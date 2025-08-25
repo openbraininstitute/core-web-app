@@ -4,6 +4,7 @@ import type { ComponentProps } from 'react';
 
 import { TopMenuNavigation } from '@/ui/segments/workspaces/top-menu-nav';
 import { SpaceSwitcher } from '@/ui/segments/workspaces/space-switcher';
+import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import { Wallet } from '@/ui/segments/project/balance';
 import { cn } from '@/utils/css-class';
 
@@ -19,7 +20,9 @@ export function WorkspaceTopMenu({ className }: Props) {
         <Wallet />
       </div>
       <div className="flex items-center justify-center gap-2">
-        <TopMenuNavigation />
+        <HydrateWrapper>
+          <TopMenuNavigation />
+        </HydrateWrapper>
       </div>
     </div>
   );

@@ -16,9 +16,9 @@ import { compactRecord } from '@/utils/dictionary';
 import { DEFAULT_PAGE_SIZE } from '@/constants';
 import {
   coreFiltersAtom,
+  coreSortStateAtom,
   corePageNumberAtom,
   coreSearchStringAtom,
-  coreSortStateAtom,
 } from '@/ui/segments/data-table/elements/context';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -35,18 +35,21 @@ export function buildQueryKey({
   context,
   workspace,
   queryParameters,
+  requireBrainRegion,
 }: {
   context: QueryContext;
   workspace: WorkspaceContext;
   queryParameters: Record<string, any>;
+  requireBrainRegion: boolean | undefined;
 }): [
   {
     workspace: WorkspaceContext;
     context: QueryContext;
     queryParameters: {} | Record<string, any>;
+    requireBrainRegion: boolean | undefined;
   },
 ] {
-  return [{ workspace, context, queryParameters }];
+  return [{ workspace, context, queryParameters, requireBrainRegion }];
 }
 
 function useQueryParameters(
@@ -126,7 +129,7 @@ export function useQueryExtendedEntityType<TData = unknown, TError = unknown>({
 >) {
   const queryParameters = useQueryParameters({ context }, requireBrainRegion);
   return useQuery({
-    queryKey: buildQueryKey({ workspace, context, queryParameters }),
+    queryKey: buildQueryKey({ workspace, context, queryParameters, requireBrainRegion }),
     queryFn,
     // NOTE: if we don't use this option, then `isLoading` should be used in the component
     placeholderData: rest.useKeepPreviousData ? keepPreviousData : undefined,
