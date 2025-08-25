@@ -1,4 +1,5 @@
-import { useQueries } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
+import { useSession } from 'next-auth/react';
 import { match } from 'ts-pattern';
 import { useMemo } from 'react';
 import kebabCase from 'lodash/kebabCase';
@@ -8,6 +9,8 @@ import { useFilteredCircuits } from '@/components/explore-section/Circuit/ListVi
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { useGetSelectedBrainRegion } from '@/features/brain-region-hierarchy/context';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
+import { getPersons } from '@/api/entitycore/queries/general/person-agent';
+import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { BrowseLink } from '@/ui/segments/explore/browse-link';
@@ -19,6 +22,8 @@ import {
   getElectricalCellRecordingsCount,
   ExperimentalEntitiesTileTypes,
   ModelEntitiesTileTypes,
+  SimulationEntitiesTileTypes,
+  getSimulationsCount,
   getAllEntitiesCount,
 } from '@/ui/segments/explore/helpers';
 import { cn } from '@/utils/css-class';
@@ -26,6 +31,7 @@ import { cn } from '@/utils/css-class';
 export const ExploreDataTypeTabs = {
   Experimental: 'experimental',
   Models: 'models',
+  Simulations: 'simulations',
 } as const;
 export type TExploreDataTypeTabs = (typeof ExploreDataTypeTabs)[keyof typeof ExploreDataTypeTabs];
 
@@ -42,6 +48,11 @@ export const tabsConfigItems: Array<{
   {
     key: ExploreDataTypeTabs.Models,
     title: 'Model',
+    position: 'middle',
+  },
+  {
+    key: ExploreDataTypeTabs.Simulations,
+    title: 'Simulations',
     position: 'last',
   },
 ];
@@ -52,6 +63,7 @@ type Props = {
 
 export function EntityLinkCount({ dataKey }: Props) {
   const breakpoint = useDefaultBreakpoint();
+  const session = useSession();
 
   const { virtualLabId, projectId } = useWorkspace();
   const { selectedBrainRegion } = useGetSelectedBrainRegion();
@@ -69,24 +81,43 @@ export function EntityLinkCount({ dataKey }: Props) {
     brainRegionId: selectedBrainRegion?.id!,
   };
 
-  const [{ isLoading: allLoading, data: allData }, { isLoading: ephysLoading, data: ephysData }] =
-    useQueries({
-      queries: [
-        {
-          queryKey: keyBuilder.dataCount({ ...params }),
-          queryFn: () => getAllEntitiesCount({ ...params }),
-          enabled: Boolean(selectedBrainRegion?.id),
-        },
-        {
-          queryKey: keyBuilder.electricalCellRecordingsCount({ ...params }),
-          queryFn: () =>
-            getElectricalCellRecordingsCount({
-              ...params,
-            }),
-          enabled: Boolean(selectedBrainRegion?.id),
-        },
-      ],
-    });
+  const { data: person } = useQuery({
+    queryKey: userKeyBuilder.person({ userId: session.data?.user.id }),
+    queryFn: () => getPersons({ filters: { sub_id: session.data?.user.id } }),
+    enabled: Boolean(session.data?.user.id),
+  });
+  const personId = person?.data.at(0)?.id;
+
+  const [
+    { isLoading: allLoading, data: allData },
+    { isLoading: ephysLoading, data: ephysData },
+    { isLoading: simsLoading, data: simsData },
+  ] = useQueries({
+    queries: [
+      {
+        queryKey: keyBuilder.dataCount({ ...params }),
+        queryFn: () => getAllEntitiesCount({ ...params }),
+        enabled: Boolean(selectedBrainRegion?.id),
+      },
+      {
+        queryKey: keyBuilder.electricalCellRecordingsCount({ ...params }),
+        queryFn: () =>
+          getElectricalCellRecordingsCount({
+            ...params,
+          }),
+        enabled: Boolean(selectedBrainRegion?.id),
+      },
+      {
+        queryKey: keyBuilder.userSimulationsCount({ ...params, personId }),
+        queryFn: () =>
+          getSimulationsCount({
+            ...params,
+            personId,
+          }),
+        enabled: Boolean(selectedBrainRegion?.id) && Boolean(personId),
+      },
+    ],
+  });
 
   const experimentalState = useMemo(
     () => [
@@ -110,20 +141,30 @@ export function EntityLinkCount({ dataKey }: Props) {
     [allLoading]
   );
 
+  const simulationState = useMemo(
+    () => [
+      ...Object.entries(SimulationEntitiesTileTypes).map(([, value]) => ({
+        ...value,
+        isLoading: simsLoading,
+      })),
+    ],
+    [simsLoading]
+  );
+
   const content = match(activeTab)
     .with(ExploreDataTypeTabs.Experimental, () => (
       <>
         {experimentalState.map((value) => {
-          let count: number | null = get(allData, value.type, null);
+          let count: number | null = get(allData, value.extendedType, null);
           if (value.type === EntityTypeDict.ElectricalCellRecording) {
             count = ephysData?.pagination.total_items ?? null;
           }
-          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/entity/${kebabCase(value.type)}`;
+          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/entity/${kebabCase(value.extendedType)}`;
           return (
             <BrowseLink
               key={`link-${value.title}/${value.type}`}
               href={link}
-              type={value.type}
+              type={value.extendedType}
               title={value.title}
               count={count}
               isLoading={value.isLoading}
@@ -135,13 +176,13 @@ export function EntityLinkCount({ dataKey }: Props) {
     .with(ExploreDataTypeTabs.Models, () => (
       <>
         {modelState.map((value) => {
-          const count = get(allData, value.type, null);
-          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/entity/${kebabCase(value.type)}`;
+          const count = get(allData, value.extendedType, null);
+          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/entity/${kebabCase(value.extendedType)}`;
           return (
             <BrowseLink
               key={`link-${value.title}/${value.type}`}
               href={link}
-              type={value.type}
+              type={value.extendedType}
               title={value.title}
               count={count}
               isLoading={value.isLoading}
@@ -158,6 +199,25 @@ export function EntityLinkCount({ dataKey }: Props) {
         />
       </>
     ))
+    .with(ExploreDataTypeTabs.Simulations, () => (
+      <>
+        {simulationState.map((value) => {
+          const count = get(simsData, value.extendedType, null);
+          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/entity/${kebabCase(value.extendedType)}`;
+
+          return (
+            <BrowseLink
+              key={`link-${value.title}/${value.type}`}
+              href={link}
+              type={value.extendedType}
+              title={value.title}
+              count={count}
+              isLoading={value.isLoading}
+            />
+          );
+        })}
+      </>
+    ))
     .otherwise(() => null);
 
   return (
@@ -172,7 +232,7 @@ export function EntityLinkCount({ dataKey }: Props) {
         }}
       >
         <PillTabsList
-          className={cn('grid h-10 w-full grid-cols-2 bg-white p-0 shadow-2xl', {
+          className={cn('grid h-10 w-full grid-cols-3 bg-white p-0 shadow-2xl', {
             'h-12': breakpoint === 'xl',
           })}
         >
