@@ -31,8 +31,6 @@ export async function downloadEntity({
 
   const fetchEntity = entityType.api.query.one;
 
-  if (!fetchEntity) throw Error(`No fetch one function defined for type ${entityType}`);
-
   let entity: AwaitedType<ReturnType<typeof fetchEntity>> | undefined;
 
   try {
