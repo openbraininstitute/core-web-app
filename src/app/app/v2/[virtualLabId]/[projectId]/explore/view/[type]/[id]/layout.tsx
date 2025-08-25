@@ -13,6 +13,7 @@ interface Params {
   id: string;
   type: EntitySlugValue;
 }
+type AwaitedType<T> = T extends Promise<infer U> ? U : T;
 
 export async function downloadEntity({
   type,
@@ -31,7 +32,6 @@ export async function downloadEntity({
   const fetchEntity = entityType.api.query.one;
 
   if (!fetchEntity) throw Error(`No fetch one function defined for type ${entityType}`);
-  type AwaitedType<T> = T extends Promise<infer U> ? U : T;
 
   let entity: AwaitedType<ReturnType<typeof fetchEntity>> | undefined;
 
@@ -79,7 +79,7 @@ export default async function Layout({
           <Breadcrumb showChevron={false}>{entity.name}</Breadcrumb>
         </div>
         <div className="mt-5 flex flex-col gap-5">
-          <DetailMenu />
+          <DetailMenu sections={entityType.detailViewSections} />
         </div>
         <ActionMenu entity={entity} entitySlug={type} ctx={{ virtualLabId, projectId }} />
       </div>

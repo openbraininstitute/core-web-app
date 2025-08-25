@@ -34,4 +34,5 @@ export const Microcircuit: EntityCoreTypeConfig<ICircuit> = {
     extension: 'application/json',
   },
   isBookmarkable: true,
+  detailViewSections: ['overview'],
 } as const;

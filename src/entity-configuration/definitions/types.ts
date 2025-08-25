@@ -117,3 +117,10 @@ export type FieldsDefinitionRegistry<T extends EntityCoreIdentifiable> = Record<
   Partial<EntityCoreFieldsValue>,
   FieldDefinition<T>
 >;
+
+export type DetailViewSection =
+  | 'overview'
+  | 'analysis'
+  | 'related-publications'
+  | 'related-artifacts'
+  | 'configuration';

@@ -34,4 +34,5 @@ export const PairedNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
     extension: 'application/json',
   },
   isBookmarkable: true,
+  detailViewSections: ['overview'],
 } as const;

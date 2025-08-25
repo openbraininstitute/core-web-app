@@ -6,6 +6,7 @@ import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
+import { DetailViewSection } from '@/entity-configuration/definitions/types';
 
 export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   group: TEntityTypeGroup;
@@ -34,6 +35,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   };
   viewDefinition?: ViewDefinitionConfig | null;
   isBookmarkable: boolean;
+  detailViewSections: DetailViewSection[];
 };
 
 export type SerializedEntityCoreTypeConfig<T extends EntityCoreIdentifiable> = Omit<

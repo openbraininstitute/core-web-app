@@ -155,4 +155,5 @@ export const SmallMicrocircuitSimulation: EntityCoreTypeConfig<ICircuitSimulatio
   asset: {
     extension: 'application/json',
   },
+  detailViewSections: ['overview'],
 } as const;
