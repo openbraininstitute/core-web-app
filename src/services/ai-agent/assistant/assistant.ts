@@ -55,6 +55,7 @@ class AiAssistantClass {
 
   readonly createThread = async () => {
     const threadId = await this.threadmanager.createThread();
+    console.log('Create new AI thread:', threadId);
     this.historyManager.reset();
     return threadId;
   };
