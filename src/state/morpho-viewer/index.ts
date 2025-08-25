@@ -5,7 +5,7 @@ import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
-import { WorkspaceContext } from '@/types/common';
+import type { WorkspaceContext } from '@/types/common';
 
 export default function createMorphologyDataAtom(
   morphology: IReconstructionMorphology,

@@ -47,7 +47,7 @@ function useTheme(children: ReactNode): ReactNode {
       theme={{
         components: {
           Button: {
-            defaultBg: '#003A8C',
+            defaultBg: '#002766',
             colorFillContent: '#003A8C',
             colorText: '#fff',
             zIndexPopupBase: 2,

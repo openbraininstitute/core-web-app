@@ -2,11 +2,11 @@
 
 import { ReactNode } from 'react';
 
-import { RenderButtonProps } from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
-import { ExploreDownloadButton } from '@/components/explore-section/ExploreSectionListingView/DownloadButton';
-import { useScrollNav } from '@/components/explore-section/ExploreSectionListingView/hooks';
-import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { ExploreDownloadButton } from '@/ui/segments/data-table/elements/download-button';
+import { useScrollNav } from '@/ui/segments/data-table/elements/hooks';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 function DefaultRenderButton<T extends EntityCoreIdentifiable>({

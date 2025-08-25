@@ -89,7 +89,11 @@ export const renderTimestamp = (timestamp: Date) => {
 export function renderPreview<T extends EntityCoreResource>(
   resource: T,
   size?: { height?: number | string; width?: number | string },
-  className?: string
+  className?: string,
+  rootClassName?: string,
+  loadingClassName?: string,
+  fill?: boolean,
+  customRender?: (src: string) => ReactNode
 ) {
   return (
     <PreviewThumbnail
@@ -97,6 +101,10 @@ export function renderPreview<T extends EntityCoreResource>(
       width={size?.width}
       height={size?.height}
       className={className}
+      rootClassName={rootClassName}
+      loadingClassName={loadingClassName}
+      fill={fill}
+      customRender={customRender}
     />
   );
 }
