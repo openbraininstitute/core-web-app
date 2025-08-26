@@ -10,7 +10,7 @@
 
 .history div > .card {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: auto 1fr auto;
   gap: 1em;
   margin: 1em 0;
   color: #003;
@@ -24,7 +24,14 @@
 }
 
 .history div > .card.currentThread {
-  border: 2px solid #abf;
+  background: linear-gradient(to top, #1890ff, #003a8c, #012766);
+  color: #fff;
+  border-color: #003a8c;
+}
+
+.history div > .card.currentThread .more,
+.history div > .card.currentThread menu {
+  color: #000;
 }
 
 .history div > .mainButton {
@@ -38,55 +45,7 @@
   margin: 0;
 }
 
-.actions {
-  position: relative;
-  overflow: visible;
-}
-
-.more {
-  display: grid;
-  place-items: center;
-  width: 2em;
-  height: 2em;
-  border-radius: 0.25em;
-  background: #fff;
-  box-shadow: 0 3px 6px #0004;
-}
-
-.actions menu {
-  position: absolute;
-  width: 140px;
-  right: -0.5em;
-  bottom: -2em;
-  padding: 0 1em;
-  background: #f7f7f7;
-  border: 2px solid #fff;
-  box-shadow: 0 0.5em 1em #0007;
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.2s;
-}
-
-.actions menu button {
-  width: 100%;
-  margin: 1em 0;
-  border: none;
-  background: none;
-  box-shadow: none;
-  display: flex;
-  flex-wrap: nowrap;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1em;
-}
-
-.actions:hover menu {
-  opacity: 1;
-  pointer-events: all;
-}
-
-.red {
+.delete {
   color: #e00;
 }
 

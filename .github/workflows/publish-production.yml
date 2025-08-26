@@ -7,7 +7,7 @@ permissions:
   contents: write
 
 jobs:
-  tag-and-publish-image:
+  publish-production-image:
     runs-on: ubuntu-latest
     env:
       ENVIRONMENT: production

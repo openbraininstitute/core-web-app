@@ -71,7 +71,7 @@ export default function SimulationCampaignConfiguration({
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
   const initialConfigValidated = useRef(false);
 
-  const selectedCatSchema = schema?.properties?.[configTab]?.additionalProperties?.anyOf?.find(
+  const selectedCatSchema = schema?.properties?.[configTab]?.additionalProperties?.oneOf?.find(
     (s) => s.properties?.type.const === selectedCategory
   );
 
@@ -246,11 +246,11 @@ export default function SimulationCampaignConfiguration({
             )}
           >
             {schema.properties &&
-              schema.properties?.[configTab]?.additionalProperties?.anyOf &&
+              schema.properties?.[configTab]?.additionalProperties?.oneOf &&
               !selectedCategory &&
               editing && (
                 <div className="flex flex-col items-center gap-5">
-                  {schema.properties[configTab].additionalProperties.anyOf.map((o) => {
+                  {schema.properties[configTab].additionalProperties.oneOf.map((o) => {
                     return (
                       <Fragment key={o.title}>
                         {/* eslint-disable-next-line */}

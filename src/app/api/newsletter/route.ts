@@ -80,10 +80,10 @@ export async function POST(req: Request) {
 
   let tags = ['website'];
 
-  if (env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'staging') {
-    tags.push('test');
-  } else {
+  if (env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'production') {
     tags.push('prod');
+  } else {
+    tags.push('test');
   }
 
   if (formValidation.tags && formValidation.tags.length) {

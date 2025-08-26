@@ -3,6 +3,7 @@ import { Message } from '@ai-sdk/react';
 import { serviceAiAgentThreadMessages } from '../../api';
 import { Signal } from '../signal';
 import { AssistantContext } from '../types';
+import { logError } from '@/util/logger';
 
 export class MessageManager {
   constructor(
@@ -19,13 +20,17 @@ export class MessageManager {
     const { target } = this;
     const { accessToken, virtualLabId, projectId } = context;
     target.initialMessages.set([]);
-    const resp = await serviceAiAgentThreadMessages({
-      accessToken,
-      virtualLabId,
-      projectId,
-      threadId,
-    });
-    const initialMessages = resp.results.reverse();
-    this.target.initialMessages.set(initialMessages);
+    try {
+      const resp = await serviceAiAgentThreadMessages({
+        accessToken,
+        virtualLabId,
+        projectId,
+        threadId,
+      });
+      const initialMessages = resp.results.reverse();
+      this.target.initialMessages.set(initialMessages);
+    } catch (ex) {
+      logError('Unable to load thread initial messages!', ex);
+    }
   };
 }

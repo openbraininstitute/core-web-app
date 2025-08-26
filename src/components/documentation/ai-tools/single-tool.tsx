@@ -3,12 +3,13 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
-import { useAITools } from '@/services/ai-agent/tools/tools';
+import { useAITool } from '@/services/ai-agent/tools/tools';
+import { Spinner } from '@/components/ai-assistant/spinner';
 
 export default function SingleAIToolsContent() {
-  const { toolId } = useParams();
+  const { toolId } = useParams<{ toolId: string }>();
 
-  const selectedTool = useAITools()?.find((tool) => tool.id === toolId);
+  const selectedTool = useAITool(toolId);
 
   return (
     <div className="relative flex w-full flex-col gap-y-4 text-white">
@@ -21,6 +22,7 @@ export default function SingleAIToolsContent() {
         </Link>
         <h1 className="text-4xl font-bold">Chat Tool {toolId}</h1>
       </div>
+      {!selectedTool && <Spinner />}
       <p className="text-lg leading-normal whitespace-pre-wrap">{selectedTool?.description}</p>
     </div>
   );
