@@ -6,7 +6,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { BrowseLibraryScope } from '@/features/views/listing/browse-library';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import { WorkspaceScope } from '@/constants';
+import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { KebabCase } from '@/utils/type';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -23,6 +23,10 @@ const AllowedEntities = [
   ExtendedEntitiesTypeDict.Memodel,
   ExtendedEntitiesTypeDict.Circuit,
   ExtendedEntitiesTypeDict.Emodel,
+  ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
+  ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
+  ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+  ExtendedEntitiesTypeDict.SingleNeuronSimulation,
 ] as const;
 
 export default async function Page({
@@ -35,7 +39,8 @@ export default async function Page({
   const { scope } = await searchParams;
   const { type } = await params;
 
-  const entity = getEntityByExtendedType({ type: snakeCase(type) as TExtendedEntitiesTypeDict });
+  const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
+  const entity = getEntityByExtendedType({ type: dataType });
 
   const content = match({ scope, entity })
     .with({ entity: P.nullish }, () => notFound())
@@ -49,7 +54,18 @@ export default async function Page({
           P.not(P.nullish)
         ),
       },
-      () => <BrowseEntityScope />
+      () => {
+        return (
+          <BrowseEntityScope
+            section={WorkspaceSection.Explore}
+            dataType={dataType}
+            scope={scope ?? WorkspaceScope.Public}
+            mainTableProps={{
+              selectionType: 'checkbox',
+            }}
+          />
+        );
+      }
     )
     .with({ scope: WorkspaceScope.Bookmarks }, () => {
       return <BrowseLibraryScope />;

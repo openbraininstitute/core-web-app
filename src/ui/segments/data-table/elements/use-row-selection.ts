@@ -16,7 +16,7 @@ export type RenderButtonProps<T> = {
 
 export function useRowSelection<T extends { id: string }>({
   dataKey,
-  selectionType = 'checkbox',
+  selectionType,
   onRowsSelected,
 }: {
   dataKey: string;

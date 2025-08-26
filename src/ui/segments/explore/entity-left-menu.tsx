@@ -1,12 +1,15 @@
 'use client';
 
 import { AnimatePresence, motion } from 'motion/react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSession } from 'next-auth/react';
 import { Suspense, useState } from 'react';
 
 import { TreeSkeleton } from '@/features/brain-region-hierarchy/brain-region-skeleton';
-import { BrainRegionHierarchy } from '@/features/brain-region-hierarchy';
+import { getPersons } from '@/api/entitycore/queries/general/person-agent';
 import { EntityLinkCount } from '@/ui/segments/explore/entity-link-count';
+import { BrainRegionHierarchy } from '@/features/brain-region-hierarchy';
+import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
 import {
   ExploreLeftMenuContext,
   RegionBanner,
@@ -14,6 +17,7 @@ import {
 import {
   getAllEntitiesCount,
   getElectricalCellRecordingsCount,
+  getSimulationsCount,
 } from '@/ui/segments/explore/helpers';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
@@ -30,7 +34,15 @@ export function EntityLeftMenu({ dataKey }: Props) {
   const [view, updateView] = useState<TExploreLeftMenuContext>(
     ExploreLeftMenuContext.BrainRegionHierarchy
   );
+  const session = useSession();
 
+  const { data: person } = useQuery({
+    queryKey: userKeyBuilder.person({ userId: session.data?.user.id }),
+    queryFn: () => getPersons({ filters: { sub_id: session.data?.user.id } }),
+    enabled: Boolean(session.data?.user.id),
+  });
+
+  const personId = person?.data.at(0)?.id;
   const onSwitchView = (_view: TExploreLeftMenuContext) => updateView(_view);
 
   const onClickBrainRegion = async (node: TTreeNode) => {
@@ -50,6 +62,15 @@ export function EntityLeftMenu({ dataKey }: Props) {
       queryFn: () =>
         getElectricalCellRecordingsCount({
           ...params,
+        }),
+    });
+
+    await queryClient.prefetchQuery({
+      queryKey: keyBuilder.userSimulationsCount({ ...params, personId }),
+      queryFn: () =>
+        getSimulationsCount({
+          ...params,
+          personId,
         }),
     });
   };

@@ -36,7 +36,6 @@ export function useQueryActivity({
   page: number;
 }) {
   const session = useSession();
-
   const { virtualLabId, projectId } = useWorkspace();
 
   const { data: person } = useQuery({

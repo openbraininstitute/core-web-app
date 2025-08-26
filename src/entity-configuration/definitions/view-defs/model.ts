@@ -28,6 +28,14 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.MType, className: 'col-span-3' },
       { field: EntityCoreFields.EType },
     ],
+    miniDetailView: [
+      { field: EntityCoreFields.BrainRegion },
+      { field: EntityCoreFields.EModelScore },
+      { field: EntityCoreFields.MType },
+      { field: EntityCoreFields.EType },
+      { field: EntityCoreFields.RegistrationDate },
+      { field: EntityCoreFields.License },
+    ],
   },
   [ExtendedEntitiesTypeDict.Memodel]: {
     title: 'ME-model',
@@ -51,6 +59,14 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.MType, className: 'col-span-4' },
       { field: EntityCoreFields.EType, className: 'col-span-4' },
     ],
+    miniDetailView: [
+      { field: EntityCoreFields.BrainRegion },
+      { field: EntityCoreFields.MType },
+      { field: EntityCoreFields.EType },
+      { field: EntityCoreFields.MEModelValidationStatus },
+      { field: EntityCoreFields.RegistrationDate },
+      { field: EntityCoreFields.License },
+    ],
   },
   [ExtendedEntitiesTypeDict.SingleNeuronSynaptome]: {
     title: 'Synaptome',
@@ -71,6 +87,14 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.BrainRegion, className: 'col-span-1' },
       { field: EntityCoreFields.License, className: 'col-span-1' },
     ],
+    miniDetailView: [
+      { field: EntityCoreFields.BrainRegion },
+      { field: EntityCoreFields.SynaptomeUsedMEModelName },
+      { field: EntityCoreFields.MType },
+      { field: EntityCoreFields.EType },
+      { field: EntityCoreFields.RegistrationDate },
+      { field: EntityCoreFields.License },
+    ],
   },
   [ExtendedEntitiesTypeDict.Circuit]: {
     title: 'Circuit',
@@ -87,6 +111,14 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.CreatedBy,
       EntityCoreFields.CreationDate,
       EntityCoreFields.CircuitBuildCategory,
+    ],
+    miniDetailView: [
+      { field: EntityCoreFields.BrainRegion },
+      { field: EntityCoreFields.CircuitScale },
+      { field: EntityCoreFields.Species },
+      { field: EntityCoreFields.CircuitBuildCategory },
+      { field: EntityCoreFields.RegistrationDate },
+      { field: EntityCoreFields.License },
     ],
   },
   [ExtendedEntitiesTypeDict.SmallMicrocircuit]: {

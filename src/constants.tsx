@@ -1,6 +1,7 @@
 export const LATEST_VISITED_PROJECT_KEY = 'latest-visited-project';
 export const AUTO_INIT_WORKSPACE = 'automatic-init-workspace';
 export const AUTO_ONBOARDING_DONE = 'automatic-app-onboarding';
+export const LAST_REGISTERED_WORKFLOW = 'last-registered-workflow';
 
 export const DEFAULT_CHECKLIST_RENDER_LENGTH = 8;
 export const DEFAULT_PAGE_SIZE = 30;
@@ -16,3 +17,11 @@ export const WorkspaceScope = {
 } as const;
 
 export type TWorkspaceScope = (typeof WorkspaceScope)[keyof typeof WorkspaceScope];
+
+export const WorkspaceSection = {
+  Explore: 'explore',
+  BuildWorkflow: 'workflows/build',
+  SimulateWorkflow: 'workflows/simulate',
+} as const;
+
+export type TWorkspaceSection = (typeof WorkspaceSection)[keyof typeof WorkspaceSection];

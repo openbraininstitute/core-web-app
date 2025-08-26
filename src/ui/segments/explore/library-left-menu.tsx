@@ -139,7 +139,7 @@ export function LibraryLeftMenu() {
         }}
       >
         <PillTabsList
-          className={cn('grid h-10 w-full grid-cols-2 bg-white p-0 shadow-2xl', {
+          className={cn('grid h-10 w-full grid-cols-3 bg-white p-0 shadow-2xl', {
             'h-12': breakpoint === 'xl',
           })}
         >

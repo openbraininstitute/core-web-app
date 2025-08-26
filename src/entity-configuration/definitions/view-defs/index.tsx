@@ -24,8 +24,8 @@ export const ViewsDefinitionRegistry = {
   ...ExperimentViewDefinition,
 } as const;
 
-export function getViewDefinitionByExtendedType(legacyType: TExtendedEntitiesTypeDict) {
-  return get(ViewsDefinitionRegistry, legacyType, null);
+export function getViewDefinitionByExtendedType(type: TExtendedEntitiesTypeDict) {
+  return get(ViewsDefinitionRegistry, type, null);
 }
 
 export function getViewDefinitionsByLegacyType(types: Array<TExtendedEntitiesTypeDict>) {

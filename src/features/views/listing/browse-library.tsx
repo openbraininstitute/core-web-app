@@ -1,5 +1,6 @@
 'use client';
 
+import { WarningOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { useAtom, useAtomValue } from 'jotai';
 import { useParams } from 'next/navigation';
@@ -31,7 +32,9 @@ import {
   useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
 import { Card, CardDescription, CardTitle } from '@/ui/molecules/card';
+import { GenericError } from '@/ui/molecules/generic-error';
 import { cn } from '@/utils/css-class';
+import { log } from '@/utils/logger';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
@@ -109,7 +112,7 @@ export function BrowseLibraryScope() {
       });
     },
     useKeepPreviousData: false,
-    useBrainRegion: false,
+    requireBrainRegion: false,
     enabled: Boolean(bookmarks?.data?.total),
   });
 
@@ -145,12 +148,19 @@ export function BrowseLibraryScope() {
     }
   }
 
-  if (error)
+  if (error) {
+    log('error', error);
     return (
-      <div>
-        <pre>{JSON.stringify(error, null, 2)}</pre>
-      </div>
+      <GenericError
+        shouldContactSupport
+        text={`
+    An error occurred while fetching  "${entity?.title ?? 'entities'}" data for this region.
+    We are sorry about the inconvenience. Please contact support
+    `}
+        icon={<WarningOutlined className="fill-current [font-size:inherit]" />}
+      />
     );
+  }
 
   return (
     <>
@@ -183,6 +193,7 @@ export function BrowseLibraryScope() {
                 '[&_.ant-table-placeholder]:bg-neutral-1! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-neutral-1!'
               ),
             }}
+            selectionType="checkbox"
           />
         </div>
       </div>

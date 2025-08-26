@@ -117,3 +117,80 @@ export function HierarchySquare(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+export function CopyIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" {...props}>
+      <path
+        fill="currentColor"
+        fillRule="evenodd"
+        d="M0 5.09c0-.401.325-.726.727-.726h10.182c.402 0 .727.325.727.727v10.182a.727.727 0 0 1-.727.727H.727A.727.727 0 0 1 0 15.273V5.091Zm1.454.728v8.728h8.728V5.818H1.454Z"
+        clipRule="evenodd"
+      />
+      <path
+        fill="currentColor"
+        fillRule="evenodd"
+        d="M4.364.727c0-.402.325-.727.727-.727h10.182c.402 0 .727.325.727.727v10.182a.727.727 0 0 1-.727.727h-2.182v-1.454h1.455V1.454H5.818V2.91H4.364V.727Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
+export function BookmarkIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" {...props}>
+      <path
+        fill="#fff"
+        d="M9.6 0H2.4C1.075 0 0 1.102 0 2.462v12.923c0 .34.268.615.6.615.332 0 .6-.275.6-.615v-.462a5.85 5.85 0 0 1 1.458-.154h6.684c.49-.01.98.042 1.458.154v.462c0 .34.268.615.6.615.332 0 .6-.275.6-.615V2.462c0-.654-.253-1.28-.703-1.741A2.37 2.37 0 0 0 9.6 0ZM5.4 8.615v2.462h-.6V9.23H3.6v1.846H3V9.23H1.8v1.846h-.6V6.769h9.6v4.308H6.6V8.615H5.4Zm-3-7.384h7.2c.318 0 .623.13.848.36.225.231.352.544.352.87v3.077h-.6V3.692H9v1.846h-.6V3.692H7.2v1.846h-.6V3.077H5.4v2.461H1.2V2.462c0-.68.537-1.231 1.2-1.231Zm6.942 12.308H2.658a7.357 7.357 0 0 0-1.458.123v-1.354h9.6v1.354c-.48-.09-.969-.131-1.458-.123Z"
+      />
+    </svg>
+  );
+}
+
+export function DownloadIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" {...props}>
+      <path
+        fill="#fff"
+        d="M12.53 8.315a.744.744 0 0 0 0-1.056.753.753 0 0 0-1.06 0l-3.22 3.205V.747A.749.749 0 0 0 7.5 0a.749.749 0 0 0-.75.747v9.717L3.53 7.259a.753.753 0 0 0-1.06 0 .744.744 0 0 0 0 1.056l4.5 4.48a.75.75 0 0 0 1.06 0l4.5-4.48ZM14.25 14.506c.414 0 .75.335.75.747a.749.749 0 0 1-.75.747H.75a.749.749 0 0 1-.75-.747c0-.412.336-.747.75-.747h13.5Z"
+      />
+    </svg>
+  );
+}
+
+export function ArrowOpenRight(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
+      <g
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      >
+        <path strokeDasharray="20" strokeDashoffset="20" d="M3 3v18">
+          <animate fill="freeze" attributeName="stroke-dashoffset" dur="0.2s" values="20;0" />
+        </path>
+        <path strokeDasharray="16" strokeDashoffset="16" d="M7 12h13.5">
+          <animate
+            fill="freeze"
+            attributeName="stroke-dashoffset"
+            begin="0.3s"
+            dur="0.2s"
+            values="16;0"
+          />
+        </path>
+        <path strokeDasharray="12" strokeDashoffset="12" d="M21 12l-7 7M21 12l-7 -7">
+          <animate
+            fill="freeze"
+            attributeName="stroke-dashoffset"
+            begin="0.5s"
+            dur="0.2s"
+            values="12;0"
+          />
+        </path>
+      </g>
+    </svg>
+  );
+}

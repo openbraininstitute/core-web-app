@@ -16,9 +16,9 @@ import { compactRecord } from '@/utils/dictionary';
 import { DEFAULT_PAGE_SIZE } from '@/constants';
 import {
   coreFiltersAtom,
+  coreSortStateAtom,
   corePageNumberAtom,
   coreSearchStringAtom,
-  coreSortStateAtom,
 } from '@/ui/segments/data-table/elements/context';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -35,23 +35,26 @@ export function buildQueryKey({
   context,
   workspace,
   queryParameters,
+  requireBrainRegion,
 }: {
   context: QueryContext;
   workspace: WorkspaceContext;
   queryParameters: Record<string, any>;
+  requireBrainRegion: boolean | undefined;
 }): [
   {
     workspace: WorkspaceContext;
     context: QueryContext;
     queryParameters: {} | Record<string, any>;
+    requireBrainRegion: boolean | undefined;
   },
 ] {
-  return [{ workspace, context, queryParameters }];
+  return [{ workspace, context, queryParameters, requireBrainRegion }];
 }
 
 function useQueryParameters(
   { context }: { context: QueryContext },
-  useBrainRegion: boolean = true
+  requireBrainRegion: boolean = true
 ) {
   const selectedBrainRegin = useAtomValue(selectedBrainRegionAtom);
   const sortState = useAtomValue(coreSortStateAtom({ key: context.key }));
@@ -66,7 +69,7 @@ function useQueryParameters(
     page: pageNumber,
     search: isEmpty(searchString) ? null : searchString,
     order_by: `${sortState.order === 'asc' ? '+' : '-'}${sortState.backendField}`,
-    ...(useBrainRegion
+    ...(requireBrainRegion
       ? {
           within_brain_region_hierarchy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,
           within_brain_region_brain_region_id: selectedBrainRegin?.id,
@@ -83,7 +86,7 @@ export function useQueryExtendedEntityType<TData = unknown, TError = unknown>({
   context,
   workspace,
   queryFn,
-  useBrainRegion,
+  requireBrainRegion,
   ...rest
 }: {
   context: QueryContext;
@@ -105,7 +108,7 @@ export function useQueryExtendedEntityType<TData = unknown, TError = unknown>({
       >
     | undefined;
   useKeepPreviousData?: boolean;
-  useBrainRegion?: boolean;
+  requireBrainRegion?: boolean;
 } & Omit<
   UseQueryOptions<
     TData,
@@ -124,11 +127,11 @@ export function useQueryExtendedEntityType<TData = unknown, TError = unknown>({
   >,
   'queryKey' | 'queryFn' | 'placeholderData'
 >) {
-  const queryParameters = useQueryParameters({ context }, useBrainRegion);
+  const queryParameters = useQueryParameters({ context }, requireBrainRegion);
   return useQuery({
-    queryKey: buildQueryKey({ workspace, context, queryParameters }),
+    queryKey: buildQueryKey({ workspace, context, queryParameters, requireBrainRegion }),
     queryFn,
-    // NOTE: if we don't use this option, the isLoading should be used in the component
+    // NOTE: if we don't use this option, then `isLoading` should be used in the component
     placeholderData: rest.useKeepPreviousData ? keepPreviousData : undefined,
     ...rest,
   });

@@ -26,6 +26,7 @@ import type {
   ICircuitSimulationCampaignFilter,
 } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { WorkspaceContext } from '@/types/common';
+import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 
 // NOTE: this is due entitycore do not support yet the circuit inclusion
 async function resolveSimulationCampaigns({
@@ -39,6 +40,8 @@ async function resolveSimulationCampaigns({
   filters?: Partial<ICircuitSimulationCampaignFilter>;
   circuitFilter?: Partial<ICircuitFilter>;
 }) {
+  // eslint-disable-next-line no-param-reassign
+  filters = discardBrainRegionQueryParams(filters);
   const source = await getCircuitSimulationCampaigns({
     context,
     withFacets,
@@ -129,7 +132,7 @@ export async function resolveSimulationByCampaignId({
 
 export const SmallMicrocircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
   group: EntityTypeGroup.Simulations,
-  title: 'Small microcircuit Simulation',
+  title: 'Small microcircuit simulation',
   extendedType: ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.SmallMicrocircuitSimulation,
