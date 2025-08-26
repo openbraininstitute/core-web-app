@@ -13,16 +13,21 @@ import styles from './github-flavor-markdown.module.css';
 interface GithubFlavorMarkdownProps {
   className?: string;
   children: string;
+  onLinkClicked(external: boolean): void;
 }
 
-export function GithubFlavorMarkdown({ className, children }: GithubFlavorMarkdownProps) {
+export function GithubFlavorMarkdown({
+  className,
+  children,
+  onLinkClicked,
+}: GithubFlavorMarkdownProps) {
   return (
     <ReactMarkdown
       className={classNames(className, styles.githubFlavorMarkdown)}
       remarkPlugins={[remarkGfm, remarkMath]}
       rehypePlugins={[rehypeKatex]}
       components={{
-        a: LinkWithExternalTarget,
+        a: makeLink(onLinkClicked),
         img: TruncableImage,
       }}
     >
@@ -31,15 +36,18 @@ export function GithubFlavorMarkdown({ className, children }: GithubFlavorMarkdo
   );
 }
 
-function LinkWithExternalTarget({ href, children }: AnchorHTMLAttributes<HTMLAnchorElement>) {
-  if (!href) return null;
+function makeLink(onLinkClicked: (external: boolean) => void) {
+  function LinkWithExternalTarget({ href, children }: AnchorHTMLAttributes<HTMLAnchorElement>) {
+    if (!href) return null;
 
-  const info = resolveLinkTarget(href);
-  return (
-    <Link href={info.href} target={info.target}>
-      {children}
-    </Link>
-  );
+    const info = resolveLinkTarget(href);
+    return (
+      <Link href={info.href} target={info.target} onClick={() => onLinkClicked(!!info.target)}>
+        {children}
+      </Link>
+    );
+  }
+  return LinkWithExternalTarget;
 }
 
 function resolveLinkTarget(href: string): { href: string; target?: string } {

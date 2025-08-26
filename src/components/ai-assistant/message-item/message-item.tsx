@@ -5,13 +5,15 @@ import { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
 
 import ToolMorphologies from '../../../services/ai-agent/tools/morphologies/tool-morphologies';
 import { IconPrice } from '../icons/price';
+import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
 import ToolsProgress from './tools-progress';
 import ToolsComponents from './tools-components';
+
 import { classNames } from '@/util/utils';
 import { AiAgentRateLimit } from '@/services/ai-agent';
 import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
-
 import { isString } from '@/util/type-guards';
+
 import styles from './message-item.module.css';
 
 interface MessageItemProps {
@@ -25,17 +27,23 @@ export default function MessageItem({ className, value, hideTools, rateLimit }: 
   const debug = useDebug();
   return (
     <div className={classNames(className, styles.messageItem)}>
-      {renderMessage(value, hideTools, debug, rateLimit)}
+      <MessageChild value={value} hideTools={hideTools} debug={debug} rateLimit={rateLimit} />
     </div>
   );
 }
 
-function renderMessage(
-  value: UIMessage,
-  hideTools: boolean,
-  debug: boolean,
-  rateLimit: AiAgentRateLimit | null
-): React.ReactNode {
+function MessageChild({
+  value,
+  hideTools,
+  debug,
+  rateLimit,
+}: {
+  value: UIMessage;
+  hideTools: boolean;
+  debug: boolean;
+  rateLimit: AiAgentRateLimit | null;
+}): React.ReactNode {
+  const [, setPanelWidth] = usePanelWidth();
   switch (value.role) {
     case 'user':
       return (
@@ -66,7 +74,14 @@ function renderMessage(
         <>
           <ToolsProgress message={value} />
           {value.content.trim().length > 0 && (
-            <GithubFlavorMarkdown className={styles.markdown}>{value.content}</GithubFlavorMarkdown>
+            <GithubFlavorMarkdown
+              className={styles.markdown}
+              onLinkClicked={(external) => {
+                if (!external) setPanelWidth(MINIMAL_PANEL_SIZE);
+              }}
+            >
+              {value.content}
+            </GithubFlavorMarkdown>
           )}
           {!hideTools && (
             <>
