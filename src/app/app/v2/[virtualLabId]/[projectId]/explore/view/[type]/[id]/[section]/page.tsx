@@ -1,8 +1,12 @@
 import { notFound } from 'next/navigation';
+import snakeCase from 'lodash/snakeCase';
 import { downloadEntity } from '../layout';
 import { DetailViewSection } from '@/entity-configuration/definitions/types';
-import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
-import { EntitySlugValue } from '@/entity-configuration/domain/slug';
+import {
+  EntityCoreExtendedType,
+  getEntityByExtendedType,
+} from '@/entity-configuration/domain/helpers';
+
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import Overview from '@/ui/segments/detail-view/overview';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
@@ -10,18 +14,18 @@ import { getViewDefinitionByExtendedType } from '@/entity-configuration/definiti
 export default async function Page({
   params,
 }: ServerSideComponentProp<
-  WorkspaceContext & { section: DetailViewSection; id: string; type: EntitySlugValue },
+  WorkspaceContext & { section: DetailViewSection; id: string; type: string },
   null
 >) {
   const { virtualLabId, projectId, section, type, id } = await params;
   const ctx = { virtualLabId, projectId };
 
-  const entityType = getEntityBySlug({ slug: type });
+  const entityType = getEntityByExtendedType({ type: snakeCase(type) as EntityCoreExtendedType });
   if (!entityType || !entityType.detailViewSections.includes(section)) notFound();
 
   if (section === 'overview') {
-    const { entity } = await downloadEntity({
-      type,
+    const entity = await downloadEntity({
+      type: snakeCase(type) as EntityCoreExtendedType,
       ctx,
       id,
     });

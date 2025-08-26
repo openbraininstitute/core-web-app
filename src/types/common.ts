@@ -41,3 +41,4 @@ export const WorkspaceContextSchema = z.object({
 });
 
 export type WorkspaceContext = z.infer<typeof WorkspaceContextSchema>;
+export type AwaitedType<T> = T extends Promise<infer U> ? U : T;

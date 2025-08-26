@@ -12,7 +12,7 @@ export default function Visualization({
   entity,
   ctx,
 }: {
-  entity: AwaitedType<ReturnType<typeof downloadEntity>>['entity'];
+  entity: AwaitedType<ReturnType<typeof downloadEntity>>;
   ctx: WorkspaceContext;
 }) {
   if (entity.type === 'reconstruction_morphology') {

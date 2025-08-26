@@ -1,32 +1,34 @@
 import { ReactNode } from 'react';
 import NextLink from 'next/link';
+import snakeCase from 'lodash/snakeCase';
 import { notFound } from 'next/navigation';
 import Breadcrumb from '@/ui/molecules/breadcrumb';
 import { basePath } from '@/config';
-import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
-import { EntitySlugValue } from '@/entity-configuration/domain/slug';
+import {
+  EntityCoreExtendedType,
+  getEntityByExtendedType,
+} from '@/entity-configuration/domain/helpers';
 import DetailMenu from '@/ui/segments/explore/detail-menu';
 import ActionMenu from '@/ui/segments/action-menu';
-import type { WorkspaceContext } from '@/types/common';
+import type { WorkspaceContext, AwaitedType } from '@/types/common';
 
 interface Params {
   id: string;
-  type: EntitySlugValue;
+  type: string;
 }
-type AwaitedType<T> = T extends Promise<infer U> ? U : T;
 
 export async function downloadEntity({
   type,
   id,
   ctx,
 }: {
-  type: EntitySlugValue;
+  type: EntityCoreExtendedType;
   id: string;
   ctx: WorkspaceContext;
 }) {
   if (!type || !id) notFound();
 
-  const entityType = getEntityBySlug({ slug: type });
+  const entityType = getEntityByExtendedType({ type });
   if (!entityType) notFound();
 
   const fetchEntity = entityType.api.query.one;
@@ -40,7 +42,7 @@ export async function downloadEntity({
   }
 
   if (!entity) notFound();
-  return { entity, entityType };
+  return entity;
 }
 
 export default async function Layout({
@@ -50,9 +52,14 @@ export default async function Layout({
   children: ReactNode;
   params: Promise<Params & WorkspaceContext>;
 }) {
-  const { virtualLabId, projectId, type, id } = await params;
+  const awaitedParams = await params;
+  const { virtualLabId, projectId, id } = awaitedParams;
+  const type = snakeCase(awaitedParams.type) as EntityCoreExtendedType;
 
-  const { entity, entityType } = await downloadEntity({
+  const entityType = getEntityByExtendedType({ type });
+  if (!entityType) notFound();
+
+  const entity = await downloadEntity({
     type,
     id,
     ctx: { virtualLabId, projectId },
@@ -79,7 +86,7 @@ export default async function Layout({
         <div className="mt-5 flex flex-col gap-5">
           <DetailMenu sections={entityType.detailViewSections} />
         </div>
-        <ActionMenu entity={entity} entitySlug={type} ctx={{ virtualLabId, projectId }} />
+        <ActionMenu entity={entity} type={type} ctx={{ virtualLabId, projectId }} />
       </div>
       <div className="grow basis-4/5">{children}</div>
     </div>
