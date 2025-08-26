@@ -74,7 +74,7 @@ function MorphoViewerLoader({ resource }: { resource: IReconstructionMorphology 
     case 'hasData':
       return morphologyData.data ? (
         <MorphoViewer
-          className="min-h-[75%]"
+          className="h-full"
           swc={morphologyData.data}
           // We disable enhanced somas until they are fixed on the backend.
           // contentUrl={swcContentUrl}
@@ -101,4 +101,4 @@ function MorphoViewerLoader({ resource }: { resource: IReconstructionMorphology 
   }
 }
 
-const MorphoViewerLoaderMemo = memo(MorphoViewerLoader);
+export const MorphoViewerLoaderMemo = memo(MorphoViewerLoader);

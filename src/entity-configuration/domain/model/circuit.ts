@@ -30,4 +30,5 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
     // configfile: AssetLabel.single_neuron_synaptome_config,
   },
   isBookmarkable: true,
+  detailViewSections: ['overview'],
 } as const;

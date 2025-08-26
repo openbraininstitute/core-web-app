@@ -40,4 +40,5 @@ export const ReconstructionMorphology: EntityCoreTypeConfig<
   },
   viewDefinition: ViewsDefinitionRegistry[ExtendedEntitiesTypeDict.ReconstructionMorphology],
   isBookmarkable: true,
+  detailViewSections: ['overview'],
 } as const;

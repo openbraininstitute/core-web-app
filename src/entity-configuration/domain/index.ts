@@ -1,3 +1,4 @@
+import type { EntityCoreTypeConfig } from './types';
 import { Emodel } from './model/e-model';
 import { MEmodel } from './model/me-model';
 import { SingleNeuronSynaptome } from './model/single-neuron-synaptome';
@@ -56,3 +57,7 @@ export const EntityCoreConfiguration = {
 
 export type TEntityCoreConfigurationItem =
   (typeof EntityCoreConfiguration)[keyof typeof EntityCoreConfiguration];
+
+type InnerEntityType<T> = T extends EntityCoreTypeConfig<infer U> ? U : never;
+
+export type EntityTypeValue = InnerEntityType<TEntityCoreConfigurationItem>;

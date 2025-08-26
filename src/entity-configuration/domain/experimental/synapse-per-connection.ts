@@ -33,4 +33,5 @@ export const SynapsePerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPer
     extension: 'application/json',
   },
   isBookmarkable: true,
+  detailViewSections: ['overview'],
 } as const;

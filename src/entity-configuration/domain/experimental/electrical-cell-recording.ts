@@ -41,4 +41,5 @@ export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecord
     extension: 'application/nwb',
   },
   isBookmarkable: true,
+  detailViewSections: ['overview'],
 } as const;

@@ -35,4 +35,5 @@ export const BoutonDensity: EntityCoreTypeConfig<IExperimentalBoutonDensity> = {
   },
   // viewDefinition: ViewsDefinitionRegistry[DataType.ExperimentalBoutonDensity],
   isBookmarkable: true,
+  detailViewSections: ['overview'],
 } as const;

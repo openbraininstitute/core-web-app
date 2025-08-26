@@ -1,18 +1,48 @@
 import { ReactNode } from 'react';
 import NextLink from 'next/link';
+import snakeCase from 'lodash/snakeCase';
 import { notFound } from 'next/navigation';
 import Breadcrumb from '@/ui/molecules/breadcrumb';
 import { basePath } from '@/config';
-import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
-import { EntitySlugValue } from '@/entity-configuration/domain/slug';
+import {
+  EntityCoreExtendedType,
+  getEntityByExtendedType,
+} from '@/entity-configuration/domain/helpers';
 import DetailMenu from '@/ui/segments/explore/detail-menu';
 import ActionMenu from '@/ui/segments/action-menu';
+import type { WorkspaceContext, AwaitedType } from '@/types/common';
 
 interface Params {
-  virtualLabId: string;
-  projectId: string;
   id: string;
-  type: EntitySlugValue;
+  type: string;
+}
+
+export async function downloadEntity({
+  type,
+  id,
+  ctx,
+}: {
+  type: EntityCoreExtendedType;
+  id: string;
+  ctx: WorkspaceContext;
+}) {
+  if (!type || !id) notFound();
+
+  const entityType = getEntityByExtendedType({ type });
+  if (!entityType) notFound();
+
+  const fetchEntity = entityType.api.query.one;
+
+  let entity: AwaitedType<ReturnType<typeof fetchEntity>> | undefined;
+
+  try {
+    entity = await fetchEntity({ id, context: ctx });
+  } catch {
+    notFound();
+  }
+
+  if (!entity) notFound();
+  return entity;
 }
 
 export default async function Layout({
@@ -20,29 +50,20 @@ export default async function Layout({
   params,
 }: {
   children: ReactNode;
-  params: Promise<Params>;
+  params: Promise<Params & WorkspaceContext>;
 }) {
-  const { virtualLabId, projectId, type, id } = await params;
+  const awaitedParams = await params;
+  const { virtualLabId, projectId, id } = awaitedParams;
+  const type = snakeCase(awaitedParams.type) as EntityCoreExtendedType;
 
-  if (!type || !id) notFound();
-
-  const entityType = getEntityBySlug({ slug: type });
+  const entityType = getEntityByExtendedType({ type });
   if (!entityType) notFound();
 
-  const fetchEntity = entityType.api.query.one;
-
-  if (!fetchEntity) throw Error(`No fetch one function defined for type ${entityType}`);
-  type AwaitedType<T> = T extends Promise<infer U> ? U : T;
-
-  let entity: AwaitedType<ReturnType<typeof fetchEntity>> | undefined;
-
-  try {
-    entity = await fetchEntity({ id, context: { virtualLabId, projectId } });
-  } catch {
-    notFound();
-  }
-
-  if (!entity) notFound();
+  const entity = await downloadEntity({
+    type,
+    id,
+    ctx: { virtualLabId, projectId },
+  });
 
   return (
     <div className="ml-5 flex h-full rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
@@ -63,9 +84,9 @@ export default async function Layout({
           <Breadcrumb showChevron={false}>{entity.name}</Breadcrumb>
         </div>
         <div className="mt-5 flex flex-col gap-5">
-          <DetailMenu />
+          <DetailMenu sections={entityType.detailViewSections} />
         </div>
-        <ActionMenu entity={entity} entitySlug={type} ctx={{ virtualLabId, projectId }} />
+        <ActionMenu entity={entity} type={type} ctx={{ virtualLabId, projectId }} />
       </div>
       <div className="grow basis-4/5">{children}</div>
     </div>

@@ -33,4 +33,5 @@ export const NeuronDensity: EntityCoreTypeConfig<IExperimentalNeuronDensity> = {
     extension: 'application/json',
   },
   isBookmarkable: true,
+  detailViewSections: ['overview'],
 } as const;

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { notFound } from 'next/navigation';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -21,25 +22,27 @@ import {
 import { useAppNotification } from '@/components/notification';
 import { deleteBookmarksFromProjectLibrary } from '@/features/bookmark/actions';
 import { downloadArchive } from '@/services/entity-download';
-import { EntitySlugValue } from '@/entity-configuration/domain/slug';
-import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
+import {
+  EntityCoreExtendedType,
+  getEntityByExtendedType,
+} from '@/entity-configuration/domain/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 export default function ActionMenu<T extends EntityCoreIdentifiable>({
   entity,
   ctx,
-  entitySlug,
+  type,
 }: {
   entity: T;
   ctx: { virtualLabId: string; projectId: string };
-  entitySlug: EntitySlugValue;
+  type: EntityCoreExtendedType;
 }) {
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
   const notification = useAppNotification();
 
-  const entityType = getEntityBySlug({ slug: entitySlug });
-  if (!entityType) throw Error('Invalid entity type');
+  const entityType = getEntityByExtendedType({ type });
+  if (!entityType) notFound();
 
   const bookmarks = useQuery({
     queryKey: keyBuilder.bookmarks({
