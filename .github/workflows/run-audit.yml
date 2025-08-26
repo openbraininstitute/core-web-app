@@ -1,0 +1,42 @@
+name: Audit dependencies
+
+permissions:
+  id-token: write
+  contents: read
+
+# Only run 'on demand' for now.
+on:
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Set-up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run audit
+        run: pnpm audit --json  > pnpm-audit-output.json || echo true
+
+      - name: Print audit output
+        run: cat pnpm-audit-output.json | jq .
+
+      - name: Upload audit output
+        uses: actions/upload-artifact@v4
+        with:
+          name: pnpm-audit-output.json
+          path: pnpm-audit-output.json
