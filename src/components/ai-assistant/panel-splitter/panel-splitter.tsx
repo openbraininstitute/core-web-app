@@ -1,22 +1,19 @@
 /* eslint-disable react/jsx-props-no-spreading */
 import React from 'react';
 
+import { usePanelWidth } from '../hooks';
 import { usePointerHandler } from './pointer-handler';
+
 import { classNames } from '@/util/utils';
 
 import styles from './panel-splitter.module.css';
 
 interface PanelSplitterProps {
   className?: string;
-  panelWidth: number;
-  setPanelWidth(panelWidth: number): void;
 }
 
-export default function PanelSplitter({
-  className,
-  panelWidth,
-  setPanelWidth,
-}: PanelSplitterProps) {
+export default function PanelSplitter({ className }: PanelSplitterProps) {
+  const [panelWidth, setPanelWidth] = usePanelWidth();
   const handler = usePointerHandler();
   React.useEffect(() => {
     handler.panelWidth = panelWidth;
@@ -25,6 +22,7 @@ export default function PanelSplitter({
     handler.eventPanelWidthChange.addListener(setPanelWidth);
     return () => handler.eventPanelWidthChange.removeListener(setPanelWidth);
   }, [setPanelWidth, handler]);
+
   return (
     <div
       className={classNames(
