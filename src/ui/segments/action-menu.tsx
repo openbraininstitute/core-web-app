@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { notFound } from 'next/navigation';
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   BookOutlined,
   CopyOutlined,
@@ -25,6 +26,7 @@ import {
   EntityCoreExtendedType,
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 export default function ActionMenu<T extends EntityCoreIdentifiable>({
   entity,
@@ -37,44 +39,51 @@ export default function ActionMenu<T extends EntityCoreIdentifiable>({
 }) {
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
-  const [loading, setLoading] = useState(false);
   const notification = useAppNotification();
 
   const entityType = getEntityByExtendedType({ type });
   if (!entityType) notFound();
 
   const bookmarks = useQuery({
-    queryKey: [ctx.projectId, ctx.virtualLabId, entityType.type],
+    queryKey: keyBuilder.bookmarks({
+      virtualLabId: ctx.virtualLabId,
+      projectId: ctx.projectId,
+      category: entityType.extendedType,
+    }),
     queryFn: async () => getAllBookmarksByCategory(ctx, { category: entityType.type }),
   });
 
   const existingBookmarks = bookmarks.data?.data?.[entityType.type]?.map((b) => b.entity_id);
   const isBookmarked = !!existingBookmarks && existingBookmarks.includes(entity.id);
 
-  const handleBookmark = async () => {
-    setLoading(true);
-    try {
-      await bookmarkToProjectLibrary(ctx, {
+  const mutation = useMutation({
+    mutationFn: () =>
+      bookmarkToProjectLibrary(ctx, {
         entity_id: entity.id,
         category: entityType.type,
-      });
-
+      }),
+    onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: [ctx.projectId, ctx.virtualLabId, entityType.type],
+        queryKey: keyBuilder.bookmarks({
+          virtualLabId: ctx.virtualLabId,
+          projectId: ctx.projectId,
+          category: entityType.extendedType,
+        }),
       });
-
       notification.success({ message: 'Entity successfully bookmarked' });
-    } catch {
+    },
+    onError: () => {
       notification.error({ message: "Couldn't add entity to bookmarks" });
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  const handleBookmark = () => {
+    mutation.mutate();
   };
 
-  const handleRemoveBookmark = async () => {
-    setLoading(true);
-    try {
-      await deleteBookmarksFromProjectLibrary({
+  const removeBookmarkMutation = useMutation({
+    mutationFn: () =>
+      deleteBookmarksFromProjectLibrary({
         virtualLabId: ctx.virtualLabId,
         projectId: ctx.projectId,
         bookmarks: [
@@ -83,19 +92,27 @@ export default function ActionMenu<T extends EntityCoreIdentifiable>({
             category: entityType.type,
           },
         ],
-      });
-
+      }),
+    onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: [ctx.projectId, ctx.virtualLabId, entityType.type],
+        queryKey: keyBuilder.bookmarks({
+          virtualLabId: ctx.virtualLabId,
+          projectId: ctx.projectId,
+          category: entityType.extendedType,
+        }),
       });
-
       notification.success({ message: 'Bookmark removed from library' });
-    } catch {
+    },
+    onError: () => {
       notification.error({ message: "Couldn't remove bookmark" });
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  const handleRemoveBookmark = () => {
+    removeBookmarkMutation.mutate();
   };
+
+  const loading = mutation.isPending || removeBookmarkMutation.isPending;
 
   const getBookmarkHandler = () => {
     if (loading) return undefined;
