@@ -5,14 +5,12 @@ import React, { type CSSProperties } from 'react';
 import dynamic from 'next/dynamic';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-import { AiContextProvider, useCollapsedPanel } from './hooks';
+import { AiContextProvider, MINIMAL_PANEL_SIZE, useCollapsedPanel, usePanelWidth } from './hooks';
 import PanelSplitter from './panel-splitter';
 import { IconChat } from './icons/chat';
 import { IconHistory } from './icons/history';
 import PanelContent from './panel-content';
 import { classNames } from '@/util/utils';
-import { useLocalStorage } from '@/util/storage';
-import { isNumber } from '@/util/type-guards';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
 
 import styles from './ai-assistant.module.css';
@@ -27,8 +25,8 @@ const Spinner = dynamic(() => import('./spinner/spinner'), { ssr: false });
 const queryClient = new QueryClient();
 
 export default function AiAssistant({ className, section }: AiAssistantProps) {
+  const [panelWidth] = usePanelWidth();
   const [tab, setTab] = React.useState<'chat' | 'history'>('chat');
-  const [panelWidth, setPanelWidth] = useLocalStorage('ai-assistant/panel-width', 25, isNumber);
   const [collapsedPanel, setCollapsedPanel] = useCollapsedPanel();
   const assistant = useAiAssistant();
   const threadId = assistant.threadId.useValue();
@@ -42,7 +40,7 @@ export default function AiAssistant({ className, section }: AiAssistantProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AiContextProvider value={{ section }}>
+      <AiContextProvider section={section}>
         <div
           style={style}
           className={classNames(className, styles.aiAssistant, isFullWidth && styles.fullscreen)}
@@ -50,7 +48,12 @@ export default function AiAssistant({ className, section }: AiAssistantProps) {
         >
           <Header collapsedPanel={collapsedPanel} onToggleCollapse={handleToggleCollapse} />
           {!collapsedPanel && threadId && (
-            <div className={classNames(styles.overlay, panelWidth > 25 && styles.shadow)}>
+            <div
+              className={classNames(
+                styles.overlay,
+                panelWidth > MINIMAL_PANEL_SIZE && styles.shadow
+              )}
+            >
               <Header collapsedPanel={collapsedPanel} onToggleCollapse={handleToggleCollapse} />
               <nav>
                 <button
@@ -77,7 +80,7 @@ export default function AiAssistant({ className, section }: AiAssistantProps) {
                 tab={tab}
                 onTabChange={setTab}
               />
-              <PanelSplitter panelWidth={panelWidth} setPanelWidth={setPanelWidth} />
+              <PanelSplitter />
             </div>
           )}
           {!collapsedPanel && !threadId && <Spinner />}
