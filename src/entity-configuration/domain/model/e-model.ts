@@ -35,5 +35,5 @@ export const Emodel: EntityCoreTypeConfig<IEModel> = {
     extension: undefined,
   },
   isBookmarkable: true,
-  detailViewSections: ['overview', 'analysis'],
+  detailViewSections: ['overview', 'analysis', 'related-artifacts'],
 } as const;

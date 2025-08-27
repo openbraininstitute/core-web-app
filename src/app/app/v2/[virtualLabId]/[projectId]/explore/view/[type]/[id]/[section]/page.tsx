@@ -12,6 +12,7 @@ import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import Overview from '@/ui/segments/detail-view/overview';
 import Visualization from '@/ui/segments/viz';
 import Analysis from '@/features/model-analysis/explorer/container';
+import RelatedArtifacts from '@/ui/segments/detail-view/related-artifacts';
 
 export default async function Page({
   params,
@@ -41,6 +42,10 @@ export default async function Page({
   }
   if (section === 'analysis') {
     content = <Analysis extendedType={entityType.extendedType} />;
+  }
+
+  if (section === 'related-artifacts') {
+    content = <RelatedArtifacts extendedType={entityType.extendedType} entity={entity} ctx={ctx} />;
   }
 
   if (!content) notFound();
