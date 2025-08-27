@@ -11,6 +11,7 @@ export const thumbnailGenerationBaseUrl = env.NEXT_PUBLIC_THUMBNAIL_GENERATION_B
 export const entityCoreUrl = env.NEXT_PUBLIC_ENTITY_CORE_URL;
 export const entityCorePublicVirtualLabId = env.NEXT_PUBLIC_ENTITY_CORE_PUBLIC_VIRTUAL_LAB_ID;
 export const entityCorePublicProjectId = env.NEXT_PUBLIC_ENTITY_CORE_PUBLIC_PROJECT_ID;
+export const notebookSvcBaseUrl = env.NEXT_PUBLIC_NOTEBOOK_SERVICE_BASE_URL;
 
 export const smallScaleSimulatorUrl = env.NEXT_PUBLIC_SMALL_SCALE_SIMULATOR_URL;
 
