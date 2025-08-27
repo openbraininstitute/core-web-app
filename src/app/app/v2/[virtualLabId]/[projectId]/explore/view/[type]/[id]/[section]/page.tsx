@@ -1,3 +1,4 @@
+import { JSX } from 'react';
 import { notFound } from 'next/navigation';
 import snakeCase from 'lodash/snakeCase';
 import { downloadEntity } from '../layout';
@@ -9,7 +10,7 @@ import {
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import Overview from '@/ui/segments/detail-view/overview';
-import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
+import Visualization from '@/ui/segments/viz';
 
 export default async function Page({
   params,
@@ -23,18 +24,22 @@ export default async function Page({
   const entityType = getEntityByExtendedType({ type: snakeCase(type) as EntityCoreExtendedType });
   if (!entityType || !entityType.detailViewSections.includes(section)) notFound();
 
+  const entity = await downloadEntity({
+    type: snakeCase(type) as EntityCoreExtendedType,
+    ctx,
+    id,
+  });
+
+  let content: JSX.Element | undefined;
+
   if (section === 'overview') {
-    const entity = await downloadEntity({
-      type: snakeCase(type) as EntityCoreExtendedType,
-      ctx,
-      id,
-    });
-
-    const fields = getViewDefinitionByExtendedType(entityType.extendedType)?.summaryViewFields;
-
-    if (!fields || !entity) notFound();
-    return <Overview entity={entity} summaryViewFields={fields} ctx={ctx} />;
+    content = <Overview entity={entity} extendedType={entityType.extendedType} />;
+  }
+  if (section === 'visualization') {
+    content = <Visualization entity={entity} ctx={ctx} />;
   }
 
-  return notFound();
+  if (!content) notFound();
+
+  return <div className="h-full overflow-y-auto p-10">{content}</div>;
 }

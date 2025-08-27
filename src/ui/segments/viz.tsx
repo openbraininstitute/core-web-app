@@ -1,5 +1,6 @@
 'use client';
 
+import { notFound } from 'next/navigation';
 import { MorphoViewerLoaderMemo } from '@/features/entities/reconstruction-morphology/detail-view';
 import { IReconstructionMorphology, IElectricalCellRecording } from '@/api/entitycore/types';
 import EphysViewer from '@/features/ephys-viewer';
@@ -22,5 +23,5 @@ export default function Visualization({
     return <EphysViewer resource={entity as IElectricalCellRecording} ctx={ctx} />;
   }
 
-  return null;
+  notFound();
 }
