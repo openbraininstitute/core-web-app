@@ -51,7 +51,7 @@ function RecordItem({
             />
           </Form.Item>
           <div className="text-neutral-4 flex h-11 items-center justify-center align-middle text-base">
-            <span className="mr-2 uppercase">offset</span>
+            <span className="mr-2 uppercase">segment</span>
             <CustomPopover
               message="The recording position relative to the section. 0 being the start of the section and 1 being the end."
               placement="bottomRight"
@@ -69,7 +69,7 @@ function RecordItem({
                 type: 'number',
                 min: 0,
                 max: 1,
-                message: 'Section offset should be between 0 and 1',
+                message: 'Section segment should be between 0 and 1',
               },
             ]}
           >
