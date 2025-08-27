@@ -6,7 +6,7 @@ import {
 
 import EModelView from '@/components/build-section/cell-model-assignment/e-model/EModelView';
 import { EntityTypeValue } from '@/entity-configuration/domain';
-import { WorkspaceContext } from '@/types/common';
+import { WorkspaceContext, AwaitedType } from '@/types/common';
 import {
   IEModel,
   IMEModel,
@@ -15,6 +15,9 @@ import {
 } from '@/api/entitycore/types';
 import { getReconstructionMorphology } from '@/api/entitycore/queries';
 import MEModelConfig from '@/features/entities/me-model/detail-view/configuration';
+import SynaptomeConfig from '@/features/entities/single-neuron-synaptome/detail-view/configuration';
+import SynapseGroupList from '@/features/entities/single-neuron-synaptome/detail-view/elements/list-synapses-configuration';
+import { loadExpandedSingleNeuronSynaptome } from '@/page-wrappers/explore/single-neuron-synaptome';
 
 export default async function Configuration({
   entity,
@@ -51,6 +54,33 @@ export default async function Configuration({
 
   if (extendedType === 'memodel') {
     return <MEModelConfig model={entity as IMEModel} />;
+  }
+
+  if (extendedType === 'single_neuron_synaptome') {
+    let data: AwaitedType<ReturnType<typeof loadExpandedSingleNeuronSynaptome>>;
+    try {
+      data = await loadExpandedSingleNeuronSynaptome({
+        virtualLabId: ctx.virtualLabId,
+        projectId: ctx.projectId,
+        id: entity.id,
+      });
+    } catch {
+      notFound();
+    }
+
+    return (
+      <div className="flex w-full flex-col gap-4">
+        <SynaptomeConfig
+          memodel={data.memodel}
+          virtualLabId={ctx.virtualLabId}
+          projectId={ctx.projectId}
+        />
+
+        <div className="mt-10">
+          <SynapseGroupList config={data.config} />
+        </div>
+      </div>
+    );
   }
 
   notFound();

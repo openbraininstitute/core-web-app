@@ -50,7 +50,7 @@ export default async function Page({
   }
 
   if (section === 'related-artifacts') {
-    content = <RelatedArtifacts extendedType={entityType.extendedType} entity={entity} ctx={ctx} />;
+    content = <RelatedArtifacts extendedType={entityType.extendedType} entity={entity} />;
   }
 
   if (!content) notFound();
