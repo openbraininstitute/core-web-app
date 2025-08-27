@@ -4,7 +4,7 @@ import {
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
 
-import EModelView from '@/components/build-section/cell-model-assignment/e-model/EModelView';
+import EModelConfig from '@/components/build-section/cell-model-assignment/e-model/EModelView';
 import { EntityTypeValue } from '@/entity-configuration/domain';
 import { WorkspaceContext, AwaitedType } from '@/types/common';
 import {
@@ -45,7 +45,7 @@ export default async function Configuration({
     }
 
     return (
-      <EModelView
+      <EModelConfig
         params={{ id: entity.id, virtualLabId: ctx.virtualLabId, projectId: ctx.projectId }}
         payload={{ source: entity as IEModel, exemplar_morphology: morphology }}
       />

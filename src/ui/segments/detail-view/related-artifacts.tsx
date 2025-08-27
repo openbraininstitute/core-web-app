@@ -4,9 +4,9 @@ import {
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
 
-import Simulation from '@/features/entities/me-model/detail-view/simulation';
+import MEModelResults from '@/features/entities/me-model/detail-view/simulation';
+import SynaptomeResults from '@/features/entities/single-neuron-synaptome/detail-view/simulation';
 import { EntityTypeValue } from '@/entity-configuration/domain';
-import Results from '@/features/entities/single-neuron-synaptome/detail-view/simulation';
 
 export default async function RelatedArtifacts({
   entity,
@@ -19,11 +19,11 @@ export default async function RelatedArtifacts({
   if (!entityType) notFound();
 
   if (extendedType === 'memodel') {
-    return <Simulation modelId={entity.id} />;
+    return <MEModelResults modelId={entity.id} />;
   }
 
   if (extendedType === 'single_neuron_synaptome') {
-    return <Results modelId={entity.id} />;
+    return <SynaptomeResults modelId={entity.id} />;
   }
 
   notFound();
