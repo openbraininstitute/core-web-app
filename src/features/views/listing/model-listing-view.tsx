@@ -43,7 +43,7 @@ export default function ModelListingView({ virtualLabId, projectId, entity }: Pr
         dataScope={ExploreDataScope.SelectedBrainRegion}
       />
     ))
-    .with({ legacyType: P.when((t) => t.startsWith('circuit-dev')) }, (en) => (
+    .with({ legacyType: DataType.Circuit }, (en) => (
       <CircuitTable
         virtualLabInfo={{ virtualLabId, projectId }}
         dataType={en.legacyType}

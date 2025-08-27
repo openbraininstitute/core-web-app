@@ -1,11 +1,12 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
-import { Collapse, CollapseProps } from 'antd';
+import { Collapse } from 'antd';
 import { useParams } from 'next/navigation';
 import { loadable } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
+import isNil from 'lodash/isNil';
 
 import { Subcircuits } from '@/features/entities/circuit/elements/related-circuits/subcircuits';
 import { DerivedFrom } from '@/features/entities/circuit/elements/related-circuits/derived-from';
@@ -41,49 +42,43 @@ export default function RelatedCircuits({ circuit }: Props) {
     )
   );
 
-  const items: CollapseProps['items'] = useMemo(
-    () =>
-      [
-        {
-          key: 'parent',
-          label: 'Parent circuit',
-          children: <Parent data={result?.parent} />,
-          visible: Boolean(result?.parent),
-        },
-        {
-          key: 'root',
-          label: 'Root circuit',
-          children: <Root circuit={circuit} />,
-          visible: Boolean(circuit.root_circuit_id),
-        },
-        {
-          key: 'derivedFrom',
-          label: 'Derived from',
-          children: <DerivedFrom data={result?.derivedFrom} />,
-          visible: Boolean(result?.derivedFrom),
-        },
-        {
-          key: 'subCircuits',
-          label: 'Subcircuits',
-          children: <Subcircuits data={result?.subCircuits} />,
-          visible: Boolean(result?.subCircuits?.at(0)?.sub_circuits?.length),
-        },
-        {
-          key: 'derived',
-          label: 'Derived circuits',
-          children: <Derived data={result?.derived} />,
-          visible: Boolean(result?.derived?.at(0)?.sub_circuits?.length),
-        },
-      ].filter((item) => item.visible),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      circuit.root_circuit_id,
-      result?.parent,
-      result?.derivedFrom,
-      result?.subCircuits,
-      result?.derived,
-    ]
-  );
+  const items = [
+    {
+      key: 'parent',
+      label: 'Parent circuit',
+      children: <Parent data={result?.parent} />,
+      visible: Boolean(result?.parent),
+    },
+    {
+      key: 'root',
+      label: 'Root circuit',
+      children: <Root circuit={circuit} />,
+      visible: Boolean(circuit.root_circuit_id),
+    },
+    {
+      key: 'derivedFrom',
+      label: 'Derived from',
+      children: <DerivedFrom data={result?.derivedFrom} />,
+      visible: Boolean(result?.derivedFrom),
+    },
+    {
+      key: 'subCircuits',
+      label: 'Subcircuits',
+      children: <Subcircuits data={result?.subCircuits} />,
+      visible: Boolean(result?.subCircuits?.at(0)?.sub_circuits?.length),
+    },
+    {
+      key: 'derived',
+      label: 'Derived circuits',
+      children: <Derived data={result?.derived} />,
+      visible: Boolean(result?.derived?.at(0)?.sub_circuits?.length),
+    },
+  ].filter((item) => item.visible);
+
+  const shouldAppear = items
+    .filter((o) => o.visible)
+    .map((o) => o.key)
+    .filter((o) => !isNil(o));
 
   const isLoading =
     useAtomValue(
@@ -117,7 +112,7 @@ export default function RelatedCircuits({ circuit }: Props) {
         bordered={false}
         items={items}
         collapsible="header"
-        defaultActiveKey={['parent', 'root']}
+        defaultActiveKey={['parent', 'root', ...shouldAppear]}
         expandIcon={() => null}
         className={classNames(
           '[&_.ant-collapse-item]:mb-2',

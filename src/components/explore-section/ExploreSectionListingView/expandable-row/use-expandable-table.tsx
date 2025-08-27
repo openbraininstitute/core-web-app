@@ -66,13 +66,12 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
 
   const resetFilterSignal = useAtomValue(resetFilterSignalAtom);
 
-  // Only top-level tables should reset when filters are cleared
   useEffect(() => {
     if (isTopLevel && resetFilterSignal > 0) {
       setState({
         expandedData: {},
         loadingRows: {},
-        expandedRowKeys: [], // Clear expanded keys to sync with Ant Design table
+        expandedRowKeys: [],
       });
     }
   }, [resetFilterSignal, isTopLevel]);
@@ -165,8 +164,6 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
           }));
         }
       } else if (!fetchId) {
-        // No fetcher and no fetchId - this shouldn't happen for expandable rows
-        // eslint-disable-next-line no-console
         log('warn', 'Row is expandable but no fetcher provided and no fetchId available');
       }
     },

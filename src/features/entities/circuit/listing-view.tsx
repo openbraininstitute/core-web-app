@@ -67,7 +67,6 @@ export default function ListingView({
 
   const expandableOptions = createExpandableTableConfig<ICircuit, VirtualLabInfo>({
     fetcher: async (record: ICircuit) => {
-      // Check if this circuit has subcircuits (it should be enriched at this point)
       const enrichedRecord = record as ICircuitEnriched;
       if (enrichedRecord.sub_circuits && enrichedRecord.sub_circuits.length > 0) {
         return enrichedRecord.sub_circuits;
@@ -114,7 +113,7 @@ export default function ListingView({
     },
     expandIconColumnIndex: 4,
     expandIcon,
-    isTopLevel: true, // this is the main table that should sync with filter resets
+    isTopLevel: true,
   });
 
   const { expandableConfig } = useExpandableTable<ICircuit, VirtualLabInfo>(expandableOptions);

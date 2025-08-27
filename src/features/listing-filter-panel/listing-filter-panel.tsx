@@ -259,6 +259,7 @@ export default function ListingFilterPanel({
   }, [filters]);
 
   const submitValues = () => {
+    setResetFilterSignal((prev) => prev + 1);
     setPageNumber(PAGE_NUMBER);
     setPrevData([]);
     const appliedFilters = filters?.map((fil: CoreFilter) => ({

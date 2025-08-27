@@ -29,7 +29,7 @@ export interface HierarchyOutputNode extends Omit<HierarchyNode, 'children'>, IC
   isFiltered: boolean;
 }
 
-export const circuitRepresentationAtom = atom<'flat' | 'hierarchy'>('flat');
+export const circuitRepresentationAtom = atom<'flat' | 'hierarchy'>('hierarchy');
 export const resetFilterSignalAtom = atom(0);
 
 function findNodeInTree(roots: HierarchyNode[], targetId: string): HierarchyNode | null {
