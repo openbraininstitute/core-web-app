@@ -11,6 +11,7 @@ import {
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import Overview from '@/ui/segments/detail-view/overview';
 import Visualization from '@/ui/segments/viz';
+import Analysis from '@/features/model-analysis/explorer/container';
 
 export default async function Page({
   params,
@@ -37,6 +38,9 @@ export default async function Page({
   }
   if (section === 'visualization') {
     content = <Visualization entity={entity} ctx={ctx} />;
+  }
+  if (section === 'analysis') {
+    content = <Analysis extendedType={entityType.extendedType} />;
   }
 
   if (!content) notFound();
