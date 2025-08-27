@@ -76,7 +76,7 @@ export default async function Layout({
           </Breadcrumb>
           <Breadcrumb>
             <NextLink
-              href={`${basePath}/app/v2/${virtualLabId}/${projectId}/explore/browse/${type}`}
+              href={`${basePath}/app/v2/${virtualLabId}/${projectId}/explore/browse/entity/${type}`}
             >
               {entityType.title}
             </NextLink>

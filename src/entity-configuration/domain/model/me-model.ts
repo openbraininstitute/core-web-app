@@ -31,5 +31,5 @@ export const MEmodel: EntityCoreTypeConfig<IMEModel> = {
     extension: undefined,
   },
   isBookmarkable: true,
-  detailViewSections: ['overview', 'analysis'],
+  detailViewSections: ['overview', 'analysis', 'configuration', 'related-artifacts'],
 } as const;

@@ -15,7 +15,6 @@ import If from '@/components/ConditionalRenderer/If';
 
 import { useClearClientStorageCacheByKey } from '@/features/model-analysis/viewer/storage';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { resolveExperimentUrl } from '@/utils/url-builder';
 import { EntityTypeDict } from '@/api/entitycore/types';
@@ -91,7 +90,7 @@ export default function SummaryView({ showViewMode = false, payload: { source } 
                   <Analysis />
                 </If>
                 <If id="simulation" condition={activeTab === 'experiments'}>
-                  <Simulation modelId={source.id} type={EntitySlug.SingleNeuronSimulation} />
+                  <Simulation modelId={source.id} />
                 </If>
               </Suspense>
             </div>
