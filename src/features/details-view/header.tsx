@@ -16,6 +16,7 @@ import { ensureArray } from '@/utils/array';
 
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
+import { tempCheckCircuitInDev } from '@/temp-circuit-check';
 
 export default function Header<T extends EntityCoreIdentifiableNamed>({
   detail,
@@ -32,7 +33,9 @@ export default function Header<T extends EntityCoreIdentifiableNamed>({
     id: string;
   }>();
 
-  const entity = getEntityBySlug({ slug: type });
+  const tempType = tempCheckCircuitInDev(type);
+
+  const entity = getEntityBySlug({ slug: tempType });
   const withinWorkspace = virtualLabId && projectId;
   const handleDownload = useCallback(() => onDownload?.(detail), [detail, onDownload]);
 

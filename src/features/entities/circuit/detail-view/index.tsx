@@ -63,11 +63,12 @@ function VisibilityWrapper({
 
 export default function DetailView({ payload }: Props) {
   const { activeTab } = useTabs({ tabsConfig: TabsConfig, shallow: true });
-
   const [visitedTabs, setVisitedTabs] = useState<Set<TabsKeys>>(new Set([activeTab as TabsKeys]));
+
   useEffect(() => {
     setVisitedTabs((prev) => new Set([...prev, activeTab as TabsKeys]));
   }, [activeTab]);
+
   return (
     <Suspense fallback={<CentralLoadingSpinner />}>
       <Summary

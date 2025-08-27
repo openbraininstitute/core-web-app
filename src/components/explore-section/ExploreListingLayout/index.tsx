@@ -10,6 +10,7 @@ import { useAtomValue } from 'jotai';
 import { useQueryState } from 'nuqs';
 import get from 'lodash/get';
 
+import { useFilteredCircuits } from '../Circuit/ListView/ExploreCircuitTable';
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';
 import NavigationMenu from '@/components/entities-type-stats/listing-navigation-menu';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
@@ -33,6 +34,8 @@ import type { NavigationMenuItem } from '@/components/entities-type-stats/listin
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { WorkspaceContext } from '@/types/common';
+import { resolveDataKey } from '@/utils/key-builder';
+import { tempIsCircuitInDev } from '@/temp-circuit-check';
 
 export default function ExploreListingLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -81,26 +84,55 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
   const nMenuItems = Object.keys(config).length;
   const menuItemWidth = `${Math.floor(100 / nMenuItems) - 0.04}%`;
 
-  const items: Array<NavigationMenuItem> = Object.keys(config).map((dataType) => {
-    const entity = get(config, `${dataType}`) as EntityCoreTypeConfig<any>;
-    const key = entity?.slug!;
-    const active = entity?.slug === activePath;
-    const label = entity?.title!;
-    const entitytype = entity.type;
+  const items: Array<NavigationMenuItem> = Object.keys(config)
+    .map((dataType) => {
+      const entity = get(config, `${dataType}`) as EntityCoreTypeConfig<any>;
+      const key = entity?.slug!;
+      const active = entity?.slug === activePath;
+      const label = entity?.title!;
+      const entitytype = entity.type;
 
-    return {
-      key,
-      entitytype,
-      title: label,
-      label,
+      return {
+        key,
+        entitytype,
+        title: label,
+        label,
+        className: 'text-center font-semibold',
+        style: {
+          backgroundColor: active ? 'white' : '#002766',
+          color: active ? '#002766' : 'white',
+          flexBasis: menuItemWidth,
+        },
+      };
+    })
+    .filter((item) => {
+      if (!tempIsCircuitInDev()) {
+        return item.key !== 'circuit';
+      }
+      return true;
+    });
+
+  const showCircuitMenu = dataTypeGroup === DataTypeGroup.ModelData;
+
+  const dataKey = resolveDataKey({ projectId: params.projectId, section: 'explore' });
+  const { filteredCircuits } = useFilteredCircuits({ dataKey });
+  if (showCircuitMenu && !tempIsCircuitInDev()) {
+    const circuitActive = activePath === 'circuit';
+
+    items.push({
+      key: 'circuit',
+      title: 'Circuit',
+      // @ts-expect-error
+      entitytype: 'Circuit',
+      label: `Circuit (${filteredCircuits.count})`,
       className: 'text-center font-semibold',
       style: {
-        backgroundColor: active ? 'white' : '#002766',
-        color: active ? '#002766' : 'white',
+        backgroundColor: circuitActive ? 'white' : '#002766',
+        color: circuitActive ? '#002766' : 'white',
         flexBasis: menuItemWidth,
       },
-    };
-  });
+    });
+  }
 
   // NOTE: this is legacy to handle details page,
   // TODO: (this should change to layout per page type (one for listing and one for details))
