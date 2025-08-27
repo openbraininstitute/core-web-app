@@ -1,15 +1,21 @@
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useMemo, useLayoutEffect, useRef, useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
-import { useMemo, useLayoutEffect, useRef } from 'react';
+import { loadable } from 'jotai/utils';
+import { useAtomValue } from 'jotai';
+import get from 'lodash/get';
 
 import { createPointCloud } from '@/features/brain-atlas-viewer/utils';
-import { addMeshVisibilityAtom, getPointCloudAtom } from '@/features/brain-atlas-viewer/state';
+import { getPointCloudAtom } from '@/features/brain-atlas-viewer/state';
+import { useAppNotification } from '@/components/notification';
+import { messages } from '@/i18n/en/atlas';
 
 type PointCloudMeshProps = {
   brainRegionId: string;
   brainRegionAnnotationValue: number;
   dataKey: string;
   color?: string;
+  onLoadingChange?: (type: 'pointCloud', loading: boolean) => void;
+  regionName?: string;
 };
 
 export default function PointCloudMesh({
@@ -17,33 +23,55 @@ export default function PointCloudMesh({
   brainRegionId,
   dataKey,
   color,
+  onLoadingChange,
+  regionName,
 }: PointCloudMeshProps) {
   const { scene } = useThree();
-  const addMeshVisibility = useSetAtom(addMeshVisibilityAtom);
   const hasAddedVisibility = useRef(false);
+  const notification = useAppNotification();
 
   // Direct atom read - this will throw a promise if not resolved yet
-  const pointCloudData = useAtomValue(
-    useMemo(() => getPointCloudAtom(brainRegionAnnotationValue), [brainRegionAnnotationValue])
+  const pointCloudLoadable = useAtomValue(
+    useMemo(
+      () => loadable(getPointCloudAtom(brainRegionAnnotationValue)),
+      [brainRegionAnnotationValue]
+    )
   );
+
+  useEffect(() => {
+    onLoadingChange?.('pointCloud', pointCloudLoadable.state === 'loading');
+
+    if (pointCloudLoadable.state === 'hasError') {
+      const error = pointCloudLoadable.error as Error;
+      notification.warning({
+        message: <strong className="text-primary-9">{regionName ?? brainRegionId}</strong>,
+        description: `${get(messages, error.message, messages.default)} point cloud.`,
+        placement: 'topRight',
+        key: `point-cloud-warning-${brainRegionId}`,
+      });
+    }
+    return () => {
+      onLoadingChange?.('pointCloud', false);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pointCloudLoadable.state]);
 
   // Create point cloud object only when data is available
   const pointCloud3DObject = useMemo(() => {
-    if (pointCloudData) {
-      const pointCloudObj = createPointCloud(pointCloudData, color || '#FFF');
+    if (pointCloudLoadable.state === 'hasData' && pointCloudLoadable.data) {
+      const pointCloudObj = createPointCloud(pointCloudLoadable.data, color || '#FFF');
       pointCloudObj.userData = { brainRegionId };
       // Reset visibility tracking when new object is created
       hasAddedVisibility.current = false;
       return pointCloudObj;
     }
     return null;
-  }, [pointCloudData, color, brainRegionId]);
+  }, [pointCloudLoadable, color, brainRegionId]);
 
   // Add to scene when point cloud is created
   useLayoutEffect(() => {
     if (pointCloud3DObject && !hasAddedVisibility.current) {
       scene.add(pointCloud3DObject);
-      addMeshVisibility(dataKey, brainRegionId, 'pointCloud', pointCloud3DObject.uuid);
       hasAddedVisibility.current = true;
 
       return () => {
@@ -51,7 +79,7 @@ export default function PointCloudMesh({
         hasAddedVisibility.current = false;
       };
     }
-  }, [pointCloud3DObject, scene, addMeshVisibility, dataKey, brainRegionId]);
+  }, [pointCloud3DObject, scene, dataKey, brainRegionId]);
 
   return null;
 }
