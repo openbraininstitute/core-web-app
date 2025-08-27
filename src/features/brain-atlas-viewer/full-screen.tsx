@@ -1,38 +1,17 @@
-import { RefObject, useEffect, useReducer } from 'react';
 import { FullscreenExitOutlined, FullscreenOutlined } from '@ant-design/icons';
 
-export default function FullScreen({
-  elementRef,
-}: {
-  elementRef?: RefObject<HTMLDivElement | null> | null;
-}) {
-  const [isFullScreen, toggleFullScreen] = useReducer((value) => !value, false);
+interface FullScreenProps {
+  isFullScreen: boolean;
+  onToggle: () => void;
+}
 
-  const onFullScreenEnter = () => {
-    if (elementRef?.current && !document.fullscreenElement) {
-      elementRef.current.requestFullscreen();
-    }
-  };
-  const onFullScreenExit = () => {
-    if (elementRef?.current && document.fullscreenElement && document.exitFullscreen) {
-      document.exitFullscreen();
-    }
-  };
-
-  useEffect(() => {
-    document.addEventListener('fullscreenchange', toggleFullScreen);
-
-    return () => {
-      document.removeEventListener('fullscreenchange', toggleFullScreen);
-    };
-  }, []);
-
+export default function FullScreen({ isFullScreen, onToggle }: FullScreenProps) {
   return (
-    <div className="absolute top-4 left-4 z-50 cursor-pointer text-white">
+    <div className="hover:text-primary-2 absolute top-4 left-4 z-50 h-8 w-7 cursor-pointer rounded-md p-1 text-white hover:bg-black/10">
       {isFullScreen ? (
-        <FullscreenExitOutlined className="h-5 w-5 text-xl" onClick={onFullScreenExit} />
+        <FullscreenExitOutlined className="text-xl" onClick={onToggle} />
       ) : (
-        <FullscreenOutlined className="h-5 w-5 text-xl" onClick={onFullScreenEnter} />
+        <FullscreenOutlined className="text-xl" onClick={onToggle} />
       )}
     </div>
   );

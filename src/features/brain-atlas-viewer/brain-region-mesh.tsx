@@ -1,49 +1,72 @@
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useMemo, useLayoutEffect, useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
-import { useMemo, useLayoutEffect } from 'react';
+import { loadable } from 'jotai/utils';
+import { useAtomValue } from 'jotai';
+import get from 'lodash/get';
 
 import { getAtlasMeshAsset } from '@/features/brain-atlas-viewer/context';
 import { createMesh } from '@/features/brain-atlas-viewer/utils';
-import { addMeshVisibilityAtom } from '@/features/brain-atlas-viewer/state';
+import { useAppNotification } from '@/components/notification';
+import { messages } from '@/i18n/en/atlas';
 
 export default function BrainRegionMesh({
   brainRegionId,
   color,
   dataKey,
+  regionName,
+  onLoadingChange,
 }: {
   brainRegionId: string;
   color?: string;
   dataKey: string;
+  regionName?: string;
+  onLoadingChange?: (type: 'mesh', loading: boolean) => void;
 }) {
-  const addMeshVisibility = useSetAtom(addMeshVisibilityAtom);
   const { scene } = useThree();
+  const notification = useAppNotification();
 
-  // Direct atom read - this will throw a promise if not resolved yet
-  const brainRegionMeshData = useAtomValue(
-    useMemo(() => getAtlasMeshAsset(brainRegionId), [brainRegionId])
+  const brainRegionMeshLoadable = useAtomValue(
+    useMemo(() => loadable(getAtlasMeshAsset(brainRegionId)), [brainRegionId])
   );
+
+  useEffect(() => {
+    onLoadingChange?.('mesh', brainRegionMeshLoadable.state === 'loading');
+
+    if (brainRegionMeshLoadable.state === 'hasError') {
+      const error = brainRegionMeshLoadable.error as Error;
+      notification.warning({
+        message: <strong className="text-primary-9">{regionName ?? brainRegionId}</strong>,
+        description: `${get(messages, error.message, messages.default)} mesh.`,
+        placement: 'topRight',
+        key: `mesh-warning-${brainRegionId}`,
+      });
+    }
+    return () => {
+      onLoadingChange?.('mesh', false);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [brainRegionMeshLoadable.state]);
 
   // Create mesh object only when data is available
   const meshObject = useMemo(() => {
-    if (brainRegionMeshData?.data) {
-      const mesh = createMesh(brainRegionMeshData.data, color || '#FFF');
+    if (brainRegionMeshLoadable.state === 'hasData' && brainRegionMeshLoadable.data?.data) {
+      const mesh = createMesh(brainRegionMeshLoadable.data.data, color || '#FFF');
       mesh.userData = { brainRegionId };
       return mesh;
     }
     return null;
-  }, [brainRegionMeshData, color, brainRegionId]);
+  }, [brainRegionMeshLoadable, color, brainRegionId]);
 
-  // Add to scene and register visibility when mesh is created
+  // Add to scene when mesh is created
   useLayoutEffect(() => {
     if (meshObject) {
       scene.add(meshObject);
-      addMeshVisibility(dataKey, brainRegionId, 'mesh', meshObject.uuid);
 
       return () => {
         scene.remove(meshObject);
       };
     }
-  }, [meshObject, scene, addMeshVisibility, dataKey, brainRegionId]);
+  }, [meshObject, scene, dataKey, brainRegionId]);
 
   return null;
 }
