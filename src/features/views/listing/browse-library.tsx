@@ -171,7 +171,6 @@ export function BrowseLibraryScope() {
       >
         <div id="main-listing-table-container" className={cn('h-full w-full')}>
           <MainTable
-            controlsVisible
             showLoadingState
             sticky={{ offsetHeader: 75.5 }}
             isLoading={isLoading || loadingBookmarks}

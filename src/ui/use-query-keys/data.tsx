@@ -1,4 +1,5 @@
-import { WorkspaceContext } from '@/types/common';
+import type { WorkspaceContext } from '@/types/common';
+import type { TWorkspaceScope } from '@/constants';
 
 const prefix = 'explore-data';
 
@@ -7,9 +8,11 @@ export const keyBuilder = {
     virtualLabId,
     projectId,
     brainRegionId,
-  }: WorkspaceContext & { brainRegionId?: string }) => [
+    personId,
+    scope,
+  }: WorkspaceContext & { brainRegionId?: string; personId?: string; scope: TWorkspaceScope }) => [
     `${prefix}-count`,
-    { virtualLabId, projectId, brainRegionId: brainRegionId ?? '' },
+    { virtualLabId, projectId, brainRegionId: brainRegionId ?? '', personId, scope },
   ],
   userSimulationsCount: ({
     virtualLabId,

@@ -1,4 +1,4 @@
-import { PlusOutlined, MenuOutlined } from '@ant-design/icons';
+import { MenuOutlined } from '@ant-design/icons';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
@@ -145,7 +145,7 @@ export function TopMenuNavigation() {
                           <span className="text-lg">{link.title}</span>
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem
+                      {/* <DropdownMenuItem
                         className="text-primary-9 hover:text-primary-7! ml-4 h-0 cursor-pointer overflow-hidden px-3 py-0 transition-all duration-200 group-hover:h-auto group-hover:py-2 group-hover:opacity-100"
                         asChild
                       >
@@ -156,7 +156,7 @@ export function TopMenuNavigation() {
                           <PlusOutlined />
                           <span className="text-lg">New {link.title.slice(0, -1)}</span>
                         </Link>
-                      </DropdownMenuItem>
+                      </DropdownMenuItem> */}
                     </div>
                   </div>
                 );
@@ -182,19 +182,7 @@ export function TopMenuNavigation() {
   }
 
   return hashedLinks.map(
-    ({
-      id,
-      key,
-      title,
-      url,
-      baseUrl,
-      icon,
-      allowText,
-      className: clx,
-      isActive,
-      hasAction,
-      action,
-    }) => (
+    ({ id, key, title, url, baseUrl, icon, allowText, className: clx, isActive, hasAction }) => (
       <div key={key} className="group flex w-max items-center justify-center gap-0">
         <div className="relative flex items-center">
           <Button
@@ -217,7 +205,7 @@ export function TopMenuNavigation() {
               {icon}
             </Link>
           </Button>
-          {hasAction && action && (
+          {/* {hasAction && action && (
             <div
               className={cn(
                 'transition-all duration-900 ease-out',
@@ -253,7 +241,7 @@ export function TopMenuNavigation() {
                 </Link>
               </Button>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     )

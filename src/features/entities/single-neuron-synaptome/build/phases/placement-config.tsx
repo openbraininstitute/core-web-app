@@ -8,7 +8,7 @@ import DefaultLoadingSuspense from '@/components/DefaultLoadingSuspense';
 import type { WorkspaceContext } from '@/types/common';
 
 const NeuronViewerContainer = dynamic(
-  () => import('@/components/neuron-viewer/NeuronViewerWithActions'),
+  () => import('@/components/neuron-viewer/neuron-viewer-with-actions'),
   {
     ssr: false,
   }

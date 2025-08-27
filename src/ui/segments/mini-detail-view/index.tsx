@@ -11,10 +11,7 @@ import Link from 'next/link';
 import { SingleNeuronSynaptomePreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-synaptome-preview';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
 import { MEModelPreview } from '@/ui/segments/mini-detail-view/previews/me-model-preview';
-import {
-  ExtendedEntitiesTypeDict,
-  TExtendedEntitiesTypeDict,
-} from '@/api/entitycore/types/extended-entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { bookmarkToProjectLibrary } from '@/api/virtual-lab-svc/queries/bookmark';
 import { renderPreview } from '@/entity-configuration/definitions/renderer';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
@@ -23,10 +20,9 @@ import { ExpandableText } from '@/ui/molecules/more-less-text';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
 import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
-import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Card, CardTitle } from '@/ui/molecules/card';
-import { LAST_REGISTERED_WORKFLOW, WorkspaceSection } from '@/constants';
+import { WorkspaceSection } from '@/constants';
 import { Button } from '@/ui/molecules/button';
 import {
   makeSelectEntityClickEvent,
@@ -136,6 +132,9 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
     .with({ section: WorkspaceSection.Explore }, () => <ExploreActions record={record} />)
     .with({ section: WorkspaceSection.SimulateWorkflow }, () => (
       <WorkflowSimulateActions record={record} />
+    ))
+    .with({ section: WorkspaceSection.BuildWorkflow }, () => (
+      <WorkflowBuildActions record={record} />
     ))
     .otherwise(() => null);
 
@@ -255,7 +254,7 @@ function ExploreActions<T extends EntityCoreObjectTypes>({ record }: { record: T
     <div className="sticky bottom-0 mt-auto flex items-center justify-center gap-2 self-end p-4">
       <Button
         rounded
-        title="copy ID"
+        title="Copy ID"
         className="hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
         onClick={onCopyClipboard}
       >
@@ -281,7 +280,7 @@ function ExploreActions<T extends EntityCoreObjectTypes>({ record }: { record: T
       </Button>
       <Button
         rounded
-        title="save to bookmark"
+        title="Save to bookmark"
         className="hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
         onClick={onBookmark}
       >
@@ -298,7 +297,7 @@ function ExploreActions<T extends EntityCoreObjectTypes>({ record }: { record: T
       <Button
         rounded
         asChild
-        title="go to details page"
+        title="Go to details page"
         variant="default"
         className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
       >
@@ -314,28 +313,15 @@ function ExploreActions<T extends EntityCoreObjectTypes>({ record }: { record: T
 
 function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({ record }: { record: T }) {
   const { virtualLabId, projectId } = useWorkspace();
-  const [, updateLastRegisteredWorkflow] = useLocalStorage<{
-    id: string;
-    date: number;
-    type: TExtendedEntitiesTypeDict;
-    section: TWorkspaceSection;
-  } | null>(LAST_REGISTERED_WORKFLOW, null);
 
-  const onWorkflowClick = () => {
-    updateLastRegisteredWorkflow({
-      id: record.id,
-      date: new Date().getTime(),
-      type: record.type,
-      section: WorkspaceSection.SimulateWorkflow,
-    });
-  };
+  const onWorkflowClick = () => {};
 
   return (
     <div className="sticky bottom-0 mt-auto flex items-center justify-center gap-2 self-end p-4">
       <Button
         rounded
         asChild
-        title="go to details page"
+        title="Go to details page"
         variant="default"
         className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
       >
@@ -348,12 +334,52 @@ function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({ record }: { 
       <Button
         rounded
         asChild
-        title="go to details page"
+        title="Start simulation"
         variant="default"
         className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
       >
         <Link
           href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/simulate/configure/${kebabCase(record.type)}/${record.id}`}
+          onClick={onWorkflowClick}
+        >
+          Use model
+        </Link>
+      </Button>
+    </div>
+  );
+}
+
+function WorkflowBuildActions<T extends EntityCoreObjectTypes>({ record }: { record: T }) {
+  const { virtualLabId, projectId } = useWorkspace();
+  const onWorkflowClick = () => {};
+
+  return (
+    <div className="sticky bottom-0 mt-auto flex items-center justify-center gap-2 self-end p-4">
+      <Button
+        rounded
+        asChild
+        title="Go to details page"
+        variant="default"
+        className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
+      >
+        <Link
+          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/view/${kebabCase(record.type)}/${record.id}`}
+        >
+          View details
+        </Link>
+      </Button>
+      <Button
+        rounded
+        asChild
+        title="Start build"
+        variant="default"
+        className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
+      >
+        <Link
+          href={{
+            pathname: `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/build/configure/${kebabCase(record.type)}/${record.id}`,
+            query: { sessionId: crypto.randomUUID() },
+          }}
           onClick={onWorkflowClick}
         >
           Use model

@@ -1,78 +1,29 @@
 'use client';
 
 import { AnimatePresence, motion } from 'motion/react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSession } from 'next-auth/react';
 import { Suspense, useState } from 'react';
+import delay from 'lodash/delay';
 
 import { TreeSkeleton } from '@/features/brain-region-hierarchy/brain-region-skeleton';
-import { getPersons } from '@/api/entitycore/queries/general/person-agent';
 import { EntityLinkCount } from '@/ui/segments/explore/entity-link-count';
 import { BrainRegionHierarchy } from '@/features/brain-region-hierarchy';
-import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
 import {
   ExploreLeftMenuContext,
   RegionBanner,
 } from '@/features/brain-region-hierarchy/region-banner';
-import {
-  getAllEntitiesCount,
-  getElectricalCellRecordingsCount,
-  getSimulationsCount,
-} from '@/ui/segments/explore/helpers';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { TExploreLeftMenuContext } from '@/features/brain-region-hierarchy/region-banner';
-import type { TTreeNode } from '@/components/tree/types';
 
 type Props = { dataKey: string };
 
 export function EntityLeftMenu({ dataKey }: Props) {
-  const queryClient = useQueryClient();
-  const { virtualLabId, projectId } = useWorkspace();
-
   const [view, updateView] = useState<TExploreLeftMenuContext>(
     ExploreLeftMenuContext.BrainRegionHierarchy
   );
-  const session = useSession();
 
-  const { data: person } = useQuery({
-    queryKey: userKeyBuilder.person({ userId: session.data?.user.id }),
-    queryFn: () => getPersons({ filters: { sub_id: session.data?.user.id } }),
-    enabled: Boolean(session.data?.user.id),
-  });
-
-  const personId = person?.data.at(0)?.id;
   const onSwitchView = (_view: TExploreLeftMenuContext) => updateView(_view);
-
-  const onClickBrainRegion = async (node: TTreeNode) => {
-    const params = {
-      virtualLabId,
-      projectId,
-      brainRegionId: node.id,
-    };
-
-    await queryClient.prefetchQuery({
-      queryKey: keyBuilder.dataCount({ ...params }),
-      queryFn: () => getAllEntitiesCount({ ...params }),
-    });
-
-    await queryClient.prefetchQuery({
-      queryKey: keyBuilder.electricalCellRecordingsCount({ ...params }),
-      queryFn: () =>
-        getElectricalCellRecordingsCount({
-          ...params,
-        }),
-    });
-
-    await queryClient.prefetchQuery({
-      queryKey: keyBuilder.userSimulationsCount({ ...params, personId }),
-      queryFn: () =>
-        getSimulationsCount({
-          ...params,
-          personId,
-        }),
-    });
+  const onClickBrainRegion = async () => {
+    delay(() => onSwitchView(ExploreLeftMenuContext.DataGroup), 100);
   };
 
   return (

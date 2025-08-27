@@ -135,14 +135,14 @@ export default function NeuronViewer({
   }
 
   return (
-    <div className="relative h-full w-full">
+    <div className="relative h-full w-full rounded-2xl">
       {loading && (
         <div className="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center">
           <NeuronLoader text="Loading Neuron" />
         </div>
       )}
       <div
-        className="h-full"
+        className="h-full [&_canvas]:rounded-2xl"
         ref={containerRef}
         // NOTE: this is removed because it does not getting the exact pointer position due the scale and nature of the custom cursor
         // style={{
@@ -151,7 +151,7 @@ export default function NeuronViewer({
       />
       <canvas
         ref={labelsCanvasRef}
-        className="pointer-events-none absolute top-0 left-0 size-full"
+        className="pointer-events-none absolute top-0 left-0 size-full rounded-2xl"
       />
       {children?.({
         useZoomer,

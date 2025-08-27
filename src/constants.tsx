@@ -13,7 +13,9 @@ export const WorkspaceScope = {
   Project: 'project',
   Bookmarks: 'bookmarks',
   Custom: 'custom',
-  BuildMeModel: 'build-me-model',
+  BuildMeModelM: 'build-me-model/m-model',
+  BuildMeModelE: 'build-me-model/e-model',
+  BuildSynaptomeModel: 'build-single-neuron-synaptome-model/memodel',
 } as const;
 
 export type TWorkspaceScope = (typeof WorkspaceScope)[keyof typeof WorkspaceScope];

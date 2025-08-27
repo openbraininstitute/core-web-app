@@ -1,6 +1,6 @@
 import { HTMLProps, PropsWithChildren, useState } from 'react';
 import ControlPanel from './ControlPanel';
-import SettingsIcon from '@/components/icons/Settings';
+import { SettingsIcon } from '@/components/icons/Settings';
 import { classNames } from '@/util/utils';
 
 export default function FilterControls({

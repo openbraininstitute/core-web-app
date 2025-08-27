@@ -24,8 +24,8 @@ export function Pagination({ dataKey, size, resultPagination, className }: Props
   return (
     <AntPagination
       responsive
-      hideOnSinglePage
       showLessItems
+      hideOnSinglePage
       key="listing-pagination"
       data-testid="listing-pagination"
       pageSize={DEFAULT_PAGE_SIZE}

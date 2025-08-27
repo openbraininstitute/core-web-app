@@ -1,13 +1,23 @@
-import { JSX } from 'react';
+import { ComponentProps, JSX } from 'react';
 import { Image } from 'antd';
 
 import { renderPreview } from '@/entity-configuration/definitions/renderer';
 import { hasAssets } from '@/api/entitycore/guards';
+import { cn } from '@/utils/css-class';
 
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import type { IMEModel } from '@/api/entitycore/types';
 
-export function MEModelPreview({ record }: { record: IMEModel }) {
+type Props = {
+  record: IMEModel;
+  cls?: {
+    container?: ComponentProps<'div'>['className'];
+    morphology?: ComponentProps<'div'>['className'];
+    emodel?: ComponentProps<'div'>['className'];
+  };
+};
+
+export function MEModelPreview({ record, cls }: Props) {
   const morphology = (record as IMEModel)?.morphology;
   let morphologyPreview = null;
   if (hasAssets(morphology))
@@ -15,7 +25,7 @@ export function MEModelPreview({ record }: { record: IMEModel }) {
       morphology,
       undefined,
       undefined,
-      'rounded-md h-auto relative w-full! bg-white',
+      cn('rounded-md h-auto relative w-full! bg-white ', cls?.morphology),
       'w-full! h-[200px]! flex!',
       true,
       (src) => (
@@ -27,11 +37,12 @@ export function MEModelPreview({ record }: { record: IMEModel }) {
         />
       )
     );
+
   const tracePreview: JSX.Element | null = renderPreview(
     record as unknown as EntityCoreResource,
     undefined,
     undefined,
-    'rounded-md h-auto relative w-full! bg-white ',
+    cn('rounded-md h-auto relative w-full! bg-white ', cls?.emodel),
     'w-full! h-[200px]! flex!',
     true,
     (src) => (
@@ -45,7 +56,10 @@ export function MEModelPreview({ record }: { record: IMEModel }) {
   );
   return (
     <div
-      className="flex h-full w-full items-stretch justify-center gap-2 rounded-md"
+      className={cn(
+        'flex h-full w-full items-stretch justify-center gap-2 rounded-md',
+        cls?.container
+      )}
       key={record.id}
     >
       {morphologyPreview}

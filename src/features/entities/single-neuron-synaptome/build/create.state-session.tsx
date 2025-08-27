@@ -1,7 +1,7 @@
 import { parseAsString, useQueryStates } from 'nuqs';
 import type { Parser } from 'nuqs';
 
-import { useSessionStorage } from '@/hooks/useSessionStorage';
+import { useSessionStorage } from '@/hooks/use-session-storage';
 
 import type { WorkspaceContext } from '@/types/common';
 import type { IMEModel } from '@/api/entitycore/types';

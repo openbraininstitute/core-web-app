@@ -84,7 +84,7 @@ export interface IMEModelFilter
 }
 
 export const CreateMEModelSchema = z.object({
-  name: z.string(),
+  name: z.string().nonempty(),
   description: z.string(),
   validation_status: z.nativeEnum(ValidationStatus),
   brain_region_id: z.string().uuid(),
