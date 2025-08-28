@@ -314,8 +314,6 @@ function ExploreActions<T extends EntityCoreObjectTypes>({ record }: { record: T
 function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({ record }: { record: T }) {
   const { virtualLabId, projectId } = useWorkspace();
 
-  const onWorkflowClick = () => {};
-
   return (
     <div className="sticky bottom-0 mt-auto flex items-center justify-center gap-2 self-end p-4">
       <Button
@@ -339,8 +337,10 @@ function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({ record }: { 
         className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
       >
         <Link
-          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/simulate/configure/${kebabCase(record.type)}/${record.id}`}
-          onClick={onWorkflowClick}
+          href={{
+            pathname: `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/simulate/configure/${kebabCase(record.type)}/${record.id}`,
+            query: { sessionId: crypto.randomUUID() },
+          }}
         >
           Use model
         </Link>

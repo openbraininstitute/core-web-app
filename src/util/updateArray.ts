@@ -8,7 +8,7 @@ import merge from 'lodash/merge';
  * @param newVal the replacement value
  * @returns the updated array
  */
-const updateArray = <T>({
+export const updateArray = <T>({
   array,
   keyfn,
   newVal,
