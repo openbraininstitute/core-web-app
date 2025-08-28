@@ -1,8 +1,5 @@
 'use client';
 
-import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
-import { EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
-import { Notebook } from '@/util/virtual-lab/types';
 import { Popover } from 'antd/lib';
 import {
   DeleteOutlined,
@@ -10,6 +7,9 @@ import {
   PlayCircleOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
+import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
+import { EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
+import { Notebook } from '@/util/virtual-lab/types';
 
 export interface ActionMenuProps {
   notebook: Notebook;

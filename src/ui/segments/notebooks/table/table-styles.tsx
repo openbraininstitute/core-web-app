@@ -15,8 +15,18 @@ export default function TableStyles() {
       }
 
       #table-container .ant-table-thead > tr > th {
-        background-color: #002766 !important; /* Matching header background color */
+        background-color: transparent !important; /* Transparent header background */
         font-weight: normal !important;
+        color: #002766 !important; /* Blue text for headers */
+      }
+
+      #table-container .ant-table-tbody > tr > td {
+        background-color: transparent !important; /* Transparent cell background */
+        color: #002766 !important; /* Blue text for table content */
+      }
+
+      #table-container .ant-table-tbody > tr:hover > td {
+        background-color: rgba(0, 39, 102, 0.05) !important; /* Light blue hover effect */
       }
 
       #popover * {
