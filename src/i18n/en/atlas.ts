@@ -9,5 +9,5 @@ export const messages = {
   BRAIN_REGION_DOES_NOT_EXIST: 'We’re unable to display the selected brain region at the moment.',
   brainRegionMeshLoadingError:
     'Something went wrong on our end while loading the brain region mesh.',
-  default: 'An error occurred while attempting to visualize the brain region.',
+  default: 'An error occurred while attempting to visualize the brain region',
 };
