@@ -12,12 +12,16 @@ import {
   IMEModel,
   IReconstructionMorphology,
   IReconstructionMorphologyExpanded,
+  ISingleNeuronSimulation,
 } from '@/api/entitycore/types';
 import { getReconstructionMorphology } from '@/api/entitycore/queries';
 import MEModelConfig from '@/features/entities/me-model/detail-view/configuration';
 import SynaptomeConfig from '@/features/entities/single-neuron-synaptome/detail-view/configuration';
 import SynapseGroupList from '@/features/entities/single-neuron-synaptome/detail-view/elements/list-synapses-configuration';
 import { loadExpandedSingleNeuronSynaptome } from '@/page-wrappers/explore/single-neuron-synaptome';
+import { singleNeuronSimulationApiQueryExpand } from '@/entity-configuration/domain/simulation';
+import SimulationConfigurationTab from '@/components/simulate/SimulationDetails/configuration-tab';
+import { SimulationPayload } from '@/types/simulation/single-neuron';
 
 export default async function Configuration({
   entity,
@@ -80,6 +84,25 @@ export default async function Configuration({
           <SynapseGroupList config={data.config} />
         </div>
       </div>
+    );
+  }
+
+  if (extendedType === 'single_neuron_simulation') {
+    let config: AwaitedType<ReturnType<typeof singleNeuronSimulationApiQueryExpand.config>>;
+    try {
+      config = await singleNeuronSimulationApiQueryExpand.config(
+        entity as ISingleNeuronSimulation,
+        ctx
+      );
+    } catch {
+      notFound();
+    }
+
+    return (
+      <SimulationConfigurationTab
+        type="single-neuron-simulation"
+        simulation={config as SimulationPayload}
+      />
     );
   }
 

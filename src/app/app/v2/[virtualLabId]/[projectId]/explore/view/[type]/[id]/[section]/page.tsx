@@ -26,8 +26,6 @@ export default async function Page({
 
   const entityType = getEntityByExtendedType({ type: snakeCase(type) as EntityCoreExtendedType });
 
-  console.log(entityType);
-
   if (!entityType || !entityType.detailViewSections.includes(section)) notFound();
 
   const entity = await downloadEntity({
@@ -36,12 +34,10 @@ export default async function Page({
     id,
   });
 
-  console.log(entity);
-
   let content: JSX.Element | undefined;
 
   if (section === 'overview') {
-    content = <Overview entity={entity} extendedType={entityType.extendedType} />;
+    content = <Overview entity={entity} extendedType={entityType.extendedType} ctx={ctx} />;
   }
   if (section === 'visualization') {
     content = <Visualization entity={entity} ctx={ctx} />;

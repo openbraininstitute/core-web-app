@@ -58,5 +58,5 @@ export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulatio
     extension: 'application/json',
     configfile: AssetLabel.single_neuron_simulation_data,
   },
-  detailViewSections: ['overview'],
+  detailViewSections: ['overview', 'configuration'],
 } as const;
