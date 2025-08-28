@@ -13,13 +13,10 @@ export default async function Page({
     <NotebooksLayout>
       <NotebookHeader />
       <NotebookInnerLayout>
-        <div id="notebook-left-menu" className="w-full [grid-area:aside]">
+        <div id="notebook-left-menu" className="w-full">
           <LeftMenu className="w-full" />
         </div>
-        <div
-          id="notebook-main-content"
-          className="secondary-scrollbar w-full overflow-y-auto px-3 [grid-area:main]"
-        >
+        <div id="notebook-main-content" className="secondary-scrollbar w-full overflow-y-auto">
           {children}
         </div>
       </NotebookInnerLayout>

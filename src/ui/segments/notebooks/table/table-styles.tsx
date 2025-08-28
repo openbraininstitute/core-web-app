@@ -3,6 +3,15 @@
 export default function TableStyles() {
   return (
     <style jsx global>{`
+      /* Make entire table background transparent */
+      #table-container .ant-table {
+        background-color: transparent !important;
+      }
+
+      #table-container .ant-table-container {
+        background-color: transparent !important;
+      }
+
       /* Change color of sorting icons */
       #table-container .ant-table-column-sorter-up,
       #table-container .ant-table-column-sorter-down {
@@ -27,6 +36,10 @@ export default function TableStyles() {
 
       #table-container .ant-table-tbody > tr:hover > td {
         background-color: rgba(0, 39, 102, 0.05) !important; /* Light blue hover effect */
+      }
+
+      #table-container .ant-table-tbody > tr {
+        background-color: transparent !important; /* Transparent row background */
       }
 
       #popover * {

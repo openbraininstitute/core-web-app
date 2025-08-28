@@ -12,7 +12,7 @@ export default async function NotebooksPage({
   const { notebooks, error } = await fetchNotebooks(notebookRepoUrl, true);
 
   return (
-    <div className="w-full p-3">
+    <div className="w-full">
       <NotebookTable
         notebooks={notebooks}
         projectId={projectId}

@@ -7,6 +7,7 @@ import {
   PlusOutlined,
 } from '@ant-design/icons';
 import { Popover } from 'antd/lib';
+
 import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
 import { EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
 import { Notebook } from '@/util/virtual-lab/types';
@@ -95,13 +96,16 @@ export default function ActionPopover({
             )}
           </div>
         }
-        overlayStyle={{ border: '1px solid #096DD9' }}
+        overlayStyle={{
+          border: '1px solid #096DD9',
+          backgroundColor: '#fff',
+        }}
         color="#002766"
         trigger="click"
         placement="bottom"
         arrow={false}
       >
-        <PlusOutlined className="border border-[#096DD9] p-2 text-lg" />
+        <PlusOutlined className="text-primary-9 rounded-full bg-white p-2 text-lg" />
       </Popover>
     </div>
   );

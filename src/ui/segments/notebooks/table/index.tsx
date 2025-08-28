@@ -6,7 +6,6 @@ import Table from 'antd/es/table';
 import dynamic from 'next/dynamic';
 import ContentModal from './content-modal';
 import FilterSection from './filter-section';
-import NotebookTabs from './notebook-tabs';
 import { useTableColumns } from './table-columns';
 import TableStyles from './table-styles';
 import { useNotebookTable } from './use-notebook-table';
@@ -18,13 +17,15 @@ export function NotebookTable({
   notebooks,
   failed,
   onDelete,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   vlabId,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   projectId,
   serverError,
   enableRunNotebook = false,
 }: {
-  vlabId: string;
-  projectId: string;
+  vlabId?: string;
+  projectId?: string;
   notebooks: Notebook[];
   failed?: string[];
   onDelete?: (id: string) => void;
@@ -71,24 +72,21 @@ export function NotebookTable({
         },
       }}
     >
-      <>
-        <NotebookTabs vlabId={vlabId} projectId={projectId} />
-        <div className="mt-10 flex items-center justify-between">
-          {Search}
-          <FilterSection
-            filteredColumns={filteredColumns}
-            filterCount={filterCount}
-            filterValue={(key: string) => filterValue(key as keyof Notebook)}
-            onChange={(key: string, value: any) => onChange(key as keyof Notebook, value)}
-            onDateChange={(key: string, values: any) => onDateChange(key as keyof Notebook, values)}
-            onFilterReset={onFilterReset}
-            toggleColumn={toggleColumn}
-            isColumnHidden={isColumnHidden}
-          />
-        </div>
-      </>
+      <div className="flex items-center justify-between">
+        {Search}
+        <FilterSection
+          filteredColumns={filteredColumns}
+          filterCount={filterCount}
+          filterValue={(key: string) => filterValue(key as keyof Notebook)}
+          onChange={(key: string, value: any) => onChange(key as keyof Notebook, value)}
+          onDateChange={(key: string, values: any) => onDateChange(key as keyof Notebook, values)}
+          onFilterReset={onFilterReset}
+          toggleColumn={toggleColumn}
+          isColumnHidden={isColumnHidden}
+        />
+      </div>
 
-      <div id="table-container" className="mt-5">
+      <div id="table-container">
         <Table
           dataSource={filteredData}
           columns={filteredColumns}
