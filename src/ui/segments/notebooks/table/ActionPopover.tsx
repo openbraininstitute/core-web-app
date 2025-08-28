@@ -35,7 +35,7 @@ export default function ActionPopover({
     <div id="popover">
       <Popover
         content={
-          <div className="flex min-w-[120px] flex-col gap-2 text-white">
+          <div className="text-primary-9 flex min-w-[120px] flex-col gap-2">
             <div className="flex gap-4">
               <button
                 type="button"
@@ -45,7 +45,7 @@ export default function ActionPopover({
                 }}
                 className="inline-flex items-center gap-[10px]"
               >
-                <EyeIconWhiteWithinBox className="text-xs" aria-label="Readme" />
+                <EyeIconWhiteWithinBox className="text-primary-9 text-xs" aria-label="Readme" />
                 Readme
               </button>
             </div>
@@ -58,7 +58,10 @@ export default function ActionPopover({
                   onDownloadClick(notebook);
                 }}
               >
-                <DownloadIconWhiteWithCorners className="text-xs" aria-label="Download" />
+                <DownloadIconWhiteWithCorners
+                  className="text-primary-9 text-xs"
+                  aria-label="Download"
+                />
                 Download
               </button>
               {loadingZip && <LoadingOutlined />}
@@ -96,16 +99,16 @@ export default function ActionPopover({
             )}
           </div>
         }
-        overlayStyle={{
+        style={{
           border: '1px solid #096DD9',
           backgroundColor: '#fff',
+          color: '#002766',
         }}
-        color="#002766"
         trigger="click"
         placement="bottom"
         arrow={false}
       >
-        <PlusOutlined className="text-primary-9 rounded-full bg-white p-2 text-lg" />
+        <PlusOutlined className="rounded-full !bg-white p-2 text-lg !text-white shadow-md" />
       </Popover>
     </div>
   );

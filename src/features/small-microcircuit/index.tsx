@@ -385,13 +385,13 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
     if (simRequestInProgress) return;
 
     const hasActiveSimulations = statusMap
-      ?.values()
-      .some((status) =>
-        [
-          CircuitSimulationExecutionStatus.PENDING,
-          CircuitSimulationExecutionStatus.RUNNING,
-        ].includes(status)
-      );
+      ? Array.from(statusMap.values()).some((status) =>
+          [
+            CircuitSimulationExecutionStatus.PENDING,
+            CircuitSimulationExecutionStatus.RUNNING,
+          ].includes(status)
+        )
+      : false;
 
     if (!hasActiveSimulations) return;
 

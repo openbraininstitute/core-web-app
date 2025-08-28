@@ -1,7 +1,7 @@
-import { classNames } from '@/util/utils';
 import { SearchOutlined } from '@ant-design/icons';
 import { ConfigProvider } from 'antd';
 import { useState, type JSX } from 'react';
+import { classNames } from '@/util/utils';
 
 export default function useSearch(
   props: JSX.IntrinsicElements['input'] & { containerClassName?: string }

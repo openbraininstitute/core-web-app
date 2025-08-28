@@ -45,6 +45,11 @@ export default function TableStyles() {
       #popover * {
         background-color: #002766 !important;
       }
+
+      #popover .ant-popover-trigger {
+        background-color: white !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+      }
     `}</style>
   );
 }
