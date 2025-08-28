@@ -3,7 +3,7 @@
 'use client';
 
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { useState, type ComponentProps } from 'react';
+import { ReactElement, useState, type ComponentProps } from 'react';
 import { WarningOutlined } from '@ant-design/icons';
 import compact from 'lodash/compact';
 import dynamic from 'next/dynamic';
@@ -32,10 +32,14 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
+import type { Props as MainTableProps } from '@/ui/segments/data-table';
 
-const MainTable = dynamic(() => import('@/ui/segments/data-table'), { ssr: false });
+const MainTable = dynamic(() => import('@/ui/segments/data-table'), { ssr: false }) as (
+  props: MainTableProps<EntityCoreIdentifiableNamed>
+) => ReactElement | null;
 
 type Props = {
+  id?: string;
   section?: TWorkspaceSection;
   requireBrainRegion?: boolean;
   requireMiniDetailView?: boolean;
@@ -44,16 +48,19 @@ type Props = {
     miniView?: ComponentProps<'div'>['className'];
   };
   scope: TWorkspaceScope;
+  defaultBrainRegion?: string;
   dataType: TExtendedEntitiesTypeDict;
   mainTableProps?: Partial<ComponentProps<typeof MainTable>>;
   miniViewProps?: Partial<ComponentProps<typeof MiniDetailView>>;
 };
 
 export function BrowseEntityScope({
+  id,
   classNames,
   section = WorkspaceSection.Explore,
   requireBrainRegion = true,
   requireMiniDetailView = true,
+  defaultBrainRegion,
   dataType,
   scope,
   mainTableProps,
@@ -61,7 +68,7 @@ export function BrowseEntityScope({
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
 
-  const dataKey = compact([virtualLabId, projectId, section, dataType, scope]).join('/');
+  const dataKey = compact([virtualLabId, projectId, section, dataType, scope, id]).join('/');
   const entity = getEntityByExtendedType({ type: dataType });
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
 
@@ -98,6 +105,7 @@ export function BrowseEntityScope({
       });
     },
     requireBrainRegion,
+    defaultBrainRegion,
     enabled: ({ queryKey }) => {
       const [{ queryParameters }] = queryKey;
       if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
@@ -138,8 +146,8 @@ export function BrowseEntityScope({
   return (
     <>
       <div
-        id="explore-body-container"
-        data-testid="explore-body-container"
+        id="data-table-container"
+        data-testid="data-table-container"
         className={cn(
           'h-full max-h-[calc(100vh-11.8rem)] min-h-0 w-full min-w-0 overflow-hidden rounded-2xl [grid-area:body]',
           classNames?.container
@@ -147,7 +155,6 @@ export function BrowseEntityScope({
       >
         <div id="main-listing-table-container" className={cn('h-full w-full')}>
           <MainTable
-            controlsVisible
             showLoadingState
             sticky={{ offsetHeader: 75.5 }}
             isLoading={(isPlaceholderData && isFetching) || isLoading}

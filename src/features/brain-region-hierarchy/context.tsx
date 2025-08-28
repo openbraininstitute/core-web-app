@@ -50,7 +50,7 @@ export const DEFAULT_BRAIN_REGION_ANNOTATION_FIELD = 'annotation_value';
 export const DEFAULT_BRAIN_REGION_QUERY_ID = 'br_id';
 export const DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE = 'br_av';
 
-type BrainRegionHierarchyOption = {
+export type BrainRegionHierarchyOption = {
   value: string;
   label: string;
   data: IBrainRegionHierarchy;

@@ -61,8 +61,8 @@ export const keyBuilder = {
     page,
     pageSize,
   }: WorkspaceContext & {
-    page: number;
-    pageSize: number;
+    page?: number;
+    pageSize?: number;
     scale: TExtendedEntitiesTypeDict;
     entity?: TExtendedEntitiesTypeDict;
     type: 'build' | 'simulate';

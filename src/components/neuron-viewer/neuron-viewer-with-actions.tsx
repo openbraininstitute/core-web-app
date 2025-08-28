@@ -24,7 +24,7 @@ type Props = {
   virtualLabId: string;
   projectId: string;
 };
-export default function NeuronViewerContainer({
+export function NeuronViewerContainer({
   meModelId,
   zoomPlacement = 'right',
   useZoomer = false,
@@ -108,3 +108,5 @@ export default function NeuronViewerContainer({
     </ErrorBoundary>
   );
 }
+
+export default NeuronViewerContainer;

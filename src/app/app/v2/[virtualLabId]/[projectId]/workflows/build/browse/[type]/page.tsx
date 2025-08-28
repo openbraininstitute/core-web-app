@@ -1,6 +1,6 @@
 import snakeCase from 'lodash/snakeCase';
 
-import { BrowseAction } from '@/ui/segments/workflows/elements/browse-action';
+import { BrowseAction } from '@/ui/segments/workflows/elements/browse-build-action';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
 
@@ -31,6 +31,7 @@ export default async function Page({
           classNames={{ container: 'max-h-full' }}
           dataType={dataType}
           scope={scope ?? WorkspaceScope.Public}
+          miniViewProps={{ section: WorkspaceSection.BuildWorkflow }}
         />
       </div>
       <div className="mt-auto flex w-full items-center justify-end">

@@ -1,4 +1,4 @@
-import { useSessionStorage } from '@/hooks/useSessionStorage';
+import { useSessionStorage } from '@/hooks/use-session-storage';
 
 import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
 import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';

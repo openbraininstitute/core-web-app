@@ -77,7 +77,7 @@ export const renderDictionaryKeys = (
   );
 };
 
-export const renderDate = (isoDateString: string) => {
+export const renderDate = (isoDateString?: string | null) => {
   if (!isoDateString) return EmptyValue;
   return format(parseISO(isoDateString), 'dd.MM.yyyy');
 };

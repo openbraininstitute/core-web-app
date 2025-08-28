@@ -41,3 +41,12 @@ export function formatBytes(bytes: number, decimals = 2): string {
 
   return parseFloat((bytes / k ** i).toFixed(dm)) + ' ' + sizes[i];
 }
+
+export function formatCompactNumber(value: number, locale: string = 'en-US'): string {
+  const formatter = new Intl.NumberFormat(locale, {
+    notation: 'compact',
+    compactDisplay: 'short',
+    maximumFractionDigits: 2,
+  });
+  return formatter.format(value);
+}

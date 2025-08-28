@@ -54,3 +54,15 @@ export function renderDateAndHour(date: string) {
     </div>
   );
 }
+
+export function makeDateToAppFormat(input: DateISOString) {
+  const date = validDate(input);
+  const formatter = new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+
+  const formatted = formatter.format(date).replace(/\//g, '.');
+  return formatted;
+}

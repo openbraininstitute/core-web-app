@@ -25,7 +25,7 @@ import {
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { KebabCase } from '@/utils/type';
 
-export function SimulationBreadcrumb() {
+export function SimulateWorkflowsBreadcrumb() {
   const pathname = usePathname();
   const segment = getWorkflowSegment(pathname);
 
@@ -37,7 +37,6 @@ export function SimulationBreadcrumb() {
   const buildType = getBuildTypeFromSimulateType(dataType);
   const selectTitle = getEntityByExtendedType({ type: buildType })?.title;
   const buildTitle = getEntityTypeWorkflowConfigurationItem(buildType)?.label;
-
   const homeLink = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/${segment}/browse/${type}`;
 
   return (

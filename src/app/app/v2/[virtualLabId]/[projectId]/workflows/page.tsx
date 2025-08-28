@@ -12,7 +12,7 @@ import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
-import type { TCategoryValue } from '@/ui/segments/workflows/elements/helpers';
+import { CategoryValues, type TCategoryValue } from '@/ui/segments/workflows/elements/helpers';
 
 export default function Page({ params }: ServerSideComponentProp<WorkspaceContext, null>) {
   useDisableElementOverflow({ id: 'workspace-body' });
@@ -32,6 +32,13 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
   };
   const onSelectType = (value: TExtendedEntitiesTypeDict | undefined) => {
     updateWorkflowState((prev) => ({ ...prev, entityType: value }));
+    if (category === CategoryValues.Build) {
+      const sessionId = crypto.randomUUID();
+      push(
+        `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/${category}/configure/${kebabCase(value)}?sessionId=${sessionId}`
+      );
+      return;
+    }
     push(
       `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/${category}/browse/${kebabCase(value)}`
     );

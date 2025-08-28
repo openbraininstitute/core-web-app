@@ -1,0 +1,44 @@
+'use client';
+
+import { useParams, usePathname } from 'next/navigation';
+import { PlusOutlined } from '@ant-design/icons';
+import lowerCase from 'lodash/lowerCase';
+import snakeCase from 'lodash/snakeCase';
+import Link from 'next/link';
+
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { getWorkflowSegment } from '@/ui/segments/workflows/elements/helpers';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Button } from '@/ui/molecules/button';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { KebabCase } from '@/utils/type';
+
+export function BrowseAction() {
+  const pathname = usePathname();
+  const breakpoint = useDefaultBreakpoint();
+  const segment = getWorkflowSegment(pathname);
+  const { type } = useParams<{ type: KebabCase<TExtendedEntitiesTypeDict> }>();
+  const { virtualLabId, projectId } = useWorkspace();
+
+  const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/${segment}/configure/${type}`;
+  const entity = getEntityByExtendedType({ type: snakeCase(type) as TExtendedEntitiesTypeDict });
+  const title = `New ${lowerCase(entity?.title)}`;
+
+  return (
+    <Button
+      asChild
+      rounded
+      variant="success"
+      size={breakpoint === 'l' ? 'md' : 'lg'}
+      className="gap-10 px-4 hover:text-white!"
+    >
+      <Link href={{ pathname: link, query: { sessionId: crypto.randomUUID() } }}>
+        <div>{title}</div>
+        <PlusOutlined />
+      </Link>
+    </Button>
+  );
+}

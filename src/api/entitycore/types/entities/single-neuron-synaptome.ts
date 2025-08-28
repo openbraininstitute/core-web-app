@@ -71,8 +71,8 @@ const SingleNeuronSynaptomeExclusionRuleSchema = z
   })
   .refine(
     (data) => {
-      if (!isNil(data.distance_soma_gte) || !isNil(data.distance_soma_lte)) return true;
-      return false;
+      if (isNil(data.distance_soma_gte) && isNil(data.distance_soma_lte)) return false;
+      return true;
     },
     {
       message: 'At least one of distance_soma_gte or distance_soma_lte must be provided',
@@ -80,48 +80,48 @@ const SingleNeuronSynaptomeExclusionRuleSchema = z
     }
   );
 
-export const SingleNeuronSynaptomeConfigurationSchema = z
-  .object({
-    id: z.string().uuid(),
-    name: z.string(),
-    target: z.string().optional(),
-    seed: z.number(),
-    color: z.string(),
-    formula: z.string().optional(),
-    soma_synapse_count: z.number().optional(),
-    type: z.union([z.literal(110), z.literal(10)]),
-    exclusion_rules: z.array(SingleNeuronSynaptomeExclusionRuleSchema).nullable(),
-  })
-  .superRefine((synapse, ctx) => {
+export const SingleNeuronSynaptomeBaseSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().nonempty(),
+  target: z.string().optional(),
+  seed: z.number(),
+  color: z.string(),
+  formula: z.string().optional(),
+  soma_synapse_count: z.number().optional(),
+  type: z.union([z.literal(110), z.literal(10)]),
+  exclusion_rules: z.array(SingleNeuronSynaptomeExclusionRuleSchema).nullable(),
+});
+
+export const SingleNeuronSynaptomeConfigurationSchema = SingleNeuronSynaptomeBaseSchema.superRefine(
+  (synapse, ctx) => {
     if (synapse.target !== 'soma' && isNil(synapse.formula)) {
-      return ctx.addIssue({
+      ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'formula should be provided when target is different then "soma"',
         path: ['formula'],
       });
     }
+
     if (synapse.target === 'soma' && isNil(synapse.soma_synapse_count)) {
-      return ctx.addIssue({
+      ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'soma_synapse_count must be a valid number when target is "soma"',
         path: ['soma_synapse_count'],
       });
     }
-  })
-  .superRefine(async (synapse, ctx) => {
-    if (synapse.target !== 'soma') {
-      return validateSingleNeuronSynapseGenerationFormula(synapse.formula!).then((v) => {
-        if (!v) {
-          return ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: 'formula is not valid',
-            path: ['formula'],
-          });
-        }
+  }
+).superRefine(async (synapse, ctx) => {
+  if (synapse.target !== 'soma') {
+    const v = await validateSingleNeuronSynapseGenerationFormula(synapse.formula!);
+    if (!v) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'formula is not valid',
+        path: ['formula'],
       });
     }
-    return true;
-  });
+  }
+});
 
 export type TSingleNeuronSynaptomeConfiguration = z.infer<
   typeof SingleNeuronSynaptomeConfigurationSchema

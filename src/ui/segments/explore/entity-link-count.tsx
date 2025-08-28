@@ -1,5 +1,8 @@
 import { useQueries, useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { useAtomValue } from 'jotai';
+import { unwrap } from 'jotai/utils';
 import { match } from 'ts-pattern';
 import { useMemo } from 'react';
 import kebabCase from 'lodash/kebabCase';
@@ -7,26 +10,29 @@ import get from 'lodash/get';
 
 import { useFilteredCircuits } from '@/components/explore-section/Circuit/ListView/ExploreCircuitTable';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { useGetSelectedBrainRegion } from '@/features/brain-region-hierarchy/context';
+import {
+  brainRegionBasicCellGroupsRegionsHierarchyAtom,
+  useGetSelectedBrainRegion,
+} from '@/features/brain-region-hierarchy/context';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { getPersons } from '@/api/entitycore/queries/general/person-agent';
 import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { BrowseLink } from '@/ui/segments/explore/browse-link';
 import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 import { useTabs } from '@/components/detail-view-tabs';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import {
-  getElectricalCellRecordingsCount,
   ExperimentalEntitiesTileTypes,
   ModelEntitiesTileTypes,
   SimulationEntitiesTileTypes,
   getSimulationsCount,
-  getAllEntitiesCount,
+  getAllEntitiesCountScoped,
 } from '@/ui/segments/explore/helpers';
 import { cn } from '@/utils/css-class';
+
+import type { TWorkspaceScope } from '@/constants';
 
 export const ExploreDataTypeTabs = {
   Experimental: 'experimental',
@@ -64,9 +70,14 @@ type Props = {
 export function EntityLinkCount({ dataKey }: Props) {
   const breakpoint = useDefaultBreakpoint();
   const session = useSession();
+  const scope = useSearchParams().get('scope') as TWorkspaceScope;
 
   const { virtualLabId, projectId } = useWorkspace();
   const { selectedBrainRegion } = useGetSelectedBrainRegion();
+  const brainRegionHierarchy = useAtomValue(
+    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
+  );
+
   const { activeTab, onChangeTab } = useTabs<TExploreDataTypeTabs>({
     tabsConfig: tabsConfigItems,
     tabKey: 'group',
@@ -75,46 +86,45 @@ export function EntityLinkCount({ dataKey }: Props) {
 
   const { filteredCircuits } = useFilteredCircuits({ dataKey });
 
+  const { data: personId } = useQuery({
+    queryKey: userKeyBuilder.person({ userId: session.data?.user.id }),
+    queryFn: () => getPersons({ filters: { sub_id: session.data?.user.id } }),
+    enabled: Boolean(session.data?.user.id),
+    select: (data) => data?.data.at(0)?.id,
+  });
+
   const params = {
     virtualLabId,
     projectId,
     brainRegionId: selectedBrainRegion?.id!,
+    scope,
+    personId,
   };
-
-  const { data: person } = useQuery({
-    queryKey: userKeyBuilder.person({ userId: session.data?.user.id }),
-    queryFn: () => getPersons({ filters: { sub_id: session.data?.user.id } }),
-    enabled: Boolean(session.data?.user.id),
-  });
-  const personId = person?.data.at(0)?.id;
 
   const [
     { isLoading: allLoading, data: allData },
-    { isLoading: ephysLoading, data: ephysData },
     { isLoading: simsLoading, data: simsData },
+    { isLoading: rootLoading, data: rootData },
   ] = useQueries({
     queries: [
       {
         queryKey: keyBuilder.dataCount({ ...params }),
-        queryFn: () => getAllEntitiesCount({ ...params }),
+        queryFn: () => getAllEntitiesCountScoped({ ...params }),
         enabled: Boolean(selectedBrainRegion?.id),
       },
       {
-        queryKey: keyBuilder.electricalCellRecordingsCount({ ...params }),
-        queryFn: () =>
-          getElectricalCellRecordingsCount({
-            ...params,
-          }),
-        enabled: Boolean(selectedBrainRegion?.id),
-      },
-      {
-        queryKey: keyBuilder.userSimulationsCount({ ...params, personId }),
+        queryKey: keyBuilder.userSimulationsCount({ ...params }),
         queryFn: () =>
           getSimulationsCount({
             ...params,
-            personId,
           }),
         enabled: Boolean(selectedBrainRegion?.id) && Boolean(personId),
+      },
+      {
+        queryKey: keyBuilder.dataCount({ ...params, brainRegionId: brainRegionHierarchy?.root.id }),
+        queryFn: () =>
+          getAllEntitiesCountScoped({ ...params, brainRegionId: brainRegionHierarchy?.root.id! }),
+        enabled: Boolean(brainRegionHierarchy?.root.id),
       },
     ],
   });
@@ -122,23 +132,20 @@ export function EntityLinkCount({ dataKey }: Props) {
   const experimentalState = useMemo(
     () => [
       ...Object.entries(ExperimentalEntitiesTileTypes).map(([, value]) => {
-        if (value.type === EntityTypeDict.ElectricalCellRecording) {
-          return { ...value, isLoading: ephysLoading };
-        }
-        return { ...value, isLoading: allLoading };
+        return { ...value, isLoading: allLoading || rootLoading };
       }),
     ],
-    [allLoading, ephysLoading]
+    [allLoading, rootLoading]
   );
 
   const modelState = useMemo(
     () => [
       ...Object.entries(ModelEntitiesTileTypes).map(([, value]) => ({
         ...value,
-        isLoading: allLoading,
+        isLoading: allLoading || rootLoading,
       })),
     ],
-    [allLoading]
+    [allLoading, rootLoading]
   );
 
   const simulationState = useMemo(
@@ -155,18 +162,22 @@ export function EntityLinkCount({ dataKey }: Props) {
     .with(ExploreDataTypeTabs.Experimental, () => (
       <>
         {experimentalState.map((value) => {
-          let count: number | null = get(allData, value.extendedType, null);
-          if (value.type === EntityTypeDict.ElectricalCellRecording) {
-            count = ephysData?.pagination.total_items ?? null;
-          }
+          const count: number | null = get(allData, value.extendedType, null);
+          const rootCount: number | null = get(rootData, value.extendedType, null);
           const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/entity/${kebabCase(value.extendedType)}`;
+
           return (
             <BrowseLink
               key={`link-${value.title}/${value.type}`}
               href={link}
               type={value.extendedType}
               title={value.title}
-              count={count}
+              count={
+                <span>
+                  <span className="font-bold">{count}</span> <span className="font-light">of</span>
+                  <span className="font-bold"> {rootCount}</span>
+                </span>
+              }
               isLoading={value.isLoading}
             />
           );
@@ -177,6 +188,7 @@ export function EntityLinkCount({ dataKey }: Props) {
       <>
         {modelState.map((value) => {
           const count = get(allData, value.extendedType, null);
+          const rootCount: number | null = get(rootData, value.extendedType, null);
           const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/entity/${kebabCase(value.extendedType)}`;
           return (
             <BrowseLink
@@ -184,7 +196,12 @@ export function EntityLinkCount({ dataKey }: Props) {
               href={link}
               type={value.extendedType}
               title={value.title}
-              count={count}
+              count={
+                <span>
+                  <span className="font-bold">{count}</span> <span className="font-light">of</span>
+                  <span className="font-bold"> {rootCount}</span>
+                </span>
+              }
               isLoading={value.isLoading}
             />
           );
@@ -194,7 +211,7 @@ export function EntityLinkCount({ dataKey }: Props) {
           href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/entity/${kebabCase('circuit')}`}
           type={ExtendedEntitiesTypeDict.Circuit}
           title="Circuit"
-          count={filteredCircuits.count}
+          count={`${filteredCircuits.count}`}
           isLoading={false}
         />
       </>
@@ -211,7 +228,7 @@ export function EntityLinkCount({ dataKey }: Props) {
               href={link}
               type={value.extendedType}
               title={value.title}
-              count={count}
+              count={`${count}`}
               isLoading={value.isLoading}
             />
           );
