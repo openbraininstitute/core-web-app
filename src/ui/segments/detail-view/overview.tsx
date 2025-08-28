@@ -14,9 +14,9 @@ export default function Overview({
   entity?: EntityTypeValue;
   extendedType: EntityCoreExtendedType;
 }) {
-  const fields = getViewDefinitionByExtendedType(extendedType)?.summaryViewFields;
+  const fields = getViewDefinitionByExtendedType(extendedType)?.summaryViewFields ?? [];
 
-  if (!fields || !entity) notFound();
+  if (!entity) notFound();
   const commonFields = CommonSummaryViewFields;
 
   return (
