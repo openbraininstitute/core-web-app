@@ -4,9 +4,15 @@ import authApiClient from '@/api/apiClient';
 
 import { EntityTypeValue } from '@/api/entitycore/types/entity-type';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
+import { compactRecord } from '@/utils/dictionary';
 import { entityCoreUrl } from '@/config';
 
-import type { AssetLabel, EntityCoreDataType, IAsset } from '@/api/entitycore/types/shared/global';
+import type {
+  AssetLabel,
+  DirectoryListContent,
+  EntityCoreDataType,
+  IAsset,
+} from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -67,6 +73,7 @@ export async function downloadAsset(params: {
   id: string;
   asRawResponse: true;
   retryOnError?: boolean;
+  signal?: AbortSignal;
 }): Promise<Response>;
 
 export async function downloadAsset<T>(params: {
@@ -77,6 +84,7 @@ export async function downloadAsset<T>(params: {
   id: string;
   asRawResponse?: false;
   retryOnError?: boolean;
+  signal?: AbortSignal;
 }): Promise<T>;
 
 /**
@@ -96,6 +104,7 @@ export async function downloadAsset<T>({
   asRawResponse = false,
   retryOnError = false,
   assetPath = '',
+  signal,
 }: {
   ctx?: WorkspaceContext;
   entityType: EntityTypeValue;
@@ -104,13 +113,15 @@ export async function downloadAsset<T>({
   id: string;
   asRawResponse?: boolean;
   retryOnError?: boolean;
+  signal?: AbortSignal;
 }): Promise<T | Response> {
   const api = await authApiClient(entityCoreUrl);
   return await api.get<T>(
     `/${kebabCase(entityType)}/${entityId}/assets/${id}/download`,
     {
       ...getEntityCoreContext(ctx),
-      queryParams: { asset_path: assetPath },
+      queryParams: compactRecord({ asset_path: assetPath }),
+      signal,
     },
     { asRawResponse, retryOnError }
   );
@@ -168,4 +179,40 @@ export async function createJsonAsset({
     },
     body: formData,
   });
+}
+
+/**
+ * Lists the contents of a directory of assets by its id from the EntityCoreAPI.
+ *
+ * @param {Object} params - The parameters object
+ * @param {string} params.entityType - The type of the entity to retrieve
+ * @param {string} params.entityId - The id of the entity to retrieve
+ * @param {string} params.id - The id of the asset to retrieve
+ * @returns {Promise<Response>} A promise that resolves to the response from the API
+ */
+export async function listDirectoryOfAssets({
+  ctx,
+  entityType,
+  entityId,
+  id,
+  retryOnError = false,
+}: {
+  ctx?: WorkspaceContext;
+  entityType: EntityTypeValue;
+  entityId: string;
+  id: string;
+  retryOnError?: boolean;
+}): Promise<DirectoryListContent> {
+  const api = await authApiClient(entityCoreUrl);
+  return await api.get<DirectoryListContent>(
+    `/${kebabCase(entityType)}/${entityId}/assets/${id}/list`,
+    {
+      headers: {
+        ...getEntityCoreContext(ctx).headers,
+        accept: 'application/json',
+        'content-type': 'application/json',
+      },
+    },
+    { retryOnError }
+  );
 }

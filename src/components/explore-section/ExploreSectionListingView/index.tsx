@@ -1,8 +1,9 @@
 'use client';
 
-import { RowSelectionType } from 'antd/es/table/interface';
-import { useAtom, useSetAtom } from 'jotai';
+import { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
 import { CSSProperties, ReactNode } from 'react';
+
+import { useAtom, useSetAtom } from 'jotai';
 import type { TableProps } from 'antd';
 
 import FilterControls from '@/components/explore-section/ExploreSectionListingView/FilterControls';
@@ -47,6 +48,7 @@ export interface Props<T extends EntityCoreIdentifiable> {
   rowClassName?: string | TableProps<T>['rowClassName'];
   tableStyle?: CSSProperties | undefined;
   onRow?: TableProps<T>['onRow'];
+  expandableConfig?: ExpandableConfig<T>;
 }
 
 export default function ExploreSectionListingView<T extends EntityCoreIdentifiable>({
@@ -68,6 +70,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
   rowClassName,
   tableStyle,
   onRow,
+  expandableConfig = undefined,
 }: Props<T>) {
   const { node } = useBrainRegionHierarchy({ dataKey });
 
@@ -92,7 +95,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
     setSortState(newSortState);
   };
 
-  const columns = useExploreColumns<T>(onSortChange, sortState, [], null, dataType);
+  const columns = useExploreColumns<T>(onSortChange, sortState, [], dataType);
 
   const { result: dataSource, isLoading } = useDataAtom<T>({
     dataType,
@@ -157,6 +160,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
                 rowClassName={rowClassName}
                 tableStyle={tableStyle}
                 onRow={onRow}
+                expandableConfig={expandableConfig}
               />
             </>
           )}

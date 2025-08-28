@@ -5,7 +5,6 @@ import { useAtomValue, useSetAtom } from 'jotai';
 
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 import Overview from '@/features/details-view/overview';
-import usePathname from '@/hooks/pathname';
 
 import {
   CommonSummaryViewFields,
@@ -20,42 +19,54 @@ import { ErrorLink, withErrorConfig } from '@/components/GenericErrorFallback';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { DataType } from '@/constants/explore-section/list-views';
 import { conditionalAtom } from '@/hooks/use-conditional-atom';
+import { downloadArchive } from '@/services/entity-download';
 
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { DetailViewUrlParams } from '@/types/explore-section/application';
-import { downloadArchive } from '@/services/entity-download';
 
 export default function Summary<T extends EntityCoreIdentifiableNamed>({
   payload,
   showViewMode,
-  extraHeaderAction,
   dataType,
   children,
+  fieldsClassName,
   commonFields = CommonSummaryViewFields,
+  actions,
 }: {
   payload?: T | undefined;
   showViewMode?: boolean;
   commonFields?: Array<TypeSummaryProps>;
-  extraHeaderAction?: ReactNode;
   dataType: DataType;
   children?: (detail: T) => ReactNode;
+  fieldsClassName?: string;
+  actions?: {
+    onDownload?: (entity: T) => void;
+  };
 }) {
   const { id, virtualLabId, projectId, ...params } = useParams<DetailViewUrlParams>();
   const setBrainRegionSidebarIsCollapsed = useSetAtom(brainRegionSidebarIsCollapsedAtom);
   const fields = getViewDefinitionByLegacyType(dataType)?.summaryViewFields;
 
-  const path = usePathname();
-
   const memoizedDetailAtom = useMemo(() => {
     const detailFetchAtom = detailFamily({ id, virtualLabId, projectId, dataType, ...params });
     return conditionalAtom<T>(payload, detailFetchAtom);
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [payload, id, virtualLabId, projectId, dataType, JSON.stringify(params)]);
 
   const detail = useAtomValue(memoizedDetailAtom);
 
-  const onDownload = useCallback((entity: T) => downloadArchive(entity.type, [entity.id]), []);
+  const onDownload = useCallback(
+    (entity: T) => {
+      if (actions?.onDownload) actions.onDownload(entity);
+      else {
+        downloadArchive(entity.type, [entity.id]);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [actions?.onDownload]
+  );
 
   useEffect(() => {
     setBrainRegionSidebarIsCollapsed(true);
@@ -98,12 +109,11 @@ export default function Summary<T extends EntityCoreIdentifiableNamed>({
             className="secondary-scrollbar ml-10 flex grow flex-col gap-7 overflow-y-scroll bg-white p-7 pr-12"
           >
             {showViewMode && <div className="text-right font-thin text-gray-400">View mode</div>}
-            <Overview
+            <Overview<T>
               fields={fields}
               commonFields={commonFields}
               detail={data}
-              url={path}
-              extraHeaderAction={extraHeaderAction}
+              fieldsClassName={fieldsClassName}
               onDownload={onDownload}
             />
             {children && data && children(data)}

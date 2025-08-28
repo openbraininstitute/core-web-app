@@ -16,6 +16,7 @@ import { Spin } from 'antd';
 import ExploreSectionNameSearch from '@/components/explore-section/ExploreSectionListingView/ExploreSectionNameSearch';
 import SettingsIcon from '@/components/icons/Settings';
 
+import { ViewToggle } from '@/features/entities/circuit/elements/view-toggle';
 import { activeColumnsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { filterHasValue } from '@/features/listing-filter-panel/util';
@@ -87,12 +88,20 @@ export default function FilterControls({
   return (
     <div
       className={classNames(
-        'grid w-full grid-cols-[max-content_1fr_max-content] items-center justify-between gap-5 py-5',
+        'grid w-full items-center justify-between gap-5 py-5',
+        dataType === DataType.Circuit
+          ? 'grid-cols-[max-content_1fr_max-content_max-content]'
+          : 'grid-cols-[max-content_1fr_max-content]',
         className
       )}
     >
       <div className="w-max">{children}</div>
       {!resourceId && <ExploreSectionNameSearch dataType={dataType} dataKey={dataKey} />}
+      {dataType === DataType.Circuit && (
+        <div className="text-red-500">
+          <ViewToggle />
+        </div>
+      )}
       <div className="inline-flex w-full place-content-end gap-2">
         {/* only show search input on listing views. resource id is present on detail views. */}
         <FilterBtn disabled={disabled} onClick={() => setDisplayControlPanel(!displayControlPanel)}>

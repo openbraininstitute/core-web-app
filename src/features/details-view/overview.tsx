@@ -29,17 +29,16 @@ export function Field({ field, className, data }: FieldProps) {
   }
 
   return (
-    <div className={classNames('text-primary-7', className)}>
+    <div className={classNames('text-primary-7 flex flex-col', className)}>
       <div className="text-neutral-4 uppercase">{fieldObj?.title}</div>
       <div className={classNames('mt-2 break-words', fieldObj?.className)}>{renderedContent}</div>
     </div>
   );
 }
 
-export default function DetailHeader<T extends EntityCoreIdentifiableNamed>({
+export default function Overview<T extends EntityCoreIdentifiableNamed>({
   fields,
   detail,
-  extraHeaderAction,
   commonFields = CommonSummaryViewFields,
   commonFieldsClassName,
   fieldsClassName,
@@ -48,18 +47,14 @@ export default function DetailHeader<T extends EntityCoreIdentifiableNamed>({
   fields: Array<TypeSummaryProps>;
   detail: T;
   commonFields?: Array<TypeSummaryProps>;
-  // @FIXME: this property is not used.
-  // eslint-disable-next-line react/no-unused-prop-types
-  url?: string | null;
-  extraHeaderAction?: ReactNode;
   commonFieldsClassName?: string;
   fieldsClassName?: string;
   onDownload?: (entity: T) => void;
 }) {
   return (
     <div className="flex w-full flex-col gap-10">
-      <Header<T> detail={detail} extraHeaderAction={extraHeaderAction} onDownload={onDownload} />
-      <div className="flex w-full flex-row gap-x-8">
+      <Header<T> detail={detail} onDownload={onDownload} />
+      <div className="flex w-full flex-row items-start gap-x-8">
         {commonFields.length > 0 && (
           <div
             className={

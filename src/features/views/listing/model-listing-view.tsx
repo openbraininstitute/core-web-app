@@ -16,7 +16,8 @@ import { generateVlProjectUrl } from '@/util/virtual-lab/urls';
 import type { SerializedEntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { WorkspaceContext } from '@/types/common';
 
-const ExploreEModelTable = dynamic(() => import('@/features/entities/e-model/listing-view'));
+const EModelTable = dynamic(() => import('@/features/entities/e-model/listing-view'));
+const CircuitTable = dynamic(() => import('@/features/entities/circuit/listing-view'));
 
 type Props = WorkspaceContext & {
   entity: SerializedEntityCoreTypeConfig<any>;
@@ -36,14 +37,23 @@ export default function ModelListingView({ virtualLabId, projectId, entity }: Pr
 
   return match<SerializedEntityCoreTypeConfig<any>>(entity)
     .with({ legacyType: DataType.CircuitEModel }, (en) => (
-      <ExploreEModelTable
+      <EModelTable
+        virtualLabInfo={{ virtualLabId, projectId }}
+        dataType={en.legacyType}
+        dataScope={ExploreDataScope.SelectedBrainRegion}
+      />
+    ))
+    .with({ legacyType: DataType.Circuit }, (en) => (
+      <CircuitTable
         virtualLabInfo={{ virtualLabId, projectId }}
         dataType={en.legacyType}
         dataScope={ExploreDataScope.SelectedBrainRegion}
       />
     ))
     .with(
-      { legacyType: P.union(DataType.CircuitMEModel, DataType.SingleNeuronSynaptome).select() },
+      {
+        legacyType: P.union(DataType.CircuitMEModel, DataType.SingleNeuronSynaptome).select(),
+      },
       () => (
         <ListingView
           {...{
@@ -54,5 +64,6 @@ export default function ModelListingView({ virtualLabId, projectId, entity }: Pr
         />
       )
     )
+
     .otherwise(() => null);
 }

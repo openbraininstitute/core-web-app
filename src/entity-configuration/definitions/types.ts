@@ -60,6 +60,11 @@ interface WithinListFilter extends Omit<BaseFilter, 'type' | 'value'> {
   value: Array<string>;
 }
 
+interface DropdownListFilter extends Omit<BaseFilter, 'type' | 'value'> {
+  type: CoreFieldFilterTypeEnum.DropdownList;
+  value: string | Array<string> | null;
+}
+
 export type CoreFilter =
   | CheckListFilter
   | SearchFilter
@@ -68,7 +73,8 @@ export type CoreFilter =
   | ValueFilter
   | ValueOrRangeFilter
   | BaseFilter
-  | WithinListFilter;
+  | WithinListFilter
+  | DropdownListFilter;
 
 type CoreFilterType = CoreFieldFilterTypeEnum | null;
 
@@ -80,6 +86,7 @@ type TableCellAlign = 'left' | 'right' | 'center';
 type Style = {
   align?: TableCellAlign;
   width?: number;
+  fixed?: 'left' | 'right' | false | undefined;
 };
 
 export type OrderShape =
@@ -93,9 +100,10 @@ export type OrderShape =
 export type FieldDefinition<T extends EntityCoreIdentifiable> = {
   fieldType?: CoreFieldType;
   className?: string;
-  title: string;
+  title: ReactNode;
   description?: string;
   filter: CoreFilterType;
+  filterData?: any;
   defaultConstraint?: string | Record<string, string>;
   perTypeConstraint?: Partial<Record<DataType, string>>;
   isSortable?: boolean;

@@ -1,10 +1,14 @@
-import React from 'react';
+import { CheckCircleOutlined, CopyOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
-import { CopyOutlined } from '@ant-design/icons';
+import React from 'react';
 
+import CustomPopover from '@/features/entities/neuron-simulation/experiment/elements/popover';
+import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
+import { ToolbarButton } from '@/components/buttons/toolbar';
+import { CopyDocument } from '@/components/icons/EditorIcons';
 import { classNames } from '@/util/utils';
 
-import styles from './button-copy-id.module.css';
+import styles from '@/features/details-view/button-copy-id/button-copy-id.module.css';
 
 interface ButtonCopyIdProps {
   className?: string;
@@ -55,5 +59,29 @@ function HasBeenCopied() {
         <path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#3e0" />
       </svg>
     </div>
+  );
+}
+
+export function DetailViewCopyButton({ id }: { id: string }) {
+  const [, copyId, , copying] = useCopyToClipboard();
+  return (
+    <CustomPopover
+      message="Database ID"
+      when="hover"
+      key={`copy-id-${id}`}
+      cls={{ contentContainer: 'p-3!' }}
+      placement="bottom"
+    >
+      <button type="button" onClick={() => copyId(id)}>
+        <ToolbarButton
+          stateIcon={
+            copying ? <CheckCircleOutlined className="text-accent-dark! text-[21px]" /> : undefined
+          }
+          icon={<CopyDocument className="text-[21px]" />}
+        >
+          Copy ID
+        </ToolbarButton>
+      </button>
+    </CustomPopover>
   );
 }

@@ -40,4 +40,7 @@ export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecord
     extension: 'application/nwb',
   },
   isBookmarkable: true,
+  isDownloadable: true,
+  isCopyable: true,
+  isSimulatable: false,
 } as const;
