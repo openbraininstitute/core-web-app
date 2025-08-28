@@ -100,6 +100,12 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     title: 'Circuit',
     name: EntitySlug.Circuit,
     curated: false,
+    summaryViewFields: [
+      { field: EntityCoreFields.BrainRegion },
+      { field: EntityCoreFields.CircuitNumberConnections },
+      { field: EntityCoreFields.CircuitNumberNeurons },
+      { field: EntityCoreFields.CircuitNumberSynapses },
+    ],
     columns: [
       EntityCoreFields.Name,
       EntityCoreFields.Description,

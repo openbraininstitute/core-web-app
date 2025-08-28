@@ -25,6 +25,9 @@ export default async function Page({
   const ctx = { virtualLabId, projectId };
 
   const entityType = getEntityByExtendedType({ type: snakeCase(type) as EntityCoreExtendedType });
+
+  console.log(entityType);
+
   if (!entityType || !entityType.detailViewSections.includes(section)) notFound();
 
   const entity = await downloadEntity({
@@ -32,6 +35,8 @@ export default async function Page({
     ctx,
     id,
   });
+
+  console.log(entity);
 
   let content: JSX.Element | undefined;
 
