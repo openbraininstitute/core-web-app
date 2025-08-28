@@ -1,7 +1,7 @@
 import { HTMLProps, PropsWithChildren, useState } from 'react';
 import ControlPanel from './ControlPanel';
 import { SettingsIcon } from '@/components/icons/Settings';
-import { classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
 
 export default function FilterControls({
   filtersCount,
@@ -19,10 +19,10 @@ export default function FilterControls({
 
   return (
     <>
-      <div className={classNames('flex items-center justify-between gap-5', className)}>
+      <div className={cn('flex items-center justify-between gap-5', className)}>
         <div className="inline-flex w-full place-content-end gap-2">
           <button
-            className={classNames(
+            className={cn(
               'border-neutral-2 flex items-center justify-between gap-10 rounded-md border px-2 py-2',
               disabled ? 'cursor-not-allowed bg-neutral-100' : 'bg-white'
             )}
@@ -37,7 +37,7 @@ export default function FilterControls({
               </span>
               <div className="flex items-center gap-2">
                 <span
-                  className={classNames(
+                  className={cn(
                     'text-sm leading-5 font-bold',
                     disabled ? 'text-primary-8' : 'text-primary-8'
                   )}

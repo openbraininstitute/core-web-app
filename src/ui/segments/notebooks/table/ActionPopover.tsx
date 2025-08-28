@@ -32,84 +32,82 @@ export default function ActionPopover({
   enableRunNotebook,
 }: ActionPopoverProps) {
   return (
-    <div id="popover">
-      <Popover
-        content={
-          <div className="text-primary-9 flex min-w-[120px] flex-col gap-2">
-            <div className="flex gap-4">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onReadmeClick(notebook);
-                }}
-                className="inline-flex items-center gap-[10px]"
-              >
-                <EyeIconWhiteWithinBox className="text-primary-9 text-xs" aria-label="Readme" />
-                Readme
-              </button>
-            </div>
-            <div className="flex gap-4">
+    <Popover
+      content={
+        <div className="text-primary-9 flex min-w-[120px] flex-col gap-2">
+          <div className="flex gap-4">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onReadmeClick(notebook);
+              }}
+              className="inline-flex items-center gap-[10px]"
+            >
+              <EyeIconWhiteWithinBox className="text-primary-9 text-xs" aria-label="Readme" />
+              Readme
+            </button>
+          </div>
+          <div className="flex gap-4">
+            <button
+              type="button"
+              className="hover:text-primary-4 inline-flex items-center gap-[10px]"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDownloadClick(notebook);
+              }}
+            >
+              <DownloadIconWhiteWithCorners
+                className="text-primary-9 text-xs"
+                aria-label="Download"
+              />
+              Download
+            </button>
+            {loadingZip && <LoadingOutlined />}
+          </div>
+
+          {onDeleteClick && (
+            <div className="text-error flex gap-4">
               <button
                 type="button"
                 className="hover:text-primary-4 inline-flex items-center gap-[10px]"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDownloadClick(notebook);
+                  onDeleteClick(notebook.id);
                 }}
               >
-                <DownloadIconWhiteWithCorners
-                  className="text-primary-9 text-xs"
-                  aria-label="Download"
-                />
-                Download
+                <DeleteOutlined className="text-error text-xs" aria-label="Delete" />
+                Delete
               </button>
-              {loadingZip && <LoadingOutlined />}
             </div>
-
-            {onDeleteClick && (
-              <div className="text-error flex gap-4">
-                <button
-                  type="button"
-                  className="hover:text-primary-4 inline-flex items-center gap-[10px]"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeleteClick(notebook.id);
-                  }}
-                >
-                  <DeleteOutlined className="text-error text-xs" aria-label="Delete" />
-                  Delete
-                </button>
-              </div>
-            )}
-            {enableRunNotebook && onRunClick && (
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-[10px]"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRunClick(notebook);
-                  }}
-                >
-                  <PlayCircleOutlined aria-label="Run" />
-                  Run
-                </button>
-              </div>
-            )}
-          </div>
-        }
-        style={{
-          border: '1px solid #096DD9',
-          backgroundColor: '#fff',
-          color: '#002766',
-        }}
-        trigger="click"
-        placement="bottom"
-        arrow={false}
-      >
-        <PlusOutlined className="rounded-full !bg-white p-2 text-lg !text-white shadow-md" />
-      </Popover>
-    </div>
+          )}
+          {enableRunNotebook && onRunClick && (
+            <div className="flex gap-4">
+              <button
+                type="button"
+                className="inline-flex items-center gap-[10px]"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRunClick(notebook);
+                }}
+              >
+                <PlayCircleOutlined aria-label="Run" />
+                Run
+              </button>
+            </div>
+          )}
+        </div>
+      }
+      style={{
+        border: '1px solid #096DD9',
+        backgroundColor: '#fff',
+        color: '#002766',
+      }}
+      trigger="click"
+      placement="bottom"
+      arrow={false}
+    >
+      <PlusOutlined className="rounded-full !bg-white p-2 text-lg !text-white shadow-md" />
+    </Popover>
   );
 }

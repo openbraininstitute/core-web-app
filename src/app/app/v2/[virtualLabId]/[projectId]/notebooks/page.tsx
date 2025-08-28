@@ -1,11 +1,11 @@
 import { notebookRepoUrl } from '@/config';
-import { ServerSideComponentProp } from '@/types/common';
+import { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import { NotebookTable } from '@/ui/segments/notebooks/table';
 import fetchNotebooks from '@/util/virtual-lab/fetchNotebooks';
 
-export default async function NotebooksPage({
+export default async function Page({
   params: promisedParams,
-}: ServerSideComponentProp<{ projectId: string; virtualLabId: string }, null>) {
+}: ServerSideComponentProp<WorkspaceContext, null>) {
   const params = await promisedParams;
   const { projectId, virtualLabId } = params;
 

@@ -4,7 +4,7 @@ type Props = {
   children: ReactNode;
 };
 
-export function NotebooksLayout({ children }: Props) {
+export function ReportsLayout({ children }: Props) {
   return (
     <div
       id="notebooks-layout"

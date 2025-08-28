@@ -106,7 +106,9 @@ export default function InteractivePlot({
           setZoomRanges({ x: [x1, x2], y: [y1, y2] });
         }}
         layout={{
-          title: recordingType === RecordingType.STIMULUS ? 'Stimulus' : 'Response',
+          title: {
+            text: recordingType === RecordingType.STIMULUS ? 'Stimulus' : 'Response',
+          },
           xaxis: {
             title: {
               font,

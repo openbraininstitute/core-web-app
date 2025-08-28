@@ -136,7 +136,10 @@ function NotebookTable({
 
     try {
       const buffer = await downloadZippedNotebook(notebook);
-      const blob = new Blob([buffer], { type: 'application/zip' });
+      const arrayBuffer = new ArrayBuffer(buffer.length);
+      const uint8Array = new Uint8Array(arrayBuffer);
+      uint8Array.set(buffer);
+      const blob = new Blob([arrayBuffer], { type: 'application/zip' });
       saveAs(blob, `${notebook.name}.zip`);
       setLoadingZip(false);
     } catch {

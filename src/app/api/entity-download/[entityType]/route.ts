@@ -27,7 +27,10 @@ const downloadRequestSchema = z.object({
  *   entityIds: string[]            // Array of entity UUIDs to download (max 100)
  * }
  */
-export async function POST(request: NextRequest, { params }: { params: { entityType: string } }) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ entityType: string }> }
+) {
   const { entityType: entityTypeRaw } = await params;
   const entityType = snakeCase(entityTypeRaw) as TEntityTypeDict;
 

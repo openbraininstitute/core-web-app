@@ -1,15 +1,15 @@
 'use client';
 
-import { NextStepProvider as OnboardingProvider, NextStep as OnboardingSteps } from 'nextstepjs';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import type { CardComponentProps, Tour } from 'nextstepjs';
+import { NextStepProvider as OnboardingProvider, NextStep as OnboardingSteps } from 'nextstepjs';
 import type { ReactNode } from 'react';
 
+import { AUTO_ONBOARDING_DONE } from '@/constants';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
 import { cn } from '@/utils/css-class';
-import { AUTO_ONBOARDING_DONE } from '@/constants';
 
 export function AppOnboardingProvider({ children }: { children: ReactNode }) {
   return (
@@ -186,6 +186,21 @@ export const OnboardingDiscoverSteps: Tour[] = [
           </>
         ),
         selector: '#workspace-notebooks',
+        side: 'bottom',
+        showControls: true,
+        pointerPadding: 4,
+        pointerRadius: 25,
+      },
+      {
+        icon: null,
+        title: 'Notebooks',
+        content: (
+          <>
+            Lorem ipsum dolor sit amet est tincidunt consequat ultricies justo donec. Labore aliquam
+            lectus elit adipiscing consectetur lectus enim fusce velit netus.
+          </>
+        ),
+        selector: '#workspace-reports',
         side: 'bottom',
         showControls: true,
         pointerPadding: 4,

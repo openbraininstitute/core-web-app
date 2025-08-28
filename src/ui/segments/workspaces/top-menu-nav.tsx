@@ -1,29 +1,31 @@
+import Link from 'next/link';
+import React from 'react';
+
 import { MenuOutlined } from '@ant-design/icons';
 import { usePathname } from 'next/navigation';
-import Link from 'next/link';
 
 import type { ReactNode } from 'react';
 
-import React from 'react';
 import {
   ExploreIcon,
   HelpIcon,
-  NotebookIcon,
-  WorkflowIcon,
   Home,
+  NotebookIcon,
+  ReportIcon,
+  WorkflowIcon,
 } from '@/components/icons/buttons';
-import { useDefaultBreakpoint, createBreakpoint } from '@/ui/hooks/create-break-point';
 import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { createBreakpoint, useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { getActiveSection } from '@/utils/get-section';
 import { Button } from '@/ui/molecules/button';
-import { cn } from '@/utils/css-class';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/ui/molecules/dropdown-menu';
+import { cn } from '@/utils/css-class';
+import { getActiveSection } from '@/utils/get-section';
 
 type LinkItem = {
   id: string;
@@ -90,12 +92,24 @@ const links: Array<LinkItem> = [
       `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/notebooks`,
   },
   {
+    id: 'workspace-reports',
+    key: 'reports',
+    title: 'Reports',
+    url: 'reports',
+    icon: <ReportIcon className="group-hover:text-primary-3 h-5!" />,
+    allowText: true,
+    className: 'px-6 gap-8',
+    hasAction: true,
+    action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
+      `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/reports`,
+  },
+  {
     id: 'workspace-help',
     key: 'help',
     title: 'Help',
     url: 'help',
     icon: <HelpIcon className="group-hover:text-primary-3 text-lg" />,
-    allowText: true,
+    allowText: false,
     className: '',
     hasAction: false,
   },
@@ -181,69 +195,47 @@ export function TopMenuNavigation() {
     );
   }
 
-  return hashedLinks.map(
-    ({ id, key, title, url, baseUrl, icon, allowText, className: clx, isActive, hasAction }) => (
-      <div key={key} className="group flex w-max items-center justify-center gap-0">
-        <div className="relative flex items-center">
-          <Button
-            asChild
-            rounded
-            id={id}
-            variant="outline"
-            size={breakpoint === 'xl' ? 'lg' : 'md'}
-            className={cn(
-              { 'w-12! justify-center!': !allowText },
-              'group relative flex items-center justify-between',
-              { 'group-hover:rounded-r-none group-hover:border-r-0': hasAction },
-              'transition-all duration-400 ease-out',
-              clx
-            )}
-            active={activeSection === baseUrl || isActive?.(pathname)}
-          >
-            <Link href={url}>
-              {allowText && <span>{title}</span>}
-              {icon}
-            </Link>
-          </Button>
-          {/* {hasAction && action && (
-            <div
-              className={cn(
-                'transition-all duration-900 ease-out',
-                'w-0 scale-0 opacity-0',
-                'group-hover:w-auto group-hover:scale-100 group-hover:opacity-100',
-                'flex origin-left items-center'
-              )}
-            >
-              <div
-                className={cn(
-                  'bg-neutral-2 h-[1px] w-0',
-                  'transition-all duration-900 ease-out group-hover:w-2',
-                  'opacity-0 group-hover:opacity-100'
-                )}
-              />
+  return (
+    <div className="flex max-w-full items-center justify-center gap-2 overflow-hidden">
+      {hashedLinks.map(
+        ({
+          id,
+          key,
+          title,
+          url,
+          baseUrl,
+          icon,
+          allowText,
+          className: clx,
+          isActive,
+          hasAction,
+        }) => (
+          <div key={key} className="group flex min-w-0 items-center justify-center gap-0">
+            <div className="relative flex items-center">
               <Button
-                variant="outline"
-                rounded
-                className={cn(
-                  'border-neutral-2 hover:bg-primary-9 hover:border-primary-9',
-                  'h-12 w-12! bg-transparent p-0 hover:text-white',
-                  'rounded-l-none border-l-0',
-                  'transition-all duration-900 ease-out',
-                  'shadow-md group-hover:shadow-xl',
-                  'group-hover:scale-100',
-                  { 'h-10! w-10!': breakpoint === 'l' },
-                  { 'h-12! w-12!': breakpoint === 'xl' }
-                )}
                 asChild
+                rounded
+                id={id}
+                variant="outline"
+                size={breakpoint === 'xl' ? 'lg' : 'md'}
+                className={cn(
+                  { 'w-12! justify-center!': !allowText },
+                  'group relative flex min-w-0 items-center justify-between',
+                  { 'group-hover:rounded-r-none group-hover:border-r-0': hasAction },
+                  'transition-all duration-400 ease-out',
+                  clx
+                )}
+                active={activeSection === baseUrl || isActive?.(pathname)}
               >
-                <Link href={action({ virtualLabId, projectId })}>
-                  <PlusOutlined />
+                <Link href={url} className="min-w-0">
+                  {allowText && <span className="truncate">{title}</span>}
+                  {icon}
                 </Link>
               </Button>
             </div>
-          )} */}
-        </div>
-      </div>
-    )
+          </div>
+        )
+      )}
+    </div>
   );
 }

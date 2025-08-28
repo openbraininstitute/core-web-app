@@ -1,53 +1,49 @@
+/* eslint-disable react/jsx-props-no-spreading */
+
+'use client';
+
 import { SearchOutlined } from '@ant-design/icons';
 import { ConfigProvider } from 'antd';
-import { useState, type JSX } from 'react';
+import { Input } from 'antd/lib';
+import { useState } from 'react';
 
-import { classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
 
-export default function useSearch(
-  props: JSX.IntrinsicElements['input'] & { containerClassName?: string }
-) {
-  const [search, setSearch] = useState('');
-
-  return {
-    search,
-    // eslint-disable-next-line react/jsx-props-no-spreading
-    Search: <Search {...props} value={search} onChange={(e) => setSearch(e.currentTarget.value)} />,
-  };
+interface UseSearchProps {
+  placeholder?: string;
+  containerClassName?: string;
+  className?: string;
 }
 
-function Search(props: JSX.IntrinsicElements['input'] & { containerClassName?: string }) {
-  const { containerClassName, className, ...rest } = props;
+export function useSearch({
+  placeholder = 'Search...',
+  containerClassName,
+  className,
+}: UseSearchProps) {
+  const [search, setSearch] = useState('');
 
-  return (
-    <ConfigProvider
-      theme={{
-        components: {
-          Input: {
-            colorTextPlaceholder: '#69C0FF',
+  const Search = (
+    <div className={cn('flex w-max items-center gap-2', containerClassName)}>
+      <ConfigProvider
+        theme={{
+          token: {
             colorBgContainer: 'transparent',
+            colorBorder: 'transparent',
+            colorText: '#002766',
+            colorTextPlaceholder: '#8c8c8c',
           },
-          Button: {
-            colorPrimary: 'transparent',
-          },
-        },
-      }}
-    >
-      <div
-        className={classNames(
-          'flex w-max justify-between border-b bg-transparent',
-          containerClassName
-        )}
+        }}
       >
-        <input
-          {...rest} // eslint-disable-line react/jsx-props-no-spreading
-          className={classNames(
-            'text-primary-3 placeholder:text-primary-3 mr-2 bg-transparent outline-hidden',
-            className
-          )}
+        <Input
+          placeholder={placeholder}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className={cn('flex w-max justify-between border-b bg-transparent', className)}
+          suffix={<SearchOutlined className="text-primary-9" />}
         />
-        <SearchOutlined />
-      </div>
-    </ConfigProvider>
+      </ConfigProvider>
+    </div>
   );
+
+  return { search, Search };
 }

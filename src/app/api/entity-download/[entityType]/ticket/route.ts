@@ -25,7 +25,10 @@ const createTicketSchema = z.object({
  *   entityIds: string[]            // Array of entity UUIDs to download (max 100)
  * }
  */
-export async function POST(request: NextRequest, { params }: { params: { entityType: string } }) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ entityType: string }> }
+) {
   const session = await auth();
   if (!session) {
     return new Response('Unauthorized', {
