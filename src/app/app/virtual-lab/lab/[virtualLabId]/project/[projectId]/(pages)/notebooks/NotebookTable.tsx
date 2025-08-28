@@ -241,7 +241,8 @@ function NotebookTable({
                   </button>
                 </div>
               )}
-              {env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'staging' && (
+              {(env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'staging' ||
+                env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'development') && (
                 <div className="flex gap-4">
                   <button
                     type="button"
