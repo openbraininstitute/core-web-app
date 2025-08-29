@@ -6,10 +6,10 @@ import type { CardComponentProps, Tour } from 'nextstepjs';
 import type { ReactNode } from 'react';
 
 import { useLocalStorage } from '@/hooks/use-local-storage';
+import { AUTO_ONBOARDING_DONE } from '@/constants';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
 import { cn } from '@/utils/css-class';
-import { AUTO_ONBOARDING_DONE } from '@/constants';
 
 export function AppOnboardingProvider({ children }: { children: ReactNode }) {
   return (

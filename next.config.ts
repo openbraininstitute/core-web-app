@@ -85,7 +85,7 @@ const nextConfig = (phase: string): NextConfig => {
       return [
         {
           source: `/app/virtual-lab/:path*`,
-          destination: `/app/v2/setup`,
+          destination: `/app/v2/sync`,
           permanent: false,
         },
       ];

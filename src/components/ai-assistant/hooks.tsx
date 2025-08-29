@@ -52,7 +52,7 @@ export function usePanelWidth(): {
     const minWidth = dimension.width;
     if (value < minWidth) return minWidth;
 
-    const maxWidth = dimension.left + dimension.width - globalThis.screen.availWidth / 3;
+    const maxWidth = dimension.left + dimension.width - (globalThis.screen?.availWidth ?? 0) / 3;
     if (value > maxWidth) return maxWidth;
 
     return value;

@@ -1,11 +1,16 @@
 import React from 'react';
-import Plot from 'react-plotly.js';
+import dynamic from 'next/dynamic';
 import { Data, Layout } from 'plotly.js-dist-min';
 
 import { classNames } from '@/util/utils';
 import { logError } from '@/util/logger';
 
 import styles from './generic-plot.module.css';
+
+// Dynamically import Plot component to avoid SSR issues
+const Plot = dynamic(() => import('react-plotly.js'), {
+  ssr: false,
+});
 
 export interface GenericPlotProps<T> {
   className?: string;

@@ -1,3 +1,4 @@
+import { redirect, RedirectType } from 'next/navigation';
 import { Suspense } from 'react';
 
 import { ProjectCardSkeletonShimmer } from '@/ui/segments/project/banner/banner-skeleton';
@@ -6,7 +7,9 @@ import { Shortcuts } from '@/ui/segments/project/bottom-nav-shortcuts';
 import { ProjectActivities } from '@/ui/segments/project/activities';
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
 import { ProjectCard } from '@/ui/segments/project/banner/banner';
+import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { tryCatch } from '@/api/utils';
 
 import type { ServerSideComponentProp } from '@/types/common';
 
@@ -16,14 +19,20 @@ export default async function Home({
   const { virtualLabId, projectId } = await promisedParams;
   const queryClient = getQueryClient();
 
-  queryClient.prefetchQuery({
-    queryKey: keyBuilder.getOne({ virtualLabId, projectId }),
-    queryFn: () => getProject({ virtualLabId, projectId }),
-  });
+  const { data, error } = await tryCatch(
+    queryClient.fetchQuery({
+      queryKey: keyBuilder.getOne({ virtualLabId, projectId }),
+      queryFn: () => getProject({ virtualLabId, projectId }),
+    })
+  );
+
+  if (!data || error) {
+    redirect(`${V2_MIGRATION_TEMPORARY_BASE_PATH}/sync`, RedirectType.replace);
+  }
 
   return (
     <HydrateClient>
-      <div className="flex flex-col gap-6 px-3">
+      <div className="flex flex-col gap-6 pr-1.5">
         <Suspense fallback={<ProjectCardSkeletonShimmer />}>
           <ProjectCard />
         </Suspense>
