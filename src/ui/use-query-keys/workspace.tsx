@@ -1,7 +1,7 @@
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkspaceContext } from '@/types/common';
 
-const prefix = 'workspace';
+export const prefix = 'workspace';
 
 export const keyBuilder = {
   getOne: ({ virtualLabId, projectId }: WorkspaceContext) => [

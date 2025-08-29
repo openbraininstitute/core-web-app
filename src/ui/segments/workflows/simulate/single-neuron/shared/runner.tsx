@@ -1,9 +1,8 @@
 'use client';
 
 import { captureException } from '@sentry/nextjs';
-import { atom } from 'jotai';
-import { RESET } from 'jotai/utils';
 import { match } from 'ts-pattern';
+import { atom } from 'jotai';
 
 import delay from 'lodash/delay';
 import isNil from 'lodash/isNil';
@@ -13,8 +12,6 @@ import uniqBy from 'lodash/uniqBy';
 import values from 'lodash/values';
 
 import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
-import { updateArray } from '@/util/updateArray';
-
 import {
   createSingleNeuronSimulation,
   createSingleNeuronSynaptomeSimulation,
@@ -22,37 +19,39 @@ import {
 } from '@/api/entitycore/queries';
 import { createJsonAsset } from '@/api/entitycore/queries/assets';
 import { SingleNeuronSimulationStatus } from '@/api/entitycore/types/shared/neuron-simulation';
-import { tryCatch } from '@/api/utils';
+import { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
 import {
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
 } from '@/entity-configuration/domain/simulation';
-import { messages } from '@/i18n/en/simulation';
-import { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
-import { currentInjectionSimulationConfigAtom } from '@/state/simulate/categories/current-injection-simulation';
-import { recordingSourceForSimulationAtom } from '@/state/simulate/categories/recording-source-for-simulation';
-import { simulationExperimentalSetupAtom } from '@/state/simulate/categories/simulation-conditions';
-import { synaptomeSimulationConfigAtom } from '@/state/simulate/categories/synaptome-simulation-config';
 import {
-  genericSingleNeuronSimulationPlotDataAtom,
-  secNamesAtom,
+  genericSingleNeuronSimulationPlotDataAtomFamily,
   simulateStepTrackerAtom,
   simulationStatusAtom,
-  stimulusPreviewPlotDataAtom,
 } from '@/state/simulate/single-neuron';
 import { SimulationType } from '@/types/simulation/common';
 import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
+import { readNdjsonResponse } from '@/utils/response';
+import { updateArray } from '@/util/updateArray';
+import { messages } from '@/i18n/en/simulation';
+import { tryCatch } from '@/api/utils';
+import { log } from '@/utils/logger';
 
+import { type Message, JobStatus, MessageType } from '@/services/small-scale-simulator/types';
 import type {
   ISingleNeuronSimulation,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
-import { JobStatus, Message, MessageType } from '@/services/small-scale-simulator/types';
 import type {
   SimulationStreamData,
   SingleNeuronModelSimulationConfig,
 } from '@/types/simulation/single-neuron';
-import { readNdjsonResponse } from '@/utils/response';
+import type {
+  RecordLocationArray,
+  SimulationExperimentalSetup,
+  StimulationSimulationConfig,
+  SynapseConfigArray,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
 
@@ -67,15 +66,14 @@ export const createSingleNeuronSimulationAtom = atom(
     meModelId: string,
     virtualLabId: string,
     projectId: string,
-    simulationType: SimulationType
+    simulationType: SimulationType,
+    stimulationConfig: StimulationSimulationConfig,
+    experimentalSetupConfig: SimulationExperimentalSetup,
+    recordFromConfig: RecordLocationArray,
+    synaptomeConfig: SynapseConfigArray | undefined,
+    simulationResult: Record<string, PlotData> | null,
+    stimulusResult: PlotData | null
   ) => {
-    const recordFromConfig = get(recordingSourceForSimulationAtom);
-    const experimentalSetupConfig = get(simulationExperimentalSetupAtom);
-    const currentInjectionConfig = get(currentInjectionSimulationConfigAtom);
-    const synaptomeConfig = get(synaptomeSimulationConfigAtom);
-    const simulationResult = get(genericSingleNeuronSimulationPlotDataAtom);
-    const stimulusResults = get(stimulusPreviewPlotDataAtom);
-
     if (!simulationResult || !modelId) return null;
 
     const recordFromUniq = uniqBy(recordFromConfig, (item) =>
@@ -87,7 +85,7 @@ export const createSingleNeuronSimulationAtom = atom(
     const singleNeuronSimulationConfig: SingleNeuronModelSimulationConfig = {
       record_from: recordFromUniq,
       conditions: experimentalSetupConfig,
-      current_injection: currentInjectionConfig[0],
+      current_injection: stimulationConfig,
       synaptome: simulationType === 'synaptome-simulation' ? synaptomeConfig : undefined,
     };
 
@@ -158,7 +156,7 @@ export const createSingleNeuronSimulationAtom = atom(
                   [curr]: convertObjectKeysToSnakeCase(simulationResult[curr]),
                 };
               }, {}),
-              stimulus: convertObjectKeysToSnakeCase(stimulusResults),
+              stimulus: convertObjectKeysToSnakeCase(stimulusResult),
               config: convertObjectKeysToSnakeCase(singleNeuronSimulationConfig),
             },
             ...assetBasePayload,
@@ -180,7 +178,18 @@ export const createSingleNeuronSimulationAtom = atom(
 
 export const launchSimulationAtom = atom<
   null,
-  [string, string, string, SimulationType, number],
+  [
+    string,
+    string,
+    string,
+    string,
+    StimulationSimulationConfig,
+    SimulationExperimentalSetup,
+    RecordLocationArray,
+    SynapseConfigArray,
+    SimulationType,
+    number,
+  ],
   void
 >(
   null,
@@ -190,22 +199,20 @@ export const launchSimulationAtom = atom<
     virtualLabId: string,
     projectId: string,
     modelId: string,
+    sessionId: string,
+    currentInjectionConfig: StimulationSimulationConfig,
+    conditionsConfig: SimulationExperimentalSetup,
+    recordFromConfig: RecordLocationArray,
+    synaptomeConfig: SynapseConfigArray,
     simulationType: SimulationType,
     duration: number
   ) => {
-    const currentInjectionConfig = get(currentInjectionSimulationConfigAtom);
-    const synaptomeConfig = get(synaptomeSimulationConfigAtom);
-    const recordFromConfig = get(recordingSourceForSimulationAtom);
-    const conditionsConfig = get(simulationExperimentalSetupAtom);
     if (simulationType === 'single-neuron-simulation') {
       if (!currentInjectionConfig) {
         throw new Error(messages.CurrentInjectionConfigMissingError);
       }
     } else if (simulationType === 'synaptome-simulation') {
-      if (
-        (!currentInjectionConfig || !currentInjectionConfig.length) &&
-        (!synaptomeConfig || !synaptomeConfig.length)
-      ) {
+      if (!currentInjectionConfig && (!synaptomeConfig || !synaptomeConfig.length)) {
         throw new Error(messages.SynaptomeConfigurationError);
       }
     }
@@ -219,14 +226,14 @@ export const launchSimulationAtom = atom<
       current: { title: 'Results', status: 'process' },
     });
 
-    set(
-      genericSingleNeuronSimulationPlotDataAtom,
-      recordFromConfig.reduce((acc: Record<string, PlotData>, o) => {
-        const key = `${o.section}_${o.offset === 0 ? '0.0' : String(o.offset)}`;
-        acc[key] = [];
-        return acc;
-      }, {})
-    );
+    const initialPlotData = recordFromConfig.reduce((acc: Record<string, PlotData>, o) => {
+      const key = `${o.section}_${o.offset === 0 ? '0.0' : String(o.offset)}`;
+      acc[key] = [];
+      return acc;
+    }, {});
+    const plotDataAtom = genericSingleNeuronSimulationPlotDataAtomFamily(sessionId);
+    log('debug', '🚀 Setting initial plot data:', initialPlotData);
+    set(plotDataAtom, initialPlotData);
     const recordFromUniq = uniqBy(recordFromConfig, (item) =>
       values(pick(item, ['section', 'offset']))
         .map(String)
@@ -241,8 +248,7 @@ export const launchSimulationAtom = atom<
           config: {
             recordFrom: recordFromUniq,
             conditions: conditionsConfig,
-            currentInjection:
-              currentInjectionConfig.length > 0 ? currentInjectionConfig[0] : undefined,
+            currentInjection: currentInjectionConfig,
             synaptome: simulationType === 'synaptome-simulation' ? synaptomeConfig : undefined,
             type: simulationType,
             duration,
@@ -311,8 +317,7 @@ export const launchSimulationAtom = atom<
           config: {
             recordFrom: recordFromUniq,
             conditions: conditionsConfig,
-            currentInjection:
-              currentInjectionConfig.length > 0 ? currentInjectionConfig[0] : undefined,
+            currentInjection: currentInjectionConfig,
             synapses: simulationType === 'synaptome-simulation' ? synaptomeConfig : undefined,
             type: simulationType,
             duration,
@@ -333,6 +338,7 @@ export const launchSimulationAtom = atom<
     }
 
     function appendStreamData(streamData: SimulationStreamData) {
+      log('debug', '📡 appendStreamData called with:', streamData);
       const newPlot: PlotDataEntry = {
         x: streamData.x,
         y: streamData.y,
@@ -344,13 +350,14 @@ export const launchSimulationAtom = atom<
         varyingKey: streamData.varying_key,
       };
 
-      const currentRecording = get(genericSingleNeuronSimulationPlotDataAtom)![
-        streamData.recording
-      ];
+      const currentPlotData = get(plotDataAtom);
+      log('debug', '📡 Current plot data before update:', currentPlotData);
+
+      const currentRecording = currentPlotData![streamData.recording];
 
       if (currentRecording) {
         const updatedPlot = {
-          ...get(genericSingleNeuronSimulationPlotDataAtom),
+          ...get(plotDataAtom),
           [streamData.recording]:
             !currentRecording.length || !currentRecording.find((o) => o.name === newPlot.name)
               ? [...currentRecording, newPlot]
@@ -370,18 +377,9 @@ export const launchSimulationAtom = atom<
           updatedPlot[recordingLocation] = sortBy(updatedPlot[recordingLocation], ['varyingKey']);
         });
 
-        set(genericSingleNeuronSimulationPlotDataAtom, updatedPlot);
+        log('debug', '📡 Setting updated plot data:', updatedPlot);
+        set(plotDataAtom, updatedPlot);
       }
     }
   }
 );
-
-export const resetSimulationAtom = atom(null, (get, set, resetValue: typeof RESET) => {
-  set(recordingSourceForSimulationAtom, resetValue);
-  set(currentInjectionSimulationConfigAtom, resetValue);
-  set(synaptomeSimulationConfigAtom, resetValue);
-  set(simulationExperimentalSetupAtom, resetValue);
-  set(simulateStepTrackerAtom, resetValue);
-  set(simulationStatusAtom, resetValue);
-  set(secNamesAtom, resetValue);
-});

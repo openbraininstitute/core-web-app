@@ -1,7 +1,7 @@
-import { atomWithReset } from 'jotai/utils';
+import { atomFamily, atomWithReset } from 'jotai/utils';
 
-import { PlotData } from '@/services/bluenaas-single-cell/types';
 import { SimulationStep, SimulationStepsTracker } from '@/types/simulation/common';
+import type { PlotData } from '@/services/bluenaas-single-cell/types';
 
 export const defaultSteps: Array<SimulationStep> = [
   { title: 'Experimental setup', status: undefined },
@@ -29,3 +29,10 @@ export const genericSingleNeuronSimulationPlotDataAtom = atomWithReset<Record<
   string,
   PlotData
 > | null>(null);
+genericSingleNeuronSimulationPlotDataAtom.debugLabel = 'genericSingleNeuronSimulationPlotDataAtom';
+
+export const genericSingleNeuronSimulationPlotDataAtomFamily = atomFamily((key: string) => {
+  const childAtom = atomWithReset<Record<string, PlotData> | null>(null);
+  childAtom.debugLabel = `generic-single-neuron-simulation-plot-data-atom-family-${key}`;
+  return childAtom;
+});

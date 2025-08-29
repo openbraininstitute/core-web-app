@@ -22,7 +22,6 @@ export function SynapseSetConfiguration({ sessionId }: Props) {
             useCursor
             useEvents
             useZoomer
-            useActions
             virtualLabId={virtualLabId}
             projectId={projectId}
             meModelId={sessionValue?.memodel?.id}

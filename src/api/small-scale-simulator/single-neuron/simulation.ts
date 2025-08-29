@@ -1,11 +1,9 @@
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { smallScaleSimulatorApi } from '@/api/small-scale-simulator/utils';
-
-import type { WorkspaceContext } from '@/types/common';
-
 import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 
 import type { SimulationType } from '@/types/simulation/common';
+import type { WorkspaceContext } from '@/types/common';
 import type {
   CurrentInjectionSimulationConfig,
   RecordLocation,
