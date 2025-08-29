@@ -29,7 +29,7 @@ export default function ExploreLayout({ children }: GenericLayoutProps) {
       <div className={styles.main}>
         <div className={styles.content}>{children}</div>
         <HydrateWrapper>
-          <AiAssistant section="explore" />
+          <AiAssistant section="explore" fullscreen={false} />
         </HydrateWrapper>
       </div>
     </ErrorBoundary>

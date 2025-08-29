@@ -33,6 +33,30 @@ function isThreadCreateResponse(data: unknown): data is ThreadCreateResponse {
   });
 }
 
+export async function serviceAiAgentThreadExists({
+  accessToken,
+  threadId,
+}: {
+  accessToken: string;
+  threadId: string;
+}): Promise<boolean> {
+  try {
+    const data = await fetchJSON({
+      method: 'GET',
+      accessToken,
+      path: `threads/${threadId}`,
+      params: {
+        thread_id: threadId,
+      },
+      typeGuard: isThreadResponse,
+    });
+    return data.thread_id === threadId;
+  } catch (ex) {
+    logError(`Unable to check existence of thread "${threadId}":`, ex);
+    return false;
+  }
+}
+
 export async function serviceAiAgentThreadMessages({
   accessToken,
   virtualLabId,
@@ -189,6 +213,35 @@ function isThreadSuggestTitleResponse(data: unknown): data is ThreadSuggestTitle
     return true;
   } catch (ex) {
     logError('Invalid response for serviceAiAgentThreadSuggestTitle!', ex);
+    return false;
+  }
+}
+
+export interface ThreadResponse {
+  thread_id: string;
+  user_id: string;
+  vlab_id: string | null;
+  project_id: string | null;
+  title: string;
+  creation_date: string;
+  update_date: string;
+}
+
+export function isThreadResponse(data: unknown): data is ThreadResponse {
+  try {
+    assertType(data, {
+      thread_id: 'string',
+      user_id: 'string',
+      vlab_id: ['|', 'string', 'null'],
+      project_id: ['|', 'string', 'null'],
+      title: 'string',
+      creation_date: 'string',
+      update_date: 'string',
+    });
+    return true;
+  } catch (ex) {
+    logError('Unexpected return type when fetching a thread:', data);
+    logError(ex);
     return false;
   }
 }
