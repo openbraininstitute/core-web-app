@@ -14,6 +14,7 @@ import Visualization from '@/ui/segments/viz';
 import Analysis from '@/features/model-analysis/explorer/container';
 import RelatedArtifacts from '@/ui/segments/detail-view/related-artifacts';
 import Configuration from '@/ui/segments/detail-view/configuration';
+import Results from '@/ui/segments/detail-view/results';
 
 export default async function Page({
   params,
@@ -52,6 +53,10 @@ export default async function Page({
 
   if (section === 'related-artifacts') {
     content = <RelatedArtifacts extendedType={entityType.extendedType} entity={entity} />;
+  }
+
+  if (section === 'results') {
+    content = <Results extendedType={entityType.extendedType} entity={entity} ctx={ctx} />;
   }
 
   if (!content) notFound();
