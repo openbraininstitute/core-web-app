@@ -1,11 +1,12 @@
 'use client';
 
-import { CSSProperties, ReactNode, useCallback, useRef, useState } from 'react';
 import { VerticalAlignMiddleOutlined } from '@ant-design/icons';
 import { ConfigProvider, Table, TableProps } from 'antd';
+import { useCallback, useRef, useState } from 'react';
 import isString from 'lodash/isString';
 
 import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
+import type { CSSProperties, ReactNode } from 'react';
 import type { TableRef } from 'antd/es/table';
 
 import {
@@ -219,8 +220,6 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
   selectionType,
   onRowsSelected,
   scrollable = true,
-  controlsVisible = true,
-  autohideControls = false,
   dataKey,
   expandableConfig,
   rowClassName,
@@ -228,18 +227,18 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
   onRow,
   className,
   dataType,
+  controls,
 }: TableProps<T> &
   AdditionalTableProps<T> & {
     renderButton?: (props: RenderButtonProps<T>) => ReactNode;
     selectionType?: RowSelectionType;
     scrollable?: boolean;
-    controlsVisible?: boolean;
     onRowsSelected?: (rows: Array<T>) => void;
-    autohideControls?: boolean;
     dataKey: string;
     expandableConfig?: ExpandableConfig<T>;
     tableStyle?: CSSProperties | undefined;
     dataType: TExtendedEntitiesTypeDict;
+    controls?: ReactNode;
   }) {
   const { rowSelection, selectedRows, clearSelectedRows } = useRowSelection({
     dataKey,
@@ -265,15 +264,17 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
         className={className}
         onRow={onRow}
       />
-      {(!autohideControls || (autohideControls && selectedRows.length > 0)) && (
-        <TableControls
-          renderButton={renderButton}
-          selectedRows={selectedRows}
-          clearSelectedRows={clearSelectedRows}
-          visible={controlsVisible}
-          dataType={dataType}
-        />
-      )}
+      <TableControls
+        visible
+        renderButton={renderButton}
+        selectedRows={selectedRows}
+        clearSelectedRows={clearSelectedRows}
+        dataType={dataType}
+      >
+        {controls}
+      </TableControls>
+      {/* {(!autohideControls || (autohideControls && selectedRows.length > 0)) && (
+      )} */}
     </>
   );
 }

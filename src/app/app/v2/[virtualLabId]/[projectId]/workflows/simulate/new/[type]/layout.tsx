@@ -3,7 +3,7 @@
 import { type ReactNode, useState } from 'react';
 import { motion } from 'motion/react';
 
-import { SimulationBreadcrumb } from '@/ui/segments/workflows/elements/simulation-breadcrumb';
+import { SimulateWorkflowsBreadcrumb } from '@/ui/segments/workflows/elements/simulate-breadcrumb';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
@@ -17,7 +17,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   return (
     <div className="bg-neutral-1 border-neutral-2 mx-2 h-full max-h-[calc(100vh-6rem)] w-[calc(100%-10px)] overflow-hidden rounded-2xl border">
-      <SimulationBreadcrumb />
+      <SimulateWorkflowsBreadcrumb />
       <motion.div
         id="workflow-new-inner-layout"
         className={cn(

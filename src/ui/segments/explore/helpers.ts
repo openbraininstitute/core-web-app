@@ -15,9 +15,11 @@ import { BoutonDensity } from '@/entity-configuration/domain/experimental/bouton
 import { getEntitiesCount } from '@/api/entitycore/queries/general/entity';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
+import { WorkspaceScope } from '@/constants';
 import { env } from '@/env';
 
 import type { WorkspaceContext } from '@/types/common';
+import type { TWorkspaceScope } from '@/constants';
 
 // import { Circuit } from '@/entity-configuration/domain/model/circuit';
 
@@ -30,9 +32,9 @@ export const ExperimentalEntitiesTileTypes = {
 } as const;
 
 export const ModelEntitiesTileTypes = {
+  SingleNeuronSynaptome,
   Emodel,
   MEmodel,
-  SingleNeuronSynaptome,
 } as const;
 
 export const SimulationEntitiesTileTypes = {
@@ -71,6 +73,47 @@ export function getAllEntitiesCount({
   });
 }
 
+export async function getAllEntitiesCountScoped({
+  virtualLabId,
+  projectId,
+  brainRegionId,
+  scope,
+  personId,
+}: WorkspaceContext & {
+  brainRegionId: string;
+  personId: string | undefined;
+  scope: TWorkspaceScope;
+}) {
+  const items = { ...ExperimentalEntitiesTileTypes, ...ModelEntitiesTileTypes };
+  const promises = Object.fromEntries(
+    Object.entries(items).map(([, value]) => {
+      return [
+        value.extendedType,
+        value.api.query?.list?.({
+          withFacets: false,
+          context: {
+            virtualLabId,
+            projectId,
+          },
+          filters: {
+            page: 1,
+            page_size: 1,
+            within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+            within_brain_region_brain_region_id: brainRegionId ?? null,
+            within_brain_region_ascendants: false,
+            ...(scope === WorkspaceScope.Project ? { created_by__id: personId } : {}),
+          },
+        }),
+      ];
+    })
+  );
+  const result = await pProps(promises);
+
+  return Object.fromEntries(
+    Object.entries(result).map(([key, value]) => [key, value?.pagination.total_items ?? 0])
+  );
+}
+
 export async function getSimulationsCount({
   virtualLabId,
   projectId,
@@ -90,18 +133,15 @@ export async function getSimulationsCount({
           filters: {
             page: 1,
             page_size: 1,
-            ...([
-              SimulationEntitiesTileTypes.SingleNeuronSimulation.extendedType,
-              SimulationEntitiesTileTypes.SingleNeuronSynaptomeSimulation.extendedType,
-            ].includes(value.extendedType)
-              ? {
-                  within_brain_region_hierarchy_id:
-                    env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
-                  within_brain_region_brain_region_id: brainRegionId ?? null,
-                  within_brain_region_ascendants: false,
-                }
-              : {}),
+            within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+            within_brain_region_brain_region_id: brainRegionId ?? null,
+            within_brain_region_ascendants: false,
             created_by__id: personId,
+          },
+          circuitFilter: {
+            within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+            within_brain_region_brain_region_id: brainRegionId ?? null,
+            within_brain_region_ascendants: false,
           },
         }),
       ];

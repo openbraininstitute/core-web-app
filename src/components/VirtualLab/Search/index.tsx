@@ -34,7 +34,7 @@ function Search(props: JSX.IntrinsicElements['input'] & { containerClassName?: s
     >
       <div
         className={classNames(
-          'flex w-max justify-between border-b bg-transparent pb-[2px]',
+          'flex w-max justify-between border-b bg-transparent',
           containerClassName
         )}
       >

@@ -1,7 +1,7 @@
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkspaceContext } from '@/types/common';
 
-const prefix = 'workspace';
+export const prefix = 'workspace';
 
 export const keyBuilder = {
   getOne: ({ virtualLabId, projectId }: WorkspaceContext) => [
@@ -61,8 +61,8 @@ export const keyBuilder = {
     page,
     pageSize,
   }: WorkspaceContext & {
-    page: number;
-    pageSize: number;
+    page?: number;
+    pageSize?: number;
     scale: TExtendedEntitiesTypeDict;
     entity?: TExtendedEntitiesTypeDict;
     type: 'build' | 'simulate';

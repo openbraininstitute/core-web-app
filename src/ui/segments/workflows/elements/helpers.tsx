@@ -27,6 +27,9 @@ export const CategoryDict = [
 ] as const;
 
 export type TCategoryValue = (typeof CategoryDict)[number]['value'];
+export const CategoryValues = Object.fromEntries(CategoryDict.map((c) => [c.label, c.value])) as {
+  [K in (typeof CategoryDict)[number] as K['label']]: K['value'];
+};
 
 type EntityTypeProperties = {
   disabled: boolean;

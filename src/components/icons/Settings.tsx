@@ -6,7 +6,7 @@ type SettingsIconProps = {
   fill?: string;
 };
 
-export default function SettingsIcon({ className, style, fill }: SettingsIconProps) {
+export function SettingsIcon({ className, style, fill }: SettingsIconProps) {
   return (
     <svg
       className={className}
@@ -32,3 +32,5 @@ export default function SettingsIcon({ className, style, fill }: SettingsIconPro
     </svg>
   );
 }
+
+export default SettingsIcon;

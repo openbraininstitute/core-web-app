@@ -1,18 +1,12 @@
 'use client';
 
-import { HTMLProps, ReactNode, useEffect, useMemo, useState } from 'react';
-import { useAtomValue } from 'jotai';
-import { unwrap } from 'jotai/utils';
-import { Spin } from 'antd';
-
-import SettingsIcon from '@/components/icons/Settings';
+import { HTMLProps, ReactNode } from 'react';
 
 import { filterHasValue } from '@/ui/segments/data-table/elements/listing-filter-panel/util';
-import { coreActiveColumnsAtom } from '@/ui/segments/data-table/elements/context';
+import { SettingsIcon } from '@/components/icons/Settings';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { CoreFilter } from '@/entity-configuration/definitions/types';
 
 function FilterBtn({ disabled, className, children, onClick }: HTMLProps<HTMLButtonElement>) {
@@ -39,8 +33,6 @@ export function FilterControls({
   children,
   displayControlPanel,
   setDisplayControlPanel,
-  dataType,
-  dataKey,
   filters,
   disabled,
   className,
@@ -48,40 +40,27 @@ export function FilterControls({
   children?: ReactNode;
   displayControlPanel: boolean;
   setDisplayControlPanel: (v: boolean) => void;
-  dataType: TExtendedEntitiesTypeDict;
-  dataKey: string;
   filters?: CoreFilter[];
   disabled?: boolean;
   className?: HTMLProps<HTMLElement>['className'];
 }) {
-  const [activeColumnsLength, setActiveColumnsLength] = useState<number | undefined>(undefined);
-
-  const activeColumns = useAtomValue(
-    useMemo(() => unwrap(coreActiveColumnsAtom({ dataType, key: dataKey })), [dataType, dataKey])
-  );
-
   const selectedFiltersCount = filters
     ? filters.filter((filter) => filterHasValue(filter)).length
     : 0;
 
-  useEffect(() => {
-    if (activeColumns && activeColumns.length) {
-      setActiveColumnsLength(activeColumns.length - 1);
-    }
-  }, [activeColumns]);
-
   const onFilterClick = () => setDisplayControlPanel(!displayControlPanel);
+
   return (
     <div
       id="data-filter-header"
       data-testid="data-filter-header"
       className={classNames(
-        'z-10 ml-auto flex w-full items-center justify-between gap-5 self-end',
+        'z-10 flex w-full items-center justify-between gap-5 self-end',
         className
       )}
     >
       {children}
-      <div className="ml-auto inline-flex w-full place-content-end gap-2">
+      <div className="inline-flex w-full place-content-end gap-2">
         <FilterBtn
           disabled={disabled}
           onClick={onFilterClick}
@@ -91,7 +70,7 @@ export function FilterControls({
             <span className="bg-primary-8 rounded-sm px-2.5 py-1 text-sm font-bold text-white">
               {selectedFiltersCount}
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col items-start">
               <span
                 className={classNames(
                   'text-sm leading-5 font-bold',
@@ -100,7 +79,7 @@ export function FilterControls({
               >
                 Filters
               </span>
-              <span className="text-neutral-4 group-hover:text-primary-8 text-xs leading-5 font-semibold">
+              {/* <span className="text-neutral-4 group-hover:text-primary-8 text-[9px] leading-3 font-light">
                 {activeColumnsLength ? (
                   <>
                     {activeColumnsLength} active{' '}
@@ -109,7 +88,7 @@ export function FilterControls({
                 ) : (
                   <Spin />
                 )}
-              </span>
+              </span> */}
             </div>
           </div>
         </FilterBtn>

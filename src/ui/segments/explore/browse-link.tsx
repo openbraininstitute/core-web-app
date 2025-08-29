@@ -3,6 +3,8 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import snakeCase from 'lodash/snakeCase';
 import Link from 'next/link';
 
+import type { ReactNode } from 'react';
+
 import { getEntityTypeFromUrlOnEntityScope } from '@/ui/segments/explore/helpers';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
@@ -17,7 +19,7 @@ export function BrowseLink({
   isLoading: boolean;
   type: string;
   title: string;
-  count: number | null;
+  count: ReactNode;
   href: string;
 }) {
   const searchParams = useSearchParams();

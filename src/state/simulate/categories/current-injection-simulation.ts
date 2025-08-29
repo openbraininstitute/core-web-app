@@ -1,7 +1,7 @@
 import { useAtom } from 'jotai';
 
 import { atomWithReset } from 'jotai/utils';
-import updateArray from '@/util/updateArray';
+import { updateArray } from '@/util/updateArray';
 import {
   CurrentInjectionSimulationConfig,
   StimulusType,

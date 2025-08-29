@@ -33,12 +33,12 @@ async function resolveSimulationCampaigns({
   withFacets,
   context,
   filters,
-  circuitFilter,
+  circuitScaleFilter,
 }: {
   withFacets?: boolean;
   context: WorkspaceContext | undefined;
   filters?: Partial<ICircuitSimulationCampaignFilter>;
-  circuitFilter?: Partial<ICircuitFilter>;
+  circuitScaleFilter?: Partial<ICircuitFilter>;
 }) {
   // eslint-disable-next-line no-param-reassign
   filters = discardBrainRegionQueryParams(filters);
@@ -80,7 +80,7 @@ async function resolveSimulationCampaigns({
 
   const circuits = await getCircuits({
     context,
-    filters: { id__in: source.data.map((l) => l.entity_id), ...circuitFilter },
+    filters: { id__in: source.data.map((l) => l.entity_id), ...circuitScaleFilter },
   });
   const circuitMap = keyBy(circuits.data, 'id');
   const result = enrichedData.map((entity) => ({
@@ -143,7 +143,7 @@ export const SmallMicrocircuitSimulation: EntityCoreTypeConfig<ICircuitSimulatio
       list: (params: Parameters<typeof resolveSimulationCampaigns>[0]) =>
         resolveSimulationCampaigns({
           ...params,
-          circuitFilter: {
+          circuitScaleFilter: {
             scale: 'small',
           },
         }),

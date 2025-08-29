@@ -1,6 +1,6 @@
 import { HTMLProps, PropsWithChildren, useState } from 'react';
 import ControlPanel from './ControlPanel';
-import SettingsIcon from '@/components/icons/Settings';
+import { SettingsIcon } from '@/components/icons/Settings';
 import { classNames } from '@/util/utils';
 
 export default function FilterControls({
@@ -19,7 +19,7 @@ export default function FilterControls({
 
   return (
     <>
-      <div className={classNames('flex items-center justify-between gap-5 py-5', className)}>
+      <div className={classNames('flex items-center justify-between gap-5', className)}>
         <div className="inline-flex w-full place-content-end gap-2">
           <button
             className={classNames(

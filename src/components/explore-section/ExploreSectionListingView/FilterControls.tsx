@@ -14,11 +14,11 @@ import { unwrap } from 'jotai/utils';
 import { Spin } from 'antd';
 
 import ExploreSectionNameSearch from '@/components/explore-section/ExploreSectionListingView/ExploreSectionNameSearch';
-import SettingsIcon from '@/components/icons/Settings';
 
 import { activeColumnsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { filterHasValue } from '@/features/listing-filter-panel/util';
+import { SettingsIcon } from '@/components/icons/Settings';
 import { classNames } from '@/util/utils';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';

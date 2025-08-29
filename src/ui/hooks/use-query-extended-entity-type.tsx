@@ -13,7 +13,7 @@ import {
   selectedBrainRegionAtom,
 } from '@/features/brain-region-hierarchy/context';
 import { compactRecord } from '@/utils/dictionary';
-import { DEFAULT_PAGE_SIZE } from '@/constants';
+import { DEFAULT_PAGE_SIZE, WorkspaceScope } from '@/constants';
 import {
   coreFiltersAtom,
   coreSortStateAtom,
@@ -53,8 +53,11 @@ export function buildQueryKey({
 }
 
 function useQueryParameters(
-  { context }: { context: QueryContext },
-  requireBrainRegion: boolean = true
+  { context, workspace }: { context: QueryContext; workspace?: WorkspaceContext },
+  {
+    requireBrainRegion = true,
+    defaultBrainRegion,
+  }: { requireBrainRegion?: boolean; defaultBrainRegion?: string }
 ) {
   const selectedBrainRegin = useAtomValue(selectedBrainRegionAtom);
   const sortState = useAtomValue(coreSortStateAtom({ key: context.key }));
@@ -72,10 +75,21 @@ function useQueryParameters(
     ...(requireBrainRegion
       ? {
           within_brain_region_hierarchy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,
-          within_brain_region_brain_region_id: selectedBrainRegin?.id,
+          within_brain_region_brain_region_id: defaultBrainRegion ?? selectedBrainRegin?.id,
           within_brain_region_ascendants: false,
         }
       : {}),
+    // eslint-disable-next-line no-nested-ternary
+    ...(context.workspaceScope === WorkspaceScope.Project
+      ? {
+          authorized_public: false,
+          authorized_project_id: workspace?.projectId,
+        }
+      : context.workspaceScope === WorkspaceScope.Public
+        ? {
+            authorized_public: true,
+          }
+        : {}),
     ...transformFiltersToQuery(filters as any),
   });
 
@@ -87,6 +101,7 @@ export function useQueryExtendedEntityType<TData = unknown, TError = unknown>({
   workspace,
   queryFn,
   requireBrainRegion,
+  defaultBrainRegion,
   ...rest
 }: {
   context: QueryContext;
@@ -109,6 +124,7 @@ export function useQueryExtendedEntityType<TData = unknown, TError = unknown>({
     | undefined;
   useKeepPreviousData?: boolean;
   requireBrainRegion?: boolean;
+  defaultBrainRegion?: string;
 } & Omit<
   UseQueryOptions<
     TData,
@@ -127,7 +143,10 @@ export function useQueryExtendedEntityType<TData = unknown, TError = unknown>({
   >,
   'queryKey' | 'queryFn' | 'placeholderData'
 >) {
-  const queryParameters = useQueryParameters({ context }, requireBrainRegion);
+  const queryParameters = useQueryParameters(
+    { context, workspace },
+    { requireBrainRegion, defaultBrainRegion }
+  );
   return useQuery({
     queryKey: buildQueryKey({ workspace, context, queryParameters, requireBrainRegion }),
     queryFn,

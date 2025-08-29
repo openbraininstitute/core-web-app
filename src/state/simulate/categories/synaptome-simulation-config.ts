@@ -2,9 +2,8 @@ import { atomWithReset } from 'jotai/utils';
 import { useAtom } from 'jotai';
 import sample from 'lodash/sample';
 
-import updateArray from '@/util/updateArray';
-
 import { getDefaultSynapseConfig, SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
+import { updateArray } from '@/util/updateArray';
 
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type {

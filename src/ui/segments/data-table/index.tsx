@@ -1,19 +1,21 @@
 'use client';
 
-import { type ComponentProps, type CSSProperties, type ReactNode, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { unwrap } from 'jotai/utils';
 import { useAtom } from 'jotai';
 
+import type { ComponentProps, CSSProperties, ReactNode } from 'react';
 import type { RowSelectionType } from 'antd/es/table/interface';
 import type { ColumnProps, TableProps } from 'antd/es/table';
 
 import { ListingFilterPanel } from '@/ui/segments/data-table/elements/listing-filter-panel/listing-filter-panel';
-// import { ResultsCount } from '@/ui/segments/data-table/elements/listing-filter-panel/numeric-results-info';
+import { BrainRegionDropdown } from '@/features/brain-region-dropdown';
 import { FilterControls } from '@/ui/segments/data-table/elements/filter-controls';
 import { coreFiltersAtom } from '@/ui/segments/data-table/elements/context';
 import { OnCellClick, WrapperTable } from '@/ui/segments/data-table/table';
 import { Pagination } from '@/ui/segments/data-table/elements/pagination';
 import { Search } from '@/ui/segments/data-table/search';
+import { WorkspaceScope } from '@/constants';
 import { cn } from '@/utils/css-class';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -34,7 +36,6 @@ export type Props<T> = {
   };
   dataScope?: TWorkspaceScope;
   columns: ColumnProps<T>[];
-  controlsVisible: boolean;
   dataType: TExtendedEntitiesTypeDict;
   workspace?: WorkspaceContext;
   cls?: {
@@ -51,7 +52,7 @@ export type Props<T> = {
   showLoadingState?: boolean;
   isLoading?: boolean;
   dataSource: Array<T>;
-  rowClassName?: ComponentProps<'td'>['className'];
+  rowClassName?: string | TableProps<T>['rowClassName'];
   tableStyle?: CSSProperties | undefined;
 };
 
@@ -62,7 +63,6 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
   workspace,
   cls,
   facets,
-  controlsVisible,
   renderButton,
   showLoadingState,
   isLoading,
@@ -106,25 +106,26 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
       >
         <div
           className={cn(
-            'mb-5 grid w-full grid-cols-[1fr_1fr_1fr] items-center justify-center gap-5 pt-2',
+            'mb-5 grid w-full grid-cols-[2fr_2fr] items-center justify-center gap-5 pt-2',
             '[grid-template-areas:"search_pagination_filter"]'
           )}
         >
           <div className="w-full [grid-area:search]">
             <Search {...{ dataType, dataKey, className: 'pl-2' }} />
           </div>
-          <div className="w-full [grid-area:pagination]">
-            <Pagination {...{ dataKey, resultPagination }} />
-          </div>
           <div className="[grid-area:filter]">
-            <FilterControls
-              filters={filters}
-              displayControlPanel={displayControlPanel}
-              dataType={dataType}
-              dataKey={dataKey}
-              setDisplayControlPanel={onDisplayControlPanel}
-              className="justify-end self-end"
-            />
+            <div className="ml-auto flex h-12 items-stretch justify-center gap-3">
+              {(dataScope === WorkspaceScope.BuildMeModelM ||
+                dataScope === WorkspaceScope.BuildSynaptomeModel) && (
+                <BrainRegionDropdown dataKey={dataKey} />
+              )}
+              <FilterControls
+                filters={filters}
+                displayControlPanel={displayControlPanel}
+                setDisplayControlPanel={onDisplayControlPanel}
+                className="justify-end self-end"
+              />
+            </div>
           </div>
         </div>
         <WrapperTable<T>
@@ -135,7 +136,6 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           onCellClick={onCellClick}
           renderButton={renderButton}
           selectionType={selectionType}
-          controlsVisible={controlsVisible}
           onRowsSelected={onRowsSelected}
           dataKey={dataKey}
           rowClassName={rowClassName}
@@ -143,6 +143,11 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           onRow={onRow}
           sticky={sticky}
           className={cls?.table}
+          controls={
+            <div className="w-full">
+              <Pagination {...{ dataKey, resultPagination }} />
+            </div>
+          }
         />
       </section>
       {displayControlPanel && filters && (

@@ -1,0 +1,53 @@
+'use client';
+
+import { useSearchParams } from 'next/navigation';
+import { match, P } from 'ts-pattern';
+import isNil from 'lodash/isNil';
+
+import {
+  BuildStep,
+  useBuildMeModelSessionState,
+} from '@/ui/segments/workflows/build/memodel/helpers';
+import { EModel, EModelMiniDetail } from '@/ui/segments/workflows/build/memodel/e-model';
+import { MModel, MModelMiniDetail } from '@/ui/segments/workflows/build/memodel/m-model';
+import { Info } from '@/ui/segments/workflows/build/memodel/overview';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+
+type Props = {
+  sessionId: string;
+};
+
+export function Content({ sessionId }: Props) {
+  const searchParams = useSearchParams();
+  const { virtualLabId, projectId } = useWorkspace();
+  const step = searchParams.get('step') ?? BuildStep.Info;
+  const { sessionValue } = useBuildMeModelSessionState({
+    sessionId,
+    virtualLabId,
+    projectId,
+  });
+
+  const content = match({ step, sessionValue })
+    .with({ step: BuildStep.Info }, () => <Info sessionId={sessionId} />)
+    .with(
+      { step: BuildStep.MModel },
+      () => isNil(sessionValue) || isNil(sessionValue.mmodel),
+      () => <MModel sessionId={sessionId} />
+    )
+    .with(
+      { step: BuildStep.MModel, sessionValue: { mmodel: P.nonNullable.select('mmodel') } },
+      () => <MModelMiniDetail sessionId={sessionId} />
+    )
+    .with(
+      { step: BuildStep.EModel },
+      () => isNil(sessionValue) || isNil(sessionValue.emodel),
+      () => <EModel sessionId={sessionId} />
+    )
+    .with(
+      { step: BuildStep.EModel, sessionValue: { emodel: P.nonNullable.select('emodel') } },
+      () => <EModelMiniDetail sessionId={sessionId} />
+    )
+    .otherwise(() => null);
+
+  return content;
+}

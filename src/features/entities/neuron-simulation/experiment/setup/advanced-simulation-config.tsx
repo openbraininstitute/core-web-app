@@ -2,9 +2,9 @@
 
 import { useParams } from 'next/navigation';
 
-import NeuronViewerContainer from '@/components/neuron-viewer/NeuronViewerWithActions';
 import Wrapper from '@/features/entities/neuron-simulation/experiment/elements/wrapper';
 import ParameterView from '@/features/entities/neuron-simulation/experiment/steps-wizard';
+import { NeuronViewerContainer } from '@/components/neuron-viewer/neuron-viewer-with-actions';
 
 import type { SingleNeuronSynaptomePayload } from '@/features/entities/neuron-simulation/experiment/containers/synaptome';
 import type { WorkspaceContext } from '@/types/common';

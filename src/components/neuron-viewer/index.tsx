@@ -1,23 +1,33 @@
 import { MutableRefObject, useCallback, useEffect, useRef } from 'react';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 
-import useNeuronViewerEvents from './hooks/events-hook';
-import useNeuronViewerActions from './hooks/actions-hook';
-import NeuronLoader from './plugins/NeuronLoader';
 import Renderer, { NeuronViewerConfig } from '@/services/bluenaas-single-cell/renderer';
+import useNeuronViewerActions from '@/components/neuron-viewer/hooks/actions-hook';
+import useNeuronViewerEvents from '@/components/neuron-viewer/hooks/events-hook';
+import NeuronLoader from '@/components/neuron-viewer/plugins/NeuronLoader';
 import useMorphology from '@/hooks/useMorphology';
 
-import { Morphology } from '@/services/bluenaas-single-cell/types';
-import { secNamesAtom } from '@/state/simulate/single-neuron';
-import { DEFAULT_CURRENT_INJECTION_CONFIG } from '@/constants/simulate/single-neuron';
+import {
+  PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
+  PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { recordingSourceForSimulationAtom } from '@/state/simulate/categories/recording-source-for-simulation';
 import { currentInjectionSimulationConfigAtom } from '@/state/simulate/categories/current-injection-simulation';
+import {
+  RecordLocationConfigurationAtomFamily,
+  StimulationProtocolConfigurationAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import { DEFAULT_CURRENT_INJECTION_CONFIG } from '@/constants/simulate/single-neuron';
 import { useAppNotification } from '@/components/notification';
+import { secNamesAtom } from '@/state/simulate/single-neuron';
+
+import type { Morphology } from '@/services/bluenaas-single-cell/types';
 
 type Props = {
   virtualLabId: string;
   projectId: string;
   meModelId: string;
+  sessionId?: string;
   useEvents?: boolean;
   useActions?: boolean;
   useZoomer?: boolean;
@@ -52,6 +62,7 @@ export default function NeuronViewer({
   actions,
   virtualLabId,
   projectId,
+  sessionId,
 }: Props) {
   const labelsCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -117,16 +128,31 @@ export default function NeuronViewer({
    * But today, we have only one.
    */
   const stimulationId = 0;
+  const sessionKey = `${PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY}-${sessionId}`;
+  const recordingAtom = sessionId
+    ? RecordLocationConfigurationAtomFamily(sessionKey)
+    : recordingSourceForSimulationAtom;
+
+  const [recordLocations] = useAtom(recordingAtom);
+
+  const stimulationKey = `${PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY}-${sessionId}`;
+  const injectionSessionAtom = useAtomValue(
+    StimulationProtocolConfigurationAtomFamily(stimulationKey)
+  );
   const injectionLocations = useAtomValue(currentInjectionSimulationConfigAtom);
-  const recordLocations = useAtomValue(recordingSourceForSimulationAtom);
+
   if (useLabels) {
-    rendererRef.current?.labels.update([
-      {
-        section: injectionLocations[stimulationId].inject_to,
+    let injection = {
+      section: injectionLocations[stimulationId].inject_to,
+      offset: 0.5,
+    };
+    if (sessionId) {
+      injection = {
+        section: injectionSessionAtom.inject_to,
         offset: 0.5,
-      },
-      ...recordLocations,
-    ]);
+      };
+    }
+    rendererRef.current?.labels.update([injection, ...recordLocations]);
   }
 
   if (error) {
@@ -135,14 +161,14 @@ export default function NeuronViewer({
   }
 
   return (
-    <div className="relative h-full w-full">
+    <div className="relative h-full w-full rounded-2xl">
       {loading && (
         <div className="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center">
           <NeuronLoader text="Loading Neuron" />
         </div>
       )}
       <div
-        className="h-full"
+        className="h-full [&_canvas]:rounded-2xl"
         ref={containerRef}
         // NOTE: this is removed because it does not getting the exact pointer position due the scale and nature of the custom cursor
         // style={{
@@ -151,7 +177,7 @@ export default function NeuronViewer({
       />
       <canvas
         ref={labelsCanvasRef}
-        className="pointer-events-none absolute top-0 left-0 size-full"
+        className="pointer-events-none absolute top-0 left-0 size-full rounded-2xl"
       />
       {children?.({
         useZoomer,

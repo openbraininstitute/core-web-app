@@ -1,11 +1,9 @@
 'use client';
 
-import { Empty, Table, ConfigProvider } from 'antd';
 import { RightSquareOutlined } from '@ant-design/icons';
-
+import { Empty, Table, ConfigProvider } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 import { useState } from 'react';
-
 import Link from 'next/link';
 import get from 'lodash/get';
 
@@ -112,56 +110,59 @@ export function ProjectActivities() {
         <Header onScaleChange={setScale} onTypeChange={setType} onPageChange={setPage} />
       </CardHeader>
       <CardContent>
-        <Card borderless shadowless className="flex items-center justify-center py-10">
-          {!data && !isLoading && (
-            <p className="text-neutral-4">You don’t have any activities yet</p>
+        <Card borderless shadowless className="flex items-center justify-center pt-5 pb-0">
+          {!data?.pagination.total_items && !isLoading ? (
+            <Card className="text-neutral-4 shadow-xs">
+              <CardContent>You don’t have any activities yet </CardContent>
+            </Card>
+          ) : (
+            <div className="flex h-full w-full flex-col">
+              <ConfigProvider theme={{ hashed: false }}>
+                <Table
+                  className={cn(
+                    '[&_.ant-table]:bg-neutral-1! [&_.ant-table-thead_th]:bg-neutral-1!',
+                    '[&_.ant-table-thead_th]:text-neutral-4!',
+                    '[&_.ant-table-placeholder]:bg-neutral-1!'
+                  )}
+                  loading={isLoading}
+                  dataSource={data?.data}
+                  columns={columns}
+                  pagination={{
+                    pageSize: ACTIVITY_PAGE_SIZE,
+                    total: data?.pagination.total_items,
+                    defaultCurrent: 1,
+                    current: page,
+                    hideOnSinglePage: true,
+                    align: 'end',
+                    size: 'default',
+                    responsive: true,
+                    role: 'button',
+                    position: ['bottomRight'],
+                    onChange: (_page, _pageSize) => {
+                      setPage(_page);
+                    },
+                    className: cn(
+                      '[&_.ant-pagination-item-active]:bg-primary-9 [&_.ant-pagination-item-active_a]:text-white!',
+                      '[&_.ant-pagination-disabled_button]:text-neutral-2 [&_button.ant-pagination-item-link]:text-primary-9'
+                    ),
+                  }}
+                  locale={{
+                    emptyText: (
+                      <Empty
+                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                        description={
+                          <span className="text-primary-9">
+                            No activities found for{' '}
+                            <strong>{getEntityByExtendedType({ type: scale })?.title}</strong>.
+                          </span>
+                        }
+                      />
+                    ),
+                  }}
+                />
+              </ConfigProvider>
+            </div>
           )}
-          <div className="flex h-full w-full flex-col">
-            <ConfigProvider theme={{ hashed: false }}>
-              <Table
-                className={cn(
-                  '[&_.ant-table]:bg-neutral-1! [&_.ant-table-thead_th]:bg-neutral-1!',
-                  '[&_.ant-table-thead_th]:text-neutral-4!',
-                  '[&_.ant-table-placeholder]:bg-neutral-1!'
-                )}
-                loading={isLoading}
-                dataSource={data?.data}
-                columns={columns}
-                pagination={{
-                  pageSize: ACTIVITY_PAGE_SIZE,
-                  total: data?.pagination.total_items,
-                  defaultCurrent: 1,
-                  current: page,
-                  hideOnSinglePage: true,
-                  align: 'end',
-                  size: 'default',
-                  responsive: true,
-                  role: 'button',
-                  position: ['bottomRight'],
-                  onChange: (_page, _pageSize) => {
-                    setPage(_page);
-                  },
-                  className: cn(
-                    '[&_.ant-pagination-item-active]:bg-primary-9 [&_.ant-pagination-item-active_a]:text-white!',
-                    '[&_.ant-pagination-disabled_button]:text-neutral-2 [&_button.ant-pagination-item-link]:text-primary-9'
-                  ),
-                }}
-                locale={{
-                  emptyText: (
-                    <Empty
-                      image={Empty.PRESENTED_IMAGE_SIMPLE}
-                      description={
-                        <span className="text-primary-9">
-                          No activities found for{' '}
-                          <strong>{getEntityByExtendedType({ type: scale })?.title}</strong>.
-                        </span>
-                      }
-                    />
-                  ),
-                }}
-              />
-            </ConfigProvider>
-          </div>
         </Card>
       </CardContent>
     </Card>
