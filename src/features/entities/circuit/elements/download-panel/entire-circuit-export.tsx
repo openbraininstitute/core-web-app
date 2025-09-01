@@ -31,6 +31,7 @@ export default function EntireCircuitExport({ circuit }: Props) {
     assets,
     filter: (asset) => asset.label === AssetLabel.compressed_sonata_circuit,
   });
+  const extension = configAsset?.content_type.split('/').pop();
 
   const downloadDirectory = useCallback(async () => {
     const result = await trackDownloadProgress(
@@ -52,7 +53,6 @@ export default function EntireCircuitExport({ circuit }: Props) {
       }
     );
 
-    const extension = configAsset?.content_type.split('/').pop();
     const blob = new Blob(result, { type: configAsset?.content_type });
     saveAs(blob, `${circuit.name}.${extension}`);
     updateDownloadProgress(0);
@@ -65,7 +65,7 @@ export default function EntireCircuitExport({ circuit }: Props) {
     }
   };
   const totalSize =
-    configAsset?.size && configAsset?.size > 1 ? formatBytes(configAsset?.size) : 'N/A';
+    configAsset?.size && configAsset?.size > 1 ? formatBytes(configAsset?.size) : '';
 
   const action = match({ status })
     .with({ status: 'idle' }, () => (
@@ -116,7 +116,7 @@ export default function EntireCircuitExport({ circuit }: Props) {
         </div>
         <div className="text-primary-1 flex flex-row gap-x-3 font-semibold">
           <div>{totalSize}</div>
-          <div>h5</div>
+          <div>{extension}</div>
           {action}
         </div>
       </div>
