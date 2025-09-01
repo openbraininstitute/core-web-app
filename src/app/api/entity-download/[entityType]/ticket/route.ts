@@ -1,9 +1,9 @@
+import snakeCase from 'lodash/snakeCase';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import snakeCase from 'lodash/snakeCase';
 
-import { auth } from '@/auth';
 import { TEntityTypeDict } from '@/api/entitycore/types';
+import { auth } from '@/auth';
 import { ticketStore } from '@/features/entity-download/ticket-store';
 
 // Schema for ticket creation request
@@ -25,10 +25,7 @@ const createTicketSchema = z.object({
  *   entityIds: string[]            // Array of entity UUIDs to download (max 100)
  * }
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ entityType: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: { entityType: string } }) {
   const session = await auth();
   if (!session) {
     return new Response('Unauthorized', {

@@ -1,5 +1,5 @@
-import snakeCase from 'lodash/snakeCase';
 import kebabCase from 'lodash/kebabCase';
+import snakeCase from 'lodash/snakeCase';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -15,7 +15,7 @@ import { ticketStore } from '@/features/entity-download/ticket-store';
  */
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ entityType: string; ticketId: string }> }
+  { params }: { params: { entityType: string; ticketId: string } }
 ) {
   const { entityType: entityTypeRaw, ticketId } = await params;
   const entityType = snakeCase(entityTypeRaw) as TEntityTypeDict;

@@ -1,11 +1,12 @@
-import z from 'zod';
-import snakeCase from 'lodash/snakeCase';
 import kebabCase from 'lodash/kebabCase';
+import snakeCase from 'lodash/snakeCase';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import z from 'zod';
+
 import { TEntityTypeDict } from '@/api/entitycore/types';
-import { getDownloadStreamHeaders } from '@/features/entity-download/utils';
+import { auth } from '@/auth';
 import { createDownloadStream } from '@/features/entity-download/download-stream';
+import { getDownloadStreamHeaders } from '@/features/entity-download/utils';
 
 const downloadRequestSchema = z.object({
   virtualLabId: z.string().uuid().optional().nullable(),
@@ -27,10 +28,8 @@ const downloadRequestSchema = z.object({
  *   entityIds: string[]            // Array of entity UUIDs to download (max 100)
  * }
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ entityType: string }> }
-) {
+
+export async function POST(request: NextRequest, { params }: { params: { entityType: string } }) {
   const { entityType: entityTypeRaw } = await params;
   const entityType = snakeCase(entityTypeRaw) as TEntityTypeDict;
 

@@ -25,9 +25,7 @@ export function convertLineChart(
       },
     ],
     layout: {
-      title: {
-        text: obj.title,
-      },
+      title: obj.title,
       autosize: true,
     },
   };

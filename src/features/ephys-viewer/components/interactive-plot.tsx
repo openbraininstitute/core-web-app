@@ -1,11 +1,14 @@
-import { useState, useMemo, useEffect } from 'react';
-import Plotly, { PlotData } from 'plotly.js-dist-min';
-import createPlotlyComponent from 'react-plotly.js/factory';
 import { Radio } from 'antd';
 import { useAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
+import Plotly, { PlotData } from 'plotly.js-dist-min';
+import { useEffect, useMemo, useState } from 'react';
+import createPlotlyComponent from 'react-plotly.js/factory';
 
+import { useInteractivePlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
 import { RecordingType, SweepData } from '@/features/ephys-viewer/nwb-trace';
+import { PlotProps, ZoomRanges } from '@/features/ephys-viewer/types';
+import optimizePlotData from '@/util/explore-section/optimizeTrace';
 import {
   convertCurrentSeries,
   convertVoltageSeries,
@@ -13,9 +16,6 @@ import {
   ensureCurrentUnit,
   VoltageUnit,
 } from '@/util/explore-section/plotHelpers';
-import optimizePlotData from '@/util/explore-section/optimizeTrace';
-import { useInteractivePlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
-import { PlotProps, ZoomRanges } from '@/features/ephys-viewer/types';
 
 const Plot = createPlotlyComponent(Plotly);
 
@@ -106,9 +106,7 @@ export default function InteractivePlot({
           setZoomRanges({ x: [x1, x2], y: [y1, y2] });
         }}
         layout={{
-          title: {
-            text: recordingType === RecordingType.STIMULUS ? 'Stimulus' : 'Response',
-          },
+          title: recordingType === RecordingType.STIMULUS ? 'Stimulus' : 'Response',
           xaxis: {
             title: {
               font,

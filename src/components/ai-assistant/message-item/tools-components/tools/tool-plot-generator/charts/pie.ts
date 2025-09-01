@@ -26,9 +26,7 @@ export function convertPieChart(
       },
     ],
     layout: {
-      title: {
-        text: obj.title,
-      },
+      title: obj.title,
       autosize: true,
     },
   };
