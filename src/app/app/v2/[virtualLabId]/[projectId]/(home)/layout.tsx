@@ -20,12 +20,12 @@ export default function Layout({ children }: Props) {
 
   return (
     <ProjectInnerLayout>
-      <div id="project-left-menu" className="w-full px-3 [grid-area:aside]">
+      <div id="project-left-menu" className="w-full pl-3 [grid-area:aside]">
         <LeftMenu className="w-full" />
       </div>
       <div
         id="project-main-content"
-        className="secondary-scrollbar w-full overflow-y-auto px-3 [grid-area:main]"
+        className="secondary-scrollbar w-full overflow-y-auto [grid-area:main]"
       >
         {children}
       </div>

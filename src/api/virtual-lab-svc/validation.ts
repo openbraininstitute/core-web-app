@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const EmailStatusSchema = z.enum([
+export const EmailStatusSchema = z.enum([
   'none',
   'error',
   'verified',
@@ -10,6 +10,7 @@ const EmailStatusSchema = z.enum([
   'not-match',
   'registered',
 ]);
+export type TEmailStatus = z.infer<typeof EmailStatusSchema>;
 
 export const RoleSchema = z.enum(['admin', 'member']);
 export const VirtualLabPayloadSchema = z.object({

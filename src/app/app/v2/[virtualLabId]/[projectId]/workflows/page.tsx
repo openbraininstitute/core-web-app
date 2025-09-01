@@ -45,7 +45,7 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
   };
 
   return (
-    <div className="mx-5 mt-3 mb-10 h-max max-h-[calc(100vh-7rem)]">
+    <div className="mr-0 mb-10 ml-3 h-max max-h-[calc(100vh-7rem)]">
       <div className="border-neutral-2 mr-1 h-full rounded-2xl border px-5">
         <CategoryMenu current={category} onItemClick={onSelectCategory} />
         <AnimatePresence>

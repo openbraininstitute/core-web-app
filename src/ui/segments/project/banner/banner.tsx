@@ -137,7 +137,7 @@ export function ProjectCard(): ReactElement {
 
       <div className="relative z-10 h-full w-full">
         <div className="h-full w-full p-6 md:w-[calc(100%-6px)] md:pt-20 lg:p-6 lg:md:w-[calc(var(--container-2xl)-14px)] xl:max-w-3xl">
-          <div className="mb-6">
+          <div className="mb-2 lg:mb-6">
             {isEditing ? (
               <textarea
                 id="project-name"
@@ -176,7 +176,7 @@ export function ProjectCard(): ReactElement {
                 id="project-description-text"
                 text={isPending ? variables.description : result.data.project.description}
                 collapsedLines={6}
-                className="text-justify text-base leading-6 text-balance text-white/90 transition-all duration-300 lg:text-lg"
+                className="text-justify text-base leading-6 text-white/90 transition-all duration-300 lg:text-lg"
               >
                 {({ isExpanded, toggle }) => (
                   <button
