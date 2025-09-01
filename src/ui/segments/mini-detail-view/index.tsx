@@ -302,7 +302,7 @@ function ExploreActions<T extends EntityCoreObjectTypes>({ record }: { record: T
         className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
       >
         <Link
-          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/view/${kebabCase(record.type)}/${record.id}`}
+          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`}
         >
           View details
         </Link>
@@ -324,7 +324,7 @@ function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({ record }: { 
         className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
       >
         <Link
-          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/view/${kebabCase(record.type)}/${record.id}`}
+          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`}
         >
           View details
         </Link>
@@ -363,7 +363,7 @@ function WorkflowBuildActions<T extends EntityCoreObjectTypes>({ record }: { rec
         className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
       >
         <Link
-          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/view/${kebabCase(record.type)}/${record.id}`}
+          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`}
         >
           View details
         </Link>

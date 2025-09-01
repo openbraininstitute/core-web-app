@@ -134,6 +134,7 @@ export default function Recording() {
           addRecordLocation({
             section: sectionNames[0],
             offset: 0.5,
+            record_currents: false,
           });
         }}
         disabled={!sectionNames.length}

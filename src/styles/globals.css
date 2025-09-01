@@ -68,7 +68,8 @@
   );
   --color-accent: #eef6fb;
   --color-accent-foreground: #050a17;
-
+  --color-background: #fafafa;
+  --color-label: #8c8c8c;
   --font-sans:
     var(--font-titillium-web), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';

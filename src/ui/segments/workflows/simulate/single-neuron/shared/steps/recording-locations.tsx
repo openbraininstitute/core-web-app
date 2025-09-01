@@ -1,6 +1,6 @@
 import { DeleteOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { TooltipContent } from '@radix-ui/react-tooltip';
-import { Form, InputNumber, Select } from 'antd';
+import { Checkbox, Form, InputNumber, Select } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import z from 'zod';
@@ -60,7 +60,7 @@ function RecordItem({ index, name, disable, disableDelete, sections, onRemove }:
   return (
     <div className="w-full">
       <div className="flex w-full flex-col items-start justify-start">
-        <div className="grid w-full grid-cols-[1fr_.5fr_max-content] items-start justify-center gap-2">
+        <div className="grid w-full grid-cols-[.5fr_.5fr_.5fr_max-content] items-start justify-center gap-4">
           <Form.Item
             label={label(`Recording ${index + 1}`, true)}
             labelAlign="left"
@@ -89,7 +89,10 @@ function RecordItem({ index, name, disable, disableDelete, sections, onRemove }:
               showSearch
               placeholder="Section name"
               options={sections.map((sec) => ({ label: sec, value: sec }))}
-              className="border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! rounded-md border-[1px]! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!"
+              className={cn(
+                'border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! rounded-md border-[1px]! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!',
+                '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!'
+              )}
               popupClassName="[&_.ant-select-item-option-content]:text-primary-9!"
               placement="bottomLeft"
               disabled={disable}
@@ -149,6 +152,33 @@ function RecordItem({ index, name, disable, disableDelete, sections, onRemove }:
               }
             />
           </Form.Item>
+          <Form.Item
+            label={label('record currents', true)}
+            labelAlign="left"
+            name={[name, 'record_currents']}
+            valuePropName="checked"
+            rules={[
+              {
+                validator: async (_rule, value) => {
+                  try {
+                    await RecordLocationSchema.pick({
+                      record_currents: true,
+                    }).shape.record_currents.parseAsync(value);
+                  } catch (error) {
+                    return Promise.reject(
+                      error instanceof z.ZodError
+                        ? error.errors.at(0)?.message
+                        : 'This field is required'
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              },
+            ]}
+            className="[&_.ant-form-item-control-input]:h-11"
+          >
+            <Checkbox className="h-full" disabled={disable} />
+          </Form.Item>
           <Form.Item className="flex items-center justify-center" label={<></>} labelAlign="left">
             <Button
               variant="ghost"
@@ -156,7 +186,7 @@ function RecordItem({ index, name, disable, disableDelete, sections, onRemove }:
               type="button"
               disabled={disableDelete}
               onClick={() => onRemove(index)}
-              className="hover:bg-neutral-2/50 w-10"
+              className="hover:bg-neutral-2 w-10 cursor-pointer"
             >
               <DeleteOutlined />
             </Button>

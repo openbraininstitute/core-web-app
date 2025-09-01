@@ -1,5 +1,6 @@
 'use client';
 
+import { atomFamily } from 'jotai/utils';
 import { atom, useAtom } from 'jotai';
 
 import { WorkflowSimulatePanels } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
@@ -26,11 +27,15 @@ export const tabsConfigItems: Array<{
   },
 ];
 
-export const headerTabsAtom = atom<WorkflowSimulatePanelKeys>(WorkflowSimulatePanels.Configuration);
+export const headerTabsAtom = atomFamily((key: string) => {
+  const childAtom = atom<WorkflowSimulatePanelKeys>(WorkflowSimulatePanels.Configuration);
+  childAtom.debugLabel = `simulation-header-menu-${key}`;
+  return childAtom;
+});
 
-export function Header() {
+export function Header({ sessionId }: { sessionId: string }) {
   const breakpoint = useDefaultBreakpoint();
-  const [active, updateActive] = useAtom(headerTabsAtom);
+  const [active, updateActive] = useAtom(headerTabsAtom(sessionId));
 
   const onTabClick = (value: string) => updateActive(value as WorkflowSimulatePanelKeys);
 

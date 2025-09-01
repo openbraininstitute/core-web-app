@@ -4,10 +4,10 @@ import { useSearchParams } from 'next/navigation';
 import { match } from 'ts-pattern';
 
 import { StimulationProtocol } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/stimulation-protocol';
-import { SynapticInput } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome/synaptic-input';
-import { ExperimentStep } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome/helpers';
+import { SynapticsConfiguration } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome/synaptics';
 import { ExperimentSetup } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/experiment-setup';
-import { Recording } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/recoding-locations';
+import { Recording } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/recording-locations';
+import { ExperimentStep } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu';
 import { Info } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/overview';
 
 import type { IMEModel, ISingleNeuronSynaptome } from '@/api/entitycore/types';
@@ -18,7 +18,7 @@ type Props = {
   memodel: IMEModel;
 };
 
-export function Content({ sessionId, memodel }: Props) {
+export function Content({ sessionId, memodel, synaptome }: Props) {
   const searchParams = useSearchParams();
   const step = searchParams.get('step') ?? ExperimentStep.Info;
 
@@ -30,7 +30,9 @@ export function Content({ sessionId, memodel }: Props) {
     .with({ step: ExperimentStep.StimulationProtocol }, () => (
       <StimulationProtocol sessionId={sessionId} memodelId={memodel.id} />
     ))
-    .with({ step: ExperimentStep.SynapticInputs }, () => <SynapticInput sessionId={sessionId} />)
+    .with({ step: ExperimentStep.SynapticInputs }, () => (
+      <SynapticsConfiguration sessionId={sessionId} memodelId={memodel.id} synaptome={synaptome} />
+    ))
     .with({ step: ExperimentStep.Recording }, () => <Recording sessionId={sessionId} />)
     .otherwise(() => null);
 

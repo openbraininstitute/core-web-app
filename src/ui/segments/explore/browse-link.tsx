@@ -8,6 +8,7 @@ import type { ReactNode } from 'react';
 import { getEntityTypeFromUrlOnEntityScope } from '@/ui/segments/explore/helpers';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
+import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 
 export function BrowseLink({
   isLoading,
@@ -25,6 +26,9 @@ export function BrowseLink({
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const entityType = snakeCase(getEntityTypeFromUrlOnEntityScope(pathname) ?? '');
+  const onClick = () => {
+    userJourneyTracker.registerArtifactClick(title);
+  };
   return (
     <Button
       asChild
@@ -34,6 +38,7 @@ export function BrowseLink({
       size="lg"
       className="group w-full"
       active={entityType === type}
+      onClick={onClick}
     >
       <Link
         href={{

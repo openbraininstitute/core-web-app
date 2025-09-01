@@ -49,8 +49,8 @@ import type {
 import type {
   RecordLocationArray,
   SimulationExperimentalSetup,
-  StimulationSimulationConfig,
-  SynapseConfigArray,
+  TStimulationConfiguration,
+  SynapseConfigurationArray,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
@@ -67,10 +67,10 @@ export const createSingleNeuronSimulationAtom = atom(
     virtualLabId: string,
     projectId: string,
     simulationType: SimulationType,
-    stimulationConfig: StimulationSimulationConfig,
+    stimulationConfig: TStimulationConfiguration,
     experimentalSetupConfig: SimulationExperimentalSetup,
     recordFromConfig: RecordLocationArray,
-    synaptomeConfig: SynapseConfigArray | undefined,
+    synaptomeConfig: SynapseConfigurationArray | undefined,
     simulationResult: Record<string, PlotData> | null,
     stimulusResult: PlotData | null
   ) => {
@@ -183,10 +183,10 @@ export const launchSimulationAtom = atom<
     string,
     string,
     string,
-    StimulationSimulationConfig,
+    TStimulationConfiguration,
     SimulationExperimentalSetup,
     RecordLocationArray,
-    SynapseConfigArray,
+    SynapseConfigurationArray,
     SimulationType,
     number,
   ],
@@ -200,10 +200,10 @@ export const launchSimulationAtom = atom<
     projectId: string,
     modelId: string,
     sessionId: string,
-    currentInjectionConfig: StimulationSimulationConfig,
+    currentInjectionConfig: TStimulationConfiguration,
     conditionsConfig: SimulationExperimentalSetup,
     recordFromConfig: RecordLocationArray,
-    synaptomeConfig: SynapseConfigArray,
+    synaptomeConfig: SynapseConfigurationArray,
     simulationType: SimulationType,
     duration: number
   ) => {

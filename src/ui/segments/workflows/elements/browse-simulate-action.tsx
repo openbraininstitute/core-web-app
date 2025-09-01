@@ -25,7 +25,7 @@ export function BrowseAction() {
 
   const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/${segment}/new/${type}`;
   const entity = getEntityByExtendedType({ type: snakeCase(type) as TExtendedEntitiesTypeDict });
-  const title = `New ${lowerCase(entity?.title)}`;
+  const title = `New ${lowerCase(entity?.alternateTitle ?? entity?.title)}`;
 
   return (
     <Button

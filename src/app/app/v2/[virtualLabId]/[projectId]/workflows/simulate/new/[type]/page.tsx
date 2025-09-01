@@ -31,7 +31,7 @@ export default async function Page({
       requireBrainRegion={false}
       classNames={{ container: 'max-h-full' }}
       dataType={buildType}
-      scope={scope ?? WorkspaceScope.Public}
+      scope={scope ?? WorkspaceScope.Combined}
       mainTableProps={{
         selectionType: undefined,
       }}

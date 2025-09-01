@@ -4,12 +4,10 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { use } from 'react';
 
 import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
+import { PanelSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/panel-selector';
+import { MenuSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu-selector';
 import { Header } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/header';
 import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import {
-  MenuSelector,
-  PanelSelector,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/panel-selector';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { getMEModel } from '@/api/entitycore/queries';
@@ -44,7 +42,7 @@ export default function Page({
   return (
     <>
       <div className="mb-2 w-full flex-shrink-0">
-        <Header />
+        <Header sessionId={sessionId} />
       </div>
       <div className='mt-5 grid h-full max-h-[calc(100%-4rem)] min-h-0 w-full flex-1 grid-cols-[24rem_1fr] gap-4 [grid-template-areas:"menu_content"]'>
         <div

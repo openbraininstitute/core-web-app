@@ -50,6 +50,7 @@ export const SingleNeuronSynaptomeSimulation: EntityCoreTypeConfig<ISingleNeuron
   {
     group: EntityTypeGroup.Simulations,
     title: 'Single neuron synaptome simulation',
+    alternateTitle: 'synaptome simulation',
     extendedType: ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
     type: EntityTypeDict.SingleNeuronSynaptomeSimulation,
     slug: EntitySlug.SingleNeuronSynaptomeSimulation,

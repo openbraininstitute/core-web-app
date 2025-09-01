@@ -9,6 +9,7 @@ export const DEFAULT_PAGE_LOW_SIZE = 15;
 export const DEFAULT_PAGE_NUMBER = 1;
 
 export const WorkspaceScope = {
+  Combined: 'combined', // this is for both public and project
   Public: 'public',
   Project: 'project',
   Bookmarks: 'bookmarks',

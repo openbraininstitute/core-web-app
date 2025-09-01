@@ -15,7 +15,7 @@ export function NeuronVisualizer({ sessionId, memodelId }: Props) {
     <div
       id="neuron-visualizer"
       data-testid="neuron-visualizer"
-      className="hidden h-full max-h-full flex-1 xl:flex"
+      className="h-full max-h-full flex-1"
     >
       {memodelId && (
         <NeuronViewerContainer

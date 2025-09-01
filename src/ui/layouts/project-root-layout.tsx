@@ -30,7 +30,7 @@ export function ProjectRootLayout({ children }: Props) {
   return (
     <div
       id="project-root-layout"
-      className="bg-neutral-1 grid h-screen w-full grid-cols-[1fr_minmax(3rem,auto)] grid-rows-[5rem_1fr] gap-1 overflow-hidden [grid-template-areas:'header_header''main_ai']"
+      className="bg-background grid h-screen w-full grid-cols-[1fr_minmax(3rem,auto)] grid-rows-[5rem_1fr] gap-1 overflow-hidden [grid-template-areas:'header_header''main_ai']"
     >
       {children}
     </div>

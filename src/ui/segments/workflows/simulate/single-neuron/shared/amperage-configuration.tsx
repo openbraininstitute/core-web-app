@@ -1,11 +1,10 @@
-import { WarningFilled } from '@ant-design/icons';
-import { useEffect, useMemo, useReducer } from 'react';
+import { useEffect, useMemo, useCallback } from 'react';
 import { InputNumber, Switch } from 'antd';
 import { useAtom } from 'jotai';
 import isEqual from 'lodash/isEqual';
 
-import StimuliPreviewPlot from '@/ui/segments/workflows/simulate/single-neuron/shared/stimuli-preview-plot';
-import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
+import { StimuliPreviewPlot } from '@/ui/segments/workflows/simulate/single-neuron/shared/stimuli-preview-plot';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import {
   calculateRangeOutput,
@@ -14,15 +13,16 @@ import {
   MAX_AMPERAGE_STEPS,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 import {
-  DEFAULT_PROTOCOL,
   DEFAULT_STIMULUS_CONFIG,
   PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
-  PREFIX_SYNAPTOME_SIMULATION_CONFIGURATION_SESSION_KEY,
+  PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
+  PREFIX_AMPERAGE_CONFIGURATION_SESSION_KEY,
   PROTOCOL_DETAILS,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
-  StimulationProtocolConfigurationAtomFamily,
+  StimulationConfigurationAtomFamily,
   SynaptomeConfigurationAtomFamily,
+  AmperageStateAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { cn } from '@/utils/css-class';
 
@@ -100,16 +100,23 @@ function rangeReducer(state: AmperageStateType, action: AmperageActionType) {
 
 export function AmperageConfiguration({ sessionId, memodelId }: Props) {
   const breakpoint = useDefaultBreakpoint();
-  const sscKey = getSessionKey(PREFIX_SYNAPTOME_SIMULATION_CONFIGURATION_SESSION_KEY, sessionId);
+  const sscKey = getSessionKey(PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
   const spcKey = getSessionKey(PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
+  const acKey = getSessionKey(PREFIX_AMPERAGE_CONFIGURATION_SESSION_KEY, sessionId);
+
   const [sscState] = useAtom(SynaptomeConfigurationAtomFamily(sscKey));
-  const [spcState, updateSPC] = useAtom(StimulationProtocolConfigurationAtomFamily(spcKey));
+  const [spcState, updateSPC] = useAtom(StimulationConfigurationAtomFamily(spcKey));
+  const [amperageState, setAmperageState] = useAtom(AmperageStateAtomFamily(acKey));
+
   const synapseIdxWithFrequencyRange = sscState.findIndex((s) => Array.isArray(s.frequency)) ?? -1;
   const disableStepper = synapseIdxWithFrequencyRange !== -1;
 
-  const [amperageState, dispatch] = useReducer(rangeReducer, {
-    ...getInitialAmperageState(DEFAULT_PROTOCOL),
-  });
+  const dispatch = useCallback(
+    (action: AmperageActionType) => {
+      setAmperageState((currentState) => rangeReducer(currentState, action));
+    },
+    [setAmperageState]
+  );
 
   const protocol =
     spcState.stimulus.stimulus_protocol ?? DEFAULT_STIMULUS_CONFIG.stimulus_protocol!;
@@ -123,21 +130,18 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
   );
 
   useEffect(() => {
-    dispatch({ type: 'reset-for-protocol', payload: protocol });
-  }, [protocol]);
-
-  useEffect(() => {
-    // If user sets a synapse with frequency range, automatically
-    // convert amplitude to a constant value
-    if (disableStepper) {
+    // Initialize state for protocol if it hasn't been set, or protocol changed
+    if (amperageState.protocol !== protocol) {
+      dispatch({ type: 'reset-for-protocol', payload: protocol });
+    } else if (disableStepper) {
+      // If user sets a synapse with frequency range, automatically
+      // convert amplitude to a constant value
       dispatch({
         type: 'constant-value',
         payload: PROTOCOL_DETAILS[protocol].defaults.current.min,
       });
-    } else {
-      dispatch({ type: 'reset-for-protocol', payload: protocol });
     }
-  }, [disableStepper, protocol]);
+  }, [protocol, disableStepper, dispatch, amperageState.protocol]);
 
   useEffect(() => {
     if (isEqual(amperageState.computed, amplitudes)) return;
@@ -160,8 +164,8 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
   const disableStepperContent = (
     <div className="text-left">
       You can only set one stepper across all the synaptic inputs and in the simulation protocols.
-      <div className="mt-8">
-        <h4 className="text-primary-3">Active stepper location</h4>
+      <div className="mt-3">
+        <h4 className="text-primary-4">Active stepper location</h4>
         <p>Synaptic inputs [{synapseIdxWithFrequencyRange + 1}]</p>
       </div>
     </div>
@@ -177,35 +181,35 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
       <div className="mt-8 mb-3 flex items-center justify-between text-left text-base">
         <span className="text-gray-400 uppercase">Amperage</span>
         {amperageState.error && (
-          <i className="text-error ml-2 text-base font-light">{amperageState.error}</i>
+          <i className="text-destructive ml-2 text-base font-light">{amperageState.error}</i>
         )}
 
         {sscState?.length ? (
           <div className="flex">
-            {disableStepper && (
-              <CustomPopover message={disableStepperContent} when="hover">
-                <div className="text-primary-9 mr-2 text-sm">
-                  <WarningFilled className="mr-2" />
-                  Stepper already assigned
-                </div>
-              </CustomPopover>
-            )}
+            <Tooltip>
+              <TooltipProvider>
+                <TooltipTrigger>
+                  <div className="flex">
+                    <span
+                      className={cn('text-primary-9 mr-2 text-sm font-light', {
+                        'text-gray-400!': disableStepper,
+                      })}
+                    >
+                      Has steps
+                    </span>
+                    <Switch value={!disableStepper} disabled onChange={() => {}} />
+                  </div>
+                </TooltipTrigger>
+              </TooltipProvider>
 
-            <CustomPopover
-              message={disableStepper ? disableStepperContent : amperageCannotBeConstant}
-              when="hover"
-            >
-              <div className="flex">
-                <span
-                  className={cn('text-primary-9 mr-2 text-sm font-light', {
-                    'text-gray-400!': disableStepper,
-                  })}
-                >
-                  Has steps
-                </span>
-                <Switch value={!disableStepper} disabled onChange={() => {}} />
-              </div>
-            </CustomPopover>
+              <TooltipContent
+                side="bottom"
+                sideOffset={5}
+                className="text-primary-9 flex max-w-60 flex-col items-center justify-center gap-2 bg-white text-base shadow-lg"
+              >
+                {disableStepper ? disableStepperContent : amperageCannotBeConstant}
+              </TooltipContent>
+            </Tooltip>
           </div>
         ) : null}
       </div>
@@ -237,7 +241,7 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
                 max={100}
                 value={amperageState.start}
                 onChange={(newVal) => dispatch({ type: 'start', payload: newVal })}
-                className="text-primary-9 [&_.ant-input-suffix]:text-neutral-3 w-full font-bold"
+                className="[&_input]:text-primary-9! [&_.ant-input-suffix]:text-neutral-3 w-full font-bold"
                 aria-label="start"
                 suffix="[nA]"
                 onBlur={() => dispatch({ type: 'checkConsistency', payload: null })}
@@ -258,7 +262,7 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
                 value={amperageState.end}
                 onChange={(newVal) => dispatch({ type: 'end', payload: newVal })}
                 suffix="[nA]"
-                className="text-primary-9 [&_.ant-input-suffix]:text-neutral-3 w-full font-bold"
+                className="[&_input]:text-primary-9! [&_.ant-input-suffix]:text-neutral-2! w-full font-bold"
                 onBlur={() => dispatch({ type: 'checkConsistency', payload: null })}
               />
             </div>
@@ -271,7 +275,7 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
               step={1}
               min={0}
               max={500}
-              className="text-primary-9 [&_.ant-input-suffix]:text-neutral-3 w-full font-bold"
+              className="[&_input]:text-primary-9! [&_.ant-input-suffix]:text-neutral-2! w-full font-bold"
               value={amperageState.stepValue}
               onChange={(newVal) => dispatch({ type: 'stepValue', payload: newVal })}
               onBlur={() => dispatch({ type: 'checkConsistency', payload: null })}

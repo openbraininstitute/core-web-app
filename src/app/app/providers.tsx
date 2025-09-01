@@ -12,9 +12,10 @@ import SessionStateProvider from '@/components/SessionStateProvider';
 import ThemeProvider from '@/components/ThemeProvider';
 import commonAntdTheme from '@/theme/antd';
 
+import { ProgressBarProvider } from '@/app/app/progress-provider';
+import { QueryProvider } from '@/query-provider/client';
 import { SessionOrNull } from '@/hooks/session';
 import { AtomProvider } from '@/state/state';
-import { QueryProvider } from '@/query-provider/client';
 
 import 'jotai-devtools/styles.css';
 
@@ -37,7 +38,9 @@ export default function Providers({ children, session }: ProvidersProps) {
                   )}
                   <ThemeProvider>
                     <SessionProvider session={session} refetchInterval={2 * 60}>
-                      <SessionStateProvider>{children}</SessionStateProvider>
+                      <SessionStateProvider>
+                        <ProgressBarProvider>{children}</ProgressBarProvider>
+                      </SessionStateProvider>
                     </SessionProvider>
                   </ThemeProvider>
                 </JotaiProvider>
