@@ -1,15 +1,18 @@
 'use client';
 
-import { DownloadOutlined } from '@ant-design/icons';
-import { Button, Spin } from 'antd';
-import lodashSet from 'lodash/set';
+import { ComponentProps, useEffect, useRef, useState } from 'react';
 import Plotly, { Config, Layout } from 'plotly.js-dist-min';
-import { useEffect, useRef, useState } from 'react';
+import { DownloadOutlined } from '@ant-design/icons';
+import lodashSet from 'lodash/set';
+import { Spin } from 'antd';
 
 import LegendItem from '@/features/entities/neuron-simulation/experiment/visualization/legend-item';
-import type { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
 import { exportSingleSimulationResultAsZip } from '@/util/simulation-plotly-to-csv';
+import { Button } from '@/ui/molecules/button';
 import { classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
+
+import type { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
 
 const PLOT_LAYOUT: Partial<Layout> = {
   plot_bgcolor: '#fff',
@@ -63,7 +66,15 @@ type BasicProps = {
   plotConfig?: PlotConfig;
   isDownloadable?: boolean;
   onlyAmplitudeLegend?: boolean;
+  showCountValues?: boolean;
   bordered?: boolean;
+  plotLayout?: Partial<Layout>;
+  rootClassName?: ComponentProps<'div'>['className'];
+  wrapperClassName?: ComponentProps<'div'>['className'];
+  graphContainerClassName?: ComponentProps<'div'>['className'];
+  graphWrapperClassName?: ComponentProps<'div'>['className'];
+  titleClassName?: ComponentProps<'div'>['className'];
+  downloadClassName?: ComponentProps<'div'>['className'];
 };
 
 type Props =
@@ -87,7 +98,15 @@ export default function PlotRenderer({
   title,
   isDownloadable = false,
   onlyAmplitudeLegend = true,
+  showCountValues = true,
   bordered = false,
+  plotLayout = PLOT_LAYOUT,
+  rootClassName,
+  wrapperClassName,
+  graphContainerClassName,
+  graphWrapperClassName,
+  titleClassName,
+  downloadClassName,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [initialized, setInitialized] = useState<boolean>(false);
@@ -106,24 +125,24 @@ export default function PlotRenderer({
 
     const container = containerRef.current;
 
-    lodashSet(PLOT_LAYOUT, 'showlegend', Boolean(plotConfig?.showDefaultLegends));
+    lodashSet(plotLayout, 'showlegend', Boolean(plotConfig?.showDefaultLegends));
 
     if (plotConfig?.yAxisTitle) {
-      lodashSet(PLOT_LAYOUT, 'yaxis.title.text', plotConfig.yAxisTitle);
+      lodashSet(plotLayout, 'yaxis.title.text', plotConfig.yAxisTitle);
     }
 
     if (!initialized) {
-      Plotly.newPlot(container, data, PLOT_LAYOUT, PLOT_CONFIG);
+      Plotly.newPlot(container, data, plotLayout, PLOT_CONFIG);
       setInitialized(true);
     } else {
-      Plotly.react(container, data, PLOT_LAYOUT, PLOT_CONFIG);
+      Plotly.react(container, data, plotLayout, PLOT_CONFIG);
     }
 
     // eslint-disable-next-line consistent-return
     return () => {
       Plotly.purge(container);
     };
-  }, [data, initialized, plotConfig]);
+  }, [data, initialized, plotConfig, plotLayout]);
 
   const isTraceVisible = (trace: PlotDataEntry) => trace.visible === undefined || trace.visible;
   const toggleTraceVisibility = (trace: PlotDataEntry, index: number) => {
@@ -135,15 +154,21 @@ export default function PlotRenderer({
   const visibleTracesCount = data?.filter((t) => isTraceVisible(t)).length;
 
   return (
-    <div className="relative mt-4 w-full px-3">
+    <div
+      id={`root-container-${name}`}
+      data-testid={`root-container-${name}`}
+      className={cn('relative mt-4 w-full px-3', rootClassName)}
+    >
       {!isLoading && data.length && !plotConfig?.showDefaultLegends && (
         <div className="py-4">
-          <div className="flex w-full justify-between text-gray-400">
-            <span className="text-base uppercase">Output Values</span>
-            <span className="text-base">
-              {visibleTracesCount}/{data.length} values displayed
-            </span>
-          </div>
+          {showCountValues && (
+            <div className="flex w-full justify-between text-gray-400">
+              <span className="text-base uppercase">Output Values</span>
+              <span className="text-base">
+                {visibleTracesCount}/{data.length} values displayed
+              </span>
+            </div>
+          )}
           <div className="mt-4 flex flex-wrap gap-2">
             {data.map((trace, index) => (
               <LegendItem
@@ -157,40 +182,52 @@ export default function PlotRenderer({
           </div>
         </div>
       )}
-      <div className="relative w-full p-2">
-        <div className="flex items-center justify-between gap-4">
+      <div className={cn('relative w-full p-2', wrapperClassName)}>
+        <div className="mb-5 flex items-center justify-between gap-4">
           {withTitle && title && (
-            <div className="bg-primary-8 flex h-10 items-center justify-center px-4 py-2 text-base text-white">
+            <div
+              className={cn(
+                'text-primary-9 flex h-10 items-center justify-center px-4 py-2 text-2xl font-bold',
+                titleClassName
+              )}
+            >
               {title}
             </div>
           )}
           <div className="ml-auto flex items-center gap-2 self-end">
             {isDownloadable && !isLoading && (
-              <>
-                <Button
-                  type="primary"
-                  size="middle"
-                  htmlType="button"
-                  icon={<DownloadOutlined />}
-                  onClick={onDownloadPlotDataCsv}
-                  className={classNames(
-                    'border-primary-8 text-primary-8 h-10 rounded-none border bg-white',
-                    bordered && 'border-b-0'
-                  )}
-                >
-                  Download
-                </Button>
-              </>
+              <Button
+                rounded
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onDownloadPlotDataCsv}
+                className={cn(
+                  'border-neutral-2 text-primary-8 rounded-none border bg-white',
+                  { 'border-b-0': bordered },
+                  downloadClassName
+                )}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <div className="mr-5">Download</div>
+                  <DownloadOutlined />
+                </div>
+              </Button>
             )}
           </div>
         </div>
         <div
-          className={classNames(
-            'relative flex h-full w-full flex-col items-center justify-center px-2 pt-8',
-            bordered && 'border-primary-8 border'
+          id={`graph-container-${name}`}
+          className={cn(
+            'relative flex h-full w-full flex-col items-center justify-center',
+            { 'border-primary-8 border px-2 pt-8': bordered },
+            graphContainerClassName
           )}
         >
-          <div className="h-full w-[calc(100%-2rem)]">
+          <div
+            id={`graph-wrapper-${name}`}
+            className={cn('h-full w-[calc(100%-2rem)]', graphWrapperClassName)}
+          >
             <div
               className={classNames(className, 'w-full')}
               ref={containerRef}

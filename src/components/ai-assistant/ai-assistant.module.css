@@ -19,23 +19,40 @@
   --color-on-primary: #fffe;
   --color-secondary-5: #062;
 
-  position: relative;
-  width: 25vw;
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 100%;
   height: 100%;
-  background-color: var(--color-neutral-7);
+  overflow: visible;
+
+  background-color: var(--color-neutral-5);
   color: var(--color-primary-1);
-  padding: 1em;
+  padding: 0;
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: 1fr;
   gap: 1em;
-  border-left: 1px solid var(--color-neutral-4);
-}
 
-.aiAssistant[data-collapsed='true'] {
-  padding: 0;
-  padding-top: 20px;
-  width: 40px;
+  .mask {
+    content: '';
+    position: relative;
+    width: 100%;
+    height: 0;
+    overflow: visible;
+
+    &::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 1em;
+      background-color: #fff;
+      z-index: 1;
+    }
+  }
 }
 
 .aiAssistant button.header {
@@ -50,12 +67,6 @@
   height: 40px;
 }
 
-.aiAssistant[data-collapsed='true'] button.header {
-  flex-direction: column;
-  padding: 0;
-  gap: 0.5em;
-}
-
 .aiAssistant button.header > h1 {
   position: relative;
   left: -2px;
@@ -64,75 +75,56 @@
   transform-origin: center;
 }
 
-.aiAssistant[data-collapsed='true'] button.header > h1 {
-  order: 9;
-  transform: rotate(180deg);
-  writing-mode: vertical-lr;
-  white-space: nowrap;
-}
-
 .overlay {
+  z-index: 0;
   position: absolute;
   top: 0;
   bottom: 0;
   right: 0;
   width: var(--custom-panel-width);
   height: 100%;
-  background-color: var(--color-neutral-7);
+  background-color: var(--color-neutral-5);
   color: var(--color-primary-1);
-  padding: 1em;
+  padding: 0;
   display: grid;
   grid-template-rows: auto 1fr auto;
-  gap: 1em;
-  border-left: 1px solid var(--color-neutral-4);
-  z-index: 999;
-}
-
-.overlay.shadow {
-  box-shadow: -0.5em 0 1em #000;
-}
-
-.fullscreen .overlay {
-  padding-left: 3em;
-}
-
-.fullscreen .overlay .content {
-  margin-left: 200px;
+  gap: 0;
+  border: 1px solid var(--color-neutral-4);
+  border-radius: 1em 0 1em 1em;
+  overflow: hidden;
+  transition: width 0.1s;
 }
 
 .overlay nav {
-  font-size: 32px;
-  position: absolute;
-  left: -48px;
-  top: 0;
-  width: 48px;
-  height: 96px;
-  height: 48px;
-  background: var(--color-neutral-3);
+  width: 100%;
+  background: #fff; /* var(--color-neutral-5); */
   display: flex;
   flex-wrap: nowrap;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: flex-start;
-  align-items: stretch;
+  align-items: center;
+  padding: 1em 2em 0 2em;
   gap: 0;
-  box-shadow: -0.5em 0.5em 1em #000;
-  clip-path: path('M-300,0h348v300h-348z');
 }
 
 .overlay nav > button {
   display: flex;
   flex-wrap: nowrap;
   flex-direction: row;
-  justify-content: space-around;
+  justify-content: flex-start;
   align-items: center;
-  gap: 1em;
-  width: 48px;
+  gap: 0.5em;
+  width: auto;
   height: 48px;
   color: #0007;
   background: transparent;
+  padding: 0 1em;
+  border-radius: 0.5em 0.5em 0 0;
+  border: none;
 }
 
 .overlay nav > button > svg {
+  font-size: 32px;
   width: 1em;
   height: 1em;
   flex: 0 0 auto;
@@ -141,40 +133,22 @@
 .overlay nav > button.selected {
   background: var(--color-neutral-7);
   color: var(--color-primary-3);
-}
-
-.fullscreen .overlay nav > button.selected {
-  background: var(--color-neutral-9);
-  border-radius: 999vmax;
-  box-shadow: 0 0.25em 0.5em #0005;
-  padding-left: 1em;
-  font-weight: bold;
+  z-index: 99999;
+  transform: translateY(1px);
+  border: 1px solid var(--color-neutral-3);
+  border-bottom: 1px solid var(--color-neutral-7);
 }
 
 .overlay nav > button > div {
-  display: none;
+  display: block;
   flex: 1 1 auto;
   text-align: left;
+  font-variant: small-caps;
 }
 
-.fullscreen .overlay nav > button {
-  width: 160px;
-  height: 2em;
-  color: var(--color-primary-3);
-}
-
-.fullscreen .overlay nav > button > div {
-  display: block;
-}
-
-.fullscreen .overlay nav {
-  left: 24px;
-  top: 92px;
-  width: 160px;
-  height: auto;
-  background: transparent;
-  font-size: 20px;
-  gap: 1em;
-  clip-path: none;
-  box-shadow: none;
+.content {
+  background-color: var(--color-neutral-7);
+  padding: 1em;
+  border: none;
+  border-top: 1px solid var(--color-neutral-3);
 }

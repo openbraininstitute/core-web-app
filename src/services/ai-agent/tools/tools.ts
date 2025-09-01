@@ -1,66 +1,56 @@
 /* eslint-disable no-param-reassign */
 import React from 'react';
-import {
-  AiAgentGetToolResponse,
-  serviceAiAgentGetTool,
-  serviceAiAgentListTools,
-} from '../api/tools';
-import { AIAssistantTool } from './ai-assistant-tool/ai-assistant-tool';
-import { useAccessToken } from '@/hooks/useAccessToken';
-import { logError } from '@/util/logger';
-import { useAppNotification } from '@/components/notification';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-let toolsListSingleton: Promise<AIAssistantTool[] | null> | null = null;
-const cacheToolsDescriptionsQueries = new Map<string, Promise<AiAgentGetToolResponse>>();
+import { serviceAiAgentGetTool, serviceAiAgentListTools } from '../api/tools';
+import { AIAssistantTool } from './ai-assistant-tool/ai-assistant-tool';
+
+import { useAccessToken } from '@/hooks/useAccessToken';
+import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
 
 /**
  *
- * @returns A list of available AI tools.
+ * @returns A list of available AI tools without description.
  * Or `undefined` if the query is still pending.
  * Or `null` if an error occured.
  */
 export function useAITools(): AIAssistantTool[] | undefined | null {
-  const { error } = useAppNotification();
+  const queryClient = useQueryClient();
   const accessToken = useAccessToken();
-  const [tools, setTools] = React.useState<AIAssistantTool[] | undefined | null>(undefined);
+  const toolsLoader = React.useCallback(() => loadTools(accessToken), [accessToken]);
+  const { data, isError, isLoading } = useQuery({
+    queryKey: keyBuilderAI.tools(),
+    queryFn: toolsLoader,
+    staleTime: 180000,
+  });
   React.useEffect(() => {
-    if (!accessToken || tools) return;
+    queryClient.invalidateQueries({ queryKey: keyBuilderAI.tools() });
+  }, [accessToken, queryClient]);
+  if (isLoading) return undefined;
 
-    const action = async () => {
-      if (!toolsListSingleton) toolsListSingleton = loadTools(accessToken);
-      const toolsWithoutDescription = await toolsListSingleton;
-      setTools(toolsWithoutDescription);
-      if (!toolsWithoutDescription) return;
-
-      try {
-        for (const { id } of toolsWithoutDescription) {
-          const toolResponse =
-            cacheToolsDescriptionsQueries.get(id) ?? serviceAiAgentGetTool(accessToken, id);
-          cacheToolsDescriptionsQueries.set(id, toolResponse);
-          const tool = await toolResponse;
-          if (!tool) continue;
-
-          const index = toolsWithoutDescription.findIndex((item) => item.id === tool.name);
-          if (index !== -1) {
-            toolsWithoutDescription[index] = new AIAssistantTool(
-              tool.name,
-              tool.name_frontend,
-              tool.description_frontend
-            );
-          }
-          setTools([...toolsWithoutDescription]);
-        }
-      } catch (ex) {
-        logError('Unable to retrieve AI tools list!', ex);
-        error({ message: 'Unable to retrieve AI tools list!' });
-      }
-    };
-    action();
-  }, [accessToken, error, tools]);
-  return tools;
+  return isError ? null : data;
 }
 
-async function loadTools(accessToken: string): Promise<AIAssistantTool[] | null> {
+export function useAITool(toolId: string) {
+  const queryClient = useQueryClient();
+  const accessToken = useAccessToken();
+  const toolLoader = React.useCallback(() => loadTool(accessToken, toolId), [accessToken, toolId]);
+  const { data, isError, isLoading } = useQuery({
+    queryKey: keyBuilderAI.tool(toolId),
+    queryFn: toolLoader,
+    staleTime: 600000,
+  });
+  React.useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: keyBuilderAI.tool(toolId) });
+  }, [accessToken, queryClient, toolId]);
+  if (isLoading) return undefined;
+
+  return isError ? null : data;
+}
+
+async function loadTools(accessToken: string | undefined): Promise<AIAssistantTool[]> {
+  if (!accessToken) return [];
+
   const list = await serviceAiAgentListTools(accessToken);
   const tools: AIAssistantTool[] = list.map(
     (summary) => new AIAssistantTool(summary.name, summary.name_frontend, '')
@@ -74,4 +64,12 @@ function sortToolsByName(tool1: AIAssistantTool, tool2: AIAssistantTool): number
   if (name1 < name2) return +1;
   if (name1 > name2) return -1;
   return 0;
+}
+
+async function loadTool(accessToken: string | undefined, toolId: string): Promise<AIAssistantTool> {
+  if (!accessToken) {
+    return new AIAssistantTool(toolId, '', '');
+  }
+  const tool = await serviceAiAgentGetTool(accessToken, toolId);
+  return new AIAssistantTool(tool.name, tool.name_frontend, tool.description_frontend);
 }

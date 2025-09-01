@@ -3,15 +3,14 @@
 import { ReloadOutlined } from '@ant-design/icons';
 import { Image } from 'antd';
 
+import { useRouter } from 'next/navigation';
 import { label, useBuildMeModelSessionState } from '@/ui/segments/workflows/build/memodel/helpers';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
+import { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { cn } from '@/utils/css-class';
-
-import type { IReconstructionMorphology } from '@/api/entitycore/types';
-
 import {
   renderArray,
   renderDate,
@@ -19,8 +18,10 @@ import {
   renderLicense,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
-import { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import { Button } from '@/ui/molecules/button';
+import { cn } from '@/utils/css-class';
+
+import type { IReconstructionMorphology } from '@/api/entitycore/types';
 
 type Props = {
   sessionId: string;
@@ -28,6 +29,7 @@ type Props = {
 
 export function MModel({ sessionId }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
+  const { push: navigate } = useRouter();
   const { setSessionValue, sessionValue } = useBuildMeModelSessionState({
     sessionId,
     virtualLabId,
@@ -46,6 +48,11 @@ export function MModel({ sessionId }: Props) {
       miniViewProps={{ section: WorkspaceSection.BuildWorkflow }}
       mainTableProps={{
         selectionType: 'radio',
+        onCellClick: (_, record) => {
+          navigate(
+            `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/view/${record.id}`
+          );
+        },
         onRowsSelected: (rows) => {
           const record = rows.at(0);
           setSessionValue({

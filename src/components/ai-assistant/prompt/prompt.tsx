@@ -42,6 +42,8 @@ export default function Prompt({ className, value, tools, onChange, onClick }: P
           <div className={styles.content}>{value + '!'}</div>
           <textarea
             placeholder="What would you like to do?"
+            // eslint-disable-next-line jsx-a11y/no-autofocus
+            autoFocus
             value={value}
             onChange={(evt) => onChange(evt.target.value)}
             onKeyDown={handleKeyDown}

@@ -23,6 +23,7 @@ type Props = {
   useLabels?: boolean;
   virtualLabId: string;
   projectId: string;
+  sessionId?: string;
 };
 export function NeuronViewerContainer({
   meModelId,
@@ -34,6 +35,7 @@ export function NeuronViewerContainer({
   useLabels = false,
   virtualLabId,
   projectId,
+  sessionId,
 }: Props) {
   const [disableHovering, setDisableHovering] = useState(() => !useActions);
   const [neuronViewerClickData, setNeuronViewerOnClickData] =
@@ -52,6 +54,7 @@ export function NeuronViewerContainer({
           projectId={projectId}
           virtualLabId={virtualLabId}
           meModelId={meModelId}
+          sessionId={sessionId}
           actions={{
             onClick: (data) => {
               setNeuronViewerOnClickData(data);
@@ -78,6 +81,7 @@ export function NeuronViewerContainer({
               <>
                 {enableActions && neuronViewerClickData && (
                   <InjectionRecordingPopover
+                    sessionId={sessionId}
                     show={!!neuronViewerClickData}
                     data={{
                       x: neuronViewerClickData.position.x,

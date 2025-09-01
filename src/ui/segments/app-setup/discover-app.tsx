@@ -7,6 +7,7 @@ import type { ReactNode } from 'react';
 
 import { AUTO_ONBOARDING_DONE } from '@/constants';
 import { useLocalStorage } from '@/hooks/use-local-storage';
+import { AUTO_ONBOARDING_DONE } from '@/constants';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
 import { cn } from '@/utils/css-class';

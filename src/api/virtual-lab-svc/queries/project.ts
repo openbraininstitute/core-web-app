@@ -162,8 +162,8 @@ export async function updateProject({
   payload,
 }: WorkspaceContext & {
   payload: {
-    name: string;
-    description: string;
+    name?: string;
+    description?: string;
   };
 }) {
   const api = await virtualLabRootApi();

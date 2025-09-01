@@ -1,0 +1,244 @@
+import { useAtom, useAtomValue } from 'jotai';
+import { Form, Input, Select } from 'antd';
+import { useEffect } from 'react';
+
+import camelCase from 'lodash/camelCase';
+import startCase from 'lodash/startCase';
+import toPairs from 'lodash/toPairs';
+import get from 'lodash/get';
+import z from 'zod';
+
+import { StimulationProtocolConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import { AmperageConfiguration } from '@/ui/segments/workflows/simulate/single-neuron/shared/amperage-configuration';
+import {
+  getSessionKey,
+  label,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import {
+  PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
+  PROTOCOL_DETAILS,
+  SIMULATION_COLORS,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { secNamesAtom } from '@/state/simulate/single-neuron';
+import {
+  StimulationMode,
+  StimulationSimulationConfigSchema,
+  type TProtocolDetails,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { log } from '@/utils/logger';
+
+type Props = {
+  sessionId: string;
+  memodelId: string;
+};
+
+export function StimulationProtocol({ sessionId, memodelId }: Props) {
+  const breakpoint = useDefaultBreakpoint();
+  const sections = useAtomValue(secNamesAtom);
+  const [form] = Form.useForm();
+
+  const spcKey = getSessionKey(PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
+  const [spcState, updateSPC] = useAtom(StimulationProtocolConfigurationAtomFamily(spcKey));
+
+  useEffect(() => {
+    form.setFieldsValue(spcState);
+  }, [spcState, form]);
+
+  const onValuesChange = (changedValues: any): void => {
+    try {
+      const updatedState = { ...spcState };
+      let hasChanges = false;
+
+      if (changedValues.inject_to !== undefined) {
+        updatedState.inject_to = changedValues.inject_to;
+        hasChanges = true;
+      }
+
+      if (changedValues.stimulus) {
+        updatedState.stimulus = {
+          ...updatedState.stimulus,
+          ...changedValues.stimulus,
+        };
+        hasChanges = true;
+      }
+
+      if (hasChanges) {
+        try {
+          const validatedValues = StimulationSimulationConfigSchema.parse(updatedState);
+          updateSPC(validatedValues);
+        } catch (validationError) {
+          updateSPC(updatedState as any);
+          log(
+            'debug',
+            'Stimulation protocol partial update (validation pending):',
+            validationError
+          );
+        }
+      }
+    } catch (error) {
+      log('error', 'Stimulation protocol onValuesChange error:', error);
+    }
+  };
+
+  return (
+    <div
+      id="stimulation-protocol"
+      data-testid="stimulation-protocol"
+      className="secondary-scrollbar mb-4 flex h-full w-full flex-col gap-4 overflow-x-hidden overflow-y-auto px-5 select-none"
+    >
+      <Form
+        scrollToFirstError
+        key={spcKey}
+        form={form}
+        layout="vertical"
+        initialValues={spcState}
+        className="relative flex w-full flex-col items-start select-none [&_.ant-form-item-explain-error]:text-sm! [&_.ant-form-item-label]:pb-0.5!"
+        onValuesChange={onValuesChange}
+        validateTrigger={['onChange']}
+        requiredMark={false}
+        data-testid="stimulation-protocol-form"
+      >
+        <Form.Item
+          name="inject_to"
+          label={label('Location', true)}
+          labelAlign="left"
+          className="[&_.ant-select-arrow]:text-primary-8 w-full [&_.ant-form-item-row]:mb-0 [&_.ant-form-item-row]:inline-block [&_.ant-form-item-row]:w-full [&_.ant-select-selector]:border-0!"
+          rules={[
+            {
+              validator: async (_rule, value) => {
+                try {
+                  await StimulationSimulationConfigSchema.pick({
+                    inject_to: true,
+                  }).shape.inject_to.parseAsync(value);
+                } catch (error) {
+                  return Promise.reject(
+                    error instanceof z.ZodError
+                      ? error.errors.at(0)?.message
+                      : 'Injection target section is required'
+                  );
+                }
+                return Promise.resolve();
+              },
+            },
+          ]}
+        >
+          <Select
+            showSearch
+            placeholder="Section name"
+            options={sections.map((sec) => ({ label: sec, value: sec }))}
+            className="border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! w-full rounded-md border-[1px]! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!"
+            popupClassName="[&_.ant-select-item-option-content]:text-primary-9!"
+            placement="bottomLeft"
+            disabled={!sections.length}
+            size={breakpoint === 'l' ? 'middle' : 'large'}
+            prefix={
+              <div
+                className="prefix bg-primary-8 mr-2 inline-block h-[10px] w-[10px] rounded-full"
+                style={{ background: SIMULATION_COLORS[0] }}
+              />
+            }
+          />
+        </Form.Item>
+        <Form.Item
+          name={['stimulus', 'stimulus_type']}
+          label={label('Stimulation Mode', true)}
+          labelAlign="left"
+          className="[&_.ant-select-arrow]:text-primary-8 w-full [&_.ant-form-item-row]:mb-0 [&_.ant-form-item-row]:inline-block [&_.ant-form-item-row]:w-full [&_.ant-select-selector]:border-0!"
+          rules={[
+            {
+              validator: async (_rule, value) => {
+                try {
+                  await StimulationSimulationConfigSchema.pick({ stimulus: true })
+                    .shape.stimulus.pick({ stimulus_type: true })
+                    .shape.stimulus_type.parseAsync(value);
+                } catch (error) {
+                  return Promise.reject(
+                    error instanceof z.ZodError
+                      ? error.errors.at(0)?.message
+                      : 'Stimulation mode is required'
+                  );
+                }
+                return Promise.resolve();
+              },
+            },
+          ]}
+        >
+          <Select
+            placeholder="Section name"
+            options={Object.entries(StimulationMode)
+              .filter(([, value]) => value.enabled)
+              .map(([, option]) => ({
+                label: option.label,
+                value: option.value,
+              }))}
+            className="border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! w-full rounded-md border-[1px]! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!"
+            popupClassName="[&_.ant-select-item-option-content]:text-primary-9!"
+            placement="bottomLeft"
+            size={breakpoint === 'l' ? 'middle' : 'large'}
+          />
+        </Form.Item>
+        <div className="ml-2 text-left text-gray-400 uppercase">Protocol</div>
+        <div className="border-neutral-2 w-full rounded-2xl border px-3 py-4">
+          <Form.Item
+            name={['stimulus', 'stimulus_protocol']}
+            label={null}
+            rules={[
+              {
+                validator: async (_rule, value) => {
+                  try {
+                    await StimulationSimulationConfigSchema.pick({ stimulus: true })
+                      .shape.stimulus.pick({ stimulus_protocol: true })
+                      .shape.stimulus_protocol.parseAsync(value);
+                  } catch (error) {
+                    return Promise.reject(
+                      error instanceof z.ZodError
+                        ? error.errors.at(0)?.message
+                        : 'Stimulus protocol is required'
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              },
+            ]}
+            labelAlign="left"
+            className="[&_.ant-select-arrow]:text-primary-8 w-full [&_.ant-form-item-row]:mb-0 [&_.ant-form-item-row]:inline-block [&_.ant-form-item-row]:w-full [&_.ant-select-selector]:border-0!"
+          >
+            <Select
+              placeholder="Select stimulus protocol"
+              options={Object.entries(PROTOCOL_DETAILS).map(([_, option]) => ({
+                label: option.label,
+                value: option.name,
+              }))}
+              className="border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! w-full rounded-md border-[1px]! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!"
+              popupClassName="[&_.ant-select-item-option-content]:text-primary-9!"
+              placement="bottomLeft"
+              size={breakpoint === 'l' ? 'middle' : 'large'}
+            />
+          </Form.Item>
+          <div className="grid grid-cols-3 gap-3">
+            {toPairs(
+              (
+                get(PROTOCOL_DETAILS, `${spcState.stimulus.stimulus_protocol}`, {
+                  defaults: {},
+                }) as TProtocolDetails
+              ).defaults?.time ?? {}
+            ).map(([key, value]) => (
+              <div key={`${key}/${value}`} className="">
+                <div>{label(startCase(camelCase(key)), false)}</div>
+                <Input
+                  readOnly
+                  value={value}
+                  defaultValue={value}
+                  suffix="ms"
+                  className="text-primary-9 [&_.ant-input-suffix]:text-neutral-3 cursor-none border-none font-bold shadow-none outline-0 select-none focus-within:border-none focus-within:shadow-none hover:border-none"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </Form>
+      <AmperageConfiguration sessionId={sessionId} memodelId={memodelId} />
+    </div>
+  );
+}

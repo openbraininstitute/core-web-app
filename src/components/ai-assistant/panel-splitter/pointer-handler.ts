@@ -1,11 +1,15 @@
 import React from 'react';
-import clamp from 'lodash/clamp';
+
+import { usePanelWidth } from '../hooks';
 
 import GenericEvent from '@/util/generic-event';
 
 export function usePointerHandler() {
+  const { panelWidth, setPanelWidth } = usePanelWidth();
   const ref = React.useRef<PointerHandler | null>(null);
   if (!ref.current) ref.current = new PointerHandler();
+  ref.current.panelWidth = panelWidth;
+  ref.current.setPanelWidth = setPanelWidth;
   return ref.current;
 }
 
@@ -13,13 +17,15 @@ export function usePointerHandler() {
  * Deals with the horizontal panning that will increase/decrease AI-Assistant panel width.
  */
 class PointerHandler {
+  public panelWidth: number = 0;
+
+  public setPanelWidth = (_panelWidth: number) => {};
+
   private touching = false;
 
   private touchingX = 0;
 
   private touchingPanelWidth = 0;
-
-  public panelWidth: number = 25;
 
   public get props() {
     return {
@@ -43,12 +49,9 @@ class PointerHandler {
   public readonly handlePointerMove = (evt: React.PointerEvent<HTMLDivElement>) => {
     if (!this.touching) return;
 
-    const shift = (100 * (evt.clientX - this.touchingX)) / window.innerWidth;
-    this.panelWidth = clamp(this.touchingPanelWidth - shift, 25, 100);
-    if (this.panelWidth > 80 && shift < 0) {
-      this.panelWidth = 100;
-    }
-    this.eventPanelWidthChange.dispatch(this.panelWidth);
+    const shift = evt.clientX - this.touchingX;
+    const newWidth = this.touchingPanelWidth - shift;
+    this.setPanelWidth(newWidth);
   };
 
   public readonly handlePointerUp = (evt: React.PointerEvent<HTMLDivElement>) => {

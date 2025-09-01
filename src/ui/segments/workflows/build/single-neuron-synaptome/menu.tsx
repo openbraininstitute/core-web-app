@@ -279,22 +279,22 @@ export function Menu({ sessionId }: Props) {
         rounded
         variant="outline"
         size={breakpoint === 'l' ? 'md' : 'lg'}
-        className={cn('w-full justify-start pr-2! font-bold shadow-md')}
+        className={cn('group w-full justify-start pr-2! font-bold shadow-md')}
         active={step === BuildStep.Info}
         onClick={() => onStepChange(BuildStep.Info)}
       >
         <div className="flex w-full items-center justify-between gap-2">
           <div>
             <SettingFilled
-              className={cn('text-neutral-3 mr-2', {
+              className={cn('text-neutral-3 mr-2 group-hover:text-white', {
                 'text-primary-4!': step === BuildStep.Info,
               })}
             />
             Info
           </div>
           <RightOutlined
-            className={cn('text-neutral-4 mr-2', {
-              'text-white!': step === BuildStep.Info,
+            className={cn('text-neutral-4 mr-2 transition-all group-hover:text-white', {
+              '-rotate-180 text-white! group-hover:text-white': step === BuildStep.Info,
             })}
           />
         </div>
@@ -304,7 +304,7 @@ export function Menu({ sessionId }: Props) {
         rounded
         variant="outline"
         size={breakpoint === 'l' ? 'md' : 'lg'}
-        className={cn('w-full justify-start pr-2 shadow-md')}
+        className={cn('group w-full justify-start pr-2 shadow-md')}
         active={step === BuildStep.MEModel}
         onClick={() => onStepChange(BuildStep.MEModel)}
       >
@@ -322,11 +322,13 @@ export function Menu({ sessionId }: Props) {
               </div>
             </div>
           ) : (
-            <div className="text-neutral-4 flex-1 self-end text-right">Select ME-model</div>
+            <div className="text-neutral-4 flex-1 self-end text-right text-sm leading-7 transition-all group-hover:text-white">
+              Select ME-model
+            </div>
           )}
           <RightOutlined
-            className={cn('text-neutral-4 mr-2', {
-              'text-white!': step === BuildStep.MEModel,
+            className={cn('text-neutral-4 mr-2 transition-all group-hover:text-white', {
+              '-rotate-180 text-white! group-hover:text-white': step === BuildStep.MEModel,
             })}
           />
         </div>
@@ -348,8 +350,9 @@ export function Menu({ sessionId }: Props) {
                 <div className="ml-auto flex items-center justify-center gap-2">
                   {!!validSetsCount && <div>{validSetsCount}</div>}
                   <RightOutlined
-                    className={cn('text-neutral-4 mr-2', {
-                      'text-white!': step === BuildStep.SynapseSet,
+                    className={cn('text-neutral-4 mr-2 transition-all', {
+                      '-rotate-180 text-white! group-hover:text-white':
+                        step === BuildStep.SynapseSet,
                     })}
                   />
                 </div>

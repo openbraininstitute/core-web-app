@@ -72,22 +72,23 @@ export function Menu({ sessionId }: { sessionId: string }) {
   };
 
   const buildMeModel = async () => {
-    let validatedPayload: TCreateMeModelContext | null = null;
+    const build = async () => {
+      let validatedPayload: TCreateMeModelContext | null = null;
+      validatedPayload = await CreateMeModelContextSchema.parseAsync(payload);
 
-    validatedPayload = await CreateMeModelContextSchema.parseAsync(payload);
+      return await createMEModel({
+        body: omit(validatedPayload, ['virtualLabId', 'projectId']),
+        context: { virtualLabId, projectId },
+      });
+    };
+
     const accountingSession = new OneshotSession({
       subtype: ServiceSubtype.SingleCellBuild,
       virtualLabId,
       projectId,
       count: 1,
     });
-
-    const data = await accountingSession.useWith<IMEModel>(() =>
-      createMEModel({
-        body: omit(validatedPayload, ['virtualLabId', 'projectId']),
-        context: { virtualLabId, projectId },
-      })
-    );
+    const data = await accountingSession.useWith<IMEModel>(build);
 
     return data;
   };
@@ -122,22 +123,22 @@ export function Menu({ sessionId }: { sessionId: string }) {
         rounded
         variant="outline"
         size={breakpoint === 'l' ? 'md' : 'lg'}
-        className={cn('w-full justify-start pr-2! font-bold shadow-md')}
+        className={cn('group w-full justify-start pr-2! font-bold shadow-md')}
         active={step === BuildStep.Info}
         onClick={() => onStepChange(BuildStep.Info)}
       >
         <div className="flex w-full items-center justify-between gap-2">
           <div>
             <SettingFilled
-              className={cn('text-neutral-3 mr-2', {
+              className={cn('text-neutral-3 mr-2 group-hover:text-white', {
                 'text-primary-4!': step === BuildStep.Info,
               })}
             />
             Info
           </div>
           <RightOutlined
-            className={cn('text-neutral-4 mr-2', {
-              'text-white!': step === BuildStep.Info,
+            className={cn('text-neutral-4 mr-2 transition-all group-hover:text-white', {
+              '-rotate-180 text-white!': step === BuildStep.Info,
             })}
           />
         </div>
@@ -147,7 +148,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
         rounded
         variant="outline"
         size={breakpoint === 'l' ? 'md' : 'lg'}
-        className={cn('w-full justify-start pr-2 shadow-md')}
+        className={cn('group w-full justify-start pr-2 shadow-md')}
         active={step === BuildStep.MModel}
         onClick={() => onStepChange(BuildStep.MModel)}
       >
@@ -165,11 +166,13 @@ export function Menu({ sessionId }: { sessionId: string }) {
               </div>
             </div>
           ) : (
-            <div className="text-neutral-4 flex-1 self-end text-right">Select M-model</div>
+            <div className="text-neutral-4 flex-1 self-end text-right text-sm leading-7 group-hover:text-white">
+              Select M-model
+            </div>
           )}
           <RightOutlined
-            className={cn('text-neutral-4 mr-2', {
-              'text-white!': step === BuildStep.MModel,
+            className={cn('text-neutral-4 mr-2 transition-all group-hover:text-white', {
+              '-rotate-180 text-white!': step === BuildStep.MModel,
             })}
           />
         </div>
@@ -178,7 +181,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
         rounded
         variant="outline"
         size={breakpoint === 'l' ? 'md' : 'lg'}
-        className={cn('w-full justify-start pr-2 shadow-md')}
+        className={cn('group w-full justify-start pr-2 shadow-md')}
         active={step === BuildStep.EModel}
         onClick={() => onStepChange(BuildStep.EModel)}
       >
@@ -196,11 +199,13 @@ export function Menu({ sessionId }: { sessionId: string }) {
               </div>
             </div>
           ) : (
-            <div className="text-neutral-4 flex-1 self-end text-right">Select E-model</div>
+            <div className="text-neutral-4 flex-1 self-end text-right text-sm leading-7 group-hover:text-white">
+              Select E-model
+            </div>
           )}
           <RightOutlined
-            className={cn('text-neutral-4 mr-2', {
-              'text-white!': step === BuildStep.EModel,
+            className={cn('text-neutral-4 mr-2 transition-all group-hover:text-white', {
+              '-rotate-180 text-white!': step === BuildStep.EModel,
             })}
           />
         </div>

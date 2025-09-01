@@ -13,7 +13,7 @@ import uniqBy from 'lodash/uniqBy';
 import values from 'lodash/values';
 
 import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
-import updateArray from '@/util/updateArray';
+import { updateArray } from '@/util/updateArray';
 
 import {
   createSingleNeuronSimulation,

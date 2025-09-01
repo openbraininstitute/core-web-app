@@ -1,0 +1,116 @@
+import { isMatching, P } from 'ts-pattern';
+import head from 'lodash/head';
+
+import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { listProjects } from '@/api/virtual-lab-svc/queries/project';
+import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
+import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
+import { tryCatch } from '@/api/utils';
+
+import type { Project, UserProfileResponse, VirtualLab } from '@/api/virtual-lab-svc/queries/types';
+
+export type TResolvedWorkspace = {
+  project: Project | null;
+  virtualLab: VirtualLab | null;
+  profile: UserProfileResponse | null;
+};
+
+export const resolveWorkspace = async () => {
+  let virtualLabId: string | undefined;
+  let project: Project | null = null;
+  let virtualLab: VirtualLab | null = null;
+
+  const [virtualLabResult, profileResult] = await Promise.all([
+    tryCatch(listVirtualLabs({ include: [LabTypeEnum.MY_LAB] })),
+    tryCatch(getUserProfile()),
+  ]);
+  const profile = profileResult.data?.profile ?? null;
+
+  virtualLab = virtualLabResult?.data?.data?.virtual_lab ?? null;
+  if (virtualLab) {
+    virtualLabId = virtualLab.id;
+    const { data: projectResult } = await tryCatch(
+      listProjects({ virtualLabId, page: 1, size: 1 })
+    );
+    const oneProject = head(projectResult?.data?.results);
+    if (oneProject) {
+      project = oneProject;
+    }
+  }
+
+  return {
+    project,
+    virtualLab,
+    profile,
+  };
+};
+
+export const hasNoVirtualLab = isMatching({
+  virtualLab: P.nullish,
+});
+
+export const hasNoProject = isMatching({
+  project: P.nullish,
+});
+
+export const isAccountPayload = isMatching({
+  name: P.string,
+  first_name: P.string,
+  last_name: P.string,
+  reference_email: P.string,
+  entity: P.string,
+  email_status: P.string,
+});
+
+export const isCustomizationPayload = isMatching({
+  virtualLabId: P.string,
+  virtualLabName: P.string,
+  projectName: P.string,
+  projectId: P.string,
+});
+
+export const WizardSteps = {
+  Identity: 'identity',
+  Provision: 'provision',
+  Customization: 'customization',
+} as const;
+
+export type TWizardSteps = (typeof WizardSteps)[keyof typeof WizardSteps];
+
+export const WorkspaceBootstrapStep = {
+  Identity: 'identity',
+  VirtualLab: 'virtual-lab',
+  Project: 'project',
+  Funds: 'funds',
+} as const;
+
+export const WorkspaceBootstrap = [
+  { step: WorkspaceBootstrapStep.Identity, message: 'Your account ...', progress: 25 },
+  {
+    step: WorkspaceBootstrapStep.VirtualLab,
+    message: 'Setting up your Virtual Lab ...',
+    progress: 50,
+  },
+  {
+    step: WorkspaceBootstrapStep.Project,
+    message: 'Initializing your first project ...',
+    progress: 75,
+  },
+  {
+    step: WorkspaceBootstrapStep.Funds,
+    message: 'Adding free credits to your account ...',
+    progress: 100,
+  },
+] as const;
+
+export type TWorkspaceBootstrapStep = (typeof WorkspaceBootstrap)[number]['step'];
+
+export const WorkspaceBootstrapStepStatus = {
+  InProgress: 'in_progress',
+  Completed: 'completed',
+  Passed: 'passed',
+  Error: 'error',
+} as const;
+
+export type TWorkspaceBootstrapStepStatus =
+  (typeof WorkspaceBootstrapStepStatus)[keyof typeof WorkspaceBootstrapStepStatus];

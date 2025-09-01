@@ -35,4 +35,18 @@ export const keyBuilder = {
     `${prefix}-single-neuron-model`,
     { virtualLabId, projectId, entityId },
   ],
+  synaptome: ({ virtualLabId, projectId, entityId }: WorkspaceContext & { entityId: string }) => [
+    `${prefix}-single-neuron-synaptome-model`,
+    { virtualLabId, projectId, entityId },
+  ],
+  stimulationProtocolPreview: ({
+    virtualLabId,
+    projectId,
+    memodelId,
+    amplitudes,
+    protocol,
+  }: WorkspaceContext & { memodelId: string; amplitudes: string; protocol: string }) => [
+    `${prefix}-stimuli-protocol-plot-data`,
+    { virtualLabId, projectId, memodelId, amplitudes, protocol },
+  ],
 };

@@ -348,8 +348,8 @@ importers:
         specifier: ^0.159.0
         version: 0.159.0
       ts-pattern:
-        specifier: ^5.7.0
-        version: 5.7.0
+        specifier: ^5.8.0
+        version: 5.8.0
       use-breakpoint:
         specifier: ^4.0.6
         version: 4.0.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -11527,8 +11527,8 @@ packages:
   ts-brand@0.2.0:
     resolution: {integrity: sha512-H5uo7OqMvd91D2EefFmltBP9oeNInNzWLAZUSt6coGDn8b814Eis6SnEtzyXORr9ccEb38PfzyiRVDacdkycSQ==}
 
-  ts-pattern@5.7.0:
-    resolution: {integrity: sha512-0/FvIG4g3kNkYgbNwBBW5pZBkfpeYQnH+2AA3xmjkCAit/DSDPKmgwC3fKof4oYUq6gupClVOJlFl+939VRBMg==}
+  ts-pattern@5.8.0:
+    resolution: {integrity: sha512-kIjN2qmWiHnhgr5DAkAafF9fwb0T5OhMVSWrm8XEdTFnX6+wfXwYOFjeF86UZ54vduqiR7BfqScFmXSzSaH8oA==}
 
   tsconfck@3.1.5:
     resolution: {integrity: sha512-CLDfGgUp7XPswWnezWwsCRxNmgQjhYq3VXHM0/XIRxhVrKw0M1if9agzryh1QS3nxjCROvV+xWxoJO1YctzzWg==}
@@ -25478,7 +25478,7 @@ snapshots:
 
   ts-brand@0.2.0: {}
 
-  ts-pattern@5.7.0: {}
+  ts-pattern@5.8.0: {}
 
   tsconfck@3.1.5(typescript@5.5.4):
     optionalDependencies:

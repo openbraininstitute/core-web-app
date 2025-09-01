@@ -110,7 +110,7 @@ export function ProjectActivities() {
         <Header onScaleChange={setScale} onTypeChange={setType} onPageChange={setPage} />
       </CardHeader>
       <CardContent>
-        <Card borderless shadowless className="flex items-center justify-center py-10">
+        <Card borderless shadowless className="flex items-center justify-center pt-5 pb-0">
           {!data?.pagination.total_items && !isLoading ? (
             <Card className="text-neutral-4 shadow-xs">
               <CardContent>You don’t have any activities yet </CardContent>

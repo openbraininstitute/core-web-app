@@ -3,11 +3,7 @@ import React from 'react';
 import debounce from 'lodash/debounce';
 import { Message } from '@ai-sdk/react';
 
-import {
-  serviceAiAgentThreadCreate,
-  serviceAiAgentThreadDelete,
-  serviceAiAgentThreadRename,
-} from '../api';
+import { serviceAiAgentThreadDelete, serviceAiAgentThreadRename } from '../api';
 import { Signal } from './signal';
 import { AiAssistantHistory, AssistantContext, AssistantError } from './types';
 import { ThreadManager } from './manager/thread';
@@ -45,7 +41,9 @@ class AiAssistantClass {
     this.virtualLabId.event.addListener(this.handleInit);
     this.projectId.event.addListener(this.handleInit);
     this.threadId.event.addListener((threadId: string | undefined) => {
-      if (threadId) this.messageManager.loadMessages(this.context, threadId);
+      if (!threadId) return;
+
+      this.messageManager.loadMessages(this.context, threadId);
     });
   }
 
@@ -56,13 +54,7 @@ class AiAssistantClass {
   }
 
   readonly createThread = async () => {
-    const params = {
-      ...this.context,
-      title: new Date().toUTCString(),
-    };
-    const thread = await serviceAiAgentThreadCreate(params);
-    const { threadId } = thread;
-    this.threadId.set(threadId);
+    const threadId = await this.threadmanager.createThread();
     this.historyManager.reset();
     return threadId;
   };
@@ -161,8 +153,9 @@ export function useAiAssistant(): Omit<AiAssistantClass, 'init' | 'history' | 'e
     AiAssistant.error.event.addListener(handleError);
     return () => AiAssistant.error.event.removeListener(handleError);
   }, [error]);
-
-  AiAssistant.init({ accessToken, virtualLabId, projectId });
+  React.useEffect(() => {
+    AiAssistant.init({ accessToken, virtualLabId, projectId });
+  }, [accessToken, virtualLabId, projectId]);
 
   return AiAssistant;
 }

@@ -25,8 +25,15 @@ export default function Page() {
     finalRedirectURL = latestVisitedProject || redirectURL;
   }
 
-  const onboarding = `/${V2_MIGRATION_TEMPORARY_BASE_PATH}/setup?redirectUrl=${encodeURIComponent(finalRedirectURL ?? '')}`;
+  const onboarding = `/${V2_MIGRATION_TEMPORARY_BASE_PATH}/sync?redirectUrl=${encodeURIComponent(finalRedirectURL ?? '')}`;
   if (!isServer) signIn('keycloak', { callbackUrl: onboarding || basePath });
 
-  return 'Logging in...';
+  return (
+    <div className="flex flex-col items-center justify-center space-y-4">
+      <h2 className="text-primary-8 text-xl font-bold">Redirecting to secure login</h2>
+      <p className="text-primary-7 mx-auto max-w-md text-center">
+        Please wait while we redirect you to our secure authentication portal.
+      </p>
+    </div>
+  );
 }

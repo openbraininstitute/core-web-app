@@ -1,16 +1,18 @@
 import type { ReactNode } from 'react';
 
+
 import { ProjectRootLayout } from '@/ui/layouts/project-root-layout';
 import { Container as AiContainer } from '@/ui/segments/ai/container';
 import { AppOnboardingProvider } from '@/ui/segments/app-setup/discover-app';
 import { SpaceManagerContainer } from '@/ui/segments/workspaces/space-manager';
+
 import { WorkspaceTopMenu } from '@/ui/segments/workspaces/top-menu';
 
 type Props = {
   children: ReactNode;
 };
 
-export default function Layout({ children }: Props) {
+export default async function Layout({ children }: Props) {
   return (
     <AppOnboardingProvider>
       <div className="h-screen w-full">

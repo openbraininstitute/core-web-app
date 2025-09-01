@@ -139,7 +139,7 @@
     "tailwind-merge": "^3.3.1",
     "tar-stream": "^3.1.7",
     "three": "^0.159.0",
-    "ts-pattern": "^5.7.0",
+    "ts-pattern": "^5.8.0",
     "use-breakpoint": "^4.0.6",
     "wavefront-obj-parser": "^2.0.1",
     "whatwg-fetch": "^3.6.19",
