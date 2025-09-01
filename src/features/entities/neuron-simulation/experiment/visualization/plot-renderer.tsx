@@ -45,7 +45,7 @@ const PLOT_LAYOUT: Partial<Layout> = {
 
 const PLOT_CONFIG: Partial<Config> = {
   displayModeBar: false,
-  responsive: false,
+  responsive: true,
   displaylogo: false,
 };
 
@@ -89,6 +89,7 @@ export default function PlotRenderer({
   onlyAmplitudeLegend = true,
   bordered = false,
 }: Props) {
+  const refFullscreen = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [initialized, setInitialized] = useState<boolean>(false);
   const [refreshLegend, setRefreshLegend] = useState(false);
@@ -112,6 +113,8 @@ export default function PlotRenderer({
       lodashSet(PLOT_LAYOUT, 'yaxis.title.text', plotConfig.yAxisTitle);
     }
 
+    console.log('🚀 [plot-renderer] data =', data); // @FIXME: Remove this line written on 2025-09-01 at 14:32
+    console.log('🚀 [plot-renderer] plotConfig =', plotConfig); // @FIXME: Remove this line written on 2025-09-01 at 14:36
     if (!initialized) {
       Plotly.newPlot(container, data, PLOT_LAYOUT, PLOT_CONFIG);
       setInitialized(true);
@@ -135,7 +138,7 @@ export default function PlotRenderer({
   const visibleTracesCount = data?.filter((t) => isTraceVisible(t)).length;
 
   return (
-    <div className="relative mt-4 w-full px-3">
+    <div className="relative mt-4 w-full px-3" ref={refFullscreen}>
       {!isLoading && data.length && !plotConfig?.showDefaultLegends && (
         <div className="py-4">
           <div className="flex w-full justify-between text-gray-400">
@@ -165,6 +168,19 @@ export default function PlotRenderer({
             </div>
           )}
           <div className="ml-auto flex items-center gap-2 self-end">
+            {/* <Button
+              type="primary"
+              size="middle"
+              htmlType="button"
+              icon={<FullscreenOutlined />}
+              onClick={onFullScreen}
+              className={classNames(
+                'border-primary-8 text-primary-8 h-10 rounded-none border bg-white',
+                bordered && 'border-b-0'
+              )}
+            >
+              Full screen
+            </Button> */}
             {isDownloadable && !isLoading && (
               <>
                 <Button
@@ -192,7 +208,7 @@ export default function PlotRenderer({
         >
           <div className="h-full w-[calc(100%-2rem)]">
             <div
-              className={classNames(className, 'w-full')}
+              className={classNames(className, 'hfull w-full')}
               ref={containerRef}
               style={{ opacity: isLoading ? 0.5 : 1 }}
             />
