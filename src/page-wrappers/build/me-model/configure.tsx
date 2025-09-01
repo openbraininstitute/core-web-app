@@ -68,13 +68,7 @@ function Header({ stateId, virtualLabId, projectId }: WorkspaceContext & { state
     },
     {
       title: 'created by',
-      value: (
-        <ul>
-          {contributors?.map(({ id, name }) => (
-            <li key={id}>{name}</li>
-          ))}
-        </ul>
-      ),
+      value: <ul>{contributors?.map(({ id, name }) => <li key={id}>{name}</li>)}</ul>,
     },
     {
       title: 'created date',
