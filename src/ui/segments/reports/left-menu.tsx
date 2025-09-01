@@ -58,7 +58,7 @@ export function LeftMenu({ className }: Props) {
   return (
     <div className={cn('flex flex-col gap-2', className)}>
       <div className="flex w-full flex-col items-center justify-center gap-2">
-        {hashedLinks.map(({ title, key, url, baseUrl }) => (
+        {hashedLinks.map(({ title, key, baseUrl }) => (
           <Button
             rounded
             borderless
@@ -70,7 +70,7 @@ export function LeftMenu({ className }: Props) {
             aria-label={activeSection === baseUrl ? 'active' : ''}
             active={activeSection === baseUrl}
           >
-            <Link href={url}>
+            <Link href={`${pathname}?section=${key}`}>
               {title}
               <RightOutlined className="ml-auto text-current" />
             </Link>
