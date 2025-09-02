@@ -89,16 +89,27 @@ export function Item({
         role="button"
         aria-label="virtual-lab-switcher"
         data-testid="virtual-lab-switcher"
-        className="flex cursor-pointer items-center justify-between px-4 py-3 transition-colors duration-150 hover:bg-gray-50"
+        className={cn(
+          'flex cursor-pointer items-center justify-between px-4 py-3 transition-colors duration-150 hover:bg-gray-50',
+          { 'bg-primary-9 hover:bg-primary-8 mx-2 mt-2 rounded-full py-2 text-white!': lab.isMine },
+          { 'mb-2': !expandedLabs.has(lab.id) && lab.isMine }
+        )}
         onKeyDown={onClick}
         onClick={onClick}
       >
-        <h4 className="text-primary-9 text-md font-bold">
-          {lab.isMine ? <>My virtual lab</> : lab.name}
+        <h4
+          className={cn('text-primary-9 text-md font-bold', {
+            'text-white!': lab.isMine,
+          })}
+        >
+          {lab.name}
         </h4>
         <div className="flex items-center space-x-2">
           <SettingOutlined
-            className="hover:text-primary-9 h-4 w-4 cursor-pointer text-gray-400 transition-colors duration-150"
+            className={cn(
+              'hover:text-primary-9 h-4 w-4 cursor-pointer text-gray-400 transition-colors duration-150',
+              { 'hover:text-primary-4 text-white!': lab.isMine }
+            )}
             onClick={(e) => {
               e.stopPropagation();
               makeTriggerWorkspaceConfigurationClickEvent({
@@ -118,7 +129,7 @@ export function Item({
             {tryingToExpand.has(lab.id) && projectsLoading ? (
               <LoadingOutlined spin />
             ) : (
-              <DownOutlined className="h-4 w-4 text-gray-400" />
+              <DownOutlined className="h-4 w-4 text-gray-200" />
             )}
           </motion.div>
         </div>
@@ -165,7 +176,7 @@ export function Item({
                     {isActive && <div className="mr-2 h-3 w-3 rounded-full bg-current" />}
                     <span className="line-clamp-1 truncate"> {project.name}</span>
                     <RightOutlined
-                      className={`ml-auto ${isActive ? 'text-neutral-4' : 'text-gray-200'}`}
+                      className={`ml-auto ${isActive ? 'text-neutral-2' : 'text-neutral-3'}`}
                     />
                   </Button>
                 </motion.div>

@@ -73,7 +73,7 @@ export function EModel({ sessionId }: Props) {
         selectionType: 'radio',
         onCellClick: (_, record) => {
           navigate(
-            `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/view/${record.id}`
+            `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${record.id}`
           );
         },
         onRowsSelected: (rows) => {

@@ -9,18 +9,23 @@ import { launchSimulationAtom } from '@/ui/segments/workflows/simulate/single-ne
 import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-
+import {
+  SynapseConfigurationArraySchema,
+  RecordLocationArraySchema,
+  StimulationConfigurationSchema,
+  ExperimentalSetupConfigurationSchema,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import {
   ExperimentalSetupConfigurationAtomFamily,
   RecordLocationConfigurationAtomFamily,
-  StimulationProtocolConfigurationAtomFamily,
+  StimulationConfigurationAtomFamily,
   SynaptomeConfigurationAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import {
   PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
   PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY,
   PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
-  PREFIX_SYNAPTOME_SIMULATION_CONFIGURATION_SESSION_KEY,
+  PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
   PROTOCOL_DETAILS,
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
@@ -37,7 +42,7 @@ export const ExperimentStep = {
   Info: 'info',
   ExperimentalSetup: 'experimental-setup',
   StimulationProtocol: 'stimulation-protocol',
-  SynapticInput: 'synaptic-input',
+  SynapticInputs: 'synaptic-inputs',
   Recording: 'recording',
 } as const;
 
@@ -57,7 +62,7 @@ export function Menu({ sessionId, type }: Props) {
   const { id: modelId } = useParams<{ id: string }>();
   const step = searchParams.get('step') ?? ExperimentStep.Info;
   const launchSimulation = useSetAtom(launchSimulationAtom);
-  const [, updatePanelId] = useAtom(headerTabsAtom);
+  const [, updatePanelId] = useAtom(headerTabsAtom(sessionId));
   const onStepChange = (s: ExperimentStepKeys) => {
     const query = new URLSearchParams(searchParams);
     query.set('step', s);
@@ -68,32 +73,42 @@ export function Menu({ sessionId, type }: Props) {
   const spcKey = getSessionKey(PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
   const sesKey = getSessionKey(PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY, sessionId);
   const rlcKey = getSessionKey(PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY, sessionId);
-  const sscKey = getSessionKey(PREFIX_SYNAPTOME_SIMULATION_CONFIGURATION_SESSION_KEY, sessionId);
-  const [currentInjectionConfig] = useAtom(StimulationProtocolConfigurationAtomFamily(spcKey));
-  const [conditionsConfig] = useAtom(ExperimentalSetupConfigurationAtomFamily(sesKey));
-  const [recordFromConfig] = useAtom(RecordLocationConfigurationAtomFamily(rlcKey));
-  const [synaptomeConfig] = useAtom(SynaptomeConfigurationAtomFamily(sscKey));
+  const sscKey = getSessionKey(PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
+
+  const [stimulationConfiguration] = useAtom(StimulationConfigurationAtomFamily(spcKey));
+  const [experimentalSetupConfiguration] = useAtom(
+    ExperimentalSetupConfigurationAtomFamily(sesKey)
+  );
+  const [recordLocationConfiguration] = useAtom(RecordLocationConfigurationAtomFamily(rlcKey));
+  const [synaptomeConfiguration] = useAtom(SynaptomeConfigurationAtomFamily(sscKey));
 
   const onRun = () => {
-    const protocol = currentInjectionConfig.stimulus.stimulus_protocol;
+    const protocol = stimulationConfiguration.stimulus.stimulus_protocol;
     let currentInjectionDuration = 0;
     if (protocol) {
       currentInjectionDuration = PROTOCOL_DETAILS[protocol].defaults.time.stop_time;
     }
     updatePanelId(WorkflowSimulatePanels.Results);
+
     launchSimulation(
       virtualLabId,
       projectId,
       modelId,
       sessionId,
-      currentInjectionConfig,
-      conditionsConfig,
-      recordFromConfig,
-      synaptomeConfig,
+      stimulationConfiguration,
+      experimentalSetupConfiguration,
+      recordLocationConfiguration,
+      synaptomeConfiguration,
       type,
-      conditionsConfig.max_time ?? currentInjectionDuration
+      experimentalSetupConfiguration.max_time ?? currentInjectionDuration
     );
   };
+  const disableRunSimulation =
+    !!RecordLocationArraySchema.safeParse(recordLocationConfiguration).error ||
+    !!ExperimentalSetupConfigurationSchema.safeParse(experimentalSetupConfiguration).error ||
+    !!StimulationConfigurationSchema.safeParse(stimulationConfiguration).error ||
+    (type === SimulationType.SingleNeuronSynaptome &&
+      !!SynapseConfigurationArraySchema.safeParse(synaptomeConfiguration).error);
 
   return (
     <div className="flex h-full flex-col gap-2">
@@ -146,14 +161,14 @@ export function Menu({ sessionId, type }: Props) {
           variant="outline"
           size={breakpoint === 'l' ? 'md' : 'lg'}
           className={cn('w-full justify-start pr-2 shadow-md')}
-          active={step === ExperimentStep.SynapticInput}
-          onClick={() => onStepChange(ExperimentStep.SynapticInput)}
+          active={step === ExperimentStep.SynapticInputs}
+          onClick={() => onStepChange(ExperimentStep.SynapticInputs)}
         >
           <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
             <div className="flex-shrink-0 font-bold">Synaptic Input</div>
             <RightOutlined
               className={cn('text-neutral-4 mr-2 [&_svg]:size-3!', {
-                '-rotate-180 transform text-white!': step === ExperimentStep.SynapticInput,
+                '-rotate-180 transform text-white!': step === ExperimentStep.SynapticInputs,
               })}
             />
           </div>
@@ -203,6 +218,7 @@ export function Menu({ sessionId, type }: Props) {
               className={cn(
                 'disabled:bg-neutral-2 disabled:text-neutral-4! w-full justify-center px-10 font-medium!'
               )}
+              disabled={disableRunSimulation}
               onClick={onRun}
             >
               <div className="flex-shrink-0 font-bold">Run experiment</div>
@@ -211,8 +227,8 @@ export function Menu({ sessionId, type }: Props) {
         </TooltipTrigger>
         <TooltipContent sideOffset={10}>
           <p className={cn('max-w-80 text-left text-base text-balance')}>
-            Please fill all the required information <br /> along with experiment configurations.
-            The simulation results will be matching only valid configurations.
+            Please fill all the required information <br />
+            along with experiment configurations.
           </p>
         </TooltipContent>
       </Tooltip>

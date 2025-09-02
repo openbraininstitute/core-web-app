@@ -11,7 +11,7 @@ import {
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
   RecordLocationConfigurationAtomFamily,
-  StimulationProtocolConfigurationAtomFamily,
+  StimulationConfigurationAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { classNames } from '@/util/utils';
 
@@ -40,7 +40,7 @@ export default function NeuronMeshInjectionRecordingPopover({
   );
   const [injectionConfig, setInjectionConfig] = useAtom(currentInjectionSimulationConfigAtom);
   const [injectConfigInSession, setInjectionConfigInSession] = useAtom(
-    StimulationProtocolConfigurationAtomFamily(spcKey)
+    StimulationConfigurationAtomFamily(spcKey)
   );
 
   const onInject = () => {
@@ -66,9 +66,9 @@ export default function NeuronMeshInjectionRecordingPopover({
 
   const onRecord = () => {
     if (sessionId) {
-      setRecodingLocation([...recordingLocations, { section, offset }]);
+      setRecodingLocation([...recordingLocations, { section, offset, record_currents: false }]);
     } else {
-      add({ section, offset });
+      add({ section, offset, record_currents: false });
     }
     onClose();
   };

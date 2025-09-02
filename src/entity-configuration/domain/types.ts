@@ -14,6 +14,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   type: TEntityTypeDict;
   slug: EntitySlugValue;
   title: string;
+  alternateTitle?: string;
   api: {
     config: {
       allowedFacets?: boolean;

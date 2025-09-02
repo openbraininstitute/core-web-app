@@ -64,7 +64,7 @@ export const label = (text: string, type: 'main' | 'secondary' = 'main', extra?:
     className={cn(
       'text-base font-light uppercase',
       type === 'main' && 'text-primary-8 !font-bold',
-      type === 'secondary' && 'text-neutral-4'
+      type === 'secondary' && 'text-label'
     )}
   >
     {text} {extra}

@@ -57,9 +57,9 @@ const links: Array<LinkItem> = [
   },
   {
     id: 'workspace-explore-data',
-    key: 'explore',
-    title: 'Explore',
-    url: 'explore',
+    key: 'data',
+    title: 'Data',
+    url: 'data',
     icon: <ExploreIcon className="group-hover:text-primary-3 text-xl" />,
     allowText: true,
     className: 'px-6 gap-8',

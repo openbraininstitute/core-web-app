@@ -126,7 +126,6 @@ export function SpaceSwitcher({ className }: Props) {
     });
   };
 
-  // Set current virtual lab based on URL
   useEffect(() => {
     if (virtualLabId && labs.length > 0) {
       setCurrentVirtualLabId(virtualLabId);
@@ -172,9 +171,7 @@ export function SpaceSwitcher({ className }: Props) {
     }
   };
 
-  const currentVirtualLabName = labs.find((lab) => lab.id === virtualLabId)?.isMine
-    ? 'My virtual lab'
-    : labs.find((lab) => lab.id === virtualLabId)?.name || 'Virtual lab';
+  const currentVirtualLabName = labs.find((lab) => lab.id === virtualLabId)?.name;
 
   const currentProjectName = projectId
     ? projects?.data?.results.find((o) => o.id === projectId)?.name
@@ -228,7 +225,9 @@ export function SpaceSwitcher({ className }: Props) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.1 }}
-              className="flex w-full flex-1 items-center space-x-2 overflow-hidden rounded-full"
+              className={cn(
+                'flex w-full flex-1 items-center space-x-2 overflow-hidden rounded-full'
+              )}
             >
               {virtualLabId && (
                 <>

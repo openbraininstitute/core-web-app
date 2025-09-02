@@ -1,12 +1,14 @@
 'use client';
 
 import { usePathname, useRouter, useSelectedLayoutSegments } from 'next/navigation';
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { LoadingOutlined, PlusOutlined, WarningOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import last from 'lodash/last';
 import sum from 'lodash/sum';
+import Link from 'next/link';
 
 import { getProjectBookmarkCategories } from '@/api/virtual-lab-svc/queries/bookmark';
+import { makeSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
@@ -21,11 +23,14 @@ const ExploreSections = {
   Public: 'public',
   Project: 'project',
 } as const;
+const ExploreBookmarkSection = 'bookmark' as const;
 
-export type ExploreSectionsKeys = (typeof ExploreSections)[keyof typeof ExploreSections];
+export type ExploreSectionsKeys =
+  | (typeof ExploreSections)[keyof typeof ExploreSections]
+  | typeof ExploreBookmarkSection;
 
 const tabsConfigItems: Array<{
-  key: ExploreSectionsKeys;
+  key: Partial<ExploreSectionsKeys>;
   title: string;
   position: 'first' | 'middle' | 'last';
 }> = [
@@ -42,12 +47,11 @@ const tabsConfigItems: Array<{
 ];
 
 function BookmarkButton() {
-  const navigate = useRouter().push;
   const breakpoint = useDefaultBreakpoint();
   const segments = useSelectedLayoutSegments();
   const { virtualLabId, projectId } = useWorkspace();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: keyBuilder.bookmarkCategories({ virtualLabId, projectId }),
     queryFn: () => getProjectBookmarkCategories({ virtualLabId, projectId }),
     select: (response) => response.data,
@@ -55,29 +59,30 @@ function BookmarkButton() {
 
   const total = sum(Object.values(data ?? {}));
 
-  const onBookmarkClick = async () => {
-    navigate(
-      `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/bookmarks?group=${EntityTypeGroup.Experimental}`
-    );
-  };
-
   return (
     <Button
       rounded
       size="lg"
       variant="outline"
       className={cn(
-        'inline-flex h-full items-center justify-center px-6 py-3 text-sm font-medium whitespace-nowrap shadow-2xl transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
-        'hover:bg-neutral-1 hover:text-primary-8 h-10 border-none py-3 text-base select-none',
+        'inline-flex h-full items-center justify-center px-6 py-3 text-sm font-medium',
+        'transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
+        'w-max whitespace-nowrap shadow-2xl disabled:pointer-events-none disabled:opacity-50',
+        'hover:bg-neutral-1 hover:text-primary-8 h-10 border-none',
+        'py-3 text-base select-none',
         { 'h-12': breakpoint === 'xl' },
         { 'bg-primary-9 font-bold text-white': last(segments) === 'bookmarks' }
       )}
-      onClick={onBookmarkClick}
+      asChild
     >
-      <div className="flex w-full items-center justify-between gap-6">
+      <Link
+        href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/browse/bookmarks?group=${EntityTypeGroup.Experimental}`}
+        className="flex w-full items-center justify-between gap-6"
+      >
         <span>Bookmarks</span>
-        {isLoading ? <LoadingOutlined spin /> : total}
-      </div>
+        {/* eslint-disable-next-line no-nested-ternary */}
+        {isLoading ? <LoadingOutlined spin /> : error ? <WarningOutlined /> : total}
+      </Link>
     </Button>
   );
 }
@@ -86,7 +91,6 @@ function ExploreTabs() {
   const navigate = useRouter().push;
   const pathname = usePathname();
   const breakpoint = useDefaultBreakpoint();
-  const segments = useSelectedLayoutSegments();
   const { virtualLabId, projectId } = useWorkspace();
 
   const { activeTab, onChangeTab } = useTabs({
@@ -98,21 +102,27 @@ function ExploreTabs() {
   });
 
   const onTabClick = (value: string) => {
-    if (pathname === `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore`) {
+    makeSelectEntityClickEvent({ display: false, data: null });
+    if (
+      pathname === `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data` ||
+      pathname.startsWith(
+        `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/browse/entity`
+      )
+    ) {
       onChangeTab(value)();
     } else
       navigate(
-        `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore?scope=${value}`
+        `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data?scope=${value}`
       );
   };
 
-  const currentScope =
-    segments.at(1) === 'entity' || !last(segments)
-      ? (activeTab ?? ExploreSections.Public)
-      : undefined;
+  const isBookmark = pathname.endsWith('/browse/bookmarks');
+  const currentScope = isBookmark ? undefined : (activeTab ?? undefined);
+
   return (
     <>
       <PillTabs
+        key={activeTab}
         value={currentScope}
         className="w-full"
         activationMode="manual"
@@ -129,7 +139,8 @@ function ExploreTabs() {
               value={tab.key}
               position={tab.position}
               className={cn(
-                'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3 text-base select-none data-[state=active]:font-bold data-[state=active]:text-white',
+                'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3',
+                'text-base select-none data-[state=active]:font-bold data-[state=active]:text-white',
                 { 'h-12': breakpoint === 'xl' }
               )}
             >

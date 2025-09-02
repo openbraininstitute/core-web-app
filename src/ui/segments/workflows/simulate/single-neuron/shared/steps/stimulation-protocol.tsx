@@ -8,7 +8,7 @@ import toPairs from 'lodash/toPairs';
 import get from 'lodash/get';
 import z from 'zod';
 
-import { StimulationProtocolConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import { StimulationConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { AmperageConfiguration } from '@/ui/segments/workflows/simulate/single-neuron/shared/amperage-configuration';
 import {
   getSessionKey,
@@ -23,9 +23,10 @@ import {
 import { secNamesAtom } from '@/state/simulate/single-neuron';
 import {
   StimulationMode,
-  StimulationSimulationConfigSchema,
+  StimulationConfigurationSchema,
   type TProtocolDetails,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
 
 type Props = {
@@ -39,7 +40,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
   const [form] = Form.useForm();
 
   const spcKey = getSessionKey(PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
-  const [spcState, updateSPC] = useAtom(StimulationProtocolConfigurationAtomFamily(spcKey));
+  const [spcState, updateSPC] = useAtom(StimulationConfigurationAtomFamily(spcKey));
 
   useEffect(() => {
     form.setFieldsValue(spcState);
@@ -65,7 +66,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
 
       if (hasChanges) {
         try {
-          const validatedValues = StimulationSimulationConfigSchema.parse(updatedState);
+          const validatedValues = StimulationConfigurationSchema.parse(updatedState);
           updateSPC(validatedValues);
         } catch (validationError) {
           updateSPC(updatedState as any);
@@ -93,7 +94,10 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
         form={form}
         layout="vertical"
         initialValues={spcState}
-        className="relative flex w-full flex-col items-start select-none [&_.ant-form-item-explain-error]:text-sm! [&_.ant-form-item-label]:pb-0.5!"
+        className={cn(
+          'relative flex w-full flex-col items-start select-none [&_.ant-form-item-explain-error]:text-sm! [&_.ant-form-item-label]:pb-0.5!',
+          '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!'
+        )}
         onValuesChange={onValuesChange}
         validateTrigger={['onChange']}
         requiredMark={false}
@@ -108,7 +112,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
             {
               validator: async (_rule, value) => {
                 try {
-                  await StimulationSimulationConfigSchema.pick({
+                  await StimulationConfigurationSchema.pick({
                     inject_to: true,
                   }).shape.inject_to.parseAsync(value);
                 } catch (error) {
@@ -127,7 +131,10 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
             showSearch
             placeholder="Section name"
             options={sections.map((sec) => ({ label: sec, value: sec }))}
-            className="border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! w-full rounded-md border-[1px]! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!"
+            className={cn(
+              'border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! w-full rounded-md border-[1px]! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!',
+              '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!'
+            )}
             popupClassName="[&_.ant-select-item-option-content]:text-primary-9!"
             placement="bottomLeft"
             disabled={!sections.length}
@@ -149,7 +156,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
             {
               validator: async (_rule, value) => {
                 try {
-                  await StimulationSimulationConfigSchema.pick({ stimulus: true })
+                  await StimulationConfigurationSchema.pick({ stimulus: true })
                     .shape.stimulus.pick({ stimulus_type: true })
                     .shape.stimulus_type.parseAsync(value);
                 } catch (error) {
@@ -172,7 +179,10 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
                 label: option.label,
                 value: option.value,
               }))}
-            className="border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! w-full rounded-md border-[1px]! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!"
+            className={cn(
+              'border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! w-full rounded-md border-[1px]! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!',
+              '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!'
+            )}
             popupClassName="[&_.ant-select-item-option-content]:text-primary-9!"
             placement="bottomLeft"
             size={breakpoint === 'l' ? 'middle' : 'large'}
@@ -187,7 +197,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
               {
                 validator: async (_rule, value) => {
                   try {
-                    await StimulationSimulationConfigSchema.pick({ stimulus: true })
+                    await StimulationConfigurationSchema.pick({ stimulus: true })
                       .shape.stimulus.pick({ stimulus_protocol: true })
                       .shape.stimulus_protocol.parseAsync(value);
                   } catch (error) {
@@ -210,7 +220,10 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
                 label: option.label,
                 value: option.name,
               }))}
-              className="border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! w-full rounded-md border-[1px]! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!"
+              className={cn(
+                'border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! w-full rounded-md border-[1px]! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!',
+                '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!'
+              )}
               popupClassName="[&_.ant-select-item-option-content]:text-primary-9!"
               placement="bottomLeft"
               size={breakpoint === 'l' ? 'middle' : 'large'}

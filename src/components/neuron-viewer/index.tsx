@@ -15,13 +15,14 @@ import { recordingSourceForSimulationAtom } from '@/state/simulate/categories/re
 import { currentInjectionSimulationConfigAtom } from '@/state/simulate/categories/current-injection-simulation';
 import {
   RecordLocationConfigurationAtomFamily,
-  StimulationProtocolConfigurationAtomFamily,
+  StimulationConfigurationAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { DEFAULT_CURRENT_INJECTION_CONFIG } from '@/constants/simulate/single-neuron';
 import { useAppNotification } from '@/components/notification';
 import { secNamesAtom } from '@/state/simulate/single-neuron';
 
 import type { Morphology } from '@/services/bluenaas-single-cell/types';
+import { RecordLocation } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 type Props = {
   virtualLabId: string;
@@ -136,20 +137,20 @@ export default function NeuronViewer({
   const [recordLocations] = useAtom(recordingAtom);
 
   const stimulationKey = `${PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY}-${sessionId}`;
-  const injectionSessionAtom = useAtomValue(
-    StimulationProtocolConfigurationAtomFamily(stimulationKey)
-  );
+  const injectionSessionAtom = useAtomValue(StimulationConfigurationAtomFamily(stimulationKey));
   const injectionLocations = useAtomValue(currentInjectionSimulationConfigAtom);
 
   if (useLabels) {
-    let injection = {
+    let injection: RecordLocation = {
       section: injectionLocations[stimulationId].inject_to,
       offset: 0.5,
+      record_currents: false,
     };
     if (sessionId) {
       injection = {
         section: injectionSessionAtom.inject_to,
         offset: 0.5,
+        record_currents: false,
       };
     }
     rendererRef.current?.labels.update([injection, ...recordLocations]);

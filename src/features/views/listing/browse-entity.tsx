@@ -2,8 +2,9 @@
 
 'use client';
 
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { ReactElement, useState, type ComponentProps } from 'react';
+import { parseAsString, Parser, useQueryState } from 'nuqs';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { WarningOutlined } from '@ant-design/icons';
 import compact from 'lodash/compact';
 import dynamic from 'next/dynamic';
@@ -12,7 +13,7 @@ import get from 'lodash/get';
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
+import { DEFAULT_PAGE_NUMBER, WorkspaceScope, WorkspaceSection } from '@/constants';
 import { MiniDetailView } from '@/ui/segments/mini-detail-view';
 import { GenericError } from '@/ui/molecules/generic-error';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -47,7 +48,7 @@ type Props = {
     container?: ComponentProps<'div'>['className'];
     miniView?: ComponentProps<'div'>['className'];
   };
-  scope: TWorkspaceScope;
+  scope?: TWorkspaceScope;
   defaultBrainRegion?: string;
   dataType: TExtendedEntitiesTypeDict;
   mainTableProps?: Partial<ComponentProps<typeof MainTable>>;
@@ -62,11 +63,17 @@ export function BrowseEntityScope({
   requireMiniDetailView = true,
   defaultBrainRegion,
   dataType,
-  scope,
+  scope: defaultScope,
   mainTableProps,
   miniViewProps,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
+  const [scope] = useQueryState(
+    'scope',
+    parseAsString
+      .withDefault(defaultScope ?? WorkspaceScope.Public)
+      .withOptions({ shallow: true }) as NonNullable<Parser<TWorkspaceScope>>
+  );
 
   const dataKey = compact([virtualLabId, projectId, section, dataType, scope, id]).join('/');
   const entity = getEntityByExtendedType({ type: dataType });
@@ -89,10 +96,10 @@ export function BrowseEntityScope({
   const activeColumns = useAtomValue(coreActiveColumnsAtom({ dataType, key: dataKey }));
   const columns = allColumns.filter(({ key }) => (activeColumns || []).includes(key as string));
 
-  const { data, error, isPlaceholderData, isFetching, isLoading } = useQueryExtendedEntityType({
+  const { data, error, isPlaceholderData, isFetching } = useQueryExtendedEntityType({
     context: {
       key: dataKey,
-      workspaceScope: scope,
+      workspaceScope: scope!,
       extendedEntityType: dataType as TExtendedEntitiesTypeDict,
     },
     workspace: { virtualLabId, projectId },
@@ -106,6 +113,7 @@ export function BrowseEntityScope({
     },
     requireBrainRegion,
     defaultBrainRegion,
+    useKeepPreviousData: true,
     enabled: ({ queryKey }) => {
       const [{ queryParameters }] = queryKey;
       if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
@@ -157,8 +165,8 @@ export function BrowseEntityScope({
           <MainTable
             showLoadingState
             sticky={{ offsetHeader: 75.5 }}
-            isLoading={(isPlaceholderData && isFetching) || isLoading}
-            dataScope={scope}
+            isLoading={(isPlaceholderData || isFetching) && !(dataSource && dataSource.length > 0)}
+            dataScope={scope!}
             dataSource={dataSource ?? []}
             dataType={dataType}
             workspace={{ virtualLabId, projectId }}

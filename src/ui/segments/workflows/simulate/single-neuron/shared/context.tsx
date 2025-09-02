@@ -2,11 +2,13 @@
 
 import { makeStorageAtomFamily, memoryStorage } from '@/ui/hooks/use-storage-atom-with-validation';
 import {
-  StimulationSimulationConfigSchema,
-  SimulationExperimentalSetupSchema,
+  StimulationConfigurationSchema,
+  ExperimentalSetupConfigurationSchema,
   RecordLocationArraySchema,
-  SynapseConfigArraySchema,
-  OverviewConfigSchema,
+  SynapseConfigurationArraySchema,
+  OverviewConfigurationSchema,
+  FrequencyInputConfigSchema,
+  AmperageStateSchema,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import {
   DEFAULT_RECORDING_LOCATION,
@@ -16,14 +18,14 @@ import {
 
 const safeStorage: Storage = typeof window !== 'undefined' ? sessionStorage : memoryStorage;
 
-export const StimulationProtocolConfigurationAtomFamily = makeStorageAtomFamily(
-  StimulationSimulationConfigSchema,
+export const StimulationConfigurationAtomFamily = makeStorageAtomFamily(
+  StimulationConfigurationSchema,
   DEFAULT_CURRENT_INJECTION_CONFIG,
   safeStorage
 );
 
 export const ExperimentalSetupConfigurationAtomFamily = makeStorageAtomFamily(
-  SimulationExperimentalSetupSchema,
+  ExperimentalSetupConfigurationSchema,
   DEFAULT_SIMULATION_EXPERIMENTAL_SETUP,
   safeStorage
 );
@@ -35,13 +37,32 @@ export const RecordLocationConfigurationAtomFamily = makeStorageAtomFamily(
 );
 
 export const SynaptomeConfigurationAtomFamily = makeStorageAtomFamily(
-  SynapseConfigArraySchema,
+  SynapseConfigurationArraySchema,
   [],
   safeStorage
 );
 
 export const OverviewConfigurationAtomFamily = makeStorageAtomFamily(
-  OverviewConfigSchema,
+  OverviewConfigurationSchema,
   { name: '', description: undefined },
+  safeStorage
+);
+
+export const FrequencyInputConfigurationAtomFamily = makeStorageAtomFamily(
+  FrequencyInputConfigSchema,
+  { constantOrSteps: 'constant', stepFrequencyState: null },
+  safeStorage
+);
+
+export const AmperageStateAtomFamily = makeStorageAtomFamily(
+  AmperageStateSchema,
+  {
+    protocol: 'idrest',
+    start: 0.05,
+    end: 0.5,
+    stepValue: 5,
+    computed: [0.05, 0.14, 0.23, 0.32, 0.41, 0.5],
+    error: null,
+  },
   safeStorage
 );

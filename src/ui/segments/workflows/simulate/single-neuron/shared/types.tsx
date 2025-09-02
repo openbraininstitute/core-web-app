@@ -87,28 +87,30 @@ export type TProtocolDetails = {
   };
 };
 
-export const SynapseType = {
+export const SynapseTypeDictionary = {
   Excitatory: {
-    key: 'excitatory',
+    id: 'excitatory',
     labe: '',
     value: 110,
   },
   Inhibitory: {
-    key: 'inhibitory',
+    id: 'inhibitory',
     label: '',
     value: 10,
   },
 } as const;
 
-export type TSynapseTypeValue = (typeof SynapseType)[keyof typeof SynapseType]['value'];
-export type TSynapseTypeKey = (typeof SynapseType)[keyof typeof SynapseType]['key'];
+export type TSynapseTypeValue =
+  (typeof SynapseTypeDictionary)[keyof typeof SynapseTypeDictionary]['value'];
+export type TSynapseTypeKey =
+  (typeof SynapseTypeDictionary)[keyof typeof SynapseTypeDictionary]['id'];
 export const SynapseTypeDict = Object.fromEntries(
-  Object.entries(SynapseType).map(([name, value]) => [name, value.value])
+  Object.entries(SynapseTypeDictionary).map(([name, value]) => [name, value.value])
 ) as {
-  [K in keyof typeof SynapseType]: (typeof SynapseType)[K]['value'];
+  [K in keyof typeof SynapseTypeDictionary]: (typeof SynapseTypeDictionary)[K]['value'];
 };
 
-export const SimulationExperimentalSetupSchema = z.object({
+export const ExperimentalSetupConfigurationSchema = z.object({
   celsius: z
     .number({ message: 'Temperature is required' })
     .min(0, 'Temperature must be between 0 and 50°C')
@@ -136,7 +138,7 @@ export const SimulationExperimentalSetupSchema = z.object({
     .max(Infinity, 'Seed must be a positive integer'),
 });
 
-export type SimulationExperimentalSetup = z.infer<typeof SimulationExperimentalSetupSchema>;
+export type SimulationExperimentalSetup = z.infer<typeof ExperimentalSetupConfigurationSchema>;
 export type SimulationExperimentalSetupKeys = keyof SimulationExperimentalSetup;
 
 export const StimulusConfigSchema = z.object({
@@ -172,14 +174,14 @@ export const StimulusConfigSchema = z.object({
 
 export type StimulusConfig = z.infer<typeof StimulusConfigSchema>;
 
-export const StimulationSimulationConfigSchema = z.object({
+export const StimulationConfigurationSchema = z.object({
   id: z.number({ message: 'Id cannot be empty' }),
   config_id: z.string().uuid('Cannot be empty'),
   inject_to: z.string({ message: 'Injection target section cannot be empty' }),
   stimulus: StimulusConfigSchema,
 });
 
-export type StimulationSimulationConfig = z.infer<typeof StimulationSimulationConfigSchema>;
+export type TStimulationConfiguration = z.infer<typeof StimulationConfigurationSchema>;
 
 export const RecordLocationSchema = z.object({
   section: z.string({ message: 'Section cannot be empty' }),
@@ -187,6 +189,7 @@ export const RecordLocationSchema = z.object({
     .number({ message: 'Offset must be a positive number' })
     .min(0, 'Offset must be a positive number')
     .max(1, 'Offset must be between 0 and 1'),
+  record_currents: z.boolean(),
 });
 
 export type RecordLocation = z.infer<typeof RecordLocationSchema>;
@@ -205,16 +208,16 @@ export const SynapseConfigSchema = z.object({
   color: z.string(),
 });
 
-export const OverviewConfigSchema = z.object({
+export const OverviewConfigurationSchema = z.object({
   name: z.string({ message: 'Name is required' }).min(1, 'Name is required'),
   description: z.string().optional(),
 });
 
-export type OverviewConfig = z.infer<typeof OverviewConfigSchema>;
+export type OverviewConfiguration = z.infer<typeof OverviewConfigurationSchema>;
 
-export type SynapseConfig = z.infer<typeof SynapseConfigSchema>;
-export const SynapseConfigArraySchema = z.array(SynapseConfigSchema);
-export type SynapseConfigArray = z.infer<typeof SynapseConfigArraySchema>;
+export type SynapseConfiguration = z.infer<typeof SynapseConfigSchema>;
+export const SynapseConfigurationArraySchema = z.array(SynapseConfigSchema);
+export type SynapseConfigurationArray = z.infer<typeof SynapseConfigurationArraySchema>;
 
 export type AmperageStateType = {
   protocol: TStimulusModuleValue;
@@ -258,3 +261,34 @@ export type PlotDataEntry = {
 };
 
 export type PlotData = PlotDataEntry[];
+
+// Frequency input configuration schema
+export const FrequencyInputConfigSchema = z.object({
+  constantOrSteps: z.enum(['constant', 'step']),
+  stepFrequencyState: z
+    .object({
+      start: z.number(),
+      stop: z.number(),
+      step: z.number(),
+    })
+    .nullable(),
+});
+
+export type FrequencyInputConfig = z.infer<typeof FrequencyInputConfigSchema>;
+
+// Amperage state schema - minimal addition for persistence
+export const AmperageStateSchema = z.object({
+  protocol: z.enum([
+    StimulusModule.APWaveform.value,
+    StimulusModule.Idrest.value,
+    StimulusModule.IV.value,
+    StimulusModule.FirePattern.value,
+  ]),
+  start: z.number(),
+  end: z.number(),
+  stepValue: z.number(),
+  computed: z.array(z.number()),
+  error: z.string().nullable(),
+});
+
+export type AmperageState = z.infer<typeof AmperageStateSchema>;

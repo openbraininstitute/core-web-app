@@ -1,6 +1,17 @@
-import type { ReactNode } from 'react';
+'use client';
 
-import { AtlasViewer } from '@/features/brain-atlas-viewer';
+import type { ReactNode } from 'react';
+import dynamic from 'next/dynamic';
+import Loader from '@/components/loader';
+
+const AtlasViewer = dynamic(() => import('@/features/brain-atlas-viewer'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full w-full items-center justify-center">
+      <Loader />
+    </div>
+  ),
+});
 
 type Props = {
   dataKey: string;

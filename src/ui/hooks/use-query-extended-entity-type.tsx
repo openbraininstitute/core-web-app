@@ -82,7 +82,6 @@ function useQueryParameters(
     // eslint-disable-next-line no-nested-ternary
     ...(context.workspaceScope === WorkspaceScope.Project
       ? {
-          authorized_public: false,
           authorized_project_id: workspace?.projectId,
         }
       : context.workspaceScope === WorkspaceScope.Public
