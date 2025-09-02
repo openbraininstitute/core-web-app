@@ -30,6 +30,9 @@ export const MEmodel: EntityCoreTypeConfig<IMEModel> = {
   asset: {
     extension: undefined,
   },
-  isBookmarkable: true,
   detailViewSections: ['overview'],
+  isDownloadable: true,
+  isBookmarkable: true,
+  isCopyable: true,
+  isSimulatable: true,
 } as const;

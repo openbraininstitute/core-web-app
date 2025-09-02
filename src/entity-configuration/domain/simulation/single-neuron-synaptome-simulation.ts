@@ -75,4 +75,7 @@ export const SingleNeuronSynaptomeSimulation: EntityCoreTypeConfig<ISingleNeuron
     },
     isBookmarkable: true,
     detailViewSections: ['overview'],
+    isDownloadable: false,
+    isCopyable: true,
+    isSimulatable: false,
   } as const;

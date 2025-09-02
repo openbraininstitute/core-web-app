@@ -32,6 +32,9 @@ export const SynapsePerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPer
   asset: {
     extension: 'application/json',
   },
-  isBookmarkable: true,
   detailViewSections: ['overview'],
+  isDownloadable: true,
+  isCopyable: true,
+  isSimulatable: false,
+  isBookmarkable: true,
 } as const;

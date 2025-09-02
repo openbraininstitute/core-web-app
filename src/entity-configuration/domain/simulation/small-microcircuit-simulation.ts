@@ -136,7 +136,6 @@ export const SmallMicrocircuitSimulation: EntityCoreTypeConfig<ICircuitSimulatio
   extendedType: ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.SmallMicrocircuitSimulation,
-  isBookmarkable: true,
   api: {
     config: { allowedFacets: true },
     query: {
@@ -159,4 +158,8 @@ export const SmallMicrocircuitSimulation: EntityCoreTypeConfig<ICircuitSimulatio
     extension: 'application/json',
   },
   detailViewSections: ['overview'],
+  isBookmarkable: true,
+  isDownloadable: false,
+  isCopyable: true,
+  isSimulatable: false,
 } as const;

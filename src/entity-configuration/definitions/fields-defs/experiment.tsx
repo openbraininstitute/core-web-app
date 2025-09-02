@@ -1,8 +1,8 @@
 import get from 'lodash/get';
 
 import { ReactNode } from 'react';
-import PreviewThumbnail from '@/features/thumbnail/preview';
 
+import { PreviewThumbnail } from '@/features/thumbnail/preview';
 import {
   renderArray,
   renderEmptyOrValue,
@@ -15,12 +15,12 @@ import {
 } from '@/entity-configuration/definitions/fields-defs/enums';
 import { hasAssets } from '@/api/entitycore/guards';
 
+import type { TCircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type {
   EntityCoreObjectTypes,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
-import { TCircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.SimulationSeed]: {
