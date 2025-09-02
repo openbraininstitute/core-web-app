@@ -3,6 +3,7 @@
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { ComponentProps, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
+import delay from 'lodash/delay';
 import find from 'lodash/find';
 
 import { streamingFetch, type StreamItem } from '@/ui/segments/app-setup/stream-fetch';
@@ -83,13 +84,17 @@ export function WorkspaceProvision({
                 step: chunk.step as TWorkspaceBootstrapStep,
               },
             ]);
-            if (chunk.step === WorkspaceBootstrapStep.Funds) {
-              move({
-                virtualLabId: chunk.data.virtualLab.id,
-                virtualLabName: chunk.data.virtualLab.name,
-                projectId: chunk.data.project.id,
-                projectName: chunk.data.project.name,
-              });
+            if (chunk.step === WorkspaceBootstrapStep.Project) {
+              delay(
+                () =>
+                  move({
+                    virtualLabId: chunk.data.virtualLab.id,
+                    virtualLabName: chunk.data.virtualLab.name,
+                    projectId: chunk.data.project.id,
+                    projectName: chunk.data.project.name,
+                  }),
+                2000
+              );
             }
           } catch (e: any) {
             log('error', e.message);
