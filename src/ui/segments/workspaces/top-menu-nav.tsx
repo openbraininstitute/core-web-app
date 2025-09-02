@@ -1,29 +1,30 @@
-import { MenuOutlined } from '@ant-design/icons';
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
-
 import type { ReactNode } from 'react';
-
 import React from 'react';
+
+import { MenuOutlined } from '@ant-design/icons';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
 import {
   ExploreIcon,
   HelpIcon,
-  NotebookIcon,
-  WorkflowIcon,
   Home,
+  NotebookIcon,
+  ReportsIcon,
+  WorkflowIcon,
 } from '@/components/icons/buttons';
-import { useDefaultBreakpoint, createBreakpoint } from '@/ui/hooks/create-break-point';
 import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { createBreakpoint, useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { getActiveSection } from '@/utils/get-section';
 import { Button } from '@/ui/molecules/button';
-import { cn } from '@/utils/css-class';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/ui/molecules/dropdown-menu';
+import { cn } from '@/utils/css-class';
+import { getActiveSection } from '@/utils/get-section';
 
 type LinkItem = {
   id: string;
@@ -76,7 +77,6 @@ const links: Array<LinkItem> = [
     action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
       `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows`,
   },
-
   {
     id: 'workspace-notebooks',
     key: 'notebooks',
@@ -90,12 +90,24 @@ const links: Array<LinkItem> = [
       `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/notebooks`,
   },
   {
+    id: 'workspace-reports',
+    key: 'reports',
+    title: 'Reports',
+    url: 'reports',
+    icon: <ReportsIcon className="group-hover:text-primary-3 h-5!" />,
+    allowText: true,
+    className: 'px-6 gap-8',
+    hasAction: true,
+    action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
+      `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/notebooks`,
+  },
+  {
     id: 'workspace-help',
     key: 'help',
     title: 'Help',
     url: 'help',
     icon: <HelpIcon className="group-hover:text-primary-3 text-lg" />,
-    allowText: true,
+    allowText: false,
     className: '',
     hasAction: false,
   },
