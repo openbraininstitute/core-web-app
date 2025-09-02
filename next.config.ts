@@ -19,9 +19,6 @@ const coreWebAppVersion = env.NEXT_PUBLIC_CORE_WEB_APP_VERSION;
 const nextConfig = (phase: string): NextConfig => {
   const isDev = phase === PHASE_DEVELOPMENT_SERVER;
   return {
-    experimental: {
-      turbopackMemoryLimit: 2097152,
-    },
     turbopack: {
       rules: {
         '*.groq': {
