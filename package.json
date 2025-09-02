@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "dev:next": "npx dotenv -e .env.development-next -- next dev --turbopack",
-    "build": "next build --turbopack --experimental-debug-memory-usage",
+    "build": "next build --turbopack",
     "start": "next start --turbopack",
     "lint": "npx eslint src && npx tsc --noEmit",
     "lint:only": "next lint",
