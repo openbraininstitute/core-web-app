@@ -20,7 +20,7 @@ const nextConfig = (phase: string): NextConfig => {
   const isDev = phase === PHASE_DEVELOPMENT_SERVER;
   return {
     experimental: {
-      turbopackMemoryLimit: 4194304,
+      turbopackMemoryLimit: 2097152,
     },
     turbopack: {
       rules: {
