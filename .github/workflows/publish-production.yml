@@ -7,7 +7,7 @@ permissions:
   contents: write
 
 jobs:
-  tag-and-publish-image:
+  publish-production-image:
     runs-on: ubuntu-latest
     env:
       ENVIRONMENT: production
@@ -47,6 +47,7 @@ jobs:
           echo "NEW_TAG=${NEW_TAG}" >> $GITHUB_ENV
           echo "New tag: $NEW_TAG"
           NEW_TAG_NODOTS="${NEW_TAG//./}"
+          echo "New tag no dots: $NEW_TAG_NODOTS"
           echo "version=${NEW_TAG_NODOTS}" >> $GITHUB_OUTPUT
 
       - name: Create Git Tag
@@ -66,12 +67,9 @@ jobs:
         with:
           registry-type: public
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Build a Docker image
         run: |
-          docker buildx build \
+          docker  build \
             --build-arg DEPLOYMENT_ENV=production \
             --build-arg CORE_WEB_APP_VERSION=${{ steps.tag.outputs.version }} \
             -t ${{ vars.PUBLICECR_URI }}:${{ env.NEW_TAG }} .
@@ -85,7 +83,7 @@ jobs:
           # remove directory for extracted assets (can be removed later)
           rm -rf ./assets-for-s3
 
-          # create directory for extracted assets
+          # create directory for extracted assets with versioned paths
           mkdir -p ./assets-for-s3/${{ steps.tag.outputs.version }}/public
           mkdir -p ./assets-for-s3/${{ steps.tag.outputs.version }}/_next
 
@@ -97,12 +95,6 @@ jobs:
 
       - name: Sync static assets to S3 and invalidate CloudFront
         run: |
-          # upload extracted static assets to S3
-          aws s3 sync ./assets-for-s3/public s3://${{ vars.PRODUCTION_S3_BUCKET_NAME }}/public --delete --exact-timestamps --cache-control "public, max-age=604800, immutable"
-          aws s3 sync ./assets-for-s3/_next/static s3://${{ vars.PRODUCTION_S3_BUCKET_NAME }}/_next/static --delete --exact-timestamps --cache-control "public, max-age=604800, immutable"
-
-          # this need to be checked how to invalidate history
-          # # invalidate CloudFront distribution
-          # if [ -n "${{ vars.PRODUCTION_CLOUDFRONT_DISTRIBUTION_ID }}" ]; then
-          #   aws cloudfront create-invalidation --distribution-id ${{ vars.PRODUCTION_CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
-          # fi
+          # upload extracted static assets to S3 with versioned paths
+          aws s3 sync ./assets-for-s3/${{ steps.tag.outputs.version }}/public s3://${{ vars.PRODUCTION_S3_BUCKET_NAME }}/${{ steps.tag.outputs.version }}/public --delete --exact-timestamps --cache-control "public, max-age=604800, immutable"
+          aws s3 sync ./assets-for-s3/${{ steps.tag.outputs.version }}/_next/static s3://${{ vars.PRODUCTION_S3_BUCKET_NAME }}/${{ steps.tag.outputs.version }}/_next/static --delete --exact-timestamps --cache-control "public, max-age=604800, immutable"

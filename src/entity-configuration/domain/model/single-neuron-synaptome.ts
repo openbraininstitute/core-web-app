@@ -47,6 +47,9 @@ export const SingleNeuronSynaptome: EntityCoreTypeConfig<ISingleNeuronSynaptome>
     extension: 'application/json',
     configfile: AssetLabel.single_neuron_synaptome_config,
   },
-  isBookmarkable: true,
   detailViewSections: ['overview'],
+  isBookmarkable: true,
+  isDownloadable: true,
+  isCopyable: true,
+  isSimulatable: true,
 } as const;

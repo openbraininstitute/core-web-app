@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import DetailView from '@/features/views/details/model';
 
+import DetailView from '@/features/views/details/model';
 import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
@@ -17,7 +17,7 @@ export const generateMetadata = async ({ params }: Props): Promise<Metadata> => 
 
   return {
     title: data?.title ?? 'Model Details',
-    description: `discover ${data?.title ? `${data.title} details` : 'model details'}`,
+    description: `discover ${data?.title ? `${data.title} details` : 'discover model details'}`,
   };
 };
 

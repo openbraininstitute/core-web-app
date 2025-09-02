@@ -1,8 +1,6 @@
 // TODO: this data type should be moved from this file
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
-export * from '@/entity-configuration/domain/model/circuit';
-
 export const MODEL_DATATYPES = [
   ExtendedEntitiesTypeDict.Emodel,
   ExtendedEntitiesTypeDict.Memodel,

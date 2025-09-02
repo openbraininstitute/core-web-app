@@ -38,7 +38,6 @@ export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulatio
   extendedType: ExtendedEntitiesTypeDict.SingleNeuronSimulation,
   type: EntityTypeDict.SingleNeuronSimulation,
   slug: EntitySlug.SingleNeuronSimulation,
-  isBookmarkable: true,
   api: {
     config: {
       allowedFacets: true,
@@ -59,4 +58,8 @@ export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulatio
     configfile: AssetLabel.single_neuron_simulation_data,
   },
   detailViewSections: ['overview'],
+  isBookmarkable: true,
+  isDownloadable: false,
+  isCopyable: true,
+  isSimulatable: false,
 } as const;

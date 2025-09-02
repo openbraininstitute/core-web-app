@@ -3,8 +3,9 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export const Circuit: EntityCoreTypeConfig<ICircuit> = {
   group: EntityTypeGroup.Models,
@@ -17,7 +18,11 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
       allowedFacets: true,
     },
     query: {
-      list: getCircuits,
+      list: (...params) =>
+        getCircuits({
+          ...params,
+          filters: { ...params[0].filters },
+        }),
       one: getCircuit,
     },
   },
@@ -27,8 +32,11 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
   },
   asset: {
     extension: 'application/json',
-    // configfile: AssetLabel.single_neuron_synaptome_config,
   },
-  isBookmarkable: true,
+
   detailViewSections: ['overview'],
+  isBookmarkable: false,
+  isDownloadable: true,
+  isCopyable: true,
+  isSimulatable: false, // TODO: should be changed after
 } as const;

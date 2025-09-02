@@ -1,13 +1,7 @@
 import { SVGProps } from 'react';
 
 /** Download icon: downwards arrow above a vertical line */
-export default function DownloadIcon({
-  iconColor,
-  className,
-}: {
-  iconColor: string;
-  className?: string;
-}) {
+export default function DownloadIcon({ className }: { className?: string }) {
   return (
     <svg
       width="11"
@@ -19,11 +13,11 @@ export default function DownloadIcon({
     >
       <path
         d="M9.18862 6.23614C9.40363 6.01722 9.40363 5.66286 9.18862 5.44394C8.97413 5.22554 8.62558 5.22554 8.41109 5.44394L6.05008 7.84789V0.560165C6.05008 0.250945 5.80362 0 5.49992 0C5.19623 0 4.94977 0.250945 4.94977 0.560165V7.84789L2.58876 5.44394C2.37426 5.22554 2.02572 5.22554 1.81122 5.44394C1.59622 5.66286 1.59622 6.01722 1.81122 6.23614L5.11112 9.59605C5.21424 9.70105 5.35396 9.75985 5.49988 9.75985C5.64581 9.75985 5.78554 9.70106 5.88865 9.59605L9.18862 6.23614Z"
-        fill={iconColor}
+        fill="currentColor"
       />
       <path
         d="M10.4498 10.8797C10.7535 10.8797 11 11.1306 11 11.4398C11 11.7491 10.7535 12 10.4498 12H0.550158C0.246463 12 0 11.7491 0 11.4398C0 11.1306 0.246463 10.8797 0.550158 10.8797H10.4498Z"
-        fill={iconColor}
+        fill="currentColor"
       />
     </svg>
   );

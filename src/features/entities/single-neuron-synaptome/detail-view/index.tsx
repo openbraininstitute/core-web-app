@@ -2,7 +2,6 @@
 
 import { Suspense } from 'react';
 import isNil from 'lodash/isNil';
-import Link from 'next/link';
 
 import SynapseGroupList from '@/features/entities/single-neuron-synaptome/detail-view/elements/list-synapses-configuration';
 import Configuration from '@/features/entities/single-neuron-synaptome/detail-view/configuration';
@@ -13,10 +12,8 @@ import Summary from '@/features/details-view/summary';
 import If from '@/components/ConditionalRenderer/If';
 
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-import { resolveExperimentUrl } from '@/utils/url-builder';
 
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
@@ -24,7 +21,7 @@ import type { IMEModel, ISingleNeuronSynaptome } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
-  params: WorkspaceContext & { id: string };
+  params: WorkspaceContext;
   // eslint-disable-next-line react/no-unused-prop-types
   showViewMode?: boolean;
   payload: {
@@ -49,7 +46,7 @@ const CommonSummaryViewFields = [
 ] as TypeSummaryProps[];
 
 export default function Page({
-  params: { virtualLabId, projectId, id },
+  params: { virtualLabId, projectId },
   payload: { config, memodel, source },
 }: Props) {
   const { activeTab } = useTabs({ tabsConfig: TabsConfig });
@@ -61,21 +58,6 @@ export default function Page({
           showViewMode
           dataType={ExtendedEntitiesTypeDict.SingleNeuronSynaptome}
           commonFields={CommonSummaryViewFields}
-          extraHeaderAction={
-            virtualLabId &&
-            projectId && (
-              <Link
-                className="flex h-11 items-center gap-2 rounded-none border border-gray-300 px-8 shadow-none"
-                href={resolveExperimentUrl({
-                  ctx: { virtualLabId, projectId },
-                  dataType: EntityTypeDict.SingleNeuronSynaptome,
-                  entityId: id,
-                })}
-              >
-                Simulate
-              </Link>
-            )
-          }
         >
           {() => {
             return (

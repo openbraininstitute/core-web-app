@@ -5,7 +5,6 @@ import { useAtomValue, useSetAtom } from 'jotai';
 
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 import Overview from '@/features/details-view/overview';
-import usePathname from '@/hooks/pathname';
 
 import {
   ExtendedEntitiesTypeDict,
@@ -32,33 +31,45 @@ import type { DetailViewUrlParams } from '@/types/explore-section/application';
 export default function Summary<T extends EntityCoreIdentifiableNamed>({
   payload,
   showViewMode,
-  extraHeaderAction,
   dataType,
   children,
+  fieldsClassName,
   commonFields = CommonSummaryViewFields,
+  actions,
 }: {
   payload?: T | undefined;
   showViewMode?: boolean;
   commonFields?: Array<TypeSummaryProps>;
-  extraHeaderAction?: ReactNode;
   dataType: TExtendedEntitiesTypeDict;
   children?: (detail: T) => ReactNode;
+  fieldsClassName?: string;
+  actions?: {
+    onDownload?: (entity: T) => void;
+  };
 }) {
   const { id, virtualLabId, projectId, ...params } = useParams<DetailViewUrlParams>();
   const setBrainRegionSidebarIsCollapsed = useSetAtom(brainRegionSidebarIsCollapsedAtom);
   const fields = getViewDefinitionByExtendedType(dataType)?.summaryViewFields;
 
-  const path = usePathname();
-
   const memoizedDetailAtom = useMemo(() => {
     const detailFetchAtom = detailFamily({ id, virtualLabId, projectId, dataType, ...params });
     return conditionalAtom<T>(payload, detailFetchAtom);
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [payload, id, virtualLabId, projectId, dataType, JSON.stringify(params)]);
 
   const detail = useAtomValue(memoizedDetailAtom);
 
-  const onDownload = useCallback((entity: T) => downloadArchive(entity.type, [entity.id]), []);
+  const onDownload = useCallback(
+    (entity: T) => {
+      if (actions?.onDownload) actions.onDownload(entity);
+      else {
+        downloadArchive(entity.type, [entity.id]);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [actions?.onDownload]
+  );
 
   useEffect(() => {
     setBrainRegionSidebarIsCollapsed(true);
@@ -101,12 +112,11 @@ export default function Summary<T extends EntityCoreIdentifiableNamed>({
             className="secondary-scrollbar ml-10 flex grow flex-col gap-7 overflow-y-scroll bg-white p-7 pr-12"
           >
             {showViewMode && <div className="text-right font-thin text-gray-400">View mode</div>}
-            <Overview
+            <Overview<T>
               fields={fields}
               commonFields={commonFields}
               detail={data}
-              url={path}
-              extraHeaderAction={extraHeaderAction}
+              fieldsClassName={fieldsClassName}
               onDownload={onDownload}
             />
             {children && data && children(data)}

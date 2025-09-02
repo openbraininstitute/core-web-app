@@ -3,6 +3,7 @@
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { ColumnProps } from 'antd/lib/table';
 import throttle from 'lodash/throttle';
+import isString from 'lodash/isString';
 
 import { fieldsDefinitionRegistry, getFieldDefinition } from '@/entity-configuration/definitions';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
@@ -33,9 +34,9 @@ const COL_SIZING = {
  * @param unit string
  * @returns number
  */
-function getProvisionedWidth(title: string, unit?: ReactNode) {
+function getProvisionedWidth(title: ReactNode, unit?: ReactNode) {
   const titleSpan = document.createElement('span');
-  titleSpan.textContent = `${title} ${unit ?? ''}`;
+  titleSpan.textContent = isString(title) ? `${title} ${unit ?? ''}` : '';
   // font-{size/weight} must be the same as the column style
   titleSpan.style.setProperty('font-size', '1rem');
   document.body.appendChild(titleSpan);
@@ -105,7 +106,7 @@ export function useDataTableColumns<T>({
         const field = getFieldDefinition(key as EntityCoreFields);
         return {
           key,
-          width: field?.style?.width ?? getProvisionedWidth(field!.title, field?.unit),
+          width: field?.style?.width ?? getProvisionedWidth(field?.title, field?.unit),
         };
       })
     );

@@ -1,7 +1,8 @@
 import { Readable } from 'stream';
-import { flatten } from 'flat';
+
 import { format } from 'fast-csv';
 
+import { CsvEntry } from './types';
 import { bufferStream } from '@/features/entity-download/utils';
 
 type FileEntry = {
@@ -10,29 +11,35 @@ type FileEntry = {
   size: number;
 };
 
-const METADATA_FLATTEN_DELIMITER = '__';
+type MetadataEntry<JsonEntry> = {
+  csv: CsvEntry;
+  json: JsonEntry;
+};
 
 /**
- * Manages metadata collection and CSV generation for entity downloads.
+ * Manages metadata collection and CSV/JSON generation for entity downloads.
  *
  * @class Metadata
- * @description Handles flattening and converting metadata entries into a CSV format
+ * @description Handles converting metadata entries into a CSV/JSON format
  * for use in entity download processes.
  */
-export class Metadata {
-  private entries: Record<string, any>[] = [];
+export class Metadata<JsonEntry> {
+  private jsonEntries: JsonEntry[] = [];
 
-  public add(entry: Record<string, any>) {
-    this.entries.push(entry);
+  private csvEntries: CsvEntry[] = [];
+
+  public add(entry: MetadataEntry<JsonEntry>) {
+    this.jsonEntries.push(entry.json);
+    this.csvEntries.push(entry.csv);
   }
 
   public get entriesCount() {
-    return this.entries.length;
+    return this.csvEntries.length;
   }
 
   public async *getFileEntries(): AsyncGenerator<FileEntry> {
     // Create JSON metadata file
-    const jsonBuffer = Buffer.from(JSON.stringify(this.entries));
+    const jsonBuffer = Buffer.from(JSON.stringify(this.jsonEntries));
 
     yield {
       path: 'metadata.json',
@@ -41,15 +48,9 @@ export class Metadata {
     };
 
     // Create  CSV metadata file
-    const flattenedEntries = this.entries.map((entry) =>
-      flatten(entry, { delimiter: METADATA_FLATTEN_DELIMITER })
-    ) as Record<string, any>[];
+    const metadataCsvStream = format({ headers: true, delimiter: ',' });
 
-    const headers = Array.from(new Set(flattenedEntries.flatMap((entry) => Object.keys(entry))));
-
-    const metadataCsvStream = format({ headers, delimiter: ',' });
-
-    flattenedEntries.forEach((entry) => metadataCsvStream.write(entry));
+    this.csvEntries.forEach((entry) => metadataCsvStream.write(entry));
     metadataCsvStream.end();
 
     const metadataCsvBuffer = await bufferStream(metadataCsvStream);

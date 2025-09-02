@@ -18,7 +18,7 @@ const ExploreSectionListingView = dynamic(
   {
     ssr: false,
   }
-) as (props: ExploreSectionListingViewProps<IEModel>) => ReactElement | null;
+) as unknown as (props: ExploreSectionListingViewProps<IEModel>) => ReactElement | null;
 
 export default function ListingView({
   dataType,
@@ -55,6 +55,7 @@ export default function ListingView({
         renderButton,
         virtualLabInfo,
         useBrainRegion: true,
+        selectionType: 'checkbox',
       }}
     />
   );

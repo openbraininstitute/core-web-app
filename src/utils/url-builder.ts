@@ -23,7 +23,7 @@ export function resolveExploreDetailsPageUrl({
 }) {
   if (dataType && entityType)
     throw Error('Only one of dataType and entityType should be specified');
-  if (!dataType && !entityType) throw new Error('Cannot resolve url');
+  if (!dataType && !entityType) return '/';
 
   const entityConfig = dataType
     ? getEntityByExtendedType({ type: dataType })

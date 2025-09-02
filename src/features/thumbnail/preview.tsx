@@ -19,7 +19,7 @@ import type { WorkspaceContext } from '@/types/common';
 
 interface T extends EntityCoreResource {}
 
-export default function PreviewThumbnail({
+export function PreviewThumbnail({
   resource,
   className,
   rootClassName,
@@ -221,3 +221,5 @@ export default function PreviewThumbnail({
     </div>
   );
 }
+
+export default PreviewThumbnail;
