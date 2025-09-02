@@ -10,6 +10,8 @@ export function UserProfile() {
   const { isLoading, data, isError } = useQuery({
     queryKey: keyBuilder.profile(),
     queryFn: getUserProfile,
+    staleTime: Infinity,
+    gcTime: Infinity,
   });
 
   if (isLoading) {

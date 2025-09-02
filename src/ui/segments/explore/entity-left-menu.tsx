@@ -71,7 +71,7 @@ export function EntityLeftMenu({ dataKey }: Props) {
           }`}
           aria-hidden={view !== ExploreLeftMenuContext.DataGroup}
         >
-          <EntityLinkCount dataKey={dataKey} />
+          <EntityLinkCount />
         </motion.div>
       </div>
     </div>

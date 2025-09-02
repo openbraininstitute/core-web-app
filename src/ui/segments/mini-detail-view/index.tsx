@@ -43,7 +43,7 @@ type Props = {
 };
 
 export function MiniDetailView<T extends EntityCoreObjectTypes>({
-  section = WorkspaceSection.Explore,
+  section = WorkspaceSection.Data,
 }: Props) {
   const [record, setRecord] = useState<T | null>(null);
   useSelectEntityClickEvent<T>((event) => {
@@ -129,7 +129,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
     .otherwise(() => null);
 
   const actions = match({ section })
-    .with({ section: WorkspaceSection.Explore }, () => <ExploreActions record={record} />)
+    .with({ section: WorkspaceSection.Data }, () => <ExploreActions record={record} />)
     .with({ section: WorkspaceSection.SimulateWorkflow }, () => (
       <WorkflowSimulateActions record={record} />
     ))

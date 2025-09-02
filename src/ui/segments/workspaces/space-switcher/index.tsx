@@ -76,6 +76,8 @@ export function SpaceSwitcher({ className }: Props) {
       {
         queryKey: userKeyBuilder.profile(),
         queryFn: getUserProfile,
+        staleTime: Infinity,
+        gcTime: Infinity,
       },
     ],
   });

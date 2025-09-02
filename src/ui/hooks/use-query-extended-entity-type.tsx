@@ -3,6 +3,7 @@ import {
   keepPreviousData,
   UseQueryOptions,
   type QueryFunction,
+  hashKey,
 } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
 import isEmpty from 'lodash/isEmpty';
@@ -70,6 +71,7 @@ function useQueryParameters(
   const queryParameters = compactRecord({
     page_size: DEFAULT_PAGE_SIZE,
     page: pageNumber,
+    with_facets: true,
     search: isEmpty(searchString) ? null : searchString,
     order_by: `${sortState.order === 'asc' ? '+' : '-'}${sortState.backendField}`,
     ...(requireBrainRegion
@@ -146,11 +148,19 @@ export function useQueryExtendedEntityType<TData = unknown, TError = unknown>({
     { context, workspace },
     { requireBrainRegion, defaultBrainRegion }
   );
-  return useQuery({
-    queryKey: buildQueryKey({ workspace, context, queryParameters, requireBrainRegion }),
+  const queryKey = buildQueryKey({ workspace, context, queryParameters, requireBrainRegion });
+  const queryKeyHash = hashKey(queryKey);
+
+  const query = useQuery({
+    queryKey,
     queryFn,
     // NOTE: if we don't use this option, then `isLoading` should be used in the component
     placeholderData: rest.useKeepPreviousData ? keepPreviousData : undefined,
     ...rest,
   });
+
+  return {
+    ...query,
+    queryKeyHash,
+  };
 }

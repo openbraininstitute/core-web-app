@@ -57,6 +57,13 @@ export function columnKeyToFilter(
         value: '',
         constraint: constraint ?? fieldConfig.defaultConstraint,
       };
+    case CoreFieldFilterTypeEnum.DropdownList:
+      return {
+        field: key,
+        type: CoreFieldFilterTypeEnum.DropdownList,
+        value: null,
+        constraint: constraint ?? fieldConfig.defaultConstraint,
+      };
     default:
       return {
         field: key,

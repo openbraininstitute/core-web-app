@@ -22,7 +22,7 @@ export const WorkspaceScope = {
 export type TWorkspaceScope = (typeof WorkspaceScope)[keyof typeof WorkspaceScope];
 
 export const WorkspaceSection = {
-  Explore: 'explore',
+  Data: 'data',
   BuildWorkflow: 'workflows/build',
   SimulateWorkflow: 'workflows/simulate',
 } as const;
