@@ -10,9 +10,7 @@ export default async function ReportsPage({
   searchParams: Promise<{ section?: string | string[] }>;
 }) {
   const params = await searchParams;
-  const section = Array.isArray(params.section)
-    ? params.section[0]
-    : params.section || null;
+  const section = Array.isArray(params.section) ? params.section[0] : params.section || null;
 
   return match(section)
     .with(null, () => <ShowcasesPage />)
