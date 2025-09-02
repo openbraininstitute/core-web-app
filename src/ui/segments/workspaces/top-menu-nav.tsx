@@ -10,6 +10,7 @@ import {
   HelpIcon,
   Home,
   NotebookIcon,
+  ReportsIcon,
   WorkflowIcon,
 } from '@/components/icons/buttons';
 import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
@@ -93,7 +94,7 @@ const links: Array<LinkItem> = [
     key: 'reports',
     title: 'Reports',
     url: 'reports',
-    icon: <NotebookIcon className="group-hover:text-primary-3 h-5!" />,
+    icon: <ReportsIcon className="group-hover:text-primary-3 h-5!" />,
     allowText: true,
     className: 'px-6 gap-8',
     hasAction: true,
