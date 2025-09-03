@@ -1,3 +1,4 @@
+import { JSX } from 'react';
 import { notFound } from 'next/navigation';
 import {
   EntityCoreExtendedType,
@@ -39,6 +40,8 @@ export default async function Configuration({
   const entityType = getEntityByExtendedType({ type: extendedType });
   if (!entityType) notFound();
 
+  let content: JSX.Element | undefined;
+
   if (extendedType === 'emodel') {
     let morphology: IReconstructionMorphologyExpanded | IReconstructionMorphology;
 
@@ -52,7 +55,7 @@ export default async function Configuration({
       notFound();
     }
 
-    return (
+    content = (
       <EModelConfig
         params={{ id: entity.id, virtualLabId: ctx.virtualLabId, projectId: ctx.projectId }}
         payload={{ source: entity as IEModel, exemplar_morphology: morphology }}
@@ -61,7 +64,7 @@ export default async function Configuration({
   }
 
   if (extendedType === 'memodel') {
-    return <MEModelConfig model={entity as IMEModel} />;
+    content = <MEModelConfig model={entity as IMEModel} />;
   }
 
   if (extendedType === 'single_neuron_synaptome') {
@@ -76,7 +79,7 @@ export default async function Configuration({
       notFound();
     }
 
-    return (
+    content = (
       <div className="flex w-full flex-col gap-4">
         <SynaptomeConfig
           memodel={data.memodel}
@@ -102,7 +105,7 @@ export default async function Configuration({
       notFound();
     }
 
-    return (
+    content = (
       <SimulationConfigurationTab
         type="single-neuron-simulation"
         simulation={config as SimulationPayload}
@@ -123,7 +126,7 @@ export default async function Configuration({
       notFound();
     }
 
-    return (
+    content = (
       <SimulationConfigurationTab
         type="single-neuron-simulation"
         simulation={config as SimulationPayload}
@@ -131,5 +134,15 @@ export default async function Configuration({
     );
   }
 
-  notFound();
+  if (!content) notFound();
+
+  return (
+    <>
+      <div className="mb-5">
+        <div className="text-neutral-4 uppercase">Name</div>
+        <div className="text-primary-8 text-2xl font-bold">{entity.name}</div>
+      </div>
+      {content}
+    </>
+  );
 }

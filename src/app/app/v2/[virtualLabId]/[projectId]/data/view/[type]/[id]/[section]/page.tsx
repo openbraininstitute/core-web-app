@@ -10,7 +10,7 @@ import {
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import Overview from '@/ui/segments/detail-view/overview';
-import Visualization from '@/ui/segments/viz';
+import Visualization from '@/ui/segments/detail-view/viz';
 import Analysis from '@/features/model-analysis/explorer/container';
 import RelatedArtifacts from '@/ui/segments/detail-view/related-artifacts';
 import Configuration from '@/ui/segments/detail-view/configuration';
