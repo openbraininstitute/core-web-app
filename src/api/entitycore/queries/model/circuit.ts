@@ -2,6 +2,8 @@ import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
 import type { ICircuit, ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
+import type { HierarchyTreeResponse } from '@/api/entitycore/types/shared/hierarchy';
+import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -62,6 +64,43 @@ export async function getCircuit({
 }) {
   const api = await entityCoreApi();
   return await api.get<ICircuit>(`${baseUri}/${id}`, {
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+  });
+}
+
+/**
+ * Retrieves the hierarchy tree based on the specified derivation type.
+ *
+ ** Return a hierarchy tree of circuits based on derivations.
+ * Depending on the derivation type, the hierarchy will be built differently. In particular, a circuit is considered a root if it has no parents of the specified derivation type.
+ * The hierarchy assumes the following rules for the derivations:
+ ** A circuit can have zero or more children linked with any derivation type.
+ ** A circuit can have zero or more parents, provided each parent is different, and is linked with a different derivation type.
+ ** A public circuit can have any combination of public and private circuits as children.
+ ** A private circuit can have only private circuits with the same project_id as children.
+ *
+ ** See also https://github.com/openbraininstitute/entitycore/issues/292#issuecomment-3174884561
+ *
+ * @param context - Optional workspace context for the API request.
+ * @param derivation_type - The type of derivation to filter the hierarchy.
+ * @returns A promise that resolves to the hierarchy tree response.
+ */
+export async function getCircuitHierarchyByDerivation({
+  context,
+  derivation_type,
+}: {
+  context?: WorkspaceContext | null;
+  derivation_type: TDerivationType;
+}): Promise<HierarchyTreeResponse> {
+  const api = await entityCoreApi();
+  return await api.get(`${baseUri}/hierarchy`, {
+    queryParams: {
+      derivation_type,
+    },
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

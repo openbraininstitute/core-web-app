@@ -10,37 +10,37 @@ import { useAtomValue } from 'jotai';
 import { useQueryState } from 'nuqs';
 import get from 'lodash/get';
 
+import { useFilteredCircuits } from '../Circuit/ListView/ExploreCircuitTable';
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';
-import NavigationMenu from '@/components/explore-section/ExploreListingLayout/navigation-menu';
+import NavigationMenu from '@/components/entities-type-stats/listing-navigation-menu';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 
-import { useFilteredCircuits } from '@/components/explore-section/Circuit/ListView/ExploreCircuitTable';
 import {
   brainRegionBasicCellGroupsRegionsHierarchyAtom,
   DEFAULT_BRAIN_REGION_QUERY_ID,
 } from '@/features/brain-region-hierarchy/context';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
-import { StatError } from '@/components/explore-section/ExploreInteractive/StatItem';
 import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/types';
 import { useCurrentExplorerArtifact } from '@/state/explore-section/artifact';
 import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
-import { resolveDataKey } from '@/utils/key-builder';
 import { ensureString } from '@/util/type-guards';
 import {
   ExperimentalEntitiesTileTypes,
   ModelEntitiesTileTypes,
 } from '@/components/entities-type-stats/helpers';
+import { classNames } from '@/util/utils';
 
-import type { NavigationMenuItem } from '@/components/explore-section/ExploreListingLayout/navigation-menu';
+import type { NavigationMenuItem } from '@/components/entities-type-stats/listing-navigation-menu';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { WorkspaceContext } from '@/types/common';
+import { resolveDataKey } from '@/utils/key-builder';
+import { tempIsCircuitInDev } from '@/temp-circuit-check';
 
 export default function ExploreListingLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const params = useParams<WorkspaceContext & { type: EntitySlugValue; id: string }>();
   const pathname = usePathname();
-  const dataKey = resolveDataKey({ projectId: params.projectId, section: 'explore' });
   const [brainRegionId] = useQueryState(DEFAULT_BRAIN_REGION_QUERY_ID);
   const brainRegionHierarchy = useAtomValue(
     useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
@@ -60,7 +60,6 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
       ? ExperimentalEntitiesTileTypes
       : ModelEntitiesTileTypes;
 
-  const showCircuitMenu = dataTypeGroup === DataTypeGroup.ModelData;
   const activePath = pathname?.split('/').pop() || 'morphology';
 
   const onClick: MenuProps['onClick'] = async (info) => {
@@ -82,37 +81,42 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
     router.push(key);
   };
 
-  const nMenuItems = Object.keys(config).length + (showCircuitMenu ? 1 : 0);
+  const nMenuItems = Object.keys(config).length;
   const menuItemWidth = `${Math.floor(100 / nMenuItems) - 0.04}%`;
 
-  const items: Array<NavigationMenuItem> = Object.keys(config).map((dataType) => {
-    const entity = get(config, `${dataType}`) as EntityCoreTypeConfig<any>;
-    const key = entity?.slug!;
-    const active = entity?.slug === activePath;
-    const label = entity?.title!;
-    const entitytype = entity.type;
+  const items: Array<NavigationMenuItem> = Object.keys(config)
+    .map((dataType) => {
+      const entity = get(config, `${dataType}`) as EntityCoreTypeConfig<any>;
+      const key = entity?.slug!;
+      const active = entity?.slug === activePath;
+      const label = entity?.title!;
+      const entitytype = entity.type;
 
-    return {
-      key,
-      entitytype,
-      title: label,
-      label,
-      className: 'text-center font-semibold',
-      style: {
-        backgroundColor: active ? 'white' : '#002766',
-        color: active ? '#002766' : 'white',
-        flexBasis: menuItemWidth,
-      },
-    };
-  });
+      return {
+        key,
+        entitytype,
+        title: label,
+        label,
+        className: 'text-center font-semibold',
+        style: {
+          backgroundColor: active ? 'white' : '#002766',
+          color: active ? '#002766' : 'white',
+          flexBasis: menuItemWidth,
+        },
+      };
+    })
+    .filter((item) => {
+      if (!tempIsCircuitInDev()) {
+        return item.key !== 'circuit';
+      }
+      return true;
+    });
 
-  const { filteredCircuits, loading, error } = useFilteredCircuits({ dataKey });
+  const showCircuitMenu = dataTypeGroup === DataTypeGroup.ModelData;
 
-  if (error) {
-    return <StatError text={error} />;
-  }
-
-  if (showCircuitMenu && !loading) {
+  const dataKey = resolveDataKey({ projectId: params.projectId, section: 'explore' });
+  const { filteredCircuits } = useFilteredCircuits({ dataKey });
+  if (showCircuitMenu && !tempIsCircuitInDev()) {
     const circuitActive = activePath === 'circuit';
 
     items.push({
@@ -147,7 +151,6 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
         key={`${params.type}/${brainRegionId}`}
       >
         <BackToInteractiveExplorationBtn href={interactivePageHref} />
-
         <div className="flex w-full grow flex-col overflow-x-hidden">
           <Suspense
             fallback={
@@ -156,7 +159,10 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
                 mode="horizontal"
                 theme="dark"
                 style={{ backgroundColor: '#002766', opacity: 70 }}
-                className="flex w-[calc(100%+6px)] justify-start"
+                className={classNames(
+                  'flex w-[calc(100%+6px)] justify-start',
+                  '[&>li]:gap2 [&>li]:flex [&>li]:h-[46px] [&>li]:items-center [&>li]:justify-center [&>li]:text-center'
+                )}
                 items={items.map((p) => ({ ...p, itemIcon: <LoadingOutlined className="ml-2" /> }))}
               />
             }

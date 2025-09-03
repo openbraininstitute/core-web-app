@@ -241,13 +241,16 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
 
     // Only update if the values are actually different
     if (region && (id !== region.id || annotation_value !== region.annotation_value)) {
-      setHierarchyConfig(region);
-      updateLocalStorage(region);
+      // Ensure the UI (e.g., RegionBanner) reflects the new selection immediately
+      // before any URL updates that may cause re-renders.
       updateSelectedBrainRegion(omit(node, 'children'));
-    } else if (!region && (id !== '' || annotation_value !== 0)) {
-      setHierarchyConfig(region);
       updateLocalStorage(region);
+      setHierarchyConfig(region);
+    } else if (!region && (id !== '' || annotation_value !== 0)) {
+      // Clear selection first to keep UI in sync, then update storage and URL
       updateSelectedBrainRegion(null);
+      updateLocalStorage(region);
+      setHierarchyConfig(region);
     }
   };
 

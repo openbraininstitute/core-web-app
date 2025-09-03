@@ -2,7 +2,7 @@ import { Suspense, type ReactNode } from 'react';
 
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
 import { WorkflowSimulateLayout } from '@/ui/layouts/workflow-simulate-layout';
-import { getQueryClient } from '@/query-provider/server';
+import { getQueryClient, HydrateClient } from '@/query-provider/server';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
@@ -21,7 +21,9 @@ export default async function Layout({
 
   return (
     <WorkflowSimulateLayout>
-      <Suspense>{children}</Suspense>
+      <HydrateClient>
+        <Suspense>{children}</Suspense>
+      </HydrateClient>
     </WorkflowSimulateLayout>
   );
 }

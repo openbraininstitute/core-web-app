@@ -1,6 +1,7 @@
 'use client';
 
 import { ReloadOutlined } from '@ant-design/icons';
+import { useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { useMemo } from 'react';
@@ -14,6 +15,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   renderArray,
@@ -45,6 +47,7 @@ function checkSelectedEmodelBlackList(e: IEModel) {
 
 export function EModel({ sessionId }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
+  const { push: navigate } = useRouter();
   const { setSessionValue, sessionValue } = useBuildMeModelSessionState({
     sessionId,
     virtualLabId,
@@ -68,6 +71,11 @@ export function EModel({ sessionId }: Props) {
       miniViewProps={{ section: WorkspaceSection.BuildWorkflow }}
       mainTableProps={{
         selectionType: 'radio',
+        onCellClick: (_, record) => {
+          navigate(
+            `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${record.id}`
+          );
+        },
         onRowsSelected: (rows) => {
           const record = rows.at(0);
           setSessionValue({

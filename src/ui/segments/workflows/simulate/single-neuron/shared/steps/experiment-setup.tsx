@@ -10,7 +10,7 @@ import {
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import {
-  SimulationExperimentalSetupSchema,
+  ExperimentalSetupConfigurationSchema,
   type SimulationExperimentalSetupKeys,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { cn } from '@/utils/css-class';
@@ -150,9 +150,8 @@ export function ExperimentSetup({ sessionId }: Props) {
         <Input
           key={id}
           validator={
-            SimulationExperimentalSetupSchema.pick({ [id]: true } as Record<typeof id, true>).shape[
-              id
-            ] as z.ZodTypeAny
+            ExperimentalSetupConfigurationSchema.pick({ [id]: true } as Record<typeof id, true>)
+              .shape[id] as z.ZodTypeAny
           }
           {...{
             id,

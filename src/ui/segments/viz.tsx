@@ -5,7 +5,7 @@ import { MorphoViewerLoaderMemo } from '@/features/entities/reconstruction-morph
 import { IReconstructionMorphology, IElectricalCellRecording } from '@/api/entitycore/types';
 import EphysViewer from '@/features/ephys-viewer';
 
-import { downloadEntity } from '@/app/app/v2/[virtualLabId]/[projectId]/explore/view/[type]/[id]/layout';
+import { downloadEntity } from '@/app/app/v2/[virtualLabId]/[projectId]/data/view/[type]/[id]/layout';
 import { WorkspaceContext } from '@/types/common';
 
 type AwaitedType<T> = T extends Promise<infer U> ? U : T;

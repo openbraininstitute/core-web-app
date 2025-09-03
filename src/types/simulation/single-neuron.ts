@@ -38,6 +38,7 @@ export type SimulationExperimentalSetup = {
 export type RecordLocation = {
   section: string;
   offset: number;
+  record_currents: boolean;
 };
 
 export interface SimulationConfiguration {

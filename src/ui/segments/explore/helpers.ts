@@ -1,3 +1,5 @@
+/* eslint-disable no-nested-ternary */
+
 import pProps from 'p-props';
 
 import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/simulation/single-neuron-synaptome-simulation';
@@ -78,10 +80,8 @@ export async function getAllEntitiesCountScoped({
   projectId,
   brainRegionId,
   scope,
-  personId,
 }: WorkspaceContext & {
   brainRegionId: string;
-  personId: string | undefined;
   scope: TWorkspaceScope;
 }) {
   const items = { ...ExperimentalEntitiesTileTypes, ...ModelEntitiesTileTypes };
@@ -101,7 +101,15 @@ export async function getAllEntitiesCountScoped({
             within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
             within_brain_region_brain_region_id: brainRegionId ?? null,
             within_brain_region_ascendants: false,
-            ...(scope === WorkspaceScope.Project ? { created_by__id: personId } : {}),
+            ...(scope === WorkspaceScope.Project
+              ? {
+                  authorized_project_id: projectId,
+                }
+              : scope === WorkspaceScope.Public
+                ? {
+                    authorized_public: true,
+                  }
+                : {}),
           },
         }),
       ];
@@ -119,7 +127,12 @@ export async function getSimulationsCount({
   projectId,
   brainRegionId,
   personId,
-}: WorkspaceContext & { brainRegionId: string; personId: string | undefined }) {
+  scope,
+}: WorkspaceContext & {
+  brainRegionId: string;
+  personId: string | undefined;
+  scope: TWorkspaceScope;
+}) {
   const promises = Object.fromEntries(
     Object.entries(SimulationEntitiesTileTypes).map(([, value]) => {
       return [
@@ -136,7 +149,16 @@ export async function getSimulationsCount({
             within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
             within_brain_region_brain_region_id: brainRegionId ?? null,
             within_brain_region_ascendants: false,
-            created_by__id: personId,
+            ...(scope === WorkspaceScope.Project
+              ? {
+                  authorized_project_id: projectId,
+                  created_by__id: personId,
+                }
+              : scope === WorkspaceScope.Public
+                ? {
+                    authorized_public: true,
+                  }
+                : {}),
           },
           circuitFilter: {
             within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
@@ -158,7 +180,13 @@ export function getElectricalCellRecordingsCount({
   virtualLabId,
   projectId,
   brainRegionId,
-}: WorkspaceContext & { brainRegionId: string }) {
+  personId,
+  scope,
+}: WorkspaceContext & {
+  brainRegionId: string;
+  personId: string | undefined;
+  scope: TWorkspaceScope;
+}) {
   return getElectricalCellRecordings({
     withFacets: false,
     context: virtualLabId && projectId ? { virtualLabId, projectId } : undefined,
@@ -169,6 +197,16 @@ export function getElectricalCellRecordingsCount({
       within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
       within_brain_region_brain_region_id: brainRegionId ?? null,
       within_brain_region_ascendants: false,
+      ...(scope === WorkspaceScope.Project
+        ? {
+            authorized_project_id: projectId,
+            created_by__id: personId,
+          }
+        : scope === WorkspaceScope.Public
+          ? {
+              authorized_public: true,
+            }
+          : {}),
     },
   });
 }

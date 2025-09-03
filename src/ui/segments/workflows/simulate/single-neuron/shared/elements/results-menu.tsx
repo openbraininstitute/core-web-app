@@ -4,28 +4,33 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
 import { useAtom } from 'jotai';
-
 import kebabCase from 'lodash/kebabCase';
 import uniqBy from 'lodash/uniqBy';
 
 import { createSingleNeuronSimulationAtom } from '@/ui/segments/workflows/simulate/single-neuron/shared/runner';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
-import {
-  OverviewConfigSchema,
-  SimulationType,
-  type PlotData,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { exportSimulationResultsAsZip } from '@/util/simulation-plotly-to-csv';
 import { getSingleNeuronStimuliPlot } from '@/api/small-scale-simulator';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { useAppNotification } from '@/components/notification';
 import {
   PREFIX_OVERVIEW_CONFIGURATION_SESSION_KEY,
   PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
   PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY,
   PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
+  PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import {
+  ExperimentalSetupConfigurationSchema,
+  OverviewConfigurationSchema,
+  RecordLocationArraySchema,
+  SimulationType,
+  StimulationConfigurationSchema,
+  SynapseConfigurationArraySchema,
+  type TSimulationType,
+  type PlotData,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useAppNotification } from '@/components/notification';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import {
@@ -36,23 +41,25 @@ import {
   ExperimentalSetupConfigurationAtomFamily,
   OverviewConfigurationAtomFamily,
   RecordLocationConfigurationAtomFamily,
-  StimulationProtocolConfigurationAtomFamily,
+  StimulationConfigurationAtomFamily,
+  SynaptomeConfigurationAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { messages } from '@/i18n/en/simulation';
 import { Button } from '@/ui/molecules/button';
-import { cn } from '@/utils/css-class';
 import {
   genericSingleNeuronSimulationPlotDataAtomFamily,
   simulationStatusAtom,
 } from '@/state/simulate/single-neuron';
+import { cn } from '@/utils/css-class';
 
 type Props = {
   sessionId: string;
   modelId: string;
   memodelId: string;
+  type: TSimulationType;
 };
 
-export function Menu({ sessionId, modelId, memodelId }: Props) {
+export function Menu({ sessionId, modelId, memodelId, type }: Props) {
   const pathname = usePathname();
   const { replace } = useRouter();
   const breakpoint = useDefaultBreakpoint();
@@ -65,18 +72,28 @@ export function Menu({ sessionId, modelId, memodelId }: Props) {
   const rclKey = getSessionKey(PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY, sessionId);
   const spcKey = getSessionKey(PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
   const sesKey = getSessionKey(PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY, sessionId);
+  const sscKey = getSessionKey(PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
 
-  const [, createSingleNeuronSimulation] = useAtom(createSingleNeuronSimulationAtom);
   const [simulationStatus] = useAtom(simulationStatusAtom);
   const [simulationResults] = useAtom(genericSingleNeuronSimulationPlotDataAtomFamily(sessionId));
-  const [recodingConfig] = useAtom(RecordLocationConfigurationAtomFamily(rclKey));
-  const [overviewConfig] = useAtom(OverviewConfigurationAtomFamily(infoKey));
-  const [stimulationConfig] = useAtom(StimulationProtocolConfigurationAtomFamily(spcKey));
-  const [experimentalConfig] = useAtom(ExperimentalSetupConfigurationAtomFamily(sesKey));
+  const [recordLocationConfiguration] = useAtom(RecordLocationConfigurationAtomFamily(rclKey));
+  const [overviewConfiguration] = useAtom(OverviewConfigurationAtomFamily(infoKey));
+  const [stimulationConfiguration] = useAtom(StimulationConfigurationAtomFamily(spcKey));
+  const [experimentalSetupConfiguration] = useAtom(
+    ExperimentalSetupConfigurationAtomFamily(sesKey)
+  );
+  const [synaptomeConfiguration] = useAtom(SynaptomeConfigurationAtomFamily(sscKey));
+
+  const [, createSingleNeuronSimulation] = useAtom(createSingleNeuronSimulationAtom);
 
   const current = queryParams.get('record') ?? 'all';
-  const validateOverview = OverviewConfigSchema.safeParse(overviewConfig);
-  const controlsDisabled = simulationStatus?.status !== 'finished' || !!validateOverview.error;
+  const disableSaveSimulation =
+    !!RecordLocationArraySchema.safeParse(recordLocationConfiguration).error ||
+    !!ExperimentalSetupConfigurationSchema.safeParse(experimentalSetupConfiguration).error ||
+    !!StimulationConfigurationSchema.safeParse(stimulationConfiguration).error ||
+    !!OverviewConfigurationSchema.safeParse(overviewConfiguration).error ||
+    (type === SimulationType.SingleNeuronSynaptome &&
+      !!SynapseConfigurationArraySchema.safeParse(synaptomeConfiguration).error);
 
   const onChange = (value: string) => {
     const params = new URLSearchParams(queryParams);
@@ -90,37 +107,37 @@ export function Menu({ sessionId, modelId, memodelId }: Props) {
         virtualLabId,
         projectId,
         memodelId,
-        amplitudes: (Array.isArray(stimulationConfig.stimulus.amplitudes)
-          ? stimulationConfig.stimulus.amplitudes
-          : [stimulationConfig.stimulus.amplitudes]
+        amplitudes: (Array.isArray(stimulationConfiguration.stimulus.amplitudes)
+          ? stimulationConfiguration.stimulus.amplitudes
+          : [stimulationConfiguration.stimulus.amplitudes]
         ).join(','),
-        protocol: stimulationConfig.stimulus.stimulus_protocol!,
+        protocol: stimulationConfiguration.stimulus.stimulus_protocol!,
       }),
       queryFn: () =>
         getSingleNeuronStimuliPlot({
           modelId: memodelId,
           config: {
-            amplitudes: Array.isArray(stimulationConfig.stimulus.amplitudes)
-              ? stimulationConfig.stimulus.amplitudes
-              : [stimulationConfig.stimulus.amplitudes],
-            stimulusProtocol: stimulationConfig.stimulus.stimulus_protocol!,
+            amplitudes: Array.isArray(stimulationConfiguration.stimulus.amplitudes)
+              ? stimulationConfiguration.stimulus.amplitudes
+              : [stimulationConfiguration.stimulus.amplitudes],
+            stimulusProtocol: stimulationConfiguration.stimulus.stimulus_protocol!,
           },
           ctx: { projectId, virtualLabId },
         }),
     });
 
     createSingleNeuronSimulation(
-      overviewConfig.name,
-      overviewConfig.description ?? '',
+      overviewConfiguration.name,
+      overviewConfiguration.description ?? '',
       modelId,
       memodelId,
       virtualLabId,
       projectId,
-      SimulationType.SingleNeuron,
-      stimulationConfig,
-      experimentalConfig,
-      recodingConfig,
-      undefined,
+      type,
+      stimulationConfiguration,
+      experimentalSetupConfiguration,
+      recordLocationConfiguration,
+      synaptomeConfiguration,
       simulationResults,
       data as PlotData
     );
@@ -158,7 +175,7 @@ export function Menu({ sessionId, modelId, memodelId }: Props) {
   const mutateDownloadResultsAsZip = useMutation({
     mutationFn: () =>
       exportSimulationResultsAsZip({
-        name: kebabCase(overviewConfig.name) ?? 'simulation_plots',
+        name: kebabCase(overviewConfiguration.name) ?? 'simulation_plots',
         result: simulationResults!,
       }),
     onSuccess: () => {
@@ -176,6 +193,11 @@ export function Menu({ sessionId, modelId, memodelId }: Props) {
       });
     },
   });
+
+  const controlsDisabled =
+    simulationStatus?.status !== 'finished' ||
+    disableSaveSimulation ||
+    mutateSaveSimulation.isPending;
 
   return (
     <div className="flex h-full flex-col gap-2">
@@ -197,7 +219,7 @@ export function Menu({ sessionId, modelId, memodelId }: Props) {
             />
           </div>
         </Button>
-        {uniqBy(recodingConfig, (item) => `${item.section}-${item.offset}`).map(
+        {uniqBy(recordLocationConfiguration, (item) => `${item.section}-${item.offset}`).map(
           ({ section, offset }, indx) => {
             const record = `${section}_${offset}`;
             return (

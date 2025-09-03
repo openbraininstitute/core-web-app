@@ -23,6 +23,7 @@ import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 import { useTabs } from '@/components/detail-view-tabs';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
+import { WorkspaceScope } from '@/constants';
 import {
   ExperimentalEntitiesTileTypes,
   ModelEntitiesTileTypes,
@@ -32,7 +33,7 @@ import {
 } from '@/ui/segments/explore/helpers';
 import { cn } from '@/utils/css-class';
 
-import type { TWorkspaceScope } from '@/constants';
+import { type TWorkspaceScope } from '@/constants';
 
 export const ExploreDataTypeTabs = {
   Experimental: 'experimental',
@@ -70,7 +71,7 @@ type Props = {
 export function EntityLinkCount({ dataKey }: Props) {
   const breakpoint = useDefaultBreakpoint();
   const session = useSession();
-  const scope = useSearchParams().get('scope') as TWorkspaceScope;
+  const scope = (useSearchParams().get('scope') ?? WorkspaceScope.Public) as TWorkspaceScope;
 
   const { virtualLabId, projectId } = useWorkspace();
   const { selectedBrainRegion } = useGetSelectedBrainRegion();
@@ -164,7 +165,7 @@ export function EntityLinkCount({ dataKey }: Props) {
         {experimentalState.map((value) => {
           const count: number | null = get(allData, value.extendedType, null);
           const rootCount: number | null = get(rootData, value.extendedType, null);
-          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/entity/${kebabCase(value.extendedType)}`;
+          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(value.extendedType)}`;
 
           return (
             <BrowseLink
@@ -189,7 +190,7 @@ export function EntityLinkCount({ dataKey }: Props) {
         {modelState.map((value) => {
           const count = get(allData, value.extendedType, null);
           const rootCount: number | null = get(rootData, value.extendedType, null);
-          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/entity/${kebabCase(value.extendedType)}`;
+          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(value.extendedType)}`;
           return (
             <BrowseLink
               key={`link-${value.title}/${value.type}`}
@@ -208,7 +209,7 @@ export function EntityLinkCount({ dataKey }: Props) {
         })}
         <BrowseLink
           key="link-circuit"
-          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/entity/${kebabCase('circuit')}`}
+          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase('circuit')}`}
           type={ExtendedEntitiesTypeDict.Circuit}
           title="Circuit"
           count={`${filteredCircuits.count}`}
@@ -220,7 +221,7 @@ export function EntityLinkCount({ dataKey }: Props) {
       <>
         {simulationState.map((value) => {
           const count = get(simsData, value.extendedType, null);
-          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/entity/${kebabCase(value.extendedType)}`;
+          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(value.extendedType)}`;
 
           return (
             <BrowseLink
@@ -259,7 +260,8 @@ export function EntityLinkCount({ dataKey }: Props) {
               value={tab.key}
               position={tab.position}
               className={cn(
-                'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3 text-base select-none data-[state=active]:font-bold data-[state=active]:text-white',
+                'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3 text-base select-none',
+                'data-[state=active]:font-bold data-[state=active]:text-white',
                 { 'h-12': breakpoint === 'xl' }
               )}
             >

@@ -34,6 +34,9 @@ export const Emodel: EntityCoreTypeConfig<IEModel> = {
   asset: {
     extension: undefined,
   },
-  isBookmarkable: true,
   detailViewSections: ['overview', 'analysis', 'configuration'],
+  isDownloadable: true,
+  isBookmarkable: true,
+  isCopyable: true,
+  isSimulatable: false,
 } as const;

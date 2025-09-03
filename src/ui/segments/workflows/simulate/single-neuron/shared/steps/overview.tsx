@@ -2,12 +2,12 @@
 
 import { useSession } from 'next-auth/react';
 import { Form, Input } from 'antd';
-import { useAtom } from 'jotai';
 import { useEffect } from 'react';
+import { useAtom } from 'jotai';
 import z from 'zod';
 
 import { OverviewConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import { OverviewConfigSchema } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { OverviewConfigurationSchema } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import {
   getSessionKey,
   label,
@@ -36,7 +36,7 @@ export function Info({ sessionId }: Props) {
 
   const onValuesChange = (changedValues: any, allValues: any) => {
     try {
-      const validatedData = OverviewConfigSchema.parse(allValues);
+      const validatedData = OverviewConfigurationSchema.parse(allValues);
       update(validatedData);
     } catch (error) {
       log('error', error);
@@ -45,13 +45,14 @@ export function Info({ sessionId }: Props) {
 
   return (
     <Form
+      key={key}
       name="single-model-configuration-form"
       className="flex flex-col gap-4"
       form={form}
       layout="vertical"
       autoComplete="off"
       preserve={false}
-      requiredMark="optional"
+      requiredMark={false}
       onValuesChange={onValuesChange}
       initialValues={{
         name: state.name,
@@ -67,7 +68,7 @@ export function Info({ sessionId }: Props) {
           {
             validator: async (_rule, value) => {
               try {
-                await OverviewConfigSchema.pick({ name: true }).shape.name.parseAsync(value);
+                await OverviewConfigurationSchema.pick({ name: true }).shape.name.parseAsync(value);
               } catch (error) {
                 return Promise.reject(
                   error instanceof z.ZodError ? error.errors.at(0)?.message : 'Name is required'
@@ -79,7 +80,7 @@ export function Info({ sessionId }: Props) {
         ]}
       >
         <Input
-          placeholder="your model name"
+          placeholder="your simulation name"
           size="large"
           className="border-neutral-2! text-primary-8! rounded-sm! font-bold! [&_input]:placeholder:!font-light"
         />
@@ -92,9 +93,9 @@ export function Info({ sessionId }: Props) {
           {
             validator: async (_rule, value) => {
               try {
-                await OverviewConfigSchema.pick({ description: true }).shape.description.parseAsync(
-                  value
-                );
+                await OverviewConfigurationSchema.pick({
+                  description: true,
+                }).shape.description.parseAsync(value);
               } catch (error) {
                 return Promise.reject(
                   error instanceof z.ZodError ? error.errors.at(0)?.message : 'Invalid description'

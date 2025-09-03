@@ -1,0 +1,297 @@
+import { DeleteOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { TooltipContent } from '@radix-ui/react-tooltip';
+import { Checkbox, Form, InputNumber, Select } from 'antd';
+import { useAtom, useAtomValue } from 'jotai';
+import { useEffect } from 'react';
+import z from 'zod';
+
+import { RecordLocationConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import { RecordLocationSchema } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import {
+  getSessionKey,
+  label,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { Tooltip, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { secNamesAtom } from '@/state/simulate/single-neuron';
+import {
+  PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
+  DEFAULT_RECORDING_LOCATION,
+  getSimulationColor,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { Button } from '@/ui/molecules/button';
+import { cn } from '@/utils/css-class';
+import { log } from '@/utils/logger';
+
+type Props = {
+  sessionId: string;
+};
+
+type RecordItemProps = {
+  index: number;
+  name: number | string;
+  disable: boolean;
+  disableDelete: boolean;
+  sections: Array<string>;
+  onRemove: (idx: number) => void;
+};
+
+function ColorMarker({ index }: { index: number }) {
+  return (
+    <div className="flex h-11 items-center justify-center">
+      <div
+        style={{
+          display: 'inline-block',
+          width: '1em',
+          height: '1em',
+          border: '1px solid currentColor',
+          borderRadius: '50%',
+          background: getSimulationColor(index),
+          verticalAlign: 'center',
+        }}
+      />
+    </div>
+  );
+}
+
+function RecordItem({ index, name, disable, disableDelete, sections, onRemove }: RecordItemProps) {
+  const breakpoint = useDefaultBreakpoint();
+
+  return (
+    <div className="w-full">
+      <div className="flex w-full flex-col items-start justify-start">
+        <div className="grid w-full grid-cols-[.5fr_.5fr_.5fr_max-content] items-start justify-center gap-4">
+          <Form.Item
+            label={label(`Recording ${index + 1}`, true)}
+            labelAlign="left"
+            className="[&_.ant-select-arrow]:text-primary-8 [&_.ant-form-item-row]:mb-0 [&_.ant-form-item-row]:inline-block [&_.ant-form-item-row]:w-full [&_.ant-select-selector]:border-0!"
+            name={[name, 'section']}
+            rules={[
+              {
+                validator: async (_rule, value) => {
+                  try {
+                    await RecordLocationSchema.pick({ section: true }).shape.section.parseAsync(
+                      value
+                    );
+                  } catch (error) {
+                    return Promise.reject(
+                      error instanceof z.ZodError
+                        ? error.errors.at(0)?.message
+                        : 'Section is required'
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              },
+            ]}
+          >
+            <Select
+              showSearch
+              placeholder="Section name"
+              options={sections.map((sec) => ({ label: sec, value: sec }))}
+              className={cn(
+                'border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! rounded-md border-[1px]! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!',
+                '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!'
+              )}
+              popupClassName="[&_.ant-select-item-option-content]:text-primary-9!"
+              placement="bottomLeft"
+              disabled={disable}
+              size={breakpoint === 'l' ? 'middle' : 'large'}
+              prefix={<ColorMarker index={index + 1} />}
+            />
+          </Form.Item>
+          <Form.Item
+            label={label('offset', true)}
+            labelAlign="left"
+            name={[name, 'offset']}
+            rules={[
+              {
+                validator: async (_rule, value) => {
+                  try {
+                    await RecordLocationSchema.pick({ offset: true }).shape.offset.parseAsync(
+                      value
+                    );
+                  } catch (error) {
+                    return Promise.reject(
+                      error instanceof z.ZodError
+                        ? error.errors.at(0)?.message
+                        : 'Offset is required'
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              },
+            ]}
+          >
+            <InputNumber<number>
+              size={breakpoint === 'l' ? 'middle' : 'large'}
+              className={cn(
+                'border-neutral-2! [&_.ant-input-number-input]:text-primary-8! flex w-full items-center justify-between gap-2 rounded-sm! bg-white font-bold! [&_input]:placeholder:!font-light',
+                '[&_.ant-input-number-suffix]:text-neutral-3 [&_.ant-input-number-suffix]:pointer-events-auto'
+              )}
+              step={0.01}
+              disabled={disable}
+              suffix={
+                <div className="pointer-events-auto">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <InfoCircleOutlined className="hover:text-primary-8 cursor-pointer" />
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      sideOffset={5}
+                      className="text-primary-9 z-50 max-w-80 rounded-md bg-white px-2 py-2 font-light shadow-md"
+                    >
+                      <p>
+                        The recording position relative to the section. <br />0 being the start of
+                        the section and 1 being the end
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              }
+            />
+          </Form.Item>
+          <Form.Item
+            label={label('record currents', true)}
+            labelAlign="left"
+            name={[name, 'record_currents']}
+            valuePropName="checked"
+            rules={[
+              {
+                validator: async (_rule, value) => {
+                  try {
+                    await RecordLocationSchema.pick({
+                      record_currents: true,
+                    }).shape.record_currents.parseAsync(value);
+                  } catch (error) {
+                    return Promise.reject(
+                      error instanceof z.ZodError
+                        ? error.errors.at(0)?.message
+                        : 'This field is required'
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              },
+            ]}
+            className="[&_.ant-form-item-control-input]:h-11"
+          >
+            <Checkbox className="h-full" disabled={disable} />
+          </Form.Item>
+          <Form.Item className="flex items-center justify-center" label={<></>} labelAlign="left">
+            <Button
+              variant="ghost"
+              size={breakpoint === 'l' ? 'md' : 'lg'}
+              type="button"
+              disabled={disableDelete}
+              onClick={() => onRemove(index)}
+              className="hover:bg-neutral-2 w-10 cursor-pointer"
+            >
+              <DeleteOutlined />
+            </Button>
+          </Form.Item>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function Recording({ sessionId }: Props) {
+  const key = getSessionKey(PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY, sessionId);
+  const [state, update] = useAtom(RecordLocationConfigurationAtomFamily(key));
+
+  const [form] = Form.useForm();
+  const sectionNames = useAtomValue(secNamesAtom);
+  const breakpoint = useDefaultBreakpoint();
+
+  useEffect(() => {
+    form.setFieldsValue({ record_from: state });
+  }, [state, form]);
+
+  const onAdd = () => {
+    try {
+      const newRecording = { ...DEFAULT_RECORDING_LOCATION };
+
+      const updatedState = [...state, newRecording];
+      update(updatedState);
+      form.setFieldValue('record_from', updatedState);
+    } catch (error) {
+      log('error', error);
+    }
+  };
+
+  const onRemove = (index: number) => {
+    try {
+      if (state.length <= 1) return;
+      const updatedState = state.filter((_, i) => i !== index);
+      update(updatedState);
+      form.setFieldValue('record_from', updatedState);
+    } catch (error) {
+      log('error', error);
+    }
+  };
+
+  const onValuesChange = (changedValues: any, allValues: any) => {
+    try {
+      if (changedValues.record_from) {
+        const recordFrom = allValues.record_from;
+        if (Array.isArray(recordFrom)) {
+          update(recordFrom);
+        }
+      }
+    } catch (error) {
+      log('error', error);
+    }
+  };
+
+  return (
+    <div
+      id="recording-container"
+      data-testid="recording-container"
+      className="mb-4 flex h-full min-h-0 w-full flex-col overflow-x-hidden overflow-y-hidden select-none"
+    >
+      <Form
+        scrollToFirstError
+        key={key}
+        form={form}
+        layout="vertical"
+        initialValues={{ record_from: state }}
+        className="secondary-scrollbar relative flex h-auto w-full flex-col items-start overflow-x-hidden overflow-y-auto select-none [&_.ant-form-item-explain-error]:text-sm! [&_.ant-form-item-label]:pb-0.5!"
+        onValuesChange={onValuesChange}
+        validateTrigger={['onChange']}
+        requiredMark={false}
+        id="recording-form"
+        data-testid="recording-form"
+      >
+        <Form.List name="record_from">
+          {(fields) =>
+            fields.map((f, index) => (
+              <RecordItem
+                key={`recording-${f.name}`}
+                index={index}
+                name={f.name}
+                disable={!sectionNames.length}
+                disableDelete={fields.length <= 1}
+                sections={sectionNames}
+                onRemove={onRemove}
+              />
+            ))
+          }
+        </Form.List>
+      </Form>
+      <Button
+        rounded
+        title="Add new Record Location"
+        onClick={onAdd}
+        disabled={!sectionNames.length}
+        type="button"
+        variant="outline"
+        className="my-2 w-max shadow-sm"
+        size={breakpoint === 'l' ? 'md' : 'lg'}
+      >
+        Add recording
+      </Button>
+    </div>
+  );
+}

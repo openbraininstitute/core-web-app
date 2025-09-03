@@ -1,5 +1,6 @@
-import isNumber from 'lodash/isNumber';
 import isEmpty from 'lodash/isEmpty';
+import isArray from 'lodash/isArray';
+import isNil from 'lodash/isNil';
 
 import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 
@@ -19,14 +20,20 @@ export function filterHasValue(filter: CoreFilter) {
     case CoreFieldFilterTypeEnum.DateRange:
       return !isEmpty(filter.value.gte) || !isEmpty(filter.value.lte);
     case CoreFieldFilterTypeEnum.ValueRange:
-      return !isEmpty(filter.value.gte) || !isEmpty(filter.value.lte);
+      return !isNil(filter.value.gte) || !isNil(filter.value.lte);
     case CoreFieldFilterTypeEnum.WithinList:
       return false; // TODO: this is need to be discussed/fixed
     case CoreFieldFilterTypeEnum.ValueOrRange:
       if (!filter.value) {
         return false;
       }
-      return !!(isNumber(filter.value) || filter.value.gte || filter.value.lte);
+      return true;
+    case CoreFieldFilterTypeEnum.DropdownList:
+      if (filter.value) {
+        if (typeof filter.value === 'string' && filter.value.trim() !== '') return true;
+        if (isArray(filter.value) && filter.value.length > 0) return true;
+      }
+      return false;
     default:
       return !!filter.value;
   }

@@ -20,6 +20,12 @@ export const getEntityByExtendedType = ({ type }: { type?: EntityCoreExtendedTyp
 export const getEntityByCoreType = ({ type }: { type?: TEntityTypeDict }) =>
   find(EntityCoreConfiguration, { type });
 
+/**
+ * Retrieves an entity configuration by its slug value.
+ *
+ * @param param0 - An object containing the `slug` of the entity to retrieve.
+ * @returns The entity configuration matching the provided slug, or `undefined` if not found.
+ */
 export const getEntityBySlug = ({ slug }: { slug: EntitySlugValue }) =>
   find(EntityCoreConfiguration, { slug });
 

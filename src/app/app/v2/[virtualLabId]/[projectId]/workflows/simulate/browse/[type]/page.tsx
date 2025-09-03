@@ -11,12 +11,10 @@ import type { KebabCase } from '@/utils/type';
 
 export default async function Page({
   params,
-  searchParams,
 }: ServerSideComponentProp<
   WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict> },
   { scope: TWorkspaceScope | null }
 >) {
-  const { scope } = await searchParams;
   const { type } = await params;
 
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
@@ -30,7 +28,7 @@ export default async function Page({
           requireMiniDetailView={false}
           classNames={{ container: 'max-h-full' }}
           dataType={dataType}
-          scope={scope ?? WorkspaceScope.Public}
+          scope={WorkspaceScope.Combined}
           miniViewProps={{ section: WorkspaceSection.SimulateWorkflow }}
         />
       </div>

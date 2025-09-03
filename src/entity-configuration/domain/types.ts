@@ -14,6 +14,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   type: TEntityTypeDict;
   slug: EntitySlugValue;
   title: string;
+  alternateTitle?: string;
   api: {
     config: {
       allowedFacets?: boolean;
@@ -36,6 +37,9 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   viewDefinition?: ViewDefinitionConfig | null;
   isBookmarkable: boolean;
   detailViewSections: DetailViewSection[];
+  isDownloadable?: boolean;
+  isCopyable?: boolean;
+  isSimulatable?: boolean;
 };
 
 export type SerializedEntityCoreTypeConfig<T extends EntityCoreIdentifiable> = Omit<

@@ -2,9 +2,6 @@
 
 import { Suspense } from 'react';
 
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-
 import Configuration from '@/features/entities/me-model/detail-view/configuration';
 import Simulation from '@/features/entities/me-model/detail-view/simulation';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
@@ -16,21 +13,11 @@ import If from '@/components/ConditionalRenderer/If';
 import { useClearClientStorageCacheByKey } from '@/features/model-analysis/viewer/storage';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { resolveExperimentUrl } from '@/utils/url-builder';
-import { EntityTypeDict } from '@/api/entitycore/types';
 
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
-import type { WorkspaceContext } from '@/types/common';
-
-type Params = WorkspaceContext & {
-  id: string;
-};
 
 export type Props = {
-  // @FIXME: Is this property necessary?
-  // eslint-disable-next-line react/no-unused-prop-types
-  params: Params;
   showViewMode?: boolean;
   payload: {
     source: IMEModel;
@@ -51,8 +38,7 @@ const CommonSummaryViewFields = [
 ] as TypeSummaryProps[];
 
 export default function SummaryView({ showViewMode = false, payload: { source } }: Props) {
-  const { virtualLabId, projectId } = useParams<WorkspaceContext>();
-  const { activeTab } = useTabs({ tabsConfig: TabsConfig });
+  const { activeTab } = useTabs({ tabsConfig: TabsConfig, shallow: true });
   useClearClientStorageCacheByKey();
 
   return (
@@ -62,25 +48,10 @@ export default function SummaryView({ showViewMode = false, payload: { source } 
         dataType={ExtendedEntitiesTypeDict.Memodel}
         commonFields={CommonSummaryViewFields}
         showViewMode={showViewMode}
-        extraHeaderAction={
-          virtualLabId &&
-          projectId && (
-            <Link
-              className="flex h-11 items-center gap-2 rounded-none border border-gray-300 px-8 shadow-none"
-              href={resolveExperimentUrl({
-                ctx: { virtualLabId, projectId },
-                dataType: EntityTypeDict.Memodel,
-                entityId: source.id,
-              })}
-            >
-              Simulate
-            </Link>
-          )
-        }
       >
         {() => (
           <>
-            <Tabs tabsConfig={TabsConfig} />
+            <Tabs shallow tabsConfig={TabsConfig} />
             <div className="w-full flex-1">
               <Suspense>
                 <If id="configuration" condition={activeTab === 'configuration'}>

@@ -1,13 +1,17 @@
 import isEmpty from 'lodash/isEmpty';
 
-import { getSession } from '@/authFetch';
 import { LabTypeEnum, VirtualLabPayload } from '@/api/virtual-lab-svc/types';
+import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
+import { getSession } from '@/authFetch';
 import {
+  VirtualLab,
   VirtualLabExistsVerificationResponse,
   VirtualLabListResponse,
   VirtualLabResponse,
 } from '@/api/virtual-lab-svc/queries/types';
 import { virtualLabApi } from '@/config';
+
+import type { VlmResponse } from '@/types/virtual-lab/common';
 
 const BASE_URL = `${virtualLabApi.url}/virtual-labs`;
 
@@ -140,4 +144,48 @@ export async function getVirtualLab(id: string): Promise<VirtualLabResponse> {
 
   const result: VirtualLabResponse = await response.json();
   return result;
+}
+
+export interface VirtualLabUpdate {
+  name?: string | null;
+  description?: string | null;
+  reference_email?: string | null;
+  entity?: string | null;
+}
+
+/**
+ * Update a Virtual Lab by sending a PATCH request to the virtual lab service.
+ *
+ * Sends a JSON PATCH request to `${BASE_URL}/virtual-lab/{virtualLabId}` using the
+ * configured virtual lab API client. The provided `updatePayload` is stringified
+ * and sent as the request body with `Content-Type: application/json`.
+ *
+ * @param params - Parameter object
+ * @param params.virtualLabId - The unique identifier of the Virtual Lab to update.
+ * @param params.updatePayload - The partial update payload conforming to `VirtualLabUpdate`.
+ *
+ * @returns A promise that resolves with the service response. The response type is
+ * a `VlmResponse` wrapping an object containing the updated `virtual_lab: VirtualLab`.
+ *
+ * @throws Will throw if the API client initialization (`virtualLabRootApi`) fails,
+ *         if the network request fails, or if the service returns an error status.
+ */
+export async function updateVirtualLab({
+  virtualLabId,
+  updatePayload,
+}: {
+  virtualLabId: string;
+  updatePayload: VirtualLabUpdate;
+}) {
+  const api = await virtualLabRootApi();
+  return await api.patch<VlmResponse<{ virtual_lab: VirtualLab }>>(
+    `/virtual-labs/${virtualLabId}`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        accept: 'application/json',
+      },
+      body: { ...updatePayload },
+    }
+  );
 }

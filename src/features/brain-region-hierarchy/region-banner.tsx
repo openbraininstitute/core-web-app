@@ -22,6 +22,7 @@ type Props = {
 
 export function RegionBanner({ view, onSwitchView }: Props) {
   const { selectedBrainRegion } = useGetSelectedBrainRegion();
+
   if (!selectedBrainRegion)
     return (
       <div className="relative mb-2 px-2 py-4">

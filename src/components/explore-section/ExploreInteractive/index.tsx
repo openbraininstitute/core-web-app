@@ -20,7 +20,7 @@ export default function ExploreInteractivePanel() {
 
   return (
     <div className="relative flex h-full w-full min-w-0 flex-1 overflow-hidden">
-      <div className="relative h-full min-w-0 flex-1 overflow-hidden bg-[#012766]">
+      <div className="bg-primary-9 relative h-full min-w-0 flex-1 overflow-hidden">
         <div
           id="interactive-layout"
           className="grid h-full grid-cols-[repeat(4,1fr)] grid-rows-[80px_repeat(4,1fr)_minmax(80px,max-content)] gap-y-4"
@@ -39,21 +39,10 @@ export default function ExploreInteractivePanel() {
           </div>
           <div
             id="3d-area"
-            className="3d relative mr-4 ml-2 h-full rounded-md border border-[#0250b3] p-1"
+            className="3d border-primary-7 relative mr-4 ml-2 h-full rounded-md border p-1"
             style={{ gridArea: '2 / 3 / 6 / 6' }}
           >
-            <ErrorBoundary
-              FallbackComponent={withErrorConfig({
-                customError: 'failed to load atlas viewer',
-                showButtons: false,
-                cls: {
-                  container:
-                    'absolute inset-0 flex items-center justify-center bg-black/5 h-full! rounded-md',
-                },
-              })}
-            >
-              <AtlasViewer dataKey={dataKey} />
-            </ErrorBoundary>
+            <AtlasViewer dataKey={dataKey} />
           </div>
           <div id="statistic-panel" style={{ gridArea: '6 / 1 / 7 / 5' }}>
             <ErrorBoundary

@@ -21,8 +21,8 @@ const PlotRenderer = dynamic(
 );
 
 const PLOT_LAYOUT: Partial<Layout> = {
-  plot_bgcolor: '#f5f5f5',
-  paper_bgcolor: '#f5f5f5',
+  plot_bgcolor: '#FAFAFA',
+  paper_bgcolor: '#FAFAFA',
   autosize: true,
   xaxis: {
     automargin: true,
@@ -58,7 +58,7 @@ type Props = {
   protocol: TStimulusModuleValue;
 };
 
-export default function StimuliPreviewPlot({ amplitudes, protocol, memodelId }: Props) {
+export function StimuliPreviewPlot({ amplitudes, protocol, memodelId }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
 
   const { error: notifyError } = useAppNotification();

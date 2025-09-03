@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import { useState } from 'react';
 
@@ -9,6 +10,8 @@ import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overfl
 import { useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { cn } from '@/utils/css-class';
 
 import type { IMEModel } from '@/api/entitycore/types';
@@ -19,6 +22,8 @@ type Props = {
 
 export function MEModel({ sessionId }: Props) {
   const [miniViewPresent, setMiniViewPresent] = useState(false);
+  const { virtualLabId, projectId } = useWorkspace();
+  const { push: navigate } = useRouter();
   useDisableElementOverflow({ id: 'workspace-body' });
   useSelectEntityClickEvent((ev) => {
     setMiniViewPresent(ev.detail.display);
@@ -52,8 +57,8 @@ export function MEModel({ sessionId }: Props) {
     >
       <BrowseEntityScope
         requireBrainRegion
-        requireMiniDetailView
         id={sessionId}
+        requireMiniDetailView={false}
         section={WorkspaceSection.BuildWorkflow}
         classNames={{ container: 'max-h-full' }}
         dataType={ExtendedEntitiesTypeDict.Memodel}
@@ -61,6 +66,11 @@ export function MEModel({ sessionId }: Props) {
         miniViewProps={{ section: WorkspaceSection.BuildWorkflow }}
         mainTableProps={{
           selectionType: 'radio',
+          onCellClick: (_, record) => {
+            navigate(
+              `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${record.id}`
+            );
+          },
           onRowsSelected: (rows) => {
             const record = rows.at(0);
             setSessionValue({

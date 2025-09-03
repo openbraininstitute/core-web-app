@@ -127,6 +127,7 @@ export function ProjectActivities() {
                   loading={isLoading}
                   dataSource={data?.data}
                   columns={columns}
+                  rowKey={(o) => o.id}
                   pagination={{
                     pageSize: ACTIVITY_PAGE_SIZE,
                     total: data?.pagination.total_items,

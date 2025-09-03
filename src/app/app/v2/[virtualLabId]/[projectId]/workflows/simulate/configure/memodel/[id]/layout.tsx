@@ -1,7 +1,7 @@
-import { Suspense, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 
 import { WorkflowSimulateLayout } from '@/ui/layouts/workflow-simulate-layout';
-import { getQueryClient } from '@/query-provider/server';
+import { getQueryClient, HydrateClient } from '@/query-provider/server';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { getMEModel } from '@/api/entitycore/queries';
 
@@ -21,7 +21,7 @@ export default async function Layout({
 
   return (
     <WorkflowSimulateLayout>
-      <Suspense>{children}</Suspense>
+      <HydrateClient>{children}</HydrateClient>
     </WorkflowSimulateLayout>
   );
 }

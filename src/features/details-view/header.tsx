@@ -1,35 +1,31 @@
-import { DownloadOutlined } from '@ant-design/icons';
 import { useParams } from 'next/navigation';
-import { ReactNode, useCallback } from 'react';
-import { Button } from 'antd';
 import { useAtomValue } from 'jotai';
+import { useCallback } from 'react';
+import Link from 'next/link';
 
-import { ButtonCopyId } from './button-copy-id';
-
-import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
-import BookmarkButton from '@/features/bookmark/control';
-import usePathname from '@/hooks/pathname';
+import BookmarkButton, { DetailViewBookmarkButton } from '@/features/bookmark/control';
 import sessionAtom from '@/state/session';
-import Link from '@/components/Link';
-import { InteractiveViewIcon } from '@/components/icons';
+
+import { DetailViewCopyButton } from '@/features/details-view/button-copy-id/button-copy-id';
+import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
+import { DownloadSimpleThin } from '@/components/icons/EditorIcons';
+import { ToolbarButton } from '@/components/buttons/toolbar';
+import { resolveExperimentUrl } from '@/utils/url-builder';
+import { BrainIcon } from '@/components/icons';
 import { ensureArray } from '@/utils/array';
+
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
+import { tempCheckCircuitInDev } from '@/temp-circuit-check';
 
 export default function Header<T extends EntityCoreIdentifiableNamed>({
   detail,
-  extraHeaderAction,
   onDownload,
 }: {
   detail: T;
-  extraHeaderAction?: ReactNode;
   onDownload?: (entity: T) => void;
 }) {
-  const path = usePathname();
-  const simCampMatch = path?.match(/\/explore\/simulation-campaigns\/[a-zA-Z0-9=]*/g);
-  const isSimCampDetail = simCampMatch && path === simCampMatch[0];
   const session = useAtomValue(sessionAtom);
-
   const { virtualLabId, projectId, type, id } = useParams<{
     virtualLabId?: string;
     projectId?: string;
@@ -37,8 +33,10 @@ export default function Header<T extends EntityCoreIdentifiableNamed>({
     id: string;
   }>();
 
-  const entity = getEntityBySlug({ slug: type });
+  const tempType = tempCheckCircuitInDev(type);
 
+  const entity = getEntityBySlug({ slug: tempType });
+  const withinWorkspace = virtualLabId && projectId;
   const handleDownload = useCallback(() => onDownload?.(detail), [detail, onDownload]);
 
   return (
@@ -48,40 +46,44 @@ export default function Header<T extends EntityCoreIdentifiableNamed>({
         <div className="flex items-center gap-5">
           <div className="col-span-3 text-2xl font-bold">{detail?.name}</div>
         </div>
-        {session && (
+        {session && entity && (
           <div className="flex flex-wrap items-center justify-end gap-2">
-            <ButtonCopyId value={id} />
-            {extraHeaderAction}
-            {virtualLabId && projectId && entity?.isBookmarkable && (
+            {entity.isCopyable && <DetailViewCopyButton id={detail.id} />}
+            {entity.isSimulatable && withinWorkspace && (
+              <Link
+                href={resolveExperimentUrl({
+                  ctx: { virtualLabId, projectId },
+                  dataType: entity.type,
+                  entityId: id,
+                })}
+              >
+                <ToolbarButton icon={<BrainIcon style={{ width: '21px', height: '21px' }} />}>
+                  <div>Simulate</div>
+                </ToolbarButton>
+              </Link>
+            )}
+            {entity.isBookmarkable && withinWorkspace && (
               <BookmarkButton
                 virtualLabId={virtualLabId}
                 entityId={detail.id}
                 projectId={projectId}
                 resourceId={ensureArray({ input: detail.legacy_id }).at(0)!}
                 type={entity.type}
+                customButton={DetailViewBookmarkButton}
               />
             )}
-            <Button
-              type="text"
-              className="text-primary-7 flex items-center gap-2 hover:bg-transparent!"
-              // disabling download button if currently fetching or if resource does not have a distribution
-              disabled={!onDownload}
-              onClick={handleDownload}
-            >
-              Download
-              <DownloadOutlined className="border-neutral-2 border px-4 py-3" />
-            </Button>
-          </div>
-        )}
-
-        {isSimCampDetail && (
-          <div className="flex gap-2">
-            <Link href={`${path}/experiment-interactive`} className="flex items-center gap-2">
-              Browse through interactive view
-              <div className="border-neutral-4 text-primary-7 border p-2">
-                <InteractiveViewIcon />
-              </div>
-            </Link>
+            {entity.isDownloadable && (
+              <button
+                type="button"
+                title="Download"
+                disabled={!onDownload}
+                onClick={handleDownload}
+              >
+                <ToolbarButton icon={<DownloadSimpleThin className="text-[21px]" />}>
+                  Download
+                </ToolbarButton>
+              </button>
+            )}
           </div>
         )}
       </div>

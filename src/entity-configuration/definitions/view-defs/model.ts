@@ -100,22 +100,19 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     title: 'Circuit',
     name: EntitySlug.Circuit,
     curated: false,
-    summaryViewFields: [
-      { field: EntityCoreFields.BrainRegion },
-      { field: EntityCoreFields.CircuitNumberConnections },
-      { field: EntityCoreFields.CircuitNumberNeurons },
-      { field: EntityCoreFields.CircuitNumberSynapses },
-    ],
     columns: [
+      EntityCoreFields.Download,
       EntityCoreFields.Name,
       EntityCoreFields.Description,
+      EntityCoreFields.CircuitSubCircuit,
       EntityCoreFields.BrainRegion,
       EntityCoreFields.CircuitScale,
       EntityCoreFields.CircuitNumberNeurons,
       EntityCoreFields.CircuitNumberSynapses,
       EntityCoreFields.CircuitNumberConnections,
-      EntityCoreFields.CreatedBy,
-      EntityCoreFields.CreationDate,
+      EntityCoreFields.Species,
+      EntityCoreFields.CircuitPublishedIn,
+      EntityCoreFields.CircuitExperimentDate,
       EntityCoreFields.CircuitBuildCategory,
     ],
     miniDetailView: [
@@ -125,6 +122,36 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.CircuitBuildCategory },
       { field: EntityCoreFields.RegistrationDate },
       { field: EntityCoreFields.License },
+    ],
+    summaryViewFields: [
+      { field: EntityCoreFields.BrainRegion, className: 'col-span-1 col-start-1' },
+      { field: EntityCoreFields.CircuitRootCircuit, className: 'col-span-1 col-start-1' },
+      { field: EntityCoreFields.CircuitScale, className: 'col-span-1 col-start-1' },
+      { field: EntityCoreFields.License, className: 'col-span-1 col-start-1' },
+      {
+        field: EntityCoreFields.CircuitNumberNeurons,
+        className: 'col-start-2 row-start-1',
+      },
+      {
+        field: EntityCoreFields.CircuitNumberConnections,
+        className: 'col-start-2 row-start-2',
+      },
+      {
+        field: EntityCoreFields.CircuitNumberSynapses,
+        className: 'col-start-2 row-start-3',
+      },
+      {
+        field: EntityCoreFields.CircuitPublishedIn,
+        className: 'col-start-3 row-start-1',
+      },
+      {
+        field: EntityCoreFields.CircuitExperimentDate,
+        className: 'col-start-3 row-start-2',
+      },
+      {
+        field: EntityCoreFields.CircuitContactEmail,
+        className: 'col-start-3 row-start-3',
+      },
     ],
   },
   [ExtendedEntitiesTypeDict.SmallMicrocircuit]: {

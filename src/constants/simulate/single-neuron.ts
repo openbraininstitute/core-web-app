@@ -126,6 +126,7 @@ const DEFAULT_SECTION = 'soma[0]';
 export const DEFAULT_RECORDING_LOCATION: RecordLocation = {
   section: DEFAULT_SECTION,
   offset: 0.5,
+  record_currents: false,
 };
 
 export const DEFAULT_SIMULATION_EXPERIMENTAL_SETUP: SimulationExperimentalSetup = {

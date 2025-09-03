@@ -19,9 +19,16 @@ export const keyBuilder = {
     projectId,
     brainRegionId,
     personId,
-  }: WorkspaceContext & { brainRegionId?: string; personId?: string }) => [
+    scope,
+  }: WorkspaceContext & { brainRegionId?: string; personId?: string; scope: TWorkspaceScope }) => [
     `${prefix}-simulations-count`,
-    { virtualLabId, projectId, brainRegionId: brainRegionId ?? '', personId: personId ?? '' },
+    {
+      virtualLabId,
+      projectId,
+      brainRegionId: brainRegionId ?? '',
+      personId: personId ?? '',
+      scope,
+    },
   ],
   electricalCellRecordingsCount: ({
     virtualLabId,
@@ -37,6 +44,14 @@ export const keyBuilder = {
   ],
   synaptome: ({ virtualLabId, projectId, entityId }: WorkspaceContext & { entityId: string }) => [
     `${prefix}-single-neuron-synaptome-model`,
+    { virtualLabId, projectId, entityId },
+  ],
+  synaptomeConfiguration: ({
+    virtualLabId,
+    projectId,
+    entityId,
+  }: WorkspaceContext & { entityId: string }) => [
+    `${prefix}-single-neuron-synaptome-configuration`,
     { virtualLabId, projectId, entityId },
   ],
   stimulationProtocolPreview: ({

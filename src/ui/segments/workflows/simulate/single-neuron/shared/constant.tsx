@@ -1,7 +1,7 @@
 import { StimulusModuleDict } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 import type {
-  StimulationSimulationConfig,
+  TStimulationConfiguration,
   RecordLocation,
   SimulationExperimentalSetup,
   StimulusConfig,
@@ -113,6 +113,7 @@ const DEFAULT_SECTION = 'soma[0]';
 export const DEFAULT_RECORDING_LOCATION: RecordLocation = {
   section: DEFAULT_SECTION,
   offset: 0.5,
+  record_currents: false,
 };
 
 export const DEFAULT_SIMULATION_EXPERIMENTAL_SETUP: SimulationExperimentalSetup = {
@@ -132,7 +133,7 @@ export const DEFAULT_STIMULUS_CONFIG: StimulusConfig = {
   amplitudes: [40, 80, 120],
 };
 
-export const DEFAULT_CURRENT_INJECTION_CONFIG: StimulationSimulationConfig = {
+export const DEFAULT_CURRENT_INJECTION_CONFIG: TStimulationConfiguration = {
   id: 0,
   config_id: crypto.randomUUID(),
   inject_to: DEFAULT_SECTION,
@@ -142,9 +143,10 @@ export const DEFAULT_CURRENT_INJECTION_CONFIG: StimulationSimulationConfig = {
 export const PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY = 'spc_sk';
 export const PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY = 'rlc_sk';
 export const PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY = 'esc_sk';
-export const PREFIX_SYNAPTOME_SIMULATION_CONFIGURATION_SESSION_KEY = 'ssc_sk';
+export const PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY = 'sic_sk';
 export const PREFIX_OVERVIEW_CONFIGURATION_SESSION_KEY = 'oc_sk';
 export const PREFIX_AMPERAGE_CONFIGURATION_SESSION_KEY = 'ac_sk';
+export const PREFIX_FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY = 'fic_sk';
 
 export const SIMULATION_COLORS = [
   '#FF8B2C',
@@ -172,3 +174,11 @@ export const SIMULATION_COLORS = [
 export function getSimulationColor(index: number) {
   return SIMULATION_COLORS[index % SIMULATION_COLORS.length];
 }
+
+export const SECTION_TARGET_MAPPING = {
+  dend: 'Basal dendrites',
+  soma: 'Soma',
+  apic: 'Apical dendrites',
+  basal: 'Basal dendrites',
+  axon: 'Axon',
+};

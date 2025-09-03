@@ -12,7 +12,8 @@ const withBundleAnalyzer = NextBundleAnalyzer({
 const SentryWebpackPluginOptions = { silent: true, dryRun: !env.NEXT_PUBLIC_SENTRY_DSN };
 
 const basePath = env.NEXT_PUBLIC_BASE_PATH;
-const cdnUri = env.NEXT_PUBLIC_CDN_URI;
+const cdnUri = env.NEXT_PUBLIC_CDN_URI || process.env.NEXT_PUBLIC_CDN_URI;
+
 const coreWebAppVersion = env.NEXT_PUBLIC_CORE_WEB_APP_VERSION;
 
 const nextConfig = (phase: string): NextConfig => {
@@ -48,7 +49,7 @@ const nextConfig = (phase: string): NextConfig => {
       },
     },
     basePath,
-    assetPrefix: isDev ? undefined : `${cdnUri}/${coreWebAppVersion}`,
+    assetPrefix: isDev || !cdnUri ? undefined : `${cdnUri}/${coreWebAppVersion}`,
     reactStrictMode: true,
     compress: false,
     output: 'standalone',
@@ -85,8 +86,37 @@ const nextConfig = (phase: string): NextConfig => {
       return [
         {
           source: `/app/virtual-lab/:path*`,
-          destination: `/app/v2/setup`,
+          destination: `/app/v2/sync`,
           permanent: false,
+        },
+      ];
+    },
+    async headers() {
+      if (isDev) return [];
+
+      // Skip CORS headers if CDN URI is not configured or empty
+      if (!process.env.PRIMARY_HOSTNAME) {
+        console.warn('CDN URI is not configured, skipping CORS headers');
+        return [];
+      }
+
+      return [
+        {
+          source: '/:prefix*/_next/static/media/:path*',
+          headers: [
+            {
+              key: 'Access-Control-Allow-Origin',
+              value: `https://${process.env.PRIMARY_HOSTNAME}`,
+            },
+            {
+              key: 'Access-Control-Allow-Methods',
+              value: 'GET, HEAD, OPTIONS',
+            },
+            {
+              key: 'Access-Control-Allow-Headers',
+              value: '*',
+            },
+          ],
         },
       ];
     },
