@@ -1,0 +1,63 @@
+name: Deploy to PREVIEW
+
+permissions:
+  id-token: write # Required for OIDC authentication
+  contents: read # Standard permission for GitHub Actions
+
+on:
+  push:
+    branches:
+      - task/v2
+  workflow_dispatch:
+
+concurrency:
+  group: preview
+  cancel-in-progress: true
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: ${{ vars.PUBLICECR_URI }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.PUBLICECR_UPLOAD_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PUBLICECR_UPLOAD_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.PUBLICECR_REGION }}
+
+      - name: Authenticate with AWS ECR
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
+      - name: Build a Docker image for AWS
+        run: |
+          docker build --build-arg DEPLOYMENT_ENV=preview -t ${{ vars.PUBLICECR_URI }}:preview .
+
+      - name: Publish the image for AWS To AWS ECR
+        run: |
+          docker push ${{ vars.PUBLICECR_URI }}:preview
+
+      - name: Authenticate with AWS ECS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.PREVIEW_ECS_REDEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_STAGING_REGION }}
+
+      - name: Trigger new deployment
+        run: |
+          aws ecs update-service \
+            --cluster ${{ vars.PREVIEW_ECS_CLUSTER }} \
+            --service ${{ vars.PREVIEW_ECS_SERVICE }} \
+            --force-new-deployment
+
+      - name: Wait until the service is stable
+        run: |
+          aws ecs wait services-stable \
+            --cluster ${{ vars.PREVIEW_ECS_CLUSTER }} \
+            --service ${{ vars.PREVIEW_ECS_SERVICE }}
