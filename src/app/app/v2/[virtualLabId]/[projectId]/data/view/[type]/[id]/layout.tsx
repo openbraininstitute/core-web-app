@@ -70,13 +70,13 @@ export default async function Layout({
       <div className="basis-1/5">
         <div className="flex flex-wrap gap-3">
           <Breadcrumb>
-            <NextLink href={`${basePath}/app/v2/${virtualLabId}/${projectId}/explore`}>
+            <NextLink href={`${basePath}/app/v2/${virtualLabId}/${projectId}/data`}>
               Explore
             </NextLink>
           </Breadcrumb>
           <Breadcrumb>
             <NextLink
-              href={`${basePath}/app/v2/${virtualLabId}/${projectId}/explore/browse/entity/${type}`}
+              href={`${basePath}/app/v2/${virtualLabId}/${projectId}/data/browse/entity/${type}`}
             >
               {entityType.title}
             </NextLink>
