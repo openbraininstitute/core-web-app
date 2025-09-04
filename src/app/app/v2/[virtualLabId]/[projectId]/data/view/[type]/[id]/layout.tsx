@@ -88,7 +88,15 @@ export default async function Layout({
         </div>
         <ActionMenu entity={entity} type={type} ctx={{ virtualLabId, projectId }} />
       </div>
-      <div className="grow basis-4/5">{children}</div>
+      <div className="grow basis-4/5">
+        <div className="h-full overflow-y-auto p-10">
+          <div className="h-[9%]">
+            <div className="text-neutral-4 uppercase">Name</div>
+            <div className="text-primary-8 text-2xl font-bold">{entity.name}</div>
+          </div>
+          <div className="h-[91%]">{children}</div>
+        </div>
+      </div>
     </div>
   );
 }

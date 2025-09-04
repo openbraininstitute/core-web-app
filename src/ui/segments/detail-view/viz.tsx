@@ -27,13 +27,5 @@ export default function Visualization({
   }
 
   if (!content) notFound();
-  return (
-    <>
-      <div className="mb-5">
-        <div className="text-neutral-4 uppercase">Name</div>
-        <div className="text-primary-8 text-2xl font-bold">{entity.name}</div>
-      </div>
-      {content}
-    </>
-  );
+  return <>{content}</>;
 }

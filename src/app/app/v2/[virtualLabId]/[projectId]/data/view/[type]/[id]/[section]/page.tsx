@@ -38,28 +38,28 @@ export default async function Page({
   let content: JSX.Element | undefined;
 
   if (section === 'overview') {
-    content = <Overview entity={entity} extendedType={entityType.extendedType} ctx={ctx} />;
+    return <Overview entity={entity} extendedType={entityType.extendedType} ctx={ctx} />;
   }
   if (section === 'visualization') {
-    content = <Visualization entity={entity} ctx={ctx} />;
+    return <Visualization entity={entity} ctx={ctx} />;
   }
   if (section === 'analysis') {
-    content = <Analysis extendedType={entityType.extendedType} />;
+    return <Analysis extendedType={entityType.extendedType} />;
   }
 
   if (section === 'configuration') {
-    content = <Configuration entity={entity} extendedType={entityType.extendedType} ctx={ctx} />;
+    return <Configuration entity={entity} extendedType={entityType.extendedType} ctx={ctx} />;
   }
 
   if (section === 'related-artifacts') {
-    content = <RelatedArtifacts extendedType={entityType.extendedType} entity={entity} />;
+    return <RelatedArtifacts extendedType={entityType.extendedType} entity={entity} />;
   }
 
   if (section === 'results') {
-    content = <Results extendedType={entityType.extendedType} entity={entity} ctx={ctx} />;
+    return <Results extendedType={entityType.extendedType} entity={entity} ctx={ctx} />;
   }
 
   if (!content) notFound();
 
-  return <div className="h-full overflow-y-auto p-10">{content}</div>;
+  return content;
 }
