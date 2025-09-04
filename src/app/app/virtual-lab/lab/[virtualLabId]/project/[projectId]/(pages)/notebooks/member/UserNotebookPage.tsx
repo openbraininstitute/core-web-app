@@ -121,7 +121,7 @@ export default function UserNotebookPage({
           onDelete={(id: string) => setDeleteNotebookId(id)}
           projectId={projectId}
           vlabId={vlabId}
-          enableRunNotebook={false}
+          enableRunNotebook
         />
       </div>
       <Modal open={openModal} onCancel={resetModal} footer={false} width="35vw">
