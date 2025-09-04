@@ -99,7 +99,7 @@ type AdditionalTableProps<T> = {
   onCellClick?: OnCellClick<T>;
 };
 
-function BaseTable<T extends EntityCoreIdentifiable>({
+export function BaseTable<T extends EntityCoreIdentifiable>({
   columns,
   dataSource,
   hasError,

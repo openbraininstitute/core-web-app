@@ -57,7 +57,7 @@ export default async function Page({
       () => {
         return (
           <BrowseEntityScope
-            section={WorkspaceSection.Explore}
+            section={WorkspaceSection.Data}
             dataType={dataType}
             scope={scope ?? WorkspaceScope.Public}
             mainTableProps={{

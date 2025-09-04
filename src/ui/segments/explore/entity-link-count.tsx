@@ -5,15 +5,10 @@ import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { match } from 'ts-pattern';
 import { useMemo } from 'react';
+
 import kebabCase from 'lodash/kebabCase';
 import get from 'lodash/get';
 
-import { useFilteredCircuits } from '@/components/explore-section/Circuit/ListView/ExploreCircuitTable';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import {
-  brainRegionBasicCellGroupsRegionsHierarchyAtom,
-  useGetSelectedBrainRegion,
-} from '@/features/brain-region-hierarchy/context';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { getPersons } from '@/api/entitycore/queries/general/person-agent';
 import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
@@ -23,6 +18,10 @@ import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 import { useTabs } from '@/components/detail-view-tabs';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
+import {
+  brainRegionBasicCellGroupsRegionsHierarchyAtom,
+  useGetSelectedBrainRegion,
+} from '@/features/brain-region-hierarchy/context';
 import { WorkspaceScope } from '@/constants';
 import {
   ExperimentalEntitiesTileTypes,
@@ -64,11 +63,7 @@ export const tabsConfigItems: Array<{
   },
 ];
 
-type Props = {
-  dataKey: string;
-};
-
-export function EntityLinkCount({ dataKey }: Props) {
+export function EntityLinkCount() {
   const breakpoint = useDefaultBreakpoint();
   const session = useSession();
   const scope = (useSearchParams().get('scope') ?? WorkspaceScope.Public) as TWorkspaceScope;
@@ -84,8 +79,6 @@ export function EntityLinkCount({ dataKey }: Props) {
     tabKey: 'group',
     shallow: true,
   });
-
-  const { filteredCircuits } = useFilteredCircuits({ dataKey });
 
   const { data: personId } = useQuery({
     queryKey: userKeyBuilder.person({ userId: session.data?.user.id }),
@@ -207,14 +200,6 @@ export function EntityLinkCount({ dataKey }: Props) {
             />
           );
         })}
-        <BrowseLink
-          key="link-circuit"
-          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase('circuit')}`}
-          type={ExtendedEntitiesTypeDict.Circuit}
-          title="Circuit"
-          count={`${filteredCircuits.count}`}
-          isLoading={false}
-        />
       </>
     ))
     .with(ExploreDataTypeTabs.Simulations, () => (

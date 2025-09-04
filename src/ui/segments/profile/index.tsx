@@ -19,6 +19,8 @@ function Header({ onClose }: { onClose: () => void }) {
   const { data, isLoading, isError } = useQuery({
     queryKey: keyBuilder.profile(),
     queryFn: getUserProfile,
+    staleTime: Infinity,
+    gcTime: Infinity,
   });
 
   if (isLoading) return <LoadingOutlined spin />;

@@ -1,10 +1,11 @@
 'use client';
 
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { WarningOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { useAtom, useAtomValue } from 'jotai';
 import { useParams } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { RESET } from 'jotai/utils';
 
 import snakeCase from 'lodash/snakeCase';
 import compact from 'lodash/compact';
@@ -20,6 +21,7 @@ import {
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
 import {
   coreActiveColumnsAtom,
+  coreFiltersAtom,
   corePageNumberAtom,
   coreSortStateAtom,
 } from '@/ui/segments/data-table/elements/context';
@@ -131,6 +133,13 @@ export function BrowseLibraryScope() {
     updateDisplayMiniView(event.detail.display);
   });
 
+  const resetFilterOnExit = useSetAtom(coreFiltersAtom({ dataType, key: dataKey }));
+  useEffect(() => {
+    return () => {
+      resetFilterOnExit(RESET);
+    };
+  }, [resetFilterOnExit]);
+
   if (!loadingBookmarksCategory) {
     if (!Object.keys(bookmarksCategories ?? {}).includes(entity?.extendedType!)) {
       return (
@@ -188,8 +197,8 @@ export function BrowseLibraryScope() {
             }}
             cls={{
               table: cn(
-                '[&_.ant-table]:bg-neutral-1! [&_.ant-table-header_th]:bg-neutral-1!',
-                '[&_.ant-table-placeholder]:bg-neutral-1! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-neutral-1!'
+                '[&_.ant-table]:bg-background! [&_.ant-table-header_th]:bg-background!',
+                '[&_.ant-table-placeholder]:bg-background! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-background!'
               ),
             }}
             selectionType="checkbox"
