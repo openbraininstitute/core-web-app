@@ -81,24 +81,18 @@ export const WorkspaceBootstrapStep = {
   Identity: 'identity',
   VirtualLab: 'virtual-lab',
   Project: 'project',
-  Funds: 'funds',
 } as const;
 
 export const WorkspaceBootstrap = [
-  { step: WorkspaceBootstrapStep.Identity, message: 'Your account ...', progress: 25 },
+  { step: WorkspaceBootstrapStep.Identity, message: 'Your account ...', progress: 33 },
   {
     step: WorkspaceBootstrapStep.VirtualLab,
     message: 'Setting up your Virtual Lab ...',
-    progress: 50,
+    progress: 66,
   },
   {
     step: WorkspaceBootstrapStep.Project,
     message: 'Initializing your first project ...',
-    progress: 75,
-  },
-  {
-    step: WorkspaceBootstrapStep.Funds,
-    message: 'Adding free credits to your account ...',
     progress: 100,
   },
 ] as const;

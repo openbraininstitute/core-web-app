@@ -54,14 +54,7 @@ type ProjectResponse = {
 
 export type ProjectCreationResponse = VlmResponse<{
   project: Project;
-  failed_invites: [
-    {
-      user_email: string;
-      first_name: string;
-      last_name: string;
-      exists: boolean;
-    },
-  ];
+  balance_added: boolean;
 }>;
 
 export type VirtualLab = {
