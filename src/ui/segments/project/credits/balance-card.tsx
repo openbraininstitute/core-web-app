@@ -5,16 +5,21 @@ import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { Card, CardContent } from '@/ui/molecules/card';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { useUserRole } from '@/hooks/use-user-role';
 import { Button } from '@/ui/molecules/button';
 
-export function BalanceCard() {
+type Props = {
+  onTransferCredits?: () => void;
+};
+
+export function BalanceCard({ onTransferCredits }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
 
   const { data } = useQuery({
     queryKey: keyBuilder.accounting({ virtualLabId }),
     queryFn: () => getVirtualLabAccountBalance({ virtualLabId, includeProjects: true }),
   });
-
+  const { isAdmin } = useUserRole({ virtualLabId, projectId });
   const ProjectBalance = data?.data.projects?.find((p) => p.proj_id === projectId);
   const virtualLabBalance = data?.data?.balance ?? 0;
 
@@ -31,19 +36,19 @@ export function BalanceCard() {
             <div className="text-xl font-bold">{ProjectBalance?.balance}</div>
           </div>
         </div>
-        <Button
-          rounded
-          borderless
-          className="group text-primary-9 hover:bg-primary-8 bg-white px-4 shadow-2xl select-none hover:border-white hover:text-white"
-          size="md"
-          variant="outline"
-          onClick={() => {
-            // Handle credit transfer logic here
-          }}
-        >
-          Transfer credits
-          <SwapOutlined />
-        </Button>
+        {isAdmin && (
+          <Button
+            rounded
+            borderless
+            className="group text-primary-9 hover:bg-primary-8 bg-white px-4 shadow-2xl select-none hover:border-white hover:text-white"
+            size="md"
+            variant="outline"
+            onClick={onTransferCredits}
+          >
+            Transfer credits
+            <SwapOutlined />
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

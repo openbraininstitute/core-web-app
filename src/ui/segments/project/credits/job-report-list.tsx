@@ -56,7 +56,7 @@ function costRenderFn(amount: string) {
   return <span>{amount}</span>;
 }
 
-export default function JobReportList() {
+export function JobReportList() {
   const { virtualLabId, projectId } = useWorkspace();
   const [pagination, setPagination] = useState({ page: 1, pageSize: 8 });
 
@@ -90,7 +90,7 @@ export default function JobReportList() {
   return (
     <div className="mb-4 flex w-full flex-col items-start gap-2">
       <h3 className="text-primary-9 text-xl font-bold">History</h3>
-      <Card shadowless className="w-full">
+      <Card shadowless className={cn('w-full', { 'pb-0': !!total })}>
         <CardContent>
           <Table<JobReport>
             sticky
@@ -100,7 +100,8 @@ export default function JobReportList() {
               '[&_.ant-table-thead_th]:text-neutral-4! [&_.ant-table-thead_th]:font-light!',
               '[&_.ant-table-thead_th]:bg-neutral-1! [&_.ant-table-tbody]:bg-neutral-1!',
               '[&_.ant-table-tbody_td]:text-primary-9 [&_.ant-pagination]:gap-2',
-              '[&:has(.ant-table-empty)_td:last]:border-b-none! [&:has(.ant-table-empty)_tr]:bg-neutral-1! [&:has(.ant-table-empty)_tr]:hover:bg-neutral-1!'
+              '[&:has(.ant-table-empty)_td:last]:border-b-none! [&:has(.ant-table-empty)_tr]:bg-neutral-1! [&:has(.ant-table-empty)_tr]:hover:bg-neutral-1!',
+              '[&_th]:uppercase!'
             )}
             loading={isLoading}
             dataSource={jobReports}
@@ -116,10 +117,12 @@ export default function JobReportList() {
             <Column title="Scale" dataIndex="subtype" key="scale" render={scaleRenderFn} />
             <Column title="Member" dataIndex="user_id" key="user" render={userRenderFn} />
             <Column title="Date" dataIndex="started_at" key="date" render={renderDateAndHour} />
-            <Column title="Credits" dataIndex="amount" key="cost" render={costRenderFn} />
+            <Column title="Cost (Credits)" dataIndex="amount" key="cost" render={costRenderFn} />
           </Table>
         </CardContent>
       </Card>
     </div>
   );
 }
+
+export default JobReportList;

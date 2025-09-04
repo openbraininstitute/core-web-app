@@ -1,6 +1,11 @@
 'use client';
 
-import { ArrowLeftOutlined, LoadingOutlined, SwapOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftOutlined,
+  ArrowRightOutlined,
+  LoadingOutlined,
+  SwapOutlined,
+} from '@ant-design/icons';
 import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'motion/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -23,6 +28,7 @@ import type { ProjectBalance } from '@/types/accounting';
 type ManageCreditsStepProps = {
   virtualLabId: string;
   onBack: () => void;
+  shouldHaveBack?: boolean;
 };
 
 type TransferDirection = 'vlab->proj' | 'proj->vlab';
@@ -60,7 +66,11 @@ async function transferCredits({
   } else throw new Error('Transfer type not supported');
 }
 
-export function ManageCreditsStep({ onBack, virtualLabId }: ManageCreditsStepProps) {
+export function ManageCreditsStep({
+  onBack,
+  virtualLabId,
+  shouldHaveBack = true,
+}: ManageCreditsStepProps) {
   const queryClient = useQueryClient();
   const [amount, setAmount] = useState<string | undefined>(undefined);
   const [isSwapping, setIsSwapping] = useState<boolean>(false);
@@ -207,24 +217,45 @@ export function ManageCreditsStep({ onBack, virtualLabId }: ManageCreditsStepPro
   return (
     <div className="flex h-full w-full flex-col gap-6 pb-10">
       <div className="bg-primary-9 sticky top-0 z-10 flex shrink-0 items-center px-6 py-5">
-        <div className="flex w-full items-center gap-4">
-          <UiButton
-            rounded
+        <div className="flex w-full items-center justify-between">
+          <div className="flex items-center gap-4">
+            {shouldHaveBack && (
+              <UiButton
+                rounded
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={onBack}
+                className="hover:bg-neutral-2/20 h-auto !px-4 py-2! text-white hover:text-white"
+              >
+                <ArrowLeftOutlined className="text-lg" />
+                <span className="ml-4 text-lg font-bold text-white">Credits</span>
+              </UiButton>
+            )}
+          </div>
+
+          <motion.button
             type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onBack}
-            className="hover:bg-neutral-2/20 h-auto !px-4 py-2! text-white hover:text-white"
+            aria-label="Swap transfer direction"
+            className="bg-primary-8 hover:bg-primary-7 flex h-8 w-8 items-center justify-center rounded-md border border-white/20 text-white transition-all hover:scale-105 disabled:opacity-50"
+            onClick={onSwap}
+            disabled={isPending}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <ArrowLeftOutlined className="text-lg" />
-            <span className="ml-4 text-lg font-bold text-white">Credits</span>
-          </UiButton>
+            <motion.div
+              animate={{ rotate: isSwapping ? 180 : 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+            >
+              <SwapOutlined className="text-sm" />
+            </motion.div>
+          </motion.button>
         </div>
       </div>
 
       <div className="mx-auto flex w-full max-w-3xl items-stretch gap-4 px-3">
         {/* source panel */}
-        <div className="flex w-[calc(50%-2.5rem)] flex-1 flex-col justify-between rounded-2xl border border-white/10 bg-[#0a3a76] p-5 text-white shadow-2xl">
+        <div className="bg-primary-8 flex w-[calc(50%-2.5rem)] flex-1 flex-col justify-between rounded-2xl border border-white/10 p-5 text-white shadow-2xl">
           <div className="flex w-full items-center gap-2">
             <span className="text-neutral-3">From</span>
             <Badge className="rounded-full border-white/10 bg-[#0e4a98] text-white/90">
@@ -259,7 +290,7 @@ export function ManageCreditsStep({ onBack, virtualLabId }: ManageCreditsStepPro
                     )}
                     options={projects}
                     popupClassName={cn(
-                      '!bg-[#0a3a76] !text-white',
+                      '!bg-primary-8 !text-white',
                       '[&_.ant-select-item-option-content]:text-white!',
                       '[&_.ant-select-item-option-selected:not(.ant-select-item-option-disabled)]:bg-primary-7/50! [&_.ant-select-item-option-selected]:!text-white!',
                       '[&_.ant-empty-description]:text-white!'
@@ -274,26 +305,13 @@ export function ManageCreditsStep({ onBack, virtualLabId }: ManageCreditsStepPro
         </div>
 
         <div className="flex w-10 shrink-0 items-center">
-          <motion.button
-            type="button"
-            aria-label="Swap transfer direction"
-            className="z-10 flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-[#0a3a76] text-white transition-all hover:scale-110 hover:bg-[#0d4a94]"
-            onClick={onSwap}
-            disabled={isPending}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <motion.div
-              animate={{ rotate: isSwapping ? 180 : 0 }}
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
-            >
-              <SwapOutlined />
-            </motion.div>
-          </motion.button>
+          <div className="bg-primary-8 flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 text-white">
+            <ArrowRightOutlined className="text-lg" />
+          </div>
         </div>
 
         {/* destination panel */}
-        <div className="flex h-full w-[calc(50%-2.5rem)] flex-1 flex-col justify-between rounded-2xl border border-white/10 bg-[#0a3a76] p-5 text-white shadow-2xl">
+        <div className="bg-primary-8 flex h-full w-[calc(50%-2.5rem)] flex-1 flex-col justify-between rounded-2xl border border-white/10 p-5 text-white shadow-2xl">
           <div className="flex items-center gap-2">
             <span className="text-neutral-3">To</span>
             <Badge className="rounded-full border-white/10 bg-[#0e4a98] text-white/90">
@@ -344,7 +362,7 @@ export function ManageCreditsStep({ onBack, virtualLabId }: ManageCreditsStepPro
       </div>
 
       <div className="mx-auto max-w-3xl px-3">
-        <div className="rounded-2xl border border-white/10 bg-[#0a3a76] p-5 text-white">
+        <div className="bg-primary-8 rounded-2xl border border-white/10 p-5 text-white">
           <div className="mb-3 text-lg font-semibold">Amount</div>
           <div className="relative w-full max-w-md">
             <Input
@@ -356,7 +374,7 @@ export function ManageCreditsStep({ onBack, virtualLabId }: ManageCreditsStepPro
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0"
               className={cn(
-                'h-16 rounded-xl border-white/20 bg-[#052f66] pr-28 text-xl! font-bold text-white placeholder:text-white/50',
+                'bg-primary-8 h-16 rounded-xl border-white/20 pr-28 text-xl! font-bold text-white placeholder:text-white/50',
                 '[appearance:textfield] border px-4 py-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
               )}
               disabled={isPending}
