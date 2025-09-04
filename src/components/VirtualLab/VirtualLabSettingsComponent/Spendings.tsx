@@ -1,4 +1,4 @@
-import JobReportList from '../../../ui/segments/project/credits/job-report-list';
+import { JobReportList } from '../../../ui/segments/project/credits/job-report-list';
 import { virtualLabProjectsAtomFamily } from '@/state/virtual-lab/projects';
 import { useLastTruthyValue, useUnwrappedValue } from '@/hooks/hooks';
 import { virtualLabBalanceAtomFamily } from '@/state/virtual-lab/lab';

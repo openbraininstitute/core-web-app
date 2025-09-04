@@ -53,6 +53,7 @@ export interface ModalProps {
   bodyClassName?: string;
   headerClassName?: string;
   footerClassName?: string;
+  closeIconClassName?: string;
   style?: CSSProperties;
   overlayStyle?: CSSProperties;
 
@@ -203,6 +204,7 @@ export function Modal({
   bodyClassName,
   headerClassName,
   footerClassName,
+  closeIconClassName,
   style,
   overlayStyle,
 
@@ -376,20 +378,23 @@ export function Modal({
           <div
             id="modal-header"
             className={cn(
-              'border-neutral-2 flex items-center justify-between border-b px-6 py-4',
+              'border-neutral-2 flex items-center justify-between px-6 py-4',
               headerClassName
             )}
           >
             {title && (
-              <h2 id="modal-title" className="text-neutral-6 text-lg font-semibold">
+              <div id="modal-title" className="text-neutral-6 text-lg font-semibold">
                 {title}
-              </h2>
+              </div>
             )}
             {closable && (
               <button
                 type="button"
                 onClick={onClose}
-                className="hover:bg-neutral-1 ml-auto rounded-md p-2 transition-colors"
+                className={cn(
+                  'hover:bg-neutral-1 ml-auto rounded-md p-2 transition-colors',
+                  closeIconClassName
+                )}
                 aria-label="Close modal"
               >
                 {closeIcon}
