@@ -33,7 +33,7 @@ export const Microcircuit: EntityCoreTypeConfig<ICircuit> = {
   asset: {
     extension: 'application/json',
   },
-  detailViewSections: ['overview'],
+  detailViewSections: ['overview', 'related-publications'],
   isBookmarkable: false,
   isDownloadable: true,
   isCopyable: true,
