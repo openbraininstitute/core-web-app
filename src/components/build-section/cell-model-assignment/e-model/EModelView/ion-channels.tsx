@@ -67,19 +67,19 @@ export default function IonChannels({ source }: Props) {
   if (error)
     return (
       <StandardFallback type="info" message={error}>
-        Ion channels
+        Ion channel models
       </StandardFallback>
     );
   if (!channels)
     return (
       <StandardFallback type="info" message="No ion channel location distribution found">
-        Ion channels
+        Ion channel models
       </StandardFallback>
     );
 
   return (
     <div className="flex flex-col gap-2">
-      <Header>Ion channels</Header>
+      <Header>Ion channel models</Header>
       <ListingGrid ionChannels={channels} />
     </div>
   );

@@ -24,7 +24,6 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.CreationDate,
     ],
     summaryViewFields: [
-      { field: EntityCoreFields.Description, className: 'col-span-3' },
       { field: EntityCoreFields.CreatedBy },
       { field: EntityCoreFields.CreationDate },
     ],
@@ -45,7 +44,6 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.CreationDate,
     ],
     summaryViewFields: [
-      { field: EntityCoreFields.Description, className: 'col-span-3' },
       { field: EntityCoreFields.CreatedBy },
       { field: EntityCoreFields.CreationDate },
     ],

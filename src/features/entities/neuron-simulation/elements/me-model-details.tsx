@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 
 import { renderArray, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';

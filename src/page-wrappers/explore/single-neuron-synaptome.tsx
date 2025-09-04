@@ -29,7 +29,11 @@ type Props = {
   };
 };
 
-async function loadExpandedSingleNeuronSynaptome({ id, virtualLabId, projectId }: Props['params']) {
+export async function loadExpandedSingleNeuronSynaptome({
+  id,
+  virtualLabId,
+  projectId,
+}: Props['params']) {
   const { data: source, error } = await tryCatch(
     getSingleNeuronSynaptome({ id, context: { virtualLabId, projectId } })
   );

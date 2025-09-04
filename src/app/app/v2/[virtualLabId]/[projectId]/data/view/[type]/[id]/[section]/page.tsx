@@ -1,3 +1,4 @@
+import { JSX } from 'react';
 import { notFound } from 'next/navigation';
 import snakeCase from 'lodash/snakeCase';
 import { downloadEntity } from '../layout';
@@ -9,7 +10,11 @@ import {
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import Overview from '@/ui/segments/detail-view/overview';
-import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
+import Visualization from '@/ui/segments/detail-view/viz';
+import Analysis from '@/features/model-analysis/explorer/container';
+import RelatedArtifacts from '@/ui/segments/detail-view/related-artifacts';
+import Configuration from '@/ui/segments/detail-view/configuration';
+import Results from '@/ui/segments/detail-view/results';
 
 export default async function Page({
   params,
@@ -21,20 +26,40 @@ export default async function Page({
   const ctx = { virtualLabId, projectId };
 
   const entityType = getEntityByExtendedType({ type: snakeCase(type) as EntityCoreExtendedType });
+
   if (!entityType || !entityType.detailViewSections.includes(section)) notFound();
 
+  const entity = await downloadEntity({
+    type: snakeCase(type) as EntityCoreExtendedType,
+    ctx,
+    id,
+  });
+
+  let content: JSX.Element | undefined;
+
   if (section === 'overview') {
-    const entity = await downloadEntity({
-      type: snakeCase(type) as EntityCoreExtendedType,
-      ctx,
-      id,
-    });
-
-    const fields = getViewDefinitionByExtendedType(entityType.extendedType)?.summaryViewFields;
-
-    if (!fields || !entity) notFound();
-    return <Overview entity={entity} summaryViewFields={fields} ctx={ctx} />;
+    return <Overview entity={entity} extendedType={entityType.extendedType} ctx={ctx} />;
+  }
+  if (section === 'visualization') {
+    return <Visualization entity={entity} ctx={ctx} />;
+  }
+  if (section === 'analysis') {
+    return <Analysis extendedType={entityType.extendedType} />;
   }
 
-  return notFound();
+  if (section === 'configuration') {
+    return <Configuration entity={entity} extendedType={entityType.extendedType} ctx={ctx} />;
+  }
+
+  if (section === 'related-artifacts') {
+    return <RelatedArtifacts extendedType={entityType.extendedType} entity={entity} />;
+  }
+
+  if (section === 'results') {
+    return <Results extendedType={entityType.extendedType} entity={entity} ctx={ctx} />;
+  }
+
+  if (!content) notFound();
+
+  return content;
 }

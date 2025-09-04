@@ -1,5 +1,7 @@
 'use client';
 
+import { JSX } from 'react';
+import { notFound } from 'next/navigation';
 import { MorphoViewerLoaderMemo } from '@/features/entities/reconstruction-morphology/detail-view';
 import { IReconstructionMorphology, IElectricalCellRecording } from '@/api/entitycore/types';
 import EphysViewer from '@/features/ephys-viewer';
@@ -15,12 +17,15 @@ export default function Visualization({
   entity: AwaitedType<ReturnType<typeof downloadEntity>>;
   ctx: WorkspaceContext;
 }) {
+  let content: JSX.Element | undefined;
+
   if (entity.type === 'reconstruction_morphology') {
-    return <MorphoViewerLoaderMemo resource={entity as IReconstructionMorphology} />;
+    content = <MorphoViewerLoaderMemo resource={entity as IReconstructionMorphology} />;
   }
   if (entity.type === 'electrical_cell_recording') {
-    return <EphysViewer resource={entity as IElectricalCellRecording} ctx={ctx} />;
+    content = <EphysViewer resource={entity as IElectricalCellRecording} ctx={ctx} />;
   }
 
-  return null;
+  if (!content) notFound();
+  return <>{content}</>;
 }

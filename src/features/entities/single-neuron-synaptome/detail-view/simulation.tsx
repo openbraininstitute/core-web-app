@@ -1,3 +1,5 @@
+'use client';
+
 import { LoadingOutlined } from '@ant-design/icons';
 import { ErrorBoundary } from '@sentry/nextjs';
 import { useEffect, useState } from 'react';
@@ -13,12 +15,9 @@ import { EntityTypeDict } from '@/api/entitycore/types';
 import { tryCatch } from '@/api/utils';
 
 import type { ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types';
-import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
-  // eslint-disable-next-line react/no-unused-prop-types
-  type: EntitySlugValue;
   modelId: string;
 };
 

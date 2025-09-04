@@ -33,7 +33,7 @@ export default function AssetViewer({ validationResult }: Props) {
   );
 
   return (
-    <div data-testid="documents-container" className="mt-4 flex flex-col items-center bg-white">
+    <div data-testid="documents-container" className="bg-neutral-1 mt-4 flex flex-col items-center">
       {validationResult.assets
         ?.filter((o) => AllowedTypes.includes(o.content_type as TAllowedTypes))
         .map((asset, ix) => {

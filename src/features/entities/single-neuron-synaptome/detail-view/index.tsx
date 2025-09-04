@@ -13,7 +13,6 @@ import If from '@/components/ConditionalRenderer/If';
 
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
@@ -81,10 +80,7 @@ export default function Page({
                     </div>
                   </If>
                   <If id="simulation" condition={activeTab === 'experiments'}>
-                    <Results
-                      type={EntitySlug.SingleNeuronSynaptomeSimulation}
-                      modelId={source.id}
-                    />
+                    <Results modelId={source.id} />
                   </If>
                 </div>
               </div>

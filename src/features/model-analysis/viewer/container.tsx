@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Tabs, Collapse } from 'antd';
+import { Collapse } from 'antd';
 import dynamic from 'next/dynamic';
 
 import { AllowedTypes } from '@/features/model-analysis/viewer/storage';
-import { classNames } from '@/util/utils';
 
 import type { IValidationConstructedResult } from '@/features/model-analysis/explorer/context';
 import type { TAllowedTypes } from '@/features/model-analysis/viewer/storage';
+import { Button } from '@/ui/molecules/button';
 
 const Viewer = dynamic(() => import('@/features/model-analysis/viewer/viewer'), {
   ssr: false,
@@ -70,17 +70,21 @@ export function ViewerContainer({ validationResults }: Props) {
   );
 
   return (
-    <div className="w-full">
-      <div className="sticky -top-7 z-10 flex max-w-full flex-wrap items-center justify-between bg-white pl-2">
-        <Tabs
-          items={tabs}
-          className={classNames('w-full max-w-full')}
-          indicator={{ align: 'center' }}
-          activeKey={type}
-          onChange={setType}
-        />
+    <div className="bg-neutral-1 h-full w-full">
+      <div className="bg-neutral-1 sticky -top-10 z-10 flex flex-wrap gap-5">
+        {tabs.map((t) => (
+          <Button
+            key={t.key}
+            onClick={() => setType(t.key)}
+            active={type === t.key}
+            variant="outline"
+          >
+            {t.label}
+          </Button>
+        ))}
       </div>
-      <div className="min-h-screen w-full">
+
+      <div className="w-full">
         <div className="w-full min-w-full">
           {type === 'all' ? (
             <Collapse

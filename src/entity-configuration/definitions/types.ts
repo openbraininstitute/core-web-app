@@ -128,6 +128,8 @@ export type FieldsDefinitionRegistry<T extends EntityCoreIdentifiable> = Record<
 
 export type DetailViewSection =
   | 'overview'
+  | 'results'
+  | 'visualization'
   | 'analysis'
   | 'related-publications'
   | 'related-artifacts'

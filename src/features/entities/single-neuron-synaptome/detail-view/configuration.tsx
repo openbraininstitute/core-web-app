@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
