@@ -13,6 +13,13 @@ import type { TEntityTypeDict } from '@/api/entitycore/types';
 export type EntityCoreExtendedType =
   (typeof EntityCoreConfiguration)[keyof typeof EntityCoreConfiguration]['extendedType'];
 
+export const circuitTypes: EntityCoreExtendedType[] = [
+  'circuit',
+  'small_micro_circuit',
+  'paired_neuron_circuit',
+  'micro_circuit',
+];
+
 export const getEntityByExtendedType = ({ type }: { type?: EntityCoreExtendedType }) =>
   find(EntityCoreConfiguration, { extendedType: type });
 

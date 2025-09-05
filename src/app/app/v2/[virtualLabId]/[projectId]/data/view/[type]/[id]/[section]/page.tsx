@@ -11,7 +11,7 @@ import {
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import Overview from '@/ui/segments/detail-view/overview';
 import Visualization from '@/ui/segments/detail-view/viz';
-import Analysis from '@/features/model-analysis/explorer/container';
+import Analysis from '@/ui/segments/detail-view/analysis';
 import RelatedArtifacts from '@/ui/segments/detail-view/related-artifacts';
 import Configuration from '@/ui/segments/detail-view/configuration';
 import Results from '@/ui/segments/detail-view/results';
@@ -44,7 +44,7 @@ export default async function Page({
     return <Visualization entity={entity} ctx={ctx} />;
   }
   if (section === 'analysis') {
-    return <Analysis extendedType={entityType.extendedType} />;
+    return <Analysis entity={entity} ctx={ctx} extendedType={entityType.extendedType} />;
   }
 
   if (section === 'configuration') {
