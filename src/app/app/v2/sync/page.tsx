@@ -22,6 +22,15 @@ export default async function Page({
     if (queryParams.redirectUrl) {
       redirect(queryParams.redirectUrl, RedirectType.replace);
     } else {
+      // if the user has already visited a virtual lab/project and stored
+      // then forward it first
+      if (workspace.recentWorkspace) {
+        redirect(
+          `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${workspace.recentWorkspace.virtual_lab_id}/${workspace.recentWorkspace.project_id}`,
+          RedirectType.replace
+        );
+      }
+      // if there is no stored recent workspace, redirect to first fetched workspace
       redirect(
         `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLab.id}/${project.id}`,
         RedirectType.replace

@@ -3,11 +3,16 @@ import head from 'lodash/head';
 
 import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
-import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
+import { getUserProfile, getUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
 import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import { tryCatch } from '@/api/utils';
 
-import type { Project, UserProfileResponse, VirtualLab } from '@/api/virtual-lab-svc/queries/types';
+import type {
+  Project,
+  RecentWorkspace,
+  UserProfileResponse,
+  VirtualLab,
+} from '@/api/virtual-lab-svc/queries/types';
 
 export type TResolvedWorkspace = {
   project: Project | null;
@@ -19,12 +24,15 @@ export const resolveWorkspace = async () => {
   let virtualLabId: string | undefined;
   let project: Project | null = null;
   let virtualLab: VirtualLab | null = null;
+  let recentWorkspace: RecentWorkspace['recent_workspace']['workspace'] | null = null;
 
-  const [virtualLabResult, profileResult] = await Promise.all([
+  const [virtualLabResult, profileResult, recentWorkspaceResult] = await Promise.all([
     tryCatch(listVirtualLabs({ include: [LabTypeEnum.MY_LAB] })),
     tryCatch(getUserProfile()),
+    tryCatch(getUserRecentWorkspace()),
   ]);
   const profile = profileResult.data?.profile ?? null;
+  recentWorkspace = recentWorkspaceResult.data?.data?.recent_workspace.workspace ?? null;
 
   virtualLab = virtualLabResult?.data?.data?.virtual_lab ?? null;
   if (virtualLab) {
@@ -39,6 +47,7 @@ export const resolveWorkspace = async () => {
   }
 
   return {
+    recentWorkspace,
     project,
     virtualLab,
     profile,
@@ -57,9 +66,9 @@ export const isAccountPayload = isMatching({
   name: P.string,
   first_name: P.string,
   last_name: P.string,
-  reference_email: P.string,
+  email: P.string,
   entity: P.string,
-  email_status: P.string,
+  email_status: P.string.regex(/^verified$/),
 });
 
 export const isCustomizationPayload = isMatching({
