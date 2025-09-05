@@ -39,7 +39,7 @@ export default function AiAssistant({ className, fullscreen, section }: AiAssist
         <div
           ref={setPanelContainer}
           style={style}
-          className={classNames(className, styles.aiAssistant)}
+          className={classNames(className, styles.aiAssistant, 'rounded-xl! border-0!')}
         >
           <div className={styles.mask} />
           {threadId && (
