@@ -1,12 +1,12 @@
 import { PaymentElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js';
 import { FormEvent, useState, useEffect, useRef, useTransition } from 'react';
 import { Stripe, StripeElementsOptions } from '@stripe/stripe-js';
+import { useQueryClient } from '@tanstack/react-query';
 import { LoadingOutlined } from '@ant-design/icons';
 import { useAtomValue } from 'jotai';
 import { Spin } from 'antd';
-import { useRouter } from 'next/navigation';
+
 import isObject from 'lodash/isObject';
-import delay from 'lodash/delay';
 
 import sessionAtom from '@/state/session';
 
@@ -17,13 +17,14 @@ import { createSubscription } from '@/api/virtual-lab-svc/queries/subscription';
 import { getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
 import { useAppNotification } from '@/components/notification';
 import { getStripe } from '@/components/VirtualLab/Billing/utils';
-import { tryCatch } from '@/api/utils';
+import { keyBuilder } from '@/ui/use-query-keys/user';
 import { Button } from '@/ui/molecules/button';
+import { tryCatch } from '@/api/utils';
 import { cn } from '@/utils/css-class';
+import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager/event';
 
 type Props = {
   onPrevious: () => void;
-  successRedirectUrl?: string;
 };
 
 const buildStripeFormOptions = (clientSecret: string): StripeElementsOptions => ({
@@ -70,11 +71,11 @@ const buildStripeFormOptions = (clientSecret: string): StripeElementsOptions => 
   },
 });
 
-function Form({ onPrevious, successRedirectUrl }: Props) {
+function Form({ onPrevious }: Props) {
+  const queryClient = useQueryClient();
   const elements = useElements();
   const stripe = useStripe();
   const { interval, tier } = useAtomValue(flowAtom);
-  const { push: navigate } = useRouter();
   const [stripeElementsReady, setElementsReady] = useState(false);
   const { success: successNotify, error: errorNotify } = useAppNotification();
   const [formLoading, startTransition] = useTransition();
@@ -121,9 +122,11 @@ function Form({ onPrevious, successRedirectUrl }: Props) {
     };
 
     startTransition(async () => {
-      const { data, error } = await tryCatch(paySubscription(), () => {
+      const { data, error } = await tryCatch(paySubscription(), async () => {
         elements.getElement('payment')?.clear();
+        await queryClient.invalidateQueries({ queryKey: keyBuilder.subscription() });
       });
+
       if (error) {
         let message =
           'There was a problem processing your payment. Please try again or contact support if the issue persists.';
@@ -149,7 +152,7 @@ function Form({ onPrevious, successRedirectUrl }: Props) {
           placement: 'topRight',
           key: 'subscription-payment-success',
         });
-        delay(() => navigate(successRedirectUrl ?? '/app/virtual-lab/account/invoices'), 2000);
+        makeTriggerWorkspaceConfigurationClickEvent<null>({ on: false, data: null, type: null });
       }
     });
   };
@@ -208,7 +211,7 @@ function Form({ onPrevious, successRedirectUrl }: Props) {
   );
 }
 
-export default function PaymentForm({ onPrevious, successRedirectUrl }: Props) {
+export default function PaymentForm({ onPrevious }: Props) {
   const stripeRef = useRef(false);
   const session = useAtomValue(sessionAtom);
   const { step } = useAtomValue(flowAtom);
@@ -259,7 +262,7 @@ export default function PaymentForm({ onPrevious, successRedirectUrl }: Props) {
   return (
     <div className="flex h-full grow flex-col">
       <Elements stripe={stripePromise} options={buildStripeFormOptions(setupIntent?.client_secret)}>
-        <Form onPrevious={onPrevious} successRedirectUrl={successRedirectUrl} />
+        <Form onPrevious={onPrevious} />
       </Elements>
     </div>
   );

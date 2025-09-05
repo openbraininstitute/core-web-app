@@ -241,8 +241,8 @@ export function WorkspaceCustomization({
     });
   };
 
-  const pending =
-    mutateProject.isPending || mutateVirtualLab.isPending || !submittable || isTransitioning;
+  const pending = mutateProject.isPending || mutateVirtualLab.isPending || isTransitioning;
+  const disabled = pending || !submittable;
 
   return (
     <HydrateWrapper>
@@ -366,7 +366,7 @@ export function WorkspaceCustomization({
                   size={breakpoint === 'xl' ? 'lg' : 'md'}
                   type="submit"
                   className="disabled:bg-neutral-1 disabled:text-neutral-4! w-full px-8! py-6! font-bold hover:text-white"
-                  disabled={pending}
+                  disabled={disabled}
                 >
                   <div className="flex items-center justify-center gap-3.5">
                     <span>Go to project</span>
