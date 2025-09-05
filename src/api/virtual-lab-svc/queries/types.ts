@@ -414,6 +414,19 @@ export interface LibraryBookmark extends AddBookmarkResponse {}
 type BookmarksByCategoryResponse = Record<TExtendedEntitiesTypeDict, Array<LibraryBookmark>>;
 export type ProjectBookmarksCategories = Record<TEntityTypeDict, number>;
 
+export type RecentWorkspace = {
+  recent_workspace: {
+    user_id: string;
+    workspace: {
+      virtual_lab_id: string;
+      project_id: string;
+    };
+    updated_at: Date;
+    virtual_lab: VirtualLab;
+    project: Project;
+  };
+};
+
 export type VlmGetSubscriptionResponse = VlmResponse<GetSubscriptionResponse>;
 export type VlmCreateSubscriptionResponse = VlmResponse<CreateSubscriptionResponse>;
 export type VlmCancelSubscriptionResponse = VlmResponse<CancelSubscriptionResponse>;
@@ -440,3 +453,5 @@ export type VlmGetProjectLibraryPerCategory = VlmResponse<{
   page_size: number;
   total: number;
 }>;
+
+export type VlmRecentWorkspace = VlmResponse<RecentWorkspace>;

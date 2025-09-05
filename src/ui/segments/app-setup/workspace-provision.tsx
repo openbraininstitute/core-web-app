@@ -3,6 +3,7 @@
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { ComponentProps, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
+import unionBy from 'lodash/unionBy';
 import delay from 'lodash/delay';
 import find from 'lodash/find';
 
@@ -76,15 +77,30 @@ export function WorkspaceProvision({
           try {
             const chunk = value as StreamItem;
             setProgress(chunk.progress);
-            setCompletedSteps((prev) => [
-              ...(prev ?? []),
-              {
-                status: chunk.status,
-                message: chunk.message,
-                step: chunk.step as TWorkspaceBootstrapStep,
-              },
-            ]);
-            if (chunk.step === WorkspaceBootstrapStep.Project) {
+            setCompletedSteps((prev) => {
+              const existingStep = prev.find((p) => p.step === chunk.step);
+              // Only update if status changed or if it's the first time we see this step
+              if (!existingStep || existingStep.status !== chunk.status) {
+                return unionBy(
+                  [
+                    {
+                      status: chunk.status,
+                      message: chunk.message,
+                      step: chunk.step as TWorkspaceBootstrapStep,
+                    },
+                  ],
+                  prev ?? [],
+                  'step'
+                );
+              }
+              return prev;
+            });
+            if (
+              chunk.step === WorkspaceBootstrapStep.Project &&
+              chunk.status === WorkspaceBootstrapStepStatus.Completed &&
+              chunk.data?.virtualLab &&
+              chunk.data?.project
+            ) {
               delay(
                 () =>
                   move({

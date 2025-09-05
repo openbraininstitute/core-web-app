@@ -2,18 +2,26 @@
 
 'use client';
 
-import { CheckCircleFilled, EditOutlined, LoadingOutlined, RightOutlined } from '@ant-design/icons';
-import { ComponentProps, ReactNode, useEffect, useState } from 'react';
+import { ComponentProps, ReactNode, useEffect, useState, useTransition } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@bprogress/next/app';
+import {
+  CheckCircleFilled,
+  CloseCircleFilled,
+  EditOutlined,
+  LoadingOutlined,
+  RightOutlined,
+} from '@ant-design/icons';
 import { Form } from 'antd';
-import delay from 'lodash/delay';
+
 import Link from 'next/link';
 import z from 'zod';
 
 import { updateVirtualLab, checkVirtualLabExists } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { updateProject, checkProjectExists } from '@/api/virtual-lab-svc/queries/project';
+// import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useAppNotification } from '@/components/notification';
 import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import { Card, CardContent } from '@/ui/molecules/card';
@@ -84,12 +92,18 @@ function CustomInput({
   value = '',
   disabled = false,
   onEdit,
+  name,
   extra,
   ...rest
 }: ComponentProps<'input'> & {
   extra?: ReactNode;
   onEdit?: () => void;
 }) {
+  const form = Form.useFormInstance();
+  const field = Form.useWatch(name, form);
+  const hasError = !!form.getFieldError(name).length;
+  const validating = form.isFieldValidating(name);
+
   return (
     <div className="relative">
       <Input
@@ -104,13 +118,26 @@ function CustomInput({
         {...rest}
       />
       <span className="absolute top-1/2 right-5 -translate-y-1/2 transform">
-        {extra ??
-          (disabled && (
-            <EditOutlined
-              className="text-neutral-3! hover:text-primary-7! cursor-pointer"
-              onClick={onEdit}
-            />
-          ))}
+        {(() => {
+          if (disabled) {
+            return (
+              <EditOutlined
+                className="text-neutral-3! hover:text-primary-7! cursor-pointer"
+                onClick={onEdit}
+              />
+            );
+          }
+          if (!validating && field && !hasError) {
+            return <CheckCircleFilled className="text-lg text-green-500" />;
+          }
+          if (hasError && !validating) {
+            return <CloseCircleFilled className="text-lg text-red-500" />;
+          }
+          if (extra) {
+            return extra;
+          }
+          return null;
+        })()}
       </span>
     </div>
   );
@@ -123,7 +150,9 @@ export function WorkspaceCustomization({
   projectName,
 }: Props) {
   const breakpoint = useDefaultBreakpoint();
-  const { push: navigate } = useRouter();
+  const { error: notifyError } = useAppNotification();
+  const { replace } = useRouter();
+  const [isTransitioning, startTransition] = useTransition();
   const [editableField, setEditableField] = useState<{
     virtual_lab_name: boolean;
     project_name: boolean;
@@ -132,16 +161,22 @@ export function WorkspaceCustomization({
     project_name: false,
   });
   const [form] = Form.useForm();
-  const [submittable, setSubmittable] = useState<boolean>(false);
-
+  const [submittable, setSubmittable] = useState<boolean>(true);
   const values = Form.useWatch([], form);
 
   useEffect(() => {
-    form
-      .validateFields({ validateOnly: true })
-      .then(() => setSubmittable(true))
-      .catch(() => setSubmittable(false));
-  }, [form, values]);
+    if (!editableField.project_name && !editableField.virtual_lab_name) {
+      setSubmittable(true);
+      return;
+    }
+
+    if (editableField.project_name || editableField.virtual_lab_name) {
+      form
+        .validateFields({ validateOnly: true })
+        .then(() => setSubmittable(true))
+        .catch(() => setSubmittable(false));
+    }
+  }, [form, values, editableField]);
 
   const handleEdit = (fieldName: keyof typeof editableField) => {
     setEditableField((prev) => ({
@@ -157,13 +192,38 @@ export function WorkspaceCustomization({
         updatePayload: { name: vlabName },
       });
     },
+    onError(error, variables) {
+      notifyError({
+        message: <h2 className="text-primary-9">{variables.vlabName}</h2>,
+        description: (
+          <p className="text-primary-9">{error.message ?? 'Failed to update virtual lab name'}</p>
+        ),
+        placement: 'topRight',
+        key: 'virtual-lab-name-update-error',
+      });
+    },
   });
 
   const mutateProject = useMutation({
     mutationFn: async ({ projName }: { projName: string }) => {
       await updateProject({ virtualLabId, projectId, payload: { name: projName } });
     },
+    onError(error, variables) {
+      notifyError({
+        message: <h2 className="text-primary-9">{variables.projName}</h2>,
+        description: (
+          <p className="text-primary-9">{error.message ?? 'Failed to update project name'}</p>
+        ),
+      });
+    },
   });
+
+  // const mutateRecentWorkspace = useMutation({
+  //   mutationFn: () => setUserRecentWorkspace({ workspace: { virtualLabId, projectId } }),
+  //   onError(error, variables) {
+  //     log('error', error, variables);
+  //   },
+  // });
 
   const onSubmitForm = async (_values: FinalFormType) => {
     if (editableField.virtual_lab_name) {
@@ -172,8 +232,17 @@ export function WorkspaceCustomization({
     if (editableField.project_name) {
       await mutateProject.mutateAsync({ projName: _values.project_name });
     }
-    delay(() => navigate(`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}`), 1000);
+    // await mutateRecentWorkspace.mutateAsync();
+
+    startTransition(() => {
+      replace(`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}`, {
+        showProgress: true,
+      });
+    });
   };
+
+  const pending =
+    mutateProject.isPending || mutateVirtualLab.isPending || !submittable || isTransitioning;
 
   return (
     <HydrateWrapper>
@@ -218,17 +287,19 @@ export function WorkspaceCustomization({
                 label={<span className="block text-sm text-[#8C8C8C]">Virtual lab name</span>}
                 rules={[
                   {
-                    validator: async (_rule, value) => {
-                      try {
-                        await virtualLabNameSchema.parseAsync(value);
-                      } catch (error) {
-                        return Promise.reject(
-                          error instanceof z.ZodError
-                            ? error.errors.at(0)?.message
-                            : 'Virtual lab name is required'
-                        );
+                    validator: async (_rule, value: string) => {
+                      if (value.trim() !== virtualLabName) {
+                        try {
+                          await virtualLabNameSchema.parseAsync(value);
+                        } catch (error) {
+                          return Promise.reject(
+                            error instanceof z.ZodError
+                              ? error.errors.at(0)?.message
+                              : 'Virtual lab name is required !'
+                          );
+                        }
+                        return Promise.resolve();
                       }
-                      return Promise.resolve();
                     },
                   },
                 ]}
@@ -237,6 +308,7 @@ export function WorkspaceCustomization({
                   placeholder="Enter your virtual lab name"
                   disabled={!editableField.virtual_lab_name}
                   onEdit={() => handleEdit('virtual_lab_name')}
+                  name="virtual_lab_name"
                   extra={
                     mutateVirtualLab.isPending ? (
                       <LoadingOutlined />
@@ -254,18 +326,21 @@ export function WorkspaceCustomization({
                 label={<span className="block text-sm text-[#8C8C8C]">Project name</span>}
                 rules={[
                   {
-                    validator: async (_rule, value) => {
-                      const projectNameSchemaWithValidation = createProjectNameSchema(virtualLabId);
-                      try {
-                        await projectNameSchemaWithValidation.parseAsync(value);
-                      } catch (error) {
-                        return Promise.reject(
-                          error instanceof z.ZodError
-                            ? error.errors.at(0)?.message
-                            : 'Project name is required'
-                        );
+                    validator: async (_rule, value: string) => {
+                      if (value.trim() !== projectName) {
+                        const projectNameSchemaWithValidation =
+                          createProjectNameSchema(virtualLabId);
+                        try {
+                          await projectNameSchemaWithValidation.parseAsync(value);
+                        } catch (error) {
+                          return Promise.reject(
+                            error instanceof z.ZodError
+                              ? error.errors.at(0)?.message
+                              : 'Project name is required !'
+                          );
+                        }
+                        return Promise.resolve();
                       }
-                      return Promise.resolve();
                     },
                   },
                 ]}
@@ -273,6 +348,7 @@ export function WorkspaceCustomization({
                 <CustomInput
                   placeholder="Enter your project name"
                   disabled={!editableField.project_name}
+                  name="project_name"
                   onEdit={() => handleEdit('project_name')}
                   extra={
                     mutateProject.isPending ? (
@@ -290,9 +366,12 @@ export function WorkspaceCustomization({
                   size={breakpoint === 'xl' ? 'lg' : 'md'}
                   type="submit"
                   className="disabled:bg-neutral-1 disabled:text-neutral-4! w-full px-8! py-6! font-bold hover:text-white"
-                  disabled={mutateProject.isPending || mutateVirtualLab.isPending || !submittable}
+                  disabled={pending}
                 >
-                  Go to project
+                  <div className="flex items-center justify-center gap-3.5">
+                    <span>Go to project</span>
+                    {pending && <LoadingOutlined spin />}
+                  </div>
                 </Button>
               </Form.Item>
             </Form>

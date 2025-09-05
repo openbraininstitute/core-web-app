@@ -6,14 +6,13 @@ import Link from 'next/link';
 
 import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager/event';
 import { Bar, MetricsSkeleton } from '@/ui/segments/project/metrics/metrics-skeleton';
+// import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
 import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
 import { Metrics } from '@/ui/segments/project/metrics/metrics';
 import { ExpandableText } from '@/ui/molecules/more-less-text';
 import { PeopleCommunity } from '@/components/icons/buttons';
-import { useLocalStorage } from '@/hooks/use-local-storage';
 import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { LATEST_VISITED_PROJECT_KEY } from '@/constants';
 import { Button } from '@/ui/molecules/button';
 
 import type { Member, Project } from '@/api/virtual-lab-svc/queries/types';
@@ -119,17 +118,13 @@ function Content({
   data?: Project | null;
   virtualLabId: string | undefined;
 }) {
-  const [, updateLatestVisitedProject] = useLocalStorage<{
-    virtualLabId: string;
-    projectId: string;
-  } | null>(LATEST_VISITED_PROJECT_KEY, null);
-
+  // const mutateRecentWorkspace = useMutation({
+  //   mutationFn: ({ vlabId, prjId }: { vlabId: string; prjId: string }) =>
+  //     setUserRecentWorkspace({ workspace: { virtualLabId: vlabId, projectId: prjId } }),
+  // });
   const onProjectClick = () => {
     if (virtualLabId && data?.id) {
-      updateLatestVisitedProject({
-        virtualLabId,
-        projectId: data.id,
-      });
+      // mutateRecentWorkspace.mutate({ vlabId: virtualLabId, prjId: data.id });
       makeTriggerWorkspaceConfigurationClickEvent({
         on: false,
         type: null,

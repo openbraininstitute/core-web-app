@@ -3,7 +3,7 @@
 
 'use client';
 
-import { ComponentProps, ReactNode, useState } from 'react';
+import { ComponentProps, ReactNode, useEffect, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Alert, Form, Popover } from 'antd';
 import {
@@ -100,9 +100,10 @@ export function WorkspaceIdentity({
 }) {
   const breakpoint = useDefaultBreakpoint();
   const [verificationMsg, setVerificationMsg] = useState<string | null>(null);
+
   const [verificationLoading, setVerificationLoading] = useState(false);
-  const [isFormValid, setIsFormValid] = useState(false);
   const [sendCode, setSendCode] = useState(false);
+  const [submittable, setSubmittable] = useState<boolean>(true);
 
   const [form] = Form.useForm<TWorkspaceIdentitySchema>();
   const fields = Form.useWatch([], form);
@@ -126,22 +127,14 @@ export function WorkspaceIdentity({
     }));
   };
 
-  const onValuesChange = (
-    changedValues: TWorkspaceIdentitySchema,
-    values: TWorkspaceIdentitySchema
-  ) => {
-    if ('email' in changedValues && values?.email_status !== 'none') {
-      form.setFieldValue('email_status', 'none');
-    }
+  const values = Form.useWatch([], form);
+
+  useEffect(() => {
     form
-      .validateFields()
-      .then(() => {
-        setIsFormValid(true);
-      })
-      .catch((err) => {
-        setIsFormValid(!(err.errorFields.length > 0));
-      });
-  };
+      .validateFields({ validateOnly: true })
+      .then(() => setSubmittable(true))
+      .catch(() => setSubmittable(false));
+  }, [form, values, editableField]);
 
   const fullName =
     [data?.profile?.first_name, data?.profile?.last_name].filter(Boolean).join(' ') ||
@@ -150,9 +143,10 @@ export function WorkspaceIdentity({
 
   const virtualLabName = fullName ? `${fullName}'s Virtual lab` : undefined;
   const disableSendCode =
-    (WorkspaceIdentitySchema.safeParse(fields).error?.issues.length || 0) > 0 ||
-    fields?.email_status === 'locked' ||
-    fields?.email_status === 'verified';
+    ((WorkspaceIdentitySchema.safeParse(fields).error?.issues.length || 0) > 0 ||
+      fields?.email_status === 'locked' ||
+      fields?.email_status === 'verified') &&
+    !form.isFieldsTouched(['email']);
 
   // const errors =
   //   WorkspaceIdentitySchema.safeParse(fields).error?.formErrors.fieldErrors &&
@@ -164,28 +158,32 @@ export function WorkspaceIdentity({
   //     </li>
   //   ));
 
-  const onFormSubmit = async (values: TWorkspaceIdentitySchema) =>
+  const onFormSubmit = async (vs: TWorkspaceIdentitySchema) =>
     move({
-      ...values,
-      name:
-        [values.first_name, values.last_name].filter(Boolean).join(' ') ||
+      ...vs,
+      name: `${
+        [vs.first_name, vs.last_name].filter(Boolean).join(' ') ||
         data?.profile?.preferred_username ||
-        '',
+        ''
+      }'s virtual lab`,
     });
 
   const openVerificationCode = () => setSendCode(true);
 
   const mutateVerification = useMutation({
     mutationFn: async () => {
-      const values = form.getFieldsValue();
+      const fv = form.getFieldsValue();
       return await getEmailVerificationCode({
-        email: values.email,
+        email: fv.email,
         name: virtualLabName!,
       });
     },
     onSuccess: (result) => {
+      form.setFieldValue('email_status', result.status);
       if (result.status === 'code_sent') {
         openVerificationCode();
+        setVerificationMsg(result.message);
+      } else {
         setVerificationMsg(result.message);
       }
     },
@@ -198,11 +196,11 @@ export function WorkspaceIdentity({
 
   const onCodeVerificationComplete = async (code: number) => {
     setVerificationLoading(true);
-    const values = form.getFieldsValue();
+    const vcfv = form.getFieldsValue();
     const result = await verifyOtpCode({
       code,
-      email: values.email,
-      name: values.name,
+      email: vcfv.email,
+      name: vcfv.name,
     });
 
     if (result) {
@@ -241,9 +239,9 @@ export function WorkspaceIdentity({
                 email: data?.profile?.email ?? undefined,
                 entity: undefined,
                 name: virtualLabName,
+                email_status: 'none',
               }}
               validateTrigger={['onBlur']}
-              onValuesChange={onValuesChange}
             >
               <Card className="mr-4 ml-4 flex w-full max-w-lg min-w-lg flex-col bg-transparent shadow-none backdrop-blur-sm">
                 <CardContent>
@@ -252,8 +250,30 @@ export function WorkspaceIdentity({
                     {errors}
                   </ul>
                 )} */}
-                  <Form.Item hidden name="email_status">
-                    <input name="email_status" value="none" type="text" hidden />
+                  <Form.Item
+                    hidden
+                    name="email_status"
+                    rules={[
+                      {
+                        required: true,
+                        validator(rule, value) {
+                          if (
+                            !EmailStatusSchema.options.includes(value) ||
+                            value !== EmailStatusSchema.Enum.verified
+                          )
+                            return Promise.reject();
+                          return Promise.resolve();
+                        },
+                      },
+                    ]}
+                  >
+                    <input
+                      name="email_status"
+                      defaultValue="none"
+                      value="none"
+                      type="text"
+                      hidden
+                    />
                   </Form.Item>
                   <Form.Item hidden name="name">
                     <input
@@ -438,7 +458,7 @@ export function WorkspaceIdentity({
                       <Card
                         borderless
                         data-testid="verification-code-form"
-                        className="animate-fade-in w-full bg-white p-3 text-[#8C8C8C]"
+                        className="animate-fade-in text-label w-full bg-white p-3"
                       >
                         <CardContent>
                           <h2 className="h-auto text-left text-lg font-bold">
@@ -485,8 +505,8 @@ export function WorkspaceIdentity({
                   size={breakpoint === 'xl' ? 'lg' : 'md'}
                   type="submit"
                   variant="success"
-                  className="h-auto px-8! py-3! font-bold"
-                  disabled={!isFormValid}
+                  className="disabled:bg-neutral-1 disabled:text-neutral-4! hover:disabled:border-neutral-4! h-auto px-8! py-3! font-bold disabled:hover:border"
+                  disabled={!submittable}
                 >
                   Create Virtual Lab
                 </Button>

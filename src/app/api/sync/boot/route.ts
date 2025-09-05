@@ -3,25 +3,25 @@
 import { NextRequest } from 'next/server';
 import pick from 'lodash/pick';
 
-import { TWorkspaceIdentitySchema } from '@/ui/segments/app-setup/workspace-identity';
 import { createVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { updateUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import { createProject } from '@/api/virtual-lab-svc/queries/project';
-import { TEmailStatus } from '@/api/virtual-lab-svc/validation';
-import { tryCatch } from '@/api/utils';
-import { auth } from '@/auth';
-// import { assignProjectBudget } from '@/services/virtual-lab/projects';
 import {
   WorkspaceBootstrapStepStatus,
   WorkspaceBootstrapStep,
   WorkspaceBootstrap,
 } from '@/ui/segments/app-setup/helpers';
+import { tryCatch } from '@/api/utils';
+import { log } from '@/utils/logger';
+import { auth } from '@/auth';
 
+import type { Project, UserProfileResponse, VirtualLab } from '@/api/virtual-lab-svc/queries/types';
+import type { TWorkspaceIdentitySchema } from '@/ui/segments/app-setup/workspace-identity';
+import type { TEmailStatus } from '@/api/virtual-lab-svc/validation';
 import type {
   TResolvedWorkspace,
   TWorkspaceBootstrapStepStatus,
 } from '@/ui/segments/app-setup/helpers';
-import type { Project, UserProfileResponse, VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -102,13 +102,15 @@ async function* fetchItems<T>(body: Body) {
           message = error?.message || 'Something went wrong while updating the profile';
         }
       }
-      yield {
+      const chunk = {
         message,
         step: sequence.step,
         status: IdentityStatus,
         progress: sequence.progress,
-        data: { profile },
+        data: { profile, virtualLab, project },
       } as T;
+      log('debug', WorkspaceBootstrapStep.Identity, chunk);
+      yield chunk;
     }
     if (sequence.step === WorkspaceBootstrapStep.VirtualLab) {
       let VirtualLabStatus: TWorkspaceBootstrapStepStatus = WorkspaceBootstrapStepStatus.Passed;
@@ -131,13 +133,15 @@ async function* fetchItems<T>(body: Body) {
           message = error?.message || 'Something went wrong while creating the virtual lab';
         }
       }
-      yield {
+      const chunk = {
         message,
         step: sequence.step,
         status: VirtualLabStatus,
         progress: sequence.progress,
-        data: { virtualLab },
+        data: { virtualLab, profile, project },
       } as T;
+      log('debug', WorkspaceBootstrapStep.VirtualLab, chunk);
+      yield chunk;
     }
     if (sequence.step === WorkspaceBootstrapStep.Project) {
       let ProjectStatus: TWorkspaceBootstrapStepStatus = WorkspaceBootstrapStepStatus.Passed;
@@ -166,13 +170,20 @@ async function* fetchItems<T>(body: Body) {
           message = error?.message || 'Something went wrong while creating the project';
         }
       }
-      yield {
+      const chunk = {
         message,
         step: sequence.step,
         status: ProjectStatus,
         progress: sequence.progress,
-        data: { project },
+        data: {
+          virtualLab,
+          project,
+          profile,
+        },
       } as T;
+
+      log('debug', WorkspaceBootstrapStep.Project, chunk);
+      yield chunk;
     }
     yield {
       step: sequence.step,
