@@ -31,7 +31,7 @@ export default async function Notebooks({
         return { ...notebookData, id: n.id, creationDate: n.created_at };
       } catch (e) {
         // Collect warning but continue
-        warning = `Some notebooks failed to load.`;
+        warning = `The notebook ${n.github_file_url} failed to load, please ensure the notebook folder exists and the repository is public`;
         return null; // skip this notebook
       }
     });
