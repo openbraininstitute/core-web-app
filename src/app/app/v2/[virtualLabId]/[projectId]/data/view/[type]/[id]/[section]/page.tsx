@@ -13,6 +13,7 @@ import Overview from '@/ui/segments/detail-view/overview';
 import Visualization from '@/ui/segments/detail-view/viz';
 import Analysis from '@/ui/segments/detail-view/analysis';
 import RelatedArtifacts from '@/ui/segments/detail-view/related-artifacts';
+import RelatedPublications from '@/ui/segments/detail-view/related-publications';
 import Configuration from '@/ui/segments/detail-view/configuration';
 import Results from '@/ui/segments/detail-view/results';
 
@@ -49,6 +50,10 @@ export default async function Page({
 
   if (section === 'configuration') {
     return <Configuration entity={entity} extendedType={entityType.extendedType} ctx={ctx} />;
+  }
+
+  if (section === 'related-publications') {
+    return <RelatedPublications entity={entity} extendedType={entityType.extendedType} />;
   }
 
   if (section === 'related-artifacts') {
