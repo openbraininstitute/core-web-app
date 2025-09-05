@@ -34,7 +34,7 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
     extension: 'application/json',
   },
 
-  detailViewSections: ['overview', 'related-publications'],
+  detailViewSections: ['overview', 'visualization', 'related-publications'],
   isBookmarkable: false,
   isDownloadable: true,
   isCopyable: true,
