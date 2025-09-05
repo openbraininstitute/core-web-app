@@ -260,7 +260,7 @@ export default function UserNotebookPage({
                     } catch (e) {
                       notification.error({
                         message: assertErrorMessage(e),
-                        key: 'user-notebook-server-error',
+                        key: 'user-notebook-register-error',
                         placement: 'topRight',
                       });
                       resetModal();
