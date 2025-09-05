@@ -54,6 +54,8 @@ export default async function fetchNotebooks(repoUrl: string, withDate = false) 
       return acc;
     }, {});
 
+    let error = '';
+
     for (const item of Object.values(items)) {
       if (item.path.endsWith('analysis_notebook.ipynb')) {
         if (withDate)
@@ -85,9 +87,7 @@ export default async function fetchNotebooks(repoUrl: string, withDate = false) 
             objectOfInterest: metadata.input.flatMap((i) => i.data_type.artefact).join(', '),
           });
         } catch (e) {
-          throw new Error(
-            `Error fetching or validating metadata for notebook ${repoUrl} ${item.path} \n ${e}`
-          );
+          error = `Error fetching or validating metadata for notebook ${repoUrl} ${item.path} \n ${e}`;
         }
       }
     }
@@ -102,7 +102,7 @@ export default async function fetchNotebooks(repoUrl: string, withDate = false) 
         n.creationDate = dates[i];
         return n;
       }),
-      error: '',
+      error,
     };
   } catch (e) {
     return { notebooks: [], error: assertErrorMessage(e) };

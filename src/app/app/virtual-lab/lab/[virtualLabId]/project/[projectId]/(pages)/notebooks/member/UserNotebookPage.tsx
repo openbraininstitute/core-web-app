@@ -62,13 +62,16 @@ export default function UserNotebookPage({
   );
   const [loading, setLoading] = useDelayedLoading(false);
   const [deleteNotebookId, setDeleteNotebookId] = useState('');
+  const errorShown = useRef(false);
 
-  if (serverError)
+  if (serverError !== '' && !errorShown.current) {
     notification.error({
       message: serverError,
       key: 'user-notebook-server-error',
       placement: 'topRight',
     });
+    errorShown.current = true;
+  }
 
   const resetModal = () => {
     setOpenModal(false);
@@ -257,7 +260,7 @@ export default function UserNotebookPage({
                     } catch (e) {
                       notification.error({
                         message: assertErrorMessage(e),
-                        key: 'user-notebook-server-error',
+                        key: 'user-notebook-register-error',
                         placement: 'topRight',
                       });
                       resetModal();
