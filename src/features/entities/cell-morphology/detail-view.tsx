@@ -15,13 +15,13 @@ import { withErrorConfig } from '@/components/GenericErrorFallback';
 import createMorphologyDataAtom from '@/state/morpho-viewer';
 
 import { MorphoViewer } from '@/components/MorphoViewer';
-import Morphometrics from '@/features/entities/reconstruction-morphology/morphometrics';
+import Morphometrics from '@/features/entities/cell-morphology/morphometrics';
 import { ensureArray } from '@/utils/array';
 
-import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import { WorkspaceContext } from '@/types/common';
 
-export default function MorphologyDetailView({ detail }: { detail: IReconstructionMorphology }) {
+export default function MorphologyDetailView({ detail }: { detail: ICellMorphology }) {
   if (!detail) return null;
 
   return (
@@ -59,7 +59,7 @@ export default function MorphologyDetailView({ detail }: { detail: IReconstructi
   );
 }
 
-function MorphoViewerLoader({ resource }: { resource: IReconstructionMorphology }) {
+function MorphoViewerLoader({ resource }: { resource: ICellMorphology }) {
   const ctx = useParams<WorkspaceContext>();
 
   const morphologyDataAtom = useMemo(
@@ -94,7 +94,9 @@ function MorphoViewerLoader({ resource }: { resource: IReconstructionMorphology 
       );
     case 'hasError':
       return morphologyData.error ? (
-        <div>{(morphologyData.error as { message: string }).message}</div>
+        <div className="text-warning flex h-40 items-center justify-center">
+          Failed to load morphology viewer
+        </div>
       ) : null;
     default:
       throw Error(`Unknown state for morphologyData: "${state}"!`);

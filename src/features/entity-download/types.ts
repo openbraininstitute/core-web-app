@@ -44,7 +44,7 @@ export type MemodelJsonMetadata = {
   [key: string]: any;
 };
 
-export type ReconstructionMorphologyJsonMetadata = {
+export type CellMorphologyJsonMetadata = {
   [key: string]: any;
 };
 

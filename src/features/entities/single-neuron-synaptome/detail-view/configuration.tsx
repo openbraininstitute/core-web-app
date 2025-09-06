@@ -9,7 +9,7 @@ import {
 } from '@/entity-configuration/definitions/renderer';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
-import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
@@ -39,7 +39,7 @@ export default function Configuration({
         <div className="mb-2 text-xl font-light text-gray-400 uppercase">single neuron model</div>
         <div className="flex items-start gap-2">
           <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border">
-            {renderPreview<IReconstructionMorphology>(memodel.morphology, {
+            {renderPreview<ICellMorphology>(memodel.morphology, {
               height: 200,
               width: 200,
             })}

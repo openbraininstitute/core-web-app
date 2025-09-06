@@ -3,6 +3,7 @@ import { EntityCoreConfiguration } from '@/entity-configuration/domain';
 import type { EntityTypeValue } from '@/api/entitycore/types/entity-type';
 import type { AssetLegacyMeta } from '@/api/entitycore/types/shared/legacy';
 import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
+import { Prettify } from '@/utils/type';
 
 export type EntityCoreDataType =
   (typeof EntityCoreConfiguration)[keyof typeof EntityCoreConfiguration]['type'];
@@ -48,21 +49,6 @@ export interface Timestamps {
   creation_date: string; // ISO format
   update_date: string; // ISO format
 }
-
-type Strain = {
-  name: string;
-  taxonomy_id: string;
-  species_id: number;
-};
-
-export interface IStrain extends Strain, Timestamps, EntityCoreIdentifiable {}
-
-type Species = {
-  name: string;
-  taxonomy_id: string;
-};
-
-export interface ISpecies extends Species, Timestamps, EntityCoreIdentifiable {}
 
 interface License {
   name: string;
@@ -189,23 +175,51 @@ export interface IAsset extends AssetBase, AssetLegacyMeta {
   status: AssetStatus;
 }
 
-type Sex = 'male' | 'female' | 'unknown';
-type AgePeriod = 'prenatal' | 'postnatal' | 'unknown';
+export const Sex = {
+  Male: {
+    key: 'male',
+    label: 'Male',
+  },
+  Female: {
+    key: 'female',
+    label: 'Female',
+  },
+  Unknown: {
+    key: 'unknown',
+    label: 'Unknown',
+  },
+} as const;
 
-type SubjectBase = {
-  name: string;
-  description: string;
-  sex: Sex;
-  weight?: number | null;
-  age_value?: number | null;
-  age_min?: number | null;
-  age_max?: number | null;
-  age_period?: AgePeriod | null;
+export const SexDictionary = Object.fromEntries(
+  Object.entries(Sex).map(([name, value]) => [name, value.key])
+) as {
+  [K in keyof typeof Sex]: (typeof Sex)[K]['key'];
 };
 
-export interface ISubject extends SubjectBase {
-  species: ISpecies;
-}
+export type TSex = (typeof SexDictionary)[keyof typeof SexDictionary];
+
+export const AgePeriod = {
+  Prenatal: {
+    key: 'prenatal',
+    label: 'Prenatal',
+  },
+  Postnatal: {
+    key: 'postnatal',
+    label: 'Postnatal',
+  },
+  Unknown: {
+    key: 'unknown',
+    label: 'Unknown',
+  },
+} as const;
+
+export const AgePeriodDictionary = Object.fromEntries(
+  Object.entries(AgePeriod).map(([name, value]) => [name, value.key])
+) as {
+  [K in keyof typeof AgePeriod]: (typeof AgePeriod)[K]['key'];
+};
+
+export type TAgePeriod = (typeof AgePeriodDictionary)[keyof typeof AgePeriodDictionary];
 
 export type EntityAuthorization = {
   authorized_project_id: string;
@@ -222,18 +236,67 @@ export interface IAnnotation extends EntityCoreIdentifiable, Annotation {}
 export interface IMType extends IAnnotation {}
 export interface IEType extends IAnnotation {}
 
-// @FIXME: check this one
-// const Dimension = {
-//   dimensionless: 'dimensionless',
-//   linear_density: '1/μm',
-//   volume_density: '1/mm³',
-// } as const;
-
 export type DirectoryItem = {
   name: string;
   size: number;
   last_modified: string; // as Date
 };
+
 export type DirectoryListContent = {
   files: Record<string, DirectoryItem>;
 };
+
+type Strain = {
+  name: string;
+  taxonomy_id: string;
+  species_id: number;
+};
+
+export interface IStrain extends Strain, Timestamps, EntityCoreIdentifiable {}
+export interface NestedStrain extends Strain, EntityCoreIdentifiable {}
+
+type SpeciesBase = {
+  name: string;
+  taxonomy_id: string;
+};
+
+export interface ISpecies extends SpeciesBase, Timestamps, EntityCoreIdentifiable {}
+
+export interface NestedSpecies extends SpeciesBase, EntityCoreIdentifiable {}
+
+/** SubjectBase
+ *  Notes:
+ *  - `age_*` fields are numeric durations (e.g., seconds) to match your existing global.ts convention.
+ *  - All age fields are nullable; TS cannot enforce the cross-field validators — do that in runtime schemas if needed.
+ */
+export interface SubjectBase {
+  name: string;
+  description: string;
+  sex: TSex;
+  /** Weight in grams (must be > 0 in validation) */
+  weight: number | null;
+  /** Age value (duration) */
+  age_value: number | null;
+  /** Minimum age (duration) */
+  age_min: number | null;
+  /** Maximum age (duration) */
+  age_max: number | null;
+  /** Age period (prenatal | postnatal | unknown) */
+  age_period: TAgePeriod | null;
+}
+
+export interface NestedSubject extends SubjectBase, EntityCoreIdentifiable {
+  species: Prettify<NestedSpecies>;
+  strain: Prettify<NestedStrain> | null;
+}
+
+export type Subject = {
+  subject: NestedSubject;
+};
+
+export interface ISubject
+  extends NestedSubject,
+    Timestamps,
+    EntityCoreOwnership,
+    EntityAuthorization,
+    EntityCoreIdentifiable {}

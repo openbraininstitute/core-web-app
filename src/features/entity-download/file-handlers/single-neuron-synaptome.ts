@@ -1,5 +1,5 @@
 /* eslint-disable no-empty */
-import { getEModel, getMEModel, getReconstructionMorphology } from '@/api/entitycore/queries';
+import { getEModel, getMEModel, getCellMorphology } from '@/api/entitycore/queries';
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
 import { EntityTypeEnum } from '@/api/entitycore/types';
 import { ASSET_BASE_PATH } from '@/features/entity-download/constants';
@@ -69,7 +69,7 @@ export async function* getSingleNeuronSynaptomeFiles(entityIds: string[], ctx?: 
     } catch (error) {}
 
     // Morphologies
-    const morphology = await getReconstructionMorphology({
+    const morphology = await getCellMorphology({
       id: memodel.morphology.id,
       context: ctx,
     });

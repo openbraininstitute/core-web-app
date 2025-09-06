@@ -64,6 +64,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     defaultConstraint: 'species__name__in',
     perTypeConstraint: {
+      [DataType.ExperimentalNeuronMorphology]: 'subject__species__name__in',
       [DataType.ExperimentalElectroPhysiology]: 'subject__species__name__in',
       [DataType.ExperimentalBoutonDensity]: 'subject__species__name__in',
       [DataType.ExperimentalNeuronDensity]: 'subject__species__name__in',

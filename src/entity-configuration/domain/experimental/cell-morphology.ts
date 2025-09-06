@@ -3,31 +3,29 @@ import { EntityTypeEnum } from '@/api/entitycore/types/entity-type';
 import { DataType } from '@/constants/explore-section/list-views';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import {
-  getReconstructionMorphologies,
-  getReconstructionMorphology,
-} from '@/api/entitycore/queries/experimental/reconstruction-morphology';
+  getCellMorphologies,
+  getCellMorphology,
+} from '@/api/entitycore/queries/experimental/cell-morphology';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type {
-  IReconstructionMorphologyExpanded,
-  IReconstructionMorphology,
-} from '@/api/entitycore/types/entities/reconstruction-morphology';
+  ICellMorphologyExpanded,
+  ICellMorphology,
+} from '@/api/entitycore/types/entities/cell-morphology';
 
-export const ReconstructionMorphology: EntityCoreTypeConfig<
-  IReconstructionMorphology | IReconstructionMorphologyExpanded
-> = {
+export const CellMorphology: EntityCoreTypeConfig<ICellMorphology | ICellMorphologyExpanded> = {
   group: 'experimental',
   title: 'Morphology',
   legacyType: DataType.ExperimentalNeuronMorphology,
-  type: EntityTypeEnum.ReconstructionMorphology,
+  type: EntityTypeEnum.CellMorphology,
   slug: EntitySlug.ReconstructionMorphology,
   api: {
     config: {
       allowedFacets: true,
     },
     query: {
-      list: getReconstructionMorphologies,
-      one: getReconstructionMorphology,
+      list: getCellMorphologies,
+      one: getCellMorphology,
     },
   },
   explore: {

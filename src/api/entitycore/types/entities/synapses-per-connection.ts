@@ -7,9 +7,8 @@ import type {
   SharedFilter,
   ContributionFilter,
   BrainRegionFilter,
-  SpeciesFilter,
   EtypeFilter,
-  StainFilter,
+  SubjectFilter,
 } from '@/api/entitycore/types/shared/request';
 
 export interface IExperimentalSynapsesPerConnection extends IExperimentalDensity, EntityCoreType {
@@ -62,8 +61,7 @@ export type ExperimentalSynapsesPerConnectionFilter = Partial<
     PaginationFilter &
     ContributionFilter &
     BrainRegionFilter &
-    SpeciesFilter &
-    StainFilter &
+    SubjectFilter &
     EtypeFilter &
     PreMtypeFilter &
     PostMtypeFilter &

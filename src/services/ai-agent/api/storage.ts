@@ -1,5 +1,6 @@
 import { fetchJSON } from './util';
 import { assertString, isString } from '@/util/type-guards';
+import { log } from '@/utils/logger';
 
 export async function serviceAiAgentStorageGetFileContent({
   accessToken,
@@ -17,7 +18,8 @@ export async function serviceAiAgentStorageGetFileContent({
   });
   assertString(url, 'presigned-url');
   const resp = await fetch(url);
-  console.log(
+  log(
+    'log',
     "🚀 [storage] url, resp.headers.get('x-amz-meta-category') =",
     url,
     resp.headers.get('X-Amz-Meta-Category')

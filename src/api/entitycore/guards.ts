@@ -22,7 +22,7 @@ export function hasAssets(
 export function isReconstructionMorphology(
   entity: EntityCoreObjectTypes
 ): entity is IReconstructionMorphology {
-  return entity.type === EntityTypeEnum.ReconstructionMorphology;
+  return entity.type === EntityTypeEnum.CellMorphology;
 }
 
 export function isElectricalCellRecording(

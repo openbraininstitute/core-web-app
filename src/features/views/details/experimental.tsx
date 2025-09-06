@@ -4,7 +4,7 @@ import { notFound, useParams } from 'next/navigation';
 import { match, P } from 'ts-pattern';
 import { Suspense } from 'react';
 
-import MorphologyDetailView from '@/features/entities/reconstruction-morphology/detail-view';
+import MorphologyDetailView from '@/features/entities/cell-morphology/detail-view';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 import Summary from '@/features/details-view/summary';
 import EphysViewer from '@/features/ephys-viewer';
@@ -12,7 +12,7 @@ import EphysViewer from '@/features/ephys-viewer';
 import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
 import { DataType } from '@/constants/explore-section/list-views';
 
-import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { ExperimentalEntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -35,7 +35,7 @@ export default function DetailView({ type }: Props) {
       },
       () => (
         <Summary dataType={DataType.ExperimentalNeuronMorphology}>
-          {(detail) => <MorphologyDetailView detail={detail as IReconstructionMorphology} />}
+          {(detail) => <MorphologyDetailView detail={detail as ICellMorphology} />}
         </Summary>
       )
     )

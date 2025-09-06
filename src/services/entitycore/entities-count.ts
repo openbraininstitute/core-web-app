@@ -40,7 +40,7 @@ export const entitiesCountAtom = atomFamily(
             'experimental_synapses_per_connection',
             'experimental_neuron_density',
             'experimental_bouton_density',
-            'reconstruction_morphology',
+            'cell_morphology',
             'single_neuron_synaptome',
             'memodel',
             'emodel',
