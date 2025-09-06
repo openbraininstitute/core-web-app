@@ -1,6 +1,6 @@
 import { useSessionStorage } from '@/hooks/useSessionStorage';
 
-import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 
@@ -19,7 +19,7 @@ export const useBuildMeModelSessionState = ({
     name?: string;
     description?: string;
     brainRegion?: BrainRegionHierarchyBase;
-    mmodel?: IReconstructionMorphology;
+    mmodel?: ICellMorphology;
     emodel?: IEModel;
   }>(stateId, {
     virtualLabId,

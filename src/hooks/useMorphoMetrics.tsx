@@ -6,11 +6,11 @@ import { getViewDefinitionByLegacyType } from '@/entity-configuration/definition
 import { EmptyValue } from '@/entity-configuration/definitions/renderer';
 import { DataType } from '@/constants/explore-section/list-views';
 
-import type { IReconstructionMorphologyExpanded } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import type { ICellMorphologyExpanded } from '@/api/entitycore/types/entities/cell-morphology';
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 
 export const useMorphometrics = (
-  morphology: IReconstructionMorphologyExpanded,
+  morphology: ICellMorphologyExpanded,
   showLabel: boolean = false
 ) => {
   const groupedCardFields = groupBy(

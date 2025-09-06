@@ -1,9 +1,9 @@
 /* eslint-disable no-empty */
-import { getReconstructionMorphology } from '@/api/entitycore/queries';
+import { getCellMorphology } from '@/api/entitycore/queries';
 import { EntityTypeEnum } from '@/api/entitycore/types';
 import { ASSET_BASE_PATH } from '@/features/entity-download/constants';
 import { Metadata } from '@/features/entity-download/metadata';
-import { ReconstructionMorphologyJsonMetadata } from '@/features/entity-download/types';
+import { CellMorphologyJsonMetadata } from '@/features/entity-download/types';
 import {
   createAssetFileEntry,
   createTemplateFileEntry,
@@ -11,18 +11,15 @@ import {
 } from '@/features/entity-download/utils';
 import { WorkspaceContext } from '@/types/common';
 
-export async function* getReconstructionMorphologyFiles(
-  entityIds: string[],
-  ctx?: WorkspaceContext
-) {
-  const metadata = new Metadata<ReconstructionMorphologyJsonMetadata>();
+export async function* getCellMorphologyFiles(entityIds: string[], ctx?: WorkspaceContext) {
+  const metadata = new Metadata<CellMorphologyJsonMetadata>();
 
   try {
-    yield await createTemplateFileEntry(EntityTypeEnum.ReconstructionMorphology);
+    yield await createTemplateFileEntry(EntityTypeEnum.CellMorphology);
   } catch {}
 
   for (const entityId of entityIds) {
-    const morphology = await getReconstructionMorphology({
+    const morphology = await getCellMorphology({
       id: entityId,
       context: ctx,
     });

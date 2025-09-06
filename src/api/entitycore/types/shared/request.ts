@@ -128,3 +128,28 @@ export interface IEntityFilter
 export type EntityCoreTypeFilter = {
   type: EntityTypeValue;
 };
+
+export type SubjectFilter = {
+  // Subject identifiers and naming
+  subject__id: string | null;
+  subject__id__in: string | Array<string> | null;
+  subject__name: string | null;
+  subject__name__ilike: string | null;
+  subject__name__in: string | null;
+
+  // Subject age
+  subject__age_value: number | null;
+
+  // Nested species filter (prefixed)
+  subject__species__id: string | null;
+  subject__species_id__in: number | null;
+  subject__species__name: string | null;
+  subject__species__name__in: string | null;
+  subject__species__name__ilike: string | null;
+
+  // Nested strain filter (prefixed)
+  subject__strain__id: string | null;
+  subject__strain__name: string | null;
+  subject__strain__name__in: string | null;
+  subject__strain__name__ilike: string | null;
+};

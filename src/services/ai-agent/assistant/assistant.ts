@@ -14,6 +14,7 @@ import { useAccessToken } from '@/hooks/useAccessToken';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 import { useAppNotification } from '@/components/notification';
 import { logError } from '@/util/logger';
+import { log } from '@/utils/logger';
 
 class AiAssistantClass {
   public readonly threadId = new Signal<string | undefined>(undefined);
@@ -55,7 +56,7 @@ class AiAssistantClass {
 
   readonly createThread = async () => {
     const threadId = await this.threadmanager.createThread();
-    console.log('Create new AI thread:', threadId);
+    log('log', 'Create new AI thread:', threadId);
     this.historyManager.reset();
     return threadId;
   };

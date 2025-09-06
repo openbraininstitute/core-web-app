@@ -8,6 +8,7 @@ import { useAsyncMemo } from '@/hooks/async-memo';
 import { serviceAiAgentStorageGetFileContent } from '@/services/ai-agent/api/storage';
 import { logError } from '@/util/logger';
 import { isString } from '@/util/type-guards';
+import { log } from '@/utils/logger';
 
 import styles from './tool-thumbnail-generation-morphology-getone.module.css';
 
@@ -48,7 +49,8 @@ function usePlotFile(fileIdentifier: string) {
   const accessToken = useAccessToken() ?? 'NO-TOKEN';
   const file = useAsyncMemo(fileIdentifier, async () => {
     try {
-      console.log(
+      log(
+        'log',
         '🚀 [tool-thumbnail-generation-morphology-getone] fileIdentifier =',
         fileIdentifier
       ); // @FIXME: Remove this line written on 2025-09-02 at 11:06
@@ -56,7 +58,7 @@ function usePlotFile(fileIdentifier: string) {
         accessToken,
         fileIdentifier,
       });
-      console.log('🚀 [tool-thumbnail-generation-morphology-getone] data =', data); // @FIXME: Remove this line written on 2025-09-02 at 11:06
+      log('log', '🚀 [tool-thumbnail-generation-morphology-getone] data =', data); // @FIXME: Remove this line written on 2025-09-02 at 11:06
       return data;
     } catch (ex) {
       logError(`Unable to retrieve file "${fileIdentifier}":`, ex);

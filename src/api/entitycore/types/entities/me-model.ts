@@ -1,7 +1,7 @@
 import z from 'zod';
 import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 
-import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type {
   EntityCoreIdentifiable,
@@ -56,7 +56,7 @@ export interface IMEModel
   contributions?: Array<IContributor> | null;
   mtypes: Array<IMType> | null;
   etypes: Array<IEType> | null;
-  morphology: IReconstructionMorphology;
+  morphology: ICellMorphology;
   emodel: IEModel;
 }
 

@@ -1,4 +1,4 @@
-import { ReconstructionMorphology } from '@/entity-configuration/domain/experimental/reconstruction-morphology';
+import { CellMorphology } from '@/entity-configuration/domain/experimental/cell-morphology';
 import { ElectricalCellRecording } from '@/entity-configuration/domain/experimental/electrical-cell-recording';
 import { SynapsePerConnection } from '@/entity-configuration/domain/experimental/synapse-per-connection';
 import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
@@ -9,7 +9,7 @@ import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
 
 export const ExperimentalEntitiesTileTypes = {
-  ReconstructionMorphology,
+  ReconstructionMorphology: CellMorphology,
   ElectricalCellRecording,
   NeuronDensity,
   BoutonDensity,

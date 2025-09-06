@@ -201,7 +201,7 @@ export default function Configure({ ctx, searchParams }: Props) {
       description: sessionValue.description ?? '',
       emodel_id: sessionValue.emodel?.id,
       morphology_id: sessionValue.mmodel?.id,
-      species_id: sessionValue.mmodel?.species.id,
+      species_id: sessionValue.mmodel?.subject.species.id,
       brain_region_id: sessionValue.mmodel?.brain_region.id ?? sessionValue.brainRegion?.id,
       strain_id: sessionValue.mmodel?.strain?.id ?? null,
       validation_status: ValidationStatus.Initialized,

@@ -5,10 +5,10 @@ import type {
   SharedFilter,
   ContributionFilter,
   BrainRegionFilter,
-  SpeciesFilter,
   StainFilter,
   EtypeFilter,
   MtypeFilter,
+  SubjectFilter,
 } from '@/api/entitycore/types/shared/request';
 import type { IExperimentalDensity } from '@/api/entitycore/types/shared/density';
 
@@ -23,7 +23,7 @@ export type ExperimentalNeuronDensityFilter = Partial<
     PaginationFilter &
     ContributionFilter &
     BrainRegionFilter &
-    SpeciesFilter &
+    SubjectFilter &
     StainFilter &
     EtypeFilter &
     MtypeFilter

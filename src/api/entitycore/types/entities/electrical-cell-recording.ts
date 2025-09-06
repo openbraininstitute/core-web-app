@@ -80,13 +80,16 @@ export type ElectricalCellRecordingFilter = Partial<
     ContributionFilter &
     BrainRegionFilter &
     PaginationFilter &
-    SharedFilter & {
-      recording_type: TRecordingTypeDictionary | null;
-      recording_type__in: Array<TRecordingTypeDictionary> | null;
-      recording_origin: TElectricalRecordingOriginDictionary | null;
-      recording_origin__in: Array<TElectricalRecordingOriginDictionary> | null;
-    }
+    SharedFilter &
+    IRecordingFilter
 >;
+
+interface IRecordingFilter {
+  recording_type: TRecordingTypeDictionary | null;
+  recording_type__in: Array<TRecordingTypeDictionary> | null;
+  recording_origin: TElectricalRecordingOriginDictionary | null;
+  recording_origin__in: Array<TElectricalRecordingOriginDictionary> | null;
+}
 
 interface IElectricalCellRecordingBase extends EntityCoreIdentifiable, EntityCoreOwnership {
   name: string;
