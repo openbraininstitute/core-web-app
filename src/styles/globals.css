@@ -119,7 +119,7 @@
   --shadow-super-shadow: 0px 24px 60px 0px rgba(0, 0, 0, 0.4);
   --shadow-skmp-s:
     -16px -16px 20px 0 rgba(255, 255, 255, 0.82), 8px 12px 24px 0 rgba(0, 0, 0, 0.06);
-
+  --shadow-bnb: rgba(0, 0, 0, 0.12) 0px 6px 16px;
   --ease-in-expo: cubic-bezier(0.95, 0.05, 0.795, 0.035);
   --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
   --ease-out-back: cubic-bezier(0.68, -0.55, 0.265, 1.55);

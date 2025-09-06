@@ -1,7 +1,10 @@
 import { atomFamily } from 'jotai/utils';
 import { atom } from 'jotai';
 
+import escapeRegExp from 'lodash/escapeRegExp';
+import isEmpty from 'lodash/isEmpty';
 import toPairs from 'lodash/toPairs';
+import reduce from 'lodash/reduce';
 import values from 'lodash/values';
 import sumBy from 'lodash/sumBy';
 import map from 'lodash/map';
@@ -56,10 +59,12 @@ export function buildNetworkConfigItem({
   item,
   selector,
   directory,
+  manifest,
 }: {
   item: SonataCircuitNetworkEdgeConfigItem | SonataCircuitNetworkNodeConfigItem;
   selector: 'edges_file' | 'nodes_file';
   directory: DirectoryListContent['files'];
+  manifest?: Record<string, string>;
 }) {
   const path = get(item, selector, EmptyValue);
   const title = path.split('/').pop();
@@ -69,29 +74,36 @@ export function buildNetworkConfigItem({
       type: value.type,
     };
   });
-
   const mimeType = get(item, selector, EmptyValue).split('/').pop()?.split('.')?.pop();
-  return {
+
+  const result = {
     type: selector,
     asset: {
-      path: getAssetPath(path),
-      ...get(directory, getAssetPath(path), { name: null, size: null, last_modified: null }),
+      path: getAssetPath(path, manifest),
+      ...get(directory, getAssetPath(path, manifest), {
+        name: null,
+        size: null,
+        last_modified: null,
+      }),
     },
     title,
     mimeType,
     subItems,
   };
+
+  return result;
 }
 
 export function buildNetworksConfig(
   networks: SonataCircuitConfigNetworks,
-  directory: DirectoryListContent['files']
+  directory: DirectoryListContent['files'],
+  manifest?: Record<string, string>
 ) {
   const edges = networks.edges.map((o) =>
-    buildNetworkConfigItem({ item: o, selector: 'edges_file', directory })
+    buildNetworkConfigItem({ item: o, selector: 'edges_file', directory, manifest })
   );
   const nodes = networks.nodes.map((o) =>
-    buildNetworkConfigItem({ item: o, selector: 'nodes_file', directory })
+    buildNetworkConfigItem({ item: o, selector: 'nodes_file', directory, manifest })
   );
 
   return {
@@ -110,9 +122,44 @@ export function buildNetworksConfig(
   };
 }
 
-export function getAssetPath(path: string): string {
-  const prefix = '$BASE_DIR/';
-  return path.startsWith(prefix) ? path.slice(prefix.length) : path;
+export function getAssetPath(path: string, manifest?: Record<string, string>): string {
+  if (!manifest || isEmpty(manifest)) {
+    return sanitizePath(path);
+  }
+
+  let resolvedPath = path;
+  const maxIterations = 50; // Prevent infinite loops
+  let iteration = 0;
+
+  // Keep replacing variables until no more variables exist or max iterations reached
+  while (resolvedPath.includes('$') && iteration < maxIterations) {
+    const previousPath = resolvedPath;
+
+    // Use lodash's reduce for efficient variable replacement
+    resolvedPath = reduce(
+      manifest,
+      (currentPath, value, key) => {
+        // Use global regex replace for all occurrences
+        return currentPath.replace(new RegExp(escapeRegExp(key), 'g'), value);
+      },
+      resolvedPath
+    );
+
+    // Break if no changes were made (no more replacements possible)
+    if (previousPath === resolvedPath) {
+      break;
+    }
+
+    iteration++;
+  }
+
+  return sanitizePath(resolvedPath);
+}
+
+function sanitizePath(path: string): string {
+  let sanitized = path.replace(/^\.\//, ''); // Remove leading ./
+  sanitized = sanitized.replace(/^\/+/, ''); // Remove leading slashes
+  return sanitized;
 }
 
 export function countConnectivityPaths(
