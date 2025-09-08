@@ -11,6 +11,7 @@ import {
 import DetailMenu from '@/ui/segments/explore/detail-menu';
 import ActionMenu from '@/ui/segments/action-menu';
 import type { WorkspaceContext, AwaitedType } from '@/types/common';
+import Close from '@/ui/molecules/close';
 
 interface Params {
   id: string;
@@ -88,7 +89,7 @@ export default async function Layout({
         </div>
         <ActionMenu entity={entity} type={type} ctx={{ virtualLabId, projectId }} />
       </div>
-      <div className="grow basis-4/5">
+      <div className="relative grow basis-4/5">
         <div className="h-full overflow-y-auto p-10">
           <div className="h-[9%]">
             <div className="text-neutral-4 uppercase">Name</div>
@@ -96,6 +97,7 @@ export default async function Layout({
           </div>
           <div className="h-[91%]">{children}</div>
         </div>
+        <Close />
       </div>
     </div>
   );
