@@ -127,33 +127,27 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.License },
     ],
     summaryViewFields: [
-      { field: EntityCoreFields.BrainRegion, className: 'col-span-1 col-start-1' },
-      { field: EntityCoreFields.CircuitRootCircuit, className: 'col-span-1 col-start-1' },
-      { field: EntityCoreFields.CircuitScale, className: 'col-span-1 col-start-1' },
-      { field: EntityCoreFields.License, className: 'col-span-1 col-start-1' },
+      { field: EntityCoreFields.BrainRegion },
+      { field: EntityCoreFields.CircuitRootCircuit },
+      { field: EntityCoreFields.CircuitScale },
+      { field: EntityCoreFields.License },
       {
         field: EntityCoreFields.CircuitNumberNeurons,
-        className: 'col-start-2 row-start-1',
       },
       {
         field: EntityCoreFields.CircuitNumberConnections,
-        className: 'col-start-2 row-start-2',
       },
       {
         field: EntityCoreFields.CircuitNumberSynapses,
-        className: 'col-start-2 row-start-3',
       },
       {
         field: EntityCoreFields.CircuitPublishedIn,
-        className: 'col-start-3 row-start-1',
       },
       {
         field: EntityCoreFields.CircuitExperimentDate,
-        className: 'col-start-3 row-start-2',
       },
       {
         field: EntityCoreFields.CircuitContactEmail,
-        className: 'col-start-3 row-start-3',
       },
     ],
   },
