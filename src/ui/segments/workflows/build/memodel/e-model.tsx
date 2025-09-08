@@ -6,6 +6,7 @@ import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { useMemo } from 'react';
 import { Image } from 'antd';
+import kebabCase from 'lodash/kebabCase';
 
 import type { HTMLAttributes, TdHTMLAttributes } from 'react';
 
@@ -26,7 +27,7 @@ import {
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
-import type { IEModel } from '@/api/entitycore/types';
+import { EntityTypeDict, type IEModel } from '@/api/entitycore/types';
 
 type Props = {
   sessionId: string;
@@ -73,7 +74,7 @@ export function EModel({ sessionId }: Props) {
         selectionType: 'radio',
         onCellClick: (_, record) => {
           navigate(
-            `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${record.id}`
+            `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${kebabCase(EntityTypeDict.Emodel)}/${record.id}/overview`
           );
         },
         onRowsSelected: (rows) => {

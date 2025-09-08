@@ -25,6 +25,7 @@ import {
   AmperageStateAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { cn } from '@/utils/css-class';
+import { log } from '@/utils/logger';
 
 import type {
   AmperageActionType,
@@ -113,7 +114,11 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
 
   const dispatch = useCallback(
     (action: AmperageActionType) => {
-      setAmperageState((currentState) => rangeReducer(currentState, action));
+      try {
+        setAmperageState((currentState) => rangeReducer(currentState, action));
+      } catch (error) {
+        log('error', 'Error in amperage reducer', error);
+      }
     },
     [setAmperageState]
   );
@@ -180,10 +185,6 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
     <div className="h-full w-full" id="amperage-settings" data-testid="amperage-settings">
       <div className="mt-8 mb-3 flex items-center justify-between text-left text-base">
         <span className="text-gray-400 uppercase">Amperage</span>
-        {amperageState.error && (
-          <i className="text-destructive ml-2 text-base font-light">{amperageState.error}</i>
-        )}
-
         {sscState?.length ? (
           <div className="flex">
             <Tooltip>
@@ -245,7 +246,17 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
                 aria-label="start"
                 suffix="[nA]"
                 onBlur={() => dispatch({ type: 'checkConsistency', payload: null })}
+                status={
+                  amperageState.error &&
+                  amperageState.error.includes('Start should be less than end')
+                    ? 'error'
+                    : ''
+                }
               />
+              {amperageState.error &&
+                amperageState.error.includes('Start should be less than end') && (
+                  <div className="mt-1 text-xs text-red-500">{amperageState.error}</div>
+                )}
             </div>
             <div className="w-full flex-1/7">
               {label('line', false, 'text-transparent')}
@@ -264,7 +275,17 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
                 suffix="[nA]"
                 className="[&_input]:text-primary-9! [&_.ant-input-suffix]:text-neutral-2! w-full font-bold"
                 onBlur={() => dispatch({ type: 'checkConsistency', payload: null })}
+                status={
+                  amperageState.error &&
+                  amperageState.error.includes('End should be greater than start')
+                    ? 'error'
+                    : ''
+                }
               />
+              {amperageState.error &&
+                amperageState.error.includes('End should be greater than start') && (
+                  <div className="mt-1 text-xs text-red-500">{amperageState.error}</div>
+                )}
             </div>
           </div>
           <div className="flex w-full flex-col items-start justify-start">
@@ -279,7 +300,13 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
               value={amperageState.stepValue}
               onChange={(newVal) => dispatch({ type: 'stepValue', payload: newVal })}
               onBlur={() => dispatch({ type: 'checkConsistency', payload: null })}
+              status={
+                amperageState.error && amperageState.error.includes('maximum of') ? 'error' : ''
+              }
             />
+            {amperageState.error && amperageState.error.includes('maximum of') && (
+              <div className="mt-1 text-xs text-red-500">{amperageState.error}</div>
+            )}
           </div>
         </div>
       )}

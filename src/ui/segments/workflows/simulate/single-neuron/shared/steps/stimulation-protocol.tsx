@@ -244,7 +244,10 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
                   value={value}
                   defaultValue={value}
                   suffix="ms"
-                  className="text-primary-9 [&_.ant-input-suffix]:text-neutral-3 cursor-none border-none font-bold shadow-none outline-0 select-none focus-within:border-none focus-within:shadow-none hover:border-none"
+                  className={cn(
+                    'text-primary-9 [&_.ant-input-suffix]:text-neutral-3 cursor-none border-none font-bold shadow-none outline-0 select-none focus-within:border-none focus-within:shadow-none hover:border-none',
+                    '[&_input]:cursor-default [&_input]:select-none'
+                  )}
                 />
               </div>
             ))}

@@ -51,6 +51,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
   section = WorkspaceSection.Data,
 }: Props) {
   const [record, setRecord] = useState<T | null>(null);
+
   useSelectEntityClickEvent<T>((event) => {
     setRecord(event.detail.data);
   });
