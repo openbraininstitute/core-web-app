@@ -2,6 +2,7 @@ import React, { useState, ReactNode, ReactElement } from 'react';
 import { Button } from './button';
 
 type TabProps = {
+  visible?: boolean; //eslint-disable-line
   label: string; //eslint-disable-line
   children: ReactNode;
 };
@@ -16,7 +17,9 @@ type TabsProps = {
 };
 
 export default function Tabs({ children, defaultIndex = 0 }: TabsProps) {
-  const tabs = React.Children.toArray(children) as ReactElement<TabProps>[];
+  const tabs = React.Children.toArray(children).filter((t) => {
+    return Boolean((t as ReactElement<TabProps>).props.visible);
+  }) as ReactElement<TabProps>[];
 
   const [activeIndex, setActiveIndex] = useState(defaultIndex);
 
