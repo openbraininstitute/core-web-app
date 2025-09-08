@@ -65,7 +65,8 @@ export async function createVirtualLab({ ...lab }: VirtualLabPayload): Promise<V
   });
 
   if (!response.ok) {
-    throw new Error(`creating virtual lab failed`, { cause: await response.json() });
+    const res = await response.json();
+    throw new Error(`creating virtual lab failed`, { cause: res });
   }
 
   const result: VirtualLabResponse = await response.json();

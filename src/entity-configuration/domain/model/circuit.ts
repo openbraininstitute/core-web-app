@@ -18,11 +18,13 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
       allowedFacets: true,
     },
     query: {
-      list: (...params) =>
-        getCircuits({
+      list: (...params) => {
+        return getCircuits({
           ...params,
+          withFacets: params[0].withFacets,
           filters: { ...params[0].filters },
-        }),
+        });
+      },
       one: getCircuit,
     },
   },

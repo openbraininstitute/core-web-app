@@ -178,7 +178,7 @@ export function BrainRegionDropdown({ dataKey }: { dataKey: string }) {
                       aria-label={label}
                       onClick={() => onSelect({ label, value: v, data })}
                       className={cn(
-                        'text-primary-9 hover:bg-neutral-1 flex h-full w-full cursor-pointer items-center justify-start px-3 text-left',
+                        'text-primary-9 hover:bg-background flex h-full w-full cursor-pointer items-center justify-start px-3 text-left',
                         { 'text-base': breakpoint === 'l' },
                         { 'text-lg': breakpoint === 'xl' }
                       )}

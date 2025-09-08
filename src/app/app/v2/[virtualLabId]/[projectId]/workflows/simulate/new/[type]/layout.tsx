@@ -16,7 +16,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   });
 
   return (
-    <div className="bg-neutral-1 border-neutral-2 mx-2 h-full max-h-[calc(100vh-6rem)] w-[calc(100%-10px)] overflow-hidden rounded-2xl border">
+    <div className="bg-background border-neutral-2 mx-2 h-full max-h-[calc(100vh-6rem)] w-[calc(100%-10px)] overflow-hidden rounded-2xl border">
       <SimulateWorkflowsBreadcrumb />
       <motion.div
         id="workflow-new-inner-layout"

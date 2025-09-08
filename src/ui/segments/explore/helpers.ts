@@ -16,14 +16,13 @@ import { NeuronDensity } from '@/entity-configuration/domain/experimental/neuron
 import { BoutonDensity } from '@/entity-configuration/domain/experimental/bouton-density';
 import { getEntitiesCount } from '@/api/entitycore/queries/general/entity';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
+import { Circuit } from '@/entity-configuration/domain/model/circuit';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
 import { WorkspaceScope } from '@/constants';
 import { env } from '@/env';
 
 import type { WorkspaceContext } from '@/types/common';
 import type { TWorkspaceScope } from '@/constants';
-
-// import { Circuit } from '@/entity-configuration/domain/model/circuit';
 
 export const ExperimentalEntitiesTileTypes = {
   ReconstructionMorphology,
@@ -37,6 +36,7 @@ export const ModelEntitiesTileTypes = {
   SingleNeuronSynaptome,
   Emodel,
   MEmodel,
+  Circuit,
 } as const;
 
 export const SimulationEntitiesTileTypes = {
@@ -66,6 +66,7 @@ export function getAllEntitiesCount({
       'single_neuron_synaptome',
       'memodel',
       'emodel',
+      'circuit',
     ],
     brainRegion: {
       within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,

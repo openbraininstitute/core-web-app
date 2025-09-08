@@ -6,11 +6,9 @@ import { ComponentProps } from 'react';
 import filter from 'lodash/filter';
 import Link from 'next/link';
 
-import { MetricsSkeleton } from '@/ui/segments/project/metrics/metrics-skeleton';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Metrics } from '@/ui/segments/project/metrics/metrics';
 import { getActiveSection } from '@/utils/get-section';
 import { useUserRole } from '@/hooks/use-user-role';
 import { Button } from '@/ui/molecules/button';
@@ -39,11 +37,6 @@ const links = [
     url: 'credits',
     requireRole: true,
   },
-  //   {
-  //     key: 'Showcases',
-  //     title: 'Showcases',
-  //     url: 'showcases',
-  //   },
 ];
 
 export function LeftMenu({ className }: Props) {
@@ -84,7 +77,7 @@ export function LeftMenu({ className }: Props) {
           </Button>
         ))}
       </div>
-      <Metrics
+      {/* <Metrics
         {...{
           virtualLabId,
           projectId,
@@ -98,7 +91,7 @@ export function LeftMenu({ className }: Props) {
             <MetricsSkeleton cls={{ body: 'flex flex-col gap-2', container: 'mt-10' }} />
           ),
         }}
-      />
+      /> */}
     </div>
   );
 }

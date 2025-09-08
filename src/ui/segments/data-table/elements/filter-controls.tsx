@@ -79,16 +79,6 @@ export function FilterControls({
               >
                 Filters
               </span>
-              {/* <span className="text-neutral-4 group-hover:text-primary-8 text-[9px] leading-3 font-light">
-                {activeColumnsLength ? (
-                  <>
-                    {activeColumnsLength} active{' '}
-                    {activeColumnsLength === 1 ? ' column' : ' columns'}
-                  </>
-                ) : (
-                  <Spin />
-                )}
-              </span> */}
             </div>
           </div>
         </FilterBtn>

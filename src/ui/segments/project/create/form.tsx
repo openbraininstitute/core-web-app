@@ -15,11 +15,12 @@ import {
 
 import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager/event';
 import { checkProjectExists, createProject } from '@/api/virtual-lab-svc/queries/project';
+// import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
 import { useAppNotification } from '@/components/notification';
 import { ProjectPayload } from '@/api/virtual-lab-svc/types';
 import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
@@ -30,6 +31,11 @@ export function CreationForm() {
 
   const { push: navigate } = useRouter();
   const [form] = Form.useForm<ProjectPayload & { virtual_lab_id: string }>();
+
+  // const mutateRecentWorkspace = useMutation({
+  //   mutationFn: ({ vlabId, prjId }: { vlabId: string; prjId: string }) =>
+  //     setUserRecentWorkspace({ workspace: { virtualLabId: vlabId, projectId: prjId } }),
+  // });
 
   const { isPending, mutateAsync } = useMutation({
     mutationKey: [virtualLabId, 'create-project'],
@@ -42,7 +48,8 @@ export function CreationForm() {
         });
       }
     },
-    onSuccess(_d, variables) {
+    onSuccess(data, variables) {
+      // mutateRecentWorkspace.mutate({ vlabId: virtualLabId, prjId: data.data?.project.id! });
       notifySuccess({
         message: `Your Project ${variables.name} has been created successfully and is now ready to use.`,
         placement: 'topRight',

@@ -19,9 +19,9 @@ function SkeletonItem({
       className="flex w-full items-center justify-between"
       style={{ paddingLeft: `${paddingLeft}px` }}
     >
-      <Skeleton className="bg-neutral-1 h-3 w-3/5" style={{ width }} />
+      <Skeleton className="bg-background h-3 w-3/5" style={{ width }} />
       <div className="flex items-center justify-center gap-1">
-        <Skeleton className="bg-neutral-1 h-3 w-7" />
+        <Skeleton className="bg-background h-3 w-7" />
         <CaretRightFilled
           size={14}
           className={cn('text-neutral-1 text-base', {
@@ -38,16 +38,16 @@ export function CellCompositionSkeleton() {
     <div className="mx-auto w-full rounded-lg bg-transparent text-white">
       <div className="mb-6 flex flex-col items-center justify-between gap-4">
         <div className="flex w-full items-center justify-between gap-4">
-          <Skeleton className="bg-neutral-1 h-3 w-3/5" />
-          <Skeleton className="bg-neutral-1 h-3 w-1/5" />
+          <Skeleton className="bg-background h-3 w-3/5" />
+          <Skeleton className="bg-background h-3 w-1/5" />
         </div>
         <div className="flex w-full items-center justify-between gap-4">
-          <Skeleton className="bg-neutral-1 h-3 w-2/5 rounded-full" />
-          <Skeleton className="bg-neutral-1 h-3 w-2/5" />
+          <Skeleton className="bg-background h-3 w-2/5 rounded-full" />
+          <Skeleton className="bg-background h-3 w-2/5" />
         </div>
       </div>
       <div className="border-primary-7 w-full rounded-lg border p-4">
-        <Skeleton className="bg-neutral-1 mb-4 h-2 w-2/5" />
+        <Skeleton className="bg-background mb-4 h-2 w-2/5" />
 
         <div className="flex w-full flex-col items-center gap-3">
           <SkeletonItem width="75%" depth={0} />

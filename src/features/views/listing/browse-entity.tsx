@@ -2,10 +2,11 @@
 
 'use client';
 
-import { ReactElement, useState, type ComponentProps } from 'react';
+import { ReactElement, useEffect, useState, type ComponentProps } from 'react';
 import { parseAsString, Parser, useQueryState } from 'nuqs';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { WarningOutlined } from '@ant-design/icons';
+import { RESET } from 'jotai/utils';
 import compact from 'lodash/compact';
 import dynamic from 'next/dynamic';
 import get from 'lodash/get';
@@ -19,6 +20,7 @@ import { GenericError } from '@/ui/molecules/generic-error';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   coreActiveColumnsAtom,
+  coreFiltersAtom,
   corePageNumberAtom,
   coreSortStateAtom,
 } from '@/ui/segments/data-table/elements/context';
@@ -58,7 +60,7 @@ type Props = {
 export function BrowseEntityScope({
   id,
   classNames,
-  section = WorkspaceSection.Explore,
+  section = WorkspaceSection.Data,
   requireBrainRegion = true,
   requireMiniDetailView = true,
   defaultBrainRegion,
@@ -137,6 +139,14 @@ export function BrowseEntityScope({
     updateDisplayMiniView(event.detail.display);
   });
 
+  const resetFilterOnExit = useSetAtom(coreFiltersAtom({ dataType, key: dataKey }));
+
+  useEffect(() => {
+    return () => {
+      resetFilterOnExit(RESET);
+    };
+  }, [resetFilterOnExit]);
+
   if (error) {
     log('error', error);
     return (
@@ -180,8 +190,8 @@ export function BrowseEntityScope({
             }}
             cls={{
               table: cn(
-                '[&_.ant-table]:bg-neutral-1! [&_.ant-table-header_th]:bg-neutral-1!',
-                '[&_.ant-table-placeholder]:bg-neutral-1! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-neutral-1!'
+                '[&_.ant-table]:bg-background! [&_.ant-table-header_th]:bg-background!',
+                '[&_.ant-table-placeholder]:bg-background! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-background!'
               ),
             }}
             {...mainTableProps}

@@ -122,7 +122,7 @@ export function ProjectActivities() {
                   className={cn(
                     '[&_.ant-table]:bg-neutral-1! [&_.ant-table-thead_th]:bg-neutral-1!',
                     '[&_.ant-table-thead_th]:text-neutral-4!',
-                    '[&_.ant-table-placeholder]:bg-neutral-1!'
+                    '[&_.ant-table-placeholder]:bg-background!'
                   )}
                   loading={isLoading}
                   dataSource={data?.data}

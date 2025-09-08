@@ -1,7 +1,7 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { Form } from 'antd';
 
 import countries from '../../../../../public/static/country';
@@ -26,8 +26,7 @@ export function Profile({ data }: ProfileProps) {
   const [, setValid] = useState(validate(initialValues));
   const handleFieldsChange = useFieldsChangeHandler(setValid);
   const [form] = Form.useForm<UserProfileResponse>();
-  const [pending, startTransition] = useTransition();
-  const onSubmit = useSubmitCallback(startTransition, errorNotify, successNotify);
+  const { mutateAsync, isPending } = useSubmitCallback(errorNotify, successNotify);
 
   return (
     <div
@@ -41,8 +40,8 @@ export function Profile({ data }: ProfileProps) {
           layout="vertical"
           className="profile-form"
           initialValues={initialValues}
-          disabled={pending}
-          onFinish={onSubmit}
+          disabled={isPending}
+          onFinish={mutateAsync}
           onInvalid={() => setValid(false)}
           scrollToFirstError
           onFieldsChange={handleFieldsChange}
@@ -143,11 +142,11 @@ export function Profile({ data }: ProfileProps) {
                 'shadow-[8px_12px_24px_0px_#00000099]',
                 'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
               )}
-              disabled={pending}
+              disabled={isPending}
             >
               <div className="flex items-center gap-2 px-6">
                 Update
-                {pending && <LoadingOutlined spin />}
+                {isPending && <LoadingOutlined spin />}
               </div>
             </Button>
           </div>

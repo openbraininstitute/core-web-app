@@ -1,5 +1,6 @@
 import type { WorkspaceContext } from '@/types/common';
 import type { TWorkspaceScope } from '@/constants';
+import { TDerivationType } from '@/api/entitycore/types/entities/derivation';
 
 const prefix = 'explore-data';
 
@@ -64,5 +65,27 @@ export const keyBuilder = {
   }: WorkspaceContext & { memodelId: string; amplitudes: string; protocol: string }) => [
     `${prefix}-stimuli-protocol-plot-data`,
     { virtualLabId, projectId, memodelId, amplitudes, protocol },
+  ],
+  circuitsByDerivationTree: ({
+    virtualLabId,
+    projectId,
+    derivationType,
+  }: WorkspaceContext & { derivationType: TDerivationType }) => [
+    `${prefix}-circuit-derivation`,
+    { virtualLabId, projectId, derivationType },
+  ],
+  fullCircuitHierarchy: ({ virtualLabId, projectId }: WorkspaceContext) => [
+    `${prefix}-full-circuit-hierarchy`,
+    { virtualLabId, projectId },
+  ],
+  manyCircuits: ({
+    virtualLabId,
+    projectId,
+    page,
+    page_size,
+    ...props
+  }: WorkspaceContext & { page: number; page_size: number } & Record<string, any>) => [
+    `${prefix}-many-circuits`,
+    { virtualLabId, projectId, page, page_size, ...props },
   ],
 };

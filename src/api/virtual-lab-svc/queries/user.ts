@@ -1,15 +1,17 @@
+import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
+import { virtualLabApi } from '@/config';
 import { getSession } from '@/authFetch';
 
-import { virtualLabApi } from '@/config';
-import {
+import type {
   UpdateUserProfileRequest,
   UserProfileResponse,
+  VlmRecentWorkspace,
   VlmUserGroupsResponse,
   VlmUserProfile,
 } from '@/api/virtual-lab-svc/queries/types';
+import type { WorkspaceContext } from '@/types/common';
 
 const BASE_URL = `${virtualLabApi.url}/users`;
-// const BASE_URL = 'http://localhost:8000';
 
 /**
  * get the profile information for the authenticated user
@@ -92,4 +94,43 @@ export const getUserGroups = async (): Promise<VlmUserGroupsResponse> => {
   }
 
   return await response.json();
+};
+
+/**
+ * Fetches the current user's most recently used workspace preference
+ *
+ * @returns Promise<VlmGetRecentWorkspace> A promise that resolves with the recent workspace data for the current user.
+ * @throws Will propagate errors thrown while creating the API client or performing the HTTP request.
+ */
+export const getUserRecentWorkspace = async () => {
+  const api = await virtualLabRootApi();
+  return await api.get<VlmRecentWorkspace>(`/users/preferences/recent-workspace`);
+};
+
+/**
+ * Sets the current user's most recently used workspace preference.
+ *
+ * @param {Object} params - The parameters object.
+ * @param {WorkspaceContext} params.workspace - The workspace context containing virtualLabId and projectId.
+ * @returns {Promise<VlmRecentWorkspace>} A promise that resolves with the updated recent workspace data for the current user.
+ * @throws Will propagate errors thrown while creating the API client or performing the HTTP request.
+ */
+export const setUserRecentWorkspace = async ({
+  workspace,
+}: {
+  workspace: WorkspaceContext;
+}): Promise<VlmRecentWorkspace> => {
+  const api = await virtualLabRootApi();
+  return await api.post<VlmRecentWorkspace>(`/users/preferences/recent-workspace`, {
+    headers: {
+      'Content-Type': 'application/json',
+      accept: 'application/json',
+    },
+    body: {
+      workspace: {
+        virtual_lab_id: workspace.virtualLabId,
+        project_id: workspace.projectId,
+      },
+    },
+  });
 };
