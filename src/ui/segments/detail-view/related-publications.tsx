@@ -1,8 +1,7 @@
 'use client';
 
 import { CloseCircleTwoTone, LoadingOutlined } from '@ant-design/icons';
-import { Collapse, Empty, List } from 'antd';
-import type { CollapseProps } from 'antd';
+import { Empty, List } from 'antd';
 import { useEffect, useState } from 'react';
 import { notFound, useParams } from 'next/navigation';
 import type { EntityTypeValue } from '@/entity-configuration/domain';
@@ -10,9 +9,9 @@ import type { EntityTypeValue } from '@/entity-configuration/domain';
 import { getScientificArtifactPublicationLinks } from '@/api/entitycore/queries/general/scientific-artifact-publication-link';
 import { PublicationTypeDictionary } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
 import { Card } from '@/features/entities/circuit/elements/publication-item/card';
-import { classNames } from '@/util/utils';
 import type { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
 import { tryCatch } from '@/api/utils';
+import Tabs, { Tab } from '@/ui/molecules/tabbed-page';
 
 import type {
   IScientificArtifactPublicationLink,
@@ -31,46 +30,19 @@ export default function RelatedPublications({
   const entityType = getEntityByExtendedType({ type: extendedType });
   if (!entityType) notFound();
 
-  const items: CollapseProps['items'] = [
-    {
-      key: 'entity_source',
-      label: 'Circuit provenance',
-      children: (
-        <PerTypePublications entity={entity} type={PublicationTypeDictionary.EntitySource} />
-      ),
-    },
-    {
-      key: 'component_source',
-      label: 'Related artifacts provenance',
-      children: (
-        <PerTypePublications entity={entity} type={PublicationTypeDictionary.ComponentSource} />
-      ),
-    },
-    {
-      key: 'application',
-      label: 'Applications',
-      children: (
-        <PerTypePublications entity={entity} type={PublicationTypeDictionary.Application} />
-      ),
-    },
-  ];
-
   return (
-    <div className="mt-5">
-      <Collapse
-        ghost
-        bordered={false}
-        items={items}
-        collapsible="header"
-        defaultActiveKey={['entity_source']}
-        expandIcon={() => null}
-        className={classNames(
-          '[&_.ant-collapse-item]:mb-2',
-          '[&_.ant-collapse-header]:bg-primary-8 [&_.ant-collapse-header]:border-none [&_.ant-collapse-header]:text-white!',
-          '[&_.ant-collapse-header]:rounded-none! [&_.ant-collapse-header]:text-lg [&_.ant-collapse-header]:font-semibold'
-        )}
-      />
-    </div>
+    <Tabs>
+      <Tab label="Provenance">
+        <PerTypePublications entity={entity} type={PublicationTypeDictionary.EntitySource} />
+      </Tab>
+
+      <Tab label="Related artifacts profenance">
+        <PerTypePublications entity={entity} type={PublicationTypeDictionary.ComponentSource} />
+      </Tab>
+      <Tab label="Applications">
+        <PerTypePublications entity={entity} type={PublicationTypeDictionary.Application} />
+      </Tab>
+    </Tabs>
   );
 }
 
