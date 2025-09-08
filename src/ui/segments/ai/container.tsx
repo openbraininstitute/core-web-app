@@ -53,7 +53,7 @@ export function Container(): JSX.Element {
       id="workspace-ai"
       className={cn(
         styles.aiPanel,
-        'text-white [grid-area:ai]',
+        'rounded-2xl! text-white [grid-area:ai]',
         { 'text-primary-9 mr-3 bg-white': isExpanded },
         { 'text-primary-9 my-2 bg-white shadow-lg': isFullscreen },
         { 'bg-primary-9 border-primary-9 mr-3 text-white shadow-md': isCollapsed }
@@ -121,7 +121,7 @@ export function Container(): JSX.Element {
               </button>
             </div>
           </div>
-          <div className="relative flex-1">
+          <div className="relative flex-1 border-none">
             <AiAssistant section="explore" fullscreen={isFullscreen} />
           </div>
         </div>

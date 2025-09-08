@@ -35,11 +35,18 @@ export function RegionBanner({ view, onSwitchView }: Props) {
       data-testid="brain-region-entities-switcher"
       className="flex flex-col items-center justify-between gap-2 px-4 py-5"
     >
+      {/* eslint-disable-next-lien jsx-a11y/interactive-supports-focus */}
       <div
         className={cn(
           'border-neutral-1 flex w-full items-center justify-between gap-6 rounded-full py-2 pr-2 pl-4',
+          'cursor-pointer',
           { 'shadow-md': Boolean(selectedBrainRegion?.id) }
         )}
+        aria-label="brain-region-banner"
+        role="button"
+        tabIndex={0}
+        onKeyDown={() => onSwitchView(ExploreLeftMenuContext.BrainRegionHierarchy)}
+        onClick={() => onSwitchView(ExploreLeftMenuContext.BrainRegionHierarchy)}
       >
         <div className="flex items-center justify-center gap-2">
           {selectedBrainRegion && (
@@ -56,24 +63,22 @@ export function RegionBanner({ view, onSwitchView }: Props) {
             </div>
           )}
         </div>
-        <Button
-          rounded
-          variant="ghost"
-          className="h-8 w-8"
-          onClick={() =>
-            onSwitchView(
-              view === ExploreLeftMenuContext.BrainRegionHierarchy
-                ? ExploreLeftMenuContext.DataGroup
-                : ExploreLeftMenuContext.BrainRegionHierarchy
-            )
-          }
-        >
-          {view === ExploreLeftMenuContext.BrainRegionHierarchy ? (
+        {view === ExploreLeftMenuContext.BrainRegionHierarchy ? (
+          <Button
+            rounded
+            variant="ghost"
+            className="h-8 w-8"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onSwitchView(ExploreLeftMenuContext.DataGroup);
+            }}
+          >
             <CloseOutlined className="text-primary-9/90" />
-          ) : (
-            <HierarchySquare />
-          )}
-        </Button>
+          </Button>
+        ) : (
+          <HierarchySquare className="mr-2" />
+        )}
       </div>
     </div>
   );
