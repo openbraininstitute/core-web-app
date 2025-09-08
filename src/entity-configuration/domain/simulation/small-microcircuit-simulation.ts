@@ -157,7 +157,7 @@ export const SmallMicrocircuitSimulation: EntityCoreTypeConfig<ICircuitSimulatio
   asset: {
     extension: 'application/json',
   },
-  detailViewSections: ['overview'],
+  detailViewSections: ['overview', 'related-publications'],
   isBookmarkable: true,
   isDownloadable: false,
   isCopyable: true,

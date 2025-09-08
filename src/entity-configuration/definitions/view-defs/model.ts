@@ -84,8 +84,11 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     ],
     curated: false,
     summaryViewFields: [
-      { field: EntityCoreFields.BrainRegion, className: 'col-span-1' },
-      { field: EntityCoreFields.License, className: 'col-span-1' },
+      { field: EntityCoreFields.BrainRegion },
+      { field: EntityCoreFields.License },
+      { field: EntityCoreFields.MType },
+      { field: EntityCoreFields.EType },
+      { field: EntityCoreFields.SynaptomeUsedMEModelName },
     ],
     miniDetailView: [
       { field: EntityCoreFields.BrainRegion },

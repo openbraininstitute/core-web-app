@@ -7,6 +7,8 @@ import {
 import MEModelResults from '@/features/entities/me-model/detail-view/simulation';
 import SynaptomeResults from '@/features/entities/single-neuron-synaptome/detail-view/simulation';
 import { EntityTypeValue } from '@/entity-configuration/domain';
+import RelatedCircuits from '@/features/entities/circuit/elements/tabs-content/related-circuits';
+import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export default async function RelatedArtifacts({
   entity,
@@ -24,6 +26,10 @@ export default async function RelatedArtifacts({
 
   if (extendedType === 'single_neuron_synaptome') {
     return <SynaptomeResults modelId={entity.id} />;
+  }
+
+  if (extendedType === 'circuit') {
+    return <RelatedCircuits circuit={entity as ICircuit} />;
   }
 
   notFound();
