@@ -27,6 +27,14 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.CreatedBy },
       { field: EntityCoreFields.CreationDate },
     ],
+    miniDetailView: [
+      { field: EntityCoreFields.SimulationModel },
+      { field: EntityCoreFields.SimulationStatus },
+      { field: EntityCoreFields.InjectionLocation },
+      { field: EntityCoreFields.RecordingLocation },
+      { field: EntityCoreFields.BrainRegion },
+      { field: EntityCoreFields.CreationDate },
+    ],
   },
   [ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation]: {
     title: 'Synaptome simulations',
@@ -47,6 +55,11 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.CreatedBy },
       { field: EntityCoreFields.CreationDate },
     ],
+    miniDetailView: [
+      { field: EntityCoreFields.SynaptomeModelName },
+      { field: EntityCoreFields.BrainRegion },
+      { field: EntityCoreFields.CreationDate },
+    ],
   },
   [ExtendedEntitiesTypeDict.SimulationCampaign]: {
     title: 'Simulation Campaign',
@@ -57,9 +70,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.Name,
       EntityCoreFields.Description,
       EntityCoreFields.CircuitName,
-      // EntityCoreFields.ScanParameters,
       EntityCoreFields.SimulationCampaignStatus,
-      EntityCoreFields.CreatedBy,
       EntityCoreFields.CreationDate,
     ],
     filterableFields: [
@@ -73,6 +84,11 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.Contributions,
       EntityCoreFields.CreatedBy,
       EntityCoreFields.CreationDate,
+    ],
+    miniDetailView: [
+      { field: EntityCoreFields.CircuitName },
+      { field: EntityCoreFields.SimulationCampaignStatus },
+      { field: EntityCoreFields.CreationDate },
     ],
   },
   [ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation]: {
@@ -100,6 +116,11 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.CreatedBy,
       EntityCoreFields.CreationDate,
     ],
+    miniDetailView: [
+      { field: EntityCoreFields.CircuitName },
+      { field: EntityCoreFields.SimulationCampaignStatus },
+      { field: EntityCoreFields.CreationDate },
+    ],
   },
   [ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation]: {
     title: 'Small microcircuit Simulation',
@@ -125,6 +146,11 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.Contributions,
       EntityCoreFields.CreatedBy,
       EntityCoreFields.CreationDate,
+    ],
+    miniDetailView: [
+      { field: EntityCoreFields.CircuitName },
+      { field: EntityCoreFields.SimulationCampaignStatus },
+      { field: EntityCoreFields.CreationDate },
     ],
   },
 };
