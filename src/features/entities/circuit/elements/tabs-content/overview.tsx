@@ -36,8 +36,8 @@ export default function Overview({ circuit }: Props) {
   });
 
   const list = {
-    cell: { title: 'Cell Properties', items: [cellProperties] },
-    network: { title: 'Network properties', items: [networkPropertiesA, networkPropertiesB] },
+    cell: { title: 'Cell statistics', items: [cellProperties] },
+    network: { title: 'Network statistics', items: [networkPropertiesA, networkPropertiesB] },
   };
 
   return (
