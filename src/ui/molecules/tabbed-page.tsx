@@ -1,4 +1,5 @@
 import React, { useState, ReactNode, ReactElement } from 'react';
+import { Button } from './button';
 
 type TabProps = {
   label: string; //eslint-disable-line
@@ -23,24 +24,19 @@ export default function Tabs({ children, defaultIndex = 0 }: TabsProps) {
 
   return (
     <div className="w-full">
-      <div className="flex border-b border-gray-300">
-        {tabs.map((tab, index) => (
-          <button
-            type="button"
-            key={tab.props.label}
-            onClick={() => setActiveIndex(index)}
-            className={`-mb-px border-b-2 px-4 py-2 ${
-              activeIndex === index
-                ? 'border-blue-500 font-semibold text-blue-600'
-                : 'border-transparent text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            {tab.props.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="p-4">{tabs[activeIndex]}</div>
+      {tabs.map((tab, index) => (
+        <Button
+          size="lg"
+          rounded
+          variant="outline"
+          key={tab.props.label}
+          onClick={() => setActiveIndex(index)}
+          active={activeIndex === index}
+        >
+          {tab.props.label}
+        </Button>
+      ))}
+      <div className="mt-5">{tabs[activeIndex]}</div>
     </div>
   );
 }
