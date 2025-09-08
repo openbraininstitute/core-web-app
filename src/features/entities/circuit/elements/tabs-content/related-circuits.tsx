@@ -67,7 +67,7 @@ export default function RelatedCircuits({ circuit }: Props) {
 
   return (
     <div className="mt-5">
-      <Tabs>
+      <Tabs defaultMessage="No subcircuits found">
         <Tab label="Parent circuit" visible={Boolean(circuit.root_circuit_id)}>
           <Parent data={result?.parent} />,
         </Tab>

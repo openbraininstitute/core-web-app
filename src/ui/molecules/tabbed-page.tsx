@@ -14,16 +14,17 @@ export function Tab({ children }: TabProps) {
 type TabsProps = {
   children: ReactElement<TabProps> | ReactElement<TabProps>[];
   defaultIndex?: number;
+  defaultMessage: string;
 };
 
-export default function Tabs({ children, defaultIndex = 0 }: TabsProps) {
+export default function Tabs({ children, defaultIndex = 0, defaultMessage }: TabsProps) {
   const tabs = React.Children.toArray(children).filter((t) => {
-    return Boolean((t as ReactElement<TabProps>).props.visible);
+    return Boolean((t as ReactElement<TabProps>).props.visible ?? true);
   }) as ReactElement<TabProps>[];
 
   const [activeIndex, setActiveIndex] = useState(defaultIndex);
 
-  if (tabs.length === 0) return <div>No tabs defined.</div>;
+  if (tabs.length === 0) return <div>{defaultMessage}</div>;
 
   function rounded(index: number) {
     if (index === 0) return 'rounded-l-full!';

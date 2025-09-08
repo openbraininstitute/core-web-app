@@ -145,7 +145,7 @@ function PerTypePublications({
 
 export default function RelatedPublications({ circuit }: Props) {
   return (
-    <Tabs>
+    <Tabs defaultMessage="No related publications found">
       <Tab label="Provenance">
         <PerTypePublications circuit={circuit} type={PublicationTypeDictionary.EntitySource} />
       </Tab>

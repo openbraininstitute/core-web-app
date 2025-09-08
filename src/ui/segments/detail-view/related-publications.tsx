@@ -31,7 +31,7 @@ export default function RelatedPublications({
   if (!entityType) notFound();
 
   return (
-    <Tabs>
+    <Tabs defaultMessage="No related publications found">
       <Tab label="Provenance">
         <PerTypePublications entity={entity} type={PublicationTypeDictionary.EntitySource} />
       </Tab>
