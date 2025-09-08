@@ -1,11 +1,16 @@
 'use client';
 
 import { CloseOutlined } from '@ant-design/icons';
+import { useQuery } from '@tanstack/react-query';
 import noop from 'lodash/noop';
 
 import { ManageCreditsStep } from '@/ui/segments/virtual-lab-settings/elements/manage-credits';
+import { getProject } from '@/api/virtual-lab-svc/queries/project';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Modal } from '@/ui/molecules/modal';
+import { Button } from '@/ui/molecules/button';
+import { cn } from '@/utils/css-class';
 
 type Props = {
   open: boolean;
@@ -13,31 +18,48 @@ type Props = {
 };
 
 export function CreditsTransferModal({ open, onClose }: Props) {
-  const { virtualLabId } = useWorkspace();
+  const { virtualLabId, projectId } = useWorkspace();
+  const { data: project } = useQuery({
+    queryKey: keyBuilder.getOne({ virtualLabId, projectId }),
+    queryFn: () => getProject({ virtualLabId, projectId }),
+  });
 
   return (
     <Modal
+      closable={false}
       open={open}
       title={
-        <div className="flex flex-col items-start justify-between">
-          <h2 className="text-2xl font-bold text-white">Transfer Credits</h2>
-          <p className="text-neutral-1 text-sm font-light">
-            Transfer credits between your virtual lab and projects.
-          </p>
+        <div className="flex w-full items-center justify-between gap-4 select-none">
+          <div className="flex flex-col items-start justify-between">
+            <h2 className="text-2xl font-bold text-white">{project?.data.project.name}</h2>
+            <p className="text-neutral-1 text-sm font-light">
+              Transfer credits between your virtual lab and projects.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onClose}
+            className="bg-primary-9 hover:bg-neutral-1/40 border-none !p-2"
+          >
+            <CloseOutlined className="text-lg text-white" />
+          </Button>
         </div>
       }
-      onClose={onClose}
       size="auto"
       position="center"
       animation="scale"
       maxWidth={700}
       width={700}
       className="!bg-primary-9 !fixed !top-1/2 !left-1/2 !z-[1000] !-translate-x-1/2 !-translate-y-1/2 !transform"
-      closable
-      closeIcon={<CloseOutlined className="text-lg text-white" />}
-      closeIconClassName="hover:bg-neutral-1/40"
+      headerClassName={cn('[&>div]:w-full')}
     >
-      <ManageCreditsStep virtualLabId={virtualLabId} onBack={noop} shouldHaveBack={false} />
+      <ManageCreditsStep
+        virtualLabId={virtualLabId}
+        onBack={noop}
+        shouldHaveBack={false}
+        swapClassname=""
+      />
     </Modal>
   );
 }
