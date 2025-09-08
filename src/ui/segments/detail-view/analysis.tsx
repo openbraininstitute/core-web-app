@@ -24,6 +24,7 @@ export default async function Configuration({
   if (circuitTypes.includes(extendedType)) {
     return <Overview circuit={entity as ICircuit} />;
   }
+  if (extendedType === 'memodel' || extendedType === 'emodel') return <Analysis />;
 
-  return <Analysis />;
+  return notFound();
 }

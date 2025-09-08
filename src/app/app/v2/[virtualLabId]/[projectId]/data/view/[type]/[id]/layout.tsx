@@ -11,6 +11,7 @@ import {
 import DetailMenu from '@/ui/segments/explore/detail-menu';
 import ActionMenu from '@/ui/segments/action-menu';
 import type { WorkspaceContext, AwaitedType } from '@/types/common';
+import Close from '@/ui/molecules/close';
 
 interface Params {
   id: string;
@@ -67,7 +68,7 @@ export default async function Layout({
 
   return (
     <div className="ml-5 flex h-full rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
-      <div className="basis-1/5">
+      <div className="w-1/5">
         <div className="flex flex-wrap gap-3">
           <Breadcrumb>
             <NextLink href={`${basePath}/app/v2/${virtualLabId}/${projectId}/data`}>
@@ -88,14 +89,15 @@ export default async function Layout({
         </div>
         <ActionMenu entity={entity} type={type} ctx={{ virtualLabId, projectId }} />
       </div>
-      <div className="grow basis-4/5">
-        <div className="h-full overflow-y-auto p-10">
+      <div className="relative w-4/5">
+        <div className="h-full w-full overflow-x-auto overflow-y-auto p-10">
           <div className="h-[9%]">
             <div className="text-neutral-4 uppercase">Name</div>
             <div className="text-primary-8 text-2xl font-bold">{entity.name}</div>
           </div>
           <div className="h-[91%]">{children}</div>
         </div>
+        <Close />
       </div>
     </div>
   );

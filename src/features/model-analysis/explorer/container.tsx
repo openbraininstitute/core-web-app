@@ -1,7 +1,7 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
-import { notFound, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { match } from 'ts-pattern';
 import { useMemo } from 'react';
 import { Spin } from 'antd';
@@ -11,12 +11,8 @@ import { ViewerContainer } from '@/features/model-analysis/viewer/container';
 import { useLoadableValue } from '@/hooks/hooks';
 
 import type { WorkspaceContext } from '@/types/common';
-import { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
 
-export default function Analysis({ extendedType }: { extendedType?: EntityCoreExtendedType }) {
-  const validTypes: EntityCoreExtendedType[] = ['emodel', 'memodel'];
-  if (!extendedType || !validTypes.includes(extendedType)) notFound();
-
+export default function Analysis() {
   const { virtualLabId, projectId, id } = useParams<WorkspaceContext & { id: string }>();
 
   const results = useLoadableValue(

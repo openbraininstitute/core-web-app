@@ -1,14 +1,11 @@
 import { CloseCircleTwoTone, LoadingOutlined } from '@ant-design/icons';
-import { Collapse, Empty, List } from 'antd';
+import { Empty, List } from 'antd';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-
-import type { CollapseProps } from 'antd';
 
 import { getScientificArtifactPublicationLinks } from '@/api/entitycore/queries/general/scientific-artifact-publication-link';
 import { PublicationTypeDictionary } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
 import { Card } from '@/features/entities/circuit/elements/publication-item/card';
-import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
 
 import type {
@@ -17,6 +14,7 @@ import type {
 } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { WorkspaceContext } from '@/types/common';
+import Tabs, { Tab } from '@/ui/molecules/tabbed-page';
 
 type Props = {
   circuit: ICircuit;
@@ -146,45 +144,18 @@ function PerTypePublications({
 }
 
 export default function RelatedPublications({ circuit }: Props) {
-  const items: CollapseProps['items'] = [
-    {
-      key: 'entity_source',
-      label: 'Circuit provenance',
-      children: (
-        <PerTypePublications circuit={circuit} type={PublicationTypeDictionary.EntitySource} />
-      ),
-    },
-    {
-      key: 'component_source',
-      label: 'Related artifacts provenance',
-      children: (
-        <PerTypePublications circuit={circuit} type={PublicationTypeDictionary.ComponentSource} />
-      ),
-    },
-    {
-      key: 'application',
-      label: 'Applications',
-      children: (
-        <PerTypePublications circuit={circuit} type={PublicationTypeDictionary.Application} />
-      ),
-    },
-  ];
-
   return (
-    <div className="mt-5">
-      <Collapse
-        ghost
-        bordered={false}
-        items={items}
-        collapsible="header"
-        defaultActiveKey={['entity_source']}
-        expandIcon={() => null}
-        className={classNames(
-          '[&_.ant-collapse-item]:mb-2',
-          '[&_.ant-collapse-header]:bg-primary-8 [&_.ant-collapse-header]:border-none [&_.ant-collapse-header]:text-white!',
-          '[&_.ant-collapse-header]:rounded-none! [&_.ant-collapse-header]:text-lg [&_.ant-collapse-header]:font-semibold'
-        )}
-      />
-    </div>
+    <Tabs defaultMessage="No related publications found">
+      <Tab label="Provenance">
+        <PerTypePublications circuit={circuit} type={PublicationTypeDictionary.EntitySource} />
+      </Tab>
+
+      <Tab label="Related artifacts provenance">
+        <PerTypePublications circuit={circuit} type={PublicationTypeDictionary.ComponentSource} />
+      </Tab>
+      <Tab label="Applications">
+        <PerTypePublications circuit={circuit} type={PublicationTypeDictionary.Application} />
+      </Tab>
+    </Tabs>
   );
 }
