@@ -7,12 +7,14 @@ import { Field } from '@/features/details-view/overview';
 import MEModelDetails from '@/features/entities/neuron-simulation/elements/me-model-details';
 import SynaptomeDetails from '@/features/entities/neuron-simulation/elements/synaptome-details';
 import { EntityTypeValue } from '@/entity-configuration/domain';
-import { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
+import CircuitViz from '@/features/entities/circuit/elements/tabs-content/visualization';
+import { circuitTypes, EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
 import {
   resolveSingleNeuronSimulation,
   resolveSingleNeuronSynaptomeSimulation,
 } from '@/entity-configuration/domain/simulation';
 import { AwaitedType, WorkspaceContext } from '@/types/common';
+import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export default async function Overview({
   entity,
@@ -78,6 +80,8 @@ export default async function Overview({
             projectId={ctx.virtualLabId}
           />
         )}
+
+      {circuitTypes.includes(extendedType) && entity && <CircuitViz circuit={entity as ICircuit} />}
     </>
   );
 }

@@ -30,6 +30,7 @@ export default function Visualization({ circuit }: Props) {
         maxWidth="100%"
         yPadding={16}
         xPadding={16}
+        bordered={false}
       />
     </div>
   );
