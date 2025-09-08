@@ -19,11 +19,13 @@ export default async function Configuration({
   extendedType: EntityCoreExtendedType;
 }) {
   const entityType = getEntityByExtendedType({ type: extendedType });
+
   if (!entityType) notFound();
 
   if (circuitTypes.includes(extendedType)) {
     return <Overview circuit={entity as ICircuit} />;
   }
+  if (extendedType === 'memodel' || extendedType === 'emodel') return <Analysis />;
 
-  return <Analysis />;
+  return notFound();
 }
