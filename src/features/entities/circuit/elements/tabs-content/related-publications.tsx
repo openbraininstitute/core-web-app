@@ -150,7 +150,7 @@ export default function RelatedPublications({ circuit }: Props) {
         <PerTypePublications circuit={circuit} type={PublicationTypeDictionary.EntitySource} />
       </Tab>
 
-      <Tab label="Related artifacts profenance">
+      <Tab label="Related artifacts provenance">
         <PerTypePublications circuit={circuit} type={PublicationTypeDictionary.ComponentSource} />
       </Tab>
       <Tab label="Applications">

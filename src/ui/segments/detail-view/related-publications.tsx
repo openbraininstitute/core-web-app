@@ -36,7 +36,7 @@ export default function RelatedPublications({
         <PerTypePublications entity={entity} type={PublicationTypeDictionary.EntitySource} />
       </Tab>
 
-      <Tab label="Related artifacts profenance">
+      <Tab label="Related artifacts provenance">
         <PerTypePublications entity={entity} type={PublicationTypeDictionary.ComponentSource} />
       </Tab>
       <Tab label="Applications">
