@@ -53,6 +53,7 @@ export default function NetworkAndMorphologyConfig({ circuit }: { circuit: ICirc
     directory: null,
     config: null,
   });
+
   const updateFileCounter = useSetAtom(updateFileCounterAtom(circuit.id));
   const assets = circuit?.assets;
   const configAsset = getAssetElement({
@@ -149,7 +150,7 @@ export default function NetworkAndMorphologyConfig({ circuit }: { circuit: ICirc
       />
     ))
     .with({ directory: P.nonNullable, config: P.nonNullable }, ({ directory, config }) => {
-      const networks = buildNetworksConfig(config.networks, directory);
+      const networks = buildNetworksConfig(config.networks, directory, config.manifest);
       const fullConfig = networksContentConfiguration.map((o) => ({
         ...o,
         ...get(networks, o.key, {}),

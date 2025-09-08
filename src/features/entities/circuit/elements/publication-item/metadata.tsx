@@ -1,15 +1,16 @@
 import { BuildingLibrary, Calendar } from '@/components/icons/EditorIcons';
 import { renderDate } from '@/entity-configuration/definitions/renderer';
+import { cn } from '@/utils/css-class';
 
 interface Props {
   publisher: string | null;
-  date?: string | null;
+  date?: Date | null;
   className?: string;
 }
 
 export function Metadata({ publisher, date, className }: Props) {
   return (
-    <div className={`text-paper-meta flex items-center gap-4 text-sm ${className || ''}`}>
+    <div className={cn('text-paper-meta flex items-center gap-4 text-sm', className)}>
       {publisher && (
         <div className="flex items-center gap-1">
           <div className="border-neutral-2 flex items-center justify-center rounded-full border p-1">
@@ -23,7 +24,7 @@ export function Metadata({ publisher, date, className }: Props) {
           <div className="border-neutral-2 flex items-center justify-center rounded-full border p-1">
             <Calendar className="text-primary-8" />
           </div>
-          <span>{renderDate(date)}</span>
+          <span>{renderDate(new Date(date).toISOString())}</span>
         </div>
       )}
     </div>

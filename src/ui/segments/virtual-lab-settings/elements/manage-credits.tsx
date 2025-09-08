@@ -29,6 +29,7 @@ type ManageCreditsStepProps = {
   virtualLabId: string;
   onBack: () => void;
   shouldHaveBack?: boolean;
+  swapClassname?: string;
 };
 
 type TransferDirection = 'vlab->proj' | 'proj->vlab';
@@ -70,6 +71,7 @@ export function ManageCreditsStep({
   onBack,
   virtualLabId,
   shouldHaveBack = true,
+  swapClassname,
 }: ManageCreditsStepProps) {
   const queryClient = useQueryClient();
   const [amount, setAmount] = useState<string | undefined>(undefined);
@@ -237,7 +239,10 @@ export function ManageCreditsStep({
           <motion.button
             type="button"
             aria-label="Swap transfer direction"
-            className="bg-primary-8 hover:bg-primary-7 flex h-8 w-8 items-center justify-center rounded-md border border-white/20 text-white transition-all hover:scale-105 disabled:opacity-50"
+            className={cn(
+              'bg-primary-8 hover:bg-primary-7 flex h-8 w-8 items-center justify-center rounded-md border border-white/20 text-white transition-all hover:scale-105 disabled:opacity-50',
+              swapClassname
+            )}
             onClick={onSwap}
             disabled={isPending}
             whileHover={{ scale: 1.05 }}

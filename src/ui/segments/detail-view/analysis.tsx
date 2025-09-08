@@ -19,7 +19,6 @@ export default async function Configuration({
   extendedType: EntityCoreExtendedType;
 }) {
   const entityType = getEntityByExtendedType({ type: extendedType });
-
   if (!entityType) notFound();
 
   if (circuitTypes.includes(extendedType)) {
