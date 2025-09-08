@@ -45,7 +45,7 @@ export default async function Page({
     return <Visualization entity={entity} ctx={ctx} />;
   }
   if (section === 'analysis') {
-    return <Analysis entity={entity} ctx={ctx} extendedType={entityType.extendedType} />;
+    return <Analysis entity={entity} extendedType={entityType.extendedType} />;
   }
 
   if (section === 'configuration') {
