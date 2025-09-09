@@ -40,7 +40,7 @@ export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecord
   asset: {
     extension: 'application/nwb',
   },
-  detailViewSections: ['overview', 'visualization', 'related-publications'],
+  detailViewSections: ['overview', 'related-publications'],
   isDownloadable: true,
   isBookmarkable: true,
   isCopyable: true,

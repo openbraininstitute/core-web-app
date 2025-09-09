@@ -15,6 +15,9 @@ import {
 } from '@/entity-configuration/domain/simulation';
 import { AwaitedType, WorkspaceContext } from '@/types/common';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { MorphoViewerLoaderMemo } from '@/features/entities/reconstruction-morphology/detail-view';
+import { IReconstructionMorphology, IElectricalCellRecording } from '@/api/entitycore/types';
+import EphysViewer from '@/features/ephys-viewer';
 
 export default async function Overview({
   entity,
@@ -81,7 +84,15 @@ export default async function Overview({
           />
         )}
 
-      {circuitTypes.includes(extendedType) && entity && <CircuitViz circuit={entity as ICircuit} />}
+      {circuitTypes.includes(extendedType) && <CircuitViz circuit={entity as ICircuit} />}
+
+      {extendedType === 'reconstruction_morphology' && (
+        <MorphoViewerLoaderMemo resource={entity as IReconstructionMorphology} />
+      )}
+
+      {extendedType === 'electrical_cell_recording' && (
+        <EphysViewer resource={entity as IElectricalCellRecording} ctx={ctx} />
+      )}
     </>
   );
 }

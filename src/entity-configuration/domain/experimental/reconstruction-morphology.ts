@@ -39,7 +39,7 @@ export const ReconstructionMorphology: EntityCoreTypeConfig<
     extension: 'application/swc',
   },
   viewDefinition: ViewsDefinitionRegistry[ExtendedEntitiesTypeDict.ReconstructionMorphology],
-  detailViewSections: ['overview', 'visualization', 'related-publications'],
+  detailViewSections: ['overview', 'related-publications'],
   isDownloadable: true,
   isBookmarkable: true,
   isCopyable: true,

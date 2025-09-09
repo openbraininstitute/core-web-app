@@ -10,7 +10,6 @@ import {
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import Overview from '@/ui/segments/detail-view/overview';
-import Visualization from '@/ui/segments/detail-view/viz';
 import Analysis from '@/ui/segments/detail-view/analysis';
 import RelatedArtifacts from '@/ui/segments/detail-view/related-artifacts';
 import RelatedPublications from '@/ui/segments/detail-view/related-publications';
@@ -40,9 +39,6 @@ export default async function Page({
 
   if (section === 'overview') {
     return <Overview entity={entity} extendedType={entityType.extendedType} ctx={ctx} />;
-  }
-  if (section === 'visualization') {
-    return <Visualization entity={entity} ctx={ctx} />;
   }
   if (section === 'analysis') {
     return <Analysis entity={entity} extendedType={entityType.extendedType} />;
