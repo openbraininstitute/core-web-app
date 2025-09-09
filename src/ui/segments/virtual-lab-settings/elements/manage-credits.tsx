@@ -8,7 +8,7 @@ import {
 } from '@ant-design/icons';
 import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'motion/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Select } from 'antd';
 
 import { assignProjectBudget, reverseProjectBudget } from '@/services/virtual-lab/projects';
@@ -25,11 +25,18 @@ import { cn } from '@/utils/css-class';
 
 import type { ProjectBalance } from '@/types/accounting';
 
-type ManageCreditsStepProps = {
+type Props = {
   virtualLabId: string;
   onBack: () => void;
   shouldHaveBack?: boolean;
+  shouldShowSwap?: boolean;
   swapClassname?: string;
+  buttonClassname?: string;
+};
+
+export type ManageCreditsStepHandle = {
+  swap: () => void;
+  isPending: boolean;
 };
 
 type TransferDirection = 'vlab->proj' | 'proj->vlab';
@@ -71,8 +78,13 @@ export function ManageCreditsStep({
   onBack,
   virtualLabId,
   shouldHaveBack = true,
+  shouldShowSwap = true,
   swapClassname,
-}: ManageCreditsStepProps) {
+  buttonClassname,
+  ref,
+}: Props & {
+  ref?: React.Ref<ManageCreditsStepHandle>;
+}) {
   const queryClient = useQueryClient();
   const [amount, setAmount] = useState<string | undefined>(undefined);
   const [isSwapping, setIsSwapping] = useState<boolean>(false);
@@ -207,6 +219,11 @@ export function ManageCreditsStep({
     setTimeout(() => setIsSwapping(false), 600);
   };
 
+  useImperativeHandle(ref, () => ({
+    swap: onSwap,
+    isPending,
+  }));
+
   useEffect(() => {
     if (!selectedProjectId && projects.length > 0) {
       setSelectedProjectId(projects[0]?.value);
@@ -221,48 +238,51 @@ export function ManageCreditsStep({
 
   return (
     <div className="flex h-full w-full flex-col gap-6 pb-10">
-      <div className="bg-primary-9 sticky top-0 z-10 flex shrink-0 items-center px-6 py-5">
-        <div className="flex w-full items-center justify-between">
-          <div className="flex items-center gap-4">
-            {shouldHaveBack && (
-              <UiButton
-                rounded
+      {(shouldHaveBack || shouldShowSwap) && (
+        <div className="bg-primary-9 sticky top-0 z-10 flex shrink-0 items-center px-6 py-5">
+          <div className="flex w-full items-center justify-between">
+            <div className="flex items-center gap-4">
+              {shouldHaveBack && (
+                <UiButton
+                  rounded
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={onBack}
+                  className="hover:bg-neutral-2/20 h-auto !px-4 py-2! text-white hover:text-white"
+                >
+                  <ArrowLeftOutlined className="text-lg" />
+                  <span className="ml-4 text-lg font-bold text-white">Credits</span>
+                </UiButton>
+              )}
+            </div>
+
+            {shouldShowSwap && (
+              <motion.button
                 type="button"
-                variant="ghost"
-                size="sm"
-                onClick={onBack}
-                className="hover:bg-neutral-2/20 h-auto !px-4 py-2! text-white hover:text-white"
+                aria-label="Swap transfer direction"
+                className={cn(
+                  'bg-primary-8 hover:bg-primary-7 flex h-8 w-8 items-center justify-center rounded-md border border-white/20 text-white transition-all hover:scale-105 disabled:opacity-50',
+                  swapClassname
+                )}
+                onClick={onSwap}
+                disabled={isPending}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <ArrowLeftOutlined className="text-lg" />
-                <span className="ml-4 text-lg font-bold text-white">Credits</span>
-              </UiButton>
+                <motion.div
+                  animate={{ rotate: isSwapping ? 180 : 0 }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                >
+                  <SwapOutlined className="text-sm" />
+                </motion.div>
+              </motion.button>
             )}
           </div>
-
-          <motion.button
-            type="button"
-            aria-label="Swap transfer direction"
-            className={cn(
-              'bg-primary-8 hover:bg-primary-7 flex h-8 w-8 items-center justify-center rounded-md border border-white/20 text-white transition-all hover:scale-105 disabled:opacity-50',
-              swapClassname
-            )}
-            onClick={onSwap}
-            disabled={isPending}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <motion.div
-              animate={{ rotate: isSwapping ? 180 : 0 }}
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
-            >
-              <SwapOutlined className="text-sm" />
-            </motion.div>
-          </motion.button>
         </div>
-      </div>
+      )}
 
       <div className="mx-auto flex w-full max-w-3xl items-stretch gap-4 px-3">
-        {/* source panel */}
         <div className="bg-primary-8 flex w-[calc(50%-2.5rem)] flex-1 flex-col justify-between rounded-2xl border border-white/10 p-5 text-white shadow-2xl">
           <div className="flex w-full items-center gap-2">
             <span className="text-neutral-3">From</span>
@@ -318,7 +338,6 @@ export function ManageCreditsStep({
           </div>
         </div>
 
-        {/* destination panel */}
         <div className="bg-primary-8 flex h-full w-[calc(50%-2.5rem)] flex-1 flex-col justify-between rounded-2xl border border-white/10 p-5 text-white shadow-2xl">
           <div className="flex items-center gap-2">
             <span className="text-neutral-3">To</span>
@@ -394,7 +413,12 @@ export function ManageCreditsStep({
         </div>
       </div>
 
-      <div className="mx-auto mt-auto flex w-full max-w-3xl justify-end gap-4 self-end px-3">
+      <div
+        className={cn(
+          'mx-auto mt-auto flex w-full max-w-3xl justify-end gap-4 self-end px-3',
+          buttonClassname
+        )}
+      >
         <Button
           rounded
           type="button"

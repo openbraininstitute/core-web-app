@@ -7,17 +7,22 @@ import {
   LoadingOutlined,
   RightOutlined,
   SettingFilled,
+  WarningFilled,
 } from '@ant-design/icons';
-import omit from 'lodash/omit';
 import { z } from 'zod';
+import kebabCase from 'lodash/kebabCase';
+import omit from 'lodash/omit';
+import Link from 'next/link';
 
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { createMEModel } from '@/api/entitycore/queries/model/me-model';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useAppNotification } from '@/components/notification';
 import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 import { WorkspaceContextSchema } from '@/types/common';
-import { OneshotSession } from '@/services/accounting';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { OneshotSession } from '@/services/accounting';
 import { ServiceSubtype } from '@/types/accounting';
 import {
   useBuildMeModelSessionState,
@@ -31,6 +36,7 @@ import {
 } from '@/api/entitycore/types/entities/me-model';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
+import { messages } from '@/i18n/en/me-model';
 
 const CreateMeModelContextSchema = CreateMEModelSchema.merge(WorkspaceContextSchema);
 type TCreateMeModelContext = z.infer<typeof CreateMeModelContextSchema>;
@@ -39,7 +45,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
   const breakpoint = useDefaultBreakpoint();
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
-  const { replace, push: navigate } = useRouter();
+  const { replace } = useRouter();
   const { virtualLabId, projectId } = useWorkspace();
   const step = searchParams.get('step');
 
@@ -92,17 +98,36 @@ export function Menu({ sessionId }: { sessionId: string }) {
 
     return data;
   };
-
+  const notification = useAppNotification();
   const mutate = useMutation({
     mutationFn: buildMeModel,
     onSuccess: (data) => {
-      navigate(
-        `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/view/memodel/${data.id}`
-      );
+      notification.success({
+        message: messages.CreationModelSucceed,
+        description: (
+          <div>
+            <Link
+              onClick={() => {
+                notification.destroy('model-saved');
+              }}
+              href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.Memodel)}/${data.id}`}
+              className="text-primary-6 hover:underline"
+            >
+              Go to model details
+            </Link>
+          </div>
+        ),
+        onClick: () => {
+          notification.destroy('model-saved');
+        },
+        placement: 'topRight',
+        key: 'model-saved',
+        duration: 10,
+      });
     },
     async onSettled() {
       await queryClient.invalidateQueries({
-        queryKey: [{ context: { key: `${virtualLabId}/${projectId}/explore/memodel/project` } }],
+        queryKey: [{ context: { key: `${virtualLabId}/${projectId}/data/memodel/project` } }],
       });
       await queryClient.invalidateQueries({
         queryKey: [
@@ -136,11 +161,34 @@ export function Menu({ sessionId }: { sessionId: string }) {
             />
             Info
           </div>
-          <RightOutlined
-            className={cn('text-neutral-4 mr-2 transition-all group-hover:text-white', {
-              '-rotate-180 text-white!': step === BuildStep.Info,
-            })}
-          />
+          <div className="flex items-center justify-center gap-3">
+            {!sessionValue?.name && (
+              <Tooltip>
+                <TooltipTrigger>
+                  <WarningFilled className="text-sm text-yellow-300" />
+                </TooltipTrigger>
+                <TooltipContent
+                  avoidCollisions
+                  side="bottom"
+                  sideOffset={10}
+                  collisionPadding={{ left: 25 }}
+                  className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
+                >
+                  <p className="w-full pb-0.5 break-words hyphens-auto">
+                    • The model name cannot be empty.
+                  </p>
+                  <p className="w-full pb-0.5 break-words hyphens-auto">
+                    • Please enter a model name (minimum 1 character).
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+            <RightOutlined
+              className={cn('text-neutral-4 mr-2 transition-all group-hover:text-white', {
+                '-rotate-180 text-white!': step === BuildStep.Info,
+              })}
+            />
+          </div>
         </div>
       </Button>
       <div className="text-neutral-3 ml-4 font-light uppercase">Modeling</div>
@@ -223,7 +271,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
               onClick={() => mutate.mutateAsync()}
               disabled={disabled}
             >
-              <div className="flex-shrink-0 font-bold">Build Model</div>
+              <div className="flex-shrink-0 font-bold">Build model</div>
               {mutate.isPending && <LoadingOutlined className="ml-2 text-white" />}
             </Button>
           </div>

@@ -1,5 +1,5 @@
 export const messages = {
-  CreationModelSucceed: 'The Synaptome model has been successfully created.',
+  CreationModelSucceed: 'The synaptome model has been successfully created.',
   CreationModelFailed: 'Failed to process your synaptome creation request.',
   CreateModelConfigFailed:
     'Failed to create the synaptome configuration file. Please review the form and try again or contact support.',
