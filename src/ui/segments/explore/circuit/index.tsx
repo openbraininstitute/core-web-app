@@ -181,6 +181,12 @@ export function BrowseCircuit({
     updateDisplayMiniView(event.detail.display);
   });
 
+  // reset mini detail view when dataKey changes (scope, dataType, etc.)
+  useEffect(() => {
+    makeSelectEntityClickEvent({ display: false, data: null });
+    updateDisplayMiniView(false);
+  }, [dataKey]);
+
   const nestedTableColumns = allColumns.filter(({ key }) =>
     (activeColumns || []).includes(key as string)
   );
@@ -229,7 +235,7 @@ export function BrowseCircuit({
         </div>
       );
     },
-    expandIconColumnIndex: 4,
+    expandIconColumnIndex: 3,
     expandIcon,
   });
 
@@ -243,6 +249,8 @@ export function BrowseCircuit({
   useEffect(() => {
     return () => {
       resetFilterOnExit(RESET);
+      // also reset mini detail view on unmount
+      makeSelectEntityClickEvent({ display: false, data: null });
     };
   }, [resetFilterOnExit]);
 

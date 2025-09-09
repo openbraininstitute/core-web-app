@@ -79,7 +79,7 @@ export function RecursiveExpandableTable({
         </div>
       );
     },
-    expandIconColumnIndex: 4,
+    expandIconColumnIndex: 3,
     expandIcon,
   });
 

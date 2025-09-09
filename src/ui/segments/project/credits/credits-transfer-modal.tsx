@@ -2,7 +2,6 @@
 
 import { CloseOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import noop from 'lodash/noop';
 
 import { ManageCreditsStep } from '@/ui/segments/virtual-lab-settings/elements/manage-credits';
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
@@ -42,7 +41,7 @@ export function CreditsTransferModal({ open, onClose }: Props) {
             onClick={onClose}
             className="bg-primary-9 hover:bg-neutral-1/40 border-none !p-2"
           >
-            <CloseOutlined className="text-lg text-white" />
+            <CloseOutlined className="text-lg text-white!" />
           </Button>
         </div>
       }
@@ -56,7 +55,7 @@ export function CreditsTransferModal({ open, onClose }: Props) {
     >
       <ManageCreditsStep
         virtualLabId={virtualLabId}
-        onBack={noop}
+        onBack={onClose}
         shouldHaveBack={false}
         swapClassname=""
       />

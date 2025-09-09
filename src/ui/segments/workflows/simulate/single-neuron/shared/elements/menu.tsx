@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { RightOutlined, SettingFilled } from '@ant-design/icons';
+import { RightOutlined, SettingFilled, WarningFilled } from '@ant-design/icons';
 import { useAtom, useSetAtom } from 'jotai';
 
 import { headerTabsAtom } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/header';
@@ -12,20 +12,29 @@ import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import {
   SynapseConfigurationArraySchema,
   RecordLocationArraySchema,
+  OverviewConfigurationSchema,
   StimulationConfigurationSchema,
   ExperimentalSetupConfigurationSchema,
+  AmperageStateSchema,
+  FrequencyInputConfigSchema,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import {
+  AmperageStateAtomFamily,
   ExperimentalSetupConfigurationAtomFamily,
+  FrequencyInputConfigurationAtomFamily,
+  OverviewConfigurationAtomFamily,
   RecordLocationConfigurationAtomFamily,
   StimulationConfigurationAtomFamily,
   SynaptomeConfigurationAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import {
+  PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
   PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
   PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY,
-  PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
   PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
+  PREFIX_FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY,
+  PREFIX_OVERVIEW_CONFIGURATION_SESSION_KEY,
+  PREFIX_AMPERAGE_CONFIGURATION_SESSION_KEY,
   PROTOCOL_DETAILS,
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
@@ -70,17 +79,23 @@ export function Menu({ sessionId, type }: Props) {
     replace(`${pathname}?${query.toString()}`);
   };
 
+  const infoKey = getSessionKey(PREFIX_OVERVIEW_CONFIGURATION_SESSION_KEY, sessionId);
   const spcKey = getSessionKey(PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
   const sesKey = getSessionKey(PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY, sessionId);
   const rlcKey = getSessionKey(PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY, sessionId);
   const sscKey = getSessionKey(PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
+  const ampKey = getSessionKey(PREFIX_AMPERAGE_CONFIGURATION_SESSION_KEY, sessionId);
+  const freqKey = getSessionKey(PREFIX_FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY, sessionId);
 
+  const [overviewConfiguration] = useAtom(OverviewConfigurationAtomFamily(infoKey));
   const [stimulationConfiguration] = useAtom(StimulationConfigurationAtomFamily(spcKey));
   const [experimentalSetupConfiguration] = useAtom(
     ExperimentalSetupConfigurationAtomFamily(sesKey)
   );
   const [recordLocationConfiguration] = useAtom(RecordLocationConfigurationAtomFamily(rlcKey));
   const [synaptomeConfiguration] = useAtom(SynaptomeConfigurationAtomFamily(sscKey));
+  const [amperageConfiguration] = useAtom(AmperageStateAtomFamily(ampKey));
+  const [frequencyConfiguration] = useAtom(FrequencyInputConfigurationAtomFamily(freqKey));
 
   const onRun = () => {
     const protocol = stimulationConfiguration.stimulus.stimulus_protocol;
@@ -103,12 +118,38 @@ export function Menu({ sessionId, type }: Props) {
       experimentalSetupConfiguration.max_time ?? currentInjectionDuration
     );
   };
+
+  const warnInfo =
+    OverviewConfigurationSchema.safeParse(overviewConfiguration).error?.formErrors.fieldErrors;
+
+  const warnRecordLocation = RecordLocationArraySchema.safeParse(recordLocationConfiguration).error
+    ?.formErrors.fieldErrors;
+
+  const warnExperimentalSetup = ExperimentalSetupConfigurationSchema.safeParse(
+    experimentalSetupConfiguration
+  ).error?.formErrors.fieldErrors;
+
+  const warnStimulationProtocol = {
+    ...StimulationConfigurationSchema.safeParse(stimulationConfiguration).error?.formErrors
+      .fieldErrors,
+    ...AmperageStateSchema.safeParse(amperageConfiguration).error?.formErrors.fieldErrors,
+  };
+
+  const warnSynaptome =
+    type === SimulationType.SingleNeuronSynaptome
+      ? {
+          ...SynapseConfigurationArraySchema.safeParse(synaptomeConfiguration).error?.formErrors
+            .fieldErrors,
+          ...FrequencyInputConfigSchema.safeParse(frequencyConfiguration).error?.formErrors
+            .fieldErrors,
+        }
+      : {};
+
   const disableRunSimulation =
-    !!RecordLocationArraySchema.safeParse(recordLocationConfiguration).error ||
-    !!ExperimentalSetupConfigurationSchema.safeParse(experimentalSetupConfiguration).error ||
-    !!StimulationConfigurationSchema.safeParse(stimulationConfiguration).error ||
-    (type === SimulationType.SingleNeuronSynaptome &&
-      !!SynapseConfigurationArraySchema.safeParse(synaptomeConfiguration).error);
+    !!Object.keys(warnRecordLocation ?? {}).length ||
+    !!Object.keys(warnExperimentalSetup ?? {}).length ||
+    !!Object.keys(warnStimulationProtocol ?? {}).length ||
+    (type === SimulationType.SingleNeuronSynaptome && !!Object.keys(warnSynaptome ?? {}).length);
 
   return (
     <div className="flex h-full flex-col gap-2">
@@ -130,11 +171,35 @@ export function Menu({ sessionId, type }: Props) {
             />
             Info
           </div>
-          <RightOutlined
-            className={cn('text-neutral-4 mr-2 [&_svg]:size-3!', {
-              '-rotate-180 transform text-white!': step === ExperimentStep.Info,
-            })}
-          />
+          <div className="flex items-center justify-center gap-3">
+            {!!warnInfo && (
+              <Tooltip>
+                <TooltipTrigger>
+                  <WarningFilled className="text-sm text-yellow-300" />
+                </TooltipTrigger>
+                <TooltipContent
+                  avoidCollisions
+                  side="bottom"
+                  sideOffset={10}
+                  collisionPadding={{ left: 25 }}
+                  className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
+                >
+                  {Object.values(warnInfo ?? {}).map((e1) => {
+                    return e1.map((err1) => (
+                      <p key={err1} className="w-full pb-0.5 break-words hyphens-auto">
+                        • {err1}
+                      </p>
+                    ));
+                  })}
+                </TooltipContent>
+              </Tooltip>
+            )}
+            <RightOutlined
+              className={cn('text-neutral-4 mr-2 [&_svg]:size-3!', {
+                '-rotate-180 transform text-white!': step === ExperimentStep.Info,
+              })}
+            />
+          </div>
         </div>
       </Button>
       <div className="text-neutral-3 ml-4 font-light uppercase">Experiment</div>
@@ -148,11 +213,38 @@ export function Menu({ sessionId, type }: Props) {
       >
         <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
           <div className="flex-shrink-0 font-bold">Experimental setup</div>
-          <RightOutlined
-            className={cn('text-neutral-4 mr-2 [&_svg]:size-3!', {
-              '-rotate-180 transform text-white!': step === ExperimentStep.ExperimentalSetup,
-            })}
-          />
+          <div className="flex items-center justify-center gap-3">
+            {warnExperimentalSetup && (
+              <Tooltip open>
+                <TooltipTrigger>
+                  <WarningFilled className="text-sm text-yellow-300" />
+                </TooltipTrigger>
+                <TooltipContent
+                  avoidCollisions
+                  side="bottom"
+                  sideOffset={10}
+                  collisionPadding={{ left: 25 }}
+                  className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
+                >
+                  {warnExperimentalSetup &&
+                    Object.values(warnExperimentalSetup).map((e2) => {
+                      return e2.map((err2) => {
+                        return (
+                          <p key={err2} className="w-full pb-0.5 break-words hyphens-auto">
+                            • {err2}
+                          </p>
+                        );
+                      });
+                    })}
+                </TooltipContent>
+              </Tooltip>
+            )}
+            <RightOutlined
+              className={cn('text-neutral-4 mr-2 [&_svg]:size-3!', {
+                '-rotate-180 transform text-white!': step === ExperimentStep.ExperimentalSetup,
+              })}
+            />
+          </div>
         </div>
       </Button>
       {type === SimulationType.SingleNeuronSynaptome && (
@@ -166,11 +258,41 @@ export function Menu({ sessionId, type }: Props) {
         >
           <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
             <div className="flex-shrink-0 font-bold">Synaptic Input</div>
-            <RightOutlined
-              className={cn('text-neutral-4 mr-2 [&_svg]:size-3!', {
-                '-rotate-180 transform text-white!': step === ExperimentStep.SynapticInputs,
-              })}
-            />
+            <div className="flex items-center justify-center gap-3">
+              {!!Object.keys(warnSynaptome ?? {}).length && (
+                <Tooltip open>
+                  <TooltipTrigger>
+                    <WarningFilled className="text-sm text-yellow-300" />
+                  </TooltipTrigger>
+                  <TooltipContent
+                    avoidCollisions
+                    side="bottom"
+                    sideOffset={10}
+                    collisionPadding={{ left: 25 }}
+                    className="text-destructive shadow-bnb w-full max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap break-words"
+                  >
+                    {warnSynaptome &&
+                      Object.values(warnSynaptome).map((e3) => {
+                        return Array.isArray(e3)
+                          ? e3.map((err3: string) => (
+                              <p
+                                key={err3}
+                                className="pb-0.5 [overflow-wrap:anywhere] hyphens-auto whitespace-pre-wrap"
+                              >
+                                • {err3}
+                              </p>
+                            ))
+                          : null;
+                      })}
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              <RightOutlined
+                className={cn('text-neutral-4 mr-2 [&_svg]:size-3!', {
+                  '-rotate-180 transform text-white!': step === ExperimentStep.SynapticInputs,
+                })}
+              />
+            </div>
           </div>
         </Button>
       )}
@@ -184,11 +306,38 @@ export function Menu({ sessionId, type }: Props) {
       >
         <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
           <div className="flex-shrink-0 font-bold">Stimulation protocol</div>
-          <RightOutlined
-            className={cn('text-neutral-4 mr-2 [&_svg]:size-3!', {
-              '-rotate-180 transform text-white!': step === ExperimentStep.StimulationProtocol,
-            })}
-          />
+          <div className="flex items-center justify-center gap-3">
+            {!!Object.keys(warnStimulationProtocol ?? {}).length && (
+              <Tooltip>
+                <TooltipTrigger>
+                  <WarningFilled className="text-sm text-yellow-300" />
+                </TooltipTrigger>
+                <TooltipContent
+                  avoidCollisions
+                  side="bottom"
+                  sideOffset={10}
+                  collisionPadding={{ left: 25 }}
+                  className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
+                >
+                  {warnStimulationProtocol &&
+                    Object.values(warnStimulationProtocol).map((e4) => {
+                      return Array.isArray(e4)
+                        ? e4.map((err4: string) => (
+                            <p key={err4} className="w-full pb-0.5 break-words hyphens-auto">
+                              • {err4}
+                            </p>
+                          ))
+                        : null;
+                    })}
+                </TooltipContent>
+              </Tooltip>
+            )}
+            <RightOutlined
+              className={cn('text-neutral-4 mr-2 [&_svg]:size-3!', {
+                '-rotate-180 transform text-white!': step === ExperimentStep.StimulationProtocol,
+              })}
+            />
+          </div>
         </div>
       </Button>
       <Button
@@ -201,11 +350,38 @@ export function Menu({ sessionId, type }: Props) {
       >
         <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
           <div className="flex-shrink-0 font-bold">Recording</div>
-          <RightOutlined
-            className={cn('text-neutral-4 mr-2 [&_svg]:size-3!', {
-              '-rotate-180 transform text-white!': step === ExperimentStep.Recording,
-            })}
-          />
+          <div className="flex items-center justify-center gap-3">
+            {!!Object.keys(warnRecordLocation ?? {}).length && (
+              <Tooltip>
+                <TooltipTrigger>
+                  <WarningFilled className="text-sm text-yellow-300" />
+                </TooltipTrigger>
+                <TooltipContent
+                  avoidCollisions
+                  side="bottom"
+                  sideOffset={10}
+                  collisionPadding={{ left: 25 }}
+                  className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
+                >
+                  {warnRecordLocation &&
+                    Object.values(warnRecordLocation).map((error) => {
+                      return Array.isArray(error)
+                        ? error.map((err5: string) => (
+                            <p key={err5} className="w-full pb-0.5 break-words hyphens-auto">
+                              • {err5}
+                            </p>
+                          ))
+                        : null;
+                    })}
+                </TooltipContent>
+              </Tooltip>
+            )}
+            <RightOutlined
+              className={cn('text-neutral-4 mr-2 [&_svg]:size-3!', {
+                '-rotate-180 transform text-white!': step === ExperimentStep.Recording,
+              })}
+            />
+          </div>
         </div>
       </Button>
       <Tooltip>

@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import { useState } from 'react';
+import kebabCase from 'lodash/kebabCase';
 
 import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -14,7 +15,7 @@ import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { cn } from '@/utils/css-class';
 
-import type { IMEModel } from '@/api/entitycore/types';
+import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
 
 type Props = {
   sessionId: string;
@@ -68,7 +69,7 @@ export function MEModel({ sessionId }: Props) {
           selectionType: 'radio',
           onCellClick: (_, record) => {
             navigate(
-              `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${record.id}`
+              `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${kebabCase(EntityTypeDict.Memodel)}/${record.id}/overview`
             );
           },
           onRowsSelected: (rows) => {

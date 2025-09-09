@@ -42,7 +42,7 @@ const links = [
 export function LeftMenu({ className }: Props) {
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
-  const { isProjectAdmin } = useUserRole({ virtualLabId, projectId });
+  const { isAdmin } = useUserRole({ virtualLabId, projectId });
   const pathname = usePathname();
   const activeSection = getActiveSection(pathname);
 
@@ -52,7 +52,7 @@ export function LeftMenu({ className }: Props) {
       baseUrl: link.url,
       url: `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/${link.url}`,
     })),
-    (link) => !link.requireRole || (link.requireRole && isProjectAdmin)
+    (link) => !link.requireRole || (link.requireRole && isAdmin)
   );
 
   return (

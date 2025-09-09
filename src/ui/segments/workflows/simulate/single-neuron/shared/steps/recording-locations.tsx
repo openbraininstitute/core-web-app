@@ -179,18 +179,20 @@ function RecordItem({ index, name, disable, disableDelete, sections, onRemove }:
           >
             <Checkbox className="h-full" disabled={disable} />
           </Form.Item>
-          <Form.Item className="flex items-center justify-center" label={<></>} labelAlign="left">
-            <Button
-              variant="ghost"
-              size={breakpoint === 'l' ? 'md' : 'lg'}
-              type="button"
-              disabled={disableDelete}
-              onClick={() => onRemove(index)}
-              className="hover:bg-neutral-2 w-10 cursor-pointer"
-            >
-              <DeleteOutlined />
-            </Button>
-          </Form.Item>
+          {!disableDelete && (
+            <Form.Item className="flex items-center justify-center" label={<></>} labelAlign="left">
+              <Button
+                variant="ghost"
+                size={breakpoint === 'l' ? 'md' : 'lg'}
+                type="button"
+                disabled={disableDelete}
+                onClick={() => onRemove(index)}
+                className="hover:bg-neutral-2 w-10 cursor-pointer"
+              >
+                <DeleteOutlined />
+              </Button>
+            </Form.Item>
+          )}
         </div>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import isNil from 'lodash/isNil';
 
 export const StimulationMode = {
   CurrentClamp: {
@@ -112,27 +113,27 @@ export const SynapseTypeDict = Object.fromEntries(
 
 export const ExperimentalSetupConfigurationSchema = z.object({
   celsius: z
-    .number({ message: 'Temperature is required' })
+    .number({ message: 'Please enter a valid numeric value for Temperature (°C).' })
     .min(0, 'Temperature must be between 0 and 50°C')
     .max(50, 'Temperature must be between 0 and 50°C'),
   vinit: z
-    .number({ message: 'Initial voltage is required' })
+    .number({ message: 'Please enter a valid numeric value for initial membrane voltage (mV).' })
     .min(-200, 'Initial voltage must be between -200 and 200 mV')
     .max(200, 'Initial voltage must be between -200 and 200 mV'),
   hypamp: z
-    .number({ message: 'Holding current is required' })
+    .number({ message: 'Please enter a valid numeric value for holding current (nA).' })
     .min(-20, 'Holding current must be between -20 and 20 nA')
     .max(20, 'Holding current must be between -20 and 20 nA'),
   max_time: z
-    .number({ message: 'Simulation duration is required' })
+    .number({ message: 'Please enter a valid numeric value for simulation duration (ms).' })
     .min(0, 'Simulation duration must be between 0 and 3000 ms')
     .max(3000, 'Simulation duration must be between 0 and 3000 ms'),
   time_step: z
-    .number({ message: 'Time step is required' })
+    .number({ message: 'Please enter a valid numeric value for time step (ms).' })
     .min(0.001, 'Time step must be between 0.001 and 10 ms')
     .max(10, 'Time step must be between 0.001 and 10 ms'),
   seed: z
-    .number({ message: 'Seed is required' })
+    .number({ message: 'Please enter a valid numeric value for random seed.' })
     .int()
     .min(0, 'Seed must be a positive integer')
     .max(Infinity, 'Seed must be a positive integer'),
@@ -150,7 +151,7 @@ export const StimulusConfigSchema = z.object({
     ],
     {
       message:
-        'Stimulation mode must be one of the following: Current Clamp, Voltage Clamp, Conductance',
+        'Stimulation mode must be one of the following: Current Clamp, Voltage Clamp, Conductance.',
     }
   ),
   stimulus_protocol: z
@@ -184,11 +185,19 @@ export const StimulationConfigurationSchema = z.object({
 export type TStimulationConfiguration = z.infer<typeof StimulationConfigurationSchema>;
 
 export const RecordLocationSchema = z.object({
-  section: z.string({ message: 'Section cannot be empty' }),
+  section: z.string({ message: 'Recording section name is required' }),
   offset: z
-    .number({ message: 'Offset must be a positive number' })
-    .min(0, 'Offset must be a positive number')
-    .max(1, 'Offset must be between 0 and 1'),
+    .number({
+      message: 'Recording position offset is required and must be a number between 0 and 1',
+    })
+    .min(
+      0,
+      'Recording position offset must be between 0 and 1 (0 = start of section, 1 = end of section)'
+    )
+    .max(
+      1,
+      'Recording position offset must be between 0 and 1 (0 = start of section, 1 = end of section)'
+    ),
   record_currents: z.boolean(),
 });
 
@@ -200,22 +209,56 @@ export type RecordLocationArray = z.infer<typeof RecordLocationArraySchema>;
 
 export const SynapseConfigSchema = z.object({
   id: z.string(),
-  config_id: z.string(),
-  delay: z.number(),
-  duration: z.number(),
-  frequency: z.union([z.number(), z.array(z.number())]),
-  weight_scalar: z.number(),
-  color: z.string(),
+  config_id: z.string({ message: 'Synapse configuration ID is required' }),
+  delay: z.number({ message: 'Synapse delay (ms) is required and must be a number' }),
+  duration: z.number({ message: 'Synapse duration (ms) is required and must be a number' }),
+  frequency: z
+    .union(
+      [
+        z
+          .number({ message: 'Synapse frequency (Hz) must be a positive number' })
+          .min(0, 'Synapse frequency must be a positive number'),
+        z.array(
+          z
+            .number({ message: 'Synapse frequencies must be positive numbers' })
+            .min(0, 'Synapse frequencies must be positive numbers')
+        ),
+      ],
+      {
+        message:
+          'Synapse frequency must be a single positive number (Hz) or a list of positive numbers if steps are used',
+        errorMap: (issue, ctx) => {
+          if (issue.code === 'invalid_union') {
+            return {
+              message:
+                'Synapse frequency must be a single positive number (Hz) or a list of positive numbers if steps are used',
+            };
+          }
+          return { message: ctx.defaultError };
+        },
+      }
+    )
+    .refine((val) => !isNil(val), {
+      message: 'Synapse frequency is required',
+    }),
+  weight_scalar: z.number({ message: 'Synapse weight scalar is required and must be a number' }),
+  color: z.string({ message: 'Synapse color is required' }),
 });
 
 export const OverviewConfigurationSchema = z.object({
-  name: z.string({ message: 'Name is required' }).min(1, 'Name is required'),
+  name: z
+    .string({ message: 'The simulation name cannot be empty.' })
+    .nonempty({
+      message: 'The simulation name cannot be empty.',
+    })
+    .min(1, 'Please enter a simulation name (minimum 1 character).'),
   description: z.string().optional(),
 });
 
 export type OverviewConfiguration = z.infer<typeof OverviewConfigurationSchema>;
 
 export type SynapseConfiguration = z.infer<typeof SynapseConfigSchema>;
+
 export const SynapseConfigurationArraySchema = z.array(SynapseConfigSchema);
 export type SynapseConfigurationArray = z.infer<typeof SynapseConfigurationArraySchema>;
 
@@ -267,28 +310,50 @@ export const FrequencyInputConfigSchema = z.object({
   constantOrSteps: z.enum(['constant', 'step']),
   stepFrequencyState: z
     .object({
-      start: z.number(),
-      stop: z.number(),
-      step: z.number(),
+      start: z.number({ message: 'Start frequency (Hz) is required and must be a number' }),
+      stop: z.number({ message: 'Stop frequency (Hz) is required and must be a number' }),
+      step: z.number({ message: 'Number of frequency steps is required and must be a number' }),
     })
-    .nullable(),
+    .nullable()
+    .refine((value) => value === null || value.start < value.stop, {
+      message: 'Start frequency must be less than stop frequency',
+      path: ['stepFrequencyState', 'start'],
+    }),
 });
 
 export type FrequencyInputConfig = z.infer<typeof FrequencyInputConfigSchema>;
 
-// Amperage state schema - minimal addition for persistence
-export const AmperageStateSchema = z.object({
+// Base amperage schema without refinements
+export const AmperageBaseSchema = z.object({
   protocol: z.enum([
     StimulusModule.APWaveform.value,
     StimulusModule.Idrest.value,
     StimulusModule.IV.value,
     StimulusModule.FirePattern.value,
   ]),
-  start: z.number(),
-  end: z.number(),
-  stepValue: z.number(),
+  start: z.number({ message: 'Start current amplitude (nA) is required and must be a number' }),
+  end: z.number({ message: 'End current amplitude (nA) is required and must be a number' }),
+  stepValue: z.number({
+    message: 'Number of current amplitude steps is required and must be a number',
+  }),
   computed: z.array(z.number()),
   error: z.string().nullable(),
 });
+
+// Amperage state schema with conditional validation
+export const AmperageStateSchema = AmperageBaseSchema.refine(
+  (data) => {
+    // If start equals end, it's a constant value (frequency mode) - this is valid
+    if (data.start === data.end) {
+      return true;
+    }
+    // Otherwise, start must be less than end (step mode)
+    return data.start < data.end;
+  },
+  {
+    message: 'Start current amplitude must be less than end current amplitude',
+    path: ['start'],
+  }
+);
 
 export type AmperageState = z.infer<typeof AmperageStateSchema>;

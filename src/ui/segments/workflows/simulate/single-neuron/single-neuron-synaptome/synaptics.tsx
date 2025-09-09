@@ -167,7 +167,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
         <Form.List name="synapses">
           {(fields, { remove }) => {
             return (
-              <div className="flex flex-col items-start justify-start gap-4">
+              <div className="flex w-full flex-col items-start justify-start gap-4">
                 {fields.map((field) => {
                   const formName = `${field.name}`;
                   const meshForForm = visualizedSynaptomes?.[formName]?.meshId;

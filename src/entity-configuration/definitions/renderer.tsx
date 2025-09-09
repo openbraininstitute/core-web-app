@@ -153,7 +153,8 @@ export function renderPreview<T extends EntityCoreResource>(
   rootClassName?: string,
   loadingClassName?: string,
   fill?: boolean,
-  customRender?: (src: string) => ReactNode
+  customRender?: (src: string) => ReactNode,
+  target?: 'simulation' | 'stimulus'
 ) {
   return (
     <PreviewThumbnail
@@ -164,6 +165,7 @@ export function renderPreview<T extends EntityCoreResource>(
       rootClassName={rootClassName}
       loadingClassName={loadingClassName}
       fill={fill}
+      target={target}
       customRender={customRender}
     />
   );
@@ -189,11 +191,6 @@ export function renderMeanStd({
   mean: MeasurementBase | undefined;
   std: MeasurementBase | undefined;
 }) {
-  // const muMinusOne = (
-  //   <span className="text-neutral-4">
-  //     µm<sup>-1</sup>
-  //   </span>
-  // );
   const field = std
     ? `${renderFloatNumber(mean?.value)} ± ${renderFloatNumber(std?.value)}`
     : `${renderFloatNumber(mean?.value)}`;

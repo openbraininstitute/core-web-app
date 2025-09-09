@@ -8,7 +8,9 @@ import { Image } from 'antd';
 import kebabCase from 'lodash/kebabCase';
 import Link from 'next/link';
 
+import { SingleNeuronSimulationPreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-simulation-preview';
 import { SingleNeuronSynaptomePreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-synaptome-preview';
+import { makeCustomRowSelectionEvent } from '@/ui/segments/explore/circuit/elements/custom-row-selection-event';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
 import { MEModelPreview } from '@/ui/segments/mini-detail-view/previews/me-model-preview';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -32,10 +34,13 @@ import { cn } from '@/utils/css-class';
 
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import type { TWorkspaceSection } from '@/constants';
-import type {
-  EntityCoreObjectTypes,
-  IMEModel,
-  ISingleNeuronSynaptome,
+import {
+  EntityTypeDict,
+  type EntityCoreObjectTypes,
+  type IMEModel,
+  type ISingleNeuronSimulation,
+  type ISingleNeuronSynaptome,
+  type ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
 
 type Props = {
@@ -46,6 +51,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
   section = WorkspaceSection.Data,
 }: Props) {
   const [record, setRecord] = useState<T | null>(null);
+
   useSelectEntityClickEvent<T>((event) => {
     setRecord(event.detail.data);
   });
@@ -110,7 +116,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
       },
       () => {
         return (
-          <div className="mt-5 w-full">
+          <div className="mt-5 w-full" key={record.id}>
             <MEModelPreview record={record as IMEModel} />
           </div>
         );
@@ -121,8 +127,23 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
         type: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
       },
       () => (
-        <div className="mt-5 w-full">
+        <div className="mt-5 w-full" key={record.id}>
           <SingleNeuronSynaptomePreview record={record as ISingleNeuronSynaptome} />
+        </div>
+      )
+    )
+    .with(
+      {
+        type: P.union(
+          ExtendedEntitiesTypeDict.SingleNeuronSimulation,
+          ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation
+        ),
+      },
+      () => (
+        <div className="mt-5 w-full" key={record.id}>
+          <SingleNeuronSimulationPreview
+            record={record as ISingleNeuronSimulation | ISingleNeuronSynaptomeSimulation}
+          />
         </div>
       )
     )
@@ -248,7 +269,13 @@ function ExploreActions<T extends EntityCoreObjectTypes>({ record }: { record: T
   });
 
   const onBookmark = () => saveAsync();
-  const onDownload = () => downloadAsync();
+  const onDownload = () => {
+    if (EntityTypeDict.Circuit === record.type) {
+      makeCustomRowSelectionEvent({ record });
+    } else {
+      downloadAsync();
+    }
+  };
 
   return (
     <div className="sticky bottom-0 mt-auto flex items-center justify-center gap-2 self-end p-4">
