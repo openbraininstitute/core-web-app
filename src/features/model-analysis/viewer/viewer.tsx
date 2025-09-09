@@ -33,20 +33,17 @@ export default function AssetViewer({ validationResult }: Props) {
   );
 
   return (
-    <div data-testid="documents-container" className="bg-neutral-1 mt-4 flex flex-col items-center">
+    <div data-testid="documents-container" className="mt-4 flex flex-col items-center">
       {validationResult.assets
         ?.filter((o) => AllowedTypes.includes(o.content_type as TAllowedTypes))
-        .map((asset, ix) => {
+        .map((asset) => {
           return (
             <div
               id={`document_${asset.id}`}
               key={`document_${asset.id}`}
               className="mb-5 flex w-full flex-col items-center"
             >
-              <h2 className="text-primary-8 mb-6 flex w-max items-center justify-center self-start p-3 text-center text-xl font-bold capitalize">
-                <span className="bg-neutral-1 flex h-12! w-12! items-center justify-center">
-                  {ix + 1}
-                </span>
+              <h2 className="text-primary-8 border-neutral-2 mb-6 block! w-full rounded-full border p-3 text-xl font-bold capitalize">
                 <span className="ml-4">{lowerCase(asset.path.split('.').at(0))}</span>
               </h2>
               {content(asset)}

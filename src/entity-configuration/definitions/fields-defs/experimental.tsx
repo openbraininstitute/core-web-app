@@ -31,6 +31,16 @@ import type {
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
 
+const morphologyMtypes = (morphology?: IReconstructionMorphology) => {
+  if (!morphology) return [];
+  return renderEmptyOrValue(renderArray(morphology.mtypes?.map((m) => m.pref_label) || []));
+};
+
+const emodelEtypes = (emodel?: IEModel) => {
+  if (!emodel) return [];
+  return renderEmptyOrValue(renderArray(emodel.etypes?.map((m) => m.pref_label) || []));
+};
+
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.License]: {
     title: 'License',
@@ -86,18 +96,19 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     fieldType: CoreFieldType.CellType,
     title: 'M-Type',
     filter: CoreFieldFilterTypeEnum.CheckList,
-    render: (r) => {
+    render(r: EntityCoreObjectTypes) {
       if (isSingleNeuronSynaptome(r)) {
-        return renderEmptyOrValue(renderArray(r.me_model.mtypes?.map((m) => m.pref_label) || []));
-      }
-      if (isMemodel(r) && isEmpty(r.etypes)) {
         return renderEmptyOrValue(
           renderArray(
-            (
-              r.morphology as IReconstructionMorphology & { etypes: Array<IMType> | null }
-            ).mtypes?.map((m) => m.pref_label) || []
+            (r.me_model.mtypes &&
+              r.me_model.mtypes.length > 0 &&
+              r.me_model.mtypes.map((m) => m.pref_label)) ||
+              morphologyMtypes(r.me_model.morphology)
           )
         );
+      }
+      if (isMemodel(r) && isEmpty(r.etypes)) {
+        return morphologyMtypes(r.morphology);
       }
       return renderEmptyOrValue(
         renderArray(
@@ -132,18 +143,19 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     fieldType: CoreFieldType.CellType,
     title: 'E-Type',
     filter: CoreFieldFilterTypeEnum.CheckList,
-    render: (r) => {
+    render(r: EntityCoreObjectTypes) {
       if (isSingleNeuronSynaptome(r)) {
-        return renderEmptyOrValue(renderArray(r.me_model.etypes?.map((m) => m.pref_label) || []));
-      }
-      if (isMemodel(r) && isEmpty(r.etypes)) {
         return renderEmptyOrValue(
           renderArray(
-            (r.emodel as IEModel & { etypes: Array<IEType> | null }).etypes?.map(
-              (e) => e.pref_label
-            ) || []
+            (r.me_model.etypes &&
+              r.me_model.etypes.length > 0 &&
+              r.me_model.etypes.map((m) => m.pref_label)) ||
+              emodelEtypes(r.me_model.emodel)
           )
         );
+      }
+      if (isMemodel(r) && isEmpty(r.etypes)) {
+        return emodelEtypes(r.emodel);
       }
       return renderEmptyOrValue(
         renderArray(

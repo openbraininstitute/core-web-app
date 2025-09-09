@@ -25,7 +25,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     summaryViewFields: [
       { field: EntityCoreFields.BrainRegion },
       { field: EntityCoreFields.EModelScore },
-      { field: EntityCoreFields.MType, className: 'col-span-3' },
+      { field: EntityCoreFields.MType },
       { field: EntityCoreFields.EType },
     ],
     miniDetailView: [
@@ -54,10 +54,10 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     ],
     curated: false,
     summaryViewFields: [
-      { field: EntityCoreFields.BrainRegion, className: 'col-span-2' },
-      { field: EntityCoreFields.MEModelValidationStatus, className: 'col-span-2 text-left' },
-      { field: EntityCoreFields.MType, className: 'col-span-4' },
-      { field: EntityCoreFields.EType, className: 'col-span-4' },
+      { field: EntityCoreFields.BrainRegion },
+      { field: EntityCoreFields.MEModelValidationStatus },
+      { field: EntityCoreFields.MType },
+      { field: EntityCoreFields.EType },
     ],
     miniDetailView: [
       { field: EntityCoreFields.BrainRegion },

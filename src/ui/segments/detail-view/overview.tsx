@@ -15,6 +15,14 @@ import {
 } from '@/entity-configuration/domain/simulation';
 import { AwaitedType, WorkspaceContext } from '@/types/common';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { MorphoViewerLoaderMemo } from '@/features/entities/reconstruction-morphology/detail-view';
+import {
+  IReconstructionMorphology,
+  IElectricalCellRecording,
+  ISingleNeuronSynaptome,
+} from '@/api/entitycore/types';
+import EphysViewer from '@/features/ephys-viewer';
+import { getMEModel } from '@/api/entitycore/queries';
 
 export default async function Overview({
   entity,
@@ -56,6 +64,15 @@ export default async function Overview({
     }
   }
 
+  if (extendedType === 'single_neuron_synaptome') {
+    const meModel = await getMEModel({
+      id: (entity as ISingleNeuronSynaptome).me_model.id,
+      context: ctx,
+    });
+
+    (entity as ISingleNeuronSynaptome).me_model = meModel; //eslint-disable-line
+  }
+
   return (
     <>
       <div className="mb-5 grid grid-cols-3 gap-4 rounded-lg border border-gray-300 p-5">
@@ -81,7 +98,15 @@ export default async function Overview({
           />
         )}
 
-      {circuitTypes.includes(extendedType) && entity && <CircuitViz circuit={entity as ICircuit} />}
+      {circuitTypes.includes(extendedType) && <CircuitViz circuit={entity as ICircuit} />}
+
+      {extendedType === 'reconstruction_morphology' && (
+        <MorphoViewerLoaderMemo resource={entity as IReconstructionMorphology} />
+      )}
+
+      {extendedType === 'electrical_cell_recording' && (
+        <EphysViewer resource={entity as IElectricalCellRecording} ctx={ctx} />
+      )}
     </>
   );
 }
