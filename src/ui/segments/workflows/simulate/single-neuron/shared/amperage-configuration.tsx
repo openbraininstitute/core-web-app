@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useCallback } from 'react';
-import { InputNumber, Switch } from 'antd';
+import { InputNumber, Switch, Form } from 'antd';
 import { useAtom } from 'jotai';
 import isEqual from 'lodash/isEqual';
+import isNil from 'lodash/isNil';
 
+import { AmperageBaseSchema } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { StimuliPreviewPlot } from '@/ui/segments/workflows/simulate/single-neuron/shared/stimuli-preview-plot';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import {
   calculateRangeOutput,
+  createZodValidator,
   getSessionKey,
   label,
   MAX_AMPERAGE_STEPS,
@@ -56,27 +59,87 @@ function rangeReducer(state: AmperageStateType, action: AmperageActionType) {
   switch (action.type) {
     case 'start':
       newState.start = newVal;
+      if (isNil(newVal)) {
+        newState.error = 'Start value is required';
+      } else {
+        newState.error = null;
+      }
       break;
     case 'end':
       newState.end = newVal;
+      if (isNil(newVal)) {
+        newState.error = 'End value is required';
+      } else {
+        newState.error = null;
+      }
       break;
     case 'stepValue':
+      if (isNil(newVal)) {
+        newState.stepValue = newVal!;
+        newState.error = 'Step value is required';
+        break;
+      }
       if (newVal < 0) {
         newState.stepValue = 0;
         break;
       }
       newState.stepValue = newVal;
+      newState.error = null;
       break;
     case 'reset-for-protocol':
       Object.assign(newState, { ...getInitialAmperageState(newVal) });
       break;
     case 'constant-value':
+      // handle null/undefined values gracefully - let Form validation handle the error display
+      if (isNil(newVal)) {
+        newState.start = newVal!;
+        newState.end = newVal!;
+        newState.computed = [];
+        newState.error = 'Amperage value is required';
+        break;
+      }
+      if (typeof newVal !== 'number') {
+        newState.start = newVal;
+        newState.end = newVal;
+        newState.computed = [];
+        newState.error = 'Amperage value must be a valid number';
+        break;
+      }
       newState.start = newVal;
       newState.end = newVal;
       newState.stepValue = 1;
-      newState.computed = calculateRangeOutput(newState.start, newState.end, newState.stepValue);
+      try {
+        newState.computed = calculateRangeOutput(newState.start, newState.end, newState.stepValue);
+        newState.error = null;
+      } catch (error) {
+        log('error', 'Error calculating constant amperage:', error);
+        newState.computed = [];
+        newState.error = 'Error calculating amperage value';
+      }
       break;
     case 'checkConsistency':
+      if (isNil(state.start)) {
+        newState.error = 'Start value is required';
+        break;
+      }
+      if (isNil(state.end)) {
+        newState.error = 'End value is required';
+        break;
+      }
+      if (isNil(state.stepValue)) {
+        newState.error = 'Step value is required';
+        break;
+      }
+
+      if (
+        typeof state.start !== 'number' ||
+        typeof state.end !== 'number' ||
+        typeof state.stepValue !== 'number'
+      ) {
+        newState.error = 'All values must be valid numbers';
+        break;
+      }
+
       if (state.start > state.end) {
         newState.error = 'Start should be less than end';
         break;
@@ -85,12 +148,18 @@ function rangeReducer(state: AmperageStateType, action: AmperageActionType) {
         break;
       }
 
-      newState.computed = calculateRangeOutput(newState.start, newState.end, newState.stepValue);
+      try {
+        newState.computed = calculateRangeOutput(newState.start, newState.end, newState.stepValue);
 
-      if (newState.computed.length > MAX_AMPERAGE_STEPS) {
-        newState.error = `There should be a maximum of ${MAX_AMPERAGE_STEPS} amperages in a simulation. Currently there are ${newState.computed.length}`;
-      } else {
-        newState.error = null;
+        if (newState.computed.length > MAX_AMPERAGE_STEPS) {
+          newState.error = `There should be a maximum of ${MAX_AMPERAGE_STEPS} amperages in a simulation. Currently there are ${newState.computed.length}`;
+        } else {
+          newState.error = null;
+        }
+      } catch (error) {
+        log('error', 'Error calculating range output:', error);
+        newState.error = 'Error calculating amperage values';
+        newState.computed = [];
       }
       break;
     default:
@@ -100,6 +169,7 @@ function rangeReducer(state: AmperageStateType, action: AmperageActionType) {
 }
 
 export function AmperageConfiguration({ sessionId, memodelId }: Props) {
+  const [form] = Form.useForm();
   const breakpoint = useDefaultBreakpoint();
   const sscKey = getSessionKey(PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
   const spcKey = getSessionKey(PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
@@ -115,9 +185,20 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
   const dispatch = useCallback(
     (action: AmperageActionType) => {
       try {
-        setAmperageState((currentState) => rangeReducer(currentState, action));
+        setAmperageState((currentState) => {
+          try {
+            return rangeReducer(currentState, action);
+          } catch (error) {
+            log('error', 'Error in amperage reducer for action:', action.type, error);
+            // return current state with error set to prevent crashes
+            return {
+              ...currentState,
+              error: 'An unexpected error occurred while processing amperage values',
+            };
+          }
+        });
       } catch (error) {
-        log('error', 'Error in amperage reducer', error);
+        log('error', 'Critical error in amperage dispatch', error);
       }
     },
     [setAmperageState]
@@ -134,12 +215,37 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
     [spcState.stimulus.amplitudes]
   );
 
+  // sync form values with atom state
   useEffect(() => {
-    // Initialize state for protocol if it hasn't been set, or protocol changed
+    form.setFieldsValue({
+      constantAmperage: amperageState.start,
+      startAmperage: amperageState.start,
+      endAmperage: amperageState.end,
+      stepValue: amperageState.stepValue,
+    });
+  }, [form, amperageState.start, amperageState.end, amperageState.stepValue]);
+
+  // clear validation errors when switching between modes
+  useEffect(() => {
+    if (disableStepper) {
+      // frequency mode: clear step field errors
+      form.setFields([
+        { name: 'startAmperage', errors: [] },
+        { name: 'endAmperage', errors: [] },
+        { name: 'stepValue', errors: [] },
+      ]);
+    } else {
+      // step mode: clear constant amperage errors
+      form.setFields([{ name: 'constantAmperage', errors: [] }]);
+    }
+  }, [form, disableStepper]);
+
+  useEffect(() => {
+    // initialize state for protocol if it hasn't been set, or protocol changed
     if (amperageState.protocol !== protocol) {
       dispatch({ type: 'reset-for-protocol', payload: protocol });
     } else if (disableStepper) {
-      // If user sets a synapse with frequency range, automatically
+      // if user sets a synapse with frequency range, automatically
       // convert amplitude to a constant value
       dispatch({
         type: 'constant-value',
@@ -150,6 +256,12 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
 
   useEffect(() => {
     if (isEqual(amperageState.computed, amplitudes)) return;
+
+    // don't update if computed values are empty or invalid
+    if (!amperageState.computed.length || amperageState.error) {
+      return;
+    }
+
     updateSPC({
       ...spcState,
       stimulus: {
@@ -214,107 +326,226 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
           </div>
         ) : null}
       </div>
-      {synapseIdxWithFrequencyRange !== -1 ? (
-        <div className="text-left">
-          <InputNumber
-            required
-            size={breakpoint === 'l' ? 'middle' : 'large'}
-            min={-100}
-            max={100}
-            value={amperageState.start}
-            className="text-primary-9 [&_.ant-input-suffix]:text-neutral-3 w-full font-bold"
-            onChange={(newVal) => dispatch({ type: 'constant-value', payload: newVal })}
-            onBlur={() => dispatch({ type: 'checkConsistency', payload: null })}
-            aria-label="constant amplitude"
-          />
-          <span className="text-gray-400">[nA]</span>
-        </div>
-      ) : (
-        <div className="my-4 flex w-full flex-col items-center justify-center gap-3.5">
-          <div className="flex w-full items-center justify-center gap-5">
-            <div className="flex w-max flex-3/7 flex-col items-start justify-start">
-              {label('start', true)}
+      <Form form={form} layout="vertical" className="[&_.ant-form-item-explain-error]:text-sm!">
+        {synapseIdxWithFrequencyRange !== -1 ? (
+          <div className="text-left">
+            <Form.Item
+              name="constantAmperage"
+              rules={
+                disableStepper
+                  ? [
+                      {
+                        validator: createZodValidator(
+                          AmperageBaseSchema.shape.start,
+                          'Amperage value is required'
+                        ),
+                      },
+                    ]
+                  : [] // No validation when stepper is enabled
+              }
+              validateStatus={amperageState.error ? 'error' : ''}
+              help={amperageState.error}
+            >
               <InputNumber
                 size={breakpoint === 'l' ? 'middle' : 'large'}
-                placeholder="start"
-                step={0.1}
                 min={-100}
                 max={100}
                 value={amperageState.start}
-                onChange={(newVal) => dispatch({ type: 'start', payload: newVal })}
-                className="[&_input]:text-primary-9! [&_.ant-input-suffix]:text-neutral-3 w-full font-bold"
-                aria-label="start"
-                suffix="[nA]"
-                onBlur={() => dispatch({ type: 'checkConsistency', payload: null })}
-                status={
+                className="text-primary-9 [&_.ant-input-suffix]:text-neutral-3 w-full font-bold"
+                onChange={(newVal) => {
+                  // always dispatch, let the reducer handle null/undefined values gracefully
+                  dispatch({ type: 'constant-value', payload: newVal });
+                }}
+                onBlur={() => {
+                  // only check consistency if we have valid values
+                  if (!isNil(amperageState.start)) {
+                    dispatch({ type: 'checkConsistency', payload: null });
+                  }
+                }}
+                aria-label="constant amplitude"
+                placeholder="Enter amperage value"
+              />
+            </Form.Item>
+            <span className="text-gray-400">[nA]</span>
+          </div>
+        ) : (
+          <div className="my-4 flex w-full flex-col items-center justify-center gap-3.5">
+            <div className="flex w-full items-center justify-center gap-5">
+              <div className="flex w-max flex-3/7 flex-col items-start justify-start">
+                <Form.Item
+                  label={label('start', true)}
+                  name="startAmperage"
+                  // no validation when frequency stepper is enabled
+                  rules={
+                    !disableStepper
+                      ? [
+                          {
+                            validator: createZodValidator(
+                              AmperageBaseSchema.shape.start,
+                              'Start value is required'
+                            ),
+                          },
+                        ]
+                      : []
+                  }
+                  validateStatus={
+                    amperageState.error &&
+                    (amperageState.error.includes('Start') ||
+                      amperageState.error.includes('Start value is required'))
+                      ? 'error'
+                      : ''
+                  }
+                  help={
+                    amperageState.error &&
+                    (amperageState.error.includes('Start') ||
+                      amperageState.error.includes('Start value is required'))
+                      ? amperageState.error
+                      : ''
+                  }
+                >
+                  <InputNumber
+                    size={breakpoint === 'l' ? 'middle' : 'large'}
+                    placeholder="start"
+                    step={0.1}
+                    min={-100}
+                    max={100}
+                    value={amperageState.start}
+                    onChange={(newVal) => dispatch({ type: 'start', payload: newVal })}
+                    className="[&_input]:text-primary-9! [&_.ant-input-suffix]:text-neutral-3 w-full font-bold"
+                    aria-label="start"
+                    suffix="[nA]"
+                    onBlur={() => {
+                      // only check consistency if we have valid values
+                      if (
+                        !isNil(amperageState.start) &&
+                        !isNil(amperageState.end) &&
+                        !isNil(amperageState.stepValue)
+                      ) {
+                        dispatch({ type: 'checkConsistency', payload: null });
+                      }
+                    }}
+                  />
+                </Form.Item>
+              </div>
+              <div className="w-full flex-1/7">
+                {label('line', false, 'text-transparent')}
+                <hr className="w-full border border-gray-200" />
+              </div>
+              <div className="flex w-max flex-3/7 flex-col items-start justify-start">
+                <Form.Item
+                  label={label('stop', true)}
+                  name="endAmperage"
+                  rules={
+                    !disableStepper
+                      ? [
+                          {
+                            validator: createZodValidator(
+                              AmperageBaseSchema.shape.end,
+                              'End value is required'
+                            ),
+                          },
+                        ]
+                      : [] // No validation when frequency stepper is enabled
+                  }
+                  validateStatus={
+                    amperageState.error &&
+                    (amperageState.error.includes('End') ||
+                      amperageState.error.includes('End value is required'))
+                      ? 'error'
+                      : ''
+                  }
+                  help={
+                    amperageState.error &&
+                    (amperageState.error.includes('End') ||
+                      amperageState.error.includes('End value is required'))
+                      ? amperageState.error
+                      : ''
+                  }
+                >
+                  <InputNumber
+                    size={breakpoint === 'l' ? 'middle' : 'large'}
+                    placeholder="end"
+                    step={0.1}
+                    min={-100}
+                    max={1000}
+                    value={amperageState.end}
+                    onChange={(newVal) => dispatch({ type: 'end', payload: newVal })}
+                    suffix="[nA]"
+                    className="[&_input]:text-primary-9! [&_.ant-input-suffix]:text-neutral-2! w-full font-bold"
+                    onBlur={() => {
+                      if (
+                        !isNil(amperageState.start) &&
+                        !isNil(amperageState.end) &&
+                        !isNil(amperageState.stepValue)
+                      ) {
+                        dispatch({ type: 'checkConsistency', payload: null });
+                      }
+                    }}
+                  />
+                </Form.Item>
+              </div>
+            </div>
+            <div className="flex w-full flex-col items-start justify-start">
+              <Form.Item
+                label={label('N° of steps', true)}
+                name="stepValue"
+                rules={
+                  !disableStepper
+                    ? [
+                        {
+                          validator: createZodValidator(
+                            AmperageBaseSchema.shape.stepValue,
+                            'Step value is required'
+                          ),
+                        },
+                      ]
+                    : [] // No validation when frequency stepper is enabled
+                }
+                validateStatus={
                   amperageState.error &&
-                  amperageState.error.includes('Start should be less than end')
+                  (amperageState.error.includes('Step') ||
+                    amperageState.error.includes('maximum of'))
                     ? 'error'
                     : ''
                 }
-              />
-              {amperageState.error &&
-                amperageState.error.includes('Start should be less than end') && (
-                  <div className="mt-1 text-xs text-red-500">{amperageState.error}</div>
-                )}
-            </div>
-            <div className="w-full flex-1/7">
-              {label('line', false, 'text-transparent')}
-              <hr className="w-full border border-gray-200" />
-            </div>
-            <div className="flex w-max flex-3/7 flex-col items-start justify-start">
-              {label('stop', true)}
-              <InputNumber
-                size={breakpoint === 'l' ? 'middle' : 'large'}
-                placeholder="end"
-                step={0.1}
-                min={-100}
-                max={1000}
-                value={amperageState.end}
-                onChange={(newVal) => dispatch({ type: 'end', payload: newVal })}
-                suffix="[nA]"
-                className="[&_input]:text-primary-9! [&_.ant-input-suffix]:text-neutral-2! w-full font-bold"
-                onBlur={() => dispatch({ type: 'checkConsistency', payload: null })}
-                status={
+                help={
                   amperageState.error &&
-                  amperageState.error.includes('End should be greater than start')
-                    ? 'error'
+                  (amperageState.error.includes('Step') ||
+                    amperageState.error.includes('maximum of'))
+                    ? amperageState.error
                     : ''
                 }
-              />
-              {amperageState.error &&
-                amperageState.error.includes('End should be greater than start') && (
-                  <div className="mt-1 text-xs text-red-500">{amperageState.error}</div>
-                )}
+              >
+                <InputNumber
+                  size={breakpoint === 'l' ? 'middle' : 'large'}
+                  placeholder="number of steps"
+                  step={1}
+                  min={1}
+                  max={500}
+                  className="[&_input]:text-primary-9! [&_.ant-input-suffix]:text-neutral-2! w-full font-bold"
+                  value={amperageState.stepValue}
+                  onChange={(newVal) => dispatch({ type: 'stepValue', payload: newVal })}
+                  onBlur={() => {
+                    // Only check consistency if we have valid values
+                    if (
+                      !isNil(amperageState.start) &&
+                      !isNil(amperageState.end) &&
+                      !isNil(amperageState.stepValue)
+                    ) {
+                      dispatch({ type: 'checkConsistency', payload: null });
+                    }
+                  }}
+                />
+              </Form.Item>
             </div>
           </div>
-          <div className="flex w-full flex-col items-start justify-start">
-            {label('N° of steps', true)}
-            <InputNumber
-              size={breakpoint === 'l' ? 'middle' : 'large'}
-              placeholder="end"
-              step={1}
-              min={0}
-              max={500}
-              className="[&_input]:text-primary-9! [&_.ant-input-suffix]:text-neutral-2! w-full font-bold"
-              value={amperageState.stepValue}
-              onChange={(newVal) => dispatch({ type: 'stepValue', payload: newVal })}
-              onBlur={() => dispatch({ type: 'checkConsistency', payload: null })}
-              status={
-                amperageState.error && amperageState.error.includes('maximum of') ? 'error' : ''
-              }
-            />
-            {amperageState.error && amperageState.error.includes('maximum of') && (
-              <div className="mt-1 text-xs text-red-500">{amperageState.error}</div>
-            )}
-          </div>
-        </div>
-      )}
-      <StimuliPreviewPlot
-        amplitudes={amperageState.computed}
-        protocol={amperageState.protocol}
-        memodelId={memodelId}
-      />
+        )}
+        <StimuliPreviewPlot
+          amplitudes={amperageState.computed}
+          protocol={amperageState.protocol}
+          memodelId={memodelId}
+        />
+      </Form>
     </div>
   );
 }

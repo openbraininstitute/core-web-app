@@ -1,12 +1,13 @@
 'use client';
 
+import { useMemo, useEffect, useState } from 'react';
 import { WarningFilled } from '@ant-design/icons';
 import { Form, InputNumber } from 'antd';
-import { useMemo, useEffect, useState } from 'react';
 import { useAtom } from 'jotai';
 
 import { PREFIX_FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { FrequencyInputConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import { FrequencyInputConfigSchema } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import {
@@ -15,11 +16,11 @@ import {
   label,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 import { Switch } from '@/components/common/Switch';
+import { isBrowser } from '@/utils/environment';
 import { cn } from '@/utils/css-class';
-import { FrequencyInputConfigSchema } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { log } from '@/utils/logger';
 
 import type { UpdateSynapseSimulationProperty } from '@/types/simulation/single-neuron';
-import { isBrowser } from '@/utils/environment';
 
 const defaultStepFrequencies = { start: 5, stop: 20, step: 3 };
 
@@ -73,11 +74,20 @@ export function FrequencyFormItem({
         constantOrSteps: 'step',
         stepFrequencyState: newStepState,
       });
-      onChange({
-        id: index,
-        key: 'frequency',
-        newValue: calculateRangeOutput(newStepState.start, newStepState.stop, newStepState.step),
-      });
+      try {
+        onChange({
+          id: index,
+          key: 'frequency',
+          newValue: calculateRangeOutput(newStepState.start, newStepState.stop, newStepState.step),
+        });
+      } catch (error) {
+        log('error', 'Error calculating frequency range:', error);
+        onChange({
+          id: index,
+          key: 'frequency',
+          newValue: [],
+        });
+      }
     } else {
       setFrequencyConfig({
         constantOrSteps: 'constant',
@@ -110,11 +120,20 @@ export function FrequencyFormItem({
     }
 
     setFrequencyConfig(newConfig);
-    onChange({
-      id: index,
-      key: 'frequency',
-      newValue: calculateRangeOutput(start, stop, step),
-    });
+    try {
+      onChange({
+        id: index,
+        key: 'frequency',
+        newValue: calculateRangeOutput(start, stop, step),
+      });
+    } catch (error) {
+      log('error', 'Error calculating frequency step range:', error);
+      onChange({
+        id: index,
+        key: 'frequency',
+        newValue: [],
+      });
+    }
   };
 
   const calculatedFrequencies = useMemo(() => {
@@ -122,12 +141,17 @@ export function FrequencyFormItem({
       return null;
     }
 
-    const stepFrequencies = calculateRangeOutput(
-      stepFrequencyState.start,
-      stepFrequencyState.stop,
-      stepFrequencyState.step
-    );
-    return stepFrequencies;
+    try {
+      const stepFrequencies = calculateRangeOutput(
+        stepFrequencyState.start,
+        stepFrequencyState.stop,
+        stepFrequencyState.step
+      );
+      return stepFrequencies;
+    } catch (error) {
+      log('error', 'Error calculating frequencies for display:', error);
+      return [];
+    }
   }, [stepFrequencyState]);
 
   const disableStepperContent = (

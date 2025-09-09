@@ -120,6 +120,9 @@ export function ManageCreditsStep({
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: keyBuilder.accounting({ virtualLabId }) });
+      await queryClient.invalidateQueries({
+        queryKey: keyBuilder.wallet({ virtualLabId, projectId: selectedProjectId! }),
+      });
       notify.success({
         message: <span className="text-primary-9 text-lg font-bold">Credits transfer</span>,
         description: (

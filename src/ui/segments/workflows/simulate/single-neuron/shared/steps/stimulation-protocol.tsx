@@ -6,11 +6,11 @@ import camelCase from 'lodash/camelCase';
 import startCase from 'lodash/startCase';
 import toPairs from 'lodash/toPairs';
 import get from 'lodash/get';
-import z from 'zod';
 
 import { StimulationConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { AmperageConfiguration } from '@/ui/segments/workflows/simulate/single-neuron/shared/amperage-configuration';
 import {
+  createZodValidator,
   getSessionKey,
   label,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
@@ -110,20 +110,10 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
           className="[&_.ant-select-arrow]:text-primary-8 w-full [&_.ant-form-item-row]:mb-0 [&_.ant-form-item-row]:inline-block [&_.ant-form-item-row]:w-full [&_.ant-select-selector]:border-0!"
           rules={[
             {
-              validator: async (_rule, value) => {
-                try {
-                  await StimulationConfigurationSchema.pick({
-                    inject_to: true,
-                  }).shape.inject_to.parseAsync(value);
-                } catch (error) {
-                  return Promise.reject(
-                    error instanceof z.ZodError
-                      ? error.errors.at(0)?.message
-                      : 'Injection target section is required'
-                  );
-                }
-                return Promise.resolve();
-              },
+              validator: createZodValidator(
+                StimulationConfigurationSchema.shape.inject_to,
+                'Injection target section is required'
+              ),
             },
           ]}
         >
@@ -154,20 +144,10 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
           className="[&_.ant-select-arrow]:text-primary-8 w-full [&_.ant-form-item-row]:mb-0 [&_.ant-form-item-row]:inline-block [&_.ant-form-item-row]:w-full [&_.ant-select-selector]:border-0!"
           rules={[
             {
-              validator: async (_rule, value) => {
-                try {
-                  await StimulationConfigurationSchema.pick({ stimulus: true })
-                    .shape.stimulus.pick({ stimulus_type: true })
-                    .shape.stimulus_type.parseAsync(value);
-                } catch (error) {
-                  return Promise.reject(
-                    error instanceof z.ZodError
-                      ? error.errors.at(0)?.message
-                      : 'Stimulation mode is required'
-                  );
-                }
-                return Promise.resolve();
-              },
+              validator: createZodValidator(
+                StimulationConfigurationSchema.shape.stimulus.shape.stimulus_type,
+                'Stimulation mode is required'
+              ),
             },
           ]}
         >
@@ -195,20 +175,10 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
             label={null}
             rules={[
               {
-                validator: async (_rule, value) => {
-                  try {
-                    await StimulationConfigurationSchema.pick({ stimulus: true })
-                      .shape.stimulus.pick({ stimulus_protocol: true })
-                      .shape.stimulus_protocol.parseAsync(value);
-                  } catch (error) {
-                    return Promise.reject(
-                      error instanceof z.ZodError
-                        ? error.errors.at(0)?.message
-                        : 'Stimulus protocol is required'
-                    );
-                  }
-                  return Promise.resolve();
-                },
+                validator: createZodValidator(
+                  StimulationConfigurationSchema.shape.stimulus.shape.stimulus_protocol,
+                  'Stimulus protocol is required'
+                ),
               },
             ]}
             labelAlign="left"

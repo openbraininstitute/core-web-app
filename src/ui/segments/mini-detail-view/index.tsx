@@ -116,7 +116,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
       },
       () => {
         return (
-          <div className="mt-5 w-full">
+          <div className="mt-5 w-full" key={record.id}>
             <MEModelPreview record={record as IMEModel} />
           </div>
         );
@@ -127,7 +127,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
         type: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
       },
       () => (
-        <div className="mt-5 w-full">
+        <div className="mt-5 w-full" key={record.id}>
           <SingleNeuronSynaptomePreview record={record as ISingleNeuronSynaptome} />
         </div>
       )
@@ -140,7 +140,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
         ),
       },
       () => (
-        <div className="mt-5 w-full">
+        <div className="mt-5 w-full" key={record.id}>
           <SingleNeuronSimulationPreview
             record={record as ISingleNeuronSimulation | ISingleNeuronSynaptomeSimulation}
           />

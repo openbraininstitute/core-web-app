@@ -28,15 +28,15 @@ import {
   SynaptomeConfigurationAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import {
+  PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
   PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
   PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY,
-  PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
   PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
-  PROTOCOL_DETAILS,
-  WorkflowSimulatePanels,
+  PREFIX_FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY,
   PREFIX_OVERVIEW_CONFIGURATION_SESSION_KEY,
   PREFIX_AMPERAGE_CONFIGURATION_SESSION_KEY,
-  PREFIX_FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY,
+  PROTOCOL_DETAILS,
+  WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
@@ -119,7 +119,9 @@ export function Menu({ sessionId, type }: Props) {
     );
   };
 
-  const warnInfo = OverviewConfigurationSchema.safeParse(overviewConfiguration);
+  const warnInfo =
+    OverviewConfigurationSchema.safeParse(overviewConfiguration).error?.formErrors.fieldErrors;
+
   const warnRecordLocation = RecordLocationArraySchema.safeParse(recordLocationConfiguration).error
     ?.formErrors.fieldErrors;
 
@@ -169,24 +171,26 @@ export function Menu({ sessionId, type }: Props) {
             />
             Info
           </div>
-          <div className="flex items-center justify-center gap-1">
+          <div className="flex items-center justify-center gap-3">
             {!!warnInfo && (
               <Tooltip>
                 <TooltipTrigger>
                   <WarningFilled className="text-sm text-yellow-300" />
                 </TooltipTrigger>
                 <TooltipContent
-                  side="right"
-                  sideOffset={40}
                   avoidCollisions
+                  side="bottom"
+                  sideOffset={10}
                   collisionPadding={{ left: 25 }}
-                  className="text-destructive shadow-bnb max-w-2xs rounded-md bg-amber-100 px-4 py-5"
+                  className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
                 >
-                  <div className="list-disc">
-                    {Object.values(warnInfo.error?.formErrors.fieldErrors ?? {}).map((e1) => {
-                      return e1.map((err1) => <li key={err1}>{err1}</li>);
-                    })}
-                  </div>
+                  {Object.values(warnInfo ?? {}).map((e1) => {
+                    return e1.map((err1) => (
+                      <p key={err1} className="w-full pb-0.5 break-words hyphens-auto">
+                        • {err1}
+                      </p>
+                    ));
+                  })}
                 </TooltipContent>
               </Tooltip>
             )}
@@ -209,29 +213,29 @@ export function Menu({ sessionId, type }: Props) {
       >
         <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
           <div className="flex-shrink-0 font-bold">Experimental setup</div>
-          <div className="flex items-center justify-center gap-1">
+          <div className="flex items-center justify-center gap-3">
             {warnExperimentalSetup && (
-              <Tooltip>
+              <Tooltip open>
                 <TooltipTrigger>
                   <WarningFilled className="text-sm text-yellow-300" />
                 </TooltipTrigger>
                 <TooltipContent
-                  side="right"
-                  sideOffset={40}
                   avoidCollisions
+                  side="bottom"
+                  sideOffset={10}
                   collisionPadding={{ left: 25 }}
-                  className="text-destructive shadow-bnb max-w-2xs rounded-md bg-amber-100 px-4 py-5"
+                  className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
                 >
-                  <div className="list-disc">
-                    {warnExperimentalSetup &&
-                      Object.values(warnExperimentalSetup).map((e2) => {
-                        return e2.map((err2) => (
-                          <li key={err2} className="w-full break-words hyphens-auto">
-                            {err2}
-                          </li>
-                        ));
-                      })}
-                  </div>
+                  {warnExperimentalSetup &&
+                    Object.values(warnExperimentalSetup).map((e2) => {
+                      return e2.map((err2) => {
+                        return (
+                          <p key={err2} className="w-full pb-0.5 break-words hyphens-auto">
+                            • {err2}
+                          </p>
+                        );
+                      });
+                    })}
                 </TooltipContent>
               </Tooltip>
             )}
@@ -254,31 +258,32 @@ export function Menu({ sessionId, type }: Props) {
         >
           <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
             <div className="flex-shrink-0 font-bold">Synaptic Input</div>
-            <div className="flex items-center justify-center gap-1">
+            <div className="flex items-center justify-center gap-3">
               {!!Object.keys(warnSynaptome ?? {}).length && (
                 <Tooltip open>
                   <TooltipTrigger>
                     <WarningFilled className="text-sm text-yellow-300" />
                   </TooltipTrigger>
                   <TooltipContent
-                    side="right"
-                    sideOffset={40}
                     avoidCollisions
+                    side="bottom"
+                    sideOffset={10}
                     collisionPadding={{ left: 25 }}
-                    className="text-destructive shadow-bnb w-full max-w-2xs rounded-md bg-amber-100 px-4 py-5 break-words"
+                    className="text-destructive shadow-bnb w-full max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap break-words"
                   >
-                    <div className="list-disc">
-                      {warnSynaptome &&
-                        Object.values(warnSynaptome).map((e3) => {
-                          return Array.isArray(e3)
-                            ? e3.map((err3: string) => (
-                                <li key={err3} className="w-full break-words hyphens-auto">
-                                  {err3}
-                                </li>
-                              ))
-                            : null;
-                        })}
-                    </div>
+                    {warnSynaptome &&
+                      Object.values(warnSynaptome).map((e3) => {
+                        return Array.isArray(e3)
+                          ? e3.map((err3: string) => (
+                              <p
+                                key={err3}
+                                className="pb-0.5 [overflow-wrap:anywhere] hyphens-auto whitespace-pre-wrap"
+                              >
+                                • {err3}
+                              </p>
+                            ))
+                          : null;
+                      })}
                   </TooltipContent>
                 </Tooltip>
               )}
@@ -301,31 +306,29 @@ export function Menu({ sessionId, type }: Props) {
       >
         <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
           <div className="flex-shrink-0 font-bold">Stimulation protocol</div>
-          <div className="flex items-center justify-center gap-1">
+          <div className="flex items-center justify-center gap-3">
             {!!Object.keys(warnStimulationProtocol ?? {}).length && (
               <Tooltip>
                 <TooltipTrigger>
                   <WarningFilled className="text-sm text-yellow-300" />
                 </TooltipTrigger>
                 <TooltipContent
-                  side="right"
-                  sideOffset={40}
                   avoidCollisions
+                  side="bottom"
+                  sideOffset={10}
                   collisionPadding={{ left: 25 }}
-                  className="text-destructive shadow-bnb max-w-2xs rounded-md bg-amber-100 px-4 py-5"
+                  className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
                 >
-                  <div className="list-disc">
-                    {warnStimulationProtocol &&
-                      Object.values(warnStimulationProtocol).map((e4) => {
-                        return Array.isArray(e4)
-                          ? e4.map((err4: string) => (
-                              <li key={err4} className="w-full break-words hyphens-auto">
-                                {err4}
-                              </li>
-                            ))
-                          : null;
-                      })}
-                  </div>
+                  {warnStimulationProtocol &&
+                    Object.values(warnStimulationProtocol).map((e4) => {
+                      return Array.isArray(e4)
+                        ? e4.map((err4: string) => (
+                            <p key={err4} className="w-full pb-0.5 break-words hyphens-auto">
+                              • {err4}
+                            </p>
+                          ))
+                        : null;
+                    })}
                 </TooltipContent>
               </Tooltip>
             )}
@@ -347,31 +350,29 @@ export function Menu({ sessionId, type }: Props) {
       >
         <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
           <div className="flex-shrink-0 font-bold">Recording</div>
-          <div className="flex items-center justify-center gap-1">
+          <div className="flex items-center justify-center gap-3">
             {!!Object.keys(warnRecordLocation ?? {}).length && (
               <Tooltip>
                 <TooltipTrigger>
                   <WarningFilled className="text-sm text-yellow-300" />
                 </TooltipTrigger>
                 <TooltipContent
-                  side="right"
-                  sideOffset={40}
                   avoidCollisions
+                  side="bottom"
+                  sideOffset={10}
                   collisionPadding={{ left: 25 }}
-                  className="text-destructive shadow-bnb max-w-2xs rounded-md bg-amber-100 px-4 py-5"
+                  className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
                 >
-                  <div className="list-disc">
-                    {warnRecordLocation &&
-                      Object.values(warnRecordLocation).map((e5) => {
-                        return Array.isArray(e5)
-                          ? e5.map((err5: string) => (
-                              <li key={err5} className="w-full break-words hyphens-auto">
-                                {err5}
-                              </li>
-                            ))
-                          : null;
-                      })}
-                  </div>
+                  {warnRecordLocation &&
+                    Object.values(warnRecordLocation).map((error) => {
+                      return Array.isArray(error)
+                        ? error.map((err5: string) => (
+                            <p key={err5} className="w-full pb-0.5 break-words hyphens-auto">
+                              • {err5}
+                            </p>
+                          ))
+                        : null;
+                    })}
                 </TooltipContent>
               </Tooltip>
             )}

@@ -141,9 +141,17 @@ export function BrowseEntityScope({
 
   const resetFilterOnExit = useSetAtom(coreFiltersAtom({ dataType, key: dataKey }));
 
+  // reset mini detail view when dataKey changes (scope, dataType, etc.)
+  useEffect(() => {
+    makeSelectEntityClickEvent({ display: false, data: null });
+    updateDisplayMiniView(false);
+  }, [dataKey]);
+
   useEffect(() => {
     return () => {
       resetFilterOnExit(RESET);
+      // also reset mini detail view on unmount
+      makeSelectEntityClickEvent({ display: false, data: null });
     };
   }, [resetFilterOnExit]);
 

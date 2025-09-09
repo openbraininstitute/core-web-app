@@ -214,7 +214,7 @@ export function EntityLinkCount() {
               href={link}
               type={value.extendedType}
               title={value.title}
-              count={`${count}`}
+              count={count ? `${count}` : 0}
               isLoading={value.isLoading}
             />
           );

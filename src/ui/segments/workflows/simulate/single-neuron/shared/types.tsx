@@ -113,27 +113,27 @@ export const SynapseTypeDict = Object.fromEntries(
 
 export const ExperimentalSetupConfigurationSchema = z.object({
   celsius: z
-    .number({ message: 'Temperature (°C) is required and must be a number' })
+    .number({ message: 'Please enter a valid numeric value for Temperature (°C).' })
     .min(0, 'Temperature must be between 0 and 50°C')
     .max(50, 'Temperature must be between 0 and 50°C'),
   vinit: z
-    .number({ message: 'Initial membrane voltage (mV) is required and must be a number' })
+    .number({ message: 'Please enter a valid numeric value for initial membrane voltage (mV).' })
     .min(-200, 'Initial voltage must be between -200 and 200 mV')
     .max(200, 'Initial voltage must be between -200 and 200 mV'),
   hypamp: z
-    .number({ message: 'Holding current (nA) is required and must be a number' })
+    .number({ message: 'Please enter a valid numeric value for holding current (nA).' })
     .min(-20, 'Holding current must be between -20 and 20 nA')
     .max(20, 'Holding current must be between -20 and 20 nA'),
   max_time: z
-    .number({ message: 'Simulation duration (ms) is required and must be a number' })
+    .number({ message: 'Please enter a valid numeric value for simulation duration (ms).' })
     .min(0, 'Simulation duration must be between 0 and 3000 ms')
     .max(3000, 'Simulation duration must be between 0 and 3000 ms'),
   time_step: z
-    .number({ message: 'Time step (ms) is required and must be a number' })
+    .number({ message: 'Please enter a valid numeric value for time step (ms).' })
     .min(0.001, 'Time step must be between 0.001 and 10 ms')
     .max(10, 'Time step must be between 0.001 and 10 ms'),
   seed: z
-    .number({ message: 'Random seed is required and must be a number' })
+    .number({ message: 'Please enter a valid numeric value for random seed.' })
     .int()
     .min(0, 'Seed must be a positive integer')
     .max(Infinity, 'Seed must be a positive integer'),
@@ -151,7 +151,7 @@ export const StimulusConfigSchema = z.object({
     ],
     {
       message:
-        'Stimulation mode must be one of the following: Current Clamp, Voltage Clamp, Conductance',
+        'Stimulation mode must be one of the following: Current Clamp, Voltage Clamp, Conductance.',
     }
   ),
   stimulus_protocol: z
@@ -226,12 +226,12 @@ export const SynapseConfigSchema = z.object({
       ],
       {
         message:
-          'Synapse frequency must be a single positive number (Hz) or an array of positive numbers if steps are used',
+          'Synapse frequency must be a single positive number (Hz) or a list of positive numbers if steps are used',
         errorMap: (issue, ctx) => {
           if (issue.code === 'invalid_union') {
             return {
               message:
-                'Synapse frequency must be a single positive number (Hz) or an array of positive numbers if steps are used',
+                'Synapse frequency must be a single positive number (Hz) or a list of positive numbers if steps are used',
             };
           }
           return { message: ctx.defaultError };
@@ -247,11 +247,11 @@ export const SynapseConfigSchema = z.object({
 
 export const OverviewConfigurationSchema = z.object({
   name: z
-    .string({ message: 'Name of the simulation is required' })
+    .string({ message: 'The simulation name cannot be empty.' })
     .nonempty({
-      message: 'Name of the simulation is required',
+      message: 'The simulation name cannot be empty.',
     })
-    .min(1, 'Name of the simulation minimum length is 1'),
+    .min(1, 'Please enter a simulation name (minimum 1 character).'),
   description: z.string().optional(),
 });
 
@@ -323,26 +323,37 @@ export const FrequencyInputConfigSchema = z.object({
 
 export type FrequencyInputConfig = z.infer<typeof FrequencyInputConfigSchema>;
 
-// Amperage state schema - minimal addition for persistence
-export const AmperageStateSchema = z
-  .object({
-    protocol: z.enum([
-      StimulusModule.APWaveform.value,
-      StimulusModule.Idrest.value,
-      StimulusModule.IV.value,
-      StimulusModule.FirePattern.value,
-    ]),
-    start: z.number({ message: 'Start current amplitude (nA) is required and must be a number' }),
-    end: z.number({ message: 'End current amplitude (nA) is required and must be a number' }),
-    stepValue: z.number({
-      message: 'Number of current amplitude steps is required and must be a number',
-    }),
-    computed: z.array(z.number()),
-    error: z.string().nullable(),
-  })
-  .refine((data) => data.start < data.end, {
+// Base amperage schema without refinements
+export const AmperageBaseSchema = z.object({
+  protocol: z.enum([
+    StimulusModule.APWaveform.value,
+    StimulusModule.Idrest.value,
+    StimulusModule.IV.value,
+    StimulusModule.FirePattern.value,
+  ]),
+  start: z.number({ message: 'Start current amplitude (nA) is required and must be a number' }),
+  end: z.number({ message: 'End current amplitude (nA) is required and must be a number' }),
+  stepValue: z.number({
+    message: 'Number of current amplitude steps is required and must be a number',
+  }),
+  computed: z.array(z.number()),
+  error: z.string().nullable(),
+});
+
+// Amperage state schema with conditional validation
+export const AmperageStateSchema = AmperageBaseSchema.refine(
+  (data) => {
+    // If start equals end, it's a constant value (frequency mode) - this is valid
+    if (data.start === data.end) {
+      return true;
+    }
+    // Otherwise, start must be less than end (step mode)
+    return data.start < data.end;
+  },
+  {
     message: 'Start current amplitude must be less than end current amplitude',
     path: ['start'],
-  });
+  }
+);
 
 export type AmperageState = z.infer<typeof AmperageStateSchema>;

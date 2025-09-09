@@ -6,9 +6,11 @@ import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
 import { useAtom } from 'jotai';
 import kebabCase from 'lodash/kebabCase';
 import uniqBy from 'lodash/uniqBy';
+import Link from 'next/link';
 
 import { createSingleNeuronSimulationAtom } from '@/ui/segments/workflows/simulate/single-neuron/shared/runner';
 import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { exportSimulationResultsAsZip } from '@/util/simulation-plotly-to-csv';
 import { getSingleNeuronStimuliPlot } from '@/api/small-scale-simulator';
@@ -31,6 +33,7 @@ import {
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useAppNotification } from '@/components/notification';
+import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import {
@@ -126,7 +129,7 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
         }),
     });
 
-    createSingleNeuronSimulation(
+    return createSingleNeuronSimulation(
       overviewConfiguration.name,
       overviewConfiguration.description ?? '',
       modelId,
@@ -153,11 +156,28 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
         key: 'simulation-saved',
       });
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       notification.success({
         message: messages.CreationSimulationSucceed,
+        description: (
+          <div>
+            <Link
+              onClick={() => {
+                notification.destroy('simulation-saved');
+              }}
+              href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${type === SimulationType.SingleNeuron ? kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSimulation) : kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation)}/${data?.simulation.id}`}
+              className="text-primary-6 hover:underline"
+            >
+              Go to simulation details
+            </Link>
+          </div>
+        ),
+        onClick: () => {
+          notification.destroy('simulation-saved');
+        },
         placement: 'topRight',
         key: 'simulation-saved',
+        duration: 10,
       });
     },
     onSettled: async () => {

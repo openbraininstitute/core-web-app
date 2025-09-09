@@ -1,5 +1,6 @@
 import range from 'lodash/range';
 import round from 'lodash/round';
+import z from 'zod';
 
 import { cn } from '@/utils/css-class';
 
@@ -9,6 +10,13 @@ import type { SynapseConfiguration } from '@/ui/segments/workflows/simulate/sing
 export const MAX_AMPERAGE_STEPS = 15;
 
 export function calculateRangeOutput(start: number, end: number, step: number) {
+  // Input validation to prevent runtime errors
+  if (typeof start !== 'number' || typeof end !== 'number' || typeof step !== 'number') {
+    throw new Error('calculateRangeOutput requires valid number inputs');
+  }
+  if (Number.isNaN(start) || Number.isNaN(end) || Number.isNaN(step)) {
+    throw new Error('calculateRangeOutput inputs cannot be NaN');
+  }
   if (step <= 0) return [];
   if (start === end) return [start];
 
@@ -57,4 +65,19 @@ export const getDefaultSynapseConfig = (
     };
   }
   return null;
+};
+
+export const createZodValidator = (schema: z.ZodType<any>, defaultMessage?: string) => {
+  return async (_rule: any, value: any) => {
+    try {
+      await schema.parseAsync(value);
+      return Promise.resolve();
+    } catch (error) {
+      const message =
+        error instanceof z.ZodError
+          ? error.errors[0]?.message
+          : defaultMessage || 'Validation failed';
+      return Promise.reject(message);
+    }
+  };
 };
