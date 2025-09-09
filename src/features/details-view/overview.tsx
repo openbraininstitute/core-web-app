@@ -21,8 +21,6 @@ type FieldProps = {
 export function Field({ field, className, data }: FieldProps) {
   const fieldObj = getFieldDefinition(field);
 
-  console.log(field, data, fieldObj?.renderForDetailView);
-
   let renderedContent: ReactNode = null;
   if (fieldObj) {
     if (fieldObj.renderForDetailView) {

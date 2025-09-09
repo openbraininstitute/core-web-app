@@ -31,11 +31,13 @@ import type {
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
 
-const morphologyMtypes = (morphology: IReconstructionMorphology) => {
+const morphologyMtypes = (morphology?: IReconstructionMorphology) => {
+  if (!morphology) return [];
   return renderEmptyOrValue(renderArray(morphology.mtypes?.map((m) => m.pref_label) || []));
 };
 
-const emodelEtypes = (emodel: IEModel) => {
+const emodelEtypes = (emodel?: IEModel) => {
+  if (!emodel) return [];
   return renderEmptyOrValue(renderArray(emodel.etypes?.map((m) => m.pref_label) || []));
 };
 
