@@ -4,8 +4,8 @@ import { Suspense } from 'react';
 import { getProjectJobReports } from '@/services/virtual-lab/projects';
 import { getQueryClient, HydrateClient } from '@/query-provider/server';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
-import { Credits } from '@/ui/segments/project/credits';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { Credits } from '@/ui/segments/project/credits';
 import { makeRoles } from '@/hooks/use-user-role';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
@@ -22,10 +22,8 @@ export default async function Home({
       queryFn: getUserGroups,
     });
 
-    // TODO: this should be fixed to allow virtual lab admin to see this page too
-    // NOTE: change should be in virtual lab service
-    const { isProjectAdmin } = makeRoles(result, virtualLabId, projectId);
-    if (!isProjectAdmin) {
+    const { isAdmin } = makeRoles(result, virtualLabId, projectId);
+    if (!isAdmin) {
       throw new Error('User not allowed to access this page');
     }
   } catch (error) {

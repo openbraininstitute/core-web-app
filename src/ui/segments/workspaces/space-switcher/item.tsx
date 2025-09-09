@@ -1,6 +1,6 @@
 'use client';
 
-import { DownOutlined, LoadingOutlined, RightOutlined, SettingOutlined } from '@ant-design/icons';
+import { DownOutlined, LoadingOutlined, RightOutlined } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
@@ -52,7 +52,8 @@ export function Item({
     }
   }, [tryingToExpand, lab.id, isSuccess, isFetched, toggleLabExpansion]);
 
-  const onClick = () => {
+  const onDownClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    e.stopPropagation();
     if (expandedLabs.has(lab.id)) {
       // lab is expanded, collapse it
       toggleLabExpansion(lab.id);
@@ -83,6 +84,20 @@ export function Item({
     });
   };
 
+  const onVlabClick = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent> | React.KeyboardEvent<HTMLDivElement>
+  ) => {
+    e.stopPropagation();
+    makeTriggerWorkspaceConfigurationClickEvent({
+      on: true,
+      type: WorkspaceActions.VirtualLabConfiguration,
+      data: {
+        virtualLabId: lab.id,
+        data: lab,
+      },
+    });
+  };
+
   return (
     <>
       <div // eslint-disable-line jsx-a11y/interactive-supports-focus
@@ -90,12 +105,12 @@ export function Item({
         aria-label="virtual-lab-switcher"
         data-testid="virtual-lab-switcher"
         className={cn(
-          'flex cursor-pointer items-center justify-between px-4 py-3 transition-colors duration-150 hover:bg-gray-50',
+          'group flex cursor-pointer items-center justify-between px-4 py-3 transition-colors duration-150 hover:bg-gray-50',
           { 'bg-primary-9 hover:bg-primary-8 mx-2 mt-2 rounded-full py-2 text-white!': lab.isMine },
           { 'mb-2': !expandedLabs.has(lab.id) && lab.isMine }
         )}
-        onKeyDown={onClick}
-        onClick={onClick}
+        onKeyDown={onVlabClick}
+        onClick={onVlabClick}
       >
         <h4
           className={cn('text-primary-9 text-md font-bold', {
@@ -105,23 +120,6 @@ export function Item({
           {lab.name}
         </h4>
         <div className="flex items-center space-x-2">
-          <SettingOutlined
-            className={cn(
-              'hover:text-primary-9 h-4 w-4 cursor-pointer text-gray-400 transition-colors duration-150',
-              { 'hover:text-primary-4 text-white!': lab.isMine }
-            )}
-            onClick={(e) => {
-              e.stopPropagation();
-              makeTriggerWorkspaceConfigurationClickEvent({
-                on: true,
-                type: WorkspaceActions.VirtualLabConfiguration,
-                data: {
-                  virtualLabId: lab.id,
-                  data: lab,
-                },
-              });
-            }}
-          />
           <motion.div
             animate={{ rotate: expandedLabs.has(lab.id) ? 180 : 0 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
@@ -129,7 +127,15 @@ export function Item({
             {tryingToExpand.has(lab.id) && projectsLoading ? (
               <LoadingOutlined spin />
             ) : (
-              <DownOutlined className="h-4 w-4 text-gray-200" />
+              <Button
+                rounded
+                size="sm"
+                variant="outline"
+                className="flex h-7 w-7 items-center justify-center rounded-full border-none bg-transparent p-0"
+                onClick={onDownClick}
+              >
+                <DownOutlined className="text-primary-7 h-4 w-4 group-hover:text-white" />
+              </Button>
             )}
           </motion.div>
         </div>
