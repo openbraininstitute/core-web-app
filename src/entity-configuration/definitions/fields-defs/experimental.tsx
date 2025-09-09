@@ -39,52 +39,6 @@ const emodelEtypes = (emodel: IEModel) => {
   return renderEmptyOrValue(renderArray(emodel.etypes?.map((m) => m.pref_label) || []));
 };
 
-const renderMtype = (r: EntityCoreObjectTypes) => {
-  if (isSingleNeuronSynaptome(r)) {
-    return renderEmptyOrValue(
-      renderArray(
-        (r.me_model.mtypes &&
-          r.me_model.mtypes.length > 0 &&
-          r.me_model.mtypes.map((m) => m.pref_label)) ||
-          morphologyMtypes(r.me_model.morphology)
-      )
-    );
-  }
-  if (isMemodel(r) && isEmpty(r.etypes)) {
-    return morphologyMtypes;
-  }
-  return renderEmptyOrValue(
-    renderArray(
-      (r as EntityCoreObjectTypes & { mtypes: Array<IMType> | null }).mtypes?.map(
-        (m: IMType) => m.pref_label
-      ) || []
-    )
-  );
-};
-
-const renderEtype = (r: EntityCoreObjectTypes) => {
-  if (isSingleNeuronSynaptome(r)) {
-    return renderEmptyOrValue(
-      renderArray(
-        (r.me_model.etypes &&
-          r.me_model.etypes.length > 0 &&
-          r.me_model.etypes.map((m) => m.pref_label)) ||
-          emodelEtypes(r.me_model.emodel)
-      )
-    );
-  }
-  if (isMemodel(r) && isEmpty(r.etypes)) {
-    return emodelEtypes(r.emodel);
-  }
-  return renderEmptyOrValue(
-    renderArray(
-      (r as EntityCoreObjectTypes & { etypes: Array<IEType> | null }).etypes?.map(
-        (e: IEType) => e.pref_label
-      ) || []
-    )
-  );
-};
-
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.License]: {
     title: 'License',
@@ -140,8 +94,28 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     fieldType: CoreFieldType.CellType,
     title: 'M-Type',
     filter: CoreFieldFilterTypeEnum.CheckList,
-    render: renderMtype,
-    renderForDetailView: renderMtype,
+    render(r: EntityCoreObjectTypes) {
+      if (isSingleNeuronSynaptome(r)) {
+        return renderEmptyOrValue(
+          renderArray(
+            (r.me_model.mtypes &&
+              r.me_model.mtypes.length > 0 &&
+              r.me_model.mtypes.map((m) => m.pref_label)) ||
+              morphologyMtypes(r.me_model.morphology)
+          )
+        );
+      }
+      if (isMemodel(r) && isEmpty(r.etypes)) {
+        return morphologyMtypes(r.morphology);
+      }
+      return renderEmptyOrValue(
+        renderArray(
+          (r as EntityCoreObjectTypes & { mtypes: Array<IMType> | null }).mtypes?.map(
+            (m: IMType) => m.pref_label
+          ) || []
+        )
+      );
+    },
     vocabulary: {
       plural: 'M-Types',
       singular: 'M-Type',
@@ -167,8 +141,28 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     fieldType: CoreFieldType.CellType,
     title: 'E-Type',
     filter: CoreFieldFilterTypeEnum.CheckList,
-    render: renderEtype,
-    renderForDetailView: renderEtype,
+    render(r: EntityCoreObjectTypes) {
+      if (isSingleNeuronSynaptome(r)) {
+        return renderEmptyOrValue(
+          renderArray(
+            (r.me_model.etypes &&
+              r.me_model.etypes.length > 0 &&
+              r.me_model.etypes.map((m) => m.pref_label)) ||
+              emodelEtypes(r.me_model.emodel)
+          )
+        );
+      }
+      if (isMemodel(r) && isEmpty(r.etypes)) {
+        return emodelEtypes(r.emodel);
+      }
+      return renderEmptyOrValue(
+        renderArray(
+          (r as EntityCoreObjectTypes & { etypes: Array<IEType> | null }).etypes?.map(
+            (e: IEType) => e.pref_label
+          ) || []
+        )
+      );
+    },
     vocabulary: {
       plural: 'E-Types',
       singular: 'E-Type',
