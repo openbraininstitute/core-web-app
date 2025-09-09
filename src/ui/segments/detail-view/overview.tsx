@@ -16,8 +16,13 @@ import {
 import { AwaitedType, WorkspaceContext } from '@/types/common';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { MorphoViewerLoaderMemo } from '@/features/entities/reconstruction-morphology/detail-view';
-import { IReconstructionMorphology, IElectricalCellRecording } from '@/api/entitycore/types';
+import {
+  IReconstructionMorphology,
+  IElectricalCellRecording,
+  ISingleNeuronSynaptome,
+} from '@/api/entitycore/types';
 import EphysViewer from '@/features/ephys-viewer';
+import { getMEModel } from '@/api/entitycore/queries';
 
 export default async function Overview({
   entity,
@@ -57,6 +62,15 @@ export default async function Overview({
     } catch {
       notFound();
     }
+  }
+
+  if (extendedType === 'single_neuron_synaptome') {
+    const meModel = await getMEModel({
+      id: (entity as ISingleNeuronSynaptome).me_model.id,
+      context: ctx,
+    });
+
+    (entity as ISingleNeuronSynaptome).me_model = meModel; //eslint-disable-line
   }
 
   return (
