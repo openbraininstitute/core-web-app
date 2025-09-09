@@ -2,6 +2,7 @@
 
 import { ReloadOutlined } from '@ant-design/icons';
 import { Image } from 'antd';
+import kebabCase from 'lodash/kebabCase';
 
 import { useRouter } from 'next/navigation';
 import { label, useBuildMeModelSessionState } from '@/ui/segments/workflows/build/memodel/helpers';
@@ -21,7 +22,7 @@ import {
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
-import type { IReconstructionMorphology } from '@/api/entitycore/types';
+import { EntityTypeDict, type IReconstructionMorphology } from '@/api/entitycore/types';
 
 type Props = {
   sessionId: string;
@@ -50,7 +51,7 @@ export function MModel({ sessionId }: Props) {
         selectionType: 'radio',
         onCellClick: (_, record) => {
           navigate(
-            `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${record.id}`
+            `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${kebabCase(EntityTypeDict.ReconstructionMorphology)}/${record.id}/overview`
           );
         },
         onRowsSelected: (rows) => {

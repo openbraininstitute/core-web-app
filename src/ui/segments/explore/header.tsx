@@ -8,7 +8,6 @@ import sum from 'lodash/sum';
 import Link from 'next/link';
 
 import { getProjectBookmarkCategories } from '@/api/virtual-lab-svc/queries/bookmark';
-import { makeSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
@@ -102,7 +101,6 @@ function ExploreTabs() {
   });
 
   const onTabClick = (value: string) => {
-    makeSelectEntityClickEvent({ display: false, data: null });
     if (
       pathname === `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data` ||
       pathname.startsWith(
