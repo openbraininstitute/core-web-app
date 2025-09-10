@@ -56,7 +56,7 @@ export const useSelectEntityClickEvent = <T>(
 export function useMiniDetailView() {
   const [mdv, setMdv] = useQueryState(
     'mdv',
-    parseAsBoolean.withDefault(false).withOptions({ clearOnDefault: false, shallow: true })
+    parseAsBoolean.withDefault(false).withOptions({ clearOnDefault: true, shallow: true })
   );
   return { mdv, setMdv };
 }

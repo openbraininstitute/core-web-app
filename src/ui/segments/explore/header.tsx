@@ -90,7 +90,7 @@ function BookmarkButton() {
   );
 }
 
-function ExploreTabs() {
+function DataTabs() {
   const navigate = useRouter().push;
   const pathname = usePathname();
   const breakpoint = useDefaultBreakpoint();
@@ -158,13 +158,13 @@ function ExploreTabs() {
   );
 }
 
-export function ExploreHeader() {
+export function DataHeader() {
   const breakpoint = useDefaultBreakpoint();
 
   return (
     <div className="flex w-full items-center justify-between gap-4 px-3 [grid-area:header]">
       <div className="flex max-w-1/2 items-center justify-center gap-2">
-        <ExploreTabs />
+        <DataTabs />
       </div>
       <div className="max-w-1/2">
         <Button

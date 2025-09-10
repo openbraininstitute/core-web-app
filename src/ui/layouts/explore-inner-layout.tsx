@@ -5,20 +5,21 @@ import type { ReactNode } from 'react';
 
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
+import { log } from '@/utils/logger';
 
 type Props = {
   children: ReactNode;
 };
 
-export function ExploreInnerLayout({ children }: Props) {
+export function DataInnerLayout({ children }: Props) {
   const { mdv, setMdv } = useMiniDetailView();
   useSelectEntityClickEvent((ev) => {
     setMdv(ev.detail.display);
   });
-
+  log('debug', 'DataInnerLayout', mdv);
   return (
     <motion.div
-      id="explore-inner-layout"
+      id="data-inner-layout"
       className={cn(
         'bg-background border-neutral-2 mx-2 mb-2 grid h-full max-h-[calc(100vh-8rem)] w-[calc(100%-10px)] gap-4 overflow-hidden rounded-2xl border p-2 [grid-area:main]',
         { "grid-cols-[27rem_1fr] [grid-template-areas:'aside_body']": !mdv },
