@@ -155,15 +155,14 @@ export default function NetworkAndMorphologyConfig({ circuit }: { circuit: ICirc
         ...o,
         ...get(networks, o.key, {}),
       })) as unknown as Record<string, Omit<ConfigItemProps, 'className'>>;
-
       const containerizedMorphologies = extractWithAlternateMorphologies(config.networks.nodes);
       const items = compact(
         Object.entries(containerizedMorphologies).map(([key, value]) => {
           const containerized = value.alternate_morphologies;
           if (containerized) {
             const asset = {
-              path: getAssetPath(value.alternate_morphologies ?? ''),
-              ...get(directory, getAssetPath(value.alternate_morphologies ?? ''), {
+              path: getAssetPath(value.alternate_morphologies ?? '', config.manifest),
+              ...get(directory, getAssetPath(value.alternate_morphologies ?? '', config.manifest), {
                 name: null,
                 size: null,
                 last_modified: null,

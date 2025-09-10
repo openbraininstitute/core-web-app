@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import noop from 'lodash/noop';
 
+import { parseAsBoolean, useQueryState } from 'nuqs';
 import { isBrowser } from '@/utils/environment';
 
 export type TSelectedExploreEntity<T> = {
@@ -51,3 +52,11 @@ export const useSelectEntityClickEvent = <T>(
     return () => unsubscribe();
   }, [cb]);
 };
+
+export function useMiniDetailView() {
+  const [mdv, setMdv] = useQueryState(
+    'mdv',
+    parseAsBoolean.withDefault(false).withOptions({ clearOnDefault: true, shallow: true })
+  );
+  return { mdv, setMdv };
+}

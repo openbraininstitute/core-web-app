@@ -4,9 +4,8 @@ import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { WarningOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import { RESET } from 'jotai/utils';
-
+import { useEffect } from 'react';
 import snakeCase from 'lodash/snakeCase';
 import compact from 'lodash/compact';
 import dynamic from 'next/dynamic';
@@ -14,10 +13,6 @@ import map from 'lodash/map';
 
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { DEFAULT_PAGE_LOW_SIZE, DEFAULT_PAGE_NUMBER, WorkspaceScope } from '@/constants';
-import {
-  getProjectBookmarkCategories,
-  getProjectBookmarksPerCategory,
-} from '@/api/virtual-lab-svc/queries/bookmark';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
 import {
   coreActiveColumnsAtom,
@@ -26,15 +21,20 @@ import {
   coreSortStateAtom,
 } from '@/ui/segments/data-table/elements/context';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { Card, CardDescription, CardTitle } from '@/ui/molecules/card';
 import { MiniDetailView } from '@/ui/segments/mini-detail-view';
+import { GenericError } from '@/ui/molecules/generic-error';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
+  getProjectBookmarkCategories,
+  getProjectBookmarksPerCategory,
+} from '@/api/virtual-lab-svc/queries/bookmark';
+import {
   makeSelectEntityClickEvent,
+  useMiniDetailView,
   useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
-import { Card, CardDescription, CardTitle } from '@/ui/molecules/card';
-import { GenericError } from '@/ui/molecules/generic-error';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
 
@@ -53,6 +53,7 @@ export function BrowseLibraryScope() {
   const dataKey = compact([virtualLabId, projectId, type, WorkspaceScope.Bookmarks]).join('/');
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
   const [pageNumber, setPageNumber] = useAtom(corePageNumberAtom(dataKey));
+  const { mdv, setMdv } = useMiniDetailView();
 
   const { isLoading: loadingBookmarksCategory, data: bookmarksCategories } = useQuery({
     queryKey: keyBuilder.bookmarkCategories({ virtualLabId, projectId }),
@@ -79,7 +80,6 @@ export function BrowseLibraryScope() {
   const entity = getEntityByExtendedType({ type: dataType });
 
   const [sortState, setSortState] = useAtom(coreSortStateAtom({ key: dataKey }));
-  const [miniViewPresent, updateDisplayMiniView] = useState(false);
 
   const onSortChange = (newSortState: any) => {
     setPageNumber(DEFAULT_PAGE_NUMBER);
@@ -130,24 +130,19 @@ export function BrowseLibraryScope() {
   };
 
   useSelectEntityClickEvent((event) => {
-    updateDisplayMiniView(event.detail.display);
+    setMdv(event.detail.display);
   });
 
   const resetFilterOnExit = useSetAtom(coreFiltersAtom({ dataType, key: dataKey }));
 
-  // Reset mini detail view when dataKey changes (scope, dataType, etc.)
   useEffect(() => {
-    makeSelectEntityClickEvent({ display: false, data: null });
-    updateDisplayMiniView(false);
-  }, [dataKey]);
-
-  useEffect(() => {
+    setMdv(false);
     return () => {
       resetFilterOnExit(RESET);
-      // also reset mini detail view on unmount
       makeSelectEntityClickEvent({ display: false, data: null });
+      setMdv(false);
     };
-  }, [resetFilterOnExit]);
+  }, [resetFilterOnExit, setMdv]);
 
   if (!loadingBookmarksCategory) {
     if (!Object.keys(bookmarksCategories ?? {}).includes(entity?.extendedType!)) {
@@ -220,7 +215,7 @@ export function BrowseLibraryScope() {
           'h-full max-h-[calc(100vh-11.8rem)] w-full min-w-0',
           '[grid-area:mini-view]',
           {
-            hidden: !miniViewPresent,
+            hidden: !mdv,
           }
         )}
       >

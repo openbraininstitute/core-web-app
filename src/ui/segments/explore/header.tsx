@@ -13,9 +13,13 @@ import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { useTabs } from '@/components/detail-view-tabs';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { useTabs } from '@/components/detail-view-tabs';
 import { Button } from '@/ui/molecules/button';
+import {
+  makeSelectEntityClickEvent,
+  useMiniDetailView,
+} from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
 
 const ExploreSections = {
@@ -86,12 +90,12 @@ function BookmarkButton() {
   );
 }
 
-function ExploreTabs() {
+function DataTabs() {
   const navigate = useRouter().push;
   const pathname = usePathname();
   const breakpoint = useDefaultBreakpoint();
+  const { setMdv } = useMiniDetailView();
   const { virtualLabId, projectId } = useWorkspace();
-
   const { activeTab, onChangeTab } = useTabs({
     tabsConfig: tabsConfigItems,
     clearOnDefault: false,
@@ -101,6 +105,8 @@ function ExploreTabs() {
   });
 
   const onTabClick = (value: string) => {
+    makeSelectEntityClickEvent({ display: false, data: null });
+    setMdv(false);
     if (
       pathname === `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data` ||
       pathname.startsWith(
@@ -152,13 +158,13 @@ function ExploreTabs() {
   );
 }
 
-export function ExploreHeader() {
+export function DataHeader() {
   const breakpoint = useDefaultBreakpoint();
 
   return (
     <div className="flex w-full items-center justify-between gap-4 px-3 [grid-area:header]">
       <div className="flex max-w-1/2 items-center justify-center gap-2">
-        <ExploreTabs />
+        <DataTabs />
       </div>
       <div className="max-w-1/2">
         <Button

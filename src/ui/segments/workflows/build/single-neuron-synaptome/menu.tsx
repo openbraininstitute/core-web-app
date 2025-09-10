@@ -7,9 +7,12 @@ import {
   LoadingOutlined,
   RightOutlined,
   SettingFilled,
+  WarningFilled,
 } from '@ant-design/icons';
-import isNil from 'lodash/isNil';
 import { z } from 'zod';
+import kebabCase from 'lodash/kebabCase';
+import isNil from 'lodash/isNil';
+import Link from 'next/link';
 
 import { DEFAULT_SYNAPSE_VALUE } from '@/features/entities/single-neuron-synaptome/build/elements/synapse-config-form';
 import { SynapseSetMenuItems } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-set-menu-item';
@@ -18,6 +21,7 @@ import {
   SingleNeuronSynaptomeConfigurationSchema,
 } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import {
@@ -58,7 +62,7 @@ export function Menu({ sessionId }: Props) {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const pathname = usePathname();
-  const { replace, push: navigate } = useRouter();
+  const { replace } = useRouter();
   const { virtualLabId, projectId } = useWorkspace();
   const step = searchParams.get('step');
 
@@ -71,77 +75,9 @@ export function Menu({ sessionId }: Props) {
     query.set('step', s);
 
     replace(
-      `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/build/configure/single-neuron-synaptome?${query.toString()}`
+      `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/build/configure/${kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSynaptome)}?${query.toString()}`
     );
   };
-
-  //   virtualLabId,
-  //   projectId,
-  //   name: sessionValue.name,
-  //   description: sessionValue.description ?? '',
-  //   emodel_id: sessionValue.emodel?.id,
-  //   morphology_id: sessionValue.mmodel?.id,
-  //   species_id: sessionValue.mmodel?.species.id,
-  //   brain_region_id: sessionValue.mmodel?.brain_region.id ?? sessionValue.brainRegion?.id,
-  //   strain_id: sessionValue.mmodel?.strain?.id ?? null,
-  //   validation_status: ValidationStatus.Initialized,
-  // };
-
-  // const buildMeModel = async () => {
-  //   let validatedPayload: TCreateMeModelContext | null = null;
-
-  //   try {
-  //     validatedPayload = await CreateMeModelContextSchema.parseAsync(payload);
-  //   } catch (err) {
-  //     throw err;
-  //   }
-
-  //   const accountingSession = new OneshotSession({
-  //     subtype: ServiceSubtype.SingleCellBuild,
-  //     virtualLabId,
-  //     projectId,
-  //     count: 1,
-  //   });
-
-  //   const data = await accountingSession.useWith<IMEModel>(() =>
-  //     createMEModel({
-  //       body: omit(validatedPayload, ['virtualLabId', 'projectId']),
-  //       context: { virtualLabId, projectId },
-  //     })
-  //   );
-
-  //   return data;
-  // };
-
-  // const mutate = useMutation({
-  //   mutationFn: buildMeModel,
-  //   onSuccess: (data) => {
-  //     navigate(
-  //       `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/view/memodel/${data.id}`
-  //     );
-  //   },
-  //   async onSettled() {
-  //     await queryClient.invalidateQueries({
-  //       queryKey: [{ context: { key: `${virtualLabId}/${projectId}/explore/memodel/project` } }],
-  //     });
-  //     await queryClient.invalidateQueries({
-  //       queryKey: [
-  //         'workspace/activities',
-  //         { virtualLabId, projectId, scale: 'memodel', type: 'build', entity: 'memodel' },
-  //       ],
-  //     });
-  //   },
-  // });
-
-  // const result = CreateMeModelContextSchema.safeParse(payload);
-  // const paths = flatten(flatten(result.error?.issues).map((o) => o.path));
-
-  // const isInfo = intersection(paths, ['name', 'description']).length > 0;
-  // const isEmodel = intersection(paths, ['emodel_id']).length > 0;
-  // const isMmodel =
-  //   intersection(paths, ['brain_region_id', 'morphology_id', 'species_id']).length > 0;
-
-  // const disabled = mutate.isPending || !!result.error;
 
   const onAdd = () => {
     const id = crypto.randomUUID();
@@ -231,9 +167,28 @@ export function Menu({ sessionId }: Props) {
   const mutate = useMutation({
     mutationFn: buildSynaptome,
     onSuccess: (data) => {
-      navigate(
-        `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/view/single-neuron-synaptome/${data?.entity.id}`
-      );
+      notification.success({
+        message: messages.CreationModelSucceed,
+        description: (
+          <div>
+            <Link
+              onClick={() => {
+                notification.destroy('model-saved');
+              }}
+              href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSynaptome)}/${data?.entity.id}`}
+              className="text-primary-6 hover:underline"
+            >
+              Go to model details
+            </Link>
+          </div>
+        ),
+        onClick: () => {
+          notification.destroy('model-saved');
+        },
+        placement: 'topRight',
+        key: 'model-saved',
+        duration: 10,
+      });
     },
     onError: (error) => {
       const errorMessage =
@@ -252,7 +207,7 @@ export function Menu({ sessionId }: Props) {
         queryKey: [
           {
             context: {
-              key: `${virtualLabId}/${projectId}/explore/single-neuron-synaptome/project`,
+              key: `${virtualLabId}/${projectId}/data/${kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSynaptome)}/project`,
             },
           },
         ],
@@ -292,11 +247,34 @@ export function Menu({ sessionId }: Props) {
             />
             Info
           </div>
-          <RightOutlined
-            className={cn('text-neutral-4 mr-2 transition-all group-hover:text-white', {
-              '-rotate-180 text-white! group-hover:text-white': step === BuildStep.Info,
-            })}
-          />
+          <div className="flex items-center justify-center gap-3">
+            {!sessionValue?.name && (
+              <Tooltip>
+                <TooltipTrigger>
+                  <WarningFilled className="text-sm text-yellow-300" />
+                </TooltipTrigger>
+                <TooltipContent
+                  avoidCollisions
+                  side="bottom"
+                  sideOffset={10}
+                  collisionPadding={{ left: 25 }}
+                  className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
+                >
+                  <p className="w-full pb-0.5 break-words hyphens-auto">
+                    • The model name cannot be empty.
+                  </p>
+                  <p className="w-full pb-0.5 break-words hyphens-auto">
+                    • Please enter a model name (minimum 1 character).
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+            <RightOutlined
+              className={cn('text-neutral-4 mr-2 transition-all group-hover:text-white', {
+                '-rotate-180 text-white!': step === BuildStep.Info,
+              })}
+            />
+          </div>
         </div>
       </Button>
       <div className="text-neutral-3 ml-4 font-light uppercase">Modeling</div>
@@ -382,7 +360,7 @@ export function Menu({ sessionId }: Props) {
               onClick={() => mutate.mutateAsync()}
               disabled={disabled}
             >
-              <div className="flex-shrink-0 font-bold">Build Synaptome</div>
+              <div className="flex-shrink-0 font-bold">Build synaptome</div>
               {mutate.isPending && <LoadingOutlined className="ml-2 text-white" />}
             </Button>
           </div>

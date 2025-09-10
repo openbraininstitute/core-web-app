@@ -2,7 +2,7 @@ import { CheckCircleFilled, CloseOutlined, CopyOutlined, LoadingOutlined } from 
 import { AnimatePresence, motion } from 'motion/react';
 import { useMutation } from '@tanstack/react-query';
 import { match, P } from 'ts-pattern';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Image } from 'antd';
 
 import kebabCase from 'lodash/kebabCase';
@@ -29,6 +29,7 @@ import { Button } from '@/ui/molecules/button';
 import {
   makeSelectEntityClickEvent,
   useSelectEntityClickEvent,
+  useMiniDetailView,
 } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
 
@@ -51,12 +52,22 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
   section = WorkspaceSection.Data,
 }: Props) {
   const [record, setRecord] = useState<T | null>(null);
+  const { mdv, setMdv } = useMiniDetailView();
 
   useSelectEntityClickEvent<T>((event) => {
     setRecord(event.detail.data);
   });
 
+  // Reset record when mdv becomes false
+  useEffect(() => {
+    if (!mdv && record) {
+      setRecord(null);
+    }
+  }, [mdv, record]);
+
   const onClose = () => {
+    setMdv(false);
+    setRecord(null);
     makeSelectEntityClickEvent({ data: null, display: false });
   };
 
