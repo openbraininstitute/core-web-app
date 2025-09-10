@@ -1,0 +1,75 @@
+# Fullstack Development Makefile
+# Usage: make -f Makefile.fullstack <target>
+
+.PHONY: help up down build logs clean restart status shell-frontend shell-backend
+
+# Default target
+help:
+	@echo "Fullstack Development Commands:"
+	@echo "  up          - Start all services"
+	@echo "  up-build    - Start all services with rebuild"
+	@echo "  down        - Stop all services"
+	@echo "  down-clean  - Stop all services and remove volumes"
+	@echo "  build       - Build all services"
+	@echo "  logs        - Show logs for all services"
+	@echo "  logs-f      - Follow logs for all services"
+	@echo "  status      - Show service status"
+	@echo "  restart     - Restart all services"
+	@echo "  shell-frontend - Open shell in frontend container"
+	@echo "  shell-backend  - Open shell in backend container"
+	@echo "  clean       - Remove all containers, networks, and volumes"
+
+# Start services
+up:
+	docker-compose -f docker-compose.fullstack.yml up -d
+
+# Start services with rebuild
+up-build:
+	docker-compose -f docker-compose.fullstack.yml up --build -d
+
+# Stop services
+down:
+	docker-compose -f docker-compose.fullstack.yml down
+
+# Stop services and remove volumes
+down-clean:
+	docker-compose -f docker-compose.fullstack.yml down -v
+
+# Build services
+build:
+	docker-compose -f docker-compose.fullstack.yml build
+
+# Show logs
+logs:
+	docker-compose -f docker-compose.fullstack.yml logs
+
+# Follow logs
+logs-f:
+	docker-compose -f docker-compose.fullstack.yml logs -f
+
+# Show service status
+status:
+	docker-compose -f docker-compose.fullstack.yml ps
+
+# Restart services
+restart:
+	docker-compose -f docker-compose.fullstack.yml restart
+
+# Open shell in frontend container
+shell-frontend:
+	docker-compose -f docker-compose.fullstack.yml exec frontend sh
+
+# Open shell in backend container
+shell-backend:
+	docker-compose -f docker-compose.fullstack.yml exec backend sh
+
+# Clean up everything
+clean:
+	docker-compose -f docker-compose.fullstack.yml down -v --remove-orphans
+	docker system prune -f
+
+# Development helpers
+dev: up-build logs-f
+
+# Quick restart for development
+dev-restart: restart logs-f
