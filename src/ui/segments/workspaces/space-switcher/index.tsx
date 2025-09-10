@@ -291,41 +291,43 @@ export function SpaceSwitcher({ className }: Props) {
                 >
                   <div
                     className={cn(
-                      'flex flex-row flex-wrap items-start gap-1.5 rounded-full bg-white px-3 py-2 shadow-md',
+                      'flex max-w-[calc(100%-100px)] flex-row items-center gap-1.5 rounded-full bg-white px-3 py-2 shadow-md',
                       'hover:bg-background'
                     )}
                     onKeyDown={onProfileClick}
                     onClick={onProfileClick}
                     role="button"
                     tabIndex={-1}
+                    title={username}
+                    aria-label={username}
                   >
-                    <UserFilled className="text-base text-current xl:text-lg" />
-                    <h3 className="text-left text-sm font-bold">{username}</h3>
+                    <UserFilled className="flex-shrink-0 text-base text-current xl:text-lg" />
+                    <h3 className="line-clamp-1 min-w-0 truncate text-left text-sm font-bold">
+                      {username}
+                    </h3>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="ml-2 flex flex-shrink-0 items-center gap-2">
                     <Link href="/app/log-out" className="hover:underline">
                       Logout
                     </Link>
+                    <motion.div
+                      animate={{ rotate: isExpanded ? 180 : 0 }}
+                      transition={{ duration: 0.15, ease: 'easeOut' }}
+                    >
+                      <DownOutlined
+                        className="text-gray-400"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (boardModalOpen) return;
+                          setIsExpanded((prev) => !prev);
+                        }}
+                      />
+                    </motion.div>
                   </div>
                 </motion.div>
               )
             )}
           </AnimatePresence>
-
-          <motion.div
-            animate={{ rotate: isExpanded ? 180 : 0 }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            className={cn('ml-2', { hidden: !isExpanded })}
-          >
-            <DownOutlined
-              className="text-gray-400"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (boardModalOpen) return;
-                setIsExpanded((prev) => !prev);
-              }}
-            />
-          </motion.div>
         </button>
 
         <AnimatePresence>
