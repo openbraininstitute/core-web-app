@@ -216,7 +216,7 @@ export function SpaceSwitcher({ className }: Props) {
           role="menubar"
           disabled={labsLoading || projectsLoading}
         >
-          {currentVirtualLabName && !isExpanded && (
+          {/* {currentVirtualLabName && !isExpanded && (
             <div
               className="group flex h-full max-w-20 items-center justify-center gap-1 overflow-hidden select-none"
               title={currentVirtualLabName}
@@ -227,7 +227,7 @@ export function SpaceSwitcher({ className }: Props) {
                 {currentVirtualLabName}
               </h3>
             </div>
-          )}
+          )} */}
           <AnimatePresence mode="wait">
             {!isExpanded ? (
               <motion.div
@@ -251,9 +251,32 @@ export function SpaceSwitcher({ className }: Props) {
               >
                 {virtualLabId && (
                   <>
-                    <span className="text-primary-9 min-w-0 flex-1 truncate text-left font-bold">
+                    {/* <span className="text-primary-9 min-w-0 flex-1 truncate text-left font-bold">
                       {currentProjectName}
-                    </span>
+                    </span> */}
+                    {/* <div className="flex flex-col min-w-0 flex-1 text-left">
+                      <span className="text-gray-500 text-sm">{currentVirtualLabName}</span>
+                      <span className="text-primary-9 truncate text-sm font-bold">
+                        {currentProjectName}
+                      </span>
+                    </div> */}
+
+                    {/* <div className="flex flex-col min-w-0 flex-1 text-left leading-tight">
+                      <span className="text-gray-500 text-base">{currentVirtualLabName}</span>
+                      <span className="text-primary-9 truncate text-lg font-bold">
+                        {currentProjectName}
+                      </span>
+                    </div> */}
+                    
+                    <div className="flex flex-col min-w-0 flex-1 text-left">
+                      <span className="text-gray-500 text-base leading-none">
+                        {currentVirtualLabName}
+                      </span>
+                      <span className="text-primary-9 truncate text-lg font-bold leading-none mt-1">
+                        {currentProjectName}
+                      </span>
+                    </div>
+
                     <motion.div
                       animate={{ rotate: isExpanded ? 180 : 0 }}
                       transition={{ duration: 0.15, ease: 'easeOut' }}
