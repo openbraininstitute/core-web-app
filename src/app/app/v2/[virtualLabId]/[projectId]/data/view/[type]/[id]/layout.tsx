@@ -66,6 +66,8 @@ export default async function Layout({
     ctx: { virtualLabId, projectId },
   });
 
+  const parentLink = `${basePath}/app/v2/${virtualLabId}/${projectId}/data/browse/entity/${type}`;
+
   return (
     <div className="ml-5 flex h-full rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
       <div className="w-1/5">
@@ -76,11 +78,7 @@ export default async function Layout({
             </NextLink>
           </Breadcrumb>
           <Breadcrumb>
-            <NextLink
-              href={`${basePath}/app/v2/${virtualLabId}/${projectId}/data/browse/entity/${type}`}
-            >
-              {entityType.title}
-            </NextLink>
+            <NextLink href={parentLink}>{entityType.title}</NextLink>
           </Breadcrumb>
           <Breadcrumb showChevron={false}>{entity.name}</Breadcrumb>
         </div>
@@ -97,7 +95,7 @@ export default async function Layout({
           </div>
           <div className="h-[91%]">{children}</div>
         </div>
-        <Close />
+        <Close href={parentLink} />
       </div>
     </div>
   );
