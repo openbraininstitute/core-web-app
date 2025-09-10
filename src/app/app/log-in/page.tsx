@@ -10,7 +10,7 @@ export default function Page() {
 
   const redirectURL = searchParams.get('callbackUrl');
 
-  const onboarding = `/${V2_MIGRATION_TEMPORARY_BASE_PATH}/sync?redirectUrl=${encodeURIComponent(redirectURL ?? '')}`;
+  const onboarding = `${typeof window !== 'undefined' ? window.location.origin : ''}${V2_MIGRATION_TEMPORARY_BASE_PATH}/sync?redirectUrl=${encodeURIComponent(redirectURL ?? '')}`;
   if (!isServer) signIn('keycloak', { callbackUrl: onboarding });
 
   return (

@@ -95,7 +95,10 @@ export function Search({ dataKey, className }: SearchProps) {
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder="Search for entities..."
-              className="text-primary-9 placeholder:text-neutral-3 w-full bg-transparent px-4 py-2 focus:outline-none"
+              className={cn(
+                'text-primary-9 w-full bg-transparent px-4 py-2 font-bold focus:outline-none',
+                'placeholder:text-neutral-3 placeholder:font-light'
+              )}
               aria-label="Search input"
             />
 
