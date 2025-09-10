@@ -142,6 +142,7 @@ export function BrowseEntityScope({
   const resetFilterOnExit = useSetAtom(coreFiltersAtom({ dataType, key: dataKey }));
 
   useEffect(() => {
+    setMdv(false);
     return () => {
       resetFilterOnExit(RESET);
       makeSelectEntityClickEvent({ display: false, data: null });

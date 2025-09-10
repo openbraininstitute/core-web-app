@@ -136,11 +136,13 @@ export function BrowseLibraryScope() {
   const resetFilterOnExit = useSetAtom(coreFiltersAtom({ dataType, key: dataKey }));
 
   useEffect(() => {
+    setMdv(false);
     return () => {
       resetFilterOnExit(RESET);
       makeSelectEntityClickEvent({ display: false, data: null });
+      setMdv(false);
     };
-  }, [resetFilterOnExit]);
+  }, [resetFilterOnExit, setMdv]);
 
   if (!loadingBookmarksCategory) {
     if (!Object.keys(bookmarksCategories ?? {}).includes(entity?.extendedType!)) {

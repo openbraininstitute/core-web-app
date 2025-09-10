@@ -98,13 +98,6 @@ export function BrowseCircuit({
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
   const [sortState, setSortState] = useAtom(coreSortStateAtom({ key: dataKey }));
 
-  // Reset mini detail view when scope changes
-  useEffect(() => {
-    if (mdv) {
-      setMdv(false);
-      makeSelectEntityClickEvent({ display: false, data: null });
-    }
-  }, [scope, mdv, setMdv]);
   const onSortChange = (newSortState: any) => {
     setPageNumber(DEFAULT_PAGE_NUMBER);
     setSortState(newSortState);
@@ -249,11 +242,13 @@ export function BrowseCircuit({
   useFilterStateWatcher({ dataType, dataKey });
 
   useEffect(() => {
+    setMdv(false);
     return () => {
       resetFilterOnExit(RESET);
       makeSelectEntityClickEvent({ display: false, data: null });
+      setMdv(false);
     };
-  }, [resetFilterOnExit]);
+  }, [resetFilterOnExit, setMdv]);
 
   if (error) {
     log('error', error);
