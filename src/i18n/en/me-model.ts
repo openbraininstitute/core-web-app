@@ -4,4 +4,5 @@ export const messages = {
     'The project does not have enough credits to create a model, please add credits and try again',
   RunAnalysisError: 'Something went wrong while launching model calibration and validation',
   ValidationError: 'Validation failed. Please check the data and try again.',
+  CreationModelSucceed: 'The me-model has been successfully created.',
 };

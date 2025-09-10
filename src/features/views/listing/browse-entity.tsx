@@ -2,7 +2,7 @@
 
 'use client';
 
-import { ReactElement, useEffect, useState, type ComponentProps } from 'react';
+import { ReactElement, useEffect, type ComponentProps } from 'react';
 import { parseAsString, Parser, useQueryState } from 'nuqs';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { WarningOutlined } from '@ant-design/icons';
@@ -13,8 +13,8 @@ import get from 'lodash/get';
 
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { DEFAULT_PAGE_NUMBER, WorkspaceScope, WorkspaceSection } from '@/constants';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { MiniDetailView } from '@/ui/segments/mini-detail-view';
 import { GenericError } from '@/ui/molecules/generic-error';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -26,6 +26,7 @@ import {
 } from '@/ui/segments/data-table/elements/context';
 import {
   makeSelectEntityClickEvent,
+  useMiniDetailView,
   useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
@@ -70,6 +71,7 @@ export function BrowseEntityScope({
   miniViewProps,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
+  const { mdv, setMdv } = useMiniDetailView();
   const [scope] = useQueryState(
     'scope',
     parseAsString
@@ -82,8 +84,6 @@ export function BrowseEntityScope({
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
 
   const [sortState, setSortState] = useAtom(coreSortStateAtom({ key: dataKey }));
-  const [miniViewPresent, updateDisplayMiniView] = useState(false);
-
   const onSortChange = (newSortState: any) => {
     setPageNumber(DEFAULT_PAGE_NUMBER);
     setSortState(newSortState);
@@ -136,24 +136,18 @@ export function BrowseEntityScope({
   };
 
   useSelectEntityClickEvent((event) => {
-    updateDisplayMiniView(event.detail.display);
+    setMdv(event.detail.display);
   });
 
   const resetFilterOnExit = useSetAtom(coreFiltersAtom({ dataType, key: dataKey }));
 
-  // reset mini detail view when dataKey changes (scope, dataType, etc.)
-  useEffect(() => {
-    makeSelectEntityClickEvent({ display: false, data: null });
-    updateDisplayMiniView(false);
-  }, [dataKey]);
-
   useEffect(() => {
     return () => {
       resetFilterOnExit(RESET);
-      // also reset mini detail view on unmount
       makeSelectEntityClickEvent({ display: false, data: null });
+      setMdv(false);
     };
-  }, [resetFilterOnExit]);
+  }, [resetFilterOnExit, setMdv]);
 
   if (error) {
     log('error', error);
@@ -213,7 +207,7 @@ export function BrowseEntityScope({
             'h-full max-h-[calc(100vh-11.8rem)] w-full min-w-0',
             '[grid-area:mini-view]',
             {
-              hidden: !miniViewPresent,
+              hidden: !mdv,
             },
             classNames?.miniView
           )}

@@ -115,17 +115,19 @@ export function MModelMiniDetail({ sessionId }: { sessionId: string }) {
       <div className="flex w-full flex-col items-center justify-center px-4">
         <div className="mb-4 flex w-full items-center justify-between gap-2 select-none">
           <h3 className="text-neutral-4 text-lg font-medium uppercase">M-Model</h3>
-          <div className="text-primary-9 hover:bg-neutral-2/40 flex items-center justify-center gap-2 rounded-full py-1 pr-1 pl-3">
-            Select another model
-            <Button
-              rounded
-              variant="ghost"
-              onClick={onReset}
-              className="h-10 w-10 bg-white/40 shadow-xs hover:font-semibold!"
-            >
-              <ReloadOutlined />
-            </Button>
-          </div>
+          <Button
+            rounded
+            className="text-primary-9 group flex items-center justify-center gap-2 rounded-full bg-white/40 pr-1 pl-3 shadow-xs hover:bg-white"
+            variant="ghost"
+            onClick={onReset}
+          >
+            <div className="flex items-center justify-center gap-1.5">
+              Select another model
+              <div className="flex h-8 w-8 items-center justify-center rounded-full group-hover:bg-white">
+                <ReloadOutlined />
+              </div>
+            </div>
+          </Button>
         </div>
         <div className="flex w-full flex-col items-start justify-center gap-5">{content}</div>
       </div>

@@ -2,7 +2,7 @@
 
 'use client';
 
-import { ReactNode, useEffect, useState, type ComponentProps } from 'react';
+import { ReactNode, useEffect, type ComponentProps } from 'react';
 import { parseAsString, Parser, useQueryStates } from 'nuqs';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { WarningOutlined } from '@ant-design/icons';
@@ -35,6 +35,7 @@ import {
 } from '@/ui/segments/data-table/elements/context';
 import {
   makeSelectEntityClickEvent,
+  useMiniDetailView,
   useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
@@ -79,6 +80,7 @@ export function BrowseCircuit({
   miniViewProps,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
+  const { mdv, setMdv } = useMiniDetailView();
   const [{ scope, view }] = useQueryStates({
     view: parseAsString
       .withDefault(CircuitView.Hierarchy)
@@ -95,8 +97,14 @@ export function BrowseCircuit({
   const activeColumns = useAtomValue(coreActiveColumnsAtom({ dataType, key: dataKey }));
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
   const [sortState, setSortState] = useAtom(coreSortStateAtom({ key: dataKey }));
-  const [miniViewPresent, updateDisplayMiniView] = useState(false);
 
+  // Reset mini detail view when scope changes
+  useEffect(() => {
+    if (mdv) {
+      setMdv(false);
+      makeSelectEntityClickEvent({ display: false, data: null });
+    }
+  }, [scope, mdv, setMdv]);
   const onSortChange = (newSortState: any) => {
     setPageNumber(DEFAULT_PAGE_NUMBER);
     setSortState(newSortState);
@@ -178,14 +186,8 @@ export function BrowseCircuit({
   };
 
   useSelectEntityClickEvent((event) => {
-    updateDisplayMiniView(event.detail.display);
+    setMdv(event.detail.display);
   });
-
-  // reset mini detail view when dataKey changes (scope, dataType, etc.)
-  useEffect(() => {
-    makeSelectEntityClickEvent({ display: false, data: null });
-    updateDisplayMiniView(false);
-  }, [dataKey]);
 
   const nestedTableColumns = allColumns.filter(({ key }) =>
     (activeColumns || []).includes(key as string)
@@ -249,7 +251,6 @@ export function BrowseCircuit({
   useEffect(() => {
     return () => {
       resetFilterOnExit(RESET);
-      // also reset mini detail view on unmount
       makeSelectEntityClickEvent({ display: false, data: null });
     };
   }, [resetFilterOnExit]);
@@ -321,7 +322,7 @@ export function BrowseCircuit({
           'h-full max-h-[calc(100vh-11.8rem)] w-full min-w-0',
           '[grid-area:mini-view]',
           {
-            hidden: !miniViewPresent,
+            hidden: !mdv,
           },
           classNames?.miniView
         )}

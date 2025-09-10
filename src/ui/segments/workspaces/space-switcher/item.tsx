@@ -15,6 +15,7 @@ import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
 import type { Project, VirtualLab } from '@/api/virtual-lab-svc/queries/types';
+import { LabCompany } from '@/components/icons/buttons';
 
 type Props = {
   lab: VirtualLab & { isMine: boolean };
@@ -99,27 +100,31 @@ export function Item({
   };
 
   return (
-    <>
-      <div // eslint-disable-line jsx-a11y/interactive-supports-focus
+    <div className={cn('border-neutral-2 text-primary-9 bg-background mx-3 rounded-2xl border')}>
+      <div
         role="button"
+        tabIndex={-1}
         aria-label="virtual-lab-switcher"
         data-testid="virtual-lab-switcher"
         className={cn(
-          'group flex cursor-pointer items-center justify-between px-4 py-3 transition-colors duration-150 hover:bg-gray-50',
-          { 'bg-primary-9 hover:bg-primary-8 mx-2 mt-2 rounded-full py-2 text-white!': lab.isMine },
-          { 'mb-2': !expandedLabs.has(lab.id) && lab.isMine }
+          'group flex cursor-pointer items-center justify-between px-2 py-3 transition-colors duration-150 hover:bg-gray-50',
+          'hover:bg-neutral-1 rounded-2xl',
+          { 'rounded-b-none': expandedLabs.has(lab.id) }
         )}
         onKeyDown={onVlabClick}
         onClick={onVlabClick}
       >
-        <h4
-          className={cn('text-primary-9 text-md font-bold', {
-            'text-white!': lab.isMine,
-          })}
-        >
-          {lab.name}
-        </h4>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center justify-center gap-2">
+          <LabCompany className="size-6" />
+          <h4
+            className={cn('text-primary-9 text-md line-clamp-1 truncate font-bold', {
+              // 'text-white!': lab.isMine,
+            })}
+          >
+            {lab.name}
+          </h4>
+        </div>
+        <div className="ml-auto flex items-center">
           <motion.div
             animate={{ rotate: expandedLabs.has(lab.id) ? 180 : 0 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
@@ -134,7 +139,7 @@ export function Item({
                 className="flex h-7 w-7 items-center justify-center rounded-full border-none bg-transparent p-0"
                 onClick={onDownClick}
               >
-                <DownOutlined className="text-primary-7 h-4 w-4 group-hover:text-white" />
+                <DownOutlined className="text-primary-7 group-hover:text-primary-8 h-4 w-4 hover:text-white" />
               </Button>
             )}
           </motion.div>
@@ -148,7 +153,12 @@ export function Item({
             animate={{ height: 'auto' }}
             exit={{ height: 0 }}
             transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
-            className="flex flex-col gap-1 overflow-hidden py-2"
+            className={cn(
+              'flex flex-col gap-1 overflow-hidden bg-white px-2 py-2 will-change-auto',
+              {
+                'rounded-b-2xl': expandedLabs.has(lab.id),
+              }
+            )}
           >
             {data?.map((project, projectIndex) => {
               const isActive = project.id === activeProjectId;
@@ -159,7 +169,7 @@ export function Item({
                   animate={{ opacity: 1 }}
                   transition={{ delay: projectIndex * 0.01, duration: 0.1 }}
                   className={cn(
-                    'flex w-full cursor-pointer items-center justify-between px-4 transition-colors duration-150'
+                    'flex w-full cursor-pointer items-center justify-between transition-colors duration-150'
                   )}
                 >
                   <Button
@@ -167,7 +177,7 @@ export function Item({
                     rounded
                     size="md"
                     variant="outline"
-                    className={cn('mx-2 w-full justify-start shadow-sm', {
+                    className={cn('w-full justify-start shadow-sm', {
                       'text-primary-8 hover:text-primary-9 bg-gradient-to-br from-zinc-200 to-slate-50 font-bold':
                         isActive,
                     })}
@@ -191,6 +201,6 @@ export function Item({
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }

@@ -2,13 +2,13 @@
 
 import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
-import { useState } from 'react';
+
 import kebabCase from 'lodash/kebabCase';
 
 import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
-import { useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
@@ -22,12 +22,12 @@ type Props = {
 };
 
 export function MEModel({ sessionId }: Props) {
-  const [miniViewPresent, setMiniViewPresent] = useState(false);
+  const { mdv, setMdv } = useMiniDetailView();
   const { virtualLabId, projectId } = useWorkspace();
   const { push: navigate } = useRouter();
   useDisableElementOverflow({ id: 'workspace-body' });
   useSelectEntityClickEvent((ev) => {
-    setMiniViewPresent(ev.detail.display);
+    setMdv(ev.detail.display);
   });
 
   const { setSessionValue, sessionValue } = useBuildSingleNeuronSynaptomeSessionState({
@@ -40,13 +40,13 @@ export function MEModel({ sessionId }: Props) {
       className={cn(
         'grid gap-4 [grid-area:body]',
         'h-full max-h-full px-3 py-2',
-        { "grid-cols-1 [grid-template-areas:'body']": !miniViewPresent },
-        { "grid-cols-[3fr_2fr] [grid-template-areas:'body_mini-view']": miniViewPresent }
+        { "grid-cols-1 [grid-template-areas:'body']": !mdv },
+        { "grid-cols-[3fr_2fr] [grid-template-areas:'body_mini-view']": mdv }
       )}
       initial={false}
       animate={{
-        gridTemplateColumns: miniViewPresent ? '3fr 2fr' : '1fr',
-        gridTemplateAreas: miniViewPresent ? "'body mini-view'" : "'body'",
+        gridTemplateColumns: mdv ? '3fr 2fr' : '1fr',
+        gridTemplateAreas: mdv ? "'body mini-view'" : "'body'",
       }}
       transition={{
         type: 'spring',

@@ -1,9 +1,13 @@
 'use client';
 
-import { CloseOutlined } from '@ant-design/icons';
+import { CloseOutlined, SwapOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
+import { useRef } from 'react';
 
-import { ManageCreditsStep } from '@/ui/segments/virtual-lab-settings/elements/manage-credits';
+import {
+  ManageCreditsStep,
+  ManageCreditsStepHandle,
+} from '@/ui/segments/virtual-lab-settings/elements/manage-credits';
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -17,6 +21,8 @@ type Props = {
 };
 
 export function CreditsTransferModal({ open, onClose }: Props) {
+  const creditsRef = useRef<ManageCreditsStepHandle>(null);
+
   const { virtualLabId, projectId } = useWorkspace();
   const { data: project } = useQuery({
     queryKey: keyBuilder.getOne({ virtualLabId, projectId }),
@@ -35,14 +41,25 @@ export function CreditsTransferModal({ open, onClose }: Props) {
               Transfer credits between your virtual lab and projects.
             </p>
           </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={onClose}
-            className="bg-primary-9 hover:bg-neutral-1/40 border-none !p-2"
-          >
-            <CloseOutlined className="text-lg text-white!" />
-          </Button>
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => creditsRef.current?.swap()}
+              className="bg-primary-9 hover:bg-neutral-1/40 border-none !p-2"
+              disabled={creditsRef.current?.isPending}
+            >
+              <SwapOutlined className="text-sm text-white!" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onClose}
+              className="bg-primary-9 hover:bg-neutral-1/40 border-none !p-2"
+            >
+              <CloseOutlined className="text-lg text-white!" />
+            </Button>
+          </div>
         </div>
       }
       size="auto"
@@ -57,7 +74,9 @@ export function CreditsTransferModal({ open, onClose }: Props) {
         virtualLabId={virtualLabId}
         onBack={onClose}
         shouldHaveBack={false}
-        swapClassname=""
+        shouldShowSwap={false}
+        buttonClassname="mt-20"
+        ref={creditsRef}
       />
     </Modal>
   );
