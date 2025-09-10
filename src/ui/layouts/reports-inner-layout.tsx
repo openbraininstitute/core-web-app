@@ -20,11 +20,12 @@ export function ReportsInnerLayout({ children }: Props) {
     <motion.div
       id="reports-inner-layout"
       className={cn(
-        'bg-neutral-1 border-neutral-2 mx-2 mb-2 grid h-full max-h-[calc(100vh-8rem)] w-[calc(100%-10px)] content-start gap-4 overflow-hidden rounded-2xl border p-5 [grid-area:main]',
-        { "grid-cols-[1fr_3fr] [grid-template-areas:'aside_body']": !mdv },
-        { "grid-cols-[3fr_1fr] [grid-template-areas:'body_mini-view']": mdv }
+        'bg-neutral-1 border-neutral-2 mx-2 mb-2 grid h-full max-h-[calc(100vh-8rem)] w-[calc(100%-10px)] content-start gap-4 overflow-hidden rounded-2xl border p-5 [grid-area:main]'
       )}
-      initial={false}
+      initial={{
+        gridTemplateColumns: '1fr 3fr',
+        gridTemplateAreas: "'aside body'",
+      }}
       animate={{
         gridTemplateColumns: mdv ? '3fr 1fr' : '1fr 3fr',
         gridTemplateAreas: mdv ? "'body mini-view'" : "'aside body'",
