@@ -132,6 +132,7 @@ export type SonataCircuitComponentConfig = {
   };
   synaptic_models_dir: string;
   templates_dir: string;
+  alternate_morphologies?: Record<string, string>;
 };
 
 export type ICircuitSonataConfiguration = {
