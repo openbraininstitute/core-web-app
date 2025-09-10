@@ -40,5 +40,5 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
   isBookmarkable: false,
   isDownloadable: true,
   isCopyable: true,
-  isSimulatable: false, // TODO: should be changed after
+  isSimulatable: (scale) => ['small', 'pair'].includes(scale),
 } as const;

@@ -7,6 +7,7 @@ import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 import { DetailViewSection } from '@/entity-configuration/definitions/types';
+import { TCircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 
 export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   group: TEntityTypeGroup;
@@ -39,7 +40,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   detailViewSections: DetailViewSection[];
   isDownloadable?: boolean;
   isCopyable?: boolean;
-  isSimulatable?: boolean;
+  isSimulatable: boolean | ((scale: TCircuitScaleDictionary) => boolean);
 };
 
 export type SerializedEntityCoreTypeConfig<T extends EntityCoreIdentifiable> = Omit<

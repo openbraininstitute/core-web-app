@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { notFound } from 'next/navigation';
+import NextLink from 'next/link';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -12,8 +13,6 @@ import {
   LoadingOutlined,
 } from '@ant-design/icons';
 import Action from '../molecules/side-menu-action';
-
-import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 import {
   bookmarkToProjectLibrary,
@@ -27,19 +26,23 @@ import {
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { basePath } from '@/config';
+import { EntityTypeValue } from '@/entity-configuration/domain';
 
-export default function ActionMenu<T extends EntityCoreIdentifiable>({
+export default function ActionMenu({
   entity,
   ctx,
   type,
 }: {
-  entity: T;
+  entity: EntityTypeValue;
   ctx: { virtualLabId: string; projectId: string };
   type: EntityCoreExtendedType;
 }) {
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
   const notification = useAppNotification();
+
+  console.log(entity);
 
   const entityType = getEntityByExtendedType({ type });
   if (!entityType) notFound();
@@ -120,6 +123,11 @@ export default function ActionMenu<T extends EntityCoreIdentifiable>({
     return handleRemoveBookmark;
   };
 
+  const isSimulatable =
+    typeof entityType.isSimulatable === 'boolean'
+      ? entityType.isSimulatable
+      : 'scale' in entity && entityType.isSimulatable(entity.scale);
+
   return (
     <div className="text-primary-9 mt-10 flex flex-col gap-5 pr-20 pl-10 text-lg font-bold">
       <Action
@@ -143,8 +151,20 @@ export default function ActionMenu<T extends EntityCoreIdentifiable>({
       >
         {copied ? 'Copied' : 'Copy ID'}
       </Action>
-      <Action icon={<ExperimentOutlined />}>Simulate</Action>
-      {bookmarks.data && (
+      {isSimulatable && (
+        <Action
+          icon={
+            <NextLink
+              href={`${basePath}/app/v2/${ctx.virtualLabId}/${ctx.projectId}/workflows/simulate/configure/${entityType.type.replaceAll('_', '-')}/${entity.id}`}
+            >
+              <ExperimentOutlined />
+            </NextLink>
+          }
+        >
+          Simulate
+        </Action>
+      )}
+      {entityType.isBookmarkable && bookmarks.data && (
         <Action
           icon={
             <>
