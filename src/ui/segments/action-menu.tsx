@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+
 import NextLink from 'next/link';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -28,6 +29,7 @@ import {
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { basePath } from '@/config';
 import { EntityTypeValue } from '@/entity-configuration/domain';
+import { IMEModel, ISingleNeuronSynaptome } from '@/api/entitycore/types';
 
 export default function ActionMenu({
   entity,
@@ -41,8 +43,6 @@ export default function ActionMenu({
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
   const notification = useAppNotification();
-
-  console.log(entity);
 
   const entityType = getEntityByExtendedType({ type });
   if (!entityType) notFound();
@@ -128,6 +128,39 @@ export default function ActionMenu({
       ? entityType.isSimulatable
       : 'scale' in entity && entityType.isSimulatable(entity.scale);
 
+  const clone = useMutation({
+    mutationFn: async (entityConfig: ReturnType<typeof getEntityByExtendedType>) => {
+      if (!entityConfig) return;
+      if (entityConfig.api.query.create && entityConfig.extendedType === 'memodel') {
+        const entityCopy = entity as IMEModel;
+
+        const res = await entityConfig.api.query.create({
+          body: {
+            ...entity,
+            brain_region_id: entityCopy.brain_region.id,
+            species_id: entityCopy.species.id,
+            morphology_id: entityCopy.morphology.id,
+            emodel_id: entityCopy.emodel.id,
+          },
+          context: ctx,
+        });
+        return res;
+      }
+    },
+    onSuccess: (data?: EntityTypeValue) => {
+      if (!data) return;
+      notification.success({ message: 'Model cloned successfully' });
+      redirect(
+        `${basePath}/app/v2/${ctx.virtualLabId}/${ctx.projectId}/data/view/${entityType.type.replaceAll('_', '-')}/${data.id}`
+      );
+    },
+    onError: (e) => {
+      if (e.message === 'NEXT_REDIRECT') return;
+
+      notification.error({ message: "Couldn't clone the model" });
+    },
+  });
+
   return (
     <div className="text-primary-9 mt-10 flex flex-col gap-5 pr-20 pl-10 text-lg font-bold">
       <Action
@@ -164,6 +197,11 @@ export default function ActionMenu({
           Simulate
         </Action>
       )}
+
+      {entityType.isClonable && (
+        <Action icon={<CopyOutlined onClick={() => clone.mutateAsync(entityType)} />}>Clone</Action>
+      )}
+
       {entityType.isBookmarkable && bookmarks.data && (
         <Action
           icon={

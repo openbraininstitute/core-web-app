@@ -52,4 +52,5 @@ export const SingleNeuronSynaptome: EntityCoreTypeConfig<ISingleNeuronSynaptome>
   isDownloadable: true,
   isCopyable: true,
   isSimulatable: true,
+  isClonable: true,
 } as const;

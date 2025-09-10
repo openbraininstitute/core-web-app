@@ -23,7 +23,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
     query: {
       list?: (query: any) => Promise<EntityCoreResponse<T>>;
       one: (query: { id: string; context?: WorkspaceContext | null }) => Promise<T>;
-      create?: (query: any) => Promise<T>;
+      create?: (body: any) => Promise<T>;
     };
     expand?: Record<string, (source: T, ctx?: WorkspaceContext, ...other: any) => Promise<any>>;
   };
@@ -41,6 +41,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   isDownloadable?: boolean;
   isCopyable?: boolean;
   isSimulatable: boolean | ((scale: TCircuitScaleDictionary) => boolean);
+  isClonable?: boolean;
 };
 
 export type SerializedEntityCoreTypeConfig<T extends EntityCoreIdentifiable> = Omit<

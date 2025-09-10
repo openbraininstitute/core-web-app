@@ -81,6 +81,7 @@ export async function createMEModel({
   context: Required<WorkspaceContext>;
 }) {
   const api = await entityCoreApi();
+  console.log('\n\n copying', context)
   return await api.post<IMEModel>(`${baseUri}`, {
     headers: {
       accept: 'application/json',
