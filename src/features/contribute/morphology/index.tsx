@@ -1,3 +1,4 @@
+// src/features/contribute/morphology/index.tsx
 'use client';
 
 import {
@@ -8,7 +9,7 @@ import {
   RightOutlined,
 } from '@ant-design/icons';
 import Ajv, { AnySchema } from 'ajv';
-import { atom } from 'jotai';
+import { atom, useAtom, PrimitiveAtom } from 'jotai';
 import { Fragment, useMemo, useRef, useState, KeyboardEvent, useEffect } from 'react';
 import { Config, ConfigValue, JSONMorphologySchemaForm } from './_components/components';
 import { useConfigAtom } from './_components/hooks/config-atom';
@@ -18,7 +19,7 @@ import {
   useObioneJsonConfigurationSchema,
 } from './_components/hooks/schema';
 import { Section } from './_components/section';
-import { CATEGORIES, isAtom, ORDERING } from './_components/utils';
+import { CATEGORIES, ORDERING } from './_components/utils';
 import { AtomsMap, JSONMorphologySchema } from './types';
 import { resolveDataKey } from '@/utils/key-builder';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
@@ -49,11 +50,11 @@ export default function ContributeMorphologyConfiguration({
     dataKey: resolveDataKey({ section: 'explore', projectId }),
   });
 
-  const [configTab, setConfigTab] = useState<string>('info');
+  const [configTab, setConfigTab] = useState<string>('morphology');
   const [editing, setEditing] = useState(true);
   const [schema, setSchema] = useState<JSONMorphologySchema | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedItemIdx, setSelectedItemIdx] = useState<number | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState('ReconstructionMorphology');
+  const [selectedItemIdx, setSelectedItemIdx] = useState<number | null>(0);
   const [loading, setLoading] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -64,11 +65,8 @@ export default function ContributeMorphologyConfiguration({
   const notification = useAppNotification();
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
   const initialConfigValidated = useRef(false);
-
-  // Add success state
   const [isSuccess, setIsSuccess] = useState(false);
-
-  // Add validation state
+  const [entityId, setEntityId] = useState<string | null>(null);
   const [formValidation] = useState<{
     isValid: boolean;
     errors: string[];
@@ -77,35 +75,41 @@ export default function ContributeMorphologyConfiguration({
     errors: [],
   });
 
-  // Debug log to verify selectedFile state
-  useEffect(() => {
-    console.log('selectedFile state:', selectedFile);
-  }, [selectedFile]);
+  const [atomsMap, setAtomsMap] = useState<AtomsMap>(() => {
+    const initial: Record<string, ConfigValue> = {
+      type: 'ReconstructionMorphology',
+      brain_region_id: node?.id || '',
+      species_id: 'b7ad4cca-4ac2-4095-9781-37fb68fe9ca1',
+      strain_id: undefined,
+      name: '',
+      description: '',
+      mtype_class_id: undefined,
+    };
+    return {
+      morphology: atom<Record<string, ConfigValue>>(initial),
+    };
+  });
+
+  const config = useConfigAtom(schema, atomsMap);
+  const [morphologyState] = useAtom(
+    atomsMap.morphology as PrimitiveAtom<Record<string, ConfigValue>>
+  );
+
+  useEffect(() => {}, [config.morphology, morphologyState]);
 
   const selectedCatSchema = schema?.properties?.[configTab]?.additionalProperties?.anyOf?.find(
     (s) => s.properties?.type.const === selectedCategory
   );
 
-  const handleAddReferenceClick = (referenceTab: string) => {
-    setConfigTab(referenceTab);
-    setEditing(true);
-    setSelectedCategory('');
-  };
-
   const readOnly = initialConfig !== undefined;
 
   const validate = useMemo(() => {
     const ajv = new Ajv({ strictSchema: false, allErrors: true });
-    if (!schema) {
-      return;
+    if (!schema || !schema.properties) {
+      return null;
     }
     return ajv.compile(schema as AnySchema);
   }, [schema]);
-
-  const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
-
-  // Fix TS2554: Adjust useConfigAtom call to pass only schema and atomsMap
-  const config = useConfigAtom(schema, atomsMap);
 
   if (validate && initialConfig && !initialConfigValidated.current) {
     initialConfigValidated.current = true;
@@ -116,19 +120,18 @@ export default function ContributeMorphologyConfiguration({
   }
 
   const errors = useMemo(() => {
-    if (validate) {
-      validate(config);
+    if (!validate || !config) {
+      return [];
     }
-    return validate?.errors;
+    validate(config);
+    return validate.errors ?? [];
   }, [validate, config]);
 
   useObioneJsonConfigurationSchema(circuitId, notification, setSchema, setAtomsMap);
 
-  // Update the submit button condition
   const canSubmit =
-    !errors?.length && !loading && !readOnly && selectedFile && formValidation.isValid;
+    !errors.length && !loading && !readOnly && selectedFile && formValidation.isValid;
 
-  // Show success page if upload was successful
   if (isSuccess) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-white">
@@ -136,19 +139,34 @@ export default function ContributeMorphologyConfiguration({
           <div className="mb-4 text-4xl font-bold text-green-600">
             ✓ Morphology created successfully
           </div>
-          <button
-            type="button"
-            onClick={() => setIsSuccess(false)}
-            className="bg-primary-8 hover:bg-primary-9 rounded-full px-6 py-3 text-white transition-colors"
-          >
-            Create Another
-          </button>
+          <div className="flex justify-center gap-4">
+            <button
+              type="button"
+              onClick={() => setIsSuccess(false)}
+              className="bg-primary-8 hover:bg-primary-9 rounded-full px-6 py-3 text-white transition-colors"
+            >
+              Create Another
+            </button>
+            {entityId && (
+              <button
+                type="button"
+                onClick={() => {
+                  const newUrl =
+                    window.location.href.split('?')[0].replace('/add', '') + '/' + entityId;
+                  window.location.href = newUrl;
+                }}
+                className="bg-primary-8 hover:bg-primary-9 rounded-full px-6 py-3 text-white transition-colors"
+              >
+                View the record
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );
   }
 
-  if (!schema) {
+  if (!schema || !schema.properties) {
     return (
       <div className="flex h-full w-full items-center justify-between">
         <LoadingOutlined />
@@ -162,7 +180,6 @@ export default function ContributeMorphologyConfiguration({
       <div className={styles.threeColumns}>
         <div className={styles.scrollable}>
           <div className="flex flex-grow flex-col items-center gap-5 overflow-y-auto pr-5 pb-5">
-            {/* ... form validation */}
             <div className="self-start text-gray-500 uppercase">Assets</div>
             <div
               role="button"
@@ -222,9 +239,9 @@ export default function ContributeMorphologyConfiguration({
                         key={k}
                         k={k}
                         sectionSchema={v}
-                        schema={schema} // Added
-                        config={config} // Added
-                        errors={errors} // Added
+                        schema={schema}
+                        config={config}
+                        errors={errors}
                         atomsMap={atomsMap}
                         setAtomsMap={setAtomsMap}
                         configTab={configTab}
@@ -232,9 +249,9 @@ export default function ContributeMorphologyConfiguration({
                         setSelectedItemIdx={setSelectedItemIdx}
                         setEditing={setEditing}
                         setSelectedCategory={setSelectedCategory}
-                        campaignId={campaignId} // Optional
-                        loading={loading} // Optional
-                        selectedItemIdx={selectedItemIdx} // Optional
+                        campaignId={campaignId}
+                        loading={loading}
+                        selectedItemIdx={selectedItemIdx}
                       />
                     ))}
               </Fragment>
@@ -259,47 +276,36 @@ export default function ContributeMorphologyConfiguration({
                   try {
                     setLoading(true);
 
-                    const morphologyConfig =
-                      (Array.isArray(config.morphology) && config.morphology.length > 0
-                        ? config.morphology[0]
-                        : {
-                            brain_region_id: node.id,
-                            species_id: 'b7ad4cca-4ac2-4095-9781-37fb68fe9ca1',
-                          }) ?? {};
-
-                    let legacyId;
-
-                    if (Array.isArray(morphologyConfig.legacy_id)) {
-                      legacyId = morphologyConfig.legacy_id;
-                    } else if (typeof morphologyConfig.legacy_id === 'string') {
-                      legacyId = [morphologyConfig.legacy_id];
-                    } else {
-                      legacyId = [];
-                    }
+                    const morphologyConfig = (config.morphology || {}) as Record<
+                      string,
+                      ConfigValue
+                    >;
+                    const licenseConfig = (config.license || {}) as Record<string, ConfigValue>;
+                    const mtypeConfig = (config.mtype || {}) as Record<string, ConfigValue>;
+                    const contributionConfig = (config.contribution || {}) as Record<
+                      string,
+                      ConfigValue
+                    >;
 
                     const newJson = {
                       authorized_public: false,
                       license_id:
-                        morphologyConfig.license_id || 'ad8686db-3cdd-4e3f-bcbd-812380a9eba7',
-                      name: morphologyConfig.name || 'test',
-                      description: morphologyConfig.description || 'string',
+                        licenseConfig?.license_id ?? 'ad8686db-3cdd-4e3f-bcbd-812380a9eba7',
+                      name: morphologyConfig.name || '',
+                      description: morphologyConfig.description || '',
                       location: {
                         x: 0,
                         y: 0,
                         z: 0,
                       },
-                      legacy_id: legacyId,
+                      legacy_id: [],
                       species_id:
-                        morphologyConfig.species_id ||
-                        morphologyConfig.species ||
-                        'b7ad4cca-4ac2-4095-9781-37fb68fe9ca1',
-                      strain_id: morphologyConfig.strain_id || null,
-                      brain_region_id:
-                        morphologyConfig.brain_region_id ||
-                        morphologyConfig.brain_region ||
-                        node.id,
-                      subject_id:
-                        morphologyConfig.subject_id || '1c71c68c-44a4-4972-955d-7e0f264425e3',
+                        morphologyConfig.species_id || 'b7ad4cca-4ac2-4095-9781-37fb68fe9ca1',
+                      strain_id: morphologyConfig.strain_id ?? undefined,
+                      brain_region_id: morphologyConfig.brain_region_id || node?.id || '',
+                      subject_id: '1c71c68c-44a4-4972-955d-7e0f264425e3',
+                      experiment_date: undefined,
+                      mtype_class_id: mtypeConfig?.mtype_class_id ?? undefined,
                     };
 
                     setNewJsonPayload(newJson);
@@ -311,7 +317,6 @@ export default function ContributeMorphologyConfiguration({
                       'project-id': projectId || '100a9a8a-5229-4f3d-aef3-6a4184c59e74',
                     };
 
-                    // Submit JSON payload
                     const jsonResponse = await authFetch(
                       'https://staging.openbraininstitute.org/api/entitycore/reconstruction-morphology',
                       {
@@ -322,7 +327,6 @@ export default function ContributeMorphologyConfiguration({
                     );
 
                     const jsonResponseText = await jsonResponse.text();
-
                     if (!jsonResponse.ok) {
                       throw new ApiError(`Failed to submit JSON payload: ${jsonResponseText}`, {
                         status: jsonResponse.status,
@@ -330,9 +334,9 @@ export default function ContributeMorphologyConfiguration({
                     }
 
                     const jsonResponseData = JSON.parse(jsonResponseText);
-                    const entityId = jsonResponseData.id;
+                    const newEntityId = jsonResponseData.id;
+                    setEntityId(newEntityId);
 
-                    // Second API call: Upload file
                     if (selectedFile) {
                       const formData = new FormData();
                       let mimeType = 'application/octet-stream';
@@ -357,7 +361,7 @@ export default function ContributeMorphologyConfiguration({
                       };
 
                       const fileResponse = await authFetch(
-                        `https://staging.openbraininstitute.org/api/entitycore/reconstruction-morphology/${entityId}/assets`,
+                        `https://staging.openbraininstitute.org/api/entitycore/reconstruction-morphology/${newEntityId}/assets`,
                         {
                           method: 'POST',
                           headers: fileUploadHeaders,
@@ -373,15 +377,68 @@ export default function ContributeMorphologyConfiguration({
                         });
                       }
 
-                      // Show success page instead of notification
+                      const mtype_request_body = {
+                        authorized_public: true,
+                        entity_id: newEntityId,
+                        mtype_class_id: mtypeConfig?.mtype_class_id ?? undefined,
+                      };
+
+                      const fileUploadMtypeHeaders = {
+                        'virtual-lab-id': headers['virtual-lab-id'],
+                        'project-id': headers['project-id'],
+                        'Content-Type': 'application/json',
+                      };
+                      const fileResponseMtype = await authFetch(
+                        `https://staging.openbraininstitute.org/api/entitycore/mtype-classification`,
+                        {
+                          method: 'POST',
+                          headers: fileUploadMtypeHeaders,
+                          body: JSON.stringify(mtype_request_body),
+                        }
+                      );
+                      const fileResponseMtypeText = await fileResponseMtype.text();
+
+                      if (!fileResponseMtype.ok) {
+                        throw new ApiError(`Failed to upload file: ${fileResponseMtypeText}`, {
+                          status: fileResponseMtype.status,
+                        });
+                      }
+
+                      const contribution_request_body = {
+                        entity_id: newEntityId,
+                        agent_id: contributionConfig?.agent_id ?? undefined,
+                        role_id: contributionConfig?.role_id ?? undefined,
+                      };
+
+                      const fileUploadContributionHeaders = {
+                        'virtual-lab-id': headers['virtual-lab-id'],
+                        'project-id': headers['project-id'],
+                        'Content-Type': 'application/json',
+                      };
+                      const fileResponseContribution = await authFetch(
+                        `https://staging.openbraininstitute.org/api/entitycore/contribution`,
+                        {
+                          method: 'POST',
+                          headers: fileUploadContributionHeaders,
+                          body: JSON.stringify(contribution_request_body),
+                        }
+                      );
+                      const fileResponseContributionText = await fileResponseContribution.text();
+                      if (!fileResponseContribution.ok) {
+                        throw new ApiError(
+                          `Failed to upload file: ${fileResponseContributionText}`,
+                          {
+                            status: fileResponseContribution.status,
+                          }
+                        );
+                      }
+
                       setIsSuccess(true);
                     } else {
                       notification.success({
                         message: 'Record submitted successfully, no file uploaded',
                       });
                     }
-
-                    setShowConfig(true);
                   } catch (error) {
                     notification.error({
                       message: 'Failed to submit record',
@@ -399,7 +456,7 @@ export default function ContributeMorphologyConfiguration({
                   !canSubmit
                     ? `Cannot submit: ${!selectedFile ? 'No file selected. ' : ''}${
                         !formValidation.isValid ? 'Required fields missing. ' : ''
-                      }${errors?.length ? 'Form validation errors. ' : ''}${
+                      }${errors.length ? 'Form validation errors. ' : ''}${
                         loading ? 'Loading...' : ''
                       }`.trim()
                     : 'Submit record'
@@ -448,7 +505,7 @@ export default function ContributeMorphologyConfiguration({
                       disabled={loading || readOnly}
                       onChange={(e) => {
                         const file = e.target.files?.[0];
-                        console.log('File selected:', file); // Debug log
+
                         if (file) {
                           setSelectedFile(file);
                           setFileStatus({ message: `File selected: ${file.name}` });
@@ -466,47 +523,42 @@ export default function ContributeMorphologyConfiguration({
               </div>
             </div>
           )}
-          {schema.properties &&
-            schema.properties?.[configTab]?.additionalProperties?.anyOf &&
-            !selectedCategory &&
+          {schema?.properties &&
+            configTab !== 'assets' &&
             editing &&
-            configTab !== 'assets' && (
-              <div className="flex flex-col items-center gap-5">
-                {schema.properties[configTab].additionalProperties.anyOf.map((o) => (
-                  <div
-                    key={o.title}
-                    role="button"
-                    tabIndex={0}
-                    className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 hover:bg-white"
-                    onClick={() => {
-                      if (isRootCategory(schema, configTab)) return;
-                      setSelectedCategory(o.properties?.type.const ?? '');
-                      const initial: Record<string, ConfigValue> = {};
-                      if (o.properties) {
-                        Object.entries(o.properties).forEach(([subkey, subValue]) => {
-                          initial[subkey] =
-                            subkey === 'type'
-                              ? (subValue.const ?? null)
-                              : (subValue.default ?? null);
-                        });
-                      }
-                      const itemIndexes = Object.keys(atomsMap[configTab]).map((subkey) =>
-                        parseInt(subkey.split('_')[1], 10)
-                      );
-                      itemIndexes.sort((a, b) => a - b);
-                      const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
-                      setSelectedItemIdx(itemIdx);
-                      setAtomsMap({
-                        ...atomsMap,
-                        [configTab]: {
-                          ...atomsMap[configTab],
-                          [resolveKey(schema, configTab, itemIdx)]:
-                            atom<Record<string, ConfigValue>>(initial),
-                        },
-                      });
-                    }}
-                    onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
+            (isRootCategory(schema, configTab) ? (
+              <JSONMorphologySchemaForm
+                disabled={!!campaignId || loading || readOnly}
+                schema={schema.properties[configTab]}
+                stateAtom={atomsMap[configTab] as PrimitiveAtom<Record<string, ConfigValue>>}
+                nodeId={node?.id}
+                currentCategory={configTab}
+              />
+            ) : selectedCatSchema ? (
+              <JSONMorphologySchemaForm
+                disabled={!!campaignId || loading || readOnly}
+                schema={selectedCatSchema}
+                stateAtom={
+                  (
+                    atomsMap[configTab] as Record<
+                      string,
+                      PrimitiveAtom<Record<string, ConfigValue>>
+                    >
+                  )[resolveKey(schema, configTab, selectedItemIdx)]
+                }
+                nodeId={node?.id}
+                currentCategory={configTab}
+              />
+            ) : (
+              schema.properties[configTab]?.additionalProperties?.anyOf && (
+                <div className="flex flex-col items-center gap-5">
+                  {schema.properties[configTab].additionalProperties.anyOf.map((o) => (
+                    <div
+                      key={o.title}
+                      role="button"
+                      tabIndex={0}
+                      className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 hover:bg-white"
+                      onClick={() => {
                         if (isRootCategory(schema, configTab)) return;
                         setSelectedCategory(o.properties?.type.const ?? '');
                         const initial: Record<string, ConfigValue> = {};
@@ -514,88 +566,98 @@ export default function ContributeMorphologyConfiguration({
                           Object.entries(o.properties).forEach(([subkey, subValue]) => {
                             initial[subkey] =
                               subkey === 'type'
-                                ? (subValue.const ?? null)
-                                : (subValue.default ?? null);
+                                ? (subValue.const ?? undefined)
+                                : (subValue.default ?? undefined);
                           });
                         }
-                        const itemIndexes = Object.keys(atomsMap[configTab]).map((subkey) =>
+                        const itemIndexes = Object.keys(atomsMap[configTab] || {}).map((subkey) =>
                           parseInt(subkey.split('_')[1], 10)
                         );
                         itemIndexes.sort((a, b) => a - b);
                         const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
                         setSelectedItemIdx(itemIdx);
-                        setAtomsMap({
-                          ...atomsMap,
+                        setAtomsMap((prev) => ({
+                          ...prev,
                           [configTab]: {
-                            ...atomsMap[configTab],
+                            ...(prev[configTab] as Record<
+                              string,
+                              PrimitiveAtom<Record<string, ConfigValue>>
+                            >),
                             [resolveKey(schema, configTab, itemIdx)]:
                               atom<Record<string, ConfigValue>>(initial),
                           },
-                        });
-                      }
-                    }}
+                        }));
+                      }}
+                      onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          if (isRootCategory(schema, configTab)) return;
+                          setSelectedCategory(o.properties?.type.const ?? '');
+                          const initial: Record<string, ConfigValue> = {};
+                          if (o.properties) {
+                            Object.entries(o.properties).forEach(([subkey, subValue]) => {
+                              initial[subkey] =
+                                subkey === 'type'
+                                  ? (subValue.const ?? undefined)
+                                  : (subValue.default ?? undefined);
+                            });
+                          }
+                          const itemIndexes = Object.keys(atomsMap[configTab] || {}).map((subkey) =>
+                            parseInt(subkey.split('_')[1], 10)
+                          );
+                          itemIndexes.sort((a, b) => a - b);
+                          const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
+                          setSelectedItemIdx(itemIdx);
+                          setAtomsMap((prev) => ({
+                            ...prev,
+                            [configTab]: {
+                              ...(prev[configTab] as Record<
+                                string,
+                                PrimitiveAtom<Record<string, ConfigValue>>
+                              >),
+                              [resolveKey(schema, configTab, itemIdx)]:
+                                atom<Record<string, ConfigValue>>(initial),
+                            },
+                          }));
+                        }
+                      }}
+                    >
+                      <div className="text-primary-9 text-lg font-bold">{o.title}</div>
+                      <div className="mt-3 text-base text-gray-700">{o.description}</div>
+                    </div>
+                  ))}
+                </div>
+              )
+            ))}
+          {showConfig && (
+            <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
+              <div className="max-h-[80vh] max-w-4xl overflow-auto rounded-lg bg-white p-6">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-xl font-bold">New Record JSON</h2>
+                  <button
+                    type="button"
+                    onClick={() => setShowConfig(false)}
+                    className="text-2xl text-gray-500 hover:text-gray-700"
                   >
-                    <div className="text-primary-9 text-lg font-bold">{o.title}</div>
-                    <div className="mt-3 text-base text-gray-700">{o.description}</div>
-                  </div>
-                ))}
+                    ×
+                  </button>
+                </div>
+                <pre className="overflow-auto rounded bg-gray-100 p-4 text-sm">
+                  {JSON.stringify(newJsonPayload, null, 2)}
+                </pre>
+                <div className="mt-4 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowConfig(false)}
+                    className="rounded bg-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-400"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
-            )}
-          {schema.properties &&
-            schema.properties?.[configTab] &&
-            editing &&
-            (isRootCategory(schema, configTab) || selectedCatSchema) &&
-            configTab !== 'assets' && (
-              <JSONMorphologySchemaForm
-                onAddReferenceClick={handleAddReferenceClick}
-                disabled={!!campaignId || loading || readOnly}
-                config={config}
-                schema={
-                  selectedCatSchema ??
-                  schema.properties[configTab]?.additionalProperties ??
-                  schema.properties[configTab]
-                }
-                stateAtom={
-                  isAtom(atomsMap[configTab])
-                    ? atomsMap[configTab]
-                    : atomsMap[configTab][resolveKey(schema, configTab, selectedItemIdx)]
-                }
-                nodeId={node.id}
-                currentCategory={configTab}
-              />
-            )}
+            </div>
+          )}
         </div>
       </div>
-      {showConfig && (
-        <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
-          <div className="max-h-[80vh] max-w-4xl overflow-auto rounded-lg bg-white p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold">New Record JSON</h2>
-              <button
-                type="button"
-                onClick={() => setShowConfig(false)}
-                className="text-2xl text-gray-500 hover:text-gray-700"
-              >
-                ×
-              </button>
-            </div>
-
-            <pre className="overflow-auto rounded bg-gray-100 p-4 text-sm">
-              {JSON.stringify(newJsonPayload, null, 2)}
-            </pre>
-
-            <div className="mt-4 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setShowConfig(false)}
-                className="rounded bg-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-400"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
