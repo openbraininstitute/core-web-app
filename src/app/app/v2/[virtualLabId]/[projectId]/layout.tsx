@@ -25,7 +25,7 @@ export default async function Layout({ children }: Props) {
             {children}
           </div>
           <SpaceManagerContainer />
-          <AiContainer />
+          {/* <AiContainer /> */}
         </ProjectRootLayout>
       </div>
     </AppOnboardingProvider>

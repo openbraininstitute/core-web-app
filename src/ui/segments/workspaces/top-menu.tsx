@@ -15,15 +15,17 @@ type Props = {
 export function WorkspaceTopMenu({ className }: Props) {
   return (
     <div className={cn('flex items-start justify-between gap-4', className)}>
-      <div className="flex items-start justify-center gap-2">
-        <SpaceSwitcher className="w-[calc(24rem-1.5rem)]" />
-        <Wallet />
-      </div>
       <div className="flex items-center justify-center gap-2">
         <HydrateWrapper>
           <TopMenuNavigation />
         </HydrateWrapper>
       </div>
+      <div className="flex items-start justify-center gap-1">
+        <Wallet />
+        <SpaceSwitcher className="w-[calc(24rem-1.5rem)]" />
+        
+      </div>
+      
     </div>
   );
 }

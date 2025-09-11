@@ -21,8 +21,9 @@ export function DataInnerLayout({ children }: Props) {
     <motion.div
       id="data-inner-layout"
       className={cn(
-        'bg-background border-neutral-2 mx-2 mb-2 grid h-full max-h-[calc(100vh-8rem)] w-[calc(100%-10px)]',
-        'gap-4 overflow-hidden rounded-2xl border p-2 [grid-area:main]'
+        'border-neutral-2 mx-2 mb-2 grid h-full max-h-[calc(100vh-8rem)] w-[calc(100%-10px)]',
+        // 'gap-4 overflow-hidden rounded-2xl border p-2 [grid-area:main]'
+        'gap-4 overflow-hidden rounded-2xl p-2 [grid-area:main]'
       )}
       initial={{
         gridTemplateColumns: '27rem 1fr',
