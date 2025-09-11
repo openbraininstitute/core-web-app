@@ -49,19 +49,21 @@ export default function Header<T extends EntityCoreIdentifiableNamed>({
         {session && entity && (
           <div className="flex flex-wrap items-center justify-end gap-2">
             {entity.isCopyable && <DetailViewCopyButton id={detail.id} />}
-            {entity.isSimulatable && withinWorkspace && (
-              <Link
-                href={resolveExperimentUrl({
-                  ctx: { virtualLabId, projectId },
-                  dataType: entity.type,
-                  entityId: id,
-                })}
-              >
-                <ToolbarButton icon={<BrainIcon style={{ width: '21px', height: '21px' }} />}>
-                  <div>Simulate</div>
-                </ToolbarButton>
-              </Link>
-            )}
+            {typeof entity.isSimulatable === 'boolean' &&
+              entity.isSimulatable &&
+              withinWorkspace && (
+                <Link
+                  href={resolveExperimentUrl({
+                    ctx: { virtualLabId, projectId },
+                    dataType: entity.type,
+                    entityId: id,
+                  })}
+                >
+                  <ToolbarButton icon={<BrainIcon style={{ width: '21px', height: '21px' }} />}>
+                    <div>Simulate</div>
+                  </ToolbarButton>
+                </Link>
+              )}
             {entity.isBookmarkable && withinWorkspace && (
               <BookmarkButton
                 virtualLabId={virtualLabId}
