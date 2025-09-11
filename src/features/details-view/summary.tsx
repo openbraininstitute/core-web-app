@@ -25,8 +25,11 @@ import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-d
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { DetailViewUrlParams } from '@/types/explore-section/application';
 import { downloadArchive } from '@/services/entity-download';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
-export default function Summary<T extends EntityCoreIdentifiableNamed>({
+export default function Summary<
+  T extends EntityCoreIdentifiableNamed & Partial<Record<EntityCoreFields, unknown>>,
+>({
   payload,
   showViewMode,
   extraHeaderAction,
@@ -50,12 +53,15 @@ export default function Summary<T extends EntityCoreIdentifiableNamed>({
   const memoizedDetailAtom = useMemo(() => {
     const detailFetchAtom = detailFamily({ id, virtualLabId, projectId, dataType, ...params });
     return conditionalAtom<T>(payload, detailFetchAtom);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [payload, id, virtualLabId, projectId, dataType, JSON.stringify(params)]);
+  }, [payload, id, virtualLabId, projectId, dataType, params]);
 
   const detail = useAtomValue(memoizedDetailAtom);
 
-  const onDownload = useCallback((entity: T) => downloadArchive(entity.type, [entity.id]), []);
+  const onDownload = useCallback(
+    (entity: EntityCoreIdentifiableNamed & Partial<Record<EntityCoreFields, unknown>>) =>
+      downloadArchive(entity.type, [entity.id]),
+    []
+  );
 
   useEffect(() => {
     setBrainRegionSidebarIsCollapsed(true);

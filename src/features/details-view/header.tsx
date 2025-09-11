@@ -1,9 +1,11 @@
-import { DownloadOutlined } from '@ant-design/icons';
+// Modified Header Component
+import { DownloadOutlined, SaveOutlined } from '@ant-design/icons';
 import { useParams } from 'next/navigation';
 import { ReactNode, useCallback } from 'react';
 import { Button } from 'antd';
 import { useAtomValue } from 'jotai';
 
+import { ButtonEditMetadata } from './button-edit-metadata';
 import { ButtonCopyId } from './button-copy-id';
 
 import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
@@ -20,10 +22,16 @@ export default function Header<T extends EntityCoreIdentifiableNamed>({
   detail,
   extraHeaderAction,
   onDownload,
+  isEditing = false,
+  onEditToggle,
+  onSave,
 }: {
   detail: T;
   extraHeaderAction?: ReactNode;
   onDownload?: (entity: T) => void;
+  isEditing?: boolean;
+  onEditToggle?: () => void;
+  onSave?: () => void;
 }) {
   const path = usePathname();
   const simCampMatch = path?.match(/\/explore\/simulation-campaigns\/[a-zA-Z0-9=]*/g);
@@ -41,6 +49,10 @@ export default function Header<T extends EntityCoreIdentifiableNamed>({
 
   const handleDownload = useCallback(() => onDownload?.(detail), [detail, onDownload]);
 
+  const handleEditToggle = useCallback(() => {
+    onEditToggle?.();
+  }, [onEditToggle]);
+
   return (
     <div className="text-primary-7 flex flex-col">
       <div className="text font-thin">Name</div>
@@ -50,6 +62,14 @@ export default function Header<T extends EntityCoreIdentifiableNamed>({
         </div>
         {session && (
           <div className="flex flex-wrap items-center justify-end gap-2">
+            {/* Fix: Removed the 'value' prop as it's not a valid prop for ButtonEditMetadata. */}
+            <ButtonEditMetadata isEditing={isEditing} onClick={handleEditToggle} />
+            {isEditing && (
+              <Button type="primary" className="flex items-center gap-2" onClick={onSave}>
+                Save
+                <SaveOutlined />
+              </Button>
+            )}
             <ButtonCopyId value={id} />
             {extraHeaderAction}
             {virtualLabId && projectId && entity?.isBookmarkable && (
@@ -64,8 +84,7 @@ export default function Header<T extends EntityCoreIdentifiableNamed>({
             <Button
               type="text"
               className="text-primary-7 flex items-center gap-2 hover:bg-transparent!"
-              // disabling download button if currently fetching or if resource does not have a distribution
-              disabled={!onDownload}
+              disabled={!onDownload || isEditing}
               onClick={handleDownload}
             >
               Download

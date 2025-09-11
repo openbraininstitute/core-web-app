@@ -1,18 +1,18 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-
-import ContributeConfig from '@/features/contribute';
+import ContributeMorphologyConfiguration from '@/features/contribute/morphology';
 import { WorkspaceContext } from '@/types/common';
 
 type Params = WorkspaceContext & { circuit_id: string };
 
-export default function ContributeConfiguration() {
-  const { virtualLabId, projectId } = useParams<Params>();
+export default function MorphologyPage() {
+  const params = useParams<Params>();
+  const { virtualLabId, projectId, circuit_id } = params;
 
   return (
-    <ContributeConfig
-      circuitId="ee3bc6d2-2953-4c23-8272-82dbeb321943"
+    <ContributeMorphologyConfiguration
+      circuitId={circuit_id}
       virtualLabId={virtualLabId}
       projectId={projectId}
     />
