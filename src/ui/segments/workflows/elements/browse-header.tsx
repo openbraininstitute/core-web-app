@@ -11,7 +11,7 @@ import {
   EntityTypeSelectScrollable,
 } from '@/ui/segments/workflows/elements/selectors';
 import { getWorkflowSegment } from '@/ui/segments/workflows/elements/helpers';
-import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { ROOT_ROUTE } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -105,7 +105,7 @@ function WorkflowMenu() {
   const onEntityTypeSelect = (v: TExtendedEntitiesTypeDict | undefined) => {
     updateWorkflowState((prev) => ({ ...prev, entityType: v }));
     navigate(
-      `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/${category}/browse/${kebabCase(v)}`,
+      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${category}/browse/${kebabCase(v)}`,
       {
         showProgress: true,
         disableSameURL: true,

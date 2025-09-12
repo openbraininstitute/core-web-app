@@ -21,7 +21,7 @@ import { BookmarkIcon, DownloadIcon } from '@/components/icons/buttons';
 import { ExpandableText } from '@/ui/molecules/more-less-text';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
-import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { ROOT_ROUTE } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Card, CardTitle } from '@/ui/molecules/card';
 import { WorkspaceSection } from '@/constants';
@@ -340,7 +340,7 @@ function ExploreActions<T extends EntityCoreObjectTypes>({ record }: { record: T
         className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
       >
         <Link
-          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`}
+          href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`}
         >
           View details
         </Link>
@@ -362,7 +362,7 @@ function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({ record }: { 
         className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
       >
         <Link
-          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`}
+          href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`}
         >
           View details
         </Link>
@@ -376,7 +376,7 @@ function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({ record }: { 
       >
         <Link
           href={{
-            pathname: `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/simulate/configure/${kebabCase(record.type)}/${record.id}`,
+            pathname: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/${kebabCase(record.type)}/${record.id}`,
             query: { sessionId: crypto.randomUUID() },
           }}
         >
@@ -401,7 +401,7 @@ function WorkflowBuildActions<T extends EntityCoreObjectTypes>({ record }: { rec
         className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
       >
         <Link
-          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`}
+          href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`}
         >
           View details
         </Link>
@@ -415,7 +415,7 @@ function WorkflowBuildActions<T extends EntityCoreObjectTypes>({ record }: { rec
       >
         <Link
           href={{
-            pathname: `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/build/configure/${kebabCase(record.type)}/${record.id}`,
+            pathname: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/${kebabCase(record.type)}/${record.id}`,
             query: { sessionId: crypto.randomUUID() },
           }}
           onClick={onWorkflowClick}

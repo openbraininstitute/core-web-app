@@ -12,9 +12,7 @@ export const entityCoreUrl = env.NEXT_PUBLIC_ENTITY_CORE_URL;
 export const entityCorePublicVirtualLabId = env.NEXT_PUBLIC_ENTITY_CORE_PUBLIC_VIRTUAL_LAB_ID;
 export const entityCorePublicProjectId = env.NEXT_PUBLIC_ENTITY_CORE_PUBLIC_PROJECT_ID;
 export const notebookSvcBaseUrl = env.NEXT_PUBLIC_NOTEBOOK_SERVICE_BASE_URL;
-
-// TODO: remove this when we move off from ui-v2 folder
-export const V2_MIGRATION_TEMPORARY_BASE_PATH = '/app/v2';
+export const ROOT_ROUTE = '/app/virtual-lab';
 
 export const smallScaleSimulatorUrl = env.NEXT_PUBLIC_SMALL_SCALE_SIMULATOR_URL;
 
