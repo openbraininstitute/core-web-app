@@ -30,13 +30,11 @@ import { classNames } from '@/util/utils';
 import styles from './small-microcircuit.module.css';
 
 export default function ContributeMorphologyConfiguration({
-  circuitId,
   virtualLabId,
   projectId,
   initialCampaignId,
   initialConfig,
 }: {
-  circuitId: string;
   virtualLabId: string;
   projectId: string;
   initialCampaignId?: string;
@@ -127,7 +125,7 @@ export default function ContributeMorphologyConfiguration({
     return validate.errors ?? [];
   }, [validate, config]);
 
-  useObioneJsonConfigurationSchema(circuitId, notification, setSchema, setAtomsMap);
+  useObioneJsonConfigurationSchema(notification, setSchema, setAtomsMap);
 
   const canSubmit =
     !errors.length && !loading && !readOnly && selectedFile && formValidation.isValid;

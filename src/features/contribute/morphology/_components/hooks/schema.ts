@@ -143,7 +143,6 @@ export function resolveKey(
 }
 
 export function useObioneJsonConfigurationSchema(
-  circuitId: string,
   notification: NotificationInstance,
   setSchema: React.Dispatch<React.SetStateAction<JSONMorphologySchema | null>>,
   setAtomsMap: (atomsMap: AtomsMap) => void
