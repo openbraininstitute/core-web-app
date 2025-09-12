@@ -19,7 +19,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 import { createMEModel } from '@/api/entitycore/queries/model/me-model';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useAppNotification } from '@/components/notification';
-import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { ROOT_ROUTE } from '@/config';
 import { WorkspaceContextSchema } from '@/types/common';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { OneshotSession } from '@/services/accounting';
@@ -60,7 +60,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
     query.set('step', s);
 
     replace(
-      `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/build/configure/memodel?${query.toString()}`
+      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/memodel?${query.toString()}`
     );
   };
 
@@ -110,7 +110,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
               onClick={() => {
                 notification.destroy('model-saved');
               }}
-              href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.Memodel)}/${data.id}`}
+              href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.Memodel)}/${data.id}`}
               className="text-primary-6 hover:underline"
             >
               Go to model details

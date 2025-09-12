@@ -11,7 +11,7 @@ import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
 import { Metrics } from '@/ui/segments/project/metrics/metrics';
 import { ExpandableText } from '@/ui/molecules/more-less-text';
 import { PeopleCommunity } from '@/components/icons/buttons';
-import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { ROOT_ROUTE } from '@/config';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { Button } from '@/ui/molecules/button';
 
@@ -167,7 +167,7 @@ function Content({
         >
           <Link
             prefetch
-            href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${data?.id}`}
+            href={`${ROOT_ROUTE}/${virtualLabId}/${data?.id}`}
             onClick={onProjectClick}
           >
             <div className="flex w-max items-center justify-between gap-10">

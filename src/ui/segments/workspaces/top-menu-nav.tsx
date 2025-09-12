@@ -13,7 +13,7 @@ import {
   ReportsIcon,
   WorkflowIcon,
 } from '@/components/icons/buttons';
-import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { ROOT_ROUTE } from '@/config';
 import { createBreakpoint, useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
@@ -75,7 +75,7 @@ const links: Array<LinkItem> = [
     className: 'px-6 gap-8',
     hasAction: true,
     action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
-      `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows`,
+      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`,
   },
   {
     id: 'workspace-notebooks',
@@ -87,7 +87,7 @@ const links: Array<LinkItem> = [
     className: 'px-6 gap-8',
     hasAction: true,
     action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
-      `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/notebooks`,
+      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
   },
   {
     id: 'workspace-reports',
@@ -99,7 +99,7 @@ const links: Array<LinkItem> = [
     className: 'px-6 gap-8',
     hasAction: true,
     action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
-      `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/notebooks`,
+      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
   },
   {
     id: 'workspace-help',
@@ -123,7 +123,7 @@ export function TopMenuNavigation() {
   const hashedLinks = links.map((link) => ({
     ...link,
     baseUrl: link.url,
-    url: `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/${link.url}`,
+    url: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/${link.url}`,
   }));
 
   // (after tests:) breakpoint for 950px threshold
@@ -152,7 +152,7 @@ export function TopMenuNavigation() {
                         className="text-primary-9 hover:text-primary-7! flex items-center gap-2 px-3 py-2"
                         asChild
                       >
-                        <Link href={link.url}>
+                        <Link prefetch href={link.url}>
                           {link.icon}
                           <span className="text-lg">{link.title}</span>
                         </Link>
@@ -180,7 +180,7 @@ export function TopMenuNavigation() {
                   className="text-primary-9 hover:text-primary-7! flex cursor-pointer items-center gap-2 px-3 py-2"
                   asChild
                 >
-                  <Link href={link.url}>
+                  <Link prefetch href={link.url}>
                     {link.icon}
                     <span className="text-lg">{link.title}</span>
                   </Link>
@@ -212,7 +212,7 @@ export function TopMenuNavigation() {
             )}
             active={activeSection === baseUrl || isActive?.(pathname)}
           >
-            <Link href={url}>
+            <Link prefetch href={url}>
               {allowText && <span>{title}</span>}
               {icon}
             </Link>

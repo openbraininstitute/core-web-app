@@ -11,7 +11,7 @@ import { getProjectBookmarkCategories } from '@/api/virtual-lab-svc/queries/book
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { ROOT_ROUTE } from '@/config';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { useTabs } from '@/components/detail-view-tabs';
@@ -79,7 +79,7 @@ function BookmarkButton() {
       asChild
     >
       <Link
-        href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/browse/bookmarks?group=${EntityTypeGroup.Experimental}`}
+        href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/bookmarks?group=${EntityTypeGroup.Experimental}`}
         className="flex w-full items-center justify-between gap-6"
       >
         <span>Bookmarks</span>
@@ -108,16 +108,11 @@ function DataTabs() {
     makeSelectEntityClickEvent({ display: false, data: null });
     setMdv(false);
     if (
-      pathname === `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data` ||
-      pathname.startsWith(
-        `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/browse/entity`
-      )
+      pathname === `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data` ||
+      pathname.startsWith(`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity`)
     ) {
       onChangeTab(value)();
-    } else
-      navigate(
-        `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data?scope=${value}`
-      );
+    } else navigate(`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data?scope=${value}`);
   };
 
   const isBookmark = pathname.endsWith('/browse/bookmarks');

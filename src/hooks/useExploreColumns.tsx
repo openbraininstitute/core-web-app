@@ -15,7 +15,7 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { OrderShape } from '@/entity-configuration/definitions/types';
 import type { SortState } from '@/types/explore-section/application';
 
-import styles from '@/app/app/virtual-lab/(free)/explore/explore.module.css';
+import styles from '@/components/explore-section/ExploreSectionListingView/explore.module.css';
 
 type ResizeInit = {
   key: string | null;
