@@ -310,10 +310,23 @@ const fetchMtypes = async (
     Authorization: `Bearer ${token}`,
   };
 
-  const url = 'https://staging.openbraininstitute.org/api/entitycore/mtype';
+  // Define your parameters
+  const params: Record<string, string | number> = {
+    page_size: 1000,
+  };
 
+  // Create URLSearchParams instance and append parameters
+  const searchParams = new URLSearchParams();
+  for (const key of Object.keys(params)) {
+    const value = params[key];
+    searchParams.append(key, String(value));
+  }
+
+  const url = 'https://staging.openbraininstitute.org/api/entitycore/mtype';
+  // Construct the new URL with the query string
+  const newUrl = `${url}?${searchParams.toString()}`;
   try {
-    const response = await fetch(url, { headers });
+    const response = await fetch(newUrl, { headers });
     if (!response.ok) {
       throw new Error(`MTYPE request failed with status code: ${response.status}`);
     }
