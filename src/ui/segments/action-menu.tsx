@@ -177,13 +177,15 @@ export default function ActionMenu({
         </Action>
       )}
 
-      <Action
-        icon={
-          <DownloadOutlined onClick={() => downloadArchive(entityType.type, [entity.id], ctx)} />
-        }
-      >
-        Download
-      </Action>
+      {entityType.isDownloadable && (
+        <Action
+          icon={
+            <DownloadOutlined onClick={() => downloadArchive(entityType.type, [entity.id], ctx)} />
+          }
+        >
+          Download
+        </Action>
+      )}
     </div>
   );
 }
