@@ -1,12 +1,12 @@
 'use client';
 
 import { CloseOutlined, RightOutlined } from '@ant-design/icons';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 
 import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager/event';
 import { Bar, MetricsSkeleton } from '@/ui/segments/project/metrics/metrics-skeleton';
-// import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
+import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
 import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
 import { Metrics } from '@/ui/segments/project/metrics/metrics';
 import { ExpandableText } from '@/ui/molecules/more-less-text';
@@ -118,13 +118,13 @@ function Content({
   data?: Project | null;
   virtualLabId: string | undefined;
 }) {
-  // const mutateRecentWorkspace = useMutation({
-  //   mutationFn: ({ vlabId, prjId }: { vlabId: string; prjId: string }) =>
-  //     setUserRecentWorkspace({ workspace: { virtualLabId: vlabId, projectId: prjId } }),
-  // });
+  const mutateRecentWorkspace = useMutation({
+    mutationFn: ({ vlabId, prjId }: { vlabId: string; prjId: string }) =>
+      setUserRecentWorkspace({ workspace: { virtualLabId: vlabId, projectId: prjId } }),
+  });
   const onProjectClick = () => {
     if (virtualLabId && data?.id) {
-      // mutateRecentWorkspace.mutate({ vlabId: virtualLabId, prjId: data.id });
+      mutateRecentWorkspace.mutate({ vlabId: virtualLabId, prjId: data.id });
       makeTriggerWorkspaceConfigurationClickEvent({
         on: false,
         type: null,
