@@ -36,7 +36,7 @@ export function BrowseLink({
       key={`counter-${type}`}
       variant="outline"
       size="lg"
-      className="group w-full"
+      className="group h-18 w-full border-none text-base"
       active={entityType === type}
       onClick={onClick}
     >
