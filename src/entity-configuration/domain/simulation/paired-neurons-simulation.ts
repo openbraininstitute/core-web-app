@@ -159,7 +159,7 @@ export const PairedNeuronCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulat
   },
   detailViewSections: ['overview', 'related-publications'],
   isBookmarkable: false,
-  isDownloadable: true,
+  isDownloadable: false,
   isCopyable: true,
   isSimulatable: true,
 } as const;
