@@ -4,8 +4,8 @@ import ConditionsDetails from './ConditionsDetails';
 import SynapticInputs from './SynapticInputs';
 import StimulationDetails from './stimulation-details';
 import RecordingLocations from './recording-locations';
-import { SimulationPayload } from '@/types/simulation/single-neuron';
-import { SimulationType } from '@/types/simulation/common';
+import { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
+import { SimulationType } from '@/types/small-scale-simulator/common';
 
 type Props = {
   type: SimulationType;

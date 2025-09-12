@@ -23,3 +23,14 @@ export type SimulationStepsTracker = {
   steps: Array<SimulationStep>;
   current: SimulationStep;
 };
+
+export interface ApiResponse<T> {
+  message: string;
+  data: T;
+}
+
+export interface ApiError {
+  error_code: string;
+  message: string;
+  details: string | Record<string, string> | null;
+}

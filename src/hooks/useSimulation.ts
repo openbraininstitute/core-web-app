@@ -15,7 +15,7 @@ import {
   singleNeuronSynaptomeSimulationApiQueryExpand,
 } from '@/entity-configuration/domain/simulation';
 
-import type { SimulationPayload } from '@/types/simulation/single-neuron';
+import type { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
 import type { WorkspaceContext } from '@/types/common';
 import type {
   IMEModel,

@@ -21,7 +21,7 @@ import { tryCatch } from '@/api/utils';
 import type {
   SimulationPayload,
   SingleNeuronModelSimulationConfig,
-} from '@/types/simulation/single-neuron';
+} from '@/types/small-scale-simulator/single-neuron';
 import type {
   ISingleNeuronSimulation,
   ISingleNeuronSynaptomeSimulation,

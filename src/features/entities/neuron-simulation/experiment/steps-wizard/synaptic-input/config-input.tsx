@@ -3,7 +3,7 @@ import { Form, InputNumber } from 'antd';
 import type {
   UpdateSynapseSimulationProperty,
   SynapseConfig,
-} from '@/types/simulation/single-neuron';
+} from '@/types/small-scale-simulator/single-neuron';
 
 const SYNAPTIC_INPUT_FIELDS: Array<Omit<ConfigInputProps, 'onChange' | 'index' | 'formName'>> = [
   {

@@ -11,7 +11,7 @@ import {
   StimulusConfig,
   StimulusModule,
   SynapseConfig,
-} from '@/types/simulation/single-neuron';
+} from '@/types/small-scale-simulator/single-neuron';
 
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { SynapseType } from '@/components/neuron-viewer/hooks/events';
