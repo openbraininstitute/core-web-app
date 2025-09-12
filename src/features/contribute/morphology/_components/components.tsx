@@ -1,4 +1,3 @@
-// src/features/contribute/morphology/_components/components.tsx
 import { useEffect, useState } from 'react';
 import { useAtom, PrimitiveAtom } from 'jotai';
 import { InputNumber, Input, Select } from 'antd';
@@ -131,8 +130,8 @@ const processData = async (token: string): Promise<string | null> => {
   const urlSpecies = 'https://staging.openbraininstitute.org/api/entitycore/subject';
   const urlStrain = 'https://staging.openbraininstitute.org/api/entitycore/strain';
 
-  let json_data_species: SpeciesData = { data: [] };
-  let json_data_strain: StrainData = { data: [] };
+  let jsonDataSpecies: SpeciesData = { data: [] };
+  let jsonDataStrain: StrainData = { data: [] };
 
   try {
     const [responseSpecies, responseStrain] = await Promise.all([
@@ -147,18 +146,17 @@ const processData = async (token: string): Promise<string | null> => {
       throw new Error(`Strain request failed with status code: ${responseStrain.status}`);
     }
 
-    json_data_species = await responseSpecies.json();
-    json_data_strain = await responseStrain.json();
-  } catch (error) {
-    console.error((error as Error).message);
+    jsonDataSpecies = await responseSpecies.json();
+    jsonDataStrain = await responseStrain.json();
+  } catch {
     return null;
   }
 
-  json_data_species.data.push({
+  jsonDataSpecies.data.push({
     id: 'b7ad4cca-4ac2-4095-9781-37fb68fe9ca1',
     name: 'Generic Mus musculus',
   });
-  json_data_species.data.push({
+  jsonDataSpecies.data.push({
     id: '3b1c2a25-b4fb-468d-98d2-d2d431ac8b4a',
     name: 'Generic Rattus norvegicus',
   });
@@ -169,27 +167,25 @@ const processData = async (token: string): Promise<string | null> => {
     strains: Record<string, string>;
   }> = [];
 
-  for (const species_record of json_data_species.data) {
-    if (species_record.name === 'Unknown') {
+  for (const speciesRecord of jsonDataSpecies.data) {
+    if (speciesRecord.name === 'Unknown') {
       continue;
     }
 
-    const filtered_data = json_data_strain.data.filter(
-      (item) => item.species_id === species_record.id
-    );
+    const filteredData = jsonDataStrain.data.filter((item) => item.species_id === speciesRecord.id);
 
     const strains: Record<string, string> = {};
-    for (const strain of filtered_data) {
+    for (const strain of filteredData) {
       strains[strain.name] = strain.id;
     }
 
-    const species_entry = {
-      species_id: species_record.id,
-      species_name: species_record.name,
+    const speciesEntry = {
+      species_id: speciesRecord.id,
+      species_name: speciesRecord.name,
       strains,
     };
 
-    speclist.push(species_entry);
+    speclist.push(speciesEntry);
   }
 
   return JSON.stringify(speclist, null, 2);
@@ -208,17 +204,16 @@ const fetchAgents = async (token: string): Promise<Record<string, string> | null
     if (!response.ok) {
       throw new Error(`Agent request failed with status code: ${response.status}`);
     }
-    const json_data_person: PersonData = await response.json();
+    const jsonDataPerson: PersonData = await response.json();
 
-    const person_dict: Record<string, string> = {};
-    for (const item of json_data_person.data) {
+    const personDict: Record<string, string> = {};
+    for (const item of jsonDataPerson.data) {
       if (item.pref_label) {
-        person_dict[item.pref_label] = item.id;
+        personDict[item.pref_label] = item.id;
       }
     }
-    return person_dict;
-  } catch (error) {
-    console.error((error as Error).message);
+    return personDict;
+  } catch {
     return null;
   }
 };
@@ -236,17 +231,16 @@ const fetchRoles = async (token: string): Promise<Record<string, string> | null>
     if (!response.ok) {
       throw new Error(`Role request failed with status code: ${response.status}`);
     }
-    const json_data_role: RoleData = await response.json();
+    const jsonDataRole: RoleData = await response.json();
 
-    const role_dict: Record<string, string> = {};
-    for (const item of json_data_role.data) {
+    const roleDict: Record<string, string> = {};
+    for (const item of jsonDataRole.data) {
       if (item.name) {
-        role_dict[item.name] = item.id;
+        roleDict[item.name] = item.id;
       }
     }
-    return role_dict;
-  } catch (error) {
-    console.error((error as Error).message);
+    return roleDict;
+  } catch {
     return null;
   }
 };
@@ -266,21 +260,20 @@ const fetchSubjects = async (
     if (!response.ok) {
       throw new Error(`Subject request failed with status code: ${response.status}`);
     }
-    const json_data_subject: SubjectData = await response.json();
+    const jsonDataSubject: SubjectData = await response.json();
 
-    const subject_list: Array<{ label: string; value: string }> = [];
-    for (const item of json_data_subject.data) {
+    const subjectList: Array<{ label: string; value: string }> = [];
+    for (const item of jsonDataSubject.data) {
       if (item.name) {
-        const subject_entry = {
+        const subjectEntry = {
           label: item.name,
           value: item.id,
         };
-        subject_list.push(subject_entry);
+        subjectList.push(subjectEntry);
       }
     }
-    return subject_list;
-  } catch (error) {
-    console.error((error as Error).message);
+    return subjectList;
+  } catch {
     return null;
   }
 };
@@ -300,21 +293,20 @@ const fetchLicenses = async (
     if (!response.ok) {
       throw new Error(`License request failed with status code: ${response.status}`);
     }
-    const json_data_license: LicenseData = await response.json();
+    const jsonDataLicense: LicenseData = await response.json();
 
-    const license_list: Array<{ label: string; value: string }> = [];
-    for (const item of json_data_license.data) {
+    const licenseList: Array<{ label: string; value: string }> = [];
+    for (const item of jsonDataLicense.data) {
       if (item.label && item.label !== 'undefined') {
-        const license_entry = {
+        const licenseEntry = {
           label: item.label,
           value: item.id,
         };
-        license_list.push(license_entry);
+        licenseList.push(licenseEntry);
       }
     }
-    return license_list;
-  } catch (error) {
-    console.error((error as Error).message);
+    return licenseList;
+  } catch {
     return null;
   }
 };
@@ -334,23 +326,21 @@ const fetchMtypes = async (
     if (!response.ok) {
       throw new Error(`MTYPE request failed with status code: ${response.status}`);
     }
-    const json_data_mtype: MtypeData = await response.json();
+    const jsonDataMtype: MtypeData = await response.json();
 
-    const mtype_list: Array<{ mtype_pref_label: string; mtype_id: string }> = [];
-    for (const item of json_data_mtype.data) {
+    const mtypeList: Array<{ mtype_pref_label: string; mtype_id: string }> = [];
+    for (const item of jsonDataMtype.data) {
       if (item.pref_label) {
-        const alt_label = item.alt_label ? ` ${item.alt_label}` : '';
-        const mtype_entry = {
-          mtype_pref_label: item.pref_label + alt_label,
+        const altLabel = item.alt_label ? ` ${item.alt_label}` : '';
+        const mtypeEntry = {
+          mtype_pref_label: item.pref_label + altLabel,
           mtype_id: item.id,
         };
-        mtype_list.push(mtype_entry);
+        mtypeList.push(mtypeEntry);
       }
     }
-
-    return mtype_list;
-  } catch (error) {
-    console.error('fetchMtypes: Error', (error as Error).message);
+    return mtypeList;
+  } catch {
     return null;
   }
 };
@@ -368,10 +358,9 @@ const fetchBrainRegion = async (token: string, brainRegionId: string): Promise<s
     if (!response.ok) {
       throw new Error(`Brain region request failed with status code: ${response.status}`);
     }
-    const json_data: BrainRegionResponse = await response.json();
-    return json_data.name;
-  } catch (error) {
-    console.error((error as Error).message);
+    const jsonData: BrainRegionResponse = await response.json();
+    return jsonData.name;
+  } catch {
     return null;
   }
 };
@@ -386,7 +375,6 @@ export function JSONMorphologySchemaForm({
   schema: JSONMorphologySchema;
   stateAtom: PrimitiveAtom<{ [key: string]: ConfigValue }>;
   nodeId?: string;
-  currentCategory?: string;
 }) {
   const skip = ['type'];
 
@@ -423,45 +411,41 @@ export function JSONMorphologySchemaForm({
       const session = await getSessionWithCheck();
       if (!session) return;
 
-      try {
-        const [speciesData, agentsData, rolesData, subjectsData, licensesData, mtypesData] =
-          await Promise.all([
-            processData(session.accessToken),
-            fetchAgents(session.accessToken),
-            fetchRoles(session.accessToken),
-            fetchSubjects(session.accessToken),
-            fetchLicenses(session.accessToken),
-            fetchMtypes(session.accessToken),
-          ]);
+      const [speciesData, agentsData, rolesData, subjectsData, licensesData, mtypesData] =
+        await Promise.all([
+          processData(session.accessToken),
+          fetchAgents(session.accessToken),
+          fetchRoles(session.accessToken),
+          fetchSubjects(session.accessToken),
+          fetchLicenses(session.accessToken),
+          fetchMtypes(session.accessToken),
+        ]);
 
-        let brainRegionName = null;
-        if (nodeId) {
-          brainRegionName = await fetchBrainRegion(session.accessToken, nodeId);
-        }
-
-        if (speciesData) {
-          const parsedData = JSON.parse(speciesData);
-          setAllSpeciesStrains(parsedData);
-        }
-        if (agentsData) {
-          setAllAgents(agentsData);
-        }
-        if (rolesData) {
-          setAllRoles(rolesData);
-        }
-        if (subjectsData) {
-          setAllSubjects(subjectsData);
-        }
-        if (licensesData) {
-          setAllLicenses(licensesData);
-        }
-        if (mtypesData) {
-          setAllMtypes(mtypesData);
-        }
-        setBrainRegionName(brainRegionName);
-      } catch (error) {
-        console.error('Failed to fetch data:', error);
+      let brainRegionName = null;
+      if (nodeId) {
+        brainRegionName = await fetchBrainRegion(session.accessToken, nodeId);
       }
+
+      if (speciesData) {
+        const parsedData = JSON.parse(speciesData);
+        setAllSpeciesStrains(parsedData);
+      }
+      if (agentsData) {
+        setAllAgents(agentsData);
+      }
+      if (rolesData) {
+        setAllRoles(rolesData);
+      }
+      if (subjectsData) {
+        setAllSubjects(subjectsData);
+      }
+      if (licensesData) {
+        setAllLicenses(licensesData);
+      }
+      if (mtypesData) {
+        setAllMtypes(mtypesData);
+      }
+      setBrainRegionName(brainRegionName);
     };
 
     fetchData();

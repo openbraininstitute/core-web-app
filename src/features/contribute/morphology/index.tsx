@@ -1,4 +1,3 @@
-// src/features/contribute/morphology/index.tsx
 'use client';
 
 import {
@@ -13,11 +12,7 @@ import { atom, useAtom, PrimitiveAtom } from 'jotai';
 import { Fragment, useMemo, useRef, useState, KeyboardEvent, useEffect } from 'react';
 import { Config, ConfigValue, JSONMorphologySchemaForm } from './_components/components';
 import { useConfigAtom } from './_components/hooks/config-atom';
-import {
-  isRootCategory,
-  resolveKey,
-  useObioneJsonConfigurationSchema,
-} from './_components/hooks/schema';
+import { isRootCategory, resolveKey, useObioneJsonSchema } from './_components/hooks/schema';
 import { Section } from './_components/section';
 import { CATEGORIES, ORDERING } from './_components/utils';
 import { AtomsMap, JSONMorphologySchema } from './types';
@@ -125,7 +120,7 @@ export default function ContributeMorphologyConfiguration({
     return validate.errors ?? [];
   }, [validate, config]);
 
-  useObioneJsonConfigurationSchema(notification, setSchema, setAtomsMap);
+  useObioneJsonSchema(notification, setSchema, setAtomsMap, 'ContributeMorphologyForm');
 
   const canSubmit =
     !errors.length && !loading && !readOnly && selectedFile && formValidation.isValid;
@@ -171,6 +166,15 @@ export default function ContributeMorphologyConfiguration({
       </div>
     );
   }
+
+  // Fallback schema for when selectedCatSchema is undefined
+  const fallbackSchema: JSONMorphologySchema = {
+    type: 'object',
+    properties: {},
+    required: [],
+    title: 'Default Schema',
+    description: 'Fallback schema when no specific schema is selected',
+  };
 
   return (
     <div className="flex h-screen flex-col space-y-5 bg-gray-100 px-10 pt-6">
@@ -375,7 +379,7 @@ export default function ContributeMorphologyConfiguration({
                         });
                       }
 
-                      const mtype_request_body = {
+                      const mtypeRequestBody = {
                         authorized_public: true,
                         entity_id: newEntityId,
                         mtype_class_id: mtypeConfig?.mtype_class_id ?? undefined,
@@ -391,7 +395,7 @@ export default function ContributeMorphologyConfiguration({
                         {
                           method: 'POST',
                           headers: fileUploadMtypeHeaders,
-                          body: JSON.stringify(mtype_request_body),
+                          body: JSON.stringify(mtypeRequestBody),
                         }
                       );
                       const fileResponseMtypeText = await fileResponseMtype.text();
@@ -402,7 +406,7 @@ export default function ContributeMorphologyConfiguration({
                         });
                       }
 
-                      const contribution_request_body = {
+                      const contributionRequestBody = {
                         entity_id: newEntityId,
                         agent_id: contributionConfig?.agent_id ?? undefined,
                         role_id: contributionConfig?.role_id ?? undefined,
@@ -418,7 +422,7 @@ export default function ContributeMorphologyConfiguration({
                         {
                           method: 'POST',
                           headers: fileUploadContributionHeaders,
-                          body: JSON.stringify(contribution_request_body),
+                          body: JSON.stringify(contributionRequestBody),
                         }
                       );
                       const fileResponseContributionText = await fileResponseContribution.text();
@@ -521,42 +525,71 @@ export default function ContributeMorphologyConfiguration({
               </div>
             </div>
           )}
-          {schema?.properties &&
-            configTab !== 'assets' &&
+          {configTab !== 'assets' && editing && (
+            <JSONMorphologySchemaForm
+              disabled={!!campaignId || loading || readOnly}
+              schema={
+                isRootCategory(schema, configTab)
+                  ? schema.properties[configTab]
+                  : (selectedCatSchema ?? fallbackSchema)
+              }
+              stateAtom={
+                isRootCategory(schema, configTab)
+                  ? (atomsMap[configTab] as PrimitiveAtom<Record<string, ConfigValue>>)
+                  : (
+                      atomsMap[configTab] as Record<
+                        string,
+                        PrimitiveAtom<Record<string, ConfigValue>>
+                      >
+                    )[resolveKey(schema, configTab, selectedItemIdx)]
+              }
+              nodeId={node?.id}
+            />
+          )}
+          {configTab !== 'assets' &&
             editing &&
-            (isRootCategory(schema, configTab) ? (
-              <JSONMorphologySchemaForm
-                disabled={!!campaignId || loading || readOnly}
-                schema={schema.properties[configTab]}
-                stateAtom={atomsMap[configTab] as PrimitiveAtom<Record<string, ConfigValue>>}
-                nodeId={node?.id}
-                currentCategory={configTab}
-              />
-            ) : selectedCatSchema ? (
-              <JSONMorphologySchemaForm
-                disabled={!!campaignId || loading || readOnly}
-                schema={selectedCatSchema}
-                stateAtom={
-                  (
-                    atomsMap[configTab] as Record<
-                      string,
-                      PrimitiveAtom<Record<string, ConfigValue>>
-                    >
-                  )[resolveKey(schema, configTab, selectedItemIdx)]
-                }
-                nodeId={node?.id}
-                currentCategory={configTab}
-              />
-            ) : (
-              schema.properties[configTab]?.additionalProperties?.anyOf && (
-                <div className="flex flex-col items-center gap-5">
-                  {schema.properties[configTab].additionalProperties.anyOf.map((o) => (
-                    <div
-                      key={o.title}
-                      role="button"
-                      tabIndex={0}
-                      className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 hover:bg-white"
-                      onClick={() => {
+            !isRootCategory(schema, configTab) &&
+            !selectedCatSchema &&
+            schema.properties[configTab]?.additionalProperties?.anyOf && (
+              <div className="flex flex-col items-center gap-5">
+                {schema.properties[configTab].additionalProperties.anyOf.map((o) => (
+                  <div
+                    key={o.title}
+                    role="button"
+                    tabIndex={0}
+                    className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 hover:bg-white"
+                    onClick={() => {
+                      if (isRootCategory(schema, configTab)) return;
+                      setSelectedCategory(o.properties?.type.const ?? '');
+                      const initial: Record<string, ConfigValue> = {};
+                      if (o.properties) {
+                        Object.entries(o.properties).forEach(([subkey, subValue]) => {
+                          initial[subkey] =
+                            subkey === 'type'
+                              ? (subValue.const ?? undefined)
+                              : (subValue.default ?? undefined);
+                        });
+                      }
+                      const itemIndexes = Object.keys(atomsMap[configTab] || {}).map((subkey) =>
+                        parseInt(subkey.split('_')[1], 10)
+                      );
+                      itemIndexes.sort((a, b) => a - b);
+                      const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
+                      setSelectedItemIdx(itemIdx);
+                      setAtomsMap((prev) => ({
+                        ...prev,
+                        [configTab]: {
+                          ...(prev[configTab] as Record<
+                            string,
+                            PrimitiveAtom<Record<string, ConfigValue>>
+                          >),
+                          [resolveKey(schema, configTab, itemIdx)]:
+                            atom<Record<string, ConfigValue>>(initial),
+                        },
+                      }));
+                    }}
+                    onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
                         if (isRootCategory(schema, configTab)) return;
                         setSelectedCategory(o.properties?.type.const ?? '');
                         const initial: Record<string, ConfigValue> = {};
@@ -585,47 +618,15 @@ export default function ContributeMorphologyConfiguration({
                               atom<Record<string, ConfigValue>>(initial),
                           },
                         }));
-                      }}
-                      onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          if (isRootCategory(schema, configTab)) return;
-                          setSelectedCategory(o.properties?.type.const ?? '');
-                          const initial: Record<string, ConfigValue> = {};
-                          if (o.properties) {
-                            Object.entries(o.properties).forEach(([subkey, subValue]) => {
-                              initial[subkey] =
-                                subkey === 'type'
-                                  ? (subValue.const ?? undefined)
-                                  : (subValue.default ?? undefined);
-                            });
-                          }
-                          const itemIndexes = Object.keys(atomsMap[configTab] || {}).map((subkey) =>
-                            parseInt(subkey.split('_')[1], 10)
-                          );
-                          itemIndexes.sort((a, b) => a - b);
-                          const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
-                          setSelectedItemIdx(itemIdx);
-                          setAtomsMap((prev) => ({
-                            ...prev,
-                            [configTab]: {
-                              ...(prev[configTab] as Record<
-                                string,
-                                PrimitiveAtom<Record<string, ConfigValue>>
-                              >),
-                              [resolveKey(schema, configTab, itemIdx)]:
-                                atom<Record<string, ConfigValue>>(initial),
-                            },
-                          }));
-                        }
-                      }}
-                    >
-                      <div className="text-primary-9 text-lg font-bold">{o.title}</div>
-                      <div className="mt-3 text-base text-gray-700">{o.description}</div>
-                    </div>
-                  ))}
-                </div>
-              )
-            ))}
+                      }
+                    }}
+                  >
+                    <div className="text-primary-9 text-lg font-bold">{o.title}</div>
+                    <div className="mt-3 text-base text-gray-700">{o.description}</div>
+                  </div>
+                ))}
+              </div>
+            )}
           {showConfig && (
             <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
               <div className="max-h-[80vh] max-w-4xl overflow-auto rounded-lg bg-white p-6">

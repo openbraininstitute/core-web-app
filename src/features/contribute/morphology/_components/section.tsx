@@ -1,32 +1,38 @@
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction, KeyboardEvent } from 'react';
 import { RightOutlined } from '@ant-design/icons';
-import { JSONMorphologySchema, AtomsMap } from '../types';
-import { classNames } from '@/util/utils';
+import isNil from 'lodash/isNil';
 import { ErrorObject } from 'ajv';
-import { Config } from './components';
+
+import { AtomsMap, JSONMorphologySchema, Config } from '../types';
+import { classNames } from '@/util/utils';
 
 type Props = {
   k: string;
-  schema: JSONMorphologySchema;
   sectionSchema: JSONMorphologySchema | undefined;
+  schema: JSONMorphologySchema;
+  config: Config;
+  errors: ErrorObject<string, Record<string, unknown>, unknown>[]; // Fixed to avoid no-explicit-any
   atomsMap: AtomsMap;
-  setAtomsMap: Dispatch<SetStateAction<AtomsMap>>; // Updated to Dispatch type
+  setAtomsMap: Dispatch<SetStateAction<AtomsMap>>;
   configTab: string;
   setConfigTab: (tab: string) => void;
-  config: Config;
-  campaignId?: string;
-  loading?: boolean;
-  errors: ErrorObject<string, Record<string, unknown>, unknown>[] | null | undefined;
-  selectedItemIdx?: number | null;
   setSelectedItemIdx: (idx: number | null) => void;
   setEditing: (editing: boolean) => void;
   setSelectedCategory: (category: string) => void;
+  campaignId: string;
+  loading: boolean;
+  selectedItemIdx: number | null;
 };
 
 export function Section({
   k,
-
   sectionSchema,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  schema,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  config,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  errors,
   atomsMap,
   setAtomsMap,
   configTab,
@@ -34,14 +40,13 @@ export function Section({
   setSelectedItemIdx,
   setEditing,
   setSelectedCategory,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  campaignId,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  loading,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  selectedItemIdx,
 }: Props) {
-  console.log(`Section ${k}:`, {
-    key: k,
-    sectionSchema: JSON.stringify(sectionSchema, null, 2),
-    isSectionSchemaValid:
-      sectionSchema && sectionSchema.type === 'object' && sectionSchema.properties,
-  });
-
   const fallbackSchema: JSONMorphologySchema = {
     type: 'object',
     title: k,
@@ -53,26 +58,37 @@ export function Section({
 
   const buttonText = k === 'subject' ? 'Subject' : schemaToUse.title || k;
 
+  const handleClick = () => {
+    setConfigTab(k);
+    setEditing(true);
+    setSelectedCategory('');
+    setSelectedItemIdx(null);
+
+    if (isNil(atomsMap[k])) {
+      setAtomsMap({
+        ...atomsMap,
+        [k]: {},
+      });
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick();
+    }
+  };
+
   return (
     <div
       className={classNames(
         'flex h-[50px] min-h-[50px] w-full cursor-pointer items-center justify-between rounded-full border border-gray-200 px-5 py-2 drop-shadow hover:bg-white',
         configTab === k ? 'bg-white' : 'bg-gray-50'
       )}
-      onClick={() => {
-        console.log(`Clicked section: ${k}`);
-        setConfigTab(k);
-        setEditing(true);
-        setSelectedCategory('');
-        setSelectedItemIdx(null);
-
-        if (!atomsMap[k]) {
-          setAtomsMap({
-            ...atomsMap,
-            [k]: {},
-          });
-        }
-      }}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
     >
       <span className="text-primary-9 text-base">{buttonText}</span>
       <div className="flex gap-1">

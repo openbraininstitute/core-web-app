@@ -54,6 +54,7 @@ function EditField<
 }) {
   const fieldObj = getFieldDefinition(field);
   const value = data[field];
+  const inputId = `input-${field}`; // Unique ID for accessibility
 
   return (
     <div className={classNames('text-primary-7', className)}>
@@ -62,8 +63,11 @@ function EditField<
         <div className="mt-2 flex flex-col gap-2">
           {Object.keys(value).map((key) => (
             <div key={key}>
-              <label className="text-neutral-5 text-sm font-light">{key}</label>
+              <label htmlFor={`${inputId}-${key}`} className="text-neutral-5 text-sm font-light">
+                {key}
+              </label>
               <input
+                id={`${inputId}-${key}`} // Link input to label
                 type="text"
                 className="mt-1 w-full border p-1"
                 value={String(value[key as keyof typeof value] ?? '')}
@@ -73,12 +77,18 @@ function EditField<
           ))}
         </div>
       ) : (
-        <input
-          type="text"
-          className="mt-2 w-full border p-2"
-          value={String(value ?? '')}
-          onChange={(e) => onFieldChange(field, e.target.value)}
-        />
+        <>
+          <label htmlFor={inputId} className="sr-only">
+            {fieldObj?.title}
+          </label>
+          <input
+            id={inputId} // Link input to label
+            type="text"
+            className="mt-2 w-full border p-2"
+            value={String(value ?? '')}
+            onChange={(e) => onFieldChange(field, e.target.value)}
+          />
+        </>
       )}
     </div>
   );
@@ -98,11 +108,12 @@ export default function DetailHeader<
   onEditToggle,
   onSave,
   onFieldChange,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  url,
 }: {
   fields: Array<TypeSummaryProps>;
   detail: T;
   commonFields?: Array<TypeSummaryProps>;
-  url?: string | null;
   extraHeaderAction?: ReactNode;
   commonFieldsClassName?: string;
   fieldsClassName?: string;
@@ -111,6 +122,7 @@ export default function DetailHeader<
   onEditToggle?: () => void;
   onSave?: () => void;
   onFieldChange?: (fieldName: string, value: unknown) => void;
+  url?: string; // Made optional to fix error in single-neuron-simulation.tsx
 }) {
   return (
     <div className="flex w-full flex-col gap-10">

@@ -1,4 +1,3 @@
-// src/features/contribute/morphology/types.ts
 import { PrimitiveAtom } from 'jotai';
 
 import { ConfigValue } from './_components/components';
@@ -34,3 +33,11 @@ export type AtomsMap = Record<
 >;
 
 export type TabType = 'configuration' | 'simulations';
+
+export type Config = {
+  morphology?: Record<string, ConfigValue>;
+  license?: Record<string, ConfigValue>;
+  mtype?: Record<string, ConfigValue>;
+  contribution?: Record<string, ConfigValue>;
+  [key: string]: ConfigValue | Record<string, ConfigValue> | ConfigValue[];
+};

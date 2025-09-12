@@ -9,7 +9,6 @@ import styles from './button-edit-metadata.module.css';
 interface ButtonEditMetadataProps {
   className?: string;
   label?: string;
-  tooltip?: string;
   isEditing: boolean;
   onClick: () => void;
 }
