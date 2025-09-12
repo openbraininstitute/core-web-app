@@ -14,7 +14,7 @@ import { getPersons } from '@/api/entitycore/queries/general/person-agent';
 import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { BrowseLink } from '@/ui/segments/explore/browse-link';
-import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { ROOT_ROUTE } from '@/config';
 import { useTabs } from '@/components/detail-view-tabs';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
@@ -158,7 +158,7 @@ export function EntityLinkCount() {
         {experimentalState.map((value) => {
           const count: number | null = get(allData, value.extendedType, null);
           const rootCount: number | null = get(rootData, value.extendedType, null);
-          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(value.extendedType)}`;
+          const link = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(value.extendedType)}`;
 
           return (
             <BrowseLink
@@ -183,7 +183,7 @@ export function EntityLinkCount() {
         {modelState.map((value) => {
           const count = get(allData, value.extendedType, null);
           const rootCount: number | null = get(rootData, value.extendedType, null);
-          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(value.extendedType)}`;
+          const link = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(value.extendedType)}`;
           return (
             <BrowseLink
               key={`link-${value.title}/${value.type}`}
@@ -206,7 +206,7 @@ export function EntityLinkCount() {
       <>
         {simulationState.map((value) => {
           const count = get(simsData, value.extendedType, null);
-          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(value.extendedType)}`;
+          const link = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(value.extendedType)}`;
 
           return (
             <BrowseLink

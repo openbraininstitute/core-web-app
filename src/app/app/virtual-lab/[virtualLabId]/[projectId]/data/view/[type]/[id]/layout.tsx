@@ -3,7 +3,7 @@ import NextLink from 'next/link';
 import snakeCase from 'lodash/snakeCase';
 import { notFound } from 'next/navigation';
 import Breadcrumb from '@/ui/molecules/breadcrumb';
-import { basePath } from '@/config';
+import { ROOT_ROUTE } from '@/config';
 import {
   EntityCoreExtendedType,
   getEntityByExtendedType,
@@ -66,16 +66,14 @@ export default async function Layout({
     ctx: { virtualLabId, projectId },
   });
 
-  const parentLink = `${basePath}/app/v2/${virtualLabId}/${projectId}/data/browse/entity/${type}`;
+  const parentLink = `${ROOT_ROUTE}/app/v2/${virtualLabId}/${projectId}/data/browse/entity/${type}`;
 
   return (
     <div className="ml-5 flex h-full rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
       <div className="w-1/5">
         <div className="flex flex-wrap gap-3">
           <Breadcrumb>
-            <NextLink href={`${basePath}/app/v2/${virtualLabId}/${projectId}/data`}>
-              Explore
-            </NextLink>
+            <NextLink href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data`}>Explore</NextLink>
           </Breadcrumb>
           <Breadcrumb>
             <NextLink href={parentLink}>{entityType.title}</NextLink>

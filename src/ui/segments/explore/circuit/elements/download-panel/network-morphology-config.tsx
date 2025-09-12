@@ -1,17 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import { match, P } from 'ts-pattern';
 import { useSetAtom } from 'jotai';
+import { useEffect } from 'react';
 
 import isString from 'lodash/isString';
 import compact from 'lodash/compact';
 import get from 'lodash/get';
 
+import { NetworkConfigItem } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
+import { SkeletonItem } from '@/ui/segments/explore/circuit/elements/download-panel/skeleton';
 import {
   morphologiesContentConfiguration,
   networksContentConfiguration,
 } from '@/ui/segments/explore/circuit/elements/download-panel/content-configuration';
-import { NetworkConfigItem } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
+import { Error } from '@/ui/segments/explore/circuit/elements/download-panel/error';
 import {
   updateFileCounterAtom,
   buildNetworksConfig,
@@ -19,40 +22,21 @@ import {
   extractWithAlternateMorphologies,
   getAssetPath,
 } from '@/ui/segments/explore/circuit/elements/download-panel/helpers';
-import { SkeletonItem } from '@/ui/segments/explore/circuit/elements/download-panel/skeleton';
-import { Error } from '@/ui/segments/explore/circuit/elements/download-panel/error';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 import type {
   ICircuit,
   ICircuitSonataConfiguration,
 } from '@/api/entitycore/types/entities/circuit';
 
 import type { ConfigItemProps } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
-import type { DirectoryListContent } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
 
 const AssetDefaultPath = 'circuit_config.json';
 
 export default function NetworkAndMorphologyConfig({ circuit }: { circuit: ICircuit }) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
-  const [networksConfig, mutateNetworksConfig] = useState<{
-    loading: boolean;
-    error?:
-      | {
-          directory: string | null;
-          config: string | null;
-        }
-      | string
-      | null;
-    directory: DirectoryListContent['files'] | null;
-    config: ICircuitSonataConfiguration | null;
-  }>({
-    loading: false,
-    error: null,
-    directory: null,
-    config: null,
-  });
 
   const updateFileCounter = useSetAtom(updateFileCounterAtom(circuit.id));
   const assets = circuit?.assets;
@@ -61,79 +45,77 @@ export default function NetworkAndMorphologyConfig({ circuit }: { circuit: ICirc
     filter: (asset) => asset.label === AssetLabel.sonata_circuit,
   });
 
+  const networksConfig = useQuery({
+    queryKey: keyBuilder.circuitConfigAndDirectory({
+      entityId: circuit.id,
+      assetId: configAsset!.id,
+      assetPath: AssetDefaultPath,
+      context: { virtualLabId, projectId },
+    }),
+    queryFn: () =>
+      resolveCircuitConfigAndDirectory<ICircuitSonataConfiguration>({
+        entityId: circuit.id,
+        assetId: configAsset!.id,
+        assetPath: AssetDefaultPath,
+        context: { virtualLabId, projectId },
+      }),
+    enabled: !!circuit && !!configAsset!.id,
+    select: (result) => {
+      return {
+        directory: result.directory,
+        config: result.config,
+        nodes: result.config?.networks.nodes.length,
+        edges: result.config?.networks.edges.length,
+        containerizedMorphologies: extractWithAlternateMorphologies(
+          result.config?.networks.nodes ?? [],
+          result.config?.components
+        ),
+        morphologies: Object.entries(
+          extractWithAlternateMorphologies(
+            result.config?.networks.nodes ?? [],
+            result.config?.components
+          )
+        ).filter(([, value]) => Boolean(value.alternate_morphologies)).length,
+        error: result.error,
+      };
+    },
+  });
+
   useEffect(() => {
-    async function getSonataCircuitConfig() {
-      mutateNetworksConfig({
-        loading: true,
-        directory: null,
-        config: null,
-      });
-
-      if (circuit && configAsset?.id) {
-        const result = await resolveCircuitConfigAndDirectory<ICircuitSonataConfiguration>({
-          entityId: circuit.id,
-          assetId: configAsset.id,
-          assetPath: AssetDefaultPath,
-          context: { virtualLabId, projectId },
-        });
-
-        mutateNetworksConfig((prev) => ({
-          ...prev,
-          directory: result.directory,
-          config: result.config,
-          error: result.error,
-          loading: false,
-        }));
-        const nodes = result.config?.networks.nodes.length;
-        const edges = result.config?.networks.edges.length;
-        const containerizedMorphologies = extractWithAlternateMorphologies(
-          result.config?.networks.nodes ?? []
-        );
-        let morphologies = 0;
-        if (containerizedMorphologies) {
-          const list = Object.entries(containerizedMorphologies).filter(([, value]) =>
-            Boolean(value.alternate_morphologies)
-          );
-          morphologies = list.length;
-        }
-        updateFileCounter({
-          nodes,
-          edges,
-          morphologies,
-        });
-      } else {
-        mutateNetworksConfig({
-          directory: null,
-          config: null,
-          error: 'Could not find sonata circuit configuration asset',
-          loading: false,
-        });
-      }
-    }
-
-    getSonataCircuitConfig();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [circuit?.id, configAsset?.id, virtualLabId, projectId]);
+    updateFileCounter({
+      nodes: networksConfig.data?.nodes,
+      edges: networksConfig.data?.nodes,
+      morphologies: networksConfig.data?.nodes,
+    });
+  }, [
+    networksConfig.data?.nodes,
+    networksConfig.data?.edges,
+    networksConfig.data?.morphologies,
+    updateFileCounter,
+  ]);
 
   return match(networksConfig)
-    .with({ loading: true }, () => (
+    .with({ isLoading: true }, () => (
       <div className="flex flex-col gap-10">
         <SkeletonItem itemsCount={3} />
         <SkeletonItem className="opacity-75" itemsCount={3} />
       </div>
     ))
-    .with({ error: P.string.select() }, () => {
-      let err = '';
-      if (isString(networksConfig.error)) err = networksConfig.error;
-      else if (networksConfig.error?.directory && networksConfig.error?.config)
-        err = 'Failed to load networks configuration and directory assets';
-      else if (networksConfig.error?.directory) err = networksConfig.error.directory;
-      else if (networksConfig.error?.config) err = networksConfig.error.config;
-      return (
-        <Error icon={null} title="Networks" description={err} cls={{ container: 'text-white' }} />
-      );
-    })
-    .with({ directory: P.nullish, config: P.nonNullable }, () => (
+    .with(
+      { data: { error: P.string.select('error') }, error: P.select('catchError') },
+      ({ error }) => {
+        let err = '';
+        if (isString(error)) err = error;
+        else if (error?.directory && error?.config)
+          err = 'Failed to load networks configuration and directory assets';
+        else if (error?.directory) err = error.directory;
+        else if (error?.config) err = error.config;
+        return (
+          <Error icon={null} title="Networks" description={err} cls={{ container: 'text-white' }} />
+        );
+      }
+    )
+    .with({ data: { directory: P.nullish, config: P.nonNullable } }, () => (
       <Error
         icon={null}
         title="Networks"
@@ -141,7 +123,7 @@ export default function NetworkAndMorphologyConfig({ circuit }: { circuit: ICirc
         cls={{ container: 'text-white' }}
       />
     ))
-    .with({ directory: P.nonNullable, config: P.nullish }, () => (
+    .with({ data: { directory: P.nonNullable, config: P.nullish } }, () => (
       <Error
         icon={null}
         title="Networks"
@@ -149,83 +131,90 @@ export default function NetworkAndMorphologyConfig({ circuit }: { circuit: ICirc
         cls={{ container: 'text-white' }}
       />
     ))
-    .with({ directory: P.nonNullable, config: P.nonNullable }, ({ directory, config }) => {
-      const networks = buildNetworksConfig(config.networks, directory, config.manifest);
-      const fullConfig = networksContentConfiguration.map((o) => ({
-        ...o,
-        ...get(networks, o.key, {}),
-      })) as unknown as Record<string, Omit<ConfigItemProps, 'className'>>;
-      const containerizedMorphologies = extractWithAlternateMorphologies(config.networks.nodes);
-      const items = compact(
-        Object.entries(containerizedMorphologies).map(([key, value]) => {
-          const containerized = value.alternate_morphologies;
-          if (containerized) {
-            const asset = {
-              path: getAssetPath(value.alternate_morphologies ?? '', config.manifest),
-              ...get(directory, getAssetPath(value.alternate_morphologies ?? '', config.manifest), {
-                name: null,
-                size: null,
-                last_modified: null,
-              }),
-            };
-            const name = containerized.split('/').pop()!;
-            return {
-              asset,
-              title: name,
-              mimeType: name?.split('.').pop() ?? 'h5',
-              description: `Container file for morphologies of ${key}`,
-            };
-          }
-          return null;
-        })
-      );
+    .with(
+      { data: { directory: P.nonNullable, config: P.nonNullable } },
+      ({ data: { directory, config } }) => {
+        const networks = buildNetworksConfig(config.networks, directory, config.manifest);
+        const fullConfig = networksContentConfiguration.map((o) => ({
+          ...o,
+          ...get(networks, o.key, {}),
+        })) as unknown as Record<string, Omit<ConfigItemProps, 'className'>>;
+        const containerizedMorphologies = extractWithAlternateMorphologies(
+          config.networks.nodes,
+          config.components
+        );
 
-      const morphologyConfig = {
-        ...morphologiesContentConfiguration,
-        count: items.length,
-        items,
-        showType: 'h5',
-        showPrefix: null,
-        emptyMessage: 'Coming soon',
-      };
+        const items = compact(
+          Object.entries(containerizedMorphologies).map(([key, value]) => {
+            const containerized = value.alternate_morphologies;
+            if (containerized) {
+              const asset = {
+                path: getAssetPath(containerized ?? '', config.manifest),
+                ...get(directory, getAssetPath(containerized ?? '', config.manifest), {
+                  name: null,
+                  size: null,
+                  last_modified: null,
+                }),
+              };
+              const name = containerized.split('/').pop()!;
+              return {
+                asset,
+                title: name,
+                mimeType: name?.split('.').pop() ?? 'h5',
+                description: `Container file for morphologies of ${key}`,
+              };
+            }
+            return null;
+          })
+        );
 
-      return (
-        <>
-          {Object.values(fullConfig).map((o) => (
+        const morphologyConfig = {
+          ...morphologiesContentConfiguration,
+          count: items.length,
+          items,
+          showType: 'h5',
+          showPrefix: null,
+          emptyMessage: 'Coming soon',
+        };
+
+        return (
+          <>
+            {Object.values(fullConfig).map((o) => (
+              <NetworkConfigItem
+                key={o.key}
+                name={o.name}
+                description={o.description}
+                count={o.count}
+                mimeType={o.mimeType}
+                items={o.items}
+                showType={o.showType}
+                showPrefix={o.showPrefix}
+                downloadConfig={{
+                  entityId: circuit?.id,
+                  assetConfigId: configAsset?.id,
+                  context: { virtualLabId, projectId },
+                }}
+              />
+            ))}
             <NetworkConfigItem
-              key={o.key}
-              name={o.name}
-              description={o.description}
-              count={o.count}
-              mimeType={o.mimeType}
-              items={o.items}
-              showType={o.showType}
-              showPrefix={o.showPrefix}
+              key={morphologyConfig.key}
+              name={morphologyConfig.name}
+              description={morphologyConfig.description}
+              count={morphologyConfig.count}
+              mimeType={morphologyConfig.mimeType}
+              items={morphologyConfig.items}
+              showType={morphologyConfig.showType}
+              showPrefix={morphologyConfig.showPrefix}
+              emptyMessage={morphologyConfig.emptyMessage}
               downloadConfig={{
                 entityId: circuit?.id,
                 assetConfigId: configAsset?.id,
                 context: { virtualLabId, projectId },
               }}
             />
-          ))}
-          <NetworkConfigItem
-            key={morphologyConfig.key}
-            name={morphologyConfig.name}
-            description={morphologyConfig.description}
-            count={morphologyConfig.count}
-            mimeType={morphologyConfig.mimeType}
-            items={morphologyConfig.items}
-            showType={morphologyConfig.showType}
-            showPrefix={morphologyConfig.showPrefix}
-            emptyMessage={morphologyConfig.emptyMessage}
-            downloadConfig={{
-              entityId: circuit?.id,
-              assetConfigId: configAsset?.id,
-              context: { virtualLabId, projectId },
-            }}
-          />
-        </>
-      );
-    })
+          </>
+        );
+      }
+    )
     .otherwise(() => null);
 }

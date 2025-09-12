@@ -88,4 +88,15 @@ export const keyBuilder = {
     `${prefix}-many-circuits`,
     { virtualLabId, projectId, page, page_size, ...props },
   ],
+  circuitConfigAndDirectory: ({
+    entityId,
+    assetId,
+    assetPath,
+    context,
+  }: {
+    entityId: string;
+    assetId: string;
+    assetPath: string;
+    context: WorkspaceContext;
+  }) => [`${prefix}-circuit-config-and-directory`, { entityId, assetId, assetPath, ...context }],
 };

@@ -27,7 +27,7 @@ import {
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { basePath } from '@/config';
+import { ROOT_ROUTE } from '@/config';
 import { EntityTypeValue } from '@/entity-configuration/domain';
 
 export default function ActionMenu({
@@ -154,7 +154,7 @@ export default function ActionMenu({
         <Action
           icon={
             <NextLink
-              href={`${basePath}/app/v2/${ctx.virtualLabId}/${ctx.projectId}/workflows/simulate/configure/${entityType.type.replaceAll('_', '-')}/${entity.id}`}
+              href={`${ROOT_ROUTE}/${ctx.virtualLabId}/${ctx.projectId}/workflows/simulate/configure/${entityType.type.replaceAll('_', '-')}/${entity.id}`}
             >
               <ExperimentOutlined />
             </NextLink>

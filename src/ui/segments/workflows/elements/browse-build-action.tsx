@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { getWorkflowSegment } from '@/ui/segments/workflows/elements/helpers';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { ROOT_ROUTE } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 
@@ -23,7 +23,7 @@ export function BrowseAction() {
   const { type } = useParams<{ type: KebabCase<TExtendedEntitiesTypeDict> }>();
   const { virtualLabId, projectId } = useWorkspace();
 
-  const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/${segment}/configure/${type}`;
+  const link = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${segment}/configure/${type}`;
   const entity = getEntityByExtendedType({ type: snakeCase(type) as TExtendedEntitiesTypeDict });
   const title = `New ${lowerCase(entity?.title)}`;
 

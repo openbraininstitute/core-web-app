@@ -19,6 +19,7 @@ import type { TCircuitContentConfigurationKeys } from '@/features/entities/circu
 import type { DirectoryListContent } from '@/api/entitycore/types/shared/global';
 import type {
   CircuitConnectivityMatricesConfiguration,
+  SonataCircuitComponentConfig,
   SonataCircuitConfigNetworks,
   SonataCircuitNetworkEdgeConfigItem,
   SonataCircuitNetworkNodeConfigItem,
@@ -175,9 +176,10 @@ type PopulationWithMorphology = {
 };
 
 export const extractWithAlternateMorphologies = (
-  sections: Array<SonataCircuitNetworkNodeConfigItem>
+  sections: Array<SonataCircuitNetworkNodeConfigItem>,
+  components?: SonataCircuitComponentConfig | undefined
 ): Record<string, PopulationWithMorphology> => {
-  return sections
+  let alternateMorpho = sections
     .flatMap((section) =>
       map(section.populations, (popValue, popName) => ({
         name: popName,
@@ -192,6 +194,20 @@ export const extractWithAlternateMorphologies = (
       };
       return acc;
     }, {});
+
+  if (Object.keys(alternateMorpho ?? {}).length <= 0) {
+    alternateMorpho = Object.entries(components?.alternate_morphologies ?? {}).reduce(
+      (acc, [key, value]) => {
+        acc[key] = {
+          type: key,
+          alternate_morphologies: value,
+        };
+        return acc;
+      },
+      {} as Record<string, PopulationWithMorphology>
+    );
+  }
+  return alternateMorpho;
 };
 
 export async function resolveCircuitConfigAndDirectory<T>({
