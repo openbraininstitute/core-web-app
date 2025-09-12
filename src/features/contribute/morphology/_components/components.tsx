@@ -421,9 +421,9 @@ export function JSONMorphologySchemaForm({
           fetchMtypes(session.accessToken),
         ]);
 
-      let brainRegionName = null;
+      let fetchedBrainRegionName = null; // Renamed to avoid shadowing
       if (nodeId) {
-        brainRegionName = await fetchBrainRegion(session.accessToken, nodeId);
+        fetchedBrainRegionName = await fetchBrainRegion(session.accessToken, nodeId);
       }
 
       if (speciesData) {
@@ -445,7 +445,7 @@ export function JSONMorphologySchemaForm({
       if (mtypesData) {
         setAllMtypes(mtypesData);
       }
-      setBrainRegionName(brainRegionName);
+      setBrainRegionName(fetchedBrainRegionName);
     };
 
     fetchData();
