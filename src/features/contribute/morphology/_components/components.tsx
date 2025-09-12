@@ -421,7 +421,7 @@ export function JSONMorphologySchemaForm({
           fetchMtypes(session.accessToken),
         ]);
 
-      let fetchedBrainRegionName = null; // Renamed to avoid shadowing
+      let fetchedBrainRegionName = null;
       if (nodeId) {
         fetchedBrainRegionName = await fetchBrainRegion(session.accessToken, nodeId);
       }
@@ -441,6 +441,10 @@ export function JSONMorphologySchemaForm({
       }
       if (licensesData) {
         setAllLicenses(licensesData);
+        if (!state.license_id) {
+          const defaultLicenseId = 'ad8686db-3cdd-4e3f-bcbd-812380a9eba7';
+          setState((prev) => ({ ...prev, license_id: defaultLicenseId }));
+        }
       }
       if (mtypesData) {
         setAllMtypes(mtypesData);
@@ -449,7 +453,7 @@ export function JSONMorphologySchemaForm({
     };
 
     fetchData();
-  }, [nodeId]);
+  }, [nodeId, state.license_id, setState]);
 
   const markFieldTouched = (field: string) => {
     setTouchedFields((prev) => new Set([...prev, field]));
