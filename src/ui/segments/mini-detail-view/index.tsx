@@ -276,7 +276,7 @@ function ExploreActions<T extends EntityCoreObjectTypes>({ record }: { record: T
   });
 
   const { isPending: pendingDownload, mutateAsync: downloadAsync } = useMutation({
-    mutationFn: () => downloadArchive(record.type, [record.id]),
+    mutationFn: () => downloadArchive(record.type, [record.id], { virtualLabId, projectId }),
   });
 
   const onBookmark = () => saveAsync();
