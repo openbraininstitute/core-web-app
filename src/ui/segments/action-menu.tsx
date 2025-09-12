@@ -178,7 +178,9 @@ export default function ActionMenu({
       )}
 
       <Action
-        icon={<DownloadOutlined onClick={() => downloadArchive(entityType.type, [entity.id])} />}
+        icon={
+          <DownloadOutlined onClick={() => downloadArchive(entityType.type, [entity.id], ctx)} />
+        }
       >
         Download
       </Action>
