@@ -152,15 +152,6 @@ const processData = async (token: string): Promise<string | null> => {
     return null;
   }
 
-  jsonDataSpecies.data.push({
-    id: 'b7ad4cca-4ac2-4095-9781-37fb68fe9ca1',
-    name: 'Generic Mus musculus',
-  });
-  jsonDataSpecies.data.push({
-    id: '3b1c2a25-b4fb-468d-98d2-d2d431ac8b4a',
-    name: 'Generic Rattus norvegicus',
-  });
-
   const speclist: Array<{
     species_id: string;
     species_name: string;
