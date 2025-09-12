@@ -44,16 +44,17 @@ export default function Summary<
   dataType: DataType;
   children?: (detail: T) => ReactNode;
 }) {
-  const { id, virtualLabId, projectId, ...params } = useParams<DetailViewUrlParams>();
+  const allParams = useParams<DetailViewUrlParams>();
+  const { virtualLabId, projectId } = allParams;
   const setBrainRegionSidebarIsCollapsed = useSetAtom(brainRegionSidebarIsCollapsedAtom);
   const fields = getViewDefinitionByLegacyType(dataType)?.summaryViewFields;
 
   const path = usePathname();
 
   const memoizedDetailAtom = useMemo(() => {
-    const detailFetchAtom = detailFamily({ id, virtualLabId, projectId, dataType, ...params });
+    const detailFetchAtom = detailFamily({ ...allParams, dataType });
     return conditionalAtom<T>(payload, detailFetchAtom);
-  }, [payload, id, virtualLabId, projectId, dataType, params]);
+  }, [payload, dataType, allParams]);
 
   const detail = useAtomValue(memoizedDetailAtom);
 
