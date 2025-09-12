@@ -127,7 +127,7 @@ const processData = async (token: string): Promise<string | null> => {
     Authorization: `Bearer ${token}`,
   };
 
-  const urlSpecies = 'https://staging.openbraininstitute.org/api/entitycore/subject';
+  const urlSpecies = 'https://staging.openbraininstitute.org/api/entitycore/species';
   const urlStrain = 'https://staging.openbraininstitute.org/api/entitycore/strain';
 
   let jsonDataSpecies: SpeciesData = { data: [] };
