@@ -188,7 +188,9 @@ export default function ContributeMorphologyConfiguration({
               tabIndex={0}
               className={classNames(
                 'flex h-[50px] min-h-[50px] w-full cursor-pointer items-center justify-between rounded-full border border-gray-200 px-5 py-2 drop-shadow hover:bg-white',
-                configTab === 'assets' ? 'bg-white' : 'bg-gray-50'
+                configTab === 'assets'
+                  ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
+                  : 'bg-gray-50'
               )}
               onClick={() => {
                 setConfigTab('assets');
@@ -205,7 +207,14 @@ export default function ContributeMorphologyConfiguration({
                 }
               }}
             >
-              <span className="text-primary-9 text-base">Assets</span>
+              <span
+                className={classNames(
+                  'text-base',
+                  configTab === 'assets' ? 'text-white' : 'text-primary-9'
+                )}
+              >
+                Assets
+              </span>
               <div className="flex gap-2">
                 {selectedFile ? (
                   <>
@@ -213,7 +222,10 @@ export default function ContributeMorphologyConfiguration({
                       className="text-green-600"
                       style={{ fontSize: '14px', visibility: 'visible' }}
                     />
-                    <RightOutlined className="text-white" style={{ fontSize: '14px' }} />
+                    <RightOutlined
+                      className={configTab === 'assets' ? 'text-white' : 'text-primary-8'}
+                      style={{ fontSize: '14px' }}
+                    />
                   </>
                 ) : (
                   <>
@@ -221,7 +233,10 @@ export default function ContributeMorphologyConfiguration({
                       className="assets-warning text-yellow-400"
                       style={{ fontSize: '14px', visibility: 'visible' }}
                     />
-                    <RightOutlined className="text-primary-8" style={{ fontSize: '14px' }} />
+                    <RightOutlined
+                      className={configTab === 'assets' ? 'text-white' : 'text-primary-8'}
+                      style={{ fontSize: '14px' }}
+                    />
                   </>
                 )}
               </div>
@@ -254,6 +269,7 @@ export default function ContributeMorphologyConfiguration({
                         campaignId={campaignId}
                         loading={loading}
                         selectedItemIdx={selectedItemIdx}
+                        isSelected={configTab === k}
                       />
                     ))}
               </Fragment>
@@ -282,6 +298,7 @@ export default function ContributeMorphologyConfiguration({
                       string,
                       ConfigValue
                     >;
+                    const subjectConfig = (config.license || {}) as Record<string, ConfigValue>;
                     const licenseConfig = (config.license || {}) as Record<string, ConfigValue>;
                     const mtypeConfig = (config.mtype || {}) as Record<string, ConfigValue>;
                     const contributionConfig = (config.contribution || {}) as Record<
@@ -302,10 +319,10 @@ export default function ContributeMorphologyConfiguration({
                       },
                       legacy_id: [],
                       species_id:
-                        morphologyConfig.species_id || 'b7ad4cca-4ac2-4095-9781-37fb68fe9ca1',
-                      strain_id: morphologyConfig.strain_id ?? undefined,
+                        subjectConfig.species_id || 'b7ad4cca-4ac2-4095-9781-37fb68fe9ca1',
+                      strain_id: subjectConfig.strain_id ?? undefined,
                       brain_region_id: morphologyConfig.brain_region_id || node?.id || '',
-                      subject_id: '1c71c68c-44a4-4972-955d-7e0f264425e3',
+                      subject_id: subjectConfig.subject_id ?? undefined,
                       experiment_date: undefined,
                       mtype_class_id: mtypeConfig?.mtype_class_id ?? undefined,
                     };

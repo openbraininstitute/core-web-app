@@ -83,14 +83,21 @@ export function Section({
     <div
       className={classNames(
         'flex h-[50px] min-h-[50px] w-full cursor-pointer items-center justify-between rounded-full border border-gray-200 px-5 py-2 drop-shadow hover:bg-white',
-        configTab === k ? 'bg-white' : 'bg-gray-50'
+        
+        configTab === k ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white' : 'bg-gray-50'
       )}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
     >
-      <span className="text-primary-9 text-base">{buttonText}</span>
+     
+            <span
+        className={classNames('text-base', configTab === k ? 'text-white' : 'text-primary-9')}
+      >
+        {buttonText}
+      </span>
+
       <div className="flex gap-1">
         <RightOutlined className="text-primary-9" />
       </div>
