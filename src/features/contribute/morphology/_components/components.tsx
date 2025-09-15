@@ -471,7 +471,7 @@ export function JSONMorphologySchemaForm({
       const selected = allSubjects.find((s) => s.id === state.subject_id);
       setSelectedSubjectData(selected || null);
       if (selected?.species?.id) {
-        setState((prev) => ({ ...prev, species_id: selected.species.id }));
+        setState((prev) => ({ ...prev, species_id: selected.species!.id }));
       } else {
         setState((prev) => ({ ...prev, species_id: undefined }));
       }
@@ -483,17 +483,25 @@ export function JSONMorphologySchemaForm({
       const session = await getSessionWithCheck();
       if (!session) return;
 
-      const [speciesData, agentsData, organizationData, consortiumData, rolesData, subjectsData, licensesData, mtypesData] =
-        await Promise.all([
-          processData(session.accessToken),
-          fetchAgents(session.accessToken),
-          fetchOrganization(session.accessToken),
-          fetchConsortium(session.accessToken),
-          fetchRoles(session.accessToken),
-          fetchSubjects(session.accessToken),
-          fetchLicenses(session.accessToken),
-          fetchMtypes(session.accessToken),
-        ]);
+      const [
+        speciesData,
+        agentsData,
+        organizationData,
+        consortiumData,
+        rolesData,
+        subjectsData,
+        licensesData,
+        mtypesData,
+      ] = await Promise.all([
+        processData(session.accessToken),
+        fetchAgents(session.accessToken),
+        fetchOrganization(session.accessToken),
+        fetchConsortium(session.accessToken),
+        fetchRoles(session.accessToken),
+        fetchSubjects(session.accessToken),
+        fetchLicenses(session.accessToken),
+        fetchMtypes(session.accessToken),
+      ]);
 
       let fetchedBrainRegionName = null;
       if (nodeId) {
@@ -573,6 +581,7 @@ export function JSONMorphologySchemaForm({
         ? `${obj.title || k} is required`
         : null;
     const hasError = !!fieldError;
+    const errorClass = hasError ? 'border-red-500' : '';
 
     if (isBrainRegionIdField) {
       return (
@@ -600,8 +609,8 @@ export function JSONMorphologySchemaForm({
       return (
         <div className="w-full">
           <Select
-            disabled={true}
-            className={`w-full ${hasError ? 'border-red-500' : ''}`}
+            disabled
+            className={classNames('w-full', errorClass)}
             onBlur={() => markFieldTouched(k)}
             onChange={(newV) => {
               setState((prev) => ({ ...prev, [k]: newV, strain_id: undefined })); // Reset strain_id when species changes
@@ -636,10 +645,12 @@ export function JSONMorphologySchemaForm({
           <div className="w-full">
             <Select
               disabled={disabled || !speciesId}
-              className={`w-full ${hasError ? 'border-red-500' : ''}`}
+              className={classNames('w-full', errorClass)}
               value={state[k]}
               options={[]}
-              placeholder={speciesId ? "No strains found for this species" : "Select a species first"}
+              placeholder={
+                speciesId ? 'No strains found for this species' : 'Select a species first'
+              }
               allowClear
             />
             {fieldError && <div className="mt-1 text-sm text-red-500">{fieldError}</div>}
@@ -656,7 +667,7 @@ export function JSONMorphologySchemaForm({
         <div className="w-full">
           <Select
             disabled={disabled}
-            className={`w-full ${hasError ? 'border-red-500' : ''}`}
+            className={classNames('w-full', errorClass)}
             onBlur={() => markFieldTouched(k)}
             onChange={(newV) => {
               setState((prev) => ({ ...prev, [k]: newV }));
@@ -690,7 +701,7 @@ export function JSONMorphologySchemaForm({
         <div className="w-full">
           <Select
             disabled={disabled}
-            className={`w-full ${hasError ? 'border-red-500' : ''}`}
+            className={classNames('w-full', errorClass)}
             onBlur={() => markFieldTouched(k)}
             onChange={(newV) => {
               setState((prev) => ({ ...prev, [k]: newV }));
@@ -724,20 +735,28 @@ export function JSONMorphologySchemaForm({
         <div className="w-full">
           {selectedSubjectData && (
             <div className="mb-2 text-sm text-gray-500">
-              <div>ID: <span className="font-bold">{selectedSubjectData.id}</span></div>
-              {selectedSubjectData.description && <div>Description: {selectedSubjectData.description}</div>}
+              <div>
+                ID: <span className="font-bold">{selectedSubjectData.id}</span>
+              </div>
+              {selectedSubjectData.description && (
+                <div>Description: {selectedSubjectData.description}</div>
+              )}
               {selectedSubjectData.sex && <div>Sex: {selectedSubjectData.sex}</div>}
               {selectedSubjectData.weight && <div>Weight: {selectedSubjectData.weight} grams</div>}
-              {selectedSubjectData.age_value && <div>Age Value: {selectedSubjectData.age_value}</div>}
+              {selectedSubjectData.age_value && (
+                <div>Age Value: {selectedSubjectData.age_value}</div>
+              )}
               {selectedSubjectData.age_min && <div>Age Min: {selectedSubjectData.age_min}</div>}
               {selectedSubjectData.age_max && <div>Age Max: {selectedSubjectData.age_max}</div>}
               {selectedSubjectData.age_unit && <div>Age Unit: {selectedSubjectData.age_unit}</div>}
-              {selectedSubjectData.age_period && <div>Age Period: {selectedSubjectData.age_period}</div>}
+              {selectedSubjectData.age_period && (
+                <div>Age Period: {selectedSubjectData.age_period}</div>
+              )}
             </div>
           )}
           <Select
             disabled={disabled}
-            className={`w-full ${hasError ? 'border-red-500' : ''}`}
+            className={classNames('w-full', errorClass)}
             onBlur={() => markFieldTouched(k)}
             onChange={(newV) => {
               setState((prev) => ({ ...prev, [k]: newV }));
@@ -773,7 +792,7 @@ export function JSONMorphologySchemaForm({
         <div className="w-full">
           <Select
             disabled={disabled}
-            className={`w-full ${hasError ? 'border-red-500' : ''}`}
+            className={classNames('w-full', errorClass)}
             onBlur={() => markFieldTouched(k)}
             onChange={(newV) => {
               setState((prev) => {
@@ -810,7 +829,7 @@ export function JSONMorphologySchemaForm({
         <div className="w-full">
           <Select
             disabled={disabled}
-            className={`w-full ${hasError ? 'border-red-500' : ''}`}
+            className={classNames('w-full', errorClass)}
             onBlur={() => markFieldTouched(k)}
             onChange={(newV) => {
               setState((prev) => ({ ...prev, [k]: newV }));
@@ -827,12 +846,14 @@ export function JSONMorphologySchemaForm({
     }
 
     if (isAgentIdField) {
-      const agentData =
-        agentType === 'Organization'
-          ? allOrganizations
-          : agentType === 'Consortium'
-          ? allConsortia
-          : allAgents;
+      let agentData = null;
+      if (agentType === 'Organization') {
+        agentData = allOrganizations;
+      } else if (agentType === 'Consortium') {
+        agentData = allConsortia;
+      } else {
+        agentData = allAgents;
+      }
 
       if (!agentData) {
         return (
@@ -851,7 +872,7 @@ export function JSONMorphologySchemaForm({
         <div className="w-full">
           <Select
             disabled={disabled}
-            className={`w-full ${hasError ? 'border-red-500' : ''}`}
+            className={classNames('w-full', errorClass)}
             onBlur={() => markFieldTouched(k)}
             onChange={(newV) => {
               setState((prev) => ({ ...prev, [k]: newV }));
@@ -859,7 +880,7 @@ export function JSONMorphologySchemaForm({
             }}
             value={state[k]}
             options={options}
-            placeholder={`Select a ${agentType.toLowerCase()}`}
+            placeholder={`Select ${agentType.toLowerCase()}`}
             allowClear
           />
           {fieldError && <div className="mt-1 text-sm text-red-500">{fieldError}</div>}
@@ -879,7 +900,7 @@ export function JSONMorphologySchemaForm({
               setState((prev) => ({ ...prev, [k]: value }));
             }}
             onBlur={() => markFieldTouched(k)}
-            className={`w-full ${hasError ? 'border-red-500' : ''}`}
+            className={classNames('w-full', errorClass)}
           />
           {fieldError && <div className="mt-1 text-sm text-red-500">{fieldError}</div>}
         </div>
@@ -891,7 +912,7 @@ export function JSONMorphologySchemaForm({
         <div className="w-full">
           <Input
             disabled={disabled}
-            className={`w-full ${hasError ? 'border-red-500' : ''}`}
+            className={classNames('w-full', errorClass)}
             onBlur={() => markFieldTouched(k)}
             value={typeof state[k] === 'string' ? state[k] : ''}
             onChange={(e) => {
@@ -910,7 +931,7 @@ export function JSONMorphologySchemaForm({
       <div className="w-full">
         <Input
           disabled={disabled}
-          className={`w-full ${hasError ? 'border-red-500' : ''}`}
+          className={classNames('w-full', errorClass)}
           onBlur={() => markFieldTouched(k)}
           value={typeof state[k] === 'string' ? state[k] : ''}
           onChange={(e) => {
@@ -983,7 +1004,7 @@ export function JSONMorphologySchemaForm({
         {isContributionSchema && (
           <div>
             <div className="flex items-end gap-3">
-              <div className="text-base font-semibold uppercase text-gray-700">AGENT TYPE</div>
+              <div className="text-base font-semibold text-gray-700 uppercase">AGENT TYPE</div>
             </div>
             <Tooltip value="Select the type of agent (Person, Organization, or Consortium)">
               <div className="w-full">
@@ -1054,19 +1075,21 @@ export function Tab({
   extraClass?: string;
   disabled?: boolean;
 }) {
+  const tabClass =
+    tab === selectedTab
+      ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
+      : 'text-primary-8 bg-white';
+
+  const buttonStyles = disabled
+    ? { background: '#d1d5db', cursor: 'default', color: '#9ca3af' }
+    : {};
+
   return (
     <button
-      onClick={!disabled ? onClick : undefined}
+      onClick={disabled ? undefined : onClick}
       type="button"
-      style={disabled ? { background: '#d1d5db', cursor: 'default', color: '#9ca3af' } : undefined}
-      className={classNames(
-        'min-w-[150px] px-5 py-2',
-        extraClass,
-        rounded,
-        tab === selectedTab
-          ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
-          : 'text-primary-8 bg-white'
-      )}
+      style={buttonStyles}
+      className={classNames('min-w-[150px] px-5 py-2', extraClass, rounded, tabClass)}
     >
       {children}
     </button>

@@ -9,43 +9,39 @@ import { classNames } from '@/util/utils';
 type Props = {
   k: string;
   sectionSchema: JSONMorphologySchema | undefined;
-  schema: JSONMorphologySchema;
-  config: Config;
-  errors: ErrorObject<string, Record<string, unknown>, unknown>[]; // Fixed to avoid no-explicit-any
+  _schema: JSONMorphologySchema; // Changed from schema to _schema
+  _config: Config;
+  _errors: ErrorObject<string, Record<string, unknown>, unknown>[];
   atomsMap: AtomsMap;
   setAtomsMap: Dispatch<SetStateAction<AtomsMap>>;
-  configTab: string;
+  _configTab: string;
   setConfigTab: (tab: string) => void;
   setSelectedItemIdx: (idx: number | null) => void;
   setEditing: (editing: boolean) => void;
   setSelectedCategory: (category: string) => void;
-  campaignId: string;
-  loading: boolean;
-  selectedItemIdx: number | null;
+  _campaignId: string;
+  _loading: boolean;
+  _selectedItemIdx: number | null;
+  isSelected: boolean;
 };
 
 export function Section({
   k,
   sectionSchema,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  schema,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  config,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  errors,
+  _schema, // Changed from schema to _schema
+  _config,
+  _errors,
   atomsMap,
   setAtomsMap,
-  configTab,
+  _configTab,
   setConfigTab,
   setSelectedItemIdx,
   setEditing,
   setSelectedCategory,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  campaignId,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  loading,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  selectedItemIdx,
+  _campaignId,
+  _loading,
+  _selectedItemIdx,
+  isSelected,
 }: Props) {
   const fallbackSchema: JSONMorphologySchema = {
     type: 'object',
@@ -83,23 +79,19 @@ export function Section({
     <div
       className={classNames(
         'flex h-[50px] min-h-[50px] w-full cursor-pointer items-center justify-between rounded-full border border-gray-200 px-5 py-2 drop-shadow hover:bg-white',
-        
-        configTab === k ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white' : 'bg-gray-50'
+        isSelected ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white' : 'bg-gray-50'
       )}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
     >
-     
-            <span
-        className={classNames('text-base', configTab === k ? 'text-white' : 'text-primary-9')}
-      >
+      <span className={classNames('text-base', isSelected ? 'text-white' : 'text-primary-9')}>
         {buttonText}
       </span>
 
       <div className="flex gap-1">
-        <RightOutlined className="text-primary-9" />
+        <RightOutlined className={isSelected ? 'text-white' : 'text-primary-9'} />
       </div>
     </div>
   );

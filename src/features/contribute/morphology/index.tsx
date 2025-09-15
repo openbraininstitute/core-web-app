@@ -256,19 +256,19 @@ export default function ContributeMorphologyConfiguration({
                         key={k}
                         k={k}
                         sectionSchema={v}
-                        schema={schema}
-                        config={config}
-                        errors={errors}
+                        _schema={schema}
+                        _config={config}
+                        _errors={errors}
                         atomsMap={atomsMap}
                         setAtomsMap={setAtomsMap}
-                        configTab={configTab}
+                        _configTab={configTab}
                         setConfigTab={setConfigTab}
                         setSelectedItemIdx={setSelectedItemIdx}
                         setEditing={setEditing}
                         setSelectedCategory={setSelectedCategory}
-                        campaignId={campaignId}
-                        loading={loading}
-                        selectedItemIdx={selectedItemIdx}
+                        _campaignId={campaignId}
+                        _loading={loading}
+                        _selectedItemIdx={selectedItemIdx}
                         isSelected={configTab === k}
                       />
                     ))}
