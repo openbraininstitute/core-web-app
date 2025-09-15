@@ -20,7 +20,7 @@ export function DataInnerLayout({ children }: Props) {
     <motion.div
       id="data-inner-layout"
       className={cn(
-        'bg-background border-neutral-2 mx-2 mb-2 grid h-full max-h-[calc(100vh-8rem)] w-[calc(100%-10px)]',
+        'bg-background border-neutral-2 mx-2 mb-2 ml-3 grid h-full max-h-[calc(100vh-8rem)] w-[calc(100%-10px)]',
         'gap-4 overflow-hidden rounded-2xl border p-2 [grid-area:main]'
       )}
       initial={{

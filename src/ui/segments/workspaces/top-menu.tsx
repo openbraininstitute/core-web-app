@@ -16,7 +16,7 @@ export function WorkspaceTopMenu({ className }: Props) {
   return (
     <div className={cn('flex items-start justify-between gap-4', className)}>
       <div className="flex items-start justify-center gap-2">
-        <SpaceSwitcher className="w-[calc(24rem-1.5rem)]" />
+        <SpaceSwitcher className="w-[calc(24rem-0.75rem)]" />
         <Wallet />
       </div>
       <div className="flex items-center justify-center gap-2">
