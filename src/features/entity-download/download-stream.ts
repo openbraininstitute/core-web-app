@@ -44,6 +44,7 @@ export async function createDownloadStream({
   // const { signal } = controller;
 
   const getFilesGenerator = getEntityFilesHandlerMap[entityType];
+
   if (!getFilesGenerator) {
     throw new Error(`No handler found for entity type ${entityType}`);
   }
