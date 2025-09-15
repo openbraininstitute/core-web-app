@@ -59,7 +59,7 @@ export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulatio
   },
   detailViewSections: ['overview', 'configuration', 'results', 'related-publications'],
   isBookmarkable: true,
-  isDownloadable: false,
+  isDownloadable: true,
   isCopyable: true,
   isSimulatable: false,
 } as const;
