@@ -8,8 +8,9 @@ import { useAtom } from 'jotai';
 
 import kebabCase from 'lodash/kebabCase';
 import Link from 'next/link';
-import { downloadPanelCircuitAtom } from '../explore/circuit/elements/download-panel';
 import { CircuitPreview } from './previews/circuit-preview';
+import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
+
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { SingleNeuronSimulationPreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-simulation-preview';
 import { SingleNeuronSynaptomePreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-synaptome-preview';
