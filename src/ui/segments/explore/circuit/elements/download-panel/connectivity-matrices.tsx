@@ -43,7 +43,7 @@ export default function ConnectivityMatrices({ circuit }: { circuit: ICircuit })
   });
 
   const connectivityMetrics = useQuery({
-    queryKey: keyBuilder.circuitConfigAndDirectory({
+    queryKey: keyBuilder.asset({
       entityId: circuit.id,
       assetId: configAsset!.id,
       assetPath: AssetDefaultPath,

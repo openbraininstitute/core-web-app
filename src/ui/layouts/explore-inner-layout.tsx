@@ -5,7 +5,6 @@ import type { ReactNode } from 'react';
 
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
-import { log } from '@/utils/logger';
 
 type Props = {
   children: ReactNode;
@@ -16,7 +15,7 @@ export function DataInnerLayout({ children }: Props) {
   useSelectEntityClickEvent((ev) => {
     setMdv(ev.detail.display);
   });
-  log('debug', 'DataInnerLayout', mdv);
+
   return (
     <motion.div
       id="data-inner-layout"

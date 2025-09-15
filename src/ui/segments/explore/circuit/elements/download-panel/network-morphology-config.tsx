@@ -46,7 +46,7 @@ export default function NetworkAndMorphologyConfig({ circuit }: { circuit: ICirc
   });
 
   const networksConfig = useQuery({
-    queryKey: keyBuilder.circuitConfigAndDirectory({
+    queryKey: keyBuilder.asset({
       entityId: circuit.id,
       assetId: configAsset!.id,
       assetPath: AssetDefaultPath,
