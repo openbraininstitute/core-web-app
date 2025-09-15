@@ -4,13 +4,15 @@ import { useMutation } from '@tanstack/react-query';
 import { match, P } from 'ts-pattern';
 import { useState, useEffect } from 'react';
 import { Image } from 'antd';
+import { useAtom } from 'jotai';
 
 import kebabCase from 'lodash/kebabCase';
 import Link from 'next/link';
+import { downloadPanelCircuitAtom } from '../explore/circuit/elements/download-panel';
+import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 import { SingleNeuronSimulationPreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-simulation-preview';
 import { SingleNeuronSynaptomePreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-synaptome-preview';
-import { makeCustomRowSelectionEvent } from '@/ui/segments/explore/circuit/elements/custom-row-selection-event';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
 import { MEModelPreview } from '@/ui/segments/mini-detail-view/previews/me-model-preview';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -279,10 +281,12 @@ function ExploreActions<T extends EntityCoreObjectTypes>({ record }: { record: T
     mutationFn: () => downloadArchive(record.type, [record.id], { virtualLabId, projectId }),
   });
 
+  const [, setDownloadPanelCircuit] = useAtom(downloadPanelCircuitAtom);
+
   const onBookmark = () => saveAsync();
   const onDownload = () => {
     if (EntityTypeDict.Circuit === record.type) {
-      makeCustomRowSelectionEvent({ record });
+      setDownloadPanelCircuit(record as ICircuit);
     } else {
       downloadAsync();
     }

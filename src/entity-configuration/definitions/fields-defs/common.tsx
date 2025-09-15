@@ -1,6 +1,6 @@
 import { Button } from 'antd';
+import { useAtom } from 'jotai';
 
-import { makeCustomRowSelectionEvent } from '@/components/explore-section/ExploreSectionListingView/expandable-row/custom-row-selection-event';
 import { transformAgentToNames } from '@/api/entitycore/transformers';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { hasAssets } from '@/api/entitycore/guards';
@@ -22,6 +22,9 @@ import { DownloadIcon } from '@/components/icons';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { IContributor } from '@/api/entitycore/types/shared/global';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
+import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
+
+import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export type ProcessedContributor = {
   name: string;
@@ -52,16 +55,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     description: 'Download item',
     filter: null,
     render: (record) => {
-      const onClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-        e.stopPropagation();
-        e.preventDefault();
-        makeCustomRowSelectionEvent({ record });
-      };
-      return (
-        <Button className="p-2" type="text" htmlType="button" onClick={onClick}>
-          <DownloadIcon className="text-current" />
-        </Button>
-      );
+      return <DownloadButton entity={record} />;
     },
     style: { width: 50, fixed: 'left', align: 'center' },
     isFilterable: false,
@@ -260,3 +254,26 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isDisplayable: true,
   },
 };
+
+function DownloadButton({ entity }: { entity: EntityCoreObjectTypes }) {
+  const [, setDownloadPanelCircuit] = useAtom(downloadPanelCircuitAtom);
+
+  return (
+    <Button
+      className="p-2"
+      type="text"
+      htmlType="button"
+      onClick={(e) => {
+        const { type } = entity;
+        if (type !== 'circuit') return;
+
+        e.stopPropagation();
+        e.preventDefault();
+
+        setDownloadPanelCircuit(entity as ICircuit);
+      }}
+    >
+      <DownloadIcon className="text-current" />
+    </Button>
+  );
+}

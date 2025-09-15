@@ -9,7 +9,6 @@ import NetworkAndMorphologyConfig from '@/ui/segments/explore/circuit/elements/d
 import ConnectivityMatrices from '@/ui/segments/explore/circuit/elements/download-panel/connectivity-matrices';
 import EntireCircuitExport from '@/ui/segments/explore/circuit/elements/download-panel/entire-circuit-export';
 
-// import { customRowSelectionEventListener } from '@/ui/segments/explore/circuit/elements/custom-row-selection-event';
 import {
   fileCounterAtom,
   updateFileCounterAtom,
@@ -32,15 +31,6 @@ export function DownloadPanel() {
   };
 
   useHotkeys('Escape', onClose);
-  // useEffect(() => {
-  //   const unsubscribe = customRowSelectionEventListener<ICircuit>((event) => {
-  //     setCircuit(event.detail?.record ?? null);
-  //   });
-
-  //   return () => {
-  //     unsubscribe();
-  //   };
-  // }, [setCircuit]);
 
   if (!circuit) return null;
   return (
