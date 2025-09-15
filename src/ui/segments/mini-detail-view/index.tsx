@@ -9,9 +9,8 @@ import { useAtom } from 'jotai';
 import kebabCase from 'lodash/kebabCase';
 import Link from 'next/link';
 import { downloadPanelCircuitAtom } from '../explore/circuit/elements/download-panel';
-import { ICircuit } from '@/api/entitycore/types/entities/circuit';
-
 import { CircuitPreview } from './previews/circuit-preview';
+import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { SingleNeuronSimulationPreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-simulation-preview';
 import { SingleNeuronSynaptomePreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-synaptome-preview';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
@@ -46,7 +45,6 @@ import {
   type ISingleNeuronSynaptome,
   type ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
-import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 type Props = {
   section?: TWorkspaceSection;
