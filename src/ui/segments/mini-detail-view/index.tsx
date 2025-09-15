@@ -8,6 +8,7 @@ import { Image } from 'antd';
 import kebabCase from 'lodash/kebabCase';
 import Link from 'next/link';
 
+import { CircuitPreview } from './previews/circuit-preview';
 import { SingleNeuronSimulationPreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-simulation-preview';
 import { SingleNeuronSynaptomePreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-synaptome-preview';
 import { makeCustomRowSelectionEvent } from '@/ui/segments/explore/circuit/elements/custom-row-selection-event';
@@ -43,6 +44,7 @@ import {
   type ISingleNeuronSynaptome,
   type ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
+import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 type Props = {
   section?: TWorkspaceSection;
@@ -157,6 +159,18 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
           />
         </div>
       )
+    )
+    .with(
+      {
+        type: ExtendedEntitiesTypeDict.Circuit,
+      },
+      () => {
+        return (
+          <div className="mt-5 w-full" key={record.id}>
+            <CircuitPreview record={record as ICircuit} />
+          </div>
+        );
+      }
     )
     .otherwise(() => null);
 
