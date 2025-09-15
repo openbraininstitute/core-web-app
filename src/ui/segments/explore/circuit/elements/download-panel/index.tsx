@@ -1,16 +1,15 @@
 'use client';
 
 import { CloseOutlined } from '@ant-design/icons';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { useEffect, useState } from 'react';
 import sum from 'lodash/sum';
 
 import NetworkAndMorphologyConfig from '@/ui/segments/explore/circuit/elements/download-panel/network-morphology-config';
 import ConnectivityMatrices from '@/ui/segments/explore/circuit/elements/download-panel/connectivity-matrices';
 import EntireCircuitExport from '@/ui/segments/explore/circuit/elements/download-panel/entire-circuit-export';
 
-import { customRowSelectionEventListener } from '@/ui/segments/explore/circuit/elements/custom-row-selection-event';
+// import { customRowSelectionEventListener } from '@/ui/segments/explore/circuit/elements/custom-row-selection-event';
 import {
   fileCounterAtom,
   updateFileCounterAtom,
@@ -19,8 +18,10 @@ import { cn } from '@/utils/css-class';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
+export const downloadPanelCircuitAtom = atom<ICircuit | null>(null);
+
 export function DownloadPanel() {
-  const [circuit, setCircuit] = useState<ICircuit | null>(null);
+  const [circuit, setCircuit] = useAtom(downloadPanelCircuitAtom);
   const fileCounter = useAtomValue(fileCounterAtom(circuit?.id!));
   const updateFileCounter = useSetAtom(updateFileCounterAtom(circuit?.id!));
   const allFilesCount = fileCounter ? sum(Object.values(fileCounter)) : null;
@@ -31,15 +32,15 @@ export function DownloadPanel() {
   };
 
   useHotkeys('Escape', onClose);
-  useEffect(() => {
-    const unsubscribe = customRowSelectionEventListener<ICircuit>((event) => {
-      setCircuit(event.detail?.record ?? null);
-    });
+  // useEffect(() => {
+  //   const unsubscribe = customRowSelectionEventListener<ICircuit>((event) => {
+  //     setCircuit(event.detail?.record ?? null);
+  //   });
 
-    return () => {
-      unsubscribe();
-    };
-  }, []);
+  //   return () => {
+  //     unsubscribe();
+  //   };
+  // }, [setCircuit]);
 
   if (!circuit) return null;
   return (
