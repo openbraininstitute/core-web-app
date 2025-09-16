@@ -21,6 +21,8 @@ import ValueOrRange from '@/features/listing-filter-panel/value-or-range';
 import ClearFilters from '@/features/listing-filter-panel/clear-filters';
 import DateRange from '@/features/listing-filter-panel/date-range';
 import CheckList from '@/features/listing-filter-panel/checklist';
+import ValueRange from '@/features/listing-filter-panel/value-range';
+import DropdownList from '@/features/listing-filter-panel/filter-as-dropdown';
 
 import {
   activeColumnsAtom,
@@ -29,6 +31,7 @@ import {
   previousDataAtom,
   searchStringAtom,
 } from '@/state/explore-section/list-view-atoms';
+import { resetFilterSignalAtom } from '@/features/entities/circuit/elements/context';
 import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 import { getViewDefinitionByLegacyType } from '@/entity-configuration/definitions/view-defs';
 import { defaultList } from '@/features/listing-filter-panel/checklist/default-checklist';
@@ -38,7 +41,7 @@ import { DataType, PAGE_NUMBER } from '@/constants/explore-section/list-views';
 import { FilterGroup } from '@/features/listing-filter-panel/filter-group';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { Facets } from '@/api/entitycore/types/shared/response';
-import { fieldTitleSentenceCase } from '@/util/utils';
+import { classNames, fieldTitleSentenceCase } from '@/util/utils';
 
 import type {
   CoreFilter,
@@ -67,7 +70,8 @@ function createFilterItemComponent(
   filter: CoreFilter,
   facets: Facets | undefined,
   filterValues: CoreFilterValues,
-  setFilterValues: Dispatch<SetStateAction<CoreFilterValues>>
+  setFilterValues: Dispatch<SetStateAction<CoreFilterValues>>,
+  items?: Array<{ value: string; label: string }> | undefined
 ) {
   return function FilterItemComponent() {
     const { type } = filter;
@@ -95,23 +99,23 @@ function createFilterItemComponent(
         );
 
       case CoreFieldFilterTypeEnum.ValueRange:
-        if (!facets) return emptyFilter;
+        return (
+          <ValueRange
+            filter={filter}
+            onChange={(values: GteLteValue) => updateFilterValues(filter.field, values)}
+          />
+        );
 
-        // if (esConfig?.nested) {
-        //   const nestedAgg = facets[filter.field] as NestedStatsAggregation;
-        //   facet = nestedAgg[filter.field][esConfig?.nested.aggregationName];
-        // } else {
-        //   facet = facets[filter.field] as Statistics;
-        // }
-
-        // return (
-        //   <ValueRange
-        //     filter={filter}
-        //     aggregation={facet}
-        //     onChange={(values: GteLteValue) => updateFilterValues(filter.field, values)}
-        //   />
-        // );
-        return null;
+      case CoreFieldFilterTypeEnum.DropdownList:
+        if (!items?.length) return emptyFilter;
+        return (
+          <DropdownList
+            filter={filter}
+            data={items}
+            onChange={(values: string[]) => updateFilterValues(filter.field, values)}
+            allowMultiple
+          />
+        );
 
       case CoreFieldFilterTypeEnum.CheckList:
         if (!facets || !facets[filter.field]) return emptyFilter;
@@ -185,7 +189,6 @@ export default function ListingFilterPanel({
 }: Props) {
   const { node } = useBrainRegionHierarchy({ dataKey });
   const brainRegionId = useBrainRegion ? node.id : undefined;
-
   const [filterValues, setFilterValues] = useState<CoreFilterValues>({});
   const resetFilters = useResetAtom(
     filtersAtom({
@@ -197,6 +200,7 @@ export default function ListingFilterPanel({
     })
   );
   const setSearchString = useSetAtom(searchStringAtom(dataKey));
+  const setResetFilterSignal = useSetAtom(resetFilterSignalAtom);
   const setPrevData = useSetAtom(
     previousDataAtom({
       workspace: virtualLabInfo,
@@ -255,10 +259,15 @@ export default function ListingFilterPanel({
   }, [filters]);
 
   const submitValues = () => {
+    setResetFilterSignal((prev) => prev + 1);
     setPageNumber(PAGE_NUMBER);
     setPrevData([]);
+    const appliedFilters = filters?.map((fil: CoreFilter) => ({
+      ...fil,
+      value: filterValues[fil.field],
+    }));
 
-    setFilters(filters?.map((fil: CoreFilter) => ({ ...fil, value: filterValues[fil.field] })));
+    setFilters(appliedFilters);
   };
 
   const Entity = getViewDefinitionByLegacyType(dataType);
@@ -273,7 +282,13 @@ export default function ListingFilterPanel({
               filter.type &&
               item?.isFilterable &&
               (Entity?.filterableFields ? Entity?.filterableFields.includes(filter.field) : true)
-                ? createFilterItemComponent(filter, facets, filterValues, setFilterValues)
+                ? createFilterItemComponent(
+                    filter,
+                    facets,
+                    filterValues,
+                    setFilterValues,
+                    item.filterData
+                  )
                 : undefined,
             display: item?.isDisplayable && activeColumns?.includes(filter.field),
             label: fieldTitleSentenceCase(item?.title ?? ''),
@@ -308,50 +323,62 @@ export default function ListingFilterPanel({
   const clearFilters = () => {
     resetFilters();
     setSearchString('');
+    setResetFilterSignal((prev) => prev + 1);
   };
 
   return (
-    <div
-      data-testid="listing-view-filter-panel"
-      className="bg-primary-8 fixed top-0 right-0 z-10 flex h-full min-h-screen w-[480px] shrink-0 flex-col space-y-4 overflow-y-auto px-8 pt-6"
-    >
-      <div className="mb-auto">
-        <div className="mb-2 flex items-center justify-between gap-4">
-          <span className="flex items-baseline gap-2 text-2xl font-bold text-white">
-            Filters
-            <small className="text-primary-3 text-base font-light">{activeColumnsText}</small>
-          </span>
+    <div className="relative">
+      <div // eslint-disable-line jsx-a11y/click-events-have-key-events
+        role="button"
+        tabIndex={0}
+        aria-label="Close filter panel mask"
+        onClick={toggleDisplay}
+        className={classNames(
+          'ease-out-back fixed top-0 left-0 z-80 h-screen w-screen bg-black opacity-50 transition-opacity duration-500'
+        )}
+      />
+      <div
+        data-testid="listing-view-filter-panel"
+        className="bg-primary-8 primary-scrollbar fixed top-0 right-0 z-100 flex h-full min-h-screen w-[480px] shrink-0 flex-col space-y-4 overflow-x-hidden overflow-y-auto px-8"
+      >
+        <div className="mb-auto">
+          <div className="bg-primary-8 sticky top-0 mb-2 flex items-center justify-between gap-4 py-6">
+            <span className="flex items-baseline gap-2 text-2xl font-bold text-white">
+              Filters
+              <small className="text-primary-3 text-base font-light">{activeColumnsText}</small>
+            </span>
+            <button
+              autoFocus // eslint-disable-line jsx-a11y/no-autofocus
+              type="button"
+              onClick={toggleDisplay}
+              className="hover:bg-neutral-1/10 rounded-md px-2 py-1 text-white"
+              aria-label="Close"
+            >
+              <CloseOutlined />
+            </button>
+          </div>
+
+          <p className="pr-4 text-white">
+            Use the eye icon to hide/show columns. Select the column titles and tick the checkbox of
+            the option(s).
+          </p>
+
+          <div className="flex flex-col gap-12">
+            <FilterGroup items={filterItems} filters={filters} setFilters={setFilters} />
+            {children}
+          </div>
+        </div>
+
+        <div className="bg-primary-8 sticky bottom-0 left-0 mt-auto flex w-full items-center justify-between py-6">
+          <ClearFilters onClick={clearFilters} />
           <button
-            autoFocus // eslint-disable-line jsx-a11y/no-autofocus
-            type="button"
-            onClick={toggleDisplay}
-            className="hover:bg-neutral-1/10 rounded-md px-2 py-1 text-white"
-            aria-label="Close"
+            type="submit"
+            onClick={submitValues}
+            className="bg-primary-2 text-primary-9 px-8 py-3"
           >
-            <CloseOutlined />
+            Apply
           </button>
         </div>
-
-        <p className="pr-4 text-white">
-          Use the eye icon to hide/show columns. Select the column titles and tick the checkbox of
-          the option(s).
-        </p>
-
-        <div className="flex flex-col gap-12">
-          <FilterGroup items={filterItems} filters={filters} setFilters={setFilters} />
-          {children}
-        </div>
-      </div>
-
-      <div className="bg-primary-8 sticky bottom-0 left-0 mt-auto flex w-full items-center justify-between py-6">
-        <ClearFilters onClick={clearFilters} />
-        <button
-          type="submit"
-          onClick={submitValues}
-          className="bg-primary-2 text-primary-9 px-8 py-3"
-        >
-          Apply
-        </button>
       </div>
     </div>
   );

@@ -6,11 +6,13 @@ export enum CoreFieldFilterTypeEnum {
   Text = 'Text',
   ValueOrRange = 'ValueOrRange',
   ValueRange = 'ValueRange',
+  DropdownList = 'DropdownList',
 }
 
 export enum EntityCoreFields {
   ID = 'id',
   Preview = 'preview',
+  Download = 'download',
   Name = 'name',
   Description = 'description',
   Species = 'species',
@@ -70,6 +72,11 @@ export enum EntityCoreFields {
   CircuitName = 'circuit_name',
   CircuitBuildCategory = 'build_category',
   CircuitScale = 'scale',
+  CircuitRootCircuit = 'root_circuit_id', // TODO: change it to sub_circuits, this is only for test the nested table
+  CircuitPublishedIn = 'published_in', // TODO: change it to sub_circuits, this is only for test the nested table
+  CircuitContactEmail = 'contact_email', // TODO: change it to sub_circuits, this is only for test the nested table
+  CircuitExperimentDate = 'experiment_date', // TODO: change it to sub_circuits, this is only for test the nested table
+  CircuitSubCircuit = 'xxxxx', // TODO: change it to sub_circuits, this is only for test the nested table
 }
 
 export type EntityCoreFieldsValue = `${EntityCoreFields}`;

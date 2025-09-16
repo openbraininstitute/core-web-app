@@ -13,7 +13,7 @@ import type {
   TCreateSingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types/entities/single-neuron-synaptome-simulation';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { SimulationPayload } from '@/types/simulation/single-neuron';
+import type { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/single-neuron-synaptome-simulation';

@@ -1,3 +1,5 @@
+import type { EntityTypeValue } from '@/api/entitycore/types/entity-type';
+
 export type TimestampsFilter = {
   creation_date__lte: Date | null;
   creation_date__gte: Date | null;
@@ -48,9 +50,10 @@ export type IdFilter = Partial<{
   id__in: string | Array<string>;
 }>;
 
-type SearchFilter = {
+export type SearchFilter = {
   search: string | null;
 };
+
 export type NameFilter = {
   name: string | null;
   name__ilike: string | null;
@@ -121,3 +124,7 @@ export interface IEntityFilter
     OwnershipFilter,
     TimestampsFilter,
     ContributionFilter {}
+
+export type EntityCoreTypeFilter = {
+  type: EntityTypeValue;
+};

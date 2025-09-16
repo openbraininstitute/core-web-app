@@ -36,15 +36,18 @@ function FullCircuitItem({ content }: { content: DownloadItemProps }) {
           </a>
         </p>
       </div>
-      <div className="text-primary-1 flex flex-row gap-x-3 font-semibold">
-        <div>{content.children?.[0]?.size || 'N/A'}</div>
-        <div>h5</div>
+      <div
+        className="text-primary-1 flex flex-row gap-x-3 font-semibold"
+        title={content.children?.[0]?.name}
+      >
+        <div>{content.children?.[0]?.size || ''}</div>
+        <div>{content.children?.[0]?.extension ?? ''}</div>
         <Link
           href={content.children?.[0]?.url || '#'}
           className="border-primary-6 flex h-7 w-7 items-center justify-center border border-solid"
           aria-label="Download the full circuit"
         >
-          <DownloadIcon iconColor="white" />
+          <DownloadIcon className="text-white" />
         </Link>
       </div>
     </div>

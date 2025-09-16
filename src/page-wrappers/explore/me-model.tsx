@@ -18,5 +18,5 @@ export default async function Detail({ params }: Props) {
   });
 
   const payload = { source } as MEmodelProps['payload'];
-  return <DetailView params={{ id, virtualLabId, projectId }} payload={payload} />;
+  return <DetailView payload={payload} />;
 }

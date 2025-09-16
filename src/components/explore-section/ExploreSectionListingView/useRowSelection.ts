@@ -15,19 +15,27 @@ export type RenderButtonProps<T> = {
 
 export default function useRowSelection<T extends { id: string }>({
   dataKey,
-  selectionType = 'checkbox',
+  selectionType,
   onRowsSelected,
 }: {
   dataKey: string;
   selectionType?: RowSelectionType;
   onRowsSelected?: (rows: Array<T>) => void;
 }): {
-  rowSelection: RowSelection<T>;
+  rowSelection: RowSelection<T> | undefined;
   selectedRows: Array<T>;
   clearSelectedRows: () => void;
 } {
   const [selectedRows, setSelectedRows] = useAtom(selectedRowsAtom(dataKey));
   const clearSelectedRows = () => setSelectedRows([]);
+
+  if (!selectionType && !onRowsSelected) {
+    return {
+      rowSelection: undefined,
+      selectedRows: [],
+      clearSelectedRows: () => {},
+    };
+  }
 
   return {
     rowSelection: {
@@ -36,7 +44,7 @@ export default function useRowSelection<T extends { id: string }>({
         setSelectedRows(() => rows);
         onRowsSelected?.(rows);
       },
-      type: selectionType,
+      type: selectionType ?? 'checkbox',
     },
     selectedRows,
     clearSelectedRows,

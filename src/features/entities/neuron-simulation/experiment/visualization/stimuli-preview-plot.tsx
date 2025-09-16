@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic';
 
 import { stimulusPreviewPlotDataAtom } from '@/state/simulate/single-neuron';
 import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
-import { StimulusModule } from '@/types/simulation/single-neuron';
+import { StimulusModule } from '@/types/small-scale-simulator/single-neuron';
 import { PlotData } from '@/services/bluenaas-single-cell/types';
 import { useAppNotification } from '@/components/notification';
 import { getSingleNeuronStimuliPlot } from '@/api/small-scale-simulator';

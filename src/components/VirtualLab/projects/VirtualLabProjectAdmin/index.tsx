@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useMemo } from 'react';
+import { useAtomValue } from 'jotai';
 import { CollapseProps } from 'antd';
 import { useQueryState } from 'nuqs';
 import { loadable } from 'jotai/utils';
@@ -9,12 +9,7 @@ import { loadable } from 'jotai/utils';
 import CostsPanel from './CostPanel';
 import DangerZonePanel from './DangerZonePanel';
 import Collapse from '@/components/Collapse';
-import {
-  userProjectsAtom,
-  virtualLabProjectDetailsAtomFamily,
-  virtualLabProjectsAtomFamily,
-} from '@/state/virtual-lab/projects';
-import { deleteProject } from '@/services/virtual-lab/projects';
+import { virtualLabProjectDetailsAtomFamily } from '@/state/virtual-lab/projects';
 
 export default function VirtualLabProjectAdmin({
   virtualLabId,
@@ -24,11 +19,6 @@ export default function VirtualLabProjectAdmin({
   projectId: string;
 }) {
   const userIsAdmin = true;
-
-  const refreshUserProjects = useSetAtom(userProjectsAtom);
-  const refreshVirtualLabProjects = useSetAtom(
-    virtualLabProjectsAtomFamily({ virtualLabId, page: 1, size: 20 })
-  );
 
   const [activePanelKey, setActivePanel] = useQueryState('panel', {
     clearOnDefault: true,
@@ -46,17 +36,6 @@ export default function VirtualLabProjectAdmin({
 
   const onChangePanel = (key: string | string[]) => setActivePanel(String(key));
 
-  const onDeleteProject = useCallback(async (): Promise<void> => {
-    await deleteProject(virtualLabId, projectId);
-
-    virtualLabProjectDetailsAtomFamily.remove({
-      virtualLabId,
-      projectId,
-    });
-
-    await Promise.all([refreshVirtualLabProjects(), refreshUserProjects()]);
-  }, [virtualLabId, projectId, refreshVirtualLabProjects, refreshUserProjects]);
-
   const costs = useMemo(
     () => ({
       key: 'costs',
@@ -71,13 +50,11 @@ export default function VirtualLabProjectAdmin({
       projectDetail.state === 'hasData' && userIsAdmin
         ? {
             key: 'danger-zone',
-            children: (
-              <DangerZonePanel onClick={onDeleteProject} name={projectDetail.data?.name || ''} />
-            ),
+            children: <DangerZonePanel />,
             label: 'Danger Zone',
           }
         : {},
-    [onDeleteProject, userIsAdmin, projectDetail]
+    [userIsAdmin, projectDetail]
   );
 
   const collapseItems: CollapseProps['items'] = useMemo(

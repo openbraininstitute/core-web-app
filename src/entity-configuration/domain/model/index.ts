@@ -1,8 +1,6 @@
 // TODO: this data type should be moved from this file
 import { DataType } from '@/constants/explore-section/list-views';
 
-export * from '@/entity-configuration/domain/model/circuit';
-
 export const MODEL_DATATYPES = [
   DataType.CircuitEModel,
   DataType.CircuitMEModel,

@@ -8,12 +8,13 @@ import {
 import { HTMLProps, ReactNode, useCallback, useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { Button, Spin } from 'antd';
+import { Button } from 'antd';
 import { loadable } from 'jotai/utils';
 
 import Link from 'next/link';
 import get from 'lodash/get';
 
+import { BaselineBookmarkAdd, BookmarkMinus } from '@/components/icons/EditorIcons';
 import {
   addBookmarksToProjectLibrary,
   deleteBookmarksFromProjectLibrary,
@@ -21,6 +22,7 @@ import {
 import { useAppNotification } from '@/components/notification';
 import { bookmarksForProjectAtomFamily } from '@/state/virtual-lab/bookmark';
 import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
+import { ToolbarButton } from '@/components/buttons/toolbar';
 import { resolveLibraryUrl } from '@/utils/url-builder';
 import { serverMessages } from '@/i18n/en/bookmark';
 import { classNames } from '@/util/utils';
@@ -35,7 +37,9 @@ type Props = {
   entityId: string;
   resourceId?: string;
   type: EntityTypeValue;
-  customButton?: (props: HTMLProps<HTMLButtonElement> & { loading?: boolean }) => ReactNode;
+  customButton?: (
+    props: HTMLProps<HTMLButtonElement> & { loading?: boolean; operation?: 'save' | 'remove' }
+  ) => ReactNode;
 };
 
 export default function BookmarkButton({
@@ -239,13 +243,13 @@ export default function BookmarkButton({
     );
   }, [bookmarks, dataType, entityId]);
 
-  if (bookmarks.state === 'loading') {
-    return (
-      <div className="flex w-32 items-center justify-center">
-        <Spin className="px-3 py-2" indicator={<LoadingOutlined />} />
-      </div>
-    );
-  }
+  // if (bookmarks.state === 'loading') {
+  //   return (
+  //     <div className="flex w-32 items-center justify-center">
+  //       <Spin className="px-3 py-2" indicator={<LoadingOutlined />} />
+  //     </div>
+  //   );
+  // }
 
   if (bookmarks.state === 'hasError') {
     return (
@@ -259,8 +263,9 @@ export default function BookmarkButton({
   const addButton = customButton ? (
     customButton({
       onClick: saveToLibrary,
-      children: 'Add to Library',
-      loading: isSaving,
+      children: 'Save to Library',
+      loading: isSaving || bookmarks.state === 'loading',
+      operation: 'save',
     })
   ) : (
     <Button
@@ -279,7 +284,8 @@ export default function BookmarkButton({
     customButton({
       onClick: removeFromLibrary,
       children: 'Remove from library',
-      loading: isRemoving,
+      loading: isRemoving || bookmarks.state === 'loading',
+      operation: 'remove',
     })
   ) : (
     <Button
@@ -294,4 +300,33 @@ export default function BookmarkButton({
     </Button>
   );
   return <>{isBookmarked || isSaved ? removeButton : addButton}</>;
+}
+
+export function DetailViewBookmarkButton({
+  children,
+  onClick,
+  loading,
+  operation,
+}: HTMLProps<HTMLButtonElement> & { loading?: boolean; operation?: 'save' | 'remove' }) {
+  return (
+    <button
+      type="button"
+      title={operation === 'save' ? 'Save to library' : 'Remove from library'}
+      disabled={!onClick || loading}
+      onClick={onClick}
+    >
+      <ToolbarButton
+        icon={
+          operation === 'save' ? (
+            <BaselineBookmarkAdd className="text-[21px]" />
+          ) : (
+            <BookmarkMinus className="text-[21px]" />
+          )
+        }
+        stateIcon={loading ? <LoadingOutlined className="text-[18px]" /> : undefined}
+      >
+        {children}
+      </ToolbarButton>
+    </button>
+  );
 }

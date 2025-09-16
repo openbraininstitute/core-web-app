@@ -1,22 +1,39 @@
+import { LoadingOutlined, WarningFilled } from '@ant-design/icons';
+import isNil from 'lodash/isNil';
+import find from 'lodash/find';
+import map from 'lodash/map';
+
+import { CircuitBuildCategory, CircuitScale } from '@/api/entitycore/types/entities/circuit';
 import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 import { DataType } from '@/constants/explore-section/list-views';
 import {
   EmptyPreview,
+  EmptyValue,
+  RenderCustomField,
+  renderDate,
+  renderEmail,
   renderEmptyOrValue,
   renderFloatNumber,
+  renderLocalizedNumber,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
 } from '@/entity-configuration/definitions/fields-defs/enums';
+import { EntityTypeEnum } from '@/api/entitycore/types';
 import { hasAssets } from '@/api/entitycore/guards';
 
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
-import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import {
+  countDeepSubCircuits,
+  ICircuitEnriched,
+} from '@/features/entities/circuit/elements/helpers';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.EModelExemplarMorphology]: {
@@ -61,14 +78,12 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.EModelResponse]: {
     title: 'Response',
     filter: null,
-    // use image field in nexus (waiting for entitycore to add image to emodel)
     render: (r) =>
       renderPreview(
         r as EntityCoreResource,
         { width: 184, height: 116 },
         'border border-neutral-3 h-full'
       ),
-    //  renderImage(r as IEModel, { width: 196, height: 116 }, 'my-4'),
     vocabulary: {
       plural: 'responses',
       singular: 'response',
@@ -142,5 +157,163 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'ME-model',
     },
     style: { width: 184, align: 'left' },
+  },
+  [EntityCoreFields.CircuitNumberNeurons]: {
+    title: 'Number of neurons',
+    filter: CoreFieldFilterTypeEnum.ValueRange,
+    render: (r) => {
+      return renderLocalizedNumber('number_neurons' in r ? r.number_neurons : null);
+    },
+    isDisplayable: true,
+    isFilterable: true,
+    defaultConstraint: {
+      lte: 'number_neurons__lte',
+      gte: 'number_neurons__gte',
+    },
+    style: { width: 85 },
+  },
+  [EntityCoreFields.CircuitNumberSynapses]: {
+    title: 'Number of synapses',
+    filter: CoreFieldFilterTypeEnum.ValueRange,
+    render: (r) => {
+      return renderLocalizedNumber('number_synapses' in r ? r.number_synapses : null);
+    },
+    isDisplayable: true,
+    isFilterable: true,
+    defaultConstraint: {
+      lte: 'number_synapses__lte',
+      gte: 'number_synapses__gte',
+    },
+    style: { width: 85 },
+  },
+  [EntityCoreFields.CircuitNumberConnections]: {
+    title: 'Number of connections',
+    filter: CoreFieldFilterTypeEnum.ValueRange,
+    render: (r) => {
+      return renderLocalizedNumber('number_connections' in r ? r.number_connections : null);
+    },
+    isDisplayable: true,
+    isFilterable: true,
+    defaultConstraint: {
+      lte: 'number_connections__lte',
+      gte: 'number_connections__gte',
+    },
+    style: { width: 85 },
+  },
+  [EntityCoreFields.CircuitBuildCategory]: {
+    className: 'text-left',
+    title: 'Build category',
+    filter: CoreFieldFilterTypeEnum.DropdownList,
+    filterData: map(CircuitBuildCategory, (item) => ({
+      label: item.label,
+      value: item.key,
+    })),
+    isFilterable: true,
+    isDisplayable: true,
+    render: (r) =>
+      renderEmptyOrValue(
+        find(CircuitBuildCategory, { key: (r as ICircuit).build_category })?.label
+      ),
+    defaultConstraint: 'build_category__in',
+    vocabulary: {
+      plural: 'Build categories',
+      singular: 'Build category',
+    },
+    style: { align: 'left' },
+  },
+  [EntityCoreFields.CircuitScale]: {
+    className: 'text-left',
+    title: 'Scale',
+    filter: CoreFieldFilterTypeEnum.DropdownList,
+    filterData: map(CircuitScale, (item) => ({
+      label: item.label,
+      value: item.key,
+    })),
+    defaultConstraint: 'scale__in',
+    isFilterable: true,
+    isDisplayable: true,
+    render: (r) => renderEmptyOrValue(find(CircuitScale, { key: (r as ICircuit).scale })?.label),
+    vocabulary: {
+      plural: 'Scales',
+      singular: 'Scale',
+    },
+    style: { width: 120, align: 'left' },
+  },
+  [EntityCoreFields.CircuitSubCircuit]: {
+    className: 'text-left',
+    title: 'Subcircuits',
+    filter: null,
+    isDisplayable: true,
+    render: (r) => {
+      if ('sub_circuits' in r) {
+        return countDeepSubCircuits(r as ICircuitEnriched) || EmptyValue;
+      }
+      return EmptyValue;
+    },
+    vocabulary: {
+      plural: 'Subcircuits',
+      singular: 'Subcircuit',
+    },
+    style: { width: 80, align: 'left' },
+  },
+  [EntityCoreFields.CircuitPublishedIn]: {
+    className: 'text-left',
+    title: 'Published in',
+    filter: null,
+    isDisplayable: true,
+    render: (r) => renderEmptyOrValue((r as ICircuit).published_in),
+    vocabulary: {
+      plural: 'Published in',
+      singular: 'Published in',
+    },
+  },
+  [EntityCoreFields.CircuitExperimentDate]: {
+    className: 'text-left',
+    title: 'Registration Date',
+    filter: null,
+    isDisplayable: true,
+    render: (r) => renderDate((r as ICircuit).experiment_date),
+    vocabulary: {
+      plural: 'Registration Date',
+      singular: 'Registration Date',
+    },
+  },
+  [EntityCoreFields.CircuitContactEmail]: {
+    className: 'text-left',
+    title: 'Contact email',
+    filter: null,
+    isDisplayable: true,
+    render: (r) => renderEmail((r as ICircuit).contact_email ?? 'bmeddah.ofc@gmail.com'),
+    vocabulary: {
+      plural: 'Registration Date',
+      singular: 'Registration Date',
+    },
+  },
+  [EntityCoreFields.CircuitRootCircuit]: {
+    className: 'text-left',
+    title: 'Root circuit',
+    filter: null,
+    isDisplayable: true,
+    renderForDetailView: (r) => {
+      if ('root_circuit_id' in r && !isNil(r.root_circuit_id))
+        return (
+          <RenderCustomField<ICircuit>
+            entityId={r.root_circuit_id}
+            entityType={EntityTypeEnum.Circuit}
+            CustomComponent={({ data, loading, error }) => {
+              if (loading) return <LoadingOutlined spin />;
+              if (error) return <WarningFilled className="text-amber-300" />;
+              return <>{data?.name}</>;
+            }}
+          />
+        );
+
+      return EmptyValue;
+    },
+    render: () => null,
+    vocabulary: {
+      plural: 'Registration Date',
+      singular: 'Registration Date',
+    },
   },
 };

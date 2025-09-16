@@ -41,6 +41,7 @@ export default function ListingView({ entity, projectId, virtualLabId }: Props) 
         projectId,
       }}
       dataKey={dataKey}
+      selectionType="checkbox"
       onCellClick={onCellClick}
     />
   );

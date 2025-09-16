@@ -24,6 +24,7 @@ import ContentModal from './ContentModal';
 import NotebookTabs from './NotebookTabs';
 import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
 import { EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
+import { startNotebook, NotebookStartResponse } from '@/services/notebooks';
 import useSearch from '@/components/VirtualLab/Search';
 
 import { downloadZippedNotebook } from '@/util/virtual-lab/github';
@@ -131,6 +132,33 @@ function NotebookTable({
     window.open(url, '_blank');
   };
 
+  const runNotebookOnEks = async (notebook: Notebook) => {
+    try {
+      const retval: NotebookStartResponse = await startNotebook(notebook, vlabId, projectId);
+      notification.success({
+        message: `Notebook starting`,
+        key: 'notebook-started-successfully',
+        placement: 'topRight',
+      });
+      window.open(retval.url, '_blank');
+    } catch (error) {
+      // Just show the hint message if we get some error
+      if (error instanceof Error && 'cause' in error) {
+        notification.error({
+          message: (error.cause as { error_code: string; hint: string }).hint,
+          key: 'notebook-error',
+          placement: 'topRight',
+        });
+      } else {
+        notification.error({
+          message: `Failed to start notebook, unknown error: ${error}`,
+          key: 'notebook-unknown-error',
+          placement: 'topRight',
+        });
+      }
+    }
+  };
+
   const handleDownloadClick = async (notebook: Notebook) => {
     setLoadingZip(true);
 
@@ -210,6 +238,22 @@ function NotebookTable({
                   >
                     <PlayCircleOutlined aria-label="Run" />
                     Run
+                  </button>
+                </div>
+              )}
+              {(env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'staging' ||
+                env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'development') && (
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-[10px]"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      runNotebookOnEks(notebook);
+                    }}
+                  >
+                    <PlayCircleOutlined aria-label="Run" />
+                    Run on EKS
                   </button>
                 </div>
               )}

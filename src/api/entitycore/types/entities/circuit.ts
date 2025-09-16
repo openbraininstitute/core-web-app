@@ -69,6 +69,9 @@ interface CircuitBase {
   build_category: TCircuitBuildCategoryDictionary;
   scale: TCircuitScaleDictionary;
   root_circuit_id: string;
+  experiment_date: string | null;
+  contact_email: string | null;
+  published_in: string | null;
 }
 
 export interface ICircuit
@@ -90,3 +93,58 @@ export interface ICircuitFilter
     SharedFilter,
     PaginationFilter,
     CircuitScaleFilter {}
+
+export type SonataCircuitNetworkEdgeConfigItem = {
+  edges_file: string;
+  populations: Record<
+    string,
+    {
+      type: string;
+    }
+  >;
+};
+
+export type SonataCircuitNetworkNodeConfigItem = {
+  nodes_file: string;
+  populations: Record<
+    string,
+    {
+      type: 'biophysical' | 'virtual';
+      biophysical_neuron_models_dir?: string;
+      morphologies_dir?: string;
+      alternate_morphologies?: Record<string, string>;
+    }
+  >;
+};
+
+export type SonataCircuitConfigNetworks = {
+  edges: Array<SonataCircuitNetworkEdgeConfigItem>;
+  nodes: Array<SonataCircuitNetworkNodeConfigItem>;
+};
+
+export type SonataCircuitComponentConfig = {
+  biophysical_neuron_models_dir: string;
+  mechanisms_dir: string;
+  morphologies_dir: string;
+  point_neuron_models_dir: string;
+  provenance: {
+    id_mapping: string;
+  };
+  synaptic_models_dir: string;
+  templates_dir: string;
+};
+
+export type ICircuitSonataConfiguration = {
+  components: SonataCircuitComponentConfig;
+  networks: SonataCircuitConfigNetworks;
+  node_sets_file: string;
+  version: number;
+  manifest: {
+    [key: string]: string;
+  };
+};
+
+export type CircuitConnectivityMatricesConfiguration = Record<
+  string,
+  Record<string, { description: string; path: string }>
+>;

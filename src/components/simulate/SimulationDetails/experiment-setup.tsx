@@ -10,7 +10,7 @@ import ErrorData from '@/components/message-banners/error';
 
 import { classNames } from '@/util/utils';
 
-import type { SimulationPayload } from '@/types/simulation/single-neuron';
+import type { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
 import type { IMEModel } from '@/api/entitycore/types';
 
 type TabKeys = 'configuration' | 'results' | 'analysis';

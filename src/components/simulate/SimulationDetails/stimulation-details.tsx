@@ -5,7 +5,7 @@ import {
   SIMULATION_COLORS,
 } from '@/constants/simulate/single-neuron';
 import { PlotData } from '@/services/bluenaas-single-cell/types';
-import { CurrentInjectionSimulationConfig } from '@/types/simulation/single-neuron';
+import { CurrentInjectionSimulationConfig } from '@/types/small-scale-simulator/single-neuron';
 import { classNames } from '@/util/utils';
 
 type Props = {

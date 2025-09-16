@@ -37,7 +37,7 @@ export default function CircuitTable({
   const [, setFilter] = useAtom(setFilterAtom);
 
   // VIEWS
-  const [toggle, setToggle] = useState<'hierarchical' | 'flat'>('hierarchical');
+  const [toggle] = useState<'hierarchical' | 'flat'>('hierarchical');
 
   // SCROLL BEHAVIOR
   const [isAtStart, setIsAtStart] = useState<boolean>(true);
@@ -361,7 +361,7 @@ export default function CircuitTable({
               numberOfFilters={Object.values(filters).filter((f) => f !== null).length}
               numberOfActiveColumns={columnState.filter((col) => col.isActive).length}
             />
-            <ViewToggle toggle={toggle} setToggle={setToggle} />
+            <ViewToggle dataKey="" />
           </div>
         </div>
       )}

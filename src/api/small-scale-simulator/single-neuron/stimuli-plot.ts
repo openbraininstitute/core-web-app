@@ -4,7 +4,7 @@ import type { WorkspaceContext } from '@/types/common';
 import type {
   CurrentInjectionGraphRequest,
   CurrentInjectionGraphResponse,
-} from '@/types/simulation/graph';
+} from '@/types/small-scale-simulator/graph';
 import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 
 type Params = {

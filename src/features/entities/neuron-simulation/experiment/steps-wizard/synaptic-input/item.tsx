@@ -36,7 +36,7 @@ import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
 
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import type { UpdateSynapseSimulationProperty } from '@/types/simulation/single-neuron';
+import type { UpdateSynapseSimulationProperty } from '@/types/small-scale-simulator/single-neuron';
 import type { SynapsesConfiguration } from '@/types/synaptome';
 import type { SectionSynapses } from '@/state/synaptome';
 import type { WorkspaceContext } from '@/types/common';

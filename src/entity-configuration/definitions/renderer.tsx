@@ -1,25 +1,31 @@
 'use client';
 
-import { Button, Empty, Modal } from 'antd';
 import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
-import find from 'lodash/find';
+import { JSX, ReactNode, useEffect, useState } from 'react';
+import { Button, Empty, Modal } from 'antd';
+import { useParams } from 'next/navigation';
 import isEmpty from 'lodash/isEmpty';
 import isNil from 'lodash/isNil';
-import { ReactNode, useState } from 'react';
-import { ProcessedContributor } from './fields-defs/common';
+import find from 'lodash/find';
 
-import PreviewThumbnail from '@/features/thumbnail/preview';
+import { ProcessedContributor } from '@/entity-configuration/definitions/fields-defs/common';
+import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
+import { PreviewThumbnail } from '@/features/thumbnail/preview';
+import { tryCatch } from '@/api/utils';
 
+import type { IReconstructionMorphologyExpanded } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import type { WorkspaceContext } from '@/types/common';
 import type {
-  EntityCoreDensityObjectTypes,
-  IReconstructionMorphology,
-} from '@/api/entitycore/types';
-import { IReconstructionMorphologyExpanded } from '@/api/entitycore/types/entities/reconstruction-morphology';
-import type {
+  EntityCoreIdentifiable,
   EntityCoreResource,
   ILicense,
   MeasurementBase,
 } from '@/api/entitycore/types/shared/global';
+import type {
+  EntityCoreDensityObjectTypes,
+  EntityTypeValue,
+  IReconstructionMorphology,
+} from '@/api/entitycore/types';
 
 export const EmptyValue = '—';
 
@@ -77,10 +83,64 @@ export const renderDictionaryKeys = (
   );
 };
 
-export const renderDate = (isoDateString: string) => {
-  if (!isoDateString) return EmptyValue;
+export const renderDate = (isoDateString?: string | null) => {
+  if (isNil(isoDateString)) return EmptyValue;
   return format(parseISO(isoDateString), 'dd.MM.yyyy');
 };
+
+export const renderEmail = (email?: string | null) => {
+  if (isNil(email)) return EmptyValue;
+  return (
+    <a href={`mailto:${email}`} className="text-primary-8 hover:underline">
+      {email}
+    </a>
+  );
+};
+
+export function RenderCustomField<R extends EntityCoreIdentifiable>({
+  entityId,
+  entityType,
+  CustomComponent,
+}: {
+  entityId: string;
+  entityType: EntityTypeValue;
+  CustomComponent: ({
+    data,
+    loading,
+    error,
+  }: {
+    data?: R | null;
+    loading?: boolean;
+    error?: string | null;
+  }) => JSX.Element;
+}) {
+  const [payload, setPayload] = useState<{
+    entity: null | R;
+    error: string | null;
+    loading: boolean;
+  } | null>(null);
+  const { virtualLabId, projectId } = useParams<WorkspaceContext>();
+  const entityConfig = getEntityByCoreType({ type: entityType });
+
+  useEffect(() => {
+    async function getEntity() {
+      setPayload({ entity: null, error: null, loading: true });
+      if (entityConfig && entityConfig.api.query.one) {
+        const { data, error } = await tryCatch<R, any>(
+          // @ts-ignore
+          entityConfig.api.query.one({ id: entityId, context: { virtualLabId, projectId } })
+        );
+        if (data) setPayload({ entity: data, error: null, loading: false });
+        if (error) setPayload({ entity: null, error: 'error loading entity', loading: false });
+      }
+    }
+    getEntity();
+  }, [entityId, entityType, virtualLabId, projectId, entityConfig]);
+
+  return (
+    <CustomComponent loading={payload?.loading} error={payload?.error} data={payload?.entity} />
+  );
+}
 
 export const renderTimestamp = (timestamp: Date) => {
   if (isValid(timestamp)) return formatDistanceToNow(timestamp, { addSuffix: true });
@@ -130,6 +190,19 @@ export function renderMeanStd({
     ? `${renderFloatNumber(mean?.value)} ± ${renderFloatNumber(std?.value)}`
     : `${renderFloatNumber(mean?.value)}`;
   return <>{field}</>;
+}
+
+export function renderLocalizedNumber(
+  value: number | null,
+  options?: Intl.NumberFormatOptions
+): string {
+  if (typeof value !== 'number' || Number.isNaN(value)) return EmptyValue;
+
+  return new Intl.NumberFormat('de-CH', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+    ...options,
+  }).format(value);
 }
 
 /**

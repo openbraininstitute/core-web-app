@@ -11,6 +11,7 @@ import {
 import { getEntitiesCount } from '@/api/entitycore/queries/general/entity';
 import { findParentIds } from '@/features/brain-region-hierarchy/helpers';
 import { getElectricalCellRecordings } from '@/api/entitycore/queries';
+import { tempIsCircuitInDev } from '@/temp-circuit-check';
 import { EntityTypeEnum } from '@/api/entitycore/types';
 import { tryCatch } from '@/api/utils';
 
@@ -43,6 +44,7 @@ export const entitiesCountAtom = atomFamily(
             'single_neuron_synaptome',
             'memodel',
             'emodel',
+            ...(tempIsCircuitInDev() ? (['circuit'] as const) : []),
           ],
           brainRegion: {
             within_brain_region_hierarchy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,

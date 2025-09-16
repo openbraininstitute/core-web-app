@@ -124,7 +124,6 @@ export const SimulationCampaign: EntityCoreTypeConfig<ICircuitSimulationCampaign
   legacyType: DataType.SimulationCampaign,
   type: EntityTypeEnum.SimulationCampaign,
   slug: EntitySlug.SimulationCampaign,
-  isBookmarkable: true,
   api: {
     config: {
       allowedFacets: true,
@@ -142,4 +141,8 @@ export const SimulationCampaign: EntityCoreTypeConfig<ICircuitSimulationCampaign
   asset: {
     extension: 'application/json',
   },
+  isBookmarkable: true,
+  isDownloadable: false,
+  isCopyable: true,
+  isSimulatable: false,
 } as const;
