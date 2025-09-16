@@ -15,7 +15,7 @@ import { HierarchyOutputNode } from '@/features/entities/circuit/elements/contex
 import { expandIcon } from '@/features/entities/circuit/elements/expand-icon';
 import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+import { resolveExploreDetailsPageUrl2 } from '@/utils/url-builder';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 
 import type { ICircuitEnriched } from '@/features/entities/circuit/elements/helpers';
@@ -53,8 +53,9 @@ export function Subcircuits({ data }: Props) {
   const columns = cols.filter(({ key }) => (activeColumns || []).includes(key as string));
 
   const onCellClick = (basePath: string, record: ICircuit) => {
+    console.log('\n\n here');
     navigate(
-      resolveExploreDetailsPageUrl({
+      resolveExploreDetailsPageUrl2({
         ctx: { virtualLabId, projectId },
         dataType: ExtendedEntitiesTypeDict.Circuit,
         entityId: record.id,

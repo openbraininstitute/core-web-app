@@ -10,7 +10,7 @@ import { activeColumnsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { Error } from '@/features/entities/circuit/elements/error';
-import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+import { resolveExploreDetailsPageUrl2 } from '@/utils/url-builder';
 import { tryCatch } from '@/api/utils';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -56,7 +56,7 @@ export function Root({ circuit }: Props) {
 
   const onCellClick = (basePath: string, record: ICircuit) => {
     navigate(
-      resolveExploreDetailsPageUrl({
+      resolveExploreDetailsPageUrl2({
         ctx: { virtualLabId, projectId },
         dataType: ExtendedEntitiesTypeDict.Circuit,
         entityId: record.id,
