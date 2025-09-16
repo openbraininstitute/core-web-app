@@ -15,7 +15,7 @@ import type {
 } from '@/api/entitycore/types/entities/single-neuron-simulation';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
-import type { SimulationPayload } from '@/types/simulation/single-neuron';
+import type { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
 
 const baseUri = '/single-neuron-simulation';
 

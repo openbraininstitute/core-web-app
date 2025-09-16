@@ -1,7 +1,7 @@
 /* eslint-disable no-param-reassign */
 import { Camera, Object3D, Scene, Vector3 } from 'three';
 
-import { RecordLocation } from '@/types/simulation/single-neuron';
+import { RecordLocation } from '@/types/small-scale-simulator/single-neuron';
 import { getSimulationColor } from '@/constants/simulate/single-neuron';
 
 interface LabelToDraw {

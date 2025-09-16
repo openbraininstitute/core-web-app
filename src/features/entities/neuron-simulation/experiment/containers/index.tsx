@@ -16,8 +16,8 @@ import { defaultSteps, simulateStepTrackerAtom } from '@/state/simulate/single-n
 import { resetSimulationAtom } from '@/state/simulate/single-neuron-setter';
 
 import type { SingleNeuronSynaptomePayload } from '@/features/entities/neuron-simulation/experiment/containers/synaptome';
-import type { SimulationConfiguration } from '@/types/simulation/single-neuron';
-import type { SimulationStepTitle } from '@/types/simulation/common';
+import type { SimulationConfiguration } from '@/types/small-scale-simulator/single-neuron';
+import type { SimulationStepTitle } from '@/types/small-scale-simulator/common';
 
 type SynaptomeProps = {
   type: 'synaptome-simulation';

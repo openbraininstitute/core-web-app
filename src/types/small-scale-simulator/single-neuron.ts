@@ -1,3 +1,4 @@
+import { ApiError } from './common';
 import { PlotData } from '@/services/bluenaas-single-cell/types';
 
 export enum SimulationTypeNames {
@@ -105,12 +106,6 @@ export type ProtocolDetails = {
   };
 };
 
-type BluenaasError = {
-  details: string;
-  message: string;
-  error_code: string;
-};
-
 export type SimulationStreamData = {
   name: string;
   amplitude?: number;
@@ -121,6 +116,6 @@ export type SimulationStreamData = {
   y: Array<number>;
 };
 
-export const isBluenaasError = (obj: Object): obj is BluenaasError => {
+export const isBluenaasError = (obj: Object): obj is ApiError => {
   return 'details' in obj && 'message' in obj && 'error_code' in obj;
 };
