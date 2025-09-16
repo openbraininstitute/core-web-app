@@ -16,7 +16,7 @@ import {
   stimulusTypeParams,
 } from '@/constants/simulate/single-neuron';
 
-import type { StimulusModule } from '@/types/simulation/single-neuron';
+import type { StimulusModule } from '@/types/small-scale-simulator/single-neuron';
 
 type Props = {
   modelId: string;

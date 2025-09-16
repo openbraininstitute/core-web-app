@@ -1,7 +1,5 @@
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   CheckCircleFilled,
   LoadingOutlined,
@@ -9,44 +7,43 @@ import {
   SettingFilled,
   WarningFilled,
 } from '@ant-design/icons';
-import { z } from 'zod';
-import kebabCase from 'lodash/kebabCase';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import isNil from 'lodash/isNil';
+import kebabCase from 'lodash/kebabCase';
+import omit from 'lodash/omit';
 import Link from 'next/link';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { z } from 'zod';
 
-import { DEFAULT_SYNAPSE_VALUE } from '@/features/entities/single-neuron-synaptome/build/elements/synapse-config-form';
-import { SynapseSetMenuItems } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-set-menu-item';
-import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
+import { SingleNeuronSynaptomeBaseSchema } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
-import {
-  useBuildSingleNeuronSynaptomeSessionState,
-  BuildStepKeys,
-  BuildStep,
-} from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import {
-  SingleNeuronSynaptomeBaseSchema,
-  SingleNeuronSynaptomeConfigurationSchema,
-} from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import { createJsonAsset } from '@/api/entitycore/queries/assets';
-import { useAppNotification } from '@/components/notification';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { OneshotSession } from '@/services/accounting';
-import { ServiceSubtype } from '@/types/accounting';
-import { messages } from '@/i18n/en/synaptome';
-import { Button } from '@/ui/molecules/button';
 import { tryCatch } from '@/api/utils';
-import { cn } from '@/utils/css-class';
+import { useAppNotification } from '@/components/notification';
 import { ROOT_ROUTE } from '@/config';
+import { DEFAULT_SYNAPSE_VALUE } from '@/features/entities/single-neuron-synaptome/build/elements/synapse-config-form';
+import { messages } from '@/i18n/en/synaptome';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Button } from '@/ui/molecules/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import {
+  BuildStep,
+  BuildStepKeys,
+  useBuildSingleNeuronSynaptomeSessionState,
+} from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import { SynapseSetMenuItems } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-set-menu-item';
+import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { cn } from '@/utils/css-class';
 
-import type { IAsset } from '@/api/entitycore/types/shared/global';
-import type {
-  ISingleNeuronSynaptome,
-  TSingleNeuronSynaptomeConfiguration,
-} from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import { createSingleNeuronSynaptome } from '@/api/small-scale-simulator';
+import { CreateSingleNeuronSynaptomeSchema } from '@/api/small-scale-simulator/types';
+import { WorkspaceContextSchema } from '@/types/common';
+
+const CreateSingleNeuronSynaptomeContextSchema =
+  CreateSingleNeuronSynaptomeSchema.merge(WorkspaceContextSchema);
+type TCreateSingleNeuronSynaptomeContext = z.infer<typeof CreateSingleNeuronSynaptomeContextSchema>;
 
 type Props = { sessionId: string };
 
@@ -113,57 +110,32 @@ export function Menu({ sessionId }: Props) {
     seed: sessionValue?.seed,
   }).success;
 
+  const payload: Partial<TCreateSingleNeuronSynaptomeContext> = {
+    virtualLabId,
+    projectId,
+    name: sessionValue?.name,
+    description: sessionValue?.description || '',
+    memodel_id: sessionValue?.memodel?.id,
+    seed: sessionValue?.seed,
+    brain_region_id: sessionValue?.memodel?.brain_region?.id,
+    config: { synapses: Array.from(sessionValue?.synapseSets?.values() ?? []).map((o) => o) },
+  };
+
   const buildSynaptome = async () => {
-    const validationPromises = Array.from(sessionValue?.synapseSets?.entries() ?? []).map(
-      ([, value]) => SingleNeuronSynaptomeConfigurationSchema.safeParseAsync(value)
+    const validatedPayload = await CreateSingleNeuronSynaptomeContextSchema.parseAsync(payload);
+
+    const { data, error } = await tryCatch(
+      createSingleNeuronSynaptome({
+        ctx: { virtualLabId, projectId },
+        modelInfo: omit(validatedPayload, ['virtualLabId', 'projectId']),
+      })
     );
-    const sets = (await Promise.all(validationPromises)).filter((o) => o.success);
 
-    const build = async () => {
-      const { data, error } = await tryCatch(
-        SingleNeuronSynaptome.api.query.create!({
-          context: { virtualLabId, projectId },
-          body: {
-            brain_region_id: sessionValue?.memodel?.brain_region.id,
-            name: sessionValue?.name,
-            description: sessionValue?.description || '',
-            seed: sessionValue?.seed,
-            me_model_id: sessionValue?.memodel?.id,
-          },
-        })
-      );
-      if (error) throw new Error(messages.CreateSynaptomeEntityFailed);
+    if (error) throw new Error(messages.CreateSynaptomeEntityFailed);
 
-      const { data: assetData, error: err } = await tryCatch(
-        createJsonAsset({
-          ctx: { virtualLabId, projectId },
-          entityId: data?.id,
-          entityType: SingleNeuronSynaptome.type,
-          path: `${SingleNeuronSynaptome.asset.configfile}_${data?.id}`,
-          label: SingleNeuronSynaptome.asset.configfile,
-          payload: { synapses: sets.map((o) => o.data) },
-        })
-      );
-
-      if (err) throw new Error(messages.CreateConfigurationAssetFailed);
-      return {
-        entity: data,
-        asset: assetData,
-      };
+    return {
+      entity: data.data,
     };
-
-    const accountingSession = new OneshotSession({
-      virtualLabId,
-      projectId,
-      subtype: ServiceSubtype.SynaptomeBuild,
-      count: 1,
-    });
-    const result = await accountingSession.useWith<{
-      entity: ISingleNeuronSynaptome;
-      asset: IAsset;
-    } | null>(build);
-
-    return result;
   };
 
   const mutate = useMutation({

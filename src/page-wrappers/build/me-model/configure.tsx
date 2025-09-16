@@ -12,8 +12,8 @@ import EModelOverviewCard from '@/features/entities/me-model/detail-view/card-vi
 import MorphologyOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/morphology-overview-card';
 // import CustomButton from '@/components/buttons/custom-btn';
 
-import { createMEModel } from '@/api/entitycore/queries';
-import { CreateMEModelSchema, ValidationStatus } from '@/api/entitycore/types/entities/me-model';
+import { createModel } from '@/api/small-scale-simulator/single-neuron/single-neuron';
+import { CreateSingleNeuronSchema } from '@/api/small-scale-simulator/types';
 import { tryCatch } from '@/api/utils';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { renderArray, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
@@ -21,24 +21,20 @@ import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { activityAtomFamily } from '@/features/activity-view/context';
 import { useBuildMeModelSessionState } from '@/features/entities/me-model/build/create.state-session';
 import { messages } from '@/i18n/en/me-model';
-import { OneshotSession } from '@/services/accounting';
 import { useEntitiesCountAtom } from '@/services/entitycore/entities-count';
-import { runSingleNeuronAnalysis } from '@/services/small-scale-simulator';
 import { useRefreshDataAtom } from '@/state/explore-section/list-view-atoms';
 import { virtualLabProjectUsersAtomFamily } from '@/state/virtual-lab/projects';
-import { ServiceSubtype } from '@/types/accounting';
 import { WorkspaceContextSchema } from '@/types/common';
 import { classNames } from '@/util/utils';
 import { resolveDataKey } from '@/utils/key-builder';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
-import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { WorkspaceContext } from '@/types/common';
 
 const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
 
-const CreateMeModelContextSchema = CreateMEModelSchema.merge(WorkspaceContextSchema);
-type TCreateMeModelContext = z.infer<typeof CreateMeModelContextSchema>;
+const CreateSingleNeuronContextSchema = CreateSingleNeuronSchema.merge(WorkspaceContextSchema);
+type TCreateSingleNeuronContext = z.infer<typeof CreateSingleNeuronContextSchema>;
 
 function Header({ stateId, virtualLabId, projectId }: WorkspaceContext & { stateId: string }) {
   const { sessionValue } = useBuildMeModelSessionState({
@@ -194,7 +190,7 @@ export default function Configure({ ctx, searchParams }: Props) {
   };
 
   const buildMeModel = async () => {
-    const body: Partial<TCreateMeModelContext> = {
+    const body: Partial<TCreateSingleNeuronContext> = {
       virtualLabId: ctx.virtualLabId,
       projectId: ctx.projectId,
       name: sessionValue.name,
@@ -204,28 +200,19 @@ export default function Configure({ ctx, searchParams }: Props) {
       species_id: sessionValue.mmodel?.subject.species.id,
       brain_region_id: sessionValue.mmodel?.brain_region.id ?? sessionValue.brainRegion?.id,
       strain_id: sessionValue.mmodel?.subject.strain?.id ?? null,
-      validation_status: ValidationStatus.Initialized,
     };
     const { error: validationError, data: validationData } =
-      await CreateMeModelContextSchema.safeParseAsync(body);
+      await CreateSingleNeuronContextSchema.safeParseAsync(body);
     if (validationError) {
       showErrorNotification(validationError, 'validation');
       return { data: null, error: validationError, errorType: 'validation' as const };
     }
-    const accountingSession = new OneshotSession({
-      subtype: ServiceSubtype.SingleCellBuild,
-      virtualLabId: ctx.virtualLabId,
-      projectId: ctx.projectId,
-      count: 1,
-    });
 
     const { data, error } = await tryCatch(
-      accountingSession.useWith<IMEModel>(() =>
-        createMEModel({
-          body: omit(validationData, ['virtualLabId', 'projectId']),
-          context: ctx,
-        })
-      ),
+      createModel({
+        modelInfo: omit(validationData, ['virtualLabId', 'projectId']),
+        ctx,
+      }),
       undefined,
       {
         section: 'build/create-me-model',
@@ -248,21 +235,16 @@ export default function Configure({ ctx, searchParams }: Props) {
         return;
       }
 
-      try {
-        await runSingleNeuronAnalysis({ ctx, modelId: data.id });
-      } catch (runAnalysisError) {
-        const message = messages.RunAnalysisError;
-        notification.error({ message, duration: 20 });
-      }
+      const model = data.data;
 
       refreshDataAtom();
       refreshActivityAtom();
-      refreshEntityCountsToParent(data.brain_region.id);
+      refreshEntityCountsToParent(model.brain_region.id);
       navigate(
         resolveExploreDetailsPageUrl({
           ctx,
           dataType: ExtendedEntitiesTypeDict.Memodel,
-          entityId: data.id,
+          entityId: model.id,
         })
       );
     });

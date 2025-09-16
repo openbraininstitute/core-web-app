@@ -9,7 +9,7 @@ import dynamic from 'next/dynamic';
 import { synaptomeSimulationConfigAtom } from '@/state/simulate/categories/synaptome-simulation-config';
 import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
 import { useCurrentInjectionSimulationConfig } from '@/state/simulate/categories';
-import { StimulusModule } from '@/types/simulation/single-neuron';
+import { StimulusModule } from '@/types/small-scale-simulator/single-neuron';
 import { secNamesAtom } from '@/state/simulate/single-neuron';
 import { Switch } from '@/components/common/Switch';
 import {

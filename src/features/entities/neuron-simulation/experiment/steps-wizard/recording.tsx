@@ -6,8 +6,8 @@ import isNil from 'lodash/isNil';
 
 import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
 import { useRecordingSourceForSimulation } from '@/state/simulate/categories';
+import { RecordLocation } from '@/types/small-scale-simulator/single-neuron';
 import { getSimulationColor } from '@/constants/simulate/single-neuron';
-import { RecordLocation } from '@/types/simulation/single-neuron';
 import { secNamesAtom } from '@/state/simulate/single-neuron';
 import { classNames } from '@/util/utils';
 

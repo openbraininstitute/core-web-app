@@ -1,7 +1,7 @@
 import { atomFamily, atomWithReset } from 'jotai/utils';
 
-import { SimulationStep, SimulationStepsTracker } from '@/types/simulation/common';
 import type { PlotData } from '@/services/bluenaas-single-cell/types';
+import { SimulationStep, SimulationStepsTracker } from '@/types/small-scale-simulator/common';
 
 export const defaultSteps: Array<SimulationStep> = [
   { title: 'Experimental setup', status: undefined },

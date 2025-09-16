@@ -3,7 +3,7 @@ import type { JSX } from 'react';
 import StepTabs from '@/features/entities/neuron-simulation/experiment/elements/step-tabs';
 import DefaultLoadingSuspense from '@/components/DefaultLoadingSuspense';
 
-import type { SimulationType } from '@/types/simulation/common';
+import type { SimulationType } from '@/types/small-scale-simulator/common';
 
 type Props = {
   viewer: JSX.Element | null;

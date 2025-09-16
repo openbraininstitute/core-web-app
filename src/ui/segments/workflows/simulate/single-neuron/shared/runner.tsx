@@ -29,7 +29,7 @@ import {
   simulateStepTrackerAtom,
   simulationStatusAtomFamily,
 } from '@/state/simulate/single-neuron';
-import { SimulationType } from '@/types/simulation/common';
+import { SimulationType } from '@/types/small-scale-simulator/common';
 import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 import { readNdjsonResponse } from '@/utils/response';
 import { updateArray } from '@/util/updateArray';
@@ -51,7 +51,7 @@ import type {
 import type {
   SimulationStreamData,
   SingleNeuronModelSimulationConfig,
-} from '@/types/simulation/single-neuron';
+} from '@/types/small-scale-simulator/single-neuron';
 
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
 
