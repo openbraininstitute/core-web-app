@@ -53,7 +53,6 @@ export function Subcircuits({ data }: Props) {
   const columns = cols.filter(({ key }) => (activeColumns || []).includes(key as string));
 
   const onCellClick = (basePath: string, record: ICircuit) => {
-    console.log('\n\n here');
     navigate(
       resolveExploreDetailsPageUrl2({
         ctx: { virtualLabId, projectId },

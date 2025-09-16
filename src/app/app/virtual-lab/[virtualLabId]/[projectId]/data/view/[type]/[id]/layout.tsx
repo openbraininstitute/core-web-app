@@ -67,7 +67,7 @@ export default async function Layout({
     ctx: { virtualLabId, projectId },
   });
 
-  const parentLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}`;
+  const parentLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}`;
 
   return (
     <>
