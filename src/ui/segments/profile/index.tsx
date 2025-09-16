@@ -31,13 +31,12 @@ function Header({ onClose }: { onClose: () => void }) {
     : data?.profile.preferred_username;
 
   return (
-    <div className="flex items-center justify-between py-2 text-white">
+    <div className="flex items-center justify-between py-2 text-white select-none">
       <div>
-        <h2 className="text-lg font-semibold">
-          <span className="text-primary-4 font-light">Profile</span>
-          <span className="ml-2 text-xl font-bold text-white">{userName}</span>
+        <h2 className="flex flex-col text-lg font-semibold">
+          <span className="text-primary-4 text-xl font-light">Profile</span>
+          <span className="text-3xl font-bold text-white">{userName}</span>
         </h2>
-        <p className="text-neutral-2 text-sm">Manage your profile information and subscription.</p>
       </div>
       <Button type="button" onClick={onClose} className="h-10 w-10 hover:bg-white/10">
         <CloseOutlined />

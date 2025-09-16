@@ -35,7 +35,7 @@ export function Shortcuts() {
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
   return (
-    <div className="mb-4">
+    <div className="mb-10">
       <div className="text-primary-9 mb-4 text-lg font-semibold">Would you like to: </div>
       <div className="flex grid-cols-3 flex-col items-start justify-start gap-2 lg:grid">
         {links.map(({ key, title, url }) => (

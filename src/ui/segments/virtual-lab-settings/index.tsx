@@ -25,15 +25,23 @@ function Header({
 }) {
   const name = virtualLab?.isMine ? 'My virtual lab' : virtualLab?.name;
   const subtitle = virtualLab?.isMine ? virtualLab.name : null;
+  const numberOfProjects = virtualLab?.projects_count ?? 0;
   return (
     <div className="flex items-center justify-between py-4 text-white">
       <div className="flex flex-col gap-0.5">
-        <h2 className="text-xl font-bold select-none">{name}</h2>
-        {subtitle && <small className="text-primary-2">{subtitle}</small>}
+        <h2 className="text-3xl font-bold select-none">{name}</h2>
+        {subtitle && <small className="text-primary-2 text-lg">{subtitle}</small>}
       </div>
-      <Button type="button" onClick={onClose} className="h-10 w-10 hover:bg-white/10">
-        <CloseOutlined />
-      </Button>
+      <div className="flex items-center justify-center gap-1.5">
+        {!!numberOfProjects && (
+          <p className="text-primary-3 w-max">
+            {numberOfProjects} {numberOfProjects > 1 ? 'projects' : 'project'}
+          </p>
+        )}
+        <Button type="button" onClick={onClose} className="h-10 w-10 hover:bg-white/10">
+          <CloseOutlined />
+        </Button>
+      </div>
     </div>
   );
 }
