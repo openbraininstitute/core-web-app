@@ -4,7 +4,8 @@ import { DownloadOutlined } from '@ant-design/icons';
 import { Button, Spin } from 'antd';
 import lodashSet from 'lodash/set';
 import Plotly, { Config, Layout } from 'plotly.js-dist-min';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
+import { parsePlots } from './plots-groups';
 
 import LegendItem from '@/features/entities/neuron-simulation/experiment/visualization/legend-item';
 import type { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
@@ -93,6 +94,8 @@ export default function PlotRenderer({
   const containerRef = useRef<HTMLDivElement>(null);
   const [initialized, setInitialized] = useState<boolean>(false);
   const [refreshLegend, setRefreshLegend] = useState(false);
+  const plotInstances = useMemo(() => parsePlots(data), [data]);
+  console.log('🚀 [plot-renderer] plotInstances =', plotInstances); // @FIXME: Remove this line written on 2025-09-16 at 12:56
 
   const onDownloadPlotDataCsv = () => {
     exportSingleSimulationResultAsZip({
@@ -113,13 +116,11 @@ export default function PlotRenderer({
       lodashSet(PLOT_LAYOUT, 'yaxis.title.text', plotConfig.yAxisTitle);
     }
 
-    console.log('🚀 [plot-renderer] data =', data); // @FIXME: Remove this line written on 2025-09-01 at 14:32
-    console.log('🚀 [plot-renderer] plotConfig =', plotConfig); // @FIXME: Remove this line written on 2025-09-01 at 14:36
     if (!initialized) {
-      Plotly.newPlot(container, data, PLOT_LAYOUT, PLOT_CONFIG);
+      Plotly.newPlot(container, data, setYAxisTitle(PLOT_LAYOUT, data), PLOT_CONFIG);
       setInitialized(true);
     } else {
-      Plotly.react(container, data, PLOT_LAYOUT, PLOT_CONFIG);
+      Plotly.react(container, data, setYAxisTitle(PLOT_LAYOUT, data), PLOT_CONFIG);
     }
 
     // eslint-disable-next-line consistent-return
@@ -222,4 +223,29 @@ export default function PlotRenderer({
       </div>
     </div>
   );
+}
+
+/**
+ * This function is used to provide backward compatibility.
+ * In the old format returned by BlueNaas, we didin't have
+ * neither `variable_name` nor `unit` attributes.
+ * The `layout` was used to define the axis title and was
+ * filled with a static text.
+ * Now, if we have the new attributes, we use them to build
+ * a more meaningful Y axis title.
+ */
+function setYAxisTitle(layout: Partial<Plotly.Layout>, data: PlotData): Partial<Plotly.Layout> {
+  const lastItem = data?.at(-1);
+  if (!lastItem?.variable_name || !lastItem?.unit) return layout;
+
+  const correctedLayout = structuredClone(layout);
+  if (!correctedLayout.yaxis) correctedLayout.yaxis = {};
+  if (!correctedLayout.yaxis.title) correctedLayout.yaxis.title = {};
+  const titleText = `${lastItem.variable_name} (${lastItem.unit})`;
+  if (typeof correctedLayout.yaxis.title === 'string') {
+    correctedLayout.yaxis.title = titleText;
+  } else {
+    correctedLayout.yaxis.title.text = titleText;
+  }
+  return correctedLayout;
 }

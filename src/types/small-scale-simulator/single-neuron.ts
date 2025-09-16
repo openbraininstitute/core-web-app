@@ -114,6 +114,8 @@ export type SimulationStreamData = {
   varying_key: string;
   x: Array<number>;
   y: Array<number>;
+  variable_name?: string;
+  unit?: string;
 };
 
 export const isBluenaasError = (obj: Object): obj is ApiError => {
