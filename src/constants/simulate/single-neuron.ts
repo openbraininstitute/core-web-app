@@ -11,7 +11,7 @@ import {
   StimulusConfig,
   StimulusModule,
   SynapseConfig,
-} from '@/types/simulation/single-neuron';
+} from '@/types/small-scale-simulator/single-neuron';
 
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { SynapseType } from '@/components/neuron-viewer/hooks/events';
@@ -126,6 +126,7 @@ const DEFAULT_SECTION = 'soma[0]';
 export const DEFAULT_RECORDING_LOCATION: RecordLocation = {
   section: DEFAULT_SECTION,
   offset: 0.5,
+  recordCurrents: false,
 };
 
 export const DEFAULT_SIMULATION_EXPERIMENTAL_SETUP: SimulationExperimentalSetup = {

@@ -12,7 +12,7 @@ export type CsvEntryBase = {
   subject_name: string;
   species_name: string;
   brain_region: string;
-  contribution: string;
+  contributors: string;
 };
 
 export type CsvEntry = CsvEntryBase & {

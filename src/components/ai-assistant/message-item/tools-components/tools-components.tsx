@@ -2,7 +2,7 @@ import React from 'react';
 import { UIMessage } from '@ai-sdk/ui-utils';
 
 import ToolPlotGenerator from './tools/tool-plot-generator';
-import ToolThumbnailGenerationMorphologyGetone from './tools/tool-thumbnail-generation-morphology-getone';
+import ToolThumbnailGeneration from './tools/tool-thumbnail-generation-morphology-getone';
 import { isToolResult } from './tools/types';
 
 import { classNames } from '@/util/utils';
@@ -18,10 +18,13 @@ export default function ToolsComponents({ className, message }: ToolsComponentsP
   return (
     <div className={classNames(className, styles.toolsComponents)}>
       <ToolPlotGenerator results={extractToolsResults(message, ['plot-generator'], isToolResult)} />
-      <ToolThumbnailGenerationMorphologyGetone
+      <ToolThumbnailGeneration
         results={extractToolsResults(
           message,
-          ['thumbnail-generation-morphology-getone'],
+          [
+            'thumbnail-generation-morphology-getone',
+            'thumbnail-generation-electricalcellrecording-getone',
+          ],
           isToolResult
         )}
       />

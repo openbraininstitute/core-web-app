@@ -17,7 +17,12 @@ export async function serviceAiAgentStorageGetFileContent({
   });
   assertString(url, 'presigned-url');
   const resp = await fetch(url);
-  const type = resp.headers.get('X-Amz-Meta-Category') ?? 'unknown';
+  console.log(
+    "🚀 [storage] url, resp.headers.get('x-amz-meta-category') =",
+    url,
+    resp.headers.get('X-Amz-Meta-Category')
+  ); // @FIXME: Remove this line written on 2025-09-02 at 11:08
+  const type = resp.headers.get('x-amz-meta-category') ?? 'unknown';
   if (type === 'image') {
     return { content: url, type };
   }

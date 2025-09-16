@@ -2,9 +2,9 @@
 
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { ColumnProps } from 'antd/lib/table';
+import isString from 'lodash/isString';
 import throttle from 'lodash/throttle';
 
-import { SortState } from '@/types/explore-section/application';
 import fieldsDefinitionRegistry, { getFieldDefinition } from 'src/entity-configuration/definitions';
 
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
@@ -13,6 +13,7 @@ import { DataType } from '@/constants/explore-section/list-views';
 import { classNames, fieldTitleSentenceCase } from '@/util/utils';
 
 import type { OrderShape } from '@/entity-configuration/definitions/types';
+import type { SortState } from '@/types/explore-section/application';
 
 import styles from '@/app/app/virtual-lab/(free)/explore/explore.module.css';
 
@@ -34,9 +35,9 @@ const COL_SIZING = {
  * @param unit string
  * @returns number
  */
-function getProvisionedWidth(title: string, unit?: ReactNode) {
+function getProvisionedWidth(title: ReactNode, unit?: ReactNode) {
   const titleSpan = document.createElement('span');
-  titleSpan.textContent = `${title} ${unit ?? ''}`;
+  titleSpan.textContent = isString(title) ? `${title} ${unit ?? ''}` : '';
   // font-{size/weight} must be the same as the column style
   titleSpan.style.setProperty('font-size', '1rem');
   document.body.appendChild(titleSpan);
@@ -80,23 +81,22 @@ export function getOrderValue(
 }
 
 export default function useExploreColumns<T>(
-  setSortState: (sortState: SortState) => void,
+  setSortState?: (sortState: SortState) => void,
   sortState?: SortState,
   initialColumns: ColumnProps<T>[] = [],
-  dimensionColumns?: string[] | null,
   dataType?: DataType
 ): ColumnProps<T>[] {
   const keys = useMemo(() => Object.keys(fieldsDefinitionRegistry), []);
 
   const [columnWidths, setColumnWidths] = useState<{ key: string; width: number }[]>(
-    [...keys, ...(dimensionColumns || [])].map((key) => ({
+    keys.map((key) => ({
       key,
       width: COL_SIZING.default,
     }))
   );
 
   useEffect(() => {
-    const totalKeys = dimensionColumns ? [...keys, ...dimensionColumns] : [...keys];
+    const totalKeys = [...keys];
     setColumnWidths(
       totalKeys.map((key) => {
         const field = getFieldDefinition(key as EntityCoreFields);
@@ -106,7 +106,7 @@ export default function useExploreColumns<T>(
         };
       })
     );
-  }, [dimensionColumns, keys]);
+  }, [keys]);
 
   const columnOrderBy = useCallback(
     (field: string, backendField: string) => {
@@ -116,7 +116,7 @@ export default function useExploreColumns<T>(
         order = sortState.order === 'desc' ? 'asc' : 'desc';
       }
 
-      setSortState({
+      setSortState?.({
         backendField,
         field,
         order,
@@ -187,14 +187,31 @@ export default function useExploreColumns<T>(
     () =>
       keys.reduce((acc, key) => {
         const term = getFieldDefinition(key as EntityCoreFields);
-        const isSortable = term?.isSortable && !!getOrderValue(term?.order, dataType);
-
+        const isSortable =
+          term?.isSortable && !!getOrderValue(term?.order, dataType) && !!setSortState;
         acc.push({
           key,
-          title: (
-            <div className="flex flex-col text-left" style={{ marginTop: '-2px' }}>
-              <div className={styles.columnTitle}>{fieldTitleSentenceCase(term?.title!)}</div>
-              {term?.unit && <span className={styles.tableHeaderUnits}>[{term?.unit}]</span>}
+          title: isString(term?.title) ? (
+            <div
+              className="flex flex-col text-left break-words"
+              style={{ marginTop: '-2px', whiteSpace: 'normal', wordWrap: 'break-word' }}
+            >
+              <div
+                className={`${styles.columnTitle} break-words`}
+                style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}
+              >
+                {fieldTitleSentenceCase(term?.title!)}
+              </div>
+              {term?.unit && (
+                <span className={`${styles.tableHeaderUnits} break-words`}>[{term?.unit}]</span>
+              )}
+            </div>
+          ) : (
+            <div
+              className="flex cursor-default flex-col pl-[18px] text-left break-words"
+              style={{ marginTop: '-2px', whiteSpace: 'normal', wordWrap: 'break-word' }}
+            >
+              {term?.title}
             </div>
           ),
           className: classNames(
@@ -214,18 +231,31 @@ export default function useExploreColumns<T>(
                 columnOrderBy(key, field);
               }
             },
+            title: isString(term?.title) ? term.title : '',
             showsortertooltip: {
-              title: term?.description ? term.description : term?.title,
+              // eslint-disable-next-line no-nested-ternary
+              title: term?.description ? term.description : isString(term?.title) ? term.title : '',
             },
           }),
           defaultSortOrder: 'descend',
           sortOrder: getOrderDirection(key),
           sortDirections: ['ascend', 'descend', 'descend'],
           align: term?.style?.align,
+          fixed: term?.style?.fixed ?? false,
         });
         return acc;
       }, initialColumns),
-    [columnWidths, initialColumns, keys, onMouseDown, columnOrderBy, getOrderDirection, dataType]
+
+    [
+      columnWidths,
+      initialColumns,
+      keys,
+      onMouseDown,
+      columnOrderBy,
+      getOrderDirection,
+      dataType,
+      setSortState,
+    ]
   );
 
   if (dataType) {

@@ -1,7 +1,7 @@
 import { Form, InputNumber } from 'antd';
 
 import { useSimulationConditions } from '@/state/simulate/categories';
-import { SimulationExperimentalSetup } from '@/types/simulation/single-neuron';
+import { SimulationExperimentalSetup } from '@/types/small-scale-simulator/single-neuron';
 
 type SetupInputProps = {
   name: keyof SimulationExperimentalSetup;

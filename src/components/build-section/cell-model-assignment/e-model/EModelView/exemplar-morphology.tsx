@@ -1,3 +1,5 @@
+import isString from 'lodash/isString';
+
 import type { ColumnsType } from 'antd/es/table';
 
 import DefaultEModelTable from '@/components/build-section/cell-model-assignment/e-model/EModelView/DefaultEModelTable';
@@ -26,7 +28,7 @@ const defaultColumnsFields = getFieldsDefinition([
 const defaultColumns: ColumnsType<IReconstructionMorphology> = Object.entries(
   defaultColumnsFields
 ).map(([key, field]) => ({
-  title: field.title.toUpperCase(),
+  title: isString(field.title) ? field.title.toUpperCase() : field.title,
   key,
   render: field.render,
 }));

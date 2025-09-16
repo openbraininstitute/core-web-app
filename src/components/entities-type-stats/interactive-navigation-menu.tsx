@@ -6,11 +6,12 @@ import { useAtomValue } from 'jotai';
 import { match } from 'ts-pattern';
 import get from 'lodash/get';
 
-import { useFilteredCircuits } from '../explore-section/Circuit/ListView/ExploreCircuitTable';
 import { dataTabAtom } from '@/components/explore-section/ExploreInteractive/interactive/entity-group-tab';
+import { useFilteredCircuits } from '@/components/explore-section/Circuit/ListView/ExploreCircuitTable';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { EntityTypeCount } from '@/components/entities-type-stats/stat-item';
 import { entitiesCountAtom } from '@/services/entitycore/entities-count';
+import { tempIsCircuitInDev } from '@/temp-circuit-check';
 import {
   ExperimentalEntitiesTileTypes,
   ModelEntitiesTileTypes,
@@ -45,7 +46,6 @@ function EntityTypeStats(props: StatsPanelProps) {
   const pathName = usePathname();
   const selectedTab = useAtomValue(dataTabAtom);
   const { error: circuitError, filteredCircuits } = useFilteredCircuits({ dataKey: props.dataKey });
-
   let data: EntityCountResponse | null = null;
   let error: Error | null = null;
   let isLoading = false;
@@ -114,15 +114,17 @@ function EntityTypeStats(props: StatsPanelProps) {
             />
           );
         })}
-        <EntityTypeCount
-          isError={!!circuitError}
-          key="count-circuit"
-          href={`${pathName}/model/circuit`}
-          type="Circuit"
-          records={`${filteredCircuits.count} record${filteredCircuits.count !== 1 ? 's' : ''}`}
-          title="Circuit"
-          isLoading={false}
-        />
+        {!tempIsCircuitInDev() && (
+          <EntityTypeCount
+            isError={!!circuitError}
+            key="count-circuit-1"
+            href={`${pathName}/model/circuit`}
+            type="Circuit"
+            records={`${filteredCircuits.count} record${filteredCircuits.count !== 1 ? 's' : ''}`}
+            title="Circuit"
+            isLoading={false}
+          />
+        )}
       </>
     ))
     .otherwise(() => null);

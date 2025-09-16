@@ -4,7 +4,7 @@ import { useAtom } from 'jotai';
 import { CheckCircleFilled, LoadingOutlined } from '@ant-design/icons';
 
 import { simulateStepTrackerAtom } from '@/state/simulate/single-neuron';
-import { SimulationStep, SimulationType } from '@/types/simulation/common';
+import { SimulationStep, SimulationType } from '@/types/small-scale-simulator/common';
 import { classNames } from '@/util/utils';
 
 type StepProps = SimulationStep & {

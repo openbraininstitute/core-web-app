@@ -5,13 +5,13 @@ import type { WorkspaceContext } from '@/types/common';
 
 import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 
-import type { SimulationType } from '@/types/simulation/common';
+import type { SimulationType } from '@/types/small-scale-simulator/common';
 import type {
   CurrentInjectionSimulationConfig,
   RecordLocation,
   SimulationExperimentalSetup,
   SynaptomeConfig,
-} from '@/types/simulation/single-neuron';
+} from '@/types/small-scale-simulator/single-neuron';
 
 type SimulationConfiguration = {
   recordFrom: Array<RecordLocation>;

@@ -1,9 +1,10 @@
 import { useAtom, useAtomValue } from 'jotai';
 import { Pagination } from 'antd';
-import { ColumnsType } from 'antd/es/table';
 import { Suspense } from 'react';
+import isString from 'lodash/isString';
 
-// import { eCodesDocumentationUrl } from '@/constants/cell-model-assignment/e-model';
+import type { ColumnsType } from 'antd/es/table';
+
 import DefaultEModelTable from '@/components/build-section/cell-model-assignment/e-model/EModelView/DefaultEModelTable';
 import ErrorData from '@/components/message-banners/error';
 
@@ -30,19 +31,10 @@ const defaultColumnsFields = getFieldsDefinition([
 const defaultColumns: ColumnsType<IElectricalCellRecording> = Object.entries(
   defaultColumnsFields
 ).map(([key, field]) => ({
-  title: field.title.toUpperCase(),
+  title: isString(field.title) ? field.title.toUpperCase() : field.title,
   key,
   render: field.render,
 }));
-
-// const eCodesLink = (
-//   <div className="w-[100px]">
-//     <a href={eCodesDocumentationUrl} target="_blank">
-//       More info about e-codes <GlobalOutlined />
-//     </a>
-//     <Divider />
-//   </div>
-// );
 
 type Props = {
   source: IEModel;
@@ -87,17 +79,6 @@ function ExemplarTraces({ params, source }: Props) {
           }}
         />
       )}
-      {/* {eModelExemplarTraces ? (
-        <>
-          <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-            <DefaultLoadingSuspense>
-              <FeatureSelectionContainer />
-            </DefaultLoadingSuspense>
-          </ErrorBoundary>
-        </>
-      ) : (
-        <Spin />
-      )} */}
     </>
   );
 }

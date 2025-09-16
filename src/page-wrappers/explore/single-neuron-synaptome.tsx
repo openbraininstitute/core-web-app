@@ -68,5 +68,5 @@ export default async function Page({ params }: Props) {
     return <ErrorComponent error={error} />;
   }
 
-  return <Detail params={{ virtualLabId, projectId, id }} payload={data} />;
+  return <Detail params={{ virtualLabId, projectId }} payload={data} />;
 }

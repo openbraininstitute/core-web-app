@@ -40,7 +40,7 @@ import {
   simulationStatusAtom,
   stimulusPreviewPlotDataAtom,
 } from '@/state/simulate/single-neuron';
-import { SimulationType } from '@/types/simulation/common';
+import { SimulationType } from '@/types/small-scale-simulator/common';
 import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 
 import type {
@@ -51,7 +51,7 @@ import { JobStatus, Message, MessageType } from '@/services/small-scale-simulato
 import type {
   SimulationStreamData,
   SingleNeuronModelSimulationConfig,
-} from '@/types/simulation/single-neuron';
+} from '@/types/small-scale-simulator/single-neuron';
 import { readNdjsonResponse } from '@/utils/response';
 
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';

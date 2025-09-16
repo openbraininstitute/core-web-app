@@ -131,7 +131,6 @@ export const PairedNeuronCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulat
   legacyType: DataType.PairedNeuronCircuitSimulation,
   type: EntityTypeEnum.SimulationCampaign,
   slug: EntitySlug.PairedNeuronCircuitSimulation,
-  isBookmarkable: true,
   api: {
     config: { allowedFacets: true },
     query: {
@@ -153,4 +152,8 @@ export const PairedNeuronCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulat
   asset: {
     extension: 'application/json',
   },
+  isBookmarkable: false,
+  isDownloadable: true,
+  isCopyable: true,
+  isSimulatable: true,
 } as const;

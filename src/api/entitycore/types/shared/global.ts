@@ -165,6 +165,12 @@ export enum AssetLabel {
   validation_result_figure = 'validation_result_figure',
   voltage_report = 'voltage_report',
   voxel_densities = 'voxel_densities',
+  network_stats_a = 'network_stats_a',
+  circuit_connectivity_matrices = 'circuit_connectivity_matrices',
+  node_stats = 'node_stats',
+  network_stats_b = 'network_stats_b',
+  circuit_visualization = 'circuit_visualization',
+  compressed_sonata_circuit = 'compressed_sonata_circuit',
 }
 
 type AssetBase = {
@@ -222,3 +228,12 @@ export interface IEType extends IAnnotation {}
 //   linear_density: '1/μm',
 //   volume_density: '1/mm³',
 // } as const;
+
+export type DirectoryItem = {
+  name: string;
+  size: number;
+  last_modified: string; // as Date
+};
+export type DirectoryListContent = {
+  files: Record<string, DirectoryItem>;
+};
