@@ -10,7 +10,6 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
-import { ROOT_ROUTE } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   renderArray,
@@ -21,6 +20,7 @@ import {
 } from '@/entity-configuration/definitions/renderer';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
+import { ROOT_ROUTE } from '@/config';
 
 import { EntityTypeDict, type IReconstructionMorphology } from '@/api/entitycore/types';
 
