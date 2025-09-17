@@ -80,15 +80,18 @@ export default function EntireCircuitExport({ circuit }: Props) {
       />
     ))
     .with({ status: 'downloading' }, () => (
-      <Progress
-        type="circle"
-        percent={Math.round(downloadProgress)}
-        size={32}
-        strokeColor="#1890ff"
-        showInfo
-        className="[&_.ant-progress-text]:text-white!"
-        style={{ marginLeft: 8 }}
-      />
+      <div className="flex flex-col items-center justify-center gap-0.5">
+        <Progress
+          type="circle"
+          percent={Math.round(downloadProgress)}
+          size={32}
+          strokeColor="#1890ff"
+          showInfo
+          className="[&_.ant-progress-text]:text-white!"
+          style={{ marginLeft: 8 }}
+        />
+        <span className="text-[8px]">downloading</span>
+      </div>
     ))
     .with({ status: 'done' }, () => (
       <CheckCircleOutlined className="px-1 text-3xl text-green-400" />

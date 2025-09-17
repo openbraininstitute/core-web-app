@@ -1,0 +1,155 @@
+@reference '../../../styles/globals.css';
+
+.table a {
+  @apply text-primary-7;
+}
+.table table .ant-table td {
+  white-space: nowrap;
+}
+
+.headerText,
+.tableHeader {
+  @apply flex w-fit items-center justify-between gap-2 text-left text-gray-500;
+}
+
+.tableHeaderTitle {
+  @apply cursor-help pl-0 text-left text-lg font-medium text-gray-500;
+}
+
+.tableHeaderUnits {
+  @apply pl-2 text-left text-sm font-thin text-gray-500;
+}
+
+.dragIcons {
+  @apply text-neutral-3 absolute right-0 ml-auto rotate-90 cursor-col-resize text-2xl font-light;
+  opacity: 0;
+}
+
+.alignmentHack > div {
+  align-items: normal !important;
+}
+
+.tableRow {
+  border: none !important;
+  @apply cursor-pointer;
+}
+
+.themeBlack {
+  @apply bg-black;
+}
+
+.container {
+  height: 100vh;
+  width: 100vw;
+  display: grid;
+  grid-template-columns: 0.7fr 1.3fr;
+  grid-template-rows: auto repeat(4, 1fr);
+  gap: 0px 0px;
+  grid-auto-flow: row;
+  grid-template-areas:
+    'explore-header content'
+    'braincells content'
+    'experimental content'
+    'reconstructions content'
+    'simulations info';
+}
+
+.content {
+  grid-area: content;
+  background-color: black;
+  -webkit-background-size: contain;
+  -moz-background-size: contain;
+  -o-background-size: contain;
+  background-size: contain;
+}
+
+.exploreHeader {
+  min-height: 0;
+  grid-area: explore-header;
+  min-height: 20%;
+}
+
+.braincells {
+  min-height: 0;
+  grid-area: braincells;
+  @apply bg-primary-8;
+}
+
+.experimental {
+  min-height: 0;
+  grid-area: experimental;
+  @apply bg-primary-7;
+}
+
+.reconstructions {
+  min-height: 0;
+  grid-area: reconstructions;
+  @apply bg-primary-6;
+}
+.simulations {
+  min-height: 0;
+  grid-area: simulations;
+  @apply bg-primary-5;
+}
+
+.themeBlack,
+.info,
+.exploreHeader,
+.experimental,
+.simulations,
+.braincells,
+.reconstructions {
+  @apply px-14 py-8 text-white;
+  > div > span,
+  > a > div > span {
+    float: right;
+    @apply text-xl;
+  }
+  h1 {
+    @apply inline text-xl font-bold;
+  }
+  button {
+    font-size: clamp(1rem, 0.5vw + 5px, 3rem);
+    @apply mt-4 border border-white px-4 py-2;
+  }
+  p {
+    font-size: clamp(1rem, 0.4vw + 5px, 3rem);
+    @apply mt-2 font-thin;
+  }
+}
+
+.exploreHeader {
+  h1 {
+    @apply block font-bold uppercase;
+    font-size: clamp(1rem, 2.5vw, 5rem);
+    line-height: 0.8;
+    word-spacing: 100vw;
+  }
+  button {
+    @apply border-primary-4 text-primary-4 border;
+    > span {
+      @apply mr-5;
+    }
+  }
+}
+.info {
+  min-height: 0;
+  background-color: black;
+  @apply py-0 text-white;
+  h1 {
+    @apply text-xl;
+  }
+  p {
+    @apply w-8/12;
+  }
+  button {
+    @apply bg-white text-black;
+  }
+}
+
+.columnTitle {
+  @apply relative pl-2;
+  &::before {
+    @apply absolute end-0 top-0 left-0 h-full w-px bg-[#d9d9d9] content-[""];
+  }
+}

@@ -64,7 +64,7 @@ export function BrainRegionHierarchy({
   return (
     <div
       className={classNames(
-        'group flex h-full min-h-0 flex-col rounded-xl bg-white transition-all duration-300 ease-in-out',
+        'group flex h-full min-h-0 flex-col rounded-xl transition-all duration-300 ease-in-out',
         isCollapsed ? 'collapsed w-full' : 'w-full'
       )}
     >

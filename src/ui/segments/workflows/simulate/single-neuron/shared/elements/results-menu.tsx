@@ -33,7 +33,7 @@ import {
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useAppNotification } from '@/components/notification';
-import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { ROOT_ROUTE } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import {
@@ -165,7 +165,7 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
               onClick={() => {
                 notification.destroy('simulation-saved');
               }}
-              href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${type === SimulationType.SingleNeuron ? kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSimulation) : kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation)}/${data?.simulation.id}`}
+              href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${type === SimulationType.SingleNeuron ? kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSimulation) : kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation)}/${data?.simulation.id}`}
               className="text-primary-6 hover:underline"
             >
               Go to simulation details

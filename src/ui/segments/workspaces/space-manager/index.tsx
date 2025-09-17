@@ -75,10 +75,10 @@ export function SpaceManagerContainer() {
       open={contextConfig.open}
       size="lg"
       onClose={onClose}
-      width="calc(100vw - 24.2rem" // this the width of the space-switcher in the left
+      width="calc(100vw - 24.9rem)" // this the width of the space-switcher in the left
       className="bg-primary-9 top-3 right-3 h-full min-h-[400px] translate-0 transform-none! rounded-md"
       animation="fade"
-      maxHeight="calc(100vh - 1.5rem)"
+      maxHeight="calc(100vh - 1rem)"
       bodyClassName="flex flex-col h-full max-h-[calc(100vh-1rem)] min-h-0 overflow-hidden p-0"
       position="right"
       afterOpen={() => {

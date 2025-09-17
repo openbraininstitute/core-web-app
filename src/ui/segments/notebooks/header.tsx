@@ -5,7 +5,7 @@ import last from 'lodash/last';
 import { usePathname, useRouter, useSelectedLayoutSegments } from 'next/navigation';
 
 import { useTabs } from '@/components/detail-view-tabs';
-import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { ROOT_ROUTE } from '@/config';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
@@ -52,12 +52,9 @@ function NotebookTabs() {
   });
 
   const onTabClick = (value: string) => {
-    if (pathname === `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore`) {
+    if (pathname === `${ROOT_ROUTE}/${virtualLabId}/${projectId}/explore`) {
       onChangeTab(value)();
-    } else
-      navigate(
-        `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore?scope=${value}`
-      );
+    } else navigate(`${ROOT_ROUTE}/${virtualLabId}/${projectId}/explore?scope=${value}`);
   };
 
   const currentScope =

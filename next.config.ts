@@ -85,8 +85,13 @@ const nextConfig = (phase: string): NextConfig => {
     async redirects() {
       return [
         {
-          source: `/app/virtual-lab/:path*`,
-          destination: `/app/v2/sync`,
+          source: '/app/virtual-lab',
+          destination: `/app/virtual-lab/sync`,
+          permanent: false,
+        },
+        {
+          source: '/app/virtual-lab/lab/:path*',
+          destination: `/app/virtual-lab/sync`,
           permanent: false,
         },
       ];
@@ -96,7 +101,8 @@ const nextConfig = (phase: string): NextConfig => {
 
       // Skip CORS headers if CDN URI is not configured or empty
       if (!process.env.PRIMARY_HOSTNAME) {
-        console.warn('CDN URI is not configured, skipping CORS headers');
+        // eslint-disable-next-line no-console
+        console.debug('CDN URI is not configured, skipping CORS headers');
         return [];
       }
 

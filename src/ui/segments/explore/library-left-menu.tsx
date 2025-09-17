@@ -11,7 +11,7 @@ import { Card, CardDescription, CardTitle } from '@/ui/molecules/card';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { BrowseLink } from '@/ui/segments/explore/browse-link';
-import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { ROOT_ROUTE } from '@/config';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { useTabs } from '@/components/detail-view-tabs';
@@ -93,7 +93,7 @@ export function LibraryLeftMenu() {
       <>
         {experimentalEntries.map((value) => {
           const count: number | null = get(data, value.type, null);
-          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/${kebabCase(value.type)}`;
+          const link = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/explore/browse/${kebabCase(value.type)}`;
           return (
             <BrowseLink
               key={`link-${value.title}/${value.type}`}
@@ -111,7 +111,7 @@ export function LibraryLeftMenu() {
       <>
         {modelEntries.map((value) => {
           const count = get(data, value.type, null);
-          const link = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/explore/browse/${kebabCase(value.type)}`;
+          const link = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/explore/browse/${kebabCase(value.type)}`;
           return (
             <BrowseLink
               key={`link-${value.title}/${value.type}`}

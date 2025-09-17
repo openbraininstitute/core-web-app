@@ -3,7 +3,7 @@ import { match, P } from 'ts-pattern';
 
 import { resolveWorkspace, WizardSteps } from '@/ui/segments/app-setup/helpers';
 import { WorkspaceWizard } from '@/ui/segments/app-setup/bootsync-wizard';
-import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { ROOT_ROUTE } from '@/config';
 import { tryCatch } from '@/api/utils';
 
 import type { ServerSideComponentProp } from '@/types/common';
@@ -26,15 +26,12 @@ export default async function Page({
       // then forward it first
       if (workspace.recentWorkspace) {
         redirect(
-          `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${workspace.recentWorkspace.virtual_lab_id}/${workspace.recentWorkspace.project_id}`,
+          `${ROOT_ROUTE}/${workspace.recentWorkspace.virtual_lab_id}/${workspace.recentWorkspace.project_id}`,
           RedirectType.replace
         );
       }
       // if there is no stored recent workspace, redirect to first fetched workspace
-      redirect(
-        `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLab.id}/${project.id}`,
-        RedirectType.replace
-      );
+      redirect(`${ROOT_ROUTE}/${virtualLab.id}/${project.id}`, RedirectType.replace);
     }
   }
 

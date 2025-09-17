@@ -31,7 +31,7 @@ import {
 } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import { createJsonAsset } from '@/api/entitycore/queries/assets';
 import { useAppNotification } from '@/components/notification';
-import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { ROOT_ROUTE } from '@/config';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { OneshotSession } from '@/services/accounting';
@@ -75,7 +75,7 @@ export function Menu({ sessionId }: Props) {
     query.set('step', s);
 
     replace(
-      `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/build/configure/${kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSynaptome)}?${query.toString()}`
+      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/${kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSynaptome)}?${query.toString()}`
     );
   };
 
@@ -175,7 +175,7 @@ export function Menu({ sessionId }: Props) {
               onClick={() => {
                 notification.destroy('model-saved');
               }}
-              href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSynaptome)}/${data?.entity.id}`}
+              href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSynaptome)}/${data?.entity.id}`}
               className="text-primary-6 hover:underline"
             >
               Go to model details

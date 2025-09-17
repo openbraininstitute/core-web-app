@@ -282,7 +282,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Contact email',
     filter: null,
     isDisplayable: true,
-    render: (r) => renderEmail((r as ICircuit).contact_email ?? 'bmeddah.ofc@gmail.com'),
+    render: (r) => renderEmptyOrValue(renderEmail((r as ICircuit).contact_email)),
     vocabulary: {
       plural: 'Registration Date',
       singular: 'Registration Date',

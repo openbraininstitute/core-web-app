@@ -19,15 +19,16 @@ import z from 'zod';
 
 import { updateVirtualLab, checkVirtualLabExists } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { updateProject, checkProjectExists } from '@/api/virtual-lab-svc/queries/project';
-// import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
+import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useAppNotification } from '@/components/notification';
-import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { ROOT_ROUTE } from '@/config';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import { Card, CardContent } from '@/ui/molecules/card';
 import { Button } from '@/ui/molecules/button';
 import { Input } from '@/ui/molecules/input';
 import { cn } from '@/utils/css-class';
+import { log } from '@/utils/logger';
 
 export type Props = {
   virtualLabId: string;
@@ -218,12 +219,12 @@ export function WorkspaceCustomization({
     },
   });
 
-  // const mutateRecentWorkspace = useMutation({
-  //   mutationFn: () => setUserRecentWorkspace({ workspace: { virtualLabId, projectId } }),
-  //   onError(error, variables) {
-  //     log('error', error, variables);
-  //   },
-  // });
+  const mutateRecentWorkspace = useMutation({
+    mutationFn: () => setUserRecentWorkspace({ workspace: { virtualLabId, projectId } }),
+    onError(error, variables) {
+      log('error', error, variables);
+    },
+  });
 
   const onSubmitForm = async (_values: FinalFormType) => {
     if (editableField.virtual_lab_name) {
@@ -232,10 +233,10 @@ export function WorkspaceCustomization({
     if (editableField.project_name) {
       await mutateProject.mutateAsync({ projName: _values.project_name });
     }
-    // await mutateRecentWorkspace.mutateAsync();
+    await mutateRecentWorkspace.mutateAsync();
 
     startTransition(() => {
-      replace(`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}`, {
+      replace(`${ROOT_ROUTE}/${virtualLabId}/${projectId}`, {
         showProgress: true,
       });
     });

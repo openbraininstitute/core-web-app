@@ -13,30 +13,32 @@ import { z } from 'zod';
 import kebabCase from 'lodash/kebabCase';
 import omit from 'lodash/omit';
 import Link from 'next/link';
+import get from 'lodash/get';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { createMEModel } from '@/api/entitycore/queries/model/me-model';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useAppNotification } from '@/components/notification';
-import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
 import { WorkspaceContextSchema } from '@/types/common';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { OneshotSession } from '@/services/accounting';
-import { ServiceSubtype } from '@/types/accounting';
 import {
   useBuildMeModelSessionState,
   BuildStepKeys,
   BuildStep,
 } from '@/ui/segments/workflows/build/memodel/helpers';
+import { OneshotSession } from '@/services/accounting';
+import { ServiceSubtype } from '@/types/accounting';
 import {
   CreateMEModelSchema,
   ValidationStatus,
   type IMEModel,
 } from '@/api/entitycore/types/entities/me-model';
 import { Button } from '@/ui/molecules/button';
+import { LOW_FUNDS_ERROR_CODE, messages } from '@/i18n/en/me-model';
 import { cn } from '@/utils/css-class';
-import { messages } from '@/i18n/en/me-model';
+import { ROOT_ROUTE } from '@/config';
+import { log } from '@/utils/logger';
 
 const CreateMeModelContextSchema = CreateMEModelSchema.merge(WorkspaceContextSchema);
 type TCreateMeModelContext = z.infer<typeof CreateMeModelContextSchema>;
@@ -60,7 +62,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
     query.set('step', s);
 
     replace(
-      `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/build/configure/memodel?${query.toString()}`
+      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/memodel?${query.toString()}`
     );
   };
 
@@ -110,7 +112,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
               onClick={() => {
                 notification.destroy('model-saved');
               }}
-              href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.Memodel)}/${data.id}`}
+              href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.Memodel)}/${data.id}`}
               className="text-primary-6 hover:underline"
             >
               Go to model details
@@ -122,6 +124,20 @@ export function Menu({ sessionId }: { sessionId: string }) {
         },
         placement: 'topRight',
         key: 'model-saved',
+        duration: 10,
+      });
+    },
+    onError(err) {
+      log('error', 'Build me-model failed:', err);
+      const message =
+        get(err, 'cause.error_code') === LOW_FUNDS_ERROR_CODE
+          ? messages.LowFundsError
+          : messages.DefaultErrorMsg;
+
+      notification.error({
+        message: 'ME-model creation failed',
+        description: message,
+        placement: 'topRight',
         duration: 10,
       });
     },

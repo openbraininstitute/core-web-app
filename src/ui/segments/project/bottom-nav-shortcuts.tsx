@@ -4,31 +4,38 @@ import { RightOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
+import { ROOT_ROUTE } from '@/config';
+
+import type { WorkspaceContext } from '@/types/common';
 
 const links = [
   {
     key: 'browse-data',
     title: 'Browse data',
-    url: 'explore',
+    url: ({ virtualLabId, projectId }: WorkspaceContext) =>
+      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data`,
   },
   {
     key: 'start-workflow',
     title: 'Start a workflow',
-    url: 'workflows',
+    url: ({ virtualLabId, projectId }: WorkspaceContext) =>
+      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`,
   },
   {
     key: 'run-notebook',
     title: 'Run a notebook',
-    url: 'notebooks',
+    url: ({ virtualLabId, projectId }: WorkspaceContext) =>
+      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
   },
 ];
 
 export function Shortcuts() {
   const breakpoint = useDefaultBreakpoint();
-
+  const { virtualLabId, projectId } = useWorkspace();
   return (
-    <div className="mb-4">
+    <div className="mb-10">
       <div className="text-primary-9 mb-4 text-lg font-semibold">Would you like to: </div>
       <div className="flex grid-cols-3 flex-col items-start justify-start gap-2 lg:grid">
         {links.map(({ key, title, url }) => (
@@ -41,7 +48,7 @@ export function Shortcuts() {
             className="h-auto w-full max-w-2/4 justify-start font-semibold shadow-md lg:max-w-full"
             size={breakpoint === 'xl' ? 'lg' : 'md'}
           >
-            <Link href={url}>
+            <Link prefetch href={url({ virtualLabId, projectId })}>
               {title}
               <RightOutlined className="ml-auto text-current" />
             </Link>

@@ -104,21 +104,22 @@ export function Item({
       <div
         role="button"
         tabIndex={-1}
-        aria-label="virtual-lab-switcher"
-        data-testid="virtual-lab-switcher"
+        aria-label="virtual-lab-item"
+        data-testid="virtual-lab-item"
         className={cn(
           'group flex cursor-pointer items-center justify-between px-2 py-3 transition-colors duration-150 hover:bg-gray-50',
           'hover:bg-neutral-1 rounded-2xl',
-          { 'rounded-b-none': expandedLabs.has(lab.id) }
+          { 'rounded-b-none': expandedLabs.has(lab.id) },
+          { 'bg-primary-9 text-white': lab.isMine }
         )}
         onKeyDown={onVlabClick}
         onClick={onVlabClick}
       >
         <div className="flex items-center justify-center gap-2">
-          <LabCompany className="size-6" />
+          <LabCompany className={cn('text-label size-4', { 'text-primary-3': lab.isMine })} />
           <h4
             className={cn('text-primary-9 text-md line-clamp-1 truncate font-bold', {
-              // 'text-white!': lab.isMine,
+              'group-hover:text-primary-8! text-white!': lab.isMine,
             })}
           >
             {lab.name}
@@ -139,7 +140,12 @@ export function Item({
                 className="flex h-7 w-7 items-center justify-center rounded-full border-none bg-transparent p-0"
                 onClick={onDownClick}
               >
-                <DownOutlined className="text-primary-7 group-hover:text-primary-8 h-4 w-4 hover:text-white" />
+                <DownOutlined
+                  className={cn(
+                    'text-primary-7 group-hover:text-primary-8 h-4 w-4 hover:text-white',
+                    { 'hover:text-primary-4 text-primary-3': lab.isMine }
+                  )}
+                />
               </Button>
             )}
           </motion.div>

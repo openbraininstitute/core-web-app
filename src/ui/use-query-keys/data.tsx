@@ -1,8 +1,9 @@
+import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 import type { TWorkspaceScope } from '@/constants';
-import { TDerivationType } from '@/api/entitycore/types/entities/derivation';
 
-const prefix = 'explore-data';
+const prefix = 'data';
 
 export const keyBuilder = {
   dataCount: ({
@@ -88,15 +89,22 @@ export const keyBuilder = {
     `${prefix}-many-circuits`,
     { virtualLabId, projectId, page, page_size, ...props },
   ],
-  circuitConfigAndDirectory: ({
+  asset: ({
     entityId,
     assetId,
     assetPath,
+    assetType,
     context,
+    asRawResponse,
   }: {
     entityId: string;
     assetId: string;
     assetPath: string;
+    assetType?: TEntityTypeDict;
     context: WorkspaceContext;
-  }) => [`${prefix}-circuit-config-and-directory`, { entityId, assetId, assetPath, ...context }],
+    asRawResponse?: boolean;
+  }) => [
+    `${prefix}-entity-asset`,
+    { entityId, assetId, assetPath, assetType, asRawResponse, ...context },
+  ],
 };

@@ -1,16 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { Progress, Empty, Image as AntdImage } from 'antd';
 import { CloseCircleFilled } from '@ant-design/icons';
 import { useParams } from 'next/navigation';
-import { Progress, Empty } from 'antd';
 import { match, P } from 'ts-pattern';
-
 import isNumber from 'lodash/isNumber';
 import NextImage from 'next/image';
 
 import { trackDownloadProgress } from '@/utils/track-download-progress';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
 
 import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
@@ -28,6 +27,16 @@ interface Props {
   className?: string;
   yPadding: number;
   xPadding: number;
+  clsx?: {
+    progress?: {
+      strokeColor?: string;
+      className?: string;
+    };
+    error?: {
+      text?: string;
+    };
+  };
+  optimized?: boolean; // whether to use next/image optimization or not (default: true)
 }
 
 export function ProgressiveEntityImage({
@@ -42,10 +51,13 @@ export function ProgressiveEntityImage({
   bordered = true,
   yPadding,
   xPadding,
+  clsx,
+  optimized = true,
 }: Props) {
   const context = useParams<WorkspaceContext>();
   const [status, setStatus] = useState<'idle' | 'loading' | 'loaded' | 'error'>('idle'); // idle, loading, loaded, error
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [error, setError] = useState<{
     message: string;
@@ -189,12 +201,12 @@ export function ProgressiveEntityImage({
         <div className="space-y-4 text-center">
           <div className="space-y-2">
             <Progress
+              showInfo
               type="circle"
               percent={Math.round(downloadProgress)}
               size={64}
-              strokeColor="#096dd9"
-              showInfo
-              className="[&_.ant-progress-text]:text-primary-8!"
+              strokeColor={clsx?.progress?.strokeColor || '096dd9'}
+              className={cn('[&_.ant-progress-text]:text-primary-8!', clsx?.progress?.className)}
             />
           </div>
         </div>
@@ -202,22 +214,25 @@ export function ProgressiveEntityImage({
     ))
     .with({ status: 'error' }, () => (
       <div
-        className={classNames(
-          'flex flex-col items-center justify-center border border-red-50 bg-red-50'
-        )}
+        className={cn('flex flex-col items-center justify-center border border-red-50 bg-red-50')}
         style={{ width, height }}
       >
         <div className="space-y-4 text-center">
           <CloseCircleFilled allowTransparency className="mx-auto text-5xl text-rose-700" />
           <div className="space-y-2">
-            <p className="text-base font-bold text-red-600">Failed to load image</p>
-            <p className="text-xs text-red-500">{error?.message}</p>
+            <p className={cn('text-base font-bold text-red-600', clsx?.error?.text)}>
+              Failed to load image
+            </p>
+            <p className={cn('text-xs text-red-500', clsx?.error?.text)}>{error?.message}</p>
           </div>
           {error?.type === 'download' && (
             <button
               type="button"
               onClick={retryDownload}
-              className="rounded bg-red-500 px-4 py-2 text-sm text-white transition-colors hover:bg-red-600"
+              className={cn(
+                'rounded bg-red-500 px-4 py-2 text-sm text-white transition-colors hover:bg-red-600',
+                clsx?.error?.text
+              )}
             >
               Retry Download
             </button>
@@ -229,7 +244,7 @@ export function ProgressiveEntityImage({
       const newHeight = `calc(${ratioHeight}px + ${yPadding * 2}px)`;
       return (
         <div
-          className={classNames('w-full', bordered && 'border border-gray-300', className)}
+          className={cn('w-full', bordered && 'border border-gray-300', className)}
           style={{
             height: newHeight,
             paddingTop: yPadding,
@@ -243,18 +258,32 @@ export function ProgressiveEntityImage({
             className="relative transition-all duration-200 ease-in-out"
             style={{ height: ratioHeight }}
           >
-            <NextImage
-              fill
-              ref={imageRef}
-              src={imageUrl || ''}
-              alt={`${value.path}`}
-              style={{
-                aspectRatio:
-                  Number(calculatedDimensions?.width) / Number(calculatedDimensions?.height),
-              }}
-              objectFit="contain"
-              className="h-full w-full transition-all duration-200 ease-in-out"
-            />
+            {optimized ? (
+              <NextImage
+                fill
+                ref={imageRef}
+                src={imageUrl || ''}
+                alt={`${value.path}`}
+                style={{
+                  aspectRatio:
+                    Number(calculatedDimensions?.width) / Number(calculatedDimensions?.height),
+                }}
+                objectFit="contain"
+                className="h-full w-full transition-all duration-200 ease-in-out"
+              />
+            ) : (
+              <AntdImage
+                src={imageUrl || ''}
+                alt={`${value.path}`}
+                style={{
+                  aspectRatio:
+                    Number(calculatedDimensions?.width) / Number(calculatedDimensions?.height),
+                }}
+                rootClassName="w-full h-full flex items-center justify-center [&_.ant-image-preview-mask]:bg-white!"
+                className="h-full w-full object-contain transition-all duration-200 ease-in-out"
+                preview={{ maskClassName: 'bg-white' }}
+              />
+            )}
           </div>
         </div>
       );

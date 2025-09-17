@@ -27,7 +27,7 @@ import { classNames } from '@/util/utils';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
 
-import styles from '@/app/app/virtual-lab/(free)/explore/explore.module.css';
+import styles from '@/components/explore-section/ExploreSectionListingView/explore.module.css';
 
 export type OnCellClick<T> = (basePath: string, record: T, type: TExtendedEntitiesTypeDict) => void;
 

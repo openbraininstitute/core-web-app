@@ -1,7 +1,7 @@
 'use client';
 
-import { DownOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
-import { useState, useRef, useEffect, ComponentProps, useMemo } from 'react';
+import { DownOutlined, PlusOutlined, RightOutlined } from '@ant-design/icons';
+import { useState, useRef, useEffect, ComponentProps, useMemo, useCallback } from 'react';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,6 +11,7 @@ import Link from 'next/link';
 
 import {
   makeTriggerWorkspaceConfigurationClickEvent,
+  type TTriggerWorkspaceConfigurationClickEvent,
   useWorkspaceConfigurationClickEvent,
   WorkspaceActions,
 } from '@/ui/segments/workspaces/space-manager/event';
@@ -25,6 +26,7 @@ import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import { UserFilled } from '@/components/icons/buttons';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Skeleton } from '@/ui/molecules/skeleton';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
@@ -116,6 +118,8 @@ export function SpaceSwitcher({ className }: Props) {
   ) => {
     e.preventDefault();
     e.stopPropagation();
+    setIsExpanded(true);
+    setBoardModalOpen(true);
     makeTriggerWorkspaceConfigurationClickEvent({
       on: true,
       type: WorkspaceActions.ProfileSettings,
@@ -183,6 +187,7 @@ export function SpaceSwitcher({ className }: Props) {
     }
   });
 
+  const onClick = () => setIsExpanded(true);
   const onProClick = () => {
     makeTriggerWorkspaceConfigurationClickEvent({
       on: true,
@@ -198,7 +203,8 @@ export function SpaceSwitcher({ className }: Props) {
         <button
           id="virtual-lab-menu-button"
           type="button"
-          onClick={() => setIsExpanded(true)}
+          role="menubar"
+          onClick={onClick}
           className={cn(
             'relative flex h-10 w-full items-center justify-between gap-1.5 pl-4 text-sm transition-all duration-150 ease-out',
             'hover:bg-gray-50',
@@ -207,25 +213,59 @@ export function SpaceSwitcher({ className }: Props) {
                 isExpanded,
             },
             {
-              'bg-background rounded-full': !isExpanded,
+              'bg-background border-neutral-2 gap-2 rounded-full border text-gray-700 hover:bg-gray-50':
+                !isExpanded,
             },
             { 'z-[1001]': boardModalOpen },
             { 'h-12': breakpoint === 'xl' }
           )}
           aria-label={`${currentVirtualLabName}/${currentProjectName}`}
-          role="menubar"
           disabled={labsLoading || projectsLoading}
         >
-          {currentVirtualLabName && !isExpanded && (
+          {projectsLoading ? (
             <div
-              className="group flex h-full max-w-20 items-center justify-center gap-1 overflow-hidden select-none"
-              title={currentVirtualLabName}
-              aria-label={currentVirtualLabName}
+              className={cn('flex items-center justify-center gap-2', {
+                hidden: isExpanded,
+              })}
             >
-              <span className="text-label flex-none font-light">Lab:</span>
-              <h3 className="text-primary-9 min-w-0 flex-1 truncate group-hover:font-bold">
-                {currentVirtualLabName}
-              </h3>
+              <Skeleton className="h-5 w-5 rounded-full xl:h-6 xl:w-6" />
+              <Skeleton className="h-3 w-3 rounded-full" />
+              <Skeleton className="h-4 w-16 rounded-full" />
+              <Skeleton className="h-3 w-3 rounded-full" />
+            </div>
+          ) : (
+            <div
+              className={cn('flex items-center justify-center gap-2', {
+                hidden: isExpanded,
+              })}
+            >
+              <div
+                className={cn(
+                  'flex items-center gap-1.5 rounded-full',
+                  'hover:bg-background border-none'
+                )}
+                onKeyDown={onProfileClick}
+                onClick={onProfileClick}
+                role="button"
+                tabIndex={-1}
+                title={username}
+                aria-label={username}
+              >
+                <UserFilled className="hover:text-primary-6 text-primary-9 flex-shrink-0 text-lg xl:text-xl" />
+              </div>
+              <RightOutlined className="text-primary-8 font-bold" />
+              {currentVirtualLabName && !isExpanded && (
+                <div
+                  className="group flex h-full max-w-20 items-center justify-center gap-1 overflow-hidden select-none"
+                  title={currentVirtualLabName}
+                  aria-label={currentVirtualLabName}
+                >
+                  <h3 className="text-primary-9 min-w-0 flex-1 truncate group-hover:font-bold">
+                    {currentVirtualLabName}
+                  </h3>
+                </div>
+              )}
+              <RightOutlined className="text-primary-8 font-bold" />
             </div>
           )}
           <AnimatePresence mode="wait">
@@ -237,30 +277,28 @@ export function SpaceSwitcher({ className }: Props) {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.1 }}
                 className={cn(
-                  'flex w-full flex-1 items-center space-x-2 overflow-hidden rounded-full px-4 py-2',
+                  'flex w-full flex-1 items-center space-x-2 overflow-hidden rounded-full py-2 pr-4',
                   {
                     'border-neutral-2 h-16! rounded-md rounded-b-none border border-b-0 bg-white':
                       isExpanded,
-                  },
-                  {
-                    'border-neutral-2 rounded-full border text-gray-700 hover:bg-gray-50':
-                      !isExpanded,
-                  },
-                  { 'h-12': breakpoint === 'xl' }
+                  }
                 )}
               >
                 {virtualLabId && (
                   <>
-                    <span className="text-primary-9 min-w-0 flex-1 truncate text-left font-bold">
-                      {currentProjectName}
-                    </span>
+                    {projectsLoading ? (
+                      <Skeleton className="h-5 w-24 flex-1 rounded-full" />
+                    ) : (
+                      <span className="text-primary-9 min-w-0 flex-1 truncate text-left font-bold">
+                        {currentProjectName}
+                      </span>
+                    )}
                     <motion.div
                       animate={{ rotate: isExpanded ? 180 : 0 }}
                       transition={{ duration: 0.15, ease: 'easeOut' }}
-                      className="ml-2"
                     >
                       {projectsLoading ? (
-                        <LoadingOutlined spin />
+                        <Skeleton className="h-4 w-4 rounded-full" />
                       ) : (
                         <DownOutlined
                           className="text-gray-400"
@@ -289,23 +327,7 @@ export function SpaceSwitcher({ className }: Props) {
                     'hover:text-primary-8! text-primary-9! flex w-full items-center justify-between'
                   )}
                 >
-                  <div
-                    className={cn(
-                      'flex max-w-[calc(100%-100px)] flex-row items-center gap-1.5 rounded-full bg-white px-3 py-2 shadow-md',
-                      'hover:bg-background'
-                    )}
-                    onKeyDown={onProfileClick}
-                    onClick={onProfileClick}
-                    role="button"
-                    tabIndex={-1}
-                    title={username}
-                    aria-label={username}
-                  >
-                    <UserFilled className="flex-shrink-0 text-base text-current xl:text-lg" />
-                    <h3 className="line-clamp-1 min-w-0 truncate text-left text-sm font-bold">
-                      {username}
-                    </h3>
-                  </div>
+                  <ProfileButton username={username} onProfileClick={onProfileClick} />
                   <div className="ml-2 flex flex-shrink-0 items-center gap-2">
                     <Link href="/app/log-out" className="hover:underline">
                       Logout
@@ -340,8 +362,8 @@ export function SpaceSwitcher({ className }: Props) {
               transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
               className={cn(
                 'border-neutral-2 absolute top-full left-0 z-50 w-full overflow-hidden rounded-tr-lg rounded-b-lg border border-t-0 bg-white',
-                'relative flex flex-col pt-1 pb-2',
-                'h-full max-h-[calc(100vh-4.6rem)] min-h-[calc(100vh-5.5rem)] lg:max-h-[calc(100vh-4.5rem)]',
+                'relative flex flex-col pt-1 pb-2 shadow-2xl',
+                'h-full max-h-[calc(100vh-4.5rem)] min-h-[calc(100vh-5rem)] lg:max-h-[calc(100vh-4.5rem)]',
                 { 'rounded-t-none': isExpanded },
                 { 'z-[1001]': boardModalOpen }
               )}
@@ -390,7 +412,7 @@ export function SpaceSwitcher({ className }: Props) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.05, duration: 0.1 }}
-                className="mt-auto border-t border-gray-100 p-4"
+                className="mt-auto p-4"
               >
                 <Button
                   rounded
@@ -412,3 +434,42 @@ export function SpaceSwitcher({ className }: Props) {
 }
 
 export default SpaceSwitcher;
+
+function ProfileButton({
+  username,
+  onProfileClick,
+}: {
+  username?: string;
+  onProfileClick: (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent> | React.KeyboardEvent<HTMLDivElement>
+  ) => void;
+}) {
+  const [isActive, setIsActive] = useState(false);
+  useWorkspaceConfigurationClickEvent(
+    useCallback((data: CustomEvent<TTriggerWorkspaceConfigurationClickEvent<any>>) => {
+      const incomingType = data.detail.type;
+      if (incomingType === WorkspaceActions.ProfileSettings) {
+        setIsActive(true);
+      }
+    }, [])
+  );
+
+  return (
+    <div
+      className={cn(
+        'flex max-w-[calc(100%-100px)] flex-row items-center gap-1.5 rounded-full bg-white px-5 py-2 shadow-md md:h-9 lg:h-10',
+        'hover:bg-background',
+        { 'bg-primary-9 hover:text-primary-9 text-white hover:bg-white': isActive }
+      )}
+      onKeyDown={onProfileClick}
+      onClick={onProfileClick}
+      role="button"
+      tabIndex={-1}
+      title={username}
+      aria-label={username}
+    >
+      <UserFilled className="flex-shrink-0 text-base text-current xl:text-lg" />
+      <h3 className="line-clamp-1 min-w-0 truncate text-left text-sm font-bold">{username}</h3>
+    </div>
+  );
+}

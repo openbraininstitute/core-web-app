@@ -8,6 +8,7 @@ import { Image } from 'antd';
 import kebabCase from 'lodash/kebabCase';
 import Link from 'next/link';
 
+import { CircuitPreview } from './previews/circuit-preview';
 import { SingleNeuronSimulationPreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-simulation-preview';
 import { SingleNeuronSynaptomePreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-synaptome-preview';
 import { makeCustomRowSelectionEvent } from '@/ui/segments/explore/circuit/elements/custom-row-selection-event';
@@ -21,7 +22,7 @@ import { BookmarkIcon, DownloadIcon } from '@/components/icons/buttons';
 import { ExpandableText } from '@/ui/molecules/more-less-text';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
-import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { ROOT_ROUTE } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Card, CardTitle } from '@/ui/molecules/card';
 import { WorkspaceSection } from '@/constants';
@@ -43,6 +44,8 @@ import {
   type ISingleNeuronSynaptome,
   type ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
+import { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 
 type Props = {
   section?: TWorkspaceSection;
@@ -157,6 +160,18 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
           />
         </div>
       )
+    )
+    .with(
+      {
+        type: ExtendedEntitiesTypeDict.Circuit,
+      },
+      () => {
+        return (
+          <div className="mt-5 w-full" key={record.id}>
+            <CircuitPreview record={record as ICircuit} />
+          </div>
+        );
+      }
     )
     .otherwise(() => null);
 
@@ -290,48 +305,92 @@ function ExploreActions<T extends EntityCoreObjectTypes>({ record }: { record: T
 
   return (
     <div className="sticky bottom-0 mt-auto flex items-center justify-center gap-2 self-end p-4">
-      <Button
-        rounded
-        title="Copy ID"
-        className="hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
-        onClick={onCopyClipboard}
-      >
-        {copying ? (
-          <motion.div
-            key="checkmark"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{
-              type: 'spring',
-              stiffness: 500,
-              damping: 30,
-              duration: 0.2,
-            }}
+      <Tooltip>
+        <TooltipTrigger>
+          <Button
+            rounded
+            title="Copy ID"
+            className="hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
+            onClick={onCopyClipboard}
           >
-            <CheckCircleFilled className="text-accent-light" />
-          </motion.div>
-        ) : (
-          <div key="copy">
-            <CopyOutlined />
-          </div>
-        )}
-      </Button>
-      <Button
-        rounded
-        title="Save to bookmark"
-        className="hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
-        onClick={onBookmark}
-      >
-        {pendingSave ? <LoadingOutlined spin className="text-primary-3" /> : <BookmarkIcon />}
-      </Button>
-      <Button
-        rounded
-        title="download"
-        className="hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
-        onClick={onDownload}
-      >
-        {pendingDownload ? <LoadingOutlined spin className="text-primary-3" /> : <DownloadIcon />}
-      </Button>
+            {copying ? (
+              <motion.div
+                key="checkmark"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{
+                  type: 'spring',
+                  stiffness: 500,
+                  damping: 30,
+                  duration: 0.2,
+                }}
+              >
+                <CheckCircleFilled className="text-accent-light" />
+              </motion.div>
+            ) : (
+              <div key="copy">
+                <CopyOutlined />
+              </div>
+            )}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent
+          avoidCollisions
+          side="top"
+          sideOffset={3}
+          align="center"
+          className="text-primary-8 bg-white"
+        >
+          <span>Copy ID</span>
+        </TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger>
+          <Button
+            rounded
+            title="Save to bookmark"
+            className="hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
+            onClick={onBookmark}
+          >
+            {pendingSave ? <LoadingOutlined spin className="text-primary-3" /> : <BookmarkIcon />}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent
+          avoidCollisions
+          side="top"
+          sideOffset={3}
+          align="center"
+          className="text-primary-8 bg-white"
+        >
+          <span>Save to bookmark</span>
+        </TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger>
+          <Button
+            rounded
+            title="download"
+            className="hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
+            onClick={onDownload}
+          >
+            {pendingDownload ? (
+              <LoadingOutlined spin className="text-primary-3" />
+            ) : (
+              <DownloadIcon />
+            )}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent
+          avoidCollisions
+          side="top"
+          sideOffset={3}
+          align="center"
+          className="text-primary-8 bg-white"
+        >
+          <span>Download</span>
+        </TooltipContent>
+      </Tooltip>
+
       <Button
         rounded
         asChild
@@ -340,7 +399,7 @@ function ExploreActions<T extends EntityCoreObjectTypes>({ record }: { record: T
         className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
       >
         <Link
-          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`}
+          href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`}
         >
           View details
         </Link>
@@ -362,7 +421,7 @@ function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({ record }: { 
         className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
       >
         <Link
-          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`}
+          href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`}
         >
           View details
         </Link>
@@ -376,7 +435,7 @@ function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({ record }: { 
       >
         <Link
           href={{
-            pathname: `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/simulate/configure/${kebabCase(record.type)}/${record.id}`,
+            pathname: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/${kebabCase(record.type)}/${record.id}`,
             query: { sessionId: crypto.randomUUID() },
           }}
         >
@@ -401,7 +460,7 @@ function WorkflowBuildActions<T extends EntityCoreObjectTypes>({ record }: { rec
         className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
       >
         <Link
-          href={`${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`}
+          href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`}
         >
           View details
         </Link>
@@ -415,7 +474,7 @@ function WorkflowBuildActions<T extends EntityCoreObjectTypes>({ record }: { rec
       >
         <Link
           href={{
-            pathname: `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/build/configure/${kebabCase(record.type)}/${record.id}`,
+            pathname: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/${kebabCase(record.type)}/${record.id}`,
             query: { sessionId: crypto.randomUUID() },
           }}
           onClick={onWorkflowClick}

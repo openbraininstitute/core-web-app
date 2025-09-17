@@ -57,7 +57,7 @@ export function DefaultContent({ children, dataKey }: Props) {
           { hidden: mdv }
         )}
       >
-        <Card borderless className="h-full w-full gap-0 bg-white py-0 shadow-lg">
+        <Card borderless className="h-full w-full gap-0 py-0 shadow-lg">
           {menu}
         </Card>
       </div>

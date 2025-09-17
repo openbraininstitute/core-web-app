@@ -6,7 +6,7 @@ import snakeCase from 'lodash/snakeCase';
 import Link from 'next/link';
 
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { ROOT_ROUTE } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   getBuildTypeFromSimulateType,
@@ -37,7 +37,7 @@ export function SimulateWorkflowsBreadcrumb() {
   const buildType = getBuildTypeFromSimulateType(dataType);
   const selectTitle = getEntityByExtendedType({ type: buildType })?.title;
   const buildTitle = getEntityTypeWorkflowConfigurationItem(buildType)?.label;
-  const homeLink = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/${segment}/browse/${type}`;
+  const homeLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${segment}/browse/${type}`;
 
   return (
     <div className="px-3 pt-4 pb-2">

@@ -17,7 +17,7 @@ import {
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { Header } from '@/ui/segments/project/activities/elements/header';
 import { Card, CardHeader, CardContent } from '@/ui/molecules/card';
-import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { ROOT_ROUTE } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
@@ -92,7 +92,7 @@ export function ProjectActivities() {
 
         if (scaleType) {
           const section = get(Scales, `${scaleType}.link`, null);
-          const linkUrl = `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/${section}/view/${record.id}`;
+          const linkUrl = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/${section}/view/${record.id}`;
           return (
             <Link href={linkUrl} aria-label={record.name} className={className}>
               <RightSquareOutlined />

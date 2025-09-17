@@ -8,7 +8,7 @@ import kebabCase from 'lodash/kebabCase';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { CategoryMenu } from '@/ui/segments/workflows/elements/category-menu';
 import { TypesMenu } from '@/ui/segments/workflows/elements/types-menu';
-import { V2_MIGRATION_TEMPORARY_BASE_PATH } from '@/config';
+import { ROOT_ROUTE } from '@/config';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
@@ -35,12 +35,12 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
     if (category === CategoryValues.Build) {
       const sessionId = crypto.randomUUID();
       push(
-        `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/${category}/configure/${kebabCase(value)}?sessionId=${sessionId}`
+        `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${category}/configure/${kebabCase(value)}?sessionId=${sessionId}`
       );
       return;
     }
     push(
-      `${V2_MIGRATION_TEMPORARY_BASE_PATH}/${virtualLabId}/${projectId}/workflows/${category}/browse/${kebabCase(value)}`
+      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${category}/browse/${kebabCase(value)}`
     );
   };
 

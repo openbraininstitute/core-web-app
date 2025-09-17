@@ -226,13 +226,20 @@ export function ArrowSyncFilled(props: React.SVGProps<SVGSVGElement>) {
 
 export function LabCompany(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" {...props}>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 20 20"
+      width={props?.width || 24}
+      height={props?.height || 24}
+      {...props}
+    >
       <path
-        fill="#A5A5A5"
+        fill="currentColor"
         d="M3.2 14a.8.8 0 1 0 0 1.6h3.6a.8.8 0 0 0 0-1.6H3.2Zm7.6-6a.8.8 0 0 0 1.6 0V7a.8.8 0 0 0-1.6 0v1Zm3.2.8a.8.8 0 0 1-.8-.8V7a.8.8 0 0 1 1.6 0v1a.8.8 0 0 1-.8.8Zm2.4 0a.8.8 0 0 1-.8-.8V7a.8.8 0 0 1 1.6 0v1a.8.8 0 0 1-.8.8Z"
       />
       <path
-        fill="#A5A5A5"
+        fill="currentColor"
         fillRule="evenodd"
         d="M20 4.4c0 .398-.236.758-.6.917V19a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V8.66a1 1 0 0 1 1.226-.975L8.6 9.4V5.317A1 1 0 0 1 8 4.4V1a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v3.4Zm-4.4 11.2v2.8h-5.4v-2.8h5.4Zm-6-1.6h6v-1.33l-14-3.255V18.4h7V15a1 1 0 0 1 1-1Zm7.6 4.399v-6.205a1 1 0 0 0-.774-.974L10.2 9.772V5.4h7.6v13h-.6v-.001ZM9.6 3.8V1.6h8.8v2.2H9.6Z"
         clipRule="evenodd"
