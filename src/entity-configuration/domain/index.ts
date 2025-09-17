@@ -7,6 +7,7 @@ import { ElectricalCellRecording } from './experimental/electrical-cell-recordin
 import { NeuronDensity } from './experimental/neuron-density';
 import { BoutonDensity } from './experimental/bouton-density';
 import { SynapsePerConnection } from './experimental/synapse-per-connection';
+import { IonChannelModel } from './model/ion-channel-model';
 
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
 import { SmallMicrocircuit } from '@/entity-configuration/domain/model/small-microcircuit';
@@ -37,6 +38,7 @@ export const EntityCoreModelConfiguration = {
   SmallMicrocircuit,
   Microcircuit,
   PairedNeuronCircuit,
+  IonChannelModel,
 } as const;
 
 const EntityCoreSimulationConfiguration = {

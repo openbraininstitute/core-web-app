@@ -185,4 +185,21 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.CreationDate,
     ],
   },
+  [ExtendedEntitiesTypeDict.IonChannelModel]: {
+    title: 'Ion channel model',
+    group: DataTypeGroup.ModelData,
+    name: EntitySlug.IonChannelModel,
+    columns: [
+      EntityCoreFields.Name,
+      EntityCoreFields.BrainRegion,
+      EntityCoreFields.Contributions,
+      EntityCoreFields.CreationDate,
+    ],
+    curated: true,
+    summaryViewFields: [{ field: EntityCoreFields.BrainRegion }],
+    miniDetailView: [
+      { field: EntityCoreFields.BrainRegion },
+      { field: EntityCoreFields.RegistrationDate },
+    ],
+  },
 };
