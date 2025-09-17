@@ -70,6 +70,10 @@ export function CheckListDescription({ id, type }: { id: string; type: 'mtype' |
       return await getEtype({ id });
     },
     refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
+    gcTime: Infinity,
   });
 
   return <span className="text-primary-1 text-justify text-balance">{data?.definition}</span>;
