@@ -295,6 +295,7 @@ export default function ExploreSectionTable<T extends EntityCoreIdentifiable>({
   onRow,
   rowKey,
   defaultDisplayLoadMore = true,
+  enableDownload = true,
 }: TableProps<T> &
   AdditionalTableProps<T> & {
     renderButton?: (props: RenderButtonProps<T>) => ReactNode;
@@ -308,6 +309,7 @@ export default function ExploreSectionTable<T extends EntityCoreIdentifiable>({
     expandableConfig?: ExpandableConfig<T>;
     tableStyle?: CSSProperties | undefined;
     defaultDisplayLoadMore?: boolean;
+    enableDownload?: boolean;
   }) {
   const { rowSelection, selectedRows, clearSelectedRows } = useRowSelection({
     dataKey,
@@ -352,6 +354,7 @@ export default function ExploreSectionTable<T extends EntityCoreIdentifiable>({
           clearSelectedRows={clearSelectedRows}
           visible={controlsVisible}
           dataType={dataContext.dataType}
+          enableDownload={enableDownload}
         >
           {displayLoadMoreBtn && defaultDisplayLoadMore && (
             <LoadMoreButton

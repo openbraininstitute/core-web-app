@@ -347,7 +347,7 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
   const simulationIds = simulations.map((s) => s.id);
 
   const simExecStatusMapAtom = simExecStatusMapAtomFamily({ context, simulationIds });
-  const fetchRemoteSimExecStatuseMap = useSetAtom(
+  const fetchRemoteSimExecStatusMap = useSetAtom(
     simExecRemoteStatusMapAtomFamily({ simulationIds, context })
   );
 
@@ -385,20 +385,20 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
     if (simRequestInProgress) return;
 
     const hasActiveSimulations = statusMap
-      ?.values()
-      .some((status) =>
-        [
-          CircuitSimulationExecutionStatus.PENDING,
-          CircuitSimulationExecutionStatus.RUNNING,
-        ].includes(status)
-      );
+      ? Array.from(statusMap.values()).some((status) =>
+          [
+            CircuitSimulationExecutionStatus.PENDING,
+            CircuitSimulationExecutionStatus.RUNNING,
+          ].includes(status)
+        )
+      : false;
 
     if (!hasActiveSimulations) return;
 
-    const intervalId = setInterval(fetchRemoteSimExecStatuseMap, 15_000);
+    const intervalId = setInterval(fetchRemoteSimExecStatusMap, 15_000);
 
     return () => clearInterval(intervalId);
-  }, [fetchRemoteSimExecStatuseMap, simRequestInProgress, statusMap]);
+  }, [fetchRemoteSimExecStatusMap, simRequestInProgress, statusMap]);
 
   // TODO Refactor
   const run = async () => {

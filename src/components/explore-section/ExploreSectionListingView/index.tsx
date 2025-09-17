@@ -44,6 +44,7 @@ export interface Props<T extends EntityCoreIdentifiable> {
   controlsVisible?: boolean;
   style?: Record<'background', string>;
   showLoadingState?: boolean;
+  enableDownload?: boolean;
   useBrainRegion?: boolean;
   rowClassName?: string | TableProps<T>['rowClassName'];
   tableStyle?: CSSProperties | undefined;
@@ -71,6 +72,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
   tableStyle,
   onRow,
   expandableConfig = undefined,
+  enableDownload = true,
 }: Props<T>) {
   const { node } = useBrainRegionHierarchy({ dataKey });
 
@@ -161,6 +163,7 @@ export default function ExploreSectionListingView<T extends EntityCoreIdentifiab
                 tableStyle={tableStyle}
                 onRow={onRow}
                 expandableConfig={expandableConfig}
+                enableDownload={enableDownload}
               />
             </>
           )}
