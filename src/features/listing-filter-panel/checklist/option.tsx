@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { getMtype } from '@/api/entitycore/queries/annotations/mtype';
 import { CheckIcon } from '@/components/icons';
 import { getEtype } from '@/api/entitycore/queries/annotations/etype';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 
 const DisplayLabel = (filterField: string, key: string): string | null => {
   switch (filterField) {
@@ -64,7 +65,7 @@ export function CheckListOption({
 
 export function CheckListDescription({ id, type }: { id: string; type: 'mtype' | 'etype' }) {
   const { data } = useQuery({
-    queryKey: [id],
+    queryKey: keyBuilder.annotation({ entityId: id }),
     queryFn: async () => {
       if (type === 'mtype') return await getMtype({ id });
       return await getEtype({ id });
