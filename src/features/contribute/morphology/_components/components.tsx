@@ -971,7 +971,6 @@ export function JSONMorphologySchemaForm({
     if (normalizedKey === 'agentid' || normalizedKey === 'agent_id' || normalizedKey === 'agent')
       return 'AGENT';
     if (normalizedKey === 'agenttype') return 'AGENT TYPE';
-
     return v.title || k;
   }
 

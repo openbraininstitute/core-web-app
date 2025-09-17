@@ -25,7 +25,7 @@ import { classNames } from '@/util/utils';
 import styles from './small-microcircuit.module.css';
 
 // File validation function
-async function checkFileIsValid(file) {
+async function checkFileIsValid(file: File | null): Promise<boolean> {
   if (!file || !(file instanceof File)) {
     return false;
   }
@@ -47,19 +47,20 @@ async function checkFileIsValid(file) {
       // Note: Content-Type is not set explicitly for FormData; browser sets it with boundary
     };
 
-    // Use this for direct requests (requires CORS configuration on server):
-    const response = await authFetch(`${process.env.NEXT_PUBLIC_OBI_ONE_URL}/declared/upload-neuron-file', {
-      method: 'POST',
-      headers,
-      body: formData,
-    });
+    const response = await authFetch(
+      `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/declared/upload-neuron-file`,
+      {
+        method: 'POST',
+        headers,
+        body: formData,
+      }
+    );
 
     const responseText = await response.text();
-    let responseJson = null;
     try {
-      responseJson = JSON.parse(responseText);  
+      JSON.parse(responseText);
     } catch (e) {
-      pass
+      // Ignore parsing errors for now
     }
 
     if (!response.ok) {
@@ -84,7 +85,7 @@ export default function ContributeMorphologyConfiguration({
   initialConfig?: Config;
 }) {
   if (!!initialCampaignId !== !!initialConfig) {
-    throw new Error('Both or none of initialCampaignId, initialConfigId should be passed');
+    throw new Error('Both or none of initialCampaignId, initialConfig should be passed');
   }
 
   const { node } = useBrainRegionHierarchy({
@@ -437,7 +438,6 @@ export default function ContributeMorphologyConfiguration({
                       );
 
                       const fileResponseText = await fileResponse.text();
-
                       if (!fileResponse.ok) {
                         throw new ApiError(`Failed to upload file: ${fileResponseText}`, {
                           status: fileResponse.status,
@@ -464,7 +464,6 @@ export default function ContributeMorphologyConfiguration({
                         }
                       );
                       const fileResponseMtypeText = await fileResponseMtype.text();
-
                       if (!fileResponseMtype.ok) {
                         throw new ApiError(`Failed to upload file: ${fileResponseMtypeText}`, {
                           status: fileResponseMtype.status,
@@ -581,7 +580,11 @@ export default function ContributeMorphologyConfiguration({
                             let errorDescription = `The file ${file.name} is not valid.`;
                             if (!file.name || file.size === 0) {
                               errorDescription = `The file ${file.name} is empty or has no name.`;
-                            } else if (!['.swc', '.asc', '.h5'].includes(file.name.slice(file.name.lastIndexOf('.')).toLowerCase())) {
+                            } else if (
+                              !['.swc', '.asc', '.h5'].includes(
+                                file.name.slice(file.name.lastIndexOf('.')).toLowerCase()
+                              )
+                            ) {
                               errorDescription = `The file ${file.name} has an invalid extension. Please select a .swc, .asc, or .h5 file.`;
                             } else {
                               errorDescription = `The file ${file.name} could not be validated by the server. Please ensure it is a valid .swc, .asc, or .h5 file or check your server configuration.`;
