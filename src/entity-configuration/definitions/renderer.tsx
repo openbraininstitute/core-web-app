@@ -285,9 +285,9 @@ export const renderContributorsModal = (
   const consortia = contributors
     .filter((c) => c.agent.type === 'consortium')
     .sort(sortContributors);
-  const persons = contributors.filter((c) => c.agent.type === 'person').sort(sortContributors);
+  const other = contributors.filter((c) => c.agent.type !== 'consortium').sort(sortContributors);
 
-  const sortedContributors = [...consortia, ...persons];
+  const sortedContributors = [...consortia, ...other];
 
   if (mode === 'inline') {
     const displayContributors = sortedContributors.slice(0, 6);
