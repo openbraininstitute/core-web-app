@@ -127,10 +127,6 @@ function createFilterItemComponent(
           value: label,
         }));
 
-        console.log(filter);
-
-        console.log(facetItems);
-
         return (
           <CheckList
             data={facetItems}
@@ -257,7 +253,6 @@ export function ListingFilterPanel({
         .filter((o) => o.field !== 'id')
         ?.map((filter) => {
           const item = getFieldDefinition(filter.field);
-
           return {
             content:
               filter.type &&
