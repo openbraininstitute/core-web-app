@@ -10,6 +10,15 @@ import type {
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
 
+import type {
+  ContributionFilter,
+  IMorphologyFilter,
+  BrainRegionFilter,
+  SpeciesFilter,
+  SharedFilter,
+  PaginationFilter,
+} from '@/api/entitycore/types/shared/request';
+
 type UseIon = {
   ion_name: string;
   read: Array<string>;
@@ -48,3 +57,11 @@ export interface IonChannelModel
   brain_region: IBrainRegionHierarchy;
   contributions: Array<IContributor>;
 }
+
+export interface IonChannelModelFilter
+  extends ContributionFilter,
+    SpeciesFilter,
+    BrainRegionFilter,
+    SharedFilter,
+    IMorphologyFilter,
+    PaginationFilter {}
