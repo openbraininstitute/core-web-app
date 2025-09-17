@@ -40,7 +40,7 @@ export default function NeuronMeshInjectionRecordingPopover({
   };
 
   const onRecord = () => {
-    add({ section, offset, recordCurrents: false });
+    add({ section, offset });
     onClose();
   };
 
