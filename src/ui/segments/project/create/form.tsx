@@ -183,7 +183,7 @@ export function CreationForm() {
             />
           </Form.Item>
         </div>
-        <div className="mt-8 flex w-full items-start justify-between gap-3">
+        <div className="mt-4 flex w-full items-start justify-between gap-3">
           <div className="flex items-start gap-2">
             <InfoCircleOutlined className="text-primary-4 mt-1.5 text-lg" />
             <p className="text-base text-white">

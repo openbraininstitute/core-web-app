@@ -1,7 +1,7 @@
 'use client';
 
 import { DownOutlined, PlusOutlined, RightOutlined } from '@ant-design/icons';
-import { useState, useRef, useEffect, ComponentProps, useMemo } from 'react';
+import { useState, useRef, useEffect, ComponentProps, useMemo, useCallback } from 'react';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,6 +11,7 @@ import Link from 'next/link';
 
 import {
   makeTriggerWorkspaceConfigurationClickEvent,
+  type TTriggerWorkspaceConfigurationClickEvent,
   useWorkspaceConfigurationClickEvent,
   WorkspaceActions,
 } from '@/ui/segments/workspaces/space-manager/event';
@@ -250,7 +251,7 @@ export function SpaceSwitcher({ className }: Props) {
                 title={username}
                 aria-label={username}
               >
-                <UserFilled className="hover:text-primary-6 flex-shrink-0 text-lg xl:text-xl" />
+                <UserFilled className="hover:text-primary-6 text-primary-9 flex-shrink-0 text-lg xl:text-xl" />
               </div>
               <RightOutlined className="text-primary-8 font-bold" />
               {currentVirtualLabName && !isExpanded && (
@@ -286,7 +287,7 @@ export function SpaceSwitcher({ className }: Props) {
                 {virtualLabId && (
                   <>
                     {projectsLoading ? (
-                      <Skeleton className="h-5 w-24 flex-1" />
+                      <Skeleton className="h-5 w-24 flex-1 rounded-full" />
                     ) : (
                       <span className="text-primary-9 min-w-0 flex-1 truncate text-left font-bold">
                         {currentProjectName}
@@ -326,23 +327,7 @@ export function SpaceSwitcher({ className }: Props) {
                     'hover:text-primary-8! text-primary-9! flex w-full items-center justify-between'
                   )}
                 >
-                  <div
-                    className={cn(
-                      'flex max-w-[calc(100%-100px)] flex-row items-center gap-1.5 rounded-full bg-white px-3 py-2 shadow-md',
-                      'hover:bg-background'
-                    )}
-                    onKeyDown={onProfileClick}
-                    onClick={onProfileClick}
-                    role="button"
-                    tabIndex={-1}
-                    title={username}
-                    aria-label={username}
-                  >
-                    <UserFilled className="flex-shrink-0 text-base text-current xl:text-lg" />
-                    <h3 className="line-clamp-1 min-w-0 truncate text-left text-sm font-bold">
-                      {username}
-                    </h3>
-                  </div>
+                  <ProfileButton username={username} onProfileClick={onProfileClick} />
                   <div className="ml-2 flex flex-shrink-0 items-center gap-2">
                     <Link href="/app/log-out" className="hover:underline">
                       Logout
@@ -427,7 +412,7 @@ export function SpaceSwitcher({ className }: Props) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.05, duration: 0.1 }}
-                className="mt-auto border-t border-gray-100 p-4"
+                className="mt-auto p-4"
               >
                 <Button
                   rounded
@@ -449,3 +434,42 @@ export function SpaceSwitcher({ className }: Props) {
 }
 
 export default SpaceSwitcher;
+
+function ProfileButton({
+  username,
+  onProfileClick,
+}: {
+  username?: string;
+  onProfileClick: (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent> | React.KeyboardEvent<HTMLDivElement>
+  ) => void;
+}) {
+  const [isActive, setIsActive] = useState(false);
+  useWorkspaceConfigurationClickEvent(
+    useCallback((data: CustomEvent<TTriggerWorkspaceConfigurationClickEvent<any>>) => {
+      const incomingType = data.detail.type;
+      if (incomingType === WorkspaceActions.ProfileSettings) {
+        setIsActive(true);
+      }
+    }, [])
+  );
+
+  return (
+    <div
+      className={cn(
+        'flex max-w-[calc(100%-100px)] flex-row items-center gap-1.5 rounded-full bg-white px-5 py-2 shadow-md md:h-9 lg:h-10',
+        'hover:bg-background',
+        { 'bg-primary-9 hover:text-primary-9 text-white hover:bg-white': isActive }
+      )}
+      onKeyDown={onProfileClick}
+      onClick={onProfileClick}
+      role="button"
+      tabIndex={-1}
+      title={username}
+      aria-label={username}
+    >
+      <UserFilled className="flex-shrink-0 text-base text-current xl:text-lg" />
+      <h3 className="line-clamp-1 min-w-0 truncate text-left text-sm font-bold">{username}</h3>
+    </div>
+  );
+}
