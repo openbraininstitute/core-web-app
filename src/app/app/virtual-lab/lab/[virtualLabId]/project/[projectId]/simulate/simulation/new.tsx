@@ -71,7 +71,7 @@ export default function StartNewSimulation() {
           renderButton={() => null}
           dataKey={dataKey}
           useBrainRegion={false}
-          showLoadingState={false}
+          showLoadingState
         />
         {buttonsVisible && selectedRows.length > 0 && (
           <div className="fixed right-[50px] bottom-8 flex items-center justify-end gap-2">

@@ -9,7 +9,7 @@ import { DataType } from '@/constants/explore-section/list-views';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
-function DefaultRenderButton<T extends EntityCoreIdentifiable>({
+function DownloadButton<T extends EntityCoreIdentifiable>({
   children,
   clearSelectedRows,
   selectedRows,
@@ -40,6 +40,7 @@ export default function TableControls<T extends EntityCoreIdentifiable>({
   selectedRows,
   visible,
   dataType,
+  enableDownload,
 }: {
   clearSelectedRows: RenderButtonProps<T>['clearSelectedRows'];
   children?: ReactNode;
@@ -47,6 +48,7 @@ export default function TableControls<T extends EntityCoreIdentifiable>({
   selectedRows: RenderButtonProps<T>['selectedRows'];
   visible: boolean;
   dataType: DataType;
+  enableDownload?: boolean;
 }) {
   const { left, right } = useScrollNav(
     typeof document !== 'undefined'
@@ -63,14 +65,14 @@ export default function TableControls<T extends EntityCoreIdentifiable>({
         <div className="flex grow justify-center">{children}</div>
         <div className="ml-auto">{right}</div>
       </div>
-      {!!selectedRows?.length && clearSelectedRows && (
-        <DefaultRenderButton<T>
+      {!!selectedRows?.length && clearSelectedRows && enableDownload && (
+        <DownloadButton<T>
           clearSelectedRows={clearSelectedRows}
           selectedRows={selectedRows}
           dataType={dataType}
         >
           {renderButton}
-        </DefaultRenderButton>
+        </DownloadButton>
       )}
     </div>
   );

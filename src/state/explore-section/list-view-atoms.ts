@@ -17,6 +17,7 @@ import { getEntityByLegacyType } from '@/entity-configuration/domain/helpers';
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
 import { getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { useUnwrappedValue } from '@/hooks/hooks';
+import { env } from '@/env';
 
 import {
   getViewDefinitionByLegacyType,
@@ -259,7 +260,11 @@ export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAt
 
       const entity = getEntityByLegacyType({ legacyType: ctx.dataType as EntityCoreLegacyType });
 
-      if (entity?.type === EntityTypeEnum.Circuit) {
+      if (
+        entity?.type === EntityTypeEnum.Circuit &&
+        env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'development' &&
+        window.location.pathname.endsWith('circuit-dev')
+      ) {
         const representation = get(circuitRepresentationAtom);
         if (representation === 'hierarchy') {
           const hierarchy = await get(

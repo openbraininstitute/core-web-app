@@ -102,7 +102,7 @@ export default function MeModelsListingView({ virtualLabId, projectId, stateId }
       <div id="explore-table-container-for-observable" className="h-full w-full overflow-auto pb-5">
         <ExploreSectionListingView
           tableScrollable
-          controlsVisible={false}
+          controlsVisible
           dataType={DataType.CircuitMEModel}
           dataScope={ExploreDataScope.SelectedBrainRegion}
           virtualLabInfo={{ virtualLabId, projectId }}
@@ -118,6 +118,7 @@ export default function MeModelsListingView({ virtualLabId, projectId, stateId }
           onCellClick={onNavigateToMeModel}
           dataKey={stateId}
           useBrainRegion={false}
+          enableDownload={false}
         />
       </div>
       <button

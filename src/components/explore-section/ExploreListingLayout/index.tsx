@@ -81,7 +81,14 @@ export default function ExploreListingLayout({ children }: { children: ReactNode
     router.push(key);
   };
 
-  const nMenuItems = Object.keys(config).length;
+  const nMenuItems =
+    // eslint-disable-next-line no-nested-ternary
+    dataTypeGroup === DataTypeGroup.ExperimentalData
+      ? Object.keys(config).length
+      : tempIsCircuitInDev()
+        ? Object.keys(config).length
+        : Object.keys(config).length + 1;
+
   const menuItemWidth = `${Math.floor(100 / nMenuItems) - 0.04}%`;
 
   const items: Array<NavigationMenuItem> = Object.keys(config)
