@@ -69,6 +69,7 @@ export function CheckListDescription({ id, type }: { id: string; type: 'mtype' |
       if (type === 'mtype') return await getMtype({ id });
       return await getEtype({ id });
     },
+    refetchOnMount: false,
   });
 
   return <span className="text-primary-1 text-justify text-balance">{data?.definition}</span>;
