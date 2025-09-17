@@ -9,7 +9,6 @@ import { z } from 'zod';
 import dynamic from 'next/dynamic';
 
 import useBuildSingleNeuronSynaptomeSessionState from '@/features/entities/single-neuron-synaptome/build/create.state-session';
-import useRowSelection from '@/components/explore-section/ExploreSectionListingView/useRowSelection';
 
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
@@ -43,20 +42,20 @@ export default function MeModelsListingView({ virtualLabId, projectId, stateId }
   const form = Form.useFormInstance();
   const { push: navigate } = useRouter();
   const [emptyMEmodelError, setEmptyMEmodelError] = useState(false);
-  const { phase, updateQueryConfig, setSessionValue } = useBuildSingleNeuronSynaptomeSessionState({
-    virtualLabId,
-    projectId,
-    stateId,
-  });
-  const { selectedRows } = useRowSelection({ dataKey: stateId });
+  const { phase, updateQueryConfig, setSessionValue, sessionValue } =
+    useBuildSingleNeuronSynaptomeSessionState({
+      virtualLabId,
+      projectId,
+      stateId,
+    });
   const { setFieldValue, validateFields } = Form.useFormInstance();
 
   const gotoSynaptomeConfiguration = async () => {
     setEmptyMEmodelError(false);
     await validateFields(['model_id']);
-    const { success } = await memodelSchema.safeParseAsync(selectedRows);
+    const { success, data } = await memodelSchema.safeParseAsync(sessionValue?.selectedRows);
     if (success) {
-      const value = selectedRows[0].id;
+      const value = data[0].id;
       setFieldValue('model_id', value);
       updateQueryConfig({ phase: 'placement', memodelId: value, stateId });
     } else {
@@ -68,7 +67,7 @@ export default function MeModelsListingView({ virtualLabId, projectId, stateId }
     setSessionValue({
       name: form.getFieldValue('name'),
       description: form.getFieldValue('description'),
-      selectedRows: selectedRows as unknown as Array<IMEModel>,
+      selectedRows: sessionValue?.selectedRows as unknown as Array<IMEModel>,
     });
     navigate(
       resolveExploreDetailsPageUrl({
@@ -128,7 +127,7 @@ export default function MeModelsListingView({ virtualLabId, projectId, stateId }
           'disabled:text-primary-7 disabled:border-primary-7 disabled:cursor-not-allowed disabled:border disabled:bg-white'
         )}
         onClick={gotoSynaptomeConfiguration}
-        disabled={!selectedRows.length}
+        disabled={!sessionValue?.selectedRows?.length}
       >
         Use single neuron model
       </button>
