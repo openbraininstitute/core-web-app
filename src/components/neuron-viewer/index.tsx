@@ -124,7 +124,6 @@ export default function NeuronViewer({
       {
         section: injectionLocations[stimulationId].inject_to,
         offset: 0.5,
-        recordCurrents: false,
       },
       ...recordLocations,
     ]);

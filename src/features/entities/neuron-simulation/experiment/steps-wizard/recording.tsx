@@ -1,5 +1,4 @@
-import React from 'react';
-import { Select, Form, InputNumber, Button, Checkbox } from 'antd';
+import { Select, Form, InputNumber, Button } from 'antd';
 import { useAtomValue } from 'jotai';
 import { DeleteOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import isNil from 'lodash/isNil';
@@ -10,8 +9,6 @@ import { useRecordingSourceForSimulation } from '@/state/simulate/categories';
 import { RecordLocation } from '@/types/small-scale-simulator/single-neuron';
 import { classNames } from '@/util/utils';
 import { getSimulationColor } from '@/constants/simulate/single-neuron';
-
-import Styles from './recording.module.css';
 
 type RecordItemProps = {
   index: number;
@@ -36,73 +33,61 @@ function RecordItem({
     <div className="w-full [&:last-of-type_div.divider]:hidden">
       <div className="flex w-full flex-col items-start justify-start">
         <h3 className="text-neutral-4 mb-1 text-lg uppercase">Recording {index + 1}</h3>
-        <div className={Styles.recordItemLine}>
-          <div>
-            {/**
-             * We add 1 to the index because the first color is already used by the current injection.
-             */}
-            <ColorMarker index={index + 1} />
-            <Form.Item name={[name, 'section']} rules={[{ required: true }]}>
-              <Select
-                showSearch
-                placeholder="Section name"
-                onChange={(v) => onAddSource(index, { section: v })}
-                options={sections.map((sec) => ({ label: sec, value: sec }))}
-                className="[&_.ant-select-selection-item]:text-primary-8! w-full [&_.ant-select-selection-item]:text-left! [&_.ant-select-selection-item]:font-bold"
-                placement="bottomLeft"
-                disabled={disable}
-                size="large"
-              />
-            </Form.Item>
-          </div>
-          <div>
-            <div className="text-neutral-4 flex h-11 items-center justify-center align-middle text-base">
-              <span className="mr-2 uppercase">segment</span>
-              <CustomPopover
-                message="The recording position relative to the section. 0 being the start of the section and 1 being the end."
-                placement="bottomRight"
-                when={['hover']}
-              >
-                <InfoCircleOutlined className="cursor-pointer" />
-              </CustomPopover>
-            </div>
-            <Form.Item
-              name={[name, 'offset']}
-              rules={[
-                { required: true, message: 'Requireed field' },
-                {
-                  type: 'number',
-                  min: 0,
-                  max: 1,
-                  message: 'Section segment should be between 0 and 1',
-                },
-              ]}
+        <div className="grid w-full grid-cols-[auto_1fr_max-content_max-content_.5fr] items-start justify-center gap-2">
+          {/**
+           * We add 1 to the index because the first color is already used by the current injection.
+           */}
+          <ColorMarker index={index + 1} />
+          <Form.Item className="mb-2 w-full" name={[name, 'section']} rules={[{ required: true }]}>
+            <Select
+              showSearch
+              placeholder="Section name"
+              onChange={(v) => onAddSource(index, { section: v })}
+              options={sections.map((sec) => ({ label: sec, value: sec }))}
+              className="[&_.ant-select-selection-item]:text-primary-8! w-full [&_.ant-select-selection-item]:text-left! [&_.ant-select-selection-item]:font-bold"
+              placement="bottomLeft"
+              disabled={disable}
+              size="large"
+            />
+          </Form.Item>
+          <div className="text-neutral-4 flex h-11 items-center justify-center align-middle text-base">
+            <span className="mr-2 uppercase">segment</span>
+            <CustomPopover
+              message="The recording position relative to the section. 0 being the start of the section and 1 being the end."
+              placement="bottomRight"
+              when={['hover']}
             >
-              <InputNumber<number>
-                min={0}
-                max={1}
-                step={0.01}
-                className="[&_.ant-input-number-input]:text-primary-8! w-full [&_.ant-input-number-input]:font-bold"
-                onChange={(v) => {
-                  if (!isNil(v)) {
-                    onAddSource(index, { offset: v });
-                  }
-                }}
-                size="large"
-                disabled={disable}
-              />
-            </Form.Item>
+              <InfoCircleOutlined className="cursor-pointer" />
+            </CustomPopover>
           </div>
-          <div>
-            <Form.Item name={[name, 'recordCurrents']}>
-              <Checkbox
-                onChange={(evt) => onAddSource(index, { recordCurrents: evt.target.checked })}
-              >
-                Record currents
-              </Checkbox>
-            </Form.Item>
-          </div>
-          <div className="flex h-11 items-center justify-end">
+          <Form.Item
+            className="mb-2"
+            name={[name, 'offset']}
+            rules={[
+              { required: true, message: 'Requireed field' },
+              {
+                type: 'number',
+                min: 0,
+                max: 1,
+                message: 'Section segment should be between 0 and 1',
+              },
+            ]}
+          >
+            <InputNumber<number>
+              min={0}
+              max={1}
+              step={0.01}
+              className="[&_.ant-input-number-input]:text-primary-8! w-full [&_.ant-input-number-input]:font-bold"
+              onChange={(v) => {
+                if (!isNil(v)) {
+                  onAddSource(index, { offset: v });
+                }
+              }}
+              size="large"
+              disabled={disable}
+            />
+          </Form.Item>
+          <div className="mb-2 flex h-11 items-center justify-end">
             <Button
               type="text"
               icon={<DeleteOutlined />}
@@ -149,7 +134,6 @@ export default function Recording() {
           addRecordLocation({
             section: sectionNames[0],
             offset: 0.5,
-            recordCurrents: false,
           });
         }}
         disabled={!sectionNames.length}
