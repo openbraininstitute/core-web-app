@@ -202,7 +202,7 @@ export default function useExploreColumns<T>(
               >
                 {fieldTitleSentenceCase(term?.title!)}
               </div>
-              {term?.unit && (
+              {term?.unit && dataType !== DataType.ExperimentalSynapsePerConnection && (
                 <span className={`${styles.tableHeaderUnits} break-words`}>[{term?.unit}]</span>
               )}
             </div>
