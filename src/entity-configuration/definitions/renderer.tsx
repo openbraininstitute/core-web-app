@@ -295,7 +295,7 @@ export const renderContributorsModal = (
 
     return (
       <div>
-        <span>
+        <span className="line-clamp-2">
           {displayContributors.map((contributor, index) => (
             <span key={`${contributor.agent.pref_label}-${contributor.agent.type}`}>
               {getName(contributor)}
