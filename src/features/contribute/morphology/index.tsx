@@ -24,6 +24,54 @@ import { useAppNotification } from '@/components/notification';
 import { classNames } from '@/util/utils';
 import styles from './small-microcircuit.module.css';
 
+// File validation function
+async function checkFileIsValid(file) {
+  if (!file || !(file instanceof File)) {
+    return false;
+  }
+  const validExtensions = ['.swc', '.asc', '.h5'];
+  const extension = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
+  if (!validExtensions.includes(extension)) {
+    return false;
+  }
+  if (!file.name || file.size === 0) {
+    return false;
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+
+    const headers = {
+      accept: 'application/json',
+      // Note: Content-Type is not set explicitly for FormData; browser sets it with boundary
+    };
+
+    // Use this for direct requests (requires CORS configuration on server):
+    const response = await authFetch('http://127.0.0.1:8100/declared/upload-neuron-file', {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    const responseText = await response.text();
+    let responseJson = null;
+    try {
+      responseJson = JSON.parse(responseText);  
+    } catch (e) {
+      pass
+    }
+
+    if (!response.ok) {
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 export default function ContributeMorphologyConfiguration({
   virtualLabId,
   projectId,
@@ -43,7 +91,7 @@ export default function ContributeMorphologyConfiguration({
     dataKey: resolveDataKey({ section: 'explore', projectId }),
   });
 
-  const [configTab, setConfigTab] = useState<string>('morphology');
+  const [configTab, setConfigTab] = useState<string>('assets');
   const [editing, setEditing] = useState(true);
   const [schema, setSchema] = useState<JSONMorphologySchema | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('ReconstructionMorphology');
@@ -522,12 +570,30 @@ export default function ContributeMorphologyConfiguration({
                       accept=".swc,.asc,.h5"
                       className="hidden"
                       disabled={loading || readOnly}
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         const file = e.target.files?.[0];
-
                         if (file) {
-                          setSelectedFile(file);
-                          setFileStatus({ message: `File selected: ${file.name}` });
+                          const isValid = await checkFileIsValid(file);
+                          if (isValid) {
+                            setSelectedFile(file);
+                            setFileStatus({ message: `File selected: ${file.name}` });
+                          } else {
+                            let errorDescription = `The file ${file.name} is not valid.`;
+                            if (!file.name || file.size === 0) {
+                              errorDescription = `The file ${file.name} is empty or has no name.`;
+                            } else if (!['.swc', '.asc', '.h5'].includes(file.name.slice(file.name.lastIndexOf('.')).toLowerCase())) {
+                              errorDescription = `The file ${file.name} has an invalid extension. Please select a .swc, .asc, or .h5 file.`;
+                            } else {
+                              errorDescription = `The file ${file.name} could not be validated by the server. Please ensure it is a valid .swc, .asc, or .h5 file or check your server configuration.`;
+                            }
+                            notification.error({
+                              message: 'Invalid File',
+                              description: errorDescription,
+                            });
+                            setSelectedFile(null);
+                            setFileStatus({ message: `Invalid file selected: ${file.name}` });
+                            e.target.value = '';
+                          }
                         } else {
                           setSelectedFile(null);
                           setFileStatus({});
@@ -536,7 +602,14 @@ export default function ContributeMorphologyConfiguration({
                     />
                   </label>
                   {fileStatus?.message && (
-                    <span className="text-sm text-gray-600">{fileStatus.message}</span>
+                    <span
+                      className={classNames(
+                        'text-sm',
+                        fileStatus.message.includes('Invalid') ? 'text-red-500' : 'text-gray-600'
+                      )}
+                    >
+                      {fileStatus.message}
+                    </span>
                   )}
                 </div>
               </div>

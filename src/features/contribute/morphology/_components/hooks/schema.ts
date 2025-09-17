@@ -36,7 +36,9 @@ export function useObioneJsonSchema(
   React.useEffect(() => {
     async function fetchSpec() {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_OBI_ONE_URL}/openapi.json`);
+        //const res = await fetch(`${process.env.NEXT_PUBLIC_OBI_ONE_URL}/openapi.json`);
+        const res = await fetch(`http://127.0.0.1:8100/openapi.json`);
+
         const json = await res.json();
         const dereferenced = (await $RefParser.dereference(json)) as OpenAPISchema;
         const theSchema = dereferenced.components?.schemas?.[schemaName];
