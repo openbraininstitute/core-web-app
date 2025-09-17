@@ -17,17 +17,19 @@ import get from 'lodash/get';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
 import { createMEModel } from '@/api/entitycore/queries/model/me-model';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { LOW_FUNDS_ERROR_CODE, messages } from '@/i18n/en/me-model';
 import { useAppNotification } from '@/components/notification';
 import { WorkspaceContextSchema } from '@/types/common';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { OneshotSession } from '@/services/accounting';
 import {
   useBuildMeModelSessionState,
   BuildStepKeys,
   BuildStep,
 } from '@/ui/segments/workflows/build/memodel/helpers';
-import { OneshotSession } from '@/services/accounting';
 import { ServiceSubtype } from '@/types/accounting';
 import {
   CreateMEModelSchema,
@@ -35,7 +37,6 @@ import {
   type IMEModel,
 } from '@/api/entitycore/types/entities/me-model';
 import { Button } from '@/ui/molecules/button';
-import { LOW_FUNDS_ERROR_CODE, messages } from '@/i18n/en/me-model';
 import { cn } from '@/utils/css-class';
 import { ROOT_ROUTE } from '@/config';
 import { log } from '@/utils/logger';
@@ -148,7 +149,12 @@ export function Menu({ sessionId }: { sessionId: string }) {
       await queryClient.invalidateQueries({
         queryKey: [
           'workspace/activities',
-          { virtualLabId, projectId, scale: 'memodel', type: 'build', entity: 'memodel' },
+          {
+            virtualLabId,
+            projectId,
+            activity: ActivityValues.Build,
+            entityType: ExtendedEntitiesTypeDict.Memodel,
+          },
         ],
       });
     },
@@ -282,7 +288,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
               variant="success"
               size={breakpoint === 'l' ? 'md' : 'lg'}
               className={cn(
-                'disabled:bg-neutral-2 disabled:text-neutral-4! w-full justify-center px-10 font-medium!'
+                'disabled:bg-neutral-2/40 disabled:text-label! w-full justify-center px-10 font-medium!'
               )}
               onClick={() => mutate.mutateAsync()}
               disabled={disabled}

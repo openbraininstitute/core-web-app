@@ -1,6 +1,6 @@
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import {
-  CategoryDict,
+  ActivityDict,
   getDropdownOptionsByCategory,
 } from '@/ui/segments/workflows/elements/helpers';
 import { cn } from '@/utils/css-class';
@@ -15,14 +15,14 @@ import {
 } from '@/ui/molecules/select';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TCategoryValue } from '@/ui/segments/workflows/elements/helpers';
+import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 
 export function EntityTypeSelectScrollable({
   value,
   category,
   onSelect,
 }: {
-  category: TCategoryValue | undefined;
+  category: TActivityValue | undefined;
   value: TExtendedEntitiesTypeDict | undefined;
   onSelect: (v: TExtendedEntitiesTypeDict | undefined) => void;
 }) {
@@ -40,7 +40,7 @@ export function EntityTypeSelectScrollable({
       >
         <SelectValue placeholder={<span className="text-base font-light!">Select a type</span>} />
       </SelectTrigger>
-      <SelectContent className="max-h-96 rounded-lg border-white bg-white shadow-2xs">
+      <SelectContent className="max-h-96 rounded-lg border-white bg-white shadow-xl">
         {getDropdownOptionsByCategory(category).enabledOptions.map(({ group, options }) => (
           <SelectGroup key={`entity-type-group-${group}`}>
             <SelectLabel className="text-neutral-3 text-base">{group}</SelectLabel>
@@ -67,12 +67,12 @@ export function CategorySelectScrollable({
   value,
   onSelect,
 }: {
-  value: TCategoryValue | undefined;
-  onSelect: (v: TCategoryValue | undefined) => void;
+  value: TActivityValue | undefined;
+  onSelect: (v: TActivityValue | undefined) => void;
 }) {
   const breakpoint = useDefaultBreakpoint();
   return (
-    <Select value={value} onValueChange={(v: TCategoryValue) => onSelect(v)}>
+    <Select value={value} onValueChange={(v: TActivityValue) => onSelect(v)}>
       <SelectTrigger
         size={breakpoint === 'l' ? 'sm' : 'default'}
         className={cn(
@@ -85,8 +85,8 @@ export function CategorySelectScrollable({
           placeholder={<span className="text-base font-light!">Select a category</span>}
         />
       </SelectTrigger>
-      <SelectContent className="max-h-96 rounded-lg border-white bg-white shadow-2xs">
-        {CategoryDict.filter((o) => !o.disabled).map(({ label, value: _value }) => (
+      <SelectContent className="max-h-96 rounded-lg border-white bg-white shadow-xl">
+        {ActivityDict.filter((o) => !o.disabled).map(({ label, value: _value }) => (
           <SelectItem
             key={`category-${_value}`}
             value={_value}

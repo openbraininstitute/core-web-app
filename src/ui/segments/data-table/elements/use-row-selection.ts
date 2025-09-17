@@ -26,17 +26,21 @@ export function useRowSelection<T extends { id: string }>({
   rowSelection: RowSelection<T>;
   selectedRows: Array<T>;
   clearSelectedRows: () => void;
+  onRowSelect: (_keys: Key[], rows: Array<T>) => void;
 } {
   const [selectedRows, setSelectedRows] = useAtom(coreSelectedRowsAtom(dataKey));
   const clearSelectedRows = () => setSelectedRows([]);
 
+  const onRowSelect = (_keys: Key[], rows: Array<T>) => {
+    setSelectedRows(() => rows);
+    onRowsSelected?.(rows);
+  };
+
   return {
+    onRowSelect,
     rowSelection: {
       selectedRowKeys: selectedRows.map((row: T) => row.id),
-      onChange: (_keys: Key[], rows: Array<T>) => {
-        setSelectedRows(() => rows);
-        onRowsSelected?.(rows);
-      },
+      onChange: onRowSelect,
       type: selectionType,
     },
     selectedRows,

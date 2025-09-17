@@ -16,22 +16,22 @@ import Link from 'next/link';
 
 import { DEFAULT_SYNAPSE_VALUE } from '@/features/entities/single-neuron-synaptome/build/elements/synapse-config-form';
 import { SynapseSetMenuItems } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-set-menu-item';
-import {
-  SingleNeuronSynaptomeBaseSchema,
-  SingleNeuronSynaptomeConfigurationSchema,
-} from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
 import {
   useBuildSingleNeuronSynaptomeSessionState,
   BuildStepKeys,
   BuildStep,
 } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import {
+  SingleNeuronSynaptomeBaseSchema,
+  SingleNeuronSynaptomeConfigurationSchema,
+} from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import { createJsonAsset } from '@/api/entitycore/queries/assets';
 import { useAppNotification } from '@/components/notification';
-import { ROOT_ROUTE } from '@/config';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { OneshotSession } from '@/services/accounting';
@@ -40,6 +40,7 @@ import { messages } from '@/i18n/en/synaptome';
 import { Button } from '@/ui/molecules/button';
 import { tryCatch } from '@/api/utils';
 import { cn } from '@/utils/css-class';
+import { ROOT_ROUTE } from '@/config';
 
 import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type {
@@ -217,9 +218,8 @@ export function Menu({ sessionId }: Props) {
           keyBuilder.activities({
             virtualLabId,
             projectId,
-            scale: 'single_neuron_synaptome',
-            type: 'build',
-            entity: 'single_neuron_synaptome',
+            activity: ActivityValues.Build,
+            entityType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
           }),
         ],
       });
@@ -355,7 +355,7 @@ export function Menu({ sessionId }: Props) {
               variant="success"
               size={breakpoint === 'l' ? 'md' : 'lg'}
               className={cn(
-                'disabled:bg-neutral-2 disabled:text-neutral-4! w-full justify-center px-10 font-medium!'
+                'disabled:bg-neutral-2/40 disabled:text-label! w-full justify-center px-10 font-medium!'
               )}
               onClick={() => mutate.mutateAsync()}
               disabled={disabled}

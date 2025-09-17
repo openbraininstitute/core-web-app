@@ -10,8 +10,8 @@ import TriangleIcon from '@/components/icons/Triangle';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
-export type ActivityType = 'build' | 'simulate';
-export const ACTIVITY_PAGE_SIZE = 5;
+export const ACTIVITY_DEFAULT_PAGE_SIZE = 5;
+
 export const StatusMap: Record<string, { class: string; icon: ReactNode; title: string }> = {
   started: {
     class: 'text-primary-2',

@@ -5,11 +5,11 @@ import { Select } from 'antd';
 import { getScaleArray } from '@/ui/segments/project/activities/elements/helpers';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { ActivityType } from '@/ui/segments/project/activities/elements/helpers';
+import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 
 type Props = {
   onScaleChange: (s: TExtendedEntitiesTypeDict) => void;
-  onTypeChange: (t: ActivityType) => void;
+  onTypeChange: (t: TActivityValue) => void;
   onPageChange: (p: number) => void;
 };
 
@@ -18,7 +18,7 @@ export function Header({ onScaleChange, onTypeChange, onPageChange }: Props) {
     onScaleChange(s);
     onPageChange(1);
   };
-  const onType = (t: ActivityType) => {
+  const onType = (t: TActivityValue) => {
     onTypeChange(t);
     onPageChange(1);
   };

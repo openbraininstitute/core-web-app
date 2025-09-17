@@ -6,7 +6,7 @@ import { useCallback, useRef, useState } from 'react';
 import isString from 'lodash/isString';
 
 import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
-import type { CSSProperties, ReactNode } from 'react';
+import type { ComponentProps, CSSProperties, ReactNode } from 'react';
 import type { TableRef } from 'antd/es/table';
 
 import {
@@ -115,6 +115,8 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
   className,
   onRow,
   dataType,
+  wrapperClassname,
+  pagination = false,
 }: TableProps<T> &
   AdditionalTableProps<T> & {
     showLoadMore?: (value?: boolean) => void;
@@ -122,6 +124,7 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
     expandableConfig?: ExpandableConfig<T>;
     tableStyle?: CSSProperties | undefined;
     dataType: TExtendedEntitiesTypeDict;
+    wrapperClassname?: ComponentProps<'div'>['className'];
   }) {
   const [containerDimension, setContainerDimension] = useState<{ height: number; width: number }>({
     height: 0,
@@ -131,9 +134,9 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const tableElement: HTMLElement | null | undefined =
     tableRef.current?.nativeElement.querySelector('.ant-table-body');
-  const headerHeight =
-    (tableElement?.getBoundingClientRect()?.y ?? 0) -
-    (wrapperRef.current?.getBoundingClientRect()?.y ?? 0);
+  const headerElement: HTMLElement | null | undefined =
+    tableRef.current?.nativeElement.querySelector('.ant-table-header');
+  const headerHeight = headerElement?.getBoundingClientRect()?.height ?? 0;
 
   const onResize = useCallback((target: HTMLElement) => {
     setContainerDimension(target.getBoundingClientRect());
@@ -156,11 +159,16 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
     onCellClick,
   });
 
+  // TODO: fix the render component if error found
   if (hasError) return <div>Something went wrong</div>;
-
   if (!columns?.length) return null;
+
   return (
-    <div ref={wrapperRef} className="flex min-h-0 grow flex-col overflow-hidden">
+    <div
+      id="base-table-wrapper"
+      ref={wrapperRef}
+      className={cn('flex min-h-0 grow flex-col overflow-hidden', wrapperClassname)}
+    >
       <ConfigProvider theme={{ hashed: false }}>
         <Table
           ref={tableRef}
@@ -185,7 +193,7 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
           }}
           dataSource={dataSource}
           loading={loading}
-          pagination={false}
+          pagination={pagination}
           rowClassName={(row: T, index: number, indent: number) =>
             classNames(
               styles.tableRow,
@@ -228,6 +236,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
   className,
   dataType,
   controls,
+  baseTableWrapperClassname,
 }: TableProps<T> &
   AdditionalTableProps<T> & {
     renderButton?: (props: RenderButtonProps<T>) => ReactNode;
@@ -239,6 +248,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
     tableStyle?: CSSProperties | undefined;
     dataType: TExtendedEntitiesTypeDict;
     controls?: ReactNode;
+    baseTableWrapperClassname?: ComponentProps<'div'>['className'];
   }) {
   const { rowSelection, selectedRows, clearSelectedRows } = useRowSelection({
     dataKey,
@@ -263,6 +273,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
         style={tableStyle}
         className={className}
         onRow={onRow}
+        wrapperClassname={baseTableWrapperClassname}
       />
       <TableControls
         visible
