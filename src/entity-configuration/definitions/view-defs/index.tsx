@@ -15,6 +15,7 @@ import type { TExperimentTypeNames } from '@/entity-configuration/domain/experim
 export const CommonSummaryViewFields = [
   { field: EntityCoreFields.Description, className: 'col-span-3' },
   { field: EntityCoreFields.Contributions },
+  { field: EntityCoreFields.InstitutionalContributions },
   { field: EntityCoreFields.RegistrationDate },
 ] as TypeSummaryProps[];
 

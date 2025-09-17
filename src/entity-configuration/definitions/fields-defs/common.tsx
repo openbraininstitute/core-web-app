@@ -25,10 +25,17 @@ import type { FieldsDefinitionRegistry } from '@/entity-configuration/definition
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { EntityTypeValue } from '@/entity-configuration/domain';
 
-export type ProcessedContributor = {
-  name: string;
-  type: number; // 0 for Org, 1 for Person
+const renderContributors = (r: EntityTypeValue, filter: 'person' | 'organization') => {
+  if (!('contributions' in r) || !r.contributions) return EmptyValue;
+
+  const filteredContributions = r.contributions.filter(
+    (c) => c.agent.type === 'consortium' || c.agent.type === filter
+  );
+
+  if (!filteredContributions || filteredContributions.length === 0) return EmptyValue;
+  return renderContributorsModal(filteredContributions, false, () => {}, 'inline');
 };
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
@@ -161,12 +168,29 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null }).contributions,
         false
       ),
-    renderForDetailView: (r) => {
-      const { contributions } = r as EntityCoreObjectTypes & {
-        contributions?: Array<IContributor> | null;
-      };
-      return renderContributorsModal(contributions, false, () => {}, 'inline');
+    renderForDetailView: (r) => renderContributors(r, 'person'),
+    vocabulary: {
+      plural: 'Contributors',
+      singular: 'Contributor',
     },
+    defaultConstraint: 'contribution__pref_label__in',
+    order: {
+      property: 'contribution__order_by',
+      value: 'pref_label',
+    },
+    isSortable: false,
+    isFilterable: true,
+    isDisplayable: true,
+  },
+  [EntityCoreFields.InstitutionalContributions]: {
+    title: 'Institutional Contributors',
+    filter: CoreFieldFilterTypeEnum.CheckList,
+    render: (r) =>
+      transformAgentToNames(
+        (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null }).contributions,
+        false
+      ),
+    renderForDetailView: (r) => renderContributors(r, 'organization'),
     vocabulary: {
       plural: 'Contributors',
       singular: 'Contributor',

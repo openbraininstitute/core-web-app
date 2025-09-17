@@ -8,7 +8,6 @@ import isEmpty from 'lodash/isEmpty';
 import isNil from 'lodash/isNil';
 import find from 'lodash/find';
 
-import { ProcessedContributor } from '@/entity-configuration/definitions/fields-defs/common';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { PreviewThumbnail } from '@/features/thumbnail/preview';
 import { tryCatch } from '@/api/utils';
@@ -18,6 +17,7 @@ import type { WorkspaceContext } from '@/types/common';
 import type {
   EntityCoreIdentifiable,
   EntityCoreResource,
+  IContributor,
   ILicense,
   MeasurementBase,
 } from '@/api/entitycore/types/shared/global';
@@ -254,17 +254,15 @@ export const renderMorphologyMeasurement = (
 // CONTRIBUTOR MODAL
 
 function ContributorsModalTrigger({
-  sortedContributors,
   contributors,
 }: {
-  sortedContributors: ProcessedContributor[];
-  contributors: Array<{ agent: { pref_label: string; type: string } }> | null | undefined;
+  contributors: Array<IContributor>;
 }): React.ReactElement {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <>
       <Button type="link" onClick={() => setIsOpen(true)} className="mt-2 h-auto p-0 text-gray-600">
-        View {sortedContributors.length} Contributor{sortedContributors.length > 1 ? 's' : ''}
+        View {contributors.length} Contributor{contributors.length > 1 ? 's' : ''}
       </Button>
       {renderContributorsModal(contributors, isOpen, () => setIsOpen(false), 'modal')}
     </>
@@ -272,21 +270,24 @@ function ContributorsModalTrigger({
 }
 
 export const renderContributorsModal = (
-  contributors: Array<{ agent: { pref_label: string; type: string } }> | null | undefined,
+  contributors: Array<IContributor>,
   open: boolean,
   onClose: () => void,
   mode: 'modal' | 'inline' = 'modal'
 ): ReactNode => {
-  if (!contributors || contributors.length === 0) return EmptyValue;
+  const getName = (c: IContributor) =>
+    ('givenName' in c.agent && c.agent.givenName) || c.agent.pref_label;
 
-  const processedContributors: ProcessedContributor[] = contributors.map((contributor) => ({
-    name: contributor.agent.pref_label,
-    type: contributor.agent.type === 'organization' ? 0 : 1, // 0 for Org, 1 for Person
-  }));
+  const sortContributors = (a: IContributor, b: IContributor) => {
+    return getName(a).localeCompare(getName(b));
+  };
 
-  const sortedContributors = processedContributors.sort((a, b) =>
-    a.type === b.type ? String(a.name ?? '').localeCompare(String(b.name ?? '')) : a.type - b.type
-  );
+  const consortia = contributors
+    .filter((c) => c.agent.type === 'consortium')
+    .sort(sortContributors);
+  const persons = contributors.filter((c) => c.agent.type === 'person').sort(sortContributors);
+
+  const sortedContributors = [...consortia, ...persons];
 
   if (mode === 'inline') {
     const displayContributors = sortedContributors.slice(0, 6);
@@ -296,8 +297,8 @@ export const renderContributorsModal = (
       <div>
         <span>
           {displayContributors.map((contributor, index) => (
-            <span key={`${contributor.name}-${contributor.type}`}>
-              {contributor.name}
+            <span key={`${contributor.agent.pref_label}-${contributor.agent.type}`}>
+              {getName(contributor)}
               {index < displayContributors.length - 1 ? ', ' : ''}
             </span>
           ))}
@@ -305,10 +306,7 @@ export const renderContributorsModal = (
         {hasMoreContributors && (
           <>
             {displayContributors.length > 0 && ' '}
-            <ContributorsModalTrigger
-              sortedContributors={sortedContributors}
-              contributors={contributors}
-            />
+            <ContributorsModalTrigger contributors={contributors} />
           </>
         )}
       </div>
@@ -330,8 +328,8 @@ export const renderContributorsModal = (
     >
       <p className="text-primary-8" style={{ margin: 0, fontSize: '18px' }}>
         {sortedContributors.map((contributor, index) => (
-          <span key={`${contributor.name}-${contributor.type}`}>
-            {contributor.name}
+          <span key={`${contributor.agent.pref_label}-${contributor.agent.type}`}>
+            {getName(contributor)}
             {index < sortedContributors.length - 1 ? ', ' : ''}
           </span>
         ))}
