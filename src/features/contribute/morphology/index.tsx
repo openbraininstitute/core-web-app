@@ -48,7 +48,7 @@ async function checkFileIsValid(file) {
     };
 
     // Use this for direct requests (requires CORS configuration on server):
-    const response = await authFetch('http://127.0.0.1:8100/declared/upload-neuron-file', {
+    const response = await authFetch(`${process.env.NEXT_PUBLIC_OBI_ONE_URL}/declared/upload-neuron-file', {
       method: 'POST',
       headers,
       body: formData,
