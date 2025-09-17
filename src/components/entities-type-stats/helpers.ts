@@ -7,6 +7,7 @@ import { BoutonDensity } from '@/entity-configuration/domain/experimental/bouton
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
+import { tempIsCircuitInDev } from '@/temp-circuit-check';
 
 export const ExperimentalEntitiesTileTypes = {
   ReconstructionMorphology,
@@ -20,5 +21,5 @@ export const ModelEntitiesTileTypes = {
   Emodel,
   MEmodel,
   SingleNeuronSynaptome,
-  Circuit,
+  ...(tempIsCircuitInDev() ? { Circuit } : {}),
 } as const;
