@@ -89,11 +89,13 @@ export default async function Layout({
         </div>
         <div className="relative w-4/5">
           <div className="h-full w-full overflow-x-auto overflow-y-auto p-10">
-            <div className="h-[9%]">
-              <div className="text-neutral-4 uppercase">Name</div>
-              <div className="text-primary-8 text-2xl font-bold">{entity.name}</div>
-            </div>
-            <div className="h-[91%]">{children}</div>
+            {type !== 'simulation_campaign' && (
+              <div className="h-[9%]">
+                <div className="text-neutral-4 uppercase">Name</div>
+                <div className="text-primary-8 text-2xl font-bold">{entity.name}</div>
+              </div>
+            )}
+            <div className={type === 'simulation_campaign' ? 'h-full' : 'h-[91%]'}>{children}</div>
           </div>
           <Close href={parentLink} />
         </div>

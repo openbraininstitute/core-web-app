@@ -10,6 +10,7 @@ import { EntityTypeValue } from '@/entity-configuration/domain';
 import CircuitViz from '@/features/entities/circuit/elements/tabs-content/visualization';
 import { circuitTypes, EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
 import {
+  resolveSimulationByCampaignId,
   resolveSingleNeuronSimulation,
   resolveSingleNeuronSynaptomeSimulation,
 } from '@/entity-configuration/domain/simulation';
@@ -23,6 +24,7 @@ import {
 } from '@/api/entitycore/types';
 import EphysViewer from '@/features/ephys-viewer';
 import { getMEModel } from '@/api/entitycore/queries';
+import SmallMicrocircuitSimulation from '@/features/small-microcircuit';
 
 export default async function Overview({
   entity,
@@ -71,6 +73,29 @@ export default async function Overview({
     });
 
     (entity as ISingleNeuronSynaptome).me_model = meModel; //eslint-disable-line
+  }
+
+  if (extendedType === 'simulation_campaign') {
+    let config: AwaitedType<ReturnType<typeof resolveSimulationByCampaignId>>;
+
+    try {
+      config = await resolveSimulationByCampaignId({ id: entity.id, context: ctx });
+    } catch {
+      notFound();
+    }
+
+    if (!config.simulation?.entity_id) notFound();
+
+    return (
+      <SmallMicrocircuitSimulation
+        circuitId={config.simulation.entity_id}
+        virtualLabId={ctx.virtualLabId}
+        projectId={ctx.projectId}
+        initialCampaignId={config.campaign.id}
+        initialConfig={config.config.form}
+        readOnly
+      />
+    );
   }
 
   return (

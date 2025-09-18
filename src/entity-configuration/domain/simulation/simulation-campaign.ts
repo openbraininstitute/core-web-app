@@ -145,7 +145,7 @@ export const SimulationCampaign: EntityCoreTypeConfig<ICircuitSimulationCampaign
   asset: {
     extension: 'application/json',
   },
-  detailViewSections: ['overview', 'related-publications'],
+  detailViewSections: ['overview'],
   isBookmarkable: true,
   isDownloadable: false,
   isCopyable: true,

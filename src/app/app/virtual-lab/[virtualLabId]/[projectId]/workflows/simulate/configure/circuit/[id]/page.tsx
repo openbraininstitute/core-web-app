@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
+import { notFound } from 'next/navigation';
 import { use } from 'react';
 import SimulationConfig from '@/features/small-microcircuit';
 
@@ -10,7 +11,6 @@ import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
-import { notFound } from 'next/navigation';
 
 export default function Page({
   searchParams,
@@ -66,6 +66,7 @@ export default function Page({
         projectId={projectId}
         initialCampaignId={initialCampaignId}
         initialConfig={campaignData?.config.form}
+        className="px-10 pt-2"
       />
     );
   }
