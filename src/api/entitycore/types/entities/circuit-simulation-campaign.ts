@@ -14,6 +14,7 @@ import type {
   IEntityFilter,
 } from '@/api/entitycore/types/shared/request';
 import type {
+  ICircuit,
   TCircuitBuildCategoryDictionary,
   TCircuitScaleDictionary,
 } from '@/api/entitycore/types/entities/circuit';
@@ -32,6 +33,7 @@ interface ICircuitSimulationCampaignBase {
   scan_parameters: { [key: string]: any };
   entity_id: string;
   simulations?: Array<ISimulationBase>;
+  circuit: ICircuit;
 }
 
 export interface ICircuitSimulationCampaign

@@ -64,7 +64,6 @@ export default function Page({
         circuitId={entity.id}
         virtualLabId={virtualLabId}
         projectId={projectId}
-        initialCampaignId={initialCampaignId}
         initialConfig={campaignData?.config.form}
         className="px-10 pt-2"
       />

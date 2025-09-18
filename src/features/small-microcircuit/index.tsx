@@ -61,9 +61,6 @@ export default function SimulationCampaignConfiguration({
   readOnly?: boolean;
   className?: string;
 }) {
-  if (!!initialCampaignId !== !!initialConfig)
-    throw new Error('Both or none of initialCampaignId, initialConfigId should be passed');
-
   const circuit = useCircuit(circuitId);
   const [tab, setTab] = useState<TabType>('configuration');
   const [configTab, setConfigTab] = useState<string>('info');

@@ -9,6 +9,7 @@ import find from 'lodash/find';
 import get from 'lodash/get';
 
 import type { ColumnsType } from 'antd/es/table/interface';
+import { useRouter } from 'next/navigation';
 
 import { EntityCoreObjectTypes, EntityTypeDict, TEntityTypeDict } from '@/api/entitycore/types';
 import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
@@ -31,8 +32,9 @@ import { ROOT_ROUTE } from '@/config';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
+import { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 
-const AllowedDuplicateEntityTypes = [EntityTypeDict.SimulationCampaign];
+const AllowedDuplicateEntityTypes: TEntityTypeDict[] = [EntityTypeDict.SimulationCampaign];
 export interface WorkflowActivityRef {
   dataCount: number;
   totalItems: number;
@@ -155,6 +157,8 @@ export function WorkflowActivity({
     useKeepPreviousData: previousActivityType === activityType,
   });
 
+  const router = useRouter();
+
   useLayoutEffect(() => {
     function resolveShouldRenderScrollableSelector() {
       if (isFetching || isLoading || isDependenciesLoading) return;
@@ -180,7 +184,6 @@ export function WorkflowActivity({
     onRowsSelected: () => {},
   });
 
-  const onDuplicate = () => {};
   const selectedRow = selectedRows.at(0);
   const configurationLink = entity?.detailViewSections.includes('configuration')
     ? `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}/configuration`
@@ -189,6 +192,14 @@ export function WorkflowActivity({
   const resultsLink = entity?.detailViewSections.includes('results')
     ? `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}/results`
     : `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}`;
+
+  const onDuplicate = () => {
+    if (selectedRow?.type === 'simulation_campaign') {
+      router.push(
+        `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${(selectedRow as ICircuitSimulationCampaign).circuit.id}?initialCampaignId=${selectedRow.id}`
+      );
+    }
+  };
 
   const shouldShowEmptyState =
     !activityResult?.pagination.total_items && !isDependenciesLoading && !isFetching;
@@ -348,23 +359,26 @@ export function WorkflowActivity({
                     View configuration
                   </a>
                 </Button>
-                <Button
-                  rounded
-                  asChild={activityType !== ActivityValues.Build}
-                  variant="outline"
-                  size={breakpoint === 'l' ? 'md' : 'lg'}
-                  disabled={activityType === ActivityValues.Build}
-                  className="disabled:bg-background! disabled:text-label! select-none disabled:cursor-not-allowed"
-                >
-                  <a
-                    href={resultsLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-disabled={activityType === ActivityValues.Build}
-                  >
-                    View results
-                  </a>
-                </Button>
+                {entityType !== 'small_microcircuit_simulation' &&
+                  entityType !== 'paired_neuron_circuit_simulation' && (
+                    <Button
+                      rounded
+                      asChild={activityType !== ActivityValues.Build}
+                      variant="outline"
+                      size={breakpoint === 'l' ? 'md' : 'lg'}
+                      disabled={activityType === ActivityValues.Build}
+                      className="disabled:bg-background! disabled:text-label! select-none disabled:cursor-not-allowed"
+                    >
+                      <a
+                        href={resultsLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-disabled={activityType === ActivityValues.Build}
+                      >
+                        View results
+                      </a>
+                    </Button>
+                  )}
                 <Button
                   rounded
                   variant="outline"
@@ -373,7 +387,7 @@ export function WorkflowActivity({
                   className="disabled:bg-background disabled:text-label select-none disabled:cursor-not-allowed"
                   disabled={
                     activityType === ActivityValues.Build ||
-                    !find(AllowedDuplicateEntityTypes, selectedRow.type)
+                    !AllowedDuplicateEntityTypes.includes(selectedRow.type)
                   }
                 >
                   Duplicate
