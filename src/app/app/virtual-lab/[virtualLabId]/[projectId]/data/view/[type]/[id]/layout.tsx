@@ -69,10 +69,6 @@ export default async function Layout({
 
   const parentLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}`;
 
-  if (entityType.extendedType === 'simulation_campaign') {
-    return <>{children}</>;
-  }
-
   return (
     <>
       <div className="ml-5 flex h-full rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
