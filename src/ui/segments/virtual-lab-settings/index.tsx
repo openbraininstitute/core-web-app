@@ -21,6 +21,7 @@ import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
 import type { VirtualLab, VirtualLabListResponse } from '@/api/virtual-lab-svc/queries/types';
+import { ExpandableText } from '@/ui/molecules/more-less-text';
 
 const baseNameSchema = z
   .string()
@@ -236,8 +237,8 @@ function EditableName({
 
   if (isEditing) {
     return (
-      <div className="flex items-start gap-2">
-        <div className="flex flex-col gap-1">
+      <div className="flex w-full items-start gap-2">
+        <div className="flex w-full flex-col gap-1">
           <div className="relative">
             <input
               type="text"
@@ -305,10 +306,30 @@ function EditableName({
   }
 
   return (
-    <div className="group flex items-center gap-2">
-      <h2 className="text-3xl font-bold transition-all duration-200 select-none group-hover:text-white/90">
+    <div className="group flex items-start gap-2">
+      <ExpandableText
+        id="project-description-text"
+        text={currentName}
+        collapsedLines={2}
+        className="text-3xl font-bold break-words hyphens-auto transition-all duration-200 select-none group-hover:text-white/90"
+      >
+        {({ isExpanded, toggle }) => (
+          <button
+            type="button"
+            onClick={toggle}
+            aria-controls="virtual-lab-less-more"
+            className={cn(
+              'text-white/90 underline decoration-white/40 underline-offset-4 transition-colors hover:text-white',
+              'text-sm'
+            )}
+          >
+            {isExpanded ? 'Show less' : 'Show more'}
+          </button>
+        )}
+      </ExpandableText>
+      {/* <h2 className="text-3xl font-bold transition-all duration-200 select-none group-hover:text-white/90">
         {currentName}
-      </h2>
+      </h2> */}
       {isAdmin && (
         <Button
           type="button"
@@ -337,8 +358,8 @@ function Header({
   const virtualLabId = virtualLab?.id || '';
 
   return (
-    <div className="flex items-center justify-between py-4 text-white">
-      <div className="flex flex-col gap-0.5">
+    <div className="flex items-start justify-between gap-4 py-4 text-white">
+      <div className="flex w-2/3 flex-col gap-0.5">
         {virtualLabId && <EditableName initialName={name} virtualLabId={virtualLabId} />}
       </div>
       <div className="flex items-center justify-center gap-1.5">

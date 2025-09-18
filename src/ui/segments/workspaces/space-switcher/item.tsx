@@ -115,12 +115,15 @@ export function Item({
         onKeyDown={onVlabClick}
         onClick={onVlabClick}
       >
-        <div className="flex items-center justify-center gap-2">
-          <LabCompany className={cn('text-label size-4', { 'text-primary-3': lab.isMine })} />
+        <div className="flex min-w-0 flex-1 items-center gap-2 select-none">
+          <LabCompany
+            className={cn('text-label size-4! min-h-4 min-w-4', { 'text-primary-3': lab.isMine })}
+          />
           <h4
             className={cn('text-primary-9 text-md line-clamp-1 truncate font-bold', {
               'group-hover:text-primary-8! text-white!': lab.isMine,
             })}
+            title={lab.name}
           >
             {lab.name}
           </h4>
@@ -184,7 +187,7 @@ export function Item({
                     size="md"
                     variant="outline"
                     className={cn('w-full justify-start shadow-sm', {
-                      'text-primary-8 hover:text-primary-9 bg-gradient-to-br from-zinc-200 to-slate-50 font-bold':
+                      'text-primary-8 hover:text-primary-9 bg-white font-bold shadow-[16px_16px_30px_0px_#0000000F,-12px_-8px_32px_0px_#FFFFFF52]':
                         isActive,
                     })}
                     title={project.name}
@@ -196,7 +199,9 @@ export function Item({
                     }
                   >
                     {isActive && <div className="mr-2 h-3 w-3 rounded-full bg-current" />}
-                    <span className="line-clamp-1 truncate"> {project.name}</span>
+                    <span className="line-clamp-1 truncate" title={project.name}>
+                      {project.name}
+                    </span>
                     <RightOutlined
                       className={`ml-auto ${isActive ? 'text-neutral-2' : 'text-neutral-3'}`}
                     />

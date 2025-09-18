@@ -485,6 +485,8 @@ function AddMemberStep({ onBack, list, allowedOperation }: AddMemberStepProps) {
         >
           <div className="secondary-scrollbar mx-auto h-full w-full max-w-3xl overflow-y-auto">
             <List
+              id="project-list-users"
+              data-testid="project-list-users"
               dataSource={filteredUsers}
               className="text-white"
               renderItem={(member, index) => {
