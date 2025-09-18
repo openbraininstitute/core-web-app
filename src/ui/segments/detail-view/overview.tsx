@@ -94,6 +94,7 @@ export default async function Overview({
         initialCampaignId={config.campaign.id}
         initialConfig={config.config.form}
         readOnly
+        className="px-10 pt-2"
       />
     );
   }

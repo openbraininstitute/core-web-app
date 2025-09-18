@@ -69,6 +69,10 @@ export default async function Layout({
 
   const parentLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}`;
 
+  if (entityType.extendedType === 'simulation_campaign') {
+    return <>{children}</>;
+  }
+
   return (
     <>
       <div className="ml-5 flex h-full rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
@@ -89,13 +93,12 @@ export default async function Layout({
         </div>
         <div className="relative w-4/5">
           <div className="h-full w-full overflow-x-auto overflow-y-auto p-10">
-            {type !== 'simulation_campaign' && (
-              <div className="h-[9%]">
-                <div className="text-neutral-4 uppercase">Name</div>
-                <div className="text-primary-8 text-2xl font-bold">{entity.name}</div>
-              </div>
-            )}
-            <div className={type === 'simulation_campaign' ? 'h-full' : 'h-[91%]'}>{children}</div>
+            <div className="h-[9%]">
+              <div className="text-neutral-4 uppercase">Name</div>
+              <div className="text-primary-8 text-2xl font-bold">{entity.name}</div>
+            </div>
+
+            <div className="h-[91%]">{children}</div>
           </div>
           <Close href={parentLink} />
         </div>
