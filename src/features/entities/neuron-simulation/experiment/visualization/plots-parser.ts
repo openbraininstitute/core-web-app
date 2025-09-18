@@ -110,7 +110,9 @@ function distributeColors(plotInstance: PlotInstance): PlotInstance {
   const step = 360 / plotInstance.lines.length;
   let angle = 0;
   for (const line of plotInstance.lines) {
-    line.color = `hsl(${angle}deg 100% 50%)`;
+    if (!line.color) {
+      line.color = `hsl(${angle}deg 100% 50%)`;
+    }
     angle += step;
   }
   return plotInstance;

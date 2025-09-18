@@ -17,7 +17,7 @@
   display: flex;
   flex-wrap: nowrap;
   flex-direction: column;
-  justify-content: space-around;
+  justify-content: center;
   align-items: stretch;
   gap: 0;
   background: #fff;
@@ -35,12 +35,35 @@
     position: absolute;
     right: 0;
     top: 0;
+  }
 
-    &:fullscreen,
-    &:-webkit-full-screen {
+  &:fullscreen,
+  &:-webkit-full-screen {
+    > button {
       font-size: 200%;
       right: 0.5em;
       top: 0.5em;
     }
+  }
+}
+
+.legend {
+  font-size: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 0 1em;
+  margin-right: 2em;
+
+  > button {
+    font: inherit;
+    text-align: center;
+    min-width: 3em;
+    border: none;
+    border-bottom: 0.2em solid var(--custom-color);
+    cursor: pointer;
+    transition: all 0.2s;
   }
 }
