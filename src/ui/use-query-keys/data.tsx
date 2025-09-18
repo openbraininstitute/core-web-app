@@ -107,4 +107,5 @@ export const keyBuilder = {
     `${prefix}-entity-asset`,
     { entityId, assetId, assetPath, assetType, asRawResponse, ...context },
   ],
+  annotation: ({ entityId }: { entityId: string }) => [`${prefix}-annotation`, { entityId }],
 };

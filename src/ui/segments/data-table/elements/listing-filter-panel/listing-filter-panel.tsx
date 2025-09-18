@@ -126,6 +126,7 @@ function createFilterItemComponent(
           count,
           value: label,
         }));
+
         return (
           <CheckList
             data={facetItems}

@@ -1,12 +1,14 @@
 'use client';
 
-import { memo, ReactNode, useEffect, useState } from 'react';
+import { ReactNode } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import * as Checkbox from '@radix-ui/react-checkbox';
 import { format } from 'date-fns';
 
 import { getMtype } from '@/api/entitycore/queries/annotations/mtype';
 import { CheckIcon } from '@/components/icons';
-import { tryCatch } from '@/api/utils';
+import { getEtype } from '@/api/entitycore/queries/annotations/etype';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 
 const DisplayLabel = (filterField: string, key: string): string | null => {
   switch (filterField) {
@@ -61,33 +63,19 @@ export function CheckListOption({
   );
 }
 
-function CheckListDescriptionToMemoize({
-  id,
-}: {
-  id: string;
-  // eslint-disable-next-line react/no-unused-prop-types
-  filterField: string;
-  // eslint-disable-next-line react/no-unused-prop-types
-  label: string;
-  // eslint-disable-next-line react/no-unused-prop-types
-  type?: string | null;
-}) {
-  const [definition, setDefinition] = useState<string | null>(null);
+export function CheckListDescription({ id, type }: { id: string; type: 'mtype' | 'etype' }) {
+  const { data } = useQuery({
+    queryKey: keyBuilder.annotation({ entityId: id }),
+    queryFn: async () => {
+      if (type === 'mtype') return await getMtype({ id });
+      return await getEtype({ id });
+    },
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
 
-  useEffect(() => {
-    // TODO: fetch based on the type
-    async function getDefinition() {
-      const { data, error } = await tryCatch(getMtype({ id }));
-      if (error) return null;
-      setDefinition(data.definition);
-    }
-    getDefinition();
-  }, [id]);
-
-  return <span className="text-primary-1 text-justify text-balance">{definition}</span>;
+  return <span className="text-primary-1 text-justify text-balance">{data?.definition}</span>;
 }
-
-export const CheckListDescription = memo(
-  CheckListDescriptionToMemoize,
-  ({ id }, { id: nextId }) => id !== nextId
-);
