@@ -213,7 +213,7 @@ export function BrowseEntityScope({
             classNames?.miniView
           )}
         >
-          <MiniDetailView {...miniViewProps} />
+          <MiniDetailView {...miniViewProps} dataType={dataType} />
         </div>
       )}
     </>
