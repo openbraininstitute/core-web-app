@@ -14,7 +14,6 @@ import { classNames, fieldTitleSentenceCase } from '@/util/utils';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { OrderShape } from '@/entity-configuration/definitions/types';
 import type { SortState } from '@/types/explore-section/application';
-
 import styles from '@/components/explore-section/ExploreSectionListingView/explore.module.css';
 
 type ResizeInit = {

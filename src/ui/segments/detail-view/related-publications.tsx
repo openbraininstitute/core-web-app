@@ -145,7 +145,7 @@ function PerTypePublications({
           ),
         }}
         renderItem={(publication) => (
-          <List.Item key={publication.id}>
+          <List.Item key={publication.id} className="cursor-default">
             <Card
               publication={publication.publication}
               scientificArtifact={publication.scientific_artifact}

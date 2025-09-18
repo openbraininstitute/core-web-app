@@ -1,3 +1,4 @@
+import kebabCase from 'lodash/kebabCase';
 import {
   getEntityByCoreType,
   getEntityByExtendedType,
@@ -7,6 +8,7 @@ import { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkspaceContext } from '@/types/common';
+import { ROOT_ROUTE } from '@/config';
 
 export const baseUri = '/app/virtual-lab';
 
@@ -52,6 +54,18 @@ export function resolveExploreDetailsPageUrl({
     baseUrl = `${baseUri}/explore/interactive`;
   }
   return baseUrl;
+}
+
+export function resolveExploreDetailsPageUrl2({
+  ctx,
+  entityId,
+  dataType,
+}: {
+  ctx: Partial<WorkspaceContext>;
+  entityId: string;
+  dataType: TExtendedEntitiesTypeDict;
+}) {
+  return `${ROOT_ROUTE}/${ctx.virtualLabId}/${ctx.projectId}/data/view/${kebabCase(dataType)}/${entityId}`;
 }
 
 export function resolveVirtualLabUrl({ virtualLabId }: { virtualLabId: string }) {

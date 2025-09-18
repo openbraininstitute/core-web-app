@@ -20,6 +20,7 @@ export enum EntityCoreFields {
   RegistrationDate = 'registration_date',
   UpdateDate = 'update_date',
   Contributions = 'contribution',
+  InstitutionalContributions = 'institutional_contributions',
   License = 'license',
   BrainRegion = 'brain_region',
   MType = 'mtype',

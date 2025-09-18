@@ -1,12 +1,12 @@
 'use client';
 
 import { CloseOutlined } from '@ant-design/icons';
-import { useRouter } from 'next/navigation';
+import NextLink from 'next/link';
 
-export default function Close() {
-  const router = useRouter();
-
+export default function Close({ href }: { href: string }) {
   return (
-    <CloseOutlined className="absolute top-0 right-0 text-2xl" onClick={() => router.back()} />
+    <NextLink href={href}>
+      <CloseOutlined className="absolute top-0 right-0 text-2xl" />
+    </NextLink>
   );
 }

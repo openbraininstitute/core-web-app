@@ -6,6 +6,8 @@ import { getExperimentalSynapsesPerConnectionFiles } from './experimental-synaps
 import { getMEmodelFiles } from './memodel';
 import { getReconstructionMorphologyFiles } from './reconstruction-morphology';
 import { getSingleNeuronSynaptomeFiles } from './single-neuron-synaptome';
+import { getSingleNeuronSimulationFiles } from './single-neuron-simulation';
+import { getSingleNeuronSynaptomeSimulationFiles } from './single-neuron-synaptome-simulation';
 import { WorkspaceContext } from '@/types/common';
 import { FileEntry } from '@/features/entity-download/types';
 import { EntityTypeDict, type TEntityTypeDict } from '@/api/entitycore/types';
@@ -27,4 +29,6 @@ export const getEntityFilesHandlerMap: Partial<Record<TEntityTypeDict, GetEntity
   [EntityTypeDict.Emodel]: getEmodelFiles,
   [EntityTypeDict.Memodel]: getMEmodelFiles,
   [EntityTypeDict.SingleNeuronSynaptome]: getSingleNeuronSynaptomeFiles,
+  [EntityTypeDict.SingleNeuronSimulation]: getSingleNeuronSimulationFiles,
+  [EntityTypeDict.SingleNeuronSynaptomeSimulation]: getSingleNeuronSynaptomeSimulationFiles,
 };

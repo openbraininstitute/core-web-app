@@ -87,7 +87,7 @@ export default function RelatedCircuits({ circuit }: Props) {
           label="Derived circuits"
           visible={Boolean(result?.derived?.at(0)?.sub_circuits?.length)}
         >
-          <Derived data={result?.derived} />,
+          <Derived data={result?.derived} />
         </Tab>
       </Tabs>
     </div>

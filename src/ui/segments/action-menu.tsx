@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { notFound } from 'next/navigation';
 
 import NextLink from 'next/link';
+import { useAtom } from 'jotai';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -14,12 +15,14 @@ import {
   LoadingOutlined,
 } from '@ant-design/icons';
 import Action from '../molecules/side-menu-action';
+import { downloadPanelCircuitAtom } from './explore/circuit/elements/download-panel';
 
 import {
   bookmarkToProjectLibrary,
   getAllBookmarksByCategory,
 } from '@/api/virtual-lab-svc/queries/bookmark';
 import { useAppNotification } from '@/components/notification';
+
 import { deleteBookmarksFromProjectLibrary } from '@/features/bookmark/actions';
 import { downloadArchive } from '@/services/entity-download';
 import {
@@ -29,6 +32,8 @@ import {
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { ROOT_ROUTE } from '@/config';
 import { EntityTypeValue } from '@/entity-configuration/domain';
+
+import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export default function ActionMenu({
   entity,
@@ -42,6 +47,7 @@ export default function ActionMenu({
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
   const notification = useAppNotification();
+  const [, setCircuit] = useAtom(downloadPanelCircuitAtom);
 
   const entityType = getEntityByExtendedType({ type });
   if (!entityType) notFound();
@@ -177,11 +183,22 @@ export default function ActionMenu({
         </Action>
       )}
 
-      <Action
-        icon={<DownloadOutlined onClick={() => downloadArchive(entityType.type, [entity.id])} />}
-      >
-        Download
-      </Action>
+      {entityType.isDownloadable && (
+        <Action
+          icon={
+            <DownloadOutlined
+              onClick={() => {
+                if (entity.type === 'circuit') setCircuit(entity as ICircuit);
+                else {
+                  downloadArchive(entityType.type, [entity.id], ctx);
+                }
+              }}
+            />
+          }
+        >
+          Download
+        </Action>
+      )}
     </div>
   );
 }

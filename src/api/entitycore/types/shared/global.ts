@@ -111,23 +111,26 @@ type RoleBase = {
 
 interface IRole extends RoleBase, Timestamps, EntityCoreIdentifiable {}
 
-type OrganizationBase = {
+export interface IOrganization extends Timestamps, EntityCoreIdentifiable {
   type: 'organization';
   pref_label: string;
   alternative_name?: string | null;
-};
+}
 
-interface IOrganization extends OrganizationBase, Timestamps, EntityCoreIdentifiable {}
-
-type PersonBase = {
+export interface IPerson extends Timestamps, EntityCoreIdentifiable {
   type: 'person';
   givenName: string | null;
   familyName: string | null;
   pref_label: string;
-};
+}
 
-export interface IPerson extends PersonBase, Timestamps, EntityCoreIdentifiable {}
-export type Agent = IPerson | IOrganization;
+export interface IConsortium extends Timestamps, EntityCoreIdentifiable {
+  pref_label: string;
+  alternative_name: string;
+  type: 'consortium';
+}
+
+export type Agent = IPerson | IOrganization | IConsortium;
 
 export interface IContributor extends Timestamps, EntityCoreIdentifiable {
   agent: Agent;

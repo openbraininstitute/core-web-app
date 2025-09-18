@@ -4,14 +4,16 @@ import { useMutation } from '@tanstack/react-query';
 import { match, P } from 'ts-pattern';
 import { useState, useEffect } from 'react';
 import { Image } from 'antd';
+import { useAtom } from 'jotai';
 
 import kebabCase from 'lodash/kebabCase';
 import Link from 'next/link';
-
 import { CircuitPreview } from './previews/circuit-preview';
+import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
+
+import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { SingleNeuronSimulationPreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-simulation-preview';
 import { SingleNeuronSynaptomePreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-synaptome-preview';
-import { makeCustomRowSelectionEvent } from '@/ui/segments/explore/circuit/elements/custom-row-selection-event';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
 import { MEModelPreview } from '@/ui/segments/mini-detail-view/previews/me-model-preview';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -44,7 +46,6 @@ import {
   type ISingleNeuronSynaptome,
   type ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
-import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 
 type Props = {
@@ -291,13 +292,15 @@ function ExploreActions<T extends EntityCoreObjectTypes>({ record }: { record: T
   });
 
   const { isPending: pendingDownload, mutateAsync: downloadAsync } = useMutation({
-    mutationFn: () => downloadArchive(record.type, [record.id]),
+    mutationFn: () => downloadArchive(record.type, [record.id], { virtualLabId, projectId }),
   });
+
+  const [, setDownloadPanelCircuit] = useAtom(downloadPanelCircuitAtom);
 
   const onBookmark = () => saveAsync();
   const onDownload = () => {
     if (EntityTypeDict.Circuit === record.type) {
-      makeCustomRowSelectionEvent({ record });
+      setDownloadPanelCircuit(record as ICircuit);
     } else {
       downloadAsync();
     }

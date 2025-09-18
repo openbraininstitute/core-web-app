@@ -1,6 +1,6 @@
 import { Button } from 'antd';
+import { useAtom } from 'jotai';
 
-import { makeCustomRowSelectionEvent } from '@/components/explore-section/ExploreSectionListingView/expandable-row/custom-row-selection-event';
 import { transformAgentToNames } from '@/api/entitycore/transformers';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { hasAssets } from '@/api/entitycore/guards';
@@ -22,10 +22,20 @@ import { DownloadIcon } from '@/components/icons';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { IContributor } from '@/api/entitycore/types/shared/global';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
+import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 
-export type ProcessedContributor = {
-  name: string;
-  type: number; // 0 for Org, 1 for Person
+import { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { EntityTypeValue } from '@/entity-configuration/domain';
+
+const renderContributors = (r: EntityTypeValue, filter: 'person' | 'organization') => {
+  if (!('contributions' in r) || !r.contributions) return EmptyValue;
+
+  const filteredContributions = r.contributions.filter(
+    (c) => c.agent.type === 'consortium' || c.agent.type === filter
+  );
+
+  if (!filteredContributions || filteredContributions.length === 0) return EmptyValue;
+  return renderContributorsModal(filteredContributions, false, () => {}, 'inline');
 };
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
@@ -52,16 +62,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     description: 'Download item',
     filter: null,
     render: (record) => {
-      const onClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-        e.stopPropagation();
-        e.preventDefault();
-        makeCustomRowSelectionEvent({ record });
-      };
-      return (
-        <Button className="p-2" type="text" htmlType="button" onClick={onClick}>
-          <DownloadIcon className="text-current" />
-        </Button>
-      );
+      return <DownloadButton entity={record} />;
     },
     style: { width: 50, fixed: 'left', align: 'center' },
     isFilterable: false,
@@ -167,12 +168,29 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null }).contributions,
         false
       ),
-    renderForDetailView: (r) => {
-      const { contributions } = r as EntityCoreObjectTypes & {
-        contributions?: Array<IContributor> | null;
-      };
-      return renderContributorsModal(contributions, false, () => {}, 'inline');
+    renderForDetailView: (r) => renderContributors(r, 'person'),
+    vocabulary: {
+      plural: 'Contributors',
+      singular: 'Contributor',
     },
+    defaultConstraint: 'contribution__pref_label__in',
+    order: {
+      property: 'contribution__order_by',
+      value: 'pref_label',
+    },
+    isSortable: false,
+    isFilterable: true,
+    isDisplayable: true,
+  },
+  [EntityCoreFields.InstitutionalContributions]: {
+    title: 'Institutional Contributors',
+    filter: CoreFieldFilterTypeEnum.CheckList,
+    render: (r) =>
+      transformAgentToNames(
+        (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null }).contributions,
+        false
+      ),
+    renderForDetailView: (r) => renderContributors(r, 'organization'),
     vocabulary: {
       plural: 'Contributors',
       singular: 'Contributor',
@@ -260,3 +278,26 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isDisplayable: true,
   },
 };
+
+function DownloadButton({ entity }: { entity: EntityCoreObjectTypes }) {
+  const [, setDownloadPanelCircuit] = useAtom(downloadPanelCircuitAtom);
+
+  return (
+    <Button
+      className="p-2"
+      type="text"
+      htmlType="button"
+      onClick={(e) => {
+        const { type } = entity;
+        if (type !== 'circuit') return;
+
+        e.stopPropagation();
+        e.preventDefault();
+
+        setDownloadPanelCircuit(entity as ICircuit);
+      }}
+    >
+      <DownloadIcon className="text-current" />
+    </Button>
+  );
+}
