@@ -123,8 +123,6 @@ export default function SimulationCampaignConfiguration({
         <TabsSelector tab={tab} setTab={setTab} disableSimulationTab={!campaignId || loading} />
         <div className="flex items-center justify-center gap-8">
           {!!campaignId && <ButtonCopyId label="Copy simulation campaign ID" value={campaignId} />}
-          {/* Temporarly commented out (James request) */}
-          {/* <CircuitName circuit={circuit} /> */}
         </div>
       </header>
       <div className="w-full border-t border-gray-200" />

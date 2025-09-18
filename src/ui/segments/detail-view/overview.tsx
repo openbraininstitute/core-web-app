@@ -75,7 +75,10 @@ export default async function Overview({
     (entity as ISingleNeuronSynaptome).me_model = meModel; //eslint-disable-line
   }
 
-  if (extendedType === 'small_microcircuit_simulation') {
+  if (
+    extendedType === 'small_microcircuit_simulation' ||
+    extendedType === 'paired_neuron_circuit_simulation'
+  ) {
     let config: AwaitedType<ReturnType<typeof resolveSimulationByCampaignId>>;
 
     try {
@@ -94,7 +97,6 @@ export default async function Overview({
         initialCampaignId={config.campaign.id}
         initialConfig={config.config.form}
         readOnly
-        className="px-10 pt-2"
       />
     );
   }

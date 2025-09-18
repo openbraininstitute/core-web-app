@@ -69,9 +69,29 @@ export default async function Layout({
 
   const parentLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}`;
 
+  if (type === 'small_microcircuit_simulation' || type === 'paired_neuron_circuit_simulation') {
+    return (
+      <div className="relative ml-5 flex h-full flex-col rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
+        <Close href={parentLink} />
+        <div className="mb-5 flex flex-wrap gap-3 pl-5">
+          <Breadcrumb>
+            <NextLink href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data`}>Explore</NextLink>
+          </Breadcrumb>
+          <Breadcrumb>
+            <NextLink href={parentLink}>{entityType.title}</NextLink>
+          </Breadcrumb>
+          <Breadcrumb showChevron={false}>{entity.name}</Breadcrumb>
+        </div>
+
+        {children}
+      </div>
+    );
+  }
+
   return (
     <>
-      <div className="ml-5 flex h-full rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
+      <div className="relative ml-5 flex h-full rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
+        <Close href={parentLink} />
         <div className="w-1/5">
           <div className="flex flex-wrap gap-3">
             <Breadcrumb>
@@ -87,7 +107,7 @@ export default async function Layout({
           </div>
           <ActionMenu entity={entity} type={type} ctx={{ virtualLabId, projectId }} />
         </div>
-        <div className="relative w-4/5">
+        <div className="w-4/5">
           <div className="h-full w-full overflow-x-auto overflow-y-auto p-10">
             <div className="h-[9%]">
               <div className="text-neutral-4 uppercase">Name</div>
@@ -96,7 +116,6 @@ export default async function Layout({
 
             <div className="h-[91%]">{children}</div>
           </div>
-          <Close href={parentLink} />
         </div>
       </div>
       {entityType.extendedType === 'circuit' && <CircuitDownloadPanel />}
