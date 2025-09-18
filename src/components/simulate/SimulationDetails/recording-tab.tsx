@@ -28,7 +28,6 @@ export default function ResultsTab({ recordings }: Props) {
             <Fragment key={key}>
               <div className="flex w-full flex-col items-start justify-start">
                 <div className="flex w-full flex-col">
-                  <h1>Devil is back!</h1>
                   <PlotRenderer
                     withTitle
                     title={key}
