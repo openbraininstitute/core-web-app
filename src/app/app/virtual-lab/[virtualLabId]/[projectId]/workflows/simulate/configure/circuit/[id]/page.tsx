@@ -1,6 +1,6 @@
 'use client';
 
-import { useSuspenseQuery } from '@tanstack/react-query';
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { use } from 'react';
 import SimulationConfig from '@/features/small-microcircuit';
 
@@ -8,6 +8,9 @@ import type { WorkflowSimulatePanelKeys } from '@/ui/segments/workflows/simulate
 import type { ExperimentStepKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
+import { keyBuilder } from '@/ui/use-query-keys/data';
+import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
+import { notFound } from 'next/navigation';
 
 export default function Page({
   searchParams,
@@ -22,6 +25,7 @@ export default function Page({
   }
 >) {
   const queryParams = use(searchParams);
+  const { initialCampaignId } = queryParams;
   const { virtualLabId, projectId, id: modelId } = use(pathParams);
 
   let sessionId = queryParams?.sessionId;
@@ -32,7 +36,37 @@ export default function Page({
     queryFn: () => getCircuit({ id: modelId, context: { virtualLabId, projectId } }),
   });
 
-  return (
-    <SimulationConfig circuitId={entity.id} virtualLabId={virtualLabId} projectId={projectId} />
-  );
+  const {
+    data: campaignData,
+    error,
+    isLoading,
+  } = useQuery({
+    queryKey: keyBuilder.simCampaign({ entityId: initialCampaignId }),
+    queryFn: async () => {
+      if (!initialCampaignId) return null;
+      return await resolveSimulationByCampaignId({
+        id: initialCampaignId,
+        context: { virtualLabId, projectId },
+      });
+    },
+  });
+
+  if (error) {
+    return notFound();
+  }
+
+  if (
+    !initialCampaignId ||
+    (initialCampaignId && !isLoading && campaignData && campaignData.config.form)
+  ) {
+    return (
+      <SimulationConfig
+        circuitId={entity.id}
+        virtualLabId={virtualLabId}
+        projectId={projectId}
+        initialCampaignId={initialCampaignId}
+        initialConfig={campaignData?.config.form}
+      />
+    );
+  }
 }

@@ -81,8 +81,6 @@ export default function SimulationCampaignConfiguration({
     setSelectedCategory('');
   };
 
-  const readOnly = initialConfig !== undefined;
-
   const validate = useMemo(() => {
     const ajv = new Ajv({ strictSchema: false, allErrors: true });
     if (!schema) return;
@@ -160,7 +158,6 @@ export default function SimulationCampaignConfiguration({
                               setSelectedItemIdx={setSelectedItemIdx}
                               setEditing={setEditing}
                               setSelectedCategory={setSelectedCategory}
-                              readOnly={readOnly}
                             />
                           );
                         })}
@@ -168,76 +165,75 @@ export default function SimulationCampaignConfiguration({
                 );
               })}
             </div>
-            {!readOnly && (
-              <button
-                type="button"
-                className={classNames(
-                  'flex min-h-[50px] w-[95%] items-center justify-center rounded-full text-lg drop-shadow',
-                  (errors && errors.length > 0) || loading || readOnly
-                    ? 'bg-gray-300 text-gray-500'
-                    : 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
-                )}
-                onClick={async () => {
-                  if (loading) return;
-                  if (campaignId) {
-                    setCampaignId('');
+
+            <button
+              type="button"
+              className={classNames(
+                'flex min-h-[50px] w-[95%] items-center justify-center rounded-full text-lg drop-shadow',
+                (errors && errors.length > 0) || loading
+                  ? 'bg-gray-300 text-gray-500'
+                  : 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
+              )}
+              onClick={async () => {
+                if (loading) return;
+                if (campaignId) {
+                  setCampaignId('');
+                  return;
+                }
+
+                setLoading(true);
+                try {
+                  const res = await authFetch(
+                    `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/generated/simulations-generate-grid-save`,
+                    {
+                      method: 'POST',
+                      body: JSON.stringify(config),
+                      headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        'virtual-lab-id': virtualLabId,
+                        'project-id': projectId,
+                      },
+                    }
+                  );
+
+                  if (res.status !== 200) {
+                    const errorRes = await res.json();
+
+                    const details =
+                      res.status === 500 ? errorRes.detail : (errorRes?.details?.[0].msg ?? '');
+
+                    notification.error({
+                      message: 'An error ocurred generating the simulation campaign',
+                      description: details,
+                    });
                     return;
                   }
 
-                  setLoading(true);
-                  try {
-                    const res = await authFetch(
-                      `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/generated/simulations-generate-grid-save`,
-                      {
-                        method: 'POST',
-                        body: JSON.stringify(config),
-                        headers: {
-                          Accept: 'application/json',
-                          'Content-Type': 'application/json',
-                          'virtual-lab-id': virtualLabId,
-                          'project-id': projectId,
-                        },
-                      }
-                    );
-
-                    if (res.status !== 200) {
-                      const errorRes = await res.json();
-
-                      const details =
-                        res.status === 500 ? errorRes.detail : (errorRes?.details?.[0].msg ?? '');
-
-                      notification.error({
-                        message: 'An error ocurred generating the simulation campaign',
-                        description: details,
-                      });
-                      return;
-                    }
-
-                    const returnedCampaignId = (await res.json()) as string;
-                    if (returnedCampaignId === '') {
-                      notification.error({
-                        message: 'An error ocurred generating the simulation campaign',
-                      });
-                      return;
-                    }
-
-                    setCampaignId(returnedCampaignId);
-                    setTab('simulations');
-                  } catch (e) {
-                    notification.error({ message: assertErrorMessage(e) });
+                  const returnedCampaignId = (await res.json()) as string;
+                  if (returnedCampaignId === '') {
+                    notification.error({
+                      message: 'An error ocurred generating the simulation campaign',
+                    });
                     return;
-                  } finally {
-                    setLoading(false);
                   }
-                }}
-                disabled={!!(errors && errors.length > 0) || loading || readOnly}
-              >
-                <div className="flex justify-between gap-5">
-                  {!campaignId ? 'Generate simulations' : 'New simulation campaign'}
-                  {loading && <LoadingOutlined />}
-                </div>
-              </button>
-            )}
+
+                  setCampaignId(returnedCampaignId);
+                  setTab('simulations');
+                } catch (e) {
+                  notification.error({ message: assertErrorMessage(e) });
+                  return;
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              disabled={!!(errors && errors.length > 0) || loading}
+            >
+              <div className="flex justify-between gap-5">
+                {!campaignId ? 'Generate simulations' : 'New simulation campaign'}
+                {loading && <LoadingOutlined />}
+              </div>
+            </button>
           </div>
           <div
             className={classNames(
@@ -297,7 +293,7 @@ export default function SimulationCampaignConfiguration({
               (isRootCategory(schema, configTab) || selectedCatSchema) && (
                 <JSONSchemaForm
                   onAddReferenceClick={handleAddReferenceClick}
-                  disabled={!!campaignId || loading || readOnly}
+                  disabled={!!campaignId || loading}
                   config={config}
                   schema={
                     selectedCatSchema ??
