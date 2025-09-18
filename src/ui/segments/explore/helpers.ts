@@ -6,14 +6,15 @@ import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/s
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { PairedNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/paired-neurons-simulation';
 import { ElectricalRecordingOriginDictionary } from '@/api/entitycore/types/entities/electrical-cell-recording';
-import { ReconstructionMorphology } from '@/entity-configuration/domain/experimental/reconstruction-morphology';
 import { ElectricalCellRecording } from '@/entity-configuration/domain/experimental/electrical-cell-recording';
 import { getElectricalCellRecordings } from '@/api/entitycore/queries/experimental/electrical-cell-recording';
 import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation/single-neuron-simulation';
 import { SynapsePerConnection } from '@/entity-configuration/domain/experimental/synapse-per-connection';
 import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
+import { CellMorphology } from '@/entity-configuration/domain/experimental/cell-morphology';
 import { NeuronDensity } from '@/entity-configuration/domain/experimental/neuron-density';
 import { BoutonDensity } from '@/entity-configuration/domain/experimental/bouton-density';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getEntitiesCount } from '@/api/entitycore/queries/general/entity';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
@@ -25,7 +26,7 @@ import type { WorkspaceContext } from '@/types/common';
 import type { TWorkspaceScope } from '@/constants';
 
 export const ExperimentalEntitiesTileTypes = {
-  ReconstructionMorphology,
+  ReconstructionMorphology: CellMorphology,
   ElectricalCellRecording,
   NeuronDensity,
   BoutonDensity,
@@ -59,14 +60,14 @@ export function getAllEntitiesCount({
   return getEntitiesCount({
     context: virtualLabId && projectId ? { virtualLabId, projectId } : undefined,
     types: [
-      'experimental_synapses_per_connection',
-      'experimental_neuron_density',
-      'experimental_bouton_density',
-      'reconstruction_morphology',
-      'single_neuron_synaptome',
-      'memodel',
-      'emodel',
-      'circuit',
+      ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
+      ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
+      ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
+      ExtendedEntitiesTypeDict.CellMorphology,
+      ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
+      ExtendedEntitiesTypeDict.Memodel,
+      ExtendedEntitiesTypeDict.Emodel,
+      ExtendedEntitiesTypeDict.Circuit,
     ],
     brainRegion: {
       within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,

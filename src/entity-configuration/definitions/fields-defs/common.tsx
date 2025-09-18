@@ -219,7 +219,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     order: [
       {
         types: [
-          ExtendedEntitiesTypeDict.ReconstructionMorphology,
+          ExtendedEntitiesTypeDict.CellMorphology,
           ExtendedEntitiesTypeDict.ElectricalCellRecording,
           ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
           ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,

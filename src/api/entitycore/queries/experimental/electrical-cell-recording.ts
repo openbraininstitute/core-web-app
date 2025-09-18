@@ -44,7 +44,7 @@ export async function getElectricalCellRecordings({
  *
  * @param {Object} params - The parameters object
  * @param {string} params.id - The unique identifier of the recording to retrieve
- * @returns {Promise<IReconstructionMorphology | IReconstructionMorphologyExpanded>} A promise that resolves to the requested recording
+ * @returns {Promise<IElectricalCellRecording>} A promise that resolves to the requested recording
  */
 export async function getElectricalCellRecording({
   id,

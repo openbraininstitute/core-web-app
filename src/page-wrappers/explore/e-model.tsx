@@ -4,15 +4,11 @@ import DetailView from '@/features/entities/e-model/detail-view';
 
 import type { Props as EmodelProps } from '@/features/entities/e-model/detail-view';
 import type { WorkspaceContext } from '@/types/common';
-import type {
-  IEModel,
-  IReconstructionMorphology,
-  IReconstructionMorphologyExpanded,
-} from '@/api/entitycore/types';
+import type { IEModel, ICellMorphology, ICellMorphologyExpanded } from '@/api/entitycore/types';
 import type { Prettify } from '@/utils/type';
 
 type ExpandType = Prettify<{
-  exemplar_morphology: IReconstructionMorphology | IReconstructionMorphologyExpanded;
+  exemplar_morphology: ICellMorphology | ICellMorphologyExpanded;
 }>;
 
 type Props = {

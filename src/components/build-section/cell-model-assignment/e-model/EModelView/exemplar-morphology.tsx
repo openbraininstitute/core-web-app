@@ -11,10 +11,7 @@ import Header from '@/components/build-section/cell-model-assignment/e-model/EMo
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { getFieldsDefinition } from '@/entity-configuration/definitions';
 
-import type {
-  IReconstructionMorphology,
-  IReconstructionMorphologyExpanded,
-} from '@/api/entitycore/types';
+import type { ICellMorphology, ICellMorphologyExpanded } from '@/api/entitycore/types';
 
 const defaultColumnsFields = getFieldsDefinition([
   EntityCoreFields.Preview,
@@ -25,16 +22,16 @@ const defaultColumnsFields = getFieldsDefinition([
   EntityCoreFields.Contributions,
 ]);
 
-const defaultColumns: ColumnsType<IReconstructionMorphology> = Object.entries(
-  defaultColumnsFields
-).map(([key, field]) => ({
-  title: isString(field.title) ? field.title.toUpperCase() : field.title,
-  key,
-  render: field.render,
-}));
+const defaultColumns: ColumnsType<ICellMorphology> = Object.entries(defaultColumnsFields).map(
+  ([key, field]) => ({
+    title: isString(field.title) ? field.title.toUpperCase() : field.title,
+    key,
+    render: field.render,
+  })
+);
 
 type Props = {
-  exemplarMorphology: IReconstructionMorphology | IReconstructionMorphologyExpanded;
+  exemplarMorphology: ICellMorphology | ICellMorphologyExpanded;
 };
 
 export default function ExemplarMorphology({ exemplarMorphology }: Props) {
@@ -63,10 +60,7 @@ export default function ExemplarMorphology({ exemplarMorphology }: Props) {
     <div className="flex flex-col gap-4">
       <Header>{title}</Header>
 
-      <DefaultEModelTable<IReconstructionMorphology>
-        dataSource={morphologies || []}
-        columns={columns}
-      />
+      <DefaultEModelTable<ICellMorphology> dataSource={morphologies || []} columns={columns} />
 
       <ErrorMessageLine message={displayMorphologyError} />
     </div>

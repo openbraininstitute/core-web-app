@@ -1,4 +1,6 @@
-import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
+import type { NestedCellMorphologyProtocolRead } from '@/api/entitycore/types/entities/cell-morphology-protocol';
+import type { MeasurementAnnotation } from '@/api/entitycore/types/entities/measurement-annotation';
+import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type {
   BrainLocationFilter,
   BrainRegionFilter,
@@ -6,8 +8,7 @@ import type {
   TimestampsFilter,
   PaginationFilter,
   SharedFilter,
-  SpeciesFilter,
-  StainFilter,
+  SubjectFilter,
   IDFilter,
   MtypeFilter,
 } from '@/api/entitycore/types/shared/request';
@@ -19,15 +20,13 @@ import type {
   IContributor,
   Timestamps,
   ILicense,
-  ISpecies,
-  IStrain,
+  Subject,
   IMType,
   EntityCoreType,
   EntityCoreOwnership,
 } from '@/api/entitycore/types/shared/global';
-import { MeasurementAnnotation } from '@/api/entitycore/types/entities/measurement-annotation';
 
-export type ReconstructionMorphologyFilter = Partial<
+export type CellMorphologyFilter = Partial<
   IDFilter &
     TimestampsFilter &
     BrainLocationFilter &
@@ -35,34 +34,33 @@ export type ReconstructionMorphologyFilter = Partial<
     BrainRegionFilter &
     PaginationFilter &
     MtypeFilter &
-    SpeciesFilter &
-    StainFilter &
+    SubjectFilter &
     SharedFilter
 >;
 
-interface IReconstructionMorphologyBase extends EntityCoreIdentifiable {
+interface ICellMorphologyBase extends EntityCoreIdentifiable {
   name: string;
   description: string;
   brain_location?: IBrainLocation | null;
 }
 
-export interface IReconstructionMorphology
-  extends IReconstructionMorphologyBase,
+export interface ICellMorphology
+  extends ICellMorphologyBase,
     Timestamps,
     EntityCoreBaseAsset,
     EntityAuthorization,
     EntityCoreType,
-    EntityCoreOwnership {
+    EntityCoreOwnership,
+    Subject {
   license?: ILicense | null;
-  species: ISpecies;
-  strain?: IStrain | null;
   brain_region: BrainRegionHierarchyBase;
   mtypes: Array<IMType> | null;
   contributions?: Array<IContributor> | null;
+  cell_morphology_protocol: NestedCellMorphologyProtocolRead;
 }
 
-export interface IReconstructionMorphologyExpanded extends IReconstructionMorphology {
+export interface ICellMorphologyExpanded extends ICellMorphology {
   measurement_annotation: MeasurementAnnotation;
 }
 
-export type ExpandReconstructionMorphologyParm = 'measurement_annotation';
+export type ExpandCellMorphologyParm = 'measurement_annotation';

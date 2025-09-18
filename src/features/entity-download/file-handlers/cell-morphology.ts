@@ -1,29 +1,27 @@
 /* eslint-disable no-empty */
 
-import { getReconstructionMorphology } from '@/api/entitycore/queries';
-import { EntityTypeDict } from '@/api/entitycore/types';
 import { ASSET_BASE_PATH } from '@/features/entity-download/constants';
 import { Metadata } from '@/features/entity-download/metadata';
-import { ReconstructionMorphologyJsonMetadata } from '@/features/entity-download/types';
+import { getCellMorphology } from '@/api/entitycore/queries';
+import { EntityTypeDict } from '@/api/entitycore/types';
 import {
   createAssetFileEntry,
   createTemplateFileEntry,
   getMetadataCsvEntryBase,
 } from '@/features/entity-download/utils';
-import { WorkspaceContext } from '@/types/common';
 
-export async function* getReconstructionMorphologyFiles(
-  entityIds: string[],
-  ctx?: WorkspaceContext
-) {
+import type { ReconstructionMorphologyJsonMetadata } from '@/features/entity-download/types';
+import type { WorkspaceContext } from '@/types/common';
+
+export async function* getCellMorphologyFiles(entityIds: string[], ctx?: WorkspaceContext) {
   const metadata = new Metadata<ReconstructionMorphologyJsonMetadata>();
 
   try {
-    yield await createTemplateFileEntry(EntityTypeDict.ReconstructionMorphology);
+    yield await createTemplateFileEntry(EntityTypeDict.CellMorphology);
   } catch {}
 
   for (const entityId of entityIds) {
-    const morphology = await getReconstructionMorphology({
+    const morphology = await getCellMorphology({
       id: entityId,
       context: ctx,
     });

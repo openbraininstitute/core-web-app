@@ -6,10 +6,10 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
 export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
-  [ExtendedEntitiesTypeDict.ReconstructionMorphology]: {
+  [ExtendedEntitiesTypeDict.CellMorphology]: {
     title: 'Morphology',
     group: DataTypeGroup.ExperimentalData,
-    name: EntitySlug.ReconstructionMorphology,
+    name: EntitySlug.CellMorphology,
     columns: [
       EntityCoreFields.Preview,
       EntityCoreFields.BrainRegion,

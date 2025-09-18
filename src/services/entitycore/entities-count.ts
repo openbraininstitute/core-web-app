@@ -12,11 +12,11 @@ import { getEntitiesCount } from '@/api/entitycore/queries/general/entity';
 import { findParentIds } from '@/features/brain-region-hierarchy/helpers';
 import { getElectricalCellRecordings } from '@/api/entitycore/queries';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { tempIsCircuitInDev } from '@/temp-circuit-check';
 import { tryCatch } from '@/api/utils';
 
 import type { EntityCountResponse } from '@/api/entitycore/types/entities/entity';
 import type { WorkspaceContext } from '@/types/common';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 type Params = WorkspaceContext & {
   brainRegionId?: string | null;
@@ -37,14 +37,14 @@ export const entitiesCountAtom = atomFamily(
         getEntitiesCount({
           context: virtualLabId && projectId ? { virtualLabId, projectId } : undefined,
           types: [
-            'experimental_synapses_per_connection',
-            'experimental_neuron_density',
-            'experimental_bouton_density',
-            'reconstruction_morphology',
-            'single_neuron_synaptome',
-            'memodel',
-            'emodel',
-            ...(tempIsCircuitInDev() ? (['circuit'] as const) : []),
+            ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
+            ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
+            ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
+            ExtendedEntitiesTypeDict.CellMorphology,
+            ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
+            ExtendedEntitiesTypeDict.Memodel,
+            ExtendedEntitiesTypeDict.Emodel,
+            ExtendedEntitiesTypeDict.Circuit,
           ],
           brainRegion: {
             within_brain_region_hierarchy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,

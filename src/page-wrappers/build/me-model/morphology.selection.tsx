@@ -12,7 +12,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { Btn } from '@/components/buttons/base/legacy-btn';
 import { resolveDataKey } from '@/utils/key-builder';
 
-import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
@@ -40,7 +40,7 @@ export default function MorphologySelection({ params, searchParams }: Props) {
     return;
   }
 
-  const onSelect = (selectedRows: Array<IReconstructionMorphology>) => {
+  const onSelect = (selectedRows: Array<ICellMorphology>) => {
     if (selectedRows.length > 1) {
       throw new Error('Multiple morphologies selected for ME-Model building. Only one is allowed');
     }
@@ -58,11 +58,11 @@ export default function MorphologySelection({ params, searchParams }: Props) {
     navigate(newHref);
   };
 
-  const onCellClick = (_basePath: string, record: IReconstructionMorphology) => {
+  const onCellClick = (_basePath: string, record: ICellMorphology) => {
     navigate(
       resolveExploreDetailsPageUrl({
         ctx: { virtualLabId: params.virtualLabId, projectId: params.projectId },
-        dataType: ExtendedEntitiesTypeDict.ReconstructionMorphology,
+        dataType: ExtendedEntitiesTypeDict.CellMorphology,
         entityId: record.id,
       })
     );
@@ -70,10 +70,10 @@ export default function MorphologySelection({ params, searchParams }: Props) {
   const dataKey = resolveDataKey({ projectId, section: 'build', suffix: id });
   return (
     <div className="h-full" id="explore-table-container-for-observable">
-      <ExploreSectionListingView<IReconstructionMorphology>
+      <ExploreSectionListingView<ICellMorphology>
         containerClass="h-full bg-white"
         dataKey={dataKey}
-        dataType={ExtendedEntitiesTypeDict.ReconstructionMorphology}
+        dataType={ExtendedEntitiesTypeDict.CellMorphology}
         dataScope={ExploreDataScope.BuildSelectedBrainRegion}
         onCellClick={onCellClick}
         virtualLabInfo={{ virtualLabId: params.virtualLabId, projectId: params.projectId }}

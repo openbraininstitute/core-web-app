@@ -5,10 +5,11 @@ import { useAtomValue } from 'jotai';
 import { File } from '../simulation-files';
 import { fileAtomFamily } from '../atoms';
 
-import EphysViewer from '@/features/ephys-viewer';
+import { EphysViewer } from '@/features/ephys-viewer';
 import { classNames } from '@/util/utils';
-import { WorkspaceContext } from '@/types/common';
-import { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
+
+import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
+import type { WorkspaceContext } from '@/types/common';
 
 type FileViewerProps = {
   file?: File;

@@ -2,7 +2,7 @@ import type { EntityCoreTypeConfig } from './types';
 import { Emodel } from './model/e-model';
 import { MEmodel } from './model/me-model';
 import { SingleNeuronSynaptome } from './model/single-neuron-synaptome';
-import { ReconstructionMorphology } from './experimental/reconstruction-morphology';
+import { CellMorphology } from './experimental/cell-morphology';
 import { ElectricalCellRecording } from './experimental/electrical-cell-recording';
 import { NeuronDensity } from './experimental/neuron-density';
 import { BoutonDensity } from './experimental/bouton-density';
@@ -22,7 +22,7 @@ import {
 } from '@/entity-configuration/domain/simulation';
 
 export const EntityCoreExperimentalConfiguration = {
-  ReconstructionMorphology,
+  ReconstructionMorphology: CellMorphology,
   ElectricalCellRecording,
   NeuronDensity,
   BoutonDensity,
