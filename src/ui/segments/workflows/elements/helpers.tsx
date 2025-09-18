@@ -8,16 +8,16 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
-export const EntityGroupDict = {
+export const EntityScopeDict = {
   Subcellular: 'Subcellular',
   Cellular: 'Cellular',
   Circuit: 'Circuit',
   System: 'System',
 } as const;
 
-export type TEntityGroupValue = keyof typeof EntityGroupDict;
+export type TEntityScopeValue = keyof typeof EntityScopeDict;
 
-export const CategoryDict = [
+export const ActivityDict = [
   { label: 'Build', value: 'build', disabled: false, name: 'Build' },
   { label: 'Simulate', value: 'simulate', disabled: false, name: 'Simulation' },
   { label: 'Extract', value: 'extract', disabled: true, name: undefined },
@@ -26,9 +26,9 @@ export const CategoryDict = [
   { label: 'Process Data', value: 'process_data', disabled: true, name: undefined },
 ] as const;
 
-export type TCategoryValue = (typeof CategoryDict)[number]['value'];
-export const CategoryValues = Object.fromEntries(CategoryDict.map((c) => [c.label, c.value])) as {
-  [K in (typeof CategoryDict)[number] as K['label']]: K['value'];
+export type TActivityValue = (typeof ActivityDict)[number]['value'];
+export const ActivityValues = Object.fromEntries(ActivityDict.map((c) => [c.label, c.value])) as {
+  [K in (typeof ActivityDict)[number] as K['label']]: K['value'];
 };
 
 type EntityTypeProperties = {
@@ -37,7 +37,7 @@ type EntityTypeProperties = {
 };
 
 type EntityTypeOption = {
-  group: TEntityGroupValue;
+  group: TEntityScopeValue;
   value: TExtendedEntitiesTypeDict | undefined;
   label: string;
   disabled: boolean;
@@ -52,14 +52,14 @@ export const EntityWorkflowConfiguration: Partial<
   Record<
     TExtendedEntitiesTypeDict,
     {
-      group: TEntityGroupValue;
+      group: TEntityScopeValue;
       label: string;
-      properties: Partial<Record<TCategoryValue, EntityTypeProperties>>;
+      properties: Partial<Record<TActivityValue, EntityTypeProperties>>;
     }
   >
 > = {
   [ExtendedEntitiesTypeDict.IonChannelModel]: {
-    group: EntityGroupDict.Subcellular,
+    group: EntityScopeDict.Subcellular,
     label: 'Ion channel',
     properties: {
       build: {
@@ -73,7 +73,7 @@ export const EntityWorkflowConfiguration: Partial<
     },
   },
   [ExtendedEntitiesTypeDict.Metabolism]: {
-    group: EntityGroupDict.Subcellular,
+    group: EntityScopeDict.Subcellular,
     label: 'Metabolism',
     properties: {
       build: {
@@ -87,7 +87,7 @@ export const EntityWorkflowConfiguration: Partial<
     },
   },
   [ExtendedEntitiesTypeDict.NGVUnit]: {
-    group: EntityGroupDict.Subcellular,
+    group: EntityScopeDict.Subcellular,
     label: 'NGV Unit',
     properties: {
       build: {
@@ -101,7 +101,7 @@ export const EntityWorkflowConfiguration: Partial<
     },
   },
   [ExtendedEntitiesTypeDict.Memodel]: {
-    group: EntityGroupDict.Cellular,
+    group: EntityScopeDict.Cellular,
     label: 'Single neuron',
     properties: {
       build: {
@@ -115,7 +115,7 @@ export const EntityWorkflowConfiguration: Partial<
     },
   },
   [ExtendedEntitiesTypeDict.SingleNeuronSynaptome]: {
-    group: EntityGroupDict.Cellular,
+    group: EntityScopeDict.Cellular,
     label: 'Synaptome',
     properties: {
       build: {
@@ -129,7 +129,7 @@ export const EntityWorkflowConfiguration: Partial<
     },
   },
   [ExtendedEntitiesTypeDict.PairedNeuronCircuit]: {
-    group: EntityGroupDict.Cellular,
+    group: EntityScopeDict.Cellular,
     label: 'Paired Neurons',
     properties: {
       build: {
@@ -143,7 +143,7 @@ export const EntityWorkflowConfiguration: Partial<
     },
   },
   [ExtendedEntitiesTypeDict.SmallMicrocircuit]: {
-    group: EntityGroupDict.Circuit,
+    group: EntityScopeDict.Circuit,
     label: 'Small microcircuit',
     properties: {
       build: {
@@ -157,7 +157,7 @@ export const EntityWorkflowConfiguration: Partial<
     },
   },
   [ExtendedEntitiesTypeDict.Microcircuit]: {
-    group: EntityGroupDict.Circuit,
+    group: EntityScopeDict.Circuit,
     label: 'Microcircuit',
     properties: {
       build: {
@@ -165,13 +165,13 @@ export const EntityWorkflowConfiguration: Partial<
         type: ExtendedEntitiesTypeDict.Microcircuit,
       },
       simulate: {
-        disabled: false,
+        disabled: true,
         type: ExtendedEntitiesTypeDict.MicrocircuitSimulation,
       },
     },
   },
   [ExtendedEntitiesTypeDict.NGVCircuit]: {
-    group: EntityGroupDict.Circuit,
+    group: EntityScopeDict.Circuit,
     label: 'NGV Circuit',
     properties: {
       build: {
@@ -185,7 +185,7 @@ export const EntityWorkflowConfiguration: Partial<
     },
   },
   [ExtendedEntitiesTypeDict.BrainRegion]: {
-    group: EntityGroupDict.System,
+    group: EntityScopeDict.System,
     label: 'Brain region',
     properties: {
       build: {
@@ -199,7 +199,7 @@ export const EntityWorkflowConfiguration: Partial<
     },
   },
   [ExtendedEntitiesTypeDict.BrainSystems]: {
-    group: EntityGroupDict.System,
+    group: EntityScopeDict.System,
     label: 'Brain system',
     properties: {
       build: {
@@ -213,7 +213,7 @@ export const EntityWorkflowConfiguration: Partial<
     },
   },
   [ExtendedEntitiesTypeDict.WholeBrain]: {
-    group: EntityGroupDict.System,
+    group: EntityScopeDict.System,
     label: 'Whole brain',
     properties: {
       build: {
@@ -230,15 +230,15 @@ export const EntityWorkflowConfiguration: Partial<
 
 export type EntityDropdownOption = {
   label: string;
-  properties: Partial<Record<TCategoryValue, { disabled: boolean }>>;
+  properties: Partial<Record<TActivityValue, { disabled: boolean }>>;
 };
 
 export type TEntityDropdownOptionsGrouped = Array<{
-  group: TEntityGroupValue;
+  group: TEntityScopeValue;
   options: Array<EntityDropdownOption>;
 }>;
 
-export function getDropdownOptionsByCategory(category: TCategoryValue): {
+export function getDropdownOptionsByCategory(category: TActivityValue): {
   allOptions: Array<EntityTypeGroupedOptions>;
   enabledOptions: Array<EntityTypeGroupedOptions>;
 } {
@@ -254,23 +254,23 @@ export function getDropdownOptionsByCategory(category: TCategoryValue): {
   const grouped = groupBy(options, 'group');
 
   const allOptions = Object.entries(grouped).map(([group, opts]) => ({
-    group: group as TEntityGroupValue,
+    group: group as TEntityScopeValue,
     options: opts.map(({ label, value, disabled }) => ({
       label,
       value,
       disabled,
-      group: group as TEntityGroupValue,
+      group: group as TEntityScopeValue,
     })),
   }));
 
   const enabledOptions = Object.entries(grouped)
     .map(([group, opts]) => ({
-      group: group as TEntityGroupValue,
+      group: group as TEntityScopeValue,
       options: opts.map(({ label, value, disabled }) => ({
         label,
         value,
         disabled,
-        group: group as TEntityGroupValue,
+        group: group as TEntityScopeValue,
       })),
     }))
     .filter((g) => g.options.some((opt) => !opt.disabled))
@@ -285,7 +285,7 @@ export function getDropdownOptionsByCategory(category: TCategoryValue): {
   };
 }
 
-export function getAllOptionsOrdered(category: TCategoryValue): Array<EntityTypeOption> {
+export function getAllOptionsOrdered(category: TActivityValue): Array<EntityTypeOption> {
   const options = Object.values(EntityWorkflowConfiguration)
     .filter((config): config is NonNullable<typeof config> => config !== undefined)
     .map((config) => ({
@@ -309,14 +309,14 @@ export function getBuildTypeFromSimulateType(
   return config?.properties.build?.type;
 }
 
-export function getWorkflowSegment(url: string): TCategoryValue | null {
+export function getWorkflowSegment(url: string): TActivityValue | null {
   const match = url.match(/\/workflows\/([^/]+)/);
-  return match ? (match[1] as TCategoryValue) : null;
+  return match ? (match[1] as TActivityValue) : null;
 }
 
-export function getCategoryDictItem(value: TCategoryValue | null | undefined) {
+export function getCategoryDictItem(value: TActivityValue | null | undefined) {
   if (!value) return null;
-  return find(CategoryDict, { value });
+  return find(ActivityDict, { value });
 }
 
 export function getEntityTypeWorkflowConfigurationItem(

@@ -5,7 +5,9 @@ export const LAST_REGISTERED_WORKFLOW = 'last-registered-workflow';
 
 export const DEFAULT_CHECKLIST_RENDER_LENGTH = 8;
 export const DEFAULT_PAGE_SIZE = 30;
-export const DEFAULT_PAGE_LOW_SIZE = 15;
+export const DEFAULT_PAGE_MEDIUM_SIZE = 15;
+export const DEFAULT_PAGE_SMALL_SIZE = 10;
+export const DEFAULT_PAGE_XSMALL_SIZE = 5;
 export const DEFAULT_PAGE_NUMBER = 1;
 
 export const WorkspaceScope = {

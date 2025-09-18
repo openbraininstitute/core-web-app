@@ -1,13 +1,13 @@
 import { WheelGesturesPlugin } from 'embla-carousel-wheel-gestures';
 import find from 'lodash/find';
 
-import { CategoryDict, getAllOptionsOrdered } from '@/ui/segments/workflows/elements/helpers';
+import { ActivityDict, getAllOptionsOrdered } from '@/ui/segments/workflows/elements/helpers';
 import { CarouselButtons } from '@/ui/segments/workflows/elements/carousel-buttons';
 import { Carousel, CarouselContent, CarouselItem } from '@/ui/molecules/carousel';
 import { MenuItem } from '@/ui/segments/workflows/elements/menu-item';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TCategoryValue } from '@/ui/segments/workflows/elements/helpers';
+import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 
 export function TypesMenu({
   current,
@@ -15,7 +15,7 @@ export function TypesMenu({
   onItemClick,
 }: {
   current: TExtendedEntitiesTypeDict | undefined;
-  category: TCategoryValue | undefined;
+  category: TActivityValue | undefined;
   onItemClick: (v: TExtendedEntitiesTypeDict | undefined) => void;
 }) {
   if (!category) return null;
@@ -44,7 +44,7 @@ export function TypesMenu({
               active={current === value}
               value={value}
               disabled={disabled}
-              title={`${label} ${find(CategoryDict, { value: category })?.name}`}
+              title={`${label} ${find(ActivityDict, { value: category })?.name}`}
               onClick={onItemClick}
             />
           </CarouselItem>

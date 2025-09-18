@@ -12,7 +12,7 @@ import dynamic from 'next/dynamic';
 import map from 'lodash/map';
 
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
-import { DEFAULT_PAGE_LOW_SIZE, DEFAULT_PAGE_NUMBER, WorkspaceScope } from '@/constants';
+import { DEFAULT_PAGE_MEDIUM_SIZE, DEFAULT_PAGE_NUMBER, WorkspaceScope } from '@/constants';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
 import {
   coreActiveColumnsAtom,
@@ -66,14 +66,14 @@ export function BrowseLibraryScope() {
       virtualLabId,
       projectId,
       page: pageNumber,
-      pageSize: DEFAULT_PAGE_LOW_SIZE,
+      pageSize: DEFAULT_PAGE_MEDIUM_SIZE,
       category: dataType,
     }),
     queryFn: () =>
       getProjectBookmarksPerCategory({
         context: { virtualLabId, projectId },
         category: dataType as TEntityTypeDict,
-        pagination: { page: pageNumber, page_size: DEFAULT_PAGE_LOW_SIZE },
+        pagination: { page: pageNumber, page_size: DEFAULT_PAGE_MEDIUM_SIZE },
       }),
   });
 

@@ -9,38 +9,43 @@ import get from 'lodash/get';
 
 import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
+import { Header } from '@/ui/segments/project/activities/elements/header';
+import { Card, CardHeader, CardContent } from '@/ui/molecules/card';
 import {
-  ACTIVITY_PAGE_SIZE,
+  ACTIVITY_DEFAULT_PAGE_SIZE,
   Scales,
   StatusMap,
 } from '@/ui/segments/project/activities/elements/helpers';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { Header } from '@/ui/segments/project/activities/elements/header';
-import { Card, CardHeader, CardContent } from '@/ui/molecules/card';
-import { ROOT_ROUTE } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
+import { ROOT_ROUTE } from '@/config';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { ActivityType } from '@/ui/segments/project/activities/elements/helpers';
+import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
 export function ProjectActivities() {
   const { virtualLabId, projectId } = useWorkspace();
   const [page, setPage] = useState(1);
-  const [scale, setScale] = useState<TExtendedEntitiesTypeDict>(ExtendedEntitiesTypeDict.Memodel);
-  const [type, setType] = useState<ActivityType>('build');
+  const [entityType, setEntityType] = useState<TExtendedEntitiesTypeDict>(
+    ExtendedEntitiesTypeDict.Memodel
+  );
+  const [activity, setActivity] = useState<TActivityValue>(ActivityValues.Build);
 
   const entity = getEntityByExtendedType({
-    type: Scales[scale]?.[type] ?? undefined,
+    // eslint-disable-next-line lodash/path-style
+    type: get(Scales, [entityType, activity], null),
   });
 
-  const { data, isLoading } = useQueryActivity({
-    scale,
-    type,
-    entity,
+  const { data, isLoading, isDependenciesLoading, isQueryEnabled } = useQueryActivity({
+    activity,
+    selectionType: entityType,
+    entityType: entity?.extendedType!,
     page,
+    useKeepPreviousData: true,
   });
 
   const columns: ColumnsType<EntityCoreObjectTypes> = [
@@ -104,14 +109,21 @@ export function ProjectActivities() {
     },
   ];
 
+  const shouldShowEmptyState =
+    data &&
+    !data.pagination.total_items &&
+    !isDependenciesLoading &&
+    !isQueryEnabled &&
+    activity &&
+    entityType;
   return (
     <Card className="w-full shadow-xs">
       <CardHeader className="text-primary-9 flex items-center justify-between font-bold">
-        <Header onScaleChange={setScale} onTypeChange={setType} onPageChange={setPage} />
+        <Header onScaleChange={setEntityType} onTypeChange={setActivity} onPageChange={setPage} />
       </CardHeader>
       <CardContent>
         <Card borderless shadowless className="flex items-center justify-center pt-5 pb-0">
-          {!data?.pagination.total_items && !isLoading ? (
+          {shouldShowEmptyState ? (
             <Card className="text-neutral-4 shadow-xs">
               <CardContent>You don’t have any activities yet </CardContent>
             </Card>
@@ -120,7 +132,7 @@ export function ProjectActivities() {
               <ConfigProvider theme={{ hashed: false }}>
                 <Table
                   className={cn(
-                    '[&_.ant-table]:bg-neutral-1! [&_.ant-table-thead_th]:bg-neutral-1!',
+                    '[&_.ant-table]:bg-background! [&_.ant-table-thead_th]:bg-background!',
                     '[&_.ant-table-thead_th]:text-neutral-4!',
                     '[&_.ant-table-placeholder]:bg-background!'
                   )}
@@ -129,7 +141,7 @@ export function ProjectActivities() {
                   columns={columns}
                   rowKey={(o) => o.id}
                   pagination={{
-                    pageSize: ACTIVITY_PAGE_SIZE,
+                    pageSize: ACTIVITY_DEFAULT_PAGE_SIZE,
                     total: data?.pagination.total_items,
                     defaultCurrent: 1,
                     current: page,
@@ -154,7 +166,7 @@ export function ProjectActivities() {
                         description={
                           <span className="text-primary-9">
                             No activities found for{' '}
-                            <strong>{getEntityByExtendedType({ type: scale })?.title}</strong>.
+                            <strong>{getEntityByExtendedType({ type: entityType })?.title}</strong>.
                           </span>
                         }
                       />

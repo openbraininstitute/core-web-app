@@ -1,4 +1,5 @@
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 import type { WorkspaceContext } from '@/types/common';
 
 export const prefix = 'workspace';
@@ -55,18 +56,21 @@ export const keyBuilder = {
   activities: ({
     virtualLabId,
     projectId,
-    scale,
-    type,
-    entity,
+    entityType,
+    activity,
+    selectionType,
     page,
     pageSize,
   }: WorkspaceContext & {
     page?: number;
     pageSize?: number;
-    scale: TExtendedEntitiesTypeDict;
-    entity?: TExtendedEntitiesTypeDict;
-    type: 'build' | 'simulate';
-  }) => [`${prefix}/activities`, { virtualLabId, projectId, page, pageSize, scale, type, entity }],
+    entityType: TExtendedEntitiesTypeDict;
+    selectionType?: TExtendedEntitiesTypeDict;
+    activity: TActivityValue;
+  }) => [
+    `${prefix}/activities`,
+    { virtualLabId, projectId, page, pageSize, selectionType, entityType, activity },
+  ],
   bookmarkCategories: ({ virtualLabId, projectId }: WorkspaceContext) => [
     `${prefix}/bookmark-categories`,
     { virtualLabId, projectId },
