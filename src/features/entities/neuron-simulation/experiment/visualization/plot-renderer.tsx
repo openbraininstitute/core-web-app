@@ -3,52 +3,16 @@
 import { DownloadOutlined } from '@ant-design/icons';
 import { Button, Spin } from 'antd';
 import lodashSet from 'lodash/set';
-import Plotly, { Config, Layout } from 'plotly.js-dist-min';
+import Plotly from 'plotly.js-dist-min';
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { parsePlots } from './plots-groups';
+import MultiPlotsView from './multi-plots-view';
 
+import { PLOT_CONFIG, PLOT_LAYOUT } from './layout-config';
 import LegendItem from '@/features/entities/neuron-simulation/experiment/visualization/legend-item';
 import type { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
 import { exportSingleSimulationResultAsZip } from '@/util/simulation-plotly-to-csv';
 import { classNames } from '@/util/utils';
-
-const PLOT_LAYOUT: Partial<Layout> = {
-  plot_bgcolor: '#fff',
-  paper_bgcolor: '#fff',
-  autosize: true,
-  xaxis: {
-    automargin: true,
-    color: '#003A8C',
-    zeroline: false,
-    showline: true,
-    linecolor: '#888888',
-    title: { text: 'Time [ms]', font: { size: 12 }, standoff: 6 },
-  },
-  yaxis: {
-    automargin: true,
-    color: '#003A8C',
-    zeroline: false,
-    showline: true,
-    linecolor: '#888888',
-    title: { text: 'Current [nA]', font: { size: 12 }, standoff: 6 },
-  },
-  showlegend: false,
-  height: 320,
-  margin: { t: 20, r: 20, b: 20, l: 20 },
-  legend: {
-    orientation: 'h',
-    yanchor: 'top',
-    xanchor: 'center',
-    x: 0.5,
-    y: 1.15,
-  },
-};
-
-const PLOT_CONFIG: Partial<Config> = {
-  displayModeBar: false,
-  responsive: true,
-  displaylogo: false,
-};
 
 type PlotConfig = {
   yAxisTitle?: string;
@@ -95,7 +59,6 @@ export default function PlotRenderer({
   const [initialized, setInitialized] = useState<boolean>(false);
   const [refreshLegend, setRefreshLegend] = useState(false);
   const plotInstances = useMemo(() => parsePlots(data), [data]);
-  console.log('🚀 [plot-renderer] plotInstances =', plotInstances); // @FIXME: Remove this line written on 2025-09-16 at 12:56
 
   const onDownloadPlotDataCsv = () => {
     exportSingleSimulationResultAsZip({
@@ -208,6 +171,8 @@ export default function PlotRenderer({
           )}
         >
           <div className="h-full w-[calc(100%-2rem)]">
+            <MultiPlotsView instances={plotInstances} />
+            <hr />
             <div
               className={classNames(className, 'hfull w-full')}
               ref={containerRef}

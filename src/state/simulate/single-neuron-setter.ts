@@ -354,7 +354,8 @@ export const launchSimulationAtom = atom<
         const updatedPlot = {
           ...get(genericSingleNeuronSimulationPlotDataAtom),
           [streamData.recording]:
-            !currentRecording.length || !currentRecording.find((o) => o.name === newPlot.name)
+            !currentRecording.length ||
+            !currentRecording.find((o) => makeKey(o) === makeKey(newPlot))
               ? [...currentRecording, newPlot]
               : updateArray({
                   array: currentRecording,

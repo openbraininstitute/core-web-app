@@ -18,7 +18,6 @@ export interface PlotInstance {
 
 export function parsePlots(entries: PlotDataEntry[]): PlotInstance[] {
   const plots = new Map<string, PlotInstance>();
-  console.log('🚀 [plots-groups] entries =', entries); // @FIXME: Remove this line written on 2025-09-16 at 13:20
   for (const entry of entries) {
     const key = makeKey(entry);
     if (!key) {
@@ -46,7 +45,7 @@ function makeKey(entry: PlotDataEntry): string | null {
 
   if (entry.variable_name.startsWith('i')) {
     // This is a current.
-    return `2.${entry.recording}.${entry.unit}`;
+    return `2.${entry.name}.${entry.unit}`;
   }
 
   return null;
@@ -63,6 +62,7 @@ function createPlotInstance(base: PlotInstance | undefined, entry: PlotDataEntry
   }
   return {
     ...base,
+    title: entry.name,
     xaxis: 'Time (ms)',
     yaxis: `Current (${entry.unit ?? '?'})`,
     lines: updatePlots(base?.lines, makeLineForCurrent(entry)),
@@ -98,7 +98,7 @@ function makeLineForVoltage(entry: PlotDataEntry): PlotInstance['lines'][0] {
 function makeLineForCurrent(entry: PlotDataEntry): PlotInstance['lines'][0] {
   return {
     color: entry.line?.color ?? '',
-    name: entry.name ?? 'Protocol',
+    name: entry.variable_name ?? 'Variable',
     x: entry.x,
     y: entry.y,
   };
