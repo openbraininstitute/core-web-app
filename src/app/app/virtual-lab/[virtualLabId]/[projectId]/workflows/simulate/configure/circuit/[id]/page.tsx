@@ -18,6 +18,7 @@ export default function Page({
     step: ExperimentStepKeys;
     sessionId: string;
     panel: WorkflowSimulatePanelKeys;
+    initialCampaignId: string;
   }
 >) {
   const queryParams = use(searchParams);
