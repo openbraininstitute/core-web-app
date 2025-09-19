@@ -9,6 +9,7 @@ import values from 'lodash/values';
 import isNil from 'lodash/isNil';
 import delay from 'lodash/delay';
 import pick from 'lodash/pick';
+import lget from 'lodash/get';
 
 import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
 import {
@@ -38,6 +39,12 @@ import { log } from '@/utils/logger';
 
 import { type Message, JobStatus, MessageType } from '@/services/small-scale-simulator/types';
 import type {
+  RecordLocationArray,
+  SimulationExperimentalSetup,
+  TStimulationConfiguration,
+  SynapseConfigurationArray,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import type {
   ISingleNeuronSimulation,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
@@ -45,12 +52,6 @@ import type {
   SimulationStreamData,
   SingleNeuronModelSimulationConfig,
 } from '@/types/simulation/single-neuron';
-import type {
-  RecordLocationArray,
-  SimulationExperimentalSetup,
-  TStimulationConfiguration,
-  SynapseConfigurationArray,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
 
@@ -188,6 +189,7 @@ export const launchSimulationAtom = atom<
     SynapseConfigurationArray,
     SimulationType,
     number,
+    () => void,
   ],
   void
 >(
@@ -204,7 +206,8 @@ export const launchSimulationAtom = atom<
     recordFromConfig: RecordLocationArray,
     synaptomeConfig: SynapseConfigurationArray,
     simulationType: SimulationType,
-    duration: number
+    duration: number,
+    onChangePanel: () => void
   ) => {
     if (simulationType === 'single-neuron-simulation') {
       if (!currentInjectionConfig) {
@@ -259,10 +262,14 @@ export const launchSimulationAtom = atom<
       );
 
       if (error) {
-        throw new Error('simulation failed');
+        set(simStatusAtom, {
+          status: 'error',
+          description: lget(error, 'cause.message', null) ?? messages.RunningSimulationDefaultError,
+        });
+        return;
       }
 
-      if (!response.ok) {
+      if (!response?.ok) {
         let errorMessage = messages.DefaultSimulationError;
 
         try {
@@ -291,7 +298,7 @@ export const launchSimulationAtom = atom<
 
         return;
       }
-
+      onChangePanel();
       await readNdjsonResponse<Message<SimulationStreamData>>(response, (message) => {
         match(message)
           .with({ message_type: MessageType.DATA }, (msg) => appendStreamData(msg.data))

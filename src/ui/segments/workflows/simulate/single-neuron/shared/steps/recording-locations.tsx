@@ -153,7 +153,7 @@ function RecordItem({ index, name, disable, disableDelete, sections, onRemove }:
             />
           </Form.Item>
           <Form.Item
-            label={label('record currents', true)}
+            label={label('record currents', false)}
             labelAlign="left"
             name={[name, 'record_currents']}
             valuePropName="checked"

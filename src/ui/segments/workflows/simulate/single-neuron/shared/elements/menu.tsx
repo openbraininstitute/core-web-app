@@ -4,6 +4,7 @@ import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigat
 import { RightOutlined, SettingFilled, WarningFilled } from '@ant-design/icons';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 
+import { useEffect } from 'react';
 import { headerTabsAtom } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/header';
 import { launchSimulationAtom } from '@/ui/segments/workflows/simulate/single-neuron/shared/runner';
 import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
@@ -42,12 +43,12 @@ import {
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
-import { log } from '@/utils/logger';
 
 import {
   SimulationType,
   type TSimulationType,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { useAppNotification } from '@/components/notification';
 
 export const ExperimentStep = {
   Info: 'info',
@@ -65,15 +66,17 @@ type Props = {
 };
 
 export function Menu({ sessionId, type }: Props) {
-  const breakpoint = useDefaultBreakpoint();
-  const searchParams = useSearchParams();
   const pathname = usePathname();
+  const notify = useAppNotification();
+  const searchParams = useSearchParams();
+  const breakpoint = useDefaultBreakpoint();
   const { replace } = useRouter();
   const { virtualLabId, projectId } = useWorkspace();
   const { id: modelId } = useParams<{ id: string }>();
   const step = searchParams.get('step') ?? ExperimentStep.Info;
   const launchSimulation = useSetAtom(launchSimulationAtom);
   const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
+
   const [, updatePanelId] = useAtom(headerTabsAtom(sessionId));
 
   const onStepChange = (s: ExperimentStepKeys) => {
@@ -107,23 +110,19 @@ export function Menu({ sessionId, type }: Props) {
     if (protocol) {
       currentInjectionDuration = PROTOCOL_DETAILS[protocol].defaults.time.stop_time;
     }
-    updatePanelId(WorkflowSimulatePanels.Results);
-    try {
-      launchSimulation(
-        virtualLabId,
-        projectId,
-        modelId,
-        sessionId,
-        stimulationConfiguration,
-        experimentalSetupConfiguration,
-        recordLocationConfiguration,
-        synaptomeConfiguration,
-        type,
-        experimentalSetupConfiguration.max_time ?? currentInjectionDuration
-      );
-    } catch (error) {
-      log('error', 'running simulation failed', error);
-    }
+    launchSimulation(
+      virtualLabId,
+      projectId,
+      modelId,
+      sessionId,
+      stimulationConfiguration,
+      experimentalSetupConfiguration,
+      recordLocationConfiguration,
+      synaptomeConfiguration,
+      type,
+      experimentalSetupConfiguration.max_time ?? currentInjectionDuration,
+      () => updatePanelId(WorkflowSimulatePanels.Results)
+    );
   };
 
   const warnInfo =
@@ -158,6 +157,20 @@ export function Menu({ sessionId, type }: Props) {
     !!Object.keys(warnStimulationProtocol ?? {}).length ||
     (type === SimulationType.SingleNeuronSynaptome && !!Object.keys(warnSynaptome ?? {}).length) ||
     simulationStatus?.status === 'launched';
+
+  useEffect(() => {
+    if (simulationStatus && simulationStatus.status === 'error') {
+      notify.error({
+        message:
+          type === SimulationType.SingleNeuronSynaptome
+            ? 'Synaptome simulation failed'
+            : 'Single neuron simulation failed',
+        description: simulationStatus.description,
+        placement: 'topRight',
+        key: 'simulation-error',
+      });
+    }
+  }, [simulationStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="flex h-full flex-col gap-2">
