@@ -13,6 +13,7 @@ import ActionMenu from '@/ui/segments/action-menu';
 import type { WorkspaceContext, AwaitedType } from '@/types/common';
 import Close from '@/ui/molecules/close';
 import { DownloadPanel as CircuitDownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 interface Params {
   id: string;
@@ -69,7 +70,10 @@ export default async function Layout({
 
   const parentLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}`;
 
-  if (type === 'small_microcircuit_simulation' || type === 'paired_neuron_circuit_simulation') {
+  if (
+    type === ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation ||
+    type === ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation
+  ) {
     return (
       <div className="relative ml-5 flex h-full flex-col rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
         <Close href={parentLink} />
