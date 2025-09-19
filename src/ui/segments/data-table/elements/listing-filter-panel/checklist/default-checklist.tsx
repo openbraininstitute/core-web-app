@@ -39,7 +39,7 @@ export const defaultList = ({
           filterField={filterField}
           label={label}
         >
-          {type === 'mtype' && <CheckListDescription {...{ id, label, type, filterField }} />}
+          {(type === 'mtype' || type === 'etype') && <CheckListDescription id={id} type={type} />}
         </CheckListOption>
       ))}
     </ul>
