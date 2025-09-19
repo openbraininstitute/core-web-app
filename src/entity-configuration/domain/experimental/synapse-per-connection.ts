@@ -32,7 +32,7 @@ export const SynapsePerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPer
   asset: {
     extension: 'application/json',
   },
-  detailViewSections: ['overview', 'related-publications'],
+  detailViewSections: ['overview'],
   isDownloadable: true,
   isCopyable: true,
   isSimulatable: false,

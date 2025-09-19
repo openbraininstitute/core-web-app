@@ -74,7 +74,7 @@ export const SingleNeuronSynaptomeSimulation: EntityCoreTypeConfig<ISingleNeuron
       configfile: AssetLabel.single_neuron_synaptome_simulation_data,
     },
     isBookmarkable: true,
-    detailViewSections: ['overview', 'configuration', 'results', 'related-publications'],
+    detailViewSections: ['overview', 'configuration', 'results'],
     isDownloadable: true,
     isCopyable: true,
     isSimulatable: false,
