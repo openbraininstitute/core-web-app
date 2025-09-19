@@ -322,7 +322,7 @@ export function BrowseCircuit({
           classNames?.miniView
         )}
       >
-        <MiniDetailView {...miniViewProps} />
+        <MiniDetailView {...miniViewProps} dataType={dataType} />
       </div>
       <DownloadPanel />
     </>

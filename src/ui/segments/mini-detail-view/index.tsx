@@ -53,7 +53,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 
 type Props = {
   section?: TWorkspaceSection;
-  dataType?: TExtendedEntitiesTypeDict;
+  dataType: TExtendedEntitiesTypeDict;
 };
 
 export function MiniDetailView<T extends EntityCoreObjectTypes>({
