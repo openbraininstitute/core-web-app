@@ -9,7 +9,7 @@ import find from 'lodash/find';
 import get from 'lodash/get';
 
 import type { ColumnsType } from 'antd/es/table/interface';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@bprogress/next';
 
 import { EntityCoreObjectTypes, EntityTypeDict, TEntityTypeDict } from '@/api/entitycore/types';
 import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
@@ -194,7 +194,7 @@ export function WorkflowActivity({
     : `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}`;
 
   const onDuplicate = () => {
-    if (selectedRow?.type === 'simulation_campaign') {
+    if (selectedRow?.type === ExtendedEntitiesTypeDict.SimulationCampaign) {
       router.push(
         `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${(selectedRow as ICircuitSimulationCampaign).circuit.id}?initialCampaignId=${selectedRow.id}`
       );
@@ -359,8 +359,8 @@ export function WorkflowActivity({
                     View configuration
                   </a>
                 </Button>
-                {entityType !== 'small_microcircuit_simulation' &&
-                  entityType !== 'paired_neuron_circuit_simulation' && (
+                {entityType !== ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation &&
+                  entityType !== ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation && (
                     <Button
                       rounded
                       asChild={activityType !== ActivityValues.Build}

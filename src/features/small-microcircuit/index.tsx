@@ -115,7 +115,7 @@ export default function SimulationCampaignConfiguration({
   }
 
   return (
-    <div className={cn('bg-gray flex h-full flex-col space-y-5', className)}>
+    <div className={cn('flex h-full flex-col space-y-5', className)}>
       <header className={styles.header}>
         <TabsSelector tab={tab} setTab={setTab} disableSimulationTab={!campaignId || loading} />
         <div className="flex items-center justify-center gap-8">
