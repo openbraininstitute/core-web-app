@@ -111,8 +111,8 @@ export function CreationForm() {
             rules={[
               { required: true, message: 'Please enter project name' },
               {
-                max: 80,
-                message: 'Project name cannot exceed 80 characters!',
+                max: 60,
+                message: 'Project name cannot exceed 60 characters',
               },
               {
                 validator: async (_: any, name: string) => {
@@ -166,6 +166,12 @@ export function CreationForm() {
           <Form.Item
             label={<span className="font-semibold text-white">Description</span>}
             name="description"
+            rules={[
+              {
+                max: 600,
+                message: 'Project description cannot exceed 600 characters',
+              },
+            ]}
           >
             <Input.TextArea
               rows={4}

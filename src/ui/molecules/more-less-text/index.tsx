@@ -13,6 +13,8 @@ type ExpandableTextProps = {
 
 const clampClassFor = (lines: number): string => {
   switch (lines) {
+    case 1:
+      return 'line-clamp-1';
     case 2:
       return 'line-clamp-2';
     case 3:

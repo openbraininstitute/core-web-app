@@ -41,8 +41,8 @@ export default function Overview() {
         rules={[
           { required: true, message: 'Please enter project name' },
           {
-            max: 80,
-            message: 'Project name cannot exceed 80 characters!',
+            max: 60,
+            message: 'Project name cannot exceed 60 characters!',
           },
           {
             validator: async (_: any, name: string) => {
