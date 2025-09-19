@@ -10,6 +10,7 @@ import {
 import Ajv, { AnySchema } from 'ajv';
 import { atom, useAtom, PrimitiveAtom } from 'jotai';
 import { Fragment, useMemo, useRef, useState, KeyboardEvent, useEffect } from 'react';
+import JSZip from 'jszip'; // This library would need to be installed as a dependency
 import { Config, ConfigValue, JSONMorphologySchemaForm } from './_components/components';
 import { useConfigAtom } from './_components/hooks/config-atom';
 import { isRootCategory, resolveKey, useObioneJsonSchema } from './_components/hooks/schema';
@@ -23,6 +24,9 @@ import authFetch from '@/authFetch';
 import { useAppNotification } from '@/components/notification';
 import { classNames } from '@/util/utils';
 import styles from './small-microcircuit.module.css';
+
+// Add a new variable to store the response as an ArrayBuffer
+let neuronFileResponse: ArrayBuffer | null = null;
 
 // File validation function
 async function checkFileIsValid(file: File | null): Promise<boolean> {
@@ -47,21 +51,14 @@ async function checkFileIsValid(file: File | null): Promise<boolean> {
       // Note: Content-Type is not set explicitly for FormData; browser sets it with boundary
     };
 
-    const response = await authFetch(
-      `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/declared/upload-neuron-file`,
-      {
-        method: 'POST',
-        headers,
-        body: formData,
-      }
-    );
+    const response = await authFetch(`http://127.0.0.1:8100/declared/test-neuron-file`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
 
-    const responseText = await response.text();
-    try {
-      JSON.parse(responseText);
-    } catch (e) {
-      // Ignore parsing errors for now
-    }
+    // Store the response as an ArrayBuffer, which is suitable for JSZip
+    neuronFileResponse = await response.arrayBuffer();
 
     if (!response.ok) {
       return false;
@@ -69,6 +66,8 @@ async function checkFileIsValid(file: File | null): Promise<boolean> {
 
     return true;
   } catch (error) {
+    // Clear the stored response on error
+    neuronFileResponse = null;
     return false;
   }
 }
@@ -405,106 +404,148 @@ export default function ContributeMorphologyConfiguration({
                     const newEntityId = jsonResponseData.id;
                     setEntityId(newEntityId);
 
+                    const filesToUpload: File[] = [];
+
                     if (selectedFile) {
-                      const formData = new FormData();
+                      // Corrected original file handling
                       let mimeType = 'application/octet-stream';
                       const fileName = selectedFile.name;
                       if (fileName.endsWith('.swc')) {
                         mimeType = 'application/swc';
                       } else if (fileName.endsWith('.asc')) {
-                        mimeType = 'text/plain';
+                        mimeType = 'application/asc';
                       } else if (fileName.endsWith('.h5')) {
                         mimeType = 'application/x-hdf5';
                       }
-
                       const fileWithMimeType = new File([selectedFile], selectedFile.name, {
                         type: mimeType,
                       });
-                      formData.append('file', fileWithMimeType);
-                      formData.append('label', 'morphology');
+                      filesToUpload.push(fileWithMimeType);
+                    }
 
+                    if (neuronFileResponse) {
+                      const zip = new JSZip();
+                      const unzippedData = await zip.loadAsync(neuronFileResponse);
+
+                      unzippedData.forEach((relativePath, zipEntry) => {
+                        if (!zipEntry.dir) {
+                          const fileName = relativePath;
+                          let mimeType = 'application/octet-stream';
+                          if (fileName.endsWith('.swc')) {
+                            mimeType = 'application/swc';
+                          } else if (fileName.endsWith('.asc')) {
+                            mimeType = 'application/asc';
+                          } else if (fileName.endsWith('.h5')) {
+                            mimeType = 'application/x-hdf5';
+                          }
+
+                          zipEntry.async('blob').then((fileBlob) => {
+                            filesToUpload.push(new File([fileBlob], fileName, { type: mimeType }));
+                          });
+                        }
+                      });
+
+                      // Wait for all files to be unzipped before proceeding
+                      await Promise.all(
+                        Object.values(unzippedData.files)
+                          .filter((zipEntry) => !zipEntry.dir)
+                          .map((zipEntry) => zipEntry.async('blob'))
+                      );
+                    }
+
+                    if (filesToUpload.length > 0) {
                       const fileUploadHeaders = {
                         'virtual-lab-id': headers['virtual-lab-id'],
                         'project-id': headers['project-id'],
                       };
 
-                      const fileResponse = await authFetch(
-                        `https://staging.openbraininstitute.org/api/entitycore/reconstruction-morphology/${newEntityId}/assets`,
-                        {
-                          method: 'POST',
-                          headers: fileUploadHeaders,
-                          body: formData,
-                        }
-                      );
+                      for (const file of filesToUpload) {
 
-                      const fileResponseText = await fileResponse.text();
-                      if (!fileResponse.ok) {
-                        throw new ApiError(`Failed to upload file: ${fileResponseText}`, {
-                          status: fileResponse.status,
-                        });
-                      }
+                        const formData = new FormData();
+                        formData.append('file', file, file.name);
+                        formData.append('label', 'morphology');
 
-                      const mtypeRequestBody = {
-                        authorized_public: true,
-                        entity_id: newEntityId,
-                        mtype_class_id: mtypeConfig?.mtype_class_id ?? undefined,
-                      };
-
-                      const fileUploadMtypeHeaders = {
-                        'virtual-lab-id': headers['virtual-lab-id'],
-                        'project-id': headers['project-id'],
-                        'Content-Type': 'application/json',
-                      };
-                      const fileResponseMtype = await authFetch(
-                        `https://staging.openbraininstitute.org/api/entitycore/mtype-classification`,
-                        {
-                          method: 'POST',
-                          headers: fileUploadMtypeHeaders,
-                          body: JSON.stringify(mtypeRequestBody),
-                        }
-                      );
-                      const fileResponseMtypeText = await fileResponseMtype.text();
-                      if (!fileResponseMtype.ok) {
-                        throw new ApiError(`Failed to upload file: ${fileResponseMtypeText}`, {
-                          status: fileResponseMtype.status,
-                        });
-                      }
-
-                      const contributionRequestBody = {
-                        entity_id: newEntityId,
-                        agent_id: contributionConfig?.agent_id ?? undefined,
-                        role_id: contributionConfig?.role_id ?? undefined,
-                      };
-
-                      const fileUploadContributionHeaders = {
-                        'virtual-lab-id': headers['virtual-lab-id'],
-                        'project-id': headers['project-id'],
-                        'Content-Type': 'application/json',
-                      };
-                      const fileResponseContribution = await authFetch(
-                        `https://staging.openbraininstitute.org/api/entitycore/contribution`,
-                        {
-                          method: 'POST',
-                          headers: fileUploadContributionHeaders,
-                          body: JSON.stringify(contributionRequestBody),
-                        }
-                      );
-                      const fileResponseContributionText = await fileResponseContribution.text();
-                      if (!fileResponseContribution.ok) {
-                        throw new ApiError(
-                          `Failed to upload file: ${fileResponseContributionText}`,
+                        const fileResponse = await authFetch(
+                          `https://staging.openbraininstitute.org/api/entitycore/reconstruction-morphology/${newEntityId}/assets`,
                           {
-                            status: fileResponseContribution.status,
+                            method: 'POST',
+                            headers: fileUploadHeaders,
+                            body: formData,
                           }
                         );
-                      }
 
-                      setIsSuccess(true);
+                        const fileResponseText = await fileResponse.text();
+                        if (!fileResponse.ok) {
+                          throw new ApiError(
+                            `Failed to upload file ${file.name}: ${fileResponseText}`,
+                            {
+                              status: fileResponse.status,
+                            }
+                          );
+                        }
+                        notification.success({
+                          message: `Successfully uploaded file: ${file.name}`,
+                        });
+                      }
                     } else {
                       notification.success({
-                        message: 'Record submitted successfully, no file uploaded',
+                        message: 'Record submitted successfully, no files to upload',
                       });
                     }
+
+                    const mtypeRequestBody = {
+                      authorized_public: true,
+                      entity_id: newEntityId,
+                      mtype_class_id: mtypeConfig?.mtype_class_id ?? undefined,
+                    };
+
+                    const fileUploadMtypeHeaders = {
+                      'virtual-lab-id': headers['virtual-lab-id'],
+                      'project-id': headers['project-id'],
+                      'Content-Type': 'application/json',
+                    };
+                    const fileResponseMtype = await authFetch(
+                      `https://staging.openbraininstitute.org/api/entitycore/mtype-classification`,
+                      {
+                        method: 'POST',
+                        headers: fileUploadMtypeHeaders,
+                        body: JSON.stringify(mtypeRequestBody),
+                      }
+                    );
+                    const fileResponseMtypeText = await fileResponseMtype.text();
+                    if (!fileResponseMtype.ok) {
+                      throw new ApiError(`Failed to upload file: ${fileResponseMtypeText}`, {
+                        status: fileResponseMtype.status,
+                      });
+                    }
+
+                    const contributionRequestBody = {
+                      entity_id: newEntityId,
+                      agent_id: contributionConfig?.agent_id ?? undefined,
+                      role_id: contributionConfig?.role_id ?? undefined,
+                    };
+
+                    const fileUploadContributionHeaders = {
+                      'virtual-lab-id': headers['virtual-lab-id'],
+                      'project-id': headers['project-id'],
+                      'Content-Type': 'application/json',
+                    };
+                    const fileResponseContribution = await authFetch(
+                      `https://staging.openbraininstitute.org/api/entitycore/contribution`,
+                      {
+                        method: 'POST',
+                        headers: fileUploadContributionHeaders,
+                        body: JSON.stringify(contributionRequestBody),
+                      }
+                    );
+                    const fileResponseContributionText = await fileResponseContribution.text();
+                    if (!fileResponseContribution.ok) {
+                      throw new ApiError(`Failed to upload file: ${fileResponseContributionText}`, {
+                        status: fileResponseContribution.status,
+                      });
+                    }
+
+                    setIsSuccess(true);
                   } catch (error) {
                     notification.error({
                       message: 'Failed to submit record',
