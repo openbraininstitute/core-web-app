@@ -25,6 +25,7 @@ import {
 import EphysViewer from '@/features/ephys-viewer';
 import { getMEModel } from '@/api/entitycore/queries';
 import SmallMicrocircuitSimulation from '@/features/small-microcircuit';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 export default async function Overview({
   entity,
@@ -43,7 +44,7 @@ export default async function Overview({
   let singleNeuronSimulationPayload:
     | AwaitedType<ReturnType<typeof resolveSingleNeuronSimulation>>
     | undefined;
-  if (extendedType === 'single_neuron_simulation') {
+  if (extendedType === ExtendedEntitiesTypeDict.SingleNeuronSimulation) {
     try {
       singleNeuronSimulationPayload = await resolveSingleNeuronSimulation(entity.id, ctx);
     } catch {
@@ -55,7 +56,7 @@ export default async function Overview({
     | AwaitedType<ReturnType<typeof resolveSingleNeuronSynaptomeSimulation>>
     | undefined;
 
-  if (extendedType === 'single_neuron_synaptome_simulation') {
+  if (extendedType === ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation) {
     try {
       singleNeuronSynaptomeSimulationPayload = await resolveSingleNeuronSynaptomeSimulation(
         entity.id,
@@ -66,7 +67,7 @@ export default async function Overview({
     }
   }
 
-  if (extendedType === 'single_neuron_synaptome') {
+  if (extendedType === ExtendedEntitiesTypeDict.SingleNeuronSynaptome) {
     const meModel = await getMEModel({
       id: (entity as ISingleNeuronSynaptome).me_model.id,
       context: ctx,
@@ -76,8 +77,8 @@ export default async function Overview({
   }
 
   if (
-    extendedType === 'small_microcircuit_simulation' ||
-    extendedType === 'paired_neuron_circuit_simulation'
+    extendedType === ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation ||
+    extendedType === ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation
   ) {
     let config: AwaitedType<ReturnType<typeof resolveSimulationByCampaignId>>;
 
