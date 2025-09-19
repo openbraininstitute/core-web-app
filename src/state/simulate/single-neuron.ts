@@ -36,3 +36,12 @@ export const genericSingleNeuronSimulationPlotDataAtomFamily = atomFamily((key: 
   childAtom.debugLabel = `generic-single-neuron-simulation-plot-data-atom-family-${key}`;
   return childAtom;
 });
+
+export const simulationStatusAtomFamily = atomFamily((key: string) => {
+  const childAtom = atomWithReset<{
+    status: null | 'launched' | 'finished' | 'error';
+    description?: string;
+  } | null>(null);
+  childAtom.debugLabel = `simulation-status-atom-family-${key}`;
+  return childAtom;
+});

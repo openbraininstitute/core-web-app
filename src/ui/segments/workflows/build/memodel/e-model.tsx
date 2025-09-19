@@ -61,9 +61,10 @@ export function EModel({ sessionId }: Props) {
 
   return (
     <BrowseEntityScope
+      requireBrainRegion
+      allowDownload={false}
       id={sessionId}
       section={WorkspaceSection.BuildWorkflow}
-      requireBrainRegion
       defaultBrainRegion={brainRegionHierarchy?.root.id}
       requireMiniDetailView={false}
       classNames={{ container: 'max-h-full' }}

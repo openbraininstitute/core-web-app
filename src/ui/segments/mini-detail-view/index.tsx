@@ -20,10 +20,9 @@ import {
   ExtendedEntitiesTypeDict,
   TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
-import { bookmarkToProjectLibrary } from '@/api/virtual-lab-svc/queries/bookmark';
 import { renderPreview } from '@/entity-configuration/definitions/renderer';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
-import { BookmarkIcon, DownloadIcon } from '@/components/icons/buttons';
+import { DownloadIcon } from '@/components/icons/buttons';
 import { ExpandableText } from '@/ui/molecules/more-less-text';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
@@ -293,16 +292,16 @@ function ExploreActions<T extends EntityCoreObjectTypes>({
   const [, copy, , copying] = useCopyToClipboard();
   const onCopyClipboard = () => copy(record.id);
 
-  const { isPending: pendingSave, mutateAsync: saveAsync } = useMutation({
-    mutationFn: () =>
-      bookmarkToProjectLibrary(
-        {
-          virtualLabId,
-          projectId,
-        },
-        { entity_id: record.id, category: record.type }
-      ),
-  });
+  // const { mutateAsync: saveAsync } = useMutation({
+  //   mutationFn: () =>
+  //     bookmarkToProjectLibrary(
+  //       {
+  //         virtualLabId,
+  //         projectId,
+  //       },
+  //       { entity_id: record.id, category: record.type }
+  //     ),
+  // });
 
   const { isPending: pendingDownload, mutateAsync: downloadAsync } = useMutation({
     mutationFn: () => downloadArchive(record.type, [record.id], { virtualLabId, projectId }),
@@ -310,7 +309,7 @@ function ExploreActions<T extends EntityCoreObjectTypes>({
 
   const [, setDownloadPanelCircuit] = useAtom(downloadPanelCircuitAtom);
 
-  const onBookmark = () => saveAsync();
+  // const onBookmark = () => saveAsync();
   const onDownload = () => {
     if (EntityTypeDict.Circuit === record.type) {
       setDownloadPanelCircuit(record as ICircuit);
@@ -356,11 +355,12 @@ function ExploreActions<T extends EntityCoreObjectTypes>({
           sideOffset={3}
           align="center"
           className="text-primary-8 bg-white"
+          arrowClassName="bg-white"
         >
           <span>Copy ID</span>
         </TooltipContent>
       </Tooltip>
-      <Tooltip>
+      {/* <Tooltip>
         <TooltipTrigger>
           <Button
             rounded
@@ -377,10 +377,11 @@ function ExploreActions<T extends EntityCoreObjectTypes>({
           sideOffset={3}
           align="center"
           className="text-primary-8 bg-white"
+          arrowClassName="bg-white"
         >
           <span>Save to bookmark</span>
         </TooltipContent>
-      </Tooltip>
+      </Tooltip> */}
       <Tooltip>
         <TooltipTrigger>
           <Button
@@ -402,6 +403,7 @@ function ExploreActions<T extends EntityCoreObjectTypes>({
           sideOffset={3}
           align="center"
           className="text-primary-8 bg-white"
+          arrowClassName="bg-white"
         >
           <span>Download</span>
         </TooltipContent>

@@ -290,10 +290,14 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
             </div>
           </TooltipTrigger>
           {controlsDisabled && (
-            <TooltipContent sideOffset={10} collisionPadding={{ left: 20 }}>
+            <TooltipContent
+              sideOffset={10}
+              collisionPadding={{ left: 20 }}
+              arrowClassName="bg-primary-9"
+            >
               <p className={cn('max-w-80 text-left text-sm break-words hyphens-auto')}>
-                Almost there! To save your simulation, please let it finish running and make sure
-                the details are complete
+                Almost there! To download your simulation results, please let it finish running and
+                make sure the details are complete
               </p>
             </TooltipContent>
           )}
@@ -317,7 +321,7 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
             </div>
           </TooltipTrigger>
           {controlsDisabled && (
-            <TooltipContent sideOffset={10}>
+            <TooltipContent sideOffset={10} arrowClassName="bg-primary-9">
               <p className={cn('max-w-80 text-left text-sm break-words hyphens-auto')}>
                 Almost there! To save your simulation, please let it finish running and make sure
                 the details are complete

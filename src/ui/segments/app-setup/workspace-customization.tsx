@@ -5,6 +5,7 @@
 import { ComponentProps, ReactNode, useEffect, useState, useTransition } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from '@bprogress/next/app';
+import { Form } from 'antd';
 import {
   CheckCircleFilled,
   CloseCircleFilled,
@@ -12,9 +13,6 @@ import {
   LoadingOutlined,
   RightOutlined,
 } from '@ant-design/icons';
-import { Form } from 'antd';
-
-import Link from 'next/link';
 import z from 'zod';
 
 import { updateVirtualLab, checkVirtualLabExists } from '@/api/virtual-lab-svc/queries/virtual-lab';
@@ -379,7 +377,7 @@ export function WorkspaceCustomization({
           </CardContent>
         </Card>
 
-        <div className="w-full">
+        {/* <div className="w-full">
           <p className="mb-2 text-left text-sm text-[#8C8C8C]">Just before you go</p>
           <div className="grid justify-items-stretch gap-4 md:grid-cols-2">
             <Link href="/">
@@ -414,7 +412,7 @@ export function WorkspaceCustomization({
               </Card>
             </Link>
           </div>
-        </div>
+        </div> */}
       </div>
     </HydrateWrapper>
   );

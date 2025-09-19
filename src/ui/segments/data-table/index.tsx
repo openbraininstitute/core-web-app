@@ -54,6 +54,7 @@ export type Props<T> = {
   dataSource: Array<T>;
   rowClassName?: string | TableProps<T>['rowClassName'];
   tableStyle?: CSSProperties | undefined;
+  allowDownload?: boolean;
 };
 
 export function MainTable<T extends EntityCoreIdentifiableNamed>({
@@ -77,6 +78,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
   onRowsSelected,
   onCellClick,
   tableStyle,
+  allowDownload,
 }: Props<T>) {
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
   const onDisplayControlPanel = (value: boolean) => setDisplayControlPanel(value);
@@ -143,6 +145,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           onRow={onRow}
           sticky={sticky}
           className={cls?.table}
+          allowDownload={allowDownload}
           controls={
             <div className="w-full">
               <Pagination {...{ dataKey, resultPagination }} />

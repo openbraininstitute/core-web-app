@@ -101,7 +101,6 @@ export const SingleNeuronSynaptomeConfigurationSchema = SingleNeuronSynaptomeBas
         path: ['formula'],
       });
     }
-
     if (synapse.target === 'soma' && isNil(synapse.soma_synapse_count)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

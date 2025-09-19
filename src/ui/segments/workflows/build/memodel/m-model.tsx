@@ -39,14 +39,15 @@ export function MModel({ sessionId }: Props) {
 
   return (
     <BrowseEntityScope
+      requireBrainRegion
       id={sessionId}
       section={WorkspaceSection.BuildWorkflow}
-      requireBrainRegion
       requireMiniDetailView={false}
       classNames={{ container: 'max-h-full' }}
       dataType={ExtendedEntitiesTypeDict.ReconstructionMorphology}
       scope={WorkspaceScope.BuildMeModelM}
       miniViewProps={{ section: WorkspaceSection.BuildWorkflow }}
+      allowDownload={false}
       mainTableProps={{
         selectionType: 'radio',
         onCellClick: (_, record) => {

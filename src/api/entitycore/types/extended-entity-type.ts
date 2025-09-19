@@ -1,5 +1,3 @@
-// NOTE: There are now various nested types associated with a single parent type in EntityCore.
-// We should enable selection and data manipulation for both the nested types and those directly defined in EntityCore.
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 
 export const ExtendedEntitiesTypeDict = {

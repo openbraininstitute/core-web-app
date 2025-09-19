@@ -40,6 +40,7 @@ import { classNames, getRandomIntInclusive } from '@/util/utils';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { tryCatch } from '@/api/utils';
 import { cn } from '@/utils/css-class';
+import { log } from '@/utils/logger';
 
 import {
   SingleNeuronSynaptomeConfigurationSchema,
@@ -72,10 +73,10 @@ function updateSeeds(
 }
 
 export function SynapseSet({ sessionId }: Props) {
+  const [form] = Form.useForm();
   const params = useSearchParams();
   const notification = useAppNotification();
   const { virtualLabId, projectId } = useWorkspace();
-  const [form] = Form.useForm();
   const secNames = useAtomValue(secNamesAtom);
   const [isFormValid, setIsFormValid] = useState(false);
   const [visualizeLoading, setLoadingVisualize] = useState(false);
@@ -111,8 +112,6 @@ export function SynapseSet({ sessionId }: Props) {
         : SECTION_TARGET_MAPPING[value as keyof typeof SECTION_TARGET_MAPPING],
   }));
 
-  const formValues = Form.useWatch([], form);
-
   const isAlreadyVisualized = useMemo(() => {
     if (!config) return false;
     return !!Object.values(synapsesPlacement ?? []).find(
@@ -123,15 +122,22 @@ export function SynapseSet({ sessionId }: Props) {
     );
   }, [config, synapsesPlacement, form]);
 
-  useEffect(() => {
-    SingleNeuronSynaptomeConfigurationSchema.parseAsync(formValues)
-      .then(() => {
-        setIsFormValid(true);
-      })
-      .catch(() => {
-        setIsFormValid(false);
-      });
-  }, [formValues]);
+  const validateFormValues = async () => {
+    const currentValues = form.getFieldsValue(true);
+
+    try {
+      await SingleNeuronSynaptomeConfigurationSchema.parseAsync(currentValues);
+
+      setIsFormValid(true);
+    } catch (err) {
+      log('error', 'synapse set validation error', err);
+      setIsFormValid(false);
+    }
+  };
+
+  const onValuesChange = () => {
+    validateFormValues();
+  };
 
   useEffect(() => {
     if (previousSetIdRef.current !== setId) {
@@ -188,13 +194,11 @@ export function SynapseSet({ sessionId }: Props) {
           ['exclusion_rules', newRuleIndex, 'distance_soma_gte'],
           ['exclusion_rules', newRuleIndex, 'distance_soma_lte'],
         ])
-        .catch(() => {
-          // validation errors are expected for empty fields, this is intentional
-        });
+        .catch(() => {});
     }, 0);
   };
 
-  const onTargetChange = (newTarget?: keyof typeof SECTION_TARGET_MAPPING) => {
+  const onTargetChange = async (newTarget?: keyof typeof SECTION_TARGET_MAPPING) => {
     if (config) {
       const tempSessionValue = sessionValue;
       if (newTarget === 'soma') {
@@ -208,6 +212,8 @@ export function SynapseSet({ sessionId }: Props) {
           seed: tempSessionValue?.seed ?? 100,
           synapseSets: tempSessionValue?.synapseSets,
         });
+        form.setFieldsValue({ target: 'soma', formula: undefined, soma_synapse_count: 50 });
+        await validateFormValues();
       }
       if (config?.target === 'soma' && newTarget !== 'soma') {
         config.soma_synapse_count = undefined;
@@ -218,6 +224,8 @@ export function SynapseSet({ sessionId }: Props) {
           seed: tempSessionValue?.seed ?? 100,
           synapseSets: tempSessionValue?.synapseSets,
         });
+        form.setFieldsValue({ target: newTarget, soma_synapse_count: undefined });
+        await validateFormValues();
       }
     }
   };
@@ -365,6 +373,7 @@ export function SynapseSet({ sessionId }: Props) {
       </div>
       <Form
         form={form}
+        onValuesChange={onValuesChange}
         id="synapse-set-config"
         className={cn(
           'flex w-full flex-col items-center justify-between gap-2 text-lg font-bold',
@@ -445,6 +454,7 @@ export function SynapseSet({ sessionId }: Props) {
                     {label('Synapse Count', true)}
                   </div>
                   <Form.Item
+                    id="soma_synapse_count"
                     name={['soma_synapse_count']}
                     rules={[
                       {
@@ -455,6 +465,7 @@ export function SynapseSet({ sessionId }: Props) {
                     validateTrigger="onBlur"
                   >
                     <InputNumber
+                      name="soma_synapse_count"
                       size="large"
                       className="border-neutral-3! [&_input]:text-primary-9! w-full rounded-md border-[1px]! placeholder:text-base placeholder:font-light"
                       min={0}

@@ -148,10 +148,7 @@ async function* fetchItems<T>(body: Body) {
       let message: string = `${sequence.message.replace('...', '')} completed!`;
       if (shouldCreateProject && (workspaceResolution || virtualLab)) {
         const ID = workspaceResolution.virtualLab?.id ?? virtualLab?.id;
-        const fullName =
-          [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') ||
-          profile?.preferred_username ||
-          '';
+        const fullName = profile?.last_name || profile?.preferred_username || '';
         const { data, error } = await tryCatch(
           createProject(ID!, {
             name: `${fullName} first project`,
