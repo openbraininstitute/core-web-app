@@ -219,7 +219,7 @@ export function BrowseLibraryScope() {
           }
         )}
       >
-        <MiniDetailView />
+        <MiniDetailView dataType={dataType} />
       </div>
     </>
   );
