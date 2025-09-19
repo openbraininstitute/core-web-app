@@ -170,6 +170,9 @@ function InviteMemberStep({ onBack, virtualLabId }: InviteMemberStepProps) {
           placement: 'topRight',
           key: 'send-invites-success',
         });
+        // Reset form to single empty invite field after successful submission
+        setInviteList([{ email: '', role: 'member' }]);
+        onBack();
       }
     },
     onError: () => {
@@ -232,6 +235,8 @@ function InviteMemberStep({ onBack, virtualLabId }: InviteMemberStepProps) {
         >
           <div className="primary-scrollbar mx-auto h-full w-full max-w-3xl overflow-y-auto px-4">
             <List
+              id="virtual-lab-list-users"
+              data-testid="virtual-lab-list-users"
               dataSource={inviteList}
               className="text-white"
               renderItem={(invite, index) => (
