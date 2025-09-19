@@ -231,6 +231,7 @@ export function SynapticInputItem({
                 side="bottom"
                 sideOffset={5}
                 className="text-primary-9 bg-white shadow-lg select-none"
+                arrowClassName="bg-white"
               >
                 {synapseDisplayed ? 'Hide synapses' : 'Show synapses'}
               </TooltipContent>
@@ -253,6 +254,7 @@ export function SynapticInputItem({
                 side="bottom"
                 sideOffset={5}
                 className="text-primary-9 flex max-w-60 flex-col items-center justify-center gap-2 bg-white shadow-lg select-none"
+                arrowClassName="bg-white"
               >
                 <p className="text-primary-9 text-justify text-sm">
                   Are you sure you want to delete this synaptic input configuration?

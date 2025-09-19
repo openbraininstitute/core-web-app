@@ -56,6 +56,7 @@ type Props = {
   dataType: TExtendedEntitiesTypeDict;
   mainTableProps?: Partial<ComponentProps<typeof MainTable>>;
   miniViewProps?: Partial<ComponentProps<typeof MiniDetailView>>;
+  allowDownload?: boolean;
 };
 
 export function BrowseEntityScope({
@@ -69,6 +70,7 @@ export function BrowseEntityScope({
   scope: defaultScope,
   mainTableProps,
   miniViewProps,
+  allowDownload,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const { mdv, setMdv } = useMiniDetailView();
@@ -177,6 +179,7 @@ export function BrowseEntityScope({
         <div id="main-listing-table-container" className={cn('h-full w-full')}>
           <MainTable
             showLoadingState
+            allowDownload={allowDownload}
             sticky={{ offsetHeader: 75.5 }}
             isLoading={(isPlaceholderData || isFetching) && !(dataSource && dataSource.length > 0)}
             dataScope={scope!}

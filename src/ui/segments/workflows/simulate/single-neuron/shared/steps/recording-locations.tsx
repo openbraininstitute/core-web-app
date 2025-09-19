@@ -1,5 +1,4 @@
 import { DeleteOutlined, InfoCircleOutlined } from '@ant-design/icons';
-import { TooltipContent } from '@radix-ui/react-tooltip';
 import { Checkbox, Form, InputNumber, Select } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
 import { useEffect } from 'react';
@@ -12,7 +11,7 @@ import {
   label,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { Tooltip, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { secNamesAtom } from '@/state/simulate/single-neuron';
 import {
   PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
@@ -141,6 +140,7 @@ function RecordItem({ index, name, disable, disableDelete, sections, onRemove }:
                       side="top"
                       sideOffset={5}
                       className="text-primary-9 z-50 max-w-80 rounded-md bg-white px-2 py-2 font-light shadow-md"
+                      arrowClassName="bg-white"
                     >
                       <p>
                         The recording position relative to the section. <br />0 being the start of

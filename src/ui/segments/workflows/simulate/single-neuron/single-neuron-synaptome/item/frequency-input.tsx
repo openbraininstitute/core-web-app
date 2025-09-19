@@ -184,6 +184,7 @@ export function FrequencyFormItem({
                 side="bottom"
                 sideOffset={5}
                 className="text-primary-9 flex max-w-60 flex-col items-center justify-center gap-2 bg-white text-base shadow-lg"
+                arrowClassName="bg-white"
               >
                 {disableStepperContent}
               </TooltipContent>

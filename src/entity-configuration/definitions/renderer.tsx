@@ -47,8 +47,9 @@ export const renderLicense = ({ license }: { license?: ILicense | null }) => {
       href={license.name}
       target="_blank"
       rel="noopener noreferrer"
+      className="line-clamp-1 truncate"
     >
-      Open 🔗
+      {license.label ?? 'View license'} 🔗
     </a>
   );
 };

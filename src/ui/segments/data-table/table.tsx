@@ -237,6 +237,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
   dataType,
   controls,
   baseTableWrapperClassname,
+  allowDownload,
 }: TableProps<T> &
   AdditionalTableProps<T> & {
     renderButton?: (props: RenderButtonProps<T>) => ReactNode;
@@ -249,6 +250,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
     dataType: TExtendedEntitiesTypeDict;
     controls?: ReactNode;
     baseTableWrapperClassname?: ComponentProps<'div'>['className'];
+    allowDownload?: boolean;
   }) {
   const { rowSelection, selectedRows, clearSelectedRows } = useRowSelection({
     dataKey,
@@ -281,6 +283,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
         selectedRows={selectedRows}
         clearSelectedRows={clearSelectedRows}
         dataType={dataType}
+        allowDownload={allowDownload}
       >
         {controls}
       </TableControls>

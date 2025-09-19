@@ -195,6 +195,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
                   sideOffset={10}
                   collisionPadding={{ left: 25 }}
                   className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
+                  arrowClassName="bg-amber-100"
                 >
                   <p className="w-full pb-0.5 break-words hyphens-auto">
                     • The model name cannot be empty.
@@ -225,23 +226,30 @@ export function Menu({ sessionId }: { sessionId: string }) {
         <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
           <div className="flex-shrink-0 font-bold">M-model</div>
           {sessionValue?.mmodel ? (
-            <div className="text-accent-light flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
-              <CheckCircleFilled className="flex-shrink-0 text-base" />
-              <div
-                title={sessionValue.mmodel.name}
-                aria-label={sessionValue.mmodel.name}
-                className="line-clamp-1 min-w-0 flex-1 truncate text-left"
-              >
-                {sessionValue?.mmodel.name}
-              </div>
-            </div>
+            <Tooltip>
+              <TooltipTrigger>
+                <div className="text-accent-light flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
+                  <CheckCircleFilled className="flex-shrink-0 text-base" />
+                  <div
+                    title={sessionValue.mmodel.name}
+                    aria-label={sessionValue.mmodel.name}
+                    className="min-w-0 flex-1 truncate text-left"
+                  >
+                    {sessionValue?.mmodel.name}
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent sideOffset={4} avoidCollisions arrowClassName="bg-primary-9">
+                <p className={cn('text-justify text-base')}>{sessionValue?.mmodel.name}</p>
+              </TooltipContent>
+            </Tooltip>
           ) : (
-            <div className="text-neutral-4 flex-1 self-end text-right text-sm leading-7 group-hover:text-white">
+            <div className="text-neutral-4 group-hover:text-label flex-1 self-end text-right text-sm leading-7">
               Select M-model
             </div>
           )}
           <RightOutlined
-            className={cn('text-neutral-4 mr-2 transition-all group-hover:text-white', {
+            className={cn('text-neutral-4 group-hover:text-label mr-2 transition-all', {
               '-rotate-180 text-white!': step === BuildStep.MModel,
             })}
           />
@@ -258,23 +266,30 @@ export function Menu({ sessionId }: { sessionId: string }) {
         <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
           <div className="flex-shrink-0 font-bold">E-model</div>
           {sessionValue?.emodel ? (
-            <div className="text-accent-light flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
-              <CheckCircleFilled className="flex-shrink-0 text-base" />
-              <div
-                title={sessionValue.emodel.name}
-                aria-label={sessionValue.emodel.name}
-                className="line-clamp-1 min-w-0 flex-1 truncate text-left"
-              >
-                {sessionValue?.emodel.name}
-              </div>
-            </div>
+            <Tooltip>
+              <TooltipTrigger>
+                <div className="text-accent-light flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
+                  <CheckCircleFilled className="flex-shrink-0 text-base" />
+                  <div
+                    title={sessionValue.emodel.name}
+                    aria-label={sessionValue.emodel.name}
+                    className="min-w-0 flex-1 truncate text-left"
+                  >
+                    {sessionValue?.emodel.name}
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent sideOffset={4} avoidCollisions arrowClassName="bg-primary-9">
+                <p className={cn('text-justify text-base')}>{sessionValue?.emodel.name}</p>
+              </TooltipContent>
+            </Tooltip>
           ) : (
-            <div className="text-neutral-4 flex-1 self-end text-right text-sm leading-7 group-hover:text-white">
+            <div className="text-neutral-4 group-hover:text-label flex-1 self-end text-right text-sm leading-7">
               Select E-model
             </div>
           )}
           <RightOutlined
-            className={cn('text-neutral-4 mr-2 transition-all group-hover:text-white', {
+            className={cn('text-neutral-4 group-hover:text-label mr-2 transition-all', {
               '-rotate-180 text-white!': step === BuildStep.EModel,
             })}
           />
@@ -299,7 +314,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
           </div>
         </TooltipTrigger>
         {disabled && (
-          <TooltipContent sideOffset={10}>
+          <TooltipContent sideOffset={10} arrowClassName="bg-primary-9">
             <p className={cn('text-justify text-base')}>
               Please fill all the required information <br /> along with selecting m-model and
               e-model

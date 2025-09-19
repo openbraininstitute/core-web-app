@@ -2,12 +2,13 @@
 
 import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { RightOutlined, SettingFilled, WarningFilled } from '@ant-design/icons';
-import { useAtom, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 
 import { headerTabsAtom } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/header';
 import { launchSimulationAtom } from '@/ui/segments/workflows/simulate/single-neuron/shared/runner';
 import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { simulationStatusAtomFamily } from '@/state/simulate/single-neuron';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import {
   SynapseConfigurationArraySchema,
@@ -41,6 +42,7 @@ import {
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
+import { log } from '@/utils/logger';
 
 import {
   SimulationType,
@@ -71,7 +73,9 @@ export function Menu({ sessionId, type }: Props) {
   const { id: modelId } = useParams<{ id: string }>();
   const step = searchParams.get('step') ?? ExperimentStep.Info;
   const launchSimulation = useSetAtom(launchSimulationAtom);
+  const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
   const [, updatePanelId] = useAtom(headerTabsAtom(sessionId));
+
   const onStepChange = (s: ExperimentStepKeys) => {
     const query = new URLSearchParams(searchParams);
     query.set('step', s);
@@ -79,13 +83,13 @@ export function Menu({ sessionId, type }: Props) {
     replace(`${pathname}?${query.toString()}`);
   };
 
-  const infoKey = getSessionKey(PREFIX_OVERVIEW_CONFIGURATION_SESSION_KEY, sessionId);
   const spcKey = getSessionKey(PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
   const sesKey = getSessionKey(PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY, sessionId);
   const rlcKey = getSessionKey(PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY, sessionId);
   const sscKey = getSessionKey(PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
-  const ampKey = getSessionKey(PREFIX_AMPERAGE_CONFIGURATION_SESSION_KEY, sessionId);
   const freqKey = getSessionKey(PREFIX_FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY, sessionId);
+  const infoKey = getSessionKey(PREFIX_OVERVIEW_CONFIGURATION_SESSION_KEY, sessionId);
+  const ampKey = getSessionKey(PREFIX_AMPERAGE_CONFIGURATION_SESSION_KEY, sessionId);
 
   const [overviewConfiguration] = useAtom(OverviewConfigurationAtomFamily(infoKey));
   const [stimulationConfiguration] = useAtom(StimulationConfigurationAtomFamily(spcKey));
@@ -104,19 +108,22 @@ export function Menu({ sessionId, type }: Props) {
       currentInjectionDuration = PROTOCOL_DETAILS[protocol].defaults.time.stop_time;
     }
     updatePanelId(WorkflowSimulatePanels.Results);
-
-    launchSimulation(
-      virtualLabId,
-      projectId,
-      modelId,
-      sessionId,
-      stimulationConfiguration,
-      experimentalSetupConfiguration,
-      recordLocationConfiguration,
-      synaptomeConfiguration,
-      type,
-      experimentalSetupConfiguration.max_time ?? currentInjectionDuration
-    );
+    try {
+      launchSimulation(
+        virtualLabId,
+        projectId,
+        modelId,
+        sessionId,
+        stimulationConfiguration,
+        experimentalSetupConfiguration,
+        recordLocationConfiguration,
+        synaptomeConfiguration,
+        type,
+        experimentalSetupConfiguration.max_time ?? currentInjectionDuration
+      );
+    } catch (error) {
+      log('error', 'running simulation failed', error);
+    }
   };
 
   const warnInfo =
@@ -149,7 +156,8 @@ export function Menu({ sessionId, type }: Props) {
     !!Object.keys(warnRecordLocation ?? {}).length ||
     !!Object.keys(warnExperimentalSetup ?? {}).length ||
     !!Object.keys(warnStimulationProtocol ?? {}).length ||
-    (type === SimulationType.SingleNeuronSynaptome && !!Object.keys(warnSynaptome ?? {}).length);
+    (type === SimulationType.SingleNeuronSynaptome && !!Object.keys(warnSynaptome ?? {}).length) ||
+    simulationStatus?.status === 'launched';
 
   return (
     <div className="flex h-full flex-col gap-2">
@@ -183,6 +191,7 @@ export function Menu({ sessionId, type }: Props) {
                   sideOffset={10}
                   collisionPadding={{ left: 25 }}
                   className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
+                  arrowClassName="bg-amber-100"
                 >
                   {Object.values(warnInfo ?? {}).map((e1) => {
                     return e1.map((err1) => (
@@ -225,6 +234,7 @@ export function Menu({ sessionId, type }: Props) {
                   sideOffset={10}
                   collisionPadding={{ left: 25 }}
                   className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
+                  arrowClassName="bg-amber-100"
                 >
                   {warnExperimentalSetup &&
                     Object.values(warnExperimentalSetup).map((e2) => {
@@ -270,6 +280,7 @@ export function Menu({ sessionId, type }: Props) {
                     sideOffset={10}
                     collisionPadding={{ left: 25 }}
                     className="text-destructive shadow-bnb w-full max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap break-words"
+                    arrowClassName="bg-amber-100"
                   >
                     {warnSynaptome &&
                       Object.values(warnSynaptome).map((e3) => {
@@ -318,6 +329,7 @@ export function Menu({ sessionId, type }: Props) {
                   sideOffset={10}
                   collisionPadding={{ left: 25 }}
                   className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
+                  arrowClassName="bg-amber-100"
                 >
                   {warnStimulationProtocol &&
                     Object.values(warnStimulationProtocol).map((e4) => {
@@ -362,6 +374,7 @@ export function Menu({ sessionId, type }: Props) {
                   sideOffset={10}
                   collisionPadding={{ left: 25 }}
                   className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
+                  arrowClassName="bg-amber-100"
                 >
                   {warnRecordLocation &&
                     Object.values(warnRecordLocation).map((error) => {
@@ -401,7 +414,7 @@ export function Menu({ sessionId, type }: Props) {
             </Button>
           </div>
         </TooltipTrigger>
-        <TooltipContent sideOffset={10}>
+        <TooltipContent sideOffset={10} arrowClassName="bg-primary-9">
           <p className={cn('max-w-80 text-left text-base text-balance')}>
             Please fill all the required information <br />
             along with experiment configurations.

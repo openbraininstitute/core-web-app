@@ -67,11 +67,36 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
 
   const onDeleteSet = (id: string) => {
     const cloneMap = new Map(sessionValue?.synapseSets);
+    const cloneCountMap = new Map(sessionValue?.synapseCount);
     cloneMap.delete(id);
+    cloneCountMap.delete(id);
+
+    if (cloneMap.size === 0) {
+      const newId = crypto.randomUUID();
+      const queryParams = new URLSearchParams(params);
+      queryParams.set('set', newId);
+      const newMap = new Map();
+      newMap.set(newId, {
+        ...DEFAULT_SYNAPSE_VALUE,
+        id: newId,
+        seed: (sessionValue?.seed ?? 0) + getRandomIntInclusive(0, sessionValue?.seed ?? 0),
+        color: sample(SIMULATION_COLORS) ?? SIMULATION_COLORS[0],
+      });
+      setSessionValue({
+        ...sessionValue,
+        seed: sessionValue?.seed ?? 100,
+        synapseSets: newMap,
+        synapseCount: new Map(),
+      });
+      replace(`${pathname}?${queryParams.toString()}`);
+      return;
+    }
+
     setSessionValue({
       ...sessionValue,
       seed: sessionValue?.seed ?? 100,
       synapseSets: cloneMap,
+      synapseCount: cloneCountMap,
     });
     const currentSynapsesPlacementConfig = synapsesPlacement?.[id];
     if (currentSynapsesPlacementConfig?.meshId) {
@@ -216,7 +241,11 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
                       </div>
                     </TooltipTrigger>
                     {!isVisible && !canShow && (
-                      <TooltipContent sideOffset={10} className="text-primary-9 bg-white">
+                      <TooltipContent
+                        sideOffset={10}
+                        className="text-primary-9 bg-white"
+                        arrowClassName="bg-white"
+                      >
                         <p className={cn('text-justify text-base')}>Please apply changes again</p>
                       </TooltipContent>
                     )}

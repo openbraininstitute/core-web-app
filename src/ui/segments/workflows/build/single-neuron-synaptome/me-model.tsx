@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 
 import kebabCase from 'lodash/kebabCase';
+import isNil from 'lodash/isNil';
 
 import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
@@ -11,8 +12,8 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
-import { ROOT_ROUTE } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { ROOT_ROUTE } from '@/config';
 import { cn } from '@/utils/css-class';
 
 import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
@@ -58,6 +59,7 @@ export function MEModel({ sessionId }: Props) {
     >
       <BrowseEntityScope
         requireBrainRegion
+        allowDownload={false}
         id={sessionId}
         requireMiniDetailView={false}
         section={WorkspaceSection.BuildWorkflow}
@@ -74,11 +76,23 @@ export function MEModel({ sessionId }: Props) {
           },
           onRowsSelected: (rows) => {
             const record = rows.at(0);
-            setSessionValue({
-              ...sessionValue,
-              seed: sessionValue?.seed ?? 100,
-              memodel: record as unknown as IMEModel,
-            });
+            if (record) {
+              if (!isNil(sessionValue?.memodel)) {
+                setSessionValue({
+                  ...sessionValue,
+                  seed: sessionValue?.seed ?? 100,
+                  memodel: record as unknown as IMEModel,
+                  synapseSets: new Map(),
+                  synapseCount: new Map(),
+                });
+              } else {
+                setSessionValue({
+                  ...sessionValue,
+                  seed: sessionValue?.seed ?? 100,
+                  memodel: record as unknown as IMEModel,
+                });
+              }
+            }
           },
         }}
       />

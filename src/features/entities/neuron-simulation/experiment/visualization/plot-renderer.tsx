@@ -159,7 +159,7 @@ export default function PlotRenderer({
       data-testid={`root-container-${name}`}
       className={cn('relative mt-4 w-full px-3', rootClassName)}
     >
-      {!isLoading && data.length && !plotConfig?.showDefaultLegends && (
+      {Boolean(!isLoading && data.length && !plotConfig?.showDefaultLegends) && (
         <div className="py-4">
           {showCountValues && (
             <div className="flex w-full justify-between text-gray-400">

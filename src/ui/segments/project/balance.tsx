@@ -41,7 +41,9 @@ export function Wallet() {
         <TooltipTrigger>
           <WarningOutlined />
         </TooltipTrigger>
-        <TooltipContent side="bottom">{err?.message}</TooltipContent>
+        <TooltipContent side="bottom" showArrow={false}>
+          {err?.message}
+        </TooltipContent>
       </Tooltip>
     ))
     .with({ isSuccess: true, data: P.select() }, (balance) => <>{balance}</>)
@@ -73,6 +75,7 @@ export function Wallet() {
             sideOffset={5}
             collisionPadding={{ bottom: 20 }}
             className="text-primary-8 max-w-2xs bg-white text-base shadow-lg"
+            arrowClassName="bg-white"
           >
             For more information, please contact the Virtual lab administrators.
           </TooltipContent>

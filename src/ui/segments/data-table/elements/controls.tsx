@@ -40,6 +40,7 @@ export default function TableControls<T extends EntityCoreIdentifiable>({
   selectedRows,
   visible,
   dataType,
+  allowDownload,
 }: {
   clearSelectedRows: RenderButtonProps<T>['clearSelectedRows'];
   children?: ReactNode;
@@ -47,6 +48,7 @@ export default function TableControls<T extends EntityCoreIdentifiable>({
   selectedRows: RenderButtonProps<T>['selectedRows'];
   visible: boolean;
   dataType: TExtendedEntitiesTypeDict;
+  allowDownload?: boolean;
 }) {
   const { left, right } = useScrollNav(
     typeof document !== 'undefined'
@@ -63,7 +65,7 @@ export default function TableControls<T extends EntityCoreIdentifiable>({
         <div className="flex grow justify-center">{children}</div>
         <div className="ml-auto">{right}</div>
       </div>
-      {!!selectedRows?.length && clearSelectedRows && (
+      {!!selectedRows?.length && clearSelectedRows && allowDownload && (
         <DefaultRenderButton<T>
           clearSelectedRows={clearSelectedRows}
           selectedRows={selectedRows}

@@ -3,13 +3,12 @@
 import { captureException } from '@sentry/nextjs';
 import { match } from 'ts-pattern';
 import { atom } from 'jotai';
-
-import delay from 'lodash/delay';
-import isNil from 'lodash/isNil';
-import pick from 'lodash/pick';
 import sortBy from 'lodash/sortBy';
 import uniqBy from 'lodash/uniqBy';
 import values from 'lodash/values';
+import isNil from 'lodash/isNil';
+import delay from 'lodash/delay';
+import pick from 'lodash/pick';
 
 import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
 import {
@@ -27,7 +26,7 @@ import {
 import {
   genericSingleNeuronSimulationPlotDataAtomFamily,
   simulateStepTrackerAtom,
-  simulationStatusAtom,
+  simulationStatusAtomFamily,
 } from '@/state/simulate/single-neuron';
 import { SimulationType } from '@/types/simulation/common';
 import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
@@ -216,8 +215,9 @@ export const launchSimulationAtom = atom<
         throw new Error(messages.SynaptomeConfigurationError);
       }
     }
+    const simStatusAtom = simulationStatusAtomFamily(sessionId);
 
-    set(simulationStatusAtom, { status: 'launched' });
+    set(simStatusAtom, { status: 'launched' });
     set(simulateStepTrackerAtom, {
       steps: get(simulateStepTrackerAtom).steps.map((p) => ({
         ...p,
@@ -232,7 +232,9 @@ export const launchSimulationAtom = atom<
       return acc;
     }, {});
     const plotDataAtom = genericSingleNeuronSimulationPlotDataAtomFamily(sessionId);
+
     log('debug', '🚀 Setting initial plot data:', initialPlotData);
+
     set(plotDataAtom, initialPlotData);
     const recordFromUniq = uniqBy(recordFromConfig, (item) =>
       values(pick(item, ['section', 'offset']))
@@ -259,6 +261,7 @@ export const launchSimulationAtom = atom<
       if (error) {
         throw new Error('simulation failed');
       }
+
       if (!response.ok) {
         let errorMessage = messages.DefaultSimulationError;
 
@@ -271,12 +274,12 @@ export const launchSimulationAtom = atom<
           // ignore
         }
 
-        set(simulationStatusAtom, {
+        set(simStatusAtom, {
           status: 'error',
           description: errorMessage,
         });
 
-        delay(() => set(simulationStatusAtom, { status: null }), 1000);
+        delay(() => set(simStatusAtom, { status: null }), 1000);
 
         set(simulateStepTrackerAtom, {
           steps: get(simulateStepTrackerAtom).steps.map((p) => ({
@@ -298,7 +301,7 @@ export const launchSimulationAtom = atom<
             });
           })
           .with({ message_type: MessageType.STATUS, status: JobStatus.DONE }, () => {
-            set(simulationStatusAtom, { status: 'finished' });
+            set(simStatusAtom, { status: 'finished' });
             set(simulateStepTrackerAtom, {
               steps: get(simulateStepTrackerAtom).steps.map((p) => ({
                 ...p,
@@ -324,7 +327,7 @@ export const launchSimulationAtom = atom<
           },
         },
       });
-      set(simulationStatusAtom, {
+      set(simStatusAtom, {
         status: 'error',
         description: error.cause ? `${error}` : messages.RunningSimulationDefaultError,
       });

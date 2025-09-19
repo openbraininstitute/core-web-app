@@ -81,24 +81,25 @@ export function Menu({ sessionId }: Props) {
   };
 
   const onAdd = () => {
-    const id = crypto.randomUUID();
-    const queryParams = new URLSearchParams(searchParams);
-    queryParams.set('set', id);
-    queryParams.set('step', BuildStep.SynapseSet);
-    const synapseSetsMap = new Map<string, TSingleNeuronSynaptomeConfiguration>([]);
-    synapseSetsMap.set(id, {
-      ...DEFAULT_SYNAPSE_VALUE,
-      id,
-      seed: 100,
-    });
+    if ((sessionValue?.synapseSets?.size ?? 0) <= 0) {
+      const id = crypto.randomUUID();
+      const queryParams = new URLSearchParams(searchParams);
+      queryParams.set('set', id);
+      queryParams.set('step', BuildStep.SynapseSet);
+      const synapseSetsMap = new Map<string, TSingleNeuronSynaptomeConfiguration>([]);
+      synapseSetsMap.set(id, {
+        ...DEFAULT_SYNAPSE_VALUE,
+        id,
+        seed: 100,
+      });
 
-    setSessionValue({
-      ...sessionValue,
-      seed: sessionValue?.seed ?? 100,
-      synapseSets: synapseSetsMap,
-    });
-
-    replace(`${pathname}?${queryParams.toString()}`);
+      setSessionValue({
+        ...sessionValue,
+        seed: sessionValue?.seed ?? 100,
+        synapseSets: synapseSetsMap,
+      });
+      replace(`${pathname}?${queryParams.toString()}`);
+    }
   };
 
   const validSetsCount = Array.from(sessionValue?.synapseSets?.values() ?? [])?.filter(
@@ -259,6 +260,7 @@ export function Menu({ sessionId }: Props) {
                   sideOffset={10}
                   collisionPadding={{ left: 25 }}
                   className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
+                  arrowClassName="bg-amber-100"
                 >
                   <p className="w-full pb-0.5 break-words hyphens-auto">
                     • The model name cannot be empty.
@@ -289,23 +291,30 @@ export function Menu({ sessionId }: Props) {
         <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
           <div className="flex-shrink-0 font-bold">ME-model</div>
           {sessionValue?.memodel ? (
-            <div className="text-accent-light flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
-              <CheckCircleFilled className="flex-shrink-0 text-base" />
-              <div
-                title={sessionValue.memodel.name}
-                aria-label={sessionValue.memodel.name}
-                className="line-clamp-1 min-w-0 flex-1 truncate text-left"
-              >
-                {sessionValue?.memodel.name}
-              </div>
-            </div>
+            <Tooltip>
+              <TooltipTrigger>
+                <div className="text-accent-light flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
+                  <CheckCircleFilled className="flex-shrink-0 text-base" />
+                  <div
+                    title={sessionValue.memodel.name}
+                    aria-label={sessionValue.memodel.name}
+                    className="line-clamp-1 min-w-0 flex-1 truncate text-left"
+                  >
+                    {sessionValue?.memodel.name}
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent sideOffset={4} avoidCollisions arrowClassName="bg-primary-9">
+                <p className={cn('text-justify text-base')}>{sessionValue?.memodel.name}</p>
+              </TooltipContent>
+            </Tooltip>
           ) : (
-            <div className="text-neutral-4 flex-1 self-end text-right text-sm leading-7 transition-all group-hover:text-white">
+            <div className="text-neutral-4 group-hover:text-label flex-1 self-end text-right text-sm leading-7 transition-all">
               Select ME-model
             </div>
           )}
           <RightOutlined
-            className={cn('text-neutral-4 mr-2 transition-all group-hover:text-white', {
+            className={cn('text-neutral-4 group-hover:text-label mr-2 transition-all', {
               '-rotate-180 text-white! group-hover:text-white': step === BuildStep.MEModel,
             })}
           />
@@ -326,7 +335,11 @@ export function Menu({ sessionId }: Props) {
               <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
                 <div className="flex-shrink-0 font-bold">Synapse sets</div>
                 <div className="ml-auto flex items-center justify-center gap-2">
-                  {!!validSetsCount && <div>{validSetsCount}</div>}
+                  {!!validSetsCount && (
+                    <div>
+                      {validSetsCount > 1 ? `${validSetsCount} sets` : `${validSetsCount} set`}
+                    </div>
+                  )}
                   <RightOutlined
                     className={cn('text-neutral-4 mr-2 transition-all', {
                       '-rotate-180 text-white! group-hover:text-white':
@@ -338,9 +351,11 @@ export function Menu({ sessionId }: Props) {
             </Button>
           </div>
         </TooltipTrigger>
-        <TooltipContent sideOffset={10} side="bottom">
-          <p className={cn('text-justify text-base')}>Please select me model first</p>
-        </TooltipContent>
+        {isNil(sessionValue?.memodel) && (
+          <TooltipContent sideOffset={0} side="bottom" arrowClassName="bg-primary-9">
+            <p className={cn('text-justify text-base')}>Please select me model first</p>
+          </TooltipContent>
+        )}
       </Tooltip>
       {!isNil(sessionValue?.memodel) && (
         <div className="px-4 pt-3">
@@ -366,7 +381,12 @@ export function Menu({ sessionId }: Props) {
           </div>
         </TooltipTrigger>
         {disabled && (
-          <TooltipContent sideOffset={10} avoidCollisions collisionPadding={{ left: 25 }}>
+          <TooltipContent
+            sideOffset={4}
+            avoidCollisions
+            collisionPadding={{ left: 25 }}
+            arrowClassName="bg-primary-9"
+          >
             <p className={cn('text-justify text-base')}>
               Please fill all the required information <br /> along with selecting me-model and
               configuring synapses
