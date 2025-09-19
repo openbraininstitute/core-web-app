@@ -4,18 +4,19 @@ import { DownOutlined, LoadingOutlined, RightOutlined } from '@ant-design/icons'
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
+import orderBy from 'lodash/orderBy';
 
+import { listProjects } from '@/api/virtual-lab-svc/queries/project';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { LabCompany } from '@/components/icons/buttons';
 import {
   makeTriggerWorkspaceConfigurationClickEvent,
   WorkspaceActions,
 } from '@/ui/segments/workspaces/space-manager/event';
-import { listProjects } from '@/api/virtual-lab-svc/queries/project';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
 import type { Project, VirtualLab } from '@/api/virtual-lab-svc/queries/types';
-import { LabCompany } from '@/components/icons/buttons';
 
 type Props = {
   lab: VirtualLab & { isMine: boolean };
@@ -44,7 +45,7 @@ export function Item({
     queryFn: async () => await listProjects({ virtualLabId: lab.id! }),
     enabled: !!lab.id && (isOpen || tryingToExpand.has(lab.id)),
   });
-  const data = projects?.data?.results;
+  const data = orderBy(projects?.data?.results, ['updated_at'], ['desc']);
 
   // automatically move from trying to expanded when query succeeds
   useEffect(() => {
@@ -198,7 +199,9 @@ export function Item({
                       })
                     }
                   >
-                    {isActive && <div className="mr-2 h-3 w-3 rounded-full bg-current" />}
+                    {isActive && (
+                      <div className="mr-2 size-3 min-h-3 min-w-3 rounded-full bg-current" />
+                    )}
                     <span className="line-clamp-1 truncate" title={project.name}>
                       {project.name}
                     </span>

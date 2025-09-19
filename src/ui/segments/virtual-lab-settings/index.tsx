@@ -26,8 +26,8 @@ import { ExpandableText } from '@/ui/molecules/more-less-text';
 const baseNameSchema = z
   .string()
   .trim()
-  .min(1, 'Name is required')
-  .max(100, 'Name must be less than 100 characters');
+  .min(1, 'Please enter a name for virtual lab')
+  .max(60, 'The name must be less than 100 characters');
 
 function buildAsyncNameSchema(currentName: string) {
   return baseNameSchema.superRefine(async (val: string, ctx: z.RefinementCtx) => {
@@ -327,9 +327,6 @@ function EditableName({
           </button>
         )}
       </ExpandableText>
-      {/* <h2 className="text-3xl font-bold transition-all duration-200 select-none group-hover:text-white/90">
-        {currentName}
-      </h2> */}
       {isAdmin && (
         <Button
           type="button"

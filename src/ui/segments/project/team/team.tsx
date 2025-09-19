@@ -390,6 +390,8 @@ function AddMemberStep({ onBack, list, allowedOperation }: AddMemberStepProps) {
         placement: 'topRight',
         key: 'add-members-success',
       });
+      setSelectedMembers([]);
+      onBack();
     },
     onError: () => {
       notifyError({

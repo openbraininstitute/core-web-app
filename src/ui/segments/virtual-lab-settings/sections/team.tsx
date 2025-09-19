@@ -170,6 +170,9 @@ function InviteMemberStep({ onBack, virtualLabId }: InviteMemberStepProps) {
           placement: 'topRight',
           key: 'send-invites-success',
         });
+        // Reset form to single empty invite field after successful submission
+        setInviteList([{ email: '', role: 'member' }]);
+        onBack();
       }
     },
     onError: () => {
