@@ -16,7 +16,10 @@ import { SingleNeuronSimulationPreview } from '@/ui/segments/mini-detail-view/pr
 import { SingleNeuronSynaptomePreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-synaptome-preview';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
 import { MEModelPreview } from '@/ui/segments/mini-detail-view/previews/me-model-preview';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import {
+  ExtendedEntitiesTypeDict,
+  TExtendedEntitiesTypeDict,
+} from '@/api/entitycore/types/extended-entity-type';
 import { bookmarkToProjectLibrary } from '@/api/virtual-lab-svc/queries/bookmark';
 import { renderPreview } from '@/entity-configuration/definitions/renderer';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
@@ -50,10 +53,12 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 
 type Props = {
   section?: TWorkspaceSection;
+  dataType?: TExtendedEntitiesTypeDict;
 };
 
 export function MiniDetailView<T extends EntityCoreObjectTypes>({
   section = WorkspaceSection.Data,
+  dataType,
 }: Props) {
   const [record, setRecord] = useState<T | null>(null);
   const { mdv, setMdv } = useMiniDetailView();
@@ -177,7 +182,9 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
     .otherwise(() => null);
 
   const actions = match({ section })
-    .with({ section: WorkspaceSection.Data }, () => <ExploreActions record={record} />)
+    .with({ section: WorkspaceSection.Data }, () => (
+      <ExploreActions record={record} dataType={dataType} />
+    ))
     .with({ section: WorkspaceSection.SimulateWorkflow }, () => (
       <WorkflowSimulateActions record={record} />
     ))
@@ -275,7 +282,13 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
 
 export default MiniDetailView;
 
-function ExploreActions<T extends EntityCoreObjectTypes>({ record }: { record: T }) {
+function ExploreActions<T extends EntityCoreObjectTypes>({
+  record,
+  dataType,
+}: {
+  record: T;
+  dataType?: TExtendedEntitiesTypeDict;
+}) {
   const { virtualLabId, projectId } = useWorkspace();
   const [, copy, , copying] = useCopyToClipboard();
   const onCopyClipboard = () => copy(record.id);
@@ -402,7 +415,7 @@ function ExploreActions<T extends EntityCoreObjectTypes>({ record }: { record: T
         className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
       >
         <Link
-          href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`}
+          href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(dataType)}/${record.id}`}
         >
           View details
         </Link>

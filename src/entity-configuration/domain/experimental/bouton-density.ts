@@ -34,7 +34,7 @@ export const BoutonDensity: EntityCoreTypeConfig<IExperimentalBoutonDensity> = {
     extension: 'application/json',
   },
   isBookmarkable: true,
-  detailViewSections: ['overview', 'related-publications'],
+  detailViewSections: ['overview'],
   isCopyable: true,
   isSimulatable: false,
 } as const;

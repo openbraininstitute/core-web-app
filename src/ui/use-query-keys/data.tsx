@@ -107,5 +107,6 @@ export const keyBuilder = {
     `${prefix}-entity-asset`,
     { entityId, assetId, assetPath, assetType, asRawResponse, ...context },
   ],
+  simCampaign: ({ entityId }: { entityId: string }) => [`${prefix}-sim-campaign`, { entityId }],
   annotation: ({ entityId }: { entityId: string }) => [`${prefix}-annotation`, { entityId }],
 };

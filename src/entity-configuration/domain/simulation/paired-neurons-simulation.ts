@@ -157,9 +157,9 @@ export const PairedNeuronCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulat
   asset: {
     extension: 'application/json',
   },
-  detailViewSections: ['overview', 'related-publications'],
+  detailViewSections: ['overview'],
   isBookmarkable: false,
   isDownloadable: false,
   isCopyable: true,
-  isSimulatable: true,
+  isSimulatable: false,
 } as const;

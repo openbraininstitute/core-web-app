@@ -28,6 +28,7 @@ import { AtomsMap, JSONSchema, TabType } from './types';
 import { File, SimulationFiles } from './_components/simulation-files';
 import { SimulationStatusBadge } from './_components/simulation-status';
 import errorRegistry from './error-registry';
+import { cn } from '@/utils/css-class';
 
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
@@ -49,16 +50,17 @@ export default function SimulationCampaignConfiguration({
   projectId,
   initialCampaignId,
   initialConfig,
+  readOnly,
+  className,
 }: {
   circuitId: string;
   virtualLabId: string;
   projectId: string;
   initialCampaignId?: string;
   initialConfig?: Config;
+  readOnly?: boolean;
+  className?: string;
 }) {
-  if (!!initialCampaignId !== !!initialConfig)
-    throw new Error('Both or none of initialCampaignId, initialConfigId should be passed');
-
   const circuit = useCircuit(circuitId);
   const [tab, setTab] = useState<TabType>('configuration');
   const [configTab, setConfigTab] = useState<string>('info');
@@ -80,8 +82,6 @@ export default function SimulationCampaignConfiguration({
     setEditing(true);
     setSelectedCategory('');
   };
-
-  const readOnly = initialConfig !== undefined;
 
   const validate = useMemo(() => {
     const ajv = new Ajv({ strictSchema: false, allErrors: true });
@@ -115,13 +115,11 @@ export default function SimulationCampaignConfiguration({
   }
 
   return (
-    <div className="flex h-full flex-col space-y-5 bg-gray-100 px-10 pt-6">
+    <div className={cn('flex h-full flex-col space-y-5', className)}>
       <header className={styles.header}>
         <TabsSelector tab={tab} setTab={setTab} disableSimulationTab={!campaignId || loading} />
         <div className="flex items-center justify-center gap-8">
           {!!campaignId && <ButtonCopyId label="Copy simulation campaign ID" value={campaignId} />}
-          {/* Temporarly commented out (James request) */}
-          {/* <CircuitName circuit={circuit} /> */}
         </div>
       </header>
       <div className="w-full border-t border-gray-200" />
@@ -168,12 +166,13 @@ export default function SimulationCampaignConfiguration({
                 );
               })}
             </div>
+
             {!readOnly && (
               <button
                 type="button"
                 className={classNames(
                   'flex min-h-[50px] w-[95%] items-center justify-center rounded-full text-lg drop-shadow',
-                  (errors && errors.length > 0) || loading || readOnly
+                  (errors && errors.length > 0) || loading
                     ? 'bg-gray-300 text-gray-500'
                     : 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
                 )}
@@ -297,7 +296,7 @@ export default function SimulationCampaignConfiguration({
               (isRootCategory(schema, configTab) || selectedCatSchema) && (
                 <JSONSchemaForm
                   onAddReferenceClick={handleAddReferenceClick}
-                  disabled={!!campaignId || loading || readOnly}
+                  disabled={!!campaignId || loading}
                   config={config}
                   schema={
                     selectedCatSchema ??
