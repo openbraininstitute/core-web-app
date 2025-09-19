@@ -32,7 +32,7 @@ import { ROOT_ROUTE } from '@/config';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
-import { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
+import { ExtendedCampaignsType } from '@/entity-configuration/domain/simulation';
 
 const AllowedDuplicateEntityTypes: TEntityTypeDict[] = [EntityTypeDict.SimulationCampaign];
 export interface WorkflowActivityRef {
@@ -196,7 +196,9 @@ export function WorkflowActivity({
   const onDuplicate = () => {
     if (selectedRow?.type === ExtendedEntitiesTypeDict.SimulationCampaign) {
       router.push(
-        `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${(selectedRow as ICircuitSimulationCampaign).circuit.id}?initialCampaignId=${selectedRow.id}`
+        `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${
+          (selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
+        }?initialCampaignId=${selectedRow.id}`
       );
     }
   };

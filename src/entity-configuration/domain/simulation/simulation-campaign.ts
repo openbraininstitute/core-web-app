@@ -23,7 +23,7 @@ import type {
   ICircuitSimulationCampaign,
   ICircuitSimulationCampaignFilter,
 } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
-import type { WorkspaceContext } from '@/types/common';
+import type { WorkspaceContext, AwaitedType } from '@/types/common';
 
 // NOTE: this is due entitycore do not support yet
 async function resolveSimulationCampaigns({
@@ -121,6 +121,8 @@ export async function resolveSimulationByCampaignId({
     config,
   };
 }
+
+export type ExtendedCampaignsType = AwaitedType<ReturnType<typeof resolveSimulationCampaigns>>;
 
 export const SimulationCampaign: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
   group: EntityTypeGroup.Simulations,
