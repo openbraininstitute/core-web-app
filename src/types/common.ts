@@ -1,3 +1,5 @@
+'use client';
+
 import { z } from 'zod';
 /**
  * Constructs a type based on T and makes properties K optional.

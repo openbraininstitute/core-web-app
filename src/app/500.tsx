@@ -6,15 +6,15 @@ import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { SharedLayout } from '@/ui/layouts/shared-layout';
 import { Button } from '@/ui/molecules/button';
 
-export default function NotFound() {
+export default function Custom500() {
   const breakpoint = useDefaultBreakpoint();
 
   return (
     <SharedLayout>
       <div className="flex max-w-md flex-col items-center gap-6">
         <div className="mx-auto flex w-full max-w-md flex-col items-center justify-center">
-          <h1 className="text-primary-9 text-8xl font-bold">404</h1>
-          <p className="text-primary-8 text-xl font-semibold">This page doesn&lsquo;t exist</p>
+          <h1 className="text-primary-9 text-8xl font-bold">500</h1>
+          <p className="text-primary-8 text-xl font-semibold">Server-side error occurred</p>
         </div>
         <Button
           rounded

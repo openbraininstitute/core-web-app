@@ -1,12 +1,10 @@
-'use client';
-
 import Link from 'next/link';
 
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { SharedLayout } from '@/ui/layouts/shared-layout';
 import { Button } from '@/ui/molecules/button';
 
-export default function NotFound() {
+export default function Custom404() {
   const breakpoint = useDefaultBreakpoint();
 
   return (
