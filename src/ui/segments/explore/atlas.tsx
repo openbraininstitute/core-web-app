@@ -20,7 +20,11 @@ type Props = {
 
 export function Atlas({ dataKey, children }: Props) {
   return (
-    <div id="3d-area" className="3d bg-primary-9 relative h-full w-full rounded-2xl p-1">
+    <div
+      id="three-d-area"
+      data-testid="three-d-area"
+      className="3d bg-primary-9 relative h-full w-full rounded-2xl p-1"
+    >
       <AtlasViewer dataKey={dataKey}>{children}</AtlasViewer>
     </div>
   );

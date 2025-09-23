@@ -21,7 +21,6 @@ import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 
 export default function Page({ params }: ServerSideComponentProp<WorkspaceContext, null>) {
   useDisableElementOverflow({ id: 'workspace-body' });
-
   const { push: navigate } = useRouter();
   const { virtualLabId, projectId } = use(params);
   const [shouldRenderScrollableSelector, updateShouldRenderScrollableSelector] = useState(false);
@@ -66,8 +65,28 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
   const handleShouldOnlyRenderScrollableSelector = (s: boolean) =>
     updateShouldRenderOnlyScrollableSelector(s);
 
+  // const [onboardingState] = useLocalStorage<{
+  //   tours: Array<{
+  //     tour: string | null;
+  //     done: boolean | null;
+  //     date: number | null;
+  //     step: number | null;
+  //   }>;
+  // }>(AUTO_ONBOARDING_TOURS, {
+  //   tours: [],
+  // });
+
+  // useLayoutEffect(() => {
+  //   const tourName = shouldRenderScrollableSelector ? workflowTourEmpty : workflowTourFull;
+  //   const tour = find(onboardingState.tours, { tour: tourName });
+
+  //   if (!tour || !tour.done) {
+  //     startNextStep(tourName);
+  //   }
+  // }, [shouldRenderScrollableSelector]);
+
   return (
-    <div className="mr-0 mb-10 ml-3 flex h-full max-h-[calc(100vh-7rem)] flex-col gap-2.5">
+    <div className="mr-0 ml-3 flex h-full max-h-[calc(100vh-6rem)] flex-col gap-2.5">
       <AnimatePresence mode="wait">
         {!shouldOnlyRenderScrollableSelector && (
           <motion.div

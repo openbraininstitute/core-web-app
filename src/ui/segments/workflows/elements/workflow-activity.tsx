@@ -86,12 +86,18 @@ export function WorkflowActivity({
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
+      onHeaderCell: () => ({
+        id: 'activity-table-name-cell-selector',
+      }),
       render: (text, record) => <span className="text-primary-9">{record.name}</span>,
     },
     {
       title: 'Category',
       dataIndex: 'category',
       key: 'category',
+      onHeaderCell: () => ({
+        id: 'activity-table-category-cell-selector',
+      }),
       render: () => {
         return (
           <span className={cn('text-primary-9 flex items-center capitalize')}>
@@ -104,6 +110,9 @@ export function WorkflowActivity({
       title: 'Type',
       dataIndex: 'type',
       key: 'type',
+      onHeaderCell: () => ({
+        id: 'activity-table-type-cell-selector',
+      }),
       render: (_, record) => {
         return (
           <span className={cn('text-primary-9 flex items-center capitalize')}>

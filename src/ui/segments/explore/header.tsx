@@ -114,6 +114,8 @@ function DataTabs() {
   return (
     <>
       <PillTabs
+        id="scope-selector"
+        data-testid="scope-selector"
         key={activeTab}
         value={currentScope}
         className="w-full"
@@ -154,7 +156,7 @@ export function DataHeader() {
       <div className="flex max-w-1/2 items-center justify-center gap-2">
         <DataTabs />
       </div>
-      <div className="max-w-1/2">
+      <div className="max-w-1/2" id="upload-data-selector" data-testid="upload-data-selector">
         <Button
           rounded
           variant="success"

@@ -2,10 +2,11 @@
 
 import { useLayoutEffect, type ReactNode } from 'react';
 import { useNextStep } from 'nextstepjs';
+import find from 'lodash/find';
 
-import { defaultWorkspaceTour } from '@/ui/segments/app-setup/discover-app';
+import { projectTour } from '@/ui/segments/app-setup/discover-app';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { AUTO_ONBOARDING_DONE } from '@/constants';
+import { AUTO_ONBOARDING_TOURS } from '@/constants';
 
 type Props = {
   children: ReactNode;
@@ -14,18 +15,23 @@ type Props = {
 export function ProjectRootLayout({ children }: Props) {
   const { startNextStep } = useNextStep();
   const [onboardingState] = useLocalStorage<{
-    date: number | null;
-    done: boolean;
-  }>(AUTO_ONBOARDING_DONE, {
-    date: null,
-    done: false,
+    tours: Array<{
+      tour: string | null;
+      done: boolean | null;
+      date: number | null;
+      step: number | null;
+    }>;
+  }>(AUTO_ONBOARDING_TOURS, {
+    tours: [],
   });
 
   useLayoutEffect(() => {
-    if (!onboardingState.done) {
-      startNextStep(defaultWorkspaceTour);
+    const tour = find(onboardingState.tours, { tour: projectTour });
+
+    if (!tour || !tour.done) {
+      startNextStep(projectTour);
     }
-  }, [onboardingState.done, startNextStep]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div

@@ -58,10 +58,10 @@ export const AmperageStateAtomFamily = makeStorageAtomFamily(
   AmperageStateSchema,
   {
     protocol: 'idrest',
-    start: 0.05,
-    end: 0.5,
-    stepValue: 5,
-    computed: [0.05, 0.14, 0.23, 0.32, 0.41, 0.5],
+    start: 40,
+    end: 120,
+    stepValue: 3,
+    computed: [40, 80, 120],
     error: null,
   },
   safeStorage

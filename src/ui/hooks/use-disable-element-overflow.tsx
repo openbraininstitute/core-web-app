@@ -1,7 +1,7 @@
 import { useLayoutEffect } from 'react';
 
 /**
- * A custom React hook that disables vertical scrolling (overflow) on the workspace body element.
+ * A custom React hook that disables vertical scrolling (overflow) on the  element.
  *
  * This hook targets the DOM element with the ID default ('workspace-body'), removes the 'overflow-y-auto' class,
  * and adds the 'overflow-hidden' class to prevent vertical scrolling when the hook is mounted.
@@ -14,16 +14,16 @@ import { useLayoutEffect } from 'react';
  */
 export function useDisableElementOverflow({ id = 'workspace-body' }: { id?: string }) {
   useLayoutEffect(() => {
-    const workspaceBodyElement: HTMLElement | null = document.getElementById(id);
+    const element: HTMLElement | null = document.getElementById(id);
 
-    if (!workspaceBodyElement) return;
+    if (!element) return;
 
-    workspaceBodyElement.classList.remove('overflow-y-auto');
-    workspaceBodyElement.classList.add('overflow-hidden');
+    element.classList.remove('overflow-y-auto');
+    element.classList.add('overflow-hidden');
 
     return () => {
-      workspaceBodyElement.classList.remove('overflow-hidden');
-      workspaceBodyElement.classList.add('overflow-y-auto');
+      element.classList.remove('overflow-hidden');
+      element.classList.add('overflow-y-auto');
     };
   }, [id]);
 }

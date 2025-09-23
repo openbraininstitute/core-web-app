@@ -96,10 +96,18 @@ export function NotebookHeader() {
 
   return (
     <div className="flex w-full items-center justify-between gap-4 px-3 [grid-area:header]">
-      <div className="flex max-w-1/2 items-center justify-center gap-2">
+      <div
+        className="flex max-w-1/2 items-center justify-center gap-2"
+        id="notebook-scope-selector"
+        data-testid="notebook-scope-selector"
+      >
         <NotebookTabs />
       </div>
-      <div className="max-w-1/2">
+      <div
+        className="max-w-1/2"
+        id="view-in-jupyter-selector"
+        data-testid="view-in-jupyter-selector"
+      >
         <Button
           rounded
           variant="success"

@@ -55,9 +55,9 @@ export function EntityLeftMenu({ dataKey }: Props) {
           </Suspense>
         </motion.div>
         <motion.div
-          key="data-type"
-          id="data-type"
-          data-testid="data-type"
+          key="data-type-container"
+          id="data-type-container"
+          data-testid="data-type-container"
           initial={false}
           animate={{
             opacity: view === ExploreLeftMenuContext.DataGroup ? 1 : 0,
