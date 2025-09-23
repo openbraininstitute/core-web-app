@@ -6,9 +6,12 @@ import useSearch from '@/components/VirtualLab/Search';
 import { env } from '@/env';
 import { downloadZippedNotebook } from '@/util/virtual-lab/github';
 import { Notebook } from '@/util/virtual-lab/types';
+import { startNotebook, NotebookStartResponse } from '@/services/notebooks';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 export function useNotebookTable(notebooks: Notebook[], failed?: string[], serverError?: string) {
   const notification = useAppNotification();
+  const { virtualLabId, projectId } = useWorkspace();
   const [loadingZip, setLoadingZip] = useState(false);
   const [currentNotebook, setCurrentNotebook] = useState<Notebook | null>(null);
   const [display, setDisplay] = useState<'notebook' | 'readme' | null>(null);
@@ -91,6 +94,33 @@ export function useNotebookTable(notebooks: Notebook[], failed?: string[], serve
     window.open(url, '_blank');
   };
 
+  const runOnEksNotebook = async (notebook: Notebook) => {
+    try {
+      const retval: NotebookStartResponse = await startNotebook(notebook, virtualLabId, projectId);
+      notification.success({
+        message: `Notebook starting`,
+        key: 'notebook-started-successfully',
+        placement: 'topRight',
+      });
+      window.open(retval.url, '_blank');
+    } catch (error) {
+      // Just show the hint message if we get some error
+      if (error instanceof Error && 'cause' in error) {
+        notification.error({
+          message: (error.cause as { error_code: string; hint: string }).hint,
+          key: 'notebook-error',
+          placement: 'topRight',
+        });
+      } else {
+        notification.error({
+          message: `Failed to start notebook, unknown error: ${error}`,
+          key: 'notebook-unknown-error',
+          placement: 'topRight',
+        });
+      }
+    }
+  };
+
   // Download notebook functionality
   const handleDownloadClick = async (notebook: Notebook) => {
     setLoadingZip(true);
@@ -126,5 +156,6 @@ export function useNotebookTable(notebooks: Notebook[], failed?: string[], serve
     runNotebook,
     handleDownloadClick,
     handleReadmeClick,
+    runOnEksNotebook,
   };
 }

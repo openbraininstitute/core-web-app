@@ -11,6 +11,7 @@ import { Popover } from 'antd/lib';
 import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
 import { EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
 import { Notebook } from '@/util/virtual-lab/types';
+import { env } from '@/env';
 
 interface ActionPopoverProps {
   notebook: Notebook;
@@ -20,6 +21,7 @@ interface ActionPopoverProps {
   onDeleteClick?: (id: string) => void;
   onRunClick?: (notebook: Notebook) => void;
   enableRunNotebook?: boolean;
+  onRunOnEksClick?: (notebook: Notebook) => void;
 }
 
 export default function ActionPopover({
@@ -30,6 +32,7 @@ export default function ActionPopover({
   onDeleteClick,
   onRunClick,
   enableRunNotebook,
+  onRunOnEksClick,
 }: ActionPopoverProps) {
   return (
     <div id="popover">
@@ -97,6 +100,24 @@ export default function ActionPopover({
                 </button>
               </div>
             )}
+            {onRunOnEksClick &&
+              (env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'staging' ||
+                env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'preview' ||
+                env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'development') && (
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-[10px]"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRunOnEksClick(notebook);
+                    }}
+                  >
+                    <PlayCircleOutlined aria-label="Run" />
+                    Run on EKS
+                  </button>
+                </div>
+              )}
           </div>
         }
         style={{
