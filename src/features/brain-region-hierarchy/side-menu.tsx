@@ -36,7 +36,7 @@ export default function TreeSideMenu({ dataKey }: Props) {
           )}
         >
           <BrainIcon style={{ height: '1em' }} />
-          <span>Brain region</span>
+          <span className="text-neutral-3">Brain region</span>
         </div>
         <Button
           type="text"
