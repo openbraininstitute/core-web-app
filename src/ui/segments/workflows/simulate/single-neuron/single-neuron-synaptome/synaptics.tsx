@@ -6,7 +6,10 @@ import { Form } from 'antd';
 import sample from 'lodash/sample';
 
 import { SynapticInputItem } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome/item/item';
-import { SynaptomeConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import {
+  SynaptomeConfigurationAtomFamily,
+  StimulationConfigurationAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { getSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/queries/model/single-neuron-synaptome';
 import { sendRemoveSynapses3DEvent } from '@/components/neuron-viewer/hooks/events';
 import {
@@ -20,7 +23,9 @@ import { keyBuilder } from '@/ui/use-query-keys/data';
 import {
   PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
   PREFIX_FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY,
+  PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
   SIMULATION_COLORS,
+  PROTOCOL_DETAILS,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
@@ -46,9 +51,11 @@ export type UpdateSynapseSimulationProperty = {
 export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Props) {
   const breakpoint = useDefaultBreakpoint();
   const key = getSessionKey(PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
+  const spcKey = getSessionKey(PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
   const { virtualLabId, projectId } = useWorkspace();
   const [visualizedSynaptomes] = useAtom(synapsesPlacementAtom);
   const [state, update] = useAtom(SynaptomeConfigurationAtomFamily(key));
+  const [stimulationState, updateStimulation] = useAtom(StimulationConfigurationAtomFamily(spcKey));
   const ref = useRef<boolean | null>(null);
   const [form] = Form.useForm<{ synapses: Array<SynapseConfiguration> }>();
 
@@ -90,17 +97,42 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
         (sc: TSingleNeuronSynaptomeConfiguration) => sc.id === newValue
       )?.color!;
     }
-    update(
-      state.map((s, ind) =>
-        ind === id
-          ? {
-              ...s,
-              [configKey]: newValue,
-              color,
-            }
-          : s
-      )
+
+    const updatedState = state.map((s, ind) =>
+      ind === id
+        ? {
+            ...s,
+            [configKey]: newValue,
+            color,
+          }
+        : s
     );
+
+    update(updatedState);
+
+    if (configKey === 'frequency') {
+      const hasFrequencyStepper = updatedState.some((s) => Array.isArray(s.frequency));
+      const protocol = stimulationState.stimulus.stimulus_protocol;
+
+      if (hasFrequencyStepper) {
+        const constantAmplitude =
+          // eslint-disable-next-line no-nested-ternary
+          stimulationState.stimulus.amplitudes &&
+          !Array.isArray(stimulationState.stimulus.amplitudes)
+            ? stimulationState.stimulus.amplitudes
+            : protocol
+              ? PROTOCOL_DETAILS[protocol].defaults.current.min
+              : 0;
+
+        updateStimulation({
+          ...stimulationState,
+          stimulus: {
+            ...stimulationState.stimulus,
+            amplitudes: constantAmplitude,
+          },
+        });
+      }
+    }
   };
 
   function newConfig(config: Array<TSingleNeuronSynaptomeConfiguration>) {
