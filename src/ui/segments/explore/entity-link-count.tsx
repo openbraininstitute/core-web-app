@@ -7,6 +7,7 @@ import { match } from 'ts-pattern';
 import { useMemo } from 'react';
 
 import kebabCase from 'lodash/kebabCase';
+import isNil from 'lodash/isNil';
 import get from 'lodash/get';
 
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
@@ -172,7 +173,7 @@ export function EntityLinkCount() {
                   <span className="font-bold"> {rootCount}</span>
                 </span>
               }
-              isLoading={value.isLoading}
+              isLoading={value.isLoading || isNil(count) || isNil(rootCount)}
             />
           );
         })}
@@ -193,10 +194,10 @@ export function EntityLinkCount() {
               count={
                 <span>
                   <span className="font-bold">{count}</span> <span className="font-light">of</span>
-                  <span className="font-bold"> {rootCount}</span>
+                  <span className="font-bold">{rootCount}</span>
                 </span>
               }
-              isLoading={value.isLoading}
+              isLoading={value.isLoading || isNil(count) || isNil(rootCount)}
             />
           );
         })}
@@ -215,7 +216,7 @@ export function EntityLinkCount() {
               type={value.extendedType}
               title={value.title}
               count={count ? `${count}` : 0}
-              isLoading={value.isLoading}
+              isLoading={value.isLoading || isNil(count)}
             />
           );
         })}

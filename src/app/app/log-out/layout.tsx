@@ -1,5 +1,5 @@
-import { BootSyncFlowLayout } from '@/ui/layouts/bootsync-flow';
+import { SharedLayout } from '@/ui/layouts/shared-layout';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return <BootSyncFlowLayout>{children}</BootSyncFlowLayout>;
+  return <SharedLayout>{children}</SharedLayout>;
 }
