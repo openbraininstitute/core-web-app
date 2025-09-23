@@ -20,8 +20,8 @@ export default function GuidesSection({
 
   return (
     <div>
-      <p>This is the guides section. Topics include: </p>
-
+      <p>This is the guides section. Topics include:</p>
+      <br />
       <button
         type="button"
         style={{ textDecoration: 'underline', cursor: 'pointer' }}
