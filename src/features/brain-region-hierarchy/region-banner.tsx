@@ -51,8 +51,8 @@ export function RegionBanner({ view, onSwitchView }: Props) {
       >
         <div className="flex items-center justify-center gap-2">
           {selectedBrainRegion && (
-            <div className="flex items-center justify-center gap-1">
-              <span className="text-neutral-3">Region:</span>
+            <div className="flex items-center justify-center gap-1 select-none">
+              <span className="text-label text-base">Region:</span>
               <div className="text-primary-9/90 flex items-center justify-center gap-1.5">
                 <div
                   key={`color-${selectedBrainRegion.id}-${selectedBrainRegion.color_hex_triplet}`}
