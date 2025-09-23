@@ -61,9 +61,11 @@ function CustomInput({
   disabled = false,
   onEdit,
   extra,
+  editable = true,
   ...rest
 }: ComponentProps<'input'> & {
   extra?: ReactNode;
+  editable?: boolean;
   onEdit?: () => void;
 }) {
   return (
@@ -80,12 +82,13 @@ function CustomInput({
         {...rest}
       />
       <span className="absolute top-1/2 right-5 -translate-y-1/2 transform">
-        {extra ?? (
-          <EditOutlined
-            className="text-neutral-3! hover:text-primary-7! cursor-pointer"
-            onClick={onEdit}
-          />
-        )}
+        {extra ??
+          (editable && (
+            <EditOutlined
+              className="text-neutral-3! hover:text-primary-7! cursor-pointer"
+              onClick={onEdit}
+            />
+          ))}
       </span>
     </div>
   );
@@ -388,8 +391,8 @@ export function WorkspaceIdentity({
                   >
                     <CustomInput
                       placeholder="Enter your affiliation here..."
-                      disabled={!editableField.affiliation}
-                      onEdit={() => handleEdit('affiliation')}
+                      disabled={false}
+                      editable={false}
                     />
                   </Form.Item>
                   <Form.Item
