@@ -1,0 +1,33 @@
+div.temporarySwitcher {
+  position: relative;
+  width: 100%;
+  height: 100%;
+
+  > div {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+
+    > * {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  > button {
+    font: inherit;
+    border: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    cursor: pointer;
+    padding: 0.5em 1em;
+    color: #fff;
+    background: #05d;
+  }
+}
