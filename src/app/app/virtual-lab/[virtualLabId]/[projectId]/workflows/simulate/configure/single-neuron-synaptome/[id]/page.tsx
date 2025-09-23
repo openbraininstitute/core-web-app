@@ -61,10 +61,10 @@ export default function Page({
           className="flex h-full max-h-full min-h-0 w-full flex-col [grid-area:content]"
         >
           <div
-            id="simulation-panel-wrapper"
-            data-testid="simulation-panel-wrapper"
+            id="simulation-panel-wrapper-two-side"
+            data-testid="simulation-panel-wrapper-two-side"
             className={cn(
-              'secondary-scrollbar grid h-full min-h-0 gap-4 overflow-hidden overflow-y-auto xl:grid-cols-[2.5fr_2fr]'
+              'grid h-full min-h-0 gap-4 overflow-hidden overflow-y-auto xl:grid-cols-[2.5fr_2fr]'
             )}
           >
             <HydrateWrapper>

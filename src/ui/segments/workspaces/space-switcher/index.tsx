@@ -197,6 +197,16 @@ export function SpaceSwitcher({ className }: Props) {
     navigateWithReplace(`${pathname}?section=subscription`);
   };
 
+  const onExpandClick = (e: React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
+    e.stopPropagation();
+    setIsExpanded((prev) => !prev);
+    makeTriggerWorkspaceConfigurationClickEvent({
+      on: false,
+      data: null,
+      type: null,
+    });
+  };
+
   return (
     <div className="flex items-start justify-center gap-1.5">
       <div id="workspace-switcher" className={cn('relative', className)} ref={dropdownRef}>
@@ -207,7 +217,7 @@ export function SpaceSwitcher({ className }: Props) {
           onClick={onClick}
           className={cn(
             'relative flex h-10 w-full items-center justify-between gap-1.5 pl-4 text-sm transition-all duration-150 ease-out',
-            'hover:bg-gray-50',
+            'hover:bg-background',
             {
               'border-neutral-2 h-16! rounded-md rounded-b-none border border-b-0 bg-white pr-4':
                 isExpanded,
@@ -324,7 +334,7 @@ export function SpaceSwitcher({ className }: Props) {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.1 }}
                   className={cn(
-                    'hover:text-primary-8! text-primary-9! flex w-full items-center justify-between'
+                    'hover:text-primary-8! text-primary-9! flex w-full items-center justify-between gap-2'
                   )}
                 >
                   <ProfileButton username={username} onProfileClick={onProfileClick} />
@@ -333,16 +343,13 @@ export function SpaceSwitcher({ className }: Props) {
                       Logout
                     </Link>
                     <motion.div
+                      className="hover:bg-neutral-2/50 group flex size-8 items-center justify-center rounded-full"
                       animate={{ rotate: isExpanded ? 180 : 0 }}
                       transition={{ duration: 0.15, ease: 'easeOut' }}
                     >
                       <DownOutlined
-                        className="text-gray-400"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (boardModalOpen) return;
-                          setIsExpanded((prev) => !prev);
-                        }}
+                        className="text-neutral-3 group-hover:text-primary-8"
+                        onClick={onExpandClick}
                       />
                     </motion.div>
                   </div>

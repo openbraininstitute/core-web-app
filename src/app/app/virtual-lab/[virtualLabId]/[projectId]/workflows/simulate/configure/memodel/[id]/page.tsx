@@ -60,7 +60,7 @@ export default function Page({
             id="simulation-panel-wrapper"
             data-testid="simulation-panel-wrapper"
             className={cn(
-              'secondary-scrollbar grid h-full min-h-0 gap-4 overflow-hidden overflow-y-auto xl:grid-cols-[2.5fr_2fr]'
+              'grid h-full min-h-0 gap-4 overflow-hidden overflow-y-auto xl:grid-cols-[2.5fr_2fr]'
             )}
           >
             <HydrateWrapper>
