@@ -24,7 +24,7 @@ type ProvidersProps = {
   session: SessionOrNull;
 };
 
-export default function Providers({ children, session }: ProvidersProps) {
+export function Providers({ children, session }: ProvidersProps) {
   return (
     <ConfigProvider theme={commonAntdTheme}>
       <App>
@@ -52,3 +52,5 @@ export default function Providers({ children, session }: ProvidersProps) {
     </ConfigProvider>
   );
 }
+
+export default Providers;

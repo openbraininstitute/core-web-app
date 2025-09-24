@@ -1,6 +1,6 @@
 export const LATEST_VISITED_PROJECT_KEY = 'latest-visited-project';
 export const AUTO_INIT_WORKSPACE = 'automatic-init-workspace';
-export const AUTO_ONBOARDING_DONE = 'automatic-app-onboarding';
+export const AUTO_ONBOARDING_TOURS = 'automatic-app-onboarding-tours';
 export const LAST_REGISTERED_WORKFLOW = 'last-registered-workflow';
 
 export const DEFAULT_CHECKLIST_RENDER_LENGTH = 8;

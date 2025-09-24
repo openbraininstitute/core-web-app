@@ -110,8 +110,12 @@ export function ActivityAndTypeSelectors({
   };
 
   return (
-    <div className="flex items-center justify-center gap-2">
-      <div className="flex items-center justify-center gap-2">
+    <div
+      id="workflow-category-selector"
+      data-testid="workflow-category-selector"
+      className="inline-flex w-full max-w-max items-center justify-start gap-2 px-2 py-2"
+    >
+      <div id="workflow-category-content" className="flex items-center justify-center gap-2">
         Category
         <CategorySelectScrollable value={activity} onSelect={handleActivitySelect} />
       </div>
@@ -176,7 +180,7 @@ export function Header() {
   return (
     <div className="flex w-full items-center justify-between">
       <div
-        id="workflow-menu-category-type"
+        id="workflow-menu-category-type-selector"
         className="border-neutral-2 rounded-full border py-1 pr-1 pl-4"
       >
         <WorkflowSelectMenu />
