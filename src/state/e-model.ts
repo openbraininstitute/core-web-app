@@ -2,6 +2,7 @@ import { Atom, atom } from 'jotai';
 import { atomFamily } from 'jotai/utils';
 
 import { pageNumberAtom, pageSizeAtom } from '@/state/explore-section/list-view-atoms';
+import { DerivationTypeDictionary } from '@/api/entitycore/types/entities/derivation';
 import { getEntityDerivations } from '@/api/entitycore/queries/general/derivation';
 import { getElectricalCellRecordings } from '@/api/entitycore/queries';
 import { tryCatch } from '@/api/utils';
@@ -23,6 +24,7 @@ export const experimentalTracesAtomFamily = atomFamily<
           entityId: ctx.id,
           entityRoute: 'emodel',
           filters: {
+            derivation_type: DerivationTypeDictionary.Unspecified,
             page: pageNumber,
             page_size: pageSize,
           },
