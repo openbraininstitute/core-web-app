@@ -141,8 +141,8 @@ importers:
         specifier: ^14.5.1
         version: 14.6.1(@testing-library/dom@10.4.0)
       '@tolokoban/tgd':
-        specifier: ^2.0.33
-        version: 2.0.33
+        specifier: ^2.0.39
+        version: 2.0.39
       '@types/d3':
         specifier: ^7.4.0
         version: 7.4.3
@@ -4610,8 +4610,8 @@ packages:
     peerDependencies:
       '@testing-library/dom': '>=7.21.4'
 
-  '@tolokoban/tgd@2.0.33':
-    resolution: {integrity: sha512-vnvTiEFMz8TbA1/wkPDRa+Yh9Q32LpAIG9zRyYGHeOkk0tma/Q0JJqgCWDVGoQJm0vvZMqJmeF7AIcpOi0uE2A==}
+  '@tolokoban/tgd@2.0.39':
+    resolution: {integrity: sha512-AKgZCKSP2GRJxVJyVppUZnJBTVPOQvcNKcaaAUc22GnTwqjX9SuhOzzWUnwp/b9dxEqKB77H/caSLT4mdtB0fA==}
 
   '@tootallnate/once@2.0.0':
     resolution: {integrity: sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==}
@@ -7442,9 +7442,6 @@ packages:
 
   gl-mat4@1.2.0:
     resolution: {integrity: sha512-sT5C0pwB1/e9G9AvAoLsoaJtbMGjfd/jfxo8jMCKqYYEnjZuFvqV5rehqar0538EmssjdDeiEWnKyBSTw7quoA==}
-
-  gl-matrix@3.4.3:
-    resolution: {integrity: sha512-wcCp8vu8FT22BnvKVPjXa/ICBWRq/zjFfdofZy1WSpQZpphblv12/bOQLBC1rMM7SGOFS9ltVmKOHil5+Ml7gA==}
 
   gl-matrix@3.4.4:
     resolution: {integrity: sha512-latSnyDNt/8zYUB6VIJ6PCh2jBjJX6gnDsoCZ7LyW7GkqrD51EWwa9qCoGixj8YqBtETQK/xY7OmpTF8xz1DdQ==}
@@ -17041,9 +17038,12 @@ snapshots:
     dependencies:
       '@testing-library/dom': 10.4.0
 
-  '@tolokoban/tgd@2.0.33':
+  '@tolokoban/tgd@2.0.39':
     dependencies:
-      gl-matrix: 3.4.3
+      '@loaders.gl/core': 4.3.4
+      '@loaders.gl/draco': 4.3.4(@loaders.gl/core@4.3.4)
+      '@loaders.gl/gltf': 4.3.4(@loaders.gl/core@4.3.4)
+      gl-matrix: 3.4.4
 
   '@tootallnate/once@2.0.0': {}
 
@@ -20308,8 +20308,6 @@ snapshots:
   github-markdown-css@5.8.1: {}
 
   gl-mat4@1.2.0: {}
-
-  gl-matrix@3.4.3: {}
 
   gl-matrix@3.4.4: {}
 
