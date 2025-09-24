@@ -237,7 +237,7 @@ export function Menu({ sessionId, type }: Props) {
           <div className="flex-shrink-0 font-bold">Experimental setup</div>
           <div className="flex items-center justify-center gap-3">
             {warnExperimentalSetup && (
-              <Tooltip open>
+              <Tooltip>
                 <TooltipTrigger>
                   <WarningFilled className="text-sm text-yellow-300" />
                 </TooltipTrigger>
