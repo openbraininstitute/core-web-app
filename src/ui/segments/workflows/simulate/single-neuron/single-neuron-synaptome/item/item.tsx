@@ -215,21 +215,21 @@ export function SynapticInputItem({
                   variant="outline"
                   onClick={synapseDisplayed ? onHideSynapse : onVisualize}
                   disabled={visualizeLoading}
-                  className="text-primary-9 h-12 w-12 hover:text-white"
+                  className="text-primary-9 group h-12 w-12"
                 >
                   {/* eslint-disable-next-line no-nested-ternary */}
                   {synapseDisplayed ? (
-                    <EyeInvisibleOutlined className="h-8 w-8 px-2 text-current" />
+                    <EyeInvisibleOutlined className="group-hover:text-primary-6 h-8 w-8 px-2 text-current" />
                   ) : visualizeLoading ? (
-                    <LoadingOutlined className="h-8 w-8 px-2 text-current" />
+                    <LoadingOutlined className="group-hover:text-primary-6 h-8 w-8 px-2 text-current" />
                   ) : (
-                    <EyeOutlined className="h-8 w-8 px-2 text-current" />
+                    <EyeOutlined className="text-curren group-hover:text-primary-6 h-8 w-8 px-2" />
                   )}
                 </Button>
               </TooltipTrigger>
               <TooltipContent
                 side="bottom"
-                sideOffset={5}
+                sideOffset={0}
                 className="text-primary-9 bg-white shadow-lg select-none"
                 arrowClassName="bg-white"
               >
