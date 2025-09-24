@@ -64,7 +64,7 @@ export default function Page({
             id="simulation-panel-wrapper-two-side"
             data-testid="simulation-panel-wrapper-two-side"
             className={cn(
-              'grid h-full min-h-0 gap-4 overflow-hidden overflow-y-auto xl:grid-cols-[2.5fr_2fr]'
+              'grid h-full min-h-0 gap-2 overflow-hidden overflow-y-auto xl:grid-cols-[2.5fr_2fr]'
             )}
           >
             <HydrateWrapper>
