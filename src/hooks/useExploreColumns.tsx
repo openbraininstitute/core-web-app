@@ -11,7 +11,10 @@ import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs
 import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
 import { classNames, fieldTitleSentenceCase } from '@/util/utils';
 
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import {
+  ExtendedEntitiesTypeDict,
+  type TExtendedEntitiesTypeDict,
+} from '@/api/entitycore/types/extended-entity-type';
 import type { OrderShape } from '@/entity-configuration/definitions/types';
 import type { SortState } from '@/types/explore-section/application';
 import styles from '@/components/explore-section/ExploreSectionListingView/explore.module.css';
@@ -201,9 +204,10 @@ export default function useExploreColumns<T>(
               >
                 {fieldTitleSentenceCase(term?.title!)}
               </div>
-              {term?.unit && (
-                <span className={`${styles.tableHeaderUnits} break-words`}>[{term?.unit}]</span>
-              )}
+              {term?.unit &&
+                dataType !== ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection && (
+                  <span className={`${styles.tableHeaderUnits} break-words`}>[{term?.unit}]</span>
+                )}
             </div>
           ) : (
             <div
