@@ -37,7 +37,7 @@ export function SimulateWorkflowsBreadcrumb() {
   const buildType = getBuildTypeFromSimulateType(dataType);
   const selectTitle = getEntityByExtendedType({ type: buildType })?.title;
   const buildTitle = getEntityTypeWorkflowConfigurationItem(buildType)?.label;
-  const homeLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${segment}/browse/${type}`;
+  const homeLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`;
 
   return (
     <div className="px-3 pt-4 pb-2">
