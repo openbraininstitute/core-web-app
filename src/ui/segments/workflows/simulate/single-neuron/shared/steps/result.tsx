@@ -27,8 +27,8 @@ export function Results({ sessionId }: { sessionId: string }) {
   if (!recordingPlotData || !Object.keys(recordingPlotData).length) {
     return (
       <div className="flex flex-col items-center justify-center gap-3">
-        <div className="text-primary-9 text-3xl">No results to display</div>
-        <div className="text-neutral-4">Please run the experiment</div>
+        <div className="text-primary-9 text-2xl">No results to display</div>
+        <div className="text-label">Please run the experiment</div>
       </div>
     );
   }
@@ -53,7 +53,7 @@ export function Results({ sessionId }: { sessionId: string }) {
                 onlyAmplitudeLegend={false}
                 data={value.map((v, i) => ({ ...v, line: { color: SIMULATION_COLORS[i] } }))}
                 isLoading={isLoading}
-                className="min-h-[320px] w-full"
+                className="h-full w-full"
                 plotConfig={{
                   yAxisTitle: 'Voltage [mV]',
                   showDefaultLegends: true,
@@ -82,7 +82,7 @@ export function Results({ sessionId }: { sessionId: string }) {
               onlyAmplitudeLegend={false}
               data={recordData.map((v, i) => ({ ...v, line: { color: SIMULATION_COLORS[i] } }))}
               isLoading={isLoading}
-              className="min-h-[320px] w-full"
+              className="h-full w-full"
               plotConfig={{
                 yAxisTitle: 'Voltage [mV]',
                 showDefaultLegends: true,
