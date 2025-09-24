@@ -36,7 +36,7 @@ export function BuildWorkflowsBreadcrumb() {
 
   const selectTitle = getEntityByExtendedType({ type: dataType })?.title;
   const buildTitle = getEntityTypeWorkflowConfigurationItem(dataType)?.label;
-  const homeLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${segment}/browse/${type}`;
+  const homeLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`;
 
   return (
     <div className="px-3 pt-4 pb-2">
