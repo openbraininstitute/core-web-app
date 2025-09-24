@@ -11,8 +11,8 @@ import { atom } from 'jotai';
 import _get from 'lodash/get';
 import pMap from 'p-map';
 
+import { DerivationTypeDictionary } from '@/api/entitycore/types/entities/derivation';
 import { getAllCircuitIds } from '@/features/entities/circuit/elements/helpers';
-import { DerivationType } from '@/api/entitycore/types/entities/derivation';
 import {
   getCircuitHierarchyByDerivation,
   getCircuits,
@@ -121,7 +121,7 @@ export const hierarchyByExtractionDerivationAtomFamily = atomFamily(
     const childAtom = atom(async () => {
       const hierarchyByDerivation = await getCircuitHierarchyByDerivation({
         context: virtualLabId && projectId ? { virtualLabId, projectId } : undefined,
-        derivation_type: DerivationType.circuit_extraction,
+        derivation_type: DerivationTypeDictionary.CircuitExtraction,
       });
       childAtom.debugLabel = `circuit_extraction-derivation/${key}`;
       return hierarchyByDerivation;
@@ -135,7 +135,7 @@ export const hierarchyByRewiringDerivationAtomFamily = atomFamily(
     const childAtom = atom(async () => {
       const hierarchyByDerivation = await getCircuitHierarchyByDerivation({
         context: virtualLabId && projectId ? { virtualLabId, projectId } : undefined,
-        derivation_type: DerivationType.circuit_rewiring,
+        derivation_type: DerivationTypeDictionary.CircuitRewiring,
       });
       childAtom.debugLabel = `circuit_rewiring-derivation/${key}`;
       return hierarchyByDerivation;

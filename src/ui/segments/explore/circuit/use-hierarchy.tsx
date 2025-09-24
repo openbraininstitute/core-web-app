@@ -18,10 +18,10 @@ import {
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
 import { CircuitView, getAllCircuitIds } from '@/ui/segments/explore/circuit/helpers';
-import { DerivationType } from '@/api/entitycore/types/entities/derivation';
+import { DerivationTypeDictionary } from '@/api/entitycore/types/entities/derivation';
 import { DEFAULT_PAGE_SIZE, WorkspaceScope } from '@/constants';
-import { keyBuilder } from '@/ui/use-query-keys/data';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 import {
   getCircuitHierarchyByDerivation,
   getCircuits,
@@ -54,12 +54,12 @@ export function useHierarchy({
       queryKey: keyBuilder.circuitsByDerivationTree({
         virtualLabId,
         projectId,
-        derivationType: DerivationType.circuit_extraction,
+        derivationType: DerivationTypeDictionary.CircuitExtraction,
       }),
       queryFn: () =>
         getCircuitHierarchyByDerivation({
           context: { virtualLabId, projectId },
-          derivation_type: DerivationType.circuit_extraction,
+          derivation_type: DerivationTypeDictionary.CircuitExtraction,
         }),
       enabled: view === CircuitView.Hierarchy,
       staleTime: Infinity,
@@ -72,12 +72,12 @@ export function useHierarchy({
         queryKey: keyBuilder.circuitsByDerivationTree({
           virtualLabId,
           projectId,
-          derivationType: DerivationType.circuit_extraction,
+          derivationType: DerivationTypeDictionary.CircuitExtraction,
         }),
         queryFn: () =>
           getCircuitHierarchyByDerivation({
             context: { virtualLabId, projectId },
-            derivation_type: DerivationType.circuit_extraction,
+            derivation_type: DerivationTypeDictionary.CircuitExtraction,
           }),
       });
       const IDs = getAllCircuitIds(hierarchyByDerivationData);
