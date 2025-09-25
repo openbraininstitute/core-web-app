@@ -10,7 +10,10 @@ import {
   CategorySelectScrollable,
   EntityTypeSelectScrollable,
 } from '@/ui/segments/workflows/elements/selectors';
-import { getWorkflowSegment } from '@/ui/segments/workflows/elements/helpers';
+import {
+  getDropdownOptionsByCategory,
+  getWorkflowSegment,
+} from '@/ui/segments/workflows/elements/helpers';
 import { ROOT_ROUTE } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
@@ -101,7 +104,11 @@ export function ActivityAndTypeSelectors({
 }: WorkflowMenuProps) {
   const handleActivitySelect = (v: TActivityValue | undefined) => {
     onActivityChange(v);
-    onEntityTypeChange(undefined);
+    if (v) {
+      const type = getDropdownOptionsByCategory(v).enabledOptions.at(0)?.options.at(0)?.value;
+      onEntityTypeChange(type);
+      onNavigate?.(type);
+    }
   };
 
   const handleEntityTypeSelect = (v: TExtendedEntitiesTypeDict | undefined) => {

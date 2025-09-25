@@ -252,16 +252,13 @@ type Props = {
 
 export function ProjectPreview({ onClose, payload }: Props) {
   return (
-    <div
-      id="project-preview-container"
-      className="flex h-max max-h-max min-h-0 flex-col overflow-hidden"
-    >
-      <div id="project-preview-header" className="sticky top-0 left-0 z-[1002] px-6 py-2">
+    <div id="project-preview-container" className="flex flex-col">
+      <div id="project-preview-header" className="z-[1002] flex px-6 py-2">
         <Header onClose={onClose} project={payload?.data} />
       </div>
       <div
         id="project-preview-content"
-        className="primary-scrollbar h-max min-h-0 flex-1 overflow-y-auto px-6 py-4 transition-opacity duration-200 ease-in-out"
+        className="flex-1 px-6 py-4 transition-opacity duration-200 ease-in-out"
       >
         <Content data={payload?.data} virtualLabId={payload?.data?.virtual_lab_id} />
       </div>

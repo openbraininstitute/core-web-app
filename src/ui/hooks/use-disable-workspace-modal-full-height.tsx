@@ -30,11 +30,13 @@ import { useLayoutEffect } from 'react';
  */
 export function useDisableWorkspaceModalFullHeight({
   modalId,
-  className = 'h-max',
+  className = ['h-max'],
   condition = null,
+  classNameToRemove,
 }: {
   modalId: string;
-  className?: string;
+  className?: string | string[];
+  classNameToRemove?: string[];
   condition?: (() => boolean) | boolean | null;
 }) {
   useLayoutEffect(() => {
@@ -43,12 +45,14 @@ export function useDisableWorkspaceModalFullHeight({
     if (typeof condition === 'function' && !condition()) return;
     if (condition === false) return;
 
-    modalElement.classList.add(className);
+    modalElement.classList.add(...className);
+    modalElement.classList.remove(...(classNameToRemove ?? []));
 
     return () => {
-      modalElement.classList.remove(className);
+      modalElement.classList.remove(...className);
+      modalElement.classList.add(...(classNameToRemove ?? []));
     };
-  }, [condition, modalId, className]);
+  }, [condition, modalId, className, classNameToRemove]);
 }
 
 export default useDisableWorkspaceModalFullHeight;

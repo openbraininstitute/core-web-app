@@ -198,9 +198,11 @@ export function Item({
                         project,
                       })
                     }
+                    id={`project-item-${project.id}`}
+                    data-testid="project-item-selector"
                   >
                     {isActive && (
-                      <div className="mr-2 size-3 min-h-3 min-w-3 rounded-full bg-current" />
+                      <div className="mr-2 size-3 min-h-3 min-w-3 rounded-[9999px] bg-current" />
                     )}
                     <span className="line-clamp-1 truncate" title={project.name}>
                       {project.name}

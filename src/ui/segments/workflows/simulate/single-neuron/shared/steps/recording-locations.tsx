@@ -6,18 +6,18 @@ import z from 'zod';
 
 import { RecordLocationConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { RecordLocationSchema } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import {
   getSessionKey,
   label,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { secNamesAtom } from '@/state/simulate/single-neuron';
 import {
   PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
   DEFAULT_RECORDING_LOCATION,
   getSimulationColor,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { secNamesAtom } from '@/state/simulate/single-neuron';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
@@ -88,8 +88,9 @@ function RecordItem({ index, name, disable, disableDelete, sections, onRemove }:
             placeholder="Section name"
             options={sections.map((sec) => ({ label: sec, value: sec }))}
             className={cn(
-              'border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! rounded-md border-[1px]! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!',
-              '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!'
+              '[&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!',
+              '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!',
+              'border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! rounded-md border-[1px]!'
             )}
             popupClassName="[&_.ant-select-item-option-content]:text-primary-9!"
             placement="bottomLeft"
@@ -120,8 +121,9 @@ function RecordItem({ index, name, disable, disableDelete, sections, onRemove }:
           <InputNumber<number>
             size={breakpoint === 'l' ? 'middle' : 'large'}
             className={cn(
-              'border-neutral-2! [&_.ant-input-number-input]:text-primary-8! flex w-full items-center justify-between gap-2 rounded-sm! bg-white font-bold! [&_input]:placeholder:!font-light',
-              '[&_.ant-input-number-suffix]:text-neutral-3 [&_.ant-input-number-suffix]:pointer-events-auto'
+              'border-neutral-2! [&_.ant-input-number-input]:text-primary-8! flex w-full items-center',
+              '[&_.ant-input-number-suffix]:text-neutral-3 [&_.ant-input-number-suffix]:pointer-events-auto',
+              'justify-between gap-2 rounded-sm! bg-white font-bold! [&_input]:placeholder:!font-light'
             )}
             step={0.01}
             disabled={disable}

@@ -101,8 +101,8 @@ export function Menu({ sessionId, type }: Props) {
   );
   const [recordLocationConfiguration] = useAtom(RecordLocationConfigurationAtomFamily(rlcKey));
   const [synaptomeConfiguration] = useAtom(SynaptomeConfigurationAtomFamily(sscKey));
-  const [amperageConfiguration] = useAtom(AmperageStateAtomFamily(ampKey));
   const [frequencyConfiguration] = useAtom(FrequencyInputConfigurationAtomFamily(freqKey));
+  const [amperageConfiguration] = useAtom(AmperageStateAtomFamily(ampKey));
 
   const onRun = () => {
     const protocol = stimulationConfiguration.stimulus.stimulus_protocol;

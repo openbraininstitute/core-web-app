@@ -40,8 +40,10 @@ import { useUserPermissions } from '@/hooks/use-user-permissions';
 import { useAppNotification } from '@/components/notification';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { useUserRole } from '@/hooks/use-user-role';
 import { extractInitials } from '@/util/slugify';
 import { Button } from '@/ui/molecules/button';
+import { Badge } from '@/ui/molecules/badge';
 import {
   cancelProjectInvite,
   listProjectMembers,
@@ -52,7 +54,6 @@ import {
 import { cn } from '@/utils/css-class';
 
 import type { Member, MembersResponse, Role } from '@/api/virtual-lab-svc/queries/types';
-import { Badge } from '@/ui/molecules/badge';
 
 const roleOptions: { value: Role; label: string }[] = [
   { value: 'admin', label: 'Administrator' },
@@ -88,7 +89,7 @@ function RoleModifier({ user, ownerId }: RoleModifierProps) {
   const { error: notifyError, success: notifySuccess } = useAppNotification();
   const [role, updateRole] = useState(user.role);
   const queryClient = useQueryClient();
-
+  const { isAdmin, isProjectAdmin } = useUserRole({ virtualLabId, projectId });
   const cancelInviteMutation = useMutation({
     mutationKey: [`${virtualLabId}/${projectId}/delete-item/${user.email}`],
     mutationFn: () =>
@@ -284,20 +285,22 @@ function RoleModifier({ user, ownerId }: RoleModifierProps) {
       </div>
     </div>
   ) : (
-    <div className="flex w-full flex-col items-center justify-end text-right">
-      <Button
-        data-testid="cancel-invite-btn"
-        key="cancel-invite"
-        type="button"
-        size="md"
-        className="hover:text-primary-2! w-max! self-end text-white! opacity-100!"
-        disabled={cancelInviteMutation.isPending}
-        onClick={() => cancelInviteMutation.mutateAsync()}
-      >
-        Cancel invitation
-        {cancelInviteMutation.isPending && <LoadingOutlined spin className="ml-2" />}
-      </Button>
-    </div>
+    (isAdmin || isProjectAdmin) && (
+      <div className="flex w-full flex-col items-center justify-end text-right">
+        <Button
+          data-testid="cancel-invite-btn"
+          key="cancel-invite"
+          type="button"
+          size="md"
+          className="hover:text-primary-2! w-max! self-end text-white! opacity-100!"
+          disabled={cancelInviteMutation.isPending}
+          onClick={() => cancelInviteMutation.mutateAsync()}
+        >
+          Cancel invitation
+          {cancelInviteMutation.isPending && <LoadingOutlined spin className="ml-2" />}
+        </Button>
+      </div>
+    )
   );
 }
 
