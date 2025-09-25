@@ -35,12 +35,12 @@ export async function getAtlasId(accessToken: string | undefined): Promise<strin
   return cacheAtlasId;
 }
 
-const cacheMeshes = new Map<string, Promise<ArrayBuffer | null>>();
+const cacheMeshes = new Map<string, Promise<ArrayBuffer>>();
 
 export async function getBrainRegionMeshArrayBuffer(
   accessToken: string,
   regionId: string
-): Promise<ArrayBuffer | null> {
+): Promise<ArrayBuffer> {
   const fromCache = cacheMeshes.get(regionId);
   if (fromCache) return fromCache;
 
@@ -52,31 +52,35 @@ export async function getBrainRegionMeshArrayBuffer(
 async function actualGetBrainRegionMeshArayBuffer(
   accessToken: string,
   regionId: string
-): Promise<ArrayBuffer | null> {
-  try {
-    const atlasId = await getAtlasId(accessToken);
-    const atlas = await getAtlas(atlasId);
-    const entity = atlas.data.find((elem) => elem.brain_region_id === regionId);
-    if (!entity) return null;
-
-    const contentType = 'model/gltf-binary';
-    // const contentType = 'application/obj';
-    const asset = entity.assets.find(
-      (elem) => elem.label === 'brain_atlas_region_mesh' && elem.content_type === contentType
-    );
-    if (!asset) return null;
-
-    const time = performance.now();
-    const api = await entityCoreApi();
-    const data = await api.get(`/brain-atlas-region/${entity.id}/assets/${asset.id}/download`);
-    // eslint-disable-next-line no-console
-    console.log('GLTF', `${performance.now() - time} msec`, data);
-    const mesh = data instanceof ArrayBuffer ? data : null;
-    return mesh;
-  } catch (ex) {
-    logError(`Unable to get mesh for region "${regionId}"!`, ex);
-    return null;
+): Promise<ArrayBuffer> {
+  const atlasId = await getAtlasId(accessToken);
+  const atlas = await getAtlas(atlasId);
+  const entity = atlas.data.find((elem) => elem.brain_region_id === regionId);
+  if (!entity) {
+    throw new Error(`Unable to find region "${regionId}" in current Atlas!`);
   }
+
+  const contentType = 'model/gltf-binary';
+  // const contentType = 'application/obj';
+  const asset = entity.assets.find(
+    (elem) => elem.label === 'brain_atlas_region_mesh' && elem.content_type === contentType
+  );
+  if (!asset) {
+    throw new Error(
+      `Unable to find entity "brain_atlas_region_mesh" of type "${contentType}" for entity "${entity.id}" (region "${regionId}")!`
+    );
+  }
+
+  const time = performance.now();
+  const api = await entityCoreApi();
+  const data = await api.get(`/brain-atlas-region/${entity.id}/assets/${asset.id}/download`);
+  // eslint-disable-next-line no-console
+  console.log('GLTF', `${performance.now() - time} msec`, data);
+  const mesh = data instanceof ArrayBuffer ? data : null;
+  if (!mesh) {
+    throw new Error(`Unable to download asset "${asset.id}" for entity "${entity.id}"!`);
+  }
+  return mesh;
 }
 
 interface PartialAtlas {
