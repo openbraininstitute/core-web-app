@@ -113,6 +113,9 @@ web_modules/
 # Output of 'npm pack'
 *.tgz
 
+# We need to keep the tarballs
+!tarball/*.tgz
+
 # Yarn Integrity file
 .yarn-integrity
 
