@@ -9,7 +9,7 @@ import ExemplarTraces from '@/features/entities/e-model/detail-view/exemplar-tra
 import DefaultLoadingSuspense from '@/components/DefaultLoadingSuspense';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 
-import type { IReconstructionMorphology, IEModel } from '@/api/entitycore/types';
+import type { ICellMorphology, IEModel } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 
 type Params = WorkspaceContext & {
@@ -23,7 +23,7 @@ export default function EModelView({
   params: Params;
   payload: {
     source: IEModel;
-    exemplar_morphology: IReconstructionMorphology;
+    exemplar_morphology: ICellMorphology;
   };
 }) {
   return (

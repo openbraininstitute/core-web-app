@@ -15,7 +15,7 @@ const baseUri = '/measurement-annotation';
  * @param {MeasurementAnnotationFilter} [options.filters] - Optional filters to apply to the query
  * @param {WorkspaceContext | null} [options.context] - Optional context for the request
  *
- * @returns {Promise<EntityCoreResponse<MeasurementAnnotation>>} A promise that resolves to the list of reconstruction morphologies
+ * @returns {Promise<EntityCoreResponse<MeasurementAnnotation>>} A promise that resolves to the list of cell morphologies
  */
 export async function getMeasurementAnnotations({
   filters,
@@ -39,7 +39,7 @@ export async function getMeasurementAnnotations({
  * Retrieves a specific measurement annotation by its ID from the EntityCoreAPI.
  *
  * @param {Object} params - The parameters object
- * @param {string} params.id - The unique identifier of the reconstruction morphology to retrieve
+ * @param {string} params.id - The unique identifier of the cell morphology to retrieve
  * @param {WorkspaceContext | null} [params.context] - Optional context for the request
  *
  * @returns {Promise<MeasurementAnnotation>} A promise that resolves to the requested measurement annotation

@@ -10,7 +10,7 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 // Mock the getEntityByLegacyType helper function
 vi.mock('@/entity-configuration/domain/helpers', () => ({
   getEntityByLegacyType: vi.fn(({ legacyType }) => {
-    if (legacyType === ExtendedEntitiesTypeDict.ReconstructionMorphology) {
+    if (legacyType === ExtendedEntitiesTypeDict.CellMorphology) {
       return {
         slug: 'morphology',
         explore: { routePrefix: 'interactive/experimental' },
@@ -42,7 +42,7 @@ describe('URL Builder Utils', () => {
     it('should build URL for morphology without workspace context', () => {
       const url = resolveExploreDetailsPageUrl({
         entityId: 'entity-123',
-        dataType: ExtendedEntitiesTypeDict.ReconstructionMorphology,
+        dataType: ExtendedEntitiesTypeDict.CellMorphology,
       });
       expect(url).toBe('/app/virtual-lab/explore/interactive/experimental/morphology/entity-123');
     });
@@ -51,7 +51,7 @@ describe('URL Builder Utils', () => {
       const url = resolveExploreDetailsPageUrl({
         ctx: workspaceContext,
         entityId: 'entity-123',
-        dataType: ExtendedEntitiesTypeDict.ReconstructionMorphology,
+        dataType: ExtendedEntitiesTypeDict.CellMorphology,
       });
       expect(url).toBe(
         '/app/virtual-lab/lab/virtual-lab-1/project/project-1/explore/interactive/experimental/morphology/entity-123'
@@ -92,7 +92,7 @@ describe('URL Builder Utils', () => {
       const url = resolveLibraryUrl({
         ctx: workspaceContext,
         category: 'experimental',
-        slug: EntitySlug.ReconstructionMorphology,
+        slug: EntitySlug.CellMorphology,
       });
       expect(url).toBe(
         '/app/virtual-lab/lab/virtual-lab-1/project/project-1/library?c=experimental&t=morphology'
@@ -102,7 +102,7 @@ describe('URL Builder Utils', () => {
     it('should build library URL with data type', () => {
       const url = resolveLibraryUrl({
         ctx: workspaceContext,
-        slug: EntitySlug.ReconstructionMorphology,
+        slug: EntitySlug.CellMorphology,
       });
       expect(url).toBe('/app/virtual-lab/lab/virtual-lab-1/project/project-1/library?t=morphology');
     });
@@ -111,7 +111,7 @@ describe('URL Builder Utils', () => {
       const url = resolveLibraryUrl({
         ctx: workspaceContext,
         category: 'experimental',
-        slug: EntitySlug.ReconstructionMorphology,
+        slug: EntitySlug.CellMorphology,
       });
       expect(url).toContain('/app/virtual-lab/lab/virtual-lab-1/project/project-1/library?');
       expect(url).toContain('c=experimental');

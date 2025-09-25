@@ -17,7 +17,7 @@ const AllowedEntities = [
   ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
   ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
   ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
-  ExtendedEntitiesTypeDict.ReconstructionMorphology,
+  ExtendedEntitiesTypeDict.CellMorphology,
   ExtendedEntitiesTypeDict.ElectricalCellRecording,
   ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
   ExtendedEntitiesTypeDict.Memodel,

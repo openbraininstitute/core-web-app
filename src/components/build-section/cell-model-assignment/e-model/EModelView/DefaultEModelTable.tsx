@@ -1,8 +1,8 @@
 import { ConfigProvider, Table, ThemeConfig } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 
-import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
-import { IElectricalCellRecording } from '@/api/entitycore/types';
+import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
+import type { IElectricalCellRecording } from '@/api/entitycore/types';
 
 const theme: ThemeConfig = {
   components: {
@@ -15,7 +15,7 @@ const theme: ThemeConfig = {
   },
 };
 
-type SupportedDataTypes = IReconstructionMorphology | IElectricalCellRecording;
+type SupportedDataTypes = ICellMorphology | IElectricalCellRecording;
 
 type Props<T> = {
   dataSource: T[];

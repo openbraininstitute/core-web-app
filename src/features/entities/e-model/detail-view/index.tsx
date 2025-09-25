@@ -12,13 +12,13 @@ import If from '@/components/ConditionalRenderer/If';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
-import type { IReconstructionMorphology, IEModel } from '@/api/entitycore/types';
+import type { ICellMorphology, IEModel } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 
 export type Props = {
   payload: {
     source: IEModel;
-    exemplar_morphology: IReconstructionMorphology;
+    exemplar_morphology: ICellMorphology;
   };
   params: WorkspaceContext & {
     id: string;

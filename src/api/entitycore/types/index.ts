@@ -2,9 +2,9 @@ import type { ICircuit } from './entities/circuit';
 import type { ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types/entities/single-neuron-synaptome-simulation';
 import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
 import type {
-  IReconstructionMorphology,
-  IReconstructionMorphologyExpanded,
-} from '@/api/entitycore/types/entities/reconstruction-morphology';
+  ICellMorphology,
+  ICellMorphologyExpanded,
+} from '@/api/entitycore/types/entities/cell-morphology';
 import type { ISingleNeuronSimulation } from 'src/api/entitycore/types/entities/single-neuron-simulation';
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/single-neuron-synaptome';
@@ -17,11 +17,11 @@ import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 export * from '@/api/entitycore/types/entity-type';
 
 export {
-  IReconstructionMorphologyExpanded,
+  ICellMorphologyExpanded,
   IExperimentalSynapsesPerConnection,
   IExperimentalNeuronDensity,
   IExperimentalBoutonDensity,
-  IReconstructionMorphology,
+  ICellMorphology,
   IElectricalCellRecording,
   ISingleNeuronSynaptome,
   IMEModel,
@@ -45,7 +45,7 @@ export type EntityCoreObjectTypes =
   | ISingleNeuronSynaptomeSimulation
   | IExperimentalNeuronDensity
   | IExperimentalBoutonDensity
-  | IReconstructionMorphology
+  | ICellMorphology
   | IElectricalCellRecording
   | ISingleNeuronSimulation
   | ISingleNeuronSynaptome

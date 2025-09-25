@@ -4,15 +4,15 @@ import { notFound, useParams } from 'next/navigation';
 import { match, P } from 'ts-pattern';
 import { Suspense } from 'react';
 
-import MorphologyDetailView from '@/features/entities/reconstruction-morphology/detail-view';
+import MorphologyDetailView from '@/features/entities/cell-morphology/detail-view';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 import Summary from '@/features/details-view/summary';
-import EphysViewer from '@/features/ephys-viewer';
 
-import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { getEntityBySlug } from '@/entity-configuration/domain/helpers';
+import { EphysViewer } from '@/features/ephys-viewer';
 
-import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { ExperimentalEntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -31,11 +31,11 @@ export default function DetailView({ type }: Props) {
   const content = match<EntityCoreTypeConfig<any>>(entity)
     .with(
       {
-        extendedType: ExtendedEntitiesTypeDict.ReconstructionMorphology,
+        extendedType: ExtendedEntitiesTypeDict.CellMorphology,
       },
       () => (
-        <Summary dataType={ExtendedEntitiesTypeDict.ReconstructionMorphology}>
-          {(detail) => <MorphologyDetailView detail={detail as IReconstructionMorphology} />}
+        <Summary dataType={ExtendedEntitiesTypeDict.CellMorphology}>
+          {(detail) => <MorphologyDetailView detail={detail as ICellMorphology} />}
         </Summary>
       )
     )

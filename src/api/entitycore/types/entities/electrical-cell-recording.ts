@@ -74,18 +74,21 @@ export const ElectricalRecordingOriginDictionary = Object.fromEntries(
 export type TElectricalRecordingOriginDictionary =
   (typeof ElectricalRecordingOriginDictionary)[keyof typeof ElectricalRecordingOriginDictionary];
 
+interface IRecordingFilter {
+  recording_type: TRecordingTypeDictionary | null;
+  recording_type__in: Array<TRecordingTypeDictionary> | null;
+  recording_origin: TElectricalRecordingOriginDictionary | null;
+  recording_origin__in: Array<TElectricalRecordingOriginDictionary> | null;
+}
+
 export type ElectricalCellRecordingFilter = Partial<
   IDFilter &
     TimestampsFilter &
     ContributionFilter &
     BrainRegionFilter &
     PaginationFilter &
-    SharedFilter & {
-      recording_type: TRecordingTypeDictionary | null;
-      recording_type__in: Array<TRecordingTypeDictionary> | null;
-      recording_origin: TElectricalRecordingOriginDictionary | null;
-      recording_origin__in: Array<TElectricalRecordingOriginDictionary> | null;
-    }
+    SharedFilter &
+    IRecordingFilter
 >;
 
 interface IElectricalCellRecordingBase extends EntityCoreIdentifiable, EntityCoreOwnership {

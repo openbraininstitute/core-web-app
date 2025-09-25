@@ -16,9 +16,9 @@ import {
   EntityCoreFields,
 } from '@/entity-configuration/definitions/fields-defs/enums';
 import { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
-import { CoreFieldType } from '@/entity-configuration/definitions/types';
-import { isMemodel, isSingleNeuronSynaptome } from '@/api/entitycore/guards';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { isMemodel, isSingleNeuronSynaptome } from '@/api/entitycore/guards';
+import { CoreFieldType } from '@/entity-configuration/definitions/types';
 import { ensureArray } from '@/utils/array';
 
 import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
@@ -26,12 +26,12 @@ import type {
   EntityCoreDensityObjectTypes,
   EntityCoreObjectTypes,
   IEModel,
-  IReconstructionMorphology,
+  ICellMorphology,
 } from '@/api/entitycore/types';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
 
-const morphologyMtypes = (morphology?: IReconstructionMorphology) => {
+const morphologyMtypes = (morphology?: ICellMorphology) => {
   if (!morphology) return [];
   return renderEmptyOrValue(renderArray(morphology.mtypes?.map((m) => m.pref_label) || []));
 };
@@ -74,7 +74,11 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     defaultConstraint: 'species__name__in',
     perTypeConstraint: {
+      [ExtendedEntitiesTypeDict.CellMorphology]: 'subject__species__name__in',
       [ExtendedEntitiesTypeDict.ElectricalCellRecording]: 'subject__species__name__in',
+      [ExtendedEntitiesTypeDict.ExperimentalNeuronDensity]: 'subject__species__name__in',
+      [ExtendedEntitiesTypeDict.ExperimentalBoutonDensity]: 'subject__species__name__in',
+      [ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection]: 'subject__species__name__in',
     },
     order: [
       {
@@ -128,7 +132,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         types: [
           ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
           ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
-          ExtendedEntitiesTypeDict.ReconstructionMorphology,
+          ExtendedEntitiesTypeDict.CellMorphology,
           ExtendedEntitiesTypeDict.Emodel,
         ],
         property: 'order_by',
@@ -355,7 +359,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     render: (r) =>
       renderMorphologyMeasurement(
-        r as IReconstructionMorphology,
+        r as ICellMorphology,
         StructuralDomain.Axon,
         'total_length',
         'raw',
@@ -373,7 +377,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     render: (r) =>
       renderMorphologyMeasurement(
-        r as IReconstructionMorphology,
+        r as ICellMorphology,
         StructuralDomain.Axon,
         'section_strahler_orders',
         'maximum'
@@ -390,7 +394,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     render: (r) =>
       renderMorphologyMeasurement(
-        r as IReconstructionMorphology,
+        r as ICellMorphology,
         StructuralDomain.Axon,
         'partition_asymmetry',
         'mean'
@@ -407,7 +411,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     render: (r) =>
       renderMorphologyMeasurement(
-        r as IReconstructionMorphology,
+        r as ICellMorphology,
         StructuralDomain.BasalDendrite,
         'total_length',
         'raw',
@@ -425,7 +429,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     render: (r) =>
       renderMorphologyMeasurement(
-        r as IReconstructionMorphology,
+        r as ICellMorphology,
         StructuralDomain.BasalDendrite,
         'section_strahler_orders',
         'maximum'
@@ -442,7 +446,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     render: (r) =>
       renderMorphologyMeasurement(
-        r as IReconstructionMorphology,
+        r as ICellMorphology,
         StructuralDomain.BasalDendrite,
         'partition_asymmetry',
         'mean'
@@ -459,7 +463,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     render: (r) =>
       renderMorphologyMeasurement(
-        r as IReconstructionMorphology,
+        r as ICellMorphology,
         StructuralDomain.ApicalDendrite,
         'Total Length',
         'raw',
@@ -477,7 +481,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     render: (r) =>
       renderMorphologyMeasurement(
-        r as IReconstructionMorphology,
+        r as ICellMorphology,
         StructuralDomain.ApicalDendrite,
         'section_strahler_orders',
         'maximum'
@@ -494,7 +498,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     render: (r) =>
       renderMorphologyMeasurement(
-        r as IReconstructionMorphology,
+        r as ICellMorphology,
         StructuralDomain.ApicalDendrite,
         'partition_asymmetry',
         'mean'
@@ -511,7 +515,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     render: (r) =>
       renderMorphologyMeasurement(
-        r as IReconstructionMorphology,
+        r as ICellMorphology,
         StructuralDomain.NeuronMorphology,
         'total_width',
         'raw',
@@ -529,7 +533,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     render: (r) =>
       renderMorphologyMeasurement(
-        r as IReconstructionMorphology,
+        r as ICellMorphology,
         StructuralDomain.NeuronMorphology,
         'total_height',
         'raw',
@@ -547,7 +551,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     render: (r) =>
       renderMorphologyMeasurement(
-        r as IReconstructionMorphology,
+        r as ICellMorphology,
         StructuralDomain.NeuronMorphology,
         'total_depth',
         'raw',
@@ -564,12 +568,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Diameter',
     },
     render: (r) =>
-      renderMorphologyMeasurement(
-        r as IReconstructionMorphology,
-        'Soma',
-        'soma_radius',
-        'raw',
-        true
-      ),
+      renderMorphologyMeasurement(r as ICellMorphology, 'Soma', 'soma_radius', 'raw', true),
   },
 };

@@ -22,7 +22,7 @@ import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 import { ROOT_ROUTE } from '@/config';
 
-import { EntityTypeDict, type IReconstructionMorphology } from '@/api/entitycore/types';
+import { EntityTypeDict, type ICellMorphology } from '@/api/entitycore/types';
 
 type Props = {
   sessionId: string;
@@ -44,7 +44,7 @@ export function MModel({ sessionId }: Props) {
       section={WorkspaceSection.BuildWorkflow}
       requireMiniDetailView={false}
       classNames={{ container: 'max-h-full' }}
-      dataType={ExtendedEntitiesTypeDict.ReconstructionMorphology}
+      dataType={ExtendedEntitiesTypeDict.CellMorphology}
       scope={WorkspaceScope.BuildMeModelM}
       miniViewProps={{ section: WorkspaceSection.BuildWorkflow }}
       allowDownload={false}
@@ -52,14 +52,14 @@ export function MModel({ sessionId }: Props) {
         selectionType: 'radio',
         onCellClick: (_, record) => {
           navigate(
-            `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(EntityTypeDict.ReconstructionMorphology)}/${record.id}/overview`
+            `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(EntityTypeDict.CellMorphology)}/${record.id}/overview`
           );
         },
         onRowsSelected: (rows) => {
           const record = rows.at(0);
           setSessionValue({
             ...sessionValue,
-            mmodel: record as unknown as IReconstructionMorphology,
+            mmodel: record as unknown as ICellMorphology,
           });
         },
       }}
@@ -81,7 +81,7 @@ export function MModelMiniDetail({ sessionId }: { sessionId: string }) {
     { label: 'Name', value: renderEmptyOrValue(data?.name), className: 'font-bold' },
     { label: 'Description', value: renderEmptyOrValue(data?.description) },
     { label: 'Brain Region', value: renderEmptyOrValue(data?.brain_region.name) },
-    { label: 'Species', value: renderEmptyOrValue(data?.species.name) },
+    { label: 'Species', value: renderEmptyOrValue(data?.subject.species.name) },
     {
       label: 'M-Type',
       value: renderEmptyOrValue(renderArray(data?.mtypes?.map((m) => m.pref_label) || [])),

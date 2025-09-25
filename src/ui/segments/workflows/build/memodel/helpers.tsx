@@ -6,7 +6,7 @@ import { useSessionStorage } from '@/hooks/use-session-storage';
 import { cn } from '@/utils/css-class';
 
 import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
-import type { IEModel, IReconstructionMorphology } from '@/api/entitycore/types';
+import type { IEModel, ICellMorphology } from '@/api/entitycore/types';
 
 export const BuildStep = {
   Info: 'info',
@@ -30,7 +30,7 @@ export const useBuildMeModelSessionState = ({
     name?: string;
     description?: string;
     brainRegion?: BrainRegionHierarchyBase;
-    mmodel?: IReconstructionMorphology;
+    mmodel?: ICellMorphology;
     emodel?: IEModel;
   }>(sessionId, {
     virtualLabId,

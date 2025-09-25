@@ -12,7 +12,9 @@ import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { PreviewThumbnail } from '@/features/thumbnail/preview';
 import { tryCatch } from '@/api/utils';
 
-import type { IReconstructionMorphologyExpanded } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import type { ICellMorphologyExpanded } from '@/api/entitycore/types/entities/cell-morphology';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreDensityObjectTypes, ICellMorphology } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 import type {
   EntityCoreIdentifiable,
@@ -21,11 +23,6 @@ import type {
   ILicense,
   MeasurementBase,
 } from '@/api/entitycore/types/shared/global';
-import type {
-  EntityCoreDensityObjectTypes,
-  IReconstructionMorphology,
-} from '@/api/entitycore/types';
-import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 export const EmptyValue = '—';
 
@@ -214,7 +211,7 @@ export function renderLocalizedNumber(
 /**
  * Renders a specific morphology measurement
  *
- * @param {IReconstructionMorphologyExpanded} morphology
+ * @param {ICellMorphologyExpanded} morphology
  * @param {string} structuralDomain - The compartment to serialize.
  * @param {string} label - The label to serialize.
  * @param {string} measurementType - The statistic to serialize.
@@ -223,7 +220,7 @@ export function renderLocalizedNumber(
  * @returns {string} - The rendered text value.
  */
 export const renderMorphologyMeasurement = (
-  morphology: IReconstructionMorphologyExpanded | IReconstructionMorphology,
+  morphology: ICellMorphologyExpanded | ICellMorphology,
   structuralDomain: string,
   label: string,
   measurementType: string,

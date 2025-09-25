@@ -4,7 +4,7 @@ import { getExperimentalBoutonDensityFiles } from './experimental-bouton-density
 import { getExperimentalNeuronDensityFiles } from './experimental-neuron-density';
 import { getExperimentalSynapsesPerConnectionFiles } from './experimental-synapses-per-connection';
 import { getMEmodelFiles } from './memodel';
-import { getReconstructionMorphologyFiles } from './reconstruction-morphology';
+import { getCellMorphologyFiles } from './cell-morphology';
 import { getSingleNeuronSynaptomeFiles } from './single-neuron-synaptome';
 import { getSingleNeuronSimulationFiles } from './single-neuron-simulation';
 import { getSingleNeuronSynaptomeSimulationFiles } from './single-neuron-synaptome-simulation';
@@ -24,7 +24,7 @@ export const getEntityFilesHandlerMap: Partial<Record<TEntityTypeDict, GetEntity
   [EntityTypeDict.ExperimentalBoutonDensity]: getExperimentalBoutonDensityFiles,
   [EntityTypeDict.ExperimentalNeuronDensity]: getExperimentalNeuronDensityFiles,
   [EntityTypeDict.ExperimentalSynapsesPerConnection]: getExperimentalSynapsesPerConnectionFiles,
-  [EntityTypeDict.ReconstructionMorphology]: getReconstructionMorphologyFiles,
+  [EntityTypeDict.CellMorphology]: getCellMorphologyFiles,
   // Model data
   [EntityTypeDict.Emodel]: getEmodelFiles,
   [EntityTypeDict.Memodel]: getMEmodelFiles,

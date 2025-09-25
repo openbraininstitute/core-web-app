@@ -4,31 +4,29 @@ import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import {
-  getReconstructionMorphologies,
-  getReconstructionMorphology,
-} from '@/api/entitycore/queries/experimental/reconstruction-morphology';
+  getCellMorphologies,
+  getCellMorphology,
+} from '@/api/entitycore/queries/experimental/cell-morphology';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type {
-  IReconstructionMorphologyExpanded,
-  IReconstructionMorphology,
-} from '@/api/entitycore/types/entities/reconstruction-morphology';
+  ICellMorphologyExpanded,
+  ICellMorphology,
+} from '@/api/entitycore/types/entities/cell-morphology';
 
-export const ReconstructionMorphology: EntityCoreTypeConfig<
-  IReconstructionMorphology | IReconstructionMorphologyExpanded
-> = {
+export const CellMorphology: EntityCoreTypeConfig<ICellMorphology | ICellMorphologyExpanded> = {
   group: EntityTypeGroup.Experimental,
   title: 'Morphology',
-  extendedType: ExtendedEntitiesTypeDict.ReconstructionMorphology,
-  type: EntityTypeDict.ReconstructionMorphology,
-  slug: EntitySlug.ReconstructionMorphology,
+  extendedType: ExtendedEntitiesTypeDict.CellMorphology,
+  type: EntityTypeDict.CellMorphology,
+  slug: EntitySlug.CellMorphology,
   api: {
     config: {
       allowedFacets: true,
     },
     query: {
-      list: getReconstructionMorphologies,
-      one: getReconstructionMorphology,
+      list: getCellMorphologies,
+      one: getCellMorphology,
     },
   },
   explore: {
@@ -38,7 +36,7 @@ export const ReconstructionMorphology: EntityCoreTypeConfig<
   asset: {
     extension: 'application/swc',
   },
-  viewDefinition: ViewsDefinitionRegistry[ExtendedEntitiesTypeDict.ReconstructionMorphology],
+  viewDefinition: ViewsDefinitionRegistry[ExtendedEntitiesTypeDict.CellMorphology],
   detailViewSections: ['overview'],
   isDownloadable: true,
   isBookmarkable: true,

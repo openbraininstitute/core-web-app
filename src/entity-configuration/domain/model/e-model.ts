@@ -1,7 +1,7 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getEModel, getEModels } from '@/api/entitycore/queries/model/e-model';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
-import { getReconstructionMorphology } from '@/api/entitycore/queries';
+import { getCellMorphology } from '@/api/entitycore/queries';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
@@ -24,7 +24,7 @@ export const Emodel: EntityCoreTypeConfig<IEModel> = {
     },
     expand: {
       exemplar_morphology: (source, ctx) =>
-        getReconstructionMorphology({ id: source.exemplar_morphology.id, context: ctx }),
+        getCellMorphology({ id: source.exemplar_morphology.id, context: ctx }),
     },
   },
   explore: {

@@ -5,7 +5,7 @@ import type {
   IExperimentalSynapsesPerConnection,
   IExperimentalBoutonDensity,
   IExperimentalNeuronDensity,
-  IReconstructionMorphology,
+  ICellMorphology,
   IElectricalCellRecording,
   ISingleNeuronSynaptome,
   EntityCoreObjectTypes,
@@ -21,8 +21,8 @@ export function hasAssets(
 
 export function isReconstructionMorphology(
   entity: EntityCoreObjectTypes
-): entity is IReconstructionMorphology {
-  return entity.type === EntityTypeDict.ReconstructionMorphology;
+): entity is ICellMorphology {
+  return entity.type === EntityTypeDict.CellMorphology;
 }
 
 export function isElectricalCellRecording(
