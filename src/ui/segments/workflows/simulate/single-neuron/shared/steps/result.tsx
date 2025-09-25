@@ -21,8 +21,7 @@ const PlotRenderer = dynamic(
 export function Results({ sessionId }: { sessionId: string }) {
   const [recordingPlotData] = useAtom(genericSingleNeuronSimulationPlotDataAtomFamily(sessionId));
   const simulationStatus = useAtomValue(simulationStatusAtom);
-  const searchParams = useSearchParams();
-  const record = searchParams.get('record') ?? 'all';
+  const record = useSearchParams().get('record') ?? 'all';
 
   if (!recordingPlotData || !Object.keys(recordingPlotData).length) {
     return (

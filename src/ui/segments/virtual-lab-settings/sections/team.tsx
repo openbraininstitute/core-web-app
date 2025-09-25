@@ -19,7 +19,9 @@ import { inviteToVirtualLab } from '@/api/virtual-lab-svc/queries/invite';
 import { useAppNotification } from '@/components/notification';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { Button as UiButton } from '@/ui/molecules/button';
+import { useUserRole } from '@/hooks/use-user-role';
 import { extractInitials } from '@/util/slugify';
+import { Badge } from '@/ui/molecules/badge';
 import {
   cancelVirtualLabInvite,
   listVirtualLabMembers,
@@ -30,7 +32,6 @@ import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
 import type { Member, Role } from '@/api/virtual-lab-svc/queries/types';
-import { Badge } from '@/ui/molecules/badge';
 
 const roleOptions: { value: Role; label: string }[] = [
   { value: 'admin', label: 'Administrator' },
@@ -346,6 +347,7 @@ function RoleModifier({
   const [removeLoading] = useState(false);
   const { error: notifyError, success: notifySuccess } = useAppNotification();
   const queryClient = useQueryClient();
+  const { isAdmin } = useUserRole({ virtualLabId });
 
   const mutateRole = useMutation({
     mutationFn: (_role: Role) =>
@@ -532,21 +534,23 @@ function RoleModifier({
       </div>
     </div>
   ) : (
-    <div className="flex w-full flex-col items-center justify-end text-right">
-      <Button
-        data-testid="cancel-invite-btn"
-        key="cancel-invite"
-        type="text"
-        htmlType="button"
-        size="middle"
-        className="hover:text-primary-2! w-max! self-end text-white! opacity-100!"
-        disabled={mutateInvite.isPending}
-        loading={mutateInvite.isPending}
-        onClick={() => mutateInvite.mutateAsync()}
-      >
-        Cancel invitation
-      </Button>
-    </div>
+    isAdmin && (
+      <div className="flex w-full flex-col items-center justify-end text-right">
+        <Button
+          data-testid="cancel-invite-btn"
+          key="cancel-invite"
+          type="text"
+          htmlType="button"
+          size="middle"
+          className="hover:text-primary-2! w-max! self-end text-white! opacity-100!"
+          disabled={mutateInvite.isPending}
+          loading={mutateInvite.isPending}
+          onClick={() => mutateInvite.mutateAsync()}
+        >
+          Cancel invitation
+        </Button>
+      </div>
+    )
   );
 }
 

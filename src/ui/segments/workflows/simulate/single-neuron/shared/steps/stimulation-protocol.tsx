@@ -7,8 +7,8 @@ import startCase from 'lodash/startCase';
 import toPairs from 'lodash/toPairs';
 import get from 'lodash/get';
 
-import { StimulationConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { AmperageConfiguration } from '@/ui/segments/workflows/simulate/single-neuron/shared/amperage-configuration';
+import { StimulationConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import {
   createZodValidator,
   getSessionKey,

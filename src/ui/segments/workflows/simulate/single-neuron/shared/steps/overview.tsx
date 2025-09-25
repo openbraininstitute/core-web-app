@@ -6,13 +6,13 @@ import { useEffect } from 'react';
 import { useAtom } from 'jotai';
 import z from 'zod';
 
+import { PREFIX_OVERVIEW_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { OverviewConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { OverviewConfigurationSchema } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import {
   getSessionKey,
   label,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
-import { PREFIX_OVERVIEW_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { makeDateToAppFormat } from '@/util/date';
 import { log } from '@/utils/logger';
 
@@ -34,7 +34,7 @@ export function Info({ sessionId }: Props) {
     });
   }, [state, form]);
 
-  const onValuesChange = (changedValues: any, allValues: any) => {
+  const onValuesChange = (_: any, allValues: any) => {
     try {
       const validatedData = OverviewConfigurationSchema.parse(allValues);
       update(validatedData);
@@ -54,6 +54,7 @@ export function Info({ sessionId }: Props) {
       preserve={false}
       requiredMark={false}
       onValuesChange={onValuesChange}
+      validateTrigger="onChange"
       initialValues={{
         name: state.name,
         description: state.description,
@@ -63,18 +64,19 @@ export function Info({ sessionId }: Props) {
         hasFeedback
         label={label('name', true)}
         name="name"
-        validateTrigger="onBlur"
         rules={[
           {
             validator: async (_rule, value) => {
               try {
-                await OverviewConfigurationSchema.pick({ name: true }).shape.name.parseAsync(value);
+                await OverviewConfigurationSchema.pick({
+                  name: true,
+                }).shape.name.parseAsync(value);
+                return Promise.resolve();
               } catch (error) {
                 return Promise.reject(
                   error instanceof z.ZodError ? error.errors.at(0)?.message : 'Name is required'
                 );
               }
-              return Promise.resolve();
             },
           },
         ]}
