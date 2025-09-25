@@ -38,8 +38,10 @@ import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 function iCMBooleanField(title: string, field: keyof IonChannelModel) {
   return {
     className: 'text-left',
+    isFilterable: true,
     title,
-    filter: null,
+    filter: CoreFieldFilterTypeEnum.Boolean,
+    defaultConstraint: field,
     isDisplayable: true,
     render: (r: EntityCoreObjectTypes) => ((r as IonChannelModel)[field] ? 'True' : 'False'),
   };

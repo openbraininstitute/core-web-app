@@ -125,7 +125,6 @@ export function BrowseEntityScope({
   });
 
   const dataSource = (data as EntityCoreResponse<EntityCoreIdentifiableNamed>)?.data;
-  console.log(dataSource);
   const facets = (data as EntityCoreResponse<EntityCoreIdentifiableNamed>)?.facets;
   const pagination = (data as EntityCoreResponse<EntityCoreIdentifiableNamed>)?.pagination;
 

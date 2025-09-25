@@ -212,5 +212,12 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.IsStochastic },
       { field: EntityCoreFields.IsTemperatureDependent },
     ],
+    filterableFields: [
+      EntityCoreFields.Name,
+      EntityCoreFields.CreationDate,
+      EntityCoreFields.IsLjpCorrected,
+      EntityCoreFields.IsStochastic,
+      EntityCoreFields.IsTemperatureDependent,
+    ],
   },
 };
