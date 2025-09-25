@@ -192,14 +192,25 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     columns: [
       EntityCoreFields.Name,
       EntityCoreFields.BrainRegion,
-      EntityCoreFields.Contributions,
       EntityCoreFields.CreationDate,
+      EntityCoreFields.IsLjpCorrected,
+      EntityCoreFields.IsStochastic,
+      EntityCoreFields.IsTemperatureDependent,
     ],
     curated: true,
-    summaryViewFields: [{ field: EntityCoreFields.BrainRegion }],
+    summaryViewFields: [
+      { field: EntityCoreFields.BrainRegion },
+      { field: EntityCoreFields.CreationDate },
+      { field: EntityCoreFields.IsLjpCorrected },
+      { field: EntityCoreFields.IsStochastic },
+      { field: EntityCoreFields.IsTemperatureDependent },
+    ],
     miniDetailView: [
       { field: EntityCoreFields.BrainRegion },
-      { field: EntityCoreFields.RegistrationDate },
+      { field: EntityCoreFields.CreationDate },
+      { field: EntityCoreFields.IsLjpCorrected },
+      { field: EntityCoreFields.IsStochastic },
+      { field: EntityCoreFields.IsTemperatureDependent },
     ],
   },
 };
