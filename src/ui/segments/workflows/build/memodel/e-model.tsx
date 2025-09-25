@@ -2,15 +2,11 @@
 
 import { ReloadOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
-import { useAtomValue } from 'jotai';
-import { unwrap } from 'jotai/utils';
-import { useMemo } from 'react';
 import { Image } from 'antd';
 import kebabCase from 'lodash/kebabCase';
 
 import type { HTMLAttributes, TdHTMLAttributes } from 'react';
 
-import { brainRegionBasicCellGroupsRegionsHierarchyAtom } from '@/features/brain-region-hierarchy/context';
 import { useBuildMeModelSessionState, label } from '@/ui/segments/workflows/build/memodel/helpers';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
@@ -55,17 +51,12 @@ export function EModel({ sessionId }: Props) {
     projectId,
   });
 
-  const brainRegionHierarchy = useAtomValue(
-    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
-  );
-
   return (
     <BrowseEntityScope
       requireBrainRegion
       allowDownload={false}
       id={sessionId}
       section={WorkspaceSection.BuildWorkflow}
-      defaultBrainRegion={brainRegionHierarchy?.root.id}
       requireMiniDetailView={false}
       classNames={{ container: 'max-h-full' }}
       dataType={ExtendedEntitiesTypeDict.Emodel}
