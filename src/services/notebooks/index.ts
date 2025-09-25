@@ -59,6 +59,14 @@ export async function startNotebook(
         },
       });
     }
+    if (res.status === 462) {
+      throw Error('JupyterError', {
+        cause: {
+          error_code: 'JUPYTER_ERROR',
+          hint: 'The notebook could not be launched in Jupyter',
+        },
+      });
+    }
   }
 
   return assertApiResponse(res);
