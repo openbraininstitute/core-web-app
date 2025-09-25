@@ -15,4 +15,4 @@ And to create a tarball, just call `npm pack` in the library project.
 
 ## Libraries
 
-* `bbp-morphoviewer-0.21.2.tgz`: [morphoviewer](https://github.com/openbraininstitute/morphoviewer)
+- `bbp-morphoviewer-0.21.2.tgz`: [morphoviewer](https://github.com/openbraininstitute/morphoviewer)
