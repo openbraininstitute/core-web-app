@@ -9,6 +9,7 @@ import type {
   TStimulusModuleValue,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
+export const PanelQueryParam = 'panel';
 export const WorkflowSimulatePanels = {
   Configuration: 'configuration',
   Results: 'results',

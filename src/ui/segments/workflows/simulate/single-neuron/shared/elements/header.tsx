@@ -1,9 +1,11 @@
 'use client';
 
-import { atomFamily } from 'jotai/utils';
-import { atom, useAtom } from 'jotai';
+import { parseAsString, Parser, useQueryState } from 'nuqs';
 
-import { WorkflowSimulatePanels } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import {
+  PanelQueryParam,
+  WorkflowSimulatePanels,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { cn } from '@/utils/css-class';
@@ -27,21 +29,29 @@ export const tabsConfigItems: Array<{
   },
 ];
 
-export const headerTabsAtom = atomFamily((key: string) => {
-  const childAtom = atom<WorkflowSimulatePanelKeys>(WorkflowSimulatePanels.Configuration);
-  childAtom.debugLabel = `simulation-header-menu-${key}`;
-  return childAtom;
-});
+// export const headerTabsAtom = atomFamily((key: string) => {
+//   const childAtom = atom<WorkflowSimulatePanelKeys>(WorkflowSimulatePanels.Configuration);
+//   childAtom.debugLabel = `simulation-header-menu-${key}`;
+//   return childAtom;
+// });
 
-export function Header({ sessionId }: { sessionId: string }) {
+export function Header() {
   const breakpoint = useDefaultBreakpoint();
-  const [active, updateActive] = useAtom(headerTabsAtom(sessionId));
+  const [panelId, updatePanel] = useQueryState(
+    PanelQueryParam,
+    parseAsString
+      .withOptions({
+        clearOnDefault: false,
+        shallow: true,
+      })
+      .withDefault(WorkflowSimulatePanels.Configuration) as Parser<WorkflowSimulatePanelKeys>
+  );
 
-  const onTabClick = (value: string) => updateActive(value as WorkflowSimulatePanelKeys);
+  const onTabClick = (value: string) => updatePanel(value as WorkflowSimulatePanelKeys);
 
   return (
     <PillTabs
-      value={active ?? WorkflowSimulatePanels.Configuration}
+      value={panelId ?? WorkflowSimulatePanels.Configuration}
       defaultValue={WorkflowSimulatePanels.Configuration}
       className="w-max"
       activationMode="manual"

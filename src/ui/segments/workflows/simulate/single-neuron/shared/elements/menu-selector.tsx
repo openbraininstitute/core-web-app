@@ -1,13 +1,16 @@
 'use client';
 
+import { parseAsString, type Parser, useQueryState } from 'nuqs';
 import { match } from 'ts-pattern';
-import { useAtom } from 'jotai';
 
 import { Menu as ResultMenu } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/results-menu';
-import { WorkflowSimulatePanels } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import { headerTabsAtom } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/header';
 import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { Menu } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu';
+import {
+  PanelQueryParam,
+  WorkflowSimulatePanelKeys,
+  WorkflowSimulatePanels,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 
 import type { IMEModel, ISingleNeuronSynaptome } from '@/api/entitycore/types';
 
@@ -26,7 +29,15 @@ type Props =
     };
 
 export function MenuSelector({ sessionId, synaptome, memodel, type }: Props) {
-  const [panelId] = useAtom(headerTabsAtom(sessionId));
+  const [panelId] = useQueryState(
+    PanelQueryParam,
+    parseAsString
+      .withOptions({
+        clearOnDefault: false,
+        shallow: true,
+      })
+      .withDefault(WorkflowSimulatePanels.Configuration) as Parser<WorkflowSimulatePanelKeys>
+  );
 
   const MenuWrapper = match({ panelId, type })
     .with(

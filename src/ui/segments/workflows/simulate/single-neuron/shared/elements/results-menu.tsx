@@ -101,6 +101,8 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
   const onChange = (value: string) => {
     const params = new URLSearchParams(queryParams);
     params.set('record', value);
+    params.delete('step');
+
     replace(`${pathname}?${params.toString()}`);
   };
 
