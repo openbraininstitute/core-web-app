@@ -223,3 +223,6 @@ playwright/.auth
 playwright/.auth
 
 .github/workflows/publish-staging-image-test.yml
+
+# Sentry Config File
+.env.sentry-build-plugin
