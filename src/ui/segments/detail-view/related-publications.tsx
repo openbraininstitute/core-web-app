@@ -65,7 +65,7 @@ function PerTypePublications({
   }>({
     loading: false,
     page: 1,
-    pageSize: 5,
+    pageSize: 20,
     error: null,
   });
 
