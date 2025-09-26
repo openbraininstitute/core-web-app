@@ -13,7 +13,10 @@ export default async function SingleOBIShowcaseLayout({
         <div id="obi-showcase-left-menu" className="w-full [grid-area:aside]">
           <OBIShowcaseLeftMenu className="w-full" />
         </div>
-        <div id="obi-showcase-main-content" className="secondary-scrollbar w-full overflow-y-auto [grid-area:body]">
+        <div
+          id="obi-showcase-main-content"
+          className="secondary-scrollbar w-full overflow-y-auto [grid-area:body]"
+        >
           {children}
         </div>
       </div>

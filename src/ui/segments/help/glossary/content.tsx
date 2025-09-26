@@ -253,7 +253,7 @@ export default function GlossaryContent({ glossarySections }: GlossaryContentPro
   if (!items.length) {
     return (
       <section className="col-span-3">
-        <p className="text-primary-9/80">No terms found in "Data".</p>
+        <p className="text-primary-9/80">No terms found in &quot;Data&quot;.</p>
       </section>
     );
   }
