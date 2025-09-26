@@ -14,7 +14,7 @@ export default function FeaturesContent() {
   const items = useSanityContentForFeatureItems() as ContentForFeatureItem[];
   const searchParams = useSearchParams();
 
-  const activeScale = searchParams.get('scale') ?? undefined;
+  const activeScale = searchParams.get('scale') ?? 'subcellular'; // Default to 'subcellular'
 
   const filteredContent = items.filter((item) => Slugify(item.Scale) === activeScale);
 
