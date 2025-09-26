@@ -6,16 +6,15 @@ import { getViewDefinitionByExtendedType } from '@/entity-configuration/definiti
 import { EmptyValue } from '@/entity-configuration/definitions/renderer';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
-import type { IReconstructionMorphologyExpanded } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import type { ICellMorphologyExpanded } from '@/api/entitycore/types/entities/cell-morphology';
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 
 export const useMorphometrics = (
-  morphology: IReconstructionMorphologyExpanded,
+  morphology: ICellMorphologyExpanded,
   showLabel: boolean = false
 ) => {
   const groupedCardFields = groupBy(
-    getViewDefinitionByExtendedType(ExtendedEntitiesTypeDict.ReconstructionMorphology)!
-      .cardViewFields,
+    getViewDefinitionByExtendedType(ExtendedEntitiesTypeDict.CellMorphology)!.cardViewFields,
     (item) => fieldsDefinitionRegistry[item.field]?.group ?? 'Metadata'
   );
 

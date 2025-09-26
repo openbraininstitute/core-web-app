@@ -82,7 +82,15 @@ export default function History({ className, onBack }: HistoryProps) {
                           </button>
                           {threadId !== thread.id && (
                             <Tooltip tooltip="Delete this thread permanently" arrow="topRight">
-                              <button type="button" className={styles.delete}>
+                              <button
+                                type="button"
+                                className={styles.delete}
+                                onClick={() => {
+                                  setCurrentThreadId(thread.id);
+                                  setCurrentThreadTitle(thread.title);
+                                  setOpenDelete(true);
+                                }}
+                              >
                                 <IconDelete />
                               </button>
                             </Tooltip>

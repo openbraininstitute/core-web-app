@@ -6,7 +6,7 @@ export const EXPERIMENTAL_DATATYPES = [
   ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
   ExtendedEntitiesTypeDict.ElectricalCellRecording,
   ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
-  ExtendedEntitiesTypeDict.ReconstructionMorphology,
+  ExtendedEntitiesTypeDict.CellMorphology,
 ] as const;
 
 export enum ExperimentTypeNames {

@@ -50,7 +50,11 @@ export function LeftMenu({ className }: Props) {
   );
 
   return (
-    <div className={cn('flex flex-col gap-2', className)}>
+    <div
+      className={cn('flex flex-col gap-2', className)}
+      id="notebook-type-menu-selector"
+      data-testid="notebook-type-menu-selector"
+    >
       <div className="flex w-full flex-col items-center justify-center gap-2">
         {hashedLinks.map(({ title, key, url, baseUrl }) => (
           <Button

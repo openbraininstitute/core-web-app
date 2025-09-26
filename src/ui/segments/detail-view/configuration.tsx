@@ -10,12 +10,12 @@ import { WorkspaceContext, AwaitedType } from '@/types/common';
 import {
   IEModel,
   IMEModel,
-  IReconstructionMorphology,
-  IReconstructionMorphologyExpanded,
+  ICellMorphology,
+  ICellMorphologyExpanded,
   ISingleNeuronSimulation,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
-import { getReconstructionMorphology } from '@/api/entitycore/queries';
+import { getCellMorphology } from '@/api/entitycore/queries';
 import MEModelConfig from '@/features/entities/me-model/detail-view/configuration';
 import SynaptomeConfig from '@/features/entities/single-neuron-synaptome/detail-view/configuration';
 import SynapseGroupList from '@/features/entities/single-neuron-synaptome/detail-view/elements/list-synapses-configuration';
@@ -40,10 +40,10 @@ export default async function Configuration({
   if (!entityType) notFound();
 
   if (extendedType === 'emodel') {
-    let morphology: IReconstructionMorphologyExpanded | IReconstructionMorphology;
+    let morphology: ICellMorphologyExpanded | ICellMorphology;
 
     try {
-      morphology = await getReconstructionMorphology({
+      morphology = await getCellMorphology({
         id: (entity as IEModel).exemplar_morphology.id,
         expand: 'measurement_annotation',
         context: ctx,

@@ -246,9 +246,24 @@ export default function GlossaryContent({ glossarySections }: GlossaryContentPro
     );
   }
 
+  // Show Data section content by default when no term is selected
+  const dataSection = glossarySections.find((s) => normalize(s.name) === 'data');
+  const items = asArray(dataSection?.data).map(mapSanityItem);
+
+  if (!items.length) {
+    return (
+      <section className="col-span-3">
+        <p className="text-primary-9/80">No terms found in &quot;Data&quot;.</p>
+      </section>
+    );
+  }
+
   return (
-    <section className="col-span-3">
-      <p className="text-primary-9/80">Select a term on the left to see its definition.</p>
+    <section className="col-span-3 flex flex-col gap-8">
+      <h2 className="text-2xl font-bold">Data</h2>
+      {items.map((content) => (
+        <TermCard key={content.Name} content={content} sectionType="data" />
+      ))}
     </section>
   );
 }

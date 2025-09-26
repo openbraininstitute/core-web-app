@@ -50,7 +50,7 @@ export function BrowseLink({
         <div className="font-bold text-current">{title}</div>
         <div
           className={cn(
-            'text-neutral-4 text-sm font-light group-hover:font-bold group-hover:text-white',
+            'text-neutral-4 group-hover:text-label text-sm font-light group-hover:font-bold',
             { 'font-bold text-white': entityType === type }
           )}
         >

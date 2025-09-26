@@ -1,6 +1,6 @@
 'use client';
 
-import { ComponentProps, useEffect, useRef, useState } from 'react';
+import { ComponentProps, useCallback, useEffect, useRef, useState } from 'react';
 import Plotly, { Config, Layout } from 'plotly.js-dist-min';
 import { DownloadOutlined } from '@ant-design/icons';
 import lodashSet from 'lodash/set';
@@ -35,7 +35,6 @@ const PLOT_LAYOUT: Partial<Layout> = {
     title: { text: 'Current [nA]', font: { size: 12 }, standoff: 6 },
   },
   showlegend: false,
-  height: 320,
   margin: { t: 20, r: 20, b: 20, l: 20 },
   legend: {
     orientation: 'h',
@@ -48,7 +47,7 @@ const PLOT_LAYOUT: Partial<Layout> = {
 
 const PLOT_CONFIG: Partial<Config> = {
   displayModeBar: false,
-  responsive: false,
+  responsive: true,
   displaylogo: false,
 };
 
@@ -120,6 +119,12 @@ export default function PlotRenderer({
     });
   };
 
+  const handleResize = useCallback(() => {
+    if (containerRef.current && initialized) {
+      Plotly.relayout(containerRef.current, plotLayout);
+    }
+  }, [initialized, plotLayout]);
+
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -143,6 +148,21 @@ export default function PlotRenderer({
       Plotly.purge(container);
     };
   }, [data, initialized, plotConfig, plotLayout]);
+
+  // Add resize observer to handle container size changes
+  useEffect(() => {
+    if (!containerRef.current || !initialized) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      handleResize();
+    });
+
+    resizeObserver.observe(containerRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [initialized, handleResize]);
 
   const isTraceVisible = (trace: PlotDataEntry) => trace.visible === undefined || trace.visible;
   const toggleTraceVisibility = (trace: PlotDataEntry, index: number) => {
@@ -183,7 +203,7 @@ export default function PlotRenderer({
         </div>
       )}
       <div className={cn('relative w-full p-2', wrapperClassName)}>
-        <div className="mb-5 flex items-center justify-between gap-4">
+        <div className="mb-5 flex flex-wrap items-start justify-between gap-2">
           {withTitle && title && (
             <div
               className={cn(
@@ -194,7 +214,7 @@ export default function PlotRenderer({
               {title}
             </div>
           )}
-          <div className="ml-auto flex items-center gap-2 self-end">
+          <div className="flex items-center gap-2">
             {isDownloadable && !isLoading && (
               <Button
                 rounded
@@ -224,10 +244,7 @@ export default function PlotRenderer({
             graphContainerClassName
           )}
         >
-          <div
-            id={`graph-wrapper-${name}`}
-            className={cn('h-full w-[calc(100%-2rem)]', graphWrapperClassName)}
-          >
+          <div id={`graph-wrapper-${name}`} className={cn('h-full w-full', graphWrapperClassName)}>
             <div
               className={classNames(className, 'w-full')}
               ref={containerRef}

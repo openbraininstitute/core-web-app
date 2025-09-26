@@ -19,7 +19,9 @@ import { inviteToVirtualLab } from '@/api/virtual-lab-svc/queries/invite';
 import { useAppNotification } from '@/components/notification';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { Button as UiButton } from '@/ui/molecules/button';
+import { useUserRole } from '@/hooks/use-user-role';
 import { extractInitials } from '@/util/slugify';
+import { Badge } from '@/ui/molecules/badge';
 import {
   cancelVirtualLabInvite,
   listVirtualLabMembers,
@@ -30,7 +32,6 @@ import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
 import type { Member, Role } from '@/api/virtual-lab-svc/queries/types';
-import { Badge } from '@/ui/molecules/badge';
 
 const roleOptions: { value: Role; label: string }[] = [
   { value: 'admin', label: 'Administrator' },
@@ -346,6 +347,7 @@ function RoleModifier({
   const [removeLoading] = useState(false);
   const { error: notifyError, success: notifySuccess } = useAppNotification();
   const queryClient = useQueryClient();
+  const { isAdmin } = useUserRole({ virtualLabId });
 
   const mutateRole = useMutation({
     mutationFn: (_role: Role) =>
@@ -481,73 +483,78 @@ function RoleModifier({
       </div>
     );
   }
-  return user.invite_accepted ? (
-    <div className="ml-auto flex w-full flex-col items-end justify-end text-right text-base text-white">
-      <div className="flex w-max flex-row items-center justify-center gap-2">
-        <Select
-          data-testid="role-select"
-          className={classNames(
-            'focus:border-primary-8 w-full bg-transparent shadow-none ring-0 focus:border-2',
-            '[&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-transparent',
-            '[&_.ant-select-selector]:!border-primary-7 [&_.ant-select-selector]:!border',
-            '[&_.ant-select-selection-item]:!font-bold [&_.ant-select-selection-item]:!text-white',
-            '!min-w-[140px] [&_.ant-select-arrow]:!text-white [&_.ant-select-selection-item]:!text-left'
-          )}
-          onChange={(_role) => mutateRole.mutateAsync(_role)}
-          value={role}
-          size="large"
-          options={roleOptions}
-          popupClassName="rounded-none!"
-          disabled={mutateRole.isPending}
-          loading={mutateRole.isPending}
-        />
-        <Popconfirm
-          placement="bottomLeft"
-          title="Remove member"
-          description="Are you sure to remove this member from the virtual lab ?"
-          onConfirm={() => deleteUser.mutateAsync()}
-          okText="Yes"
-          cancelText="No"
-          disabled={removeLoading}
-          classNames={{
-            root: classNames(
-              '[&_.ant-popover-inner]:bg-primary-9! [&_.ant-popover-inner]:text-white! ',
-              '[&_.ant-popover-inner]:rounded-none! [&_.ant-popconfirm-description]:text-white!',
-              '[&_.ant-popconfirm-title]:text-white!',
-              '[&_.ant-popconfirm-buttons>button]:rounded-none! [&_.ant-popconfirm-buttons>button]:px-5!',
-              '[&_.ant-popover-arrow]:after:bg-primary-9!'
-            ),
-          }}
-        >
-          <Button
-            type="default"
+
+  if (isAdmin) {
+    return user.invite_accepted ? (
+      <div className="ml-auto flex w-full flex-col items-end justify-end text-right text-base text-white">
+        <div className="flex w-max flex-row items-center justify-center gap-2">
+          <Select
+            data-testid="role-select"
+            className={classNames(
+              'focus:border-primary-8 w-full bg-transparent shadow-none ring-0 focus:border-2',
+              '[&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-transparent',
+              '[&_.ant-select-selector]:!border-primary-7 [&_.ant-select-selector]:!border',
+              '[&_.ant-select-selection-item]:!font-bold [&_.ant-select-selection-item]:!text-white',
+              '!min-w-[140px] [&_.ant-select-arrow]:!text-white [&_.ant-select-selection-item]:!text-left'
+            )}
+            onChange={(_role) => mutateRole.mutateAsync(_role)}
+            value={role}
             size="large"
-            className="hover:bg-primary-8! bg-primary-9 w-max! self-end rounded-none text-white! opacity-100! hover:text-white!"
-            disabled={deleteUser.isPending}
-            loading={deleteUser.isPending}
+            options={roleOptions}
+            popupClassName="rounded-none!"
+            disabled={mutateRole.isPending}
+            loading={mutateRole.isPending}
+          />
+          <Popconfirm
+            placement="bottomLeft"
+            title="Remove member"
+            description="Are you sure to remove this member from the virtual lab ?"
+            onConfirm={() => deleteUser.mutateAsync()}
+            okText="Yes"
+            cancelText="No"
+            disabled={removeLoading}
+            classNames={{
+              root: classNames(
+                '[&_.ant-popover-inner]:bg-primary-9! [&_.ant-popover-inner]:text-white! ',
+                '[&_.ant-popover-inner]:rounded-none! [&_.ant-popconfirm-description]:text-white!',
+                '[&_.ant-popconfirm-title]:text-white!',
+                '[&_.ant-popconfirm-buttons>button]:rounded-none! [&_.ant-popconfirm-buttons>button]:px-5!',
+                '[&_.ant-popover-arrow]:after:bg-primary-9!'
+              ),
+            }}
           >
-            Remove member
-          </Button>
-        </Popconfirm>
+            <Button
+              type="default"
+              size="large"
+              className="hover:bg-primary-8! bg-primary-9 w-max! self-end rounded-none text-white! opacity-100! hover:text-white!"
+              disabled={deleteUser.isPending}
+              loading={deleteUser.isPending}
+            >
+              Remove member
+            </Button>
+          </Popconfirm>
+        </div>
       </div>
-    </div>
-  ) : (
-    <div className="flex w-full flex-col items-center justify-end text-right">
-      <Button
-        data-testid="cancel-invite-btn"
-        key="cancel-invite"
-        type="text"
-        htmlType="button"
-        size="middle"
-        className="hover:text-primary-2! w-max! self-end text-white! opacity-100!"
-        disabled={mutateInvite.isPending}
-        loading={mutateInvite.isPending}
-        onClick={() => mutateInvite.mutateAsync()}
-      >
-        Cancel invitation
-      </Button>
-    </div>
-  );
+    ) : (
+      <div className="flex w-full flex-col items-center justify-end text-right">
+        <Button
+          data-testid="cancel-invite-btn"
+          key="cancel-invite"
+          type="text"
+          htmlType="button"
+          size="middle"
+          className="hover:text-primary-2! w-max! self-end text-white! opacity-100!"
+          disabled={mutateInvite.isPending}
+          loading={mutateInvite.isPending}
+          onClick={() => mutateInvite.mutateAsync()}
+        >
+          Cancel invitation
+        </Button>
+      </div>
+    );
+  }
+
+  return null;
 }
 
 type ListingStepProps = {

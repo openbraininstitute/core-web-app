@@ -3,9 +3,8 @@
 import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { RightOutlined, SettingFilled, WarningFilled } from '@ant-design/icons';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-
 import { useEffect } from 'react';
-import { headerTabsAtom } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/header';
+
 import { launchSimulationAtom } from '@/ui/segments/workflows/simulate/single-neuron/shared/runner';
 import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
@@ -40,6 +39,7 @@ import {
   PROTOCOL_DETAILS,
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { useAppNotification } from '@/components/notification';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
@@ -48,7 +48,6 @@ import {
   SimulationType,
   type TSimulationType,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { useAppNotification } from '@/components/notification';
 
 export const ExperimentStep = {
   Info: 'info',
@@ -77,7 +76,12 @@ export function Menu({ sessionId, type }: Props) {
   const launchSimulation = useSetAtom(launchSimulationAtom);
   const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
 
-  const [, updatePanelId] = useAtom(headerTabsAtom(sessionId));
+  const updatePanelSelection = () => {
+    const query = new URLSearchParams(searchParams);
+    query.delete('step');
+    query.set('panel', WorkflowSimulatePanels.Results);
+    replace(`${pathname}?${query.toString()}`);
+  };
 
   const onStepChange = (s: ExperimentStepKeys) => {
     const query = new URLSearchParams(searchParams);
@@ -101,8 +105,8 @@ export function Menu({ sessionId, type }: Props) {
   );
   const [recordLocationConfiguration] = useAtom(RecordLocationConfigurationAtomFamily(rlcKey));
   const [synaptomeConfiguration] = useAtom(SynaptomeConfigurationAtomFamily(sscKey));
-  const [amperageConfiguration] = useAtom(AmperageStateAtomFamily(ampKey));
   const [frequencyConfiguration] = useAtom(FrequencyInputConfigurationAtomFamily(freqKey));
+  const [amperageConfiguration] = useAtom(AmperageStateAtomFamily(ampKey));
 
   const onRun = () => {
     const protocol = stimulationConfiguration.stimulus.stimulus_protocol;
@@ -121,7 +125,7 @@ export function Menu({ sessionId, type }: Props) {
       synaptomeConfiguration,
       type,
       experimentalSetupConfiguration.max_time ?? currentInjectionDuration,
-      () => updatePanelId(WorkflowSimulatePanels.Results)
+      () => updatePanelSelection()
     );
   };
 
@@ -237,7 +241,7 @@ export function Menu({ sessionId, type }: Props) {
           <div className="flex-shrink-0 font-bold">Experimental setup</div>
           <div className="flex items-center justify-center gap-3">
             {warnExperimentalSetup && (
-              <Tooltip open>
+              <Tooltip>
                 <TooltipTrigger>
                   <WarningFilled className="text-sm text-yellow-300" />
                 </TooltipTrigger>

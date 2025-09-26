@@ -57,12 +57,8 @@ function MessageChild({
               <div className={styles.price}>
                 <IconPrice />
                 <div>
-                  {rateLimit.limit - rateLimit.remaining} credit
-                  {rateLimit.limit - rateLimit.remaining > 1 ? 's' : ''}
-                  <em>
-                    {Math.max(0, rateLimit.remaining)} free credit
-                    {rateLimit.remaining > 1 ? 's' : ''} left
-                  </em>
+                  {Math.max(0, rateLimit.remaining)} free credit
+                  {rateLimit.remaining > 1 ? 's' : ''} left
                 </div>
               </div>
             )}

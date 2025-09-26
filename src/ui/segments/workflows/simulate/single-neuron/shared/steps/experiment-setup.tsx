@@ -24,9 +24,6 @@ type SetupInputProps = {
   id: SimulationExperimentalSetupKeys;
   text: string;
   unit?: string;
-  // min and max are used in zod schema
-  //   min: number;
-  //   max: number;
   onChange: (key: SimulationExperimentalSetupKeys, newValue: number | null) => void;
 };
 
@@ -35,42 +32,30 @@ const CONDITIONS_FIELDS: Array<Omit<SetupInputProps, 'onChange'>> = [
     id: 'celsius',
     text: 'Temperature',
     unit: '°C',
-    // min: 0,
-    // max: 50,
   },
   {
     id: 'vinit',
     text: 'Initial voltage',
     unit: 'mV',
-    // min: -200,
-    // max: 200,
   },
   {
     id: 'hypamp',
     text: 'Holding current',
     unit: 'nA',
-    // min: -20,
-    // max: 20,
   },
   {
     id: 'max_time',
     text: 'Simulation duration',
     unit: 'ms',
-    // min: 0,
-    // max: 3000,
   },
   {
     id: 'time_step',
     text: 'Time Step',
     unit: 'ms',
-    // min: 0.001,
-    // max: 10,
   },
   {
     id: 'seed',
     text: 'seed',
-    // min: 0,
-    // max: Infinity,
   },
 ];
 

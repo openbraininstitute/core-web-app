@@ -44,7 +44,16 @@ export function SpaceManagerContainer() {
     condition:
       contextConfig.type === WorkspaceActions.NewProject ||
       contextConfig.type === WorkspaceActions.ProjectPreview,
-    className: 'h-max',
+    className:
+      contextConfig.type === WorkspaceActions.NewProject ||
+      contextConfig.type === WorkspaceActions.ProjectPreview
+        ? ['h-auto']
+        : ['h-max'],
+    classNameToRemove:
+      contextConfig.type === WorkspaceActions.NewProject ||
+      contextConfig.type === WorkspaceActions.ProjectPreview
+        ? ['h-full']
+        : [],
   });
 
   useWorkspaceConfigurationClickEvent(

@@ -118,6 +118,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           <div className="[grid-area:filter]">
             <div className="ml-auto flex h-12 items-stretch justify-center gap-3">
               {(dataScope === WorkspaceScope.BuildMeModelM ||
+                dataScope === WorkspaceScope.BuildMeModelE ||
                 dataScope === WorkspaceScope.BuildSynaptomeModel) && (
                 <BrainRegionDropdown dataKey={dataKey} />
               )}

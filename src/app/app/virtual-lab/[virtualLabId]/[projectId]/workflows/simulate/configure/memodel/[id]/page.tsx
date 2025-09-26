@@ -42,7 +42,7 @@ export default function Page({
   return (
     <>
       <div className="mb-2 w-full flex-shrink-0">
-        <Header sessionId={sessionId} />
+        <Header />
       </div>
       <div className='mt-5 grid h-full max-h-[calc(100%-4rem)] min-h-0 w-full flex-1 grid-cols-[24rem_1fr] gap-4 [grid-template-areas:"menu_content"]'>
         <div

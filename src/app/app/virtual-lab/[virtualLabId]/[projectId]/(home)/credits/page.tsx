@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 
-import { getProjectJobReports } from '@/services/virtual-lab/projects';
 import { getQueryClient, HydrateClient } from '@/query-provider/server';
+import { getProjectJobReports } from '@/services/virtual-lab/projects';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { Credits } from '@/ui/segments/project/credits';

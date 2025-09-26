@@ -7,6 +7,7 @@ import { match } from 'ts-pattern';
 import { useMemo } from 'react';
 
 import kebabCase from 'lodash/kebabCase';
+import isNil from 'lodash/isNil';
 import get from 'lodash/get';
 
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
@@ -172,7 +173,7 @@ export function EntityLinkCount() {
                   <span className="font-bold"> {rootCount}</span>
                 </span>
               }
-              isLoading={value.isLoading}
+              isLoading={value.isLoading || isNil(count) || isNil(rootCount)}
             />
           );
         })}
@@ -193,10 +194,10 @@ export function EntityLinkCount() {
               count={
                 <span>
                   <span className="font-bold">{count}</span> <span className="font-light">of</span>
-                  <span className="font-bold"> {rootCount}</span>
+                  <span className="font-bold">{rootCount}</span>
                 </span>
               }
-              isLoading={value.isLoading}
+              isLoading={value.isLoading || isNil(count) || isNil(rootCount)}
             />
           );
         })}
@@ -215,7 +216,7 @@ export function EntityLinkCount() {
               type={value.extendedType}
               title={value.title}
               count={count ? `${count}` : 0}
-              isLoading={value.isLoading}
+              isLoading={value.isLoading || isNil(count)}
             />
           );
         })}
@@ -224,38 +225,48 @@ export function EntityLinkCount() {
     .otherwise(() => null);
 
   return (
-    <div className="px-4">
-      <PillTabs
-        value={activeTab ?? ExploreDataTypeTabs.Experimental}
-        defaultValue={activeTab ?? ExploreDataTypeTabs.Experimental}
-        className="w-full"
-        activationMode="manual"
-        onValueChange={(value) => {
-          onChangeTab(value as TExploreDataTypeTabs)();
-        }}
-      >
-        <PillTabsList
-          className={cn('grid h-10 w-full grid-cols-3 bg-white p-0 shadow-2xl', {
-            'h-12': breakpoint === 'xl',
-          })}
+    <div className="px-2 py-2">
+      <div className="w-full px-2">
+        <PillTabs
+          id="data-type-selector"
+          data-testid="data-type-selector"
+          value={activeTab ?? ExploreDataTypeTabs.Experimental}
+          defaultValue={activeTab ?? ExploreDataTypeTabs.Experimental}
+          className="w-full"
+          activationMode="manual"
+          onValueChange={(value) => {
+            onChangeTab(value as TExploreDataTypeTabs)();
+          }}
         >
-          {tabsConfigItems.map((tab) => (
-            <PillTabsTrigger
-              key={tab.key}
-              value={tab.key}
-              position={tab.position}
-              className={cn(
-                'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3 text-base select-none',
-                'data-[state=active]:font-bold data-[state=active]:text-white',
-                { 'h-12': breakpoint === 'xl' }
-              )}
-            >
-              {tab.title}
-            </PillTabsTrigger>
-          ))}
-        </PillTabsList>
-      </PillTabs>
-      <div className="my-4 flex w-full flex-col items-center justify-center gap-2">{content}</div>
+          <PillTabsList
+            className={cn('grid h-10 w-full grid-cols-3 bg-white p-0 shadow-2xl', {
+              'h-12': breakpoint === 'xl',
+            })}
+          >
+            {tabsConfigItems.map((tab) => (
+              <PillTabsTrigger
+                key={tab.key}
+                value={tab.key}
+                position={tab.position}
+                className={cn(
+                  'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3 text-base select-none',
+                  'data-[state=active]:font-bold data-[state=active]:text-white',
+                  { 'h-12': breakpoint === 'xl' }
+                )}
+              >
+                {tab.title}
+              </PillTabsTrigger>
+            ))}
+          </PillTabsList>
+        </PillTabs>
+      </div>
+      <div
+        id="data-type-items-container"
+        data-testid="data-type-items-container"
+        className="my-4 flex w-full flex-col items-center justify-center gap-2 px-2 py-2"
+      >
+        {content}
+      </div>
     </div>
   );
 }

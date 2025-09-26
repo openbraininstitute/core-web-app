@@ -14,11 +14,11 @@ import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { classNames } from '@/util/utils';
 
-import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 
 type Props = {
   mode: 'select' | 'summary';
-  data?: IReconstructionMorphology | IReconstructionMorphology;
+  data?: ICellMorphology | ICellMorphology;
   reselectLink?: boolean;
 };
 
@@ -41,7 +41,7 @@ function MorphologyOverviewCard({ mode = 'summary', data, reselectLink = false }
   if (data) {
     const details = [
       { label: 'Brain Region', value: renderEmptyOrValue(data.brain_region.name) },
-      { label: 'Species', value: renderEmptyOrValue(data.species.name) },
+      { label: 'Species', value: renderEmptyOrValue(data.subject.species.name) },
       {
         label: 'License',
         value: renderEmptyOrValue(renderLicense({ license: data.license })),
@@ -55,7 +55,7 @@ function MorphologyOverviewCard({ mode = 'summary', data, reselectLink = false }
 
     const exploreUrl = resolveExploreDetailsPageUrl({
       ctx: { ...(params ?? {}) },
-      dataType: ExtendedEntitiesTypeDict.ReconstructionMorphology,
+      dataType: ExtendedEntitiesTypeDict.CellMorphology,
       entityId: data.id,
     });
 
@@ -69,7 +69,7 @@ function MorphologyOverviewCard({ mode = 'summary', data, reselectLink = false }
         exploreUrl={exploreUrl}
         modelDetails={details}
         reselectLink={reselectLink}
-        thumbnail={renderPreview<IReconstructionMorphology>(data, { height: 200, width: 200 })}
+        thumbnail={renderPreview<ICellMorphology>(data, { height: 200, width: 200 })}
       />
     );
   }

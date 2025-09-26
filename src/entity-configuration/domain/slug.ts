@@ -1,5 +1,5 @@
 const ExperimentalEntitySlug = {
-  ReconstructionMorphology: 'morphology',
+  CellMorphology: 'morphology',
   ExperimentalNeuronDensity: 'neuron-density',
   ElectricalCellRecording: 'electrophysiology',
   ExperimentalBoutonDensity: 'bouton-density',

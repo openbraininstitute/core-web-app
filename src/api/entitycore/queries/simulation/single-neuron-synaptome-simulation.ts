@@ -22,8 +22,8 @@ const baseUri = '/single-neuron-synaptome-simulation';
  * Retrieves a specific single neuron synaptome simulations by its ID from the EntityCoreAPI.
  *
  * @param {Object} params - The parameters object
- * @param {string} params.id - The unique identifier of the reconstruction morphology to retrieve
- * @returns {Promise<ISingleNeuronSynaptomeSimulation>} A promise that resolves to the requested reconstruction morphology
+ * @param {string} params.id - The unique identifier of the single neuron synaptome simulation to retrieve
+ * @returns {Promise<ISingleNeuronSynaptomeSimulation>} A promise that resolves to the requested single neuron synaptome simulation
  */
 export async function getSingleNeuronSynaptomeSimulation({
   id,

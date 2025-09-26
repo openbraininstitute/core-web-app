@@ -10,7 +10,10 @@ import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs
 import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
 import { classNames, fieldTitleSentenceCase } from '@/util/utils';
 
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import {
+  ExtendedEntitiesTypeDict,
+  type TExtendedEntitiesTypeDict,
+} from '@/api/entitycore/types/extended-entity-type';
 import type { OrderShape } from '@/entity-configuration/definitions/types';
 import type { SortState } from '@/types/explore-section/application';
 
@@ -198,7 +201,10 @@ export function useDataTableColumns<T>({
           title: (
             <div className="flex flex-col text-left" style={{ marginTop: '-2px' }}>
               <div className={styles.columnTitle}>{fieldTitleSentenceCase(term?.title!)}</div>
-              {term?.unit && <span className={styles.tableHeaderUnits}>[{term?.unit}]</span>}
+              {term?.unit &&
+                dataType !== ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection && (
+                  <span className={styles.tableHeaderUnits}>[{term?.unit}]</span>
+                )}
             </div>
           ),
           className: classNames(

@@ -42,6 +42,7 @@ export function NotebookTable({
     runNotebook,
     handleDownloadClick,
     handleReadmeClick,
+    runOnEksNotebook,
   } = useNotebookTable(notebooks, failed, serverError);
 
   // Get table columns
@@ -51,6 +52,7 @@ export function NotebookTable({
     onDownloadClick: handleDownloadClick,
     onDeleteClick: onDelete,
     onRunClick: runNotebook,
+    onRunOnEksClick: runOnEksNotebook,
     enableRunNotebook,
   });
 

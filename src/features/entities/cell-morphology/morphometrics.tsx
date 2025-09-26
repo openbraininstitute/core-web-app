@@ -5,10 +5,7 @@ import { atom } from 'jotai';
 import { atomFamily } from 'jotai/utils';
 import { useMorphometrics } from '@/hooks/useMorphoMetrics';
 import { useUnwrappedValue } from '@/hooks/hooks';
-import {
-  IReconstructionMorphology,
-  IReconstructionMorphologyExpanded,
-} from '@/api/entitycore/types';
+import { ICellMorphology, ICellMorphologyExpanded } from '@/api/entitycore/types';
 import { MeasurementKind } from '@/api/entitycore/types/entities/measurement-annotation';
 import { getMeasurementAnnotations } from '@/api/entitycore/queries/general/measurement-annotation';
 
@@ -22,7 +19,7 @@ const measurementAnnotationsAtomFamily = atomFamily((entityId: string) =>
   })
 );
 
-export default function Morphometrics({ morphology }: { morphology: IReconstructionMorphology }) {
+export function Morphometrics({ morphology }: { morphology: ICellMorphology }) {
   const measurementKinds = useUnwrappedValue(measurementAnnotationsAtomFamily(morphology.id));
 
   const expandedMorphology = {
@@ -30,7 +27,7 @@ export default function Morphometrics({ morphology }: { morphology: IReconstruct
     measurement_annotation: {
       measurement_kinds: measurementKinds,
     },
-  } as IReconstructionMorphologyExpanded;
+  } as ICellMorphologyExpanded;
 
   const { filteredGroupedCardFields, renderMetric } = useMorphometrics(expandedMorphology, true);
 
@@ -49,3 +46,5 @@ export default function Morphometrics({ morphology }: { morphology: IReconstruct
     </div>
   );
 }
+
+export default Morphometrics;

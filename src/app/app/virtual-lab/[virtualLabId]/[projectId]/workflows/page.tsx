@@ -18,10 +18,13 @@ import { ROOT_ROUTE } from '@/config';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
+import {
+  PanelQueryParam,
+  WorkflowSimulatePanels,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 
 export default function Page({ params }: ServerSideComponentProp<WorkspaceContext, null>) {
   useDisableElementOverflow({ id: 'workspace-body' });
-
   const { push: navigate } = useRouter();
   const { virtualLabId, projectId } = use(params);
   const [shouldRenderScrollableSelector, updateShouldRenderScrollableSelector] = useState(false);
@@ -44,8 +47,11 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
     updateWorkflowState((prev) => ({ ...prev, entityType: value }));
     if (activity === ActivityValues.Build) {
       const sessionId = crypto.randomUUID();
+      const query = new URLSearchParams();
+      query.set('sessionId', sessionId);
+      query.set(PanelQueryParam, WorkflowSimulatePanels.Configuration);
       navigate(
-        `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/configure/${kebabCase(value)}?sessionId=${sessionId}`
+        `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/configure/${kebabCase(value)}?${query.toString()}`
       );
     } else if (activity === ActivityValues.Simulate) {
       navigate(
@@ -66,8 +72,28 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
   const handleShouldOnlyRenderScrollableSelector = (s: boolean) =>
     updateShouldRenderOnlyScrollableSelector(s);
 
+  // const [onboardingState] = useLocalStorage<{
+  //   tours: Array<{
+  //     tour: string | null;
+  //     done: boolean | null;
+  //     date: number | null;
+  //     step: number | null;
+  //   }>;
+  // }>(AUTO_ONBOARDING_TOURS, {
+  //   tours: [],
+  // });
+
+  // useLayoutEffect(() => {
+  //   const tourName = shouldRenderScrollableSelector ? workflowTourEmpty : workflowTourFull;
+  //   const tour = find(onboardingState.tours, { tour: tourName });
+
+  //   if (!tour || !tour.done) {
+  //     startNextStep(tourName);
+  //   }
+  // }, [shouldRenderScrollableSelector]);
+
   return (
-    <div className="mr-0 mb-10 ml-3 flex h-full max-h-[calc(100vh-7rem)] flex-col gap-2.5">
+    <div className="mr-0 ml-3 flex h-full max-h-[calc(100vh-6rem)] flex-col gap-2.5">
       <AnimatePresence mode="wait">
         {!shouldOnlyRenderScrollableSelector && (
           <motion.div

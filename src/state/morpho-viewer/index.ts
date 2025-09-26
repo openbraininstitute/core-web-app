@@ -4,11 +4,11 @@ import sessionAtom from '@/state/session';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 
-import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { WorkspaceContext } from '@/types/common';
 
 export default function createMorphologyDataAtom(
-  morphology: IReconstructionMorphology,
+  morphology: ICellMorphology,
   ctx?: WorkspaceContext
 ): Atom<Promise<string | null>> {
   return atom(async (get) => {
@@ -23,7 +23,7 @@ export default function createMorphologyDataAtom(
     // TODO: extend downloadAsset so that return type can be parameterized
     // as: ArrayBuffer, String, JSON, Response, etc.
     const arrayBuffer = await downloadAsset<ArrayBuffer>({
-      entityType: EntityTypeDict.ReconstructionMorphology,
+      entityType: EntityTypeDict.CellMorphology,
       entityId: morphology.id,
       id: asset.id,
       ctx,

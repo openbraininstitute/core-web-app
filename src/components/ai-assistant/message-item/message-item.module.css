@@ -144,14 +144,7 @@ div.price {
   flex-direction: row;
   justify-content: flex-start;
   align-items: center;
-  gap: 1em;
-}
-
-div.price em {
-  font-variant: normal;
-  font-style: normal;
-  opacity: 0.5;
-  margin-left: 1em;
+  gap: 0.5em;
 }
 
 div.price > svg {

@@ -13,6 +13,7 @@ interface TableColumnsProps {
   onDeleteClick?: (id: string) => void;
   onRunClick?: (notebook: Notebook) => void;
   enableRunNotebook?: boolean;
+  onRunOnEksClick?: (notebook: Notebook) => void;
 }
 
 export function useTableColumns({
@@ -22,6 +23,7 @@ export function useTableColumns({
   onDeleteClick,
   onRunClick,
   enableRunNotebook,
+  onRunOnEksClick,
 }: TableColumnsProps): Column<Notebook>[] {
   const renderActionColumns = (_: string, notebook: Notebook) => {
     return (
@@ -33,6 +35,7 @@ export function useTableColumns({
         onDeleteClick={onDeleteClick}
         onRunClick={onRunClick}
         enableRunNotebook={enableRunNotebook}
+        onRunOnEksClick={onRunOnEksClick}
       />
     );
   };

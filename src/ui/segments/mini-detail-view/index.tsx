@@ -1,33 +1,34 @@
 import { CheckCircleFilled, CloseOutlined, CopyOutlined, LoadingOutlined } from '@ant-design/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import { useMutation } from '@tanstack/react-query';
-import { match, P } from 'ts-pattern';
 import { useState, useEffect } from 'react';
-import { Image } from 'antd';
+import { match, P } from 'ts-pattern';
 import { useAtom } from 'jotai';
+import { Image } from 'antd';
 
 import kebabCase from 'lodash/kebabCase';
 import Link from 'next/link';
-import { CircuitPreview } from './previews/circuit-preview';
-import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 
-import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { SingleNeuronSimulationPreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-simulation-preview';
 import { SingleNeuronSynaptomePreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-synaptome-preview';
+import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
 import { MEModelPreview } from '@/ui/segments/mini-detail-view/previews/me-model-preview';
-import {
-  ExtendedEntitiesTypeDict,
-  TExtendedEntitiesTypeDict,
-} from '@/api/entitycore/types/extended-entity-type';
+import { CircuitPreview } from '@/ui/segments/mini-detail-view/previews/circuit-preview';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { renderPreview } from '@/entity-configuration/definitions/renderer';
+import {
+  PanelQueryParam,
+  WorkflowSimulatePanels,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
-import { DownloadIcon } from '@/components/icons/buttons';
 import { ExpandableText } from '@/ui/molecules/more-less-text';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
-import { ROOT_ROUTE } from '@/config';
+import { DownloadIcon } from '@/components/icons/buttons';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { EntityTypeDict } from '@/api/entitycore/types';
 import { Card, CardTitle } from '@/ui/molecules/card';
 import { WorkspaceSection } from '@/constants';
 import { Button } from '@/ui/molecules/button';
@@ -37,18 +38,19 @@ import {
   useMiniDetailView,
 } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
+import { ROOT_ROUTE } from '@/config';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TWorkspaceSection } from '@/constants';
-import {
-  EntityTypeDict,
-  type EntityCoreObjectTypes,
-  type IMEModel,
-  type ISingleNeuronSimulation,
-  type ISingleNeuronSynaptome,
-  type ISingleNeuronSynaptomeSimulation,
+import type {
+  ISingleNeuronSynaptomeSimulation,
+  ISingleNeuronSimulation,
+  ISingleNeuronSynaptome,
+  EntityCoreObjectTypes,
+  IMEModel,
 } from '@/api/entitycore/types';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 
 type Props = {
   section?: TWorkspaceSection;
@@ -98,7 +100,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
     .with(
       {
         type: P.union(
-          ExtendedEntitiesTypeDict.ReconstructionMorphology,
+          ExtendedEntitiesTypeDict.CellMorphology,
           ExtendedEntitiesTypeDict.ElectricalCellRecording,
           ExtendedEntitiesTypeDict.Emodel
         ),
@@ -454,7 +456,10 @@ function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({ record }: { 
         <Link
           href={{
             pathname: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/${kebabCase(record.type)}/${record.id}`,
-            query: { sessionId: crypto.randomUUID() },
+            query: {
+              sessionId: crypto.randomUUID(),
+              [PanelQueryParam]: WorkflowSimulatePanels.Configuration,
+            },
           }}
         >
           Use model

@@ -1,35 +1,34 @@
 'use client';
 
-import { WarningOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 
-export default function NotFoundContent() {
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { SharedLayout } from '@/ui/layouts/shared-layout';
+import { Button } from '@/ui/molecules/button';
+
+export default function NotFound() {
+  const breakpoint = useDefaultBreakpoint();
+
   return (
-    <div className="bg-primary-9 flex h-screen w-full flex-col items-center justify-center p-6 text-white">
-      <div className="mx-auto w-full max-w-md">
-        <div className="mb-2 flex items-center justify-start gap-2">
-          <WarningOutlined className="text-3xl text-[#f0c75e]" />
-          <h1 className="text-4xl font-bold text-[#f0c75e]">404</h1>
+    <SharedLayout>
+      <div className="flex max-w-md flex-col items-center gap-6">
+        <div className="mx-auto flex w-full max-w-md flex-col items-center justify-center">
+          <h1 className="text-primary-9 text-8xl font-bold">404</h1>
+          <p className="text-primary-8 text-xl font-semibold">This page doesn&lsquo;t exist</p>
         </div>
-
-        <div className="mb-2 w-full bg-white p-6">
-          <h2 className="text-primary-8 mb-2 text-sm font-medium select-none">DESCRIPTION</h2>
-          <p className="text-primary-8 text-xl font-bold">This page doesn&lsquo;t exist</p>
-        </div>
-
-        <div className="flex w-full gap-2">
-          <Link href="/app/virtual-lab/explore/interactive" className="w-1/2">
-            <div className="hover:bg-opacity-10 hover:text-primary-8 border border-white py-4 text-center text-base font-medium text-white transition-colors hover:bg-white">
-              Back to Explore
-            </div>
+        <Button
+          rounded
+          asChild
+          variant="success"
+          size={breakpoint === 'xl' ? 'lg' : 'md'}
+          type="submit"
+          className="disabled:bg-neutral-1 disabled:text-neutral-4! w-full px-8! py-6! font-bold hover:text-white"
+        >
+          <Link href="/app/virtual-lab/sync" className="flex items-center justify-center gap-3.5">
+            <span>Go to project</span>
           </Link>
-          <Link href="/app/virtual-lab" className="w-1/2">
-            <div className="hover:bg-opacity-10 hover:text-primary-8 border border-white py-4 text-center text-base font-medium text-white transition-colors hover:bg-white">
-              Back to home
-            </div>
-          </Link>
-        </div>
+        </Button>
       </div>
-    </div>
+    </SharedLayout>
   );
 }

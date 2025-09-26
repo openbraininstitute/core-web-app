@@ -1,23 +1,29 @@
 'use client';
 
+import { useEffect, useMemo, type HTMLAttributes, type TdHTMLAttributes } from 'react';
 import { ReloadOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
-import { useMemo } from 'react';
 import { Image } from 'antd';
+
 import kebabCase from 'lodash/kebabCase';
+import compact from 'lodash/compact';
+import omit from 'lodash/omit';
 
-import type { HTMLAttributes, TdHTMLAttributes } from 'react';
-
-import { brainRegionBasicCellGroupsRegionsHierarchyAtom } from '@/features/brain-region-hierarchy/context';
 import { useBuildMeModelSessionState, label } from '@/ui/segments/workflows/build/memodel/helpers';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
-import { ROOT_ROUTE } from '@/config';
+import { EntityTypeDict } from '@/api/entitycore/types';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import {
+  brainRegionBasicCellGroupsRegionsHierarchyAtom,
+  useBrainRegionHierarchy,
+  useSetSelectedBrainRegion,
+} from '@/features/brain-region-hierarchy/context';
+import { ROOT_ROUTE } from '@/config';
 import {
   renderArray,
   renderDate,
@@ -27,7 +33,7 @@ import {
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
-import { EntityTypeDict, type IEModel } from '@/api/entitycore/types';
+import type { IEModel } from '@/api/entitycore/types';
 
 type Props = {
   sessionId: string;
@@ -55,9 +61,31 @@ export function EModel({ sessionId }: Props) {
     projectId,
   });
 
+  const dataKey = compact([
+    virtualLabId,
+    projectId,
+    WorkspaceSection.BuildWorkflow,
+    ExtendedEntitiesTypeDict.Emodel,
+    WorkspaceScope.BuildMeModelE,
+    sessionId,
+  ]).join('/');
+
+  const { updateSelectedBrainRegion } = useSetSelectedBrainRegion();
+  const { updateHierarchyConfig } = useBrainRegionHierarchy({
+    dataKey,
+  });
+
   const brainRegionHierarchy = useAtomValue(
     useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
   );
+
+  useEffect(() => {
+    if (brainRegionHierarchy) {
+      const defaultBrainRegion = brainRegionHierarchy?.root;
+      updateHierarchyConfig(defaultBrainRegion);
+      updateSelectedBrainRegion(omit(defaultBrainRegion, 'children'));
+    }
+  }, [brainRegionHierarchy]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <BrowseEntityScope
@@ -65,7 +93,6 @@ export function EModel({ sessionId }: Props) {
       allowDownload={false}
       id={sessionId}
       section={WorkspaceSection.BuildWorkflow}
-      defaultBrainRegion={brainRegionHierarchy?.root.id}
       requireMiniDetailView={false}
       classNames={{ container: 'max-h-full' }}
       dataType={ExtendedEntitiesTypeDict.Emodel}

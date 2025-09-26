@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
 import { classNames } from '@/util/utils';
 
-import type { IReconstructionMorphology } from '@/api/entitycore/types/entities/reconstruction-morphology';
+import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 
 const subtitleStyle = 'uppercase font-thin text-neutral-4';
@@ -35,7 +35,7 @@ type Props = {
   // @FIXME: Is this property used somewhere?
   // eslint-disable-next-line react/no-unused-prop-types
   mode: 'select' | 'summary';
-  model: IEModel | IReconstructionMorphology;
+  model: IEModel | ICellMorphology;
   title: string;
   selectUrl: string;
   queryParams: string;

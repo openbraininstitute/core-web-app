@@ -40,8 +40,10 @@ import { useUserPermissions } from '@/hooks/use-user-permissions';
 import { useAppNotification } from '@/components/notification';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { useUserRole } from '@/hooks/use-user-role';
 import { extractInitials } from '@/util/slugify';
 import { Button } from '@/ui/molecules/button';
+import { Badge } from '@/ui/molecules/badge';
 import {
   cancelProjectInvite,
   listProjectMembers,
@@ -52,7 +54,6 @@ import {
 import { cn } from '@/utils/css-class';
 
 import type { Member, MembersResponse, Role } from '@/api/virtual-lab-svc/queries/types';
-import { Badge } from '@/ui/molecules/badge';
 
 const roleOptions: { value: Role; label: string }[] = [
   { value: 'admin', label: 'Administrator' },
@@ -88,7 +89,7 @@ function RoleModifier({ user, ownerId }: RoleModifierProps) {
   const { error: notifyError, success: notifySuccess } = useAppNotification();
   const [role, updateRole] = useState(user.role);
   const queryClient = useQueryClient();
-
+  const { isAdmin, isProjectAdmin } = useUserRole({ virtualLabId, projectId });
   const cancelInviteMutation = useMutation({
     mutationKey: [`${virtualLabId}/${projectId}/delete-item/${user.email}`],
     mutationFn: () =>
@@ -227,78 +228,80 @@ function RoleModifier({ user, ownerId }: RoleModifierProps) {
       </div>
     );
   }
-
-  return user.invite_accepted ? (
-    <div className="ml-auto text-right text-base text-white">
-      <div className="ml-auto flex w-full flex-col items-end justify-end text-right text-base text-white">
-        <div className="flex w-max flex-row items-center justify-center gap-2">
-          <Select
-            data-testid="role-select"
-            className={cn(
-              'focus:border-primary-8 w-full bg-transparent shadow-none ring-0 focus:border-2',
-              '[&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-transparent',
-              '[&_.ant-select-selector]:!border-primary-7 [&_.ant-select-selector]:!border',
-              '[&_.ant-select-selection-item]:!text-primary-8 [&_.ant-select-selection-item]:!font-bold',
-              '[&_.ant-select-arrow]:!text-primary-8 min-w-[140px] [&_.ant-select-selection-item]:!text-left'
-            )}
-            onChange={(value) => {
-              updateRole(value);
-              updateRoleMutation.mutateAsync(value);
-            }}
-            value={role}
-            size="large"
-            options={roleOptions}
-            popupClassName="rounded-none!"
-            disabled={updateRoleMutation.isPending}
-            loading={updateRoleMutation.isPending}
-          />
-          <Popconfirm
-            placement="bottomLeft"
-            title="Remove member"
-            description="Are you sure to remove this member from the project ?"
-            onConfirm={() => removeItemMutation.mutateAsync()}
-            okText="Yes"
-            cancelText="No"
-            disabled={removeItemMutation.isPending}
-            classNames={{
-              root: cn(
-                '[&_.ant-popover-inner]:bg-primary-9! [&_.ant-popover-inner]:text-white! ',
-                '[&_.ant-popover-inner]:rounded-none! [&_.ant-popconfirm-description]:text-white!',
-                '[&_.ant-popconfirm-title]:text-white!',
-                '[&_.ant-popconfirm-buttons>button]:rounded-none! [&_.ant-popconfirm-buttons>button]:px-5!',
-                '[&_.ant-popover-arrow]:after:bg-primary-9!'
-              ),
-            }}
-          >
-            <AntdButton
-              className="bg-primary-9 hover:text-destructive! h-12 w-14! rounded-none hover:bg-white!"
-              type="primary"
-              variant="outlined"
+  if (isAdmin || isProjectAdmin) {
+    return user.invite_accepted ? (
+      <div className="ml-auto text-right text-base text-white">
+        <div className="ml-auto flex w-full flex-col items-end justify-end text-right text-base text-white">
+          <div className="flex w-max flex-row items-center justify-center gap-2">
+            <Select
+              data-testid="role-select"
+              className={cn(
+                'focus:border-primary-8 w-full bg-transparent shadow-none ring-0 focus:border-2',
+                '[&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-transparent',
+                '[&_.ant-select-selector]:!border-primary-7 [&_.ant-select-selector]:!border',
+                '[&_.ant-select-selection-item]:!text-primary-8 [&_.ant-select-selection-item]:!font-bold',
+                '[&_.ant-select-arrow]:!text-primary-8 min-w-[140px] [&_.ant-select-selection-item]:!text-left'
+              )}
+              onChange={(value) => {
+                updateRole(value);
+                updateRoleMutation.mutateAsync(value);
+              }}
+              value={role}
               size="large"
-              icon={<DeleteOutlined className="text-lg" />}
-              disabled={removeItemMutation.isPending}
-              loading={removeItemMutation.isPending}
+              options={roleOptions}
+              popupClassName="rounded-none!"
+              disabled={updateRoleMutation.isPending}
+              loading={updateRoleMutation.isPending}
             />
-          </Popconfirm>
+            <Popconfirm
+              placement="bottomLeft"
+              title="Remove member"
+              description="Are you sure to remove this member from the project ?"
+              onConfirm={() => removeItemMutation.mutateAsync()}
+              okText="Yes"
+              cancelText="No"
+              disabled={removeItemMutation.isPending}
+              classNames={{
+                root: cn(
+                  '[&_.ant-popover-inner]:bg-primary-9! [&_.ant-popover-inner]:text-white! ',
+                  '[&_.ant-popover-inner]:rounded-none! [&_.ant-popconfirm-description]:text-white!',
+                  '[&_.ant-popconfirm-title]:text-white!',
+                  '[&_.ant-popconfirm-buttons>button]:rounded-none! [&_.ant-popconfirm-buttons>button]:px-5!',
+                  '[&_.ant-popover-arrow]:after:bg-primary-9!'
+                ),
+              }}
+            >
+              <AntdButton
+                className="bg-primary-9 hover:text-destructive! h-12 w-14! rounded-none hover:bg-white!"
+                type="primary"
+                variant="outlined"
+                size="large"
+                icon={<DeleteOutlined className="text-lg" />}
+                disabled={removeItemMutation.isPending}
+                loading={removeItemMutation.isPending}
+              />
+            </Popconfirm>
+          </div>
         </div>
       </div>
-    </div>
-  ) : (
-    <div className="flex w-full flex-col items-center justify-end text-right">
-      <Button
-        data-testid="cancel-invite-btn"
-        key="cancel-invite"
-        type="button"
-        size="md"
-        className="hover:text-primary-2! w-max! self-end text-white! opacity-100!"
-        disabled={cancelInviteMutation.isPending}
-        onClick={() => cancelInviteMutation.mutateAsync()}
-      >
-        Cancel invitation
-        {cancelInviteMutation.isPending && <LoadingOutlined spin className="ml-2" />}
-      </Button>
-    </div>
-  );
+    ) : (
+      <div className="flex w-full flex-col items-center justify-end text-right">
+        <Button
+          data-testid="cancel-invite-btn"
+          key="cancel-invite"
+          type="button"
+          size="md"
+          className="hover:text-primary-2! w-max! self-end text-white! opacity-100!"
+          disabled={cancelInviteMutation.isPending}
+          onClick={() => cancelInviteMutation.mutateAsync()}
+        >
+          Cancel invitation
+          {cancelInviteMutation.isPending && <LoadingOutlined spin className="ml-2" />}
+        </Button>
+      </div>
+    );
+  }
+  return null;
 }
 
 type AddMemberStepProps = {

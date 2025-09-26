@@ -51,7 +51,7 @@ import { messages } from '@/i18n/en/simulation';
 import { Button } from '@/ui/molecules/button';
 import {
   genericSingleNeuronSimulationPlotDataAtomFamily,
-  simulationStatusAtom,
+  simulationStatusAtomFamily,
 } from '@/state/simulate/single-neuron';
 import { cn } from '@/utils/css-class';
 
@@ -77,7 +77,7 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
   const sesKey = getSessionKey(PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY, sessionId);
   const sscKey = getSessionKey(PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
 
-  const [simulationStatus] = useAtom(simulationStatusAtom);
+  const [simulationStatus] = useAtom(simulationStatusAtomFamily(sessionId));
   const [simulationResults] = useAtom(genericSingleNeuronSimulationPlotDataAtomFamily(sessionId));
   const [recordLocationConfiguration] = useAtom(RecordLocationConfigurationAtomFamily(rclKey));
   const [overviewConfiguration] = useAtom(OverviewConfigurationAtomFamily(infoKey));
@@ -101,6 +101,8 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
   const onChange = (value: string) => {
     const params = new URLSearchParams(queryParams);
     params.set('record', value);
+    params.delete('step');
+
     replace(`${pathname}?${params.toString()}`);
   };
 

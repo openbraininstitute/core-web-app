@@ -37,6 +37,8 @@ export function RegionBanner({ view, onSwitchView }: Props) {
     >
       {/* eslint-disable-next-lien jsx-a11y/interactive-supports-focus */}
       <div
+        id="atlas-regions-selector"
+        data-testid="atlas-regions-selector"
         className={cn(
           'border-neutral-1 flex h-12! w-full items-center justify-between gap-6 rounded-full py-2 pr-2 pl-4',
           'cursor-pointer',
@@ -51,8 +53,8 @@ export function RegionBanner({ view, onSwitchView }: Props) {
       >
         <div className="flex items-center justify-center gap-2">
           {selectedBrainRegion && (
-            <div className="flex items-center justify-center gap-1">
-              <span className="text-neutral-3">Region:</span>
+            <div className="flex items-center justify-center gap-1 select-none">
+              <span className="text-label text-base">Region:</span>
               <div className="text-primary-9/90 flex items-center justify-center gap-1.5">
                 <div
                   key={`color-${selectedBrainRegion.id}-${selectedBrainRegion.color_hex_triplet}`}

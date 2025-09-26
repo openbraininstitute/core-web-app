@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-import { IconGear } from '../icons/gear';
+// import { IconGear } from '../icons/gear';
 import ToolsSelector from './tools-selector';
 import { classNames } from '@/util/utils';
 import SendIcon from '@/components/icons/Send';
@@ -31,9 +31,9 @@ export default function Prompt({ className, value, tools, onChange, onClick }: P
       handleSendClick();
     }
   };
-  const handleToolsClick = () => {
-    setShowToolsSelector(true);
-  };
+  // const handleToolsClick = () => {
+  //   setShowToolsSelector(true);
+  // };
 
   return (
     <>
@@ -49,9 +49,10 @@ export default function Prompt({ className, value, tools, onChange, onClick }: P
             onKeyDown={handleKeyDown}
           />
         </div>
-        <button type="button" onClick={handleToolsClick} aria-label="Send prompt">
+        {/* For now, we remove the tool selector. In the future we will add all of them with categories. */}
+        {/* <button type="button" onClick={handleToolsClick} aria-label="Select tools">
           <IconGear />
-        </button>
+        </button> */}
         <button
           type="button"
           onClick={handleSendClick}

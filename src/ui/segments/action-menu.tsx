@@ -1,39 +1,26 @@
 'use client';
 
+import { CopyOutlined, DownloadOutlined, ExperimentOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 import { notFound } from 'next/navigation';
-
 import NextLink from 'next/link';
 import { useAtom } from 'jotai';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  BookOutlined,
-  CopyOutlined,
-  DownloadOutlined,
-  ExperimentOutlined,
-  LoadingOutlined,
-} from '@ant-design/icons';
-import Action from '../molecules/side-menu-action';
-import { downloadPanelCircuitAtom } from './explore/circuit/elements/download-panel';
-
-import {
-  bookmarkToProjectLibrary,
-  getAllBookmarksByCategory,
-} from '@/api/virtual-lab-svc/queries/bookmark';
-import { useAppNotification } from '@/components/notification';
-
-import { deleteBookmarksFromProjectLibrary } from '@/features/bookmark/actions';
+import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
+import Action from '@/ui/molecules/side-menu-action';
 import { downloadArchive } from '@/services/entity-download';
 import {
   EntityCoreExtendedType,
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { ROOT_ROUTE } from '@/config';
 import { EntityTypeValue } from '@/entity-configuration/domain';
+import {
+  PanelQueryParam,
+  WorkflowSimulatePanels,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 
-import { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export default function ActionMenu({
   entity,
@@ -44,89 +31,87 @@ export default function ActionMenu({
   ctx: { virtualLabId: string; projectId: string };
   type: EntityCoreExtendedType;
 }) {
-  const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
-  const notification = useAppNotification();
   const [, setCircuit] = useAtom(downloadPanelCircuitAtom);
 
   const entityType = getEntityByExtendedType({ type });
   if (!entityType) notFound();
 
-  const bookmarks = useQuery({
-    queryKey: keyBuilder.bookmarks({
-      virtualLabId: ctx.virtualLabId,
-      projectId: ctx.projectId,
-      category: entityType.extendedType,
-    }),
-    queryFn: async () => getAllBookmarksByCategory(ctx, { category: entityType.type }),
-  });
+  // const bookmarks = useQuery({
+  //   queryKey: keyBuilder.bookmarks({
+  //     virtualLabId: ctx.virtualLabId,
+  //     projectId: ctx.projectId,
+  //     category: entityType.extendedType,
+  //   }),
+  //   queryFn: async () => getAllBookmarksByCategory(ctx, { category: entityType.type }),
+  // });
 
-  const existingBookmarks = bookmarks.data?.data?.[entityType.type]?.map((b) => b.entity_id);
-  const isBookmarked = !!existingBookmarks && existingBookmarks.includes(entity.id);
+  // const existingBookmarks = bookmarks.data?.data?.[entityType.type]?.map((b) => b.entity_id);
+  // const isBookmarked = !!existingBookmarks && existingBookmarks.includes(entity.id);
 
-  const mutation = useMutation({
-    mutationFn: () =>
-      bookmarkToProjectLibrary(ctx, {
-        entity_id: entity.id,
-        category: entityType.type,
-      }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: keyBuilder.bookmarks({
-          virtualLabId: ctx.virtualLabId,
-          projectId: ctx.projectId,
-          category: entityType.extendedType,
-        }),
-      });
-      notification.success({ message: 'Entity successfully bookmarked' });
-    },
-    onError: () => {
-      notification.error({ message: "Couldn't add entity to bookmarks" });
-    },
-  });
+  // const mutation = useMutation({
+  //   mutationFn: () =>
+  //     bookmarkToProjectLibrary(ctx, {
+  //       entity_id: entity.id,
+  //       category: entityType.type,
+  //     }),
+  //   onSuccess: async () => {
+  //     await queryClient.invalidateQueries({
+  //       queryKey: keyBuilder.bookmarks({
+  //         virtualLabId: ctx.virtualLabId,
+  //         projectId: ctx.projectId,
+  //         category: entityType.extendedType,
+  //       }),
+  //     });
+  //     notification.success({ message: 'Entity successfully bookmarked' });
+  //   },
+  //   onError: () => {
+  //     notification.error({ message: "Couldn't add entity to bookmarks" });
+  //   },
+  // });
 
-  const handleBookmark = () => {
-    mutation.mutate();
-  };
+  // const handleBookmark = () => {
+  //   mutation.mutate();
+  // };
 
-  const removeBookmarkMutation = useMutation({
-    mutationFn: () =>
-      deleteBookmarksFromProjectLibrary({
-        virtualLabId: ctx.virtualLabId,
-        projectId: ctx.projectId,
-        bookmarks: [
-          {
-            entity_id: entity.id,
-            category: entityType.type,
-          },
-        ],
-      }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: keyBuilder.bookmarks({
-          virtualLabId: ctx.virtualLabId,
-          projectId: ctx.projectId,
-          category: entityType.extendedType,
-        }),
-      });
-      notification.success({ message: 'Bookmark removed from library' });
-    },
-    onError: () => {
-      notification.error({ message: "Couldn't remove bookmark" });
-    },
-  });
+  // const removeBookmarkMutation = useMutation({
+  //   mutationFn: () =>
+  //     deleteBookmarksFromProjectLibrary({
+  //       virtualLabId: ctx.virtualLabId,
+  //       projectId: ctx.projectId,
+  //       bookmarks: [
+  //         {
+  //           entity_id: entity.id,
+  //           category: entityType.type,
+  //         },
+  //       ],
+  //     }),
+  //   onSuccess: async () => {
+  //     await queryClient.invalidateQueries({
+  //       queryKey: keyBuilder.bookmarks({
+  //         virtualLabId: ctx.virtualLabId,
+  //         projectId: ctx.projectId,
+  //         category: entityType.extendedType,
+  //       }),
+  //     });
+  //     notification.success({ message: 'Bookmark removed from library' });
+  //   },
+  //   onError: () => {
+  //     notification.error({ message: "Couldn't remove bookmark" });
+  //   },
+  // });
 
-  const handleRemoveBookmark = () => {
-    removeBookmarkMutation.mutate();
-  };
+  // const handleRemoveBookmark = () => {
+  //   removeBookmarkMutation.mutate();
+  // };
 
-  const loading = mutation.isPending || removeBookmarkMutation.isPending;
+  // const loading = mutation.isPending || removeBookmarkMutation.isPending;
 
-  const getBookmarkHandler = () => {
-    if (loading) return undefined;
-    if (!isBookmarked) return handleBookmark;
-    return handleRemoveBookmark;
-  };
+  // const getBookmarkHandler = () => {
+  //   if (loading) return undefined;
+  //   if (!isBookmarked) return handleBookmark;
+  //   return handleRemoveBookmark;
+  // };
 
   const isSimulatable =
     typeof entityType.isSimulatable === 'boolean'
@@ -160,7 +145,13 @@ export default function ActionMenu({
         <Action
           icon={
             <NextLink
-              href={`${ROOT_ROUTE}/${ctx.virtualLabId}/${ctx.projectId}/workflows/simulate/configure/${entityType.type.replaceAll('_', '-')}/${entity.id}`}
+              href={{
+                pathname: `${ROOT_ROUTE}/${ctx.virtualLabId}/${ctx.projectId}/workflows/simulate/configure/${entityType.type.replaceAll('_', '-')}/${entity.id}`,
+                query: {
+                  sessionId: crypto.randomUUID(),
+                  [PanelQueryParam]: WorkflowSimulatePanels.Configuration,
+                },
+              }}
             >
               <ExperimentOutlined />
             </NextLink>
@@ -170,7 +161,7 @@ export default function ActionMenu({
         </Action>
       )}
 
-      {entityType.isBookmarkable && bookmarks.data && (
+      {/* {entityType.isBookmarkable && bookmarks.data && (
         <Action
           icon={
             <>
@@ -181,7 +172,7 @@ export default function ActionMenu({
         >
           <>{!isBookmarked ? 'Bookmark' : 'Remove from bookmarks'}</>
         </Action>
-      )}
+      )} */}
 
       {entityType.isDownloadable && (
         <Action
