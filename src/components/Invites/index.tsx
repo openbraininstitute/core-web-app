@@ -9,13 +9,16 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { acceptInvite as sendInviteAcceptRequest, getInviteDetails } from './api';
-import { getErrorUrl, getLabUrl } from './utils';
+import { getErrorUrl } from './utils';
 import Logo from '@/components/logo/as-svg';
-import { InviteDetailsData } from '@/types/virtual-lab/invites';
+import { InviteDetailsData, InviteErrorCodes } from '@/types/virtual-lab/invites';
 import sessionAtom from '@/state/session';
 
 import inviteBgImgSrc from '@/../public/images/invite/invite-bg.webp';
 import { isVlmError } from '@/types/virtual-lab/common';
+import { listProjects } from '@/api/virtual-lab-svc/queries/project';
+import { ROOT_ROUTE } from '@/config';
+import { tryCatch } from '@/api/utils';
 
 export default function InviteLoader() {
   const inviteToken = useSearchParams().get('token');
@@ -36,9 +39,25 @@ export default function InviteLoader() {
       router.push(getErrorUrl(res, session?.accessToken, inviteToken));
       return;
     }
+    if (res.data.status === 'already_accepted') {
+      return `/?errorcode=${InviteErrorCodes.INVITE_ALREADY_ACCEPTED}&origin=${origin}&lab_id=${res.data.virtual_lab_id}`;
+    }
+
+    const { data: results, error } = await tryCatch(
+      listProjects({ virtualLabId: res.data.virtual_lab_id, page: 1, size: 1 })
+    );
+
+    if (error) {
+      router.push(`${ROOT_ROUTE}/sync`);
+    }
 
     if (res.data.origin) {
-      router.push(getLabUrl(res.data));
+      const projectId = results?.data?.results.at(0)?.id;
+      if (projectId) {
+        router.push(`${ROOT_ROUTE}/${res.data.virtual_lab_id}/${projectId}`);
+      } else {
+        router.push(`${ROOT_ROUTE}/sync`);
+      }
     }
   };
 
