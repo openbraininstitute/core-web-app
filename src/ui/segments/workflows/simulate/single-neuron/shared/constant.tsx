@@ -131,7 +131,7 @@ export const DEFAULT_PROTOCOL = 'idrest';
 export const DEFAULT_STIMULUS_CONFIG: StimulusConfig = {
   stimulus_type: 'current_clamp',
   stimulus_protocol: DEFAULT_PROTOCOL,
-  amplitudes: [40, 80, 120],
+  amplitudes: [0.05, 0.1625, 0.275, 0.3875, 0.5],
 };
 
 export const DEFAULT_CURRENT_INJECTION_CONFIG: TStimulationConfiguration = {

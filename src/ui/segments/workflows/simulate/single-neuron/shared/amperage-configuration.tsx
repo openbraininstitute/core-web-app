@@ -371,8 +371,8 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
           </div>
         ) : (
           <div className="my-4 flex w-full flex-col items-center justify-center gap-3.5">
-            <div className="flex w-full items-center justify-center gap-5">
-              <div className="flex w-max flex-3/7 flex-col items-start justify-start">
+            <div className="flex w-full items-center justify-center gap-3">
+              <div className="flex w-max min-w-36 flex-col items-start justify-start">
                 <Form.Item
                   label={label('start', true)}
                   name="startAmperage"
@@ -428,14 +428,15 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
                   />
                 </Form.Item>
               </div>
-              <div className="w-full flex-1/7">
-                {label('line', false, 'text-transparent')}
+              <div className="w-full grow">
+                {label('line', false, 'text-transparent sr-only')}
                 <hr className="w-full border border-gray-200" />
               </div>
-              <div className="flex w-max flex-3/7 flex-col items-start justify-start">
+              <div className="flex w-max min-w-36 flex-col items-start justify-end">
                 <Form.Item
                   label={label('stop', true)}
                   name="endAmperage"
+                  className="self-end"
                   rules={
                     !disableStepper
                       ? [
