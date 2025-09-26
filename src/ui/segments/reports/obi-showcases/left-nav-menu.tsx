@@ -35,7 +35,7 @@ export function OBIShowcaseLeftMenu({ className }: Props) {
   const breakpoint = useDefaultBreakpoint();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const activeSection = searchParams.get('section');
+  const activeSection = searchParams.get('section') ?? 'description'; // Default to 'description'
 
   return (
     <div className={cn('flex flex-col gap-2', className)}>
@@ -47,7 +47,10 @@ export function OBIShowcaseLeftMenu({ className }: Props) {
             asChild
             key={key}
             variant="outline"
-            className="h-auto w-full justify-start font-bold shadow-sm"
+            className={cn(
+              'h-auto w-full justify-start font-bold shadow-sm',
+              activeSection === url && 'bg-primary-9 text-white'
+            )}
             size={breakpoint === 'xl' ? 'lg' : 'md'}
             aria-label={activeSection === url ? 'active' : ''}
             active={activeSection === url}
