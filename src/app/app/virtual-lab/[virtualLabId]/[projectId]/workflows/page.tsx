@@ -18,6 +18,10 @@ import { ROOT_ROUTE } from '@/config';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
+import {
+  PanelQueryParam,
+  WorkflowSimulatePanels,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 
 export default function Page({ params }: ServerSideComponentProp<WorkspaceContext, null>) {
   useDisableElementOverflow({ id: 'workspace-body' });
@@ -43,8 +47,11 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
     updateWorkflowState((prev) => ({ ...prev, entityType: value }));
     if (activity === ActivityValues.Build) {
       const sessionId = crypto.randomUUID();
+      const query = new URLSearchParams();
+      query.set('sessionId', sessionId);
+      query.set(PanelQueryParam, WorkflowSimulatePanels.Configuration);
       navigate(
-        `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/configure/${kebabCase(value)}?sessionId=${sessionId}`
+        `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/configure/${kebabCase(value)}?${query.toString()}`
       );
     } else if (activity === ActivityValues.Simulate) {
       navigate(
