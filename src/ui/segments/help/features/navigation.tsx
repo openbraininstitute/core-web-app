@@ -32,7 +32,7 @@ export default function FeaturesNavigation() {
   const searchParams = useSearchParams();
   const searchParamsObj = Object.fromEntries(searchParams.entries());
 
-  const activeScale = searchParams.get('scale');
+  const activeScale = searchParams.get('scale') ?? 'subcellular'; // Default to 'subcellular'
 
   return (
     <div className="col-span-1 flex flex-col gap-y-3">
