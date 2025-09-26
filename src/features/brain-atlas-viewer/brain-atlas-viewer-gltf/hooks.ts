@@ -23,7 +23,9 @@ export function usePainter(): Painter {
   const refPainter = React.useRef<Painter | null>(null);
   if (!refPainter.current) {
     refPainter.current = new Painter();
-    refPainter.current.eventError.addListener((message) => notif.error({ message }));
+    refPainter.current.eventError.addListener((message) =>
+      notif.error({ message, key: '3d-mesh-error' })
+    );
   }
 
   return refPainter.current;

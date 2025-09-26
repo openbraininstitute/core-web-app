@@ -15,6 +15,10 @@ import {
 } from '@/entity-configuration/domain/helpers';
 import { ROOT_ROUTE } from '@/config';
 import { EntityTypeValue } from '@/entity-configuration/domain';
+import {
+  PanelQueryParam,
+  WorkflowSimulatePanels,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
@@ -141,7 +145,13 @@ export default function ActionMenu({
         <Action
           icon={
             <NextLink
-              href={`${ROOT_ROUTE}/${ctx.virtualLabId}/${ctx.projectId}/workflows/simulate/configure/${entityType.type.replaceAll('_', '-')}/${entity.id}`}
+              href={{
+                pathname: `${ROOT_ROUTE}/${ctx.virtualLabId}/${ctx.projectId}/workflows/simulate/configure/${entityType.type.replaceAll('_', '-')}/${entity.id}`,
+                query: {
+                  sessionId: crypto.randomUUID(),
+                  [PanelQueryParam]: WorkflowSimulatePanels.Configuration,
+                },
+              }}
             >
               <ExperimentOutlined />
             </NextLink>
