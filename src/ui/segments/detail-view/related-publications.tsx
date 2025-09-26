@@ -19,6 +19,7 @@ import type {
 } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
 import type { WorkspaceContext } from '@/types/common';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { DEFAULT_PAGE_SIZE } from '@/constants';
 
 export default function RelatedPublications({
   entity,
@@ -65,7 +66,7 @@ function PerTypePublications({
   }>({
     loading: false,
     page: 1,
-    pageSize: 20,
+    pageSize: DEFAULT_PAGE_SIZE,
     error: null,
   });
 
