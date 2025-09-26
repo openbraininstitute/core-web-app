@@ -33,7 +33,7 @@ export default function AboutNavigation() {
   const searchParams = useSearchParams();
   const searchParamsObj = Object.fromEntries(searchParams.entries());
 
-  const activeSubsection = searchParams.get('subsection');
+  const activeSubsection = searchParams.get('subsection') ?? 'about'; // Default to 'about'
 
   return (
     <div className="col-span-1 flex max-h-[82vh] w-full flex-col gap-y-4 overflow-y-scroll">
