@@ -24,7 +24,7 @@ export default async function AboutContent({
 }) {
   const content = (await getAboutContent()) as AboutContentProps;
 
-  const aboutParam = getSearchParam(searchParams, 'subsection');
+  const aboutParam = getSearchParam(searchParams, 'subsection') ?? 'about'; // Default to 'about'
 
   const contentFiltered = (): PortableTextBlock[] => {
     if (aboutParam === 'about') {
@@ -36,7 +36,7 @@ export default async function AboutContent({
     if (aboutParam === 'about-the-app') {
       return content.aboutTheAppContent;
     }
-    return [];
+    return content.aboutContent; // Fallback to about content
   };
 
   return (
