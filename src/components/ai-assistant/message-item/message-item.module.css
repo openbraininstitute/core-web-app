@@ -115,6 +115,7 @@
 .markdown a {
   color: var(--color-secondary-5);
   text-decoration: underline;
+  word-break: break-all;
 }
 
 button.debugButton {
