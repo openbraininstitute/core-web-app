@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import IonChannelModelOverview from './ion-channel-model';
 import {
   CommonSummaryViewFields,
   getViewDefinitionByExtendedType,
@@ -28,6 +29,7 @@ import type {
 } from '@/api/entitycore/types';
 
 import SmallMicrocircuitSimulation from '@/features/small-microcircuit';
+import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 
 export default async function Overview({
   entity,
@@ -119,7 +121,6 @@ export default async function Overview({
             projectId={ctx.projectId}
           />
         )}
-
       {extendedType === ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation &&
         singleNeuronSynaptomeSimulationPayload && (
           <SynaptomeDetails
@@ -129,15 +130,15 @@ export default async function Overview({
             projectId={ctx.virtualLabId}
           />
         )}
-
       {circuitTypes.includes(extendedType) && <CircuitViz circuit={entity as ICircuit} />}
-
       {extendedType === ExtendedEntitiesTypeDict.CellMorphology && (
         <MorphoViewerLoaderMemo resource={entity as ICellMorphology} />
       )}
-
       {extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording && (
         <EphysViewer resource={entity as IElectricalCellRecording} ctx={ctx} />
+      )}
+      {extendedType === ExtendedEntitiesTypeDict.IonChannelModel && (
+        <IonChannelModelOverview icm={entity as IonChannelModel} ctx={ctx} />
       )}
     </>
   );

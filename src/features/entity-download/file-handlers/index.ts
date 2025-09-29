@@ -3,6 +3,7 @@ import { getEmodelFiles } from './emodel';
 import { getExperimentalBoutonDensityFiles } from './experimental-bouton-density';
 import { getExperimentalNeuronDensityFiles } from './experimental-neuron-density';
 import { getExperimentalSynapsesPerConnectionFiles } from './experimental-synapses-per-connection';
+import { getIonChannelModelFiles } from './ion-channel-model';
 import { getMEmodelFiles } from './memodel';
 import { getCellMorphologyFiles } from './cell-morphology';
 import { getSingleNeuronSynaptomeFiles } from './single-neuron-synaptome';
@@ -31,4 +32,5 @@ export const getEntityFilesHandlerMap: Partial<Record<TEntityTypeDict, GetEntity
   [EntityTypeDict.SingleNeuronSynaptome]: getSingleNeuronSynaptomeFiles,
   [EntityTypeDict.SingleNeuronSimulation]: getSingleNeuronSimulationFiles,
   [EntityTypeDict.SingleNeuronSynaptomeSimulation]: getSingleNeuronSynaptomeSimulationFiles,
+  [EntityTypeDict.IonChannelModel]: getIonChannelModelFiles,
 };
