@@ -81,6 +81,7 @@ export enum EntityCoreFields {
   IsLjpCorrected = 'is_ljp_corrected',
   IsStochastic = 'is_stochastic',
   IsTemperatureDependent = 'is_temperature_dependent',
+  TemperatureCelsius = 'temperature_celsius',
 }
 
 export type EntityCoreFieldsValue = `${EntityCoreFields}`;
