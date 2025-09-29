@@ -1,19 +1,21 @@
-.githubFlavorMarkdown table {
-  border-collapse: collapse;
-}
+.githubFlavorMarkdown {
+  table {
+    border-collapse: collapse;
 
-.githubFlavorMarkdown table td {
-  border: 1px solid #0007;
-  padding: 0 0.5em;
-}
+    td {
+      border: 1px solid #0007;
+      padding: 0 0.5em;
+    }
 
-.githubFlavorMarkdown table th {
-  color: #fff;
-  background-color: #003a8c;
-  padding: 0 0.5em;
-  border: 1px solid #fff7;
-}
+    th {
+      color: #fff;
+      background-color: #003a8c;
+      padding: 0 0.5em;
+      border: 1px solid #fff7;
+    }
+  }
 
-.githubFlavorMarkdown :global(span.katex-html) {
-  display: none;
+  :global(span.katex-html) {
+    display: none;
+  }
 }
