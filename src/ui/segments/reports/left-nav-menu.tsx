@@ -3,7 +3,7 @@
 import { RightOutlined } from '@ant-design/icons';
 import filter from 'lodash/filter';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { ComponentProps } from 'react';
 
 import { ROOT_ROUTE } from '@/config';
@@ -44,7 +44,12 @@ export function LeftMenu({ className }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const { isProjectAdmin } = useUserRole({ virtualLabId, projectId });
   const pathname = usePathname();
-  const activeSection = getActiveSection(pathname);
+  const searchParams = useSearchParams();
+
+  // Check for section in query params first, then fallback to pathname detection
+  const sectionFromQuery = searchParams.get('section');
+  const sectionFromPath = getActiveSection(pathname);
+  const activeSection = sectionFromQuery ?? sectionFromPath ?? 'showcases';
 
   const hashedLinks = filter(
     links.map((link) => ({
@@ -65,7 +70,10 @@ export function LeftMenu({ className }: Props) {
             asChild
             key={key}
             variant="outline"
-            className="h-auto w-full justify-start font-bold shadow-sm"
+            className={cn(
+              'h-auto w-full justify-start font-bold shadow-sm',
+              activeSection === baseUrl && 'bg-primary-9 text-white'
+            )}
             size={breakpoint === 'xl' ? 'lg' : 'md'}
             aria-label={activeSection === baseUrl ? 'active' : ''}
             active={activeSection === baseUrl}

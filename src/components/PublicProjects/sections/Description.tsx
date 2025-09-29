@@ -1,8 +1,10 @@
 import { PortableText } from 'next-sanity';
-import { PresentationVideoProps, ShowCaseProjectQueryType } from '../type';
+import { PresentationVideoProps } from '../type';
 
 import PTGlossary, { PTGlossaryListProps } from '../Glossary';
 import VideoBlock from '../VideoBlock';
+
+import { OBIShowcaseType } from '@/types/virtual-lab/obi-showcases';
 
 import styles from '../style/portableText.module.css';
 
@@ -12,7 +14,7 @@ const components = {
   },
 };
 
-export default function DescriptionSection({ content }: { content: ShowCaseProjectQueryType }) {
+export default function DescriptionSection({ content }: { content: OBIShowcaseType }) {
   return (
     <div className="relative flex w-full flex-row flex-nowrap gap-x-12">
       <div className={styles.coreContent}>
