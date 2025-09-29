@@ -23,7 +23,7 @@ import {
 } from '@/entity-configuration/definitions/fields-defs/enums';
 import { hasAssets } from '@/api/entitycore/guards';
 
-import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
+import { type FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -33,6 +33,19 @@ import {
   countDeepSubCircuits,
   ICircuitEnriched,
 } from '@/features/entities/circuit/elements/helpers';
+import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+
+function iCMBooleanField(title: string, field: keyof IonChannelModel) {
+  return {
+    className: 'text-left',
+    isFilterable: true,
+    title,
+    filter: CoreFieldFilterTypeEnum.Boolean,
+    defaultConstraint: field,
+    isDisplayable: true,
+    render: (r: EntityCoreObjectTypes) => ((r as IonChannelModel)[field] ? 'True' : 'False'),
+  };
+}
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.EModelExemplarMorphology]: {
@@ -315,4 +328,10 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Registration Date',
     },
   },
+  [EntityCoreFields.IsLjpCorrected]: iCMBooleanField('LJP corrected', 'is_ljp_corrected'),
+  [EntityCoreFields.IsStochastic]: iCMBooleanField('Stochastic', 'is_stochastic'),
+  [EntityCoreFields.IsTemperatureDependent]: iCMBooleanField(
+    'Temperature dependent',
+    'is_temperature_dependent'
+  ),
 };

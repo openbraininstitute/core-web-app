@@ -64,6 +64,13 @@ export function columnKeyToFilter(
         value: null,
         constraint: constraint ?? fieldConfig.defaultConstraint,
       };
+    case CoreFieldFilterTypeEnum.Boolean:
+      return {
+        field: key,
+        type: CoreFieldFilterTypeEnum.Boolean,
+        value: null,
+        constraint: constraint ?? fieldConfig.defaultConstraint,
+      };
     default:
       return {
         field: key,

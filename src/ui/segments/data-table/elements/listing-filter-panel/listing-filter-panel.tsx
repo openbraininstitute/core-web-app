@@ -14,7 +14,7 @@ import { CloseOutlined, LoadingOutlined } from '@ant-design/icons';
 import { unwrap, useResetAtom } from 'jotai/utils';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useAtom, useSetAtom } from 'jotai';
-import { Input } from 'antd';
+import { Input, Select } from 'antd';
 
 import isNil from 'lodash/isNil';
 import map from 'lodash/map';
@@ -168,6 +168,21 @@ function createFilterItemComponent(
           </div>
         );
 
+      case CoreFieldFilterTypeEnum.Boolean:
+        return (
+          <Select
+            defaultValue="—"
+            value={filterValues[filter.field]}
+            style={{ width: 120 }}
+            onChange={(v) => updateFilterValues(filter.field, v)}
+            options={[
+              { value: null, label: '—' },
+              { value: true, label: 'True' },
+              { value: false, label: 'False' },
+            ]}
+          />
+        );
+
       default:
         return null;
     }
@@ -193,6 +208,7 @@ export function ListingFilterPanel({
       key: dataKey,
     })
   );
+
   const setSearchString = useSetAtom(coreSearchStringAtom(dataKey));
   useHotkeys('Escape', toggleDisplay);
 

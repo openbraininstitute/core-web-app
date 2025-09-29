@@ -13,6 +13,7 @@ import type { IExperimentalBoutonDensity } from '@/api/entitycore/types/entities
 import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
+import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 
 export * from '@/api/entitycore/types/entity-type';
 
@@ -53,4 +54,5 @@ export type EntityCoreObjectTypes =
   | IEModel
   | ISingleNeuronSimulation
   | ICircuit
-  | ICircuitSimulationCampaign;
+  | ICircuitSimulationCampaign
+  | IonChannelModel;

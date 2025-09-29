@@ -15,6 +15,7 @@ export const ModelEntitySlug = {
   Microcircuit: 'microcircuit',
   PairedNeuronsCircuit: 'paired-neurons',
   Circuit: 'circuit',
+  IonChannelModel: 'ion-channel-model',
 } as const;
 
 const SimulationEntitySlug = {

@@ -18,6 +18,8 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { getEntitiesCount } from '@/api/entitycore/queries/general/entity';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
+import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
+
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
 import { WorkspaceScope } from '@/constants';
 import { env } from '@/env';
@@ -38,6 +40,7 @@ export const ModelEntitiesTileTypes = {
   Emodel,
   MEmodel,
   Circuit,
+  IonChannelModel,
 } as const;
 
 export const SimulationEntitiesTileTypes = {

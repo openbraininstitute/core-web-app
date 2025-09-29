@@ -12,7 +12,7 @@ import {
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 export type CoreFilterValues = {
-  [field: string]: string | number | string[] | GteLteValue | null;
+  [field: string]: string | number | string[] | GteLteValue | null | boolean;
 };
 export interface GteLteValue {
   gte: Date | number | null;
@@ -65,6 +65,11 @@ interface DropdownListFilter extends Omit<BaseFilter, 'type' | 'value'> {
   value: string | Array<string> | null;
 }
 
+interface BooleanFilter extends Omit<BaseFilter, 'type' | 'value'> {
+  type: CoreFieldFilterTypeEnum.Boolean;
+  value: boolean | null;
+}
+
 export type CoreFilter =
   | CheckListFilter
   | SearchFilter
@@ -74,7 +79,8 @@ export type CoreFilter =
   | ValueOrRangeFilter
   | BaseFilter
   | WithinListFilter
-  | DropdownListFilter;
+  | DropdownListFilter
+  | BooleanFilter;
 
 type CoreFilterType = CoreFieldFilterTypeEnum | null;
 

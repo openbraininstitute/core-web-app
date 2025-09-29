@@ -262,6 +262,7 @@ export default function ListingFilterPanel({
   };
 
   const Entity = getViewDefinitionByExtendedType(dataType);
+
   const filterItems = useMemo(
     () =>
       filters

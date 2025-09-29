@@ -8,7 +8,7 @@ import type { CoreFilter } from '@/entity-configuration/definitions/types';
 
 type TransformFiltersToQueryReturnValue = Record<
   string,
-  string | Array<string> | number | Array<number> | Date | null
+  string | Array<string> | number | Array<number> | Date | null | boolean
 >;
 
 /**
