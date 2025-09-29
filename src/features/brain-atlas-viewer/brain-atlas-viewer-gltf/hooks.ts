@@ -24,7 +24,7 @@ export function usePainter(): Painter {
   if (!refPainter.current) {
     refPainter.current = new Painter();
     refPainter.current.eventError.addListener((message) =>
-      notif.error({ message, key: '3d-mesh-error' })
+      notif.warning({ message, key: '3d-mesh-error' })
     );
   }
 
