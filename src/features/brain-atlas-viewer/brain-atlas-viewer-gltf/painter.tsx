@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   TgdCamera,
   tgdCanvasCreateFill,
@@ -25,7 +26,7 @@ let globalId = 1;
 export class Painter {
   public readonly ID: number;
 
-  public readonly eventError = new GenericEvent<string>();
+  public readonly eventError = new GenericEvent<React.ReactNode>();
 
   public readonly eventCameraChange = new GenericEvent<TgdCamera>();
 
@@ -116,7 +117,12 @@ export class Painter {
         await this.addMesh(data, region);
       } catch (ex) {
         logError(`Unable to load mesh for region "${region.name}":`, ex);
-        this.eventError.dispatch(`Unable to load mesh for region "${region.name}"!`);
+        this.eventError.dispatch(
+          <>
+            <strong>{region.name}</strong>
+            <p>An error occurred while attempting to visualize the brain region mesh.</p>
+          </>
+        );
       }
     }
     this.isAddingRegions = false;
