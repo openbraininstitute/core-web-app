@@ -36,6 +36,8 @@ export const env = createEnv({
       (sentryDsn) => sentryDsn || undefined,
       z.string().url().optional()
     ),
+    NEXT_PUBLIC_SENTRY_ORG: z.string().optional(),
+    NEXT_PUBLIC_SENTRY_PRJ: z.string().optional(),
 
     NEXT_PUBLIC_ACCOUNTING_BASE_URL: z.string().url().optional(),
 
@@ -71,6 +73,8 @@ export const env = createEnv({
     NEXT_PUBLIC_ACCOUNTING_BASE_URL: process.env.NEXT_PUBLIC_ACCOUNTING_BASE_URL,
 
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    NEXT_PUBLIC_SENTRY_ORG: process.env.NEXT_PUBLIC_SENTRY_ORG,
+    NEXT_PUBLIC_SENTRY_PRJ: process.env.NEXT_PUBLIC_SENTRY_PRJ,
 
     NEXT_PUBLIC_SMALL_SCALE_SIMULATOR_URL: process.env.NEXT_PUBLIC_SMALL_SCALE_SIMULATOR_URL,
     NEXT_PUBLIC_CELL_SVC_BASE_URL: process.env.NEXT_PUBLIC_CELL_SVC_BASE_URL,
