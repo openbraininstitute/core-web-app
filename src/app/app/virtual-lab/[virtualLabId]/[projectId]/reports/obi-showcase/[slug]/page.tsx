@@ -27,7 +27,6 @@ export default async function OBIShowcasePage({
     notFound();
   }
 
-  // Validate with Zod
   const validationResult = SanityShowcaseSchema.safeParse(rawData);
 
   let project;
