@@ -9,7 +9,8 @@ export default function GuidesSection() {
   const [isSection2Open, setIsSection2Open] = useState(false); // Upload data
   const [isSection3Open, setIsSection3Open] = useState(false); // Browse data
   const [isSection4Open, setIsSection4Open] = useState(false); // Build a single neuron
-
+  const [isSection5Open, setIsSection5Open] = useState(false); 
+  
   // Helper function to create a click handler for any given setter
   const createToggleHandler = (setter: React.Dispatch<React.SetStateAction<boolean>>) => () => {
     setter((prev) => !prev);
@@ -32,12 +33,13 @@ export default function GuidesSection() {
   const handleToggle2 = createToggleHandler(setIsSection2Open);
   const handleToggle3 = createToggleHandler(setIsSection3Open);
   const handleToggle4 = createToggleHandler(setIsSection4Open);
+  const handleToggle5 = createToggleHandler(setIsSection5Open);
 
   const handleKeyDown1 = createKeyDownHandler(setIsSection1Open);
   const handleKeyDown2 = createKeyDownHandler(setIsSection2Open);
   const handleKeyDown3 = createKeyDownHandler(setIsSection3Open);
   const handleKeyDown4 = createKeyDownHandler(setIsSection4Open);
-
+  const handleKeyDown5 = createKeyDownHandler(setIsSection5Open);
 
   return (
     <div className="p-4 space-y-4 max-w-2xl mx-auto">
@@ -130,6 +132,28 @@ export default function GuidesSection() {
           </p>
         )}
       </div>
+
+      {/* Section 5: How to build a synaptome. */}
+      <div className="pb-2">
+        <button
+          type="button"
+          className="text-left w-full font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
+          style={buttonStyle}
+          onClick={handleToggle5}
+          onKeyDown={handleKeyDown5}
+          aria-expanded={isSection5Open}
+          aria-controls="content-5"
+        >
+          {getButtonText(isSection5Open)} How to build a synaptome.
+        </button>
+        {isSection5Open && (
+          <p id="content-5" className="ml-5 mt-2 p-3 bg-blue-50 text-gray-700 rounded-lg transition-all duration-300">
+            In the workflows section click on the build button and choose synaptome build. You will then be prompted to select an me-model and synapse sets.
+          </p>
+        )}
+      </div>
+      
+      
     </div>
   );
 }
