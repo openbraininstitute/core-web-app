@@ -47,7 +47,6 @@ export function FilterControls({
   const selectedFiltersCount = filters
     ? filters.filter((filter) => filterHasValue(filter)).length
     : 0;
-
   const onFilterClick = () => setDisplayControlPanel(!displayControlPanel);
 
   return (
