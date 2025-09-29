@@ -1,7 +1,9 @@
+import React from 'react';
 import isString from 'lodash/isString';
-
+import Link from 'next/link';
 import type { ColumnsType } from 'antd/es/table';
 
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import DefaultEModelTable from '@/components/build-section/cell-model-assignment/e-model/EModelView/DefaultEModelTable';
 import ErrorMessageLine, {
   StandardFallback,
@@ -11,7 +13,11 @@ import Header from '@/components/build-section/cell-model-assignment/e-model/EMo
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { getFieldsDefinition } from '@/entity-configuration/definitions';
 
-import type { ICellMorphology, ICellMorphologyExpanded } from '@/api/entitycore/types';
+import type {
+  EntityCoreObjectTypes,
+  ICellMorphology,
+  ICellMorphologyExpanded,
+} from '@/api/entitycore/types';
 
 const defaultColumnsFields = getFieldsDefinition([
   EntityCoreFields.Preview,
@@ -22,23 +28,35 @@ const defaultColumnsFields = getFieldsDefinition([
   EntityCoreFields.Contributions,
 ]);
 
-const defaultColumns: ColumnsType<ICellMorphology> = Object.entries(defaultColumnsFields).map(
-  ([key, field]) => ({
+function makeColumns(virtualLabId: string, projectId: string): ColumnsType<ICellMorphology> {
+  return Object.entries(defaultColumnsFields).map(([key, field]) => ({
     title: isString(field.title) ? field.title.toUpperCase() : field.title,
     key,
-    render: field.render,
-  })
-);
+    render: (entity: EntityCoreObjectTypes) => {
+      if (key === 'preview') {
+        const href = `/app/virtual-lab/${virtualLabId}/${projectId}/data/view/cell-morphology/${
+          entity.id
+        }/overview`;
+        return <Link href={href}>{field.render?.(entity)}</Link>;
+      }
+      return field.render?.(entity);
+    },
+  }));
+}
 
 type Props = {
   exemplarMorphology: ICellMorphology | ICellMorphologyExpanded;
 };
 
 export default function ExemplarMorphology({ exemplarMorphology }: Props) {
+  const { virtualLabId, projectId } = useWorkspace();
   const exemplarMorphologyAsList = exemplarMorphology ? [exemplarMorphology] : [];
   const morphologies = exemplarMorphologyAsList;
 
-  const columns = defaultColumns;
+  const columns = React.useMemo(
+    () => makeColumns(virtualLabId, projectId),
+    [virtualLabId, projectId]
+  );
 
   let displayMorphologyError = null;
 

@@ -57,6 +57,11 @@ async function actualGetBrainRegionMeshArayBuffer(
   const atlas = await getAtlas(atlasId);
   const entity = atlas.data.find((elem) => elem.brain_region_id === regionId);
   if (!entity) {
+    console.log('🚀 [services] regionId =', regionId); // @FIXME: Remove this line written on 2025-09-29 at 14:18
+    console.log(
+      '🚀 [services] brain_region_id =',
+      atlas.data.map((elem) => elem.brain_region_id).sort()
+    ); // @FIXME: Remove this line written on 2025-09-29 at 14:18
     throw new Error(`Unable to find region "${regionId}" in current Atlas!`);
   }
 
@@ -114,6 +119,7 @@ async function actualGetAtlas(atlasId: string) {
       page_size: 2000,
     },
   });
+  console.log('🚀 [services] atlasId =', atlasId); // @FIXME: Remove this line written on 2025-09-29 at 14:23
   // eslint-disable-next-line no-console
   console.log('🚀 [services] atlas =', atlas, `${performance.now() - time} msec`); // @FIXME: Remove this line written on 2025-09-24 at 11:43
   assertType<PartialAtlas>(atlas, {
