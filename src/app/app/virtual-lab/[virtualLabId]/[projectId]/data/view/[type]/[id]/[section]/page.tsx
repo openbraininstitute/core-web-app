@@ -9,6 +9,7 @@ import {
 } from '@/entity-configuration/domain/helpers';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+
 import Overview from '@/ui/segments/detail-view/overview';
 import Analysis from '@/ui/segments/detail-view/analysis';
 import RelatedArtifacts from '@/ui/segments/detail-view/related-artifacts';
