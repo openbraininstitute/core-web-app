@@ -9,12 +9,12 @@ export default function GuidesSection() {
   const [isSection2Open, setIsSection2Open] = useState(false); // Upload data
   const [isSection3Open, setIsSection3Open] = useState(false); // Browse data
   const [isSection4Open, setIsSection4Open] = useState(false); // Build a single neuron
-  const [isSection5Open, setIsSection5Open] = useState(false); 
-  const [isSection6Open, setIsSection6Open] = useState(false); 
-  const [isSection7Open, setIsSection7Open] = useState(false); 
-  const [isSection8Open, setIsSection8Open] = useState(false); 
-  const [isSection9Open, setIsSection9Open] = useState(false); 
-  
+  const [isSection5Open, setIsSection5Open] = useState(false); // Build a synaptome
+  const [isSection6Open, setIsSection6Open] = useState(false); // Simulate single neuron
+  const [isSection7Open, setIsSection7Open] = useState(false); // Simulate a synaptome
+  const [isSection8Open, setIsSection8Open] = useState(false); // Simulate paired neurons
+  const [isSection9Open, setIsSection9Open] = useState(false); // Simulate microcircuit
+
   // Helper function to create a click handler for any given setter
   const createToggleHandler = (setter: React.Dispatch<React.SetStateAction<boolean>>) => () => {
     setter((prev) => !prev);
@@ -126,7 +126,7 @@ export default function GuidesSection() {
       </div>
 
       {/* Section 4: How to build a single neuron. */}
-      <div className="pb-2">
+      <div className="border-b border-gray-200 pb-2">
         <button
           type="button"
           className="text-left w-full font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
@@ -146,7 +146,7 @@ export default function GuidesSection() {
       </div>
 
       {/* Section 5: How to build a synaptome. */}
-      <div className="pb-2">
+      <div className="border-b border-gray-200 pb-2">
         <button
           type="button"
           className="text-left w-full font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
@@ -166,7 +166,7 @@ export default function GuidesSection() {
       </div>
       
       {/* Section 6: How to simulate a single neuron. */}
-      <div className="pb-2">
+      <div className="border-b border-gray-200 pb-2">
         <button
           type="button"
           className="text-left w-full font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
@@ -185,8 +185,8 @@ export default function GuidesSection() {
         )}
       </div>
       
-      {/* Section 7: How to simulate a synaptome. */}
-      <div className="pb-2">
+      {/* Section 7: How to simulate a synaptome. (Corrected title) */}
+      <div className="border-b border-gray-200 pb-2">
         <button
           type="button"
           className="text-left w-full font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
@@ -196,17 +196,17 @@ export default function GuidesSection() {
           aria-expanded={isSection7Open}
           aria-controls="content-7"
         >
-          {getButtonText(isSection7Open)} How to build a synaptome.
+          {getButtonText(isSection7Open)} How to simulate a synaptome.
         </button>
         {isSection7Open && (
           <p id="content-7" className="ml-5 mt-2 p-3 bg-blue-50 text-gray-700 rounded-lg transition-all duration-300">
-                In the simulate section click synaptome simulation. You will then choose a built model. Setup the experiment, synaptic input, stimulation, and recording. The morphology is visible on the right. Then run the experiment.
-       </p>
+            In the simulate section click synaptome simulation. You will then choose a built model. Setup the experiment, synaptic input, stimulation, and recording. The morphology is visible on the right. Then run the experiment.
+          </p>
         )}
       </div>
       
-      {/* Section 8: How to simulate paired neurons. */}
-      <div className="pb-2">
+      {/* Section 8: How to simulate paired neurons. (Corrected title) */}
+      <div className="border-b border-gray-200 pb-2">
         <button
           type="button"
           className="text-left w-full font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
@@ -216,11 +216,11 @@ export default function GuidesSection() {
           aria-expanded={isSection8Open}
           aria-controls="content-8"
         >
-          {getButtonText(isSection8Open)} How to build a synaptome.
+          {getButtonText(isSection8Open)} How to simulate paired neurons.
         </button>
         {isSection8Open && (
           <p id="content-8" className="ml-5 mt-2 p-3 bg-blue-50 text-gray-700 rounded-lg transition-all duration-300">
-                In the simulate section click paired neuron simulation. You will then choose a built model. Complete the setup, stimuli, circuit, and events sections The morphologies are visible on the right. Then run the experiment.
+            In the simulate section click paired neuron simulation. You will then choose a built model. Complete the setup, stimuli, circuit, and events sections. The morphologies are visible on the right. Then run the experiment.
           </p>
         )}
       </div>
@@ -241,7 +241,7 @@ export default function GuidesSection() {
         </button>
         {isSection9Open && (
           <p id="content-9" className="ml-5 mt-2 p-3 bg-blue-50 text-gray-700 rounded-lg transition-all duration-300">
-                In the simulate section click small microcircuit simulation. You will then choose a built model. Complete the setup, stimuli, circuit, and events sections The morphologies are visible on the right. Then generate the simulation.
+            In the simulate section click small microcircuit simulation. You will then choose a built model. Complete the setup, stimuli, circuit, and events sections. The morphologies are visible on the right. Then generate the simulation.
           </p>
         )}
       </div>
