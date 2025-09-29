@@ -1,13 +1,16 @@
-import React from 'react';
-import Plotly from 'plotly.js-dist-min';
 import { FullscreenOutlined } from '@ant-design/icons';
 import { tgdFullscreenToggle } from '@bbp/morphoviewer';
+import Plotly from 'plotly.js-dist-min';
+import React from 'react';
 
-import { PlotInstance } from '../plots-parser';
-import { PLOT_CONFIG, PLOT_LAYOUT } from '../layout-config';
+import {
+  PLOT_CONFIG,
+  PLOT_LAYOUT,
+} from '@/features/entities/neuron-simulation/experiment/visualization/layout-config';
+import { PlotInstance } from '@/features/entities/neuron-simulation/experiment/visualization/plots-parser';
 import { classNames } from '@/util/utils';
 
-import styles from './multi-plots-view.module.css';
+import styles from '@/features/entities/neuron-simulation/experiment/visualization/multi-plots-view/multi-plots-view.module.css';
 
 export interface MultiPlotsViewProps {
   className?: string;
