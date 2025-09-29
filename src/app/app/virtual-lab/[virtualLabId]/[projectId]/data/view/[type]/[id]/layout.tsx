@@ -70,6 +70,18 @@ export default async function Layout({
 
   const parentLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}`;
 
+  const breadcrumbs = (
+    <div className="flex flex-wrap gap-3">
+      <Breadcrumb>
+        <NextLink href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data`}>Explore</NextLink>
+      </Breadcrumb>
+      <Breadcrumb>
+        <NextLink href={parentLink}>{entityType.title}</NextLink>
+      </Breadcrumb>
+      <Breadcrumb showChevron={false}>{entity.name}</Breadcrumb>
+    </div>
+  );
+
   if (
     type === ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation ||
     type === ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation
@@ -77,20 +89,7 @@ export default async function Layout({
     return (
       <div className="relative ml-5 flex h-full flex-col rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
         <Close href={parentLink} />
-        <div className="mb-5 flex flex-wrap gap-3 pl-5">
-          <Breadcrumb>
-            <NextLink href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data`}>Explore</NextLink>
-          </Breadcrumb>
-          <Breadcrumb>
-            <NextLink
-              href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}`}
-            >
-              {entityType.title}
-            </NextLink>
-          </Breadcrumb>
-          <Breadcrumb showChevron={false}>{entity.name}</Breadcrumb>
-        </div>
-
+        {breadcrumbs}
         {children}
       </div>
     );
@@ -101,15 +100,7 @@ export default async function Layout({
       <div className="relative ml-5 flex h-full rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
         <Close href={parentLink} />
         <div className="w-1/5">
-          <div className="flex flex-wrap gap-3">
-            <Breadcrumb>
-              <NextLink href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data`}>Explore</NextLink>
-            </Breadcrumb>
-            <Breadcrumb>
-              <NextLink href={parentLink}>{entityType.title}</NextLink>
-            </Breadcrumb>
-            <Breadcrumb showChevron={false}>{entity.name}</Breadcrumb>
-          </div>
+          {breadcrumbs}
           <div className="mt-5 flex flex-col gap-5">
             <DetailMenu sections={entityType.detailViewSections} />
           </div>
