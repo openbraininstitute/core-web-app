@@ -1,6 +1,7 @@
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { WorkspaceContext } from '@/types/common';
 
 export default async function IonChannelModelOverview({
@@ -10,7 +11,7 @@ export default async function IonChannelModelOverview({
   icm: IonChannelModel;
   ctx: WorkspaceContext;
 }) {
-  const asset = icm.assets.filter((a) => a.label === 'neuron_mechanisms')[0];
+  const asset = icm.assets.filter((a) => a.label === AssetLabel.neuron_mechanisms)[0];
   if (!asset) return null;
   const file: ArrayBuffer = await downloadAsset({
     ctx,
