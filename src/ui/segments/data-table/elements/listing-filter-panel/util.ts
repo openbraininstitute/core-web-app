@@ -19,7 +19,7 @@ export function filterHasValue(filter: CoreFilter) {
     case CoreFieldFilterTypeEnum.DateRange:
       return !isEmpty(filter.value.gte) || !isEmpty(filter.value.lte);
     case CoreFieldFilterTypeEnum.ValueRange:
-      return !isEmpty(filter.value.gte) || !isEmpty(filter.value.lte);
+      return isNumber(filter.value.gte) || isNumber(filter.value.lte);
     case CoreFieldFilterTypeEnum.WithinList:
       return false; // TODO: this is need to be discussed/fixed
     case CoreFieldFilterTypeEnum.ValueOrRange:

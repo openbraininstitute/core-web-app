@@ -47,7 +47,11 @@ export function FilterControls({
   const selectedFiltersCount = filters
     ? filters.filter((filter) => filterHasValue(filter)).length
     : 0;
-
+  console.log(
+    '🚀 [filter-controls] filters, selectedFiltersCount =',
+    filters,
+    selectedFiltersCount
+  ); // @FIXME: Remove this line written on 2025-09-29 at 11:55
   const onFilterClick = () => setDisplayControlPanel(!displayControlPanel);
 
   return (
