@@ -334,4 +334,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     'Temperature dependent',
     'is_temperature_dependent'
   ),
+  [EntityCoreFields.TemperatureCelsius]: {
+    className: 'text-left',
+    title: 'Temperature (°C)',
+    filter: null,
+    isDisplayable: true,
+    render: (r) => {
+      if ('temperature_celsius' in r && !isNil(r.temperature_celsius)) return r.temperature_celsius;
+      return EmptyValue;
+    },
+  },
 };
