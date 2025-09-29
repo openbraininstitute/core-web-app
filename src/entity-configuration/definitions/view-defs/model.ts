@@ -221,6 +221,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.IsLjpCorrected,
       EntityCoreFields.IsStochastic,
       EntityCoreFields.IsTemperatureDependent,
+      EntityCoreFields.TemperatureCelsius,
     ],
   },
 };

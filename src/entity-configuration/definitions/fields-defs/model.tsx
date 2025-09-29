@@ -337,8 +337,13 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.TemperatureCelsius]: {
     className: 'text-left',
     title: 'Temperature (°C)',
-    filter: null,
+    isFilterable: true,
+    filter: CoreFieldFilterTypeEnum.ValueRange,
     isDisplayable: true,
+    defaultConstraint: {
+      lte: 'temperature_celsius__lte',
+      gte: 'temperature_celsius__gte',
+    },
     render: (r) => {
       if ('temperature_celsius' in r && !isNil(r.temperature_celsius)) return r.temperature_celsius;
       return EmptyValue;
