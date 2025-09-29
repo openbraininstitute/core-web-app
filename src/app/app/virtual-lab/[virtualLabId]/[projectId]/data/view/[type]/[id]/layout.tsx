@@ -82,7 +82,11 @@ export default async function Layout({
             <NextLink href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data`}>Explore</NextLink>
           </Breadcrumb>
           <Breadcrumb>
-            <NextLink href={parentLink}>{entityType.title}</NextLink>
+            <NextLink
+              href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}`}
+            >
+              {entityType.title}
+            </NextLink>
           </Breadcrumb>
           <Breadcrumb showChevron={false}>{entity.name}</Breadcrumb>
         </div>
