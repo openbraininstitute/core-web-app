@@ -1,15 +1,15 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtomValue } from 'jotai';
 import dynamic from 'next/dynamic';
 import get from 'lodash/get';
 
+import { PlotData } from '../types';
+import { useRecordingPlotData } from './hooks';
+
 import { SIMULATION_COLORS } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import {
-  genericSingleNeuronSimulationPlotDataAtomFamily,
-  simulationStatusAtom,
-} from '@/state/simulate/single-neuron';
+import { simulationStatusAtom } from '@/state/simulate/single-neuron';
 
 const PlotRenderer = dynamic(
   () => import('@/features/entities/neuron-simulation/experiment/visualization/plot-renderer'),
@@ -19,7 +19,8 @@ const PlotRenderer = dynamic(
 );
 
 export function Results({ sessionId }: { sessionId: string }) {
-  const [recordingPlotData] = useAtom(genericSingleNeuronSimulationPlotDataAtomFamily(sessionId));
+  const recordingPlotData = useRecordingPlotData(sessionId);
+  // const [recordingPlotData] = useAtom(genericSingleNeuronSimulationPlotDataAtomFamily(sessionId));
   const simulationStatus = useAtomValue(simulationStatusAtom);
   const record = useSearchParams().get('record') ?? 'all';
 
@@ -34,7 +35,7 @@ export function Results({ sessionId }: { sessionId: string }) {
 
   const isLoading =
     simulationStatus?.status === 'launched' &&
-    Object.values(recordingPlotData).every((o) => o.every((p) => p.y.length === 0));
+    Object.values(recordingPlotData).every((o: PlotData) => o.every((p) => p.y.length === 0));
 
   let content = null;
   if (record === 'all') {

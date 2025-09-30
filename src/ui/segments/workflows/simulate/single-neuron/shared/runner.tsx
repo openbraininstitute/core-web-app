@@ -348,7 +348,6 @@ export const launchSimulationAtom = atom<
     }
 
     function appendStreamData(streamData: SimulationStreamData) {
-      log('debug', '📡 appendStreamData called with:', streamData);
       const newPlot: PlotDataEntry = {
         x: streamData.x,
         y: streamData.y,
@@ -363,8 +362,6 @@ export const launchSimulationAtom = atom<
       };
 
       const currentPlotData = get(plotDataAtom);
-      log('debug', '📡 Current plot data before update:', currentPlotData);
-
       const currentRecording = currentPlotData![streamData.recording];
 
       if (currentRecording) {
@@ -392,7 +389,6 @@ export const launchSimulationAtom = atom<
           updatedPlot[recordingLocation] = sortBy(updatedPlot[recordingLocation], ['varyingKey']);
         });
 
-        log('debug', '📡 Setting updated plot data:', updatedPlot);
         set(plotDataAtom, updatedPlot);
       }
     }
