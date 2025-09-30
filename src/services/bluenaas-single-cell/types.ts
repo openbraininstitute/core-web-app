@@ -56,6 +56,8 @@ export type PlotDataEntry = {
   varyingOrder?: number;
   visible?: boolean;
   line?: { color: string };
+  variable_name?: string;
+  unit?: string;
 };
 
 export type PlotData = PlotDataEntry[];

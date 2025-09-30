@@ -301,7 +301,7 @@ export const launchSimulationAtom = atom<
       onChangePanel();
       await readNdjsonResponse<Message<SimulationStreamData>>(response, (message) => {
         match(message)
-          .with({ message_type: MessageType.DATA }, (msg) => appendStreamData(msg.data))
+          .with({ message_type: MessageType.DATA }, ({ data }) => appendStreamData(data))
           .with({ message_type: MessageType.STATUS, status: JobStatus.ERROR }, (msg) => {
             throw new Error(msg.extra ?? messages.SteamingSimulationResultDefaultError, {
               cause: 'SmallScaleSimulatorError',
@@ -358,6 +358,8 @@ export const launchSimulationAtom = atom<
         amplitude: streamData.amplitude,
         frequency: streamData.frequency,
         varyingKey: streamData.varying_key,
+        variable_name: streamData.variable_name,
+        unit: streamData.unit,
       };
 
       const currentPlotData = get(plotDataAtom);
@@ -369,15 +371,18 @@ export const launchSimulationAtom = atom<
         const updatedPlot = {
           ...get(plotDataAtom),
           [streamData.recording]:
-            !currentRecording.length || !currentRecording.find((o) => o.name === newPlot.name)
+            !currentRecording.length ||
+            !currentRecording.find((o) => makeKey(o) === makeKey(newPlot))
               ? [...currentRecording, newPlot]
               : updateArray({
                   array: currentRecording,
-                  keyfn: (item) => item.name === newPlot.name,
+                  keyfn: (item) => makeKey(item) === makeKey(newPlot),
                   newVal: (value) => ({
                     ...value,
                     x: [...value.x, ...newPlot.x],
                     y: [...value.y, ...newPlot.y],
+                    variable_name: newPlot.variable_name ?? value.variable_name,
+                    unit: newPlot.unit ?? value.unit,
                   }),
                 }),
         };
@@ -393,3 +398,7 @@ export const launchSimulationAtom = atom<
     }
   }
 );
+
+function makeKey(entry: PlotDataEntry): string {
+  return `${entry.name}\t${entry.variable_name}\t${entry.unit}`;
+}
