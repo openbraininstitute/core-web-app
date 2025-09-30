@@ -13,7 +13,7 @@ const options = {
   },
 
   next: {
-    revalidate: 3600 * 24,
+    revalidate: 3600,
   },
 };
 
