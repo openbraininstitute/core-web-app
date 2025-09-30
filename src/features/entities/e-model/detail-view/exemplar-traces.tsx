@@ -1,6 +1,7 @@
+import Link from 'next/link';
 import { useAtom, useAtomValue } from 'jotai';
 import { Pagination } from 'antd';
-import { Suspense } from 'react';
+import React, { Suspense } from 'react';
 import isString from 'lodash/isString';
 
 import type { ColumnsType } from 'antd/es/table';
@@ -16,8 +17,13 @@ import { experimentalTracesAtomFamily } from '@/state/e-model';
 import { resolveDataKey } from '@/utils/key-builder';
 import { useUnwrappedValue } from '@/hooks/hooks';
 
-import type { IElectricalCellRecording, IEModel } from '@/api/entitycore/types';
+import type {
+  EntityCoreObjectTypes,
+  IElectricalCellRecording,
+  IEModel,
+} from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 const defaultPageSize = 5;
 const defaultColumnsFields = getFieldsDefinition([
@@ -28,13 +34,21 @@ const defaultColumnsFields = getFieldsDefinition([
   EntityCoreFields.Species,
 ]);
 
-const defaultColumns: ColumnsType<IElectricalCellRecording> = Object.entries(
-  defaultColumnsFields
-).map(([key, field]) => ({
-  title: isString(field.title) ? field.title.toUpperCase() : field.title,
-  key,
-  render: field.render,
-}));
+function makeColumns(
+  virtualLabId: string,
+  projectId: string
+): ColumnsType<IElectricalCellRecording> {
+  return Object.entries(defaultColumnsFields).map(([key, field]) => ({
+    title: isString(field.title) ? field.title.toUpperCase() : field.title,
+    key,
+    render: (entity: EntityCoreObjectTypes) => {
+      const href = `/app/virtual-lab/${virtualLabId}/${projectId}/data/view/electrical-cell-recording/${
+        entity.id
+      }/overview`;
+      return <Link href={href}>{field.render?.(entity)}</Link>;
+    },
+  }));
+}
 
 type Props = {
   source: IEModel;
@@ -57,8 +71,11 @@ function ExemplarTraces({ params, source }: Props) {
       virtualLabId: params.virtualLabId,
     })
   );
-
-  const columns: ColumnsType<IElectricalCellRecording> = [...defaultColumns];
+  const { virtualLabId, projectId } = useWorkspace();
+  const columns: ColumnsType<IElectricalCellRecording> = React.useMemo(
+    () => makeColumns(virtualLabId, projectId),
+    [virtualLabId, projectId]
+  );
 
   return (
     <>

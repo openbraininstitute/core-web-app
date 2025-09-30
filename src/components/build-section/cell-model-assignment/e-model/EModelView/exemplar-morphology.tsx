@@ -33,13 +33,10 @@ function makeColumns(virtualLabId: string, projectId: string): ColumnsType<ICell
     title: isString(field.title) ? field.title.toUpperCase() : field.title,
     key,
     render: (entity: EntityCoreObjectTypes) => {
-      if (key === 'preview') {
-        const href = `/app/virtual-lab/${virtualLabId}/${projectId}/data/view/cell-morphology/${
-          entity.id
-        }/overview`;
-        return <Link href={href}>{field.render?.(entity)}</Link>;
-      }
-      return field.render?.(entity);
+      const href = `/app/virtual-lab/${virtualLabId}/${projectId}/data/view/cell-morphology/${
+        entity.id
+      }/overview`;
+      return <Link href={href}>{field.render?.(entity)}</Link>;
     },
   }));
 }
