@@ -13,7 +13,7 @@ import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types
 import type {
   SynapseConfig,
   UpdateSynapseSimulationProperty,
-} from '@/types/simulation/single-neuron';
+} from '@/types/small-scale-simulator/single-neuron';
 
 export default function SynapticInputs({
   meModelId,

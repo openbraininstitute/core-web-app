@@ -1,26 +1,26 @@
 'use client';
 
-import { useMemo, useEffect, useState } from 'react';
 import { WarningFilled } from '@ant-design/icons';
 import { Form, InputNumber } from 'antd';
 import { useAtom } from 'jotai';
+import { useEffect, useMemo, useState } from 'react';
 
+import { Switch } from '@/components/common/Switch';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { PREFIX_FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { FrequencyInputConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import { FrequencyInputConfigSchema } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import {
   calculateRangeOutput,
   getSessionKey,
   label,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
-import { Switch } from '@/components/common/Switch';
-import { isBrowser } from '@/utils/environment';
+import { FrequencyInputConfigSchema } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { cn } from '@/utils/css-class';
+import { isBrowser } from '@/utils/environment';
 import { log } from '@/utils/logger';
 
-import type { UpdateSynapseSimulationProperty } from '@/types/simulation/single-neuron';
+import type { UpdateSynapseSimulationProperty } from '@/types/small-scale-simulator/single-neuron';
 
 const defaultStepFrequencies = { start: 5, stop: 20, step: 3 };
 

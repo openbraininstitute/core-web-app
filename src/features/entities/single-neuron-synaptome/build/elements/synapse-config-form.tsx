@@ -1,50 +1,44 @@
 'use client';
 
-import { useCallback, useEffect, useState, useTransition } from 'react';
-import { Form, Button, Space, InputNumber, App } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
-import { useRouter } from 'next/navigation';
+import { App, Button, Form, InputNumber, Space } from 'antd';
 import { useAtom, useSetAtom } from 'jotai';
-import { z } from 'zod';
 import sample from 'lodash/sample';
+import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState, useTransition } from 'react';
+import { z } from 'zod';
 
 import useBuildSingleNeuronSynaptomeSessionState from '@/features/entities/single-neuron-synaptome/build/create.state-session';
 import SynapseSet from '@/features/entities/single-neuron-synaptome/build/elements/synapse-set';
 
 import { SingleNeuronSynaptomeConfigurationSchema } from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
-import { useRefreshDataAtom } from '@/state/explore-section/list-view-atoms';
-import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
-import { activityAtomFamily } from '@/features/activity-view/context';
-import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { createJsonAsset } from '@/api/entitycore/queries/assets';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { classNames, getRandomIntInclusive } from '@/util/utils';
-import { selectedSimulationScopeAtom } from '@/state/simulate';
-import {
-  DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
-  DEFAULT_BRAIN_REGION_QUERY_ID,
-} from '@/features/brain-region-hierarchy/context';
-import { synapsesPlacementAtom } from '@/state/synaptome';
-import { SimulationType } from '@/types/virtual-lab/lab';
-import { OneshotSession } from '@/services/accounting';
-import { resolveDataKey } from '@/utils/key-builder';
-import { ServiceSubtype } from '@/types/accounting';
+import { tryCatch } from '@/api/utils';
 import {
   sendRemoveSynapses3DEvent,
   sendResetSynapses3DEvent,
 } from '@/components/neuron-viewer/hooks/events';
+import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
+import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
+import { activityAtomFamily } from '@/features/activity-view/context';
+import {
+  DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
+  DEFAULT_BRAIN_REGION_QUERY_ID,
+} from '@/features/brain-region-hierarchy/context';
 import { messages } from '@/i18n/en/synaptome';
-import { tryCatch } from '@/api/utils';
+import { useRefreshDataAtom } from '@/state/explore-section/list-view-atoms';
+import { selectedSimulationScopeAtom } from '@/state/simulate';
+import { synapsesPlacementAtom } from '@/state/synaptome';
+import { SimulationType } from '@/types/virtual-lab/lab';
+import { classNames, getRandomIntInclusive } from '@/util/utils';
+import { resolveDataKey } from '@/utils/key-builder';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
-import type {
-  TSingleNeuronSynaptomeConfiguration,
-  ISingleNeuronSynaptome,
-} from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import type { SynaptomeModelConfiguration } from '@/types/synaptome';
-import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { IMEModel } from '@/api/entitycore/types';
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import { createSingleNeuronSynaptome } from '@/api/small-scale-simulator';
 import type { WorkspaceContext } from '@/types/common';
+import type { SynaptomeModelConfiguration } from '@/types/synaptome';
 
 const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
 export const DEFAULT_SYNAPSE_VALUE: TSingleNeuronSynaptomeConfiguration = {
@@ -172,48 +166,28 @@ export default function SynaptomeConfigurationForm({
 
       const buildSingleNeuronSynaptome = async () => {
         const { data, error } = await tryCatch(
-          SingleNeuronSynaptome.api.query.create!({
-            context: { virtualLabId, projectId },
-            body: {
-              brain_region_id: sessionValue?.selectedRows?.at(0)?.brain_region.id,
+          createSingleNeuronSynaptome({
+            ctx: { virtualLabId, projectId },
+            modelInfo: {
               name: values.name,
               description: values.description || '',
+              memodel_id: entity.id,
               seed: values.seed,
-              me_model_id: entity.id,
+              brain_region_id: sessionValue?.selectedRows?.at(0)?.brain_region.id!,
+              config: { synapses: values.synapses },
             },
           })
         );
         if (error) throw new Error(messages.CreateSynaptomeEntityFailed);
-        const { data: assetData, error: err } = await tryCatch(
-          createJsonAsset({
-            ctx: { virtualLabId, projectId },
-            entityId: data?.id,
-            entityType: SingleNeuronSynaptome.type,
-            path: `${SingleNeuronSynaptome.asset.configfile}_${data?.id}`,
-            label: SingleNeuronSynaptome.asset.configfile,
-            payload: { synapses: values.synapses },
-          })
-        );
-        if (err) throw new Error(messages.CreateConfigurationAssetFailed);
+
         return {
-          entity: data,
-          asset: assetData,
+          entity: data.data,
         };
       };
 
-      const accountingSession = new OneshotSession({
-        virtualLabId,
-        projectId,
-        subtype: ServiceSubtype.SynaptomeBuild,
-        count: 1,
-      });
-
       startTransition(async () => {
         try {
-          const result = await accountingSession.useWith<{
-            entity: ISingleNeuronSynaptome;
-            asset: IAsset;
-          } | null>(buildSingleNeuronSynaptome);
+          const result = await buildSingleNeuronSynaptome();
           if (result) {
             setLoading(false);
             form.resetFields();

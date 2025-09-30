@@ -16,7 +16,7 @@ import { resolveDataKey } from '@/utils/key-builder';
 import { messages } from '@/i18n/en/simulation';
 import { tryCatch } from '@/api/utils';
 
-import type { SimulationType } from '@/types/simulation/common';
+import type { SimulationType } from '@/types/small-scale-simulator/common';
 import type { WorkspaceContext } from '@/types/common';
 
 export type Props = WorkspaceContext & {

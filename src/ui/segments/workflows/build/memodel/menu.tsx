@@ -1,7 +1,5 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   CheckCircleFilled,
   LoadingOutlined,
@@ -9,40 +7,36 @@ import {
   SettingFilled,
   WarningFilled,
 } from '@ant-design/icons';
-import { z } from 'zod';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import get from 'lodash/get';
 import kebabCase from 'lodash/kebabCase';
 import omit from 'lodash/omit';
 import Link from 'next/link';
-import get from 'lodash/get';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { z } from 'zod';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
-import { createMEModel } from '@/api/entitycore/queries/model/me-model';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { LOW_FUNDS_ERROR_CODE, messages } from '@/i18n/en/me-model';
+import { createModel } from '@/api/small-scale-simulator/single-neuron/single-neuron';
+import { CreateSingleNeuronSchema } from '@/api/small-scale-simulator/types';
 import { useAppNotification } from '@/components/notification';
-import { WorkspaceContextSchema } from '@/types/common';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { OneshotSession } from '@/services/accounting';
-import {
-  useBuildMeModelSessionState,
-  BuildStepKeys,
-  BuildStep,
-} from '@/ui/segments/workflows/build/memodel/helpers';
-import { ServiceSubtype } from '@/types/accounting';
-import {
-  CreateMEModelSchema,
-  ValidationStatus,
-  type IMEModel,
-} from '@/api/entitycore/types/entities/me-model';
-import { Button } from '@/ui/molecules/button';
-import { cn } from '@/utils/css-class';
 import { ROOT_ROUTE } from '@/config';
+import { LOW_FUNDS_ERROR_CODE, messages } from '@/i18n/en/me-model';
+import { WorkspaceContextSchema } from '@/types/common';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Button } from '@/ui/molecules/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import {
+  BuildStep,
+  BuildStepKeys,
+  useBuildMeModelSessionState,
+} from '@/ui/segments/workflows/build/memodel/helpers';
+import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
+import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
 
-const CreateMeModelContextSchema = CreateMEModelSchema.merge(WorkspaceContextSchema);
-type TCreateMeModelContext = z.infer<typeof CreateMeModelContextSchema>;
+const CreateSingleNeuronContextSchema = CreateSingleNeuronSchema.merge(WorkspaceContextSchema);
+type TCreateSingleNeuronContext = z.infer<typeof CreateSingleNeuronContextSchema>;
 
 export function Menu({ sessionId }: { sessionId: string }) {
   const breakpoint = useDefaultBreakpoint();
@@ -67,7 +61,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
     );
   };
 
-  const payload: Partial<TCreateMeModelContext> = {
+  const payload: Partial<TCreateSingleNeuronContext> = {
     virtualLabId,
     projectId,
     name: sessionValue.name,
@@ -77,29 +71,15 @@ export function Menu({ sessionId }: { sessionId: string }) {
     species_id: sessionValue.mmodel?.subject.species?.id,
     brain_region_id: sessionValue.mmodel?.brain_region.id ?? sessionValue.brainRegion?.id,
     strain_id: sessionValue.mmodel?.subject.strain?.id ?? null,
-    validation_status: ValidationStatus.Initialized,
   };
 
   const buildMeModel = async () => {
-    const build = async () => {
-      let validatedPayload: TCreateMeModelContext | null = null;
-      validatedPayload = await CreateMeModelContextSchema.parseAsync(payload);
+    const validatedPayload = await CreateSingleNeuronContextSchema.parseAsync(payload);
 
-      return await createMEModel({
-        body: omit(validatedPayload, ['virtualLabId', 'projectId']),
-        context: { virtualLabId, projectId },
-      });
-    };
-
-    const accountingSession = new OneshotSession({
-      subtype: ServiceSubtype.SingleCellBuild,
-      virtualLabId,
-      projectId,
-      count: 1,
+    return await createModel({
+      modelInfo: omit(validatedPayload, ['virtualLabId', 'projectId']),
+      ctx: { virtualLabId, projectId },
     });
-    const data = await accountingSession.useWith<IMEModel>(build);
-
-    return data;
   };
   const notification = useAppNotification();
   const mutate = useMutation({
@@ -113,7 +93,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
               onClick={() => {
                 notification.destroy('model-saved');
               }}
-              href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.Memodel)}/${data.id}`}
+              href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.Memodel)}/${data.data.id}`}
               className="text-primary-6 hover:underline"
             >
               Go to model details
@@ -160,7 +140,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
     },
   });
 
-  const result = CreateMeModelContextSchema.safeParse(payload);
+  const result = CreateSingleNeuronContextSchema.safeParse(payload);
   const disabled = mutate.isPending || !!result.error;
 
   return (

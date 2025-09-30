@@ -25,7 +25,7 @@ import {
   singleNeuronSynaptomeSimulationApiQueryExpand,
 } from '@/entity-configuration/domain/simulation';
 import SimulationConfigurationTab from '@/components/simulate/SimulationDetails/configuration-tab';
-import { SimulationPayload } from '@/types/simulation/single-neuron';
+import { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
 
 export default async function Configuration({
   entity,

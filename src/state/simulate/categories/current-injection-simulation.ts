@@ -6,7 +6,7 @@ import {
   CurrentInjectionSimulationConfig,
   StimulusType,
   StimulusModule,
-} from '@/types/simulation/single-neuron';
+} from '@/types/small-scale-simulator/single-neuron';
 import {
   DEFAULT_CURRENT_INJECTION_CONFIG,
   PROTOCOL_DETAILS,

@@ -23,7 +23,7 @@ import {
 } from '@/state/simulate/single-neuron';
 
 import type { Props as SaveSimulationProps } from '@/features/entities/neuron-simulation/experiment/elements/save-simulation';
-import type { SimulationType } from '@/types/simulation/common';
+import type { SimulationType } from '@/types/small-scale-simulator/common';
 import type { WorkspaceContext } from '@/types/common';
 
 type Props = WorkspaceContext & {
