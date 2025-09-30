@@ -17,6 +17,7 @@ export default async function EntityDetail({ params }: { params: Promise<{ id: s
   let url: string;
   try {
     entity = await getEntity({ id });
+
     url = resolveExploreDetailsPageUrl2({
       entityId: id,
       dataType: entity.type,
