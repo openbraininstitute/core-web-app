@@ -1,3 +1,5 @@
+import { PortableTextBlock } from 'next-sanity';
+
 export type EModelsProps = {
   name: string;
   response: string;

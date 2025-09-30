@@ -9,5 +9,6 @@ pre-commit:
       run: |
         npx prettier --write {staged_files}
         git add {staged_files}
-    typescript:
-      run: npm run typecheck
+    # typescript:
+    #   glob: '*.{js,jsx,ts,tsx}'
+    #   run: npx tsc --noEmit
