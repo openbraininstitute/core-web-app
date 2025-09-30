@@ -1,13 +1,11 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { PlusOutlined } from '@ant-design/icons';
 
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { useTabs } from '@/components/detail-view-tabs';
-import { Button } from '@/ui/molecules/button';
 import {
   makeSelectEntityClickEvent,
   useMiniDetailView,
@@ -149,14 +147,12 @@ function DataTabs() {
 }
 
 export function DataHeader() {
-  const breakpoint = useDefaultBreakpoint();
-
   return (
     <div className="flex w-full items-center justify-between gap-4 px-3 [grid-area:header]">
       <div className="flex max-w-1/2 items-center justify-center gap-2">
         <DataTabs />
       </div>
-      <div className="max-w-1/2" id="upload-data-selector" data-testid="upload-data-selector">
+      {/* <div className="max-w-1/2" id="upload-data-selector" data-testid="upload-data-selector">
         <Button
           rounded
           variant="success"
@@ -169,7 +165,7 @@ export function DataHeader() {
             <PlusOutlined className="ml-auto text-sm" />
           </div>
         </Button>
-      </div>
+      </div> */}
     </div>
   );
 }
