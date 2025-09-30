@@ -54,8 +54,14 @@ function PlotView({ instance }: { instance: PlotInstance }) {
     layout.showlegend = false;
     layout.datarevision = performance.now();
     delete layout.height;
-    // Plotly.newPlot(container, data, layout, PLOT_CONFIG);
     Plotly.react(container, data, layout, PLOT_CONFIG);
+
+    const observer = new ResizeObserver(() => {
+      // Redraw the graph after resize
+      Plotly.relayout(container, {});
+    });
+    observer.observe(container);
+    return () => observer.unobserve(container);
   }, [instance, disabledLines]);
   const handleFullscreen = () => {
     const container = refContainer.current;
