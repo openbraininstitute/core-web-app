@@ -58,8 +58,11 @@ export default async function Layout({
   const awaitedParams = await params;
   const { virtualLabId, projectId, id } = awaitedParams;
   const type = snakeCase(awaitedParams.type) as EntityCoreExtendedType;
+  // Temporarily hide ion channel model
+  if (type === ExtendedEntitiesTypeDict.IonChannelModel) notFound();
 
   const entityType = getEntityByExtendedType({ type });
+
   if (!entityType) notFound();
 
   const entity = await downloadEntity({
