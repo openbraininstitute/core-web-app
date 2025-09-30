@@ -52,8 +52,10 @@ function PlotView({ instance }: { instance: PlotInstance }) {
     if (!layout.yaxis) layout.yaxis = { title: instance.yaxis };
     else layout.yaxis.title = instance.yaxis;
     layout.showlegend = false;
+    layout.datarevision = performance.now();
     delete layout.height;
-    Plotly.newPlot(container, data, layout, PLOT_CONFIG);
+    // Plotly.newPlot(container, data, layout, PLOT_CONFIG);
+    Plotly.react(container, data, layout, PLOT_CONFIG);
   }, [instance, disabledLines]);
   const handleFullscreen = () => {
     const container = refContainer.current;

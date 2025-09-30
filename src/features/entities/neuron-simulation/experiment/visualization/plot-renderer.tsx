@@ -120,7 +120,7 @@ export default function PlotRenderer({
           )}
         >
           <div id={`graph-wrapper-${name}`} className={cn('h-full w-full', graphWrapperClassName)}>
-            {isLoading && (
+            {(isLoading || plotInstances.length === 0) && (
               <div className="flex w-full justify-center p-8">
                 <Spin size="large" />
               </div>
