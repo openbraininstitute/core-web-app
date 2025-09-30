@@ -56,6 +56,8 @@ export type NotebooksProps = {
 };
 
 export type ShowCaseProjectQueryType = {
+  _id: string;
+  eModelsList: any;
   name: string;
   slug: string;
   introduction: string;

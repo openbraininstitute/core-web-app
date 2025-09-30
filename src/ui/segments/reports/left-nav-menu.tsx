@@ -1,36 +1,36 @@
 'use client';
 
+import { usePathname, useSearchParams } from 'next/navigation';
 import { RightOutlined } from '@ant-design/icons';
 import filter from 'lodash/filter';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { ComponentProps } from 'react';
 
-import { ROOT_ROUTE } from '@/config';
-import { useUserRole } from '@/hooks/use-user-role';
+import type { ComponentProps } from 'react';
+
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { useUserRole } from '@/hooks/use-user-role';
 import { Button } from '@/ui/molecules/button';
+import { ROOT_ROUTE } from '@/config';
 import { cn } from '@/utils/css-class';
-import { getActiveSection } from '@/utils/get-section';
 
 type Props = {
   className?: ComponentProps<'div'>['className'];
 };
 
 const links = [
-  {
-    key: 'showcases',
-    title: 'Showcases',
-    url: 'showcases',
-    requireRole: false,
-  },
-  {
-    key: 'summaries',
-    title: 'Summaries',
-    url: 'summaries',
-    requireRole: false,
-  },
+  // {
+  //   key: 'showcases',
+  //   title: 'Showcases',
+  //   url: 'showcases',
+  //   requireRole: false,
+  // },
+  // {
+  //   key: 'summaries',
+  //   title: 'Summaries',
+  //   url: 'summaries',
+  //   requireRole: false,
+  // },
   {
     key: 'obi-showcases',
     title: 'OBI Showcases',
@@ -48,8 +48,7 @@ export function LeftMenu({ className }: Props) {
 
   // Check for section in query params first, then fallback to pathname detection
   const sectionFromQuery = searchParams.get('section');
-  const sectionFromPath = getActiveSection(pathname);
-  const activeSection = sectionFromQuery ?? sectionFromPath ?? 'showcases';
+  const activeSection = sectionFromQuery ?? 'obi-showcases';
 
   const hashedLinks = filter(
     links.map((link) => ({

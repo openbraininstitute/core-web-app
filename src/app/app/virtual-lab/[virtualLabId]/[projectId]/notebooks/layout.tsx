@@ -7,9 +7,9 @@ import find from 'lodash/find';
 import { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import { NotebookInnerLayout } from '@/ui/layouts/notebook-inner-layout';
 import { notebookTour } from '@/ui/segments/app-setup/discover-app';
-import { LeftMenu } from '@/ui/segments/notebooks/left-nav-menu';
+// import { LeftMenu } from '@/ui/segments/notebooks/left-nav-menu';
 import { NotebooksLayout } from '@/ui/layouts/notebooks-layout';
-import { NotebookHeader } from '@/ui/segments/notebooks/header';
+// import { NotebookHeader } from '@/ui/segments/notebooks/header';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { AUTO_ONBOARDING_TOURS } from '@/constants';
 
@@ -38,11 +38,11 @@ export default function Page({
 
   return (
     <NotebooksLayout>
-      <NotebookHeader />
+      {/* <NotebookHeader /> */}
       <NotebookInnerLayout>
-        <div id="notebook-left-menu" data-testid="notebook-left-menu" className="w-full">
+        {/* <div id="notebook-left-menu" data-testid="notebook-left-menu" className="w-full">
           <LeftMenu className="w-full" />
-        </div>
+        </div> */}
         <div id="notebook-main-content" className="secondary-scrollbar w-full overflow-y-auto">
           {children}
         </div>
