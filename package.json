@@ -90,7 +90,7 @@
     "framer-motion": "^12.4.7",
     "github-markdown-css": "^5.8.1",
     "h5wasm": "^0.7.9",
-    "import-in-the-middle": "^1.13.1",
+    "import-in-the-middle": "^1.14.4",
     "input-otp": "^1.4.2",
     "install": "^0.13.0",
     "jotai": "^2.7.2",

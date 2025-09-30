@@ -13,9 +13,8 @@ export default async function ReportsPage({
   const section = Array.isArray(params.section) ? params.section[0] : params.section || null;
 
   return match(section)
-    .with(null, () => <ShowcasesPage />)
     .with('showcases', () => <ShowcasesPage />)
     .with('summaries', () => <SummariesPage />)
     .with('obi-showcases', () => <OBIShowcasesPage />)
-    .otherwise(() => <ShowcasesPage />);
+    .otherwise(() => <OBIShowcasesPage />);
 }

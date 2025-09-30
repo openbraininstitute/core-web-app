@@ -91,7 +91,7 @@ export default function ArtifactsSection({ content }: { content: SanityShowcaseT
 
   return (
     <div className="relative flex w-full flex-col gap-y-6 scroll-smooth" id="artifacts">
-      <header className="sticky top-0 z-50 flex w-full flex-row items-center justify-between">
+      <header className="bg-background sticky top-0 z-50 flex w-full flex-row items-center justify-between">
         <div className="relative flex flex-row text-base">
           <div>Total artifacts: </div>
           <span className="ml-2 block font-bold">

@@ -18,7 +18,6 @@ export default async function NotebooksPage({
         projectId={projectId}
         vlabId={virtualLabId}
         serverError={error}
-        enableRunNotebook
       />
     </div>
   );

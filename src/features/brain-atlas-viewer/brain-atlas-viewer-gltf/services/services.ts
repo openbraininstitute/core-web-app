@@ -7,6 +7,7 @@ import { env } from '@/env';
 import { assertType } from '@/util/type-guards';
 import { createHeaders } from '@/util/utils';
 import { logError } from '@/util/logger';
+import { log } from '@/utils/logger';
 
 let cacheAtlasId: string | null = null;
 
@@ -57,11 +58,6 @@ async function actualGetBrainRegionMeshArayBuffer(
   const atlas = await getAtlas(atlasId);
   const entity = atlas.data.find((elem) => elem.brain_region_id === regionId);
   if (!entity) {
-    console.log('🚀 [services] regionId =', regionId); // @FIXME: Remove this line written on 2025-09-29 at 14:18
-    console.log(
-      '🚀 [services] brain_region_id =',
-      atlas.data.map((elem) => elem.brain_region_id).sort()
-    ); // @FIXME: Remove this line written on 2025-09-29 at 14:18
     throw new Error(`Unable to find region "${regionId}" in current Atlas!`);
   }
 
@@ -80,7 +76,7 @@ async function actualGetBrainRegionMeshArayBuffer(
   const api = await entityCoreApi();
   const data = await api.get(`/brain-atlas-region/${entity.id}/assets/${asset.id}/download`);
   // eslint-disable-next-line no-console
-  console.log('GLTF', `${performance.now() - time} msec`, data);
+  log('debug', 'GLTF', `${performance.now() - time} msec`, data);
   const mesh = data instanceof ArrayBuffer ? data : null;
   if (!mesh) {
     throw new Error(`Unable to download asset "${asset.id}" for entity "${entity.id}"!`);
@@ -119,9 +115,8 @@ async function actualGetAtlas(atlasId: string) {
       page_size: 2000,
     },
   });
-  console.log('🚀 [services] atlasId =', atlasId); // @FIXME: Remove this line written on 2025-09-29 at 14:23
-  // eslint-disable-next-line no-console
-  console.log('🚀 [services] atlas =', atlas, `${performance.now() - time} msec`); // @FIXME: Remove this line written on 2025-09-24 at 11:43
+
+  log('debug', '🚀 [services] atlas =', atlas, `${performance.now() - time} msec`);
   assertType<PartialAtlas>(atlas, {
     data: [
       'array',

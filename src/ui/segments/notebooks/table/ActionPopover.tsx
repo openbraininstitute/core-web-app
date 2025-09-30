@@ -19,8 +19,6 @@ interface ActionPopoverProps {
   onReadmeClick: (notebook: Notebook) => void;
   onDownloadClick: (notebook: Notebook) => void;
   onDeleteClick?: (id: string) => void;
-  onRunClick?: (notebook: Notebook) => void;
-  enableRunNotebook?: boolean;
   onRunOnEksClick?: (notebook: Notebook) => void;
 }
 
@@ -30,8 +28,6 @@ export default function ActionPopover({
   onReadmeClick,
   onDownloadClick,
   onDeleteClick,
-  onRunClick,
-  enableRunNotebook,
   onRunOnEksClick,
 }: ActionPopoverProps) {
   return (
@@ -46,7 +42,7 @@ export default function ActionPopover({
                   e.stopPropagation();
                   onReadmeClick(notebook);
                 }}
-                className="inline-flex items-center gap-[10px]"
+                className="hover:text-primary-4 inline-flex items-center gap-[10px]"
               >
                 <EyeIconWhiteWithinBox className="text-primary-9 text-xs" aria-label="Readme" />
                 Readme
@@ -85,7 +81,7 @@ export default function ActionPopover({
                 </button>
               </div>
             )}
-            {enableRunNotebook && onRunClick && (
+            {/* {enableRunNotebook && onRunClick && (
               <div className="flex gap-4">
                 <button
                   type="button"
@@ -99,7 +95,7 @@ export default function ActionPopover({
                   Run
                 </button>
               </div>
-            )}
+            )} */}
             {onRunOnEksClick &&
               (env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'staging' ||
                 env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'preview' ||
@@ -107,14 +103,14 @@ export default function ActionPopover({
                 <div className="flex gap-4">
                   <button
                     type="button"
-                    className="inline-flex items-center gap-[10px]"
+                    className="hover:text-primary-4 inline-flex items-center gap-[10px]"
                     onClick={(e) => {
                       e.stopPropagation();
                       onRunOnEksClick(notebook);
                     }}
                   >
                     <PlayCircleOutlined aria-label="Run" />
-                    Run on EKS
+                    Run
                   </button>
                 </div>
               )}
@@ -126,7 +122,7 @@ export default function ActionPopover({
           color: '#002766',
         }}
         trigger="click"
-        placement="bottom"
+        placement="bottomRight"
         arrow={false}
       >
         <PlusOutlined className="rounded-full !bg-white p-2 text-lg !text-white shadow-md" />
