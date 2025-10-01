@@ -1,7 +1,7 @@
+import React from 'react';
 import { FullscreenOutlined } from '@ant-design/icons';
 import { tgdFullscreenToggle } from '@bbp/morphoviewer';
 import Plotly from 'plotly.js-dist-min';
-import React from 'react';
 
 import {
   PLOT_CONFIG,
@@ -41,7 +41,9 @@ function PlotView({ instance }: { instance: PlotInstance }) {
         x: line.x,
         y: line.y,
         name: line.name,
-        'line.color': line.color,
+        line: {
+          color: line.color,
+        },
         visible: !disabledLines.includes(line.name),
       };
       return item;
