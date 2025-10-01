@@ -22,7 +22,6 @@ export function NotebookTable({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   projectId,
   serverError,
-  enableRunNotebook = false,
 }: {
   vlabId?: string;
   projectId?: string;
@@ -30,7 +29,6 @@ export function NotebookTable({
   failed?: string[];
   onDelete?: (id: string) => void;
   serverError?: string;
-  enableRunNotebook?: boolean;
 }) {
   const {
     loadingZip,
@@ -39,7 +37,6 @@ export function NotebookTable({
     Search,
     filteredNotebooks,
     resetModal,
-    runNotebook,
     handleDownloadClick,
     handleReadmeClick,
     runOnEksNotebook,
@@ -51,9 +48,7 @@ export function NotebookTable({
     onReadmeClick: handleReadmeClick,
     onDownloadClick: handleDownloadClick,
     onDeleteClick: onDelete,
-    onRunClick: runNotebook,
     onRunOnEksClick: runOnEksNotebook,
-    enableRunNotebook,
   });
 
   // Column toggle functionality

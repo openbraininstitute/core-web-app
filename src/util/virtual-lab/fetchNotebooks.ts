@@ -28,13 +28,7 @@ export default async function fetchNotebooks(repoUrl: string, withDate = false) 
     if (!defaultBranch)
       throw new Error(`Failed to fetch the repository ${repoUrl}, please ensure it's public.`);
 
-    const response = await fetch(apiBaseUrl + `/git/trees/${defaultBranch}?recursive=1`, {
-      headers: options.headers,
-      next: {
-        revalidate: 3600 * 24,
-        tags: ['tree'],
-      },
-    });
+    const response = await fetch(apiBaseUrl + `/git/trees/${defaultBranch}?recursive=1`, options);
 
     if (!response.ok) {
       throw new Error(`Cannot fetch the repository ${repoUrl}, ensure the repository is public.`);

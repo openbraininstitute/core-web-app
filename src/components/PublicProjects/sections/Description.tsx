@@ -1,8 +1,8 @@
 import { PortableText } from 'next-sanity';
 import { PresentationVideoProps, ShowCaseProjectQueryType } from '../type';
 
-import PTGlossary, { PTGlossaryListProps } from '../Glossary';
-import VideoBlock from '../VideoBlock';
+import PTGlossary, { PTGlossaryListProps } from '@/components/PublicProjects/Glossary';
+import VideoBlock from '@/components/PublicProjects/VideoBlock';
 
 import styles from '../style/portableText.module.css';
 

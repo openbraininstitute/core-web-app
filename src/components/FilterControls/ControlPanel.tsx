@@ -26,7 +26,7 @@ export default function ControlPanel({
   return (
     <div
       className={classNames(
-        'bg-primary-8 fixed top-0 right-0 z-10 flex h-screen w-[480px] shrink-0 flex-col space-y-4 p-8',
+        'bg-primary-8 fixed top-0 right-0 z-10 z-[9999] flex h-screen w-[480px] shrink-0 flex-col space-y-4 p-8',
         !visible && 'invisible'
       )}
     >
