@@ -357,12 +357,12 @@ export const launchSimulationAtom = atom<
         variable_name: streamData.variable_name,
         unit: streamData.unit,
       };
-      // if (streamData.name === 'IDREST_0.05') {
+      // if (streamData.name === 'IDREST_0.05' && newPlot.variable_name === 'ik') {
       //   const minX = newPlot.x.reduce((prv, cur) => Math.min(prv, cur), Number.POSITIVE_INFINITY);
       //   const maxX = newPlot.x.reduce((prv, cur) => Math.max(prv, cur), Number.NEGATIVE_INFINITY);
       //   const minY = newPlot.y.reduce((prv, cur) => Math.min(prv, cur), Number.POSITIVE_INFINITY);
       //   const maxY = newPlot.y.reduce((prv, cur) => Math.max(prv, cur), Number.NEGATIVE_INFINITY);
-      // console.log(`🚀 [${newPlot.variable_name}]`, minY, maxY, `   in [${minX}, ${maxX}]`); // @FIXME: Remove this line written on 2025-10-01 at 09:39
+      //   console.log(`🚀 [${newPlot.variable_name}]`, minY, maxY, `   in [${minX}, ${maxX}]`); // @FIXME: Remove this line written on 2025-10-01 at 09:39
       // }
       const currentPlotData = get(plotDataAtom);
       const currentRecording = currentPlotData![streamData.recording];

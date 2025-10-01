@@ -3,6 +3,10 @@ import { useAtom } from 'jotai';
 
 import { PlotData } from '../types';
 
+import { PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY } from '../constant';
+import { ExperimentalSetupConfigurationAtomFamily } from '../context';
+import { getSessionKey } from '../helpers';
+
 import { genericSingleNeuronSimulationPlotDataAtomFamily } from '@/state/simulate/single-neuron';
 
 const THROTTLE = 1000;
@@ -29,4 +33,10 @@ export function useRecordingPlotData(sessionId: string): Type {
     if (rawData) refDataToSend.current = rawData;
   }, [rawData]);
   return recordingPlotData;
+}
+
+export function useCurrentSimulationConfig(sessionId: string) {
+  const key = getSessionKey(PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY, sessionId);
+  const [state] = useAtom(ExperimentalSetupConfigurationAtomFamily(key));
+  return state;
 }

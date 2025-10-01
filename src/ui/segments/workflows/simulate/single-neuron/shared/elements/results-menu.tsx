@@ -1,3 +1,5 @@
+/* eslint-disable react/no-array-index-key */
+
 'use client';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -7,6 +9,7 @@ import { useAtom } from 'jotai';
 import kebabCase from 'lodash/kebabCase';
 import uniqBy from 'lodash/uniqBy';
 import Link from 'next/link';
+import { ZodError } from 'zod';
 
 import { createSingleNeuronSimulationAtom } from '@/ui/segments/workflows/simulate/single-neuron/shared/runner';
 import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
@@ -54,6 +57,9 @@ import {
   simulationStatusAtomFamily,
 } from '@/state/simulate/single-neuron';
 import { cn } from '@/utils/css-class';
+import { classNames } from '@/util/utils';
+
+import styles from './results-menu.module.css';
 
 type Props = {
   sessionId: string;
@@ -90,13 +96,15 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
   const [, createSingleNeuronSimulation] = useAtom(createSingleNeuronSimulationAtom);
 
   const current = queryParams.get('record') ?? 'all';
-  const disableSaveSimulation =
-    !!RecordLocationArraySchema.safeParse(recordLocationConfiguration).error ||
-    !!ExperimentalSetupConfigurationSchema.safeParse(experimentalSetupConfiguration).error ||
-    !!StimulationConfigurationSchema.safeParse(stimulationConfiguration).error ||
-    !!OverviewConfigurationSchema.safeParse(overviewConfiguration).error ||
+  const configError =
+    RecordLocationArraySchema.safeParse(recordLocationConfiguration).error ??
+    ExperimentalSetupConfigurationSchema.safeParse(experimentalSetupConfiguration).error ??
+    StimulationConfigurationSchema.safeParse(stimulationConfiguration).error ??
+    OverviewConfigurationSchema.safeParse(overviewConfiguration).error ??
     (type === SimulationType.SingleNeuronSynaptome &&
-      !!SynapseConfigurationArraySchema.safeParse(synaptomeConfiguration).error);
+      SynapseConfigurationArraySchema.safeParse(synaptomeConfiguration).error);
+
+  const disableSaveSimulation = !!configError;
 
   const onChange = (value: string) => {
     const params = new URLSearchParams(queryParams);
@@ -295,12 +303,17 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
             <TooltipContent
               sideOffset={10}
               collisionPadding={{ left: 20 }}
-              arrowClassName="bg-primary-9"
+              arrowClassName={configError ? styles.error : 'bg-primary-9'}
+              className={classNames(configError && styles.error)}
             >
-              <p className={cn('max-w-80 text-left text-sm break-words hyphens-auto')}>
-                Almost there! To download your simulation results, please let it finish running and
-                make sure the details are complete
-              </p>
+              {configError ? (
+                <p>{extractErrorMessage(configError)}</p>
+              ) : (
+                <p className={cn('max-w-80 text-left text-sm break-words hyphens-auto')}>
+                  Almost there! To download your simulation results, please let it finish running
+                  and make sure the details are complete
+                </p>
+              )}
             </TooltipContent>
           )}
         </Tooltip>
@@ -323,15 +336,33 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
             </div>
           </TooltipTrigger>
           {controlsDisabled && (
-            <TooltipContent sideOffset={10} arrowClassName="bg-primary-9">
-              <p className={cn('max-w-80 text-left text-sm break-words hyphens-auto')}>
-                Almost there! To save your simulation, please let it finish running and make sure
-                the details are complete
-              </p>
+            <TooltipContent
+              sideOffset={10}
+              arrowClassName={configError ? styles.error : 'bg-primary-9'}
+              className={classNames(configError && styles.error)}
+            >
+              {configError ? (
+                <p>{extractErrorMessage(configError)}</p>
+              ) : (
+                <p className={cn('max-w-80 text-left text-sm break-words hyphens-auto')}>
+                  Almost there! To download your simulation results, please let it finish running
+                  and make sure the details are complete
+                </p>
+              )}
             </TooltipContent>
           )}
         </Tooltip>
       </div>
     </div>
+  );
+}
+
+function extractErrorMessage(error: ZodError): import('react').ReactNode {
+  return (
+    <>
+      {error.issues.map((issue, index) => (
+        <div key={index}>{issue.message}</div>
+      ))}
+    </>
   );
 }

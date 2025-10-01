@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 import get from 'lodash/get';
 
 import { PlotData } from '../types';
-import { useRecordingPlotData } from './hooks';
+import { useCurrentSimulationConfig, useRecordingPlotData } from './hooks';
 
 import { SIMULATION_COLORS } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { simulationStatusAtom } from '@/state/simulate/single-neuron';
@@ -19,8 +19,8 @@ const PlotRenderer = dynamic(
 );
 
 export function Results({ sessionId }: { sessionId: string }) {
+  const currentSimulationConfig = useCurrentSimulationConfig(sessionId);
   const recordingPlotData = useRecordingPlotData(sessionId);
-  // const [recordingPlotData] = useAtom(genericSingleNeuronSimulationPlotDataAtomFamily(sessionId));
   const simulationStatus = useAtomValue(simulationStatusAtom);
   const record = useSearchParams().get('record') ?? 'all';
 
@@ -36,7 +36,6 @@ export function Results({ sessionId }: { sessionId: string }) {
   const isLoading =
     simulationStatus?.status === 'launched' &&
     Object.values(recordingPlotData).every((o: PlotData) => o.every((p) => p.y.length === 0));
-
   let content = null;
   if (record === 'all') {
     content = (
@@ -57,6 +56,7 @@ export function Results({ sessionId }: { sessionId: string }) {
                 plotConfig={{
                   yAxisTitle: 'Voltage [mV]',
                   showDefaultLegends: true,
+                  maxTime: currentSimulationConfig.max_time,
                 }}
                 rootClassName="p-0 m-0"
                 wrapperClassName="p-0"
@@ -86,6 +86,7 @@ export function Results({ sessionId }: { sessionId: string }) {
               plotConfig={{
                 yAxisTitle: 'Voltage [mV]',
                 showDefaultLegends: true,
+                maxTime: currentSimulationConfig.max_time,
               }}
               rootClassName="p-0 m-0"
               wrapperClassName="p-0"

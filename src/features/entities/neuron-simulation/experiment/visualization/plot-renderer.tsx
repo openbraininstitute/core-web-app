@@ -14,6 +14,7 @@ import { cn } from '@/utils/css-class';
 type PlotConfig = {
   yAxisTitle?: string;
   showDefaultLegends?: boolean;
+  maxTime?: number;
 };
 
 type BasicProps = {
@@ -53,6 +54,7 @@ export default function PlotRenderer({
   isLoading,
   withTitle,
   title,
+  plotConfig,
   isDownloadable = false,
   bordered = false,
   rootClassName,
@@ -125,7 +127,7 @@ export default function PlotRenderer({
                 <Spin size="large" />
               </div>
             )}
-            <MultiPlotsView instances={plotInstances} />
+            <MultiPlotsView instances={plotInstances} maxTime={plotConfig?.maxTime ?? 0} />
           </div>
         </div>
       </div>
