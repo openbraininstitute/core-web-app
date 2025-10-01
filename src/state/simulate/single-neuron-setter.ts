@@ -345,7 +345,6 @@ export const launchSimulationAtom = atom<
         variable_name: streamData.variable_name,
         unit: streamData.unit,
       };
-
       const currentRecording = get(genericSingleNeuronSimulationPlotDataAtom)![
         streamData.recording
       ];

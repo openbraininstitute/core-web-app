@@ -35,7 +35,6 @@ import { readNdjsonResponse } from '@/utils/response';
 import { updateArray } from '@/util/updateArray';
 import { messages } from '@/i18n/en/simulation';
 import { tryCatch } from '@/api/utils';
-import { log } from '@/utils/logger';
 
 import { type Message, JobStatus, MessageType } from '@/services/small-scale-simulator/types';
 import type {
@@ -236,8 +235,6 @@ export const launchSimulationAtom = atom<
     }, {});
     const plotDataAtom = genericSingleNeuronSimulationPlotDataAtomFamily(sessionId);
 
-    log('debug', '🚀 Setting initial plot data:', initialPlotData);
-
     set(plotDataAtom, initialPlotData);
     const recordFromUniq = uniqBy(recordFromConfig, (item) =>
       values(pick(item, ['section', 'offset']))
@@ -348,7 +345,6 @@ export const launchSimulationAtom = atom<
     }
 
     function appendStreamData(streamData: SimulationStreamData) {
-      log('debug', '📡 appendStreamData called with:', streamData);
       const newPlot: PlotDataEntry = {
         x: streamData.x,
         y: streamData.y,
@@ -361,10 +357,14 @@ export const launchSimulationAtom = atom<
         variable_name: streamData.variable_name,
         unit: streamData.unit,
       };
-
+      // if (streamData.name === 'IDREST_0.05' && newPlot.variable_name === 'ik') {
+      //   const minX = newPlot.x.reduce((prv, cur) => Math.min(prv, cur), Number.POSITIVE_INFINITY);
+      //   const maxX = newPlot.x.reduce((prv, cur) => Math.max(prv, cur), Number.NEGATIVE_INFINITY);
+      //   const minY = newPlot.y.reduce((prv, cur) => Math.min(prv, cur), Number.POSITIVE_INFINITY);
+      //   const maxY = newPlot.y.reduce((prv, cur) => Math.max(prv, cur), Number.NEGATIVE_INFINITY);
+      //   console.log(`🚀 [${newPlot.variable_name}]`, minY, maxY, `   in [${minX}, ${maxX}]`); // @FIXME: Remove this line written on 2025-10-01 at 09:39
+      // }
       const currentPlotData = get(plotDataAtom);
-      log('debug', '📡 Current plot data before update:', currentPlotData);
-
       const currentRecording = currentPlotData![streamData.recording];
 
       if (currentRecording) {
@@ -392,7 +392,6 @@ export const launchSimulationAtom = atom<
           updatedPlot[recordingLocation] = sortBy(updatedPlot[recordingLocation], ['varyingKey']);
         });
 
-        log('debug', '📡 Setting updated plot data:', updatedPlot);
         set(plotDataAtom, updatedPlot);
       }
     }
