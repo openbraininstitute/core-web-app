@@ -1,8 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { Select } from 'antd';
 
-import { getScaleArray } from '@/ui/segments/project/activities/elements/helpers';
+import {
+  getScaleArray,
+  getScaleAvailableActivities,
+} from '@/ui/segments/project/activities/elements/helpers';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
@@ -14,11 +18,28 @@ type Props = {
 };
 
 export function Header({ onScaleChange, onTypeChange, onPageChange }: Props) {
+  const defaultScale = getScaleArray().at(0)?.value!;
+  const defaultActivities = getScaleAvailableActivities(defaultScale);
+
+  const [activities, setActivities] =
+    useState<Array<{ label: string; value: string }>>(defaultActivities);
+  const [selectedActivityType, setSelectedActivityType] = useState<TActivityValue>(
+    defaultActivities?.at(0)?.value!
+  );
+
   const onScale = (s: TExtendedEntitiesTypeDict) => {
+    const availableActivities = getScaleAvailableActivities(s);
+    const firstActivityType = availableActivities?.at(0)?.value!;
+
     onScaleChange(s);
+    setActivities(availableActivities);
+    setSelectedActivityType(firstActivityType);
+    onTypeChange(firstActivityType);
     onPageChange(1);
   };
+
   const onType = (t: TActivityValue) => {
+    setSelectedActivityType(t);
     onTypeChange(t);
     onPageChange(1);
   };
@@ -43,19 +64,10 @@ export function Header({ onScaleChange, onTypeChange, onPageChange }: Props) {
           <Select
             className="[&_.ant-select-selector]:rounded-none!"
             popupClassName="rounded-none!"
-            defaultValue="build"
+            value={selectedActivityType}
             style={{ width: 120 }}
             onChange={onType}
-            options={[
-              {
-                label: 'Build',
-                value: 'build',
-              },
-              {
-                label: 'Simulate',
-                value: 'simulate',
-              },
-            ]}
+            options={activities}
           />
         </div>
       </div>
