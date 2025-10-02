@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   CheckCircleFilled,
@@ -34,6 +34,7 @@ import {
 import { useAppNotification } from '@/components/notification';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { browserReplace } from '@/utils/browser';
 import { messages } from '@/i18n/en/synaptome';
 import { Button } from '@/ui/molecules/button';
 import { tryCatch } from '@/api/utils';
@@ -57,7 +58,6 @@ export function Menu({ sessionId }: Props) {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const pathname = usePathname();
-  const { replace } = useRouter();
   const { virtualLabId, projectId } = useWorkspace();
   const step = searchParams.get('step');
 
@@ -69,7 +69,8 @@ export function Menu({ sessionId }: Props) {
     const query = new URLSearchParams(searchParams);
     query.set('step', s);
 
-    replace(
+    browserReplace(
+      null,
       `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/${kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSynaptome)}?${query.toString()}`
     );
   };
@@ -94,7 +95,8 @@ export function Menu({ sessionId }: Props) {
         synapseSets: synapseSetsMap,
       });
     }
-    replace(`${pathname}?${queryParams.toString()}`);
+
+    browserReplace(null, `${pathname}?${queryParams.toString()}`);
   };
 
   const validSetsCount = Array.from(sessionValue?.synapseSets?.values() ?? [])?.filter(
@@ -115,6 +117,7 @@ export function Menu({ sessionId }: Props) {
       me_model_id: sessionValue?.memodel?.id,
       seed: sessionValue?.seed,
     }).data;
+
     const validationPromises = Array.from(sessionValue?.synapseSets?.entries() ?? []).map(
       ([, value]) => SingleNeuronSynaptomeConfigurationSchema.safeParseAsync(value)
     );

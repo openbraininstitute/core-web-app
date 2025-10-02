@@ -8,31 +8,33 @@ import {
   WarningFilled,
 } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'next/navigation';
+import { z } from 'zod';
+
 import get from 'lodash/get';
 import kebabCase from 'lodash/kebabCase';
 import omit from 'lodash/omit';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { z } from 'zod';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { createModel } from '@/api/small-scale-simulator/single-neuron/single-neuron';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { CreateSingleNeuronSchema } from '@/api/small-scale-simulator/types';
-import { useAppNotification } from '@/components/notification';
-import { ROOT_ROUTE } from '@/config';
-import { LOW_FUNDS_ERROR_CODE, messages } from '@/i18n/en/me-model';
-import { WorkspaceContextSchema } from '@/types/common';
+import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { LOW_FUNDS_ERROR_CODE, messages } from '@/i18n/en/me-model';
+import { useAppNotification } from '@/components/notification';
+import { WorkspaceContextSchema } from '@/types/common';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import {
   BuildStep,
   BuildStepKeys,
   useBuildMeModelSessionState,
 } from '@/ui/segments/workflows/build/memodel/helpers';
-import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
+import { browserReplace } from '@/utils/browser';
 import { cn } from '@/utils/css-class';
+import { ROOT_ROUTE } from '@/config';
 import { log } from '@/utils/logger';
 
 const CreateSingleNeuronContextSchema = CreateSingleNeuronSchema.merge(WorkspaceContextSchema);
@@ -43,7 +45,6 @@ export function Menu({ sessionId }: { sessionId: string }) {
   const notification = useAppNotification();
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
-  const { replace } = useRouter();
   const { virtualLabId, projectId } = useWorkspace();
   const step = searchParams.get('step');
 
@@ -57,7 +58,8 @@ export function Menu({ sessionId }: { sessionId: string }) {
     const query = new URLSearchParams(searchParams);
     query.set('step', s);
 
-    replace(
+    browserReplace(
+      null,
       `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/memodel?${query.toString()}`
     );
   };
