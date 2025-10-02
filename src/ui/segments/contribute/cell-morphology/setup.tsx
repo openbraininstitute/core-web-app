@@ -1,0 +1,173 @@
+import { DatePicker, Form, Input, InputNumber, Space } from 'antd';
+import dayjs from 'dayjs';
+
+import {
+  label,
+  CellMorphologySchema,
+  zodFieldValidator,
+} from '@/ui/segments/contribute/cell-morphology/helpers';
+import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { resolveDataKey } from '@/utils/key-builder';
+
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+
+export function Setup() {
+  const form = Form.useFormInstance();
+  const { projectId } = useWorkspace();
+
+  const { node: defaultBrainRegion } = useBrainRegionHierarchy({
+    dataKey: resolveDataKey({ section: 'explore', projectId }),
+  });
+
+  const BrainRegionDropdown = BrainRegionDropdownWithFormItem({
+    clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
+    showIcon: false,
+    charsPerLine: 200,
+    defaultBrainRegion: defaultBrainRegion as IBrainRegionHierarchy,
+  });
+
+  return (
+    <div className="h-full w-full">
+      <Form.Item
+        name={['setup', 'name']}
+        label={label('Name', 'main', <sup className="text-destructive">*</sup>)}
+        rules={[
+          {
+            required: true,
+            validator: zodFieldValidator(CellMorphologySchema, 'setup.name', form),
+          },
+        ]}
+      >
+        <Input
+          className="h-12 rounded-full placeholder:text-sm"
+          size="large"
+          placeholder="Enter cell morphology name"
+        />
+      </Form.Item>
+      <Form.Item
+        name={['setup', 'description']}
+        label={label('Description', 'main', <sup className="text-destructive">*</sup>)}
+        rules={[
+          {
+            required: true,
+            validator: zodFieldValidator(CellMorphologySchema, 'setup.description', form),
+          },
+        ]}
+      >
+        <Input.TextArea
+          rows={5}
+          className="rounded-xl placeholder:text-sm"
+          placeholder="Enter cell morphology description"
+        />
+      </Form.Item>
+      <Form.Item
+        name={['setup', 'brain_region_id']}
+        label={label('Brain region', 'main', <sup className="text-destructive">*</sup>)}
+        rules={[
+          {
+            required: true,
+            validator: zodFieldValidator(CellMorphologySchema, 'setup.brain_region_id', form),
+          },
+        ]}
+      >
+        <BrainRegionDropdown />
+      </Form.Item>
+      <Form.Item
+        name={['setup', 'experiment_date']}
+        label={label('Experiment date', 'main')}
+        rules={[
+          {
+            required: true,
+            validator: zodFieldValidator(CellMorphologySchema, 'setup.experiment_date', form),
+          },
+        ]}
+      >
+        <DatePicker className="h-12 w-full rounded-full" format="DD/MM/YYYY" maxDate={dayjs()} />
+      </Form.Item>
+      <Form.Item
+        name={['setup', 'contact_email']}
+        label={label('Contact email', 'main')}
+        rules={[
+          {
+            required: false,
+            validator: zodFieldValidator(CellMorphologySchema, 'setup.contact_email', form),
+          },
+        ]}
+      >
+        <Input
+          className="h-12 rounded-full placeholder:text-sm"
+          placeholder="Enter contact email"
+        />
+      </Form.Item>
+      <Form.Item
+        name={['setup', 'published_in']}
+        label={label('Published in', 'main')}
+        rules={[
+          {
+            required: false,
+            validator: zodFieldValidator(CellMorphologySchema, 'setup.published_in', form),
+          },
+        ]}
+      >
+        <Input className="h-12 rounded-full placeholder:text-sm" placeholder="Enter published in" />
+      </Form.Item>
+      <Form.Item label={label('Location (x, y, z)', 'main')}>
+        <Space.Compact className="flex gap-2">
+          <Form.Item
+            name={['setup', 'location', 'x']}
+            required={false}
+            validateTrigger={['onChange', 'onBlur']}
+            rules={[
+              {
+                validator: zodFieldValidator(CellMorphologySchema, 'setup.location.x', form),
+              },
+            ]}
+            className="w-1/3"
+          >
+            <InputNumber
+              placeholder="X"
+              size="large"
+              className="h-12 w-full rounded-full placeholder:text-sm [&_.ant-input-number-handler-wrap]:hidden"
+            />
+          </Form.Item>
+          <Form.Item
+            name={['setup', 'location', 'y']}
+            required={false}
+            validateTrigger={['onChange', 'onBlur']}
+            rules={[
+              {
+                validator: zodFieldValidator(CellMorphologySchema, 'setup.location.y', form),
+              },
+            ]}
+            className="w-1/3"
+          >
+            <InputNumber
+              placeholder="Y"
+              size="large"
+              className="h-12 w-full rounded-full placeholder:text-sm [&_.ant-input-number-handler-wrap]:hidden"
+            />
+          </Form.Item>
+          <Form.Item
+            name={['setup', 'location', 'z']}
+            required={false}
+            validateTrigger={['onChange', 'onBlur']}
+            rules={[
+              {
+                validator: zodFieldValidator(CellMorphologySchema, 'setup.location.z', form),
+              },
+            ]}
+            className="w-1/3"
+          >
+            <InputNumber
+              placeholder="Z"
+              size="large"
+              className="h-12 w-full rounded-full placeholder:text-sm [&_.ant-input-number-handler-wrap]:hidden"
+            />
+          </Form.Item>
+        </Space.Compact>
+      </Form.Item>
+    </div>
+  );
+}

@@ -117,4 +117,12 @@ export const keyBuilder = {
     `${prefix}-neuron-morphology-3d-data`,
     { virtualLabId, projectId, modelId },
   ],
+  agents: ({ agentType }: { agentType: 'person' | 'organization' | 'consortium' }) => [
+    `${prefix}-agents`,
+    { agentType },
+  ],
+  roles: ({ roleType }: { roleType: 'contributor' | 'owner' | 'viewer' }) => [
+    `${prefix}-roles`,
+    { roleType },
+  ],
 };

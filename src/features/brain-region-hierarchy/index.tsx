@@ -80,18 +80,20 @@ export function BrainRegionHierarchy({
               <TreeSearch options={brainRegionHierarchyResult.options} onSelect={onClick} />
             </HydrateWrapper>
             {brainRegionHierarchyResult.nodes && (
-              <Tree
-                dataKey={dataKey}
-                data={brainRegionHierarchyResult.nodes}
-                height="100%"
-                defaultExpandedNodes={defaultBrainRegion ? [defaultBrainRegion] : []}
-                indentation={{
-                  v: true,
-                  h: false,
-                }}
-                selectedNode={(selectedBrainRegion as unknown as TTreeNode) ?? null}
-                onClick={onClick}
-              />
+              <HydrateWrapper>
+                <Tree
+                  dataKey={dataKey}
+                  data={brainRegionHierarchyResult.nodes}
+                  height="100%"
+                  defaultExpandedNodes={defaultBrainRegion ? [defaultBrainRegion] : []}
+                  indentation={{
+                    v: true,
+                    h: false,
+                  }}
+                  selectedNode={(selectedBrainRegion as unknown as TTreeNode) ?? null}
+                  onClick={onClick}
+                />
+              </HydrateWrapper>
             )}
           </div>
         </div>

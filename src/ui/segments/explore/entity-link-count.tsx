@@ -174,6 +174,7 @@ export function EntityLinkCount() {
                 </span>
               }
               isLoading={value.isLoading || isNil(count) || isNil(rootCount)}
+              isUploadable={value.isUploadable}
             />
           );
         })}
@@ -198,6 +199,7 @@ export function EntityLinkCount() {
                 </span>
               }
               isLoading={value.isLoading || isNil(count) || isNil(rootCount)}
+              isUploadable={value.isUploadable}
             />
           );
         })}
@@ -217,6 +219,7 @@ export function EntityLinkCount() {
               title={value.title}
               count={count ? `${count}` : 0}
               isLoading={value.isLoading || isNil(count)}
+              isUploadable={value.isUploadable}
             />
           );
         })}
