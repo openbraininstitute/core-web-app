@@ -482,7 +482,10 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
           onClick={run}
           disabled={simRequestInProgress || simExecSelectedSimulationIds.length === 0}
         >
-          Launch simulations {launchSimBtnLabelPrefix}
+          <div className="flex justify-center gap-4">
+            <span className="pl-10">Launch simulations {launchSimBtnLabelPrefix}</span>
+            <div className="w-6">{simRequestInProgress && <LoadingOutlined />}</div>
+          </div>
         </button>
       </div>
 
