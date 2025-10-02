@@ -7,7 +7,7 @@ import { EntityTypeDict } from '@/api/entitycore/types';
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { WorkspaceContext } from '@/types/common';
 
-export default function createMorphologyDataAtom(
+export function createMorphologyDataAtom(
   morphology: ICellMorphology,
   ctx?: WorkspaceContext
 ): Atom<Promise<string | null>> {
@@ -17,7 +17,9 @@ export default function createMorphologyDataAtom(
 
     const asset = morphology.assets?.find((a) => a.content_type === 'application/swc');
     if (!asset) {
-      throw new Error(`No distribution found for resource ${morphology.id}`);
+      throw new Error(`No asset found for entity`, {
+        cause: { name: morphology.name },
+      });
     }
 
     // TODO: extend downloadAsset so that return type can be parameterized
@@ -33,3 +35,5 @@ export default function createMorphologyDataAtom(
     return decoder.decode(arrayBuffer);
   });
 }
+
+export default createMorphologyDataAtom;

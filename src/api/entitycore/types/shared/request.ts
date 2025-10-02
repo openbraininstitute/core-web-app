@@ -78,7 +78,8 @@ export type MtypeFilter = {
 };
 
 export type IDFilter = {
-  id__in: string | null;
+  id: string | null;
+  id__in: string | Array<string> | null;
 };
 
 export interface IEModelFilter {
@@ -152,4 +153,22 @@ export type SubjectFilter = {
   subject__strain__name: string | null;
   subject__strain__name__in: string | null;
   subject__strain__name__ilike: string | null;
+};
+
+export type PrefLabelFilter = {
+  pref_label: string | null;
+  pref_label__in: Array<string> | null;
+};
+
+export type AlternativeNameFilter = {
+  alternative_name: string | null;
+};
+
+export type PersonNameFilter = {
+  given_name: string | null;
+  given_name__in: Array<string> | null;
+  given_name__ilike: string | null;
+  family_name: string | null;
+  family_name__in: Array<string> | null;
+  family_name__ilike: string | null;
 };

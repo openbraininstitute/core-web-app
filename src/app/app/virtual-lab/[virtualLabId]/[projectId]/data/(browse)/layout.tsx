@@ -16,11 +16,14 @@ import { resolveDataKey } from '@/utils/key-builder';
 import { AUTO_ONBOARDING_TOURS } from '@/constants';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import { ContributionModal } from '@/ui/segments/contribute/modal';
 
 export default function Page({
   children,
   params,
-}: ServerSideComponentProp<WorkspaceContext, null> & { children: ReactNode }) {
+}: ServerSideComponentProp<WorkspaceContext, null> & {
+  children: ReactNode;
+}) {
   const { projectId } = use(params);
   const dataKey = resolveDataKey({ projectId, section: 'explore' });
 
@@ -49,6 +52,7 @@ export default function Page({
       <DataHeader />
       <DataInnerLayout>
         <ExploreDefaultContent dataKey={dataKey}>{children}</ExploreDefaultContent>
+        <ContributionModal />
       </DataInnerLayout>
     </DataLayout>
   );

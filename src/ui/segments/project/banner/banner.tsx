@@ -183,6 +183,7 @@ export function ProjectCard(): ReactElement {
                   placeholder="Enter title..."
                   rows={1}
                   autoSize
+                  maxLength={60}
                 />
               </Form.Item>
             ) : (
@@ -208,6 +209,7 @@ export function ProjectCard(): ReactElement {
                   )}
                   placeholder="Enter description..."
                   rows={4}
+                  maxLength={600}
                   autoSize={{ minRows: 4, maxRows: 10 }}
                 />
               </Form.Item>

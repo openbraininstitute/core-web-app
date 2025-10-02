@@ -1,25 +1,25 @@
 'use client';
 
-import { LoadingOutlined } from '@ant-design/icons';
-import { Spin } from 'antd';
-import { useAtomValue } from 'jotai';
-import { loadable } from 'jotai/utils';
-import { useParams } from 'next/navigation';
-import { memo, useMemo } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
+import { LoadingOutlined } from '@ant-design/icons';
+import { useParams } from 'next/navigation';
+import { loadable } from 'jotai/utils';
+import { useAtomValue } from 'jotai';
+import { memo, useMemo } from 'react';
+import { Spin } from 'antd';
+import get from 'lodash/get';
 
 // We disable enhanced somas until they are fixed on the backend.
 // import { useSwcContentUrl } from '@/util/content-url';
 
-import { withErrorConfig } from '@/components/GenericErrorFallback';
-import createMorphologyDataAtom from '@/state/morpho-viewer';
-
 import { Morphometrics } from '@/features/entities/cell-morphology/morphometrics';
+import { withErrorConfig } from '@/components/GenericErrorFallback';
+import { createMorphologyDataAtom } from '@/state/morpho-viewer';
 import { MorphoViewer } from '@/components/MorphoViewer';
 import { ensureArray } from '@/utils/array';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
-import { WorkspaceContext } from '@/types/common';
+import type { WorkspaceContext } from '@/types/common';
 
 export default function MorphologyDetailView({ detail }: { detail: ICellMorphology }) {
   if (!detail) return null;
@@ -70,6 +70,7 @@ function MorphoViewerLoader({ resource }: { resource: ICellMorphology }) {
   // const swcContentUrl = useSwcContentUrl(resource.distribution);
   const morphologyData = useAtomValue(morphologyDataAtom);
   const { state } = morphologyData;
+
   switch (state) {
     case 'hasData':
       return morphologyData.data ? (
@@ -94,7 +95,10 @@ function MorphoViewerLoader({ resource }: { resource: ICellMorphology }) {
       );
     case 'hasError':
       return morphologyData.error ? (
-        <div>{(morphologyData.error as { message: string }).message}</div>
+        <div className="border-neutral-2 text-primary-9 flex items-center justify-center rounded-lg border px-4 py-2 text-lg">
+          <div className="mr-1">{(morphologyData.error as { message: string }).message}</div>
+          <div className="font-bold">{get(morphologyData.error, 'cause.name', '')}</div>
+        </div>
       ) : null;
     default:
       throw Error(`Unknown state for morphologyData: "${state}"!`);
