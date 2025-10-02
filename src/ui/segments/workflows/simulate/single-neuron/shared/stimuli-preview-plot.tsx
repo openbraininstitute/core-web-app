@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Layout } from 'plotly.js-dist-min';
 import dynamic from 'next/dynamic';
 
-import { SIMULATION_COLORS } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { SimulationColors } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import { getSingleNeuronStimuliPlot } from '@/api/small-scale-simulator';
 import { useAppNotification } from '@/components/notification';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -82,7 +82,7 @@ export function StimuliPreviewPlot({ amplitudes, protocol, memodelId }: Props) {
 
   const plotData: PlotData | undefined = data?.map((d, i) => ({
     type: 'scatter',
-    line: { color: SIMULATION_COLORS[i] }, // Since we limit the number of amperages to 15 these colors should be enought
+    line: { color: SimulationColors[i] }, // Since we limit the number of amperages to 15 these colors should be enought
     ...d,
   }));
 
