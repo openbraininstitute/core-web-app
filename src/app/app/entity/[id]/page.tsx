@@ -1,58 +1,31 @@
 import { redirect, notFound } from 'next/navigation';
 import { getEntity } from '@/api/entitycore/queries/general/entity';
-import { IEntity } from '@/api/entitycore/types/entities/entity';
-import authFetch from '@/authFetch';
 import { resolveExploreDetailsPageUrl2 } from '@/utils/url-builder';
-import { entityCorePublicProjectId, entityCorePublicVirtualLabId, virtualLabApi } from '@/config';
-
-interface Group {
-  project_id: string;
-  virtual_lab_id: string;
-}
+import { tryCatch } from '@/api/utils';
+import { resolveWorkspace } from '@/ui/segments/app-setup/helpers';
 
 export default async function EntityDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  let entity: IEntity;
-  let url: string;
-  try {
-    entity = await getEntity({ id });
+  const { data: workspace, error } = await tryCatch(resolveWorkspace());
 
-    url = resolveExploreDetailsPageUrl2({
-      entityId: id,
-      dataType: entity.type,
-      ctx: { virtualLabId: entityCorePublicVirtualLabId, projectId: entityCorePublicProjectId },
-    });
-  } catch (e) {
-    notFound();
-  }
-  if (entity.authorized_public) {
-    redirect(url);
+  if (!workspace || error || !workspace.virtualLab || !workspace.project) notFound();
+
+  const redirectCtx = {
+    virtualLabId: workspace.virtualLab.id,
+    projectId: workspace.project.id,
+  };
+
+  if (workspace.recentWorkspace) {
+    redirectCtx.virtualLabId = workspace.recentWorkspace.virtual_lab_id;
+    redirectCtx.projectId = workspace.recentWorkspace.project_id;
   }
 
-  let group: Group | undefined;
+  const { data: entity, error: entityError } = await tryCatch(() => getEntity({ id }));
 
-  try {
-    const res = await authFetch(`${virtualLabApi.url}/users/groups`);
-    if (!res.ok) notFound();
-    const json = (await res.json()) as {
-      data: {
-        groups: Group[];
-      };
-    };
-    const { groups } = json.data;
-    group = groups.find((g) => g.project_id === entity.authorized_project_id);
+  if (!entity || entityError) notFound();
 
-    if (!group) notFound();
-
-    url = resolveExploreDetailsPageUrl2({
-      ctx: { virtualLabId: group.virtual_lab_id, projectId: entity.authorized_project_id },
-      entityId: id,
-      dataType: entity.type,
-    });
-  } catch {
-    notFound();
-  }
-
-  redirect(url);
+  redirect(
+    resolveExploreDetailsPageUrl2({ ctx: redirectCtx, entityId: id, dataType: entity.type })
+  );
 }

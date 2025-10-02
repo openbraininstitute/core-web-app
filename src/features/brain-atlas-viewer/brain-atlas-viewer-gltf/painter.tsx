@@ -145,14 +145,16 @@ export class Painter {
         this.pointCloudPainter.delete();
       }
       this.pointCloudId = annotationValue;
-      const dataPoint = await getPointCouldData(annotationValue, accessToken);
-      const painter = new TgdPainterPointsCloud(context, {
-        dataPoint,
-        minSizeInPixels: 2,
-        texture: new TgdTexture2D(context).loadBitmap(tgdCanvasCreateFill(1, 1, color)),
-      });
-      group.add(painter);
-      this.pointCloudPainter = painter;
+      if (annotationValue !== -1) {
+        const dataPoint = await getPointCouldData(annotationValue, accessToken);
+        const painter = new TgdPainterPointsCloud(context, {
+          dataPoint,
+          minSizeInPixels: 2,
+          texture: new TgdTexture2D(context).loadBitmap(tgdCanvasCreateFill(1, 1, color)),
+        });
+        group.add(painter);
+        this.pointCloudPainter = painter;
+      }
     } catch (ex) {
       logError('Unable to load point could!', ex);
       this.eventError.dispatch(`Unable to load points cloud!`);
