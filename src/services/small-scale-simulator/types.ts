@@ -13,13 +13,19 @@ export enum MessageType {
 
 export type Message<T> = StatusMessage | DataMessage<T>;
 
+type MessageCtx = {
+  [key: string]: any;
+};
+
 type StatusMessage = {
   message_type: MessageType.STATUS;
   status: JobStatus;
   extra?: string;
+  ctx?: MessageCtx;
 };
 
 type DataMessage<T> = {
   message_type: MessageType.DATA;
   data: T;
+  ctx?: MessageCtx;
 };

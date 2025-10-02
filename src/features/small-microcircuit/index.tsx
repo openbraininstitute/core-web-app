@@ -5,7 +5,7 @@ import Ajv, { AnySchema } from 'ajv';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { Fragment, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Progress } from 'antd';
+import { Progress, Checkbox } from 'antd';
 import { match } from 'ts-pattern';
 import {
   simExecRemoteStatusMapAtomFamily,
@@ -38,7 +38,7 @@ import { useAppNotification } from '@/components/notification';
 import { ButtonCopyId } from '@/features/details-view/button-copy-id';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/simulation';
-import { runSimulation } from '@/services/small-scale-simulator/circuit';
+import { runSimulationBatch } from '@/services/small-scale-simulator/circuit';
 import { MessageType } from '@/services/small-scale-simulator/types';
 import { assertErrorMessage, classNames } from '@/util/utils';
 import { getErrorMessage } from '@/utils/error';
@@ -403,33 +403,35 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
   const run = async () => {
     setSimRequestInProgress(true);
     try {
-      for (const simId of simExecSelectedSimulationIds) {
-        await runSimulation({
-          ctx: { virtualLabId, projectId },
-          simulationId: simulations[0].id,
-          onMessage: (message) => {
-            match(message)
-              .with({ message_type: MessageType.STATUS }, (msg) => {
-                // TODO: fix types
+      await runSimulationBatch({
+        ctx: { virtualLabId, projectId },
+        simulationIds: simExecSelectedSimulationIds,
+        onMessage: (message) => {
+          match(message)
+            .with({ message_type: MessageType.STATUS }, (msg) => {
+              // TODO: fix types
+              const simId = msg.ctx?.simulation_id;
+              if (simId) {
                 updateStatusMap(
                   statusMap!.set(simId, msg.status as unknown as CircuitSimulationExecutionStatus)
                 );
+              }
 
-                if (msg.status === 'running' && msg.extra) {
-                  const progressParsed = parseInt(msg.extra, 10);
-                  if (Number.isFinite(progressParsed) && progressParsed > 0) {
-                    setProgress(progressParsed);
-                  }
+              // TODO: see the impact on sim perf, possibly remove it's too expensive
+              if (msg.status === 'running' && msg.extra) {
+                const progressParsed = parseInt(msg.extra, 10);
+                if (Number.isFinite(progressParsed) && progressParsed > 0) {
+                  setProgress(progressParsed);
                 }
+              }
 
-                if (msg.status !== 'done') return;
+              if (msg.status !== 'done') return;
 
-                notification.success({ message: `Simulation ${simulations[0].name} done` });
-              })
-              .otherwise(() => null);
-          },
-        });
-      }
+              notification.success({ message: `Simulation ${simulations[0].name} done` });
+            })
+            .otherwise(() => null);
+        },
+      });
     } catch (error) {
       const defaultMsg = messages.RunningSimulationDefaultError;
 
@@ -448,19 +450,63 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
     ? `(${simExecSelectedSimulationIds.length})`
     : '';
 
+  const scanParams = {
+    amplitude_ethunoehuoneuheleuoenuonhuntoehu_noethunoethuneo_tehnoehunteohuneo_unoehuntoeh: 0.01,
+    frequency: 200,
+    simultion_length: 3000,
+    somethingElse: 100,
+    somethingElse2: 200,
+  };
+
   return (
     <div className={styles.threeColumns}>
-      {/* List of simulations */}
-      <div className="flex flex-col gap-5 overflow-y-auto border-r border-gray-200 pr-4">
-        {simulations.map((simulation) => (
-          <SimulationListItem
-            key={simulation.id}
-            simulation={simulation}
-            execStatus={statusMap?.get(simulation.id)}
-            onSelect={() => {}}
-            progress={progress}
-          />
-        ))}
+      <div className="flex">
+        {/* List of simulations */}
+        <div className="flex flex-col justify-center gap-5 overflow-y-auto border-r border-gray-200 pr-4">
+          {simulations.map((simulation) => (
+            <>
+              <SimulationListItem
+                key={simulation.id}
+                simulation={simulation}
+                execStatus={statusMap?.get(simulation.id)}
+                onSelect={() => {}}
+                onSelectedForSimChange={(simulationId, selected) => {
+                  if (selected) {
+                    setSimExecSelectedSimulationIds((prev) => [...prev, simulationId]);
+                  } else {
+                    setSimExecSelectedSimulationIds((prev) =>
+                      prev.filter((id) => id !== simulationId)
+                    );
+                  }
+                }}
+                selectedForSim={simExecSelectedSimulationIds.includes(simulation.id)}
+                progress={progress}
+              >
+                <ScanParams scanParams={scanParams} />
+              </SimulationListItem>
+              {/* // TODO Remove after debugging. */}
+              <SimulationListItem
+                key={simulation.id + '2'}
+                simulation={simulation}
+                execStatus={statusMap?.get(simulation.id)}
+                onSelect={() => {}}
+                onSelectedForSimChange={(simulationId, selected) => {
+                  if (selected) {
+                    setSimExecSelectedSimulationIds((prev) => [...prev, simulationId]);
+                  } else {
+                    setSimExecSelectedSimulationIds((prev) =>
+                      prev.filter((id) => id !== simulationId)
+                    );
+                  }
+                }}
+                selectedForSim={simExecSelectedSimulationIds.includes(simulation.id)}
+                progress={progress}
+              >
+                <ScanParams scanParams={scanParams} />
+              </SimulationListItem>
+            </>
+          ))}
+        </div>
         <button
           className={classNames(
             'min-h-[50] w-full cursor-pointer rounded-3xl p-2 text-white',
@@ -502,25 +548,66 @@ type SimulationBlockProps = {
   simulation: ICircuitSimulation;
   execStatus?: CircuitSimulationExecutionStatus;
   onSelect: (simulationId: string) => void;
+  onSelectedForSimChange: (simulationId: string, selected: boolean) => void;
+  selectedForSim: boolean;
   progress: number | null;
+  children: React.ReactNode;
 };
 
-function SimulationListItem({ simulation, execStatus, onSelect, progress }: SimulationBlockProps) {
+function SimulationListItem({
+  simulation,
+  execStatus,
+  onSelect,
+  onSelectedForSimChange,
+  selectedForSim,
+  progress,
+  children,
+}: SimulationBlockProps) {
   return (
-    <button
-      type="button"
-      title={simulation.name}
-      className="h-20 w-full cursor-pointer rounded-lg bg-white p-4"
-      onClick={() => onSelect(simulation.id)}
-    >
-      <div className="flex items-center justify-between">
-        <div className="truncate overflow-hidden whitespace-nowrap">{simulation.name}</div>
-        <div className="ml-4 flex flex-shrink-0">
-          <SimulationStatusBadge status={execStatus} />
-          <RightOutlined className="ml-2 text-sm" />
+    <div className="flex-none rounded-lg bg-white p-4">
+      <button
+        type="button"
+        title={simulation.name}
+        className="h-20 w-full cursor-pointer"
+        onClick={() => onSelect(simulation.id)}
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            {(!execStatus || execStatus === CircuitSimulationExecutionStatus.CREATED) && (
+              <Checkbox
+                className="mr-2"
+                onChange={(e) => onSelectedForSimChange(simulation.id, e.target.checked)}
+                checked={selectedForSim}
+              />
+            )}
+            <span className="truncate overflow-hidden whitespace-nowrap">{simulation.name}</span>
+          </div>
+          <div className="ml-4 flex flex-shrink-0">
+            <SimulationStatusBadge status={execStatus} />
+            <RightOutlined className="ml-2 text-sm" />
+          </div>
         </div>
-      </div>
-      {progress && <Progress className="mt-2" size="small" percent={progress} status="active" />}
-    </button>
+        {progress && <Progress className="mt-2" size="small" percent={progress} status="active" />}
+      </button>
+
+      {children}
+    </div>
+  );
+}
+
+type SimulationScanParams = { [key: string]: string | number };
+
+function ScanParams({ scanParams }: { scanParams: SimulationScanParams }) {
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      {Object.entries(scanParams).map(([key, value]) => (
+        <div key={key} className="overflow-x-hidden">
+          <div title={key} className="truncate text-ellipsis text-gray-400">
+            {key}
+          </div>
+          <div className="text-primary-9 truncate font-bold text-ellipsis">{value}</div>
+        </div>
+      ))}
+    </div>
   );
 }
