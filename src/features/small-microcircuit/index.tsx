@@ -5,7 +5,7 @@ import Ajv, { AnySchema } from 'ajv';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { Fragment, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Progress, Checkbox } from 'antd';
+import { Checkbox, ConfigProvider } from 'antd';
 import { match } from 'ts-pattern';
 import {
   simExecRemoteStatusMapAtomFamily,
@@ -25,10 +25,10 @@ import { AtomsMap, JSONSchema, TabType } from './types';
 // James asked to only comment it out for now.
 // import CircuitName from './_components/circuit-name';
 
+import { cn } from '@/utils/css-class';
 import { File, SimulationFiles } from './_components/simulation-files';
 import { SimulationStatusBadge } from './_components/simulation-status';
 import errorRegistry from './error-registry';
-import { cn } from '@/utils/css-class';
 
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
@@ -36,12 +36,14 @@ import ApiError from '@/api/error';
 import authFetch from '@/authFetch';
 import { useAppNotification } from '@/components/notification';
 import { ButtonCopyId } from '@/features/details-view/button-copy-id';
+import { simulationStatusColorMap } from '@/features/small-microcircuit/constants';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/simulation';
 import { runSimulationBatch } from '@/services/small-scale-simulator/circuit';
 import { MessageType } from '@/services/small-scale-simulator/types';
 import { assertErrorMessage, classNames } from '@/util/utils';
 import { getErrorMessage } from '@/utils/error';
+
 import styles from './small-microcircuit.module.css';
 
 export default function SimulationCampaignConfiguration({
@@ -358,8 +360,6 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
   const [selectedSimulation, setSelectedSimulation] = useState<null | ICircuitSimulation>(null);
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
 
-  const [progress, setProgress] = useState<number | null>(null);
-
   const activeSimulationExecStatus = selectedSimulation && statusMap?.get(selectedSimulation.id);
 
   useEffect(() => {
@@ -374,8 +374,8 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
   }, [simulations, statusMap]);
 
   useEffect(() => {
-    // If there is only one simulation in the campaign - make it active on page load.
-    if (simulations.length === 1) setSelectedSimulation(simulations[0]);
+    // Select first simulation from the list
+    setSelectedSimulation(simulations[0]);
   }, [simulations]);
 
   useEffect(() => {
@@ -406,6 +406,10 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
       await runSimulationBatch({
         ctx: { virtualLabId, projectId },
         simulationIds: simExecSelectedSimulationIds,
+        onInit: () => {
+          setSimRequestInProgress(false);
+          setSimExecSelectedSimulationIds([]);
+        },
         onMessage: (message) => {
           match(message)
             .with({ message_type: MessageType.STATUS }, (msg) => {
@@ -415,14 +419,6 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
                 updateStatusMap(
                   statusMap!.set(simId, msg.status as unknown as CircuitSimulationExecutionStatus)
                 );
-              }
-
-              // TODO: see the impact on sim perf, possibly remove it's too expensive
-              if (msg.status === 'running' && msg.extra) {
-                const progressParsed = parseInt(msg.extra, 10);
-                if (Number.isFinite(progressParsed) && progressParsed > 0) {
-                  setProgress(progressParsed);
-                }
               }
 
               if (msg.status !== 'done') return;
@@ -450,61 +446,30 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
     ? `(${simExecSelectedSimulationIds.length})`
     : '';
 
-  const scanParams = {
-    amplitude_ethunoehuoneuheleuoenuonhuntoehu_noethunoethuneo_tehnoehunteohuneo_unoehuntoeh: 0.01,
-    frequency: 200,
-    simultion_length: 3000,
-    somethingElse: 100,
-    somethingElse2: 200,
-  };
-
   return (
     <div className={styles.threeColumns}>
-      <div className="flex">
+      <div className="flex border-r border-gray-200 pr-4">
         {/* List of simulations */}
-        <div className="flex flex-col justify-center gap-5 overflow-y-auto border-r border-gray-200 pr-4">
+        <div className="flex flex-col justify-start gap-5 overflow-y-auto">
           {simulations.map((simulation) => (
-            <>
-              <SimulationListItem
-                key={simulation.id}
-                simulation={simulation}
-                execStatus={statusMap?.get(simulation.id)}
-                onSelect={() => {}}
-                onSelectedForSimChange={(simulationId, selected) => {
-                  if (selected) {
-                    setSimExecSelectedSimulationIds((prev) => [...prev, simulationId]);
-                  } else {
-                    setSimExecSelectedSimulationIds((prev) =>
-                      prev.filter((id) => id !== simulationId)
-                    );
-                  }
-                }}
-                selectedForSim={simExecSelectedSimulationIds.includes(simulation.id)}
-                progress={progress}
-              >
-                <ScanParams scanParams={scanParams} />
-              </SimulationListItem>
-              {/* // TODO Remove after debugging. */}
-              <SimulationListItem
-                key={simulation.id + '2'}
-                simulation={simulation}
-                execStatus={statusMap?.get(simulation.id)}
-                onSelect={() => {}}
-                onSelectedForSimChange={(simulationId, selected) => {
-                  if (selected) {
-                    setSimExecSelectedSimulationIds((prev) => [...prev, simulationId]);
-                  } else {
-                    setSimExecSelectedSimulationIds((prev) =>
-                      prev.filter((id) => id !== simulationId)
-                    );
-                  }
-                }}
-                selectedForSim={simExecSelectedSimulationIds.includes(simulation.id)}
-                progress={progress}
-              >
-                <ScanParams scanParams={scanParams} />
-              </SimulationListItem>
-            </>
+            <SimulationListItem
+              key={simulation.id}
+              selected={selectedSimulation?.id === simulation.id}
+              simulation={simulation}
+              execStatus={statusMap?.get(simulation.id)}
+              onSelect={() => setSelectedSimulation(simulation)}
+              onSelectedForSimChange={(simulationId, selected) => {
+                if (selected) {
+                  setSimExecSelectedSimulationIds((prev) => [...prev, simulationId]);
+                } else {
+                  setSimExecSelectedSimulationIds((prev) =>
+                    prev.filter((id) => id !== simulationId)
+                  );
+                }
+              }}
+              selectedForSim={simExecSelectedSimulationIds.includes(simulation.id)}
+              selectionForSimDisabled={simRequestInProgress}
+            />
           ))}
         </div>
         <button
@@ -548,64 +513,99 @@ type SimulationBlockProps = {
   simulation: ICircuitSimulation;
   execStatus?: CircuitSimulationExecutionStatus;
   onSelect: (simulationId: string) => void;
+  selected?: boolean;
   onSelectedForSimChange: (simulationId: string, selected: boolean) => void;
   selectedForSim: boolean;
-  progress: number | null;
-  children: React.ReactNode;
+  selectionForSimDisabled?: boolean;
 };
 
 function SimulationListItem({
   simulation,
   execStatus,
   onSelect,
+  selected,
   onSelectedForSimChange,
   selectedForSim,
-  progress,
-  children,
+  selectionForSimDisabled,
 }: SimulationBlockProps) {
-  return (
-    <div className="flex-none rounded-lg bg-white p-4">
-      <button
-        type="button"
-        title={simulation.name}
-        className="h-20 w-full cursor-pointer"
-        onClick={() => onSelect(simulation.id)}
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            {(!execStatus || execStatus === CircuitSimulationExecutionStatus.CREATED) && (
-              <Checkbox
-                className="mr-2"
-                onChange={(e) => onSelectedForSimChange(simulation.id, e.target.checked)}
-                checked={selectedForSim}
-              />
-            )}
-            <span className="truncate overflow-hidden whitespace-nowrap">{simulation.name}</span>
-          </div>
-          <div className="ml-4 flex flex-shrink-0">
-            <SimulationStatusBadge status={execStatus} />
-            <RightOutlined className="ml-2 text-sm" />
-          </div>
-        </div>
-        {progress && <Progress className="mt-2" size="small" percent={progress} status="active" />}
-      </button>
+  const color = simulationStatusColorMap[execStatus ?? CircuitSimulationExecutionStatus.CREATED];
 
-      {children}
+  const scanParams = {
+    amplitude_ethunoehuoneuheleuoenuonhuntoehu_noethunoethuneo_tehnoehunteohuneo_unoehuntoeh: 0.01,
+    frequency: 200,
+    simultion_length: 3000,
+    somethingElse: 100,
+  };
+
+  return (
+    <div className="flex-none bg-white">
+      <div
+        className="rounded-lg p-4 transition-colors duration-300"
+        style={{
+          border: selected ? `2px solid ${color}` : 'none',
+          backgroundColor: selected ? `${color}0f` : 'white', // 6% opacity for bg color
+        }}
+      >
+        <button
+          type="button"
+          title={simulation.name}
+          className="mb-2 h-18 w-full cursor-pointer"
+          onClick={() => onSelect(simulation.id)}
+        >
+          <div className="flex items-center justify-between">
+            <div className="font-bold">
+              {!execStatus || execStatus === CircuitSimulationExecutionStatus.CREATED ? (
+                <ConfigProvider theme={{ token: { colorPrimary: '#1890ff' } }}>
+                  <Checkbox
+                    className="mr-2 transition-colors duration-300"
+                    disabled={selectionForSimDisabled}
+                    onChange={(e) => onSelectedForSimChange(simulation.id, e.target.checked)}
+                    checked={selectedForSim}
+                    style={{ color }}
+                  >
+                    <span className="truncate overflow-hidden text-lg whitespace-nowrap transition-colors duration-300">
+                      {simulation.name}
+                    </span>
+                  </Checkbox>
+                </ConfigProvider>
+              ) : (
+                <span
+                  style={{ color }}
+                  className="truncate overflow-hidden text-lg whitespace-nowrap transition-colors duration-300"
+                >
+                  {simulation.name}
+                </span>
+              )}
+            </div>
+            <div className="ml-4 flex flex-shrink-0">
+              <SimulationStatusBadge status={execStatus} />
+              <RightOutlined className="ml-2 text-sm" />
+            </div>
+          </div>
+        </button>
+
+        <ScanParams scanParams={scanParams} color={color} />
+      </div>
     </div>
   );
 }
 
 type SimulationScanParams = { [key: string]: string | number };
 
-function ScanParams({ scanParams }: { scanParams: SimulationScanParams }) {
+function ScanParams({ scanParams, color }: { scanParams: SimulationScanParams; color: string }) {
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
       {Object.entries(scanParams).map(([key, value]) => (
         <div key={key} className="overflow-x-hidden">
           <div title={key} className="truncate text-ellipsis text-gray-400">
             {key}
           </div>
-          <div className="text-primary-9 truncate font-bold text-ellipsis">{value}</div>
+          <div
+            className="truncate font-bold text-ellipsis transition-colors duration-300"
+            style={{ color }}
+          >
+            {value}
+          </div>
         </div>
       ))}
     </div>
