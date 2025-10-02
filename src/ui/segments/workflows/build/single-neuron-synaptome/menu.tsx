@@ -1,5 +1,7 @@
 'use client';
 
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   CheckCircleFilled,
   LoadingOutlined,
@@ -7,39 +9,38 @@ import {
   SettingFilled,
   WarningFilled,
 } from '@ant-design/icons';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import isNil from 'lodash/isNil';
+
 import kebabCase from 'lodash/kebabCase';
+import isNil from 'lodash/isNil';
 import omit from 'lodash/omit';
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { z } from 'zod';
 
+import { DEFAULT_SYNAPSE_VALUE } from '@/features/entities/single-neuron-synaptome/build/elements/synapse-config-form';
+import { SynapseSetMenuItems } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-set-menu-item';
 import { SingleNeuronSynaptomeBaseSchema } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { tryCatch } from '@/api/utils';
-import { useAppNotification } from '@/components/notification';
-import { ROOT_ROUTE } from '@/config';
-import { DEFAULT_SYNAPSE_VALUE } from '@/features/entities/single-neuron-synaptome/build/elements/synapse-config-form';
-import { messages } from '@/i18n/en/synaptome';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Button } from '@/ui/molecules/button';
+import { CreateSingleNeuronSynaptomeSchema } from '@/api/small-scale-simulator/types';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
+import { createSingleNeuronSynaptome } from '@/api/small-scale-simulator';
 import {
   BuildStep,
   BuildStepKeys,
   useBuildSingleNeuronSynaptomeSessionState,
 } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import { SynapseSetMenuItems } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-set-menu-item';
-import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useAppNotification } from '@/components/notification';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { WorkspaceContextSchema } from '@/types/common';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { messages } from '@/i18n/en/synaptome';
+import { Button } from '@/ui/molecules/button';
+import { tryCatch } from '@/api/utils';
 import { cn } from '@/utils/css-class';
+import { ROOT_ROUTE } from '@/config';
 
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import { createSingleNeuronSynaptome } from '@/api/small-scale-simulator';
-import { CreateSingleNeuronSynaptomeSchema } from '@/api/small-scale-simulator/types';
-import { WorkspaceContextSchema } from '@/types/common';
 
 const CreateSingleNeuronSynaptomeContextSchema =
   CreateSingleNeuronSynaptomeSchema.merge(WorkspaceContextSchema);
@@ -95,6 +96,7 @@ export function Menu({ sessionId }: Props) {
         seed: sessionValue?.seed ?? 100,
         synapseSets: synapseSetsMap,
       });
+
       replace(`${pathname}?${queryParams.toString()}`);
     }
   };

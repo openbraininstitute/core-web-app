@@ -739,9 +739,9 @@ export function SynapseSet({ sessionId }: Props) {
             <Button
               type="submit"
               rounded
-              disabled={!isFormValid || isAlreadyVisualized || visualizeLoading}
+              disabled={!isFormValid || visualizeLoading}
               size="lg"
-              variant="outline"
+              variant="success"
               className="shadow-sm disabled:opacity-50"
             >
               <div className="flex items-center justify-center gap-3">
