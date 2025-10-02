@@ -530,13 +530,6 @@ function SimulationListItem({
 }: SimulationBlockProps) {
   const color = simulationStatusColorMap[execStatus ?? CircuitSimulationExecutionStatus.CREATED];
 
-  const scanParams = {
-    amplitude_ethunoehuoneuheleuoenuonhuntoehu_noethunoethuneo_tehnoehunteohuneo_unoehuntoeh: 0.01,
-    frequency: 200,
-    simultion_length: 3000,
-    somethingElse: 100,
-  };
-
   return (
     <div className="flex-none bg-white">
       <div
@@ -584,7 +577,7 @@ function SimulationListItem({
           </div>
         </button>
 
-        <ScanParams scanParams={scanParams} color={color} />
+        <ScanParams scanParams={simulation.scan_parameters} color={color} />
       </div>
     </div>
   );
