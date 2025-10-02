@@ -75,11 +75,12 @@ export function Menu({ sessionId }: Props) {
   };
 
   const onAdd = () => {
+    const queryParams = new URLSearchParams(searchParams);
+    queryParams.set('step', BuildStep.SynapseSet);
+
     if ((sessionValue?.synapseSets?.size ?? 0) <= 0) {
       const id = crypto.randomUUID();
-      const queryParams = new URLSearchParams(searchParams);
       queryParams.set('set', id);
-      queryParams.set('step', BuildStep.SynapseSet);
       const synapseSetsMap = new Map<string, TSingleNeuronSynaptomeConfiguration>([]);
       synapseSetsMap.set(id, {
         ...DefaultSynapseValue,
@@ -92,9 +93,8 @@ export function Menu({ sessionId }: Props) {
         seed: sessionValue?.seed ?? 100,
         synapseSets: synapseSetsMap,
       });
-
-      replace(`${pathname}?${queryParams.toString()}`);
     }
+    replace(`${pathname}?${queryParams.toString()}`);
   };
 
   const validSetsCount = Array.from(sessionValue?.synapseSets?.values() ?? [])?.filter(

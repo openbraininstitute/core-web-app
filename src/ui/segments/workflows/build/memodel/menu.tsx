@@ -40,6 +40,7 @@ type TCreateSingleNeuronContext = z.infer<typeof CreateSingleNeuronContextSchema
 
 export function Menu({ sessionId }: { sessionId: string }) {
   const breakpoint = useDefaultBreakpoint();
+  const notification = useAppNotification();
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const { replace } = useRouter();
@@ -81,7 +82,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
       ctx: { virtualLabId, projectId },
     });
   };
-  const notification = useAppNotification();
+
   const mutate = useMutation({
     mutationFn: buildMeModel,
     onSuccess: (data) => {
