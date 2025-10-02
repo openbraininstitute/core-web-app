@@ -25,10 +25,10 @@ import { AtomsMap, JSONSchema, TabType } from './types';
 // James asked to only comment it out for now.
 // import CircuitName from './_components/circuit-name';
 
-import { cn } from '@/utils/css-class';
 import { File, SimulationFiles } from './_components/simulation-files';
 import { SimulationStatusBadge } from './_components/simulation-status';
 import errorRegistry from './error-registry';
+import { cn } from '@/utils/css-class';
 
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
