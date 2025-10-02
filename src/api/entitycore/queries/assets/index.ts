@@ -1,10 +1,9 @@
 import kebabCase from 'lodash/kebabCase';
 
-import authApiClient from '@/api/apiClient';
-
 import { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
+import { authApiClient } from '@/api/apiClient';
 import { entityCoreUrl } from '@/config';
 
 import type {
@@ -215,4 +214,44 @@ export async function listDirectoryOfAssets({
     },
     { retryOnError }
   );
+}
+
+export async function createAsset({
+  ctx,
+  entityType,
+  entityId,
+  fileName,
+  payload,
+  meta,
+  label,
+  mimeType,
+}: {
+  ctx?: WorkspaceContext;
+  entityType: EntityCoreDataType;
+  entityId: string;
+  fileName: string;
+  mimeType: string;
+  payload: BlobPart;
+  meta?: Record<string, any>;
+  label?: AssetLabel;
+}): Promise<IAsset> {
+  const blob = new Blob([payload], { type: mimeType });
+  const file = new File([blob], fileName, { type: mimeType });
+  const formData = new FormData();
+
+  if (file) formData.append('file', file);
+  if (label) formData.append('label', label);
+  if (meta) formData.append('meta', JSON.stringify(meta));
+  if (label) formData.append('label', label);
+
+  const api = await authApiClient(entityCoreUrl);
+  return await api.post<IAsset>(`/${kebabCase(entityType)}/${entityId}/assets`, {
+    headers: {
+      ...getEntityCoreContext(ctx).headers,
+      // This is required due apiClient is using "application/json" as default content-type
+      // the browser should handle auto the multipart-form
+      'Content-Type': undefined,
+    },
+    body: formData,
+  });
 }

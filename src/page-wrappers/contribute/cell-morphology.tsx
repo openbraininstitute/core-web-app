@@ -1,0 +1,400 @@
+'use client';
+
+import { CheckCircleFilled, CloseOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { useMemo, useState, useCallback, Fragment, ReactNode } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { Form } from 'antd';
+
+import { Contribution } from '@/ui/segments/explore/contribute/cell-morphology/contribution';
+import { MTypeClassification } from '@/ui/segments/explore/contribute/cell-morphology/mtype';
+import { AssetUpload } from '@/ui/segments/explore/contribute/cell-morphology/asset-upload';
+import { usePipeline } from '@/page-wrappers/contribute/use-cell-morphology-pipeline';
+import { License } from '@/ui/segments/explore/contribute/cell-morphology/license';
+import { Subject } from '@/ui/segments/explore/contribute/cell-morphology/subject';
+import { Setup } from '@/ui/segments/explore/contribute/cell-morphology/setup';
+import {
+  SubmitButton,
+  SubmitStatusFollow,
+} from '@/ui/segments/explore/contribute/cell-morphology/submit-entity';
+import {
+  CellMorphologySchema,
+  getValidationStatus,
+  type TCellMorphologyForm,
+} from '@/ui/segments/explore/contribute/cell-morphology/helpers';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { resolveDataKey } from '@/utils/key-builder';
+import { Button } from '@/ui/molecules/button';
+import { Modal } from '@/ui/molecules/modal';
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+} from '@/ui/molecules/breadcrumb/index';
+import { cn } from '@/utils/css-class';
+
+type Props = {
+  isModal?: boolean;
+  brainRegionId: string;
+};
+
+export function FixModalCloseBug({
+  expectedPath,
+  children,
+}: {
+  expectedPath: string | RegExp;
+  children: ReactNode;
+}) {
+  const pathname = usePathname();
+
+  if (expectedPath instanceof RegExp) {
+    if (expectedPath.test(pathname)) {
+      return children;
+    }
+    return null;
+  }
+  // eslint-disable-next-line no-else-return
+  else if (pathname.includes(expectedPath)) {
+    return children;
+  }
+  return null;
+}
+
+const STEPS = {
+  assets: 'assets',
+  setup: 'setup',
+  contribution: 'contribution',
+  subject: 'subject',
+  license: 'license',
+  mtype: 'mtype',
+} as const;
+
+type StepKey = (typeof STEPS)[keyof typeof STEPS];
+
+export function CellMorphologyContribution({ isModal = true, brainRegionId }: Props) {
+  const { projectId } = useWorkspace();
+  const router = useRouter();
+  const sessionId = useSearchParams().get('sessionId');
+  const [form] = Form.useForm();
+  const allValues = Form.useWatch([], form);
+
+  const [submitting, setSubmitting] = useState(false);
+  const dataKey = resolveDataKey({
+    projectId,
+    section: 'contribute',
+    suffix: `${sessionId}`,
+  });
+
+  const [activeStep, setActiveStep] = useState<StepKey>(STEPS.assets);
+
+  const getDirtyFields = useCallback(() => {
+    const allFields = form.getFieldsValue(true);
+    const touchedFields = Object.keys(allFields).filter((field) => form.isFieldTouched(field));
+
+    return touchedFields;
+  }, [form]);
+
+  const onChangeStep = useCallback(
+    (stepKey: StepKey) => {
+      if (stepKey !== activeStep) {
+        setActiveStep(stepKey);
+      }
+    },
+    [activeStep]
+  );
+
+  const assetValidator = CellMorphologySchema.pick({ assets: true }).safeParse(allValues);
+  const setupValidator = CellMorphologySchema.pick({ setup: true }).safeParse(allValues);
+  const subjectValidator = CellMorphologySchema.pick({ subject_id: true }).safeParse(allValues);
+  const licenseValidator = CellMorphologySchema.pick({ license_id: true }).safeParse(allValues);
+  const mtypeValidator = CellMorphologySchema.pick({ mtype_class_id: true }).safeParse(allValues);
+  const contributionValidator = CellMorphologySchema.pick({ contribution: true }).safeParse(
+    allValues
+  );
+  const dirtyFields = getDirtyFields();
+
+  const assetsStatus = getValidationStatus(assetValidator, 'assets', dirtyFields);
+  const setupStatus = getValidationStatus(setupValidator, 'setup', dirtyFields);
+  const contributionStatus = getValidationStatus(
+    contributionValidator,
+    'contribution',
+    dirtyFields
+  );
+  const licenseStatus = getValidationStatus(licenseValidator, 'license_id', dirtyFields);
+  const mtypeStatus = getValidationStatus(mtypeValidator, 'mtype_class_id', dirtyFields);
+  const subjectStatus = getValidationStatus(subjectValidator, 'subject_id', dirtyFields);
+
+  const steps = useMemo(
+    () => [
+      {
+        key: 'assets',
+        label: (
+          <div
+            className={cn('font-light', {
+              'text-error': assetsStatus === 'invalid',
+              'text-primary-8 font-bold': assetsStatus === 'valid',
+              'text-primary-6': assetsStatus !== 'invalid' && activeStep === STEPS.assets,
+            })}
+          >
+            Asset Upload
+          </div>
+        ),
+        children: <AssetUpload dataKey={dataKey} />,
+        icon: assetsStatus === 'valid' && <CheckCircleFilled className="text-teal-500" />,
+      },
+      {
+        key: 'setup',
+        label: (
+          <div
+            className={cn('font-light', {
+              'text-error': setupStatus === 'invalid',
+              'text-primary-8 font-bold': setupStatus === 'valid',
+              'text-primary-6': setupStatus !== 'invalid' && activeStep === STEPS.setup,
+            })}
+          >
+            Setup
+          </div>
+        ),
+        children: <Setup />,
+        icon: setupStatus === 'valid' && <CheckCircleFilled className="text-teal-500" />,
+      },
+      {
+        key: 'contribution',
+        label: (
+          <div
+            className={cn('font-light', {
+              'text-error': contributionStatus === 'invalid',
+              'text-primary-8 font-bold': contributionStatus === 'valid',
+              'text-primary-6':
+                contributionStatus !== 'invalid' && activeStep === STEPS.contribution,
+            })}
+          >
+            Contribution
+          </div>
+        ),
+        children: <Contribution />,
+        icon: contributionStatus === 'valid' && <CheckCircleFilled className="text-teal-500" />,
+      },
+      {
+        key: 'subject',
+        label: (
+          <div
+            className={cn('font-light', {
+              'text-error': subjectStatus === 'invalid',
+              'text-primary-8 font-bold': subjectStatus === 'valid',
+              'text-primary-6': subjectStatus !== 'invalid' && activeStep === STEPS.subject,
+            })}
+          >
+            Subject
+          </div>
+        ),
+        children: <Subject />,
+        icon: subjectStatus === 'valid' && <CheckCircleFilled className="text-teal-500" />,
+      },
+      {
+        key: 'license',
+        label: (
+          <div
+            className={cn('font-light', {
+              'text-error': licenseStatus === 'invalid',
+              'text-primary-8 font-bold': licenseStatus === 'valid',
+              'text-primary-6': licenseStatus !== 'invalid' && activeStep === STEPS.license,
+            })}
+          >
+            License
+          </div>
+        ),
+        children: <License />,
+        icon: licenseStatus === 'valid' && <CheckCircleFilled className="text-teal-500" />,
+      },
+      {
+        key: 'mtype',
+        label: (
+          <div
+            className={cn('font-light', {
+              'text-error': mtypeStatus === 'invalid',
+              'text-primary-8 font-bold': mtypeStatus === 'valid',
+              'text-primary-6': mtypeStatus !== 'invalid' && activeStep === STEPS.mtype,
+            })}
+          >
+            M-Type
+          </div>
+        ),
+        children: <MTypeClassification />,
+        icon: mtypeStatus === 'valid' && <CheckCircleFilled className="text-teal-500" />,
+      },
+    ],
+    [
+      dataKey,
+      activeStep,
+      assetsStatus,
+      setupStatus,
+      contributionStatus,
+      subjectStatus,
+      licenseStatus,
+      mtypeStatus,
+    ]
+  );
+
+  const onPrevious = useCallback((): void => {
+    const currentIndex = steps.findIndex((step) => step.key === activeStep);
+    if (currentIndex > 0) {
+      onChangeStep(steps[currentIndex - 1].key as StepKey);
+    }
+  }, [activeStep, steps, onChangeStep]);
+
+  const onNext = useCallback((): void => {
+    const currentIndex = steps.findIndex((step) => step.key === activeStep);
+    if (currentIndex < steps.length - 1) {
+      onChangeStep(steps[currentIndex + 1].key as StepKey);
+    }
+  }, [activeStep, steps, onChangeStep]);
+
+  const { createEntityGenerator, loading: submitLoading } = usePipeline({ sessionId: sessionId! });
+
+  const onSubmit = async (values: TCellMorphologyForm) => {
+    setSubmitting(true);
+    await createEntityGenerator({ values });
+  };
+
+  const content = (
+    <div className={cn('relative mx-auto h-full w-full max-w-5xl px-6 py-2')}>
+      <Form
+        form={form}
+        id="contribute-cell-morphology-modal"
+        rootClassName={cn(
+          'relative flex flex-col w-full h-full [&_.ant-form-item-explain-error]:text-sm! [&_.ant-form-item-explain-error]:pl-1.5! [&_.ant-form-item-explain-error]:select-none!'
+        )}
+        layout="vertical"
+        requiredMark={false}
+        className="h-full"
+        validateTrigger={['onChange', 'onBlur']}
+        autoComplete="false"
+        onFinish={onSubmit}
+        initialValues={{
+          setup: { brain_region_id: brainRegionId },
+        }}
+      >
+        <div className="mb-4 flex-shrink-0">
+          <Breadcrumb>
+            <BreadcrumbList className="justify-between gap-0.5 sm:gap-0.5">
+              {steps.map((step, index) => (
+                <Fragment key={step.key}>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild className={cn('hover:text-primary-6 cursor-pointer')}>
+                      <Button
+                        borderless
+                        rounded
+                        type="button"
+                        variant="outline"
+                        className={cn(
+                          'active:text-primary-6 text-label active:bg-neutral-1 bg-transparent px-2 text-base shadow-none'
+                        )}
+                        onClick={() => onChangeStep(step.key as StepKey)}
+                      >
+                        {step.label}
+                        {step.icon}
+                      </Button>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  {index < steps.length - 1 && (
+                    <BreadcrumbSeparator>
+                      <RightOutlined className="text-primary-9 size-2" />
+                    </BreadcrumbSeparator>
+                  )}
+                </Fragment>
+              ))}
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+
+        <div className="border-neutral-2 h-full max-h-[calc(100%-2rem)] min-h-0 flex-1 rounded-md border py-6 pr-1">
+          {submitting ? (
+            <div className="flex h-full w-full items-center justify-center">
+              <SubmitStatusFollow sessionId={sessionId!} />
+            </div>
+          ) : (
+            <div className="relative h-full w-full">
+              {steps.map((step) => (
+                <motion.div
+                  key={step.key}
+                  initial={false}
+                  animate={{
+                    opacity: activeStep === step.key ? 1 : 0,
+                  }}
+                  transition={{ duration: 0.2 }}
+                  style={{
+                    pointerEvents: activeStep === step.key ? 'auto' : 'none',
+                  }}
+                  className={cn(
+                    'secondary-scrollbar h-full flex-1 overflow-auto rounded-xl pr-4 pl-4',
+                    activeStep === step.key ? 'relative' : 'absolute inset-0'
+                  )}
+                >
+                  {step.children}
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="flex w-full flex-shrink-0 items-center justify-between gap-2 px-2 py-3">
+          <Button
+            rounded
+            variant="outline"
+            className="text-primary-9 border-primary-9 disabled:border-neutral-1 shadow-bnb size-12 active:text-white"
+            size="lg"
+            type="button"
+            onClick={onPrevious}
+            disabled={activeStep === STEPS.assets}
+          >
+            <LeftOutlined />
+          </Button>
+          <SubmitButton loading={submitLoading} sessionId={sessionId!} />
+          <Button
+            rounded
+            variant="outline"
+            type="button"
+            size="lg"
+            className="text-primary-9 border-primary-9 disabled:border-neutral-1 shadow-bnb size-12 active:text-white"
+            onClick={onNext}
+            disabled={activeStep === STEPS.mtype}
+          >
+            <RightOutlined />
+          </Button>
+        </div>
+      </Form>
+    </div>
+  );
+
+  if (isModal) {
+    return (
+      <Modal
+        open
+        position="custom"
+        className="top-[unset]! right-[4.3rem] bottom-3! left-[unset] h-full max-h-[calc(100vh-6rem)] min-h-[400px] w-[45rem] translate-0 rounded-2xl rounded-tl-none!"
+        bodyClassName="flex flex-col h-full min-h-0 max-h-full overflow-hidden p-0 relative"
+        overlayClassName="bg-primary-9/50 backdrop-blur-none!"
+        onClose={() => router.back()}
+        closable={false}
+        animation="slideLeft"
+        title={
+          <Button
+            variant="icon"
+            className="text-primary-9 hover:text-primary-6 bg-white"
+            onClick={() => router.back()}
+          >
+            <CloseOutlined />
+          </Button>
+        }
+        headerClassName="absolute top-0 -left-12 bg-white rounded-l-xl p-0  size-12"
+      >
+        {content}
+      </Modal>
+    );
+  }
+
+  return content;
+}

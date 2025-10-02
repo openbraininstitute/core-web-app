@@ -20,7 +20,9 @@ import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 export default function Page({
   children,
   params,
-}: ServerSideComponentProp<WorkspaceContext, null> & { children: ReactNode }) {
+}: ServerSideComponentProp<WorkspaceContext, null> & {
+  children: ReactNode;
+}) {
   const { projectId } = use(params);
   const dataKey = resolveDataKey({ projectId, section: 'explore' });
 

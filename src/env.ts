@@ -65,6 +65,7 @@ export const env = createEnv({
     NEXT_PUBLIC_LEGACY_DEFAULT_CIRCUIT_ID: z.string().url().optional(),
     NEXT_PUBLIC_CORE_WEB_APP_VERSION: z.string().optional(),
     NEXT_PUBLIC_NOTEBOOK_SERVICE_BASE_URL: z.string().optional(),
+    NEXT_PUBLIC_OBI_ONE_URL: z.string().optional(),
   },
 
   experimental__runtimeEnv: {
@@ -109,5 +110,6 @@ export const env = createEnv({
     NEXT_PUBLIC_CORE_WEB_APP_VERSION: process.env.NEXT_PUBLIC_CORE_WEB_APP_VERSION,
 
     NEXT_PUBLIC_NOTEBOOK_SERVICE_BASE_URL: process.env.NEXT_PUBLIC_NOTEBOOK_SERVICE_BASE_URL,
+    NEXT_PUBLIC_OBI_ONE_URL: process.env.NEXT_PUBLIC_OBI_ONE_URL,
   },
 });

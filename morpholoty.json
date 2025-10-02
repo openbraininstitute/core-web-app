@@ -1,0 +1,393 @@
+{
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "ContributeMorphologyForm",
+      "title": "Type"
+    },
+    "assets": {
+      "description": "Morphology files.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "Assets",
+          "title": "Type"
+        },
+        "swc_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Swc File",
+          "description": "SWC file for the morphology."
+        },
+        "asc_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Asc File",
+          "description": "ASC file for the morphology."
+        },
+        "h5_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "H5 File",
+          "description": "H5 file for the morphology."
+        }
+      },
+      "type": "object",
+      "required": ["type"],
+      "title": "Assets"
+    },
+    "contribution": {
+      "description": "Contributor.",
+      "properties": {
+        "agent_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Agent Id"
+        },
+        "role_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Role Id"
+        }
+      },
+      "type": "object",
+      "title": "Contribution"
+    },
+    "morphology": {
+      "title": "Morphology",
+      "description": "Information about the morphology.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "CellMorphology",
+          "title": "Type"
+        },
+        "name": {
+          "type": "string",
+          "title": "Name",
+          "description": "Name of the morphology"
+        },
+        "description": {
+          "type": "string",
+          "title": "Description",
+          "description": "Description"
+        },
+        "species_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Species Id"
+        },
+        "strain_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Strain Id"
+        },
+        "brain_region_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Brain Region Id"
+        }
+      },
+      "type": "object",
+      "required": ["type", "name", "description"]
+    },
+    "publication": {
+      "title": "Publication Details",
+      "description": "Publication details.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "Publication",
+          "title": "Type"
+        },
+        "name": {
+          "type": "string",
+          "title": "Name",
+          "description": "Publication name",
+          "default": ""
+        },
+        "description": {
+          "type": "string",
+          "title": "Description",
+          "description": "Publication description",
+          "default": ""
+        },
+        "DOI": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Doi",
+          "default": ""
+        },
+        "publication_title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Publication Title",
+          "default": ""
+        },
+        "authors": {
+          "anyOf": [
+            {
+              "properties": {
+                "given_name": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Given Name"
+                },
+                "family_name": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Family Name"
+                }
+              },
+              "type": "object",
+              "title": "Author"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "publication_year": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Publication Year"
+        },
+        "abstract": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Abstract",
+          "default": ""
+        }
+      },
+      "type": "object",
+      "required": ["type"]
+    },
+    "subject": {
+      "title": "Subject",
+      "description": "The subject from which the morphology was derived.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "SubjectID",
+          "title": "Type"
+        },
+        "subject_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Subject Id"
+        }
+      },
+      "type": "object",
+      "required": ["type"]
+    },
+    "license": {
+      "description": "The license used.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "License",
+          "title": "Type"
+        },
+        "license_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "License Id"
+        }
+      },
+      "type": "object",
+      "required": ["type"],
+      "title": "License"
+    },
+    "scientificartifact": {
+      "title": "Scientific Artifact",
+      "description": "Information about the artifact.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "ScientificArtifact",
+          "title": "Type"
+        },
+        "experiment_date": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Experiment Date"
+        },
+        "contact_email": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Contact Email"
+        },
+        "atlas_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Atlas Id"
+        }
+      },
+      "type": "object",
+      "required": ["type"]
+    },
+    "mtype": {
+      "title": "Mtype Classification",
+      "description": "The mtype.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "MTypeClassification",
+          "title": "Type"
+        },
+        "mtype_class_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Mtype Class Id",
+          "description": "UUID for MType classification"
+        }
+      },
+      "type": "object",
+      "required": ["type"]
+    }
+  },
+  "additionalProperties": false,
+  "type": "object",
+  "required": ["type"],
+  "title": "ContributeMorphologyForm",
+  "description": "Contribute Morphology Form.",
+  "block_block_group_order": [
+    "Basic information",
+    "Morphology files",
+    "Experimenter",
+    "Animal strain",
+    "Location",
+    "Protocol",
+    "License"
+  ]
+}
