@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import isNil from 'lodash/isNil';
 
+import { DefaultColor } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+
 export const StimulationMode = {
   CurrentClamp: {
     label: 'Current Clamp',
@@ -242,7 +244,7 @@ export const SynapseConfigSchema = z.object({
       message: 'Synapse frequency is required',
     }),
   weight_scalar: z.number({ message: 'Synapse weight scalar is required and must be a number' }),
-  color: z.string({ message: 'Synapse color is required' }),
+  color: z.string({ message: 'Synapse color is required' }).default(DefaultColor).optional(),
 });
 
 export const OverviewConfigurationSchema = z.object({
