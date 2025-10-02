@@ -56,7 +56,7 @@ export type SynapseConfig = {
   duration: number;
   frequency: number | number[];
   weight_scalar: number;
-  color: string;
+  color?: string;
 };
 
 export type StimulusConfig = {

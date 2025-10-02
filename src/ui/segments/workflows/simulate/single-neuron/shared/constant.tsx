@@ -1,10 +1,11 @@
 import { StimulusModuleDict } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { SimulationColors } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 
 import type {
-  TStimulationConfiguration,
   RecordLocation,
   SimulationExperimentalSetup,
   StimulusConfig,
+  TStimulationConfiguration,
   TProtocolDetails,
   TStimulusModuleValue,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
@@ -149,34 +150,11 @@ export const PREFIX_OVERVIEW_CONFIGURATION_SESSION_KEY = 'oc_sk';
 export const PREFIX_AMPERAGE_CONFIGURATION_SESSION_KEY = 'ac_sk';
 export const PREFIX_FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY = 'fic_sk';
 
-export const SIMULATION_COLORS = [
-  '#FF8B2C',
-  '#32C14E',
-  '#8AB5FF',
-  '#DC51FF',
-  '#B3A26E',
-  '#F02124',
-  '#32D4C1',
-  '#814BFF',
-  '#E3F750',
-  '#D653C5',
-  '#AD7A14',
-  '#87BB74',
-  '#DFC6AE',
-  '#5778FF',
-  '#EE527C',
-  '#81ADE0',
-  '#99FF80',
-  '#FFCF30',
-  '#5193BA',
-  '#DD63CF',
-];
-
 export function getSimulationColor(index: number) {
-  return SIMULATION_COLORS[index % SIMULATION_COLORS.length];
+  return SimulationColors[index % SimulationColors.length];
 }
 
-export const SECTION_TARGET_MAPPING = {
+export const SectionTargetMapping = {
   dend: 'Basal dendrites',
   soma: 'Soma',
   apic: 'Apical dendrites',

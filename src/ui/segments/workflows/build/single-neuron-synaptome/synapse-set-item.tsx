@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useReducer, useRef, useState, useEffect } from 'react';
+import { useReducer, useRef, useState, useEffect } from 'react';
 import { Form, Input, Select, InputNumber } from 'antd';
 import { useSearchParams } from 'next/navigation';
 import { useAtom, useAtomValue } from 'jotai';
@@ -14,7 +14,6 @@ import {
 } from '@ant-design/icons';
 
 import findIndex from 'lodash/findIndex';
-import isEqual from 'lodash/isEqual';
 import groupBy from 'lodash/groupBy';
 import map from 'lodash/map';
 
@@ -112,22 +111,19 @@ export function SynapseSet({ sessionId }: Props) {
         : SECTION_TARGET_MAPPING[value as keyof typeof SECTION_TARGET_MAPPING],
   }));
 
-  const isAlreadyVisualized = useMemo(() => {
-    if (!config) return false;
-    return !!Object.values(synapsesPlacement ?? []).find(
-      (c) =>
-        c?.synapsePlacementConfigId === config.id &&
-        c.meshId &&
-        isEqual(config, { ...config, ...form.getFieldsValue() })
-    );
-  }, [config, synapsesPlacement, form]);
+  // const isAlreadyVisualized = useMemo(() => {
+  //   if (!config) return false;
+  //   return !!Object.values(synapsesPlacement ?? []).find(
+  //     (c) =>
+  //       c?.synapsePlacementConfigId === config.id &&
+  //       c.meshId &&
+  //       isEqual(config, { ...config, ...form.getFieldsValue() })
+  //   );
+  // }, [config, synapsesPlacement, form]);
 
-  const validateFormValues = async () => {
-    const currentValues = form.getFieldsValue(true);
-
+  const validateFormValues = async (values: TSingleNeuronSynaptomeConfiguration) => {
     try {
-      await SingleNeuronSynaptomeConfigurationSchema.parseAsync(currentValues);
-
+      await SingleNeuronSynaptomeConfigurationSchema.parseAsync(values);
       setIsFormValid(true);
     } catch (err) {
       log('error', 'synapse set validation error', err);
@@ -135,8 +131,8 @@ export function SynapseSet({ sessionId }: Props) {
     }
   };
 
-  const onValuesChange = () => {
-    validateFormValues();
+  const onValuesChange = (_: any, values: TSingleNeuronSynaptomeConfiguration) => {
+    validateFormValues(values);
   };
 
   useEffect(() => {
@@ -201,6 +197,7 @@ export function SynapseSet({ sessionId }: Props) {
   const onTargetChange = async (newTarget?: keyof typeof SECTION_TARGET_MAPPING) => {
     if (config) {
       const tempSessionValue = sessionValue;
+      const currentValues = form.getFieldsValue(true);
       if (newTarget === 'soma') {
         config.target = newTarget;
         config.formula = undefined;
@@ -213,7 +210,7 @@ export function SynapseSet({ sessionId }: Props) {
           synapseSets: tempSessionValue?.synapseSets,
         });
         form.setFieldsValue({ target: 'soma', formula: undefined, soma_synapse_count: 50 });
-        await validateFormValues();
+        await validateFormValues(currentValues);
       }
       if (config?.target === 'soma' && newTarget !== 'soma') {
         config.soma_synapse_count = undefined;
@@ -225,7 +222,7 @@ export function SynapseSet({ sessionId }: Props) {
           synapseSets: tempSessionValue?.synapseSets,
         });
         form.setFieldsValue({ target: newTarget, soma_synapse_count: undefined });
-        await validateFormValues();
+        await validateFormValues(currentValues);
       }
     }
   };
@@ -269,8 +266,6 @@ export function SynapseSet({ sessionId }: Props) {
   };
 
   const onApplyChanges = async (values: TSingleNeuronSynaptomeConfiguration) => {
-    if (isAlreadyVisualized) return;
-
     if (config) {
       setLoadingVisualize(true);
       onHideSynapse();
@@ -365,6 +360,8 @@ export function SynapseSet({ sessionId }: Props) {
             placeholder="Set a seed"
             defaultValue={sessionValue?.seed}
             size="large"
+            min={0}
+            precision={0}
             onChange={onChangeSeed}
             value={sessionValue?.seed}
             className="border-neutral-3! [&_.ant-input-number-input]:text-primary-9! max-w-[100px] rounded-md border-[1px]! font-bold"

@@ -2,16 +2,19 @@
 
 import { DeleteOutlined, EyeInvisibleOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import sample from 'lodash/sample';
 import { useAtom } from 'jotai';
 import { Color } from 'three';
-import sample from 'lodash/sample';
 
-import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import { DEFAULT_SYNAPSE_VALUE } from '@/features/entities/single-neuron-synaptome/build/elements/synapse-config-form';
 import { SingleNeuronSynaptomeBaseSchema } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
+import {
+  DefaultColor,
+  DefaultSynapseValue,
+  SimulationColors,
+  useBuildSingleNeuronSynaptomeSessionState,
+} from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { synapsesPlacementAtom } from '@/state/synaptome';
 import { formatCompactNumber } from '@/utils/format';
@@ -44,10 +47,10 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
     const cloneMap = new Map(sessionValue?.synapseSets);
 
     cloneMap?.set(id, {
-      ...DEFAULT_SYNAPSE_VALUE,
+      ...DefaultSynapseValue,
       id,
       seed: (sessionValue?.seed ?? 0) + getRandomIntInclusive(0, sessionValue?.seed ?? 0),
-      color: sample(SIMULATION_COLORS) ?? SIMULATION_COLORS[cloneMap.size],
+      color: sample(SimulationColors) ?? SimulationColors[cloneMap.size],
     });
 
     setSessionValue({
@@ -77,10 +80,10 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
       queryParams.set('set', newId);
       const newMap = new Map();
       newMap.set(newId, {
-        ...DEFAULT_SYNAPSE_VALUE,
+        ...DefaultSynapseValue,
         id: newId,
         seed: (sessionValue?.seed ?? 0) + getRandomIntInclusive(0, sessionValue?.seed ?? 0),
-        color: sample(SIMULATION_COLORS) ?? SIMULATION_COLORS[0],
+        color: sample(SimulationColors) ?? SimulationColors.at(0) ?? DefaultColor,
       });
       setSessionValue({
         ...sessionValue,
@@ -98,6 +101,7 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
       synapseSets: cloneMap,
       synapseCount: cloneCountMap,
     });
+
     const currentSynapsesPlacementConfig = synapsesPlacement?.[id];
     if (currentSynapsesPlacementConfig?.meshId) {
       sendRemoveSynapses3DEvent(id, currentSynapsesPlacementConfig.meshId);

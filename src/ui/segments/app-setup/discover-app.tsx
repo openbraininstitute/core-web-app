@@ -403,7 +403,6 @@ export const OnboardingDiscoverSteps: Tour[] = [
         blockKeyboardControl: true,
         pointerPadding: 0,
         pointerRadius: 25,
-        viewportID: 'workflow-viewport',
       },
       {
         icon: null,
@@ -420,7 +419,6 @@ export const OnboardingDiscoverSteps: Tour[] = [
         blockKeyboardControl: true,
         pointerPadding: 4,
         pointerRadius: 16,
-        viewportID: 'workflow-viewport',
       },
       {
         icon: null,
@@ -437,7 +435,6 @@ export const OnboardingDiscoverSteps: Tour[] = [
         blockKeyboardControl: true,
         pointerPadding: 4,
         pointerRadius: 16,
-        viewportID: 'workflow-viewport',
       },
       {
         icon: null,
@@ -454,7 +451,6 @@ export const OnboardingDiscoverSteps: Tour[] = [
         blockKeyboardControl: true,
         pointerPadding: 4,
         pointerRadius: 16,
-        viewportID: 'workflow-viewport',
       },
       {
         icon: null,
@@ -471,7 +467,6 @@ export const OnboardingDiscoverSteps: Tour[] = [
         blockKeyboardControl: true,
         pointerPadding: 4,
         pointerRadius: 25,
-        viewportID: 'workflow-viewport',
       },
     ],
   },

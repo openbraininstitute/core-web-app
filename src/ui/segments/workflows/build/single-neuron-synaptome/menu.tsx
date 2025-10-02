@@ -16,7 +16,6 @@ import omit from 'lodash/omit';
 import Link from 'next/link';
 import { z } from 'zod';
 
-import { DEFAULT_SYNAPSE_VALUE } from '@/features/entities/single-neuron-synaptome/build/elements/synapse-config-form';
 import { SynapseSetMenuItems } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-set-menu-item';
 import { SingleNeuronSynaptomeBaseSchema } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -27,6 +26,7 @@ import { createSingleNeuronSynaptome } from '@/api/small-scale-simulator';
 import {
   BuildStep,
   BuildStepKeys,
+  DefaultSynapseValue,
   useBuildSingleNeuronSynaptomeSessionState,
 } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
@@ -86,7 +86,7 @@ export function Menu({ sessionId }: Props) {
       queryParams.set('step', BuildStep.SynapseSet);
       const synapseSetsMap = new Map<string, TSingleNeuronSynaptomeConfiguration>([]);
       synapseSetsMap.set(id, {
-        ...DEFAULT_SYNAPSE_VALUE,
+        ...DefaultSynapseValue,
         id,
         seed: 100,
       });
