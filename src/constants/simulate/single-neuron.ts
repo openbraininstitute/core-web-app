@@ -176,7 +176,6 @@ export const getDefaultSynapseConfig = (
 };
 
 export const SIMULATION_COLORS = [
-  '#FF8B2C',
   '#32C14E',
   '#8AB5FF',
   '#DC51FF',
@@ -190,7 +189,6 @@ export const SIMULATION_COLORS = [
   '#87BB74',
   '#DFC6AE',
   '#5778FF',
-  '#EE527C',
   '#81ADE0',
   '#99FF80',
   '#FFCF30',
