@@ -65,7 +65,6 @@ export default function PlotRenderer({
   downloadClassName,
 }: Props) {
   const plotInstances = useMemo(() => parsePlots(data), [data]);
-
   const onDownloadPlotDataCsv = () => {
     exportSingleSimulationResultAsZip({
       type,
@@ -122,12 +121,14 @@ export default function PlotRenderer({
           )}
         >
           <div id={`graph-wrapper-${name}`} className={cn('h-full w-full', graphWrapperClassName)}>
-            {(isLoading || plotInstances.length === 0) && (
+            {isLoading && (
               <div className="flex w-full justify-center p-8">
                 <Spin size="large" />
               </div>
             )}
-            <MultiPlotsView instances={plotInstances} maxTime={plotConfig?.maxTime ?? 0} />
+            {plotInstances.length > 0 && (
+              <MultiPlotsView instances={plotInstances} maxTime={plotConfig?.maxTime ?? 0} />
+            )}
           </div>
         </div>
       </div>

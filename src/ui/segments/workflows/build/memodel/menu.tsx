@@ -8,7 +8,7 @@ import {
   WarningFilled,
 } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { z } from 'zod';
 
 import get from 'lodash/get';
@@ -32,7 +32,7 @@ import {
   BuildStepKeys,
   useBuildMeModelSessionState,
 } from '@/ui/segments/workflows/build/memodel/helpers';
-import { browserReplace } from '@/utils/browser';
+import { browserHistoryReplace } from '@/utils/browser';
 import { cn } from '@/utils/css-class';
 import { ROOT_ROUTE } from '@/config';
 import { log } from '@/utils/logger';
@@ -43,8 +43,9 @@ type TCreateSingleNeuronContext = z.infer<typeof CreateSingleNeuronContextSchema
 export function Menu({ sessionId }: { sessionId: string }) {
   const breakpoint = useDefaultBreakpoint();
   const notification = useAppNotification();
-  const queryClient = useQueryClient();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
+  const pathname = usePathname();
   const { virtualLabId, projectId } = useWorkspace();
   const step = searchParams.get('step');
 
@@ -58,10 +59,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
     const query = new URLSearchParams(searchParams);
     query.set('step', s);
 
-    browserReplace(
-      null,
-      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/memodel?${query.toString()}`
-    );
+    browserHistoryReplace(null, `${pathname}?${query.toString()}`);
   };
 
   const payload: Partial<TCreateSingleNeuronContext> = {

@@ -34,7 +34,7 @@ import {
 import { useAppNotification } from '@/components/notification';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { browserReplace } from '@/utils/browser';
+import { browserHistoryReplace } from '@/utils/browser';
 import { messages } from '@/i18n/en/synaptome';
 import { Button } from '@/ui/molecules/button';
 import { tryCatch } from '@/api/utils';
@@ -69,10 +69,7 @@ export function Menu({ sessionId }: Props) {
     const query = new URLSearchParams(searchParams);
     query.set('step', s);
 
-    browserReplace(
-      null,
-      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/${kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSynaptome)}?${query.toString()}`
-    );
+    browserHistoryReplace(null, `${pathname}?${query.toString()}`);
   };
 
   const onAdd = () => {
@@ -96,7 +93,7 @@ export function Menu({ sessionId }: Props) {
       });
     }
 
-    browserReplace(null, `${pathname}?${queryParams.toString()}`);
+    browserHistoryReplace(null, `${pathname}?${queryParams.toString()}`);
   };
 
   const validSetsCount = Array.from(sessionValue?.synapseSets?.values() ?? [])?.filter(
