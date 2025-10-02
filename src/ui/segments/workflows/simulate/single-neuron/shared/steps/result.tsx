@@ -5,11 +5,14 @@ import { useAtomValue } from 'jotai';
 import dynamic from 'next/dynamic';
 import get from 'lodash/get';
 
-import { PlotData } from '../types';
-import { useCurrentSimulationConfig, useRecordingPlotData } from './hooks';
-
-import { SIMULATION_COLORS } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { SimulationColors } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import {
+  useCurrentSimulationConfig,
+  useRecordingPlotData,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/hooks';
 import { simulationStatusAtom } from '@/state/simulate/single-neuron';
+
+import type { PlotData } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 const PlotRenderer = dynamic(
   () => import('@/features/entities/neuron-simulation/experiment/visualization/plot-renderer'),
@@ -50,7 +53,7 @@ export function Results({ sessionId }: { sessionId: string }) {
                 name={key}
                 isDownloadable={!!value.length}
                 onlyAmplitudeLegend={false}
-                data={value.map((v, i) => ({ ...v, line: { color: SIMULATION_COLORS[i] } }))}
+                data={value.map((v, i) => ({ ...v, line: { color: SimulationColors[i] } }))}
                 isLoading={isLoading}
                 className="h-full w-full"
                 plotConfig={{
@@ -80,7 +83,7 @@ export function Results({ sessionId }: { sessionId: string }) {
               name={record}
               isDownloadable={!!recordData.length}
               onlyAmplitudeLegend={false}
-              data={recordData.map((v, i) => ({ ...v, line: { color: SIMULATION_COLORS[i] } }))}
+              data={recordData.map((v, i) => ({ ...v, line: { color: SimulationColors[i] } }))}
               isLoading={isLoading}
               className="h-full w-full"
               plotConfig={{
