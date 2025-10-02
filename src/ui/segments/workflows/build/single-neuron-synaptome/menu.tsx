@@ -9,20 +9,17 @@ import {
   SettingFilled,
   WarningFilled,
 } from '@ant-design/icons';
+import { z } from 'zod';
 
 import kebabCase from 'lodash/kebabCase';
 import isNil from 'lodash/isNil';
-import omit from 'lodash/omit';
 import Link from 'next/link';
-import { z } from 'zod';
 
 import { SynapseSetMenuItems } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-set-menu-item';
-import { SingleNeuronSynaptomeBaseSchema } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { CreateSingleNeuronSynaptomeSchema } from '@/api/small-scale-simulator/types';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
 import { createSingleNeuronSynaptome } from '@/api/small-scale-simulator';
+import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
 import {
   BuildStep,
   BuildStepKeys,
@@ -30,9 +27,12 @@ import {
   useBuildSingleNeuronSynaptomeSessionState,
 } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import {
+  SingleNeuronSynaptomeBaseSchema,
+  SingleNeuronSynaptomeConfigurationSchema,
+} from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import { useAppNotification } from '@/components/notification';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { WorkspaceContextSchema } from '@/types/common';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { messages } from '@/i18n/en/synaptome';
 import { Button } from '@/ui/molecules/button';
@@ -41,10 +41,6 @@ import { cn } from '@/utils/css-class';
 import { ROOT_ROUTE } from '@/config';
 
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
-
-const CreateSingleNeuronSynaptomeContextSchema =
-  CreateSingleNeuronSynaptomeSchema.merge(WorkspaceContextSchema);
-type TCreateSingleNeuronSynaptomeContext = z.infer<typeof CreateSingleNeuronSynaptomeContextSchema>;
 
 type Props = { sessionId: string };
 
@@ -112,32 +108,40 @@ export function Menu({ sessionId }: Props) {
     seed: sessionValue?.seed,
   }).success;
 
-  const payload: Partial<TCreateSingleNeuronSynaptomeContext> = {
-    virtualLabId,
-    projectId,
-    name: sessionValue?.name,
-    description: sessionValue?.description || '',
-    memodel_id: sessionValue?.memodel?.id,
-    seed: sessionValue?.seed,
-    brain_region_id: sessionValue?.memodel?.brain_region?.id,
-    config: { synapses: Array.from(sessionValue?.synapseSets?.values() ?? []).map((o) => o) },
-  };
-
   const buildSynaptome = async () => {
-    const validatedPayload = await CreateSingleNeuronSynaptomeContextSchema.parseAsync(payload);
-
-    const { data, error } = await tryCatch(
-      createSingleNeuronSynaptome({
-        ctx: { virtualLabId, projectId },
-        modelInfo: omit(validatedPayload, ['virtualLabId', 'projectId']),
-      })
+    const validateMainFormData = mainFormSchema.safeParse({
+      name: sessionValue?.name,
+      description: sessionValue?.description,
+      me_model_id: sessionValue?.memodel?.id,
+      seed: sessionValue?.seed,
+    }).data;
+    const validationPromises = Array.from(sessionValue?.synapseSets?.entries() ?? []).map(
+      ([, value]) => SingleNeuronSynaptomeConfigurationSchema.safeParseAsync(value)
     );
+    const sets = (await Promise.all(validationPromises)).filter((o) => o.success);
 
-    if (error) throw new Error(messages.CreateSynaptomeEntityFailed);
+    if (validateMainForm) {
+      const { data, error } = await tryCatch(
+        createSingleNeuronSynaptome({
+          ctx: { virtualLabId, projectId },
+          modelInfo: {
+            name: validateMainFormData?.name!,
+            description: validateMainFormData?.description || '',
+            seed: validateMainFormData?.seed!,
+            memodel_id: validateMainFormData?.me_model_id!,
+            brain_region_id: sessionValue?.memodel?.brain_region?.id!,
+            config: {
+              synapses: sets.map((o) => o.data),
+            },
+          },
+        })
+      );
+      if (error) throw new Error(messages.CreateSynaptomeEntityFailed);
 
-    return {
-      entity: data.data,
-    };
+      return {
+        entity: data.data,
+      };
+    }
   };
 
   const mutate = useMutation({
