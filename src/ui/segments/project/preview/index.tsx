@@ -24,7 +24,7 @@ function Header({ onClose, project }: { onClose: () => void; project?: Project |
   const { name } = project;
 
   return (
-    <div className="flex items-center justify-between py-4 text-white">
+    <div className="flex w-full items-center justify-between py-4 text-white">
       <div className="flex flex-col items-start gap-0.5">
         <span className="text-primary-3">Project</span>
         <h2 className="text-2xl font-bold select-none">{name}</h2>

@@ -4,6 +4,7 @@ import { RightSquareOutlined } from '@ant-design/icons';
 import { Empty, Table, ConfigProvider } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 import { useState } from 'react';
+import kebabCase from 'lodash/kebabCase';
 import Link from 'next/link';
 import get from 'lodash/get';
 
@@ -96,8 +97,7 @@ export function ProjectActivities() {
         const scaleType = get(record, 'type', null);
 
         if (scaleType) {
-          const section = get(Scales, `${scaleType}.link`, null);
-          const linkUrl = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/${section}/view/${record.id}`;
+          const linkUrl = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(scaleType)}/${record.id}`;
           return (
             <Link href={linkUrl} aria-label={record.name} className={className}>
               <RightSquareOutlined />
