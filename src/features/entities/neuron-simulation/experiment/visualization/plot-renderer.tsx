@@ -7,9 +7,10 @@ import { ComponentProps, useMemo } from 'react';
 
 import MultiPlotsView from '@/features/entities/neuron-simulation/experiment/visualization/multi-plots-view';
 import { parsePlots } from '@/features/entities/neuron-simulation/experiment/visualization/plots-parser';
-import type { PlotData } from '@/services/bluenaas-single-cell/types';
 import { exportSingleSimulationResultAsZip } from '@/util/simulation-plotly-to-csv';
 import { cn } from '@/utils/css-class';
+
+import type { PlotData } from '@/services/bluenaas-single-cell/types';
 
 type PlotConfig = {
   yAxisTitle?: string;
@@ -54,7 +55,6 @@ export default function PlotRenderer({
   isLoading,
   withTitle,
   title,
-  plotConfig,
   isDownloadable = false,
   bordered = false,
   rootClassName,
@@ -126,9 +126,7 @@ export default function PlotRenderer({
                 <Spin size="large" />
               </div>
             )}
-            {plotInstances.length > 0 && (
-              <MultiPlotsView instances={plotInstances} maxTime={plotConfig?.maxTime ?? 0} />
-            )}
+            {plotInstances.length > 0 && <MultiPlotsView instances={plotInstances} />}
           </div>
         </div>
       </div>
