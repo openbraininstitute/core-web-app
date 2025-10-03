@@ -351,25 +351,6 @@ export const launchSimulationAtom = atom<
           [streamData.recording]: currentRecording,
         };
 
-        // const updatedPlot2 = {
-        //   ...get(plotDataAtom),
-        //   [streamData.recording]:
-        //     !currentRecording.length ||
-        //     !currentRecording.find((o) => makeKey(o) === makeKey(newPlot))
-        //       ? [...currentRecording, newPlot]
-        //       : updateArray({
-        //           array: currentRecording,
-        //           keyfn: (item) => makeKey(item) === makeKey(newPlot),
-        //           newVal: (value2) => ({
-        //             ...value2,
-        //             x: [...value2.x, ...newPlot.x],
-        //             y: [...value2.y, ...newPlot.y],
-        //             variable_name: newPlot.variable_name ?? value.variable_name,
-        //             unit: newPlot.unit ?? value.unit,
-        //           }),
-        //         }),
-        // };
-
         // Sort traces for each plot by `varyingKey` so that the legends appear in sorted order.
         Object.keys(updatedPlot).forEach((recordingLocation) => {
           updatedPlot[recordingLocation] = sortBy(updatedPlot[recordingLocation], ['varyingKey']);
