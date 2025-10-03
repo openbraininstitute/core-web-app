@@ -1,3 +1,6 @@
+'use client';
+
+import { use } from 'react';
 import snakeCase from 'lodash/snakeCase';
 
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
@@ -8,15 +11,15 @@ import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { TWorkspaceScope } from '@/constants';
 import type { KebabCase } from '@/utils/type';
 
-export default async function Page({
+export default function Page({
   params,
   searchParams,
 }: ServerSideComponentProp<
   WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict> },
   { scope: TWorkspaceScope | null }
 >) {
-  const { scope } = await searchParams;
-  const { type } = await params;
+  const { scope } = use(searchParams);
+  const { type } = use(params);
 
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
 

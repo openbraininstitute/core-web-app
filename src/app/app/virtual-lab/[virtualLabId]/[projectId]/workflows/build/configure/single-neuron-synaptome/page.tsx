@@ -1,3 +1,7 @@
+'use client';
+
+import { use } from 'react';
+
 import { Header } from '@/ui/segments/workflows/build/single-neuron-synaptome/header';
 import { Menu } from '@/ui/segments/workflows/build/single-neuron-synaptome/menu';
 import { Content } from '@/ui/segments/workflows/build/single-neuron-synaptome';
@@ -5,13 +9,13 @@ import { Content } from '@/ui/segments/workflows/build/single-neuron-synaptome';
 import type { BuildStepKeys } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
-export default async function Page({
+export default function Page({
   searchParams,
 }: ServerSideComponentProp<
   WorkspaceContext & { id: string },
   { step: BuildStepKeys; sessionId: string }
 >) {
-  let { sessionId } = await searchParams;
+  let { sessionId } = use(searchParams);
   if (!sessionId) sessionId = crypto.randomUUID();
 
   return (
