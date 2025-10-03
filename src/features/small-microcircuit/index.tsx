@@ -383,6 +383,8 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
     // and no active simulation request with the status streaming
     if (simRequestInProgress) return;
 
+    // TODO Optimize the polling when there are multiple simulation requests
+
     const hasActiveSimulations = statusMap
       ? Array.from(statusMap.values()).some((status) =>
           [
