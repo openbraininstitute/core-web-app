@@ -11,10 +11,10 @@ export default async function EntityDetail({ params }: { params: Promise<{ id: s
   const { data: entity, error: entityError } = await tryCatch(() => getEntity({ id }));
   if (!entity || entityError) notFound();
 
-  // For public entities use the user's recent workspace
+  // For public entities use the most recent workspace
   if (entity.authorized_public) {
-    const { data: workspace, error } = await tryCatch(resolveWorkspace());
-    if (!workspace || error || !workspace.virtualLab || !workspace.project) notFound();
+    const { data: workspace, error: workspaceError } = await tryCatch(resolveWorkspace());
+    if (!workspace || workspaceError || !workspace.virtualLab || !workspace.project) notFound();
 
     const redirectCtx = {
       virtualLabId: workspace.virtualLab.id,
@@ -31,8 +31,7 @@ export default async function EntityDetail({ params }: { params: Promise<{ id: s
     );
   }
 
-  // For private entities, check if the user is a member of the entity's "authorized_project_id"
-
+  // Find out the virtual lab for the "authorized_project_id" for private entities
   const { data: groups, error } = await tryCatch(getUserGroups);
 
   if (!groups?.data?.groups ?? error) notFound();
@@ -42,7 +41,7 @@ export default async function EntityDetail({ params }: { params: Promise<{ id: s
 
   redirect(
     resolveExploreDetailsPageUrl2({
-      ctx: { virtualLabId: group.virtual_lab_id, projectId: entity.authorized_project_id },
+      ctx: { virtualLabId: group.virtual_lab_id, projectId: group.project_id },
       entityId: id,
       dataType: entity.type,
     })
