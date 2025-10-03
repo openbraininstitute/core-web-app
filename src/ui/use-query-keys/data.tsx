@@ -109,4 +109,12 @@ export const keyBuilder = {
   ],
   simCampaign: ({ entityId }: { entityId: string }) => [`${prefix}-sim-campaign`, { entityId }],
   annotation: ({ entityId }: { entityId: string }) => [`${prefix}-annotation`, { entityId }],
+  neuronMorphology3DData: ({
+    virtualLabId,
+    projectId,
+    modelId,
+  }: WorkspaceContext & { modelId: string }) => [
+    `${prefix}-neuron-morphology-3d-data`,
+    { virtualLabId, projectId, modelId },
+  ],
 };

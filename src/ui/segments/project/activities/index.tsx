@@ -34,8 +34,8 @@ export function ProjectActivities() {
   const [entityType, setEntityType] = useState<TExtendedEntitiesTypeDict>(
     ExtendedEntitiesTypeDict.Memodel
   );
-  const [activity, setActivity] = useState<TActivityValue>(ActivityValues.Build);
 
+  const [activity, setActivity] = useState<TActivityValue>(ActivityValues.Build);
   const entity = getEntityByExtendedType({
     // eslint-disable-next-line lodash/path-style
     type: get(Scales, [entityType, activity], null),
@@ -97,7 +97,7 @@ export function ProjectActivities() {
         const scaleType = get(record, 'type', null);
 
         if (scaleType) {
-          const linkUrl = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(scaleType)}/${record.id}`;
+          const linkUrl = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entity?.extendedType)}/${record.id}`;
           return (
             <Link href={linkUrl} aria-label={record.name} className={className}>
               <RightSquareOutlined />
@@ -116,6 +116,7 @@ export function ProjectActivities() {
     !isQueryEnabled &&
     activity &&
     entityType;
+
   return (
     <Card className="w-full shadow-xs">
       <CardHeader className="text-primary-9 flex items-center justify-between font-bold">
