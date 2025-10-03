@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import { WorkflowSimulateLayout } from '@/ui/layouts/workflow-simulate-layout';
 import { getQueryClient, HydrateClient } from '@/query-provider/server';

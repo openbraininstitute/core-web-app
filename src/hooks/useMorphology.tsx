@@ -1,7 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 import { getSingleNeuronMorphology } from '@/api/small-scale-simulator';
-import { Morphology } from '@/services/bluenaas-single-cell/types';
+import { keyBuilder } from '@/ui/use-query-keys/data';
+
+import type { Morphology } from '@/services/bluenaas-single-cell/types';
 
 export default function useMorphology({
   modelId,
@@ -14,40 +17,22 @@ export default function useMorphology({
   projectId: string;
   virtualLabId: string;
 }) {
-  const mountedRef = useRef(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    isLoading: loading,
+    isSuccess,
+    error,
+    data,
+  } = useQuery({
+    queryKey: keyBuilder.neuronMorphology3DData({ virtualLabId, projectId, modelId }),
+    queryFn: () =>
+      getSingleNeuronMorphology({ ctx: { virtualLabId, projectId }, meModelId: modelId }),
+  });
 
   useEffect(() => {
-    mountedRef.current = true;
-
-    async function start() {
-      setError(null);
-      if (mountedRef.current) {
-        setLoading(true);
-        try {
-          const morphology = await getSingleNeuronMorphology({
-            ctx: { virtualLabId, projectId },
-            meModelId: modelId,
-          });
-          mountedRef.current = false;
-          if (morphology) {
-            callback(morphology);
-          }
-        } catch (err) {
-          setError(`${err}`);
-        } finally {
-          setLoading(false);
-        }
-      }
+    if (isSuccess && data) {
+      callback(data);
     }
-
-    start();
-
-    return () => {
-      mountedRef.current = false;
-    };
-  }, [callback, mountedRef, virtualLabId, projectId, modelId]);
+  }, [data, callback, isSuccess]);
 
   return { loading, error };
 }

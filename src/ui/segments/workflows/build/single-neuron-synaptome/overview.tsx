@@ -75,7 +75,7 @@ export function Info({ sessionId }: Props) {
           </div>
         </div>
       </Form>
-      <div className="w-full rounded-2xl bg-white" />
+      <div className="bg-background w-full rounded-2xl" />
     </div>
   );
 }
