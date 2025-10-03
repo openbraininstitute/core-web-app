@@ -26,7 +26,6 @@ import {
 } from '@/entity-configuration/domain/simulation';
 import {
   genericSingleNeuronSimulationPlotDataAtomFamily,
-  simulateStepTrackerAtom,
   simulationStatusAtomFamily,
 } from '@/state/simulate/single-neuron';
 import { SimulationType } from '@/types/small-scale-simulator/common';
@@ -220,13 +219,6 @@ export const launchSimulationAtom = atom<
     const simStatusAtom = simulationStatusAtomFamily(sessionId);
 
     set(simStatusAtom, { status: 'launched' });
-    set(simulateStepTrackerAtom, {
-      steps: get(simulateStepTrackerAtom).steps.map((p) => ({
-        ...p,
-        status: p.title === 'Results' ? 'process' : p.status,
-      })),
-      current: { title: 'Results', status: 'process' },
-    });
 
     const initialPlotData = recordFromConfig.reduce((acc: Record<string, PlotData>, o) => {
       const key = `${o.section}_${o.offset === 0 ? '0.0' : String(o.offset)}`;
@@ -241,6 +233,7 @@ export const launchSimulationAtom = atom<
         .map(String)
         .join()
     );
+    onChangePanel();
 
     try {
       const { data: response, error } = await tryCatch(
@@ -285,17 +278,9 @@ export const launchSimulationAtom = atom<
 
         delay(() => set(simStatusAtom, { status: null }), 1000);
 
-        set(simulateStepTrackerAtom, {
-          steps: get(simulateStepTrackerAtom).steps.map((p) => ({
-            ...p,
-            status: p.title === 'Results' ? 'wait' : p.status,
-          })),
-          current: { title: 'Experimental setup' },
-        });
-
         return;
       }
-      onChangePanel();
+
       await readNdjsonResponse<Message<SimulationStreamData>>(response, (message) => {
         match(message)
           .with({ message_type: MessageType.DATA }, ({ data }) => appendStreamData(data))
@@ -306,13 +291,6 @@ export const launchSimulationAtom = atom<
           })
           .with({ message_type: MessageType.STATUS, status: JobStatus.DONE }, () => {
             set(simStatusAtom, { status: 'finished' });
-            set(simulateStepTrackerAtom, {
-              steps: get(simulateStepTrackerAtom).steps.map((p) => ({
-                ...p,
-                status: p.title === 'Results' ? 'finish' : p.status,
-              })),
-              current: { title: 'Results', status: 'finish' },
-            });
           })
           .otherwise(() => null);
       });
@@ -334,13 +312,6 @@ export const launchSimulationAtom = atom<
       set(simStatusAtom, {
         status: 'error',
         description: error.cause ? `${error}` : messages.RunningSimulationDefaultError,
-      });
-      set(simulateStepTrackerAtom, {
-        steps: get(simulateStepTrackerAtom).steps.map((p) => ({
-          ...p,
-          status: p.title === 'Results' ? 'wait' : p.status,
-        })),
-        current: { title: 'Experimental setup' },
       });
     }
 

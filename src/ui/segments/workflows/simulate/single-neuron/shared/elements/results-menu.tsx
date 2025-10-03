@@ -2,14 +2,16 @@
 
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useAtom } from 'jotai';
+
 import kebabCase from 'lodash/kebabCase';
 import uniqBy from 'lodash/uniqBy';
 import Link from 'next/link';
-import { ZodError } from 'zod';
+
+import type { ZodError } from 'zod';
 
 import { createSingleNeuronSimulationAtom } from '@/ui/segments/workflows/simulate/single-neuron/shared/runner';
 import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
@@ -36,7 +38,6 @@ import {
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useAppNotification } from '@/components/notification';
-import { ROOT_ROUTE } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import {
@@ -50,14 +51,16 @@ import {
   StimulationConfigurationAtomFamily,
   SynaptomeConfigurationAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import { browserHistoryReplace } from '@/utils/browser';
 import { messages } from '@/i18n/en/simulation';
 import { Button } from '@/ui/molecules/button';
+import { classNames } from '@/util/utils';
 import {
   genericSingleNeuronSimulationPlotDataAtomFamily,
   simulationStatusAtomFamily,
 } from '@/state/simulate/single-neuron';
 import { cn } from '@/utils/css-class';
-import { classNames } from '@/util/utils';
+import { ROOT_ROUTE } from '@/config';
 
 import styles from './results-menu.module.css';
 
@@ -70,7 +73,6 @@ type Props = {
 
 export function Menu({ sessionId, modelId, memodelId, type }: Props) {
   const pathname = usePathname();
-  const { replace } = useRouter();
   const breakpoint = useDefaultBreakpoint();
   const queryClient = useQueryClient();
   const queryParams = useSearchParams();
@@ -111,7 +113,7 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
     params.set('record', value);
     params.delete('step');
 
-    replace(`${pathname}?${params.toString()}`);
+    browserHistoryReplace(null, `${pathname}?${params.toString()}`);
   };
 
   const handleSaveSimulation = async () => {

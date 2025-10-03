@@ -3,14 +3,15 @@
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { notFound } from 'next/navigation';
 import { use } from 'react';
+
+import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
+import { getCircuit } from '@/api/entitycore/queries/model/circuit';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 import SimulationConfig from '@/features/small-microcircuit';
 
 import type { WorkflowSimulatePanelKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import type { ExperimentStepKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
-import { getCircuit } from '@/api/entitycore/queries/model/circuit';
-import { keyBuilder } from '@/ui/use-query-keys/data';
-import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 
 export default function Page({
   searchParams,

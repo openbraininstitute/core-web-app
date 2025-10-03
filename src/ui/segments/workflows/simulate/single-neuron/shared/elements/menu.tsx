@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, usePathname, useSearchParams } from 'next/navigation';
 import { RightOutlined, SettingFilled, WarningFilled } from '@ant-design/icons';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useEffect } from 'react';
@@ -48,6 +48,7 @@ import {
   SimulationType,
   type TSimulationType,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { browserHistoryReplace } from '@/utils/browser';
 
 export const ExperimentStep = {
   Info: 'info',
@@ -69,7 +70,6 @@ export function Menu({ sessionId, type }: Props) {
   const notify = useAppNotification();
   const searchParams = useSearchParams();
   const breakpoint = useDefaultBreakpoint();
-  const { replace } = useRouter();
   const { virtualLabId, projectId } = useWorkspace();
   const { id: modelId } = useParams<{ id: string }>();
   const step = searchParams.get('step') ?? ExperimentStep.Info;
@@ -80,14 +80,15 @@ export function Menu({ sessionId, type }: Props) {
     const query = new URLSearchParams(searchParams);
     query.delete('step');
     query.set('panel', WorkflowSimulatePanels.Results);
-    replace(`${pathname}?${query.toString()}`);
+
+    browserHistoryReplace(null, `${pathname}?${query.toString()}`);
   };
 
   const onStepChange = (s: ExperimentStepKeys) => {
     const query = new URLSearchParams(searchParams);
     query.set('step', s);
 
-    replace(`${pathname}?${query.toString()}`);
+    browserHistoryReplace(null, `${pathname}?${query.toString()}`);
   };
 
   const spcKey = getSessionKey(PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);

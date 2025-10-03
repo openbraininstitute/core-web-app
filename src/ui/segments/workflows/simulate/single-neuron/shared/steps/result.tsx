@@ -6,11 +6,11 @@ import dynamic from 'next/dynamic';
 import get from 'lodash/get';
 
 import { SimulationColors } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import { simulationStatusAtomFamily } from '@/state/simulate/single-neuron';
 import {
   useCurrentSimulationConfig,
   useRecordingPlotData,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/hooks';
-import { simulationStatusAtom } from '@/state/simulate/single-neuron';
 
 import type { PlotData } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
@@ -24,8 +24,11 @@ const PlotRenderer = dynamic(
 export function Results({ sessionId }: { sessionId: string }) {
   const currentSimulationConfig = useCurrentSimulationConfig(sessionId);
   const recordingPlotData = useRecordingPlotData(sessionId);
-  const simulationStatus = useAtomValue(simulationStatusAtom);
+
+  const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
+
   const record = useSearchParams().get('record') ?? 'all';
+  const duration = currentSimulationConfig.max_time;
 
   if (!recordingPlotData || !Object.keys(recordingPlotData).length) {
     return (
@@ -36,10 +39,27 @@ export function Results({ sessionId }: { sessionId: string }) {
     );
   }
 
+  if (
+    simulationStatus?.status === 'finished' &&
+    Object.values(recordingPlotData).every((o: PlotData) => o.every((p) => p.y.length === 0))
+  ) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3">
+        <div className="text-primary-9 text-center text-2xl">
+          Simulation finished <br />
+          but no results to display
+        </div>
+        <div className="text-label">If the issue persists, please contact support</div>
+      </div>
+    );
+  }
+
   const isLoading =
     simulationStatus?.status === 'launched' &&
     Object.values(recordingPlotData).every((o: PlotData) => o.every((p) => p.y.length === 0));
+
   let content = null;
+
   if (record === 'all') {
     content = (
       <div className="flex w-full flex-col gap-2">
@@ -59,7 +79,7 @@ export function Results({ sessionId }: { sessionId: string }) {
                 plotConfig={{
                   yAxisTitle: 'Voltage [mV]',
                   showDefaultLegends: true,
-                  maxTime: currentSimulationConfig.max_time,
+                  maxTime: duration,
                 }}
                 rootClassName="p-0 m-0"
                 wrapperClassName="p-0"
@@ -89,7 +109,7 @@ export function Results({ sessionId }: { sessionId: string }) {
               plotConfig={{
                 yAxisTitle: 'Voltage [mV]',
                 showDefaultLegends: true,
-                maxTime: currentSimulationConfig.max_time,
+                maxTime: duration,
               }}
               rootClassName="p-0 m-0"
               wrapperClassName="p-0"
