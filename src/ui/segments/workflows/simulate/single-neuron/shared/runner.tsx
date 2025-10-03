@@ -32,7 +32,6 @@ import {
 import { SimulationType } from '@/types/small-scale-simulator/common';
 import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 import { readNdjsonResponse } from '@/utils/response';
-import { updateArray } from '@/util/updateArray';
 import { messages } from '@/i18n/en/simulation';
 import { tryCatch } from '@/api/utils';
 
@@ -329,34 +328,27 @@ export const launchSimulationAtom = atom<
         variable_name: streamData.variable_name,
         unit: streamData.unit,
       };
-      // if (streamData.name === 'IDREST_0.05' && newPlot.variable_name === 'ik') {
-      //   const minX = newPlot.x.reduce((prv, cur) => Math.min(prv, cur), Number.POSITIVE_INFINITY);
-      //   const maxX = newPlot.x.reduce((prv, cur) => Math.max(prv, cur), Number.NEGATIVE_INFINITY);
-      //   const minY = newPlot.y.reduce((prv, cur) => Math.min(prv, cur), Number.POSITIVE_INFINITY);
-      //   const maxY = newPlot.y.reduce((prv, cur) => Math.max(prv, cur), Number.NEGATIVE_INFINITY);
-      //   console.log(`🚀 [${newPlot.variable_name}]`, minY, maxY, `   in [${minX}, ${maxX}]`); // @FIXME: Remove this line written on 2025-10-01 at 09:39
-      // }
       const currentPlotData = get(plotDataAtom);
       const currentRecording = currentPlotData![streamData.recording];
 
       if (currentRecording) {
+        const key = makeKey(newPlot);
+        const currentRecordingIndex = currentRecording.findIndex((o) => makeKey(o) === key);
+        const value = currentRecording[currentRecordingIndex];
+        if (currentRecordingIndex === -1) {
+          currentRecording.push(newPlot);
+        } else {
+          currentRecording[currentRecordingIndex] = {
+            ...value,
+            x: [...value.x, ...newPlot.x],
+            y: [...value.y, ...newPlot.y],
+            variable_name: newPlot.variable_name ?? value.variable_name,
+            unit: newPlot.unit ?? value.unit,
+          };
+        }
         const updatedPlot = {
           ...get(plotDataAtom),
-          [streamData.recording]:
-            !currentRecording.length ||
-            !currentRecording.find((o) => makeKey(o) === makeKey(newPlot))
-              ? [...currentRecording, newPlot]
-              : updateArray({
-                  array: currentRecording,
-                  keyfn: (item) => makeKey(item) === makeKey(newPlot),
-                  newVal: (value) => ({
-                    ...value,
-                    x: [...value.x, ...newPlot.x],
-                    y: [...value.y, ...newPlot.y],
-                    variable_name: newPlot.variable_name ?? value.variable_name,
-                    unit: newPlot.unit ?? value.unit,
-                  }),
-                }),
+          [streamData.recording]: currentRecording,
         };
 
         // Sort traces for each plot by `varyingKey` so that the legends appear in sorted order.
