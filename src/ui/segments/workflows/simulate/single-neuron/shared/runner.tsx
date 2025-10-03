@@ -26,6 +26,7 @@ import {
 } from '@/entity-configuration/domain/simulation';
 import {
   genericSingleNeuronSimulationPlotDataAtomFamily,
+  SimulationStatus,
   simulationStatusAtomFamily,
 } from '@/state/simulate/single-neuron';
 import { SimulationType } from '@/types/small-scale-simulator/common';
@@ -218,7 +219,7 @@ export const launchSimulationAtom = atom<
     }
     const simStatusAtom = simulationStatusAtomFamily(sessionId);
 
-    set(simStatusAtom, { status: 'launched' });
+    set(simStatusAtom, { status: SimulationStatus.LAUNCHED });
 
     const initialPlotData = recordFromConfig.reduce((acc: Record<string, PlotData>, o) => {
       const key = `${o.section}_${o.offset === 0 ? '0.0' : String(o.offset)}`;
@@ -253,7 +254,7 @@ export const launchSimulationAtom = atom<
 
       if (error) {
         set(simStatusAtom, {
-          status: 'error',
+          status: SimulationStatus.ERROR,
           description: lget(error, 'cause.message', null) ?? messages.RunningSimulationDefaultError,
         });
         return;
@@ -272,7 +273,7 @@ export const launchSimulationAtom = atom<
         }
 
         set(simStatusAtom, {
-          status: 'error',
+          status: SimulationStatus.ERROR,
           description: errorMessage,
         });
 
@@ -284,13 +285,13 @@ export const launchSimulationAtom = atom<
       await readNdjsonResponse<Message<SimulationStreamData>>(response, (message) => {
         match(message)
           .with({ message_type: MessageType.DATA }, ({ data }) => appendStreamData(data))
-          .with({ message_type: MessageType.STATUS, status: JobStatus.ERROR }, (msg) => {
-            throw new Error(msg.extra ?? messages.SteamingSimulationResultDefaultError, {
+          .with({ message_type: MessageType.STATUS, status: JobStatus.ERROR }, () => {
+            throw new Error(messages.SteamingSimulationResultDefaultError, {
               cause: 'SmallScaleSimulatorError',
             });
           })
           .with({ message_type: MessageType.STATUS, status: JobStatus.DONE }, () => {
-            set(simStatusAtom, { status: 'finished' });
+            set(simStatusAtom, { status: SimulationStatus.FINISHED });
           })
           .otherwise(() => null);
       });
@@ -310,7 +311,7 @@ export const launchSimulationAtom = atom<
         },
       });
       set(simStatusAtom, {
-        status: 'error',
+        status: SimulationStatus.ERROR,
         description: error.cause ? `${error}` : messages.RunningSimulationDefaultError,
       });
     }

@@ -37,9 +37,16 @@ export const genericSingleNeuronSimulationPlotDataAtomFamily = atomFamily((key: 
   return childAtom;
 });
 
+export const SimulationStatus = {
+  LAUNCHED: 'launched',
+  FINISHED: 'finished',
+  ERROR: 'error',
+} as const;
+
+export type TSimulationStatus = (typeof SimulationStatus)[keyof typeof SimulationStatus];
 export const simulationStatusAtomFamily = atomFamily((key: string) => {
   const childAtom = atomWithReset<{
-    status: null | 'launched' | 'finished' | 'error';
+    status: TSimulationStatus | null;
     description?: string;
   } | null>(null);
   childAtom.debugLabel = `simulation-status-atom-family-${key}`;

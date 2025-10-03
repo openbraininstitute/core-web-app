@@ -6,11 +6,12 @@ import dynamic from 'next/dynamic';
 import get from 'lodash/get';
 
 import { SimulationColors } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import { simulationStatusAtomFamily } from '@/state/simulate/single-neuron';
+import { SimulationStatus, simulationStatusAtomFamily } from '@/state/simulate/single-neuron';
 import {
   useCurrentSimulationConfig,
   useRecordingPlotData,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/hooks';
+import { cn } from '@/utils/css-class';
 
 import type { PlotData } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
@@ -24,10 +25,9 @@ const PlotRenderer = dynamic(
 export function Results({ sessionId }: { sessionId: string }) {
   const currentSimulationConfig = useCurrentSimulationConfig(sessionId);
   const recordingPlotData = useRecordingPlotData(sessionId);
-
   const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
-
   const record = useSearchParams().get('record') ?? 'all';
+
   const duration = currentSimulationConfig.max_time;
 
   if (!recordingPlotData || !Object.keys(recordingPlotData).length) {
@@ -40,7 +40,7 @@ export function Results({ sessionId }: { sessionId: string }) {
   }
 
   if (
-    simulationStatus?.status === 'finished' &&
+    simulationStatus?.status === SimulationStatus.FINISHED &&
     Object.values(recordingPlotData).every((o: PlotData) => o.every((p) => p.y.length === 0))
   ) {
     return (
@@ -54,8 +54,17 @@ export function Results({ sessionId }: { sessionId: string }) {
     );
   }
 
+  if (simulationStatus?.status === SimulationStatus.ERROR) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3">
+        <div className="text-primary-9 text-center text-2xl">Simulation failed</div>
+        <div className="text-label">If the issue persists, please contact support</div>
+      </div>
+    );
+  }
+
   const isLoading =
-    simulationStatus?.status === 'launched' &&
+    simulationStatus?.status === SimulationStatus.LAUNCHED &&
     Object.values(recordingPlotData).every((o: PlotData) => o.every((p) => p.y.length === 0));
 
   let content = null;
@@ -122,7 +131,12 @@ export function Results({ sessionId }: { sessionId: string }) {
     }
   }
   return (
-    <div className="secondary-scrollbar mb-4 flex h-full w-full flex-col gap-4 overflow-x-hidden overflow-y-auto px-5 select-none">
+    <div
+      className={cn(
+        'secondary-scrollbar mb-4 flex h-full w-full flex-col',
+        'gap-4 overflow-x-hidden overflow-y-auto px-5 select-none'
+      )}
+    >
       {content}
     </div>
   );
