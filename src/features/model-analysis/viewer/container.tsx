@@ -5,6 +5,9 @@ import { AllowedTypes } from '@/features/model-analysis/viewer/storage';
 import type { IValidationConstructedResult } from '@/features/model-analysis/explorer/context';
 import type { TAllowedTypes } from '@/features/model-analysis/viewer/storage';
 import Tabs, { Tab } from '@/ui/molecules/tabbed-page';
+import { IEntity } from '@/api/entitycore/types/entities/entity';
+import { EntityCoreBaseAsset } from '@/api/entitycore/types/shared/global';
+import { EntityTypeDict } from '@/api/entitycore/types';
 
 const Viewer = dynamic(() => import('@/features/model-analysis/viewer/viewer'), {
   ssr: false,
@@ -27,7 +30,12 @@ export function ViewerContainer({ validationResults }: Props) {
         return (
           <Tab label={name} key={name}>
             {results.map((r) => (
-              <Viewer validationResult={r} key={r.id} />
+              <Viewer
+                entity={r as IEntity & EntityCoreBaseAsset}
+                key={r.id}
+                entityType={EntityTypeDict.ValidationResult}
+                pdfShowPageCount={false}
+              />
             ))}
           </Tab>
         );

@@ -160,6 +160,7 @@ export enum AssetLabel {
   network_stats_b = 'network_stats_b',
   circuit_visualization = 'circuit_visualization',
   compressed_sonata_circuit = 'compressed_sonata_circuit',
+  ion_channel_model_figure = 'ion_channel_model_figure',
 }
 
 type AssetBase = {
