@@ -7,10 +7,10 @@ import { JSONSchema } from '../types';
 import { isPlainObject } from './utils';
 import CircuitDetails from './circuit-details';
 import Tooltip from './tooltip';
+import ParameterSwep from './parameter-sweep';
 
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { classNames } from '@/util/utils';
-import ParameterSwep from './paremeter-sweep';
 
 type Primitive = null | boolean | number | string;
 interface Object {
@@ -227,20 +227,18 @@ export function JSONSchemaForm({
           })}
         />
       );
+
     if (obj.type === 'number' || obj.type === 'integer') {
-
-      return <ParameterSwep />;
-
       return (
-        <InputNumber
+        <ParameterSwep
+          k={k}
           min={obj.minimum ?? null}
           max={obj.maximum ?? null}
           disabled={disabled}
-          value={typeof state[k] === 'number' ? state[k] : null}
+          value={state[k] as number | null | number[]}
           onChange={(value) => {
             setState({ ...state, [k]: value });
           }}
-          className="w-full"
         />
       );
     }
