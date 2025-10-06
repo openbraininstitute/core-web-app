@@ -5,7 +5,10 @@ import { useEffect } from 'react';
 import z from 'zod';
 
 import { RecordLocationConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import { RecordLocationSchema } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import {
+  RecordLocation,
+  RecordLocationSchema,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import {
   getSessionKey,
@@ -13,7 +16,7 @@ import {
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 import {
   PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
-  DEFAULT_RECORDING_LOCATION,
+  buildDefaultRecordingLocation,
   getSimulationColor,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
@@ -33,9 +36,10 @@ type RecordItemProps = {
   disableDelete: boolean;
   sections: Array<string>;
   onRemove: (idx: number) => void;
+  record?: RecordLocation;
 };
 
-function ColorMarker({ index }: { index: number }) {
+function ColorMarker({ color }: { color?: string }) {
   return (
     <div className="flex h-11 items-center justify-center">
       <div
@@ -45,7 +49,7 @@ function ColorMarker({ index }: { index: number }) {
           height: '1em',
           border: '1px solid currentColor',
           borderRadius: '50%',
-          background: getSimulationColor(index),
+          background: color,
           verticalAlign: 'center',
         }}
       />
@@ -53,9 +57,16 @@ function ColorMarker({ index }: { index: number }) {
   );
 }
 
-function RecordItem({ index, name, disable, disableDelete, sections, onRemove }: RecordItemProps) {
+function RecordItem({
+  index,
+  name,
+  disable,
+  disableDelete,
+  sections,
+  record,
+  onRemove,
+}: RecordItemProps) {
   const breakpoint = useDefaultBreakpoint();
-
   return (
     <div className="flex w-full flex-col items-start justify-start pr-2">
       <div className="grid w-full grid-cols-[.5fr_.5fr_.5fr_max-content] items-start justify-center gap-4">
@@ -96,7 +107,7 @@ function RecordItem({ index, name, disable, disableDelete, sections, onRemove }:
             placement="bottomLeft"
             disabled={disable}
             size={breakpoint === 'l' ? 'middle' : 'large'}
-            prefix={<ColorMarker index={index + 1} />}
+            prefix={<ColorMarker color={record?.color} />}
           />
         </Form.Item>
         <Form.Item
@@ -208,7 +219,8 @@ export function Recording({ sessionId }: Props) {
 
   const onAdd = () => {
     try {
-      const newRecording = { ...DEFAULT_RECORDING_LOCATION };
+      const colorIndex = state.length;
+      const newRecording = { ...buildDefaultRecordingLocation(getSimulationColor(colorIndex)) };
 
       const updatedState = [...state, newRecording];
       update(updatedState);
@@ -254,7 +266,10 @@ export function Recording({ sessionId }: Props) {
         form={form}
         layout="vertical"
         initialValues={{ record_from: state }}
-        className="secondary-scrollbar relative flex h-auto w-full flex-col items-start overflow-x-hidden overflow-y-auto select-none [&_.ant-form-item-explain-error]:text-sm! [&_.ant-form-item-label]:pb-0.5!"
+        className={cn(
+          'secondary-scrollbar relative flex h-auto w-full flex-col items-start overflow-x-hidden overflow-y-auto',
+          'select-none [&_.ant-form-item-explain-error]:text-sm! [&_.ant-form-item-label]:pb-0.5!'
+        )}
         onValuesChange={onValuesChange}
         validateTrigger={['onChange']}
         requiredMark={false}
@@ -272,6 +287,7 @@ export function Recording({ sessionId }: Props) {
                 disableDelete={fields.length <= 1}
                 sections={sectionNames}
                 onRemove={onRemove}
+                record={state.at(index)}
               />
             ))
           }

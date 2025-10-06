@@ -14,8 +14,12 @@ import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
 
-import type { WorkflowSimulatePanelKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import {
+  threeDVisualizerState,
+  type ThreeDVisualizerQueryParamKeys,
+  type WorkflowSimulatePanelKeys,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 
 export default function Page({
   searchParams,
@@ -26,9 +30,12 @@ export default function Page({
     step: ExperimentStepKeys;
     sessionId: string;
     panel: WorkflowSimulatePanelKeys;
+    '3d': ThreeDVisualizerQueryParamKeys;
   }
 >) {
   const queryParams = use(searchParams);
+  const visualizerState =
+    (queryParams['3d'] as ThreeDVisualizerQueryParamKeys) ?? threeDVisualizerState.Expanded;
   const { virtualLabId, projectId, id: modelId } = use(pathParams);
   let sessionId = queryParams?.sessionId;
   if (!sessionId) sessionId = crypto.randomUUID();
@@ -61,10 +68,12 @@ export default function Page({
           className="flex h-full max-h-full min-h-0 w-full flex-col [grid-area:content]"
         >
           <div
-            id="simulation-panel-wrapper-two-side"
-            data-testid="simulation-panel-wrapper-two-side"
+            id="simulation-panel-wrapper"
+            data-testid="simulation-panel-wrapper"
             className={cn(
-              'grid h-full min-h-0 gap-2 overflow-hidden overflow-y-auto xl:grid-cols-[2.5fr_2fr]'
+              'grid h-full min-h-0 gap-4 overflow-hidden overflow-y-auto',
+              { 'grid-cols-[2.5fr_2fr]': visualizerState === threeDVisualizerState.Expanded },
+              { 'grid-cols-[2.5fr_5rem]': visualizerState === threeDVisualizerState.Collapsed }
             )}
           >
             <HydrateWrapper>

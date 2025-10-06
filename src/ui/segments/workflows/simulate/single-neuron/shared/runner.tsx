@@ -10,6 +10,8 @@ import isNil from 'lodash/isNil';
 import delay from 'lodash/delay';
 import pick from 'lodash/pick';
 import lget from 'lodash/get';
+import omit from 'lodash/omit';
+import map from 'lodash/map';
 
 import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
 import {
@@ -74,10 +76,13 @@ export const createSingleNeuronSimulationAtom = atom(
   ) => {
     if (!simulationResult || !modelId) return null;
 
-    const recordFromUniq = uniqBy(recordFromConfig, (item) =>
-      values(pick(item, ['section', 'offset']))
-        .map(String)
-        .join()
+    const recordFromUniq = map(
+      uniqBy(recordFromConfig, (item) =>
+        values(pick(item, ['section', 'offset']))
+          .map(String)
+          .join()
+      ),
+      (obj) => omit(obj, ['color'])
     );
 
     const singleNeuronSimulationConfig: SingleNeuronModelSimulationConfig = {

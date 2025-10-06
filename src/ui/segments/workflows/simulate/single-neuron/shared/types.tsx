@@ -201,6 +201,7 @@ export const RecordLocationSchema = z.object({
       'Recording position offset must be between 0 and 1 (0 = start of section, 1 = end of section)'
     ),
   record_currents: z.boolean(),
+  color: z.string().optional(),
 });
 
 export type RecordLocation = z.infer<typeof RecordLocationSchema>;

@@ -7,22 +7,23 @@ import useNeuronViewerEvents from '@/components/neuron-viewer/hooks/events-hook'
 import NeuronLoader from '@/components/neuron-viewer/plugins/NeuronLoader';
 import useMorphology from '@/hooks/useMorphology';
 
+import { recordingSourceForSimulationAtom } from '@/state/simulate/categories/recording-source-for-simulation';
+import { currentInjectionSimulationConfigAtom } from '@/state/simulate/categories/current-injection-simulation';
+import { DefaultInjectionColor } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import { RecordLocation } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { DEFAULT_CURRENT_INJECTION_CONFIG } from '@/constants/simulate/single-neuron';
 import {
   PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
   PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import { recordingSourceForSimulationAtom } from '@/state/simulate/categories/recording-source-for-simulation';
-import { currentInjectionSimulationConfigAtom } from '@/state/simulate/categories/current-injection-simulation';
 import {
   RecordLocationConfigurationAtomFamily,
   StimulationConfigurationAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import { DEFAULT_CURRENT_INJECTION_CONFIG } from '@/constants/simulate/single-neuron';
 import { useAppNotification } from '@/components/notification';
 import { secNamesAtom } from '@/state/simulate/single-neuron';
 
 import type { Morphology } from '@/services/bluenaas-single-cell/types';
-import { RecordLocation } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 type Props = {
   virtualLabId: string;
@@ -140,21 +141,32 @@ export default function NeuronViewer({
   const injectionSessionAtom = useAtomValue(StimulationConfigurationAtomFamily(stimulationKey));
   const injectionLocations = useAtomValue(currentInjectionSimulationConfigAtom);
 
-  if (useLabels) {
-    let injection: RecordLocation = {
-      section: injectionLocations[stimulationId].inject_to,
-      offset: 0.5,
-      record_currents: false,
-    };
-    if (sessionId) {
-      injection = {
-        section: injectionSessionAtom.inject_to,
+  useEffect(() => {
+    if (useLabels && !loading && rendererRef.current) {
+      let injection: RecordLocation = {
+        section: injectionLocations[stimulationId].inject_to,
         offset: 0.5,
         record_currents: false,
       };
+      if (sessionId) {
+        injection = {
+          section: injectionSessionAtom.inject_to,
+          offset: 0.5,
+          record_currents: false,
+          color: DefaultInjectionColor,
+        };
+      }
+      rendererRef.current.labels.update([injection, ...recordLocations]);
     }
-    rendererRef.current?.labels.update([injection, ...recordLocations]);
-  }
+  }, [
+    useLabels,
+    loading,
+    recordLocations,
+    injectionLocations,
+    stimulationId,
+    sessionId,
+    injectionSessionAtom.inject_to,
+  ]);
 
   if (error) {
     notifyError({ message: `Morphology initialization error: ${error}`, placement: 'topRight' });
@@ -169,7 +181,7 @@ export default function NeuronViewer({
         </div>
       )}
       <div
-        className="h-full [&_canvas]:rounded-2xl"
+        className="h-full w-full [&_canvas]:rounded-2xl"
         ref={containerRef}
         // NOTE: this is removed because it does not getting the exact pointer position due the scale and nature of the custom cursor
         // style={{

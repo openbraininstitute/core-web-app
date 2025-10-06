@@ -72,6 +72,7 @@ export const label = (text: string, type: 'main' | 'secondary' = 'main', extra?:
 );
 
 export const DefaultColor = '#003a8c';
+export const DefaultInjectionColor = '#fff';
 export const SimulationColors = [
   '#32C14E',
   '#8AB5FF',

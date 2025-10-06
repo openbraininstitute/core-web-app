@@ -47,7 +47,14 @@ export const env = createEnv({
 
     NEXT_PUBLIC_VIRTUAL_LAB_API_URL: z.string().url(),
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().startsWith('pk_'),
-    NEXT_PUBLIC_DEPLOYMENT_ENV: z.enum(['preview', 'development', 'staging', 'production']),
+    NEXT_PUBLIC_DEPLOYMENT_ENV: z.enum([
+      'local',
+      'preview',
+      'development',
+      'staging',
+      'production',
+      'local',
+    ]),
     NEXT_PUBLIC_MATOMO_URL: z.string().optional(),
     NEXT_PUBLIC_MATOMO_CDN_URL: z.string().optional(),
     NEXT_PUBLIC_MATOMO_SITE_ID: z.string().optional(),

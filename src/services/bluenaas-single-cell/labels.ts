@@ -1,8 +1,9 @@
 /* eslint-disable no-param-reassign */
 import { Camera, Object3D, Scene, Vector3 } from 'three';
 
-import { RecordLocation } from '@/types/small-scale-simulator/single-neuron';
 import { getSimulationColor } from '@/constants/simulate/single-neuron';
+
+import type { RecordLocation } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 interface LabelToDraw {
   /**
@@ -17,6 +18,7 @@ interface LabelToDraw {
   boxW: number;
   text: string;
   object: Object3D;
+  color: string;
 }
 
 interface LabelsOptions {
@@ -88,8 +90,9 @@ export class Labels {
         obj.children.forEach((item) => fringe.push(item));
       }
     }
+
     this.labelsToDraw = [];
-    for (const label of labels) {
+    for (const [index, label] of labels.entries()) {
       const name = `${label.section}_0`;
       const obj = objects.get(name);
       if (!obj) continue;
@@ -103,6 +106,7 @@ export class Labels {
         boxW: 0,
         text: label.section,
         object: obj,
+        color: label.color ?? getSimulationColor(index),
       });
     }
     this.paint();
@@ -236,7 +240,7 @@ function paintLabelsArrows(
   }
   ctx.lineWidth = 1;
   for (const label of allLabels) {
-    const foreColor = getSimulationColor(label.index);
+    const foreColor = label.color ?? getSimulationColor(label.index);
     ctx.strokeStyle = foreColor;
     ctx.fillStyle = foreColor;
     ctx.beginPath();
