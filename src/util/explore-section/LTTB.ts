@@ -3,7 +3,7 @@
  * with the swc minifier used by default by nextjs.
  * More details are available here - https://bbpgitlab.epfl.ch/project/sbo/core-web-app/-/merge_requests/1240
  *
- * Note - All usages of `isA` function are replaced by suitable functions from lodash or vanilla js to avoid importing yet another library (ts-type-checked).
+ * Note - All usages of `isA` function are replaced by suitable functions from  es-toolkit or vanilla js to avoid importing yet another library (ts-type-checked).
  *
  * Original Code - https://github.com/janjakubnanista/downsample/blob/master/src/methods/LTTB.ts
  * Library - https://www.npmjs.com/package/downsample

@@ -86,7 +86,7 @@ type DebounceParams = RestParameters<typeof debounce>;
   @param func The function to debounce.
   @param deps The dependency array.
   @param wait The number of milliseconds to delay.
-  @param options The options object. (See lodash.debounce docs).
+  @param options The options object. (See es-toolkit.debounce docs).
 
   @returns - The memoized, debounced version of the callback.
 */

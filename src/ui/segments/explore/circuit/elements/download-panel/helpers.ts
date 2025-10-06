@@ -136,7 +136,7 @@ export function getAssetPath(path: string, manifest?: Record<string, string>): s
   while (resolvedPath.includes('$') && iteration < maxIterations) {
     const previousPath = resolvedPath;
 
-    // Use lodash's reduce for efficient variable replacement
+    // Use  es-toolkit's reduce for efficient variable replacement
     resolvedPath = reduce(
       manifest,
       (currentPath, value, key) => {
