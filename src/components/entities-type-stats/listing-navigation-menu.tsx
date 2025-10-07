@@ -5,7 +5,7 @@ import { CSSProperties, ReactNode } from 'react';
 import { useParams } from 'next/navigation';
 import { Menu, MenuProps } from 'antd';
 import { useAtomValue } from 'jotai';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { entitiesCountAtom } from '@/services/entitycore/entities-count';

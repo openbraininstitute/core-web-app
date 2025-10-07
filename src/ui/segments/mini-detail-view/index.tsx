@@ -6,7 +6,7 @@ import { match, P } from 'ts-pattern';
 import { useAtom } from 'jotai';
 import { Image } from 'antd';
 
-import kebabCase from 'lodash/kebabCase';
+import kebabCase from 'es-toolkit/compat/kebabCase';
 import Link from 'next/link';
 
 import { SingleNeuronSimulationPreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-simulation-preview';

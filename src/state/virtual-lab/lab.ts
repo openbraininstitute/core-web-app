@@ -1,8 +1,8 @@
 import { RefObject } from 'react';
 import { PrimitiveAtom, atom } from 'jotai';
 import { atomFamily, atomWithDefault, atomWithRefresh } from 'jotai/utils';
-import isEqual from 'lodash/isEqual';
-import isNil from 'lodash/isNil';
+import isEqual from 'es-toolkit/compat/isEqual';
+import isNil from 'es-toolkit/compat/isNil';
 
 import { getVirtualLabsOfUser, getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
 import { VirtualLabAPIListData } from '@/types/virtual-lab/common';

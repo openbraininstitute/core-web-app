@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import groupBy from 'lodash/groupBy';
-import find from 'lodash/find';
+import groupBy from 'es-toolkit/compat/groupBy';
+import find from 'es-toolkit/compat/find';
 
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';

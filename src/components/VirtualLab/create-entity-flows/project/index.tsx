@@ -1,4 +1,4 @@
-import reject from 'lodash/reject';
+import reject from 'es-toolkit/compat/reject';
 
 import { ExclamationCircleFilled } from '@ant-design/icons';
 import Content from '@/components/VirtualLab/create-entity-flows/project/content';

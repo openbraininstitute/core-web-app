@@ -1,6 +1,6 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { usePathname, useSearchParams } from 'next/navigation';
-import snakeCase from 'lodash/snakeCase';
+import snakeCase from 'es-toolkit/compat/snakeCase';
 import Link from 'next/link';
 
 import type { ReactNode } from 'react';

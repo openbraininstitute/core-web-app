@@ -10,9 +10,9 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { useSession } from 'next-auth/react';
 import { unwrap } from 'jotai/utils';
 
-import uniqBy from 'lodash/uniqBy';
-import reject from 'lodash/reject';
-import find from 'lodash/find';
+import uniqBy from 'es-toolkit/compat/uniqBy';
+import reject from 'es-toolkit/compat/reject';
+import find from 'es-toolkit/compat/find';
 import VirtualLabsList from '@/components/VirtualLab/create-entity-flows/project/vlabs-list';
 import Overview from '@/components/VirtualLab/create-entity-flows/project/overview';
 import Footer from '@/components/VirtualLab/create-entity-flows/project/footer';

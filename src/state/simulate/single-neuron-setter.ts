@@ -5,12 +5,12 @@ import { atom } from 'jotai';
 import { RESET } from 'jotai/utils';
 import { match } from 'ts-pattern';
 
-import delay from 'lodash/delay';
-import isNil from 'lodash/isNil';
-import pick from 'lodash/pick';
-import sortBy from 'lodash/sortBy';
-import uniqBy from 'lodash/uniqBy';
-import values from 'lodash/values';
+import delay from 'es-toolkit/compat/delay';
+import isNil from 'es-toolkit/compat/isNil';
+import pick from 'es-toolkit/compat/pick';
+import sortBy from 'es-toolkit/compat/sortBy';
+import uniqBy from 'es-toolkit/compat/uniqBy';
+import values from 'es-toolkit/compat/values';
 
 import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
 import { updateArray } from '@/util/updateArray';

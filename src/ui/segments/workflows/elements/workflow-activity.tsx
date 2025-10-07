@@ -4,9 +4,9 @@ import { Card, ConfigProvider, Empty, Pagination as AntPagination } from 'antd';
 import { useState, useLayoutEffect } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
 import { motion } from 'motion/react';
-import kebabCase from 'lodash/kebabCase';
-import find from 'lodash/find';
-import get from 'lodash/get';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import find from 'es-toolkit/compat/find';
+import get from 'es-toolkit/compat/get';
 
 import type { ColumnsType } from 'antd/es/table/interface';
 import { useRouter } from '@bprogress/next';

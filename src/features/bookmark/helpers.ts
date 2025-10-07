@@ -1,13 +1,13 @@
-import fromPairs from 'lodash/fromPairs';
-import mapValues from 'lodash/mapValues';
-import compact from 'lodash/compact';
-import isEmpty from 'lodash/isEmpty';
-import groupBy from 'lodash/groupBy';
-import sortBy from 'lodash/sortBy';
-import isNil from 'lodash/isNil';
-import pick from 'lodash/pick';
-import get from 'lodash/get';
-import map from 'lodash/map';
+import fromPairs from 'es-toolkit/compat/fromPairs';
+import mapValues from 'es-toolkit/compat/mapValues';
+import compact from 'es-toolkit/compat/compact';
+import isEmpty from 'es-toolkit/compat/isEmpty';
+import groupBy from 'es-toolkit/compat/groupBy';
+import sortBy from 'es-toolkit/compat/sortBy';
+import isNil from 'es-toolkit/compat/isNil';
+import pick from 'es-toolkit/compat/pick';
+import get from 'es-toolkit/compat/get';
+import map from 'es-toolkit/compat/map';
 
 import { getEntitiesByGroup, getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { getViewDefinitionsByLegacyType } from '@/entity-configuration/definitions/view-defs';

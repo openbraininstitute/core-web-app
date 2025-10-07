@@ -1,5 +1,5 @@
 import React from 'react';
-import isString from 'lodash/isString';
+import isString from 'es-toolkit/compat/isString';
 import Link from 'next/link';
 import type { ColumnsType } from 'antd/es/table';
 

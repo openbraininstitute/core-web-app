@@ -2,7 +2,7 @@ import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { useQueries } from '@tanstack/react-query';
 import { match, P } from 'ts-pattern';
 import { ReactNode } from 'react';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
 import { getProjectStats } from '@/api/virtual-lab-svc/queries/stats';

@@ -4,7 +4,7 @@ import { CloseOutlined } from '@ant-design/icons';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useEffect, useState } from 'react';
-import sum from 'lodash/sum';
+import sum from 'es-toolkit/compat/sum';
 
 import NetworkAndMorphologyConfig from '@/features/entities/circuit/elements/download-panel/network-morphology-config';
 import ConnectivityMatrices from '@/features/entities/circuit/elements/download-panel/connectivity-matrices';

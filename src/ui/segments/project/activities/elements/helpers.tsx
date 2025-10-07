@@ -1,6 +1,6 @@
 'use client';
 
-import isNil from 'lodash/isNil';
+import isNil from 'es-toolkit/compat/isNil';
 
 import type { ReactNode } from 'react';
 

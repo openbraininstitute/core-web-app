@@ -1,7 +1,7 @@
 import { Select, Form, Collapse, ConfigProvider } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 import { useAtomValue } from 'jotai';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import AmperageRange from '@/features/entities/neuron-simulation/experiment/steps-wizard/stimulation-protocol/amperage-range';
 import SelectedIcon from '@/components/icons/SelectedIcon';

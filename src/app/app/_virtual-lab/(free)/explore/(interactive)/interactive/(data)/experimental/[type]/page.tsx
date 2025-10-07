@@ -1,4 +1,4 @@
-import omit from 'lodash/omit';
+import omit from 'es-toolkit/compat/omit';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 

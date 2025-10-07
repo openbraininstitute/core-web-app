@@ -1,7 +1,7 @@
-import isEmpty from 'lodash/isEmpty';
-import sortBy from 'lodash/sortBy';
-import omit from 'lodash/omit';
-import map from 'lodash/map';
+import isEmpty from 'es-toolkit/compat/isEmpty';
+import sortBy from 'es-toolkit/compat/sortBy';
+import omit from 'es-toolkit/compat/omit';
+import map from 'es-toolkit/compat/map';
 
 import type { Agent, IContributor } from '@/api/entitycore/types/shared/global';
 import type { CoreFilter } from '@/entity-configuration/definitions/types';

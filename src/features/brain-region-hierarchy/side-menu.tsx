@@ -3,7 +3,7 @@ import { useAtom, useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { Button } from 'antd';
 import { useMemo } from 'react';
-import find from 'lodash/find';
+import find from 'es-toolkit/compat/find';
 
 import {
   brainRegionBasicCellGroupsRegionsHierarchyAtom,

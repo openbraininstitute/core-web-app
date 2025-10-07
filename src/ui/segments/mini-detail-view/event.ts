@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import noop from 'lodash/noop';
+import noop from 'es-toolkit/compat/noop';
 
 import { parseAsBoolean, useQueryState } from 'nuqs';
 import { isBrowser } from '@/utils/environment';

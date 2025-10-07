@@ -1,7 +1,7 @@
 import { useState, useTransition } from 'react';
 import { Form, Button } from 'antd';
 import { useSetAtom } from 'jotai';
-import isNull from 'lodash/isNull';
+import isNull from 'es-toolkit/compat/isNull';
 
 import CreateEntityModal from '@/components/VirtualLab/create-entity-flows/common/modal';
 import MemberList from '@/components/VirtualLab/create-entity-flows/common/member-form';

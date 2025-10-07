@@ -1,4 +1,4 @@
-import isNil from 'lodash/isNil';
+import isNil from 'es-toolkit/compat/isNil';
 
 import Detail from '@/features/entities/single-neuron-synaptome/detail-view';
 

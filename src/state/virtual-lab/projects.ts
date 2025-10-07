@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 import { atomFamily, atomWithRefresh, atomWithDefault } from 'jotai/utils';
-import isEqual from 'lodash/isEqual';
+import isEqual from 'es-toolkit/compat/isEqual';
 
 import { virtualLabBalanceRefreshTriggerAtom } from './lab';
 import { Project } from '@/types/virtual-lab/projects';

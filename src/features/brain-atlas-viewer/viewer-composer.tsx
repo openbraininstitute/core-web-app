@@ -2,9 +2,9 @@ import { Fragment, useEffect, useLayoutEffect, useMemo } from 'react';
 import { useThree } from '@react-three/fiber';
 import { unwrap } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
-import compact from 'lodash/compact';
-import groupBy from 'lodash/groupBy';
-import find from 'lodash/find';
+import compact from 'es-toolkit/compat/compact';
+import groupBy from 'es-toolkit/compat/groupBy';
+import find from 'es-toolkit/compat/find';
 
 import BrainRegionMesh from '@/features/brain-atlas-viewer/brain-region-mesh';
 import PointCloudMesh from '@/features/brain-atlas-viewer/point-cloud';

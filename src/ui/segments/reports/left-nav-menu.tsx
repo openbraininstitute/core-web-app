@@ -2,7 +2,7 @@
 
 import { usePathname, useSearchParams } from 'next/navigation';
 import { RightOutlined } from '@ant-design/icons';
-import filter from 'lodash/filter';
+import filter from 'es-toolkit/compat/filter';
 import Link from 'next/link';
 
 import type { ComponentProps } from 'react';

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import sumBy from 'lodash/sumBy';
+import sumBy from 'es-toolkit/compat/sumBy';
 
 import BookmarksView from '@/features/bookmark/view';
 import ErrorData from '@/components/message-banners/error';

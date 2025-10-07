@@ -8,7 +8,7 @@ import { Menu, type MenuProps } from 'antd';
 import { unwrap } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
 import { useQueryState } from 'nuqs';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import { useFilteredCircuits } from '../Circuit/ListView/ExploreCircuitTable';
 import BackToInteractiveExplorationBtn from '@/components/explore-section/BackToInteractiveExplorationBtn';

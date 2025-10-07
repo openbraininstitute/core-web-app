@@ -3,7 +3,7 @@ import { useEffect, useReducer } from 'react';
 import { useAtomValue } from 'jotai';
 import { InputNumber } from 'antd';
 
-import isEqual from 'lodash/isEqual';
+import isEqual from 'es-toolkit/compat/isEqual';
 import dynamic from 'next/dynamic';
 
 import { synaptomeSimulationConfigAtom } from '@/state/simulate/categories/synaptome-simulation-config';

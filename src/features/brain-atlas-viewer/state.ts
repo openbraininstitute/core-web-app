@@ -1,7 +1,7 @@
 import { atomFamily, atomWithReset } from 'jotai/utils';
 import { atom } from 'jotai';
 
-import uniqBy from 'lodash/uniqBy';
+import uniqBy from 'es-toolkit/compat/uniqBy';
 import sessionAtom from '@/state/session';
 
 import { MeshVisibility, VisibilityType } from '@/features/brain-atlas-viewer/types';

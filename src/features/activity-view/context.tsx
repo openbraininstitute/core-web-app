@@ -1,6 +1,6 @@
 import { atomFamily, atomWithRefresh, loadable } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import sessionAtom from '@/state/session';
 

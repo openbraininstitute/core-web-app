@@ -1,5 +1,5 @@
-import flatMap from 'lodash/flatMap';
-import keyBy from 'lodash/keyBy';
+import flatMap from 'es-toolkit/compat/flatMap';
+import keyBy from 'es-toolkit/compat/keyBy';
 
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';

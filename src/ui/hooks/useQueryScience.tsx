@@ -6,7 +6,7 @@ import {
   GetPreviousPageParamFunction,
 } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
-import isEmpty from 'lodash/isEmpty';
+import isEmpty from 'es-toolkit/compat/isEmpty';
 
 import { DEFAULT_BRAIN_REGION_HIERARCHY_ID } from '@/features/brain-region-hierarchy/context';
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';

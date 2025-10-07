@@ -1,10 +1,10 @@
 import { atom } from 'jotai';
-import toPairs from 'lodash/toPairs';
-import values from 'lodash/values';
-import sumBy from 'lodash/sumBy';
-import map from 'lodash/map';
-import get from 'lodash/get';
-import has from 'lodash/has';
+import toPairs from 'es-toolkit/compat/toPairs';
+import values from 'es-toolkit/compat/values';
+import sumBy from 'es-toolkit/compat/sumBy';
+import map from 'es-toolkit/compat/map';
+import get from 'es-toolkit/compat/get';
+import has from 'es-toolkit/compat/has';
 
 import { downloadAsset, listDirectoryOfAssets } from '@/api/entitycore/queries/assets';
 import { EmptyValue } from '@/entity-configuration/definitions/renderer';

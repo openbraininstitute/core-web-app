@@ -2,7 +2,7 @@
 
 import { NextStepProvider as OnboardingProvider, NextStep as OnboardingSteps } from 'nextstepjs';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
-import unionBy from 'lodash/unionBy';
+import unionBy from 'es-toolkit/compat/unionBy';
 
 import type { CardComponentProps, Tour } from 'nextstepjs';
 import type { ReactNode } from 'react';

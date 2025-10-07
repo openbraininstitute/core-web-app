@@ -13,9 +13,9 @@ import {
   PlusCircleOutlined,
 } from '@ant-design/icons';
 
-import findIndex from 'lodash/findIndex';
-import isEqual from 'lodash/isEqual';
-import groupBy from 'lodash/groupBy';
+import findIndex from 'es-toolkit/compat/findIndex';
+import isEqual from 'es-toolkit/compat/isEqual';
+import groupBy from 'es-toolkit/compat/groupBy';
 
 import { SECTION_TARGET_MAPPING } from '@/features/entities/single-neuron-synaptome/build/elements/constants';
 import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';

@@ -7,8 +7,8 @@ import { useSetAtom } from 'jotai';
 import { match } from 'ts-pattern';
 import { useEffect } from 'react';
 
-import compact from 'lodash/compact';
-import get from 'lodash/get';
+import compact from 'es-toolkit/compat/compact';
+import get from 'es-toolkit/compat/get';
 
 import ListingTable from '@/features/bookmark/listing-table';
 import EmptyData from '@/components/message-banners/info';

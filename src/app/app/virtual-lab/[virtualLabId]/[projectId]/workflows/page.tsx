@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { CloseOutlined } from '@ant-design/icons';
 import { useRouter } from '@bprogress/next';
 import { use, useState } from 'react';
-import kebabCase from 'lodash/kebabCase';
+import kebabCase from 'es-toolkit/compat/kebabCase';
 
 import { WorkflowActivity } from '@/ui/segments/workflows/elements/workflow-activity';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';

@@ -6,9 +6,9 @@ import { unwrap } from 'jotai/utils';
 import { match } from 'ts-pattern';
 import { useMemo } from 'react';
 
-import kebabCase from 'lodash/kebabCase';
-import isNil from 'lodash/isNil';
-import get from 'lodash/get';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import isNil from 'es-toolkit/compat/isNil';
+import get from 'es-toolkit/compat/get';
 
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { getPersons } from '@/api/entitycore/queries/general/person-agent';

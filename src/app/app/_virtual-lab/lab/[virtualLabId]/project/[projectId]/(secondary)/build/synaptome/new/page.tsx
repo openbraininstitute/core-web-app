@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
-import some from 'lodash/some';
-import startsWith from 'lodash/startsWith';
+import some from 'es-toolkit/compat/some';
+import startsWith from 'es-toolkit/compat/startsWith';
 import Configuration from '@/page-wrappers/build/single-neuron-synaptome';
 
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';

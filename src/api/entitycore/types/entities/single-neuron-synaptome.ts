@@ -1,4 +1,4 @@
-import isNil from 'lodash/isNil';
+import isNil from 'es-toolkit/compat/isNil';
 import { z } from 'zod';
 
 import { validateSingleNeuronSynapseGenerationFormula } from '@/api/small-scale-simulator';

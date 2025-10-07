@@ -5,7 +5,7 @@ import { LoadingOutlined, SearchOutlined } from '@ant-design/icons';
 import { useState, useTransition } from 'react';
 import { Button } from 'antd';
 import Link from 'next/link';
-import isEmpty from 'lodash/isEmpty';
+import isEmpty from 'es-toolkit/compat/isEmpty';
 
 import { Input } from '@/components/VirtualLab/create-entity-flows/common/inputs';
 import { classNames } from '@/util/utils';

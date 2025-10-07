@@ -3,7 +3,7 @@ import { CloseOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { useSetAtom } from 'jotai';
-import isNil from 'lodash/isNil';
+import isNil from 'es-toolkit/compat/isNil';
 
 import GenericButton from '@/components/Global/GenericButton';
 

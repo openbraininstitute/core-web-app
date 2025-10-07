@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useMemo } from 'react';
 
 import Link from 'next/link';
-import kebabCase from 'lodash/kebabCase';
+import kebabCase from 'es-toolkit/compat/kebabCase';
 
 import Base from '@/components/VirtualLab/side-bar/base';
 import Item, { Props as ItemProps } from '@/components/VirtualLab/side-bar/item';

@@ -3,9 +3,9 @@
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { ComponentProps, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import unionBy from 'lodash/unionBy';
-import delay from 'lodash/delay';
-import find from 'lodash/find';
+import unionBy from 'es-toolkit/compat/unionBy';
+import delay from 'es-toolkit/compat/delay';
+import find from 'es-toolkit/compat/find';
 
 import { streamingFetch, type StreamItem } from '@/ui/segments/app-setup/stream-fetch';
 import { WorkspaceCustomization } from '@/ui/segments/app-setup/workspace-customization';

@@ -3,7 +3,7 @@
 import { useAtomValue, atom, useAtom } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { useMemo } from 'react';
-import find from 'lodash/find';
+import find from 'es-toolkit/compat/find';
 
 import MenuTabs from '@/components/MenuTabs';
 

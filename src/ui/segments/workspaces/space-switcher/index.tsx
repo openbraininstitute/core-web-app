@@ -6,7 +6,7 @@ import { useQueries, useQuery } from '@tanstack/react-query';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
-import compact from 'lodash/compact';
+import compact from 'es-toolkit/compat/compact';
 import Link from 'next/link';
 
 import {

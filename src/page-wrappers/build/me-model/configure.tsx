@@ -2,8 +2,8 @@
 
 import { App, Button } from 'antd';
 import { useAtomValue, useSetAtom } from 'jotai';
-import get from 'lodash/get';
-import omit from 'lodash/omit';
+import get from 'es-toolkit/compat/get';
+import omit from 'es-toolkit/compat/omit';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import z from 'zod';

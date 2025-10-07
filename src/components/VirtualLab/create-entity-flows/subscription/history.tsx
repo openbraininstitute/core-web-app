@@ -1,4 +1,4 @@
-import flatMap from 'lodash/flatMap';
+import flatMap from 'es-toolkit/compat/flatMap';
 
 import { BillingTable } from '@/components/VirtualLab/create-entity-flows/subscription/billing-table';
 import {

@@ -1,6 +1,6 @@
-import isEmpty from 'lodash/isEmpty';
-import isArray from 'lodash/isArray';
-import isNil from 'lodash/isNil';
+import isEmpty from 'es-toolkit/compat/isEmpty';
+import isArray from 'es-toolkit/compat/isArray';
+import isNil from 'es-toolkit/compat/isNil';
 
 import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 

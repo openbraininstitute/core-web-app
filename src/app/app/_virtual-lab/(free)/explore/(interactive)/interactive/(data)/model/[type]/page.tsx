@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import omit from 'lodash/omit';
+import omit from 'es-toolkit/compat/omit';
 
 import ListingView from '@/features/views/listing/model-listing-view';
 import { getEntityBySlug } from '@/entity-configuration/domain/helpers';

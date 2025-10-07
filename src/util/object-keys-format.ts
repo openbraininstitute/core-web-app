@@ -1,5 +1,5 @@
-import snakeCase from 'lodash/snakeCase';
-import camelCase from 'lodash/camelCase';
+import snakeCase from 'es-toolkit/compat/snakeCase';
+import camelCase from 'es-toolkit/compat/camelCase';
 import { mapKeysDeep } from 'deepdash-es/standalone';
 
 type SnakeCase<S extends string> = S extends `${infer T}_${infer Rest}`

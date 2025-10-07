@@ -3,11 +3,11 @@ import { useParams } from 'next/navigation';
 import { match, P } from 'ts-pattern';
 import { useSetAtom } from 'jotai';
 
-import isString from 'lodash/isString';
-import flatMap from 'lodash/flatMap';
-import last from 'lodash/last';
-import map from 'lodash/map';
-import get from 'lodash/get';
+import isString from 'es-toolkit/compat/isString';
+import flatMap from 'es-toolkit/compat/flatMap';
+import last from 'es-toolkit/compat/last';
+import map from 'es-toolkit/compat/map';
+import get from 'es-toolkit/compat/get';
 
 import { connectivityMetricsContentConfiguration } from '@/features/entities/circuit/elements/download-panel/content-configuration';
 import {

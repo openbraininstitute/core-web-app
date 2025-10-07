@@ -3,7 +3,7 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { App, Button, Form, InputNumber, Space } from 'antd';
 import { useAtom, useSetAtom } from 'jotai';
-import sample from 'lodash/sample';
+import sample from 'es-toolkit/compat/sample';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState, useTransition } from 'react';
 import { z } from 'zod';

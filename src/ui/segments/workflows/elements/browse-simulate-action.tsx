@@ -2,8 +2,8 @@
 
 import { useParams, usePathname } from 'next/navigation';
 import { PlusOutlined } from '@ant-design/icons';
-import lowerCase from 'lodash/lowerCase';
-import snakeCase from 'lodash/snakeCase';
+import lowerCase from 'es-toolkit/compat/lowerCase';
+import snakeCase from 'es-toolkit/compat/snakeCase';
 import Link from 'next/link';
 
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';

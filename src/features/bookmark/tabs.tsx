@@ -1,11 +1,11 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import Link, { useLinkStatus } from 'next/link';
 
-import kebabCase from 'lodash/kebabCase';
-import isEmpty from 'lodash/isEmpty';
-import pickBy from 'lodash/pickBy';
-import isNil from 'lodash/isNil';
-import get from 'lodash/get';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import isEmpty from 'es-toolkit/compat/isEmpty';
+import pickBy from 'es-toolkit/compat/pickBy';
+import isNil from 'es-toolkit/compat/isNil';
+import get from 'es-toolkit/compat/get';
 
 import useHorizontalScrollInfo from '@/hooks/useHorizontalScrollInfo';
 import { DotsHorizontal } from '@/components/icons/EditorIcons';

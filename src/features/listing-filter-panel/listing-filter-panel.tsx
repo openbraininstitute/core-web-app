@@ -14,8 +14,8 @@ import { CloseOutlined } from '@ant-design/icons';
 import { unwrap, useResetAtom } from 'jotai/utils';
 import { useAtom, useSetAtom } from 'jotai';
 import { Input } from 'antd';
-import isNil from 'lodash/isNil';
-import map from 'lodash/map';
+import isNil from 'es-toolkit/compat/isNil';
+import map from 'es-toolkit/compat/map';
 
 import ValueOrRange from '@/features/listing-filter-panel/value-or-range';
 import ClearFilters from '@/features/listing-filter-panel/clear-filters';

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import startsWith from 'lodash/startsWith';
-import some from 'lodash/some';
+import startsWith from 'es-toolkit/compat/startsWith';
+import some from 'es-toolkit/compat/some';
 
 import { useParams } from 'next/navigation';
 import { getSession } from '@/authFetch';

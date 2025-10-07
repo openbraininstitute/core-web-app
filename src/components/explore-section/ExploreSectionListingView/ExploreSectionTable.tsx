@@ -3,7 +3,7 @@
 import { CSSProperties, ReactNode, useCallback, useRef, useState } from 'react';
 import { VerticalAlignMiddleOutlined } from '@ant-design/icons';
 import { ConfigProvider, Table, TableProps } from 'antd';
-import isString from 'lodash/isString';
+import isString from 'es-toolkit/compat/isString';
 
 import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
 import type { TableRef } from 'antd/es/table';

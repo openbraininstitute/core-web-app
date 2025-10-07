@@ -1,14 +1,14 @@
 import { atomWithCache } from 'jotai-cache';
 import { atomFamily } from 'jotai/utils';
 
-import mergeWith from 'lodash/mergeWith';
-import isArray from 'lodash/isArray';
-import flatMap from 'lodash/flatMap';
-import uniqBy from 'lodash/uniqBy';
-import chunk from 'lodash/chunk';
-import keyBy from 'lodash/keyBy';
+import mergeWith from 'es-toolkit/compat/mergeWith';
+import isArray from 'es-toolkit/compat/isArray';
+import flatMap from 'es-toolkit/compat/flatMap';
+import uniqBy from 'es-toolkit/compat/uniqBy';
+import chunk from 'es-toolkit/compat/chunk';
+import keyBy from 'es-toolkit/compat/keyBy';
 import { atom } from 'jotai';
-import _get from 'lodash/get';
+import _get from 'es-toolkit/compat/get';
 import pMap from 'p-map';
 
 import { DerivationTypeDictionary } from '@/api/entitycore/types/entities/derivation';

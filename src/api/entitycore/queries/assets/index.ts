@@ -1,4 +1,4 @@
-import kebabCase from 'lodash/kebabCase';
+import kebabCase from 'es-toolkit/compat/kebabCase';
 
 import authApiClient from '@/api/apiClient';
 

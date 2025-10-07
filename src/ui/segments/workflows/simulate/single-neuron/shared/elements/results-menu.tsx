@@ -7,8 +7,8 @@ import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useAtom } from 'jotai';
 
-import kebabCase from 'lodash/kebabCase';
-import uniqBy from 'lodash/uniqBy';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import uniqBy from 'es-toolkit/compat/uniqBy';
 import Link from 'next/link';
 
 import type { ZodError } from 'zod';

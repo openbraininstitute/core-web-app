@@ -5,7 +5,7 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect, useState } from 'react';
 import { Form } from 'antd';
 
-import kebabCase from 'lodash/kebabCase';
+import kebabCase from 'es-toolkit/compat/kebabCase';
 
 import useSimulationModal from '@/features/entities/neuron-simulation/experiment/hooks/useSimulationModal';
 import SaveSimulation from '@/features/entities/neuron-simulation/experiment/elements/save-simulation';

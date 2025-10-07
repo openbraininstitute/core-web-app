@@ -85,6 +85,7 @@
     "distinct-colors": "^3.0.0",
     "embla-carousel-react": "^8.6.0",
     "embla-carousel-wheel-gestures": "^8.1.0",
+    "es-toolkit": "^1.39.10",
     "fast-csv": "^5.0.2",
     "file-saver": "^2.0.5",
     "framer-motion": "^12.4.7",

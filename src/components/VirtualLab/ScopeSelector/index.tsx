@@ -4,12 +4,12 @@ import { useSetAtom } from 'jotai';
 import { parseAsString, Parser, useQueryStates } from 'nuqs';
 import { DownOutlined } from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
-import capitalize from 'lodash/capitalize';
-import Image from 'next/image';
-import map from 'lodash/map';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRef } from 'react';
 import { Button } from 'antd';
+import capitalize from 'es-toolkit/compat/capitalize';
+import map from 'es-toolkit/compat/map';
+import Image from 'next/image';
 
 import { ModelTilesConfig, ModelTileType, SectionTypeValue, TTileConfig } from './tiles';
 
@@ -259,7 +259,7 @@ export function ScopeSelectorSmall({
       >
         <span className={classNames('text-gray-400', expanded && 'opacity-40')}>Scale</span>
         <span className={classNames('text-primary-9 ml-3 font-bold', expanded && 'opacity-40')}>
-          {capitalize(ModelTilesConfig.find((o) => o.type === type)?.title)}
+          {capitalize(ModelTilesConfig.find((o) => o.type === type)?.title ?? '')}
         </span>
         <DownOutlined
           className={classNames(

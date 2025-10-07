@@ -2,7 +2,7 @@
 
 import { Atom, atom } from 'jotai';
 import { atomFamily } from 'jotai/utils';
-import isEqual from 'lodash/isEqual';
+import isEqual from 'es-toolkit/compat/isEqual';
 
 import { DetailViewUrlParams } from '@/types/explore-section/application';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';

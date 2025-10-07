@@ -6,10 +6,10 @@ import { ColumnType } from 'antd/es/table';
 import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useSetAtom } from 'jotai';
-import get from 'lodash/get';
-import find from 'lodash/find';
-import sortBy from 'lodash/sortBy';
-import compact from 'lodash/compact';
+import get from 'es-toolkit/compat/get';
+import find from 'es-toolkit/compat/find';
+import sortBy from 'es-toolkit/compat/sortBy';
+import compact from 'es-toolkit/compat/compact';
 
 import InviteModal from '@/components/VirtualLab/create-entity-flows/invite';
 import { useAppNotification } from '@/components/notification';

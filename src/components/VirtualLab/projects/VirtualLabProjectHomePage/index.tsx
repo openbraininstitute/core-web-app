@@ -2,7 +2,7 @@
 
 import { LoadingOutlined } from '@ant-design/icons';
 import { Spin } from 'antd';
-import sortBy from 'lodash/sortBy';
+import sortBy from 'es-toolkit/compat/sortBy';
 
 import WelcomeUserBanner from '@/components/VirtualLab/VirtualLabHomePage/WelcomeUserBanner';
 import MemberAvatar from '@/components/VirtualLab/create-entity-flows/common/member-avatar';

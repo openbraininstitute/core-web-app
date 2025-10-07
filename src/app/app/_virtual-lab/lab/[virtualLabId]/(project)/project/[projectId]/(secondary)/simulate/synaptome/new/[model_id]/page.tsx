@@ -1,4 +1,4 @@
-import isNil from 'lodash/isNil';
+import isNil from 'es-toolkit/compat/isNil';
 import dynamic from 'next/dynamic';
 
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';

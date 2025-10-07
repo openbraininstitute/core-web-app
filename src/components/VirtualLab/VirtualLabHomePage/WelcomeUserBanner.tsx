@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { CloseOutlined } from '@ant-design/icons';
 import { useSession } from 'next-auth/react';
 import { Button } from 'antd';
-import delay from 'lodash/delay';
+import delay from 'es-toolkit/compat/delay';
 import Realistic from 'react-canvas-confetti/dist/presets/realistic';
 
 import { basePath } from '@/config';

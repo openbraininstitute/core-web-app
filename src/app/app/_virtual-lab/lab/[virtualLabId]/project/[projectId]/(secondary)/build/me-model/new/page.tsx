@@ -6,7 +6,7 @@ import { useMemo, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { unwrap } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
-import omit from 'lodash/omit';
+import omit from 'es-toolkit/compat/omit';
 
 import {
   brainRegionBasicCellGroupsRegionsHierarchyAtom,

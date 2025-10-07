@@ -1,7 +1,7 @@
 import { RowSelectionType, TableRowSelection } from 'antd/es/table/interface';
 import { useAtom } from 'jotai';
 import { Key } from 'react';
-import noop from 'lodash/noop';
+import noop from 'es-toolkit/compat/noop';
 
 import { selectedRowsAtom } from '@/state/explore-section/list-view-atoms';
 import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';

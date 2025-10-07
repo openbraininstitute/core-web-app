@@ -5,9 +5,9 @@ import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-q
 import { useRef, useState, type ReactElement } from 'react';
 import { Form, Input, type FormProps } from 'antd';
 import { z } from 'zod';
-import delay from 'lodash/delay';
+import delay from 'es-toolkit/compat/delay';
 import Image from 'next/image';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import { getProject, updateProject } from '@/api/virtual-lab-svc/queries/project';
 import { useUserPermissions } from '@/hooks/use-user-permissions';

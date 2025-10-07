@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { DefaultOptionType } from 'antd/es/select';
 import { Select } from 'antd';
-import map from 'lodash/map';
+import map from 'es-toolkit/compat/map';
 
 import { classNames } from '@/util/utils';
 

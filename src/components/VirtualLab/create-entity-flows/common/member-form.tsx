@@ -2,7 +2,7 @@
 
 import { Button, Form, Select } from 'antd';
 import { useEffect, useRef, type JSX } from 'react';
-import filter from 'lodash/filter';
+import filter from 'es-toolkit/compat/filter';
 
 import { classNames } from '@/util/utils';
 import { DeleteOutline } from '@/components/icons/EditorIcons';

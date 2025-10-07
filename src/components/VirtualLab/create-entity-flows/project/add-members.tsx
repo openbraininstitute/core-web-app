@@ -5,11 +5,11 @@ import { SearchOutlined } from '@ant-design/icons';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useSession } from 'next-auth/react';
 import { unwrap } from 'jotai/utils';
-import compact from 'lodash/compact';
-import isEmpty from 'lodash/isEmpty';
-import reject from 'lodash/reject';
-import find from 'lodash/find';
-import get from 'lodash/get';
+import compact from 'es-toolkit/compat/compact';
+import isEmpty from 'es-toolkit/compat/isEmpty';
+import reject from 'es-toolkit/compat/reject';
+import find from 'es-toolkit/compat/find';
+import get from 'es-toolkit/compat/get';
 
 import CreateEntityModal from '@/components/VirtualLab/create-entity-flows/common/modal';
 import { useAppNotification } from '@/components/notification';

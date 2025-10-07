@@ -3,8 +3,8 @@ import { ReactNode, useState } from 'react';
 import { Button, Progress } from 'antd';
 import { match } from 'ts-pattern';
 
-import kebabCase from 'lodash/kebabCase';
-import delay from 'lodash/delay';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import delay from 'es-toolkit/compat/delay';
 import saveAs from 'file-saver';
 
 import { renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';

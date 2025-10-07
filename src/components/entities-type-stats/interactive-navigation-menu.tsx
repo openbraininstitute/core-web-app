@@ -4,7 +4,7 @@ import { useParams, usePathname } from 'next/navigation';
 import { memo, ReactNode, Suspense, useMemo } from 'react';
 import { useAtomValue } from 'jotai';
 import { match } from 'ts-pattern';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import { dataTabAtom } from '@/components/explore-section/ExploreInteractive/interactive/entity-group-tab';
 import { useFilteredCircuits } from '@/components/explore-section/Circuit/ListView/ExploreCircuitTable';

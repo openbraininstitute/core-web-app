@@ -1,7 +1,7 @@
 'use client';
 
 import { PlusOutlined } from '@ant-design/icons';
-import last from 'lodash/last';
+import last from 'es-toolkit/compat/last';
 import { usePathname, useRouter, useSelectedLayoutSegments } from 'next/navigation';
 
 import { useTabs } from '@/components/detail-view-tabs';

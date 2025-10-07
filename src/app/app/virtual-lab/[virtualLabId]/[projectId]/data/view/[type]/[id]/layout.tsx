@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import NextLink from 'next/link';
-import snakeCase from 'lodash/snakeCase';
+import snakeCase from 'es-toolkit/compat/snakeCase';
 import { notFound } from 'next/navigation';
 import Breadcrumb from '@/ui/molecules/breadcrumb';
 import { ROOT_ROUTE } from '@/config';

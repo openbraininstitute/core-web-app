@@ -8,7 +8,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { match, P } from 'ts-pattern';
 import { Spin } from 'antd';
 
-import isObject from 'lodash/isObject';
+import isObject from 'es-toolkit/compat/isObject';
 
 import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
 import { SetupIntentResponse } from '@/api/virtual-lab-svc/queries/types';

@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 import { atomWithRefresh } from 'jotai/utils';
-import isEqual from 'lodash/isEqual';
+import isEqual from 'es-toolkit/compat/isEqual';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';

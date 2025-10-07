@@ -1,5 +1,5 @@
 import { atomFamily, atomWithRefresh } from 'jotai/utils';
-import isEqual from 'lodash/isEqual';
+import isEqual from 'es-toolkit/compat/isEqual';
 
 import { VlmGetProjectBookmarksResponse } from '@/api/virtual-lab-svc/queries/types';
 import { getAllBookmarksByCategory } from '@/api/virtual-lab-svc/queries/bookmark';

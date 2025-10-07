@@ -2,7 +2,7 @@ import { useMemo, useLayoutEffect, useRef, useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
 import { loadable } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import { createPointCloud } from '@/features/brain-atlas-viewer/utils';
 import { getPointCloudAtom } from '@/features/brain-atlas-viewer/state';

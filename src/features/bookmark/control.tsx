@@ -12,7 +12,7 @@ import { Button } from 'antd';
 import { loadable } from 'jotai/utils';
 
 import Link from 'next/link';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import { BaselineBookmarkAdd, BookmarkMinus } from '@/components/icons/EditorIcons';
 import {

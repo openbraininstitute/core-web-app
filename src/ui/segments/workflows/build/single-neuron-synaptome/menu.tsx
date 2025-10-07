@@ -11,8 +11,8 @@ import {
 } from '@ant-design/icons';
 import { z } from 'zod';
 
-import kebabCase from 'lodash/kebabCase';
-import isNil from 'lodash/isNil';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import isNil from 'es-toolkit/compat/isNil';
 import Link from 'next/link';
 
 import { SynapseSetMenuItems } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-set-menu-item';

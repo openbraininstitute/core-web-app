@@ -11,9 +11,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { z } from 'zod';
 
-import get from 'lodash/get';
-import kebabCase from 'lodash/kebabCase';
-import omit from 'lodash/omit';
+import get from 'es-toolkit/compat/get';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import omit from 'es-toolkit/compat/omit';
 import Link from 'next/link';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';

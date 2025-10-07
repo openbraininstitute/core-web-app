@@ -1,8 +1,8 @@
 import { atomFamily, atomWithDefault, loadable } from 'jotai/utils';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
-import isEmpty from 'lodash/isEmpty';
-import flatMap from 'lodash/flatMap';
-import _get from 'lodash/get';
+import isEmpty from 'es-toolkit/compat/isEmpty';
+import flatMap from 'es-toolkit/compat/flatMap';
+import _get from 'es-toolkit/compat/get';
 import pMap from 'p-map';
 
 import columnKeyToFilter from './column-key-to-filter';

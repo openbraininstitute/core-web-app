@@ -5,8 +5,8 @@ import { useRouter, useParams } from 'next/navigation';
 import { LoadingOutlined } from '@ant-design/icons';
 import { useAtom, useAtomValue } from 'jotai';
 import { Button, Spin } from 'antd';
-import isObject from 'lodash/isObject';
-import delay from 'lodash/delay';
+import isObject from 'es-toolkit/compat/isObject';
+import delay from 'es-toolkit/compat/delay';
 
 import sessionAtom from '@/state/session';
 

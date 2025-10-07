@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense } from 'react';
-import isNil from 'lodash/isNil';
+import isNil from 'es-toolkit/compat/isNil';
 
 import SynapseGroupList from '@/features/entities/single-neuron-synaptome/detail-view/elements/list-synapses-configuration';
 import Configuration from '@/features/entities/single-neuron-synaptome/detail-view/configuration';

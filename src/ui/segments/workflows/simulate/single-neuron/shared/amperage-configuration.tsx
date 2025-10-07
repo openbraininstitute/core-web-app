@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useCallback } from 'react';
 import { InputNumber, Switch, Form } from 'antd';
 import { useAtom } from 'jotai';
-import isEqual from 'lodash/isEqual';
-import isNil from 'lodash/isNil';
+import isEqual from 'es-toolkit/compat/isEqual';
+import isNil from 'es-toolkit/compat/isNil';
 
 import { AmperageBaseSchema } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { StimuliPreviewPlot } from '@/ui/segments/workflows/simulate/single-neuron/shared/stimuli-preview-plot';

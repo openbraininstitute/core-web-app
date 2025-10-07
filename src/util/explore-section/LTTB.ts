@@ -12,8 +12,8 @@
 
 /* eslint-disable no-plusplus */
 
-import isDate from 'lodash/isDate';
-import isObject from 'lodash/isObject';
+import isDate from 'es-toolkit/compat/isDate';
+import isObject from 'es-toolkit/compat/isObject';
 
 /**
  * Possible types for the X coordinate (most probably time)

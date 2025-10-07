@@ -2,7 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { match, P } from 'ts-pattern';
-import isNil from 'lodash/isNil';
+import isNil from 'es-toolkit/compat/isNil';
 
 import {
   BuildStep,

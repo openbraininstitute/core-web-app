@@ -1,6 +1,6 @@
 'use client';
 
-import toPairs from 'lodash/toPairs';
+import toPairs from 'es-toolkit/compat/toPairs';
 
 import { ProgressiveEntityImage } from '@/features/entities/circuit/elements/use-progressive-img';
 import { Header } from '@/features/entities/circuit/elements/section-header';

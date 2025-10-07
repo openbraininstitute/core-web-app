@@ -2,7 +2,7 @@ import React from 'react';
 import { Select, Form, InputNumber, Button, Checkbox } from 'antd';
 import { useAtomValue } from 'jotai';
 import { DeleteOutlined, InfoCircleOutlined } from '@ant-design/icons';
-import isNil from 'lodash/isNil';
+import isNil from 'es-toolkit/compat/isNil';
 
 import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
 import { useRecordingSourceForSimulation } from '@/state/simulate/categories';

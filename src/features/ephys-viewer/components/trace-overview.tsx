@@ -1,6 +1,6 @@
 import { LineChartOutlined } from '@ant-design/icons';
 import { Select } from 'antd';
-import startCase from 'lodash/startCase';
+import startCase from 'es-toolkit/compat/startCase';
 import Plotly from 'plotly.js-dist-min';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useInView } from 'react-intersection-observer';

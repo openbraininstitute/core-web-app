@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { useAtom, useAtomValue } from 'jotai';
 import { Pagination } from 'antd';
 import React, { Suspense } from 'react';
-import isString from 'lodash/isString';
+import isString from 'es-toolkit/compat/isString';
 
 import type { ColumnsType } from 'antd/es/table';
 

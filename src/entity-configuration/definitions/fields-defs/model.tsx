@@ -1,7 +1,7 @@
 import { LoadingOutlined, WarningFilled } from '@ant-design/icons';
-import isNil from 'lodash/isNil';
-import find from 'lodash/find';
-import map from 'lodash/map';
+import isNil from 'es-toolkit/compat/isNil';
+import find from 'es-toolkit/compat/find';
+import map from 'es-toolkit/compat/map';
 
 import { CircuitBuildCategory, CircuitScale } from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
