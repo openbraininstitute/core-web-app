@@ -52,9 +52,9 @@ export async function getContribution({ id, context }: { id: string; context: Wo
 }
 
 const contributorPayloadSchema = z.object({
-  agent_id: z.string().uuid(),
-  role_id: z.string().uuid(),
-  entity_id: z.string().uuid(),
+  agent_id: z.uuid(),
+  role_id: z.uuid(),
+  entity_id: z.uuid(),
 });
 
 export type IContributorPayload = z.infer<typeof contributorPayloadSchema>;

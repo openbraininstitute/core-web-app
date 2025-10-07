@@ -67,8 +67,8 @@ export interface ICircuitSimulationCampaignFilter
 const CreateCircuitSimulationCampaignSchema = z.object({
   name: z.string(),
   description: z.string(),
-  simulation_campaign_id: z.string().uuid(),
-  entity_id: z.string().uuid(),
+  simulation_campaign_id: z.uuid(),
+  entity_id: z.uuid(),
   scan_parameters: z.record(z.string(), z.any()), // TODO: replace with z.looseObject when migrated to zod 4
   authorized_public: z.boolean(),
 });

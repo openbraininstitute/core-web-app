@@ -31,13 +31,16 @@ type Props = WorkspaceContext & {
   stateId: string;
 };
 
-const memodelSchema = z
-  .array(
+const memodelSchema = z.tuple(
+  [
     z.object({
-      id: z.string().uuid(),
-    })
-  )
-  .nonempty();
+      id: z.uuid(),
+    }),
+  ],
+  z.object({
+    id: z.uuid(),
+  })
+);
 
 export default function MeModelsListingView({ virtualLabId, projectId, stateId }: Props) {
   const form = Form.useFormInstance();

@@ -73,29 +73,43 @@ export async function getCellMorphology({
 
 const cellMorphologySchema = z.object({
   name: z
-    .string({ message: 'Cell morphology name is required' })
-    .nonempty({ message: 'Cell morphology name is required' }),
+    .string({
+      error: 'Cell morphology name is required',
+    })
+    .nonempty({
+      error: 'Cell morphology name is required',
+    }),
   description: z
-    .string({ message: 'Cell morphology description is required' })
-    .nonempty({ message: 'Cell morphology description is required' }),
-  brain_region_id: z
-    .string({ message: 'Brain region is required' })
-    .uuid()
-    .nonempty({ message: 'Brain region is required' }),
-  subject_id: z
-    .string({ message: 'Subject is required' })
-    .uuid()
-    .nonempty({ message: 'Subject is required' }),
-  license_id: z
-    .string({ message: 'License is required' })
-    .uuid()
-    .nonempty({ message: 'License is required' }),
-  experiment_date: z.string({ message: 'Experiment date is required' }).nullish(),
-  contact_email: z
-    .string({ message: 'Contact email is required' })
-    .email({ message: 'Contact email is required' })
+    .string({
+      error: 'Cell morphology description is required',
+    })
+    .nonempty({
+      error: 'Cell morphology description is required',
+    }),
+  brain_region_id: z.uuid().nonempty({
+    error: 'Brain region is required',
+  }),
+  subject_id: z.uuid().nonempty({
+    error: 'Subject is required',
+  }),
+  license_id: z.uuid().nonempty({
+    error: 'License is required',
+  }),
+  experiment_date: z
+    .string({
+      error: 'Experiment date is required',
+    })
     .nullish(),
-  published_in: z.string({ message: 'Published in is required' }).nullish(),
+  contact_email: z
+    .email({
+      error: 'Contact email is required',
+    })
+    .nullish(),
+  published_in: z
+    .string({
+      error: 'Published in is required',
+    })
+    .nullish(),
   location: z.object({ x: z.number(), y: z.number(), z: z.number() }).nullable(),
 });
 

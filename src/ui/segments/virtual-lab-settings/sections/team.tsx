@@ -38,7 +38,7 @@ const roleOptions: { value: Role; label: string }[] = [
   { value: 'member', label: 'Member' },
 ];
 
-const emailSchema = z.string().min(3, 'Email is required').email('Email is not valid');
+const emailSchema = z.email('Email is not valid').min(3, 'Email is required');
 
 const Steps = {
   InviteMember: 'invite-member',

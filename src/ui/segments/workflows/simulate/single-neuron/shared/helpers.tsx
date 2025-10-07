@@ -75,7 +75,7 @@ export const createZodValidator = (schema: z.ZodType<any>, defaultMessage?: stri
     } catch (error) {
       const message =
         error instanceof z.ZodError
-          ? error.errors[0]?.message
+          ? error.issues[0]?.message
           : defaultMessage || 'Validation failed';
       return Promise.reject(message);
     }

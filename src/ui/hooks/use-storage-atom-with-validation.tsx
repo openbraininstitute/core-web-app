@@ -6,6 +6,18 @@ import z from 'zod';
 
 import type { ZodType } from 'zod';
 
+export class ValidationError extends Error {
+  public readonly issues?: z.core.$ZodIssue[] | null;
+
+  public readonly cause?: string | null;
+
+  constructor(message: string, issues: z.core.$ZodIssue[] | null, cause: string | null) {
+    super(message);
+    this.issues = issues;
+    this.cause = cause;
+  }
+}
+
 export function createZodSuperJsonStorage<T>(schema: z.ZodType<T>, storage: Storage) {
   return {
     getItem(key: string, initialValue: T): T {
@@ -19,14 +31,10 @@ export function createZodSuperJsonStorage<T>(schema: z.ZodType<T>, storage: Stor
         return schema.parse(parsed);
       } catch (error) {
         if (error instanceof z.ZodError) {
-          const errors = error.formErrors.fieldErrors;
-          throw new Error('validation error', {
-            cause: errors,
-          });
+          const errors = error.issues;
+          throw new ValidationError('validation error', errors, null);
         } else {
-          throw new Error('storage error', {
-            cause: 'setting storage error',
-          });
+          throw new ValidationError('storage error', null, 'setting storage error');
         }
       }
     },
@@ -37,14 +45,10 @@ export function createZodSuperJsonStorage<T>(schema: z.ZodType<T>, storage: Stor
         storage.setItem(key, superjson.stringify(value));
       } catch (error) {
         if (error instanceof z.ZodError) {
-          const errors = error.formErrors.fieldErrors;
-          throw new Error('validation error', {
-            cause: errors,
-          });
+          const errors = error.issues;
+          throw new ValidationError('validation error', errors, null);
         } else {
-          throw new Error('storage error', {
-            cause: 'setting storage error',
-          });
+          throw new ValidationError('storage error', null, 'setting storage error');
         }
       }
     },

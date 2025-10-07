@@ -74,7 +74,7 @@ export function Info({ sessionId }: Props) {
                 return Promise.resolve();
               } catch (error) {
                 return Promise.reject(
-                  error instanceof z.ZodError ? error.errors.at(0)?.message : 'Name is required'
+                  error instanceof z.ZodError ? error.issues.at(0)?.message : 'Name is required'
                 );
               }
             },
@@ -100,7 +100,7 @@ export function Info({ sessionId }: Props) {
                 }).shape.description.parseAsync(value);
               } catch (error) {
                 return Promise.reject(
-                  error instanceof z.ZodError ? error.errors.at(0)?.message : 'Invalid description'
+                  error instanceof z.ZodError ? error.issues.at(0)?.message : 'Invalid description'
                 );
               }
               return Promise.resolve();

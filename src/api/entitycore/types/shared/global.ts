@@ -212,12 +212,12 @@ export type DirectoryListContent = {
 
 // mirror Python Enums
 export const SexEnum = z.enum(['male', 'female', 'unknown'], {
-  message: 'Sex must be male, female, or unknown',
+  error: 'Sex must be male, female, or unknown',
 });
 export type TSex = z.infer<typeof SexEnum>;
 
 export const AgePeriodEnum = z.enum(['prenatal', 'postnatal', 'unknown'], {
-  message: 'Age period must be prenatal, postnatal, or unknown',
+  error: 'Age period must be prenatal, postnatal, or unknown',
 });
 export type TAgePeriod = z.infer<typeof AgePeriodEnum>;
 

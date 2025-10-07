@@ -227,6 +227,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
                     type="button"
                     variant="outline"
                     size={breakpoint === 'l' ? 'md' : 'lg'}
+                    className="active:text-white"
                     onClick={() => {
                       if (data?.synapses.length) {
                         newConfig(data.synapses);

@@ -36,31 +36,43 @@ export type Props = {
 };
 
 const virtualLabNameSchema = z
-  .string({ message: 'Please enter your virtual lab name' })
-  .min(2, { message: 'Please enter your virtual lab name' })
-  .max(80, { message: 'Please enter your virtual lab name' })
+  .string({
+    error: 'Please enter your virtual lab name',
+  })
+  .min(2, {
+    error: 'Please enter your virtual lab name',
+  })
+  .max(80, {
+    error: 'Please enter your virtual lab name',
+  })
   .superRefine(async (name, ctx) => {
     try {
       const exists = await checkVirtualLabExists({ name });
       if (exists) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           message:
             'Another virtual lab with same name already exists, Please use a different name.',
         });
       }
     } catch (error) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'Failed to validate virtual lab name',
       });
     }
   });
 
 const projectNameSchema = z
-  .string({ message: 'Please enter your project name' })
-  .min(2, { message: 'Please enter your project name' })
-  .max(80, { message: 'Please enter your project name' });
+  .string({
+    error: 'Please enter your project name',
+  })
+  .min(2, {
+    error: 'Please enter your project name',
+  })
+  .max(80, {
+    error: 'Please enter your project name',
+  });
 
 export const createProjectNameSchema = (virtualLabId: string) =>
   projectNameSchema.superRefine(async (name, ctx) => {
@@ -68,13 +80,13 @@ export const createProjectNameSchema = (virtualLabId: string) =>
       const exists = await checkProjectExists({ vlabId: virtualLabId, name });
       if (exists) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           message: 'You already have a project with this name',
         });
       }
     } catch (error) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'Failed to validate project name',
       });
     }
@@ -293,7 +305,7 @@ export function WorkspaceCustomization({
                         } catch (error) {
                           return Promise.reject(
                             error instanceof z.ZodError
-                              ? error.errors.at(0)?.message
+                              ? error.issues.at(0)?.message
                               : 'Virtual lab name is required !'
                           );
                         }
@@ -334,7 +346,7 @@ export function WorkspaceCustomization({
                         } catch (error) {
                           return Promise.reject(
                             error instanceof z.ZodError
-                              ? error.errors.at(0)?.message
+                              ? error.issues.at(0)?.message
                               : 'Project name is required !'
                           );
                         }

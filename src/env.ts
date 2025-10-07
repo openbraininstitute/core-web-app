@@ -12,7 +12,7 @@ export const env = createEnv({
   emptyStringAsUndefined: true,
 
   server: {
-    KEYCLOAK_ISSUER: z.string().url(),
+    KEYCLOAK_ISSUER: z.url(),
     KEYCLOAK_CLIENT_ID: z.string().min(3),
     KEYCLOAK_CLIENT_SECRET: z.string().min(5),
 
@@ -29,23 +29,20 @@ export const env = createEnv({
 
   client: {
     NEXT_PUBLIC_BASE_PATH: z.preprocess((basePath) => basePath ?? '', z.string()),
-    NEXT_PUBLIC_CDN_URI: z.string().url().optional(),
+    NEXT_PUBLIC_CDN_URI: z.url().optional(),
     // When run on non-protected branch in Gitlab CI the value of env var will be an empty string.
     // This transforms an empty string value to undefined in order to pass the .optional validation.
-    NEXT_PUBLIC_SENTRY_DSN: z.preprocess(
-      (sentryDsn) => sentryDsn || undefined,
-      z.string().url().optional()
-    ),
+    NEXT_PUBLIC_SENTRY_DSN: z.preprocess((sentryDsn) => sentryDsn || undefined, z.url().optional()),
     NEXT_PUBLIC_SENTRY_ORG: z.string().optional(),
     NEXT_PUBLIC_SENTRY_PRJ: z.string().optional(),
 
-    NEXT_PUBLIC_ACCOUNTING_BASE_URL: z.string().url().optional(),
+    NEXT_PUBLIC_ACCOUNTING_BASE_URL: z.url().optional(),
 
-    NEXT_PUBLIC_SMALL_SCALE_SIMULATOR_URL: z.string().url(),
-    NEXT_PUBLIC_CELL_SVC_BASE_URL: z.string().url(),
-    NEXT_PUBLIC_THUMBNAIL_GENERATION_BASE_URL: z.string().url(),
+    NEXT_PUBLIC_SMALL_SCALE_SIMULATOR_URL: z.url(),
+    NEXT_PUBLIC_CELL_SVC_BASE_URL: z.url(),
+    NEXT_PUBLIC_THUMBNAIL_GENERATION_BASE_URL: z.url(),
 
-    NEXT_PUBLIC_VIRTUAL_LAB_API_URL: z.string().url(),
+    NEXT_PUBLIC_VIRTUAL_LAB_API_URL: z.url(),
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().startsWith('pk_'),
     NEXT_PUBLIC_DEPLOYMENT_ENV: z.enum([
       'preview',
@@ -59,7 +56,7 @@ export const env = createEnv({
     NEXT_PUBLIC_MATOMO_SITE_ID: z.string().optional(),
     // There is only one Sanity server, but with two datasets.
     NEXT_PUBLIC_SANITY_DATASET: z.enum(['staging', 'production']).optional(),
-    NEXT_PUBLIC_ENTITY_CORE_URL: z.string().url(),
+    NEXT_PUBLIC_ENTITY_CORE_URL: z.url(),
     NEXT_PUBLIC_ENTITY_CORE_PUBLIC_VIRTUAL_LAB_ID: z.string().nonempty(),
     NEXT_PUBLIC_ENTITY_CORE_PUBLIC_PROJECT_ID: z.string().nonempty(),
     NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID: z.string().nonempty(),
@@ -68,7 +65,7 @@ export const env = createEnv({
     NEXT_PUBLIC_DEFAULT_BRAIN_ATLAS_ID: z.string().nonempty(),
     NEXT_PUBLIC_ROOT_BRAIN_REGION_ANNOTATION_VALUE: z.string().nonempty(),
     NEXT_PUBLIC_ROOT_BRAIN_REGION_ID: z.string().nonempty(),
-    NEXT_PUBLIC_LEGACY_DEFAULT_CIRCUIT_ID: z.string().url().optional(),
+    NEXT_PUBLIC_LEGACY_DEFAULT_CIRCUIT_ID: z.url().optional(),
     NEXT_PUBLIC_CORE_WEB_APP_VERSION: z.string().optional(),
     NEXT_PUBLIC_NOTEBOOK_SERVICE_BASE_URL: z.string().optional(),
     NEXT_PUBLIC_OBI_ONE_URL: z.string().optional(),

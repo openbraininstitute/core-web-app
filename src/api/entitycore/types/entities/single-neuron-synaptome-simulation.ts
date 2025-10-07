@@ -69,12 +69,12 @@ export interface ISingleNeuronSynaptomeSimulationFilter
 const CreateSingleNeuronSynaptomeSimulationSchema = z.object({
   name: z.string(),
   description: z.string(),
-  status: z.nativeEnum(SingleNeuronSimulationStatus),
-  seed: z.number().int(),
+  status: z.enum(SingleNeuronSimulationStatus),
+  seed: z.int(),
   injection_location: z.array(z.string()),
   recording_location: z.array(z.string()),
-  brain_region_id: z.string().uuid(),
-  synaptome_id: z.string().uuid(),
+  brain_region_id: z.uuid(),
+  synaptome_id: z.uuid(),
 });
 
 export type TCreateSingleNeuronSynaptomeSimulation = z.infer<

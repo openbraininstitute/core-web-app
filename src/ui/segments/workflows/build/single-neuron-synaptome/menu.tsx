@@ -48,7 +48,7 @@ type Props = { sessionId: string };
 const mainFormSchema = z.object({
   name: z.string().nonempty().min(1),
   description: z.string().optional(),
-  me_model_id: z.string().uuid(),
+  me_model_id: z.uuid(),
   seed: z.number().nonnegative(),
 });
 

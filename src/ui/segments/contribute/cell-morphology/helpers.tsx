@@ -10,7 +10,7 @@ import last from 'lodash/last';
 import join from 'lodash/join';
 import dayjs from 'dayjs';
 
-import type { SafeParseReturnType, ZodTypeAny } from 'zod';
+import type { ZodSafeParseResult, ZodType } from 'zod';
 import type { ComponentProps, ReactNode } from 'react';
 
 import { cn } from '@/utils/css-class';
@@ -53,17 +53,26 @@ export type TAgentType = (typeof AgentType)[keyof typeof AgentType]['key'];
 export const CellMorphologySchema = z.object({
   setup: z.object({
     name: z
-      .string({ message: 'Cell morphology name is required' })
-      .nonempty({ message: 'Cell morphology name is required' }),
+      .string({
+        error: 'Cell morphology name is required',
+      })
+      .nonempty({
+        error: 'Cell morphology name is required',
+      }),
     description: z
-      .string({ message: 'Cell morphology description is required' })
-      .nonempty({ message: 'Cell morphology description is required' }),
-    brain_region_id: z
-      .string({ message: 'Brain region is required' })
-      .uuid()
-      .nonempty({ message: 'Brain region is required' }),
+      .string({
+        error: 'Cell morphology description is required',
+      })
+      .nonempty({
+        error: 'Cell morphology description is required',
+      }),
+    brain_region_id: z.uuid().nonempty({
+      error: 'Brain region is required',
+    }),
     experiment_date: z
-      .custom((data) => dayjs.isDayjs(data), { message: 'Experiment date should be a valid date' })
+      .custom((data) => dayjs.isDayjs(data), {
+        error: 'Experiment date should be a valid date',
+      })
       .refine(
         (data) => {
           const today = dayjs();
@@ -73,50 +82,59 @@ export const CellMorphologySchema = z.object({
           return false;
         },
         {
-          message: 'Experiment date should be today or in the past',
+          error: 'Experiment date should be today or in the past',
         }
       )
       .nullish(),
-    contact_email: z.string().email({ message: 'Contact email should be a valid email' }).nullish(),
+    contact_email: z
+      .email({
+        error: 'Contact email should be a valid email',
+      })
+      .nullish(),
     published_in: z.string().nullish(),
     location: z
       .object({
-        x: z.number({ message: 'X coordinate should be a number' }).nullish(),
-        y: z.number({ message: 'Y coordinate should be a number' }).nullish(),
-        z: z.number({ message: 'Z coordinate should be a number' }).nullish(),
+        x: z
+          .number({
+            error: 'X coordinate should be a number',
+          })
+          .nullish(),
+        y: z
+          .number({
+            error: 'Y coordinate should be a number',
+          })
+          .nullish(),
+        z: z
+          .number({
+            error: 'Z coordinate should be a number',
+          })
+          .nullish(),
       })
       .nullable()
-      .refine(
-        (val) => {
-          if (!val) return true;
-          const defined = pickBy(val, (v) => !isNil(v) && !Number.isNaN(v));
-          return isEmpty(defined) || size(defined) === 3;
-        },
-        (val) => {
-          if (!val) return { message: '', path: [] };
-          const defined = pickBy(val, (v) => !isNil(v) && !Number.isNaN(v));
+      .superRefine((val, ctx) => {
+        const defined = pickBy(val, (v) => !isNil(v) && !Number.isNaN(v));
+        const status = Boolean(isEmpty(defined) || size(defined) === 3);
+        if (!status && val) {
           const allKeys = Object.keys(val);
           const difference = allKeys.filter((key) => !defined[key]);
-          return {
+          ctx.addIssue({
+            code: 'custom',
             message: `All coordinates (x, y, z) are required if one is provided`,
             path: difference,
-          };
+          });
         }
-      ),
+      }),
   }),
   // subject: SubjectCreateSchema,
-  subject_id: z
-    .string({ message: 'Subject is required' })
-    .uuid()
-    .nonempty({ message: 'Subject is required' }),
-  license_id: z
-    .string({ message: 'License is required' })
-    .uuid()
-    .nonempty({ message: 'License is required' }),
-  mtype_class_id: z
-    .string({ message: 'M-type class is required' })
-    .uuid()
-    .nonempty({ message: 'M-type class is required' }),
+  subject_id: z.uuid().nonempty({
+    error: 'Subject is required',
+  }),
+  license_id: z.uuid().nonempty({
+    error: 'License is required',
+  }),
+  mtype_class_id: z.uuid().nonempty({
+    error: 'M-type class is required',
+  }),
   assets: z.object({
     swc: z.instanceof(File),
     asc: z.instanceof(File),
@@ -127,19 +145,15 @@ export const CellMorphologySchema = z.object({
       z.object({
         agent_type: z.enum(
           Object.values(AgentType).map((type) => type.key) as [TAgentType, ...TAgentType[]],
-          { message: 'Agent type is required' }
+          {
+            error: 'Agent type is required',
+          }
         ),
-        agent_id: z
-          .string({ message: 'Agent is required' })
-          .uuid()
-          .nonempty({ message: 'Agent is required' }),
-        role_id: z
-          .string({ message: 'Role is required' })
-          .uuid()
-          .nonempty({ message: 'Role is required' }),
+        agent_id: z.uuid(),
+        role_id: z.uuid(),
       })
     )
-    .nonempty({ message: 'At least one contributor is required' }),
+    .nonempty({ error: 'At least one contributor is required' }),
 });
 
 export type TCellMorphologyForm = z.infer<typeof CellMorphologySchema>;
@@ -193,7 +207,7 @@ export class CustomFormError extends Error {
  * @param extraCustomValidator - An extra custom validator to run this should throw a custom error CustomFormError
  * @returns A validator function
  */
-export function zodFieldValidator<T extends ZodTypeAny, R>(
+export function zodFieldValidator<T extends ZodType, R>(
   schema: T,
   fieldPath: string,
   form: FormInstance,
@@ -227,7 +241,7 @@ export function zodFieldValidator<T extends ZodTypeAny, R>(
  * @returns 'valid' if validation passed, 'invalid' if validation failed and field is dirty, 'non-touched' otherwise
  */
 export function getValidationStatus<T = any>(
-  validator: SafeParseReturnType<T, T>,
+  validator: ZodSafeParseResult<T>,
   fieldKey: string,
   dirtyFields: Array<string>
 ): 'valid' | 'invalid' | 'non-touched' {
@@ -251,7 +265,7 @@ export function getValidationStatus<T = any>(
  *
  */
 export function getContributionValidationStatus<T = any>(
-  validator: SafeParseReturnType<T, T>,
+  validator: ZodSafeParseResult<T>,
   fieldKey: string,
   dirtyFields: Array<string>
 ): 'valid' | 'invalid' | 'non-touched' {

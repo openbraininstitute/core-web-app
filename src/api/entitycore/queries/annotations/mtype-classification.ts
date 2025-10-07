@@ -44,8 +44,8 @@ export async function getMtypeClassification({ id }: { id: string }) {
 
 export const mtypeClassificationCreateSchema = z.object({
   authorized_public: z.boolean(),
-  entity_id: z.string().uuid(),
-  mtype_class_id: z.string().uuid(),
+  entity_id: z.uuid(),
+  mtype_class_id: z.uuid(),
 });
 
 export type TMtypeClassificationCreate = z.infer<typeof mtypeClassificationCreateSchema>;

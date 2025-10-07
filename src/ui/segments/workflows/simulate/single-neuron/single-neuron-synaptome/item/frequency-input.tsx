@@ -5,19 +5,19 @@ import { Form, InputNumber } from 'antd';
 import { useAtom } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
 
-import { Switch } from '@/components/common/Switch';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { PREFIX_FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { FrequencyInputConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { ValidationError } from '@/ui/hooks/use-storage-atom-with-validation';
 import {
   calculateRangeOutput,
   getSessionKey,
   label,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
-import { FrequencyInputConfigSchema } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { cn } from '@/utils/css-class';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { Switch } from '@/components/common/Switch';
 import { isBrowser } from '@/utils/environment';
+import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
 
 import type { UpdateSynapseSimulationProperty } from '@/types/small-scale-simulator/single-neuron';
@@ -47,12 +47,14 @@ export function FrequencyFormItem({
   );
 
   const { constantOrSteps, stepFrequencyState } = frequencyConfig;
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<{
+    message: string;
+    path: PropertyKey[];
+  } | null>(null);
 
   const disableFrequencyStepper =
     simIndexWithVariableFrequency !== -1 && simIndexWithVariableFrequency !== index;
 
-  // Initialize frequency config on mount or when stepper is disabled
   useEffect(() => {
     if (disableFrequencyStepper && constantOrSteps === 'step') {
       setFrequencyConfig({
@@ -111,28 +113,29 @@ export function FrequencyFormItem({
       stepFrequencyState: newStepState,
     };
 
-    // Validate using Zod schema
-    const validation = FrequencyInputConfigSchema.safeParse(newConfig);
-    if (!validation.success) {
-      setValidationError(validation.error.errors[0]?.message || 'Invalid frequency configuration');
-    } else {
-      setValidationError(null);
-    }
-
-    setFrequencyConfig(newConfig);
+    let newValue: number[] = [];
     try {
+      setFrequencyConfig(newConfig);
+      setValidationError(null);
+      newValue = calculateRangeOutput(start, stop, step);
       onChange({
         id: index,
         key: 'frequency',
-        newValue: calculateRangeOutput(start, stop, step),
+        newValue,
       });
     } catch (error) {
-      log('error', 'Error calculating frequency step range:', error);
-      onChange({
-        id: index,
-        key: 'frequency',
-        newValue: [],
-      });
+      if (error instanceof ValidationError) {
+        setValidationError({
+          message: error.issues?.at(0)?.message ?? '',
+          path: error.issues?.at(0)?.path ?? [],
+        });
+      } else {
+        setValidationError({
+          message: error instanceof Error ? error.message : 'Unknown error',
+          path: ['form'],
+        });
+      }
+      log('error', error instanceof Error ? error.message : 'Unknown error');
     }
   };
 
@@ -211,7 +214,13 @@ export function FrequencyFormItem({
         {constantOrSteps === 'constant' ? (
           <Form.Item
             name={[formName, 'frequency']}
-            rules={[{ required: true, message: 'Required field' }]}
+            rules={[
+              {
+                required: true,
+                message:
+                  'Synapse frequency must be a single positive number (Hz) or a list of positive numbers if steps are used',
+              },
+            ]}
           >
             <InputNumber
               size={breakpoint === 'l' ? 'middle' : 'large'}
@@ -232,9 +241,9 @@ export function FrequencyFormItem({
             />
           </Form.Item>
         ) : (
-          <div className="mt-2 flex justify-between gap-3">
-            <div className="flex items-center text-sm">
-              <div className="flex flex-col items-start">
+          <div className="mt-2 flex items-start justify-between gap-3">
+            <div className="flex items-start text-sm">
+              <div className="flex h-[91px] flex-col items-start">
                 {label('Start', false, 'pb-0.5')}
                 <InputNumber
                   defaultValue={stepFrequencyState!.start}
@@ -247,27 +256,20 @@ export function FrequencyFormItem({
                   min={0}
                   step={1}
                   onChange={(v) =>
-                    v !== null &&
-                    stepFrequencyState &&
-                    onFrequencyStepChange(v, stepFrequencyState.stop, stepFrequencyState.step)
+                    onFrequencyStepChange(v!, stepFrequencyState?.stop!, stepFrequencyState?.step!)
                   }
                   suffix={<span className="normal-case">[hz]</span>}
-                  status={
-                    validationError && validationError.includes('Start value must be less than')
-                      ? 'error'
-                      : ''
-                  }
+                  status={validationError && validationError.path.includes('start') ? 'error' : ''}
                 />
-                {validationError && validationError.includes('Start value must be less than') && (
-                  <div className="mt-1 text-xs text-red-500">{validationError}</div>
+                {validationError && validationError.path.includes('start') && (
+                  <div className="mt-1 text-xs text-red-500">{validationError.message}</div>
                 )}
               </div>
-              <div className="flex flex-col items-start">
-                {label('line', false, 'invisible')}
+              <div className="flex h-[80px] flex-col items-center justify-center">
                 <hr className="mx-4 w-8 border border-gray-200" />
               </div>
-              <div className="flex flex-col items-start">
-                {label('stop')}
+              <div className="flex h-[91px] flex-col items-start">
+                {label('stop', false, 'pb-0.5')}
                 <InputNumber
                   defaultValue={stepFrequencyState!.stop}
                   size={breakpoint === 'l' ? 'middle' : 'large'}
@@ -279,23 +281,17 @@ export function FrequencyFormItem({
                   step={1}
                   placeholder="end"
                   onChange={(v) =>
-                    v &&
-                    stepFrequencyState &&
-                    onFrequencyStepChange(stepFrequencyState.start, v, stepFrequencyState.step)
+                    onFrequencyStepChange(stepFrequencyState?.start!, v!, stepFrequencyState?.step!)
                   }
                   suffix={<span className="normal-case">[hz]</span>}
-                  status={
-                    validationError && validationError.includes('Start value must be less than')
-                      ? 'error'
-                      : ''
-                  }
+                  status={validationError && validationError.path.includes('stop') ? 'error' : ''}
                 />
-                {validationError && validationError.includes('Start value must be less than') && (
-                  <div className="mt-1 text-xs text-red-500">{validationError}</div>
+                {validationError && validationError.path.includes('stop') && (
+                  <div className="mt-1 text-xs text-red-500">{validationError.message}</div>
                 )}
               </div>
             </div>
-            <div className="flex flex-col items-start text-sm">
+            <div className="flex h-[91px] flex-col items-start text-sm">
               {label('N° of steps', false, 'pb-0.5')}
               <InputNumber
                 defaultValue={stepFrequencyState!.step}
@@ -308,13 +304,18 @@ export function FrequencyFormItem({
                 min={1}
                 placeholder="step size"
                 onChange={(v) =>
-                  v &&
-                  stepFrequencyState &&
-                  onFrequencyStepChange(stepFrequencyState.start, stepFrequencyState.stop, v)
+                  onFrequencyStepChange(stepFrequencyState?.start!, stepFrequencyState?.stop!, v!)
                 }
+                status={validationError && validationError.path.includes('step') ? 'error' : ''}
               />
+              {validationError && validationError.path.includes('step') && (
+                <div className="mt-1 text-xs text-red-500">{validationError.message}</div>
+              )}
             </div>
           </div>
+        )}
+        {validationError && validationError.path.includes('form') && (
+          <div className="mt-1 text-xs text-red-500">{validationError.message}</div>
         )}
         {calculatedFrequencies && (
           <div className="mt-4 max-w-full">

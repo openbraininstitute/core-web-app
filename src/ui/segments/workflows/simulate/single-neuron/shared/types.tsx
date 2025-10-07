@@ -227,16 +227,11 @@ export const SynapseConfigSchema = z.object({
         ),
       ],
       {
-        message:
-          'Synapse frequency must be a single positive number (Hz) or a list of positive numbers if steps are used',
-        errorMap: (issue, ctx) => {
+        error: (issue) => {
           if (issue.code === 'invalid_union') {
-            return {
-              message:
-                'Synapse frequency must be a single positive number (Hz) or a list of positive numbers if steps are used',
-            };
+            return 'Synapse frequency must be a single positive number (Hz) or a list of positive numbers if steps are used';
           }
-          return { message: ctx.defaultError };
+          return 'Synapse frequency must be a single positive number (Hz) or a list of positive numbers if steps are used';
         },
       }
     )

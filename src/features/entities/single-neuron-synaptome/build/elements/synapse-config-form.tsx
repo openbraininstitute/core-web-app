@@ -27,6 +27,7 @@ import {
 } from '@/features/brain-region-hierarchy/context';
 import { messages } from '@/i18n/en/synaptome';
 import { useRefreshDataAtom } from '@/state/explore-section/list-view-atoms';
+import { createSingleNeuronSynaptome } from '@/api/small-scale-simulator';
 import { selectedSimulationScopeAtom } from '@/state/simulate';
 import { synapsesPlacementAtom } from '@/state/synaptome';
 import { SimulationType } from '@/types/virtual-lab/lab';
@@ -36,7 +37,6 @@ import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 import type { IMEModel } from '@/api/entitycore/types';
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import { createSingleNeuronSynaptome } from '@/api/small-scale-simulator';
 import type { WorkspaceContext } from '@/types/common';
 import type { SynaptomeModelConfiguration } from '@/types/synaptome';
 
@@ -74,7 +74,7 @@ export default function SynaptomeConfigurationForm({
   const { push: navigate } = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const [synapsesHasErrors, setSynapsesHasErrors] = useState<Array<(string | number)[]>>([]);
+  const [synapsesHasErrors, setSynapsesHasErrors] = useState<Array<PropertyKey[]>>([]);
   const form = Form.useFormInstance<SynaptomeModelConfiguration>();
   const seed = Form.useWatch<number>('seed', form);
   const watchedSynapses = Form.useWatch<number>('synapses', form);

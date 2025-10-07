@@ -10,10 +10,10 @@ importers:
     dependencies:
       '@ai-sdk/react':
         specifier: ^1.1.21
-        version: 1.2.8(react@19.1.0)(zod@3.25.76)
+        version: 1.2.8(react@19.1.0)(zod@4.1.12)
       '@ai-sdk/ui-utils':
         specifier: ^1.1.17
-        version: 1.2.7(zod@3.25.76)
+        version: 1.2.7(zod@4.1.12)
       '@ant-design/icons':
         specifier: ^6.0.0
         version: 6.0.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -127,7 +127,7 @@ importers:
         version: 7.0.0
       '@t3-oss/env-nextjs':
         specifier: ^0.13.0
-        version: 0.13.0(arktype@2.1.20)(typescript@5.5.4)(valibot@1.1.0(typescript@5.5.4))(zod@3.25.76)
+        version: 0.13.0(arktype@2.1.20)(typescript@5.5.4)(valibot@1.1.0(typescript@5.5.4))(zod@4.1.12)
       '@tanstack/react-query':
         specifier: ^5.84.1
         version: 5.84.2(react@19.1.0)
@@ -378,8 +378,8 @@ importers:
         specifier: ^3.6.19
         version: 3.6.20
       zod:
-        specifier: ^3.25.76
-        version: 3.25.76
+        specifier: ^4.1.12
+        version: 4.1.12
     devDependencies:
       '@playwright/test':
         specifier: ^1.51.1
@@ -12320,6 +12320,9 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
+  zod@4.1.12:
+    resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
+
   zustand@4.5.6:
     resolution: {integrity: sha512-ibr/n1hBzLLj5Y+yUcU7dYw8p6WnIVzdJbnX+1YpaScvZVF2ziugqHs+LAmHw4lWO9c/zRj+K1ncgWDQuthEdQ==}
     engines: {node: '>=12.7.0'}
@@ -12383,33 +12386,33 @@ snapshots:
 
   '@adobe/css-tools@4.4.2': {}
 
-  '@ai-sdk/provider-utils@2.2.6(zod@3.25.76)':
+  '@ai-sdk/provider-utils@2.2.6(zod@4.1.12)':
     dependencies:
       '@ai-sdk/provider': 1.1.2
       nanoid: 3.3.11
       secure-json-parse: 2.7.0
-      zod: 3.25.76
+      zod: 4.1.12
 
   '@ai-sdk/provider@1.1.2':
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@1.2.8(react@19.1.0)(zod@3.25.76)':
+  '@ai-sdk/react@1.2.8(react@19.1.0)(zod@4.1.12)':
     dependencies:
-      '@ai-sdk/provider-utils': 2.2.6(zod@3.25.76)
-      '@ai-sdk/ui-utils': 1.2.7(zod@3.25.76)
+      '@ai-sdk/provider-utils': 2.2.6(zod@4.1.12)
+      '@ai-sdk/ui-utils': 1.2.7(zod@4.1.12)
       react: 19.1.0
       swr: 2.3.3(react@19.1.0)
       throttleit: 2.1.0
     optionalDependencies:
-      zod: 3.25.76
+      zod: 4.1.12
 
-  '@ai-sdk/ui-utils@1.2.7(zod@3.25.76)':
+  '@ai-sdk/ui-utils@1.2.7(zod@4.1.12)':
     dependencies:
       '@ai-sdk/provider': 1.1.2
-      '@ai-sdk/provider-utils': 2.2.6(zod@3.25.76)
-      zod: 3.25.76
-      zod-to-json-schema: 3.24.5(zod@3.25.76)
+      '@ai-sdk/provider-utils': 2.2.6(zod@4.1.12)
+      zod: 4.1.12
+      zod-to-json-schema: 3.24.5(zod@4.1.12)
 
   '@alloc/quick-lru@5.2.0': {}
 
@@ -16768,21 +16771,21 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@t3-oss/env-core@0.13.0(arktype@2.1.20)(typescript@5.5.4)(valibot@1.1.0(typescript@5.5.4))(zod@3.25.76)':
+  '@t3-oss/env-core@0.13.0(arktype@2.1.20)(typescript@5.5.4)(valibot@1.1.0(typescript@5.5.4))(zod@4.1.12)':
     dependencies:
       arktype: 2.1.20
     optionalDependencies:
       typescript: 5.5.4
       valibot: 1.1.0(typescript@5.5.4)
-      zod: 3.25.76
+      zod: 4.1.12
 
-  '@t3-oss/env-nextjs@0.13.0(arktype@2.1.20)(typescript@5.5.4)(valibot@1.1.0(typescript@5.5.4))(zod@3.25.76)':
+  '@t3-oss/env-nextjs@0.13.0(arktype@2.1.20)(typescript@5.5.4)(valibot@1.1.0(typescript@5.5.4))(zod@4.1.12)':
     dependencies:
-      '@t3-oss/env-core': 0.13.0(arktype@2.1.20)(typescript@5.5.4)(valibot@1.1.0(typescript@5.5.4))(zod@3.25.76)
+      '@t3-oss/env-core': 0.13.0(arktype@2.1.20)(typescript@5.5.4)(valibot@1.1.0(typescript@5.5.4))(zod@4.1.12)
     optionalDependencies:
       typescript: 5.5.4
       valibot: 1.1.0(typescript@5.5.4)
-      zod: 3.25.76
+      zod: 4.1.12
     transitivePeerDependencies:
       - arktype
 
@@ -26207,15 +26210,17 @@ snapshots:
       compress-commons: 6.0.2
       readable-stream: 4.7.0
 
-  zod-to-json-schema@3.24.5(zod@3.25.76):
+  zod-to-json-schema@3.24.5(zod@4.1.12):
     dependencies:
-      zod: 3.25.76
+      zod: 4.1.12
 
   zod-validation-error@3.5.2(zod@3.25.76):
     dependencies:
       zod: 3.25.76
 
   zod@3.25.76: {}
+
+  zod@4.1.12: {}
 
   zustand@4.5.6(@types/react@19.1.0)(immer@10.1.1)(react@19.1.0):
     dependencies:

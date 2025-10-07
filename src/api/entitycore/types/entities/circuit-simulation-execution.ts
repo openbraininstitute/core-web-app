@@ -36,17 +36,17 @@ export interface ICircuitSimulationExecutionFilter extends IActivityFilter {
 }
 
 const activityCreateSchema = z.object({
-  start_time: z.string().datetime(),
-  end_time: z.string().datetime(),
-  used_ids: z.array(z.string().uuid()),
-  generated_ids: z.array(z.string().uuid()),
+  start_time: z.iso.datetime(),
+  end_time: z.iso.datetime(),
+  used_ids: z.array(z.uuid()),
+  generated_ids: z.array(z.uuid()),
   authorized_public: z.boolean(),
 });
 
 const simulationExecutionCreateSchema = z
   .object({
-    status: z.nativeEnum(CircuitSimulationExecutionStatus),
+    status: z.enum(CircuitSimulationExecutionStatus),
   })
-  .merge(activityCreateSchema);
+  .extend(activityCreateSchema.shape);
 
 export type ISimulationExecutionCreate = z.infer<typeof simulationExecutionCreateSchema>;

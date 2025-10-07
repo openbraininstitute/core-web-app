@@ -86,12 +86,12 @@ export interface IMEModelFilter
 export const CreateMEModelSchema = z.object({
   name: z.string().nonempty(),
   description: z.string(),
-  validation_status: z.nativeEnum(ValidationStatus),
-  brain_region_id: z.string().uuid(),
-  morphology_id: z.string().uuid(),
-  emodel_id: z.string().uuid(),
-  species_id: z.string().uuid(),
-  strain_id: z.string().uuid().nullable(),
+  validation_status: z.enum(ValidationStatus),
+  brain_region_id: z.uuid(),
+  morphology_id: z.uuid(),
+  emodel_id: z.uuid(),
+  species_id: z.uuid(),
+  strain_id: z.uuid().nullable(),
 });
 
 export type TCreateMEModel = z.infer<typeof CreateMEModelSchema>;

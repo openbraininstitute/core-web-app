@@ -31,27 +31,50 @@ import { cn } from '@/utils/css-class';
 import type { TResolvedWorkspace } from '@/ui/segments/app-setup/helpers';
 
 export const WorkspaceIdentitySchema = z.object({
-  name: z.string({ message: 'Virtual lab name is required' }).min(1),
+  name: z
+    .string({
+      error: 'Virtual lab name is required',
+    })
+    .min(1),
   first_name: z
-    .string({ message: 'Please enter your first name' })
-    .nonempty({ message: 'First name is required' })
+    .string({
+      error: 'Please enter your first name',
+    })
+    .nonempty({
+      error: 'First name is required',
+    })
     .describe('first name of the user'),
   last_name: z
-    .string({ message: 'Please enter your last name' })
-    .nonempty({ message: 'Last name is required' })
+    .string({
+      error: 'Please enter your last name',
+    })
+    .nonempty({
+      error: 'Last name is required',
+    })
     .describe('last name of the user'),
   email: z
-    .string({ message: 'Please enter your email' })
-    .email({ message: 'Email must be in a valid format' })
-    .nonempty({ message: 'Email is required' })
+    .email({
+      error: 'Email must be in a valid format',
+    })
+    .nonempty({
+      error: 'Email is required',
+    })
     .describe('reference email associated with the virtual lab'),
   entity: z
-    .string({ message: 'Please enter your affiliation' })
-    .nonempty({ message: 'Affiliation is required' })
+    .string({
+      error: 'Please enter your affiliation',
+    })
+    .nonempty({
+      error: 'Affiliation is required',
+    })
     .describe('entity or organization associated with the virtual lab'),
   email_status: EmailStatusSchema.describe('status of the reference email verification')
-    .default('none')
-    .or(z.string({ message: 'Email verification is required' })),
+    .prefault('none')
+    .or(
+      z.string({
+        error: 'Email verification is required',
+      })
+    ),
 });
 
 export type TWorkspaceIdentitySchema = z.infer<typeof WorkspaceIdentitySchema>;
@@ -262,7 +285,7 @@ export function WorkspaceIdentity({
                         validator(rule, value) {
                           if (
                             !EmailStatusSchema.options.includes(value) ||
-                            value !== EmailStatusSchema.Enum.verified
+                            value !== EmailStatusSchema.enum.verified
                           )
                             return Promise.reject();
                           return Promise.resolve();
@@ -301,7 +324,7 @@ export function WorkspaceIdentity({
                           } catch (error) {
                             return Promise.reject(
                               error instanceof z.ZodError
-                                ? error.errors.at(0)?.message
+                                ? error.issues.at(0)?.message
                                 : 'First name is required'
                             );
                           }
@@ -330,7 +353,7 @@ export function WorkspaceIdentity({
                           } catch (error) {
                             return Promise.reject(
                               error instanceof z.ZodError
-                                ? error.errors.at(0)?.message
+                                ? error.issues.at(0)?.message
                                 : 'Last name is required'
                             );
                           }
@@ -380,7 +403,7 @@ export function WorkspaceIdentity({
                           } catch (error) {
                             return Promise.reject(
                               error instanceof z.ZodError
-                                ? error.errors.at(0)?.message
+                                ? error.issues.at(0)?.message
                                 : 'Affiliation is required'
                             );
                           }
@@ -409,7 +432,7 @@ export function WorkspaceIdentity({
                           } catch (error) {
                             return Promise.reject(
                               error instanceof z.ZodError
-                                ? error.errors.at(0)?.message
+                                ? error.issues.at(0)?.message
                                 : 'Email must be in a valid format'
                             );
                           }

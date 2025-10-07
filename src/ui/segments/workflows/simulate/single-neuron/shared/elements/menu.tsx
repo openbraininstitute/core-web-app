@@ -106,6 +106,7 @@ export function Menu({ sessionId, type }: Props) {
   );
   const [recordLocationConfiguration] = useAtom(RecordLocationConfigurationAtomFamily(rlcKey));
   const [synaptomeConfiguration] = useAtom(SynaptomeConfigurationAtomFamily(sscKey));
+
   const [frequencyConfiguration] = useAtom(FrequencyInputConfigurationAtomFamily(freqKey));
   const [amperageConfiguration] = useAtom(AmperageStateAtomFamily(ampKey));
 
@@ -130,37 +131,34 @@ export function Menu({ sessionId, type }: Props) {
     );
   };
 
-  const warnInfo =
-    OverviewConfigurationSchema.safeParse(overviewConfiguration).error?.formErrors.fieldErrors;
+  const warnInfo = OverviewConfigurationSchema.safeParse(overviewConfiguration).error?.issues;
 
   const warnRecordLocation = RecordLocationArraySchema.safeParse(recordLocationConfiguration).error
-    ?.formErrors.fieldErrors;
+    ?.issues;
 
   const warnExperimentalSetup = ExperimentalSetupConfigurationSchema.safeParse(
     experimentalSetupConfiguration
-  ).error?.formErrors.fieldErrors;
+  ).error?.issues;
 
-  const warnStimulationProtocol = {
-    ...StimulationConfigurationSchema.safeParse(stimulationConfiguration).error?.formErrors
-      .fieldErrors,
-    ...AmperageStateSchema.safeParse(amperageConfiguration).error?.formErrors.fieldErrors,
-  };
+  const warnStimulationProtocol = [
+    ...(StimulationConfigurationSchema.safeParse(stimulationConfiguration).error?.issues ?? []),
+    ...(AmperageStateSchema.safeParse(amperageConfiguration).error?.issues ?? []),
+  ];
 
   const warnSynaptome =
     type === SimulationType.SingleNeuronSynaptome
-      ? {
-          ...SynapseConfigurationArraySchema.safeParse(synaptomeConfiguration).error?.formErrors
-            .fieldErrors,
-          ...FrequencyInputConfigSchema.safeParse(frequencyConfiguration).error?.formErrors
-            .fieldErrors,
-        }
-      : {};
+      ? [
+          ...(SynapseConfigurationArraySchema.safeParse(synaptomeConfiguration).error?.issues ??
+            []),
+          ...(FrequencyInputConfigSchema.safeParse(frequencyConfiguration).error?.issues ?? []),
+        ]
+      : [];
 
   const disableRunSimulation =
     !!Object.keys(warnRecordLocation ?? {}).length ||
     !!Object.keys(warnExperimentalSetup ?? {}).length ||
     !!Object.keys(warnStimulationProtocol ?? {}).length ||
-    (type === SimulationType.SingleNeuronSynaptome && !!Object.keys(warnSynaptome ?? {}).length) ||
+    (type === SimulationType.SingleNeuronSynaptome && !!warnSynaptome.length) ||
     simulationStatus?.status === 'launched';
 
   useEffect(() => {
@@ -212,11 +210,14 @@ export function Menu({ sessionId, type }: Props) {
                   arrowClassName="bg-amber-100"
                 >
                   {Object.values(warnInfo ?? {}).map((e1) => {
-                    return e1.map((err1) => (
-                      <p key={err1} className="w-full pb-0.5 break-words hyphens-auto">
-                        • {err1}
+                    return (
+                      <p
+                        key={e1.path.toString()}
+                        className="w-full pb-0.5 break-words hyphens-auto"
+                      >
+                        • {e1.message}
                       </p>
-                    ));
+                    );
                   })}
                 </TooltipContent>
               </Tooltip>
@@ -256,13 +257,14 @@ export function Menu({ sessionId, type }: Props) {
                 >
                   {warnExperimentalSetup &&
                     Object.values(warnExperimentalSetup).map((e2) => {
-                      return e2.map((err2) => {
-                        return (
-                          <p key={err2} className="w-full pb-0.5 break-words hyphens-auto">
-                            • {err2}
-                          </p>
-                        );
-                      });
+                      return (
+                        <p
+                          key={e2.path.toString()}
+                          className="w-full pb-0.5 break-words hyphens-auto"
+                        >
+                          • {e2.message}
+                        </p>
+                      );
                     })}
                 </TooltipContent>
               </Tooltip>
@@ -288,7 +290,7 @@ export function Menu({ sessionId, type }: Props) {
             <div className="flex-shrink-0 font-bold">Synaptic Input</div>
             <div className="flex items-center justify-center gap-3">
               {!!Object.keys(warnSynaptome ?? {}).length && (
-                <Tooltip open>
+                <Tooltip>
                   <TooltipTrigger>
                     <WarningFilled className="text-sm text-yellow-300" />
                   </TooltipTrigger>
@@ -301,17 +303,15 @@ export function Menu({ sessionId, type }: Props) {
                     arrowClassName="bg-amber-100"
                   >
                     {warnSynaptome &&
-                      Object.values(warnSynaptome).map((e3) => {
-                        return Array.isArray(e3)
-                          ? e3.map((err3: string) => (
-                              <p
-                                key={err3}
-                                className="pb-0.5 [overflow-wrap:anywhere] hyphens-auto whitespace-pre-wrap"
-                              >
-                                • {err3}
-                              </p>
-                            ))
-                          : null;
+                      warnSynaptome.map((e3) => {
+                        return (
+                          <p
+                            key={e3.path.toString()}
+                            className="pb-0.5 [overflow-wrap:anywhere] hyphens-auto whitespace-pre-wrap"
+                          >
+                            • {e3.message}
+                          </p>
+                        );
                       })}
                   </TooltipContent>
                 </Tooltip>
@@ -350,14 +350,15 @@ export function Menu({ sessionId, type }: Props) {
                   arrowClassName="bg-amber-100"
                 >
                   {warnStimulationProtocol &&
-                    Object.values(warnStimulationProtocol).map((e4) => {
-                      return Array.isArray(e4)
-                        ? e4.map((err4: string) => (
-                            <p key={err4} className="w-full pb-0.5 break-words hyphens-auto">
-                              • {err4}
-                            </p>
-                          ))
-                        : null;
+                    warnStimulationProtocol.map((e4) => {
+                      return (
+                        <p
+                          key={e4.path.toString()}
+                          className="w-full pb-0.5 break-words hyphens-auto"
+                        >
+                          • {e4.message}
+                        </p>
+                      );
                     })}
                 </TooltipContent>
               </Tooltip>

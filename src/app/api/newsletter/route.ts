@@ -10,10 +10,16 @@ const AUDIENCE_ID = env.MAILCHIMP_AUDIENCE_ID;
 const url = `https://${API_SERVER}.api.mailchimp.com/3.0/lists/${AUDIENCE_ID}/members`;
 
 const newsletterFormSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email address.' }),
+  email: z.email({
+    error: 'Please enter a valid email address.',
+  }),
   name: z
-    .string({ message: 'Please enter a name.' })
-    .min(2, { message: 'Please a correct name' })
+    .string({
+      error: 'Please enter a name.',
+    })
+    .min(2, {
+      error: 'Please a correct name',
+    })
     .optional(),
   tags: z.array(z.string()).optional(),
 });
