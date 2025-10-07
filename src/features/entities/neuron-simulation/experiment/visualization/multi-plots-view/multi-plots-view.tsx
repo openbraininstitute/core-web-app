@@ -58,6 +58,10 @@ function PlotView({ instance }: { instance: PlotInstance }) {
     layout.datarevision = performance.now();
     delete layout.height;
     Plotly.react(container, data, layout, PLOT_CONFIG);
+  }, [instance, disabledLines]);
+  React.useEffect(() => {
+    const container = refPlot.current;
+    if (!container) return;
 
     const observer = new ResizeObserver(() => {
       // Redraw the graph after resize
@@ -65,7 +69,7 @@ function PlotView({ instance }: { instance: PlotInstance }) {
     });
     observer.observe(container);
     return () => observer.unobserve(container);
-  }, [instance, disabledLines]);
+  }, []);
   const handleFullscreen = () => {
     const container = refContainer.current;
     tgdFullscreenToggle(container, { navigationUI: 'show' });
