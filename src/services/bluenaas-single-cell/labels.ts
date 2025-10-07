@@ -3,7 +3,10 @@ import { Camera, Object3D, Scene, Vector3 } from 'three';
 
 import { getSimulationColor } from '@/constants/simulate/single-neuron';
 
-import type { RecordLocation } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import type {
+  NeuronLocation,
+  TNeuronLocationOrigin,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 interface LabelToDraw {
   /**
@@ -19,6 +22,7 @@ interface LabelToDraw {
   text: string;
   object: Object3D;
   color: string;
+  origin: TNeuronLocationOrigin;
 }
 
 interface LabelsOptions {
@@ -47,6 +51,8 @@ export class Labels {
 
   private readonly options: LabelsOptions;
 
+  private injectionIcon: HTMLImageElement | null = null;
+
   constructor(
     private readonly getRendererEnvironment: () => { scene: Scene; camera: Camera },
     options: Partial<LabelsOptions> = {}
@@ -60,6 +66,16 @@ export class Labels {
       bulletRadius: 8,
       ...options,
     };
+    this.loadInjectionIcon();
+  }
+
+  private loadInjectionIcon() {
+    const img = new Image();
+    img.src = '/images/svg/inject.svg';
+    img.onload = () => {
+      this.injectionIcon = img;
+      this.paint();
+    };
   }
 
   get canvas() {
@@ -72,7 +88,7 @@ export class Labels {
     if (canvas) this.observer.observe(canvas);
   }
 
-  update(labels: RecordLocation[]) {
+  update(labels: NeuronLocation[]) {
     const { scene } = this.getRendererEnvironment();
     if (!scene) return;
 
@@ -107,6 +123,7 @@ export class Labels {
         text: label.section,
         object: obj,
         color: label.color ?? getSimulationColor(index),
+        origin: label.origin,
       });
     }
     this.paint();
@@ -154,9 +171,24 @@ export class Labels {
     const center = w * 0.5;
     paintLabelsArrows(ctx, allLabels, center, this.options);
     ctx.fillStyle = '#000';
+    const iconSize = fontSize;
+    const iconSpacing = 4;
+
     for (const label of allLabels) {
       const x = label.boxX > center ? label.boxX : margin;
-      ctx.fillText(label.text, x + padding, label.boxY);
+      let currentX = x + padding;
+
+      // draw injection icon if origin is 'injection'
+      if (label.origin === 'injection' && this.injectionIcon) {
+        ctx.save();
+        ctx.translate(currentX + iconSize / 2, label.boxY);
+        ctx.rotate((-75 * Math.PI) / 180);
+        ctx.drawImage(this.injectionIcon, -iconSize / 2, -iconSize / 2, iconSize, iconSize);
+        ctx.restore();
+        currentX += iconSize + iconSpacing;
+      }
+
+      ctx.fillText(label.text, currentX, label.boxY);
     }
   };
 
@@ -166,7 +198,10 @@ export class Labels {
     toY: (y: number) => number,
     w: number
   ) {
-    const { padding, margin } = this.options;
+    const { padding, margin, fontSize } = this.options;
+    const iconSize = fontSize;
+    const iconSpacing = 4;
+
     const topRight: LabelToDraw[] = [];
     const bottomRight: LabelToDraw[] = [];
     const topLeft: LabelToDraw[] = [];
@@ -177,7 +212,10 @@ export class Labels {
       const measure = ctx.measureText(label.text);
       newLabel.tipX = toX(label.tipX);
       newLabel.tipY = toY(label.tipY);
-      newLabel.boxW = 2 * padding + measure.width;
+
+      const iconWidth = label.origin === 'injection' ? iconSize + iconSpacing : 0;
+      newLabel.boxW = 2 * padding + measure.width + iconWidth;
+
       if (label.tipX > 0) {
         newLabel.boxX = w - margin - newLabel.boxW;
         if (label.tipY > 0) topRight.push(newLabel);

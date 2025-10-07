@@ -1,4 +1,7 @@
-import { StimulusModuleDict } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import {
+  NeuronLocationOriginDict,
+  StimulusModuleDict,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import {
   DefaultColor,
   SimulationColors,
@@ -129,6 +132,7 @@ export function buildDefaultRecordingLocation(color: string = DefaultColor) {
     offset: 0.5,
     record_currents: false,
     color,
+    origin: NeuronLocationOriginDict.recording,
   };
 }
 

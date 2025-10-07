@@ -39,7 +39,7 @@ import { tryCatch } from '@/api/utils';
 
 import { type Message, JobStatus, MessageType } from '@/services/small-scale-simulator/types';
 import type {
-  RecordLocationArray,
+  NeuronLocationArray,
   SimulationExperimentalSetup,
   TStimulationConfiguration,
   SynapseConfigurationArray,
@@ -69,7 +69,7 @@ export const createSingleNeuronSimulationAtom = atom(
     simulationType: SimulationType,
     stimulationConfig: TStimulationConfiguration,
     experimentalSetupConfig: SimulationExperimentalSetup,
-    recordFromConfig: RecordLocationArray,
+    recordFromConfig: NeuronLocationArray,
     synaptomeConfig: SynapseConfigurationArray | undefined,
     simulationResult: Record<string, PlotData> | null,
     stimulusResult: PlotData | null
@@ -188,7 +188,7 @@ export const launchSimulationAtom = atom<
     string,
     TStimulationConfiguration,
     SimulationExperimentalSetup,
-    RecordLocationArray,
+    NeuronLocationArray,
     SynapseConfigurationArray,
     SimulationType,
     number,
@@ -206,7 +206,7 @@ export const launchSimulationAtom = atom<
     sessionId: string,
     currentInjectionConfig: TStimulationConfiguration,
     conditionsConfig: SimulationExperimentalSetup,
-    recordFromConfig: RecordLocationArray,
+    recordFromConfig: NeuronLocationArray,
     synaptomeConfig: SynapseConfigurationArray,
     simulationType: SimulationType,
     duration: number,

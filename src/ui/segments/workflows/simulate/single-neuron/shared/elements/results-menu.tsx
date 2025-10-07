@@ -29,7 +29,7 @@ import {
 import {
   ExperimentalSetupConfigurationSchema,
   OverviewConfigurationSchema,
-  RecordLocationArraySchema,
+  NeuronLocationArraySchema,
   SimulationType,
   StimulationConfigurationSchema,
   SynapseConfigurationArraySchema,
@@ -99,7 +99,7 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
 
   const current = queryParams.get('record') ?? 'all';
   const configError =
-    RecordLocationArraySchema.safeParse(recordLocationConfiguration).error ??
+    NeuronLocationArraySchema.safeParse(recordLocationConfiguration).error ??
     ExperimentalSetupConfigurationSchema.safeParse(experimentalSetupConfiguration).error ??
     StimulationConfigurationSchema.safeParse(stimulationConfiguration).error ??
     OverviewConfigurationSchema.safeParse(overviewConfiguration).error ??
@@ -253,7 +253,7 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
         </Button>
         {uniqBy(recordLocationConfiguration, (item) => `${item.section}-${item.offset}`).map(
           ({ section, offset, color }, indx) => {
-            const record = `${section}_${offset}`;
+            const record = `${section}_${offset === 0 ? '0.0' : String(offset)}`;
             return (
               <Button
                 // eslint-disable-next-line react/no-array-index-key

@@ -5,10 +5,6 @@ import { useEffect } from 'react';
 import z from 'zod';
 
 import { RecordLocationConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import {
-  RecordLocation,
-  RecordLocationSchema,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import {
   getSessionKey,
@@ -19,6 +15,10 @@ import {
   buildDefaultRecordingLocation,
   getSimulationColor,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import {
+  type NeuronLocation,
+  NeuronLocationSchema,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { secNamesAtom } from '@/state/simulate/single-neuron';
 import { Button } from '@/ui/molecules/button';
@@ -36,7 +36,7 @@ type RecordItemProps = {
   disableDelete: boolean;
   sections: Array<string>;
   onRemove: (idx: number) => void;
-  record?: RecordLocation;
+  record?: NeuronLocation;
 };
 
 function ColorMarker({ color }: { color?: string }) {
@@ -79,7 +79,7 @@ function RecordItem({
             {
               validator: async (_rule, value) => {
                 try {
-                  await RecordLocationSchema.pick({ section: true }).shape.section.parseAsync(
+                  await NeuronLocationSchema.pick({ section: true }).shape.section.parseAsync(
                     value
                   );
                 } catch (error) {
@@ -118,7 +118,7 @@ function RecordItem({
             {
               validator: async (_rule, value) => {
                 try {
-                  await RecordLocationSchema.pick({ offset: true }).shape.offset.parseAsync(value);
+                  await NeuronLocationSchema.pick({ offset: true }).shape.offset.parseAsync(value);
                 } catch (error) {
                   return Promise.reject(
                     error instanceof z.ZodError ? error.errors.at(0)?.message : 'Offset is required'
@@ -169,7 +169,7 @@ function RecordItem({
             {
               validator: async (_rule, value) => {
                 try {
-                  await RecordLocationSchema.pick({
+                  await NeuronLocationSchema.pick({
                     record_currents: true,
                   }).shape.record_currents.parseAsync(value);
                 } catch (error) {

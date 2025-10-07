@@ -4,7 +4,7 @@ import { makeStorageAtomFamily, memoryStorage } from '@/ui/hooks/use-storage-ato
 import {
   StimulationConfigurationSchema,
   ExperimentalSetupConfigurationSchema,
-  RecordLocationArraySchema,
+  NeuronLocationArraySchema,
   SynapseConfigurationArraySchema,
   OverviewConfigurationSchema,
   FrequencyInputConfigSchema,
@@ -32,7 +32,7 @@ export const ExperimentalSetupConfigurationAtomFamily = makeStorageAtomFamily(
 );
 
 export const RecordLocationConfigurationAtomFamily = makeStorageAtomFamily(
-  RecordLocationArraySchema,
+  NeuronLocationArraySchema,
   [buildDefaultRecordingLocation(getSimulationColor(0))],
   safeStorage
 );

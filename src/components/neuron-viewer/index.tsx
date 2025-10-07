@@ -10,7 +10,10 @@ import useMorphology from '@/hooks/useMorphology';
 import { recordingSourceForSimulationAtom } from '@/state/simulate/categories/recording-source-for-simulation';
 import { currentInjectionSimulationConfigAtom } from '@/state/simulate/categories/current-injection-simulation';
 import { DefaultInjectionColor } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import { RecordLocation } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import {
+  NeuronLocation,
+  NeuronLocationOriginDict,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { DEFAULT_CURRENT_INJECTION_CONFIG } from '@/constants/simulate/single-neuron';
 import {
   PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
@@ -143,10 +146,11 @@ export default function NeuronViewer({
 
   useEffect(() => {
     if (useLabels && !loading && rendererRef.current) {
-      let injection: RecordLocation = {
+      let injection: NeuronLocation = {
         section: injectionLocations[stimulationId].inject_to,
         offset: 0.5,
         record_currents: false,
+        origin: NeuronLocationOriginDict.injection,
       };
       if (sessionId) {
         injection = {
@@ -154,6 +158,7 @@ export default function NeuronViewer({
           offset: 0.5,
           record_currents: false,
           color: DefaultInjectionColor,
+          origin: NeuronLocationOriginDict.injection,
         };
       }
       rendererRef.current.labels.update([injection, ...recordLocations]);

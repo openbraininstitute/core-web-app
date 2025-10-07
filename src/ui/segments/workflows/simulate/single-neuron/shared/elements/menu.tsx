@@ -12,7 +12,7 @@ import { simulationStatusAtomFamily } from '@/state/simulate/single-neuron';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import {
   SynapseConfigurationArraySchema,
-  RecordLocationArraySchema,
+  NeuronLocationArraySchema,
   OverviewConfigurationSchema,
   StimulationConfigurationSchema,
   ExperimentalSetupConfigurationSchema,
@@ -133,7 +133,7 @@ export function Menu({ sessionId, type }: Props) {
   const warnInfo =
     OverviewConfigurationSchema.safeParse(overviewConfiguration).error?.formErrors.fieldErrors;
 
-  const warnRecordLocation = RecordLocationArraySchema.safeParse(recordLocationConfiguration).error
+  const warnRecordLocation = NeuronLocationArraySchema.safeParse(recordLocationConfiguration).error
     ?.formErrors.fieldErrors;
 
   const warnExperimentalSetup = ExperimentalSetupConfigurationSchema.safeParse(

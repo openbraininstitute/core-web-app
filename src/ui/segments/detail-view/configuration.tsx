@@ -125,7 +125,7 @@ export default async function Configuration({
 
     return (
       <SimulationConfigurationTab
-        type="single-neuron-simulation"
+        type="synaptome-simulation"
         simulation={config as SimulationPayload}
       />
     );

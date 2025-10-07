@@ -273,3 +273,26 @@ export function HorizontalResize(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+export function IconInjection(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 48 48" {...props}>
+      {/* Icon from IconPark Outline by ByteDance - https://github.com/bytedance/IconPark/blob/master/LICENSE */}
+      <g fill="none">
+        <path d="M38.168 22.262L19.077 41.354L6.349 28.626L25.44 9.534" clipRule="evenodd" />
+        <path
+          stroke="currentColor"
+          strokeLinejoin="round"
+          strokeWidth="4"
+          d="M38.168 22.262L19.077 41.354L6.349 28.626L25.44 9.534"
+        />
+        <path
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeWidth="4"
+          d="m21.905 5.999l19.8 19.799m-26.871 2.828l4.243 4.243M6.35 41.353l6.363-6.363m19.092-19.092l3.534-3.535"
+        />
+      </g>
+    </svg>
+  );
+}
