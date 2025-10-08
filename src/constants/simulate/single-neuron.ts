@@ -7,7 +7,6 @@ import {
   StimulusDropdownInfo,
   StimulusTypeOption,
   ProtocolDetails,
-  RecordLocation,
   StimulusConfig,
   StimulusModule,
   SynapseConfig,
@@ -15,6 +14,10 @@ import {
 
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { SynapseType } from '@/components/neuron-viewer/hooks/events';
+import {
+  NeuronLocation,
+  NeuronLocationOriginDict,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 export const stimulusTypeParams: StimulusDropdownInfo & {
   options: StimulusTypeOption[];
@@ -123,10 +126,11 @@ export const PROTOCOL_DETAILS: Record<StimulusModule, ProtocolDetails> = {
 
 const DEFAULT_SECTION = 'soma[0]';
 
-export const DEFAULT_RECORDING_LOCATION: RecordLocation = {
+export const DEFAULT_RECORDING_LOCATION: NeuronLocation = {
   section: DEFAULT_SECTION,
   offset: 0.5,
   record_currents: false,
+  origin: NeuronLocationOriginDict.recording,
 };
 
 export const DEFAULT_SIMULATION_EXPERIMENTAL_SETUP: SimulationExperimentalSetup = {

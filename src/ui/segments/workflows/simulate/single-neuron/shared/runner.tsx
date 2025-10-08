@@ -10,6 +10,8 @@ import isNil from 'lodash/isNil';
 import delay from 'lodash/delay';
 import pick from 'lodash/pick';
 import lget from 'lodash/get';
+import omit from 'lodash/omit';
+import map from 'lodash/map';
 
 import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
 import {
@@ -37,7 +39,7 @@ import { tryCatch } from '@/api/utils';
 
 import { type Message, JobStatus, MessageType } from '@/services/small-scale-simulator/types';
 import type {
-  RecordLocationArray,
+  NeuronLocationArray,
   SimulationExperimentalSetup,
   TStimulationConfiguration,
   SynapseConfigurationArray,
@@ -67,17 +69,20 @@ export const createSingleNeuronSimulationAtom = atom(
     simulationType: SimulationType,
     stimulationConfig: TStimulationConfiguration,
     experimentalSetupConfig: SimulationExperimentalSetup,
-    recordFromConfig: RecordLocationArray,
+    recordFromConfig: NeuronLocationArray,
     synaptomeConfig: SynapseConfigurationArray | undefined,
     simulationResult: Record<string, PlotData> | null,
     stimulusResult: PlotData | null
   ) => {
     if (!simulationResult || !modelId) return null;
 
-    const recordFromUniq = uniqBy(recordFromConfig, (item) =>
-      values(pick(item, ['section', 'offset']))
-        .map(String)
-        .join()
+    const recordFromUniq = map(
+      uniqBy(recordFromConfig, (item) =>
+        values(pick(item, ['section', 'offset']))
+          .map(String)
+          .join()
+      ),
+      (obj) => omit(obj, ['color'])
     );
 
     const singleNeuronSimulationConfig: SingleNeuronModelSimulationConfig = {
@@ -183,7 +188,7 @@ export const launchSimulationAtom = atom<
     string,
     TStimulationConfiguration,
     SimulationExperimentalSetup,
-    RecordLocationArray,
+    NeuronLocationArray,
     SynapseConfigurationArray,
     SimulationType,
     number,
@@ -201,7 +206,7 @@ export const launchSimulationAtom = atom<
     sessionId: string,
     currentInjectionConfig: TStimulationConfiguration,
     conditionsConfig: SimulationExperimentalSetup,
-    recordFromConfig: RecordLocationArray,
+    recordFromConfig: NeuronLocationArray,
     synaptomeConfig: SynapseConfigurationArray,
     simulationType: SimulationType,
     duration: number,

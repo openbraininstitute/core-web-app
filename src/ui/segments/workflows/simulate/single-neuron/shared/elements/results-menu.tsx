@@ -29,7 +29,7 @@ import {
 import {
   ExperimentalSetupConfigurationSchema,
   OverviewConfigurationSchema,
-  RecordLocationArraySchema,
+  NeuronLocationArraySchema,
   SimulationType,
   StimulationConfigurationSchema,
   SynapseConfigurationArraySchema,
@@ -99,7 +99,7 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
 
   const current = queryParams.get('record') ?? 'all';
   const configError =
-    RecordLocationArraySchema.safeParse(recordLocationConfiguration).error ??
+    NeuronLocationArraySchema.safeParse(recordLocationConfiguration).error ??
     ExperimentalSetupConfigurationSchema.safeParse(experimentalSetupConfiguration).error ??
     StimulationConfigurationSchema.safeParse(stimulationConfiguration).error ??
     OverviewConfigurationSchema.safeParse(overviewConfiguration).error ??
@@ -252,8 +252,8 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
           </div>
         </Button>
         {uniqBy(recordLocationConfiguration, (item) => `${item.section}-${item.offset}`).map(
-          ({ section, offset }, indx) => {
-            const record = `${section}_${offset}`;
+          ({ section, offset, color }, indx) => {
+            const record = `${section}_${offset === 0 ? '0.0' : String(offset)}`;
             return (
               <Button
                 // eslint-disable-next-line react/no-array-index-key
@@ -267,11 +267,17 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
               >
                 <div className="flex w-full items-center justify-between gap-2">
                   <div>{record}</div>
-                  <RightOutlined
-                    className={cn('text-neutral-4 mr-2 [&_svg]:size-3!', {
-                      '-rotate-180 transform text-white!': current === record,
-                    })}
-                  />
+                  <div className="mr-2 ml-auto flex items-center justify-center gap-1">
+                    <div
+                      className="size-3! rounded-full border border-white"
+                      style={{ background: color }}
+                    />
+                    <RightOutlined
+                      className={cn('text-neutral-4 [&_svg]:size-3!', {
+                        '-rotate-180 transform text-white!': current === record,
+                      })}
+                    />
+                  </div>
                 </div>
               </Button>
             );

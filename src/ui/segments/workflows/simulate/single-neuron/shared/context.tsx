@@ -4,17 +4,18 @@ import { makeStorageAtomFamily, memoryStorage } from '@/ui/hooks/use-storage-ato
 import {
   StimulationConfigurationSchema,
   ExperimentalSetupConfigurationSchema,
-  RecordLocationArraySchema,
+  NeuronLocationArraySchema,
   SynapseConfigurationArraySchema,
   OverviewConfigurationSchema,
   FrequencyInputConfigSchema,
   AmperageStateSchema,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import {
-  DEFAULT_RECORDING_LOCATION,
+  buildDefaultRecordingLocation,
   DEFAULT_SIMULATION_EXPERIMENTAL_SETUP,
   DEFAULT_CURRENT_INJECTION_CONFIG,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { getSimulationColor } from '@/constants/simulate/single-neuron';
 
 const safeStorage: Storage = typeof window !== 'undefined' ? sessionStorage : memoryStorage;
 
@@ -31,8 +32,8 @@ export const ExperimentalSetupConfigurationAtomFamily = makeStorageAtomFamily(
 );
 
 export const RecordLocationConfigurationAtomFamily = makeStorageAtomFamily(
-  RecordLocationArraySchema,
-  [DEFAULT_RECORDING_LOCATION],
+  NeuronLocationArraySchema,
+  [buildDefaultRecordingLocation(getSimulationColor(0))],
   safeStorage
 );
 

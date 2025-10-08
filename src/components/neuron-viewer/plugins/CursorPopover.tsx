@@ -1,6 +1,6 @@
 import { Fragment, useRef } from 'react';
 
-import { NeuronSegementInfo } from '@/services/bluenaas-single-cell/renderer-utils';
+import { NeuronSegmentInfo } from '@/services/bluenaas-single-cell/renderer-utils';
 
 const dataMapping = {
   segIdx: { title: 'Segment index', unit: '' },
@@ -19,7 +19,7 @@ export default function NeuronMeshInjectionRecordingPopover({
   show: boolean;
   x: number;
   y: number;
-  data: NeuronSegementInfo;
+  data: NeuronSegmentInfo;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 

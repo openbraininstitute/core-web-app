@@ -6,6 +6,7 @@ import { currentInjectionSimulationConfigAtom } from '@/state/simulate/categorie
 import { useRecordingSourceForSimulation } from '@/state/simulate/categories';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
 import {
+  getSimulationColor,
   PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
   PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
@@ -14,6 +15,7 @@ import {
   StimulationConfigurationAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { classNames } from '@/util/utils';
+import { NeuronLocationOriginDict } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 export default function NeuronMeshInjectionRecordingPopover({
   show,
@@ -66,9 +68,24 @@ export default function NeuronMeshInjectionRecordingPopover({
 
   const onRecord = () => {
     if (sessionId) {
-      setRecodingLocation([...recordingLocations, { section, offset, record_currents: false }]);
+      setRecodingLocation([
+        ...recordingLocations,
+        {
+          section,
+          offset,
+          record_currents: false,
+          origin: NeuronLocationOriginDict.recording,
+          color: getSimulationColor(recordingLocations.length),
+        },
+      ]);
     } else {
-      add({ section, offset, record_currents: false });
+      add({
+        section,
+        offset,
+        record_currents: false,
+        origin: NeuronLocationOriginDict.recording,
+        color: getSimulationColor(recordingLocations.length),
+      });
     }
     onClose();
   };

@@ -9,10 +9,7 @@ import get from 'lodash/get';
 
 import { AmperageConfiguration } from '@/ui/segments/workflows/simulate/single-neuron/shared/amperage-configuration';
 import { StimulationConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import {
-  DefaultColor,
-  SimulationColors,
-} from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import { DefaultInjectionColor } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import {
   createZodValidator,
   getSessionKey,
@@ -134,8 +131,8 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
             size={breakpoint === 'l' ? 'middle' : 'large'}
             prefix={
               <div
-                className="prefix bg-primary-8 mr-2 inline-block h-[10px] w-[10px] rounded-full"
-                style={{ background: SimulationColors.at(0) ?? DefaultColor }}
+                className="prefix bg-primary-8 border-label mt-2.5 mr-2 inline-block size-3.5 rounded-full border"
+                style={{ background: DefaultInjectionColor }}
               />
             }
           />

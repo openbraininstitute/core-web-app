@@ -261,3 +261,38 @@ export function UserFilled(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+export function HorizontalResize(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
+      <g fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M10 20V4m4 16V4m-4 8H6" />
+        <path d="M2 12.05c-.03-1.035 4.008-3.47 4.389-2.987c.431.548-.6 2.177-.832 2.695c-.14.312-.136.448.023.76c.717 1.406 1.075 2.11.856 2.414l-.002.003C6.08 15.42 2.03 13.061 2 12.05Zm20-.1c.03 1.035-4.008 3.47-4.389 2.987c-.431-.548.6-2.177.832-2.695c.14-.312.136-.448-.023-.76c-.717-1.406-1.075-2.11-.856-2.414l.002-.003C17.92 8.58 21.97 10.939 22 11.95Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M18 12h-4" />
+      </g>
+    </svg>
+  );
+}
+
+export function IconInjection(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 48 48" {...props}>
+      {/* Icon from IconPark Outline by ByteDance - https://github.com/bytedance/IconPark/blob/master/LICENSE */}
+      <g fill="none">
+        <path d="M38.168 22.262L19.077 41.354L6.349 28.626L25.44 9.534" clipRule="evenodd" />
+        <path
+          stroke="currentColor"
+          strokeLinejoin="round"
+          strokeWidth="4"
+          d="M38.168 22.262L19.077 41.354L6.349 28.626L25.44 9.534"
+        />
+        <path
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeWidth="4"
+          d="m21.905 5.999l19.8 19.799m-26.871 2.828l4.243 4.243M6.35 41.353l6.363-6.363m19.092-19.092l3.534-3.535"
+        />
+      </g>
+    </svg>
+  );
+}

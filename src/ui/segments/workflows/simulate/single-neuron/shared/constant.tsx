@@ -1,8 +1,13 @@
-import { StimulusModuleDict } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { SimulationColors } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import {
+  NeuronLocationOriginDict,
+  StimulusModuleDict,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import {
+  DefaultColor,
+  SimulationColors,
+} from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 
 import type {
-  RecordLocation,
   SimulationExperimentalSetup,
   StimulusConfig,
   TStimulationConfiguration,
@@ -18,6 +23,15 @@ export const WorkflowSimulatePanels = {
 
 export type WorkflowSimulatePanelKeys =
   (typeof WorkflowSimulatePanels)[keyof typeof WorkflowSimulatePanels];
+
+export const threeDVisualizerQueryParam = '3d';
+export const threeDVisualizerState = {
+  Collapsed: 'collapsed',
+  Expanded: 'expanded',
+} as const;
+
+export type ThreeDVisualizerQueryParamKeys =
+  (typeof threeDVisualizerState)[keyof typeof threeDVisualizerState];
 
 export const PROTOCOL_DETAILS: Record<TStimulusModuleValue, TProtocolDetails> = {
   [StimulusModuleDict.Idrest]: {
@@ -112,11 +126,15 @@ export const PROTOCOL_DETAILS: Record<TStimulusModuleValue, TProtocolDetails> = 
 
 const DEFAULT_SECTION = 'soma[0]';
 
-export const DEFAULT_RECORDING_LOCATION: RecordLocation = {
-  section: DEFAULT_SECTION,
-  offset: 0.5,
-  record_currents: false,
-};
+export function buildDefaultRecordingLocation(color: string = DefaultColor) {
+  return {
+    section: DEFAULT_SECTION,
+    offset: 0.5,
+    record_currents: false,
+    color,
+    origin: NeuronLocationOriginDict.recording,
+  };
+}
 
 export const DEFAULT_SIMULATION_EXPERIMENTAL_SETUP: SimulationExperimentalSetup = {
   celsius: 34,
