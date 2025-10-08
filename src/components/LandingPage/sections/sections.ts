@@ -10,6 +10,7 @@ export enum EnumSection {
   Pricing,
   Team,
   Resources,
+  Sfn2025,
   Contact,
   Story,
 }
