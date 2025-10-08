@@ -11,12 +11,12 @@ import {
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
-export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecording> = {
+export const IonChannelElectrophysiology: EntityCoreTypeConfig<IElectricalCellRecording> = {
   group: EntityTypeGroup.Experimental,
-  title: 'Single cell electrophysiology',
-  extendedType: ExtendedEntitiesTypeDict.ElectricalCellRecording,
-  type: EntityTypeDict.ElectricalCellRecording,
-  slug: EntitySlug.ElectricalCellRecording,
+  title: 'Ion channel electrophysiology',
+  extendedType: ExtendedEntitiesTypeDict.IonChannelElectrophysiology,
+  type: EntityTypeDict.IonChannelElectrophysiology,
+  slug: EntitySlug.IonChannelElectrophysiology,
   api: {
     config: {
       allowedFacets: true,

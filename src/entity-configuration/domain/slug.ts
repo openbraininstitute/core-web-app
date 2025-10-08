@@ -2,6 +2,7 @@ const ExperimentalEntitySlug = {
   CellMorphology: 'morphology',
   ExperimentalNeuronDensity: 'neuron-density',
   ElectricalCellRecording: 'electrophysiology',
+  IonChannelElectrophysiology: 'ion-channel-electrophysiology',
   ExperimentalBoutonDensity: 'bouton-density',
   ExperimentalSynapsesPerConnection: 'synapse-per-connection',
 } as const;
