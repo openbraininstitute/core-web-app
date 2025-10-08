@@ -16,7 +16,6 @@ import {
   CellMorphologySchema,
   zodFieldValidator,
   AgentType,
-  CustomFormError,
   type TAgentType,
   type TCellMorphologyForm,
 } from '@/ui/segments/contribute/cell-morphology/helpers';
@@ -138,21 +137,7 @@ export function Contribution() {
                                   validator: zodFieldValidator(
                                     CellMorphologySchema,
                                     `contribution.${o.name}.agent_id`,
-                                    form,
-                                    (values: TCellMorphologyForm) => {
-                                      if (
-                                        values.contribution
-                                          .filter((c, index) => index !== o.name)
-                                          .some(
-                                            (c) =>
-                                              c.agent_id === values.contribution[o.name].agent_id
-                                          )
-                                      ) {
-                                        throw new CustomFormError(
-                                          'Duplicate contributor, contributor should be used only once.'
-                                        );
-                                      }
-                                    }
+                                    form
                                   ),
                                 },
                               ]}

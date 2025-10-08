@@ -127,19 +127,34 @@ export const CellMorphologySchema = z.object({
       z.object({
         agent_type: z.enum(
           Object.values(AgentType).map((type) => type.key) as [TAgentType, ...TAgentType[]],
-          { message: 'Agent type is required' }
+          { message: 'Contributor type is required' }
         ),
         agent_id: z
-          .string({ message: 'Agent is required' })
+          .string({ message: 'Contributor is required' })
           .uuid()
-          .nonempty({ message: 'Agent is required' }),
+          .nonempty({ message: 'Contributor is required' }),
         role_id: z
           .string({ message: 'Role is required' })
           .uuid()
           .nonempty({ message: 'Role is required' }),
       })
     )
-    .nonempty({ message: 'At least one contributor is required' }),
+    .nonempty({ message: 'At least one contributor is required' })
+    .superRefine((arr, ctx) => {
+      const seen = new Map<string, number>();
+      arr.forEach((contrib, idx) => {
+        const id = contrib.agent_id;
+        if (seen.has(id)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Duplicate contributor, contributor should be used only once`,
+            path: [idx, 'agent_id'],
+          });
+        } else {
+          seen.set(id, idx);
+        }
+      });
+    }),
 });
 
 export type TCellMorphologyForm = z.infer<typeof CellMorphologySchema>;
