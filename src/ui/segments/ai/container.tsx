@@ -11,8 +11,9 @@ import {
 
 import AiAssistant from '@/components/ai-assistant';
 import { PANEL_STATE, TPanelState, usePanelState } from '@/ui/segments/ai/hooks';
+import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import { cn } from '@/utils/css-class';
-import styles from './container.module.css';
+import styles from '@/ui/segments/ai/container.module.css';
 
 export function Container(): JSX.Element {
   const { state, setState, isCollapsed, isExpanded, isFullscreen } = usePanelState();
@@ -123,7 +124,9 @@ export function Container(): JSX.Element {
             </div>
           </div>
           <div className="relative flex-1 border-none">
-            <AiAssistant section="explore" fullscreen={isFullscreen} />
+            <HydrateWrapper>
+              <AiAssistant section="explore" fullscreen={isFullscreen} />
+            </HydrateWrapper>
           </div>
         </div>
       )}

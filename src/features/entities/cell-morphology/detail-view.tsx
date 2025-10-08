@@ -8,10 +8,9 @@ import { Spin } from 'antd';
 // We disable enhanced somas until they are fixed on the backend.
 // import { useSwcContentUrl } from '@/util/content-url';
 
-import { withErrorConfig } from '@/components/GenericErrorFallback';
-import { useLoadCellMorphology3DAsset } from '@/state/morpho-viewer';
-
 import { Morphometrics } from '@/features/entities/cell-morphology/morphometrics';
+import { useLoadCellMorphology3DAsset } from '@/state/morpho-viewer';
+import { withErrorConfig } from '@/components/GenericErrorFallback';
 import { MorphoViewer } from '@/components/MorphoViewer';
 import { ensureArray } from '@/utils/array';
 
