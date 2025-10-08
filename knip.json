@@ -1,0 +1,12 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "ignore": [
+    "src/app/404.tsx",
+    "src/app/500.tsx",
+    "src/api/**/*.{ts,tsx}",
+    "src/i18n/**/*.{ts,tsx}",
+    "src/ui/molecules/**/*.{ts,tsx}",
+    "src/ui/use-query-keys/*.{ts,tsx}"
+  ],
+  "project": ["src/**/*.{js,ts,tsx,jsx}"]
+}
