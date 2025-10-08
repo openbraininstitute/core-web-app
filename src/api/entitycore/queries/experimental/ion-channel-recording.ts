@@ -8,7 +8,7 @@ import type {
 } from '@/api/entitycore/types/entities/ion-channel-recording';
 import type { WorkspaceContext } from '@/types/common';
 
-const baseUri = '/electrical-cell-recording';
+const baseUri = '/ion-channel-recording';
 /**
  * Retrieves a list of electrical cell recordings from the EntityCoreAPI.
  *
