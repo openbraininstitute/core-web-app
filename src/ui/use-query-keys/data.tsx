@@ -99,9 +99,9 @@ export const keyBuilder = {
   }: {
     entityId: string;
     assetId: string;
-    assetPath: string;
+    assetPath?: string;
     assetType?: TEntityTypeDict;
-    context: WorkspaceContext;
+    context?: WorkspaceContext;
     asRawResponse?: boolean;
   }) => [
     `${prefix}-entity-asset`,
