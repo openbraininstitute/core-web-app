@@ -1,7 +1,8 @@
 import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
+import { simulationStatusColorMap } from '@/features/small-microcircuit/constants';
 
 export function SimulationStatusBadge({ status }: { status?: CircuitSimulationExecutionStatus }) {
-  const color = status ? statusColorMap[status] : '#fafafa';
+  const color = status ? simulationStatusColorMap[status] : '#fafafa';
   const showSpinner = status && ['pending', 'running'].includes(status);
 
   // TODO: move spinner outside of the module.
@@ -34,17 +35,10 @@ export function SimulationStatusBadge({ status }: { status?: CircuitSimulationEx
 
       <span
         style={{ borderColor: color, color }}
-        className="flex items-center rounded-xl border-1 px-4"
+        className="flex items-center rounded-xl border-1 px-4 capitalize transition-colors duration-300"
       >
         {status ?? ''}
       </span>
     </div>
   );
 }
-const statusColorMap: Record<CircuitSimulationExecutionStatus, string> = {
-  created: '#434343',
-  pending: '#fa8c16',
-  running: '#1890ff',
-  done: '#389e0d',
-  error: '#f5222d',
-};
