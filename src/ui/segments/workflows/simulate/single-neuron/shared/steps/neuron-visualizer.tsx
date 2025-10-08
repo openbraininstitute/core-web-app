@@ -2,17 +2,19 @@
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
+import { useMemo, useTransition } from 'react';
 import { motion } from 'motion/react';
-import { useMemo } from 'react';
 
+import { NeuronViewerContainer } from '@/components/neuron-viewer/neuron-viewer-with-actions';
 import {
   type ThreeDVisualizerQueryParamKeys,
   threeDVisualizerState,
   threeDVisualizerQueryParam,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import { NeuronViewerContainer } from '@/components/neuron-viewer/neuron-viewer-with-actions';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { cn } from '@/utils/css-class';
+
+import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
   sessionId: string;
@@ -22,6 +24,7 @@ type Props = {
 export function NeuronVisualizer({ sessionId, memodelId }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const queryParams = useSearchParams();
+  const [, startTransition] = useTransition();
   const { replace } = useRouter();
   const visualizerState = queryParams.get('3d') as ThreeDVisualizerQueryParamKeys;
 
@@ -35,10 +38,13 @@ export function NeuronVisualizer({ sessionId, memodelId }: Props) {
   }, [isCollapsed]);
 
   const updateVisualizerState = (v: ThreeDVisualizerQueryParamKeys) => {
-    const params = new URLSearchParams(queryParams);
-    params.set(threeDVisualizerQueryParam, v);
-    replace(`${pathname}?${params.toString()}`);
+    startTransition(() => {
+      const params = new URLSearchParams(queryParams);
+      params.set(threeDVisualizerQueryParam, v);
+      replace(`${pathname}?${params.toString()}`);
+    });
   };
+
   return (
     memodelId && (
       <motion.div
@@ -92,23 +98,41 @@ export function NeuronVisualizer({ sessionId, memodelId }: Props) {
               </button>
             </div>
 
-            <div className="relative w-full flex-1 border-none">
-              <NeuronViewerContainer
-                useCursor
-                useEvents
-                useZoomer
-                useActions
-                useLabels
-                virtualLabId={virtualLabId}
-                projectId={projectId}
-                meModelId={memodelId}
-                sessionId={sessionId}
-                zoomPlacement="right"
-              />
-            </div>
+            <ThreeDNeuronVisualizer
+              {...{
+                virtualLabId,
+                projectId,
+                memodelId,
+                sessionId,
+              }}
+            />
           </div>
         )}
       </motion.div>
     )
+  );
+}
+
+function ThreeDNeuronVisualizer({
+  virtualLabId,
+  projectId,
+  memodelId,
+  sessionId,
+}: WorkspaceContext & Props) {
+  return (
+    <div className="relative w-full flex-1 border-none">
+      <NeuronViewerContainer
+        useCursor
+        useEvents
+        useZoomer
+        useActions
+        useLabels
+        virtualLabId={virtualLabId}
+        projectId={projectId}
+        meModelId={memodelId}
+        sessionId={sessionId}
+        zoomPlacement="right"
+      />
+    </div>
   );
 }
