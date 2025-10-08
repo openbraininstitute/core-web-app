@@ -117,6 +117,7 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
   dataType,
   wrapperClassname,
   pagination = false,
+  size,
 }: TableProps<T> &
   AdditionalTableProps<T> & {
     showLoadMore?: (value?: boolean) => void;
@@ -171,6 +172,7 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
     >
       <ConfigProvider theme={{ hashed: false }}>
         <Table
+          size={size}
           ref={tableRef}
           sticky={sticky}
           style={tableStyle}

@@ -1,17 +1,17 @@
-import React from 'react';
+import { useMemo } from 'react';
 import isString from 'lodash/isString';
 import Link from 'next/link';
 import type { ColumnsType } from 'antd/es/table';
 
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import DefaultEModelTable from '@/components/build-section/cell-model-assignment/e-model/EModelView/DefaultEModelTable';
 import ErrorMessageLine, {
   StandardFallback,
-} from '@/components/build-section/cell-model-assignment/e-model/EModelView/ErrorMessageLine';
-import Header from '@/components/build-section/cell-model-assignment/e-model/EModelView/Header';
-
+} from '@/features/entities/e-model/detail-view/error-message-line';
+import { Header } from '@/features/entities/e-model/detail-view/header';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getFieldsDefinition } from '@/entity-configuration/definitions';
+import { BaseTable } from '@/ui/segments/data-table/table';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type {
   EntityCoreObjectTypes,
@@ -38,6 +38,7 @@ function makeColumns(virtualLabId: string, projectId: string): ColumnsType<ICell
       }/overview`;
       return <Link href={href}>{field.render?.(entity)}</Link>;
     },
+    width: key === EntityCoreFields.Preview ? '200px' : 'max-content',
   }));
 }
 
@@ -45,15 +46,12 @@ type Props = {
   exemplarMorphology: ICellMorphology | ICellMorphologyExpanded;
 };
 
-export default function ExemplarMorphology({ exemplarMorphology }: Props) {
+export function ExemplarMorphology({ exemplarMorphology }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const exemplarMorphologyAsList = exemplarMorphology ? [exemplarMorphology] : [];
   const morphologies = exemplarMorphologyAsList;
 
-  const columns = React.useMemo(
-    () => makeColumns(virtualLabId, projectId),
-    [virtualLabId, projectId]
-  );
+  const columns = useMemo(() => makeColumns(virtualLabId, projectId), [virtualLabId, projectId]);
 
   let displayMorphologyError = null;
 
@@ -74,9 +72,19 @@ export default function ExemplarMorphology({ exemplarMorphology }: Props) {
   return (
     <div className="flex flex-col gap-4">
       <Header>{title}</Header>
-
-      <DefaultEModelTable<ICellMorphology> dataSource={morphologies || []} columns={columns} />
-
+      <BaseTable
+        size="small"
+        wrapperClassname="h-full min-h-max "
+        className="h-full [&_.ant-table-body]:max-h-full!"
+        dataType={ExtendedEntitiesTypeDict.CellMorphology}
+        dataSource={morphologies}
+        rowKey="id"
+        columns={columns}
+        rowClassName="[&:last-child>td]:border-b-0!"
+        scroll={{
+          x: true,
+        }}
+      />
       <ErrorMessageLine message={displayMorphologyError} />
     </div>
   );

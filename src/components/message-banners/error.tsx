@@ -12,7 +12,7 @@ type Props = {
     description?: string;
   };
 };
-export default function ErrorData({ title, description, cls, borderless = false }: Props) {
+export function ErrorData({ title, description, cls, borderless = false }: Props) {
   return (
     <div
       data-testid="virtual-labs-memberships-empty"
@@ -34,3 +34,5 @@ export default function ErrorData({ title, description, cls, borderless = false 
     </div>
   );
 }
+
+export default ErrorData;

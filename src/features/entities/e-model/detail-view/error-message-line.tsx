@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { WarningFilled } from '@ant-design/icons';
 
-import Header from './Header';
+import { Header } from '@/features/entities/e-model/detail-view/header';
 
 type Props = {
   message?: ReactNode;
