@@ -62,7 +62,14 @@ export function WorkflowIcon(props: React.SVGProps<SVGSVGElement>) {
 
 export function Home(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" {...props}>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="1em"
+      height="1em"
+      fill="none"
+      viewBox="-1 -1 16 16"
+      {...props}
+    >
       <path
         fill="currentColor"
         d="m14.297 5.406.203.15V14.5H9.321V8.88H5.68v5.62H.5V5.556l.203-.15L7.5.378l6.797 5.028ZM1.5 6.06v7.44h3.179V7.88h5.642v5.62H13.5V6.06l-6-4.439-6 4.439Z"
