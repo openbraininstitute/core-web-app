@@ -3,6 +3,7 @@
 import { Card, ConfigProvider, Empty, Pagination as AntPagination } from 'antd';
 import { useState, useLayoutEffect } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
+import NextLink from 'next/link';
 import { motion } from 'motion/react';
 import kebabCase from 'lodash/kebabCase';
 import find from 'lodash/find';
@@ -366,9 +367,7 @@ export function WorkflowActivity({
                   size={breakpoint === 'l' ? 'md' : 'lg'}
                   className="select-none"
                 >
-                  <a href={configurationLink} target="_blank" rel="noopener noreferrer">
-                    View configuration
-                  </a>
+                  <NextLink href={configurationLink}>View configuration</NextLink>
                 </Button>
                 {entityType !== ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation &&
                   entityType !== ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation && (
@@ -380,14 +379,12 @@ export function WorkflowActivity({
                       disabled={activityType === ActivityValues.Build}
                       className="disabled:bg-background! disabled:text-label! select-none disabled:cursor-not-allowed"
                     >
-                      <a
+                      <NextLink
                         href={resultsLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
                         aria-disabled={activityType === ActivityValues.Build}
                       >
                         View results
-                      </a>
+                      </NextLink>
                     </Button>
                   )}
                 <Button
