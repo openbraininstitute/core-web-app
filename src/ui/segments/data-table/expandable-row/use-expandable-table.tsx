@@ -4,7 +4,7 @@ import { useAtomValue } from 'jotai';
 import { Spin } from 'antd';
 import type { ExpandableConfig } from 'antd/es/table/interface';
 
-import { resetFilterSignalAtom } from '@/features/entities/circuit/elements/context';
+import { resetFilterSignalAtom } from '@/ui/segments/explore/circuit/helpers';
 import { log } from '@/utils/logger';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';

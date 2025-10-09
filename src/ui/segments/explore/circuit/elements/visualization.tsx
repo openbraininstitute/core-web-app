@@ -1,6 +1,6 @@
 'use client';
 
-import { ProgressiveEntityImage } from '@/features/entities/circuit/elements/use-progressive-img';
+import { ProgressiveEntityImage } from '@/ui/segments/explore/circuit/elements/use-progressive-img';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
 
@@ -10,7 +10,7 @@ type Props = {
   circuit: ICircuit;
 };
 
-export default function Visualization({ circuit }: Props) {
+export function Visualization({ circuit }: Props) {
   const visAsset = getAssetElement({
     assets: circuit.assets,
     filter(i) {

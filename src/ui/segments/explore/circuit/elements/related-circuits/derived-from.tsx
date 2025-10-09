@@ -7,11 +7,11 @@ import { useMemo } from 'react';
 
 import useExploreColumns from '@/hooks/useExploreColumns';
 
-import { BaseTable } from '@/components/explore-section/ExploreSectionListingView/ExploreSectionTable';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { activeColumnsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+import { BaseTable } from '@/ui/segments/data-table/table';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { WorkspaceContext } from '@/types/common';
@@ -57,12 +57,9 @@ export function DerivedFrom({ data }: Props) {
   return (
     <BaseTable
       loading={false}
+      wrapperClassname="[&_.ant-table-body]:max-h-full!"
       columns={columns}
-      dataContext={{
-        dataScope: ExploreDataScope.NoScope,
-        virtualLabInfo: undefined,
-        dataType: ExtendedEntitiesTypeDict.Circuit,
-      }}
+      dataType={ExtendedEntitiesTypeDict.Circuit}
       dataSource={data ? [data] : []}
       onCellClick={onCellClick}
     />

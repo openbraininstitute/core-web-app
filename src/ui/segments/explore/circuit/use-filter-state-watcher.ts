@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import isNil from 'lodash/isNil';
 
 import { coreFiltersAtom, coreSearchStringAtom } from '@/ui/segments/data-table/elements/context';
-import { resetFilterSignalAtom } from '@/ui/segments/explore/circuit/context';
+import { resetFilterSignalAtom } from '@/ui/segments/explore/circuit/helpers';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 

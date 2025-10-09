@@ -2,15 +2,14 @@
 
 import { ReactNode, CSSProperties } from 'react';
 import { TableProps } from 'antd';
-
 import type { ExpandableConfig } from 'antd/es/table/interface';
 
-import { BaseTable } from '@/components/explore-section/ExploreSectionListingView/ExploreSectionTable';
+import { BaseTable } from '@/ui/segments/data-table/table';
 import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
   useExpandableTable,
   UseExpandableTableOptions,
-} from '@/components/explore-section/ExploreSectionListingView/expandable-row/use-expandable-table';
+} from '@/ui/segments/data-table/expandable-row/use-expandable-table';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { ExploreDataScope } from '@/types/explore-section/application';
 
@@ -31,6 +30,7 @@ type BaseTableProps<T extends EntityCoreIdentifiable> = TableProps<T> &
     showLoadMore?: (value?: boolean) => void;
     scrollable?: boolean;
     expandableConfig?: ExpandableConfig<T>;
+    dataType: TExtendedEntitiesTypeDict;
   };
 
 export interface ExpandableBaseTableProps<T extends EntityCoreIdentifiable, P = unknown>
@@ -43,6 +43,7 @@ export interface ExpandableBaseTableProps<T extends EntityCoreIdentifiable, P = 
    * show expand/collapse buttons
    */
   showExpandButtons?: boolean;
+  dataType: TExtendedEntitiesTypeDict;
 }
 
 /**
@@ -75,7 +76,7 @@ export function createExpandableTableConfig<T extends EntityCoreIdentifiable, P 
     /**
      * additional props to pass to the expanded BaseTable (dataContext is required)
      */
-    expandedTableProps: Pick<BaseTableProps<T>, 'dataContext'> & Partial<BaseTableProps<T>>;
+    expandedTableProps: Pick<BaseTableProps<T>, 'dataType'> & Partial<BaseTableProps<T>>;
     /**
      * simple wrapper props for basic styling (className, style, etc.)
      * if provided, wraps the table in a div with these props

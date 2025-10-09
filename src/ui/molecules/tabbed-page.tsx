@@ -1,5 +1,6 @@
 import React, { useState, ReactNode, ReactElement } from 'react';
 import { Button } from './button';
+import { cn } from '@/utils/css-class';
 
 type TabProps = {
   visible?: boolean; //eslint-disable-line
@@ -24,9 +25,20 @@ export default function Tabs({ children, defaultIndex = 0, defaultMessage }: Tab
 
   const [activeIndex, setActiveIndex] = useState(defaultIndex);
 
-  if (tabs.length === 0) return <div>{defaultMessage}</div>;
+  if (tabs.length === 0)
+    return (
+      <div
+        className={cn(
+          'text-primary-8 border-neutral-2 flex w-full',
+          'items-center justify-center rounded-2xl border p-5 select-none'
+        )}
+      >
+        {defaultMessage}
+      </div>
+    );
 
   function rounded(index: number) {
+    if (index === 0 && index === tabs.length - 1) return 'rounded-full!';
     if (index === 0) return 'rounded-l-full!';
     if (index === tabs.length - 1) return 'rounded-r-full!';
     return undefined;
@@ -41,7 +53,7 @@ export default function Tabs({ children, defaultIndex = 0, defaultMessage }: Tab
           key={tab.props.label}
           onClick={() => setActiveIndex(index)}
           active={activeIndex === index}
-          className={rounded(index)}
+          className={cn('rounded-none', rounded(index))}
           borderless
         >
           {tab.props.label}

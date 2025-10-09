@@ -7,17 +7,13 @@ import mergeWith from 'lodash/mergeWith';
 import flatMap from 'lodash/flatMap';
 import isArray from 'lodash/isArray';
 import uniqBy from 'lodash/uniqBy';
+import keyBy from 'lodash/keyBy';
 import chunk from 'lodash/chunk';
 import get from 'lodash/get';
 import pMap from 'p-map';
 
-import {
-  buildFilteredHierarchyTree,
-  HierarchyOutputNode,
-} from '@/ui/segments/explore/circuit/context';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
-import { CircuitView, getAllCircuitIds } from '@/ui/segments/explore/circuit/helpers';
 import { DerivationTypeDictionary } from '@/api/entitycore/types/entities/derivation';
 import { DEFAULT_PAGE_SIZE, WorkspaceScope } from '@/constants';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -26,45 +22,31 @@ import {
   getCircuitHierarchyByDerivation,
   getCircuits,
 } from '@/api/entitycore/queries/model/circuit';
+import {
+  buildFilteredHierarchyTree,
+  CircuitView,
+  collectIdsFromNode,
+  filterAndEnrichTree,
+  findNodeInTree,
+  findParentInTree,
+  getAllCircuitIds,
+} from '@/ui/segments/explore/circuit/helpers';
 
+import type { HierarchyOutputNode, TCircuitView } from '@/ui/segments/explore/circuit/helpers';
 import type { HierarchyTreeResponse } from '@/api/entitycore/types/shared/hierarchy';
-import type { TCircuitView } from '@/ui/segments/explore/circuit/helpers';
+import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { WorkspaceContext } from '@/types/common';
+import type { TWorkspaceScope } from '@/constants';
 import type {
   EntityCoreResponse,
   Facets,
   Pagination,
 } from '@/api/entitycore/types/shared/response';
-import type { TWorkspaceScope } from '@/constants';
 
-export function useHierarchy({
-  scope = WorkspaceScope.Public,
-  view = CircuitView.Flat,
-  dataKey,
-}: {
-  scope: TWorkspaceScope | null;
-  view: TCircuitView | null;
-  dataKey: string;
-}) {
+export function useFullRawHierarchy({ view = CircuitView.Flat }: { view: TCircuitView | null }) {
   const queryClient = useQueryClient();
   const { virtualLabId, projectId } = useWorkspace();
-
-  const { data: hierarchyByDerivation, isLoading: loadingDerivation } =
-    useQuery<HierarchyTreeResponse>({
-      queryKey: keyBuilder.circuitsByDerivationTree({
-        virtualLabId,
-        projectId,
-        derivationType: DerivationTypeDictionary.CircuitExtraction,
-      }),
-      queryFn: () =>
-        getCircuitHierarchyByDerivation({
-          context: { virtualLabId, projectId },
-          derivation_type: DerivationTypeDictionary.CircuitExtraction,
-        }),
-      enabled: view === CircuitView.Hierarchy,
-      staleTime: Infinity,
-    });
-
   const { data: circuitHierarchy, isLoading: isLoadingFullHierarchy } = useQuery({
     queryKey: keyBuilder.fullCircuitHierarchy({ virtualLabId, projectId }),
     queryFn: async () => {
@@ -130,6 +112,57 @@ export function useHierarchy({
     staleTime: Infinity,
     gcTime: 3_600_000, // 1 hour
   });
+
+  return { circuitHierarchy, isLoadingFullHierarchy };
+}
+
+export function useHierarchyDerivationTree({
+  view,
+  derivationType,
+}: {
+  view: TCircuitView | null;
+  derivationType: TDerivationType;
+}) {
+  const { virtualLabId, projectId } = useWorkspace();
+  const { data: hierarchyByDerivation, isLoading: loadingDerivation } =
+    useQuery<HierarchyTreeResponse>({
+      queryKey: keyBuilder.circuitsByDerivationTree({
+        virtualLabId,
+        projectId,
+        derivationType,
+      }),
+      queryFn: () =>
+        getCircuitHierarchyByDerivation({
+          context: { virtualLabId, projectId },
+          derivation_type: derivationType,
+        }),
+      enabled: view === CircuitView.Hierarchy,
+      staleTime: Infinity,
+    });
+
+  return {
+    hierarchyByDerivation,
+    loadingDerivation,
+  };
+}
+
+export function useHierarchy({
+  scope = WorkspaceScope.Public,
+  view = CircuitView.Flat,
+  dataKey,
+}: {
+  scope: TWorkspaceScope | null;
+  view: TCircuitView | null;
+  dataKey: string;
+}) {
+  const queryClient = useQueryClient();
+  const { virtualLabId, projectId } = useWorkspace();
+
+  const { hierarchyByDerivation, loadingDerivation } = useHierarchyDerivationTree({
+    view,
+    derivationType: DerivationTypeDictionary.CircuitExtraction,
+  });
+  const { circuitHierarchy, isLoadingFullHierarchy } = useFullRawHierarchy({ view });
 
   const {
     data: circuitHierarchyFiltered,
@@ -211,7 +244,7 @@ export function useHierarchy({
       hierarchyByDerivation,
       circuitHierarchy,
       circuitHierarchyFiltered
-    ) as unknown as HierarchyOutputNode[];
+    ) as unknown as Array<HierarchyOutputNode>;
     const { pagination, facets } = circuitHierarchy;
     return {
       queryKeyHash,
@@ -233,5 +266,61 @@ export function useHierarchy({
     dataSource: [],
     pagination: undefined,
     facets: {},
+  };
+}
+
+export function useHierarchyAllLevels({ entityId }: WorkspaceContext & { entityId: string }) {
+  let extractionParentCircuitAsParent: ICircuit | undefined;
+  let rewiringParentCircuitAsDerivedFrom: ICircuit | undefined;
+  const { circuitHierarchy, isLoadingFullHierarchy } = useFullRawHierarchy({
+    view: CircuitView.Hierarchy,
+  });
+  const {
+    hierarchyByDerivation: hierarchyByExtractionDerivation,
+    loadingDerivation: loadingExtractionDerivation,
+  } = useHierarchyDerivationTree({
+    view: CircuitView.Hierarchy,
+    derivationType: DerivationTypeDictionary.CircuitExtraction,
+  });
+
+  const {
+    hierarchyByDerivation: hierarchyByRewiringDerivation,
+    loadingDerivation: loadingRewiringDerivation,
+  } = useHierarchyDerivationTree({
+    view: CircuitView.Hierarchy,
+    derivationType: DerivationTypeDictionary.CircuitRewiring,
+  });
+
+  if (circuitHierarchy && hierarchyByExtractionDerivation && hierarchyByRewiringDerivation) {
+    const fullById = keyBy(circuitHierarchy.data, 'id');
+    const extractionParent = findParentInTree(hierarchyByExtractionDerivation.data, entityId);
+    const rewiringParent = findParentInTree(hierarchyByRewiringDerivation.data, entityId);
+    const extractionNode = findNodeInTree(hierarchyByExtractionDerivation.data, entityId);
+    const rewiringNode = findNodeInTree(hierarchyByRewiringDerivation.data, entityId);
+    const extractionTreeAsSubcircuits = extractionNode
+      ? filterAndEnrichTree([extractionNode], new Set(collectIdsFromNode(extractionNode)), fullById)
+      : [];
+
+    const rewiringTreeAsDerivedCircuits = rewiringNode
+      ? filterAndEnrichTree([rewiringNode], new Set(collectIdsFromNode(rewiringNode)), fullById)
+      : [];
+
+    if (extractionParent) extractionParentCircuitAsParent = get(fullById, extractionParent.id);
+    if (rewiringParent) rewiringParentCircuitAsDerivedFrom = get(fullById, rewiringParent.id);
+
+    return {
+      subCircuits: extractionTreeAsSubcircuits,
+      derived: rewiringTreeAsDerivedCircuits,
+      parent: extractionParentCircuitAsParent,
+      derivedFrom: rewiringParentCircuitAsDerivedFrom,
+    };
+  }
+
+  return {
+    subCircuits: [],
+    derived: [],
+    parent: extractionParentCircuitAsParent,
+    derivedFrom: rewiringParentCircuitAsDerivedFrom,
+    isLoading: isLoadingFullHierarchy || loadingExtractionDerivation || loadingRewiringDerivation,
   };
 }

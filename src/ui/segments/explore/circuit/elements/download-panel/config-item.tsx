@@ -15,7 +15,7 @@ import { DownloadIcon } from '@/components/icons';
 import { formatBytes } from '@/utils/format';
 import { classNames } from '@/util/utils';
 
-import type { TCircuitContentConfigurationKeys } from '@/features/entities/circuit/elements/download-panel/content-configuration';
+import type { TCircuitContentConfigurationKeys } from '@/ui/segments/explore/circuit/elements/download-panel/content-configuration';
 import type { DirectoryItem } from '@/api/entitycore/types/shared/global';
 import type { Nullable } from '@/utils/type';
 

@@ -17,7 +17,8 @@ import {
 } from '@/api/entitycore/types/extended-entity-type';
 import type { OrderShape } from '@/entity-configuration/definitions/types';
 import type { SortState } from '@/types/explore-section/application';
-import styles from '@/components/explore-section/ExploreSectionListingView/explore.module.css';
+
+import styles from '@/ui/segments/data-table/styles.module.css';
 
 type ResizeInit = {
   key: string | null;

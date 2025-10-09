@@ -1,45 +1,21 @@
-import { atomFamily, atomWithDefault, loadable } from 'jotai/utils';
-import { atom, useAtomValue, useSetAtom } from 'jotai';
-import isEmpty from 'lodash/isEmpty';
-import flatMap from 'lodash/flatMap';
+import { atomFamily, atomWithDefault } from 'jotai/utils';
+import { atom, useSetAtom } from 'jotai';
 import _get from 'lodash/get';
-import pMap from 'p-map';
 
 import columnKeyToFilter from './column-key-to-filter';
-import {
-  EntityCoreFields,
-  CoreFieldFilterTypeEnum,
-} from '@/entity-configuration/definitions/fields-defs/enums';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
 import { ExploreDataScope, SortState } from '@/types/explore-section/application';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { transformFiltersToQuery } from '@/api/entitycore/transformers';
-import { getCircuits } from '@/api/entitycore/queries/model/circuit';
-import { useUnwrappedValue } from '@/hooks/hooks';
-
 import {
   getViewDefinitionByExtendedType,
   ViewsDefinitionRegistry,
 } from '@/entity-configuration/definitions/view-defs';
-import { DEFAULT_BRAIN_REGION_HIERARCHY_ID } from '@/features/brain-region-hierarchy/context';
 import { getFieldsDefinition } from '@/entity-configuration/definitions';
 import { CoreFilter } from '@/entity-configuration/definitions/types';
-import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE } from '@/constants';
-import { EntityTypeDict } from '@/api/entitycore/types';
-import { compactRecord } from '@/utils/dictionary';
-import {
-  buildFilteredHierarchyTree,
-  circuitHierarchy,
-  circuitRepresentationAtom,
-  hierarchyByExtractionDerivationAtomFamily,
-  HierarchyOutputNode,
-} from '@/features/entities/circuit/elements/context';
+import { DEFAULT_PAGE_NUMBER } from '@/constants';
 
-import type { Pagination, EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
-import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 type DataAtomBinding = {
   key: string;
@@ -149,169 +125,4 @@ export function useRefreshDataAtom(key: string): () => void {
   return () => {
     setRefresh(Symbol('refreshDataAtomFamily'));
   };
-}
-
-export const circuitHierarchyFiltered = atomFamily(
-  ({
-    key,
-    virtualLabId,
-    projectId,
-    brainRegionId,
-  }: { key: string; brainRegionId: string | null | undefined } & Partial<WorkspaceContext>) => {
-    const childAtom = atom(async (get) => {
-      const sortState = get(sortStateAtom({ key }));
-      const searchString = get(searchStringAtom(key));
-      const pageNumber = get(pageNumberAtom(key));
-      const filters = get(filtersAtom({ dataType: ExtendedEntitiesTypeDict.Circuit, key }));
-
-      const queryParameters = compactRecord({
-        page_size: DEFAULT_PAGE_SIZE,
-        page: pageNumber,
-        search: isEmpty(searchString) ? null : searchString,
-        order_by: `${sortState.order === 'asc' ? '+' : '-'}${sortState.backendField}`,
-        within_brain_region_hierarchy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,
-        within_brain_region_brain_region_id: brainRegionId,
-        within_brain_region_ascendants: false,
-        ...transformFiltersToQuery(filters as any),
-      });
-
-      const first = await getCircuits({
-        withFacets: false,
-        context: virtualLabId && projectId ? { virtualLabId, projectId } : undefined,
-        filters: { ...queryParameters, page: 1, page_size: DEFAULT_PAGE_SIZE },
-      });
-
-      const totalPages = Math.ceil(first.pagination.total_items / first.pagination.page_size);
-      const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
-
-      const responses = await pMap(
-        pages,
-        (page) =>
-          getCircuits({
-            withFacets: false,
-            context: virtualLabId && projectId ? { virtualLabId, projectId } : undefined,
-            filters: { ...queryParameters, page, page_size: DEFAULT_PAGE_SIZE },
-          }),
-        { concurrency: 5 }
-      );
-
-      const allData = flatMap(responses, (r) => r.data);
-
-      return {
-        data: allData.map((p) => ({ ...p, isFiltered: true })),
-        facets: undefined,
-        pagination: {} as Pagination,
-      };
-    });
-
-    childAtom.debugLabel = `circuit-filtered/${key}`;
-    return childAtom;
-  },
-  (a, b) => a.key === b.key
-);
-
-export const dataAtom = atomFamily(<T extends EntityCoreObjectTypes>(ctx: DataAtomBinding) => {
-  const refreshDataAtom = refreshDataAtomFamily(ctx.key);
-
-  const childAtom = atom<Promise<EntityCoreResponse<T>>>(
-    async (get): Promise<EntityCoreResponse<T>> => {
-      get(refreshDataAtom);
-      const sortState = get(sortStateAtom({ key: ctx.key }));
-      const searchString = get(searchStringAtom(ctx.key));
-      const extraPerTypeQueryParams = get(queryParamsPerEntityTypeAtomFamily(ctx.key));
-      const pageNumber = get(pageNumberAtom(ctx.key));
-      const filters = get(filtersAtom(ctx));
-      // TODO: better handling when we have IDs filter
-      if (ctx.shouldUseIds) {
-        const IDs = get(entityTargetIdentifiersAtom(ctx.key));
-        if (IDs.length) {
-          filters.push({
-            constraint: 'id__in',
-            field: EntityCoreFields.ID,
-            type: CoreFieldFilterTypeEnum.WithinList,
-            value: IDs,
-          });
-        } else {
-          return {
-            data: [],
-            pagination: {
-              total_items: 0,
-              page: 1,
-              page_size: DEFAULT_PAGE_SIZE,
-            },
-          } as EntityCoreResponse<T>;
-        }
-      }
-
-      const queryParameters = compactRecord({
-        page_size: DEFAULT_PAGE_SIZE,
-        page: pageNumber,
-        search: isEmpty(searchString) ? null : searchString,
-        order_by: `${sortState.order === 'asc' ? '+' : '-'}${sortState.backendField}`,
-        within_brain_region_hierarchy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,
-        within_brain_region_brain_region_id: ctx.brainRegionId,
-        within_brain_region_ascendants: false,
-        ...transformFiltersToQuery(filters as any),
-        ...extraPerTypeQueryParams,
-      });
-
-      const entity = getEntityByExtendedType({ type: ctx.dataType as EntityCoreExtendedType });
-
-      if (entity?.type === EntityTypeDict.Circuit) {
-        const representation = get(circuitRepresentationAtom);
-        if (representation === 'hierarchy') {
-          const hierarchy = await get(
-            hierarchyByExtractionDerivationAtomFamily({ key: ctx.key, ...ctx.workspace })
-          );
-          const result = await get(circuitHierarchy({ key: ctx.key, ...ctx.workspace }));
-          const filteredResult = await get(
-            circuitHierarchyFiltered({
-              key: ctx.key,
-              ...ctx.workspace,
-              brainRegionId: ctx.brainRegionId,
-            })
-          );
-
-          return {
-            // @ts-expect-error
-            data: buildFilteredHierarchyTree(
-              hierarchy,
-              result,
-              filteredResult
-            ) as unknown as HierarchyOutputNode[],
-            pagination: result.pagination,
-            facets: result.facets,
-          };
-        }
-      }
-
-      if (entity && entity.api.query.list) {
-        const response = await entity.api.query.list({
-          withFacets: entity.api.config.allowedFacets,
-          filters: queryParameters,
-          context: ctx.workspace,
-        });
-        return response as EntityCoreResponse<T>;
-      }
-
-      return {
-        data: [],
-        pagination: {
-          total_items: 0,
-          page: 1,
-          page_size: DEFAULT_PAGE_SIZE,
-        },
-      } as EntityCoreResponse<T>;
-    }
-  );
-  childAtom.debugLabel = `data-atom/${ctx.key}`;
-  return childAtom;
-}, isListAtomEqual);
-
-export function useDataAtom<T>(ctx: DataAtomBinding) {
-  const prevData = useAtomValue(previousDataAtom(ctx));
-  const data = useUnwrappedValue(dataAtom(ctx));
-  const isLoading = useAtomValue(loadable(dataAtom(ctx))).state === 'loading';
-
-  return { result: [...prevData, ...(data?.data ?? [])] as Array<T>, isLoading };
 }

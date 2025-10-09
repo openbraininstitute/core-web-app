@@ -15,8 +15,9 @@ import { downloadAsset, listDirectoryOfAssets } from '@/api/entitycore/queries/a
 import { EmptyValue } from '@/entity-configuration/definitions/renderer';
 import { EntityTypeDict } from '@/api/entitycore/types';
 
-import type { TCircuitContentConfigurationKeys } from '@/features/entities/circuit/elements/download-panel/content-configuration';
+import type { TCircuitContentConfigurationKeys } from '@/ui/segments/explore/circuit/elements/download-panel/content-configuration';
 import type { DirectoryListContent } from '@/api/entitycore/types/shared/global';
+import type { WorkspaceContext } from '@/types/common';
 import type {
   CircuitConnectivityMatricesConfiguration,
   SonataCircuitComponentConfig,
@@ -24,7 +25,6 @@ import type {
   SonataCircuitNetworkEdgeConfigItem,
   SonataCircuitNetworkNodeConfigItem,
 } from '@/api/entitycore/types/entities/circuit';
-import type { WorkspaceContext } from '@/types/common';
 
 type FilesCount = Record<TCircuitContentConfigurationKeys, number>;
 

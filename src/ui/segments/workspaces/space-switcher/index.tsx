@@ -266,7 +266,7 @@ export function SpaceSwitcher({ className }: Props) {
               <RightOutlined className="text-primary-8 font-bold" />
               {currentVirtualLabName && !isExpanded && (
                 <div
-                  className="group flex h-full max-w-20 items-center justify-center gap-1 overflow-hidden select-none"
+                  className="group flex h-full max-w-20 items-center justify-center gap-1 overflow-hidden pl-2 select-none"
                   title={currentVirtualLabName}
                   aria-label={currentVirtualLabName}
                 >
@@ -299,7 +299,7 @@ export function SpaceSwitcher({ className }: Props) {
                     {projectsLoading ? (
                       <Skeleton className="h-5 w-24 flex-1 rounded-full" />
                     ) : (
-                      <span className="text-primary-9 min-w-0 flex-1 truncate text-left font-bold">
+                      <span className="text-primary-9 min-w-0 flex-1 truncate pl-2 text-left font-bold">
                         {currentProjectName}
                       </span>
                     )}
