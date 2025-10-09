@@ -127,9 +127,6 @@ export function BrowseEntityScope({
       return true;
     },
   });
-  console.log('🚀 [browse-entity] entity =', entity); // @FIXME: Remove this line written on 2025-10-09 at 10:09
-  console.log('🚀 [browse-entity] data =', data); // @FIXME: Remove this line written on 2025-10-09 at 10:09
-  console.log('🚀 [browse-entity] error =', error); // @FIXME: Remove this line written on 2025-10-09 at 10:09
 
   const dataSource = (data as EntityCoreResponse<EntityCoreIdentifiableNamed>)?.data;
   const facets = (data as EntityCoreResponse<EntityCoreIdentifiableNamed>)?.facets;

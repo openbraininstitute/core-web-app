@@ -32,6 +32,12 @@ import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import {
+  countDeepSubCircuits,
+  ICircuitEnriched,
+} from '@/features/entities/circuit/elements/helpers';
+import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import { ensureString } from '@/util/type-guards';
 
 function iCMBooleanField(title: string, field: keyof IonChannelModel) {
   return {
@@ -338,6 +344,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isFilterable: true,
     filter: CoreFieldFilterTypeEnum.ValueRange,
     isDisplayable: true,
+    isSortable: true,
     defaultConstraint: {
       lte: 'temperature_celsius__lte',
       gte: 'temperature_celsius__gte',
@@ -347,16 +354,29 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       return EmptyValue;
     },
   },
-  // TODO, add when assets are in the ICM read_many response
-  // [EntityCoreFields.ICMThumbnail]: {
-  //   className: 'text-left',
-  //   title: 'Preview',
-  //   isFilterable: false,
-  //   filter: null,
-  //   isDisplayable: true,
-  //   render: (r) => {
-
-  //     return EmptyValue;
-  //   },
-  // },
+  [EntityCoreFields.IonChannel]: {
+    className: 'text-left',
+    title: 'Ion channel',
+    isFilterable: true,
+    filter: CoreFieldFilterTypeEnum.Text,
+    isDisplayable: true,
+    isSortable: true,
+    render: (r) => {
+      const ionChannel = 'ion_channel' in r ? (r.ion_channel as Record<string, unknown>) : {};
+      const name = ensureString(ionChannel.name, '—');
+      return name;
+    },
+  },
+  [EntityCoreFields.CellLine]: {
+    className: 'text-left',
+    title: 'Cell line',
+    isFilterable: true,
+    filter: CoreFieldFilterTypeEnum.Text,
+    isDisplayable: true,
+    isSortable: true,
+    render: (r) => {
+      const cellLine = ensureString('cell_line' in r ? r.cell_line : null, '—');
+      return cellLine;
+    },
+  },
 };
