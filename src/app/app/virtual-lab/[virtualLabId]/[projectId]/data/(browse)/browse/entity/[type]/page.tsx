@@ -19,6 +19,7 @@ const AllowedEntities = [
   ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
   ExtendedEntitiesTypeDict.CellMorphology,
   ExtendedEntitiesTypeDict.ElectricalCellRecording,
+  ExtendedEntitiesTypeDict.IonChannelElectrophysiology,
   ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
   ExtendedEntitiesTypeDict.Memodel,
   ExtendedEntitiesTypeDict.Circuit,
@@ -41,9 +42,7 @@ export default async function Page({
   const { type } = await params;
 
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
-
   const entity = getEntityByExtendedType({ type: dataType });
-
   const content = match({ scope, entity })
     .with({ entity: P.nullish }, () => notFound())
     .with(
