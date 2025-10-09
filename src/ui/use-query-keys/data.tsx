@@ -50,8 +50,8 @@ export const keyBuilder = {
     ...props
   }: WorkspaceContext & {
     brainRegionId?: string;
-    page: number;
-    pageSize: number;
+    page?: number;
+    pageSize?: number;
   } & ElectricalCellRecordingFilter) => [
     `${prefix}-electrical-cell-recordings`,
     { virtualLabId, projectId, brainRegionId: brainRegionId ?? '', page, pageSize, ...props },

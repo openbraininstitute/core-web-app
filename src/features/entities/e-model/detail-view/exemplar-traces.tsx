@@ -1,31 +1,23 @@
-import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { match, P } from 'ts-pattern';
 import { Pagination } from 'antd';
 
 import Link from 'next/link';
 import isString from 'lodash/isString';
-import kebabCase from 'lodash/kebabCase';
 
 import type { ColumnsType } from 'antd/es/table';
 
+import { useElectricalCellRecordingsByDerivations, useEmodelDerivations } from '@/ui/hooks/data';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { DerivationTypeDictionary } from '@/api/entitycore/types/entities/derivation';
-import { getEntityDerivations } from '@/api/entitycore/queries/general/derivation';
 import { getFieldsDefinition } from '@/entity-configuration/definitions';
 import { Header } from '@/features/entities/e-model/detail-view/header';
-import { getElectricalCellRecordings } from '@/api/entitycore/queries';
 import { ErrorData } from '@/components/message-banners/error';
 import { BaseTable } from '@/ui/segments/data-table/table';
-import { EntityTypeDict } from '@/api/entitycore/types';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { DEFAULT_PAGE_XSMALL_SIZE } from '@/constants';
-import { keyBuilder } from '@/ui/use-query-keys/data';
 
-import type { NormalizeChars } from '@/utils/type';
 import type {
-  TEntityTypeDict,
   EntityCoreObjectTypes,
   IElectricalCellRecording,
   IEModel,
@@ -66,55 +58,21 @@ export function ExemplarTraces({ source }: Props) {
     pageSize: DEFAULT_PAGE_XSMALL_SIZE,
   });
 
-  const {
-    data: derivations,
-    isLoading,
-    isSuccess: isSuccessDerivations,
-    error,
-  } = useQuery({
-    queryKey: keyBuilder.derivations({
-      virtualLabId,
-      projectId,
-      entityId: source.id,
-      entityRoute: EntityTypeDict.Emodel,
-      derivationType: DerivationTypeDictionary.Unspecified,
-      page: pageNumber,
-      pageSize,
-    }),
-    queryFn: () =>
-      getEntityDerivations({
-        context: { virtualLabId, projectId },
-        entityId: source.id,
-        entityRoute: kebabCase(EntityTypeDict.Emodel) as NormalizeChars<TEntityTypeDict>,
-        filters: {
-          derivation_type: DerivationTypeDictionary.Unspecified,
-          page: pageNumber,
-          page_size: pageSize,
-        },
-      }),
+  const { derivations, error, isLoading, isSuccessDerivations } = useEmodelDerivations({
+    entityId: source.id,
+    virtualLabId,
+    projectId,
+    pageNumber,
+    pageSize,
   });
 
-  const {
-    data: eModelExemplarTraces,
-    isLoading: isLoadingExemplarTraces,
-    error: errorExemplarTraces,
-  } = useQuery({
-    queryKey: keyBuilder.electricalCellRecordings({
+  const { eModelExemplarTraces, errorExemplarTraces, isLoadingExemplarTraces } =
+    useElectricalCellRecordingsByDerivations({
       virtualLabId,
       projectId,
-      page: pageNumber,
-      pageSize,
-      id__in: derivations?.data.map((p) => p.id),
-    }),
-    queryFn: () => {
-      return getElectricalCellRecordings({
-        context: { virtualLabId, projectId },
-        filters: { id__in: derivations?.data.map((o) => o.id).join(',') },
-        withFacets: false,
-      });
-    },
-    enabled: isSuccessDerivations && !!(derivations.pagination.total_items > 0),
-  });
+      enabled: isSuccessDerivations ? !!(derivations!.pagination.total_items > 0) : false,
+      Ids: derivations?.data.map((p) => p.id) || [],
+    });
 
   const total = derivations?.pagination.total_items;
   const columns: ColumnsType<IElectricalCellRecording> = useMemo(
