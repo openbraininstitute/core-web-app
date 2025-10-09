@@ -28,7 +28,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 import RendererCtrl from './renderer-ctrl';
 import type { Morphology, SecMarkerConfig } from './types';
-import { createSegMarkerMesh, createSegmentMesh, NeuronSegementInfo } from './renderer-utils';
+import { createSegMarkerMesh, createSegmentMesh, NeuronSegmentInfo } from './renderer-utils';
 import { Labels } from './labels';
 
 import { basePath } from '@/config';
@@ -49,7 +49,7 @@ const TEXTURE_BASE_URL = `${basePath}/images/e-model-interactive`;
 
 export type NeuronViewerClickData = {
   type: string;
-  data: NeuronSegementInfo;
+  data: NeuronSegmentInfo;
   position: {
     x: number;
     y: number;
@@ -58,7 +58,7 @@ export type NeuronViewerClickData = {
 
 export type NeuronViewerHoverData = {
   type: string;
-  data: NeuronSegementInfo;
+  data: NeuronSegmentInfo;
   position: {
     x: number;
     y: number;
@@ -179,7 +179,6 @@ export default class NeuronViewerRenderer {
 
     this.container = container;
     const { clientWidth, clientHeight } = container;
-
     this.resizeObserver = new ResizeObserver(this.onResize);
     this.resizeObserver.observe(container);
 
@@ -275,7 +274,7 @@ export default class NeuronViewerRenderer {
     if (!clickedMesh) return;
     this.config.onClick({
       type: clickedMesh.name,
-      data: clickedMesh.userData as NeuronSegementInfo,
+      data: clickedMesh.userData as NeuronSegmentInfo,
       position: {
         x: e.clientX,
         y: e.clientY,
@@ -333,7 +332,7 @@ export default class NeuronViewerRenderer {
 
     this.config.onHover?.({
       type: 'morphSection',
-      data: hoverData.mesh?.userData as NeuronSegementInfo,
+      data: hoverData.mesh?.userData as NeuronSegmentInfo,
       position: hoverData.position ?? null,
     });
 
@@ -347,7 +346,7 @@ export default class NeuronViewerRenderer {
 
     this.config.onHoverEnd?.({
       type: 'morphSection',
-      data: mesh.userData as NeuronSegementInfo,
+      data: mesh.userData as NeuronSegmentInfo,
       position,
     });
 

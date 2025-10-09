@@ -2,14 +2,16 @@
 
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useAtom } from 'jotai';
+
 import kebabCase from 'lodash/kebabCase';
 import uniqBy from 'lodash/uniqBy';
 import Link from 'next/link';
-import { ZodError } from 'zod';
+
+import type { ZodError } from 'zod';
 
 import { createSingleNeuronSimulationAtom } from '@/ui/segments/workflows/simulate/single-neuron/shared/runner';
 import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
@@ -27,7 +29,7 @@ import {
 import {
   ExperimentalSetupConfigurationSchema,
   OverviewConfigurationSchema,
-  RecordLocationArraySchema,
+  NeuronLocationArraySchema,
   SimulationType,
   StimulationConfigurationSchema,
   SynapseConfigurationArraySchema,
@@ -36,7 +38,6 @@ import {
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useAppNotification } from '@/components/notification';
-import { ROOT_ROUTE } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import {
@@ -50,14 +51,16 @@ import {
   StimulationConfigurationAtomFamily,
   SynaptomeConfigurationAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import { browserHistoryReplace } from '@/utils/browser';
 import { messages } from '@/i18n/en/simulation';
 import { Button } from '@/ui/molecules/button';
+import { classNames } from '@/util/utils';
 import {
   genericSingleNeuronSimulationPlotDataAtomFamily,
   simulationStatusAtomFamily,
 } from '@/state/simulate/single-neuron';
 import { cn } from '@/utils/css-class';
-import { classNames } from '@/util/utils';
+import { ROOT_ROUTE } from '@/config';
 
 import styles from './results-menu.module.css';
 
@@ -70,7 +73,6 @@ type Props = {
 
 export function Menu({ sessionId, modelId, memodelId, type }: Props) {
   const pathname = usePathname();
-  const { replace } = useRouter();
   const breakpoint = useDefaultBreakpoint();
   const queryClient = useQueryClient();
   const queryParams = useSearchParams();
@@ -97,7 +99,7 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
 
   const current = queryParams.get('record') ?? 'all';
   const configError =
-    RecordLocationArraySchema.safeParse(recordLocationConfiguration).error ??
+    NeuronLocationArraySchema.safeParse(recordLocationConfiguration).error ??
     ExperimentalSetupConfigurationSchema.safeParse(experimentalSetupConfiguration).error ??
     StimulationConfigurationSchema.safeParse(stimulationConfiguration).error ??
     OverviewConfigurationSchema.safeParse(overviewConfiguration).error ??
@@ -111,7 +113,7 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
     params.set('record', value);
     params.delete('step');
 
-    replace(`${pathname}?${params.toString()}`);
+    browserHistoryReplace(null, `${pathname}?${params.toString()}`);
   };
 
   const handleSaveSimulation = async () => {
@@ -250,8 +252,8 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
           </div>
         </Button>
         {uniqBy(recordLocationConfiguration, (item) => `${item.section}-${item.offset}`).map(
-          ({ section, offset }, indx) => {
-            const record = `${section}_${offset}`;
+          ({ section, offset, color }, indx) => {
+            const record = `${section}_${offset === 0 ? '0.0' : String(offset)}`;
             return (
               <Button
                 // eslint-disable-next-line react/no-array-index-key
@@ -265,11 +267,17 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
               >
                 <div className="flex w-full items-center justify-between gap-2">
                   <div>{record}</div>
-                  <RightOutlined
-                    className={cn('text-neutral-4 mr-2 [&_svg]:size-3!', {
-                      '-rotate-180 transform text-white!': current === record,
-                    })}
-                  />
+                  <div className="mr-2 ml-auto flex items-center justify-center gap-1">
+                    <div
+                      className="size-3! rounded-full border border-white"
+                      style={{ background: color }}
+                    />
+                    <RightOutlined
+                      className={cn('text-neutral-4 [&_svg]:size-3!', {
+                        '-rotate-180 transform text-white!': current === record,
+                      })}
+                    />
+                  </div>
                 </div>
               </Button>
             );

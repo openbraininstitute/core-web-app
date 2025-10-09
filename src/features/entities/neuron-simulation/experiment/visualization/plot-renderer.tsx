@@ -7,9 +7,10 @@ import { ComponentProps, useMemo } from 'react';
 
 import MultiPlotsView from '@/features/entities/neuron-simulation/experiment/visualization/multi-plots-view';
 import { parsePlots } from '@/features/entities/neuron-simulation/experiment/visualization/plots-parser';
-import type { PlotData } from '@/services/bluenaas-single-cell/types';
-import { exportSingleSimulationResultAsZip } from '@/util/simulation-plotly-to-csv';
+import { exportSingleSimulationResultWithCurrentsAsZip } from '@/util/simulation-plotly-to-csv';
 import { cn } from '@/utils/css-class';
+
+import type { PlotData } from '@/services/bluenaas-single-cell/types';
 
 type PlotConfig = {
   yAxisTitle?: string;
@@ -54,7 +55,6 @@ export default function PlotRenderer({
   isLoading,
   withTitle,
   title,
-  plotConfig,
   isDownloadable = false,
   bordered = false,
   rootClassName,
@@ -65,12 +65,11 @@ export default function PlotRenderer({
   downloadClassName,
 }: Props) {
   const plotInstances = useMemo(() => parsePlots(data), [data]);
-
   const onDownloadPlotDataCsv = () => {
-    exportSingleSimulationResultAsZip({
+    exportSingleSimulationResultWithCurrentsAsZip({
       type,
       name: name ?? 'plots',
-      result: data,
+      plotInstances,
     });
   };
 
@@ -81,7 +80,7 @@ export default function PlotRenderer({
       className={cn('relative mt-4 w-full px-3', rootClassName)}
     >
       <div className={cn('relative w-full p-2', wrapperClassName)}>
-        <div className="mb-5 flex flex-wrap items-start justify-between gap-2">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
           {withTitle && title && (
             <div
               className={cn(
@@ -122,12 +121,12 @@ export default function PlotRenderer({
           )}
         >
           <div id={`graph-wrapper-${name}`} className={cn('h-full w-full', graphWrapperClassName)}>
-            {(isLoading || plotInstances.length === 0) && (
+            {isLoading && (
               <div className="flex w-full justify-center p-8">
                 <Spin size="large" />
               </div>
             )}
-            <MultiPlotsView instances={plotInstances} maxTime={plotConfig?.maxTime ?? 0} />
+            {plotInstances.length > 0 && <MultiPlotsView instances={plotInstances} />}
           </div>
         </div>
       </div>

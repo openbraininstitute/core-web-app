@@ -1,13 +1,12 @@
 import React from 'react';
 import { useAtom } from 'jotai';
 
-import { PlotData } from '../types';
-
-import { PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY } from '../constant';
-import { ExperimentalSetupConfigurationAtomFamily } from '../context';
-import { getSessionKey } from '../helpers';
-
+import { PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { ExperimentalSetupConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { genericSingleNeuronSimulationPlotDataAtomFamily } from '@/state/simulate/single-neuron';
+import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
+
+import type { PlotData } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 const THROTTLE = 1000;
 
@@ -15,23 +14,38 @@ type Type = Record<string, PlotData> | null;
 
 export function useRecordingPlotData(sessionId: string): Type {
   const [recordingPlotData, setRecordingPlotData] = React.useState<Type>(null);
-  const refTimeout = React.useRef<NodeJS.Timeout | null>(null);
-  const refDataToSend = React.useRef<Type>(null);
+  const refInterval = React.useRef<NodeJS.Timeout | null>(null);
+  const refLatestData = React.useRef<Type>(null);
+  const refIsFirstData = React.useRef<boolean>(true);
   const [rawData] = useAtom(genericSingleNeuronSimulationPlotDataAtomFamily(sessionId));
+
+  // update latest data reference whenever rawData changes
   React.useEffect(() => {
-    const handleThrottling = () => {
-      if (refDataToSend.current) {
-        setRecordingPlotData(refDataToSend.current);
-      }
-      refTimeout.current = globalThis.setTimeout(handleThrottling, THROTTLE);
-    };
-    if (!refTimeout.current) {
-      // First call
+    refLatestData.current = rawData;
+
+    // immediately update on first data
+    if (refIsFirstData.current && rawData) {
       setRecordingPlotData(rawData);
-      refTimeout.current = globalThis.setTimeout(handleThrottling, THROTTLE);
+      refIsFirstData.current = false;
     }
-    if (rawData) refDataToSend.current = rawData;
   }, [rawData]);
+
+  // set up throttled update interval (only once)
+  React.useEffect(() => {
+    refInterval.current = globalThis.setInterval(() => {
+      if (refLatestData.current) {
+        setRecordingPlotData(refLatestData.current);
+      }
+    }, THROTTLE);
+
+    return () => {
+      if (refInterval.current) {
+        globalThis.clearInterval(refInterval.current);
+        refInterval.current = null;
+      }
+    };
+  }, []);
+
   return recordingPlotData;
 }
 

@@ -1,8 +1,9 @@
-import authApiClient from '@/api/apiClient';
-import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import { IPerson } from '@/api/entitycore/types/shared/global';
-import { IPersonFilter } from '@/api/entitycore/types/entities/person';
+import { authApiClient } from '@/api/apiClient';
 import { entityCoreUrl } from '@/config';
+
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { IPersonFilter } from '@/api/entitycore/types/entities/agent';
+import type { IPerson } from '@/api/entitycore/types/shared/global';
 
 const baseUri = '/person';
 /**

@@ -1,17 +1,21 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { PlusOutlined } from '@ant-design/icons';
 
+import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute/event';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { useTabs } from '@/components/detail-view-tabs';
+import { Button } from '@/ui/molecules/button';
 import {
   makeSelectEntityClickEvent,
   useMiniDetailView,
 } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
 import { ROOT_ROUTE } from '@/config';
+import { TWorkspaceScope, WorkspaceScope } from '@/constants';
 
 const ExploreSections = {
   Public: 'public',
@@ -147,25 +151,40 @@ function DataTabs() {
 }
 
 export function DataHeader() {
+  const searchParams = useSearchParams();
+  const scope = (searchParams.get('scope') as TWorkspaceScope) ?? WorkspaceScope.Public;
+  const breakpoint = useDefaultBreakpoint();
+
+  const onContribute = () => {
+    makeSelectContributionEntityClickEvent({
+      display: true,
+      entityType: null,
+      sessionId: crypto.randomUUID(),
+    });
+  };
+
   return (
     <div className="flex w-full items-center justify-between gap-4 px-3 [grid-area:header]">
       <div className="flex max-w-1/2 items-center justify-center gap-2">
         <DataTabs />
       </div>
-      {/* <div className="max-w-1/2" id="upload-data-selector" data-testid="upload-data-selector">
-        <Button
-          rounded
-          variant="success"
-          size={breakpoint === 'xl' ? 'lg' : 'md'}
-          type="button"
-          className="px-8"
-        >
-          <div className="flex items-center justify-between gap-5">
-            <span>Upload data</span>
-            <PlusOutlined className="ml-auto text-sm" />
-          </div>
-        </Button>
-      </div> */}
+      {scope === WorkspaceScope.Project && (
+        <div className="max-w-1/2" id="upload-data-selector" data-testid="upload-data-selector">
+          <Button
+            rounded
+            variant="success"
+            size={breakpoint === 'xl' ? 'lg' : 'md'}
+            type="button"
+            className="px-8"
+            onClick={onContribute}
+          >
+            <div className="flex items-center justify-between gap-5">
+              <span>Upload data</span>
+              <PlusOutlined className="ml-auto text-sm" />
+            </div>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

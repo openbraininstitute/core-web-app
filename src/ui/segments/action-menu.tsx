@@ -7,18 +7,18 @@ import NextLink from 'next/link';
 import { useAtom } from 'jotai';
 
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
-import Action from '@/ui/molecules/side-menu-action';
+import { EntityTypeValue } from '@/entity-configuration/domain';
 import { downloadArchive } from '@/services/entity-download';
+import Action from '@/ui/molecules/side-menu-action';
 import {
   EntityCoreExtendedType,
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
-import { ROOT_ROUTE } from '@/config';
-import { EntityTypeValue } from '@/entity-configuration/domain';
 import {
   PanelQueryParam,
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { ROOT_ROUTE } from '@/config';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 

@@ -15,24 +15,24 @@ import styles from '@/features/entities/neuron-simulation/experiment/visualizati
 export interface MultiPlotsViewProps {
   className?: string;
   instances: PlotInstance[];
-  maxTime: number;
 }
 
-export default function MultiPlotsView({ className, instances, maxTime }: MultiPlotsViewProps) {
+export default function MultiPlotsView({ className, instances }: MultiPlotsViewProps) {
   return (
     <div className={classNames(className, styles.multiPlotsView)}>
       {instances.map((instance, index) => {
         const key = instance.title ?? `Plot-${index}`;
-        return <PlotView key={key} instance={instance} maxTime={maxTime} />;
+        return <PlotView key={key} instance={instance} />;
       })}
     </div>
   );
 }
 
-function PlotView({ instance, maxTime }: { instance: PlotInstance; maxTime: number }) {
+function PlotView({ instance }: { instance: PlotInstance }) {
   const [disabledLines, setDisabledLines] = React.useState<string[]>([]);
   const refPlot = React.useRef<HTMLDivElement | null>(null);
   const refContainer = React.useRef<HTMLDivElement | null>(null);
+
   React.useEffect(() => {
     const container = refPlot.current;
     if (!container) return;
@@ -58,6 +58,10 @@ function PlotView({ instance, maxTime }: { instance: PlotInstance; maxTime: numb
     layout.datarevision = performance.now();
     delete layout.height;
     Plotly.react(container, data, layout, PLOT_CONFIG);
+  }, [instance, disabledLines]);
+  React.useEffect(() => {
+    const container = refPlot.current;
+    if (!container) return;
 
     const observer = new ResizeObserver(() => {
       // Redraw the graph after resize
@@ -65,7 +69,7 @@ function PlotView({ instance, maxTime }: { instance: PlotInstance; maxTime: numb
     });
     observer.observe(container);
     return () => observer.unobserve(container);
-  }, [instance, disabledLines]);
+  }, []);
   const handleFullscreen = () => {
     const container = refContainer.current;
     tgdFullscreenToggle(container, { navigationUI: 'show' });
@@ -83,7 +87,6 @@ function PlotView({ instance, maxTime }: { instance: PlotInstance; maxTime: numb
       .filter((item) => item !== name);
     setDisabledLines(newDisabledLines);
   };
-  const progress = resolveProgress(instance, maxTime);
 
   return (
     <div className={styles.plotContainer} ref={refContainer}>
@@ -109,11 +112,6 @@ function PlotView({ instance, maxTime }: { instance: PlotInstance; maxTime: numb
         ))}
       </div>
       <div ref={refPlot} className={styles.plot} />
-      {progress < 100 && maxTime > 0 && (
-        <div className={styles.streaming}>
-          Streaming: <strong>{progress}</strong>%
-        </div>
-      )}
       <button type="button" onClick={handleFullscreen}>
         <FullscreenOutlined />
       </button>
@@ -121,11 +119,11 @@ function PlotView({ instance, maxTime }: { instance: PlotInstance; maxTime: numb
   );
 }
 
-function resolveProgress(instance: PlotInstance, maxTime: number): number {
-  const time = instance.lines.reduce(
-    (prv, cur) => Math.max(prv, cur.x.at(-1) ?? 0),
-    Number.NEGATIVE_INFINITY
-  );
-  const percent = time >= maxTime ? 100 : Math.floor((100 * time) / maxTime);
-  return percent;
-}
+// function resolveProgress(instance: PlotInstance, maxTime: number): number {
+//   const time = instance.lines.reduce(
+//     (prv, cur) => Math.max(prv, cur.x.at(-1) ?? 0),
+//     Number.NEGATIVE_INFINITY
+//   );
+//   const percent = time >= maxTime ? 100 : Math.floor((100 * time) / maxTime);
+//   return percent;
+// }

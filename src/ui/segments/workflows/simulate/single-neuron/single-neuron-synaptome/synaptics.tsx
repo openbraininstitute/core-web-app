@@ -6,12 +6,13 @@ import { Form } from 'antd';
 import sample from 'lodash/sample';
 
 import { SynapticInputItem } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome/item/item';
+import { getSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/queries/model/single-neuron-synaptome';
+import { SimulationColors } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import { sendRemoveSynapses3DEvent } from '@/components/neuron-viewer/hooks/events';
 import {
   SynaptomeConfigurationAtomFamily,
   StimulationConfigurationAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import { getSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/queries/model/single-neuron-synaptome';
-import { sendRemoveSynapses3DEvent } from '@/components/neuron-viewer/hooks/events';
 import {
   getDefaultSynapseConfig,
   getSessionKey,
@@ -21,10 +22,9 @@ import { synapsesPlacementAtom } from '@/state/synaptome';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import {
+  PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
   PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
   PREFIX_FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY,
-  PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
-  SIMULATION_COLORS,
   PROTOCOL_DETAILS,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { Button } from '@/ui/molecules/button';
@@ -141,9 +141,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
       const nextConfig = {
         ...defaultSynapseConfig,
         color:
-          defaultSynapseConfig.color ??
-          sample(SIMULATION_COLORS) ??
-          SIMULATION_COLORS[state.length],
+          defaultSynapseConfig.color ?? sample(SimulationColors) ?? SimulationColors[state.length],
       } as SynapseConfiguration;
 
       // Update global state

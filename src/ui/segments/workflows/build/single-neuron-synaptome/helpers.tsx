@@ -70,3 +70,38 @@ export const label = (text: string, type: 'main' | 'secondary' = 'main', extra?:
     {text} {extra}
   </span>
 );
+
+export const DefaultColor = '#003a8c';
+export const DefaultInjectionColor = '#fff';
+export const SimulationColors = [
+  '#32C14E',
+  '#8AB5FF',
+  '#DC51FF',
+  '#B3A26E',
+  '#F02124',
+  '#32D4C1',
+  '#814BFF',
+  '#E3F750',
+  '#D653C5',
+  '#AD7A14',
+  '#87BB74',
+  '#DFC6AE',
+  '#5778FF',
+  '#81ADE0',
+  '#99FF80',
+  '#FFCF30',
+  '#5193BA',
+  '#DD63CF',
+];
+
+export const DefaultSynapseValue: TSingleNeuronSynaptomeConfiguration = {
+  id: '',
+  name: '',
+  target: undefined,
+  type: 110,
+  formula: '',
+  seed: 100,
+  exclusion_rules: null,
+  soma_synapse_count: 50,
+  color: SimulationColors.at(0) ?? DefaultColor,
+};

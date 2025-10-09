@@ -17,6 +17,7 @@ const FREE_ACCESS_PAGES = [
   '/privacy',
   '/financing',
   '/coming-soon',
+  '/sfn-2025',
   '/the-real-digital-brain-story',
   '/app/documentation',
   '/app/documentation/*',

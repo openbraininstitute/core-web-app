@@ -18,6 +18,7 @@ import { OptionRender } from '@/ui/segments/workflows/simulate/single-neuron/sin
 import { ConfigInputList } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome/item/config-input';
 import { SynaptomeConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { SynapseTypeDictionary } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { DefaultColor } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { getSingleNeuronSynaptomePlacement } from '@/api/small-scale-simulator';
@@ -28,7 +29,7 @@ import {
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 import {
   PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
-  SECTION_TARGET_MAPPING,
+  SectionTargetMapping,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { useAppNotification } from '@/components/notification';
 import { synapsesPlacementAtom } from '@/state/synaptome';
@@ -92,11 +93,11 @@ export function SynapticInputItem({
   const options = synapsesConfiguration.synapses.map((op) => ({
     label: op.name,
     value: op.id,
-    target: SECTION_TARGET_MAPPING[op.target as keyof typeof SECTION_TARGET_MAPPING],
+    target: SectionTargetMapping[op.target as keyof typeof SectionTargetMapping],
     type: find(Object.values(SynapseTypeDictionary), { value: 110 })?.id,
     distribution: op.formula,
     isFormula: 'formula',
-    color: op.color,
+    color: op.color ?? DefaultColor,
   }));
 
   const onHideSynapse = () => {

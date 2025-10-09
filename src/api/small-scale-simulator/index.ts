@@ -1,5 +1,5 @@
 // Small circuit scale
-export { runSimulation as runCircuitSimulation } from './circuit/simulation';
+export { runBatch as runCircuitSimulationBatch } from './circuit/simulation';
 
 // Single neuron scale
 export { createModel as createSingleNeuronSynaptome } from './single-neuron/synaptome';
