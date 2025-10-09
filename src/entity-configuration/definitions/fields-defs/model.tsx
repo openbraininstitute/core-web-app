@@ -349,4 +349,16 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       return EmptyValue;
     },
   },
+  // TODO, add when assets are in the ICM read_many response
+  // [EntityCoreFields.ICMThumbnail]: {
+  //   className: 'text-left',
+  //   title: 'Preview',
+  //   isFilterable: false,
+  //   filter: null,
+  //   isDisplayable: true,
+  //   render: (r) => {
+
+  //     return EmptyValue;
+  //   },
+  // },
 };

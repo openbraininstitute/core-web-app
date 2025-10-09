@@ -83,6 +83,7 @@ export enum EntityCoreFields {
   IsStochastic = 'is_stochastic',
   IsTemperatureDependent = 'is_temperature_dependent',
   TemperatureCelsius = 'temperature_celsius',
+  ICMThumbnail = 'icm_thumbnail',
 }
 
 export type EntityCoreFieldsValue = `${EntityCoreFields}`;
