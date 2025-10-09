@@ -8,7 +8,7 @@ import { useState } from 'react';
 
 import { getScientificArtifactPublicationLinks } from '@/api/entitycore/queries/general/scientific-artifact-publication-link';
 import { PublicationTypeDictionary } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
-import { Card } from '@/features/entities/circuit/elements/publication-item/card';
+import { Card } from '@/ui/segments/explore/circuit/elements/publication-item/card';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import Tabs, { Tab } from '@/ui/molecules/tabbed-page';
 import { keyBuilder } from '@/ui/use-query-keys/data';

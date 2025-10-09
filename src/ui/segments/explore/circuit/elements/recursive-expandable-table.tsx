@@ -8,8 +8,7 @@ import { createExpandableTableConfig } from '@/ui/segments/explore/circuit/eleme
 import { useExpandableTable } from '@/ui/segments/explore/circuit/elements/use-expandable-table';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { ICircuitEnriched } from '@/features/entities/circuit/elements/helpers';
-import type { TCircuitView } from '@/ui/segments/explore/circuit/helpers';
+import type { ICircuitEnriched, TCircuitView } from '@/ui/segments/explore/circuit/helpers';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { WorkspaceContext } from '@/types/common';
 import type { TWorkspaceScope } from '@/constants';

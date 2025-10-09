@@ -1,8 +1,8 @@
-import { Metadata } from '@/features/entities/circuit/elements/publication-item/metadata';
-import { Abstract } from '@/features/entities/circuit/elements/publication-item/abstract';
-import { Header } from '@/features/entities/circuit/elements/publication-item/header';
-import { Authors } from '@/features/entities/circuit/elements/publication-item/authors';
-import { Actions } from '@/features/entities/circuit/elements/publication-item/actions';
+import { Metadata } from '@/ui/segments/explore/circuit/elements/publication-item/metadata';
+import { Abstract } from '@/ui/segments/explore/circuit/elements/publication-item/abstract';
+import { Header } from '@/ui/segments/explore/circuit/elements/publication-item/header';
+import { Authors } from '@/ui/segments/explore/circuit/elements/publication-item/authors';
+import { Actions } from '@/ui/segments/explore/circuit/elements/publication-item/actions';
 
 import type { IPublication } from '@/api/entitycore/types/entities/publication';
 import type { ScientificArtifactBase } from '@/api/entitycore/types/entities/scientific-artifact';

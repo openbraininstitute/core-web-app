@@ -4,13 +4,13 @@ import { unwrap } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
 
 import useExploreColumns from '@/hooks/useExploreColumns';
-import { BaseTable } from '@/components/explore-section/ExploreSectionListingView/ExploreSectionTable';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { activeColumnsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
-import { Error } from '@/features/entities/circuit/elements/error';
+import { Error } from '@/ui/segments/explore/circuit/elements/error';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+import { BaseTable } from '@/ui/segments/data-table/table';
 import { tryCatch } from '@/api/utils';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -122,13 +122,10 @@ export function Root({ circuit }: Props) {
     <BaseTable
       loading={rootCircuit.loading}
       columns={columns}
-      dataContext={{
-        dataScope: ExploreDataScope.NoScope,
-        virtualLabInfo: undefined,
-        dataType: ExtendedEntitiesTypeDict.Circuit,
-      }}
+      dataType={ExtendedEntitiesTypeDict.Circuit}
       dataSource={rootCircuit.record ? [rootCircuit.record] : []}
       onCellClick={onCellClick}
+      wrapperClassname="[&_.ant-table-body]:max-h-full!"
     />
   );
 }

@@ -3,12 +3,12 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { useParams } from 'next/navigation';
 
-import { Subcircuits } from '@/features/entities/circuit/elements/related-circuits/subcircuits';
-import { DerivedFrom } from '@/features/entities/circuit/elements/related-circuits/derived-from';
-import { Derived } from '@/features/entities/circuit/elements/related-circuits/derived';
-import { Parent } from '@/features/entities/circuit/elements/related-circuits/parent';
+import { Subcircuits } from '@/ui/segments/explore/circuit/elements/related-circuits/subcircuits';
+import { DerivedFrom } from '@/ui/segments/explore/circuit/elements/related-circuits/derived-from';
+import { Derived } from '@/ui/segments/explore/circuit/elements/related-circuits/derived';
+import { Parent } from '@/ui/segments/explore/circuit/elements/related-circuits/parent';
 import { useHierarchyAllLevels } from '@/ui/segments/explore/circuit/use-hierarchy';
-import { Root } from '@/features/entities/circuit/elements/related-circuits/root';
+import { Root } from '@/ui/segments/explore/circuit/elements/related-circuits/root';
 import Tabs, { Tab } from '@/ui/molecules/tabbed-page';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
