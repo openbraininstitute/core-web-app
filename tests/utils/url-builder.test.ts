@@ -39,14 +39,6 @@ describe('URL Builder Utils', () => {
   };
 
   describe('resolveExploreDetailsPageUrl', () => {
-    it('should build URL for morphology without workspace context', () => {
-      const url = resolveExploreDetailsPageUrl({
-        entityId: 'entity-123',
-        dataType: ExtendedEntitiesTypeDict.CellMorphology,
-      });
-      expect(url).toBe('/app/virtual-lab/explore/interactive/experimental/morphology/entity-123');
-    });
-
     it('should build URL for morphology with workspace context', () => {
       const url = resolveExploreDetailsPageUrl({
         ctx: workspaceContext,

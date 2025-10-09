@@ -53,11 +53,13 @@ export default function SimulationDetail<T extends GenericSimulation>({
   const [error, setError] = useState<Error | null>(null);
 
   const simulationEntity = getEntityByCoreType({ type: simulation.type });
-  const detailsPageUrl = resolveExploreDetailsPageUrl({
-    ctx: { virtualLabId, projectId },
-    dataType: simulationEntity?.extendedType,
-    entityId: simulation.id,
-  });
+  const detailsPageUrl = simulationEntity
+    ? resolveExploreDetailsPageUrl({
+        ctx: { virtualLabId, projectId },
+        dataType: simulationEntity?.extendedType,
+        entityId: simulation.id,
+      })
+    : '';
 
   useEffect(() => {
     async function getConfigurationAsset() {

@@ -9,6 +9,7 @@ import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { createCellMorphology } from '@/api/entitycore/queries';
 import { createAsset } from '@/api/entitycore/queries/assets';
 import {
+  ContributionSchema,
   getMimeTypeByExtension,
   type TCellMorphologyForm,
 } from '@/ui/segments/contribute/cell-morphology/helpers';
@@ -78,16 +79,18 @@ export const usePipeline = ({ sessionId }: { sessionId: string }) => {
       contribution: TCellMorphologyForm['contribution'];
     }) => {
       return Promise.all(
-        contribution.map((c) =>
-          createContribution({
-            context: { virtualLabId, projectId },
-            contributor: {
-              agent_id: c.agent_id,
-              role_id: c.role_id,
-              entity_id: entityId,
-            },
-          })
-        )
+        contribution
+          .filter((c) => ContributionSchema.safeParse(c).success)
+          .map((c) =>
+            createContribution({
+              context: { virtualLabId, projectId },
+              contributor: {
+                agent_id: c.agent_id!,
+                role_id: c.role_id!,
+                entity_id: entityId,
+              },
+            })
+          )
       );
     },
   });
