@@ -1,10 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 48 48"><!-- Icon from
-    IconPark Outline by ByteDance - https://github.com/bytedance/IconPark/blob/master/LICENSE -->
-    <g fill="none">
-        <path d="M38.168 22.262L19.077 41.354L6.349 28.626L25.44 9.534" clip-rule="evenodd" />
-        <path stroke="currentColor" stroke-linejoin="round" stroke-width="4"
-            d="M38.168 22.262L19.077 41.354L6.349 28.626L25.44 9.534" />
-        <path stroke="currentColor" stroke-linecap="round" stroke-width="4"
-            d="m21.905 5.999l19.8 19.799m-26.871 2.828l4.243 4.243M6.35 41.353l6.363-6.363m19.092-19.092l3.534-3.535" />
-    </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 1024 1024">
+    <path fill="#fc7703"
+        d="M848 359.3H627.7L825.8 109c4.1-5.3.4-13-6.3-13H436c-2.8 0-5.5 1.5-6.9 4L170 547.5c-3.1 5.3.7 12 6.9 12h174.4l-89.4 357.6c-1.9 7.8 7.5 13.3 13.3 7.7L853.5 373c5.2-4.9 1.7-13.7-5.5-13.7" />
 </svg>
