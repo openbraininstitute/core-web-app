@@ -1,7 +1,6 @@
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useCallback } from 'react';
 import { Form } from 'antd';
-
 import capitalize from 'lodash/capitalize';
 import isNil from 'lodash/isNil';
 
@@ -18,6 +17,8 @@ import {
   AgentType,
   type TAgentType,
   type TCellMorphologyForm,
+  TContribution,
+  ContributionSchema,
 } from '@/ui/segments/contribute/cell-morphology/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { Button } from '@/ui/molecules/button';
@@ -76,7 +77,7 @@ export function Contribution() {
   return (
     <div className="my-3">
       <Form.List name="contribution">
-        {(fields, { add, remove }) => {
+        {(fields, { remove }) => {
           return (
             <div className="mt-2 flex flex-col gap-2">
               {fields.map((o) => {
@@ -161,28 +162,6 @@ export function Contribution() {
                       >
                         <DeleteOutlined />
                       </Button>
-                      <Button
-                        type="button"
-                        variant="icon"
-                        rounded
-                        size="lg"
-                        onClick={add}
-                        disabled={
-                          !CellMorphologySchema.shape.contribution.safeParse(
-                            form.getFieldValue(['contribution'])
-                          ).success
-                        }
-                        className={cn(
-                          'text-primary-6 bg-background disabled:bg-neutral-1 hover:bg-neutral-1',
-                          'hover:border-primary-7 hover:text-primary-7 size-12 w-12',
-                          'disabled:text-label shrink-0',
-                          'not-disabled:bg-primary-9 not-disabled:text-white!',
-                          'not-disabled:hover:bg-primary-8'
-                        )}
-                      >
-                        <span className="sr-only">Add Contribution</span>
-                        <PlusOutlined />
-                      </Button>
                     </div>
                   </Card>
                 );
@@ -191,6 +170,37 @@ export function Contribution() {
           );
         }}
       </Form.List>
+      <div className="mt-4 flex items-center justify-end gap-x-2">
+        <Button
+          rounded
+          type="button"
+          variant="outline"
+          size="lg"
+          onClick={() => {
+            const current = form.getFieldValue('contribution') as Array<TContribution>;
+            form.setFieldValue('contribution', [
+              ...current,
+              { agent_type: undefined, agent_id: undefined, role_id: undefined },
+            ]);
+          }}
+          disabled={(() => {
+            const contributions = form.getFieldValue('contribution') as Array<TContribution>;
+            return contributions.some(
+              (contrib) => ContributionSchema.required().safeParse(contrib).success === false
+            );
+          })()}
+          className={cn(
+            'text-primary-6 bg-background disabled:bg-neutral-1 hover:bg-neutral-1',
+            'hover:border-primary-7 hover:text-primary-7 w-max',
+            'disabled:text-label shrink-0',
+            'not-disabled:bg-primary-9 not-disabled:text-white!',
+            'not-disabled:hover:bg-primary-8'
+          )}
+        >
+          <span>Add contribution</span>
+          <PlusOutlined />
+        </Button>
+      </div>
     </div>
   );
 }

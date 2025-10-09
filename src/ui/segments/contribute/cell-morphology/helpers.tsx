@@ -50,6 +50,23 @@ export const AgentType = {
 
 export type TAgentType = (typeof AgentType)[keyof typeof AgentType]['key'];
 
+export const ContributionSchema = z.object({
+  agent_type: z
+    .enum(Object.values(AgentType).map((type) => type.key) as [TAgentType, ...TAgentType[]], {
+      message: 'Contributor type is required',
+    })
+    .optional(),
+  agent_id: z
+    .string({ message: 'Contributor is required' })
+    .uuid({ message: 'Contributor must be a valid UUID' })
+    .optional(),
+  role_id: z
+    .string({ message: 'Role is required' })
+    .uuid({ message: 'Role must be a valid UUID' })
+    .optional(),
+});
+
+export type TContribution = z.infer<typeof ContributionSchema>;
 export const CellMorphologySchema = z.object({
   setup: z.object({
     name: z
@@ -123,35 +140,69 @@ export const CellMorphologySchema = z.object({
     h5: z.instanceof(File),
   }),
   contribution: z
-    .array(
-      z.object({
-        agent_type: z.enum(
-          Object.values(AgentType).map((type) => type.key) as [TAgentType, ...TAgentType[]],
-          { message: 'Contributor type is required' }
-        ),
-        agent_id: z
-          .string({ message: 'Contributor is required' })
-          .uuid()
-          .nonempty({ message: 'Contributor is required' }),
-        role_id: z
-          .string({ message: 'Role is required' })
-          .uuid()
-          .nonempty({ message: 'Role is required' }),
-      })
-    )
+    .array(ContributionSchema)
     .nonempty({ message: 'At least one contributor is required' })
     .superRefine((arr, ctx) => {
+      // check that at least one contribution is fully filled
+      let hasFullyFilledContribution = false;
+      arr.forEach((contrib, idx) => {
+        const filledFields = [contrib.agent_type, contrib.agent_id, contrib.role_id].filter(
+          (field) => !isNil(field) && (typeof field !== 'string' || field !== '')
+        );
+
+        // if partially filled (some fields but not all), it's invalid
+        if (filledFields.length > 0 && filledFields.length < 3) {
+          if (isNil(contrib.agent_type)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'Contributor type is required',
+              path: [idx, 'agent_type'],
+            });
+          }
+          if (isNil(contrib.agent_id) || contrib.agent_id === '') {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'Contributor is required',
+              path: [idx, 'agent_id'],
+            });
+          }
+          if (isNil(contrib.role_id) || contrib.role_id === '') {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'Role is required',
+              path: [idx, 'role_id'],
+            });
+          }
+        }
+
+        // if fully filled, mark that we have at least one valid contribution
+        if (filledFields.length === 3) {
+          hasFullyFilledContribution = true;
+        }
+      });
+
+      // check that we have at least one fully filled contribution
+      if (!hasFullyFilledContribution) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'At least one contribution must be fully filled',
+          path: [],
+        });
+      }
+
+      // check for duplicate contributors (only among filled entries)
       const seen = new Map<string, number>();
       arr.forEach((contrib, idx) => {
-        const id = contrib.agent_id;
-        if (seen.has(id)) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `Duplicate contributor, contributor should be used only once`,
-            path: [idx, 'agent_id'],
-          });
-        } else {
-          seen.set(id, idx);
+        if (contrib.agent_id) {
+          if (seen.has(contrib.agent_id)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Duplicate contributor, contributor should be used only once`,
+              path: [idx, 'agent_id'],
+            });
+          } else {
+            seen.set(contrib.agent_id, idx);
+          }
         }
       });
     }),
