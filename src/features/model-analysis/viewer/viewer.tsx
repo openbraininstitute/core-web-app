@@ -9,32 +9,42 @@ import ImageViewer from '@/features/model-analysis/viewer/image-viewer';
 import PDFViewer from '@/features/model-analysis/viewer/pdf-viewer';
 import { AllowedTypes } from '@/features/model-analysis/viewer/storage';
 
-import type { IValidationConstructedResult } from '@/features/model-analysis/explorer/context';
 import type { TAllowedTypes } from '@/features/model-analysis/viewer/storage';
-import type { IAsset } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreBaseAsset, IAsset } from '@/api/entitycore/types/shared/global';
+import { IEntity } from '@/api/entitycore/types/entities/entity';
+import { TEntityTypeDict } from '@/api/entitycore/types';
 
 type Props = {
-  validationResult: IValidationConstructedResult[number];
+  entity: IEntity & EntityCoreBaseAsset;
+  entityType: TEntityTypeDict;
+  pdfShowPageCount?: boolean;
 };
 
-export default function AssetViewer({ validationResult }: Props) {
+export default function AssetViewer({ entity, entityType, pdfShowPageCount = true }: Props) {
   const content = useCallback(
     (asset: IAsset) => {
       return match({ asset })
         .with({ asset: { content_type: 'application/pdf' } }, () => {
-          return <PDFViewer validationResult={validationResult} asset={asset} />;
+          return (
+            <PDFViewer
+              entityId={entity.id}
+              assetId={asset.id}
+              entityType={entityType}
+              showPageCount={pdfShowPageCount}
+            />
+          );
         })
         .with({ asset: { content_type: P.union('image/png', 'image/jpeg', 'image/jpg') } }, () => {
-          return <ImageViewer validationResult={validationResult} asset={asset} />;
+          return <ImageViewer entityId={entity.id} assetId={asset.id} entityType={entity.type} />;
         })
         .otherwise(() => null);
     },
-    [validationResult]
+    [entity, pdfShowPageCount, entityType]
   );
 
   return (
     <div data-testid="documents-container" className="mt-4 flex flex-col items-center">
-      {validationResult.assets
+      {entity.assets
         ?.filter((o) => AllowedTypes.includes(o.content_type as TAllowedTypes))
         .map((asset) => {
           return (

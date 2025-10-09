@@ -2,19 +2,20 @@ import { Empty, Skeleton } from 'antd';
 import { match, P } from 'ts-pattern';
 import Image from 'next/image';
 
+import kebabCase from 'lodash/kebabCase';
 import { useClientCachedUrl } from '@/features/model-analysis/viewer/storage';
 import { entityCoreUrl } from '@/config';
 
-import type { IValidationConstructedResult } from '@/features/model-analysis/explorer/context';
-import type { IAsset } from '@/api/entitycore/types/shared/global';
+import { TEntityTypeDict } from '@/api/entitycore/types';
 
 type Props = {
-  validationResult: IValidationConstructedResult[number];
-  asset: IAsset;
+  entityId: string;
+  assetId: string;
+  entityType: TEntityTypeDict;
 };
 
-export default function ImageViewer({ validationResult, asset }: Props) {
-  const pdfFileUrl = `${entityCoreUrl}/validation-result/${validationResult.id}/assets/${asset.id}/download`;
+export default function ImageViewer({ entityId, entityType, assetId }: Props) {
+  const pdfFileUrl = `${entityCoreUrl}/${kebabCase(entityType)}/${entityId}/assets/${assetId}/download`;
 
   const {
     cachedUrl,
@@ -22,7 +23,7 @@ export default function ImageViewer({ validationResult, asset }: Props) {
     error,
   } = useClientCachedUrl({
     url: pdfFileUrl,
-    urlKey: `${validationResult.id}/${asset.id}`,
+    urlKey: `${entityId}/${assetId}`,
   });
 
   return match({ cachedUrl, isCaching, error })

@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import ICMRelatedArtifacts from './ion-channel-model';
 import {
   EntityCoreExtendedType,
   getEntityByExtendedType,
@@ -9,6 +10,8 @@ import SynaptomeResults from '@/features/entities/single-neuron-synaptome/detail
 import { EntityTypeValue } from '@/entity-configuration/domain';
 import RelatedCircuits from '@/features/entities/circuit/elements/tabs-content/related-circuits';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 
 export default async function RelatedArtifacts({
   entity,
@@ -20,16 +23,20 @@ export default async function RelatedArtifacts({
   const entityType = getEntityByExtendedType({ type: extendedType });
   if (!entityType) notFound();
 
-  if (extendedType === 'memodel') {
+  if (extendedType === ExtendedEntitiesTypeDict.Memodel) {
     return <MEModelResults modelId={entity.id} />;
   }
 
-  if (extendedType === 'single_neuron_synaptome') {
+  if (extendedType === ExtendedEntitiesTypeDict.SingleNeuronSynaptome) {
     return <SynaptomeResults modelId={entity.id} />;
   }
 
-  if (extendedType === 'circuit') {
+  if (extendedType === ExtendedEntitiesTypeDict.Circuit) {
     return <RelatedCircuits circuit={entity as ICircuit} />;
+  }
+
+  if (extendedType === ExtendedEntitiesTypeDict.IonChannelModel) {
+    return <ICMRelatedArtifacts icm={entity as IonChannelModel} />;
   }
 
   notFound();

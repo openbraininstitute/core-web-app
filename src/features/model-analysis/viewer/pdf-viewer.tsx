@@ -3,28 +3,39 @@
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Empty, Skeleton } from 'antd';
 import { Fragment, useState } from 'react';
+import kebabCase from 'lodash/kebabCase';
 
 import { useClientCachedUrl } from '@/features/model-analysis/viewer/storage';
+
 import { classNames } from '@/util/utils';
 import { entityCoreUrl } from '@/config';
-
-import type { IValidationConstructedResult } from '@/features/model-analysis/explorer/context';
-import type { IAsset } from '@/api/entitycore/types/shared/global';
+import { TEntityTypeDict } from '@/api/entitycore/types';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 type Props = {
-  validationResult: IValidationConstructedResult[number];
-  asset: IAsset;
+  entityType: TEntityTypeDict;
+  entityId: string;
+  assetId: string;
+  showPageCount?: boolean;
+  documentClassName?: string;
+  pageWidth?: number;
 };
 
 const options = {
   standardFontDataUrl: '/standard_fonts/',
 };
 
-export default function PDFViewer({ validationResult, asset }: Props) {
+export default function PDFViewer({
+  entityType,
+  entityId,
+  assetId,
+  showPageCount = true,
+  documentClassName,
+  pageWidth,
+}: Props) {
   const [totalPages, setNumPages] = useState<number>();
-  const pdfFileUrl = `${entityCoreUrl}/validation-result/${validationResult.id}/assets/${asset.id}/download`;
+  const pdfFileUrl = `${entityCoreUrl}/${kebabCase(entityType)}/${entityId}/assets/${assetId}/download`;
 
   const {
     cachedUrl,
@@ -32,7 +43,7 @@ export default function PDFViewer({ validationResult, asset }: Props) {
     error,
   } = useClientCachedUrl({
     url: pdfFileUrl,
-    urlKey: `${validationResult.id}/${asset.id}`,
+    urlKey: `${entityId}/${assetId}`,
   });
 
   const onLoadSuccess = ({ numPages }: { numPages: number }) => setNumPages(numPages);
@@ -61,13 +72,15 @@ export default function PDFViewer({ validationResult, asset }: Props) {
 
   return (
     <Document
-      key={`${validationResult.id}/${asset.id}`}
+      key={`${entityId}/${assetId}`}
       options={options}
       file={cachedUrl}
       loading={<Skeleton.Image active style={{ width: '478.25px', height: '286.945px' }} />}
       renderMode="canvas"
       onLoadSuccess={onLoadSuccess}
-      className={classNames('w-full lg:w-2/3 xl:w-1/2 [&_canvas]:h-auto! [&_canvas]:w-full!')}
+      className={
+        documentClassName ?? classNames('lg:w-2/3 xl:w-1/2 [&_canvas]:h-auto! [&_canvas]:w-full!')
+      }
     >
       {Array.from(new Array(totalPages), (_, index) => (
         <Fragment key={`page_${index + 1}`}>
@@ -77,10 +90,13 @@ export default function PDFViewer({ validationResult, asset }: Props) {
             renderTextLayer={false}
             renderAnnotationLayer={false}
             className="border-primary-8 border"
+            width={pageWidth}
           />
-          <div className="text-center">
-            Page {index + 1} of {totalPages}
-          </div>
+          {showPageCount && (
+            <div className="text-center">
+              Page {index + 1} of {totalPages}
+            </div>
+          )}
         </Fragment>
       ))}
     </Document>

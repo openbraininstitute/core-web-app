@@ -57,6 +57,7 @@ type Props = {
   mainTableProps?: Partial<ComponentProps<typeof MainTable>>;
   miniViewProps?: Partial<ComponentProps<typeof MiniDetailView>>;
   allowDownload?: boolean;
+  extraQueryParams?: Record<string, any>;
 };
 
 export function BrowseEntityScope({
@@ -71,6 +72,7 @@ export function BrowseEntityScope({
   mainTableProps,
   miniViewProps,
   allowDownload,
+  extraQueryParams,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const { mdv, setMdv } = useMiniDetailView();
@@ -111,7 +113,7 @@ export function BrowseEntityScope({
       const [{ workspace, queryParameters }] = queryKey;
       return entity?.api?.query.list?.({
         withFacets: true,
-        filters: { ...queryParameters },
+        filters: { ...queryParameters, ...extraQueryParams },
         context: workspace,
       });
     },

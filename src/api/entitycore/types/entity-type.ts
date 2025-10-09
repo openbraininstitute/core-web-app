@@ -20,6 +20,7 @@ export const EntityTypeDict = {
   SimulationCampaign: 'simulation_campaign',
   Simulation: 'simulation',
   IonChannelModel: 'ion_channel_model',
+  ValidationResult: 'validation_result',
 } as const;
 
 export const EntityTypeWithBrainRegionDict = {
