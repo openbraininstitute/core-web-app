@@ -1,6 +1,6 @@
 import { redirect, notFound } from 'next/navigation';
 import { getEntity } from '@/api/entitycore/queries/general/entity';
-import { resolveExploreDetailsPageUrl2 } from '@/utils/url-builder';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { tryCatch } from '@/api/utils';
 import { resolveWorkspace } from '@/ui/segments/app-setup/helpers';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
@@ -27,7 +27,7 @@ export default async function EntityDetail({ params }: { params: Promise<{ id: s
     }
 
     redirect(
-      resolveExploreDetailsPageUrl2({ ctx: redirectCtx, entityId: id, dataType: entity.type })
+      resolveExploreDetailsPageUrl({ ctx: redirectCtx, entityId: id, dataType: entity.type })
     );
   }
 
@@ -40,7 +40,7 @@ export default async function EntityDetail({ params }: { params: Promise<{ id: s
   if (!group) notFound();
 
   redirect(
-    resolveExploreDetailsPageUrl2({
+    resolveExploreDetailsPageUrl({
       ctx: { virtualLabId: group.virtual_lab_id, projectId: group.project_id },
       entityId: id,
       dataType: entity.type,

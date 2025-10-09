@@ -8,7 +8,7 @@ import { Form } from 'antd';
 import isNil from 'lodash/isNil';
 import { buildCellMorphologyMutationKeys } from '@/ui/segments/contribute/cell-morphology/use-pipeline';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { resolveExploreDetailsPageUrl2 } from '@/utils/url-builder';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import {
   CellMorphologySchema,
@@ -174,7 +174,7 @@ export function SubmitButton({ loading, sessionId }: { loading: boolean; session
   const { CreateCellMorphologyData } = useCreateCellMorphologyStatus({ sessionId });
 
   const detailsUrl = CreateCellMorphologyData?.id
-    ? resolveExploreDetailsPageUrl2({
+    ? resolveExploreDetailsPageUrl({
         ctx: { virtualLabId, projectId },
         entityId: CreateCellMorphologyData.id,
         dataType: ExtendedEntitiesTypeDict.CellMorphology,
