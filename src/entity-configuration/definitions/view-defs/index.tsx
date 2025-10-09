@@ -4,7 +4,7 @@ import pick from 'es-toolkit/compat/pick';
 import get from 'es-toolkit/compat/get';
 
 import { ViewsDefinition as ExperimentalViewDefinition } from '@/entity-configuration/definitions/view-defs/experimental';
-import { ViewsDefinition as ExperimentViewDefinition } from '@/entity-configuration/definitions/view-defs/experiment';
+import { ViewsDefinition as ExperimentViewDefinition } from '@/entity-configuration/definitions/view-defs/experimental/index';
 import { ViewsDefinition as ModelViewDefinition } from '@/entity-configuration/definitions/view-defs/model';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
