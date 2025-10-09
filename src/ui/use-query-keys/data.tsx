@@ -170,4 +170,7 @@ export const keyBuilder = {
     context: WorkspaceContext;
     props: Partial<IScientificArtifactPublicationLinkFilter>;
   }) => [`${prefix}-scientific-artifact-publication-links`, { ...props, ...context }],
+  circuitProperties: ({ circuitId }: { circuitId: string }) => {
+    return [`${prefix}-circuit-properties`, circuitId];
+  },
 };
