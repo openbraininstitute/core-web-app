@@ -4,7 +4,7 @@ import { notFound, useParams } from 'next/navigation';
 import { match, P } from 'ts-pattern';
 import { Suspense } from 'react';
 
-import MorphologyDetailView from '@/features/entities/cell-morphology/detail-view';
+import { CellMorphologyViewer } from '@/features/entities/cell-morphology/detail-view';
 import CentralLoadingSpinner from '@/components/CentralLoadingSpinner';
 import Summary from '@/features/details-view/summary';
 
@@ -35,7 +35,7 @@ export default function DetailView({ type }: Props) {
       },
       () => (
         <Summary dataType={ExtendedEntitiesTypeDict.CellMorphology}>
-          {(detail) => <MorphologyDetailView detail={detail as ICellMorphology} />}
+          {(detail) => <CellMorphologyViewer entity={detail as ICellMorphology} />}
         </Summary>
       )
     )

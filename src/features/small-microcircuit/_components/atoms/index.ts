@@ -10,7 +10,10 @@ import { getCircuitSimulationResult } from '@/api/entitycore/queries/simulation/
 import { TEntityTypeDict } from '@/api/entitycore/types';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/circuit-simulation-execution';
+import {
+  CircuitSimulationExecutionStatus,
+  ICircuitSimulationExecution,
+} from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import { getLatestSimExecStatus } from '@/features/small-microcircuit/_components/utils';
 import { SimExecStatusMap } from '@/features/small-microcircuit/types';
@@ -70,8 +73,7 @@ export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
         const remoteStatusMap = await get(simExecRemoteStatusMapAtom);
         const localStatusMap = get(localStatusMapAtom);
 
-        const simIds = Array.from(new Set([...remoteStatusMap.keys(), ...localStatusMap.keys()]));
-        const statusMap = simIds.reduce((map, simId) => {
+        const statusMap = simulationIds.reduce((map, simId) => {
           const remoteStatus = remoteStatusMap.get(simId);
           const localStatus = localStatusMap.get(simId);
           // If both are set we take the latest possible one,
@@ -80,7 +82,7 @@ export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
           const status =
             remoteStatus && localStatus
               ? getLatestSimExecStatus(remoteStatus, localStatus)
-              : (localStatus ?? remoteStatus);
+              : (localStatus ?? remoteStatus ?? CircuitSimulationExecutionStatus.CREATED);
           return map.set(simId, status);
         }, new Map());
 

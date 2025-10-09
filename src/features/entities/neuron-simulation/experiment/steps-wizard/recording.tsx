@@ -4,6 +4,7 @@ import { useAtomValue } from 'jotai';
 import { DeleteOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import isNil from 'lodash/isNil';
 
+import { NeuronLocationOriginDict } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
 import { useRecordingSourceForSimulation } from '@/state/simulate/categories';
 import { RecordLocation } from '@/types/small-scale-simulator/single-neuron';
@@ -119,6 +120,7 @@ function RecordItem({
 
 export default function Recording() {
   const {
+    state,
     setSource,
     add: addRecordLocation,
     remove: removeRecordLocation,
@@ -150,6 +152,8 @@ export default function Recording() {
             section: sectionNames[0],
             offset: 0.5,
             record_currents: false,
+            origin: NeuronLocationOriginDict.recording,
+            color: getSimulationColor(state.length),
           });
         }}
         disabled={!sectionNames.length}

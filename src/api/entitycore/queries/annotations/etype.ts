@@ -1,5 +1,5 @@
-import authApiClient from '@/api/apiClient';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
+import { authApiClient } from '@/api/apiClient';
 import { entityCoreUrl } from '@/config';
 
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';

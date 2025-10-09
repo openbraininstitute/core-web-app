@@ -5,22 +5,22 @@ import type { WorkspaceContext } from '@/types/common';
 
 type Params = {
   ctx: WorkspaceContext;
-  simulationId: string;
+  simulationIds: string[];
   signal?: AbortSignal;
 };
 
-export async function runSimulation({ ctx, simulationId, signal }: Params) {
+export async function runBatch({ ctx, simulationIds, signal }: Params) {
   const api = await smallScaleSimulatorApi();
 
   return api.post<Response>(
-    '/circuit/simulation/run',
+    '/circuit/simulation/run-batch',
     {
-      queryParams: { simulation_id: simulationId },
       headers: {
         ...getEntityCoreContext(ctx).headers,
         accept: 'application/x-ndjson',
         'Content-Type': 'application/json',
       },
+      body: { simulation_ids: simulationIds },
       signal,
     },
     { asRawResponse: true }

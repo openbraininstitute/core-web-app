@@ -1,9 +1,10 @@
+import z from 'zod';
 import { EntityCoreConfiguration } from '@/entity-configuration/domain';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { AssetLegacyMeta } from '@/api/entitycore/types/shared/legacy';
 import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
-import { Prettify } from '@/utils/type';
+import type { Prettify } from '@/utils/type';
 
 export type EntityCoreDataType =
   (typeof EntityCoreConfiguration)[keyof typeof EntityCoreConfiguration]['type'];
@@ -193,6 +194,13 @@ type Annotation = {
 export interface IAnnotation extends EntityCoreIdentifiable, Annotation {}
 export interface IMType extends IAnnotation {}
 export interface IEType extends IAnnotation {}
+export interface IMTypeClassification
+  extends EntityCoreIdentifiable,
+    Timestamps,
+    EntityAuthorization {
+  mtype_class_id: string;
+  entity_id: string;
+}
 
 export type DirectoryItem = {
   name: string;
@@ -202,6 +210,17 @@ export type DirectoryItem = {
 export type DirectoryListContent = {
   files: Record<string, DirectoryItem>;
 };
+
+// mirror Python Enums
+export const SexEnum = z.enum(['male', 'female', 'unknown'], {
+  message: 'Sex must be male, female, or unknown',
+});
+export type TSex = z.infer<typeof SexEnum>;
+
+export const AgePeriodEnum = z.enum(['prenatal', 'postnatal', 'unknown'], {
+  message: 'Age period must be prenatal, postnatal, or unknown',
+});
+export type TAgePeriod = z.infer<typeof AgePeriodEnum>;
 
 export const Sex = {
   Male: {
@@ -224,8 +243,6 @@ export const SexDictionary = Object.fromEntries(
   [K in keyof typeof Sex]: (typeof Sex)[K]['key'];
 };
 
-export type TSex = (typeof SexDictionary)[keyof typeof SexDictionary];
-
 export const AgePeriod = {
   Prenatal: {
     key: 'prenatal',
@@ -246,8 +263,6 @@ export const AgePeriodDictionary = Object.fromEntries(
 ) as {
   [K in keyof typeof AgePeriod]: (typeof AgePeriod)[K]['key'];
 };
-
-export type TAgePeriod = (typeof AgePeriodDictionary)[keyof typeof AgePeriodDictionary];
 
 type Strain = {
   name: string;

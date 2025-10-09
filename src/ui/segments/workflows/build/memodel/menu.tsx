@@ -8,31 +8,34 @@ import {
   WarningFilled,
 } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import get from 'lodash/get';
-import kebabCase from 'lodash/kebabCase';
-import omit from 'lodash/omit';
-import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useRouter } from '@bprogress/next';
 import { z } from 'zod';
+
+import kebabCase from 'lodash/kebabCase';
+import delay from 'lodash/delay';
+import omit from 'lodash/omit';
+import get from 'lodash/get';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { createModel } from '@/api/small-scale-simulator/single-neuron/single-neuron';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { CreateSingleNeuronSchema } from '@/api/small-scale-simulator/types';
-import { useAppNotification } from '@/components/notification';
-import { ROOT_ROUTE } from '@/config';
-import { LOW_FUNDS_ERROR_CODE, messages } from '@/i18n/en/me-model';
-import { WorkspaceContextSchema } from '@/types/common';
+import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { LOW_FUNDS_ERROR_CODE, messages } from '@/i18n/en/me-model';
+import { useAppNotification } from '@/components/notification';
+import { WorkspaceContextSchema } from '@/types/common';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import {
   BuildStep,
   BuildStepKeys,
   useBuildMeModelSessionState,
 } from '@/ui/segments/workflows/build/memodel/helpers';
-import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
+import { browserHistoryReplace } from '@/utils/browser';
 import { cn } from '@/utils/css-class';
+import { ROOT_ROUTE } from '@/config';
 import { log } from '@/utils/logger';
 
 const CreateSingleNeuronContextSchema = CreateSingleNeuronSchema.merge(WorkspaceContextSchema);
@@ -40,10 +43,12 @@ type TCreateSingleNeuronContext = z.infer<typeof CreateSingleNeuronContextSchema
 
 export function Menu({ sessionId }: { sessionId: string }) {
   const breakpoint = useDefaultBreakpoint();
-  const queryClient = useQueryClient();
+  const notification = useAppNotification();
   const searchParams = useSearchParams();
-  const { replace } = useRouter();
+  const pathname = usePathname();
+  const queryClient = useQueryClient();
   const { virtualLabId, projectId } = useWorkspace();
+  const { push: navigate } = useRouter();
   const step = searchParams.get('step');
 
   const { sessionValue } = useBuildMeModelSessionState({
@@ -56,9 +61,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
     const query = new URLSearchParams(searchParams);
     query.set('step', s);
 
-    replace(
-      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/memodel?${query.toString()}`
-    );
+    browserHistoryReplace(null, `${pathname}?${query.toString()}`);
   };
 
   const payload: Partial<TCreateSingleNeuronContext> = {
@@ -81,32 +84,24 @@ export function Menu({ sessionId }: { sessionId: string }) {
       ctx: { virtualLabId, projectId },
     });
   };
-  const notification = useAppNotification();
+
   const mutate = useMutation({
     mutationFn: buildMeModel,
     onSuccess: (data) => {
       notification.success({
         message: messages.CreationModelSucceed,
-        description: (
-          <div>
-            <Link
-              onClick={() => {
-                notification.destroy('model-saved');
-              }}
-              href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.Memodel)}/${data.data.id}`}
-              className="text-primary-6 hover:underline"
-            >
-              Go to model details
-            </Link>
-          </div>
-        ),
         onClick: () => {
           notification.destroy('model-saved');
         },
         placement: 'topRight',
         key: 'model-saved',
-        duration: 10,
+        duration: 3,
       });
+      delay(() => {
+        navigate(
+          `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.Memodel)}/${data.data.id}`
+        );
+      }, 500);
     },
     onError(err) {
       log('error', 'Build me-model failed:', err);

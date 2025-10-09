@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useEffect, type JSX } from 'react';
+import { useMemo, useEffect, type JSX, useState } from 'react';
 import { motion } from 'motion/react';
 import {
   MinusOutlined,
@@ -9,16 +9,15 @@ import {
   PlusOutlined,
 } from '@ant-design/icons';
 
-import { PANEL_STATE, TPanelState, usePanelState } from './hooks';
-
-import { cn } from '@/utils/css-class';
 import AiAssistant from '@/components/ai-assistant';
-
-import styles from './container.module.css';
+import { PANEL_STATE, TPanelState, usePanelState } from '@/ui/segments/ai/hooks';
+import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
+import { cn } from '@/utils/css-class';
+import styles from '@/ui/segments/ai/container.module.css';
 
 export function Container(): JSX.Element {
   const { state, setState, isCollapsed, isExpanded, isFullscreen } = usePanelState();
-
+  const [animationComplete, setAnimationComplete] = useState(false);
   useEffect(() => {
     if (isFullscreen) {
       document.body.style.overflow = 'hidden';
@@ -45,6 +44,7 @@ export function Container(): JSX.Element {
   }, [isFullscreen, isExpanded, isCollapsed]);
 
   function beginTransition(next: TPanelState) {
+    setAnimationComplete(false);
     setState(next);
   }
 
@@ -53,10 +53,11 @@ export function Container(): JSX.Element {
       id="workspace-ai"
       className={cn(
         styles.aiPanel,
-        'rounded-2xl! text-white [grid-area:ai]',
-        { 'text-primary-9 mr-3 bg-white': isExpanded },
+        'text-white [grid-area:ai]',
+        { 'text-primary-9 mr-3 rounded-lg! bg-white': isExpanded },
         { 'text-primary-9 my-2 bg-white shadow-lg': isFullscreen },
-        { 'bg-primary-9 border-primary-9 mr-3 text-white shadow-md': isCollapsed }
+        { 'bg-primary-9 border-primary-9 mr-3 text-white shadow-md': isCollapsed },
+        { 'rounded-full!': isCollapsed && animationComplete }
       )}
       animate={{
         width: targetWidth,
@@ -68,7 +69,8 @@ export function Container(): JSX.Element {
         zIndex: isFullscreen ? 500 : 10,
       }}
       initial={false}
-      transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+      transition={{ ease: ['easeIn', 'easeOut'], stiffness: 260, damping: 30 }}
+      onAnimationComplete={() => setAnimationComplete(true)}
     >
       {isCollapsed ? (
         <button
@@ -122,7 +124,9 @@ export function Container(): JSX.Element {
             </div>
           </div>
           <div className="relative flex-1 border-none">
-            <AiAssistant section="explore" fullscreen={isFullscreen} />
+            <HydrateWrapper>
+              <AiAssistant section="explore" fullscreen={isFullscreen} />
+            </HydrateWrapper>
           </div>
         </div>
       )}

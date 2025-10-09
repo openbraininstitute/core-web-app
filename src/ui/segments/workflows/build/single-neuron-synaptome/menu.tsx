@@ -1,5 +1,8 @@
 'use client';
 
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useRouter } from '@bprogress/next';
 import {
   CheckCircleFilled,
   LoadingOutlined,
@@ -7,43 +10,39 @@ import {
   SettingFilled,
   WarningFilled,
 } from '@ant-design/icons';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import isNil from 'lodash/isNil';
-import kebabCase from 'lodash/kebabCase';
-import omit from 'lodash/omit';
-import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { z } from 'zod';
 
-import { SingleNeuronSynaptomeBaseSchema } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import kebabCase from 'lodash/kebabCase';
+import isNil from 'lodash/isNil';
+import delay from 'lodash/delay';
+
+import { SynapseSetMenuItems } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-set-menu-item';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { tryCatch } from '@/api/utils';
-import { useAppNotification } from '@/components/notification';
-import { ROOT_ROUTE } from '@/config';
-import { DEFAULT_SYNAPSE_VALUE } from '@/features/entities/single-neuron-synaptome/build/elements/synapse-config-form';
-import { messages } from '@/i18n/en/synaptome';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { createSingleNeuronSynaptome } from '@/api/small-scale-simulator';
+import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
 import {
   BuildStep,
   BuildStepKeys,
+  DefaultSynapseValue,
   useBuildSingleNeuronSynaptomeSessionState,
 } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import { SynapseSetMenuItems } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-set-menu-item';
-import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import {
+  SingleNeuronSynaptomeBaseSchema,
+  SingleNeuronSynaptomeConfigurationSchema,
+} from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import { useAppNotification } from '@/components/notification';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { browserHistoryReplace } from '@/utils/browser';
+import { messages } from '@/i18n/en/synaptome';
+import { Button } from '@/ui/molecules/button';
+import { tryCatch } from '@/api/utils';
 import { cn } from '@/utils/css-class';
+import { ROOT_ROUTE } from '@/config';
 
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import { createSingleNeuronSynaptome } from '@/api/small-scale-simulator';
-import { CreateSingleNeuronSynaptomeSchema } from '@/api/small-scale-simulator/types';
-import { WorkspaceContextSchema } from '@/types/common';
-
-const CreateSingleNeuronSynaptomeContextSchema =
-  CreateSingleNeuronSynaptomeSchema.merge(WorkspaceContextSchema);
-type TCreateSingleNeuronSynaptomeContext = z.infer<typeof CreateSingleNeuronSynaptomeContextSchema>;
 
 type Props = { sessionId: string };
 
@@ -60,8 +59,8 @@ export function Menu({ sessionId }: Props) {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const pathname = usePathname();
-  const { replace } = useRouter();
   const { virtualLabId, projectId } = useWorkspace();
+  const { push: navigate } = useRouter();
   const step = searchParams.get('step');
 
   const { sessionValue, setSessionValue } = useBuildSingleNeuronSynaptomeSessionState({
@@ -72,20 +71,19 @@ export function Menu({ sessionId }: Props) {
     const query = new URLSearchParams(searchParams);
     query.set('step', s);
 
-    replace(
-      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/${kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSynaptome)}?${query.toString()}`
-    );
+    browserHistoryReplace(null, `${pathname}?${query.toString()}`);
   };
 
   const onAdd = () => {
+    const queryParams = new URLSearchParams(searchParams);
+    queryParams.set('step', BuildStep.SynapseSet);
+
     if ((sessionValue?.synapseSets?.size ?? 0) <= 0) {
       const id = crypto.randomUUID();
-      const queryParams = new URLSearchParams(searchParams);
       queryParams.set('set', id);
-      queryParams.set('step', BuildStep.SynapseSet);
       const synapseSetsMap = new Map<string, TSingleNeuronSynaptomeConfiguration>([]);
       synapseSetsMap.set(id, {
-        ...DEFAULT_SYNAPSE_VALUE,
+        ...DefaultSynapseValue,
         id,
         seed: 100,
       });
@@ -95,8 +93,9 @@ export function Menu({ sessionId }: Props) {
         seed: sessionValue?.seed ?? 100,
         synapseSets: synapseSetsMap,
       });
-      replace(`${pathname}?${queryParams.toString()}`);
     }
+
+    browserHistoryReplace(null, `${pathname}?${queryParams.toString()}`);
   };
 
   const validSetsCount = Array.from(sessionValue?.synapseSets?.values() ?? [])?.filter(
@@ -110,32 +109,41 @@ export function Menu({ sessionId }: Props) {
     seed: sessionValue?.seed,
   }).success;
 
-  const payload: Partial<TCreateSingleNeuronSynaptomeContext> = {
-    virtualLabId,
-    projectId,
-    name: sessionValue?.name,
-    description: sessionValue?.description || '',
-    memodel_id: sessionValue?.memodel?.id,
-    seed: sessionValue?.seed,
-    brain_region_id: sessionValue?.memodel?.brain_region?.id,
-    config: { synapses: Array.from(sessionValue?.synapseSets?.values() ?? []).map((o) => o) },
-  };
-
   const buildSynaptome = async () => {
-    const validatedPayload = await CreateSingleNeuronSynaptomeContextSchema.parseAsync(payload);
+    const validateMainFormData = mainFormSchema.safeParse({
+      name: sessionValue?.name,
+      description: sessionValue?.description,
+      me_model_id: sessionValue?.memodel?.id,
+      seed: sessionValue?.seed,
+    }).data;
 
-    const { data, error } = await tryCatch(
-      createSingleNeuronSynaptome({
-        ctx: { virtualLabId, projectId },
-        modelInfo: omit(validatedPayload, ['virtualLabId', 'projectId']),
-      })
+    const validationPromises = Array.from(sessionValue?.synapseSets?.entries() ?? []).map(
+      ([, value]) => SingleNeuronSynaptomeConfigurationSchema.safeParseAsync(value)
     );
+    const sets = (await Promise.all(validationPromises)).filter((o) => o.success);
 
-    if (error) throw new Error(messages.CreateSynaptomeEntityFailed);
+    if (validateMainForm) {
+      const { data, error } = await tryCatch(
+        createSingleNeuronSynaptome({
+          ctx: { virtualLabId, projectId },
+          modelInfo: {
+            name: validateMainFormData?.name!,
+            description: validateMainFormData?.description || '',
+            seed: validateMainFormData?.seed!,
+            memodel_id: validateMainFormData?.me_model_id!,
+            brain_region_id: sessionValue?.memodel?.brain_region?.id!,
+            config: {
+              synapses: sets.map((o) => o.data),
+            },
+          },
+        })
+      );
+      if (error) throw new Error(messages.CreateSynaptomeEntityFailed);
 
-    return {
-      entity: data.data,
-    };
+      return {
+        entity: data.data,
+      };
+    }
   };
 
   const mutate = useMutation({
@@ -143,26 +151,18 @@ export function Menu({ sessionId }: Props) {
     onSuccess: (data) => {
       notification.success({
         message: messages.CreationModelSucceed,
-        description: (
-          <div>
-            <Link
-              onClick={() => {
-                notification.destroy('model-saved');
-              }}
-              href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSynaptome)}/${data?.entity.id}`}
-              className="text-primary-6 hover:underline"
-            >
-              Go to model details
-            </Link>
-          </div>
-        ),
         onClick: () => {
           notification.destroy('model-saved');
         },
         placement: 'topRight',
         key: 'model-saved',
-        duration: 10,
+        duration: 3,
       });
+      delay(() => {
+        navigate(
+          `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSynaptome)}/${data?.entity.id}`
+        );
+      }, 500);
     },
     onError: (error) => {
       const errorMessage =

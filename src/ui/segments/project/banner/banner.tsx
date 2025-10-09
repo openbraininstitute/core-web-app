@@ -1,8 +1,9 @@
 'use client';
 
 import { CheckOutlined, CloseOutlined, EditOutlined, LoadingOutlined } from '@ant-design/icons';
-import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
-import { useRef, useState, type ReactElement } from 'react';
+import { useMutation, useSuspenseQuery } from '@tanstack/react-query';
+import { useRef, useState, useEffect, type ReactElement } from 'react';
+import { motion, transform, useAnimate } from 'motion/react';
 import { Form, Input, type FormProps } from 'antd';
 import { z } from 'zod';
 import delay from 'lodash/delay';
@@ -31,12 +32,10 @@ type ProjectFormValues = z.infer<typeof projectFormSchema>;
 
 export function ProjectCard(): ReactElement {
   const { virtualLabId, projectId } = useWorkspace();
-  const queryClient = useQueryClient();
   const [form] = Form.useForm<ProjectFormValues>();
 
-  const queryKey = keyBuilder.getOne({ virtualLabId, projectId });
-  const { data: result } = useSuspenseQuery({
-    queryKey,
+  const { data: result, refetch } = useSuspenseQuery({
+    queryKey: keyBuilder.getOne({ virtualLabId, projectId }),
     queryFn: () => getProject({ virtualLabId, projectId }),
   });
 
@@ -44,6 +43,54 @@ export function ProjectCard(): ReactElement {
   const [isEditing, setIsEditing] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
   const nameRef = useRef<any>(null);
+
+  // Animation for name character counter
+  const maxNameLength = 60;
+  const nameValue = Form.useWatch('name', form) || '';
+  const nameCharactersRemaining = maxNameLength - nameValue.length;
+  const [nameCounterRef, animateName] = useAnimate();
+
+  const mapNameRemainingToColor = transform([10, 20], ['#e7000b', '#ffffff']);
+
+  useEffect(() => {
+    if (!isEditing || nameCharactersRemaining > 20) return;
+    const mapRemainingToSpringVelocity = transform([0, 20], [50, 0]);
+
+    animateName(
+      nameCounterRef.current,
+      { scale: 1 },
+      {
+        type: 'spring',
+        velocity: mapRemainingToSpringVelocity(nameCharactersRemaining),
+        stiffness: 700,
+        damping: 80,
+      }
+    );
+  }, [animateName, nameCharactersRemaining, isEditing]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Animation for description character counter
+  const maxDescriptionLength = 600;
+  const descriptionValue = Form.useWatch('description', form) || '';
+  const descriptionCharactersRemaining = maxDescriptionLength - descriptionValue.length;
+  const [descriptionCounterRef, animateDescription] = useAnimate();
+
+  const mapDescriptionRemainingToColor = transform([50, 150], ['#e7000b', '#ffffff']);
+
+  useEffect(() => {
+    if (!isEditing || descriptionCharactersRemaining > 150) return;
+    const mapRemainingToSpringVelocity = transform([0, 100], [50, 0]);
+
+    animateDescription(
+      descriptionCounterRef.current,
+      { scale: 1 },
+      {
+        type: 'spring',
+        velocity: mapRemainingToSpringVelocity(descriptionCharactersRemaining),
+        stiffness: 700,
+        damping: 80,
+      }
+    );
+  }, [animateDescription, descriptionCharactersRemaining, isEditing]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { mutateAsync, isPending, variables } = useMutation({
     mutationFn: (payload: TCardContent) =>
@@ -54,7 +101,7 @@ export function ProjectCard(): ReactElement {
       }),
 
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey });
+      refetch();
     },
   });
 
@@ -75,9 +122,6 @@ export function ProjectCard(): ReactElement {
 
   const handleSave: FormProps<ProjectFormValues>['onFinish'] = async (values) => {
     await mutateAsync(values);
-    await queryClient.invalidateQueries({
-      queryKey: keyBuilder.listWorkspaceProjects({ virtualLabId }),
-    });
     setIsEditing(false);
   };
 
@@ -164,27 +208,50 @@ export function ProjectCard(): ReactElement {
         <div className="h-full w-full p-6 md:w-[calc(100%-6px)] md:pt-20 lg:p-6 lg:md:w-[calc(var(--container-2xl)-14px)] xl:max-w-3xl">
           <div className="mb-2 lg:mb-6">
             {isEditing ? (
-              <Form.Item
-                name="name"
-                rules={[
-                  { required: true, message: 'Name is required' },
-                  { max: 60, message: 'Name must be less than 60 characters' },
-                ]}
-                initialValue={result.data.project.name}
-              >
-                <Input.TextArea
-                  id="project-name"
-                  ref={nameRef}
+              <div className="relative">
+                <Form.Item
+                  name="name"
+                  rules={[
+                    { required: true, message: 'Name is required' },
+                    { max: maxNameLength, message: 'Name must be less than 60 characters' },
+                  ]}
+                  initialValue={result.data.project.name}
+                >
+                  <Input.TextArea
+                    id="project-name"
+                    ref={nameRef}
+                    className={cn(
+                      'w-full resize-none rounded-lg border border-white/20 p-3 text-lg font-bold text-white placeholder-white/60 backdrop-blur-sm transition-all duration-300',
+                      'min-h-auto placeholder:text-sm hover:bg-transparent! focus:bg-white/15 focus:ring-1 focus:ring-white/30 focus:outline-none lg:text-xl',
+                      '[&.ant-input-outlined]:bg-transparent! [&.ant-input-outlined]:hover:bg-transparent!'
+                    )}
+                    placeholder="Enter title..."
+                    rows={1}
+                    maxLength={maxNameLength}
+                    autoSize
+                  />
+                </Form.Item>
+                <div
                   className={cn(
-                    'w-full resize-none rounded-lg border border-white/20 p-3 text-lg font-bold text-white placeholder-white/60 backdrop-blur-sm transition-all duration-300',
-                    'min-h-auto placeholder:text-sm hover:bg-transparent! focus:bg-white/15 focus:ring-1 focus:ring-white/30 focus:outline-none lg:text-xl',
-                    '[&.ant-input-outlined]:bg-transparent! [&.ant-input-outlined]:hover:bg-transparent!'
+                    'pointer-events-none absolute top-1 right-1 flex size-9',
+                    'items-center justify-center rounded-full bg-white/30 backdrop-blur-md'
                   )}
-                  placeholder="Enter title..."
-                  rows={1}
-                  autoSize
-                />
-              </Form.Item>
+                >
+                  <motion.span
+                    ref={nameCounterRef}
+                    style={{
+                      color: mapNameRemainingToColor(nameCharactersRemaining),
+                      willChange: 'transform',
+                      display: 'inline-block',
+                      fontSize: '0.875rem',
+                      fontWeight: 500,
+                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
+                    }}
+                  >
+                    {nameCharactersRemaining}
+                  </motion.span>
+                </div>
+              </div>
             ) : (
               <h1 className="text-xl leading-tight font-bold text-white transition-all duration-300 lg:text-2xl xl:text-3xl">
                 {isPending ? variables?.name : result.data.project.name}
@@ -194,23 +261,51 @@ export function ProjectCard(): ReactElement {
 
           <div>
             {isEditing ? (
-              <Form.Item
-                name="description"
-                initialValue={result.data.project.description}
-                rules={[{ max: 600, message: 'Description must be less than 600 characters' }]}
-              >
-                <Input.TextArea
-                  id="project-description"
+              <div className="relative">
+                <Form.Item
+                  name="description"
+                  initialValue={result.data.project.description}
+                  rules={[
+                    {
+                      max: maxDescriptionLength,
+                      message: 'Description must be less than 600 characters',
+                    },
+                  ]}
+                >
+                  <Input.TextArea
+                    id="project-description"
+                    className={cn(
+                      'w-full resize-y rounded-lg border border-white/20 p-2 text-base text-white/90 placeholder-white/60 backdrop-blur-sm',
+                      'transition-all duration-300 placeholder:text-sm focus:bg-white/15 focus:ring-1 focus:ring-white/30 focus:outline-none lg:text-lg',
+                      '[&.ant-input-outlined]:bg-transparent! [&.ant-input-outlined]:hover:bg-transparent!'
+                    )}
+                    placeholder="Enter description..."
+                    rows={4}
+                    maxLength={maxDescriptionLength}
+                    autoSize={{ minRows: 4, maxRows: 10 }}
+                  />
+                </Form.Item>
+                <div
                   className={cn(
-                    'w-full resize-y rounded-lg border border-white/20 p-2 text-base text-white/90 placeholder-white/60 backdrop-blur-sm',
-                    'transition-all duration-300 placeholder:text-sm focus:bg-white/15 focus:ring-1 focus:ring-white/30 focus:outline-none lg:text-lg',
-                    '[&.ant-input-outlined]:bg-transparent! [&.ant-input-outlined]:hover:bg-transparent!'
+                    'pointer-events-none absolute top-1 right-1 flex size-9',
+                    'items-center justify-center rounded-full bg-white/30 backdrop-blur-md'
                   )}
-                  placeholder="Enter description..."
-                  rows={4}
-                  autoSize={{ minRows: 4, maxRows: 10 }}
-                />
-              </Form.Item>
+                >
+                  <motion.span
+                    ref={descriptionCounterRef}
+                    style={{
+                      color: mapDescriptionRemainingToColor(descriptionCharactersRemaining),
+                      willChange: 'transform',
+                      display: 'inline-block',
+                      fontSize: '0.875rem',
+                      fontWeight: 500,
+                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
+                    }}
+                  >
+                    {descriptionCharactersRemaining}
+                  </motion.span>
+                </div>
+              </div>
             ) : (
               <ExpandableText
                 id="project-description-text"

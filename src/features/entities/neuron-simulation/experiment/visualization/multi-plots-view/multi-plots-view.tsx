@@ -1,7 +1,7 @@
+import React from 'react';
 import { FullscreenOutlined } from '@ant-design/icons';
 import { tgdFullscreenToggle } from '@bbp/morphoviewer';
 import Plotly from 'plotly.js-dist-min';
-import React from 'react';
 
 import {
   PLOT_CONFIG,
@@ -32,6 +32,7 @@ function PlotView({ instance }: { instance: PlotInstance }) {
   const [disabledLines, setDisabledLines] = React.useState<string[]>([]);
   const refPlot = React.useRef<HTMLDivElement | null>(null);
   const refContainer = React.useRef<HTMLDivElement | null>(null);
+
   React.useEffect(() => {
     const container = refPlot.current;
     if (!container) return;
@@ -41,7 +42,9 @@ function PlotView({ instance }: { instance: PlotInstance }) {
         x: line.x,
         y: line.y,
         name: line.name,
-        'line.color': line.color,
+        line: {
+          color: line.color,
+        },
         visible: !disabledLines.includes(line.name),
       };
       return item;
@@ -52,9 +55,21 @@ function PlotView({ instance }: { instance: PlotInstance }) {
     if (!layout.yaxis) layout.yaxis = { title: instance.yaxis };
     else layout.yaxis.title = instance.yaxis;
     layout.showlegend = false;
+    layout.datarevision = performance.now();
     delete layout.height;
-    Plotly.newPlot(container, data, layout, PLOT_CONFIG);
+    Plotly.react(container, data, layout, PLOT_CONFIG);
   }, [instance, disabledLines]);
+  React.useEffect(() => {
+    const container = refPlot.current;
+    if (!container) return;
+
+    const observer = new ResizeObserver(() => {
+      // Redraw the graph after resize
+      Plotly.relayout(container, {});
+    });
+    observer.observe(container);
+    return () => observer.unobserve(container);
+  }, []);
   const handleFullscreen = () => {
     const container = refContainer.current;
     tgdFullscreenToggle(container, { navigationUI: 'show' });
@@ -79,11 +94,11 @@ function PlotView({ instance }: { instance: PlotInstance }) {
       <div className={styles.legend}>
         {instance.lines.map((line) => (
           <button
+            className={classNames(disabledLines.includes(line.name) && styles.disabled)}
             key={line.name}
             type="button"
             style={{
               '--custom-color': line.color,
-              opacity: disabledLines.includes(line.name) ? 0.5 : 1,
             }}
             onClick={() => toggleLine(line.name)}
             onDoubleClick={(evt: React.MouseEvent) => {
@@ -103,3 +118,12 @@ function PlotView({ instance }: { instance: PlotInstance }) {
     </div>
   );
 }
+
+// function resolveProgress(instance: PlotInstance, maxTime: number): number {
+//   const time = instance.lines.reduce(
+//     (prv, cur) => Math.max(prv, cur.x.at(-1) ?? 0),
+//     Number.NEGATIVE_INFINITY
+//   );
+//   const percent = time >= maxTime ? 100 : Math.floor((100 * time) / maxTime);
+//   return percent;
+// }

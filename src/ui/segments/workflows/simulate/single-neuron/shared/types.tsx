@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import isNil from 'lodash/isNil';
 
+import { DefaultColor } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+
 export const StimulationMode = {
   CurrentClamp: {
     label: 'Current Clamp',
@@ -184,7 +186,14 @@ export const StimulationConfigurationSchema = z.object({
 
 export type TStimulationConfiguration = z.infer<typeof StimulationConfigurationSchema>;
 
-export const RecordLocationSchema = z.object({
+export const NeuronLocationOriginSchema = z.enum(['injection', 'recording']);
+export type TNeuronLocationOrigin = z.infer<typeof NeuronLocationOriginSchema>;
+
+export const NeuronLocationOriginDict = Object.fromEntries(
+  NeuronLocationOriginSchema.options.map((value) => [value, value])
+) as Record<TNeuronLocationOrigin, TNeuronLocationOrigin>;
+
+export const NeuronLocationSchema = z.object({
   section: z.string({ message: 'Recording section name is required' }),
   offset: z
     .number({
@@ -199,13 +208,15 @@ export const RecordLocationSchema = z.object({
       'Recording position offset must be between 0 and 1 (0 = start of section, 1 = end of section)'
     ),
   record_currents: z.boolean(),
+  color: z.string().optional(),
+  origin: NeuronLocationOriginSchema,
 });
 
-export type RecordLocation = z.infer<typeof RecordLocationSchema>;
+export type NeuronLocation = z.infer<typeof NeuronLocationSchema>;
 
-export const RecordLocationArraySchema = z.array(RecordLocationSchema);
+export const NeuronLocationArraySchema = z.array(NeuronLocationSchema);
 
-export type RecordLocationArray = z.infer<typeof RecordLocationArraySchema>;
+export type NeuronLocationArray = z.infer<typeof NeuronLocationArraySchema>;
 
 export const SynapseConfigSchema = z.object({
   id: z.string(),
@@ -242,7 +253,7 @@ export const SynapseConfigSchema = z.object({
       message: 'Synapse frequency is required',
     }),
   weight_scalar: z.number({ message: 'Synapse weight scalar is required and must be a number' }),
-  color: z.string({ message: 'Synapse color is required' }),
+  color: z.string({ message: 'Synapse color is required' }).default(DefaultColor).optional(),
 });
 
 export const OverviewConfigurationSchema = z.object({

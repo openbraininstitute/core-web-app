@@ -177,6 +177,21 @@ export function DownloadIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+export function DownloadAsBoxIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
+      <path
+        fill="currentColor"
+        d="M21.086 8.804v2.21a.75.75 0 1 1-1.5 0v-2.21a2 2 0 0 0-.13-.76l-7.3 4.38v8.19q.172-.051.33-.14l2.53-1.4a.75.75 0 0 1 1 .29a.75.75 0 0 1-.3 1l-2.52 1.4a3.72 3.72 0 0 1-3.62 0l-6-3.3a3.79 3.79 0 0 1-1.92-3.27v-6.39c0-.669.18-1.325.52-1.9q.086-.155.2-.29l.12-.15a3.45 3.45 0 0 1 1.08-.93l6-3.31a3.81 3.81 0 0 1 3.62 0l6 3.31c.42.231.788.548 1.08.93a1 1 0 0 1 .12.15q.113.135.2.29a3.64 3.64 0 0 1 .49 1.9"
+      />
+      <path
+        fill="currentColor"
+        d="m22.196 17.624l-2 2a1.2 1.2 0 0 1-.39.26a1.1 1.1 0 0 1-.46.1q-.239 0-.46-.09a1.3 1.3 0 0 1-.4-.27l-2-2a.74.74 0 0 1 0-1.06a.75.75 0 0 1 1.06 0l1 1v-3.36a.75.75 0 0 1 1.5 0v3.38l1-1a.75.75 0 0 1 1.079-.02a.75.75 0 0 1-.02 1.08z"
+      />
+    </svg>
+  );
+}
+
 export function ArrowOpenRight(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
@@ -256,6 +271,41 @@ export function UserFilled(props: React.SVGProps<SVGSVGElement>) {
         <path
           fill="currentColor"
           d="M12 13c2.396 0 4.575.694 6.178 1.672c.8.488 1.484 1.064 1.978 1.69c.486.615.844 1.351.844 2.138c0 .845-.411 1.511-1.003 1.986c-.56.45-1.299.748-2.084.956c-1.578.417-3.684.558-5.913.558s-4.335-.14-5.913-.558c-.785-.208-1.524-.506-2.084-.956C3.41 20.01 3 19.345 3 18.5c0-.787.358-1.523.844-2.139c.494-.625 1.177-1.2 1.978-1.69C7.425 13.695 9.605 13 12 13m0-11a5 5 0 1 1 0 10a5 5 0 0 1 0-10"
+        />
+      </g>
+    </svg>
+  );
+}
+
+export function HorizontalResize(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
+      <g fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M10 20V4m4 16V4m-4 8H6" />
+        <path d="M2 12.05c-.03-1.035 4.008-3.47 4.389-2.987c.431.548-.6 2.177-.832 2.695c-.14.312-.136.448.023.76c.717 1.406 1.075 2.11.856 2.414l-.002.003C6.08 15.42 2.03 13.061 2 12.05Zm20-.1c.03 1.035-4.008 3.47-4.389 2.987c-.431-.548.6-2.177.832-2.695c.14-.312.136-.448-.023-.76c-.717-1.406-1.075-2.11-.856-2.414l.002-.003C17.92 8.58 21.97 10.939 22 11.95Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M18 12h-4" />
+      </g>
+    </svg>
+  );
+}
+
+export function IconInjection(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 48 48" {...props}>
+      {/* Icon from IconPark Outline by ByteDance - https://github.com/bytedance/IconPark/blob/master/LICENSE */}
+      <g fill="none">
+        <path d="M38.168 22.262L19.077 41.354L6.349 28.626L25.44 9.534" clipRule="evenodd" />
+        <path
+          stroke="currentColor"
+          strokeLinejoin="round"
+          strokeWidth="4"
+          d="M38.168 22.262L19.077 41.354L6.349 28.626L25.44 9.534"
+        />
+        <path
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeWidth="4"
+          d="m21.905 5.999l19.8 19.799m-26.871 2.828l4.243 4.243M6.35 41.353l6.363-6.363m19.092-19.092l3.534-3.535"
         />
       </g>
     </svg>

@@ -1,35 +1,45 @@
-import { Atom, atom } from 'jotai';
+import { useQuery } from '@tanstack/react-query';
 
-import sessionAtom from '@/state/session';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { WorkspaceContext } from '@/types/common';
 
-export default function createMorphologyDataAtom(
-  morphology: ICellMorphology,
-  ctx?: WorkspaceContext
-): Atom<Promise<string | null>> {
-  return atom(async (get) => {
-    const session = get(sessionAtom);
-    if (!session) return null;
-
-    const asset = morphology.assets?.find((a) => a.content_type === 'application/swc');
-    if (!asset) {
-      throw new Error(`No distribution found for resource ${morphology.id}`);
-    }
-
-    // TODO: extend downloadAsset so that return type can be parameterized
-    // as: ArrayBuffer, String, JSON, Response, etc.
-    const arrayBuffer = await downloadAsset<ArrayBuffer>({
-      entityType: EntityTypeDict.CellMorphology,
+export function useLoadCellMorphology3DAsset({
+  morphology,
+  ctx,
+}: {
+  morphology: ICellMorphology;
+  ctx?: WorkspaceContext;
+}) {
+  const asset = morphology?.assets?.find((a) => a.content_type === 'application/swc');
+  if (!asset) {
+    throw new Error(`No distribution found for resource ${morphology?.id}`);
+  }
+  const { data, isLoading, error } = useQuery({
+    queryKey: keyBuilder.asset({
+      assetId: asset.id,
       entityId: morphology.id,
-      id: asset.id,
-      ctx,
-    });
-
-    const decoder = new TextDecoder('utf-8');
-    return decoder.decode(arrayBuffer);
+      assetType: EntityTypeDict.CellMorphology,
+      context: ctx,
+    }),
+    queryFn: () =>
+      downloadAsset<ArrayBuffer>({
+        entityType: EntityTypeDict.CellMorphology,
+        entityId: morphology.id,
+        id: asset.id,
+        ctx,
+      }),
   });
+
+  const decoder = new TextDecoder('utf-8');
+  const result = data ? decoder.decode(data) : null;
+
+  return {
+    error,
+    result,
+    isLoading,
+  };
 }

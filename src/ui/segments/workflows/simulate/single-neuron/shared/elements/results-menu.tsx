@@ -1,12 +1,17 @@
+/* eslint-disable react/no-array-index-key */
+
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useAtom } from 'jotai';
+
 import kebabCase from 'lodash/kebabCase';
 import uniqBy from 'lodash/uniqBy';
 import Link from 'next/link';
+
+import type { ZodError } from 'zod';
 
 import { createSingleNeuronSimulationAtom } from '@/ui/segments/workflows/simulate/single-neuron/shared/runner';
 import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
@@ -24,7 +29,7 @@ import {
 import {
   ExperimentalSetupConfigurationSchema,
   OverviewConfigurationSchema,
-  RecordLocationArraySchema,
+  NeuronLocationArraySchema,
   SimulationType,
   StimulationConfigurationSchema,
   SynapseConfigurationArraySchema,
@@ -33,7 +38,6 @@ import {
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useAppNotification } from '@/components/notification';
-import { ROOT_ROUTE } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import {
@@ -47,13 +51,18 @@ import {
   StimulationConfigurationAtomFamily,
   SynaptomeConfigurationAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import { browserHistoryReplace } from '@/utils/browser';
 import { messages } from '@/i18n/en/simulation';
 import { Button } from '@/ui/molecules/button';
+import { classNames } from '@/util/utils';
 import {
   genericSingleNeuronSimulationPlotDataAtomFamily,
   simulationStatusAtomFamily,
 } from '@/state/simulate/single-neuron';
 import { cn } from '@/utils/css-class';
+import { ROOT_ROUTE } from '@/config';
+
+import styles from './results-menu.module.css';
 
 type Props = {
   sessionId: string;
@@ -64,7 +73,6 @@ type Props = {
 
 export function Menu({ sessionId, modelId, memodelId, type }: Props) {
   const pathname = usePathname();
-  const { replace } = useRouter();
   const breakpoint = useDefaultBreakpoint();
   const queryClient = useQueryClient();
   const queryParams = useSearchParams();
@@ -90,20 +98,22 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
   const [, createSingleNeuronSimulation] = useAtom(createSingleNeuronSimulationAtom);
 
   const current = queryParams.get('record') ?? 'all';
-  const disableSaveSimulation =
-    !!RecordLocationArraySchema.safeParse(recordLocationConfiguration).error ||
-    !!ExperimentalSetupConfigurationSchema.safeParse(experimentalSetupConfiguration).error ||
-    !!StimulationConfigurationSchema.safeParse(stimulationConfiguration).error ||
-    !!OverviewConfigurationSchema.safeParse(overviewConfiguration).error ||
+  const configError =
+    NeuronLocationArraySchema.safeParse(recordLocationConfiguration).error ??
+    ExperimentalSetupConfigurationSchema.safeParse(experimentalSetupConfiguration).error ??
+    StimulationConfigurationSchema.safeParse(stimulationConfiguration).error ??
+    OverviewConfigurationSchema.safeParse(overviewConfiguration).error ??
     (type === SimulationType.SingleNeuronSynaptome &&
-      !!SynapseConfigurationArraySchema.safeParse(synaptomeConfiguration).error);
+      SynapseConfigurationArraySchema.safeParse(synaptomeConfiguration).error);
+
+  const disableSaveSimulation = !!configError;
 
   const onChange = (value: string) => {
     const params = new URLSearchParams(queryParams);
     params.set('record', value);
     params.delete('step');
 
-    replace(`${pathname}?${params.toString()}`);
+    browserHistoryReplace(null, `${pathname}?${params.toString()}`);
   };
 
   const handleSaveSimulation = async () => {
@@ -242,8 +252,8 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
           </div>
         </Button>
         {uniqBy(recordLocationConfiguration, (item) => `${item.section}-${item.offset}`).map(
-          ({ section, offset }, indx) => {
-            const record = `${section}_${offset}`;
+          ({ section, offset, color }, indx) => {
+            const record = `${section}_${offset === 0 ? '0.0' : String(offset)}`;
             return (
               <Button
                 // eslint-disable-next-line react/no-array-index-key
@@ -257,11 +267,17 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
               >
                 <div className="flex w-full items-center justify-between gap-2">
                   <div>{record}</div>
-                  <RightOutlined
-                    className={cn('text-neutral-4 mr-2 [&_svg]:size-3!', {
-                      '-rotate-180 transform text-white!': current === record,
-                    })}
-                  />
+                  <div className="mr-2 ml-auto flex items-center justify-center gap-1">
+                    <div
+                      className="size-3! rounded-full border border-white"
+                      style={{ background: color }}
+                    />
+                    <RightOutlined
+                      className={cn('text-neutral-4 [&_svg]:size-3!', {
+                        '-rotate-180 transform text-white!': current === record,
+                      })}
+                    />
+                  </div>
                 </div>
               </Button>
             );
@@ -295,12 +311,17 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
             <TooltipContent
               sideOffset={10}
               collisionPadding={{ left: 20 }}
-              arrowClassName="bg-primary-9"
+              arrowClassName={configError ? styles.error : 'bg-primary-9'}
+              className={classNames(configError && styles.error)}
             >
-              <p className={cn('max-w-80 text-left text-sm break-words hyphens-auto')}>
-                Almost there! To download your simulation results, please let it finish running and
-                make sure the details are complete
-              </p>
+              {configError ? (
+                <p>{extractErrorMessage(configError)}</p>
+              ) : (
+                <p className={cn('max-w-80 text-left text-sm break-words hyphens-auto')}>
+                  Almost there! To download your simulation results, please let it finish running
+                  and make sure the details are complete
+                </p>
+              )}
             </TooltipContent>
           )}
         </Tooltip>
@@ -323,15 +344,33 @@ export function Menu({ sessionId, modelId, memodelId, type }: Props) {
             </div>
           </TooltipTrigger>
           {controlsDisabled && (
-            <TooltipContent sideOffset={10} arrowClassName="bg-primary-9">
-              <p className={cn('max-w-80 text-left text-sm break-words hyphens-auto')}>
-                Almost there! To save your simulation, please let it finish running and make sure
-                the details are complete
-              </p>
+            <TooltipContent
+              sideOffset={10}
+              arrowClassName={configError ? styles.error : 'bg-primary-9'}
+              className={classNames(configError && styles.error)}
+            >
+              {configError ? (
+                <p>{extractErrorMessage(configError)}</p>
+              ) : (
+                <p className={cn('max-w-80 text-left text-sm break-words hyphens-auto')}>
+                  Almost there! To download your simulation results, please let it finish running
+                  and make sure the details are complete
+                </p>
+              )}
             </TooltipContent>
           )}
         </Tooltip>
       </div>
     </div>
+  );
+}
+
+function extractErrorMessage(error: ZodError): import('react').ReactNode {
+  return (
+    <>
+      {error.issues.map((issue, index) => (
+        <div key={index}>{issue.message}</div>
+      ))}
+    </>
   );
 }

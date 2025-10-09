@@ -10,6 +10,8 @@ import isNil from 'lodash/isNil';
 import delay from 'lodash/delay';
 import pick from 'lodash/pick';
 import lget from 'lodash/get';
+import omit from 'lodash/omit';
+import map from 'lodash/map';
 
 import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
 import {
@@ -26,20 +28,18 @@ import {
 } from '@/entity-configuration/domain/simulation';
 import {
   genericSingleNeuronSimulationPlotDataAtomFamily,
-  simulateStepTrackerAtom,
+  SimulationStatus,
   simulationStatusAtomFamily,
 } from '@/state/simulate/single-neuron';
 import { SimulationType } from '@/types/small-scale-simulator/common';
 import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 import { readNdjsonResponse } from '@/utils/response';
-import { updateArray } from '@/util/updateArray';
 import { messages } from '@/i18n/en/simulation';
 import { tryCatch } from '@/api/utils';
-import { log } from '@/utils/logger';
 
 import { type Message, JobStatus, MessageType } from '@/services/small-scale-simulator/types';
 import type {
-  RecordLocationArray,
+  NeuronLocationArray,
   SimulationExperimentalSetup,
   TStimulationConfiguration,
   SynapseConfigurationArray,
@@ -69,17 +69,20 @@ export const createSingleNeuronSimulationAtom = atom(
     simulationType: SimulationType,
     stimulationConfig: TStimulationConfiguration,
     experimentalSetupConfig: SimulationExperimentalSetup,
-    recordFromConfig: RecordLocationArray,
+    recordFromConfig: NeuronLocationArray,
     synaptomeConfig: SynapseConfigurationArray | undefined,
     simulationResult: Record<string, PlotData> | null,
     stimulusResult: PlotData | null
   ) => {
     if (!simulationResult || !modelId) return null;
 
-    const recordFromUniq = uniqBy(recordFromConfig, (item) =>
-      values(pick(item, ['section', 'offset']))
-        .map(String)
-        .join()
+    const recordFromUniq = map(
+      uniqBy(recordFromConfig, (item) =>
+        values(pick(item, ['section', 'offset']))
+          .map(String)
+          .join()
+      ),
+      (obj) => omit(obj, ['color'])
     );
 
     const singleNeuronSimulationConfig: SingleNeuronModelSimulationConfig = {
@@ -185,7 +188,7 @@ export const launchSimulationAtom = atom<
     string,
     TStimulationConfiguration,
     SimulationExperimentalSetup,
-    RecordLocationArray,
+    NeuronLocationArray,
     SynapseConfigurationArray,
     SimulationType,
     number,
@@ -203,7 +206,7 @@ export const launchSimulationAtom = atom<
     sessionId: string,
     currentInjectionConfig: TStimulationConfiguration,
     conditionsConfig: SimulationExperimentalSetup,
-    recordFromConfig: RecordLocationArray,
+    recordFromConfig: NeuronLocationArray,
     synaptomeConfig: SynapseConfigurationArray,
     simulationType: SimulationType,
     duration: number,
@@ -220,14 +223,7 @@ export const launchSimulationAtom = atom<
     }
     const simStatusAtom = simulationStatusAtomFamily(sessionId);
 
-    set(simStatusAtom, { status: 'launched' });
-    set(simulateStepTrackerAtom, {
-      steps: get(simulateStepTrackerAtom).steps.map((p) => ({
-        ...p,
-        status: p.title === 'Results' ? 'process' : p.status,
-      })),
-      current: { title: 'Results', status: 'process' },
-    });
+    set(simStatusAtom, { status: SimulationStatus.LAUNCHED });
 
     const initialPlotData = recordFromConfig.reduce((acc: Record<string, PlotData>, o) => {
       const key = `${o.section}_${o.offset === 0 ? '0.0' : String(o.offset)}`;
@@ -236,14 +232,13 @@ export const launchSimulationAtom = atom<
     }, {});
     const plotDataAtom = genericSingleNeuronSimulationPlotDataAtomFamily(sessionId);
 
-    log('debug', '🚀 Setting initial plot data:', initialPlotData);
-
     set(plotDataAtom, initialPlotData);
     const recordFromUniq = uniqBy(recordFromConfig, (item) =>
       values(pick(item, ['section', 'offset']))
         .map(String)
         .join()
     );
+    onChangePanel();
 
     try {
       const { data: response, error } = await tryCatch(
@@ -263,7 +258,7 @@ export const launchSimulationAtom = atom<
 
       if (error) {
         set(simStatusAtom, {
-          status: 'error',
+          status: SimulationStatus.ERROR,
           description: lget(error, 'cause.message', null) ?? messages.RunningSimulationDefaultError,
         });
         return;
@@ -282,40 +277,25 @@ export const launchSimulationAtom = atom<
         }
 
         set(simStatusAtom, {
-          status: 'error',
+          status: SimulationStatus.ERROR,
           description: errorMessage,
         });
 
         delay(() => set(simStatusAtom, { status: null }), 1000);
 
-        set(simulateStepTrackerAtom, {
-          steps: get(simulateStepTrackerAtom).steps.map((p) => ({
-            ...p,
-            status: p.title === 'Results' ? 'wait' : p.status,
-          })),
-          current: { title: 'Experimental setup' },
-        });
-
         return;
       }
-      onChangePanel();
+
       await readNdjsonResponse<Message<SimulationStreamData>>(response, (message) => {
         match(message)
           .with({ message_type: MessageType.DATA }, ({ data }) => appendStreamData(data))
-          .with({ message_type: MessageType.STATUS, status: JobStatus.ERROR }, (msg) => {
-            throw new Error(msg.extra ?? messages.SteamingSimulationResultDefaultError, {
+          .with({ message_type: MessageType.STATUS, status: JobStatus.ERROR }, () => {
+            throw new Error(messages.SteamingSimulationResultDefaultError, {
               cause: 'SmallScaleSimulatorError',
             });
           })
           .with({ message_type: MessageType.STATUS, status: JobStatus.DONE }, () => {
-            set(simStatusAtom, { status: 'finished' });
-            set(simulateStepTrackerAtom, {
-              steps: get(simulateStepTrackerAtom).steps.map((p) => ({
-                ...p,
-                status: p.title === 'Results' ? 'finish' : p.status,
-              })),
-              current: { title: 'Results', status: 'finish' },
-            });
+            set(simStatusAtom, { status: SimulationStatus.FINISHED });
           })
           .otherwise(() => null);
       });
@@ -335,20 +315,12 @@ export const launchSimulationAtom = atom<
         },
       });
       set(simStatusAtom, {
-        status: 'error',
+        status: SimulationStatus.ERROR,
         description: error.cause ? `${error}` : messages.RunningSimulationDefaultError,
-      });
-      set(simulateStepTrackerAtom, {
-        steps: get(simulateStepTrackerAtom).steps.map((p) => ({
-          ...p,
-          status: p.title === 'Results' ? 'wait' : p.status,
-        })),
-        current: { title: 'Experimental setup' },
       });
     }
 
     function appendStreamData(streamData: SimulationStreamData) {
-      log('debug', '📡 appendStreamData called with:', streamData);
       const newPlot: PlotDataEntry = {
         x: streamData.x,
         y: streamData.y,
@@ -361,30 +333,27 @@ export const launchSimulationAtom = atom<
         variable_name: streamData.variable_name,
         unit: streamData.unit,
       };
-
       const currentPlotData = get(plotDataAtom);
-      log('debug', '📡 Current plot data before update:', currentPlotData);
-
       const currentRecording = currentPlotData![streamData.recording];
 
       if (currentRecording) {
+        const key = makeKey(newPlot);
+        const currentRecordingIndex = currentRecording.findIndex((o) => makeKey(o) === key);
+        const value = currentRecording[currentRecordingIndex];
+        if (currentRecordingIndex === -1) {
+          currentRecording.push(newPlot);
+        } else {
+          currentRecording[currentRecordingIndex] = {
+            ...value,
+            x: [...value.x, ...newPlot.x],
+            y: [...value.y, ...newPlot.y],
+            variable_name: newPlot.variable_name ?? value.variable_name,
+            unit: newPlot.unit ?? value.unit,
+          };
+        }
         const updatedPlot = {
           ...get(plotDataAtom),
-          [streamData.recording]:
-            !currentRecording.length ||
-            !currentRecording.find((o) => makeKey(o) === makeKey(newPlot))
-              ? [...currentRecording, newPlot]
-              : updateArray({
-                  array: currentRecording,
-                  keyfn: (item) => makeKey(item) === makeKey(newPlot),
-                  newVal: (value) => ({
-                    ...value,
-                    x: [...value.x, ...newPlot.x],
-                    y: [...value.y, ...newPlot.y],
-                    variable_name: newPlot.variable_name ?? value.variable_name,
-                    unit: newPlot.unit ?? value.unit,
-                  }),
-                }),
+          [streamData.recording]: currentRecording,
         };
 
         // Sort traces for each plot by `varyingKey` so that the legends appear in sorted order.
@@ -392,7 +361,6 @@ export const launchSimulationAtom = atom<
           updatedPlot[recordingLocation] = sortBy(updatedPlot[recordingLocation], ['varyingKey']);
         });
 
-        log('debug', '📡 Setting updated plot data:', updatedPlot);
         set(plotDataAtom, updatedPlot);
       }
     }

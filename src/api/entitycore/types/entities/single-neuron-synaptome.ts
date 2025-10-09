@@ -85,7 +85,7 @@ export const SingleNeuronSynaptomeBaseSchema = z.object({
   name: z.string().nonempty(),
   target: z.string().optional(),
   seed: z.number(),
-  color: z.string(),
+  color: z.string().optional(),
   formula: z.string().optional(),
   soma_synapse_count: z.number().optional(),
   type: z.union([z.literal(110), z.literal(10)]),

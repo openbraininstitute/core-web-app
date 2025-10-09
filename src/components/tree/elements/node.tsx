@@ -160,5 +160,6 @@ function Node<TNode extends TTreeNode>({
   );
 }
 
-const MemoizedNode = memo(Node) as typeof Node;
+export const MemoizedNode = memo(Node) as typeof Node;
+
 export default MemoizedNode;

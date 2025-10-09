@@ -1,10 +1,10 @@
 import { PortableText } from 'next-sanity';
-import { PresentationVideoProps, ShowCaseProjectQueryType } from '@/components/PublicProjects/type';
+import { PresentationVideoProps, ShowCaseProjectQueryType } from '../type';
 
 import PTGlossary, { PTGlossaryListProps } from '@/components/PublicProjects/Glossary';
 import VideoBlock from '@/components/PublicProjects/VideoBlock';
 
-import styles from '@/components/PublicProjects/style/portableText.module.css';
+import styles from '../style/portableText.module.css';
 
 const components = {
   types: {

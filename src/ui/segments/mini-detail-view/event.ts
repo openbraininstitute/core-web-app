@@ -1,7 +1,7 @@
+import { parseAsBoolean, useQueryState } from 'nuqs';
 import { useEffect } from 'react';
 import noop from 'lodash/noop';
 
-import { parseAsBoolean, useQueryState } from 'nuqs';
 import { isBrowser } from '@/utils/environment';
 
 export type TSelectedExploreEntity<T> = {

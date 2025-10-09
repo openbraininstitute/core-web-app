@@ -1,15 +1,19 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtomValue } from 'jotai';
 import dynamic from 'next/dynamic';
 import get from 'lodash/get';
 
-import { SIMULATION_COLORS } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { SimulationColors } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import { SimulationStatus, simulationStatusAtomFamily } from '@/state/simulate/single-neuron';
 import {
-  genericSingleNeuronSimulationPlotDataAtomFamily,
-  simulationStatusAtom,
-} from '@/state/simulate/single-neuron';
+  useCurrentSimulationConfig,
+  useRecordingPlotData,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/hooks';
+import { cn } from '@/utils/css-class';
+
+import type { PlotData } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 const PlotRenderer = dynamic(
   () => import('@/features/entities/neuron-simulation/experiment/visualization/plot-renderer'),
@@ -19,9 +23,12 @@ const PlotRenderer = dynamic(
 );
 
 export function Results({ sessionId }: { sessionId: string }) {
-  const [recordingPlotData] = useAtom(genericSingleNeuronSimulationPlotDataAtomFamily(sessionId));
-  const simulationStatus = useAtomValue(simulationStatusAtom);
+  const currentSimulationConfig = useCurrentSimulationConfig(sessionId);
+  const recordingPlotData = useRecordingPlotData(sessionId);
+  const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
   const record = useSearchParams().get('record') ?? 'all';
+
+  const duration = currentSimulationConfig.max_time;
 
   if (!recordingPlotData || !Object.keys(recordingPlotData).length) {
     return (
@@ -32,11 +39,36 @@ export function Results({ sessionId }: { sessionId: string }) {
     );
   }
 
+  if (
+    simulationStatus?.status === SimulationStatus.FINISHED &&
+    Object.values(recordingPlotData).every((o: PlotData) => o.every((p) => p.y.length === 0))
+  ) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3">
+        <div className="text-primary-9 text-center text-2xl">
+          Simulation finished <br />
+          but no results to display
+        </div>
+        <div className="text-label">If the issue persists, please contact support</div>
+      </div>
+    );
+  }
+
+  if (simulationStatus?.status === SimulationStatus.ERROR) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3">
+        <div className="text-primary-9 text-center text-2xl">Simulation failed</div>
+        <div className="text-label">If the issue persists, please contact support</div>
+      </div>
+    );
+  }
+
   const isLoading =
-    simulationStatus?.status === 'launched' &&
-    Object.values(recordingPlotData).every((o) => o.every((p) => p.y.length === 0));
+    simulationStatus?.status === SimulationStatus.LAUNCHED &&
+    Object.values(recordingPlotData).every((o: PlotData) => o.every((p) => p.y.length === 0));
 
   let content = null;
+
   if (record === 'all') {
     content = (
       <div className="flex w-full flex-col gap-2">
@@ -50,12 +82,13 @@ export function Results({ sessionId }: { sessionId: string }) {
                 name={key}
                 isDownloadable={!!value.length}
                 onlyAmplitudeLegend={false}
-                data={value.map((v, i) => ({ ...v, line: { color: SIMULATION_COLORS[i] } }))}
+                data={value.map((v, i) => ({ ...v, line: { color: SimulationColors[i] } }))}
                 isLoading={isLoading}
                 className="h-full w-full"
                 plotConfig={{
                   yAxisTitle: 'Voltage [mV]',
                   showDefaultLegends: true,
+                  maxTime: duration,
                 }}
                 rootClassName="p-0 m-0"
                 wrapperClassName="p-0"
@@ -79,12 +112,13 @@ export function Results({ sessionId }: { sessionId: string }) {
               name={record}
               isDownloadable={!!recordData.length}
               onlyAmplitudeLegend={false}
-              data={recordData.map((v, i) => ({ ...v, line: { color: SIMULATION_COLORS[i] } }))}
+              data={recordData.map((v, i) => ({ ...v, line: { color: SimulationColors[i] } }))}
               isLoading={isLoading}
               className="h-full w-full"
               plotConfig={{
                 yAxisTitle: 'Voltage [mV]',
                 showDefaultLegends: true,
+                maxTime: duration,
               }}
               rootClassName="p-0 m-0"
               wrapperClassName="p-0"
@@ -97,7 +131,12 @@ export function Results({ sessionId }: { sessionId: string }) {
     }
   }
   return (
-    <div className="secondary-scrollbar mb-4 flex h-full w-full flex-col gap-4 overflow-x-hidden overflow-y-auto px-5 select-none">
+    <div
+      className={cn(
+        'secondary-scrollbar mb-4 flex h-full w-full flex-col',
+        'gap-4 overflow-x-hidden overflow-y-auto px-5 select-none'
+      )}
+    >
       {content}
     </div>
   );

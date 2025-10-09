@@ -1,0 +1,373 @@
+import { ComponentProps, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  CheckOutlined,
+  CloseOutlined,
+  DownOutlined,
+  InfoCircleFilled,
+  LoadingOutlined,
+  SearchOutlined,
+} from '@ant-design/icons';
+import { useInfiniteQuery } from '@tanstack/react-query';
+
+import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { Button } from '@/ui/molecules/button';
+import { cn } from '@/utils/css-class';
+
+import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+
+function SkeletonLoader({ count = 5 }: { count?: number }) {
+  return (
+    <div className="space-y-2 p-2">
+      {Array.from({ length: count }).map((_, index) => (
+        <div
+          // eslint-disable-next-line react/no-array-index-key
+          key={`select-skeleton-${index}`}
+          className={cn(
+            'from-neutral-1 via-neutral-2 to-neutral-1 animate-shimmer',
+            'relative h-10 overflow-hidden rounded-md bg-gradient-to-r bg-[length:200%_100%]'
+          )}
+          style={{
+            animationDelay: `${index * 100}ms`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+export type AsyncSelectOption<T = unknown> = {
+  value: string;
+  label: string;
+  data: T;
+};
+
+export type AsyncSelectQueryFn<
+  R extends Partial<PaginationFilter & SearchFilter>,
+  T = unknown,
+> = (params: { filters: R; search?: string }) => Promise<EntityCoreResponse<T>>;
+
+export type AsyncSelectProps<R extends Partial<PaginationFilter & SearchFilter>, T = unknown> = {
+  dataKey: Array<string> | Array<string | Record<string, any>>;
+  queryFn: AsyncSelectQueryFn<R, T>;
+  getOptionLabel: (item: T) => string;
+  getOptionValue: (item: T) => string;
+  placeholder?: string;
+  searchPlaceholder?: string;
+  onSelect?: (option: AsyncSelectOption<T> | undefined) => void;
+  selectedValue?: string;
+  searchField?: string;
+  searchable: boolean;
+  clsx?: {
+    trigger?: ComponentProps<'div'>['className'];
+    content?: ComponentProps<'div'>['className'];
+  };
+  tooltip?: ((data: T) => React.ReactNode) | null;
+};
+
+export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, T = unknown>({
+  dataKey,
+  queryFn,
+  getOptionLabel,
+  getOptionValue,
+  placeholder = 'Select option...',
+  searchPlaceholder = 'Search...',
+  onSelect,
+  selectedValue,
+  searchField,
+  searchable,
+  tooltip,
+  clsx,
+}: AsyncSelectProps<R, T>) {
+  const breakpoint = useDefaultBreakpoint();
+  const [open, setOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const [parent, setParent] = useState<HTMLDivElement | null>(null);
+
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isFetching } =
+    useInfiniteQuery({
+      queryKey: [dataKey, { searchTerm }],
+      queryFn: ({ pageParam = 1 }) =>
+        queryFn({
+          filters: {
+            page: pageParam,
+            page_size: 10,
+            ...(searchField ? { [searchField]: searchTerm } : {}),
+          } as R,
+        }),
+      getNextPageParam: (lastPage, pages) => {
+        const hasNext =
+          lastPage.pagination.page * lastPage.pagination.page_size <
+          lastPage.pagination.total_items;
+        return hasNext ? pages.length + 1 : undefined;
+      },
+      initialPageParam: 1,
+    });
+
+  const allItems = useMemo(() => {
+    return data?.pages.flatMap((page) => page.data) ?? [];
+  }, [data]);
+
+  const options = useMemo<Array<AsyncSelectOption<T>>>(() => {
+    return allItems.map((item) => ({
+      value: getOptionValue(item),
+      label: getOptionLabel(item),
+      data: item,
+    }));
+  }, [allItems, getOptionLabel, getOptionValue]);
+
+  const parentSetter = useCallback(
+    (el: HTMLDivElement) => {
+      setParent(el);
+    },
+    [setParent]
+  );
+
+  useEffect(() => {
+    if (!open || !parent) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = parent;
+      const isNearBottom = scrollTop + clientHeight >= scrollHeight - 100;
+
+      if (isNearBottom && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    };
+
+    parent.addEventListener('scroll', handleScroll);
+    return () => parent.removeEventListener('scroll', handleScroll);
+  }, [open, parent, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const handleSelect = useCallback(
+    (option: AsyncSelectOption<T> | undefined) => {
+      onSelect?.(option);
+      setOpen(false);
+    },
+    [onSelect]
+  );
+
+  const handleOpenChange = useCallback((newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      setSearchTerm('');
+    }
+  }, []);
+
+  const selectedOption = options.find((option) => option?.value === selectedValue);
+
+  return (
+    <Popover open={open} onOpenChange={handleOpenChange}>
+      <PopoverTrigger
+        asChild
+        className={cn(
+          'text-primary-9 border-neutral-2 hover:border-primary-9 active:bg-primary-9',
+          'hover:text-primary-8 border bg-white shadow-xs hover:border-2',
+          'text-md active:border-primary-9 h-full flex-1 gap-1.5 rounded-md pr-3 pl-5 active:bg-white',
+          'group flex w-full grow justify-between self-stretch',
+          clsx?.trigger
+        )}
+      >
+        <Button variant="outline" role="combobox" disabled={isLoading} className="select-none">
+          <div className="line-clamp-1 w-full truncate text-left">
+            {selectedOption?.label || placeholder}
+          </div>
+          {/* eslint-disable-next-line no-nested-ternary */}
+          {isLoading || isFetching ? (
+            <LoadingOutlined className="opacity-50 [&_svg]:size-3!" spin />
+          ) : selectedValue ? (
+            <div
+              className={cn(
+                'group-hover:bg-neutral-1 group-hover:text-primary-8',
+                'flex cursor-pointer items-center justify-center rounded-full p-1'
+              )}
+              role="button"
+              tabIndex={-1}
+              onKeyDown={(e) => {
+                e.stopPropagation();
+                handleSelect(undefined);
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSelect(undefined);
+              }}
+            >
+              <CloseOutlined className="opacity-50 [&_svg]:size-3!" />
+            </div>
+          ) : (
+            <div
+              className={cn(
+                'group-hover:bg-neutral-1 group-hover:text-primary-8',
+                'flex cursor-pointer items-center justify-center rounded-full p-1'
+              )}
+            >
+              <DownOutlined className="opacity-50 [&_svg]:size-3!" />
+            </div>
+          )}
+        </Button>
+      </PopoverTrigger>
+
+      <PopoverContent
+        className={cn(
+          'border-neutral-2 bg-white p-0 shadow-md transition-all duration-150',
+          clsx?.content
+        )}
+        style={{
+          width: 'var(--radix-popover-trigger-width)',
+        }}
+      >
+        {searchable && !!searchField && (
+          <div className="border-neutral-2 border-b p-2">
+            <div
+              data-slot="command-input-wrapper"
+              className={cn(
+                'focus-within:bg-neutral-0.5 flex h-9 items-center gap-2 rounded-md px-3 transition-colors duration-200'
+              )}
+            >
+              <SearchOutlined className="text-primary-8 size-4 shrink-0 transition-opacity duration-200" />
+              <input
+                placeholder={searchPlaceholder}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={cn(
+                  'outline-hidden transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50',
+                  'placeholder:text-label flex h-10 w-full rounded-md bg-transparent py-3 text-sm',
+                  'border-none',
+                  { 'h-9 text-base': breakpoint === 'l' },
+                  { 'h-10 text-lg': breakpoint === 'xl' }
+                )}
+              />
+            </div>
+          </div>
+        )}
+
+        <div
+          id={`${dataKey}-dropdown-parent`}
+          ref={parentSetter}
+          className="relative h-full max-h-80 w-full overflow-auto scroll-smooth"
+        >
+          {/* eslint-disable-next-line no-nested-ternary */}
+          {isLoading && options.length === 0 ? (
+            <SkeletonLoader count={5} />
+          ) : options.length === 0 ? (
+            <div className="flex h-full w-full items-center justify-center py-5">
+              <span className="text-neutral-4 text-sm">No results found</span>
+            </div>
+          ) : (
+            <>
+              {options.map((option) => {
+                if (!option) return null;
+
+                const { value, label, data: optionData } = option;
+                const isSelected = value === selectedValue;
+
+                return (
+                  <div key={option?.value} className="group mb-1 flex items-center justify-start">
+                    <button
+                      type="button"
+                      aria-label={label}
+                      onClick={() => handleSelect(option)}
+                      className={cn(
+                        'text-primary-9 hover:bg-background flex h-full w-full cursor-pointer',
+                        'items-center justify-start px-3 text-left transition-colors duration-150',
+                        'group-first:hover:rounded-t-md',
+                        { 'p-2 text-base': breakpoint === 'l' },
+                        { 'p-3 text-lg': breakpoint === 'xl' }
+                      )}
+                      title={label}
+                    >
+                      <span className="line-clamp-2 w-full">{label}</span>
+                      <div className="flex items-center justify-center gap-1">
+                        <CheckOutlined
+                          className={cn(
+                            'ml-auto text-sm transition-opacity duration-200',
+                            isSelected ? 'opacity-100' : 'opacity-0'
+                          )}
+                        />
+                        {tooltip && (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Button rounded borderless variant="icon" size="sm">
+                                <InfoCircleFilled className="text-primary-8" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              avoidCollisions
+                              align="end"
+                              side="bottom"
+                              sideOffset={0}
+                              collisionPadding={{ left: 0 }}
+                              arrowPadding={0}
+                              className="shadow-bnb bg-primary-9 z-[99999] text-white!"
+                              arrowClassName="bg-primary-9"
+                            >
+                              {tooltip(optionData)}
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </button>
+                  </div>
+                );
+              })}
+            </>
+          )}
+          {isFetchingNextPage && (
+            <div className="sticky bottom-0 left-0 z-[99999] flex items-center justify-center gap-2 py-3">
+              <LoadingOutlined className="text-primary-8" spin />
+              <span className="text-primary-8 text-sm font-medium">Loading next results...</span>
+            </div>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+export function AsyncSelectFormItem<
+  R extends Partial<PaginationFilter & SearchFilter>,
+  T = unknown,
+>({
+  dataKey,
+  queryFn,
+  getOptionLabel,
+  getOptionValue,
+  placeholder = 'Select option...',
+  searchPlaceholder = 'Search...',
+  onSelect,
+  searchField,
+  searchable = true,
+  tooltip,
+  clsx,
+}: AsyncSelectProps<R, T>) {
+  return function Wrapper({
+    value,
+    onChange,
+  }: {
+    value?: string;
+    onChange?: (value: string | undefined) => void;
+  }) {
+    return (
+      <AsyncSelect<R, T>
+        dataKey={dataKey}
+        queryFn={queryFn}
+        getOptionLabel={getOptionLabel}
+        getOptionValue={getOptionValue}
+        placeholder={placeholder}
+        searchPlaceholder={searchPlaceholder}
+        onSelect={(option) => {
+          onSelect?.(option);
+          onChange?.(option?.value);
+        }}
+        searchField={searchField}
+        selectedValue={value}
+        searchable={searchable}
+        clsx={clsx}
+        tooltip={tooltip}
+      />
+    );
+  };
+}

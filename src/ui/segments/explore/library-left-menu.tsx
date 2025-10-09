@@ -40,7 +40,7 @@ export function LibraryLeftMenu() {
     return {
       title: entity?.title,
       value,
-      type,
+      type: type as TExtendedEntitiesTypeDict,
       group: entity?.group,
     };
   });

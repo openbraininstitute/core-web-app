@@ -99,9 +99,9 @@ export const keyBuilder = {
   }: {
     entityId: string;
     assetId: string;
-    assetPath: string;
+    assetPath?: string;
     assetType?: TEntityTypeDict;
-    context: WorkspaceContext;
+    context?: WorkspaceContext;
     asRawResponse?: boolean;
   }) => [
     `${prefix}-entity-asset`,
@@ -109,4 +109,20 @@ export const keyBuilder = {
   ],
   simCampaign: ({ entityId }: { entityId: string }) => [`${prefix}-sim-campaign`, { entityId }],
   annotation: ({ entityId }: { entityId: string }) => [`${prefix}-annotation`, { entityId }],
+  neuronMorphology3DData: ({
+    virtualLabId,
+    projectId,
+    modelId,
+  }: WorkspaceContext & { modelId: string }) => [
+    `${prefix}-neuron-morphology-3d-data`,
+    { virtualLabId, projectId, modelId },
+  ],
+  agents: ({ agentType }: { agentType: 'person' | 'organization' | 'consortium' }) => [
+    `${prefix}-agents`,
+    { agentType },
+  ],
+  roles: ({ roleType }: { roleType: 'contributor' | 'owner' | 'viewer' }) => [
+    `${prefix}-roles`,
+    { roleType },
+  ],
 };
