@@ -1,0 +1,41 @@
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/types';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
+
+import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
+
+export const viewDefForIonChannelRecording: ViewDefinitionConfig = {
+  title: 'Ion channel electrophysiology',
+  group: DataTypeGroup.ExperimentalData,
+  name: EntitySlug.IonChannelRecording,
+  columns: [
+    EntityCoreFields.Preview,
+    EntityCoreFields.BrainRegion,
+    EntityCoreFields.IonChannel,
+    EntityCoreFields.TemperatureCelsius,
+    EntityCoreFields.CellLine,
+    EntityCoreFields.Name,
+    EntityCoreFields.Species,
+    EntityCoreFields.Contributions,
+    EntityCoreFields.RegistrationDate,
+  ],
+  summaryViewFields: [
+    { field: EntityCoreFields.BrainRegion },
+    { field: EntityCoreFields.Species },
+    { field: EntityCoreFields.License },
+    { field: EntityCoreFields.IonChannel },
+    { field: EntityCoreFields.TemperatureCelsius },
+    { field: EntityCoreFields.CellLine },
+    { field: EntityCoreFields.SubjectAge },
+  ],
+  miniDetailView: [
+    { field: EntityCoreFields.BrainRegion },
+    { field: EntityCoreFields.IonChannel },
+    { field: EntityCoreFields.TemperatureCelsius },
+    { field: EntityCoreFields.CellLine },
+    { field: EntityCoreFields.Species },
+    { field: EntityCoreFields.License },
+  ],
+  curated: true,
+  mlTopic: 'Neuron spike',
+};

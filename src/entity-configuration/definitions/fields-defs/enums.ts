@@ -83,6 +83,8 @@ export enum EntityCoreFields {
   IsStochastic = 'is_stochastic',
   IsTemperatureDependent = 'is_temperature_dependent',
   TemperatureCelsius = 'temperature_celsius',
+  CellLine = 'cell_line',
+  IonChannel = 'ion_channel',
   ICMThumbnail = 'icm_thumbnail',
 }
 
