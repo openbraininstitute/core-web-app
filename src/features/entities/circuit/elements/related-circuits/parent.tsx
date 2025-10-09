@@ -10,7 +10,7 @@ import { BaseTable } from '@/components/explore-section/ExploreSectionListingVie
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { activeColumnsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
-import { resolveExploreDetailsPageUrl2 } from '@/utils/url-builder';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { WorkspaceContext } from '@/types/common';
@@ -45,7 +45,7 @@ export function Parent({ data }: Props) {
   const columns = cols.filter(({ key }) => (activeColumns || []).includes(key as string));
   const onCellClick = (basePath: string, record: ICircuit) => {
     navigate(
-      resolveExploreDetailsPageUrl2({
+      resolveExploreDetailsPageUrl({
         ctx: { virtualLabId, projectId },
         dataType: ExtendedEntitiesTypeDict.Circuit,
         entityId: record.id,
