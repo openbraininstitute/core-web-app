@@ -62,7 +62,14 @@ export function WorkflowIcon(props: React.SVGProps<SVGSVGElement>) {
 
 export function Home(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" {...props}>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="1em"
+      height="1em"
+      fill="none"
+      viewBox="-1 -1 16 16"
+      {...props}
+    >
       <path
         fill="currentColor"
         d="m14.297 5.406.203.15V14.5H9.321V8.88H5.68v5.62H.5V5.556l.203-.15L7.5.378l6.797 5.028ZM1.5 6.06v7.44h3.179V7.88h5.642v5.62H13.5V6.06l-6-4.439-6 4.439Z"
@@ -74,8 +81,11 @@ export function Home(props: React.SVGProps<SVGSVGElement>) {
 export function ExploreIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" {...props}>
-      <path fill="#003A8C" d="M4.326 1.5v1H1v10h10V8.218h1V13.5H0v-12h4.326Z" />
-      <path fill="#003A8C" d="M12 3a2 2 0 1 0-2 2v1a3 3 0 1 1 0-6 3 3 0 0 1 0 6V5a2 2 0 0 0 2-2Z" />
+      <path fill="currentColor" d="M4.326 1.5v1H1v10h10V8.218h1V13.5H0v-12h4.326Z" />
+      <path
+        fill="currentColor"
+        d="M12 3a2 2 0 1 0-2 2v1a3 3 0 1 1 0-6 3 3 0 0 1 0 6V5a2 2 0 0 0 2-2Z"
+      />
       <path
         fill="currentColor"
         d="M13.707 6.293 13 7l-2-2 .707-.707 2 2ZM4 4v1H2V4h2ZM4 7v1H2V7h2ZM4 10v1H2v-1h2ZM9 7v1H5V7h4ZM10 10v1H5v-1h5ZM6 4v1H5V4h1Z"
