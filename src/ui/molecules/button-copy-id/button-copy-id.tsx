@@ -7,7 +7,7 @@ import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { ToolbarButton } from '@/components/buttons/toolbar';
 import { classNames } from '@/util/utils';
 
-import styles from '@/features/details-view/button-copy-id/button-copy-id.module.css';
+import styles from '@/ui/molecules/button-copy-id/button-copy-id.module.css';
 
 interface ButtonCopyIdProps {
   className?: string;

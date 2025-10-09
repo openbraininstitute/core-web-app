@@ -5,7 +5,7 @@ type FileIconProps = {
   style?: CSSProperties;
 };
 
-export default function DocumentationIcon({ className, style }: FileIconProps) {
+export function DocumentationIcon({ className, style }: FileIconProps) {
   return (
     <svg
       width="121"
@@ -23,3 +23,5 @@ export default function DocumentationIcon({ className, style }: FileIconProps) {
     </svg>
   );
 }
+
+export default DocumentationIcon;

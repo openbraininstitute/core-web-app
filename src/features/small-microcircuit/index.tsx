@@ -35,7 +35,7 @@ import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entitie
 import ApiError from '@/api/error';
 import authFetch from '@/authFetch';
 import { useAppNotification } from '@/components/notification';
-import { ButtonCopyId } from '@/features/details-view/button-copy-id';
+import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { simulationStatusColorMap } from '@/features/small-microcircuit/constants';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/simulation';

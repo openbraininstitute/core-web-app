@@ -27,7 +27,7 @@ import type {
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
-import { ButtonCopyId } from '@/features/details-view/button-copy-id';
+import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 const subtitleStyle = 'font-thin text-neutral-4';

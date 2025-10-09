@@ -1,3 +1,4 @@
+import type { ElectricalCellRecordingFilter } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
@@ -40,7 +41,21 @@ export const keyBuilder = {
     `${prefix}-electrical-cell-recordings-count`,
     { virtualLabId, projectId, brainRegionId: brainRegionId ?? '' },
   ],
-
+  electricalCellRecordings: ({
+    virtualLabId,
+    projectId,
+    brainRegionId,
+    page,
+    pageSize,
+    ...props
+  }: WorkspaceContext & {
+    brainRegionId?: string;
+    page?: number;
+    pageSize?: number;
+  } & ElectricalCellRecordingFilter) => [
+    `${prefix}-electrical-cell-recordings`,
+    { virtualLabId, projectId, brainRegionId: brainRegionId ?? '', page, pageSize, ...props },
+  ],
   meModel: ({ virtualLabId, projectId, entityId }: WorkspaceContext & { entityId: string }) => [
     `${prefix}-single-neuron-model`,
     { virtualLabId, projectId, entityId },
@@ -124,5 +139,27 @@ export const keyBuilder = {
   roles: ({ roleType }: { roleType: 'contributor' | 'owner' | 'viewer' }) => [
     `${prefix}-roles`,
     { roleType },
+  ],
+  derivations: ({
+    virtualLabId,
+    projectId,
+    entityId,
+    entityRoute,
+    derivationType,
+    page,
+    pageSize,
+  }: WorkspaceContext & {
+    entityId: string;
+    entityRoute: TEntityTypeDict;
+    derivationType: TDerivationType;
+    page: number;
+    pageSize: number;
+  }) => [
+    `${prefix}-derivations`,
+    { virtualLabId, projectId, entityId, entityRoute, derivationType, page, pageSize },
+  ],
+  ionChannelsFile: ({ entityName }: { entityName: string }) => [
+    `${prefix}-ion-channels-file`,
+    { entityName },
   ],
 };
