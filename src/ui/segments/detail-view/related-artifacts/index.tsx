@@ -7,8 +7,8 @@ import {
 
 import MEModelResults from '@/features/entities/me-model/detail-view/simulation';
 import SynaptomeResults from '@/features/entities/single-neuron-synaptome/detail-view/simulation';
+import { RelatedCircuits } from '@/ui/segments/explore/circuit/elements/related-circuits';
 import { EntityTypeValue } from '@/entity-configuration/domain';
-import RelatedCircuits from '@/features/entities/circuit/elements/tabs-content/related-circuits';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';

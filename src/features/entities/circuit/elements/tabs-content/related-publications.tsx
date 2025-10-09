@@ -1,57 +1,32 @@
-'use client';
-
 import { CloseCircleTwoTone, LoadingOutlined } from '@ant-design/icons';
-import { notFound, useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
 import { Empty, List } from 'antd';
 import { useState } from 'react';
 
 import { getScientificArtifactPublicationLinks } from '@/api/entitycore/queries/general/scientific-artifact-publication-link';
 import { PublicationTypeDictionary } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
 import { Card } from '@/features/entities/circuit/elements/publication-item/card';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import Tabs, { Tab } from '@/ui/molecules/tabbed-page';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { TPublicationTypeDictionary } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
-import type { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
-import type { EntityTypeValue } from '@/entity-configuration/domain';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { WorkspaceContext } from '@/types/common';
 
-export default function RelatedPublications({
-  entity,
-  extendedType,
-}: {
-  entity: EntityTypeValue;
-  extendedType: EntityCoreExtendedType;
-}) {
-  const entityType = getEntityByExtendedType({ type: extendedType });
-  if (!entityType) notFound();
-
-  return (
-    <Tabs defaultMessage="No related publications found">
-      <Tab label="Provenance">
-        <PerTypePublications entity={entity} type={PublicationTypeDictionary.EntitySource} />
-      </Tab>
-
-      <Tab label="Related artifacts provenance">
-        <PerTypePublications entity={entity} type={PublicationTypeDictionary.ComponentSource} />
-      </Tab>
-      <Tab label="Applications">
-        <PerTypePublications entity={entity} type={PublicationTypeDictionary.Application} />
-      </Tab>
-    </Tabs>
-  );
-}
+type Props = {
+  circuit: ICircuit;
+};
 
 function PerTypePublications({
-  entity,
+  circuit,
   type,
 }: {
-  entity: EntityTypeValue;
+  circuit: ICircuit;
   type: TPublicationTypeDictionary;
 }) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
+
   const [pagination, setPagination] = useState<{
     page: number;
     pageSize: number;
@@ -69,7 +44,7 @@ function PerTypePublications({
     queryKey: keyBuilder.scientificArtifactPublicationLinks({
       context: { virtualLabId, projectId },
       props: {
-        scientific_artifact__id: entity.id,
+        scientific_artifact__id: circuit.id,
         publication_type: type,
         page: pagination.page,
         page_size: pagination.pageSize,
@@ -78,7 +53,7 @@ function PerTypePublications({
     queryFn: async () => {
       return await getScientificArtifactPublicationLinks({
         filters: {
-          scientific_artifact__id: entity.id,
+          scientific_artifact__id: circuit.id,
           publication_type: type,
           page: pagination.page,
           page_size: pagination.pageSize,
@@ -146,5 +121,22 @@ function PerTypePublications({
         </div>
       )}
     </div>
+  );
+}
+
+export default function RelatedPublications({ circuit }: Props) {
+  return (
+    <Tabs defaultMessage="No related publications found">
+      <Tab label="Provenance">
+        <PerTypePublications circuit={circuit} type={PublicationTypeDictionary.EntitySource} />
+      </Tab>
+
+      <Tab label="Related artifacts provenance">
+        <PerTypePublications circuit={circuit} type={PublicationTypeDictionary.ComponentSource} />
+      </Tab>
+      <Tab label="Applications">
+        <PerTypePublications circuit={circuit} type={PublicationTypeDictionary.Application} />
+      </Tab>
+    </Tabs>
   );
 }

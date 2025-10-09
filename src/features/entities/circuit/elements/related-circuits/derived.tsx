@@ -90,7 +90,7 @@ export function Derived({ data }: Props) {
         <div className="my-5 flex flex-col items-start gap-5">
           <div className="ml-2 flex flex-row items-center gap-2">
             <ArrowReturnRight className="text-neutral-4 text-3xl" />
-            <div className="text-neutral-4 text-lg font-semibold uppercase">subcircuits</div>
+            <div className="text-neutral-4 text-lg font-semibold uppercase">Derived circuits</div>
           </div>
           <div className="w-full">
             <div className="ml-4">

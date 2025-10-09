@@ -1,3 +1,4 @@
+import type { IScientificArtifactPublicationLinkFilter } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
 import type { ElectricalCellRecordingFilter } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
@@ -162,4 +163,11 @@ export const keyBuilder = {
     `${prefix}-ion-channels-file`,
     { entityName },
   ],
+  scientificArtifactPublicationLinks: ({
+    context,
+    ...props
+  }: {
+    context: WorkspaceContext;
+    props: Partial<IScientificArtifactPublicationLinkFilter>;
+  }) => [`${prefix}-scientific-artifact-publication-links`, { ...props, ...context }],
 };
