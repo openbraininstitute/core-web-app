@@ -182,7 +182,7 @@ export class Labels {
       if (label.origin === 'injection' && this.injectionIcon) {
         ctx.save();
         ctx.translate(currentX + iconSize / 2, label.boxY);
-        ctx.rotate((-75 * Math.PI) / 180);
+        ctx.rotate((-35 * Math.PI) / 180);
         ctx.drawImage(this.injectionIcon, -iconSize / 2, -iconSize / 2, iconSize, iconSize);
         ctx.restore();
         currentX += iconSize + iconSpacing;

@@ -106,7 +106,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
     onError(err) {
       log('error', 'Build me-model failed:', err);
       const message =
-        get(err, 'cause.error_code') === LOW_FUNDS_ERROR_CODE
+        get(err, 'cause.code') === LOW_FUNDS_ERROR_CODE
           ? messages.LowFundsError
           : messages.DefaultErrorMsg;
 
