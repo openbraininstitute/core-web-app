@@ -112,7 +112,7 @@ function distributeColors(plotInstance: PlotInstance): PlotInstance {
   if (plotInstance.lines.length === 0) return plotInstance;
 
   const step = 360 / plotInstance.lines.length;
-  let angle = 240;
+  let angle = 240; // Start with blue.
   for (const line of plotInstance.lines) {
     const color = new TgdColor(`hsl(${angle}deg 80% 50%)`);
     line.color = color.toString();
