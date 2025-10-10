@@ -1,3 +1,4 @@
+import { TgdColor } from '@tolokoban/tgd';
 import { PlotDataEntry } from '@/services/bluenaas-single-cell/types';
 import { logError } from '@/util/logger';
 
@@ -113,7 +114,8 @@ function distributeColors(plotInstance: PlotInstance): PlotInstance {
   const step = 360 / plotInstance.lines.length;
   let angle = 0;
   for (const line of plotInstance.lines) {
-    line.color = `hsl(${angle}deg 100% 50%)`;
+    const color = new TgdColor(`hsl(${angle}deg 80% 50%)`);
+    line.color = color.toString();
     angle += step;
   }
   return plotInstance;
