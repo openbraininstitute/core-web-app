@@ -1,6 +1,6 @@
 import React from 'react';
-import compact from 'lodash/compact';
-import find from 'lodash/find';
+import compact from 'es-toolkit/compat/compact';
+import find from 'es-toolkit/compat/find';
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { TgdColor, TgdVec4 } from '@tolokoban/tgd';

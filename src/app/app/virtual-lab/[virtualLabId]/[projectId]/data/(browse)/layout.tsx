@@ -2,7 +2,7 @@
 
 import { use, useLayoutEffect } from 'react';
 import { useNextStep } from 'nextstepjs';
-import find from 'lodash/find';
+import find from 'es-toolkit/compat/find';
 
 import type { ReactNode } from 'react';
 

@@ -4,9 +4,9 @@ import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
 import { JSX, ReactNode, useEffect, useState } from 'react';
 import { Button, Empty, Modal } from 'antd';
 import { useParams } from 'next/navigation';
-import isEmpty from 'lodash/isEmpty';
-import isNil from 'lodash/isNil';
-import find from 'lodash/find';
+import isEmpty from 'es-toolkit/compat/isEmpty';
+import isNil from 'es-toolkit/compat/isNil';
+import find from 'es-toolkit/compat/find';
 
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { PreviewThumbnail } from '@/features/thumbnail/preview';

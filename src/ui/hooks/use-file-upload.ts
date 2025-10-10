@@ -1,6 +1,6 @@
 'use client';
 
-import isString from 'lodash/isString';
+import isString from 'es-toolkit/compat/isString';
 
 import {
   useCallback,

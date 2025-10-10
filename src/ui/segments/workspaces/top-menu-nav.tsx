@@ -215,7 +215,8 @@ export function TopMenuNavigation() {
             variant="outline"
             size={breakpoint === 'xl' ? 'lg' : 'md'}
             className={cn(
-              { 'w-12! justify-center!': !allowText },
+              { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
+              { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
               'group relative flex items-center justify-between',
               { 'group-hover:rounded-r-none group-hover:border-r-0': hasAction },
               'transition-all duration-400 ease-out',

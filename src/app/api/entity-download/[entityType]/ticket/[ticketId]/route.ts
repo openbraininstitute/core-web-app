@@ -1,5 +1,5 @@
-import snakeCase from 'lodash/snakeCase';
-import kebabCase from 'lodash/kebabCase';
+import snakeCase from 'es-toolkit/compat/snakeCase';
+import kebabCase from 'es-toolkit/compat/kebabCase';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 

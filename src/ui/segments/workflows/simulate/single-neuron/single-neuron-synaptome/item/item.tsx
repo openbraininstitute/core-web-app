@@ -11,7 +11,7 @@ import {
   DeleteOutlined,
   EyeOutlined,
 } from '@ant-design/icons';
-import find from 'lodash/find';
+import find from 'es-toolkit/compat/find';
 
 import { FrequencyFormItem } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome/item/frequency-input';
 import { OptionRender } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome/item/config-list-render';

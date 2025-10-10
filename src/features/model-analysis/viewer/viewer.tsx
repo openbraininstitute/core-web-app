@@ -3,7 +3,7 @@
 import { match, P } from 'ts-pattern';
 import { useCallback } from 'react';
 import { Divider } from 'antd';
-import lowerCase from 'lodash/lowerCase';
+import lowerCase from 'es-toolkit/compat/lowerCase';
 
 import ImageViewer from '@/features/model-analysis/viewer/image-viewer';
 import PDFViewer from '@/features/model-analysis/viewer/pdf-viewer';

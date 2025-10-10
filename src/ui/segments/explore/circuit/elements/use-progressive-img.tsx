@@ -3,7 +3,7 @@ import { Progress, Empty, Image as AntdImage } from 'antd';
 import { CloseCircleFilled } from '@ant-design/icons';
 import { useParams } from 'next/navigation';
 import { match, P } from 'ts-pattern';
-import isNumber from 'lodash/isNumber';
+import isNumber from 'es-toolkit/compat/isNumber';
 import NextImage from 'next/image';
 
 import { trackDownloadProgress } from '@/utils/track-download-progress';

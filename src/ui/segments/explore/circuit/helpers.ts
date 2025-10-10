@@ -1,5 +1,5 @@
 import { atom } from 'jotai';
-import keyBy from 'lodash/keyBy';
+import keyBy from 'es-toolkit/compat/keyBy';
 
 import type { HierarchyNode, HierarchyTreeResponse } from '@/api/entitycore/types/shared/hierarchy';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';

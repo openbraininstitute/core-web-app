@@ -12,10 +12,10 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { useRouter } from '@bprogress/next';
 import { z } from 'zod';
 
-import kebabCase from 'lodash/kebabCase';
-import delay from 'lodash/delay';
-import omit from 'lodash/omit';
-import get from 'lodash/get';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import delay from 'es-toolkit/compat/delay';
+import omit from 'es-toolkit/compat/omit';
+import get from 'es-toolkit/compat/get';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { createModel } from '@/api/small-scale-simulator/single-neuron/single-neuron';

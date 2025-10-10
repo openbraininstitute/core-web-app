@@ -3,7 +3,7 @@
 import { useSearchParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import dynamic from 'next/dynamic';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import { SimulationColors } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import { SimulationStatus, simulationStatusAtomFamily } from '@/state/simulate/single-neuron';

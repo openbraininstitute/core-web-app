@@ -5,8 +5,8 @@
 import { AlertOutlined, LoadingOutlined } from '@ant-design/icons';
 import { Form, Spin } from 'antd';
 import { useState } from 'react';
-import reject from 'lodash/reject';
-import isNil from 'lodash/isNil';
+import reject from 'es-toolkit/compat/reject';
+import isNil from 'es-toolkit/compat/isNil';
 import JSZip from 'jszip';
 
 import { Alert, AlertContent, AlertDescription, AlertIcon, AlertTitle } from '@/ui/molecules/alert';

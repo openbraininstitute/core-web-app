@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import delay from 'lodash/delay';
+import delay from 'es-toolkit/compat/delay';
 
 type CopiedValue = string | null;
 type CopyFn = (text: string) => Promise<boolean>;

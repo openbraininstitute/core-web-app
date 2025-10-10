@@ -1,4 +1,4 @@
-import find from 'lodash/find';
+import find from 'es-toolkit/compat/find';
 
 import { authApiClient } from '@/api/apiClient';
 import { entityCoreUrl } from '@/config';

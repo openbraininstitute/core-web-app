@@ -1,5 +1,5 @@
 import { WheelGesturesPlugin } from 'embla-carousel-wheel-gestures';
-import find from 'lodash/find';
+import find from 'es-toolkit/compat/find';
 
 import { ActivityDict, getAllOptionsOrdered } from '@/ui/segments/workflows/elements/helpers';
 import { CarouselButtons } from '@/ui/segments/workflows/elements/carousel-buttons';

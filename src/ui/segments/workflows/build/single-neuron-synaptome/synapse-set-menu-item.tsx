@@ -2,7 +2,7 @@
 
 import { DeleteOutlined, EyeInvisibleOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import sample from 'lodash/sample';
+import sample from 'es-toolkit/compat/sample';
 import { useAtom } from 'jotai';
 import { Color } from 'three';
 

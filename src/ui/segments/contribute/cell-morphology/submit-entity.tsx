@@ -5,7 +5,7 @@ import { useMutationState } from '@tanstack/react-query';
 import { useRouter } from '@bprogress/next';
 import { Form } from 'antd';
 
-import isNil from 'lodash/isNil';
+import isNil from 'es-toolkit/compat/isNil';
 import { buildCellMorphologyMutationKeys } from '@/ui/segments/contribute/cell-morphology/use-pipeline';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';

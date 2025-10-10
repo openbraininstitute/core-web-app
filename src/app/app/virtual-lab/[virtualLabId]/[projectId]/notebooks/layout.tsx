@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 // import { useNextStep } from 'nextstepjs';
-// import find from 'lodash/find';
+// import find from 'es-toolkit/compat/find';
 
 import { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import { NotebookInnerLayout } from '@/ui/layouts/notebook-inner-layout';

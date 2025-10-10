@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { Form } from 'antd';
-import isNil from 'lodash/isNil';
+import isNil from 'es-toolkit/compat/isNil';
 /* 
 import { getSpecies } from '@/api/entitycore/queries/general/species';
 import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';

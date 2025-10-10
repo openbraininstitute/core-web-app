@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import React from 'react';
-import debounce from 'lodash/debounce';
+import debounce from 'es-toolkit/compat/debounce';
 import { Message } from '@ai-sdk/react';
 
 import { serviceAiAgentThreadDelete, serviceAiAgentThreadRename } from '../api';

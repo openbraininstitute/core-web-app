@@ -13,9 +13,9 @@ import {
   PlusCircleOutlined,
 } from '@ant-design/icons';
 
-import findIndex from 'lodash/findIndex';
-import groupBy from 'lodash/groupBy';
-import map from 'lodash/map';
+import findIndex from 'es-toolkit/compat/findIndex';
+import groupBy from 'es-toolkit/compat/groupBy';
+import map from 'es-toolkit/compat/map';
 
 import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import { SECTION_TARGET_MAPPING } from '@/features/entities/single-neuron-synaptome/build/elements/constants';

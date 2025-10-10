@@ -1,8 +1,8 @@
 import { NotificationInstance } from 'antd/es/notification/interface';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
-import omit from 'lodash/omit';
-import get from 'lodash/get';
+import omit from 'es-toolkit/compat/omit';
+import get from 'es-toolkit/compat/get';
 
 import { UserProfileResponse } from '@/api/virtual-lab-svc/queries/types';
 import { updateUserProfile } from '@/api/virtual-lab-svc/queries/user';

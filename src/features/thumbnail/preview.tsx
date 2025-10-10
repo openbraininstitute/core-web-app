@@ -7,7 +7,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Empty, Skeleton } from 'antd';
 import { match, P } from 'ts-pattern';
-import isEmpty from 'lodash/isEmpty';
+import isEmpty from 'es-toolkit/compat/isEmpty';
 import Image from 'next/image';
 
 import { getPreviewBlob } from '@/api/thumbnail-svc';

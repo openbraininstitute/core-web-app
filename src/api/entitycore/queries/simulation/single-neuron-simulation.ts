@@ -1,5 +1,5 @@
-import startsWith from 'lodash/startsWith';
-import some from 'lodash/some';
+import startsWith from 'es-toolkit/compat/startsWith';
+import some from 'es-toolkit/compat/some';
 
 import { entityCoreApi, getAssetElement, getEntityCoreContext } from '@/api/entitycore/utils';
 import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation';

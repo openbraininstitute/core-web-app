@@ -1,8 +1,8 @@
 import { ReactNode } from 'react';
 import { format } from 'date-fns';
-import capitalize from 'lodash/capitalize';
-import isString from 'lodash/isString';
-import _memoize from 'lodash/memoize';
+import capitalize from 'es-toolkit/compat/capitalize';
+import isString from 'es-toolkit/compat/isString';
+import _memoize from 'es-toolkit/compat/memoize';
 
 export function createHeaders(
   token: string,

@@ -1,5 +1,5 @@
-import find from 'lodash/find';
-import merge from 'lodash/merge';
+import find from 'es-toolkit/compat/find';
+import merge from 'es-toolkit/compat/merge';
 
 /**
  * This function will update an item of Array of objects by giving a costum predicate
