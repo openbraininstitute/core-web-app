@@ -157,7 +157,7 @@ export const OnboardingDiscoverSteps: Tour[] = [
     steps: [
       {
         icon: null,
-        title: 'Labs, Projects + User Account',
+        title: 'Labs, projects + user account',
         content: (
           <>
             Here you can manage your virtual labs, projects, user account and subscription. You can
@@ -173,7 +173,7 @@ export const OnboardingDiscoverSteps: Tour[] = [
       },
       {
         icon: null,
-        title: 'Project Credits',
+        title: 'Project credits',
         content: (
           <>
             Here are your remaining project credits. You can also transfer credits between projects.
@@ -188,7 +188,7 @@ export const OnboardingDiscoverSteps: Tour[] = [
       },
       {
         icon: null,
-        title: 'Project Home',
+        title: 'Project home',
         content: (
           <>View your project’s latest activities, invite new members and manage your credits.</>
         ),
@@ -283,7 +283,7 @@ export const OnboardingDiscoverSteps: Tour[] = [
       },
       {
         icon: null,
-        title: 'Ai assistant',
+        title: 'Ai Assistant',
         content: (
           <>
             Chat with our AI assistant: ask questions about our data or ask it to read and summarise
