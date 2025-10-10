@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useSyncExternalStore } from 'react';
-import isNil from 'lodash/isNil';
+import isNil from 'es-toolkit/compat/isNil';
 
 function dispatchStorageEvent(key: string, newValue: string | null): void {
   window.dispatchEvent(new StorageEvent('storage', { key, newValue }));

@@ -1,4 +1,4 @@
-import sortBy from 'lodash/sortBy';
+import sortBy from 'es-toolkit/compat/sortBy';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';

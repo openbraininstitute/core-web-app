@@ -1,5 +1,5 @@
-import pick from 'lodash/pick';
-import get from 'lodash/get';
+import pick from 'es-toolkit/compat/pick';
+import get from 'es-toolkit/compat/get';
 
 import { FieldsDefinition as ExperimentalFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/experimental';
 import { FieldsDefinition as ExperimentFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/experiment';

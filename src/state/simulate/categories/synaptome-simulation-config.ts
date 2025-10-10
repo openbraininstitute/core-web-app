@@ -1,6 +1,6 @@
 import { atomWithReset } from 'jotai/utils';
 import { useAtom } from 'jotai';
-import sample from 'lodash/sample';
+import sample from 'es-toolkit/compat/sample';
 
 import { getDefaultSynapseConfig, SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
 import { updateArray } from '@/util/updateArray';

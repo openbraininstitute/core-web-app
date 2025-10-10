@@ -1,4 +1,4 @@
-import isNil from 'lodash/isNil';
+import isNil from 'es-toolkit/compat/isNil';
 
 export function compactRecord<T>(
   values: Record<string, any> | undefined

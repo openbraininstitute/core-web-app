@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Button, Progress } from 'antd';
 import { match } from 'ts-pattern';
-import delay from 'lodash/delay';
+import delay from 'es-toolkit/compat/delay';
 import saveAs from 'file-saver';
 
 import { trackDownloadProgress } from '@/utils/track-download-progress';

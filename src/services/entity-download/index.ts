@@ -1,4 +1,4 @@
-import snakeCase from 'lodash/snakeCase';
+import snakeCase from 'es-toolkit/compat/snakeCase';
 
 import { TEntityTypeDict } from '@/api/entitycore/types';
 import createDownloadTicket from '@/api/entity-download';

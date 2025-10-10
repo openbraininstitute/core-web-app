@@ -1,4 +1,4 @@
-import snakeCase from 'lodash/snakeCase';
+import snakeCase from 'es-toolkit/compat/snakeCase';
 
 import { BrowseAction } from '@/ui/segments/workflows/elements/browse-build-action';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';

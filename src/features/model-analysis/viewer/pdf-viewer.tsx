@@ -3,7 +3,7 @@
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Empty, Skeleton } from 'antd';
 import { Fragment, useState } from 'react';
-import kebabCase from 'lodash/kebabCase';
+import kebabCase from 'es-toolkit/compat/kebabCase';
 
 import { useClientCachedUrl } from '@/features/model-analysis/viewer/storage';
 

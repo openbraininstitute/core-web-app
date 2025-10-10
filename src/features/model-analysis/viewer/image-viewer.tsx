@@ -2,7 +2,7 @@ import { Empty, Skeleton } from 'antd';
 import { match, P } from 'ts-pattern';
 import Image from 'next/image';
 
-import kebabCase from 'lodash/kebabCase';
+import kebabCase from 'es-toolkit/compat/kebabCase';
 import { useClientCachedUrl } from '@/features/model-analysis/viewer/storage';
 import { entityCoreUrl } from '@/config';
 

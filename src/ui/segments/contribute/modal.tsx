@@ -1,7 +1,7 @@
 import { CloseOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 import { match, P } from 'ts-pattern';
-import isNil from 'lodash/isNil';
+import isNil from 'es-toolkit/compat/isNil';
 
 import {
   makeSelectContributionEntityClickEvent,

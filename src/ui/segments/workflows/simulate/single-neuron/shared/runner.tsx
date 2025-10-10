@@ -3,15 +3,15 @@
 import { captureException } from '@sentry/nextjs';
 import { match } from 'ts-pattern';
 import { atom } from 'jotai';
-import sortBy from 'lodash/sortBy';
-import uniqBy from 'lodash/uniqBy';
-import values from 'lodash/values';
-import isNil from 'lodash/isNil';
-import delay from 'lodash/delay';
-import pick from 'lodash/pick';
-import lget from 'lodash/get';
-import omit from 'lodash/omit';
-import map from 'lodash/map';
+import sortBy from 'es-toolkit/compat/sortBy';
+import uniqBy from 'es-toolkit/compat/uniqBy';
+import values from 'es-toolkit/compat/values';
+import isNil from 'es-toolkit/compat/isNil';
+import delay from 'es-toolkit/compat/delay';
+import pick from 'es-toolkit/compat/pick';
+import lget from 'es-toolkit/compat/get';
+import omit from 'es-toolkit/compat/omit';
+import map from 'es-toolkit/compat/map';
 
 import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
 import {

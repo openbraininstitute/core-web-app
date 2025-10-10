@@ -1,8 +1,8 @@
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useCallback } from 'react';
 import { Form } from 'antd';
-import capitalize from 'lodash/capitalize';
-import isNil from 'lodash/isNil';
+import capitalize from 'es-toolkit/compat/capitalize';
+import isNil from 'es-toolkit/compat/isNil';
 
 import { getOrganizations } from '@/api/entitycore/queries/general/organization-agent';
 import { getConsortia } from '@/api/entitycore/queries/general/consortium-agent';

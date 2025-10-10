@@ -1,6 +1,6 @@
-import filter from 'lodash/filter';
-import find from 'lodash/find';
-import set from 'lodash/set';
+import filter from 'es-toolkit/compat/filter';
+import find from 'es-toolkit/compat/find';
+import set from 'es-toolkit/compat/set';
 
 import { EntityCoreConfiguration } from '@/entity-configuration/domain';
 

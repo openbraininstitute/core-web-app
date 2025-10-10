@@ -1,5 +1,5 @@
 import { Atom } from 'jotai';
-import uniq from 'lodash/uniq';
+import uniq from 'es-toolkit/compat/uniq';
 import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 
 export type Primitive = null | boolean | number | string;

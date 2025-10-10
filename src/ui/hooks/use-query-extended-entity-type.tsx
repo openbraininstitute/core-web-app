@@ -6,7 +6,7 @@ import {
   hashKey,
 } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
-import isEmpty from 'lodash/isEmpty';
+import isEmpty from 'es-toolkit/compat/isEmpty';
 
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
 import {

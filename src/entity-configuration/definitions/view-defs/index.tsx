@@ -1,7 +1,7 @@
-import findKey from 'lodash/findKey';
-import find from 'lodash/find';
-import pick from 'lodash/pick';
-import get from 'lodash/get';
+import findKey from 'es-toolkit/compat/findKey';
+import find from 'es-toolkit/compat/find';
+import pick from 'es-toolkit/compat/pick';
+import get from 'es-toolkit/compat/get';
 
 import { ViewsDefinition as ExperimentalViewDefinition } from '@/entity-configuration/definitions/view-defs/experimental';
 import { ViewsDefinition as ExperimentViewDefinition } from '@/entity-configuration/definitions/view-defs/experiment';

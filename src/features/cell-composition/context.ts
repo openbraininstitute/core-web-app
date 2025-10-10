@@ -1,7 +1,7 @@
 import { arrayToTree } from 'performant-array-to-tree';
 import { atomFamily } from 'jotai/utils';
 import { Atom, atom } from 'jotai';
-import isEqual from 'lodash/isEqual';
+import isEqual from 'es-toolkit/compat/isEqual';
 
 import { resolveBrainRegionCellComposition } from '@/features/cell-composition/composition-constructor';
 import { getCellCompositions } from '@/api/entitycore/queries/general/cell-composition';

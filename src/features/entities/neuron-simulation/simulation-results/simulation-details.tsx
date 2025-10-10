@@ -4,9 +4,9 @@ import { ConfigProvider, Segmented, Spin } from 'antd';
 import { SegmentedValue } from 'antd/lib/segmented';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import startsWith from 'lodash/startsWith';
-import some from 'lodash/some';
-import get from 'lodash/get';
+import startsWith from 'es-toolkit/compat/startsWith';
+import some from 'es-toolkit/compat/some';
+import get from 'es-toolkit/compat/get';
 
 import SimulationPlot from '@/features/entities/neuron-simulation/simulation-results/simulation-plot-dynamic';
 

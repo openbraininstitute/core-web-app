@@ -6,7 +6,7 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { useAtomValue } from 'jotai';
 import { Spin } from 'antd';
 
-import isObject from 'lodash/isObject';
+import isObject from 'es-toolkit/compat/isObject';
 
 import sessionAtom from '@/state/session';
 

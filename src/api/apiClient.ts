@@ -1,5 +1,5 @@
-import isNil from 'lodash/isNil';
-import omitBy from 'lodash/omitBy';
+import isNil from 'es-toolkit/compat/isNil';
+import omitBy from 'es-toolkit/compat/omitBy';
 
 import { parseApiError } from '@/api/utils';
 import { getSession } from '@/authFetch';

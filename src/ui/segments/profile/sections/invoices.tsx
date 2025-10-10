@@ -2,7 +2,7 @@ import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { Button, ConfigProvider, theme } from 'antd';
 import Table, { ColumnsType } from 'antd/es/table';
 import { useQuery } from '@tanstack/react-query';
-import flatMap from 'lodash/flatMap';
+import flatMap from 'es-toolkit/compat/flatMap';
 import { format } from 'date-fns';
 
 import { getStatusColor } from '@/components/VirtualLab/create-entity-flows/subscription/elements';

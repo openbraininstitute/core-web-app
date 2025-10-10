@@ -1,6 +1,6 @@
-import throttle from 'lodash/throttle';
-import isEqual from 'lodash/isEqual';
-import differenceWith from 'lodash/differenceWith';
+import throttle from 'es-toolkit/compat/throttle';
+import isEqual from 'es-toolkit/compat/isEqual';
+import differenceWith from 'es-toolkit/compat/differenceWith';
 import {
   AmbientLight,
   Color,

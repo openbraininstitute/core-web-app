@@ -3,8 +3,8 @@
 import { useParams, usePathname } from 'next/navigation';
 import { useRouter } from '@bprogress/next/app';
 import { useState } from 'react';
-import snakeCase from 'lodash/snakeCase';
-import kebabCase from 'lodash/kebabCase';
+import snakeCase from 'es-toolkit/compat/snakeCase';
+import kebabCase from 'es-toolkit/compat/kebabCase';
 
 import {
   CategorySelectScrollable,

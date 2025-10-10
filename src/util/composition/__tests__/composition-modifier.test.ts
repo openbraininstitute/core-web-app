@@ -1,4 +1,4 @@
-import cloneDeep from 'lodash/cloneDeep';
+import cloneDeep from 'es-toolkit/compat/cloneDeep';
 import testComposition from './data/test-composition.json';
 import { calculateNewExtendedNodeId } from '@/util/composition/utils';
 import computeModifiedComposition, {

@@ -1,6 +1,6 @@
-import find from 'lodash/find';
-import get from 'lodash/get';
-import isEmpty from 'lodash/isEmpty';
+import find from 'es-toolkit/compat/find';
+import get from 'es-toolkit/compat/get';
+import isEmpty from 'es-toolkit/compat/isEmpty';
 
 import getMeasurements, {
   EmptyValue,

@@ -1,7 +1,7 @@
 /* eslint-disable prefer-destructuring */
 
 import { NextRequest } from 'next/server';
-import pick from 'lodash/pick';
+import pick from 'es-toolkit/compat/pick';
 
 import { createVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { updateUserProfile } from '@/api/virtual-lab-svc/queries/user';

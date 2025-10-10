@@ -2,8 +2,8 @@
 
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { ColumnProps } from 'antd/lib/table';
-import throttle from 'lodash/throttle';
-import isString from 'lodash/isString';
+import throttle from 'es-toolkit/compat/throttle';
+import isString from 'es-toolkit/compat/isString';
 
 import { fieldsDefinitionRegistry, getFieldDefinition } from '@/entity-configuration/definitions';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';

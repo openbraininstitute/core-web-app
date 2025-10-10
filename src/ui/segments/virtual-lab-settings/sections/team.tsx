@@ -9,10 +9,10 @@ import { ColumnType } from 'antd/es/table';
 import { match } from 'ts-pattern';
 import { z } from 'zod';
 
-import compact from 'lodash/compact';
-import sortBy from 'lodash/sortBy';
-import find from 'lodash/find';
-import get from 'lodash/get';
+import compact from 'es-toolkit/compat/compact';
+import sortBy from 'es-toolkit/compat/sortBy';
+import find from 'es-toolkit/compat/find';
+import get from 'es-toolkit/compat/get';
 
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
 import { inviteToVirtualLab } from '@/api/virtual-lab-svc/queries/invite';

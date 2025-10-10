@@ -1,6 +1,6 @@
 import z from 'zod';
-import snakeCase from 'lodash/snakeCase';
-import kebabCase from 'lodash/kebabCase';
+import snakeCase from 'es-toolkit/compat/snakeCase';
+import kebabCase from 'es-toolkit/compat/kebabCase';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { TEntityTypeDict } from '@/api/entitycore/types';

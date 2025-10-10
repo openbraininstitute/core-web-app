@@ -2,10 +2,10 @@ import { useAtom, useAtomValue } from 'jotai';
 import { Form, Input, Select } from 'antd';
 import { useEffect } from 'react';
 
-import camelCase from 'lodash/camelCase';
-import startCase from 'lodash/startCase';
-import toPairs from 'lodash/toPairs';
-import get from 'lodash/get';
+import camelCase from 'es-toolkit/compat/camelCase';
+import startCase from 'es-toolkit/compat/startCase';
+import toPairs from 'es-toolkit/compat/toPairs';
+import get from 'es-toolkit/compat/get';
 
 import { AmperageConfiguration } from '@/ui/segments/workflows/simulate/single-neuron/shared/amperage-configuration';
 import { StimulationConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';

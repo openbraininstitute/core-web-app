@@ -1,6 +1,6 @@
 import { atomFamily, atomWithDefault } from 'jotai/utils';
 import { atom } from 'jotai';
-import _get from 'lodash/get';
+import _get from 'es-toolkit/compat/get';
 
 import { columnKeyToFilter } from '@/ui/segments/data-table/elements/column-key-to-filter';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
