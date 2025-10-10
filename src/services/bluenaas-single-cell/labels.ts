@@ -171,7 +171,7 @@ export class Labels {
     const center = w * 0.5;
     paintLabelsArrows(ctx, allLabels, center, this.options);
     ctx.fillStyle = '#000';
-    const iconSize = fontSize;
+    const iconSize = fontSize * 1.3;
     const iconSpacing = 4;
 
     for (const label of allLabels) {
@@ -182,7 +182,7 @@ export class Labels {
       if (label.origin === 'injection' && this.injectionIcon) {
         ctx.save();
         ctx.translate(currentX + iconSize / 2, label.boxY);
-        ctx.rotate((-35 * Math.PI) / 180);
+        ctx.rotate((-45 * Math.PI) / 180);
         ctx.drawImage(this.injectionIcon, -iconSize / 2, -iconSize / 2, iconSize, iconSize);
         ctx.restore();
         currentX += iconSize + iconSpacing;
@@ -199,7 +199,7 @@ export class Labels {
     w: number
   ) {
     const { padding, margin, fontSize } = this.options;
-    const iconSize = fontSize;
+    const iconSize = fontSize * 1.3;
     const iconSpacing = 4;
 
     const topRight: LabelToDraw[] = [];
