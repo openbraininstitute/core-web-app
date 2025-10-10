@@ -1,7 +1,6 @@
 import { WheelGesturesPlugin } from 'embla-carousel-wheel-gestures';
-import find from 'es-toolkit/compat/find';
 
-import { ActivityDict, getAllOptionsOrdered } from '@/ui/segments/workflows/elements/helpers';
+import { getAllOptionsOrdered } from '@/ui/segments/workflows/elements/helpers';
 import { CarouselButtons } from '@/ui/segments/workflows/elements/carousel-buttons';
 import { Carousel, CarouselContent, CarouselItem } from '@/ui/molecules/carousel';
 import { MenuItem } from '@/ui/segments/workflows/elements/menu-item';
@@ -44,7 +43,7 @@ export function TypesMenu({
               active={current === value}
               value={value}
               disabled={disabled}
-              title={`${label} ${find(ActivityDict, { value: category })?.name}`}
+              title={`${label}`}
               onClick={onItemClick}
             />
           </CarouselItem>

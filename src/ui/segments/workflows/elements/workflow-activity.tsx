@@ -6,7 +6,7 @@ import { useState } from 'react';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 import find from 'es-toolkit/compat/find';
 import get from 'es-toolkit/compat/get';
-
+import Link from 'next/link';
 import type { ColumnsType } from 'antd/es/table/interface';
 
 import { EntityCoreObjectTypes, EntityTypeDict, TEntityTypeDict } from '@/api/entitycore/types';
@@ -31,7 +31,6 @@ import { ROOT_ROUTE } from '@/config';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ExtendedCampaignsType } from '@/entity-configuration/domain/simulation';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
-import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 
 const AllowedDuplicateEntityTypes: TEntityTypeDict[] = [EntityTypeDict.SimulationCampaign];
 export interface WorkflowActivityRef {
@@ -47,19 +46,7 @@ export type WorkflowActivityProps = {
   onShouldOnlyRenderScrollableSelector: (shouldRenderOnlyScrollableSelector: boolean) => void;
 };
 
-export function WorkflowActivity({
-  ref,
-  children,
-}: {
-  ref: React.RefObject<HTMLDivElement | null>;
-  children?: ({
-    isFetching,
-    data,
-  }: {
-    isFetching: boolean;
-    data: EntityCoreResponse<any> | null | undefined;
-  }) => React.ReactNode;
-}) {
+export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement | null> }) {
   const { push: navigate } = useRouter();
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
@@ -337,9 +324,7 @@ export function WorkflowActivity({
                       size={breakpoint === 'l' ? 'md' : 'lg'}
                       className="select-none"
                     >
-                      <a href={configurationLink} target="_blank" rel="noopener noreferrer">
-                        View configuration
-                      </a>
+                      <Link href={configurationLink}>View configuration</Link>
                     </Button>
                     {entityType !== ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation &&
                       entityType !== ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation && (
@@ -351,14 +336,12 @@ export function WorkflowActivity({
                           disabled={activityType === ActivityValues.Build}
                           className="disabled:bg-background! disabled:text-label! select-none disabled:cursor-not-allowed"
                         >
-                          <a
+                          <Link
                             href={resultsLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
                             aria-disabled={activityType === ActivityValues.Build}
                           >
                             View results
-                          </a>
+                          </Link>
                         </Button>
                       )}
                     <Button
@@ -381,7 +364,6 @@ export function WorkflowActivity({
           </div>
         )}
       </div>
-      {children && children({ data: activityResult, isFetching })}
     </section>
   );
 }
