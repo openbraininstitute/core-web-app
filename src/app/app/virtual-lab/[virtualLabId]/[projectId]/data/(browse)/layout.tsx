@@ -1,22 +1,18 @@
 'use client';
 
-import { use, useLayoutEffect } from 'react';
-import { useNextStep } from 'nextstepjs';
-import find from 'es-toolkit/compat/find';
+import { use } from 'react';
 
 import type { ReactNode } from 'react';
 
 import { DefaultContent as ExploreDefaultContent } from '@/ui/segments/explore/default-content';
+import { dataTour, useNextStepOnboarding } from '@/ui/segments/app-setup/discover-app';
 import { DataInnerLayout } from '@/ui/layouts/explore-inner-layout';
-import { dataTour } from '@/ui/segments/app-setup/discover-app';
-import { useLocalStorage } from '@/hooks/use-local-storage';
+import { ContributionModal } from '@/ui/segments/contribute/modal';
 import { DataHeader } from '@/ui/segments/explore/header';
 import { DataLayout } from '@/ui/layouts/explore-layout';
 import { resolveDataKey } from '@/utils/key-builder';
-import { AUTO_ONBOARDING_TOURS } from '@/constants';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
-import { ContributionModal } from '@/ui/segments/contribute/modal';
 
 export default function Page({
   children,
@@ -27,25 +23,7 @@ export default function Page({
   const { projectId } = use(params);
   const dataKey = resolveDataKey({ projectId, section: 'explore' });
 
-  const { startNextStep } = useNextStep();
-  const [onboardingState] = useLocalStorage<{
-    tours: Array<{
-      tour: string | null;
-      done: boolean | null;
-      date: number | null;
-      step: number | null;
-    }>;
-  }>(AUTO_ONBOARDING_TOURS, {
-    tours: [],
-  });
-
-  useLayoutEffect(() => {
-    const tour = find(onboardingState.tours, { tour: dataTour });
-
-    if (!tour || !tour.done) {
-      startNextStep(dataTour);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useNextStepOnboarding({ condition: true, tour: dataTour });
 
   return (
     <DataLayout>

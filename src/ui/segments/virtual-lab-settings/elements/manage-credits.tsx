@@ -1,15 +1,15 @@
 'use client';
 
+import { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'motion/react';
+import { Select } from 'antd';
 import {
   ArrowLeftOutlined,
   ArrowRightOutlined,
   LoadingOutlined,
   SwapOutlined,
 } from '@ant-design/icons';
-import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'motion/react';
-import { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { Select } from 'antd';
 
 import { assignProjectBudget, reverseProjectBudget } from '@/services/virtual-lab/projects';
 import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
@@ -19,6 +19,7 @@ import { Button, Button as UiButton } from '@/ui/molecules/button';
 import { useAppNotification } from '@/components/notification';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { CoinsIcon } from '@/components/icons/buttons';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge } from '@/ui/molecules/badge';
 import { Input } from '@/ui/molecules/input';
 import { cn } from '@/utils/css-class';
@@ -92,7 +93,7 @@ export function ManageCreditsStep({
   const [selectedProjectId, setSelectedProjectId] = useState<string | undefined>(undefined);
   const notify = useAppNotification();
   const amountInputRef = useRef<HTMLInputElement>(null);
-
+  const { projectId } = useWorkspace();
   const [labDetails, accountingRes, projectsRes] = useQueries({
     queries: [
       {
@@ -226,9 +227,11 @@ export function ManageCreditsStep({
 
   useEffect(() => {
     if (!selectedProjectId && projects.length > 0) {
-      setSelectedProjectId(projects[0]?.value);
+      setSelectedProjectId(
+        projects.find((p) => p.value === projectId)?.value ?? projects[0]?.value
+      );
     }
-  }, [projects, selectedProjectId]);
+  }, [projects, projectId, selectedProjectId]);
 
   useEffect(() => {
     if (amountInputRef.current) {

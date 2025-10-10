@@ -40,7 +40,11 @@ export function EntityTypeSelectScrollable({
       >
         <SelectValue placeholder={<span className="text-base font-light!">Select a type</span>} />
       </SelectTrigger>
-      <SelectContent className="max-h-96 rounded-lg border-white bg-white shadow-xl">
+      <SelectContent
+        className="max-h-96 rounded-lg border-white bg-white shadow-xl"
+        side="bottom"
+        sideOffset={3}
+      >
         {getDropdownOptionsByCategory(category).enabledOptions.map(({ group, options }) => (
           <SelectGroup key={`entity-type-group-${group}`}>
             <SelectLabel className="text-neutral-3 text-base">{group}</SelectLabel>
@@ -85,7 +89,11 @@ export function CategorySelectScrollable({
           placeholder={<span className="text-base font-light!">Select a category</span>}
         />
       </SelectTrigger>
-      <SelectContent className="max-h-96 rounded-lg border-white bg-white shadow-xl">
+      <SelectContent
+        className="max-h-96 rounded-lg border-white bg-white shadow-xl"
+        side="bottom"
+        sideOffset={3}
+      >
         {ActivityDict.filter((o) => !o.disabled).map(({ label, value: _value }) => (
           <SelectItem
             key={`category-${_value}`}
