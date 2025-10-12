@@ -2,11 +2,16 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useAtomValue } from 'jotai';
-import dynamic from 'next/dynamic';
+import { match } from 'ts-pattern';
+
 import get from 'es-toolkit/compat/get';
+import dynamic from 'next/dynamic';
 
 import { SimulationColors } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import { SimulationStatus, simulationStatusAtomFamily } from '@/state/simulate/single-neuron';
+import {
+  SimulationStatus,
+  simulationStatusAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import {
   useCurrentSimulationConfig,
   useRecordingPlotData,
@@ -40,7 +45,7 @@ export function Results({ sessionId }: { sessionId: string }) {
   }
 
   if (
-    simulationStatus?.status === SimulationStatus.FINISHED &&
+    simulationStatus?.status === SimulationStatus.EXECUTED &&
     Object.values(recordingPlotData).every((o: PlotData) => o.every((p) => p.y.length === 0))
   ) {
     return (
@@ -67,10 +72,8 @@ export function Results({ sessionId }: { sessionId: string }) {
     simulationStatus?.status === SimulationStatus.LAUNCHED &&
     Object.values(recordingPlotData).every((o: PlotData) => o.every((p) => p.y.length === 0));
 
-  let content = null;
-
-  if (record === 'all') {
-    content = (
+  const content = match(record)
+    .with('all', () => (
       <div className="flex w-full flex-col gap-2">
         {Object.entries(recordingPlotData).map(([key, value]) => {
           return (
@@ -98,38 +101,40 @@ export function Results({ sessionId }: { sessionId: string }) {
           );
         })}
       </div>
-    );
-  } else {
-    const recordData = get(recordingPlotData, `${record}`, null);
-    if (record && recordData) {
-      content = (
-        <div className="flex w-full flex-col gap-2">
-          <div key={`${record}`} className="flex w-full flex-col items-start justify-start">
-            <PlotRenderer
-              withTitle
-              title={record}
-              type="simulation"
-              name={record}
-              isDownloadable={!!recordData.length}
-              onlyAmplitudeLegend={false}
-              data={recordData.map((v, i) => ({ ...v, line: { color: SimulationColors[i] } }))}
-              isLoading={isLoading}
-              className="h-full w-full"
-              plotConfig={{
-                yAxisTitle: 'Voltage [mV]',
-                showDefaultLegends: true,
-                maxTime: duration,
-              }}
-              rootClassName="p-0 m-0"
-              wrapperClassName="p-0"
-              graphWrapperClassName="w-full"
-              titleClassName="p-0"
-            />
+    ))
+    .otherwise(() => {
+      const recordData = get(recordingPlotData, `${record}`, null);
+      if (record && recordData) {
+        return (
+          <div className="flex w-full flex-col gap-2">
+            <div key={`${record}`} className="flex w-full flex-col items-start justify-start">
+              <PlotRenderer
+                withTitle
+                title={record}
+                type="simulation"
+                name={record}
+                isDownloadable={!!recordData.length}
+                onlyAmplitudeLegend={false}
+                data={recordData.map((v, i) => ({ ...v, line: { color: SimulationColors[i] } }))}
+                isLoading={isLoading}
+                className="h-full w-full"
+                plotConfig={{
+                  yAxisTitle: 'Voltage [mV]',
+                  showDefaultLegends: true,
+                  maxTime: duration,
+                }}
+                rootClassName="p-0 m-0"
+                wrapperClassName="p-0"
+                graphWrapperClassName="w-full"
+                titleClassName="p-0"
+              />
+            </div>
           </div>
-        </div>
-      );
-    }
-  }
+        );
+      }
+      return null;
+    });
+
   return (
     <div
       className={cn(

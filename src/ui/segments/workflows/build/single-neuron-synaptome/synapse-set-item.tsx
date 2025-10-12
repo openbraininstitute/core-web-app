@@ -19,6 +19,7 @@ import map from 'es-toolkit/compat/map';
 
 import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import { SECTION_TARGET_MAPPING } from '@/features/entities/single-neuron-synaptome/build/elements/constants';
+import { neuronSectionNamesAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
 import { synapsesPlacementAtom } from '@/state/synaptome';
 import {
@@ -28,7 +29,6 @@ import {
 import { SettingAdjustment } from '@/components/icons/SettingAdjustment';
 import { useAppNotification } from '@/components/notification';
 import { ArrowSyncFilled } from '@/components/icons/buttons';
-import { secNamesAtom } from '@/state/simulate/single-neuron';
 import { Button } from '@/ui/molecules/button';
 import { messages } from '@/i18n/en/synaptome';
 import {
@@ -76,7 +76,7 @@ export function SynapseSet({ sessionId }: Props) {
   const params = useSearchParams();
   const notification = useAppNotification();
   const { virtualLabId, projectId } = useWorkspace();
-  const secNames = useAtomValue(secNamesAtom);
+  const secNames = useAtomValue(neuronSectionNamesAtomFamily(sessionId));
   const [isFormValid, setIsFormValid] = useState(false);
   const [visualizeLoading, setLoadingVisualize] = useState(false);
   const [synapsesPlacement, setSynapsesPlacementAtom] = useAtom(synapsesPlacementAtom);
@@ -110,16 +110,6 @@ export function SynapseSet({ sessionId }: Props) {
         ? 'Dendrites'
         : SECTION_TARGET_MAPPING[value as keyof typeof SECTION_TARGET_MAPPING],
   }));
-
-  // const isAlreadyVisualized = useMemo(() => {
-  //   if (!config) return false;
-  //   return !!Object.values(synapsesPlacement ?? []).find(
-  //     (c) =>
-  //       c?.synapsePlacementConfigId === config.id &&
-  //       c.meshId &&
-  //       isEqual(config, { ...config, ...form.getFieldsValue() })
-  //   );
-  // }, [config, synapsesPlacement, form]);
 
   const validateFormValues = async (values: TSingleNeuronSynaptomeConfiguration) => {
     try {

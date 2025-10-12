@@ -1,10 +1,8 @@
-import { useRef } from 'react';
 import { Button, Divider } from 'antd';
 import { useAtom } from 'jotai';
+import { useRef } from 'react';
 
-import { currentInjectionSimulationConfigAtom } from '@/state/simulate/categories/current-injection-simulation';
-import { useRecordingSourceForSimulation } from '@/state/simulate/categories';
-import useOnClickOutside from '@/hooks/useOnClickOutside';
+import { NeuronLocationOriginDict } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import {
   getSimulationColor,
   PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
@@ -14,8 +12,8 @@ import {
   RecordLocationConfigurationAtomFamily,
   StimulationConfigurationAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import useOnClickOutside from '@/hooks/useOnClickOutside';
 import { classNames } from '@/util/utils';
-import { NeuronLocationOriginDict } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 export default function NeuronMeshInjectionRecordingPopover({
   show,
@@ -34,35 +32,22 @@ export default function NeuronMeshInjectionRecordingPopover({
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const { add } = useRecordingSourceForSimulation();
   const rlcKey = `${PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY}-${sessionId}`;
   const spcKey = `${PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY}-${sessionId}`;
   const [recordingLocations, setRecodingLocation] = useAtom(
     RecordLocationConfigurationAtomFamily(rlcKey)
   );
-  const [injectionConfig, setInjectionConfig] = useAtom(currentInjectionSimulationConfigAtom);
   const [injectConfigInSession, setInjectionConfigInSession] = useAtom(
     StimulationConfigurationAtomFamily(spcKey)
   );
 
   const onInject = () => {
-    if (injectionConfig.length === 0) {
-      onClose();
-      return;
-    }
-
     if (sessionId) {
       setInjectionConfigInSession({
         ...injectConfigInSession,
         inject_to: section,
       });
-    } else {
-      setInjectionConfig([
-        { ...injectionConfig[0], inject_to: section },
-        ...injectionConfig.slice(1),
-      ]);
     }
-
     onClose();
   };
 
@@ -78,14 +63,6 @@ export default function NeuronMeshInjectionRecordingPopover({
           color: getSimulationColor(recordingLocations.length),
         },
       ]);
-    } else {
-      add({
-        section,
-        offset,
-        record_currents: false,
-        origin: NeuronLocationOriginDict.recording,
-        color: getSimulationColor(recordingLocations.length),
-      });
     }
     onClose();
   };

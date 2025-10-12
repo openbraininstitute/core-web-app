@@ -1,19 +1,16 @@
-import { MutableRefObject, useCallback, useEffect, useRef } from 'react';
+import { RefObject, useCallback, useEffect, useRef } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 
-import Renderer, { NeuronViewerConfig } from '@/services/bluenaas-single-cell/renderer';
-import useNeuronViewerActions from '@/components/neuron-viewer/hooks/actions-hook';
-import useNeuronViewerEvents from '@/components/neuron-viewer/hooks/events-hook';
-import NeuronLoader from '@/components/neuron-viewer/plugins/NeuronLoader';
-import useMorphology from '@/hooks/useMorphology';
-
-import { recordingSourceForSimulationAtom } from '@/state/simulate/categories/recording-source-for-simulation';
-import { currentInjectionSimulationConfigAtom } from '@/state/simulate/categories/current-injection-simulation';
-import { DefaultInjectionColor } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import {
-  NeuronLocation,
-  NeuronLocationOriginDict,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+  TNeuronViewerConfig,
+  NeuronViewerRenderer,
+} from '@/services/bluenaas-single-cell/renderer';
+import { useNeuronViewerActions } from '@/components/neuron-viewer/hooks/actions-hook';
+import { useNeuronViewerEvents } from '@/components/neuron-viewer/hooks/events-hook';
+import NeuronLoader from '@/components/neuron-viewer/plugins/neuron-loader';
+
+import { NeuronLocationOriginDict } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { DefaultInjectionColor } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import { DEFAULT_CURRENT_INJECTION_CONFIG } from '@/constants/simulate/single-neuron';
 import {
   PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
@@ -22,9 +19,10 @@ import {
 import {
   RecordLocationConfigurationAtomFamily,
   StimulationConfigurationAtomFamily,
+  neuronSectionNamesAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { useAppNotification } from '@/components/notification';
-import { secNamesAtom } from '@/state/simulate/single-neuron';
+import { useMorphology } from '@/hooks/use-morphology';
 
 import type { Morphology } from '@/services/bluenaas-single-cell/types';
 
@@ -32,7 +30,7 @@ type Props = {
   virtualLabId: string;
   projectId: string;
   meModelId: string;
-  sessionId?: string;
+  sessionId: string;
   useEvents?: boolean;
   useActions?: boolean;
   useZoomer?: boolean;
@@ -42,14 +40,14 @@ type Props = {
    * will be added to the display.
    */
   useLabels?: boolean;
-  actions?: NeuronViewerConfig;
+  actions?: TNeuronViewerConfig;
   children?: ({
     renderer,
     useZoomer,
     useCursor,
     useActions,
   }: {
-    renderer: MutableRefObject<Renderer | null>;
+    renderer: RefObject<NeuronViewerRenderer | null>;
     useZoomer?: boolean;
     useCursor?: boolean;
     useActions?: boolean;
@@ -71,8 +69,8 @@ export default function NeuronViewer({
 }: Props) {
   const labelsCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const rendererRef = useRef<Renderer | null>(null);
-  const setSecNames = useSetAtom(secNamesAtom);
+  const rendererRef = useRef<NeuronViewerRenderer | null>(null);
+  const setSecNames = useSetAtom(neuronSectionNamesAtomFamily(sessionId));
   const { error: notifyError } = useAppNotification();
 
   const setSectionsAndSegments = useCallback(
@@ -100,7 +98,7 @@ export default function NeuronViewer({
 
   useEffect(() => {
     if (!rendererRef.current && containerRef.current) {
-      const renderer = new Renderer(containerRef.current, {});
+      const renderer = new NeuronViewerRenderer(containerRef.current, {});
       renderer.labels.canvas = labelsCanvasRef.current;
       rendererRef.current = renderer;
     }
@@ -134,40 +132,28 @@ export default function NeuronViewer({
    */
   const stimulationId = 0;
   const sessionKey = `${PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY}-${sessionId}`;
-  const recordingAtom = sessionId
-    ? RecordLocationConfigurationAtomFamily(sessionKey)
-    : recordingSourceForSimulationAtom;
+  const recordingAtom = RecordLocationConfigurationAtomFamily(sessionKey);
 
   const [recordLocations] = useAtom(recordingAtom);
 
   const stimulationKey = `${PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY}-${sessionId}`;
   const injectionSessionAtom = useAtomValue(StimulationConfigurationAtomFamily(stimulationKey));
-  const injectionLocations = useAtomValue(currentInjectionSimulationConfigAtom);
 
   useEffect(() => {
-    if (useLabels && !loading && rendererRef.current) {
-      let injection: NeuronLocation = {
-        section: injectionLocations[stimulationId].inject_to,
+    if (useLabels && !loading && rendererRef.current && sessionId) {
+      const injection = {
+        section: injectionSessionAtom.inject_to,
         offset: 0.5,
         record_currents: false,
+        color: DefaultInjectionColor,
         origin: NeuronLocationOriginDict.injection,
       };
-      if (sessionId) {
-        injection = {
-          section: injectionSessionAtom.inject_to,
-          offset: 0.5,
-          record_currents: false,
-          color: DefaultInjectionColor,
-          origin: NeuronLocationOriginDict.injection,
-        };
-      }
       rendererRef.current.labels.update([injection, ...recordLocations]);
     }
   }, [
     useLabels,
     loading,
     recordLocations,
-    injectionLocations,
     stimulationId,
     sessionId,
     injectionSessionAtom.inject_to,

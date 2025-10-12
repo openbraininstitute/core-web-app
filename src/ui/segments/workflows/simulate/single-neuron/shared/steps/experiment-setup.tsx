@@ -1,9 +1,13 @@
 import { Form, InputNumber } from 'antd';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import z from 'zod';
 
 import { PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import { ExperimentalSetupConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import {
+  ExperimentalSetupConfigurationAtomFamily,
+  SimulationStatus,
+  simulationStatusAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import {
   getSessionKey,
   label,
@@ -67,6 +71,7 @@ function Input({
   onChange,
 }: SetupInputProps & { validator: z.ZodTypeAny }) {
   const breakpoint = useDefaultBreakpoint();
+
   return (
     <div className="flex flex-col items-start justify-center">
       {label(text, true)}
@@ -105,9 +110,10 @@ function Input({
 }
 
 export function ExperimentSetup({ sessionId }: Props) {
+  const [form] = Form.useForm();
   const key = getSessionKey(PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY, sessionId);
   const [state, update] = useAtom(ExperimentalSetupConfigurationAtomFamily(key));
-  const [form] = Form.useForm();
+  const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
 
   const onChange = (id: SimulationExperimentalSetupKeys, value: number | null) => {
     try {
@@ -130,6 +136,10 @@ export function ExperimentSetup({ sessionId }: Props) {
       validateTrigger={['onChange']}
       name="simulation-experimental-setup-configuration"
       className="[&_.ant-form-item-explain-error]:text-sm"
+      disabled={
+        simulationStatus?.status === SimulationStatus.LAUNCHED ||
+        simulationStatus?.status === SimulationStatus.SAVING
+      }
     >
       {CONDITIONS_FIELDS.map(({ id, text, unit }) => (
         <Input

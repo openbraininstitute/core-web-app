@@ -2,8 +2,10 @@ import React from 'react';
 import { useAtom } from 'jotai';
 
 import { PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import { ExperimentalSetupConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import { genericSingleNeuronSimulationPlotDataAtomFamily } from '@/state/simulate/single-neuron';
+import {
+  ExperimentalSetupConfigurationAtomFamily,
+  genericSingleNeuronSimulationPlotDataAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 
 import type { PlotData } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';

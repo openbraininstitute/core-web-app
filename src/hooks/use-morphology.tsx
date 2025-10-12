@@ -6,7 +6,7 @@ import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { Morphology } from '@/services/bluenaas-single-cell/types';
 
-export default function useMorphology({
+export function useMorphology({
   modelId,
   callback,
   projectId,

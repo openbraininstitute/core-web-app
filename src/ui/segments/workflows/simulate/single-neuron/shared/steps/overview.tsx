@@ -3,11 +3,15 @@
 import { useSession } from 'next-auth/react';
 import { Form, Input } from 'antd';
 import { useEffect } from 'react';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import z from 'zod';
 
 import { PREFIX_OVERVIEW_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import { OverviewConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import {
+  OverviewConfigurationAtomFamily,
+  SimulationStatus,
+  simulationStatusAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { OverviewConfigurationSchema } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import {
   getSessionKey,
@@ -26,6 +30,7 @@ export function Info({ sessionId }: Props) {
 
   const key = getSessionKey(PREFIX_OVERVIEW_CONFIGURATION_SESSION_KEY, sessionId);
   const [state, update] = useAtom(OverviewConfigurationAtomFamily(key));
+  const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
 
   useEffect(() => {
     form.setFieldsValue({
@@ -59,6 +64,10 @@ export function Info({ sessionId }: Props) {
         name: state.name,
         description: state.description,
       }}
+      disabled={
+        simulationStatus?.status === SimulationStatus.LAUNCHED ||
+        simulationStatus?.status === SimulationStatus.SAVING
+      }
     >
       <Form.Item
         hasFeedback

@@ -3,55 +3,60 @@
 import { captureException } from '@sentry/nextjs';
 import { match } from 'ts-pattern';
 import { atom } from 'jotai';
-import sortBy from 'es-toolkit/compat/sortBy';
-import uniqBy from 'es-toolkit/compat/uniqBy';
-import values from 'es-toolkit/compat/values';
-import isNil from 'es-toolkit/compat/isNil';
-import delay from 'es-toolkit/compat/delay';
-import pick from 'es-toolkit/compat/pick';
-import lget from 'es-toolkit/compat/get';
-import omit from 'es-toolkit/compat/omit';
-import map from 'es-toolkit/compat/map';
+import {
+  sortBy,
+  uniqBy,
+  values,
+  isNil,
+  delay,
+  pick,
+  omit,
+  map,
+  get as lget,
+} from 'es-toolkit/compat';
 
 import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
+import { SingleNeuronSimulationStatus } from '@/api/entitycore/types/shared/neuron-simulation';
+import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import {
+  genericSingleNeuronSimulationPlotDataAtomFamily,
+  SimulationStatus,
+  simulationStatusAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import { createJsonAsset } from '@/api/entitycore/queries/assets';
 import {
   createSingleNeuronSimulation,
   createSingleNeuronSynaptomeSimulation,
   getMEModel,
 } from '@/api/entitycore/queries';
-import { createJsonAsset } from '@/api/entitycore/queries/assets';
-import { SingleNeuronSimulationStatus } from '@/api/entitycore/types/shared/neuron-simulation';
-import { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
+
 import {
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
 } from '@/entity-configuration/domain/simulation';
-import {
-  genericSingleNeuronSimulationPlotDataAtomFamily,
-  SimulationStatus,
-  simulationStatusAtomFamily,
-} from '@/state/simulate/single-neuron';
-import { SimulationType } from '@/types/small-scale-simulator/common';
 import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 import { readNdjsonResponse } from '@/utils/response';
 import { messages } from '@/i18n/en/simulation';
 import { tryCatch } from '@/api/utils';
 
 import { type Message, JobStatus, MessageType } from '@/services/small-scale-simulator/types';
+import type { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
 import type {
   NeuronLocationArray,
   SimulationExperimentalSetup,
   TStimulationConfiguration,
   SynapseConfigurationArray,
+  TOverviewConfiguration,
+  TSimulationType,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import type {
-  ISingleNeuronSimulation,
-  ISingleNeuronSynaptomeSimulation,
-} from '@/api/entitycore/types';
 import type {
   SimulationStreamData,
   SingleNeuronModelSimulationConfig,
 } from '@/types/small-scale-simulator/single-neuron';
+import type {
+  ISingleNeuronSimulation,
+  ISingleNeuronSynaptomeSimulation,
+} from '@/api/entitycore/types';
 
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
 
@@ -63,21 +68,21 @@ export const createSingleNeuronSimulationAtom = atom(
     name: string,
     description: string,
     modelId: string,
-    meModelId: string,
+    memodelId: string,
     virtualLabId: string,
     projectId: string,
-    simulationType: SimulationType,
-    stimulationConfig: TStimulationConfiguration,
-    experimentalSetupConfig: SimulationExperimentalSetup,
-    recordFromConfig: NeuronLocationArray,
-    synaptomeConfig: SynapseConfigurationArray | undefined,
+    simulationType: TSimulationType,
+    stimulationConfiguration: TStimulationConfiguration,
+    experimentalSetupConfiguration: SimulationExperimentalSetup,
+    recordingConfiguration: NeuronLocationArray,
+    synaptomeConfiguration: SynapseConfigurationArray | undefined,
     simulationResult: Record<string, PlotData> | null,
     stimulusResult: PlotData | null
   ) => {
     if (!simulationResult || !modelId) return null;
 
     const recordFromUniq = map(
-      uniqBy(recordFromConfig, (item) =>
+      uniqBy(recordingConfiguration, (item) =>
         values(pick(item, ['section', 'offset']))
           .map(String)
           .join()
@@ -87,14 +92,17 @@ export const createSingleNeuronSimulationAtom = atom(
 
     const singleNeuronSimulationConfig: SingleNeuronModelSimulationConfig = {
       record_from: recordFromUniq,
-      conditions: experimentalSetupConfig,
-      current_injection: stimulationConfig,
-      synaptome: simulationType === 'synaptome-simulation' ? synaptomeConfig : undefined,
+      conditions: experimentalSetupConfiguration,
+      current_injection: stimulationConfiguration,
+      synaptome:
+        simulationType === SimulationType.SingleNeuronSynaptome
+          ? synaptomeConfiguration
+          : undefined,
     };
 
     const { data: meModel, error } = await tryCatch(
       getMEModel({
-        id: meModelId,
+        id: memodelId,
         context: { virtualLabId, projectId },
       })
     );
@@ -106,7 +114,7 @@ export const createSingleNeuronSimulationAtom = atom(
       name,
       description,
       status: SingleNeuronSimulationStatus.success,
-      seed: experimentalSetupConfig.seed,
+      seed: experimentalSetupConfiguration.seed,
       injection_location: [singleNeuronSimulationConfig.current_injection.inject_to],
       recording_location: singleNeuronSimulationConfig.record_from.map(
         (r) => `${r.section}_${r.offset}`
@@ -116,12 +124,12 @@ export const createSingleNeuronSimulationAtom = atom(
     let simulationPromise: Promise<
       ISingleNeuronSimulation | ISingleNeuronSynaptomeSimulation
     > | null = null;
-    if (simulationType === 'single-neuron-simulation') {
+    if (simulationType === SimulationType.SingleNeuron) {
       simulationPromise = createSingleNeuronSimulation({
         context: { virtualLabId, projectId },
         body: { ...basePayload, me_model_id: meModel.id },
       });
-    } else if (simulationType === 'synaptome-simulation') {
+    } else if (simulationType === SimulationType.SingleNeuronSynaptome) {
       simulationPromise = createSingleNeuronSynaptomeSimulation({
         context: { virtualLabId, projectId },
         body: { ...basePayload, synaptome_id: modelId },
@@ -133,7 +141,7 @@ export const createSingleNeuronSimulationAtom = atom(
         throw new Error(messages.CreationSimulationFailed);
       }
       const assetBasePayload =
-        simulationType === 'single-neuron-simulation'
+        simulationType === SimulationType.SingleNeuron
           ? {
               label: SingleNeuronSimulation.asset.configfile,
               entityType: SingleNeuronSimulation.type,
@@ -186,11 +194,14 @@ export const launchSimulationAtom = atom<
     string,
     string,
     string,
+    string,
+    TOverviewConfiguration,
     TStimulationConfiguration,
     SimulationExperimentalSetup,
     NeuronLocationArray,
     SynapseConfigurationArray,
-    SimulationType,
+    PlotData,
+    TSimulationType,
     number,
     () => void,
   ],
@@ -203,29 +214,35 @@ export const launchSimulationAtom = atom<
     virtualLabId: string,
     projectId: string,
     modelId: string,
+    memodelId: string,
     sessionId: string,
-    currentInjectionConfig: TStimulationConfiguration,
-    conditionsConfig: SimulationExperimentalSetup,
-    recordFromConfig: NeuronLocationArray,
-    synaptomeConfig: SynapseConfigurationArray,
-    simulationType: SimulationType,
+    overviewConfiguration: TOverviewConfiguration,
+    stimulationConfiguration: TStimulationConfiguration,
+    experimentalSetupConfiguration: SimulationExperimentalSetup,
+    recordingConfiguration: NeuronLocationArray,
+    synaptomeConfiguration: SynapseConfigurationArray,
+    stimulusGraphResult: PlotData,
+    simulationType: TSimulationType,
     duration: number,
     onChangePanel: () => void
   ) => {
     if (simulationType === 'single-neuron-simulation') {
-      if (!currentInjectionConfig) {
+      if (!stimulationConfiguration) {
         throw new Error(messages.CurrentInjectionConfigMissingError);
       }
     } else if (simulationType === 'synaptome-simulation') {
-      if (!currentInjectionConfig && (!synaptomeConfig || !synaptomeConfig.length)) {
+      if (
+        !stimulationConfiguration &&
+        (!synaptomeConfiguration || !synaptomeConfiguration.length)
+      ) {
         throw new Error(messages.SynaptomeConfigurationError);
       }
     }
-    const simStatusAtom = simulationStatusAtomFamily(sessionId);
+    const simulationStatusAtom = simulationStatusAtomFamily(sessionId);
 
-    set(simStatusAtom, { status: SimulationStatus.LAUNCHED });
+    set(simulationStatusAtom, { status: SimulationStatus.LAUNCHED });
 
-    const initialPlotData = recordFromConfig.reduce((acc: Record<string, PlotData>, o) => {
+    const initialPlotData = recordingConfiguration.reduce((acc: Record<string, PlotData>, o) => {
       const key = `${o.section}_${o.offset === 0 ? '0.0' : String(o.offset)}`;
       acc[key] = [];
       return acc;
@@ -233,7 +250,7 @@ export const launchSimulationAtom = atom<
     const plotDataAtom = genericSingleNeuronSimulationPlotDataAtomFamily(sessionId);
 
     set(plotDataAtom, initialPlotData);
-    const recordFromUniq = uniqBy(recordFromConfig, (item) =>
+    const recordFromUniq = uniqBy(recordingConfiguration, (item) =>
       values(pick(item, ['section', 'offset']))
         .map(String)
         .join()
@@ -247,9 +264,12 @@ export const launchSimulationAtom = atom<
           modelId,
           config: {
             recordFrom: recordFromUniq,
-            conditions: conditionsConfig,
-            currentInjection: currentInjectionConfig,
-            synaptome: simulationType === 'synaptome-simulation' ? synaptomeConfig : undefined,
+            conditions: experimentalSetupConfiguration,
+            currentInjection: stimulationConfiguration,
+            synaptome:
+              simulationType === SimulationType.SingleNeuronSynaptome
+                ? synaptomeConfiguration
+                : undefined,
             type: simulationType,
             duration,
           },
@@ -257,7 +277,7 @@ export const launchSimulationAtom = atom<
       );
 
       if (error) {
-        set(simStatusAtom, {
+        set(simulationStatusAtom, {
           status: SimulationStatus.ERROR,
           description: lget(error, 'cause.message', null) ?? messages.RunningSimulationDefaultError,
         });
@@ -276,12 +296,12 @@ export const launchSimulationAtom = atom<
           // ignore
         }
 
-        set(simStatusAtom, {
+        set(simulationStatusAtom, {
           status: SimulationStatus.ERROR,
           description: errorMessage,
         });
 
-        delay(() => set(simStatusAtom, { status: null }), 1000);
+        delay(() => set(simulationStatusAtom, { status: null }), 1000);
 
         return;
       }
@@ -294,8 +314,26 @@ export const launchSimulationAtom = atom<
               cause: 'SmallScaleSimulatorError',
             });
           })
-          .with({ message_type: MessageType.STATUS, status: JobStatus.DONE }, () => {
-            set(simStatusAtom, { status: SimulationStatus.FINISHED });
+          .with({ message_type: MessageType.STATUS, status: JobStatus.DONE }, async () => {
+            set(simulationStatusAtom, { status: SimulationStatus.EXECUTED });
+            const description = overviewConfiguration.description ?? '';
+            await set(
+              createSingleNeuronSimulationAtom,
+              overviewConfiguration.name,
+              description,
+              modelId,
+              memodelId,
+              virtualLabId,
+              projectId,
+              simulationType,
+              stimulationConfiguration,
+              experimentalSetupConfiguration,
+              recordingConfiguration,
+              synaptomeConfiguration,
+              get(plotDataAtom),
+              stimulusGraphResult as PlotData
+            );
+            set(simulationStatusAtom, { status: SimulationStatus.SAVED });
           })
           .otherwise(() => null);
       });
@@ -306,15 +344,16 @@ export const launchSimulationAtom = atom<
           modelId,
           config: {
             recordFrom: recordFromUniq,
-            conditions: conditionsConfig,
-            currentInjection: currentInjectionConfig,
-            synapses: simulationType === 'synaptome-simulation' ? synaptomeConfig : undefined,
+            conditions: experimentalSetupConfiguration,
+            currentInjection: stimulationConfiguration,
+            synapses:
+              simulationType === 'synaptome-simulation' ? synaptomeConfiguration : undefined,
             type: simulationType,
             duration,
           },
         },
       });
-      set(simStatusAtom, {
+      set(simulationStatusAtom, {
         status: SimulationStatus.ERROR,
         description: error.cause ? `${error}` : messages.RunningSimulationDefaultError,
       });

@@ -1,15 +1,16 @@
 import { MutableRefObject, useEffect, useState } from 'react';
 import { ConfigProvider } from 'antd';
 
-import Zoomer from './Zoomer';
-import Renderer from '@/services/bluenaas-single-cell/renderer';
+import { NeuronViewerRenderer } from '@/services/bluenaas-single-cell/renderer';
+import { Zoomer } from '@/components/neuron-viewer/plugins/zoomer';
 import { classNames } from '@/util/utils';
 
 type Props = {
   placement?: 'left' | 'right';
-  renderer: MutableRefObject<Renderer | null>;
+  renderer: MutableRefObject<NeuronViewerRenderer | null>;
 };
-export default function CustomZoomer({ renderer, placement = 'left' }: Props) {
+
+export function CustomZoomer({ renderer, placement = 'left' }: Props) {
   const [value, setValue] = useState(0);
 
   const onChange = (zoomValue: number) => {

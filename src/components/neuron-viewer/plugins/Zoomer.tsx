@@ -12,7 +12,7 @@ type Props = {
   onZoomOut?: () => void;
 };
 
-export default function Zoomer({ className, value, onChange, onZoomIn, onZoomOut }: Props) {
+export function Zoomer({ className, value, onChange, onZoomIn, onZoomOut }: Props) {
   return (
     <div className={classNames('flex flex-col items-center justify-center gap-2', className)}>
       {onZoomIn && <ZoomInOutlined className="text-white" onClick={onZoomIn} />}

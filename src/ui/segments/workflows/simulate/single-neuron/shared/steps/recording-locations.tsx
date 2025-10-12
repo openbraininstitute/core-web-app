@@ -4,8 +4,13 @@ import { useAtom, useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import z from 'zod';
 
-import { RecordLocationConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import {
+  neuronSectionNamesAtomFamily,
+  RecordLocationConfigurationAtomFamily,
+  SimulationStatus,
+  simulationStatusAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import {
   getSessionKey,
   label,
@@ -20,7 +25,6 @@ import {
   NeuronLocationSchema,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { secNamesAtom } from '@/state/simulate/single-neuron';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
@@ -206,12 +210,13 @@ function RecordItem({
 }
 
 export function Recording({ sessionId }: Props) {
+  const [form] = Form.useForm();
+  const breakpoint = useDefaultBreakpoint();
+
   const key = getSessionKey(PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY, sessionId);
   const [state, update] = useAtom(RecordLocationConfigurationAtomFamily(key));
-
-  const [form] = Form.useForm();
-  const sectionNames = useAtomValue(secNamesAtom);
-  const breakpoint = useDefaultBreakpoint();
+  const morphologySectionNames = useAtomValue(neuronSectionNamesAtomFamily(sessionId));
+  const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
 
   useEffect(() => {
     form.setFieldsValue({ record_from: state });
@@ -254,6 +259,10 @@ export function Recording({ sessionId }: Props) {
     }
   };
 
+  const disableForm =
+    simulationStatus?.status === SimulationStatus.LAUNCHED ||
+    simulationStatus?.status === SimulationStatus.SAVING;
+
   return (
     <div
       id="recording-container"
@@ -275,6 +284,7 @@ export function Recording({ sessionId }: Props) {
         requiredMark={false}
         id="recording-form"
         data-testid="recording-form"
+        disabled={disableForm}
       >
         <Form.List name="record_from">
           {(fields) =>
@@ -283,9 +293,9 @@ export function Recording({ sessionId }: Props) {
                 key={`recording-${f.name}`}
                 index={index}
                 name={f.name}
-                disable={!sectionNames.length}
-                disableDelete={fields.length <= 1}
-                sections={sectionNames}
+                disable={!morphologySectionNames.length || disableForm}
+                disableDelete={fields.length <= 1 || disableForm}
+                sections={morphologySectionNames}
                 onRemove={onRemove}
                 record={state.at(index)}
               />
@@ -297,10 +307,10 @@ export function Recording({ sessionId }: Props) {
         rounded
         title="Add new Record Location"
         onClick={onAdd}
-        disabled={!sectionNames.length}
+        disabled={!morphologySectionNames.length || disableForm}
         type="button"
         variant="outline"
-        className="mt-2 mb-1 w-max shadow-sm"
+        className="disabled:bg-neutral-2 mt-2 mb-1 w-max shadow-sm"
         size={breakpoint === 'l' ? 'md' : 'lg'}
       >
         Add recording

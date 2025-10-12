@@ -1,15 +1,16 @@
+import { camelCase, startCase, toPairs, get } from 'es-toolkit/compat';
 import { useAtom, useAtomValue } from 'jotai';
 import { Form, Input, Select } from 'antd';
 import { useEffect } from 'react';
 
-import camelCase from 'es-toolkit/compat/camelCase';
-import startCase from 'es-toolkit/compat/startCase';
-import toPairs from 'es-toolkit/compat/toPairs';
-import get from 'es-toolkit/compat/get';
-
 import { AmperageConfiguration } from '@/ui/segments/workflows/simulate/single-neuron/shared/amperage-configuration';
-import { StimulationConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { DefaultInjectionColor } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import {
+  neuronSectionNamesAtomFamily,
+  SimulationStatus,
+  simulationStatusAtomFamily,
+  StimulationConfigurationAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import {
   createZodValidator,
   getSessionKey,
@@ -20,7 +21,6 @@ import {
   PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
   PROTOCOL_DETAILS,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import { secNamesAtom } from '@/state/simulate/single-neuron';
 import {
   StimulationMode,
   StimulationConfigurationSchema,
@@ -35,12 +35,13 @@ type Props = {
 };
 
 export function StimulationProtocol({ sessionId, memodelId }: Props) {
-  const breakpoint = useDefaultBreakpoint();
-  const sections = useAtomValue(secNamesAtom);
   const [form] = Form.useForm();
+  const breakpoint = useDefaultBreakpoint();
+  const sections = useAtomValue(neuronSectionNamesAtomFamily(sessionId));
 
   const spcKey = getSessionKey(PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
   const [spcState, updateSPC] = useAtom(StimulationConfigurationAtomFamily(spcKey));
+  const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
 
   useEffect(() => {
     form.setFieldsValue(spcState);
@@ -102,6 +103,10 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
         validateTrigger={['onChange']}
         requiredMark={false}
         data-testid="stimulation-protocol-form"
+        disabled={
+          simulationStatus?.status === SimulationStatus.LAUNCHED ||
+          simulationStatus?.status === SimulationStatus.SAVING
+        }
       >
         <Form.Item
           name="inject_to"

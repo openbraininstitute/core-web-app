@@ -1,2 +1,2 @@
-export { default as CursorPopover } from './CursorPopover';
-export { default as InjectionRecordingPopover } from './InjectionRecordingPopover';
+export { default as CursorPopover } from './cursor-popover';
+export { default as InjectionRecordingPopover } from './injection-recording-popover';
