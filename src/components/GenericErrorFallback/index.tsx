@@ -8,7 +8,7 @@ import { cn } from '@/utils/css-class';
 
 interface Props {
   error?: Error & { cause?: unknown };
-  cls?: { container: string };
+  cls?: { container?: string; error?: string };
   showButtons?: boolean;
   customError?: string;
   children?: ReactNode;
@@ -26,7 +26,7 @@ export function ErrorLink({ href, title }: { href: string; title: string }) {
 
 export function ErrorComponent({
   error,
-  cls = { container: '' },
+  cls,
   customError = '',
   showButtons = true,
   children,
@@ -34,25 +34,24 @@ export function ErrorComponent({
   return (
     <div
       className={cn(
-        'bg-primary-9 flex h-screen w-full flex-col items-center justify-center p-6 text-white',
-        cls.container
+        'flex h-full w-full flex-col items-center justify-center bg-white p-6 text-white',
+        cls?.container
       )}
     >
       <div className="mx-auto w-full max-w-md">
         <div className="mb-2 flex items-center justify-start gap-2">
-          <WarningOutlined className="text-3xl text-[#f0c75e]" />
-          <h1 className="text-4xl font-bold text-[#f0c75e]">An error occurred</h1>
+          <WarningOutlined className="text-2xl text-[#f0c75e]" />
+          <h1 className="text-xl font-bold text-[#f0c75e]">An error occurred</h1>
         </div>
 
-        <div className="mb-2 w-full bg-white p-6">
-          <h2 className="text-primary-8 mb-2 text-sm font-medium select-none">DESCRIPTION</h2>
-          <p className="text-primary-8 text-xl font-bold">{error?.message || customError}</p>
+        <div className={cn('text-primary-8 mb-2 w-full bg-white p-6', cls?.error)}>
+          <h2 className="mb-2 text-sm font-medium select-none">DESCRIPTION</h2>
+          <p className="text-lg font-bold">{error?.message || customError}</p>
         </div>
         {children}
         {showButtons && (
           <div className="flex w-full gap-2">
-            <ErrorLink href="/app/virtual-lab/explore/interactive" title="Back to Explore" />
-            <ErrorLink href="/app/virtual-lab" title="Back to Home" />
+            <ErrorLink href="/app/virtual-lab/sync" title="Back to Home" />
           </div>
         )}
       </div>
@@ -66,7 +65,7 @@ export function withErrorConfig({
   customError,
   children,
 }: {
-  cls?: { container: string };
+  cls?: { container?: string; error?: string };
   showButtons?: boolean;
   customError?: string;
   children?: ReactNode;

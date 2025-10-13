@@ -1,26 +1,26 @@
 import { RefObject, useCallback, useEffect, useRef } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 
-import {
-  TNeuronViewerConfig,
-  NeuronViewerRenderer,
-} from '@/services/bluenaas-single-cell/renderer';
-import { useNeuronViewerActions } from '@/components/neuron-viewer/hooks/actions-hook';
-import { useNeuronViewerEvents } from '@/components/neuron-viewer/hooks/events-hook';
-import NeuronLoader from '@/components/neuron-viewer/plugins/neuron-loader';
-
 import { NeuronLocationOriginDict } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { DefaultInjectionColor } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
+import { useNeuronViewerActions } from '@/components/neuron-viewer/hooks/actions-hook';
 import { DEFAULT_CURRENT_INJECTION_CONFIG } from '@/constants/simulate/single-neuron';
+import { useNeuronViewerEvents } from '@/components/neuron-viewer/hooks/events-hook';
+import { NeuronLoader } from '@/components/neuron-viewer/plugins/neuron-loader';
 import {
-  PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
-  PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
+  RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
+  STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
   RecordLocationConfigurationAtomFamily,
   StimulationConfigurationAtomFamily,
   neuronSectionNamesAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import {
+  type TNeuronViewerConfig,
+  NeuronViewerRenderer,
+} from '@/services/bluenaas-single-cell/renderer';
 import { useAppNotification } from '@/components/notification';
 import { useMorphology } from '@/hooks/use-morphology';
 
@@ -54,7 +54,7 @@ type Props = {
   }) => React.ReactNode;
 };
 
-export default function NeuronViewer({
+export function NeuronViewer({
   children,
   meModelId,
   useEvents,
@@ -131,12 +131,12 @@ export default function NeuronViewer({
    * But today, we have only one.
    */
   const stimulationId = 0;
-  const sessionKey = `${PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY}-${sessionId}`;
+  const sessionKey = `${RECORDING_LOCATION_CONFIGURATION_SESSION_KEY}-${sessionId}`;
   const recordingAtom = RecordLocationConfigurationAtomFamily(sessionKey);
 
   const [recordLocations] = useAtom(recordingAtom);
 
-  const stimulationKey = `${PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY}-${sessionId}`;
+  const stimulationKey = getSessionKey(STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
   const injectionSessionAtom = useAtomValue(StimulationConfigurationAtomFamily(stimulationKey));
 
   useEffect(() => {
@@ -192,3 +192,5 @@ export default function NeuronViewer({
     </div>
   );
 }
+
+export default NeuronViewer;

@@ -6,13 +6,17 @@ import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { kebabCase, uniqBy } from 'es-toolkit/compat';
 import { useMutation } from '@tanstack/react-query';
+import { RESET } from 'jotai/utils';
 
 import type { ZodError } from 'zod';
 
 import { useSingleNeuronSimulationAtoms } from '@/ui/segments/workflows/simulate/single-neuron/shared/use-simulation-atoms';
+import { WorkflowSimulatePanels } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { SimulationStatus } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { exportSimulationResultsAsZip } from '@/util/simulation-plotly-to-csv';
+import { useAppMessage, useAppNotification } from '@/components/notification';
 import {
   ExperimentalSetupConfigurationSchema,
   OverviewConfigurationSchema,
@@ -23,14 +27,13 @@ import {
   type TSimulationType,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { useAppNotification } from '@/components/notification';
 import { browserHistoryReplace } from '@/utils/browser';
 import { messages } from '@/i18n/en/simulation';
 import { Button } from '@/ui/molecules/button';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
-import styles from './results-menu.module.css';
+import styles from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/results-menu.module.css';
 
 type Props = {
   sessionId: string;
@@ -41,6 +44,7 @@ export function Menu({ sessionId, type }: Props) {
   const pathname = usePathname();
   const queryParams = useSearchParams();
   const notification = useAppNotification();
+  const message = useAppMessage();
   const breakpoint = useDefaultBreakpoint();
 
   const {
@@ -51,6 +55,9 @@ export function Menu({ sessionId, type }: Props) {
     stimulationConfiguration,
     simulationResults,
     simulationStatus,
+    updateOverviewConfiguration,
+    updateSimulationResult,
+    updateSimulationStatus,
   } = useSingleNeuronSimulationAtoms(sessionId);
 
   const current = queryParams.get('record') ?? 'all';
@@ -93,6 +100,31 @@ export function Menu({ sessionId, type }: Props) {
   });
 
   const controlsDisabled = simulationStatus?.status !== SimulationStatus.SAVED;
+
+  const onReconfigure = () => {
+    updateOverviewConfiguration(RESET);
+    updateSimulationStatus(RESET);
+    updateSimulationResult(RESET);
+
+    message.open({
+      content: (
+        <div className="flex flex-col items-start justify-start">
+          <p>{messages.ReconfigureSimulation}</p>
+          <p>{messages.ReconfigureSimulationDescription}</p>
+        </div>
+      ),
+      type: 'info',
+      key: 'reconfigure-simulation',
+    });
+
+    notification.destroy(`simulation-success-${sessionId}`);
+    const params = new URLSearchParams(queryParams);
+    params.delete('record');
+    params.delete('step');
+    params.set('panel', WorkflowSimulatePanels.Configuration);
+
+    browserHistoryReplace(null, `${pathname}?${params.toString()}`);
+  };
 
   return (
     <div className="flex h-full flex-col gap-2">
@@ -188,19 +220,48 @@ export function Menu({ sessionId, type }: Props) {
             </TooltipContent>
           )}
         </Tooltip>
-        <div className="mt-auto w-full">
-          <Button
-            rounded
-            variant="success"
-            size={breakpoint === 'l' ? 'md' : 'lg'}
-            className={cn(
-              'disabled:bg-neutral-2 disabled:text-neutral-4! w-full justify-center px-10 font-medium!'
-            )}
-            disabled={controlsDisabled}
-          >
-            <div className="flex-shrink-0 font-bold">Reconfigure</div>
-          </Button>
-        </div>
+        <Popover>
+          <PopoverTrigger asChild disabled={controlsDisabled}>
+            <div className="mt-auto w-full">
+              <Button
+                rounded
+                variant="success"
+                size={breakpoint === 'l' ? 'md' : 'lg'}
+                className={cn(
+                  'disabled:bg-neutral-2 disabled:text-neutral-4! w-full justify-center px-10 font-medium!'
+                )}
+                disabled={controlsDisabled}
+              >
+                <div className="flex-shrink-0 font-bold">Reconfigure</div>
+              </Button>
+            </div>
+          </PopoverTrigger>
+          {!controlsDisabled && (
+            <PopoverContent
+              sideOffset={5}
+              side="top"
+              align="end"
+              collisionPadding={{ left: 20 }}
+              className="shadow-bnb border-primary-8 flex max-w-sm flex-col bg-white py-3 select-none"
+            >
+              <p className="text-primary-9 mb-1.5 w-full text-base text-wrap">
+                You are about to start a new simulation using the same{' '}
+                {type === SimulationType.SingleNeuron ? 'me-model' : 'synaptome model'}. Do you want
+                to continue ?
+              </p>
+              <Button
+                rounded
+                variant="default"
+                size="sm"
+                onClick={onReconfigure}
+                disabled={controlsDisabled}
+                className="max-w-max self-end"
+              >
+                <div className="flex-shrink-0 font-bold">Continue</div>
+              </Button>
+            </PopoverContent>
+          )}
+        </Popover>
       </div>
     </div>
   );

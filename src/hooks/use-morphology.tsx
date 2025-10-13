@@ -24,8 +24,9 @@ export function useMorphology({
     data,
   } = useQuery({
     queryKey: keyBuilder.neuronMorphology3DData({ virtualLabId, projectId, modelId }),
-    queryFn: () =>
-      getSingleNeuronMorphology({ ctx: { virtualLabId, projectId }, meModelId: modelId }),
+    queryFn: () => {
+      return getSingleNeuronMorphology({ ctx: { virtualLabId, projectId }, meModelId: modelId });
+    },
   });
 
   useEffect(() => {

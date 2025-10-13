@@ -5,10 +5,11 @@ import { useState } from 'react';
 
 import { CursorPopover, InjectionRecordingPopover } from '@/components/neuron-viewer/plugins';
 import { CustomZoomer } from '@/components/neuron-viewer/plugins/custom-zoomer';
-import DefaultLoadingSuspense from '@/components/DefaultLoadingSuspense';
+import { DefaultLoadingSuspense } from '@/components/DefaultLoadingSuspense';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
-import NeuronViewer from '@/components/neuron-viewer';
-import {
+import { NeuronViewer } from '@/components/neuron-viewer';
+
+import type {
   TNeuronViewerClickData,
   TNeuronViewerHoverData,
 } from '@/services/bluenaas-single-cell/renderer';
@@ -47,6 +48,10 @@ export function NeuronViewerContainer({
     <ErrorBoundary
       FallbackComponent={withErrorConfig({
         showButtons: false,
+        cls: {
+          container: 'rounded-xl bg-transparent border border-neutral-2',
+          error: '[&_h2]:text-primary-8 bg-transparent px-0',
+        },
       })}
     >
       <DefaultLoadingSuspense>

@@ -5,8 +5,8 @@ import { useRef } from 'react';
 import { NeuronLocationOriginDict } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import {
   getSimulationColor,
-  PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
-  PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
+  RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
+  STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
   RecordLocationConfigurationAtomFamily,
@@ -32,8 +32,8 @@ export default function NeuronMeshInjectionRecordingPopover({
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const rlcKey = `${PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY}-${sessionId}`;
-  const spcKey = `${PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY}-${sessionId}`;
+  const rlcKey = `${RECORDING_LOCATION_CONFIGURATION_SESSION_KEY}-${sessionId}`;
+  const spcKey = `${STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY}-${sessionId}`;
   const [recordingLocations, setRecodingLocation] = useAtom(
     RecordLocationConfigurationAtomFamily(rlcKey)
   );

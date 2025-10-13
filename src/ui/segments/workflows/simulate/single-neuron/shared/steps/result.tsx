@@ -9,13 +9,13 @@ import dynamic from 'next/dynamic';
 
 import { SimulationColors } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import {
-  SimulationStatus,
-  simulationStatusAtomFamily,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import {
   useCurrentSimulationConfig,
   useRecordingPlotData,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/hooks';
+import {
+  SimulationStatus,
+  simulationStatusAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { cn } from '@/utils/css-class';
 
 import type { PlotData } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
@@ -83,7 +83,9 @@ export function Results({ sessionId }: { sessionId: string }) {
                 title={key}
                 type="simulation"
                 name={key}
-                isDownloadable={!!value.length}
+                isDownloadable={
+                  !!value.length && simulationStatus?.status === SimulationStatus.EXECUTED
+                }
                 onlyAmplitudeLegend={false}
                 data={value.map((v, i) => ({ ...v, line: { color: SimulationColors[i] } }))}
                 isLoading={isLoading}
@@ -113,7 +115,9 @@ export function Results({ sessionId }: { sessionId: string }) {
                 title={record}
                 type="simulation"
                 name={record}
-                isDownloadable={!!recordData.length}
+                isDownloadable={
+                  !!recordData.length && simulationStatus?.status === SimulationStatus.EXECUTED
+                }
                 onlyAmplitudeLegend={false}
                 data={recordData.map((v, i) => ({ ...v, line: { color: SimulationColors[i] } }))}
                 isLoading={isLoading}

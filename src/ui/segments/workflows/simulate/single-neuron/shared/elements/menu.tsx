@@ -4,7 +4,6 @@ import { RightOutlined, SettingFilled, WarningFilled } from '@ant-design/icons';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { useEffect } from 'react';
 
 import { useSingleNeuronSimulationAtoms } from '@/ui/segments/workflows/simulate/single-neuron/shared/use-simulation-atoms';
 import { launchSimulationAtom } from '@/ui/segments/workflows/simulate/single-neuron/shared/runner';
@@ -141,7 +140,8 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
       stimulusGraphResult as PlotData,
       simulationType,
       experimentalSetupConfiguration.max_time ?? currentInjectionDuration,
-      () => updatePanelSelection()
+      () => updatePanelSelection(),
+      notify
     );
   };
 
@@ -179,20 +179,6 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
     (simulationType === SimulationType.SingleNeuronSynaptome &&
       !!Object.keys(warnSynaptome ?? {}).length) ||
     simulationStatus?.status === SimulationStatus.LAUNCHED;
-
-  useEffect(() => {
-    if (simulationStatus && simulationStatus.status === SimulationStatus.ERROR) {
-      notify.error({
-        message:
-          simulationType === SimulationType.SingleNeuronSynaptome
-            ? 'Synaptome simulation failed'
-            : 'Single neuron simulation failed',
-        description: simulationStatus.description,
-        placement: 'topRight',
-        key: 'simulation-error',
-      });
-    }
-  }, [simulationStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="flex h-full flex-col gap-2">
@@ -449,7 +435,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
             </Button>
           </div>
         </TooltipTrigger>
-        <TooltipContent sideOffset={10} arrowClassName="bg-primary-9">
+        <TooltipContent sideOffset={0} arrowClassName="bg-primary-9">
           <p className={cn('max-w-80 text-left text-base text-balance')}>
             Please fill all the required information <br />
             along with experiment configurations.

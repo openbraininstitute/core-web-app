@@ -1,7 +1,7 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import { Form } from 'antd';
 import sample from 'es-toolkit/compat/sample';
 
@@ -12,6 +12,8 @@ import { sendRemoveSynapses3DEvent } from '@/components/neuron-viewer/hooks/even
 import {
   SynaptomeConfigurationAtomFamily,
   StimulationConfigurationAtomFamily,
+  simulationStatusAtomFamily,
+  SimulationStatus,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import {
   getDefaultSynapseConfig,
@@ -22,9 +24,9 @@ import { synapsesPlacementAtom } from '@/state/synaptome';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import {
-  PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
-  PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
-  PREFIX_FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY,
+  STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
+  SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
+  FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY,
   PROTOCOL_DETAILS,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { Button } from '@/ui/molecules/button';
@@ -50,15 +52,15 @@ export type UpdateSynapseSimulationProperty = {
 
 export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Props) {
   const breakpoint = useDefaultBreakpoint();
-  const key = getSessionKey(PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
-  const spcKey = getSessionKey(PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
+  const key = getSessionKey(SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
+  const spcKey = getSessionKey(STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
   const { virtualLabId, projectId } = useWorkspace();
   const [visualizedSynaptomes] = useAtom(synapsesPlacementAtom);
   const [state, update] = useAtom(SynaptomeConfigurationAtomFamily(key));
   const [stimulationState, updateStimulation] = useAtom(StimulationConfigurationAtomFamily(spcKey));
   const ref = useRef<boolean | null>(null);
   const [form] = Form.useForm<{ synapses: Array<SynapseConfiguration> }>();
-
+  const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
   const { data, isLoading } = useQuery({
     queryKey: keyBuilder.synaptomeConfiguration({
       virtualLabId,
@@ -80,7 +82,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
     if (safeStorage) {
       state.forEach((_, index) => {
         const frequencyKey = getSessionKey(
-          PREFIX_FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY,
+          FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY,
           `${sessionId}_${index}`
         );
         safeStorage.removeItem(frequencyKey);
@@ -174,6 +176,10 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
     );
   }
 
+  const disableForm =
+    simulationStatus?.status === SimulationStatus.LAUNCHED ||
+    simulationStatus?.status === SimulationStatus.SAVING;
+
   return (
     <div
       id="synaptic-inputs-container"
@@ -193,6 +199,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
         validateTrigger={['onChange']}
         name="synaptic-inputs-configuration"
         data-testid="synaptic-inputs-configuration"
+        disabled={disableForm}
       >
         <Form.List name="synapses">
           {(fields, { remove }) => {
@@ -218,6 +225,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
                       }}
                       onChange={onConfigProperty}
                       sessionId={sessionId}
+                      disableControls={disableForm}
                     />
                   );
                 })}
@@ -226,12 +234,14 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
                     rounded
                     type="button"
                     variant="outline"
+                    className="disabled:bg-neutral-1 disabled:text-label mt-2 mb-1 w-max shadow-sm"
                     size={breakpoint === 'l' ? 'md' : 'lg'}
                     onClick={() => {
                       if (data?.synapses.length) {
                         newConfig(data.synapses);
                       }
                     }}
+                    disabled={disableForm}
                   >
                     Add synaptic input
                   </Button>

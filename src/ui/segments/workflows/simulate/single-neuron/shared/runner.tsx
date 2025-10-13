@@ -1,7 +1,9 @@
 'use client';
 
 import { captureException } from '@sentry/nextjs';
+import { RESET } from 'jotai/utils';
 import { match } from 'ts-pattern';
+import Link from 'next/link';
 import { atom } from 'jotai';
 import {
   sortBy,
@@ -13,31 +15,32 @@ import {
   omit,
   map,
   get as lget,
+  kebabCase,
 } from 'es-toolkit/compat';
+import type { NotificationInstance } from 'antd/es/notification/interface';
 
-import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
 import { SingleNeuronSimulationStatus } from '@/api/entitycore/types/shared/neuron-simulation';
 import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
+import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
 import {
   genericSingleNeuronSimulationPlotDataAtomFamily,
   SimulationStatus,
   simulationStatusAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { createJsonAsset } from '@/api/entitycore/queries/assets';
+import { readNdjsonResponse } from '@/utils/response';
+import {
+  SingleNeuronSimulation,
+  SingleNeuronSynaptomeSimulation,
+} from '@/entity-configuration/domain/simulation';
+import { messages } from '@/i18n/en/simulation';
+import { tryCatch } from '@/api/utils';
 import {
   createSingleNeuronSimulation,
   createSingleNeuronSynaptomeSimulation,
   getMEModel,
 } from '@/api/entitycore/queries';
-
-import {
-  SingleNeuronSimulation,
-  SingleNeuronSynaptomeSimulation,
-} from '@/entity-configuration/domain/simulation';
-import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
-import { readNdjsonResponse } from '@/utils/response';
-import { messages } from '@/i18n/en/simulation';
-import { tryCatch } from '@/api/utils';
 
 import { type Message, JobStatus, MessageType } from '@/services/small-scale-simulator/types';
 import type { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
@@ -57,6 +60,8 @@ import type {
   ISingleNeuronSimulation,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
+
+import { ROOT_ROUTE } from '@/config';
 
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
 
@@ -204,6 +209,7 @@ export const launchSimulationAtom = atom<
     TSimulationType,
     number,
     () => void,
+    NotificationInstance,
   ],
   void
 >(
@@ -224,7 +230,8 @@ export const launchSimulationAtom = atom<
     stimulusGraphResult: PlotData,
     simulationType: TSimulationType,
     duration: number,
-    onChangePanel: () => void
+    onChangePanel: () => void,
+    notify: NotificationInstance
   ) => {
     if (simulationType === 'single-neuron-simulation') {
       if (!stimulationConfiguration) {
@@ -281,6 +288,12 @@ export const launchSimulationAtom = atom<
           status: SimulationStatus.ERROR,
           description: lget(error, 'cause.message', null) ?? messages.RunningSimulationDefaultError,
         });
+        notify.error({
+          message: `Simulation ${overviewConfiguration.name}`,
+          description: lget(error, 'cause.message', null) ?? messages.RunningSimulationDefaultError,
+          placement: 'topRight',
+          key: `simulation-failed-${sessionId}`,
+        });
         return;
       }
 
@@ -300,9 +313,14 @@ export const launchSimulationAtom = atom<
           status: SimulationStatus.ERROR,
           description: errorMessage,
         });
+        notify.error({
+          message: `Simulation ${overviewConfiguration.name}`,
+          description: errorMessage,
+          placement: 'topRight',
+          key: `simulation-failed-${sessionId}`,
+        });
 
-        delay(() => set(simulationStatusAtom, { status: null }), 1000);
-
+        delay(() => set(simulationStatusAtom, RESET), 1000);
         return;
       }
 
@@ -310,29 +328,84 @@ export const launchSimulationAtom = atom<
         match(message)
           .with({ message_type: MessageType.DATA }, ({ data }) => appendStreamData(data))
           .with({ message_type: MessageType.STATUS, status: JobStatus.ERROR }, () => {
+            notify.error({
+              message: `Simulation ${overviewConfiguration.name}`,
+              description: messages.SteamingSimulationResultDefaultError,
+              placement: 'topRight',
+              key: `simulation-failed-${sessionId}`,
+            });
+            set(simulationStatusAtom, {
+              status: SimulationStatus.ERROR,
+              description: messages.SteamingSimulationResultDefaultError,
+            });
             throw new Error(messages.SteamingSimulationResultDefaultError, {
               cause: 'SmallScaleSimulatorError',
             });
           })
           .with({ message_type: MessageType.STATUS, status: JobStatus.DONE }, async () => {
             set(simulationStatusAtom, { status: SimulationStatus.EXECUTED });
+            notify.success({
+              message: `Simulation ${overviewConfiguration.name}`,
+              description: messages.ExecutionSimulationSucceed,
+              placement: 'topRight',
+              key: `simulation-success-${sessionId}`,
+            });
             const description = overviewConfiguration.description ?? '';
-            await set(
-              createSingleNeuronSimulationAtom,
-              overviewConfiguration.name,
-              description,
-              modelId,
-              memodelId,
-              virtualLabId,
-              projectId,
-              simulationType,
-              stimulationConfiguration,
-              experimentalSetupConfiguration,
-              recordingConfiguration,
-              synaptomeConfiguration,
-              get(plotDataAtom),
-              stimulusGraphResult as PlotData
+            const { data, error: saveError } = await tryCatch(
+              set(
+                createSingleNeuronSimulationAtom,
+                overviewConfiguration.name,
+                description,
+                modelId,
+                memodelId,
+                virtualLabId,
+                projectId,
+                simulationType,
+                stimulationConfiguration,
+                experimentalSetupConfiguration,
+                recordingConfiguration,
+                synaptomeConfiguration,
+                get(plotDataAtom),
+                stimulusGraphResult as PlotData
+              )
             );
+            if (saveError) {
+              set(simulationStatusAtom, {
+                status: SimulationStatus.ERROR,
+                description: messages.CreationSimulationFailed,
+              });
+              notify.error({
+                message: `Simulation ${overviewConfiguration.name}`,
+                description: messages.CreationSimulationFailed,
+                placement: 'topRight',
+                key: `simulation-failed-${sessionId}`,
+              });
+            }
+            if (data) {
+              notify.success({
+                message: (
+                  <>
+                    Simulation <strong>{overviewConfiguration.name}</strong>
+                  </>
+                ),
+                description: (
+                  <div className="flex flex-col gap-2">
+                    <p>{messages.CreationSimulationSucceed}</p>
+                    <Link
+                      href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(data.simulation.type)}/${data.simulation.id}`}
+                      className="text-primary-8 no-underline! hover:underline"
+                      onClick={() => notify.destroy(`simulation-success-${sessionId}`)}
+                    >
+                      View Simulation
+                    </Link>
+                  </div>
+                ),
+                placement: 'topRight',
+                duration: 0,
+                key: `simulation-success-${sessionId}`,
+                onClick: () => notify.destroy(`simulation-success-${sessionId}`),
+              });
+            }
             set(simulationStatusAtom, { status: SimulationStatus.SAVED });
           })
           .otherwise(() => null);
@@ -355,7 +428,13 @@ export const launchSimulationAtom = atom<
       });
       set(simulationStatusAtom, {
         status: SimulationStatus.ERROR,
-        description: error.cause ? `${error}` : messages.RunningSimulationDefaultError,
+        description: error.cause ? `${error.cause}` : messages.RunningSimulationDefaultError,
+      });
+      notify.error({
+        message: `Simulation ${overviewConfiguration.name}`,
+        description: lget(error, 'cause.message', null) ?? messages.RunningSimulationDefaultError,
+        placement: 'topRight',
+        key: `simulation-failed-${sessionId}`,
       });
     }
 

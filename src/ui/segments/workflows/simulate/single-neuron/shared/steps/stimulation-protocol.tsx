@@ -18,7 +18,7 @@ import {
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import {
-  PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
+  STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
   PROTOCOL_DETAILS,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
@@ -39,7 +39,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
   const breakpoint = useDefaultBreakpoint();
   const sections = useAtomValue(neuronSectionNamesAtomFamily(sessionId));
 
-  const spcKey = getSessionKey(PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
+  const spcKey = getSessionKey(STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
   const [spcState, updateSPC] = useAtom(StimulationConfigurationAtomFamily(spcKey));
   const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
 
@@ -83,6 +83,10 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
     }
   };
 
+  const disableForm =
+    simulationStatus?.status === SimulationStatus.LAUNCHED ||
+    simulationStatus?.status === SimulationStatus.SAVING;
+
   return (
     <div
       id="stimulation-protocol"
@@ -103,10 +107,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
         validateTrigger={['onChange']}
         requiredMark={false}
         data-testid="stimulation-protocol-form"
-        disabled={
-          simulationStatus?.status === SimulationStatus.LAUNCHED ||
-          simulationStatus?.status === SimulationStatus.SAVING
-        }
+        disabled={disableForm}
       >
         <Form.Item
           name="inject_to"
@@ -132,7 +133,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
             )}
             popupClassName="[&_.ant-select-item-option-content]:text-primary-9!"
             placement="bottomLeft"
-            disabled={!sections.length}
+            disabled={!sections.length || disableForm}
             size={breakpoint === 'l' ? 'middle' : 'large'}
             prefix={
               <div
@@ -158,6 +159,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
         >
           <Select
             placeholder="Section name"
+            disabled={disableForm}
             options={Object.entries(StimulationMode)
               .filter(([, value]) => value.enabled)
               .map(([, option]) => ({

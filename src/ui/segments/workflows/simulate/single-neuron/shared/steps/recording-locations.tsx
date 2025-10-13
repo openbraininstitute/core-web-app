@@ -16,7 +16,7 @@ import {
   label,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 import {
-  PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
+  RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
   buildDefaultRecordingLocation,
   getSimulationColor,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
@@ -213,7 +213,7 @@ export function Recording({ sessionId }: Props) {
   const [form] = Form.useForm();
   const breakpoint = useDefaultBreakpoint();
 
-  const key = getSessionKey(PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY, sessionId);
+  const key = getSessionKey(RECORDING_LOCATION_CONFIGURATION_SESSION_KEY, sessionId);
   const [state, update] = useAtom(RecordLocationConfigurationAtomFamily(key));
   const morphologySectionNames = useAtomValue(neuronSectionNamesAtomFamily(sessionId));
   const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
@@ -310,7 +310,7 @@ export function Recording({ sessionId }: Props) {
         disabled={!morphologySectionNames.length || disableForm}
         type="button"
         variant="outline"
-        className="disabled:bg-neutral-2 mt-2 mb-1 w-max shadow-sm"
+        className="disabled:bg-neutral-1 disabled:text-label mt-2 mb-1 w-max shadow-sm"
         size={breakpoint === 'l' ? 'md' : 'lg'}
       >
         Add recording

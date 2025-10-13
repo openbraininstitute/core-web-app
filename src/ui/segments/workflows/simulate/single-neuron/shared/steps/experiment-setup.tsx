@@ -2,7 +2,7 @@ import { Form, InputNumber } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
 import z from 'zod';
 
-import { PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
   ExperimentalSetupConfigurationAtomFamily,
   SimulationStatus,
@@ -111,7 +111,7 @@ function Input({
 
 export function ExperimentSetup({ sessionId }: Props) {
   const [form] = Form.useForm();
-  const key = getSessionKey(PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY, sessionId);
+  const key = getSessionKey(EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY, sessionId);
   const [state, update] = useAtom(ExperimentalSetupConfigurationAtomFamily(key));
   const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
 

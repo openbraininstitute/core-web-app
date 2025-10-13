@@ -2,8 +2,8 @@
 
 import { motion, AnimatePresence } from 'motion/react';
 import { use, useRef, useState } from 'react';
+import { kebabCase } from 'es-toolkit/compat';
 import { useRouter } from '@bprogress/next';
-import kebabCase from 'es-toolkit/compat/kebabCase';
 
 import { useNextStepOnboarding, workflowTour } from '@/ui/segments/app-setup/discover-app';
 import { WorkflowActivity } from '@/ui/segments/workflows/elements/workflow-activity';
