@@ -433,7 +433,10 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
 
               if (msg.status !== 'done') return;
 
-              notification.success({ message: `Simulation ${simulations[0].name} done` });
+              const simulation = simulations.find((s) => s.id === simId);
+              if (!simulation) return;
+
+              notification.success({ message: `Simulation ${simulation?.name} done` });
             })
             .otherwise(() => null);
         },
