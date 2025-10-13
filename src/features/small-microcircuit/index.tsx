@@ -3,7 +3,7 @@
 import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
 import Ajv, { AnySchema } from 'ajv';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
-import { Fragment, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Checkbox, ConfigProvider } from 'antd';
 import { match } from 'ts-pattern';
@@ -362,6 +362,11 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
 
   const activeSimulationExecStatus = selectedSimulation && statusMap?.get(selectedSimulation.id);
 
+  const onSimulationSelect = useCallback((simulation: ICircuitSimulation) => {
+    setSelectedSimulation(simulation);
+    setSelectedFile(undefined);
+  }, []);
+
   useEffect(() => {
     // Auto select all simulations with status "created" on page load.
     if (statusMap) {
@@ -375,8 +380,8 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
 
   useEffect(() => {
     // Select first simulation from the list
-    setSelectedSimulation(simulations[0]);
-  }, [simulations]);
+    onSimulationSelect(simulations[0]);
+  }, [onSimulationSelect, simulations]);
 
   useEffect(() => {
     // Poll simulation statuses if there are active (running/pending) simulations
@@ -408,10 +413,13 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
       await runSimulationBatch({
         ctx: { virtualLabId, projectId },
         simulationIds: simExecSelectedSimulationIds,
-        onInit: () => {
-          setSimRequestInProgress(false);
-          setSimExecSelectedSimulationIds([]);
-        },
+        onInit: () =>
+          setTimeout(() => {
+            // Pending statuses are sent via the stream asynchronously after the init.
+            // This timeout prevents the "Run simulations" button from flashing.
+            setSimRequestInProgress(false);
+            setSimExecSelectedSimulationIds([]);
+          }, 1000),
         onMessage: (message) => {
           match(message)
             .with({ message_type: MessageType.STATUS }, (msg) => {
@@ -448,31 +456,35 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
     ? `(${simExecSelectedSimulationIds.length})`
     : '';
 
+  const loading = !statusMap;
+  // TODO: Add loading skeleton animation
+
   return (
     <div className={styles.threeColumns}>
       <div className="flex border-r border-gray-200 pr-4">
         {/* List of simulations */}
         <div className="flex flex-col justify-start gap-5 overflow-y-auto">
-          {simulations.map((simulation) => (
-            <SimulationListItem
-              key={simulation.id}
-              selected={selectedSimulation?.id === simulation.id}
-              simulation={simulation}
-              execStatus={statusMap?.get(simulation.id)}
-              onSelect={() => setSelectedSimulation(simulation)}
-              onSelectedForSimChange={(simulationId, selected) => {
-                if (selected) {
-                  setSimExecSelectedSimulationIds((prev) => [...prev, simulationId]);
-                } else {
-                  setSimExecSelectedSimulationIds((prev) =>
-                    prev.filter((id) => id !== simulationId)
-                  );
-                }
-              }}
-              selectedForSim={simExecSelectedSimulationIds.includes(simulation.id)}
-              selectionForSimDisabled={simRequestInProgress}
-            />
-          ))}
+          {!loading &&
+            simulations.map((simulation) => (
+              <SimulationListItem
+                key={simulation.id}
+                selected={selectedSimulation?.id === simulation.id}
+                simulation={simulation}
+                execStatus={statusMap?.get(simulation.id)}
+                onSelect={() => onSimulationSelect(simulation)}
+                onSelectedForSimChange={(simulationId, selected) => {
+                  if (selected) {
+                    setSimExecSelectedSimulationIds((prev) => [...prev, simulationId]);
+                  } else {
+                    setSimExecSelectedSimulationIds((prev) =>
+                      prev.filter((id) => id !== simulationId)
+                    );
+                  }
+                }}
+                selectedForSim={simExecSelectedSimulationIds.includes(simulation.id)}
+                selectionForSimDisabled={simRequestInProgress}
+              />
+            ))}
         </div>
         <button
           className={classNames(
@@ -536,11 +548,11 @@ function SimulationListItem({
   const color = simulationStatusColorMap[execStatus ?? CircuitSimulationExecutionStatus.CREATED];
 
   return (
-    <div className="flex-none bg-white">
+    <div className="flex-none">
       <div
-        className="rounded-lg p-4 transition-colors duration-300"
+        className="rounded-lg px-4 pb-4 transition-colors duration-300"
         style={{
-          border: selected ? `2px solid ${color}` : 'none',
+          border: `2px solid ${selected ? color : 'transparent'}`,
           backgroundColor: selected ? `${color}0f` : 'white', // 6% opacity for bg color
         }}
       >
