@@ -34,7 +34,6 @@ export function usePlotly(
     layout.datarevision = performance.now();
     delete layout.height;
     Plotly.react(container, data, layout, PLOT_CONFIG);
-    console.log('🚀 [hooks] data =', data); // @FIXME: Remove this line written on 2025-10-10 at 15:40
   }, [instance, disabledLines, refPlot]);
 }
 
