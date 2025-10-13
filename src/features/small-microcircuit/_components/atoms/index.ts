@@ -120,7 +120,10 @@ export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
       const filters = { simulation_campaign_id: campaignId };
       const res = await getCircuitSimulations({ filters, context });
 
-      return res.data;
+      const simulations = res.data;
+      const sortedSimulations = simulations.sort((a, b) => a.name.localeCompare(b.name));
+
+      return sortedSimulations;
     }),
   {
     ttl: 120000, // 2 minutes
