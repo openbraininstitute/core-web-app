@@ -93,7 +93,6 @@ function useQueryParameters(
         : {}),
     ...transformFiltersToQuery(filters as any),
   });
-
   return queryParameters;
 }
 

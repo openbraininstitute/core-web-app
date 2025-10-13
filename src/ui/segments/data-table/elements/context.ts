@@ -29,8 +29,7 @@ export const coreFiltersAtom = atomFamily(
     const childAtom = atomWithDefault<Array<CoreFilter>>(() => {
       const columns = getViewDefinitionByExtendedType(dataType)?.columns;
       const fields = columns ? getFieldsDefinition(columns) : [];
-
-      return [
+      const filteredColumns = [
         ...(columns
           ?.filter(
             (o) =>
@@ -39,6 +38,7 @@ export const coreFiltersAtom = atomFamily(
           )
           ?.map((colKey) => columnKeyToFilter(colKey, dataType)) ?? []),
       ];
+      return filteredColumns;
     });
     childAtom.debugLabel = `filter-atom/${key}`;
     return childAtom;

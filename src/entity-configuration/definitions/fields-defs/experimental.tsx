@@ -30,6 +30,7 @@ import type {
 } from '@/api/entitycore/types';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
+import { ensureString, isNumber, isString } from '@/util/type-guards';
 
 const morphologyMtypes = (morphology?: ICellMorphology) => {
   if (!morphology) return [];
@@ -569,5 +570,45 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     render: (r) =>
       renderMorphologyMeasurement(r as ICellMorphology, 'Soma', 'soma_radius', 'raw', true),
+  },
+  [EntityCoreFields.IonChannel]: {
+    className: 'text-left',
+    title: 'Ion channel',
+    isFilterable: true,
+    filter: CoreFieldFilterTypeEnum.Text,
+    isDisplayable: true,
+    isSortable: true,
+    render: (r) => {
+      const ionChannel = 'ion_channel' in r ? (r.ion_channel as Record<string, unknown>) : {};
+      const name = ensureString(ionChannel.name, '—');
+      return name;
+    },
+    defaultConstraint: 'ion_channel__name__ilike',
+  },
+  [EntityCoreFields.TemperatureCelsius]: {
+    className: 'text-left',
+    title: 'Temperature °C',
+    isFilterable: true,
+    filter: CoreFieldFilterTypeEnum.Text,
+    isDisplayable: true,
+    isSortable: true,
+    render: (r) => {
+      const temperature =
+        'temperature_celcius' in r ? (r.temperature_celcius as Record<string, unknown>) : {};
+      return isNumber(temperature) || isString(temperature) ? `${temperature}` : '--';
+    },
+  },
+  [EntityCoreFields.CellLine]: {
+    className: 'text-left',
+    title: 'Cell line',
+    isFilterable: true,
+    filter: CoreFieldFilterTypeEnum.Text,
+    isDisplayable: true,
+    isSortable: true,
+    render: (r) => {
+      const cellLine = ensureString('cell_line' in r ? r.cell_line : null, '—');
+      return cellLine;
+    },
+    defaultConstraint: 'cell_line__ilike',
   },
 };

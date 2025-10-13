@@ -49,7 +49,7 @@ export default function FilterSection({
       >
         <ColumnToggle
           hidden={isColumnHidden('name')}
-          title="Name"
+          title="Name 666"
           onToggle={() => toggleColumn('name')}
         >
           <Input
