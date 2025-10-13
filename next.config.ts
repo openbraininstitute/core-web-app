@@ -70,6 +70,15 @@ const nextConfig = (phase: string): NextConfig => {
       },
     },
     basePath,
+    devIndicators: process.env.NEXT_PUBLIC_NEXT_DEVTOOLS_POSITION
+      ? {
+          position:
+            (process.env.NEXT_PUBLIC_NEXT_DEVTOOLS_POSITION as Exclude<
+              NextConfig['devIndicators'],
+              false | undefined
+            >['position']) ?? 'top-right',
+        }
+      : false,
     assetPrefix: isDev || !cdnUri ? undefined : `${cdnUri}/${coreWebAppVersion}`,
     reactStrictMode: true,
     compress: false,

@@ -1,9 +1,11 @@
 import React from 'react';
 import { useAtom } from 'jotai';
 
-import { PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import { ExperimentalSetupConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import { genericSingleNeuronSimulationPlotDataAtomFamily } from '@/state/simulate/single-neuron';
+import { EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import {
+  ExperimentalSetupConfigurationAtomFamily,
+  genericSingleNeuronSimulationPlotDataAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 
 import type { PlotData } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
@@ -50,7 +52,7 @@ export function useRecordingPlotData(sessionId: string): Type {
 }
 
 export function useCurrentSimulationConfig(sessionId: string) {
-  const key = getSessionKey(PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY, sessionId);
+  const key = getSessionKey(EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY, sessionId);
   const [state] = useAtom(ExperimentalSetupConfigurationAtomFamily(key));
   return state;
 }

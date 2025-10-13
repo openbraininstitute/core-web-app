@@ -16,6 +16,8 @@ function Loading() {
   );
 }
 
-export default function DefaultLoadingSuspense({ children }: Props) {
+export function DefaultLoadingSuspense({ children }: Props) {
   return <Suspense fallback={<Loading />}>{children}</Suspense>;
 }
+
+export default DefaultLoadingSuspense;

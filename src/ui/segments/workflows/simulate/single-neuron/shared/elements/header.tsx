@@ -2,11 +2,11 @@
 
 import { parseAsString, Parser, useQueryState } from 'nuqs';
 
+import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import {
   PanelQueryParam,
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { cn } from '@/utils/css-class';
 
@@ -28,12 +28,6 @@ export const tabsConfigItems: Array<{
     position: 'last',
   },
 ];
-
-// export const headerTabsAtom = atomFamily((key: string) => {
-//   const childAtom = atom<WorkflowSimulatePanelKeys>(WorkflowSimulatePanels.Configuration);
-//   childAtom.debugLabel = `simulation-header-menu-${key}`;
-//   return childAtom;
-// });
 
 export function Header() {
   const breakpoint = useDefaultBreakpoint();

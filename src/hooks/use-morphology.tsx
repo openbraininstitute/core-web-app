@@ -6,7 +6,7 @@ import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { Morphology } from '@/services/bluenaas-single-cell/types';
 
-export default function useMorphology({
+export function useMorphology({
   modelId,
   callback,
   projectId,
@@ -24,8 +24,9 @@ export default function useMorphology({
     data,
   } = useQuery({
     queryKey: keyBuilder.neuronMorphology3DData({ virtualLabId, projectId, modelId }),
-    queryFn: () =>
-      getSingleNeuronMorphology({ ctx: { virtualLabId, projectId }, meModelId: modelId }),
+    queryFn: () => {
+      return getSingleNeuronMorphology({ ctx: { virtualLabId, projectId }, meModelId: modelId });
+    },
   });
 
   useEffect(() => {

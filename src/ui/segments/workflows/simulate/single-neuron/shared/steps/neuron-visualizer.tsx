@@ -4,8 +4,13 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMemo, useTransition } from 'react';
 import { motion } from 'motion/react';
+import { useAtomValue } from 'jotai';
 
 import { NeuronViewerContainer } from '@/components/neuron-viewer/neuron-viewer-with-actions';
+import {
+  SimulationStatus,
+  simulationStatusAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import {
   type ThreeDVisualizerQueryParamKeys,
   threeDVisualizerState,
@@ -27,7 +32,7 @@ export function NeuronVisualizer({ sessionId, memodelId }: Props) {
   const [, startTransition] = useTransition();
   const { replace } = useRouter();
   const visualizerState = queryParams.get('3d') as ThreeDVisualizerQueryParamKeys;
-
+  const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
   const isCollapsed = visualizerState === threeDVisualizerState.Collapsed;
   const isExpanded = visualizerState === threeDVisualizerState.Expanded;
 
@@ -36,6 +41,11 @@ export function NeuronVisualizer({ sessionId, memodelId }: Props) {
     if (isCollapsed) return '3rem';
     return '100%';
   }, [isCollapsed]);
+
+  const enableActions = !(
+    simulationStatus?.status === SimulationStatus.LAUNCHED ||
+    simulationStatus?.status === SimulationStatus.SAVED
+  );
 
   const updateVisualizerState = (v: ThreeDVisualizerQueryParamKeys) => {
     startTransition(() => {
@@ -52,8 +62,8 @@ export function NeuronVisualizer({ sessionId, memodelId }: Props) {
         data-testid="neuron-visualizer"
         className={cn(
           'flex h-full max-h-full min-w-0 flex-1 items-end justify-end justify-self-end',
-          { 'text-primary-9 bg- mr-3 w-full': isExpanded },
-          { 'mr-3 rounded-full border-black bg-black text-white shadow-md': isCollapsed }
+          { 'text-primary-9 w-full': isExpanded },
+          { 'rounded-full border-black bg-black text-white shadow-md': isCollapsed }
         )}
         animate={{
           width: targetWidth,
@@ -104,6 +114,7 @@ export function NeuronVisualizer({ sessionId, memodelId }: Props) {
                 projectId,
                 memodelId,
                 sessionId,
+                useActions: enableActions,
               }}
             />
           </div>
@@ -118,15 +129,19 @@ function ThreeDNeuronVisualizer({
   projectId,
   memodelId,
   sessionId,
-}: WorkspaceContext & Props) {
+  useActions,
+}: WorkspaceContext &
+  Props & {
+    useActions: boolean;
+  }) {
   return (
     <div className="relative w-full flex-1 border-none">
       <NeuronViewerContainer
         useCursor
         useEvents
         useZoomer
-        useActions
         useLabels
+        useActions={useActions}
         virtualLabId={virtualLabId}
         projectId={projectId}
         meModelId={memodelId}

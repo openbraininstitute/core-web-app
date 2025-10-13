@@ -266,7 +266,7 @@ export const OverviewConfigurationSchema = z.object({
   description: z.string().optional(),
 });
 
-export type OverviewConfiguration = z.infer<typeof OverviewConfigurationSchema>;
+export type TOverviewConfiguration = z.infer<typeof OverviewConfigurationSchema>;
 
 export type SynapseConfiguration = z.infer<typeof SynapseConfigSchema>;
 

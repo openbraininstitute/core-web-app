@@ -26,6 +26,7 @@ export function SynapseSetConfiguration({ sessionId }: Props) {
             projectId={projectId}
             meModelId={sessionValue?.memodel?.id}
             zoomPlacement="right"
+            sessionId="custom-me-model-build"
           />
         )}
       </div>
