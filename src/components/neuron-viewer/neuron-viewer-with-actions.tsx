@@ -13,6 +13,7 @@ import type {
   TNeuronViewerClickData,
   TNeuronViewerHoverData,
 } from '@/services/bluenaas-single-cell/renderer';
+import { WebglNeuronSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector/webgl-neuron-selector';
 
 type Props = {
   meModelId: string;
@@ -113,6 +114,11 @@ export function NeuronViewerContainer({
             );
           }}
         </NeuronViewer>
+        <WebglNeuronSelector
+          projectId={projectId}
+          virtualLabId={virtualLabId}
+          meModelId={meModelId}
+        />
       </DefaultLoadingSuspense>
     </ErrorBoundary>
   );

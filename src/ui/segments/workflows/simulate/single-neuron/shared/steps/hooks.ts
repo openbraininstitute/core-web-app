@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAtom } from 'jotai';
 
+import { tgdFullscreenToggle } from '@tolokoban/tgd';
 import { EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
   ExperimentalSetupConfigurationAtomFamily,
@@ -55,4 +56,10 @@ export function useCurrentSimulationConfig(sessionId: string) {
   const key = getSessionKey(EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY, sessionId);
   const [state] = useAtom(ExperimentalSetupConfigurationAtomFamily(key));
   return state;
+}
+
+export function useFullscreenSwitcher() {
+  const refContainer = React.useRef<HTMLDivElement | null>(null);
+
+  return { refContainer, toggleFullscreen: () => tgdFullscreenToggle(refContainer.current) };
 }
