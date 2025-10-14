@@ -85,23 +85,27 @@ export default function ParameterSwep({
                   />
                   {!disabled && (
                     <div className="flex gap-1">
-                      <PlusCircleOutlined
-                        className="text-primary-8"
-                        onClick={() => {
-                          setValues([...values, null]);
-                        }}
-                      />
-                      {i !== 0 && (
-                        <CloseOutlined
-                          className="text-primary-8"
-                          onClick={() => {
-                            const updated = [...values];
-                            updated.splice(i, 1);
-                            setValues(updated);
-                            onChange(updated.filter((_v) => _v !== null));
-                          }}
-                        />
-                      )}
+                      <>
+                        {i === values.length - 1 && (
+                          <PlusCircleOutlined
+                            className="text-primary-8"
+                            onClick={() => {
+                              setValues([...values, null]);
+                            }}
+                          />
+                        )}
+                        {values.length >= 2 && (
+                          <CloseOutlined
+                            className="text-primary-8"
+                            onClick={() => {
+                              const updated = [...values];
+                              updated.splice(i, 1);
+                              setValues(updated);
+                              onChange(updated.filter((_v) => _v !== null));
+                            }}
+                          />
+                        )}
+                      </>
                     </div>
                   )}
                 </div>
