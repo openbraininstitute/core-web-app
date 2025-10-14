@@ -186,4 +186,7 @@ export const keyBuilder = {
     context: WorkspaceContext;
     props: Partial<ISingleNeuronSynaptomeSimulationFilter>;
   }) => [`${prefix}-single-neuron-synaptome-simulations`, { ...context, ...props }],
+  circuitProperties: ({ circuitId }: { circuitId: string }) => {
+    return [`${prefix}-circuit-properties`, circuitId];
+  },
 };

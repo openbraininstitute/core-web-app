@@ -9,6 +9,7 @@ import CircuitDetails from './circuit-details';
 import Tooltip from './tooltip';
 import ParameterSwep from './parameter-sweep';
 
+import PredefinedNodeset from './predefined-nodeset';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { classNames } from '@/util/utils';
 
@@ -28,13 +29,19 @@ export function JSONSchemaForm({
   config,
   circuit,
   onAddReferenceClick,
+  selectedCategory,
+  virtualLabId,
+  projectId,
 }: {
+  selectedCategory: string;
   disabled: boolean;
   config: Config;
   schema: JSONSchema;
   circuit: ICircuit | undefined | null;
   stateAtom: ReturnType<typeof atom<{ [key: string]: ConfigValue }>>;
   onAddReferenceClick: (reference: string) => void;
+  virtualLabId: string;
+  projectId: string;
 }) {
   const skip = ['type']; // , 'circuit'];
 
@@ -69,6 +76,17 @@ export function JSONSchemaForm({
 
   function renderInput(k: string, v: JSONSchema) {
     const obj = { ...v, ...v.anyOf?.find((subv) => subv.type !== 'array') };
+
+    if (selectedCategory === 'PredefinedNeuronSet' && k === 'node_set' && circuit) {
+      return (
+        <PredefinedNodeset
+          circuitId={circuit.id}
+          virtualLabId={virtualLabId}
+          projectId={projectId}
+          stateAtom={stateAtom}
+        />
+      );
+    }
 
     if (k === 'circuit' && circuit) return <CircuitDetails circuit={circuit} />;
 
