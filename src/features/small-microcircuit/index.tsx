@@ -205,10 +205,10 @@ export default function SimulationCampaignConfiguration({
                     );
 
                     if (coordinateCountRes.status !== 200) {
+                      const message = await coordinateCountRes.json();
                       notification.error({
                         message: 'An error ocurred generating the simulation campaign',
-                        description:
-                          'There should be at most 100 generated coordinates, reduce the number of values in parameters using scan ',
+                        description: message.detail,
                       });
                       return;
                     }
