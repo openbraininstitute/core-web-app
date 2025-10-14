@@ -196,7 +196,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.IsLjpCorrected,
       EntityCoreFields.IsStochastic,
       EntityCoreFields.IsTemperatureDependent,
-      EntityCoreFields.TemperatureCelsius,
+      EntityCoreFields.Temperature,
     ],
     curated: true,
     summaryViewFields: [
@@ -205,7 +205,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.IsLjpCorrected },
       { field: EntityCoreFields.IsStochastic },
       { field: EntityCoreFields.IsTemperatureDependent },
-      { field: EntityCoreFields.TemperatureCelsius },
+      { field: EntityCoreFields.Temperature },
     ],
     miniDetailView: [
       { field: EntityCoreFields.BrainRegion },
@@ -213,7 +213,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.IsLjpCorrected },
       { field: EntityCoreFields.IsStochastic },
       { field: EntityCoreFields.IsTemperatureDependent },
-      { field: EntityCoreFields.TemperatureCelsius },
+      { field: EntityCoreFields.Temperature },
     ],
     filterableFields: [
       EntityCoreFields.Name,
@@ -221,7 +221,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.IsLjpCorrected,
       EntityCoreFields.IsStochastic,
       EntityCoreFields.IsTemperatureDependent,
-      EntityCoreFields.TemperatureCelsius,
+      EntityCoreFields.Temperature,
     ],
   },
 };

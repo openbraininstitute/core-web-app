@@ -32,6 +32,7 @@ import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import { isNumber } from '@/util/type-guards';
 
 function iCMBooleanField(title: string, field: keyof IonChannelModel) {
   return {
@@ -332,7 +333,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     'Temperature dependent',
     'is_temperature_dependent'
   ),
-  [EntityCoreFields.TemperatureCelsius]: {
+  [EntityCoreFields.Temperature]: {
     className: 'text-left',
     title: 'Temperature (°C)',
     isFilterable: true,
@@ -344,7 +345,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       gte: 'temperature__gte',
     },
     render: (r) => {
-      if ('temperature_celsius' in r && !isNil(r.temperature_celsius)) return r.temperature_celsius;
+      if (EntityCoreFields.Temperature in r && isNumber(r[EntityCoreFields.Temperature]))
+        return `${r[EntityCoreFields.Temperature]} °C`;
       return EmptyValue;
     },
   },

@@ -585,17 +585,17 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     defaultConstraint: 'ion_channel__name__ilike',
   },
-  [EntityCoreFields.TemperatureCelsius]: {
+  [EntityCoreFields.Temperature]: {
     className: 'text-left',
-    title: 'Temperature °C',
+    title: 'Temperature (°C)',
     isFilterable: true,
-    filter: CoreFieldFilterTypeEnum.Text,
+    filter: CoreFieldFilterTypeEnum.ValueOrRange,
     isDisplayable: true,
     isSortable: true,
     render: (r) => {
       const temperature =
-        'temperature_celcius' in r ? (r.temperature_celcius as Record<string, unknown>) : {};
-      return isNumber(temperature) || isString(temperature) ? `${temperature}` : '--';
+        EntityCoreFields.Temperature in r ? (r[EntityCoreFields.Temperature] as number) : null;
+      return isNumber(temperature) || isString(temperature) ? `${temperature} °C` : '--';
     },
   },
   [EntityCoreFields.CellLine]: {
