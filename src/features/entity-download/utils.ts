@@ -168,7 +168,7 @@ export async function createTemplateFileEntry(entityType: TEntityTypeDict): Prom
   const stream = Readable.from(buffer);
 
   return {
-    path: 'README.md',
+    path: `README.md`,
     stream,
     size: buffer.length,
   };

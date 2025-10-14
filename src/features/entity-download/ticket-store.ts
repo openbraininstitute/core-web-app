@@ -83,6 +83,12 @@ class TicketStore {
 
     // Check if ticket is expired
     if (Date.now() - ticket.createdAt > TICKET_EXPIRATION_MS) {
+      console.log(
+        '🚀 [ticket-store] TICKET_EXPIRATION_MS, ticket.createdAt, Date.now() =',
+        TICKET_EXPIRATION_MS,
+        ticket.createdAt,
+        Date.now()
+      ); // @FIXME: Remove this line written on 2025-10-14 at 13:41
       this.deleteTicket(ticketId);
       return null;
     }
