@@ -1,17 +1,18 @@
 'use client';
 
+import { ErrorBoundary } from 'react-error-boundary';
 import { useState } from 'react';
 
-import { ErrorBoundary } from 'react-error-boundary';
-import { withErrorConfig } from '../GenericErrorFallback';
-import { CursorPopover, InjectionRecordingPopover } from './plugins';
-import Zoomer from './plugins/CustomZoomer';
-import NeuronViewer from '@/components/neuron-viewer';
-import {
-  NeuronViewerClickData,
-  NeuronViewerHoverData,
+import { CursorPopover, InjectionRecordingPopover } from '@/components/neuron-viewer/plugins';
+import { CustomZoomer } from '@/components/neuron-viewer/plugins/custom-zoomer';
+import { DefaultLoadingSuspense } from '@/components/DefaultLoadingSuspense';
+import { withErrorConfig } from '@/components/GenericErrorFallback';
+import { NeuronViewer } from '@/components/neuron-viewer';
+
+import type {
+  TNeuronViewerClickData,
+  TNeuronViewerHoverData,
 } from '@/services/bluenaas-single-cell/renderer';
-import DefaultLoadingSuspense from '@/components/DefaultLoadingSuspense';
 
 type Props = {
   meModelId: string;
@@ -23,7 +24,7 @@ type Props = {
   useLabels?: boolean;
   virtualLabId: string;
   projectId: string;
-  sessionId?: string;
+  sessionId: string;
 };
 export function NeuronViewerContainer({
   meModelId,
@@ -39,14 +40,18 @@ export function NeuronViewerContainer({
 }: Props) {
   const [disableHovering, setDisableHovering] = useState(() => !useActions);
   const [neuronViewerClickData, setNeuronViewerOnClickData] =
-    useState<NeuronViewerClickData | null>(null);
+    useState<TNeuronViewerClickData | null>(null);
   const [neuronViewerHoverData, setNeuronViewerOnHoverData] =
-    useState<NeuronViewerHoverData | null>(null);
+    useState<TNeuronViewerHoverData | null>(null);
 
   return (
     <ErrorBoundary
       FallbackComponent={withErrorConfig({
         showButtons: false,
+        cls: {
+          container: 'rounded-xl bg-transparent border border-neutral-2',
+          error: '[&_h2]:text-primary-8 bg-transparent px-0',
+        },
       })}
     >
       <DefaultLoadingSuspense>
@@ -103,7 +108,7 @@ export function NeuronViewerContainer({
                     data={neuronViewerHoverData.data}
                   />
                 )}
-                {enableZoom && <Zoomer renderer={renderer} placement={zoomPlacement} />}
+                {enableZoom && <CustomZoomer renderer={renderer} placement={zoomPlacement} />}
               </>
             );
           }}

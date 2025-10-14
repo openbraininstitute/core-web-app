@@ -6,10 +6,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import { RESET } from 'jotai/utils';
 import { useEffect } from 'react';
-import snakeCase from 'lodash/snakeCase';
-import compact from 'lodash/compact';
+import snakeCase from 'es-toolkit/compat/snakeCase';
+import compact from 'es-toolkit/compat/compact';
 import dynamic from 'next/dynamic';
-import map from 'lodash/map';
+import map from 'es-toolkit/compat/map';
 
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { DEFAULT_PAGE_MEDIUM_SIZE, DEFAULT_PAGE_NUMBER, WorkspaceScope } from '@/constants';

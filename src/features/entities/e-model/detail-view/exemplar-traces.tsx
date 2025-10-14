@@ -3,7 +3,7 @@ import { match, P } from 'ts-pattern';
 import { Pagination } from 'antd';
 
 import Link from 'next/link';
-import isString from 'lodash/isString';
+import isString from 'es-toolkit/compat/isString';
 
 import type { ColumnsType } from 'antd/es/table';
 

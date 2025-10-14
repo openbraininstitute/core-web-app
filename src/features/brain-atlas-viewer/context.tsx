@@ -1,7 +1,7 @@
 import { atomFamily } from 'jotai/utils';
 import { atom } from 'jotai';
 
-import isNil from 'lodash/isNil';
+import isNil from 'es-toolkit/compat/isNil';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import {
   getBrainAtlases,

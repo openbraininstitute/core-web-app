@@ -3,9 +3,9 @@
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 import { useEffect, useRef } from 'react';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import lowerCase from 'lodash/lowerCase';
-import find from 'lodash/find';
-import omit from 'lodash/omit';
+import lowerCase from 'es-toolkit/compat/lowerCase';
+import find from 'es-toolkit/compat/find';
+import omit from 'es-toolkit/compat/omit';
 
 import {
   flattenTreeAsObject,

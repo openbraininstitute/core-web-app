@@ -1,15 +1,16 @@
+import { camelCase, startCase, toPairs, get } from 'es-toolkit/compat';
 import { useAtom, useAtomValue } from 'jotai';
 import { Form, Input, Select } from 'antd';
 import { useEffect } from 'react';
 
-import camelCase from 'lodash/camelCase';
-import startCase from 'lodash/startCase';
-import toPairs from 'lodash/toPairs';
-import get from 'lodash/get';
-
 import { AmperageConfiguration } from '@/ui/segments/workflows/simulate/single-neuron/shared/amperage-configuration';
-import { StimulationConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { DefaultInjectionColor } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import {
+  neuronSectionNamesAtomFamily,
+  SimulationStatus,
+  simulationStatusAtomFamily,
+  StimulationConfigurationAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import {
   createZodValidator,
   getSessionKey,
@@ -17,10 +18,9 @@ import {
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import {
-  PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
+  STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
   PROTOCOL_DETAILS,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import { secNamesAtom } from '@/state/simulate/single-neuron';
 import {
   StimulationMode,
   StimulationConfigurationSchema,
@@ -35,12 +35,13 @@ type Props = {
 };
 
 export function StimulationProtocol({ sessionId, memodelId }: Props) {
-  const breakpoint = useDefaultBreakpoint();
-  const sections = useAtomValue(secNamesAtom);
   const [form] = Form.useForm();
+  const breakpoint = useDefaultBreakpoint();
+  const sections = useAtomValue(neuronSectionNamesAtomFamily(sessionId));
 
-  const spcKey = getSessionKey(PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
+  const spcKey = getSessionKey(STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
   const [spcState, updateSPC] = useAtom(StimulationConfigurationAtomFamily(spcKey));
+  const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
 
   useEffect(() => {
     form.setFieldsValue(spcState);
@@ -82,6 +83,10 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
     }
   };
 
+  const disableForm =
+    simulationStatus?.status === SimulationStatus.LAUNCHED ||
+    simulationStatus?.status === SimulationStatus.SAVING;
+
   return (
     <div
       id="stimulation-protocol"
@@ -102,6 +107,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
         validateTrigger={['onChange']}
         requiredMark={false}
         data-testid="stimulation-protocol-form"
+        disabled={disableForm}
       >
         <Form.Item
           name="inject_to"
@@ -127,7 +133,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
             )}
             popupClassName="[&_.ant-select-item-option-content]:text-primary-9!"
             placement="bottomLeft"
-            disabled={!sections.length}
+            disabled={!sections.length || disableForm}
             size={breakpoint === 'l' ? 'middle' : 'large'}
             prefix={
               <div
@@ -153,6 +159,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
         >
           <Select
             placeholder="Section name"
+            disabled={disableForm}
             options={Object.entries(StimulationMode)
               .filter(([, value]) => value.enabled)
               .map(([, option]) => ({

@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import capitalize from 'lodash/capitalize';
+import capitalize from 'es-toolkit/compat/capitalize';
 import Tab from '@/ui/molecules/tab';
 import { DetailViewSection } from '@/entity-configuration/definitions/types';
 

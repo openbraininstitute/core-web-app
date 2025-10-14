@@ -1,7 +1,6 @@
 import { WheelGesturesPlugin } from 'embla-carousel-wheel-gestures';
-import find from 'lodash/find';
 
-import { ActivityDict, getAllOptionsOrdered } from '@/ui/segments/workflows/elements/helpers';
+import { getAllOptionsOrdered } from '@/ui/segments/workflows/elements/helpers';
 import { CarouselButtons } from '@/ui/segments/workflows/elements/carousel-buttons';
 import { Carousel, CarouselContent, CarouselItem } from '@/ui/molecules/carousel';
 import { MenuItem } from '@/ui/segments/workflows/elements/menu-item';
@@ -37,14 +36,14 @@ export function TypesMenu({
         {getAllOptionsOrdered(category).map(({ value, disabled, group, label }) => (
           <CarouselItem
             key={`category-selector-${value}`}
-            className="w-max basis-1/2 py-2 md:basis-1/3! lg:basis-1/4! xl:basis-1/5! 2xl:basis-1/6!"
+            className="w-max basis-1/2 py-2 md:basis-1/3! lg:basis-1/5! 2xl:basis-1/6!"
           >
             <MenuItem<TExtendedEntitiesTypeDict | undefined>
               group={group}
               active={current === value}
               value={value}
               disabled={disabled}
-              title={`${label} ${find(ActivityDict, { value: category })?.name}`}
+              title={`${label}`}
               onClick={onItemClick}
             />
           </CarouselItem>

@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { FormInstance } from 'antd';
-import initial from 'lodash/initial';
-import isEmpty from 'lodash/isEmpty';
-import pickBy from 'lodash/pickBy';
-import split from 'lodash/split';
-import isNil from 'lodash/isNil';
-import size from 'lodash/size';
-import last from 'lodash/last';
-import join from 'lodash/join';
+import initial from 'es-toolkit/compat/initial';
+import isEmpty from 'es-toolkit/compat/isEmpty';
+import pickBy from 'es-toolkit/compat/pickBy';
+import split from 'es-toolkit/compat/split';
+import isNil from 'es-toolkit/compat/isNil';
+import size from 'es-toolkit/compat/size';
+import last from 'es-toolkit/compat/last';
+import join from 'es-toolkit/compat/join';
 import dayjs from 'dayjs';
 
 import type { SafeParseReturnType, ZodTypeAny } from 'zod';

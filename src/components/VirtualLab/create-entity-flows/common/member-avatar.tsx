@@ -1,6 +1,6 @@
 import { Avatar } from 'antd';
-import get from 'lodash/get';
-import nth from 'lodash/nth';
+import get from 'es-toolkit/compat/get';
+import nth from 'es-toolkit/compat/nth';
 
 import { CheckCircleFilled, ClockCircleOutlined } from '@ant-design/icons';
 import {

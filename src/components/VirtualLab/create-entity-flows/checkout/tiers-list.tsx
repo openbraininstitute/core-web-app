@@ -5,9 +5,9 @@ import { useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
 import { Tooltip } from 'antd';
 import { useAtom } from 'jotai';
-import kebabCase from 'lodash/kebabCase';
-import toUpper from 'lodash/toUpper';
-import noop from 'lodash/noop';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import toUpper from 'es-toolkit/compat/toUpper';
+import noop from 'es-toolkit/compat/noop';
 
 import { tryCatch } from '@/api/utils';
 import { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';

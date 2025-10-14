@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import isNil from 'lodash/isNil';
+import isNil from 'es-toolkit/compat/isNil';
 
 import { DefaultColor } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 
@@ -266,7 +266,7 @@ export const OverviewConfigurationSchema = z.object({
   description: z.string().optional(),
 });
 
-export type OverviewConfiguration = z.infer<typeof OverviewConfigurationSchema>;
+export type TOverviewConfiguration = z.infer<typeof OverviewConfigurationSchema>;
 
 export type SynapseConfiguration = z.infer<typeof SynapseConfigSchema>;
 

@@ -1,14 +1,19 @@
 'use client';
 
-import { NextStepProvider as OnboardingProvider, NextStep as OnboardingSteps } from 'nextstepjs';
+import {
+  NextStepProvider as OnboardingProvider,
+  NextStep as OnboardingSteps,
+  useNextStep,
+} from 'nextstepjs';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
-import unionBy from 'lodash/unionBy';
+import { useLayoutEffect, type ReactNode } from 'react';
+import unionBy from 'es-toolkit/compat/unionBy';
+import find from 'es-toolkit/compat/find';
 
 import type { CardComponentProps, Tour } from 'nextstepjs';
-import type { ReactNode } from 'react';
 
-import { AUTO_ONBOARDING_TOURS } from '@/constants';
 import { useLocalStorage } from '@/hooks/use-local-storage';
+import { AUTO_ONBOARDING_TOURS } from '@/constants';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
 import { cn } from '@/utils/css-class';
@@ -28,6 +33,7 @@ export function AppOnboardingProvider({ children }: { children: ReactNode }) {
   return (
     <OnboardingProvider>
       <OnboardingSteps
+        showNextStep
         steps={OnboardingDiscoverSteps}
         shadowRgb="63, 92, 139"
         shadowOpacity="0.8"
@@ -39,7 +45,6 @@ export function AppOnboardingProvider({ children }: { children: ReactNode }) {
           stiffness: 100,
           damping: 10,
         }}
-        showNextStep
         onSkip={(step, tour) => {
           updateOnboardingState({
             tours: unionBy(
@@ -83,10 +88,8 @@ export function OnboardingDiscoverCard({
   arrow,
   skipTour,
 }: CardComponentProps) {
-  const onNextStep = () => nextStep();
-
   return (
-    <Card className="w-max max-w-xs gap-0 rounded-3xl border-0 bg-white p-0">
+    <Card id="onboarding-card" className="w-max max-w-xs gap-0 rounded-3xl border-0 bg-white p-0">
       <div className="flex w-full items-start justify-between px-6 pt-4 pb-0">
         <h1 className="text-primary-9 mb-2 text-lg font-bold">{step?.title}</h1>
         <div className="flex w-max min-w-max flex-nowrap items-center justify-center gap-1">
@@ -117,7 +120,7 @@ export function OnboardingDiscoverCard({
           </Button>
         )}
         {currentStep + 1 !== totalSteps && (
-          <Button rounded onClick={onNextStep}>
+          <Button rounded onClick={nextStep}>
             Next tip
           </Button>
         )}
@@ -129,12 +132,15 @@ export function OnboardingDiscoverCard({
       </div>
       <span
         className={cn(
-          'flex items-center justify-center text-white [&_svg]:-top-[19px]!',
+          'flex items-center justify-center text-white',
           { '[&_svg]:left-[20px]!': step.side === 'bottom-left' },
           { '[&_svg]:right-[20px]!': step.side === 'bottom-right' },
           {
             '[&_svg]:top-1/2! [&_svg]:-right-[20px]!':
               step.side === 'left' || step.side === 'right',
+          },
+          {
+            '-top-[19px]': step.side?.startsWith('top'),
           }
         )}
       >
@@ -147,8 +153,7 @@ export function OnboardingDiscoverCard({
 export const defaultWorkspaceTour = 'workspace';
 export const projectTour = `${defaultWorkspaceTour}/projects`;
 export const dataTour = `${defaultWorkspaceTour}/data`;
-export const workflowTourFull = `${defaultWorkspaceTour}/workflow-full`;
-export const workflowTourEmpty = `${defaultWorkspaceTour}/workflow-empty`;
+export const workflowTour = `${defaultWorkspaceTour}/workflow`;
 export const notebookTour = `${defaultWorkspaceTour}/notebook`;
 
 export const OnboardingDiscoverSteps: Tour[] = [
@@ -157,11 +162,11 @@ export const OnboardingDiscoverSteps: Tour[] = [
     steps: [
       {
         icon: null,
-        title: 'Labs, Projects + User Account',
+        title: 'Labs, projects + user account',
         content: (
           <>
-            Here you can manage your virtual labs, projects, user account and subscription. You can
-            already invite people to your lab or project, and buy credits.
+            Manage your virtual labs, projects, user account, credits and subscription. Invite
+            people to your lab and projects.
           </>
         ),
         selector: '#workspace-switcher',
@@ -173,12 +178,8 @@ export const OnboardingDiscoverSteps: Tour[] = [
       },
       {
         icon: null,
-        title: 'Project Credits',
-        content: (
-          <>
-            Here are your remaining project credits. You can also transfer credits between projects.
-          </>
-        ),
+        title: 'Project credits',
+        content: <>View your remaining project credits and transfer credits between projects.</>,
         selector: '#workspace-project-credits',
         side: 'bottom',
         showControls: true,
@@ -188,9 +189,9 @@ export const OnboardingDiscoverSteps: Tour[] = [
       },
       {
         icon: null,
-        title: 'Project Home',
+        title: 'Project home',
         content: (
-          <>View your project’s latest activities, invite new members and manage your credits.</>
+          <>View your project’s latest activities, manage project credits and invite new members.</>
         ),
         selector: '#workspace-home',
         side: 'bottom',
@@ -205,7 +206,7 @@ export const OnboardingDiscoverSteps: Tour[] = [
         content: (
           <>
             Explore an extensive collection of experimental and model data, made public by the
-            community or OBI. All data is standardized and curated, allowing you to instantly start
+            community or OBI. All data is standardized and curated, so you can instantly start
             answering scientific questions with Workflows and example Notebooks.
           </>
         ),
@@ -238,9 +239,8 @@ export const OnboardingDiscoverSteps: Tour[] = [
         title: 'Notebooks',
         content: (
           <>
-            Work with Jupyter notebooks on the platform. Try our examples showing you how to get
-            started with our standardized data, from morphologies, circuits or large-scale
-            simulations.
+            Work with Jupyter notebooks on the platform. Try our examples to get started with our
+            standardized data, including morphologies, circuits and large-scale simulations.
           </>
         ),
         selector: '#workspace-notebooks',
@@ -255,8 +255,8 @@ export const OnboardingDiscoverSteps: Tour[] = [
         title: 'Reports',
         content: (
           <>
-            Reports are quick summaries of research: from showcases of your project, to summaries of
-            validations and predictions you’d like to share.
+            Summarize your validations or predictions you’d like to share, or create a showcase of
+            your project.
           </>
         ),
         selector: '#workspace-reports',
@@ -283,7 +283,7 @@ export const OnboardingDiscoverSteps: Tour[] = [
       },
       {
         icon: null,
-        title: 'Ai assistant',
+        title: 'Ai Assistant',
         content: (
           <>
             Chat with our AI assistant: ask questions about our data or ask it to read and summarise
@@ -295,7 +295,7 @@ export const OnboardingDiscoverSteps: Tour[] = [
         showControls: true,
         blockKeyboardControl: true,
         pointerPadding: 4,
-        pointerRadius: 16,
+        pointerRadius: 10,
       },
     ],
   },
@@ -343,7 +343,7 @@ export const OnboardingDiscoverSteps: Tour[] = [
       {
         icon: null,
         title: 'Artifact type',
-        content: <>Choose the artifcact type you’d like to view.</>,
+        content: <>Choose the artifact type you’d like to view.</>,
         selector: '#data-type-items-container',
         side: 'right',
         showControls: true,
@@ -384,21 +384,27 @@ export const OnboardingDiscoverSteps: Tour[] = [
       },
     ],
   },
+
   {
-    tour: workflowTourFull,
+    tour: workflowTour,
     steps: [
       {
         icon: null,
-        title: 'Workflow category',
-        content: (
-          <>
-            To start you will have only one project. You can create as many projects as you want and
-            invite collaborators to run experiments. You will also find your virtual lab management
-            system for credits.{' '}
-          </>
-        ),
-        selector: '#workflow-category-selector',
-        side: 'left-bottom',
+        title: 'Start a workflow',
+        content: <>Choose a workflow category to get started.</>,
+        selector: '#workflow-scrollable-selector',
+        side: 'bottom',
+        showControls: true,
+        blockKeyboardControl: true,
+        pointerPadding: 0,
+        pointerRadius: 16,
+      },
+      {
+        icon: null,
+        title: 'Workflow filters',
+        content: <>Filter your existing workflows by category and type.</>,
+        selector: '#workflow-category-and-type-selector',
+        side: 'bottom',
         showControls: true,
         blockKeyboardControl: true,
         pointerPadding: 0,
@@ -406,67 +412,19 @@ export const OnboardingDiscoverSteps: Tour[] = [
       },
       {
         icon: null,
-        title: 'Name',
+        title: 'Workflow tables',
         content: (
           <>
-            Lorem ipsum dolor sit amet est tincidunt consequat ultricies justo donec. Labore aliquam
-            lectus elit adipiscing consectetur lectus enim fusce velit netus.
+            View your previously generated and completed workflows. Duplicate workflows and re-run
+            to iterate quickly.
           </>
         ),
-        selector: '#activity-table-name-cell-selector',
-        side: 'bottom-left',
+        selector: '#workflow-activities-table',
+        side: 'top',
         showControls: true,
         blockKeyboardControl: true,
-        pointerPadding: 4,
-        pointerRadius: 16,
-      },
-      {
-        icon: null,
-        title: 'Category',
-        content: (
-          <>
-            Lorem ipsum dolor sit amet est tincidunt consequat ultricies justo donec. Labore aliquam
-            lectus elit adipiscing consectetur lectus enim fusce velit netus.
-          </>
-        ),
-        selector: '#activity-table-category-cell-selector',
-        side: 'bottom-right',
-        showControls: true,
-        blockKeyboardControl: true,
-        pointerPadding: 4,
-        pointerRadius: 16,
-      },
-      {
-        icon: null,
-        title: 'Type',
-        content: (
-          <>
-            Lorem ipsum dolor sit amet est tincidunt consequat ultricies justo donec. Labore aliquam
-            lectus elit adipiscing consectetur lectus enim fusce velit netus.
-          </>
-        ),
-        selector: '#activity-table-type-cell-selector',
-        side: 'bottom-right',
-        showControls: true,
-        blockKeyboardControl: true,
-        pointerPadding: 4,
-        pointerRadius: 16,
-      },
-      {
-        icon: null,
-        title: 'Create new',
-        content: (
-          <>
-            Lorem ipsum dolor sit amet est tincidunt consequat ultricies justo donec. Labore aliquam
-            lectus elit adipiscing consectetur lectus enim fusce velit netus.
-          </>
-        ),
-        selector: '#new-workflow-button',
-        side: 'bottom-right',
-        showControls: true,
-        blockKeyboardControl: true,
-        pointerPadding: 4,
-        pointerRadius: 25,
+        pointerPadding: 0,
+        pointerRadius: 14,
       },
     ],
   },
@@ -525,3 +483,32 @@ export const OnboardingDiscoverSteps: Tour[] = [
     ],
   },
 ];
+
+export function useNextStepOnboarding({
+  condition,
+  tour,
+}: {
+  condition: boolean | (() => boolean);
+  tour: string;
+}) {
+  const { startNextStep } = useNextStep();
+  const [onboardingState] = useLocalStorage<{
+    tours: Array<{
+      tour: string | null;
+      done: boolean | null;
+      date: number | null;
+      step: number | null;
+    }>;
+  }>(AUTO_ONBOARDING_TOURS, {
+    tours: [],
+  });
+
+  useLayoutEffect(() => {
+    const tourState = find(onboardingState.tours, { tour });
+    if (condition) {
+      if (!tourState || !tourState.done) {
+        startNextStep(tour);
+      }
+    }
+  }, [condition]); // eslint-disable-line react-hooks/exhaustive-deps
+}

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import kebabCase from 'lodash/kebabCase';
+import kebabCase from 'es-toolkit/compat/kebabCase';
 
 import { DerivationTypeDictionary } from '@/api/entitycore/types/entities/derivation';
 import { getEntityDerivations } from '@/api/entitycore/queries/general/derivation';

@@ -3,7 +3,7 @@
 import { CloseOutlined } from '@ant-design/icons';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useHotkeys } from 'react-hotkeys-hook';
-import sum from 'lodash/sum';
+import sum from 'es-toolkit/compat/sum';
 
 import NetworkAndMorphologyConfig from '@/ui/segments/explore/circuit/elements/download-panel/network-morphology-config';
 import ConnectivityMatrices from '@/ui/segments/explore/circuit/elements/download-panel/connectivity-matrices';

@@ -1,4 +1,6 @@
 import type { IScientificArtifactPublicationLinkFilter } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
+import type { ISingleNeuronSynaptomeSimulationFilter } from '@/api/entitycore/types/entities/single-neuron-synaptome-simulation';
+import type { ISingleNeuronSimulationFilter } from '@/api/entitycore/types/entities/single-neuron-simulation';
 import type { ElectricalCellRecordingFilter } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
@@ -169,7 +171,21 @@ export const keyBuilder = {
   }: {
     context: WorkspaceContext;
     props: Partial<IScientificArtifactPublicationLinkFilter>;
-  }) => [`${prefix}-scientific-artifact-publication-links`, { ...props, ...context }],
+  }) => [`${prefix}-scientific-artifact-publication-links`, { ...context, ...props }],
+  singleNeuronSimulations: ({
+    context,
+    ...props
+  }: {
+    context: WorkspaceContext;
+    props: Partial<ISingleNeuronSimulationFilter>;
+  }) => [`${prefix}-single-neuron-simulations`, { ...context, ...props }],
+  singleNeuronSynaptomeSimulations: ({
+    context,
+    ...props
+  }: {
+    context: WorkspaceContext;
+    props: Partial<ISingleNeuronSynaptomeSimulationFilter>;
+  }) => [`${prefix}-single-neuron-synaptome-simulations`, { ...context, ...props }],
   circuitProperties: ({ circuitId }: { circuitId: string }) => {
     return [`${prefix}-circuit-properties`, circuitId];
   },

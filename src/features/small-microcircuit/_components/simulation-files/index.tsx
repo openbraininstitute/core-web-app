@@ -1,11 +1,12 @@
 import { useAtomValue } from 'jotai';
 import { Suspense, useMemo } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
+import sortBy from 'es-toolkit/compat/sortBy';
 
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import { IEntity } from '@/api/entitycore/types/entities/entity';
-import { IAsset } from '@/api/entitycore/types/shared/global';
+import { AssetLabel, IAsset } from '@/api/entitycore/types/shared/global';
 import {
   circuitAtomFamily,
   simResultBySimIdAtomFamily,
@@ -51,7 +52,7 @@ export function SimulationFiles({
         onSelect={onSelect}
       />
       <h4 className="uppercase">Output files</h4>
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<div className="mt-8 ml-4">Loading...</div>}>
         {outputAvailable && (
           <ErrorBoundary
             fallback={
@@ -90,7 +91,9 @@ function SimulationInputFiles({
 }: SimulationInputFilesProps) {
   const circuit = useAtomValue(circuitAtomFamily({ circuitId: simulation.entity_id, context }));
   // TODO: fetch circuitConfig
-  const sonataCircuitAsset = circuit.assets.find((asset) => asset.label === 'sonata_circuit');
+  const sonataCircuitAsset = circuit.assets.find(
+    (asset) => asset.label === AssetLabel.sonata_circuit
+  );
   const circuitConfigFile: File = useMemo(
     () => ({
       entity: circuit,
@@ -101,7 +104,13 @@ function SimulationInputFiles({
   );
 
   const files: File[] = useMemo(
-    () => [circuitConfigFile, ...simulation.assets.map((asset) => ({ asset, entity: simulation }))],
+    () => [
+      circuitConfigFile, // Circuit config has a custom name here and stays in the of the list
+      ...sortBy(
+        simulation.assets.map((asset) => ({ asset, entity: simulation })),
+        (file) => file.asset.path
+      ),
+    ],
     [simulation, circuitConfigFile]
   );
 
@@ -139,7 +148,11 @@ function SimulationOutputFiles({
   );
 
   const files: File[] = useMemo(
-    () => simResult.assets.map((asset) => ({ asset, entity: simResult })),
+    () =>
+      sortBy(
+        simResult.assets.map((asset) => ({ asset, entity: simResult })),
+        (file) => file.asset.path
+      ),
     [simResult]
   );
 

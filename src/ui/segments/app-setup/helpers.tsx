@@ -1,5 +1,5 @@
 import { isMatching, P } from 'ts-pattern';
-import head from 'lodash/head';
+import head from 'es-toolkit/compat/head';
 
 import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';

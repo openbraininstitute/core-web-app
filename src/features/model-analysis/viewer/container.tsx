@@ -2,9 +2,9 @@
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
 
-import groupBy from 'lodash/groupBy';
+import groupBy from 'es-toolkit/compat/groupBy';
 import { Select } from 'antd';
-import capitalize from 'lodash/capitalize';
+import capitalize from 'es-toolkit/compat/capitalize';
 import { AllowedTypes } from '@/features/model-analysis/viewer/storage';
 import type { IValidationConstructedResult } from '@/features/model-analysis/explorer/context';
 import type { TAllowedTypes } from '@/features/model-analysis/viewer/storage';

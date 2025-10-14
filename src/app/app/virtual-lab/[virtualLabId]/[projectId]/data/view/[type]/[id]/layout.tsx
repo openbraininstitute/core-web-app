@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import NextLink from 'next/link';
-import snakeCase from 'lodash/snakeCase';
+import snakeCase from 'es-toolkit/compat/snakeCase';
 import { notFound } from 'next/navigation';
 import Breadcrumb from '@/ui/molecules/breadcrumb';
 import { ROOT_ROUTE } from '@/config';
@@ -10,10 +10,12 @@ import {
 } from '@/entity-configuration/domain/helpers';
 import DetailMenu from '@/ui/segments/explore/detail-menu';
 import ActionMenu from '@/ui/segments/action-menu';
-import type { WorkspaceContext, AwaitedType } from '@/types/common';
 import Close from '@/ui/molecules/close';
 import { DownloadPanel as CircuitDownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { WorkspaceScope } from '@/constants';
+
+import type { WorkspaceContext, AwaitedType } from '@/types/common';
 
 interface Params {
   id: string;
@@ -69,7 +71,8 @@ export default async function Layout({
     ctx: { virtualLabId, projectId },
   });
 
-  const parentLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}`;
+  const isPublicEntity = entity.authorized_public;
+  const parentLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}&scope=${isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project}`;
 
   const breadcrumbs = (
     <div className="flex flex-wrap gap-3">

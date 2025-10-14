@@ -2,10 +2,10 @@
 
 import * as SwitchPrimitives from '@radix-ui/react-switch';
 import { atom } from 'jotai';
-import keyBy from 'lodash/keyBy';
-import map from 'lodash/map';
-import merge from 'lodash/merge';
-import omit from 'lodash/omit';
+import keyBy from 'es-toolkit/compat/keyBy';
+import map from 'es-toolkit/compat/map';
+import merge from 'es-toolkit/compat/merge';
+import omit from 'es-toolkit/compat/omit';
 import { forwardRef } from 'react';
 
 import { getSanityTiers } from '@/api/sanity/client';

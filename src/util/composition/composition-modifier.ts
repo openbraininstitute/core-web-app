@@ -1,4 +1,4 @@
-import cloneDeep from 'lodash/cloneDeep';
+import cloneDeep from 'es-toolkit/compat/cloneDeep';
 import { OriginalComposition, OriginalCompositionNode } from '@/types/composition/original';
 import { CalculatedCompositionNode } from '@/types/composition/calculation';
 

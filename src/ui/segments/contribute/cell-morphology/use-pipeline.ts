@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import isNil from 'lodash/isNil';
+import isNil from 'es-toolkit/compat/isNil';
 
 import { createMtypeClassification } from '@/api/entitycore/queries/annotations/mtype-classification';
 import { createContribution } from '@/api/entitycore/queries/general/contribution';

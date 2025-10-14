@@ -3,23 +3,23 @@
 import { VerticalAlignMiddleOutlined } from '@ant-design/icons';
 import { ConfigProvider, Table, TableProps } from 'antd';
 import { useCallback, useRef, useState } from 'react';
-import isString from 'lodash/isString';
+import isString from 'es-toolkit/compat/isString';
 
 import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
 import type { ComponentProps, CSSProperties, ReactNode } from 'react';
 import type { TableRef } from 'antd/es/table';
 
+import { useOnCellRouteHandler } from '@/ui/segments/data-table/elements/hooks';
 import {
   useRowSelection,
   type RenderButtonProps,
 } from '@/ui/segments/data-table/elements/use-row-selection';
-import { useOnCellRouteHandler } from '@/ui/segments/data-table/elements/hooks';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
 import TableControls from '@/ui/segments/data-table/elements/controls';
-import useResizeObserver from '@/hooks/useResizeObserver';
 import useScrollComplete from '@/hooks/useScrollComplete';
+import useResizeObserver from '@/hooks/useResizeObserver';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
@@ -118,8 +118,12 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
   wrapperClassname,
   pagination = false,
   size,
+  id,
+  dataTestId,
 }: TableProps<T> &
   AdditionalTableProps<T> & {
+    id?: string;
+    dataTestId?: string;
     showLoadMore?: (value?: boolean) => void;
     scrollable?: boolean;
     expandableConfig?: ExpandableConfig<T>;
@@ -172,6 +176,8 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
     >
       <ConfigProvider theme={{ hashed: false }}>
         <Table
+          id={id}
+          data-testid={dataTestId}
           size={size}
           ref={tableRef}
           sticky={sticky}

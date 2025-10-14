@@ -7,6 +7,7 @@ export const messages = {
   DownloadFailed: 'An error occurred while generating the ZIP file. Please try again.',
   SimulationFailed:
     'We are having trouble running the simulation, please wait a few moments, and try again',
+  ExecutionSimulationSucceed: 'Simulation has been successfully executed. ',
   CreationSimulationSucceed: 'Simulation results have been successfully saved. ',
   CreationSimulationFailed: 'An error occurred while saving the simulation, please try again',
   CreationSimulationIOAssetFailed:
@@ -24,4 +25,6 @@ export const messages = {
   SynaptomeConfigurationError: 'Cannot run simulation without valid configuration',
   SimulationPrerequisitesMEModelError:
     'Unable to load the required model data. Please refresh the page or try again in a few moments.',
+  ReconfigureSimulation: 'New simulation configuration cloned from the previous one',
+  ReconfigureSimulationDescription: 'Please re-check before launching the simulation.',
 };

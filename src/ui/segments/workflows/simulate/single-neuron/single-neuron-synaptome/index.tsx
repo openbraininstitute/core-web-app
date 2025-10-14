@@ -8,6 +8,7 @@ import { SynapticsConfiguration } from '@/ui/segments/workflows/simulate/single-
 import { ExperimentSetup } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/experiment-setup';
 import { Recording } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/recording-locations';
 import { ExperimentStep } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu';
+import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { Info } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/overview';
 
 import type { IMEModel, ISingleNeuronSynaptome } from '@/api/entitycore/types';
@@ -23,7 +24,9 @@ export function Content({ sessionId, memodel, synaptome }: Props) {
   const step = searchParams.get('step') ?? ExperimentStep.Info;
 
   const content = match({ step })
-    .with({ step: ExperimentStep.Info }, () => <Info sessionId={sessionId} />)
+    .with({ step: ExperimentStep.Info }, () => (
+      <Info sessionId={sessionId} simulationType={SimulationType.SingleNeuronSynaptome} />
+    ))
     .with({ step: ExperimentStep.ExperimentalSetup }, () => (
       <ExperimentSetup sessionId={sessionId} />
     ))

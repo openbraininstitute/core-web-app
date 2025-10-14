@@ -1,7 +1,7 @@
 'use server';
 
 import path from 'path';
-import capitalize from 'lodash/capitalize';
+import capitalize from 'es-toolkit/compat/capitalize';
 import JSZip from 'jszip';
 import { assertGithubApiResponse, Notebook, validateMetadata } from './types';
 import { env } from '@/env';

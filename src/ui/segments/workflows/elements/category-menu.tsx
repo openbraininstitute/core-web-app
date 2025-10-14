@@ -31,7 +31,7 @@ export function CategoryMenu({ current, onItemClick }: Props) {
         {ActivityDict.map((o) => (
           <CarouselItem
             key={`category-selector-${o.value}`}
-            className="w-max basis-1/2 py-2 md:basis-1/3! lg:basis-1/4! xl:basis-1/5! 2xl:basis-1/6!"
+            className="w-max basis-1/2 py-2 md:basis-1/3! lg:basis-1/5! 2xl:basis-1/6!"
           >
             <MenuItem<TActivityValue | undefined>
               disabled={o.disabled}

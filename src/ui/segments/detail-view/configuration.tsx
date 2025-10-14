@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import isNil from 'lodash/isNil';
+import isNil from 'es-toolkit/compat/isNil';
 
 import {
   EntityCoreExtendedType,

@@ -1,5 +1,5 @@
 import { Divider } from 'antd';
-import startCase from 'lodash/startCase';
+import startCase from 'es-toolkit/compat/startCase';
 
 import { atom } from 'jotai';
 import { atomFamily } from 'jotai/utils';

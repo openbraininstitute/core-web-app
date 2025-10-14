@@ -1,5 +1,5 @@
-import range from 'lodash/range';
-import round from 'lodash/round';
+import range from 'es-toolkit/compat/range';
+import round from 'es-toolkit/compat/round';
 
 import {
   CurrentInjectionSimulationConfig,

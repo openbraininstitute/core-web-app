@@ -5,8 +5,8 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { ExemplarMorphology } from '@/features/entities/e-model/detail-view/exemplar-morphology';
 import { StandardFallback } from '@/features/entities/e-model/detail-view/error-message-line';
 import { ExemplarTraces } from '@/features/entities/e-model/detail-view/exemplar-traces';
+import { DefaultLoadingSuspense } from '@/components/DefaultLoadingSuspense';
 import IonChannels from '@/features/entities/e-model/detail-view/ion-channels';
-import DefaultLoadingSuspense from '@/components/DefaultLoadingSuspense';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 
 import type { ICellMorphology, IEModel } from '@/api/entitycore/types';

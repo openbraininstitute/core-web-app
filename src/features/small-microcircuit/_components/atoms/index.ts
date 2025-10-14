@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 import { atomWithRefresh } from 'jotai/utils';
-import isEqual from 'lodash/isEqual';
+import isEqual from 'es-toolkit/compat/isEqual';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
@@ -120,7 +120,10 @@ export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
       const filters = { simulation_campaign_id: campaignId };
       const res = await getCircuitSimulations({ filters, context });
 
-      return res.data;
+      const simulations = res.data;
+      const sortedSimulations = simulations.sort((a, b) => a.name.localeCompare(b.name));
+
+      return sortedSimulations;
     }),
   {
     ttl: 120000, // 2 minutes

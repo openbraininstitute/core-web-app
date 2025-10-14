@@ -1,6 +1,6 @@
 /* eslint-disable max-classes-per-file */
 import { File, Group, Dataset, ready } from 'h5wasm';
-import range from 'lodash/range';
+import range from 'es-toolkit/compat/range';
 
 const SMALL_SCALE_SIMULATOR_ID = 'obi_small_scale_simulator_v1';
 

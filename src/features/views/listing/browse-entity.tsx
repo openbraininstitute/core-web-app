@@ -7,9 +7,9 @@ import { parseAsString, Parser, useQueryState } from 'nuqs';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { WarningOutlined } from '@ant-design/icons';
 import { RESET } from 'jotai/utils';
-import compact from 'lodash/compact';
+import compact from 'es-toolkit/compat/compact';
 import dynamic from 'next/dynamic';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';

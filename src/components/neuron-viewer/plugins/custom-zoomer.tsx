@@ -1,15 +1,16 @@
-import { MutableRefObject, useEffect, useState } from 'react';
+import { RefObject, useEffect, useState } from 'react';
 import { ConfigProvider } from 'antd';
 
-import Zoomer from './Zoomer';
-import Renderer from '@/services/bluenaas-single-cell/renderer';
-import { classNames } from '@/util/utils';
+import { NeuronViewerRenderer } from '@/services/bluenaas-single-cell/renderer';
+import { Zoomer } from '@/components/neuron-viewer/plugins/zoomer';
+import { cn } from '@/utils/css-class';
 
 type Props = {
   placement?: 'left' | 'right';
-  renderer: MutableRefObject<Renderer | null>;
+  renderer: RefObject<NeuronViewerRenderer | null>;
 };
-export default function CustomZoomer({ renderer, placement = 'left' }: Props) {
+
+export function CustomZoomer({ renderer, placement = 'left' }: Props) {
   const [value, setValue] = useState(0);
 
   const onChange = (zoomValue: number) => {
@@ -79,9 +80,7 @@ export default function CustomZoomer({ renderer, placement = 'left' }: Props) {
   }, [renderer, value]);
 
   return (
-    <div
-      className={classNames('absolute bottom-4 z-50', placement === 'left' ? 'left-6' : 'right-6')}
-    >
+    <div className={cn('absolute bottom-4 z-50', placement === 'left' ? 'left-6' : 'right-6')}>
       <ConfigProvider
         theme={{
           components: {

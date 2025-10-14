@@ -3,7 +3,7 @@ import { ComponentProps, useCallback, useEffect, useMemo, useState } from 'react
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { loadable, unwrap } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
-import omit from 'lodash/omit';
+import omit from 'es-toolkit/compat/omit';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';

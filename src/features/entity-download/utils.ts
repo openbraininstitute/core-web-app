@@ -3,9 +3,9 @@ import fsPath from 'path';
 import { Readable } from 'stream';
 
 import { format } from 'date-fns';
-import get from 'lodash/get';
-import kebabCase from 'lodash/kebabCase';
-import template from 'lodash/template';
+import get from 'es-toolkit/compat/get';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import template from 'es-toolkit/compat/template';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { TEntityTypeDict } from '@/api/entitycore/types';
