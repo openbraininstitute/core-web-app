@@ -26,8 +26,9 @@ export default function ParameterSwep({
 
   if (mode === 'single' && !Array.isArray(value)) {
     return (
-      <div className="flex w-full gap-1">
+      <div className="relative">
         <InputNumber
+          controls={false}
           min={min}
           max={max}
           disabled={disabled}
@@ -38,9 +39,10 @@ export default function ParameterSwep({
           }}
           className="w-full"
         />
+
         {!disabled && (
           <PlusCircleOutlined
-            className="text-primary-8"
+            className="text-primary-8 absolute top-[10px] right-[8px]"
             onClick={() => {
               setMode('multiple');
               onChange(values.filter((v) => v !== null));
@@ -117,32 +119,3 @@ export default function ParameterSwep({
     );
   }
 }
-
-// Icon inside field
-// if (mode === 'single' && !Array.isArray(value)) {
-//     return (
-//       <div className="relative">
-//         <InputNumber
-//           min={min}
-//           max={max}
-//           disabled={disabled}
-//           value={value}
-//           onChange={(v) => {
-//             setSingleValue(v); // Update locally
-//             onChange(v); // Update in the config
-//           }}
-//           className="w-full"
-//         />
-
-//         {!disabled && (
-//           <PlusCircleOutlined
-//             className="text-primary-8 absolute right-[27px] top-[10px]"
-//             onClick={() => {
-//               setMode('multiple');
-//               onChange(values.filter((v) => v !== null));
-//             }}
-//           />
-//         )}
-//       </div>
-//     );
-//   }
