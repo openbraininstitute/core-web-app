@@ -20,9 +20,8 @@ export const circuitTypes: EntityCoreExtendedType[] = [
   'micro_circuit',
 ];
 
-export const getEntityByExtendedType = ({ type }: { type?: EntityCoreExtendedType }) => {
-  return find(EntityCoreConfiguration, { extendedType: type });
-};
+export const getEntityByExtendedType = ({ type }: { type?: EntityCoreExtendedType }) =>
+  find(EntityCoreConfiguration, { extendedType: type });
 
 // TODO: fix type to be a list of available types in entitycore
 export const getEntityByCoreType = ({ type }: { type?: TEntityTypeDict }) =>
