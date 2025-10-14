@@ -54,6 +54,7 @@ export async function getCircuitSimulationExecutions({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
+
   return await api.get<EntityCoreResponse<ICircuitSimulationExecution>>(baseUri, {
     queryParams: compactRecord({
       ...filters,
