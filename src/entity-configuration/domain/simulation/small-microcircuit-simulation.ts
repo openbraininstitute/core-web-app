@@ -35,7 +35,7 @@ export async function resolveExecutions({
   context: WorkspaceContext | undefined;
   allSimIds: string[];
 }) {
-  const chunkSize = 10;
+  const chunkSize = 30;
 
   const promises: ReturnType<typeof getCircuitSimulationExecutions>[] = [];
 
