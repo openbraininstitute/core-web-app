@@ -31,7 +31,7 @@ import { IonChannelRecording } from '@/entity-configuration/domain/experimental/
 export const ExperimentalEntitiesTileTypes = {
   ReconstructionMorphology: CellMorphology,
   ElectricalCellRecording,
-  IonChannelElectrophysiology: IonChannelRecording,
+  IonChannelRecording,
   NeuronDensity,
   BoutonDensity,
   SynapsePerConnection,

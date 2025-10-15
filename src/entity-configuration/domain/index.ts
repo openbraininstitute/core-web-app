@@ -24,9 +24,9 @@ import {
 } from '@/entity-configuration/domain/simulation';
 
 export const EntityCoreExperimentalConfiguration = {
-  ReconstructionMorphology: CellMorphology,
+  CellMorphology,
   ElectricalCellRecording,
-  IonChannelElectrophysiology: IonChannelRecording,
+  IonChannelRecording,
   NeuronDensity,
   BoutonDensity,
   SynapsePerConnection,

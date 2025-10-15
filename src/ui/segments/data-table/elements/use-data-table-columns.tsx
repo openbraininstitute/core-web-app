@@ -242,9 +242,9 @@ export function useDataTableColumns<T>({
     return columns.sort((a, b) => {
       const defs = ViewsDefinitionRegistry[dataType];
       if (!defs) {
-        throw new Error(
-          `Cannot find any item in ViewsDefinitionRegistry for dataType "${dataType}"!`
-        );
+        throw new Error('Unable to display the table! Please contact support.', {
+          cause: `Cannot find any item in ViewsDefinitionRegistry for dataType "${dataType}"!`,
+        });
       }
 
       return a.key && b.key
