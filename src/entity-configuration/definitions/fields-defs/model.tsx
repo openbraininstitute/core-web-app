@@ -32,6 +32,7 @@ import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import { isNumber } from '@/util/type-guards';
 
 function iCMBooleanField(title: string, field: keyof IonChannelModel) {
   return {
@@ -338,25 +339,18 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isFilterable: true,
     filter: CoreFieldFilterTypeEnum.ValueRange,
     isDisplayable: true,
+    isSortable: true,
     defaultConstraint: {
-      lte: 'temperature_celsius__lte',
-      gte: 'temperature_celsius__gte',
+      lte: 'temperature__lte',
+      gte: 'temperature__gte',
     },
     render: (r) => {
-      if ('temperature_celsius' in r && !isNil(r.temperature_celsius)) return r.temperature_celsius;
+      if (
+        EntityCoreFields.TemperatureCelsius in r &&
+        isNumber(r[EntityCoreFields.TemperatureCelsius])
+      )
+        return `${r[EntityCoreFields.TemperatureCelsius]} °C`;
       return EmptyValue;
     },
   },
-  // TODO, add when assets are in the ICM read_many response
-  // [EntityCoreFields.ICMThumbnail]: {
-  //   className: 'text-left',
-  //   title: 'Preview',
-  //   isFilterable: false,
-  //   filter: null,
-  //   isDisplayable: true,
-  //   render: (r) => {
-
-  //     return EmptyValue;
-  //   },
-  // },
 };

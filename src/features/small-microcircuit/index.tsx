@@ -323,6 +323,7 @@ export default function SimulationCampaignConfiguration({
               editing &&
               (isRootCategory(schema, configTab) || selectedCatSchema) && (
                 <JSONSchemaForm
+                  selectedCategory={selectedCategory}
                   onAddReferenceClick={handleAddReferenceClick}
                   disabled={!!campaignId || loading}
                   config={config}
@@ -337,6 +338,8 @@ export default function SimulationCampaignConfiguration({
                       : atomsMap[configTab][resolveKey(schema, configTab, selectedItemIdx)]
                   }
                   circuit={circuit}
+                  virtualLabId={virtualLabId}
+                  projectId={projectId}
                 />
               )}
           </div>

@@ -17,13 +17,11 @@ export default async function createDownloadTicket({
   entityIds: string[];
 }): Promise<CreateTicketResponse> {
   const url = `${window.location.origin}/api/entity-download/${kebabCase(entityType)}/ticket`;
-
   const downloadTicketRequest = {
     virtualLabId,
     projectId,
     entityIds,
   };
-
   const response = await fetch(url, {
     method: 'post',
     headers: {
@@ -32,9 +30,9 @@ export default async function createDownloadTicket({
     },
     body: JSON.stringify(downloadTicketRequest),
   });
-
   if (response.ok) {
-    return await response.json();
+    const result = await response.json();
+    return result;
   }
-  throw new Error('Error creating download ticket');
+  throw new Error(`Error #${response.status} creating download ticket: ${response.statusText}`);
 }
