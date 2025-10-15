@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { CreditsManagement } from '@/ui/segments/virtual-lab-settings/elements/credits-management';
 import { PurchasesHistory } from '@/ui/segments/virtual-lab-settings/elements/payment-history';
 import { ManageCreditsStep } from '@/ui/segments/virtual-lab-settings/elements/manage-credits';
-import { BuyCreditsStep } from '@/ui/segments/virtual-lab-settings/elements/buy-credits';
+import { BuyCredits } from '@/ui/segments/virtual-lab-settings/elements/buy-credits';
 
 type Props = {
   virtualLabId: string;
@@ -39,7 +39,7 @@ export function Credits({ virtualLabId }: Props) {
 
   return match({ currentStep, selectedProjectId })
     .with({ currentStep: CreditsStep.BuyCredits }, () => {
-      return <BuyCreditsStep virtualLabId={virtualLabId} onBack={handleBackToListing} />;
+      return <BuyCredits virtualLabId={virtualLabId} onBack={handleBackToListing} />;
     })
     .with(
       {
