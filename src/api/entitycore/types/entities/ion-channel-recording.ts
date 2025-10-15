@@ -1,3 +1,5 @@
+import { ElectricalRecordingOrigin, IRecordingFilter } from './electrical-cell-recording';
+
 import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type {
   BrainRegionFilter,
@@ -46,40 +48,11 @@ export const RecordingTypeDictionary = Object.fromEntries(
 export type TRecordingTypeDictionary =
   (typeof RecordingTypeDictionary)[keyof typeof RecordingTypeDictionary];
 
-export const ElectricalRecordingOrigin = {
-  InVivo: {
-    key: 'in_vivo',
-    label: 'in vivo',
-  },
-  InVitro: {
-    key: 'in_vitro',
-    label: 'in vitro',
-  },
-  InSilico: {
-    key: 'in_silico',
-    label: 'in silico',
-  },
-  Unknown: {
-    key: 'unknown',
-    label: 'unknown',
-  },
-} as const;
-
 export const ElectricalRecordingOriginDictionary = Object.fromEntries(
   Object.entries(ElectricalRecordingOrigin).map(([name, value]) => [name, value.key])
 ) as {
   [K in keyof typeof ElectricalRecordingOrigin]: (typeof ElectricalRecordingOrigin)[K]['key'];
 };
-
-export type TElectricalRecordingOriginDictionary =
-  (typeof ElectricalRecordingOriginDictionary)[keyof typeof ElectricalRecordingOriginDictionary];
-
-interface IRecordingFilter {
-  recording_type: TRecordingTypeDictionary | null;
-  recording_type__in: Array<TRecordingTypeDictionary> | null;
-  recording_origin: TElectricalRecordingOriginDictionary | null;
-  recording_origin__in: Array<TElectricalRecordingOriginDictionary> | null;
-}
 
 export type IonChannelRecordingFilter = Partial<
   IDFilter &

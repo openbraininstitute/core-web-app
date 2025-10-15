@@ -74,7 +74,7 @@ export const ElectricalRecordingOriginDictionary = Object.fromEntries(
 export type TElectricalRecordingOriginDictionary =
   (typeof ElectricalRecordingOriginDictionary)[keyof typeof ElectricalRecordingOriginDictionary];
 
-interface IRecordingFilter {
+export interface IRecordingFilter {
   recording_type: TRecordingTypeDictionary | null;
   recording_type__in: Array<TRecordingTypeDictionary> | null;
   recording_origin: TElectricalRecordingOriginDictionary | null;
