@@ -580,7 +580,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isSortable: true,
     render: (r) => {
       const ionChannel = 'ion_channel' in r ? (r.ion_channel as Record<string, unknown>) : {};
-      const name = ensureString(ionChannel.name, '—');
+      const name = ensureString(ionChannel.name, EmptyValue);
       return name;
     },
     defaultConstraint: 'ion_channel__name__ilike',
@@ -595,7 +595,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     render: (r) => {
       const temperature =
         EntityCoreFields.Temperature in r ? (r[EntityCoreFields.Temperature] as number) : null;
-      return isNumber(temperature) || isString(temperature) ? `${temperature} °C` : '--';
+      return isNumber(temperature) || isString(temperature) ? `${temperature} °C` : EmptyValue;
     },
   },
   [EntityCoreFields.CellLine]: {
