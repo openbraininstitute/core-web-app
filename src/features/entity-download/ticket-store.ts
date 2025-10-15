@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 
 import { TEntityTypeDict } from '@/api/entitycore/types';
 import { PartialBy } from '@/types/common';
-import { logDebug, logError, logInfo, logWarn } from '@/utils/logger';
+import { logError, logInfo } from '@/utils/logger';
 
 type DownloadTicket = {
   entityType: TEntityTypeDict;
@@ -26,8 +26,6 @@ const MAX_TICKETS = 100;
  * TODO: Replace with Redis if more than 1 container is used.
  */
 class TicketStore {
-  private ID = `${Math.floor(1e8 * Math.random())}`;
-
   private tickets: Map<string, DownloadTicket> = new Map();
 
   private cleanupInterval: NodeJS.Timeout;
@@ -44,7 +42,6 @@ class TicketStore {
    * @returns true if ticket was created, false if store is full
    */
   createTicket(ticket: DownloadTicketRequest): string | null {
-    logDebug(this.ID, 'Create ticket!');
     // Check if we've reached the maximum number of tickets
     if (this.tickets.size >= MAX_TICKETS) {
       this.cleanupExpiredTickets();
@@ -58,7 +55,6 @@ class TicketStore {
     const ticketId = randomUUID();
     const newTicket = { ...ticket, createdAt: Date.now() };
     this.tickets.set(ticketId, newTicket);
-    logDebug('🚀 [ticket-store] ticketId, newTicket =', ticketId, newTicket); // @FIXME: Remove this line written on 2025-10-14 at 10:37
 
     return ticketId;
   }
@@ -72,7 +68,7 @@ class TicketStore {
     const ticket = this.tickets.get(ticketId);
 
     if (!ticket) {
-      logError(this.ID, 'No ticket with this id:', ticketId);
+      logError('No ticket with this id:', ticketId);
       logInfo(
         'Available ones are:',
         Array.from(this.tickets.keys()).join(', '),
@@ -95,7 +91,6 @@ class TicketStore {
    * @param ticketId Ticket identifier
    */
   deleteTicket(ticketId: string): void {
-    logInfo(this.ID, 'Delete ticket:', ticketId);
     this.tickets.delete(ticketId);
   }
 
@@ -106,7 +101,6 @@ class TicketStore {
     const now = Date.now();
     for (const [ticketId, ticket] of this.tickets.entries()) {
       if (now - ticket.createdAt > TICKET_EXPIRATION_MS) {
-        logWarn(this.ID, 'Expired ticket:', ticketId);
         this.deleteTicket(ticketId);
       }
     }
