@@ -69,6 +69,8 @@ export class PainterManager {
     );
     context.paint();
 
+    const maxDistance = context.camera.transfo.distance;
+    const minDistance = maxDistance / 10;
     const orbitter = new TgdControllerCameraOrbit(context, {
       geo: {
         minLat: tgdCalcDegToRad(-0),
@@ -76,9 +78,9 @@ export class PainterManager {
       },
       inertiaOrbit: 500,
       inertiaZoom: 500,
-      minDistance: context.camera.transfo.distance / 10,
-      maxDistance: context.camera.transfo.distance,
-      speedZoom: 100,
+      minDistance,
+      maxDistance,
+      speedZoom: maxDistance,
     });
     orbitter.enabled = true;
   }
