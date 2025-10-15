@@ -21,6 +21,7 @@ import { MTypeClassification } from '@/ui/segments/contribute/cell-morphology/mt
 import { AssetUpload } from '@/ui/segments/contribute/cell-morphology/asset-upload';
 import { usePipeline } from '@/ui/segments/contribute/cell-morphology/use-pipeline';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { Subject } from '@/ui/segments/contribute/cell-morphology/subject';
 import { Setup } from '@/ui/segments/contribute/cell-morphology/setup';
 import {
@@ -43,7 +44,6 @@ import {
   BreadcrumbSeparator,
 } from '@/ui/molecules/breadcrumb/index';
 import { cn } from '@/utils/css-class';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 
 type Props = {
   brainRegionId: string;
@@ -83,18 +83,10 @@ const STEPS = {
 
 type StepKey = (typeof STEPS)[keyof typeof STEPS];
 
-function CellMorphologyContribution({ brainRegionId, sessionId }: Props) {
-  const { projectId } = useWorkspace();
+function UploadCellMorphology({ brainRegionId, sessionId }: Props) {
   const [form] = Form.useForm<TCellMorphologyForm>();
   const allValues = Form.useWatch([], form);
-
   const [submitting, setSubmitting] = useState(false);
-  const dataKey = resolveDataKey({
-    projectId,
-    section: 'contribute',
-    suffix: `${sessionId}`,
-  });
-
   const [activeStep, setActiveStep] = useState<StepKey>(STEPS.assets);
 
   const getDirtyFields = useCallback(() => {
@@ -143,7 +135,7 @@ function CellMorphologyContribution({ brainRegionId, sessionId }: Props) {
             Asset Upload
           </div>
         ),
-        children: <AssetUpload dataKey={dataKey} />,
+        children: <AssetUpload />,
         icon: assetsStatus === 'valid' && <CheckCircleFilled className="text-teal-500" />,
       },
       {
@@ -255,7 +247,6 @@ function CellMorphologyContribution({ brainRegionId, sessionId }: Props) {
       },
     ],
     [
-      dataKey,
       activeStep,
       assetsStatus,
       setupStatus,
@@ -414,5 +405,5 @@ export function CellMorphology({ sessionId }: { sessionId: string }) {
     dataKey: resolveDataKey({ section: 'explore', projectId }),
   });
 
-  return <CellMorphologyContribution brainRegionId={defaultBrainRegion.id} sessionId={sessionId} />;
+  return <UploadCellMorphology brainRegionId={defaultBrainRegion.id} sessionId={sessionId} />;
 }

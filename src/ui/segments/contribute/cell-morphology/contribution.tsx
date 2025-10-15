@@ -49,6 +49,7 @@ export function Contribution() {
   });
 
   const AgentRoleDropdown = AsyncSelectFormItem<PaginationFilter, IRole>({
+    id: 'agent-role-selector',
     dataKey: keyBuilder.roles({ roleType: 'contributor' }),
     queryFn: getRoles,
     getOptionLabel: (l) => capitalize(l.name),
@@ -61,6 +62,7 @@ export function Contribution() {
 
   const renderAgentDropdown = useCallback((type: TAgentType) => {
     const AgentDropdown = AsyncSelectFormItem<PaginationFilter, Agent>({
+      id: `agent-${type}-selector`,
       dataKey: keyBuilder.agents({ agentType: type }),
       queryFn: queryFnMapping[type],
       getOptionLabel: (l) => l.pref_label,

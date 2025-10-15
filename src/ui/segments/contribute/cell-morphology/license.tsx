@@ -1,12 +1,13 @@
 import { Form } from 'antd';
 
 import { getLicenses } from '@/api/entitycore/queries/general/license';
+import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
 import {
   CellMorphologySchema,
   label,
   zodFieldValidator,
 } from '@/ui/segments/contribute/cell-morphology/helpers';
-import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
 import type { ILicense } from '@/api/entitycore/types/shared/global';
@@ -16,9 +17,9 @@ export const DEFAULT_LICENSE_NAME = 'CC BY 4.0';
 
 export function License() {
   const form = Form.useFormInstance();
-
   const LicenseDropdown = AsyncSelectFormItem<PaginationFilter, ILicense>({
-    dataKey: ['license'],
+    id: 'license-selector',
+    dataKey: keyBuilder.license(),
     queryFn: getLicenses,
     getOptionLabel: (l) => l.label ?? l.name,
     getOptionValue: (l) => l.id,
