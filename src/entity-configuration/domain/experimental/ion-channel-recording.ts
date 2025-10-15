@@ -4,33 +4,33 @@ import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import {
-  getElectricalCellRecordings,
-  getElectricalCellRecording,
-} from '@/api/entitycore/queries/experimental/electrical-cell-recording';
+  getIonChannelRecording,
+  getIonChannelRecordings,
+} from '@/api/entitycore/queries/experimental/ion-channel-recording';
 
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
-export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecording> = {
+export const IonChannelRecording: EntityCoreTypeConfig<IElectricalCellRecording> = {
   group: EntityTypeGroup.Experimental,
-  title: 'Single cell electrophysiology',
-  extendedType: ExtendedEntitiesTypeDict.ElectricalCellRecording,
-  type: EntityTypeDict.ElectricalCellRecording,
-  slug: EntitySlug.ElectricalCellRecording,
+  title: 'Ion channel electrophysiology',
+  extendedType: ExtendedEntitiesTypeDict.IonChannelRecording,
+  type: EntityTypeDict.IonChannelRecording,
+  slug: EntitySlug.IonChannelRecording,
   api: {
     config: {
       allowedFacets: true,
     },
     query: {
-      list: (params: Parameters<typeof getElectricalCellRecordings>[0]) =>
-        getElectricalCellRecordings({
+      list: (params: Parameters<typeof getIonChannelRecordings>[0]) =>
+        getIonChannelRecordings({
           ...params,
           filters: {
             ...params.filters,
             recording_origin: ElectricalRecordingOriginDictionary.InVitro,
           },
         }),
-      one: getElectricalCellRecording,
+      one: getIonChannelRecording,
     },
   },
   explore: {

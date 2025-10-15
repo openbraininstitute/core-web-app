@@ -111,9 +111,10 @@ export function BrowseEntityScope({
     workspace: { virtualLabId, projectId },
     queryFn: async ({ queryKey }) => {
       const [{ workspace, queryParameters }] = queryKey;
+      const filters = { ...queryParameters, ...extraQueryParams };
       return entity?.api?.query.list?.({
         withFacets: true,
-        filters: { ...queryParameters, ...extraQueryParams },
+        filters,
         context: workspace,
       });
     },

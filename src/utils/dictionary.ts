@@ -1,5 +1,9 @@
 import isNil from 'es-toolkit/compat/isNil';
 
+/**
+ * @returns A clone of `values` without items whose values are null, undefined,
+ * empty strings or strings full of spaces.
+ */
 export function compactRecord<T>(
   values: Record<string, any> | undefined
 ): NonNullable<T> | NonNullable<Record<string, any>> {

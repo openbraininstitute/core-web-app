@@ -26,10 +26,12 @@ import { env } from '@/env';
 
 import type { WorkspaceContext } from '@/types/common';
 import type { TWorkspaceScope } from '@/constants';
+import { IonChannelRecording } from '@/entity-configuration/domain/experimental/ion-channel-recording';
 
 export const ExperimentalEntitiesTileTypes = {
   ReconstructionMorphology: CellMorphology,
   ElectricalCellRecording,
+  IonChannelRecording,
   NeuronDensity,
   BoutonDensity,
   SynapsePerConnection,

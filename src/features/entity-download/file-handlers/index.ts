@@ -9,6 +9,7 @@ import { getCellMorphologyFiles } from './cell-morphology';
 import { getSingleNeuronSynaptomeFiles } from './single-neuron-synaptome';
 import { getSingleNeuronSimulationFiles } from './single-neuron-simulation';
 import { getSingleNeuronSynaptomeSimulationFiles } from './single-neuron-synaptome-simulation';
+import { getIonChannellRecordingFiles } from './ion-channel-recording';
 import { WorkspaceContext } from '@/types/common';
 import { FileEntry } from '@/features/entity-download/types';
 import { EntityTypeDict, type TEntityTypeDict } from '@/api/entitycore/types';
@@ -22,6 +23,7 @@ type GetEntityFilesHandler = (
 export const getEntityFilesHandlerMap: Partial<Record<TEntityTypeDict, GetEntityFilesHandler>> = {
   // Experimental data
   [EntityTypeDict.ElectricalCellRecording]: getElectricalCellRecordingFiles,
+  [EntityTypeDict.IonChannelRecording]: getIonChannellRecordingFiles,
   [EntityTypeDict.ExperimentalBoutonDensity]: getExperimentalBoutonDensityFiles,
   [EntityTypeDict.ExperimentalNeuronDensity]: getExperimentalNeuronDensityFiles,
   [EntityTypeDict.ExperimentalSynapsesPerConnection]: getExperimentalSynapsesPerConnectionFiles,

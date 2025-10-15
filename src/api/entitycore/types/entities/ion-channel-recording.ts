@@ -1,3 +1,5 @@
+import { ElectricalRecordingOrigin, IRecordingFilter } from './electrical-cell-recording';
+
 import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type {
   BrainRegionFilter,
@@ -46,42 +48,13 @@ export const RecordingTypeDictionary = Object.fromEntries(
 export type TRecordingTypeDictionary =
   (typeof RecordingTypeDictionary)[keyof typeof RecordingTypeDictionary];
 
-export const ElectricalRecordingOrigin = {
-  InVivo: {
-    key: 'in_vivo',
-    label: 'in vivo',
-  },
-  InVitro: {
-    key: 'in_vitro',
-    label: 'in vitro',
-  },
-  InSilico: {
-    key: 'in_silico',
-    label: 'in silico',
-  },
-  Unknown: {
-    key: 'unknown',
-    label: 'unknown',
-  },
-} as const;
-
 export const ElectricalRecordingOriginDictionary = Object.fromEntries(
   Object.entries(ElectricalRecordingOrigin).map(([name, value]) => [name, value.key])
 ) as {
   [K in keyof typeof ElectricalRecordingOrigin]: (typeof ElectricalRecordingOrigin)[K]['key'];
 };
 
-export type TElectricalRecordingOriginDictionary =
-  (typeof ElectricalRecordingOriginDictionary)[keyof typeof ElectricalRecordingOriginDictionary];
-
-export interface IRecordingFilter {
-  recording_type: TRecordingTypeDictionary | null;
-  recording_type__in: Array<TRecordingTypeDictionary> | null;
-  recording_origin: TElectricalRecordingOriginDictionary | null;
-  recording_origin__in: Array<TElectricalRecordingOriginDictionary> | null;
-}
-
-export type ElectricalCellRecordingFilter = Partial<
+export type IonChannelRecordingFilter = Partial<
   IDFilter &
     TimestampsFilter &
     ContributionFilter &
@@ -91,14 +64,14 @@ export type ElectricalCellRecordingFilter = Partial<
     IRecordingFilter
 >;
 
-interface IElectricalCellRecordingBase extends EntityCoreIdentifiable, EntityCoreOwnership {
+interface IIonChannelRecordingBase extends EntityCoreIdentifiable, EntityCoreOwnership {
   name: string;
   description: string;
   brain_location?: IBrainLocation | null;
 }
 
-export interface IElectricalCellRecording
-  extends IElectricalCellRecordingBase,
+export interface IIonChannelRecording
+  extends IIonChannelRecordingBase,
     Timestamps,
     EntityCoreBaseAsset,
     EntityAuthorization,
