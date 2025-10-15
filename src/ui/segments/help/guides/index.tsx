@@ -21,12 +21,13 @@ export default function GuidesSection() {
   };
 
   // Helper function to create a key down handler for accessibility (Enter/Space)
-  const createKeyDownHandler = (setter: React.Dispatch<React.SetStateAction<boolean>>) => (event: React.KeyboardEvent) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      setter((prev) => !prev);
-    }
-  };
+  const createKeyDownHandler =
+    (setter: React.Dispatch<React.SetStateAction<boolean>>) => (event: React.KeyboardEvent) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        setter((prev) => !prev);
+      }
+    };
 
   // Define shared styles and content indicators
   const buttonStyle = { textDecoration: 'underline', cursor: 'pointer' };
@@ -54,14 +55,16 @@ export default function GuidesSection() {
   const handleKeyDown9 = createKeyDownHandler(setIsSection9Open);
 
   return (
-    <div className="p-4 space-y-4 max-w-2xl mx-auto">
-      <p className="mb-4 text-lg font-medium text-gray-700">This is the guides section. Topics include:</p>
+    <div className="mx-auto max-w-2xl space-y-4 p-4">
+      <p className="mb-4 text-lg font-medium text-gray-700">
+        This is the guides section. Topics include:
+      </p>
 
       {/* Section 1: How to batch upload morphologies. */}
       <div className="border-b border-gray-200 pb-2">
         <button
           type="button"
-          className="text-left w-full font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
+          className="w-full text-left font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
           style={buttonStyle}
           onClick={handleToggle1}
           onKeyDown={handleKeyDown1}
@@ -71,12 +74,15 @@ export default function GuidesSection() {
           {getButtonText(isSection1Open)} How to batch upload morphologies.
         </button>
         {isSection1Open && (
-          <p id="content-1" className="ml-5 mt-2 p-3 bg-blue-50 text-gray-700 rounded-lg transition-all duration-300">
+          <p
+            id="content-1"
+            className="mt-2 ml-5 rounded-lg bg-blue-50 p-3 text-gray-700 transition-all duration-300"
+          >
             To upload multiple morphologies, download this{' '}
             <a
               href="/guides/batch_register_morphologies.ipynb"
               download="batch_register_morphologies.ipynb"
-              className="font-bold text-blue-700 hover:text-blue-900 underline"
+              className="font-bold text-blue-700 underline hover:text-blue-900"
             >
               script
             </a>{' '}
@@ -89,7 +95,7 @@ export default function GuidesSection() {
       <div className="border-b border-gray-200 pb-2">
         <button
           type="button"
-          className="text-left w-full font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
+          className="w-full text-left font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
           style={buttonStyle}
           onClick={handleToggle2}
           onKeyDown={handleKeyDown2}
@@ -99,8 +105,12 @@ export default function GuidesSection() {
           {getButtonText(isSection2Open)} How to upload data.
         </button>
         {isSection2Open && (
-          <p id="content-2" className="ml-5 mt-2 p-3 bg-blue-50 text-gray-700 rounded-lg transition-all duration-300">
-            In the data section click on upload data button and select the type. Then complete the workflow that pops up.
+          <p
+            id="content-2"
+            className="mt-2 ml-5 rounded-lg bg-blue-50 p-3 text-gray-700 transition-all duration-300"
+          >
+            In the data section click on upload data button and select the type. Then complete the
+            workflow that pops up.
           </p>
         )}
       </div>
@@ -109,7 +119,7 @@ export default function GuidesSection() {
       <div className="border-b border-gray-200 pb-2">
         <button
           type="button"
-          className="text-left w-full font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
+          className="w-full text-left font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
           style={buttonStyle}
           onClick={handleToggle3}
           onKeyDown={handleKeyDown3}
@@ -119,8 +129,13 @@ export default function GuidesSection() {
           {getButtonText(isSection3Open)} How to browse data.
         </button>
         {isSection3Open && (
-          <p id="content-3" className="ml-5 mt-2 p-3 bg-blue-50 text-gray-700 rounded-lg transition-all duration-300">
-            In the data section click on the left hand side choose the brain region. Then select experimental, model, or simulation data. The entities appear below and can be clicked on to see the full list.
+          <p
+            id="content-3"
+            className="mt-2 ml-5 rounded-lg bg-blue-50 p-3 text-gray-700 transition-all duration-300"
+          >
+            In the data section click on the left hand side choose the brain region. Then select
+            experimental, model, or simulation data. The entities appear below and can be clicked on
+            to see the full list.
           </p>
         )}
       </div>
@@ -129,7 +144,7 @@ export default function GuidesSection() {
       <div className="border-b border-gray-200 pb-2">
         <button
           type="button"
-          className="text-left w-full font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
+          className="w-full text-left font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
           style={buttonStyle}
           onClick={handleToggle4}
           onKeyDown={handleKeyDown4}
@@ -139,8 +154,12 @@ export default function GuidesSection() {
           {getButtonText(isSection4Open)} How to build a single neuron.
         </button>
         {isSection4Open && (
-          <p id="content-4" className="ml-5 mt-2 p-3 bg-blue-50 text-gray-700 rounded-lg transition-all duration-300">
-            In the workflows section click on the build button and choose single neuron. You will then be prompted to select an m-model and an e-model.
+          <p
+            id="content-4"
+            className="mt-2 ml-5 rounded-lg bg-blue-50 p-3 text-gray-700 transition-all duration-300"
+          >
+            In the workflows section click on the build button and choose single neuron. You will
+            then be prompted to select an m-model and an e-model.
           </p>
         )}
       </div>
@@ -149,7 +168,7 @@ export default function GuidesSection() {
       <div className="border-b border-gray-200 pb-2">
         <button
           type="button"
-          className="text-left w-full font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
+          className="w-full text-left font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
           style={buttonStyle}
           onClick={handleToggle5}
           onKeyDown={handleKeyDown5}
@@ -159,17 +178,21 @@ export default function GuidesSection() {
           {getButtonText(isSection5Open)} How to build a synaptome.
         </button>
         {isSection5Open && (
-          <p id="content-5" className="ml-5 mt-2 p-3 bg-blue-50 text-gray-700 rounded-lg transition-all duration-300">
-            In the workflows section click on the build button and choose synaptome build. You will then be prompted to select an me-model and synapse sets.
+          <p
+            id="content-5"
+            className="mt-2 ml-5 rounded-lg bg-blue-50 p-3 text-gray-700 transition-all duration-300"
+          >
+            In the workflows section click on the build button and choose synaptome build. You will
+            then be prompted to select an me-model and synapse sets.
           </p>
         )}
       </div>
-      
+
       {/* Section 6: How to simulate a single neuron. */}
       <div className="border-b border-gray-200 pb-2">
         <button
           type="button"
-          className="text-left w-full font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
+          className="w-full text-left font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
           style={buttonStyle}
           onClick={handleToggle6}
           onKeyDown={handleKeyDown6}
@@ -179,17 +202,22 @@ export default function GuidesSection() {
           {getButtonText(isSection6Open)} How to simulate a single neuron.
         </button>
         {isSection6Open && (
-          <p id="content-6" className="ml-5 mt-2 p-3 bg-blue-50 text-gray-700 rounded-lg transition-all duration-300">
-            In the simulate section click single neuron simulation. You will then choose a built model. Setup the experiment, stimulation, and recording. The morphology is visible on the right. Then run the experiment.
+          <p
+            id="content-6"
+            className="mt-2 ml-5 rounded-lg bg-blue-50 p-3 text-gray-700 transition-all duration-300"
+          >
+            In the simulate section click single neuron simulation. You will then choose a built
+            model. Setup the experiment, stimulation, and recording. The morphology is visible on
+            the right. Then run the experiment.
           </p>
         )}
       </div>
-      
+
       {/* Section 7: How to simulate a synaptome. (Corrected title) */}
       <div className="border-b border-gray-200 pb-2">
         <button
           type="button"
-          className="text-left w-full font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
+          className="w-full text-left font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
           style={buttonStyle}
           onClick={handleToggle7}
           onKeyDown={handleKeyDown7}
@@ -199,17 +227,22 @@ export default function GuidesSection() {
           {getButtonText(isSection7Open)} How to simulate a synaptome.
         </button>
         {isSection7Open && (
-          <p id="content-7" className="ml-5 mt-2 p-3 bg-blue-50 text-gray-700 rounded-lg transition-all duration-300">
-            In the simulate section click synaptome simulation. You will then choose a built model. Setup the experiment, synaptic input, stimulation, and recording. The morphology is visible on the right. Then run the experiment.
+          <p
+            id="content-7"
+            className="mt-2 ml-5 rounded-lg bg-blue-50 p-3 text-gray-700 transition-all duration-300"
+          >
+            In the simulate section click synaptome simulation. You will then choose a built model.
+            Setup the experiment, synaptic input, stimulation, and recording. The morphology is
+            visible on the right. Then run the experiment.
           </p>
         )}
       </div>
-      
+
       {/* Section 8: How to simulate paired neurons. (Corrected title) */}
       <div className="border-b border-gray-200 pb-2">
         <button
           type="button"
-          className="text-left w-full font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
+          className="w-full text-left font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
           style={buttonStyle}
           onClick={handleToggle8}
           onKeyDown={handleKeyDown8}
@@ -219,18 +252,22 @@ export default function GuidesSection() {
           {getButtonText(isSection8Open)} How to simulate paired neurons.
         </button>
         {isSection8Open && (
-          <p id="content-8" className="ml-5 mt-2 p-3 bg-blue-50 text-gray-700 rounded-lg transition-all duration-300">
-            In the simulate section click paired neuron simulation. You will then choose a built model. Complete the setup, stimuli, circuit, and events sections. The morphologies are visible on the right. Then run the experiment.
+          <p
+            id="content-8"
+            className="mt-2 ml-5 rounded-lg bg-blue-50 p-3 text-gray-700 transition-all duration-300"
+          >
+            In the simulate section click paired neuron simulation. You will then choose a built
+            model. Complete the setup, stimuli, circuit, and events sections. The morphologies are
+            visible on the right. Then run the experiment.
           </p>
         )}
       </div>
-
 
       {/* Section 9: How to simulate a small microcircuit. */}
       <div className="pb-2">
         <button
           type="button"
-          className="text-left w-full font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
+          className="w-full text-left font-semibold text-blue-500 hover:text-blue-700 focus:outline-none"
           style={buttonStyle}
           onClick={handleToggle9}
           onKeyDown={handleKeyDown9}
@@ -240,12 +277,16 @@ export default function GuidesSection() {
           {getButtonText(isSection9Open)} How to simulate a small microcircuit.
         </button>
         {isSection9Open && (
-          <p id="content-9" className="ml-5 mt-2 p-3 bg-blue-50 text-gray-700 rounded-lg transition-all duration-300">
-            In the simulate section click small microcircuit simulation. You will then choose a built model. Complete the setup, stimuli, circuit, and events sections. The morphologies are visible on the right. Then generate the simulation.
+          <p
+            id="content-9"
+            className="mt-2 ml-5 rounded-lg bg-blue-50 p-3 text-gray-700 transition-all duration-300"
+          >
+            In the simulate section click small microcircuit simulation. You will then choose a
+            built model. Complete the setup, stimuli, circuit, and events sections. The morphologies
+            are visible on the right. Then generate the simulation.
           </p>
         )}
       </div>
-      
     </div>
   );
 }
