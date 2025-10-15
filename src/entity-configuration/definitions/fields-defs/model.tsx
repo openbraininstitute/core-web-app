@@ -333,7 +333,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     'Temperature dependent',
     'is_temperature_dependent'
   ),
-  [EntityCoreFields.Temperature]: {
+  [EntityCoreFields.TemperatureCelsius]: {
     className: 'text-left',
     title: 'Temperature (°C)',
     isFilterable: true,
@@ -345,8 +345,11 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       gte: 'temperature__gte',
     },
     render: (r) => {
-      if (EntityCoreFields.Temperature in r && isNumber(r[EntityCoreFields.Temperature]))
-        return `${r[EntityCoreFields.Temperature]} °C`;
+      if (
+        EntityCoreFields.TemperatureCelsius in r &&
+        isNumber(r[EntityCoreFields.TemperatureCelsius])
+      )
+        return `${r[EntityCoreFields.TemperatureCelsius]} °C`;
       return EmptyValue;
     },
   },

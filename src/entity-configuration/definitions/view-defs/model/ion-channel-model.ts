@@ -14,7 +14,7 @@ export const ViewDefForIonChannelModel: ViewDefinitionConfig = {
     EntityCoreFields.IsLjpCorrected,
     EntityCoreFields.IsStochastic,
     EntityCoreFields.IsTemperatureDependent,
-    EntityCoreFields.Temperature,
+    EntityCoreFields.TemperatureCelsius,
   ],
   curated: true,
   summaryViewFields: [
@@ -23,7 +23,7 @@ export const ViewDefForIonChannelModel: ViewDefinitionConfig = {
     { field: EntityCoreFields.IsLjpCorrected },
     { field: EntityCoreFields.IsStochastic },
     { field: EntityCoreFields.IsTemperatureDependent },
-    { field: EntityCoreFields.Temperature },
+    { field: EntityCoreFields.TemperatureCelsius },
   ],
   miniDetailView: [
     { field: EntityCoreFields.BrainRegion },
@@ -31,7 +31,7 @@ export const ViewDefForIonChannelModel: ViewDefinitionConfig = {
     { field: EntityCoreFields.IsLjpCorrected },
     { field: EntityCoreFields.IsStochastic },
     { field: EntityCoreFields.IsTemperatureDependent },
-    { field: EntityCoreFields.Temperature },
+    { field: EntityCoreFields.TemperatureCelsius },
   ],
   filterableFields: [
     EntityCoreFields.Name,
@@ -39,6 +39,6 @@ export const ViewDefForIonChannelModel: ViewDefinitionConfig = {
     EntityCoreFields.IsLjpCorrected,
     EntityCoreFields.IsStochastic,
     EntityCoreFields.IsTemperatureDependent,
-    EntityCoreFields.Temperature,
+    EntityCoreFields.TemperatureCelsius,
   ],
 };
