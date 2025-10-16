@@ -95,9 +95,6 @@ export function SpaceManagerContainer() {
           resetQueryParams();
         }
       }}
-      afterClose={() => {
-        resetQueryParams();
-      }}
     >
       <div
         id="workspace-manager-modal-content"
