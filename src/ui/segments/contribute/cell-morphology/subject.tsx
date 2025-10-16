@@ -6,12 +6,14 @@ import { getSpecies } from '@/api/entitycore/queries/general/species';
 import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
 import { getStrains } from '@/api/entitycore/queries/general/strain'; */
 import { getSubjects } from '@/api/entitycore/queries/general/subject';
+import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
 import {
   CellMorphologySchema,
   label,
   zodFieldValidator,
 } from '@/ui/segments/contribute/cell-morphology/helpers';
-import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
 import {
@@ -29,6 +31,8 @@ import {
 
 export function Subject() {
   const form = Form.useFormInstance();
+  const { virtualLabId, projectId } = useWorkspace();
+
   const DataTooltip = useCallback((data: ISubject) => {
     const fields = [];
     if (data.strain?.name) {
@@ -83,17 +87,23 @@ export function Subject() {
     );
   }, []);
 
-  const SubjectDropdown = AsyncSelectFormItem<PaginationFilter & SearchFilter, ISubject>({
-    dataKey: ['subjects'],
-    queryFn: getSubjects,
-    getOptionLabel: (l) => l.name,
-    getOptionValue: (l) => l.id,
-    placeholder: 'Select a subject...',
-    searchPlaceholder: 'Search subject...',
-    clsx: { trigger: 'rounded-full h-12', content: 'z-[99999]' },
-    searchable: false,
-    tooltip: DataTooltip,
-  });
+  const SubjectDropdown = React.useMemo(
+    () =>
+      AsyncSelectFormItem<PaginationFilter & SearchFilter, ISubject>({
+        id: 'subject-selector',
+        dataKey: keyBuilder.subject({ virtualLabId, projectId }),
+        queryFn: getSubjects,
+        getOptionLabel: (l) => l.name,
+        getOptionValue: (l) => l.id,
+        placeholder: 'Select a subject...',
+        searchPlaceholder: 'Search subject...',
+        clsx: { trigger: 'rounded-full h-12', content: 'z-[99999]' },
+        searchable: true,
+        searchField: 'search',
+        tooltip: DataTooltip,
+      }),
+    [virtualLabId, projectId, DataTooltip]
+  );
 
   return (
     <Form.Item
