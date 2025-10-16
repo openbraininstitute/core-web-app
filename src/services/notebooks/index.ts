@@ -10,18 +10,31 @@ export type NotebookStartResponse = {
 };
 
 export interface NotebookStartRequest {
-  notebook: Notebook;
+  analysis_notebook_template_id: string;
+  analysis_notebook_template_filename: string;
   vlabId: string;
   projectId: string;
-  session: Session;
+  session: {
+    idToken: string;
+    accessToken: string;
+    user: {
+      email: string;
+      id: string;
+      name: string;
+      username: string;
+    };
+  };
 }
 
 export async function startNotebook(
-  notebook: Notebook,
+  id: string,
+  filename: string,
   vlabId: string,
   projectId: string
 ): Promise<NotebookStartResponse> {
   const session = await getSession();
+
+  console.log(session);
   if (!session) {
     throw Error('no session found', {
       cause: {
@@ -31,16 +44,29 @@ export async function startNotebook(
     });
   }
   const request: NotebookStartRequest = {
-    notebook,
+    analysis_notebook_template_id: id,
+    analysis_notebook_template_filename: filename,
     vlabId,
     projectId,
-    session,
+    session: {
+      idToken: session.idToken,
+      accessToken: session.accessToken,
+      user: {
+        email: session.user.email ?? '',
+        id: session.user.id,
+        name: session.user.name ?? '',
+        username: session.user.username,
+      },
+    },
   };
-  const res = await authFetch(`${notebookSvcBaseUrl}/notebook/start`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(request),
-  });
+  const res = await authFetch(
+    `https://staging.openbraininstitute.org/api/notebook_service/analysis_notebook_template/start`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    }
+  );
 
   if (!res.ok) {
     if (res.status === 460) {

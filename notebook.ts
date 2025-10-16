@@ -1,0 +1,83 @@
+const n = {
+  authorized_project_id: 'b7da4e0a-ab7e-49ff-a081-cfc1e0891874',
+  authorized_public: true,
+  creation_date: '2025-10-01T10:52:13.569580Z',
+  update_date: '2025-10-01T10:52:13.569580Z',
+  created_by: {
+    id: 'f3f97efc-d917-4f5d-b193-3e9be07fc590',
+    given_name: 'Michael',
+    family_name: 'Reimann',
+    pref_label: 'Michael Reimann',
+    type: 'person',
+    sub_id: '3f9c6f94-03ca-463a-b79b-27242a6f1b87',
+  },
+  updated_by: {
+    id: 'f3f97efc-d917-4f5d-b193-3e9be07fc590',
+    given_name: 'Michael',
+    family_name: 'Reimann',
+    pref_label: 'Michael Reimann',
+    type: 'person',
+    sub_id: '3f9c6f94-03ca-463a-b79b-27242a6f1b87',
+  },
+  assets: [
+    {
+      size: 168,
+      sha256_digest: '451ce68fe21b4df1c7fa9a59dc51763b8077548a198258686534e2c2b419a933',
+      path: 'requirements.txt',
+      full_path:
+        'public/e6030ed8-a589-4be2-80a6-f975406eb1f6/b7da4e0a-ab7e-49ff-a081-cfc1e0891874/assets/analysis_notebook_template/827eb08e-12ab-4e00-bada-1ae537a13739/requirements.txt',
+      is_directory: false,
+      content_type: 'text/plain',
+      meta: {},
+      label: 'requirements',
+      storage_type: 'aws_s3_internal',
+      id: '0af9862e-a651-4cf7-8237-6bd51d7b3525',
+      status: 'created',
+    },
+    {
+      size: 10175,
+      sha256_digest: '3742626ac5863ffd8e1235d2f93bc6b8e9adc7cb49326640149cefe2914bb191',
+      path: 'display_circuit_composition.ipynb',
+      full_path:
+        'public/e6030ed8-a589-4be2-80a6-f975406eb1f6/b7da4e0a-ab7e-49ff-a081-cfc1e0891874/assets/analysis_notebook_template/827eb08e-12ab-4e00-bada-1ae537a13739/display_circuit_composition.ipynb',
+      is_directory: false,
+      content_type: 'application/x-ipynb+json',
+      meta: {},
+      label: 'jupyter_notebook',
+      storage_type: 'aws_s3_internal',
+      id: '38852cee-b01c-4ed3-b82d-b54ebe6d9a9b',
+      status: 'created',
+    },
+  ],
+  id: '827eb08e-12ab-4e00-bada-1ae537a13739',
+  type: 'analysis_notebook_template',
+  name: 'Display circuit composition',
+  description:
+    'This analysis displays the composition of a circuit model with respect to user-selected neuron properties, such as morphological types, electrical types, home layers, etc. It is displayed as a Sankey plot, allowing the user to see, e.g., how many neurons of a given morphological type have a given electrical type.',
+  specifications: {
+    schema_version: 1,
+    python: { version: '>=3.10,<3.12' },
+    docker: {
+      image_repository: 'openbraininstitute/obi-notebook-image',
+      image_tag: '>=2025.09.24-2',
+      image_digest: '3406990b6e4c7192317b6fdc5680498744f6142f01f0287f4ee0420d8c74063c',
+      docker_version: '>=20.10,<29.0',
+    },
+    inputs: [[Object]],
+  },
+  scale: 'circuit',
+};
+const asset = {
+  size: 10175,
+  sha256_digest: '3742626ac5863ffd8e1235d2f93bc6b8e9adc7cb49326640149cefe2914bb191',
+  path: 'display_circuit_composition.ipynb',
+  full_path:
+    'public/e6030ed8-a589-4be2-80a6-f975406eb1f6/b7da4e0a-ab7e-49ff-a081-cfc1e0891874/assets/analysis_notebook_template/827eb08e-12ab-4e00-bada-1ae537a13739/display_circuit_composition.ipynb',
+  is_directory: false,
+  content_type: 'application/x-ipynb+json',
+  meta: {},
+  label: 'jupyter_notebook',
+  storage_type: 'aws_s3_internal',
+  id: '38852cee-b01c-4ed3-b82d-b54ebe6d9a9b',
+  status: 'created',
+};

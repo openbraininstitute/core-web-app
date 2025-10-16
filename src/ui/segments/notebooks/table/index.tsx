@@ -9,6 +9,8 @@ import FilterSection from './filter-section';
 import { useTableColumns } from './table-columns';
 import TableStyles from './table-styles';
 import { useNotebookTable } from './use-notebook-table';
+import { Notebook } from '@/util/virtual-lab/types';
+import { startNotebook, NotebookStartResponse } from '@/services/notebooks';
 
 import { useFilters, useToggleColumns } from '@/components/FilterControls/Filter';
 import { Notebook } from '@/util/virtual-lab/types';
