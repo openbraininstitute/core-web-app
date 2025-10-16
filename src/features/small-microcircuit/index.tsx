@@ -187,6 +187,32 @@ export default function SimulationCampaignConfiguration({
 
                   setLoading(true);
                   try {
+                    const configCopy = { ...config };
+                    configCopy.type = 'CircuitSimulationScanConfig';
+
+                    const coordinateCountRes = await authFetch(
+                      `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/declared/scan_config/grid-scan-coordinate-count`,
+                      {
+                        method: 'POST',
+                        body: JSON.stringify(config),
+                        headers: {
+                          Accept: 'application/json',
+                          'Content-Type': 'application/json',
+                          'virtual-lab-id': virtualLabId,
+                          'project-id': projectId,
+                        },
+                      }
+                    );
+
+                    if (coordinateCountRes.status !== 200) {
+                      const message = await coordinateCountRes.json();
+                      notification.error({
+                        message: 'An error ocurred generating the simulation campaign',
+                        description: message.detail,
+                      });
+                      return;
+                    }
+
                     const res = await authFetch(
                       `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/generated/simulations-generate-grid-save`,
                       {

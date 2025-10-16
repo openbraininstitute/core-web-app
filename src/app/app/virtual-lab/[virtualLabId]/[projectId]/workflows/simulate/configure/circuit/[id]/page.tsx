@@ -61,7 +61,7 @@ export default function Page({
     (initialCampaignId && !isLoading && campaignData && campaignData.config.form)
   ) {
     return (
-      <div className="border-neutral-2 ml-2 h-full rounded-2xl border">
+      <div className="border-neutral-2 ml-2 h-full rounded-2xl border pt-3">
         <SimulationConfig
           circuitId={entity.id}
           virtualLabId={virtualLabId}

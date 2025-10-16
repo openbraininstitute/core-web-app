@@ -26,8 +26,9 @@ export default function ParameterSwep({
 
   if (mode === 'single' && !Array.isArray(value)) {
     return (
-      <div className="flex w-full gap-1">
+      <div className="relative">
         <InputNumber
+          controls={false}
           min={min}
           max={max}
           disabled={disabled}
@@ -38,9 +39,10 @@ export default function ParameterSwep({
           }}
           className="w-full"
         />
+
         {!disabled && (
           <PlusCircleOutlined
-            className="text-primary-8"
+            className="text-primary-8 absolute top-[10px] right-[8px]"
             onClick={() => {
               setMode('multiple');
               onChange(values.filter((v) => v !== null));
@@ -85,23 +87,27 @@ export default function ParameterSwep({
                   />
                   {!disabled && (
                     <div className="flex gap-1">
-                      <PlusCircleOutlined
-                        className="text-primary-8"
-                        onClick={() => {
-                          setValues([...values, null]);
-                        }}
-                      />
-                      {i !== 0 && (
-                        <CloseOutlined
-                          className="text-primary-8"
-                          onClick={() => {
-                            const updated = [...values];
-                            updated.splice(i, 1);
-                            setValues(updated);
-                            onChange(updated.filter((_v) => _v !== null));
-                          }}
-                        />
-                      )}
+                      <>
+                        {i === values.length - 1 && (
+                          <PlusCircleOutlined
+                            className="text-primary-8"
+                            onClick={() => {
+                              setValues([...values, null]);
+                            }}
+                          />
+                        )}
+                        {values.length >= 2 && (
+                          <CloseOutlined
+                            className="text-primary-8"
+                            onClick={() => {
+                              const updated = [...values];
+                              updated.splice(i, 1);
+                              setValues(updated);
+                              onChange(updated.filter((_v) => _v !== null));
+                            }}
+                          />
+                        )}
+                      </>
                     </div>
                   )}
                 </div>

@@ -19,6 +19,7 @@ import { getLatestSimExecStatus } from '@/features/small-microcircuit/_component
 import { SimExecStatusMap } from '@/features/small-microcircuit/types';
 import { WorkspaceContext } from '@/types/common';
 import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';
+import { resolveExecutions } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 
 const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
   ({ simulationId, context }: { simulationId: string; context: WorkspaceContext }) =>
@@ -40,13 +41,9 @@ const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
 export const simExecRemoteStatusMapAtomFamily = atomFamilyWithExpiration(
   ({ simulationIds, context }: { simulationIds: string[]; context: WorkspaceContext }) =>
     atomWithRefresh<Promise<SimExecStatusMap>>(async () => {
-      const simulationExecutionFilters = { used__id__in: simulationIds.join(',') };
-      const res = await getCircuitSimulationExecutions({
-        filters: simulationExecutionFilters,
-        context,
-      });
+      const executions = await resolveExecutions({ context, allSimIds: simulationIds });
 
-      return res.data.reduce(
+      return executions.reduce(
         (map, simExec) => map.set(simExec.used[0].id, simExec.status),
         new Map()
       );

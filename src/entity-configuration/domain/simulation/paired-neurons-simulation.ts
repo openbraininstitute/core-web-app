@@ -1,7 +1,7 @@
 import flatMap from 'es-toolkit/compat/flatMap';
 import keyBy from 'es-toolkit/compat/keyBy';
 
-import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
+import { resolveExecutions } from './small-microcircuit-simulation';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
@@ -52,13 +52,8 @@ async function resolveSimulationCampaigns({
     source.data,
     (campaign) => campaign.simulations?.map((sim) => sim.id) ?? []
   );
-  // fetch executions related to those simulation IDs
-  const executionsResponse = await getCircuitSimulationExecutions({
-    context,
-    withFacets: false,
-    filters: { used__id__in: allSimIds },
-  });
-  const executions = executionsResponse.data;
+
+  const executions = await resolveExecutions({ context, allSimIds });
 
   // map simulationId -> array of executions that use it
   const executionsBySimId = executions.reduce<Record<string, typeof executions>>((acc, exec) => {
