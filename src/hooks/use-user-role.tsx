@@ -1,10 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
-import groupBy from 'es-toolkit/compat/groupBy';
-import find from 'es-toolkit/compat/find';
+import { useQueries } from '@tanstack/react-query';
+import { groupBy, find } from 'es-toolkit/compat';
 
+import { VlmUserGroupsResponse } from '@/api/virtual-lab-svc/queries/types';
+import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { VlmUserGroupsResponse } from '@/api/virtual-lab-svc/queries/types';
+import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 
 type Props = {
   virtualLabId?: string;
@@ -12,22 +13,33 @@ type Props = {
 };
 
 export function useUserRole({ virtualLabId, projectId }: Props) {
-  const { data, isLoading } = useQuery({
-    queryKey: keyBuilder.roles(),
-    queryFn: getUserGroups,
-  });
-
+  const [{ data, isLoading: loadingGroups }, { data: myVirtualLab, isLoading: loadingVirtualLab }] =
+    useQueries({
+      queries: [
+        {
+          queryKey: keyBuilder.roles(),
+          queryFn: getUserGroups,
+        },
+        {
+          queryKey: keyBuilder.listAllLabs({ includes: [LabTypeEnum.MY_LAB] }),
+          queryFn: async () => await listVirtualLabs({ include: [LabTypeEnum.MY_LAB] }),
+        },
+      ],
+    });
+  const ownerVirtualLabId = myVirtualLab?.data?.virtual_lab.id;
   const { userGroups, isMember, isAdmin, isProjectMember, isProjectAdmin } = makeRoles(
     data,
     virtualLabId,
     projectId
   );
+  const isOwner = ownerVirtualLabId === virtualLabId;
 
   return {
-    loading: isLoading,
+    loading: loadingGroups || loadingVirtualLab,
     userGroups,
     isMember,
     isAdmin,
+    isOwner,
     isProjectMember,
     isProjectAdmin,
   };

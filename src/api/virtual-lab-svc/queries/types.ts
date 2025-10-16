@@ -427,6 +427,28 @@ export type RecentWorkspace = {
   };
 };
 
+enum PromotionCodeUsageStatus {
+  PENDING = 'pending',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  ROLLED_BACK = 'rolled_back',
+}
+
+export type RedeemPromotionCodeRequest = {
+  code: string;
+  virtual_lab_id: string;
+};
+
+export type RedemptionResult = {
+  redemption_id: string;
+  promotion_code: string;
+  credits_granted: number;
+  virtual_lab_id: string;
+  status: PromotionCodeUsageStatus;
+  redeemed_at: Date;
+  accounting_transaction_id: string | null;
+};
+
 export type VlmGetSubscriptionResponse = VlmResponse<GetSubscriptionResponse>;
 export type VlmCreateSubscriptionResponse = VlmResponse<CreateSubscriptionResponse>;
 export type VlmCancelSubscriptionResponse = VlmResponse<CancelSubscriptionResponse>;
@@ -455,3 +477,4 @@ export type VlmGetProjectLibraryPerCategory = VlmResponse<{
 }>;
 
 export type VlmRecentWorkspace = VlmResponse<RecentWorkspace>;
+export type VlmPromotionResponse = VlmResponse<RedemptionResult>;

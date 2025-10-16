@@ -80,9 +80,11 @@ export async function createStandalonePayment(
 export async function listStandalonePayments({
   page = 1,
   pageSize = 5,
+  virtualLabId,
 }: {
   page?: number;
   pageSize?: number;
+  virtualLabId?: string;
 }): Promise<SubscriptionPaymentsResponse> {
   const session = await getSession();
 
@@ -91,6 +93,7 @@ export async function listStandalonePayments({
   url.searchParams.append('payment_type', 'standalone');
   url.searchParams.append('page', page.toString());
   url.searchParams.append('page_size', pageSize.toString());
+  if (virtualLabId) url.searchParams.append('virtual_lab_id', virtualLabId);
 
   const response = await fetch(url.toString(), {
     headers: {

@@ -62,7 +62,9 @@ export function SpaceSwitcher({ className }: Props) {
   ] = useQueries({
     queries: [
       {
-        queryKey: keyBuilder.listAllLabs(),
+        queryKey: keyBuilder.listAllLabs({
+          includes: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS],
+        }),
         queryFn: async () =>
           await listVirtualLabs({ include: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS] }),
       },
