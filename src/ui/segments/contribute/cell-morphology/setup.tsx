@@ -1,15 +1,17 @@
 import { DatePicker, Form, Input, InputNumber, Space } from 'antd';
+import { InfoCircleFilled } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
+import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import {
   label,
   CellMorphologySchema,
   zodFieldValidator,
 } from '@/ui/segments/contribute/cell-morphology/helpers';
-import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
-import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { resolveDataKey } from '@/utils/key-builder';
+import { cn } from '@/utils/css-class';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
@@ -113,7 +115,30 @@ export function Setup() {
       >
         <Input className="h-12 rounded-full placeholder:text-sm" placeholder="Enter published in" />
       </Form.Item>
-      <Form.Item label={label('Location (x, y, z)', 'main')}>
+      <Form.Item
+        label={label('Location (x, y, z)', 'main')}
+        tooltip={{
+          icon: <InfoCircleFilled />,
+          className: '[&_svg]:text-primary-8!',
+          rootClassName: cn(
+            '[&_.ant-tooltip-inner]:bg-white [&_.ant-tooltip-inner]:text-primary-8 ',
+            '[&_.ant-tooltip-arrow]:before:bg-white'
+          ),
+          title: (
+            <div className="flex items-center gap-1">
+              <p>Learn more about this field</p>
+              <a
+                href="https://pubmed.ncbi.nlm.nih.gov/40800985/"
+                rel="noopener noreferrer"
+                target="_blank"
+                className="text-primary-9 underline"
+              >
+                here
+              </a>
+            </div>
+          ),
+        }}
+      >
         <Space.Compact className="flex gap-2">
           <Form.Item
             name={['setup', 'location', 'x']}
@@ -127,7 +152,7 @@ export function Setup() {
             className="w-1/3"
           >
             <InputNumber
-              placeholder="X"
+              placeholder="X (microns)"
               size="large"
               className="h-12 w-full rounded-full placeholder:text-sm [&_.ant-input-number-handler-wrap]:hidden"
             />
@@ -144,7 +169,7 @@ export function Setup() {
             className="w-1/3"
           >
             <InputNumber
-              placeholder="Y"
+              placeholder="Y (microns)"
               size="large"
               className="h-12 w-full rounded-full placeholder:text-sm [&_.ant-input-number-handler-wrap]:hidden"
             />
@@ -161,7 +186,7 @@ export function Setup() {
             className="w-1/3"
           >
             <InputNumber
-              placeholder="Z"
+              placeholder="Z (microns)"
               size="large"
               className="h-12 w-full rounded-full placeholder:text-sm [&_.ant-input-number-handler-wrap]:hidden"
             />
