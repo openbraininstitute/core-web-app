@@ -101,7 +101,6 @@ export function BrowseEntityScope({
 
   const activeColumns = useAtomValue(coreActiveColumnsAtom({ dataType, key: dataKey }));
   const columns = allColumns.filter(({ key }) => (activeColumns || []).includes(key as string));
-
   const { data, error, isPlaceholderData, isFetching } = useQueryExtendedEntityType({
     context: {
       key: dataKey,
