@@ -13,7 +13,6 @@ import { Notebook } from '@/util/virtual-lab/types';
 import { startNotebook, NotebookStartResponse } from '@/services/notebooks';
 
 import { useFilters, useToggleColumns } from '@/components/FilterControls/Filter';
-import { Notebook } from '@/util/virtual-lab/types';
 
 export function NotebookTable({
   notebooks,
