@@ -34,7 +34,7 @@ export class OffscreenPainter {
         depth: webglPresetDepth.lessOrEqual,
         children: [
           new TgdPainterSegments(context, {
-            minRadius: 4,
+            minRadius: 3,
             makeDataset: segments.makeDataset,
             material: new MaterialIndex(),
           }),
@@ -46,16 +46,6 @@ export class OffscreenPainter {
 
   getItemAt(xScreen: number, yScreen: number) {
     const { structure, context } = this;
-    const data = new Uint8Array(context.width * context.height * 4);
-    context.gl.readPixels(
-      0,
-      0,
-      context.width,
-      context.height,
-      context.gl.RGBA,
-      context.gl.UNSIGNED_BYTE,
-      data
-    );
     const [R, G, B] = context.readPixel(xScreen, yScreen);
     const value = (R + (G << 8) + (B << 16)) / 0xffffff;
     const index = Math.floor((structure.length + 2) * value) - 1;
@@ -66,8 +56,8 @@ export class OffscreenPainter {
 
   private readonly paint = () => {
     const { canvas } = this.onscreenContext;
-    const w = Math.ceil(canvas.width / 2);
-    const h = Math.ceil(canvas.height / 2);
+    const w = Math.ceil(canvas.width / 4);
+    const h = Math.ceil(canvas.height / 4);
     this.offscreenCanvas.width = w;
     this.offscreenCanvas.height = h;
     this.context.paint();
