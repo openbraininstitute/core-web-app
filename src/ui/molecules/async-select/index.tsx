@@ -130,9 +130,9 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
 
   // persist seen options across searches/pages so we can still display the
   // selected label even if it is not present in the current options list.
-  const persistedOptionsRef = useRef<Map<string, AsyncSelectOption<T>>>(
-    new Map<string, AsyncSelectOption<T>>()
-  );
+  const persistedOptionsRef = useRef<Map<string, AsyncSelectOption<T>> | null>(null);
+  if (!persistedOptionsRef.current)
+    persistedOptionsRef.current = new Map<string, AsyncSelectOption<T>>();
 
   const currentOptionsMap = useMemo<Map<string, AsyncSelectOption<T>>>(() => {
     const next = new Map<string, AsyncSelectOption<T>>();
@@ -142,15 +142,17 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
 
   useEffect(() => {
     if (options.length === 0) return;
-    const cache = persistedOptionsRef.current;
-    options.forEach((opt) => {
-      cache.set(opt.value, opt);
-    });
+    if (persistedOptionsRef.current) {
+      const cache = persistedOptionsRef.current;
+      options.forEach((opt) => {
+        cache.set(opt.value, opt);
+      });
+    }
   }, [options]);
 
   const selectedOptionFromProps = useMemo<AsyncSelectOption<T> | undefined>(() => {
     if (!selectedValue) return undefined;
-    return currentOptionsMap.get(selectedValue) ?? persistedOptionsRef.current.get(selectedValue);
+    return currentOptionsMap.get(selectedValue) ?? persistedOptionsRef.current?.get(selectedValue);
   }, [currentOptionsMap, selectedValue]);
 
   const parentSetter = useCallback(
@@ -178,7 +180,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
 
   const handleSelect = useCallback(
     (option: AsyncSelectOption<T> | undefined) => {
-      if (option) {
+      if (option && persistedOptionsRef.current) {
         persistedOptionsRef.current.set(option.value, option);
       }
       onSelect?.(option);
@@ -331,16 +333,16 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
                         />
                         {tooltip && (
                           <Tooltip>
-                            <TooltipTrigger>
-                              <Button rounded borderless variant="icon" size="sm">
+                            <TooltipTrigger asChild>
+                              <div className="h-8 rounded-full border-none">
                                 <InfoCircleFilled className="text-primary-8" />
-                              </Button>
+                              </div>
                             </TooltipTrigger>
                             <TooltipContent
                               avoidCollisions
                               align="end"
                               side="bottom"
-                              sideOffset={0}
+                              sideOffset={-9}
                               collisionPadding={{ left: 0 }}
                               arrowPadding={0}
                               className="shadow-bnb bg-primary-9 z-[99999] text-white!"
