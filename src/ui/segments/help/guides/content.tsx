@@ -18,9 +18,6 @@ export default async function GuidesContent({
     ? content.filter((guide) => guide.topic?.toLowerCase() === guidesParams.toLowerCase())
     : content;
 
-  console.log('My content is: ', content);
-  console.log('Filtered content for subsection:', guidesParams, filteredContent);
-
   return (
     <div className="text-primary-9 col-span-3 flex max-h-[82vh] w-2/3 flex-col items-start gap-y-4 overflow-y-scroll">
       {filteredContent.map((guide) => (
