@@ -1,8 +1,7 @@
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { capitalize, isNil } from 'es-toolkit/compat';
 import { useCallback } from 'react';
 import { Form } from 'antd';
-import capitalize from 'es-toolkit/compat/capitalize';
-import isNil from 'es-toolkit/compat/isNil';
 
 import { getOrganizations } from '@/api/entitycore/queries/general/organization-agent';
 import { getConsortia } from '@/api/entitycore/queries/general/consortium-agent';
@@ -57,7 +56,8 @@ export function Contribution() {
     placeholder: 'Select a role...',
     searchPlaceholder: 'Search role...',
     clsx: { trigger: 'rounded-full  h-12', content: 'z-[99999]' },
-    searchable: false,
+    searchable: true,
+    searchField: 'name__ilike',
   });
 
   const renderAgentDropdown = useCallback((type: TAgentType) => {
@@ -70,7 +70,8 @@ export function Contribution() {
       placeholder: `Select a ${Object.values(AgentType).find((t) => t.key === type)?.label}...`,
       searchPlaceholder: `Search for ${Object.values(AgentType).find((t) => t.key === type)?.label}...`,
       clsx: { trigger: 'rounded-full h-12', content: 'z-[99999]' },
-      searchable: false,
+      searchable: true,
+      searchField: 'pref_label__ilike',
     });
 
     return <AgentDropdown />;

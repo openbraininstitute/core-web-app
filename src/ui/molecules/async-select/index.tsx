@@ -104,7 +104,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
           filters: {
             page: pageParam,
             page_size: 10,
-            ...(searchField ? { [searchField]: searchTerm } : {}),
+            ...(searchField && searchTerm.trim() !== '' ? { [searchField]: searchTerm } : {}),
           } as R,
         }),
       getNextPageParam: (lastPage, pages) => {

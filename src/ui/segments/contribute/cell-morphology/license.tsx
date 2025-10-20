@@ -26,7 +26,8 @@ export function License() {
     placeholder: 'Select a license...',
     searchPlaceholder: 'Search license...',
     clsx: { trigger: 'rounded-full h-12', content: 'z-[99999]' },
-    searchable: false,
+    searchable: true,
+    searchField: 'label__ilike',
     selectedValue: DEFAULT_LICENSE_ID,
   });
 
