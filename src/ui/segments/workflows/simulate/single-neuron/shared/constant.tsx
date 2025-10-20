@@ -119,7 +119,7 @@ export const DEFAULT_RECORDING_LOCATION: RecordLocation = {
 
 export const DEFAULT_SIMULATION_EXPERIMENTAL_SETUP: SimulationExperimentalSetup = {
   celsius: 34,
-  vinit: -73,
+  vinit: -80,
   hypamp: 0,
   max_time: 2000,
   time_step: 0.05,
