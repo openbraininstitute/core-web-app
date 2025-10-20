@@ -1,8 +1,8 @@
 import { z } from 'zod';
+import { PortableTextBlock } from '@sanity/types';
 
 import { client } from '@/api/sanity/client';
 import { logError } from '@/util/logger';
-import { PortableTextBlock } from '@sanity/types';
 
 export type GuideCardProps = {
   title: string;
