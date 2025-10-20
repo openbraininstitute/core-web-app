@@ -10,11 +10,12 @@ export const ViewDefForIonChannelModel: ViewDefinitionConfig = {
   columns: [
     EntityCoreFields.Name,
     EntityCoreFields.BrainRegion,
-    EntityCoreFields.CreationDate,
+    EntityCoreFields.TemperatureCelsius,
     EntityCoreFields.IsLjpCorrected,
     EntityCoreFields.IsStochastic,
     EntityCoreFields.IsTemperatureDependent,
-    EntityCoreFields.TemperatureCelsius,
+    EntityCoreFields.Species,
+    EntityCoreFields.CreationDate,
   ],
   curated: true,
   summaryViewFields: [
