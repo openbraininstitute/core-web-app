@@ -1,17 +1,20 @@
 'use client';
 
+import Link from 'next/link';
+
 import { CloseOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { match } from 'ts-pattern';
 
-import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
-import { Subscription } from '@/ui/segments/profile/sections/subscription';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { UserProfile } from '@/ui/segments/profile/sections/profile';
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
-import { Invoices } from '@/ui/segments/profile/sections/invoices';
 import { useTabs } from '@/components/detail-view-tabs';
+import { SignOutFill } from '@/components/icons/EditorIcons';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
+import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
+import { Invoices } from '@/ui/segments/profile/sections/invoices';
+import { UserProfile } from '@/ui/segments/profile/sections/profile';
+import { Subscription } from '@/ui/segments/profile/sections/subscription';
 import { keyBuilder } from '@/ui/use-query-keys/user';
 import { cn } from '@/utils/css-class';
 
@@ -169,6 +172,12 @@ export function AccountSettings({ onClose, data }: Props) {
         )}
       >
         <Content defaultKey={data?.section} />
+      </div>
+      <div className="flex w-full flex-row-reverse items-center gap-x-2">
+        <Link href="/app/log-out" className="text-lg! text-white">
+          Logout
+        </Link>
+        <SignOutFill className="text-primary-2 ml-auto" />
       </div>
     </div>
   );
