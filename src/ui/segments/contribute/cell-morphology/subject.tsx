@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Form } from 'antd';
 import isNil from 'es-toolkit/compat/isNil';
 /* 
@@ -87,7 +87,7 @@ export function Subject() {
     );
   }, []);
 
-  const SubjectDropdown = React.useMemo(
+  const SubjectDropdown = useMemo(
     () =>
       AsyncSelectFormItem<PaginationFilter & SearchFilter, ISubject>({
         id: 'subject-selector',

@@ -1,6 +1,6 @@
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
-import { capitalize, isNil } from 'es-toolkit/compat';
-import { useCallback } from 'react';
+import { capitalize, isNil, get } from 'es-toolkit/compat';
+import { useMemo } from 'react';
 import { Form } from 'antd';
 
 import { getOrganizations } from '@/api/entitycore/queries/general/organization-agent';
@@ -56,26 +56,68 @@ export function Contribution() {
     placeholder: 'Select a role...',
     searchPlaceholder: 'Search role...',
     clsx: { trigger: 'rounded-full  h-12', content: 'z-[99999]' },
-    searchable: true,
-    searchField: 'name__ilike',
+    searchable: false,
   });
 
-  const renderAgentDropdown = useCallback((type: TAgentType) => {
-    const AgentDropdown = AsyncSelectFormItem<PaginationFilter, Agent>({
-      id: `agent-${type}-selector`,
-      dataKey: keyBuilder.agents({ agentType: type }),
-      queryFn: queryFnMapping[type],
-      getOptionLabel: (l) => l.pref_label,
-      getOptionValue: (l) => l.id,
-      placeholder: `Select a ${Object.values(AgentType).find((t) => t.key === type)?.label}...`,
-      searchPlaceholder: `Search for ${Object.values(AgentType).find((t) => t.key === type)?.label}...`,
-      clsx: { trigger: 'rounded-full h-12', content: 'z-[99999]' },
-      searchable: true,
-      searchField: 'pref_label__ilike',
-    });
+  const RenderPersonDropdown = useMemo(
+    () =>
+      AsyncSelectFormItem<PaginationFilter, Agent>({
+        id: `agent-person-selector`,
+        dataKey: keyBuilder.agents({ agentType: AgentType.Person.key }),
+        queryFn: queryFnMapping[AgentType.Person.key],
+        getOptionLabel: (l) => l.pref_label,
+        getOptionValue: (l) => l.id,
+        placeholder: `Select a person...`,
+        searchPlaceholder: `Search for person...`,
+        clsx: { trigger: 'rounded-full h-12', content: 'z-[99999]' },
+        searchable: true,
+        searchField: 'pref_label__ilike',
+      }),
+    []
+  ); // eslint-disable-line react-hooks/exhaustive-deps
 
-    return <AgentDropdown />;
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const RenderOrganizationDropdown = useMemo(
+    () =>
+      AsyncSelectFormItem<PaginationFilter, Agent>({
+        id: `agent-organization-selector`,
+        dataKey: keyBuilder.agents({ agentType: AgentType.Organization.key }),
+        queryFn: queryFnMapping[AgentType.Organization.key],
+        getOptionLabel: (l) => l.pref_label,
+        getOptionValue: (l) => l.id,
+        placeholder: `Select a organization...`,
+        searchPlaceholder: `Search for organization...`,
+        clsx: { trigger: 'rounded-full h-12', content: 'z-[99999]' },
+        searchable: true,
+        searchField: 'pref_label__ilike',
+      }),
+    []
+  ); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const RenderConsortiumDropdown = useMemo(
+    () =>
+      AsyncSelectFormItem<PaginationFilter, Agent>({
+        id: `agent-consortium-selector`,
+        dataKey: keyBuilder.agents({ agentType: AgentType.Consortium.key }),
+        queryFn: queryFnMapping[AgentType.Consortium.key],
+        getOptionLabel: (l) => l.pref_label,
+        getOptionValue: (l) => l.id,
+        placeholder: `Select a consortium...`,
+        searchPlaceholder: `Search for consortium...`,
+        clsx: { trigger: 'rounded-full h-12', content: 'z-[99999]' },
+        searchable: true,
+        searchField: 'pref_label__ilike',
+      }),
+    []
+  ); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const renderAgentDropdown = useMemo(
+    () => ({
+      [AgentType.Person.key]: RenderPersonDropdown,
+      [AgentType.Organization.key]: RenderOrganizationDropdown,
+      [AgentType.Consortium.key]: RenderConsortiumDropdown,
+    }),
+    [RenderPersonDropdown, RenderOrganizationDropdown, RenderConsortiumDropdown]
+  );
 
   return (
     <div className="my-3">
@@ -125,8 +167,13 @@ export function Contribution() {
                     <div className="flex w-full items-start justify-center gap-x-5">
                       <Form.Item shouldUpdate noStyle>
                         {({ getFieldValue }) => {
-                          const agentType = getFieldValue(['contribution', o.name, 'agent_type']);
+                          const agentType = getFieldValue([
+                            'contribution',
+                            o.name,
+                            'agent_type',
+                          ]) as TAgentType;
                           if (isNil(agentType)) return null;
+                          const Component = get(renderAgentDropdown, `${agentType}`, () => <></>);
                           return (
                             <Form.Item
                               name={[o.name, 'agent_id']}
@@ -147,7 +194,7 @@ export function Contribution() {
                               ]}
                               className="min-w-0 flex-1"
                             >
-                              {renderAgentDropdown(agentType)}
+                              <Component />
                             </Form.Item>
                           );
                         }}

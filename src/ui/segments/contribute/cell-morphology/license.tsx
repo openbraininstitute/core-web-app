@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Form } from 'antd';
 
 import { getLicenses } from '@/api/entitycore/queries/general/license';
@@ -17,19 +18,24 @@ export const DEFAULT_LICENSE_NAME = 'CC BY 4.0';
 
 export function License() {
   const form = Form.useFormInstance();
-  const LicenseDropdown = AsyncSelectFormItem<PaginationFilter, ILicense>({
-    id: 'license-selector',
-    dataKey: keyBuilder.license(),
-    queryFn: getLicenses,
-    getOptionLabel: (l) => l.label ?? l.name,
-    getOptionValue: (l) => l.id,
-    placeholder: 'Select a license...',
-    searchPlaceholder: 'Search license...',
-    clsx: { trigger: 'rounded-full h-12', content: 'z-[99999]' },
-    searchable: true,
-    searchField: 'label__ilike',
-    selectedValue: DEFAULT_LICENSE_ID,
-  });
+
+  const LicenseDropdown = useMemo(
+    () =>
+      AsyncSelectFormItem<PaginationFilter, ILicense>({
+        id: 'license-selector',
+        dataKey: keyBuilder.license(),
+        queryFn: getLicenses,
+        getOptionLabel: (l) => l.label ?? l.name,
+        getOptionValue: (l) => l.id,
+        placeholder: 'Select a license...',
+        searchPlaceholder: 'Search license...',
+        clsx: { trigger: 'rounded-full h-12', content: 'z-[99999]' },
+        searchable: true,
+        searchField: 'label__ilike',
+        selectedValue: DEFAULT_LICENSE_ID,
+      }),
+    []
+  );
 
   return (
     <Form.Item
