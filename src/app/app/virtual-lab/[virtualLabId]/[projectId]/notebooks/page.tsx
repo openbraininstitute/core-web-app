@@ -7,7 +7,22 @@ import { NotebookTable } from '@/ui/segments/notebooks/table';
 import { useAppNotification } from '@/components/notification';
 import { Notebook } from '@/util/virtual-lab/types';
 import { startNotebook, NotebookStartResponse } from '@/services/notebooks';
+
 // import fetchNotebooks from '@/util/virtual-lab/fetchNotebooks';
+import { notFound } from 'next/navigation';
+import { match, P } from 'ts-pattern';
+import snakeCase from 'es-toolkit/compat/snakeCase';
+
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { BrowseLibraryScope } from '@/features/views/listing/browse-library';
+import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
+import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import { KebabCase } from '@/utils/type';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import type { TWorkspaceScope } from '@/constants';
 
 export default async function NotebooksPage({
   params: promisedParams,
@@ -15,25 +30,6 @@ export default async function NotebooksPage({
   const params = promisedParams;
   const { projectId, virtualLabId } = await params;
 
-  // const notification = useAppNotification();
-
-  function fetchNotebooks() {
-    return authFetch(
-      'https://staging.openbraininstitute.org/api/entitycore/analysis-notebook-template',
-      {
-        headers: {
-          'virtual-lab-id': virtualLabId,
-          'project-id': projectId,
-        },
-      }
-    );
-  }
-
-  const notebooks = await fetchNotebooks();
-  const json = await notebooks.json();
-  console.log(json)
-
-  const notebook = json.data[0];
   // const asset = notebook.assets.find((n) => n.label === 'jupyter_notebook');
 
   // const file = await downloadAsset({
@@ -79,16 +75,24 @@ export default async function NotebooksPage({
   // };
 
   // return <button onClick={runOnEksNotebook}>Run notebook</button>;
-  // return (
-  //   <div className="w-full">
-  //     <NotebookTable
-  //       notebooks={notebooks}
-  //       projectId={projectId}
-  //       vlabId={virtualLabId}
-  //       serverError={error}
-  //     />
-  //   </div>
-  // );
+  return (
+    <div className="w-full">
+      <NotebookTable
+        notebooks={notebooks}
+        projectId={projectId}
+        vlabId={virtualLabId}
+        serverError={error}
+      />
+    </div>
+  );
 
-  return null;
+  return (
+    <BrowseEntityScope
+      section={WorkspaceSection.Notebooks}
+      dataType={ExtendedEntitiesTypeDict.Notebook}
+      scope={WorkspaceScope.Public}
+      requireBrainRegion={false}
+      requireMiniDetailView={false}
+    />
+  );
 }

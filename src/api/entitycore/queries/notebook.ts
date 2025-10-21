@@ -4,7 +4,8 @@ import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response'
 import type { INotebook, NotebookFilter } from '@/api/entitycore/types/entities/notebook';
 import type { WorkspaceContext } from '@/types/common';
 
-const baseUri = '/cell-morphology';
+const baseUri = '/analysis-notebook-template';
+
 /**
  * Retrieves a list of notebooks from the EntityCoreAPI.
  *

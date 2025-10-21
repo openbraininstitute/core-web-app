@@ -135,6 +135,7 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
     height: 0,
     width: 0,
   });
+
   const tableRef = useRef<TableRef>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const tableElement: HTMLElement | null | undefined =

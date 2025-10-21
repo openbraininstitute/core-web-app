@@ -151,7 +151,9 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.Description]: {
     title: 'Description',
     filter: CoreFieldFilterTypeEnum.Text,
-    render: (r) => renderEmptyOrValue(r.description),
+    render: (r) => (
+      <div className="line-clamp-3 max-w-[50px]">{renderEmptyOrValue(r.description)}</div>
+    ),
     vocabulary: {
       plural: 'Descriptions',
       singular: 'Description',

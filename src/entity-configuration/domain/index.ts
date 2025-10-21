@@ -9,6 +9,7 @@ import { NeuronDensity } from './experimental/neuron-density';
 import { BoutonDensity } from './experimental/bouton-density';
 import { SynapsePerConnection } from './experimental/synapse-per-connection';
 import { IonChannelModel } from './model/ion-channel-model';
+import { Notebook } from './notebook';
 
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
 import { SmallMicrocircuit } from '@/entity-configuration/domain/model/small-microcircuit';
@@ -55,6 +56,7 @@ export const EntityCoreConfiguration = {
   ...EntityCoreExperimentalConfiguration,
   ...EntityCoreModelConfiguration,
   ...EntityCoreSimulationConfiguration,
+  Notebook,
 } as const;
 
 export type TEntityCoreConfigurationItem =

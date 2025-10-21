@@ -5,7 +5,6 @@ import type { ReactNode } from 'react';
 // import find from 'es-toolkit/compat/find';
 
 import { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
-import { NotebookInnerLayout } from '@/ui/layouts/notebook-inner-layout';
 import { NotebooksLayout } from '@/ui/layouts/notebooks-layout';
 // import { notebookTour } from '@/ui/segments/app-setup/discover-app';
 // import { LeftMenu } from '@/ui/segments/notebooks/left-nav-menu';
@@ -36,17 +35,5 @@ export default function Page({
   //   }
   // }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return (
-    <NotebooksLayout>
-      {/* <NotebookHeader /> */}
-      <NotebookInnerLayout>
-        {/* <div id="notebook-left-menu" data-testid="notebook-left-menu" className="w-full">
-          <LeftMenu className="w-full" />
-        </div> */}
-        <div id="notebook-main-content" className="secondary-scrollbar w-full overflow-y-auto">
-          {children}
-        </div>
-      </NotebookInnerLayout>
-    </NotebooksLayout>
-  );
+  return <NotebooksLayout>{children}</NotebooksLayout>;
 }
