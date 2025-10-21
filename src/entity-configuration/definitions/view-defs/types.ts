@@ -12,7 +12,7 @@ export type ViewDefinitionConfig = {
   title: string;
   name: string;
   columns: Array<EntityCoreFields>;
-  curated: boolean;
+  curated?: boolean;
   group?: DataTypeGroup;
   cardViewFields?: Array<TypeSummaryProps>;
   summaryViewFields?: Array<TypeSummaryProps>;
