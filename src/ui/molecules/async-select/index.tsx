@@ -1,4 +1,4 @@
-import { ComponentProps, useCallback, useEffect, useMemo, useState } from 'react';
+import { ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   CheckOutlined,
   CloseOutlined,
@@ -50,6 +50,7 @@ export type AsyncSelectQueryFn<
 > = (params: { filters: R; search?: string }) => Promise<EntityCoreResponse<T>>;
 
 export type AsyncSelectProps<R extends Partial<PaginationFilter & SearchFilter>, T = unknown> = {
+  id?: string;
   dataKey: Array<string> | Array<string | Record<string, any>>;
   queryFn: AsyncSelectQueryFn<R, T>;
   getOptionLabel: (item: T) => string;
@@ -65,9 +66,17 @@ export type AsyncSelectProps<R extends Partial<PaginationFilter & SearchFilter>,
     content?: ComponentProps<'div'>['className'];
   };
   tooltip?: ((data: T) => React.ReactNode) | null;
+  customItemRender?:
+    | ((props: {
+        data: AsyncSelectOption<T>;
+        selected: boolean;
+        onSelect: (option: AsyncSelectOption<T> | undefined) => void;
+      }) => React.ReactNode)
+    | null;
 };
 
 export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, T = unknown>({
+  id,
   dataKey,
   queryFn,
   getOptionLabel,
@@ -79,17 +88,17 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
   searchField,
   searchable,
   tooltip,
+  customItemRender,
   clsx,
 }: AsyncSelectProps<R, T>) {
   const breakpoint = useDefaultBreakpoint();
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-
   const [parent, setParent] = useState<HTMLDivElement | null>(null);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isFetching } =
     useInfiniteQuery({
-      queryKey: [dataKey, { searchTerm }],
+      queryKey: [...dataKey, { searchTerm }],
       queryFn: ({ pageParam = 1 }) =>
         queryFn({
           filters: {
@@ -119,6 +128,33 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
     }));
   }, [allItems, getOptionLabel, getOptionValue]);
 
+  // persist seen options across searches/pages so we can still display the
+  // selected label even if it is not present in the current options list.
+  const persistedOptionsRef = useRef<Map<string, AsyncSelectOption<T>> | null>(null);
+  if (!persistedOptionsRef.current)
+    persistedOptionsRef.current = new Map<string, AsyncSelectOption<T>>();
+
+  const currentOptionsMap = useMemo<Map<string, AsyncSelectOption<T>>>(() => {
+    const next = new Map<string, AsyncSelectOption<T>>();
+    options.forEach((opt) => next.set(opt.value, opt));
+    return next;
+  }, [options]);
+
+  useEffect(() => {
+    if (options.length === 0) return;
+    if (persistedOptionsRef.current) {
+      const cache = persistedOptionsRef.current;
+      options.forEach((opt) => {
+        cache.set(opt.value, opt);
+      });
+    }
+  }, [options]);
+
+  const selectedOptionFromProps = useMemo<AsyncSelectOption<T> | undefined>(() => {
+    if (!selectedValue) return undefined;
+    return currentOptionsMap.get(selectedValue) ?? persistedOptionsRef.current?.get(selectedValue);
+  }, [currentOptionsMap, selectedValue]);
+
   const parentSetter = useCallback(
     (el: HTMLDivElement) => {
       setParent(el);
@@ -144,6 +180,9 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
 
   const handleSelect = useCallback(
     (option: AsyncSelectOption<T> | undefined) => {
+      if (option && persistedOptionsRef.current) {
+        persistedOptionsRef.current.set(option.value, option);
+      }
       onSelect?.(option);
       setOpen(false);
     },
@@ -156,8 +195,6 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
       setSearchTerm('');
     }
   }, []);
-
-  const selectedOption = options.find((option) => option?.value === selectedValue);
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
@@ -172,8 +209,8 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
         )}
       >
         <Button variant="outline" role="combobox" disabled={isLoading} className="select-none">
-          <div className="line-clamp-1 w-full truncate text-left">
-            {selectedOption?.label || placeholder}
+          <div id={`async-select-label-${id}`} className="line-clamp-1 w-full truncate text-left">
+            {selectedOptionFromProps?.label || placeholder}
           </div>
           {/* eslint-disable-next-line no-nested-ternary */}
           {isLoading || isFetching ? (
@@ -263,6 +300,13 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
 
                 const { value, label, data: optionData } = option;
                 const isSelected = value === selectedValue;
+                if (customItemRender) {
+                  return customItemRender({
+                    data: option,
+                    selected: isSelected,
+                    onSelect: handleSelect,
+                  });
+                }
 
                 return (
                   <div key={option?.value} className="group mb-1 flex items-center justify-start">
@@ -279,7 +323,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
                       )}
                       title={label}
                     >
-                      <span className="line-clamp-2 w-full">{label}</span>
+                      <span className="line-clamp-2 w-full group-hover:font-black">{label}</span>
                       <div className="flex items-center justify-center gap-1">
                         <CheckOutlined
                           className={cn(
@@ -289,16 +333,16 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
                         />
                         {tooltip && (
                           <Tooltip>
-                            <TooltipTrigger>
-                              <Button rounded borderless variant="icon" size="sm">
+                            <TooltipTrigger asChild>
+                              <div className="h-8 rounded-full border-none">
                                 <InfoCircleFilled className="text-primary-8" />
-                              </Button>
+                              </div>
                             </TooltipTrigger>
                             <TooltipContent
                               avoidCollisions
                               align="end"
                               side="bottom"
-                              sideOffset={0}
+                              sideOffset={-9}
                               collisionPadding={{ left: 0 }}
                               arrowPadding={0}
                               className="shadow-bnb bg-primary-9 z-[99999] text-white!"
@@ -342,6 +386,7 @@ export function AsyncSelectFormItem<
   searchable = true,
   tooltip,
   clsx,
+  customItemRender,
 }: AsyncSelectProps<R, T>) {
   return function Wrapper({
     value,
@@ -359,14 +404,15 @@ export function AsyncSelectFormItem<
         placeholder={placeholder}
         searchPlaceholder={searchPlaceholder}
         onSelect={(option) => {
-          onSelect?.(option);
           onChange?.(option?.value);
+          onSelect?.(option);
         }}
         searchField={searchField}
         selectedValue={value}
         searchable={searchable}
         clsx={clsx}
         tooltip={tooltip}
+        customItemRender={customItemRender}
       />
     );
   };

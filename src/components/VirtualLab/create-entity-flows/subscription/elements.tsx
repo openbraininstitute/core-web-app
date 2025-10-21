@@ -16,18 +16,18 @@ export function getStatusColor(status: string): string {
 
 export function HistoryError() {
   return (
-    <div className="mb-6 transform rounded-xs bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
+    <div className="bg-destructive-foreground my-6 transform rounded-xs p-6 transition-all duration-500">
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h2 className="mb-2 text-2xl font-bold text-red-200">Subscription History</h2>
-          <p className="max-w-xl text-red-200/80">
+          <h2 className="text-destructive mb-2 text-xl font-bold">Subscription History</h2>
+          <p className="text-destructive max-w-xl">
             We encountered an issue while retrieving your subscription history. Please try again
             later or contact support at{' '}
             <a href="mailto:support@openbraininstitute.org">support@openbraininstitute.org</a>.
           </p>
         </div>
         <div className="mb-2 flex items-center gap-2 self-baseline">
-          <CloseCircleFilled className="text-2xl text-red-500" />
+          <CloseCircleFilled className="text-destructive text-xl" />
         </div>
       </div>
     </div>

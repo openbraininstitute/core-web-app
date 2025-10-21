@@ -33,8 +33,8 @@ export const resolveWorkspace = async () => {
   ]);
   const profile = profileResult.data?.profile ?? null;
   recentWorkspace = recentWorkspaceResult.data?.data?.recent_workspace.workspace ?? null;
-
   virtualLab = virtualLabResult?.data?.data?.virtual_lab ?? null;
+
   if (virtualLab) {
     virtualLabId = virtualLab.id;
     const { data: projectResult } = await tryCatch(
