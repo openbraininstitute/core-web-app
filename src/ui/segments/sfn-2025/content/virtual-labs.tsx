@@ -38,7 +38,7 @@ export default function SFNVirtualLabs() {
       </div>
 
       <motion.div
-        className="absolute top-0 left-0 z-0"
+        className="absolute top-0 left-[10vw] z-0 h-full w-full"
         initial={{ scale: 0.8, opacity: 0 }}
         animate={isInView ? { scale: 1.2, opacity: 1 } : { scale: 0.8, opacity: 0 }}
         transition={{

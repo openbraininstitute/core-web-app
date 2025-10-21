@@ -1,18 +1,20 @@
+import { CalendarFilled } from '@ant-design/icons';
+
 import { PlayIcon } from '@/components/tutorials-carrousel/tutorial-card/play-icon';
+
 import {
   generateGoogleCalendar,
   generateICalendar,
 } from '@/ui/segments/sfn-2025/content/calendar-utils';
 import Divider from '@/ui/segments/sfn-2025/content/divider';
-import { CalendarFilled } from '@ant-design/icons';
 
-type AgendaItem = {
+type AgendaItemProps = {
   title: string;
   subtitle: string;
   time: string;
 };
 
-const agenda: AgendaItem[][] = [
+const agenda: AgendaItemProps[][] = [
   [
     {
       title: 'Explore & AI',
@@ -59,7 +61,7 @@ const agenda: AgendaItem[][] = [
   ],
 ];
 
-function AgendaItem({ item }: { item: AgendaItem }) {
+function AgendaCard({ item }: { item: AgendaItemProps }) {
   return (
     <div className="border-neutral-3 text-primary-9 relative w-full rounded-2xl border border-solid p-6">
       <div className="relative mb-6">
@@ -81,6 +83,7 @@ function AgendaItem({ item }: { item: AgendaItem }) {
         <div className="bg-neutral-2 h-px w-full" />
         <div className="flex flex-row gap-x-2">
           <button
+            type="button"
             onClick={() => generateICalendar(item)}
             className="flex cursor-pointer flex-row gap-x-2 px-4 py-3 transition-colors hover:bg-gray-100"
           >
@@ -89,6 +92,7 @@ function AgendaItem({ item }: { item: AgendaItem }) {
           </button>
           <div className="bg-neutral-2 h-full w-px" />
           <button
+            type="button"
             onClick={() => generateGoogleCalendar(item)}
             className="flex cursor-pointer flex-row gap-x-2 px-4 py-3 transition-colors hover:bg-gray-100"
           >
@@ -112,7 +116,7 @@ export default function SFNAgenda() {
           Outside of our scheduled events and workshops, we warmly invite you to stop by our booth
           and explore the Open Brain Platform. Our team is here throughout the day, eager to
           introduce you to our tools, answer your questions, and guide you through the possibilities
-          of collaborative neuroscience. Don't hesitate to come by — we're ready to welcome you and
+          of collaborative neuroscience. Don&apos;t hesitate to come by — we&apos;re ready to welcome you and
           help you get started.
         </p>
       </div>
@@ -122,7 +126,7 @@ export default function SFNAgenda() {
             Morning
           </div>
           {agenda[0].map((item) => (
-            <AgendaItem key={item.title} item={item} />
+            <AgendaCard key={item.title} item={item} />
           ))}
         </div>
         <div className="mt-24 flex flex-col gap-y-4">
@@ -130,7 +134,7 @@ export default function SFNAgenda() {
             Afternoon
           </div>
           {agenda[1].map((item) => (
-            <AgendaItem key={item.title} item={item} />
+            <AgendaCard key={item.title} item={item} />
           ))}
         </div>
       </div>
