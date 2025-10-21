@@ -6,6 +6,7 @@ import get from 'es-toolkit/compat/get';
 import { ViewsDefinition as ExperimentalViewDefinition } from '@/entity-configuration/definitions/view-defs/experimental';
 import { ViewsDefinition as ExperimentViewDefinition } from '@/entity-configuration/definitions/view-defs/experiment';
 import { ViewsDefinition as ModelViewDefinition } from '@/entity-configuration/definitions/view-defs/model';
+import { ViewsDefinition as NotebookViewDefinition } from '@/entity-configuration/definitions/view-defs/notebook';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
@@ -23,6 +24,7 @@ export const ViewsDefinitionRegistry = {
   ...ExperimentalViewDefinition,
   ...ModelViewDefinition,
   ...ExperimentViewDefinition,
+  ...NotebookViewDefinition,
 } as const;
 
 export function getViewDefinitionByExtendedType(type: TExtendedEntitiesTypeDict) {

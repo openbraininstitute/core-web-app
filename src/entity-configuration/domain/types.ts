@@ -22,22 +22,22 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
     };
     query: {
       list?: (query: any) => Promise<EntityCoreResponse<T>>;
-      one: (query: { id: string; context?: WorkspaceContext | null }) => Promise<T>;
+      one?: (query: { id: string; context?: WorkspaceContext | null }) => Promise<T>;
       create?: (body: any) => Promise<T>;
     };
     expand?: Record<string, (source: T, ctx?: WorkspaceContext, ...other: any) => Promise<any>>;
   };
-  explore: {
+  explore?: {
     basePrefix?: string;
     routePrefix?: string;
   };
-  asset: {
+  asset?: {
     extension?: string;
     configfile?: AssetLabel;
   };
   viewDefinition?: ViewDefinitionConfig | null;
   isBookmarkable: boolean;
-  detailViewSections: DetailViewSection[];
+  detailViewSections?: DetailViewSection[];
   isDownloadable?: boolean;
   isCopyable?: boolean;
   isSimulatable: boolean | ((scale: TCircuitScaleDictionary) => boolean);
