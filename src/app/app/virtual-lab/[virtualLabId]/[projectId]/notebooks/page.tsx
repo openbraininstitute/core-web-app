@@ -75,16 +75,6 @@ export default async function NotebooksPage({
   // };
 
   // return <button onClick={runOnEksNotebook}>Run notebook</button>;
-  return (
-    <div className="w-full">
-      <NotebookTable
-        notebooks={notebooks}
-        projectId={projectId}
-        vlabId={virtualLabId}
-        serverError={error}
-      />
-    </div>
-  );
 
   return (
     <BrowseEntityScope

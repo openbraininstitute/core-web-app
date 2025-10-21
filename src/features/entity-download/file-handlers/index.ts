@@ -9,6 +9,7 @@ import { getCellMorphologyFiles } from './cell-morphology';
 import { getSingleNeuronSynaptomeFiles } from './single-neuron-synaptome';
 import { getSingleNeuronSimulationFiles } from './single-neuron-simulation';
 import { getSingleNeuronSynaptomeSimulationFiles } from './single-neuron-synaptome-simulation';
+import { getNotebookFiles } from './notebook';
 import { getIonChannellRecordingFiles } from './ion-channel-recording';
 import { WorkspaceContext } from '@/types/common';
 import { FileEntry } from '@/features/entity-download/types';
@@ -35,4 +36,5 @@ export const getEntityFilesHandlerMap: Partial<Record<TEntityTypeDict, GetEntity
   [EntityTypeDict.SingleNeuronSimulation]: getSingleNeuronSimulationFiles,
   [EntityTypeDict.SingleNeuronSynaptomeSimulation]: getSingleNeuronSynaptomeSimulationFiles,
   [EntityTypeDict.IonChannelModel]: getIonChannelModelFiles,
+  [EntityTypeDict.Notebook]: getNotebookFiles,
 };

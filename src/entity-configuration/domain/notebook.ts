@@ -5,7 +5,7 @@ import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { INotebook } from '@/api/entitycore/types/entities/notebook';
-import { getNotebooks } from '@/api/entitycore/queries/notebook';
+import { getNotebook, getNotebooks } from '@/api/entitycore/queries/notebook';
 
 export const Notebook: EntityCoreTypeConfig<INotebook> = {
   group: EntityTypeGroup.Notebooks,
@@ -19,6 +19,7 @@ export const Notebook: EntityCoreTypeConfig<INotebook> = {
     },
     query: {
       list: getNotebooks,
+      one: getNotebook,
     },
   },
   viewDefinition: ViewsDefinitionRegistry[ExtendedEntitiesTypeDict.Notebook],

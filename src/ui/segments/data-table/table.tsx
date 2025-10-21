@@ -182,7 +182,7 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
           size={size}
           ref={tableRef}
           sticky={sticky}
-          style={tableStyle}
+          // style={tableStyle}
           aria-label="listing-view-table"
           className={cn(styles.table, 'grow [&_.ant-table-sticky-holder]:shadow-md', className)}
           columns={

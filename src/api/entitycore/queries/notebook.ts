@@ -35,3 +35,27 @@ export async function getNotebooks({
     },
   });
 }
+
+/**
+ * Retrieves a specific notebook by its ID from the EntityCoreAPI.
+ *
+ * @param {Object} params - The parameters object
+ * @param {string} params.id - The unique identifier of the emodel to retrieve
+ * @returns {Promise<INotebook>} A promise that resolves to the requested notebook
+ */
+export async function getNotebook({
+  id,
+  context,
+}: {
+  id: string;
+  context?: WorkspaceContext | null;
+}) {
+  const api = await entityCoreApi();
+  return await api.get<INotebook>(`${baseUri}/${id}`, {
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+  });
+}

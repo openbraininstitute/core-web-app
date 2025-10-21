@@ -34,7 +34,6 @@ export async function startNotebook(
 ): Promise<NotebookStartResponse> {
   const session = await getSession();
 
-  console.log(session);
   if (!session) {
     throw Error('no session found', {
       cause: {
@@ -43,6 +42,7 @@ export async function startNotebook(
       },
     });
   }
+
   const request: NotebookStartRequest = {
     analysis_notebook_template_id: id,
     analysis_notebook_template_filename: filename,

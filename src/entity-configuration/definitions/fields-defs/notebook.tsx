@@ -2,6 +2,8 @@ import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs
 
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import ActionPopover from '@/ui/segments/notebooks/table/ActionPopover';
+import { INotebook } from '@/api/entitycore/types/entities/notebook';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.NotebookScale]: {
@@ -14,6 +16,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.NotebookActions]: {
     title: '',
     filter: null,
-    render: (r) => null,
+    render: (r) => <ActionPopover notebook={r as INotebook} />,
   },
 };
