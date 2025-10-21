@@ -7,8 +7,8 @@ import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 export default async function NotebooksPage({
   params: promisedParams,
 }: ServerSideComponentProp<WorkspaceContext, null>) {
-  const params = promisedParams;
-  const { projectId, virtualLabId } = await params;
+  const params = await promisedParams;
+  const { projectId, virtualLabId } = params;
 
   return (
     <BrowseEntityScope
