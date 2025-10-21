@@ -121,7 +121,7 @@ export const ExperimentalSetupConfigurationSchema = z.object({
   vinit: z
     .number({ message: 'Please enter a valid numeric value for initial membrane voltage (mV).' })
     .min(-200, 'Initial voltage must be between -200 and 200 mV')
-    .max(200, 'Initial voltage must be between -200 and 200 mV'),
+    .max(100, 'Initial voltage must be between -200 and 200 mV'),
   hypamp: z
     .number({ message: 'Please enter a valid numeric value for holding current (nA).' })
     .min(-20, 'Holding current must be between -20 and 20 nA')

@@ -1,4 +1,5 @@
 import { CheckOutlined } from '@ant-design/icons';
+import { useMemo, useState } from 'react';
 import { Form } from 'antd';
 
 import { AsyncSelectFormItem, AsyncSelectOption } from '@/ui/molecules/async-select';
@@ -58,32 +59,51 @@ function CustomRenderer({
 export function MTypeClassification() {
   const form = Form.useFormInstance();
   const { virtualLabId, projectId } = useWorkspace();
+  const [mtype, setMtype] = useState<AsyncSelectOption<IMType> | undefined>(undefined);
 
-  const MTypeDropdown = AsyncSelectFormItem<PaginationFilter & SearchFilter, IMType>({
-    id: 'mtype-selector',
-    dataKey: keyBuilder.mtype({ virtualLabId, projectId }),
-    queryFn: getMtypes,
-    getOptionLabel: (l) => l.pref_label ?? l.alt_label,
-    getOptionValue: (l) => l.id,
-    placeholder: 'Select a mtype...',
-    searchPlaceholder: 'Search mtype...',
-    clsx: { trigger: 'rounded-full h-12', content: 'z-[99999]' },
-    searchable: false,
-    customItemRender: CustomRenderer,
-  });
+  const onSelect = (option: AsyncSelectOption<IMType> | undefined) => {
+    setMtype(option);
+  };
+
+  const MTypeDropdown = useMemo(
+    () =>
+      AsyncSelectFormItem<PaginationFilter & SearchFilter, IMType>({
+        id: 'mtype-selector',
+        dataKey: keyBuilder.mtype({ virtualLabId, projectId }),
+        queryFn: getMtypes,
+        getOptionLabel: (l) => l.pref_label ?? l.alt_label,
+        getOptionValue: (l) => l.id,
+        placeholder: 'Select a mtype...',
+        searchPlaceholder: 'Search mtype...',
+        clsx: { trigger: 'rounded-full h-12', content: 'z-[99999]' },
+        searchable: true,
+        searchField: 'pref_label__ilike',
+        customItemRender: CustomRenderer,
+        onSelect,
+      }),
+    [virtualLabId, projectId]
+  );
 
   return (
-    <Form.Item
-      name="mtype_class_id"
-      label={label('Mtype classification', 'main', <sup className="text-destructive">*</sup>)}
-      rules={[
-        {
-          required: true,
-          validator: zodFieldValidator(CellMorphologySchema, 'mtype_class_id', form),
-        },
-      ]}
-    >
-      <MTypeDropdown />
-    </Form.Item>
+    <>
+      <Form.Item
+        name="mtype_class_id"
+        label={label('Mtype classification', 'main', <sup className="text-destructive">*</sup>)}
+        rules={[
+          {
+            required: true,
+            validator: zodFieldValidator(CellMorphologySchema, 'mtype_class_id', form),
+          },
+        ]}
+      >
+        <MTypeDropdown />
+      </Form.Item>
+      {mtype && (
+        <div className="border-neutral-1 mx-5 rounded-md border px-3 py-2 shadow-xs select-none">
+          <h4 className="text-primary-5">{mtype?.data.alt_label}</h4>
+          <p className="text-gray-600">{mtype?.data.definition}</p>
+        </div>
+      )}
+    </>
   );
 }

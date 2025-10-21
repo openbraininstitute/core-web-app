@@ -104,7 +104,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
           filters: {
             page: pageParam,
             page_size: 10,
-            ...(searchField ? { [searchField]: searchTerm } : {}),
+            ...(searchField && searchTerm.trim() !== '' ? { [searchField]: searchTerm } : {}),
           } as R,
         }),
       getNextPageParam: (lastPage, pages) => {
@@ -130,9 +130,9 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
 
   // persist seen options across searches/pages so we can still display the
   // selected label even if it is not present in the current options list.
-  const persistedOptionsRef = useRef<Map<string, AsyncSelectOption<T>> | null>(null);
-  if (!persistedOptionsRef.current)
-    persistedOptionsRef.current = new Map<string, AsyncSelectOption<T>>();
+  const persistedOptionsRef = useRef<Map<string, AsyncSelectOption<T>> | null>(
+    new Map<string, AsyncSelectOption<T>>()
+  );
 
   const currentOptionsMap = useMemo<Map<string, AsyncSelectOption<T>>>(() => {
     const next = new Map<string, AsyncSelectOption<T>>();
@@ -180,9 +180,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
 
   const handleSelect = useCallback(
     (option: AsyncSelectOption<T> | undefined) => {
-      if (option && persistedOptionsRef.current) {
-        persistedOptionsRef.current.set(option.value, option);
-      }
+      if (option) persistedOptionsRef.current?.set(option.value, option);
       onSelect?.(option);
       setOpen(false);
     },
@@ -248,6 +246,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
       </PopoverTrigger>
 
       <PopoverContent
+        id={id}
         className={cn(
           'border-neutral-2 bg-white p-0 shadow-md transition-all duration-150',
           clsx?.content
@@ -375,6 +374,7 @@ export function AsyncSelectFormItem<
   R extends Partial<PaginationFilter & SearchFilter>,
   T = unknown,
 >({
+  id,
   dataKey,
   queryFn,
   getOptionLabel,
@@ -397,6 +397,7 @@ export function AsyncSelectFormItem<
   }) {
     return (
       <AsyncSelect<R, T>
+        id={id}
         dataKey={dataKey}
         queryFn={queryFn}
         getOptionLabel={getOptionLabel}
