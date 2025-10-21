@@ -19,9 +19,17 @@ export default function HeaderSFN2025() {
   return (
     <div className={styles.landingPage}>
       <Menu scrollHasStarted={scrollHasStarted} />
-      <div className="absolute top-0 left-0 h-screen w-full">
+      <div className="relative z-10 flex h-screen w-screen items-center justify-center">
+        <h1 className="text-[10vw] font-bold text-white">
+          SfN 2025 Neuroscience at the Speed of Thought{' '}
+        </h1>
+      </div>
+      <div className="absolute top-0 left-0 z-0 h-screen w-full">
         <video
-          className={cn('h-full w-full object-cover', videoReady ? 'opacity-100' : 'opacity-0')}
+          className={cn(
+            'h-full w-full scale-110 object-cover',
+            videoReady ? 'opacity-100' : 'opacity-0'
+          )}
           loop
           muted
           autoPlay
