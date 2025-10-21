@@ -22,6 +22,7 @@ export const Notebook: EntityCoreTypeConfig<INotebook> = {
       one: getNotebook,
     },
   },
+  asset: {},
   viewDefinition: ViewsDefinitionRegistry[ExtendedEntitiesTypeDict.Notebook],
   isDownloadable: true,
   isBookmarkable: false,

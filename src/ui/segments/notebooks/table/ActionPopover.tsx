@@ -1,20 +1,15 @@
 'use client';
 
-import {
-  DeleteOutlined,
-  LoadingOutlined,
-  PlayCircleOutlined,
-  PlusOutlined,
-} from '@ant-design/icons';
+import { Modal } from 'antd';
+import { useState } from 'react';
+import { PlayCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { Popover } from 'antd/lib';
 import { useParams } from 'next/navigation';
 
 import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
 import { EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
-import { Notebook } from '@/util/virtual-lab/types';
 import { INotebook } from '@/api/entitycore/types/entities/notebook';
-import { Modal } from 'antd';
-import { useState } from 'react';
+
 import { downloadArchive } from '@/services/entity-download';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { useAppNotification } from '@/components/notification';
@@ -23,21 +18,9 @@ import { WorkspaceContext } from '@/types/common';
 
 interface ActionPopoverProps {
   notebook: INotebook;
-  // loadingZip: boolean;
-  // onReadmeClick: (notebook: Notebook) => void;
-  // onDownloadClick: (notebook: Notebook) => void;
-  // onDeleteClick?: (id: string) => void;
-  // onRunOnEksClick?: (notebook: Notebook) => void;
 }
 
-export default function ActionPopover({
-  notebook,
-  // loadingZip,
-  // onReadmeClick,
-  // onDownloadClick,
-  // onDeleteClick,
-  // onRunOnEksClick,
-}: ActionPopoverProps) {
+export default function ActionPopover({ notebook }: ActionPopoverProps) {
   const [open, setOpen] = useState(false);
   const notification = useAppNotification();
   const params = useParams<WorkspaceContext>();

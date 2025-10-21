@@ -111,7 +111,6 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
   sticky,
   expandableConfig,
   rowClassName,
-  tableStyle,
   className,
   onRow,
   dataType,
@@ -127,7 +126,6 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
     showLoadMore?: (value?: boolean) => void;
     scrollable?: boolean;
     expandableConfig?: ExpandableConfig<T>;
-    tableStyle?: CSSProperties | undefined;
     dataType: TExtendedEntitiesTypeDict;
     wrapperClassname?: ComponentProps<'div'>['className'];
   }) {

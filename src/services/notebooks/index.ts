@@ -1,6 +1,3 @@
-import { Session } from 'next-auth';
-import { notebookSvcBaseUrl } from '@/config';
-import { Notebook } from '@/util/virtual-lab/types';
 import { assertApiResponse } from '@/util/utils';
 import authFetch, { getSession } from '@/authFetch';
 

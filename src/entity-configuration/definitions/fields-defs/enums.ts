@@ -88,7 +88,7 @@ export enum EntityCoreFields {
   IonChannel = 'ion_channel',
   ICMThumbnail = 'icm_thumbnail',
   NotebookScale = 'notebook_scale',
-  NotebookActions = 'notebook_actions'
+  NotebookActions = 'notebook_actions',
 }
 
 export type EntityCoreFieldsValue = `${EntityCoreFields}`;

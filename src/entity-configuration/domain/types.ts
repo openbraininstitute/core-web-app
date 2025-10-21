@@ -31,7 +31,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
     basePrefix?: string;
     routePrefix?: string;
   };
-  asset?: {
+  asset: {
     extension?: string;
     configfile?: AssetLabel;
   };
