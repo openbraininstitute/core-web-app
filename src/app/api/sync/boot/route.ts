@@ -13,7 +13,6 @@ import {
 } from '@/ui/segments/app-setup/helpers';
 import { tryCatch } from '@/api/utils';
 import { log } from '@/utils/logger';
-import { auth } from '@/auth';
 
 import type { Project, UserProfileResponse, VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 import type { TWorkspaceIdentitySchema } from '@/ui/segments/app-setup/workspace-identity';
@@ -22,6 +21,7 @@ import type {
   TResolvedWorkspace,
   TWorkspaceBootstrapStepStatus,
 } from '@/ui/segments/app-setup/helpers';
+import { getSessionServer } from '@/auth-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -198,7 +198,7 @@ async function* fetchItems<T>(body: Body) {
 
 export async function POST(req: NextRequest) {
   const body = (await req.json()) as Body;
-  const session = await auth();
+  const session = await getSessionServer();
   if (!session) {
     return new Response('Unauthorized', {
       status: 401,

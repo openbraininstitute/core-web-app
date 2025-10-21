@@ -1,18 +1,38 @@
-import { getServerSession, type NextAuthOptions, type TokenSet, type Session } from 'next-auth';
-import { GetServerSidePropsContext, NextApiRequest, NextApiResponse } from 'next';
+import 'server-only';
 
+import { type NextAuthOptions, type Session } from 'next-auth';
+import { type JWT } from 'next-auth/jwt';
+
+import { log } from '@/utils/logger';
 import { env } from '@/env';
 
 const issuer = env.KEYCLOAK_ISSUER;
 const clientId = env.KEYCLOAK_CLIENT_ID;
 const clientSecret = env.KEYCLOAK_CLIENT_SECRET;
 
+declare module 'next-auth/jwt' {
+  // eslint-disable-next-line @typescript-eslint/no-shadow
+  interface JWT {
+    accessToken?: string;
+    accessTokenExpires?: number | null;
+    refreshToken?: string;
+    idToken?: string;
+    user?: {
+      id: string;
+      name?: string | null;
+      email?: string | null;
+      username?: string | null;
+    };
+    error?: string;
+  }
+}
+
 /**
  * Takes a token, and returns a new token with updated
  * `accessToken` and `accessTokenExpires`. If an error occurs,
  * returns the old token and an error property
  */
-export async function refreshAccessToken(token: TokenSet) {
+export async function refreshAccessToken(token: JWT): Promise<JWT> {
   try {
     const tokenUrl = `${issuer}/protocol/openid-connect/token`;
 
@@ -29,22 +49,52 @@ export async function refreshAccessToken(token: TokenSet) {
       }),
     });
 
-    const refreshedTokens = await response.json();
+    const result = await response.json();
 
     if (!response.ok) {
-      throw refreshedTokens;
+      throw result;
+    }
+    log('info', '[token.refreshed]', {
+      component: 'NextAuth',
+      operation: 'refreshAccessToken',
+      userId: token.user?.id,
+    });
+
+    const newRefreshToken = result.refresh_token ?? token.refreshToken;
+
+    if (token.user?.id) {
+      try {
+        const { upsertRefreshTokenToVault } = await import(
+          '@/services/auth-manager/use-cases/upsert-refresh-only'
+        );
+        upsertRefreshTokenToVault({
+          refreshToken: newRefreshToken,
+          userId: token.user.id,
+          sessionState: result.session_state,
+          metadata: {
+            name: token.user.name,
+            lastRefresh: new Date().toISOString(),
+          },
+        });
+      } catch (err) {
+        // don't fail the refresh if vault update fails
+        log('error', 'vault.error', {
+          component: 'NextAuth',
+          operation: 'upsertRefreshToken',
+          userId: token.user?.id,
+        });
+      }
     }
 
     return {
       ...token,
-      accessToken: refreshedTokens.access_token,
-      accessTokenExpires: Date.now() + refreshedTokens.expires_in * 1000,
-      refreshToken: refreshedTokens.refresh_token ?? token.refreshToken, // Fall back to old refresh token
+      accessToken: result.access_token,
+      accessTokenExpires: Date.now() + result.expires_in * 1000,
+      refreshToken: newRefreshToken, // Fall back to old refresh token
     };
   } catch (error) {
     // TODO: log to Sentry once it's enabled
-    // eslint-disable-next-line no-console
-    console.log(error);
+    log('error', error);
 
     return {
       ...token,
@@ -87,6 +137,30 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, account, user, profile }) {
       // Initial sign in
       if (account && user) {
+        if (account.refresh_token && profile?.sub) {
+          try {
+            const { upsertRefreshTokenToVault } = await import(
+              '@/services/auth-manager/use-cases/upsert-refresh-only'
+            );
+            await upsertRefreshTokenToVault({
+              refreshToken: account.refresh_token,
+              userId: profile?.sub || user.id,
+              sessionState: account.session_state,
+              metadata: {
+                name: profile?.name,
+                provider: account.provider,
+                loginTime: new Date().toISOString(),
+              },
+            });
+          } catch (err) {
+            log('error', 'vault.error', {
+              component: 'NextAuth',
+              operation: 'upsertRefreshToken',
+              userId: profile?.sub || user.id,
+            });
+          }
+        }
+
         return {
           ...token,
           accessToken: account.access_token,
@@ -94,7 +168,7 @@ export const authOptions: NextAuthOptions = {
           refreshToken: account.refresh_token,
           user: {
             ...user,
-            id: profile?.sub,
+            id: profile?.sub || user.id,
           },
 
           idToken: account.id_token,
@@ -133,14 +207,3 @@ export const authOptions: NextAuthOptions = {
     signIn: '/app/log-in',
   },
 } satisfies NextAuthOptions;
-
-function auth(
-  ...args:
-    | [GetServerSidePropsContext['req'], GetServerSidePropsContext['res']]
-    | [NextApiRequest, NextApiResponse]
-    | []
-) {
-  return getServerSession(...args, authOptions);
-}
-
-export { auth };

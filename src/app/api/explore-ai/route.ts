@@ -4,10 +4,10 @@ import { isExploreAiSuggestionsQuery } from './types/suggestions';
 import { serviceExploreAiGetSuggestions } from './suggestions';
 import { isExploreAiThreadCreateQuery, isExploreAiThreadDeleteQuery } from './types';
 import { serviceExploreAiCreateThread, serviceExploreAiDeleteThread } from './threads';
-import { auth } from '@/auth';
+import { getSessionServer } from '@/auth-server';
 
 export const POST = async (request: Request) => {
-  const session = await auth();
+  const session = await getSessionServer();
   if (!session) {
     return new Response('Unauthorized', {
       status: 401,

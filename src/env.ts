@@ -15,8 +15,13 @@ export const env = createEnv({
     KEYCLOAK_ISSUER: z.string().url(),
     KEYCLOAK_CLIENT_ID: z.string().min(3),
     KEYCLOAK_CLIENT_SECRET: z.string().min(5),
-
+    KEYCLOAK_REALM: z.string().min(1),
     NEXTAUTH_SECRET: z.string().min(5),
+
+    NEXTAUTH_URL: z.string().url(),
+    AUTH_MANAGER_DATABASE_URL: z.string().url(),
+    AUTH_MANAGER_VAULT_STORAGE: z.union([z.literal('pg'), z.literal('redis')]),
+    AUTH_MANAGER_TOKEN_VAULT_ENCRYPTION_KEY: z.string().min(64).max(64),
 
     MAILCHIMP_API_KEY: z.string().min(1),
     MAILCHIMP_AUDIENCE_ID: z.string().min(1),

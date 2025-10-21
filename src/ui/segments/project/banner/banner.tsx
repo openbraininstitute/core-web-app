@@ -1,15 +1,15 @@
 'use client';
 
 import { CheckOutlined, CloseOutlined, EditOutlined, LoadingOutlined } from '@ant-design/icons';
-import { useMutation, useSuspenseQuery } from '@tanstack/react-query';
 import { useRef, useState, useEffect, type ReactElement } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { motion, transform, useAnimate } from 'motion/react';
 import { Form, Input, type FormProps } from 'antd';
+import { delay, get } from 'es-toolkit/compat';
 import { z } from 'zod';
-import delay from 'es-toolkit/compat/delay';
 import Image from 'next/image';
-import get from 'es-toolkit/compat/get';
 
+import { ProjectCardSkeletonShimmer } from '@/ui/segments/project/banner/banner-skeleton';
 import { getProject, updateProject } from '@/api/virtual-lab-svc/queries/project';
 import { useUserPermissions } from '@/hooks/use-user-permissions';
 import { ExpandableText } from '@/ui/molecules/more-less-text';
@@ -34,7 +34,11 @@ export function ProjectCard(): ReactElement {
   const { virtualLabId, projectId } = useWorkspace();
   const [form] = Form.useForm<ProjectFormValues>();
 
-  const { data: result, refetch } = useSuspenseQuery({
+  const {
+    data: result,
+    refetch,
+    isLoading,
+  } = useQuery({
     queryKey: keyBuilder.getOne({ virtualLabId, projectId }),
     queryFn: () => getProject({ virtualLabId, projectId }),
   });
@@ -44,7 +48,6 @@ export function ProjectCard(): ReactElement {
   const [isFormValid, setIsFormValid] = useState(false);
   const nameRef = useRef<any>(null);
 
-  // Animation for name character counter
   const maxNameLength = 60;
   const nameValue = Form.useWatch('name', form) || '';
   const nameCharactersRemaining = maxNameLength - nameValue.length;
@@ -134,7 +137,7 @@ export function ProjectCard(): ReactElement {
       setIsFormValid(errors.length === 0);
     }
   };
-
+  if (isLoading) return <ProjectCardSkeletonShimmer />;
   return (
     <Form
       form={form}
@@ -215,7 +218,7 @@ export function ProjectCard(): ReactElement {
                     { required: true, message: 'Name is required' },
                     { max: maxNameLength, message: 'Name must be less than 60 characters' },
                   ]}
-                  initialValue={result.data.project.name}
+                  initialValue={result?.data.project.name}
                 >
                   <Input.TextArea
                     id="project-name"
@@ -254,7 +257,7 @@ export function ProjectCard(): ReactElement {
               </div>
             ) : (
               <h1 className="text-xl leading-tight font-bold text-white transition-all duration-300 lg:text-2xl xl:text-3xl">
-                {isPending ? variables?.name : result.data.project.name}
+                {isPending ? variables?.name : result?.data.project.name}
               </h1>
             )}
           </div>
@@ -264,7 +267,7 @@ export function ProjectCard(): ReactElement {
               <div className="relative">
                 <Form.Item
                   name="description"
-                  initialValue={result.data.project.description}
+                  initialValue={result?.data.project.description}
                   rules={[
                     {
                       max: maxDescriptionLength,
@@ -309,7 +312,7 @@ export function ProjectCard(): ReactElement {
             ) : (
               <ExpandableText
                 id="project-description-text"
-                text={isPending ? variables?.description : result.data.project.description}
+                text={isPending ? variables?.description : result?.data.project.description || ''}
                 collapsedLines={6}
                 className="text-justify text-base leading-6 text-white/90 transition-all duration-300 lg:text-lg"
               >

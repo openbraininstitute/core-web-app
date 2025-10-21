@@ -7,8 +7,8 @@ import { createDownloadStream } from '@/features/entity-download/download-stream
 import { getDownloadStreamHeaders } from '@/features/entity-download/utils';
 
 import { TEntityTypeDict } from '@/api/entitycore/types';
-import { auth } from '@/auth';
 import { ticketStore } from '@/features/entity-download/ticket-store';
+import { getSessionServer } from '@/auth-server';
 
 /**
  * Handles GET requests for downloading an entity archive via a download ticket
@@ -20,7 +20,7 @@ export async function GET(
   const { entityType: entityTypeRaw, ticketId } = await params;
   const entityType = snakeCase(entityTypeRaw) as TEntityTypeDict;
 
-  const session = await auth();
+  const session = await getSessionServer();
   if (!session) {
     return new Response('Unauthorized', {
       status: 401,

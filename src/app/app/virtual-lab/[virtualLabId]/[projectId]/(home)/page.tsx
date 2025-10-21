@@ -1,7 +1,6 @@
 import { redirect, RedirectType } from 'next/navigation';
 import { Suspense } from 'react';
 
-import { ProjectCardSkeletonShimmer } from '@/ui/segments/project/banner/banner-skeleton';
 import { getQueryClient, HydrateClient } from '@/query-provider/server';
 import { Shortcuts } from '@/ui/segments/project/bottom-nav-shortcuts';
 import { ProjectActivities } from '@/ui/segments/project/activities';
@@ -33,9 +32,7 @@ export default async function Home({
   return (
     <HydrateClient>
       <div className="flex flex-col gap-6 pr-1.5">
-        <Suspense fallback={<ProjectCardSkeletonShimmer />}>
-          <ProjectCard />
-        </Suspense>
+        <ProjectCard />
         <Suspense>
           <ProjectActivities />
         </Suspense>

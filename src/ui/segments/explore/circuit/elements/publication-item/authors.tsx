@@ -1,4 +1,5 @@
 import { Button } from 'antd';
+
 import Popover from '@/features/entities/neuron-simulation/experiment/elements/popover';
 import { Person } from '@/components/icons/EditorIcons';
 
