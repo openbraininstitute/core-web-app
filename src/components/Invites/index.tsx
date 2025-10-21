@@ -105,7 +105,7 @@ export default function InviteLoader() {
               <div className="mt-12 flex justify-center gap-8 text-lg">
                 <Link
                   className="border-gray-4 border border-solid px-12 py-8"
-                  href="/app/virtual-lab"
+                  href="/app/virtual-lab/sync"
                 >
                   Browse platform
                 </Link>
