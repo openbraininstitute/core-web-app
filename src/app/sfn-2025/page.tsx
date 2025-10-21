@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 
 import FooterPanel from '@/components/LandingPage/layout/FooterPanel';
 import Menu from '@/components/LandingPage/layout/Menu';
+import ContentSFN from '@/ui/segments/sfn-2025/content';
 import HeroSFN from '@/ui/segments/sfn-2025/hero';
 
 import { useScrollHasStarted } from '@/utils/scroll-has-started';
@@ -32,6 +33,7 @@ export default function Page() {
           posterHeight={108}
           title="SfN 2025 Neuroscience at the Speed of Thought"
         />
+        <ContentSFN />
         <FooterPanel />
       </div>
     </>
