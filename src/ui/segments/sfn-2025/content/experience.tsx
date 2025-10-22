@@ -36,11 +36,11 @@ export default function SFNExperience() {
       </div>
 
       <motion.div
-        className="absolute top-0 left-0 z-0"
+        className="absolute top-0 right-0 z-0"
         initial={{ scale: 0.8, opacity: 0 }}
         animate={isInView ? { scale: 1, opacity: 1 } : { scale: 0.8, opacity: 0 }}
         transition={{
-          duration: 1,
+          duration: 0.3,
           ease: 'easeOut',
         }}
       >

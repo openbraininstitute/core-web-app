@@ -37,13 +37,14 @@ function LinkButton({
   link,
   bgUrl,
   isInView,
-}: LinkButtonProps & { isInView: boolean }) {
+  delay = 0,
+}: LinkButtonProps & { isInView: boolean; delay?: number }) {
   return (
     <motion.div
       className="w-1/2"
       initial={{ height: 0 }}
       animate={{ height: isInView ? '60vh' : 0 }}
-      transition={{ duration: 0.8, ease: 'easeInOut' }}
+      transition={{ duration: 0.8, ease: 'easeInOut', delay }}
     >
       <Link
         href={link}
@@ -102,7 +103,7 @@ export default function SFNDoubleButton() {
 
   return (
     <div ref={ref} className="flex flex-row gap-x-4 px-[2vw] py-[10vh]">
-      {linkButtons.map((button) => (
+      {linkButtons.map((button, index) => (
         <LinkButton
           key={button.title}
           title={button.title}
@@ -110,6 +111,7 @@ export default function SFNDoubleButton() {
           link={button.link}
           bgUrl={button.bgUrl}
           isInView={isInView}
+          delay={index === 1 ? 0.3 : 0}
         />
       ))}
     </div>
