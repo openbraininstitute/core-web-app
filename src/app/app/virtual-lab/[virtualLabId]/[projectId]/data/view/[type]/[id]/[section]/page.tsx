@@ -24,7 +24,6 @@ export default async function Page({
   null
 >) {
   const { virtualLabId, projectId, section, type, id } = await params;
-
   const ctx = { virtualLabId, projectId };
 
   const entityType = getEntityByExtendedType({ type: snakeCase(type) as EntityCoreExtendedType });

@@ -1,8 +1,10 @@
 'use client';
 
-import { redirect, usePathname } from 'next/navigation';
+import { redirect, usePathname, useSearchParams } from 'next/navigation';
 
 export default function DetailPage() {
   const path = usePathname();
-  redirect(`${path}/overview`);
+  const query = useSearchParams();
+
+  redirect(`${path}/overview?${query.toString()}`);
 }
