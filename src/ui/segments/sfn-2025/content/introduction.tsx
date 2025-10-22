@@ -13,11 +13,11 @@ export default function SFNIntroduction() {
   return (
     <div
       ref={ref}
-      className="text-primary-9 flex min-h-[80vh] w-full flex-col items-start justify-center px-[8vw] py-[15vh]"
+      className="text-primary-9 flex w-full flex-col items-start justify-center px-[8vw] py-[15vh] md:min-h-[80vh]"
     >
-      <div className="mb-4 w-2/3">
+      <div className="mb-6 w-full md:mb-4 md:w-2/3">
         <motion.h2
-          className="font-serif text-[80px]! font-normal"
+          className="font-serif text-4xl! font-normal md:text-[80px]!"
           initial={{ lineHeight: 3 }}
           animate={{ lineHeight: isInView ? 1.2 : 3 }}
           transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
@@ -27,7 +27,7 @@ export default function SFNIntroduction() {
         </motion.h2>
       </div>
       <motion.div
-        className="font-title border-neutral-3 flex flex-row gap-x-2 rounded-full border border-solid text-4xl"
+        className="font-title border-neutral-3 flex flex-col items-start gap-x-2 rounded-lg border border-solid py-2 text-2xl md:flex-row md:items-center md:rounded-full md:py-0 md:text-4xl"
         initial={{ opacity: 0, y: 20 }}
         animate={{
           opacity: isInView ? 1 : 0,
@@ -39,9 +39,8 @@ export default function SFNIntroduction() {
           ease: [0.25, 0.46, 0.45, 0.94],
         }}
       >
-        <div className="px-8 py-5">November 15 – 19</div>
-        <div className="bg-neutral-5 block h-full w-0.5" />
-        <div className="px-6 py-5">Booth #3631</div>
+        <div className="px-6 py-0.5 md:py-3">November 15 – 19</div>
+        <div className="px-6 py-0.5 md:py-3">Booth #3631</div>
       </motion.div>
     </div>
   );

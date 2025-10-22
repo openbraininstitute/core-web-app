@@ -18,15 +18,15 @@ export default function SFNExperience() {
   return (
     <div
       ref={ref}
-      className="text-primary-9 relative flex min-h-[50vh] w-full flex-col px-[8vw] py-[25vh]"
+      className="text-primary-9 relative flex min-h-[50vh] w-full flex-col px-[8vw] py-12 md:py-[25vh]"
     >
       <div className="relative z-10">
-        <h2 className="font-serif text-6xl! leading-[1.2]! font-normal">
+        <h2 className="font-serif text-6xl! leading-none font-normal md:leading-[1.2]!">
           What you will experience
         </h2>
         <Divider />
 
-        <ul className="flex list-inside list-disc flex-col gap-y-2 text-xl">
+        <ul className="flex list-inside list-disc flex-col gap-y-6 text-2xl! md:gap-y-2 md:text-xl">
           <li>Explore data interactively and uncover hidden patterns with AI-powered insights</li>
           <li>Simulate single neurons and synaptoms to visualize function and connectivity</li>
           <li>Build and test small microcircuits to understand network-level dynamics</li>

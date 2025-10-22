@@ -3,9 +3,26 @@
 import { motion, useInView } from 'framer-motion';
 import Image, { StaticImageData } from 'next/image';
 import Link from 'next/link';
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import image1 from '../images/background_image_buttons-01.jpg';
+
+// Custom hook to detect screen size
+function useScreenSize() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768); // md breakpoint
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
+  return isMobile;
+}
 
 type LinkButtonProps = {
   title: string;
@@ -39,20 +56,23 @@ function LinkButton({
   isInView,
   delay = 0,
 }: LinkButtonProps & { isInView: boolean; delay?: number }) {
+  const isMobile = useScreenSize();
+  const targetHeight = isMobile ? '30vh' : '60vh';
+
   return (
     <motion.div
-      className="w-1/2"
+      className="w-full md:w-1/2"
       initial={{ height: 0 }}
-      animate={{ height: isInView ? '60vh' : 0 }}
+      animate={{ height: isInView ? targetHeight : 0 }}
       transition={{ duration: 0.8, ease: 'easeInOut', delay }}
     >
       <Link
         href={link}
-        className="relative flex h-full w-full flex-row gap-x-4 overflow-hidden rounded-xl p-10"
+        className="relative flex h-full w-full flex-row gap-x-4 overflow-hidden rounded-xl p-6 md:p-10"
       >
-        <div className="text-primary-9 relative z-10 h-1/2 w-full bg-white p-12">
+        <div className="text-primary-9 relative z-10 h-full w-full bg-white p-6 md:h-1/2 md:p-12">
           <motion.div
-            className="font-serif text-6xl!"
+            className="mb-3 font-serif text-4xl! md:mb-4 md:text-6xl!"
             initial={{ opacity: 0, y: 20 }}
             animate={{
               opacity: isInView ? 1 : 0,
@@ -67,7 +87,7 @@ function LinkButton({
             {title}
           </motion.div>
           <motion.p
-            className="font-title text-xl!"
+            className="font-title text-2xl! leading-normal! md:text-xl!"
             initial={{ opacity: 0, y: 20 }}
             animate={{
               opacity: isInView ? 1 : 0,
@@ -102,7 +122,7 @@ export default function SFNDoubleButton() {
   });
 
   return (
-    <div ref={ref} className="flex flex-row gap-x-4 px-[2vw] py-[10vh]">
+    <div ref={ref} className="flex flex-col gap-4 px-[2vw] py-12 md:flex-row md:py-[10vh]">
       {linkButtons.map((button, index) => (
         <LinkButton
           key={button.title}
