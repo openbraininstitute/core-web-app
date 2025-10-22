@@ -13,9 +13,10 @@ import ActionMenu from '@/ui/segments/action-menu';
 import Close from '@/ui/molecules/close';
 import { DownloadPanel as CircuitDownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { BackToDataButton } from '@/ui/segments/explore/back-data-btn';
 import { WorkspaceScope } from '@/constants';
 
-import type { WorkspaceContext, AwaitedType } from '@/types/common';
+import type { WorkspaceContext, AwaitedType, ServerSideComponentProp } from '@/types/common';
 
 interface Params {
   id: string;
@@ -53,11 +54,11 @@ export async function downloadEntity({
 export default async function Layout({
   children,
   params,
-}: {
+}: ServerSideComponentProp<WorkspaceContext & Params, null> & {
   children: ReactNode;
-  params: Promise<Params & WorkspaceContext>;
 }) {
   const awaitedParams = await params;
+
   const { virtualLabId, projectId, id } = awaitedParams;
   const type = snakeCase(awaitedParams.type) as EntityCoreExtendedType;
 
@@ -76,9 +77,7 @@ export default async function Layout({
 
   const breadcrumbs = (
     <div className="flex flex-wrap gap-3">
-      <Breadcrumb>
-        <NextLink href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data`}>Data</NextLink>
-      </Breadcrumb>
+      <BackToDataButton {...{ virtualLabId, projectId }} />
       <Breadcrumb showChevron={false}>
         <NextLink href={parentLink}>{entityType.title}</NextLink>
       </Breadcrumb>
