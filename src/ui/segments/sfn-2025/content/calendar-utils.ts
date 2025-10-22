@@ -19,7 +19,7 @@ export function generateICalendar(item: AgendaItem): void {
                         DTEND:${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z
                         SUMMARY:${item.title} - ${item.subtitle}
                         DESCRIPTION:${item.subtitle} at SFN 2025. Open Brain Platform booth.
-                        LOCATION:SFN 2025, Chicago
+                        LOCATION:SFN 2025, San Diego
                         END:VEVENT
                         END:VCALENDAR`;
 
@@ -42,7 +42,7 @@ export function generateGoogleCalendar(item: AgendaItem): void {
   const startISO = startDate.toISOString();
   const endISO = endDate.toISOString();
 
-  const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(item.title + ' - ' + item.subtitle)}&dates=${startISO.replace(/[-:]/g, '').split('.')[0]}Z/${endISO.replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(item.subtitle + ' at SFN 2025. Open Brain Platform booth.')}&location=${encodeURIComponent('SFN 2025, Chicago')}`;
+  const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(item.title + ' - ' + item.subtitle)}&dates=${startISO.replace(/[-:]/g, '').split('.')[0]}Z/${endISO.replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(item.subtitle + ' at SFN 2025. Open Brain Platform booth.')}&location=${encodeURIComponent('SFN 2025, San Diego')}`;
 
   window.open(googleUrl, '_blank');
 }
