@@ -1,9 +1,7 @@
-import { ReactNode } from 'react';
-import NextLink from 'next/link';
-import snakeCase from 'es-toolkit/compat/snakeCase';
+import { snakeCase } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
-import Breadcrumb from '@/ui/molecules/breadcrumb';
-import { ROOT_ROUTE } from '@/config';
+import { ReactNode } from 'react';
+
 import {
   EntityCoreExtendedType,
   getEntityByExtendedType,
@@ -13,8 +11,9 @@ import ActionMenu from '@/ui/segments/action-menu';
 import Close from '@/ui/molecules/close';
 import { DownloadPanel as CircuitDownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { BackToDataButton } from '@/ui/segments/explore/back-data-btn';
+import { BackToDataButton, BackToEntityType } from '@/ui/segments/explore/back-data-btn';
 import { WorkspaceScope } from '@/constants';
+import { ROOT_ROUTE } from '@/config';
 
 import type { WorkspaceContext, AwaitedType, ServerSideComponentProp } from '@/types/common';
 
@@ -78,9 +77,7 @@ export default async function Layout({
   const breadcrumbs = (
     <div className="flex flex-wrap gap-3">
       <BackToDataButton {...{ virtualLabId, projectId }} />
-      <Breadcrumb showChevron={false}>
-        <NextLink href={parentLink}>{entityType.title}</NextLink>
-      </Breadcrumb>
+      <BackToEntityType {...{ virtualLabId, projectId, type, title: entityType.title }} />
     </div>
   );
 
