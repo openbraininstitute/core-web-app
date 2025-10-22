@@ -103,6 +103,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
         type: P.union(
           ExtendedEntitiesTypeDict.CellMorphology,
           ExtendedEntitiesTypeDict.ElectricalCellRecording,
+          ExtendedEntitiesTypeDict.IonChannelRecording,
           ExtendedEntitiesTypeDict.Emodel
         ),
       },
