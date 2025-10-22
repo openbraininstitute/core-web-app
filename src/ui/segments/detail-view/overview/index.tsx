@@ -31,7 +31,7 @@ import type {
 import SmallMicrocircuitSimulation from '@/features/small-microcircuit';
 import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
-import { IonChannelRecordingViewer } from '@/features/ion-channel-recording-viewer';
+import IonChannelRecordingViewer from '@/features/ion-channel-recording-viewer';
 
 export default async function Overview({
   entity,
