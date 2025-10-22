@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import useTrace from './hooks/use-nwb-trace';
-import { TraceOverview } from './components/trace-overview';
-import { TraceDetailsView } from './components/trace-details-view';
+import TraceOverview from './components/trace-overview';
+import TraceDetailsView from './components/trace-details-view';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
