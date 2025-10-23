@@ -1,13 +1,13 @@
 import React from 'react';
 
 import { IonChannelRecordingParser } from '../../ion-channel-recording-parser';
+import { GenericPlot } from '../generic-plot';
+import { useColorMap, usePlotParams, useVisibleLines } from './hooks';
+import { factory } from './factory';
 import OptionSelect from '@/features/ephys-viewer/components/option-select';
 
-import styles from './trace-details-view.module.css';
 import SweepSelector from '@/features/ephys-viewer/components/sweep-selector';
-import { useColorMap, usePlotParams, useVisibleLines } from './hooks';
-import { GenericPlot } from '../generic-plot';
-import { factory } from './factory';
+import styles from './trace-details-view.module.css';
 
 export interface TraceDetailsViewProps {
   trace: IonChannelRecordingParser;
