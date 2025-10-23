@@ -13,7 +13,7 @@ export default function ParameterSwep({
   value: number | number[] | null;
   min: number | undefined;
   max: number | undefined;
-  onChange: (v: null | number | number[]) => void;
+  onChange: (v: null | number | (number | null)[]) => void;
   disabled: boolean;
   k: string;
 }) {
@@ -82,7 +82,10 @@ export default function ParameterSwep({
                       const updated = [...values];
                       updated[i] = newValue;
                       setValues(updated);
-                      onChange(updated.filter((_v) => _v !== null));
+
+                      const filteredValues = updated.filter((_v) => _v !== null);
+
+                      onChange(filteredValues.length > 0 ? filteredValues : [null]);
                     }}
                   />
                   {!disabled && (
@@ -103,7 +106,8 @@ export default function ParameterSwep({
                               const updated = [...values];
                               updated.splice(i, 1);
                               setValues(updated);
-                              onChange(updated.filter((_v) => _v !== null));
+                              const filteredValues = updated.filter((_v) => _v !== null);
+                              onChange(filteredValues.length > 0 ? filteredValues : [null]);
                             }}
                           />
                         )}
