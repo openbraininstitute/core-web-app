@@ -118,35 +118,23 @@ function CellDetails({ trace, cellId, defaultProtocol, defaultRepetition }: Cell
           label={{ title: 'Protocol', numberOfAvailable: trace.getProtocols(cellId).length }}
           options={dataSetOptions}
           value={selectedProtocol}
-          handleChange={handleProtocolChange}
+          onChange={handleProtocolChange}
         />
         <OptionSelect
           label={{ title: 'Repetition', numberOfAvailable: Object.keys(repetitions).length }}
           options={repetitionOptions}
           value={selectedRepetition}
-          handleChange={handleRepetitionChange}
+          onChange={handleRepetitionChange}
           hideWhenSingle
         />
         <SweepSelector
-          handlePreviewSweep={handlePreviewSweep}
+          onPreviewSweep={handlePreviewSweep}
           colorMap={colorMap}
           selectedSweeps={selectedSweeps}
           previewItem={previewItem}
           setSelectedSweeps={setSelectedSweeps}
           sweepOptions={sweepOptions}
         />
-        {sweeps.length > 1 && (
-          <button
-            type="button"
-            className="bg-transparant text-dark h-[32px] self-end"
-            onClick={() => {
-              setReset(!reset);
-              setSelectedSweeps([]);
-            }}
-          >
-            Reset
-          </button>
-        )}
       </div>
       <div ref={plotContainerRef} className="flex flex-col gap-10 2xl:flex-row">
         {trace.recordingTypes.includes(RecordingType.STIMULUS) && (
