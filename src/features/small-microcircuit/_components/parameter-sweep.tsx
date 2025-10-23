@@ -13,7 +13,7 @@ export default function ParameterSwep({
   value: number | number[] | null;
   min: number | undefined;
   max: number | undefined;
-  onChange: (v: null | number | number[]) => void;
+  onChange: (v: null | number | (number | null)[]) => void;
   disabled: boolean;
   k: string;
 }) {
@@ -45,7 +45,7 @@ export default function ParameterSwep({
             className="text-primary-8 absolute top-[10px] right-[8px]"
             onClick={() => {
               setMode('multiple');
-              onChange(values.filter((v) => v !== null));
+              onChange(values);
             }}
           />
         )}
@@ -74,6 +74,7 @@ export default function ParameterSwep({
                 // eslint-disable-next-line
                 <div className="flex w-full justify-between gap-1" key={k + i}>
                   <InputNumber
+                    status={v === null ? 'error' : undefined}
                     value={v}
                     min={min}
                     max={max}
@@ -82,7 +83,7 @@ export default function ParameterSwep({
                       const updated = [...values];
                       updated[i] = newValue;
                       setValues(updated);
-                      onChange(updated.filter((_v) => _v !== null));
+                      onChange(updated);
                     }}
                   />
                   {!disabled && (
@@ -93,6 +94,7 @@ export default function ParameterSwep({
                             className="text-primary-8"
                             onClick={() => {
                               setValues([...values, null]);
+                              onChange([...values, null]);
                             }}
                           />
                         )}
@@ -103,7 +105,7 @@ export default function ParameterSwep({
                               const updated = [...values];
                               updated.splice(i, 1);
                               setValues(updated);
-                              onChange(updated.filter((_v) => _v !== null));
+                              onChange(updated);
                             }}
                           />
                         )}
