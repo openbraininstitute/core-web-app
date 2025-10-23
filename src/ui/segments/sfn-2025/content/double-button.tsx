@@ -34,7 +34,8 @@ type LinkButtonProps = {
 const linkButtons: LinkButtonProps[] = [
   {
     title: 'Discover OBI',
-    description: 'Explore our virtual labs and see how they work',
+    description:
+      'Learn more about our mission and how we are democratizing simulation neuroscience',
     link: '/',
     bgUrl: image1,
   },
@@ -42,7 +43,7 @@ const linkButtons: LinkButtonProps[] = [
   {
     title: 'Your virtual lab',
     description:
-      'Create your Virtual Lab on the Open Brain Platform and join a global network accelerating open neuroscience.',
+      'Create your own Virtual Lab today and join a global network of neuroscientists accelerating research and discovery.',
     link: '/app/virtual-lab',
     bgUrl: image1,
   },
