@@ -1,8 +1,9 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import NextLink from 'next/link';
 import Image from 'next/image';
+import { LoadingOutlined } from '@ant-design/icons';
 import { useWorkspace } from '../hooks/use-workspace';
 import { cn } from '@/utils/css-class';
 import { startEmptyNotebook } from '@/services/notebooks';
@@ -16,8 +17,10 @@ type Props = {
 export function NotebooksLayout({ children, active }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const notification = useAppNotification();
+  const [loading, setLoading] = useState(false);
 
   async function handleRunNotebook() {
+    setLoading(true);
     try {
       const retval = await startEmptyNotebook(virtualLabId, projectId);
       notification.success({
@@ -41,6 +44,8 @@ export function NotebooksLayout({ children, active }: Props) {
           placement: 'topRight',
         });
       }
+    } finally {
+      setLoading(false);
     }
   }
   return (
@@ -68,12 +73,14 @@ export function NotebooksLayout({ children, active }: Props) {
           </NextLink>
         </div>
         <button
+          disabled={loading}
           type="button"
           className="flex h-[40px] items-center justify-between gap-2 rounded-full border border-[#F37726] bg-white px-5 text-[#F37726]"
           onClick={handleRunNotebook}
         >
           <div>Open JupyterHub</div>
-          <Image src="/images/jupyter.svg" alt="Jupyter hub" width={20} height={20} />
+          {!loading && <Image src="/images/jupyter.svg" alt="Jupyter hub" width={20} height={20} />}
+          {loading && <LoadingOutlined className="text-[#F37726]" />}
         </button>
       </div>
 
