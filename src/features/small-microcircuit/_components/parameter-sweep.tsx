@@ -45,7 +45,7 @@ export default function ParameterSwep({
             className="text-primary-8 absolute top-[10px] right-[8px]"
             onClick={() => {
               setMode('multiple');
-              onChange(values.filter((v) => v !== null));
+              onChange(values);
             }}
           />
         )}
@@ -74,6 +74,7 @@ export default function ParameterSwep({
                 // eslint-disable-next-line
                 <div className="flex w-full justify-between gap-1" key={k + i}>
                   <InputNumber
+                    status={v === null ? 'error' : undefined}
                     value={v}
                     min={min}
                     max={max}
@@ -93,6 +94,7 @@ export default function ParameterSwep({
                             className="text-primary-8"
                             onClick={() => {
                               setValues([...values, null]);
+                              onChange([...values, null]);
                             }}
                           />
                         )}
