@@ -25,7 +25,6 @@ export default function SFNVideo() {
             setIsPaused(false);
           })
           .catch((error) => {
-            console.log('Video play failed:', error);
             setIsPaused(true);
             // Video might not play due to browser autoplay policies
           });
@@ -52,7 +51,6 @@ export default function SFNVideo() {
             setIsPaused(false);
           })
           .catch((error) => {
-            console.log('Video play failed on click:', error);
             setIsPaused(true);
           });
       } else {
