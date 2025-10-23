@@ -41,7 +41,7 @@ const linkButtons: LinkButtonProps[] = [
   },
 
   {
-    title: 'Your virtual lab',
+    title: 'Access the Virtual Labs',
     description:
       'Create your own Virtual Lab today and join a global network of neuroscientists accelerating research and discovery.',
     link: '/app/virtual-lab',
