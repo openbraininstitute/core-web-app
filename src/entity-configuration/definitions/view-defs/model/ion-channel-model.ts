@@ -35,10 +35,11 @@ export const ViewDefForIonChannelModel: ViewDefinitionConfig = {
   ],
   filterableFields: [
     EntityCoreFields.Name,
-    EntityCoreFields.CreationDate,
-    EntityCoreFields.IsLjpCorrected,
-    EntityCoreFields.IsStochastic,
-    EntityCoreFields.IsTemperatureDependent,
+    EntityCoreFields.BrainRegion,
+    EntityCoreFields.Species,
     EntityCoreFields.TemperatureCelsius,
+    EntityCoreFields.IsTemperatureDependent,
+    EntityCoreFields.IsLjpCorrected,
+    EntityCoreFields.CreationDate,
   ],
 };

@@ -11,6 +11,7 @@ import {
 import {
   EmptyPreview,
   EmptyValue,
+  renderArray,
   renderContributorsModal,
   renderDate,
   renderEmptyOrValue,
@@ -26,6 +27,7 @@ import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements
 
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { EntityTypeValue } from '@/entity-configuration/domain';
+import { ensureArray } from '@/utils/array';
 
 const renderContributors = (r: EntityTypeValue, filter: 'person' | 'organization') => {
   if (!('contributions' in r) || !r.contributions) return EmptyValue;
@@ -240,6 +242,39 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         value: 'brain_region__name',
       },
     ],
+  },
+  [EntityCoreFields.Species]: {
+    title: 'Species',
+    filter: CoreFieldFilterTypeEnum.CheckList,
+    render: (r) => {
+      if ('species' in r)
+        return renderEmptyOrValue(
+          renderArray(ensureArray({ input: r.species }).map((s) => s.name))
+        );
+      if ('subject' in r && 'species' in r.subject)
+        return renderEmptyOrValue(r.subject.species.name);
+      return EmptyValue;
+    },
+    vocabulary: {
+      plural: 'Species',
+      singular: 'Species',
+    },
+    defaultConstraint: 'subject__species__name__in',
+    order: [
+      {
+        types: [
+          ExtendedEntitiesTypeDict.ElectricalCellRecording,
+          ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
+          ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
+          ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
+        ],
+        property: 'order_by',
+        value: 'subject__species__name',
+      },
+    ],
+    isSortable: true,
+    isFilterable: true,
+    isDisplayable: true,
   },
   [EntityCoreFields.CreatedBy]: {
     title: 'Created by',
