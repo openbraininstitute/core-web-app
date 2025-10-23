@@ -1,6 +1,6 @@
 'use client';
 
-import { SoundFilled, SoundOutlined } from '@ant-design/icons';
+import { PlayCircleOutlined, SoundFilled, SoundOutlined } from '@ant-design/icons';
 import { useInView } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 
@@ -10,6 +10,7 @@ export default function SFNVideo() {
   const ref = useRef(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isMuted, setIsMuted] = useState(true);
+  const [isPaused, setIsPaused] = useState(true);
   const isInView = useInView(ref, {
     amount: 0.8,
     once: false,
@@ -18,9 +19,19 @@ export default function SFNVideo() {
   useEffect(() => {
     if (videoRef.current) {
       if (isInView) {
-        videoRef.current.play();
+        videoRef.current
+          .play()
+          .then(() => {
+            setIsPaused(false);
+          })
+          .catch((error) => {
+            console.log('Video play failed:', error);
+            setIsPaused(true);
+            // Video might not play due to browser autoplay policies
+          });
       } else {
         videoRef.current.pause();
+        setIsPaused(true);
       }
     }
   }, [isInView]);
@@ -32,6 +43,25 @@ export default function SFNVideo() {
     }
   };
 
+  const handleVideoClick = () => {
+    if (videoRef.current) {
+      if (videoRef.current.paused) {
+        videoRef.current
+          .play()
+          .then(() => {
+            setIsPaused(false);
+          })
+          .catch((error) => {
+            console.log('Video play failed on click:', error);
+            setIsPaused(true);
+          });
+      } else {
+        videoRef.current.pause();
+        setIsPaused(true);
+      }
+    }
+  };
+
   return (
     <div ref={ref} className="relative h-full w-full px-8 py-12 md:px-[8vw] md:py-[15vh]">
       <video
@@ -39,7 +69,8 @@ export default function SFNVideo() {
         muted={isMuted}
         loop
         playsInline
-        className="h-full w-full object-cover"
+        className="h-full w-full cursor-pointer object-cover"
+        onClick={handleVideoClick}
         src="https://player.vimeo.com/progressive_redirect/playback/1129196270/rendition/1080p/file.mp4?loc=external&log_user=0&signature=b8ed690f71165397f6349edadb8b953ff25ccf7235228c949a6a6c0420b0d4bf"
       >
         <track
@@ -51,6 +82,19 @@ export default function SFNVideo() {
         />
       </video>
 
+      {/* Play/Pause Button - Only show when paused */}
+      {isPaused && (
+        <button
+          type="button"
+          onClick={handleVideoClick}
+          className="bg-opacity-70 hover:bg-opacity-90 absolute top-1/2 left-1/2 z-20 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black text-white transition-all"
+          aria-label="Play video"
+        >
+          <PlayCircleOutlined className="text-3xl" />
+        </button>
+      )}
+
+      {/* Mute Button */}
       <button
         type="button"
         onClick={toggleMute}

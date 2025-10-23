@@ -4,6 +4,8 @@ import { motion, useInView, useMotionValue, useSpring, useTransform } from 'fram
 import Image from 'next/image';
 import { useRef } from 'react';
 
+import Divider from '@/ui/segments/sfn-2025/content/divider';
+
 import image from '../images/brain-region_image-01.png';
 
 export default function SFNVirtualLabs() {
@@ -29,6 +31,8 @@ export default function SFNVirtualLabs() {
     >
       <div className="relative z-10 flex w-full flex-col pr-8 md:w-1/2">
         <h2 className="font-serif text-6xl! font-normal md:text-[80px]!">Virtual Labs</h2>
+        <Divider />
+
         <p className="font-title text-2xl! leading-normal md:text-lg">
           Step into the future of neuroscience and discover how our Virtual Labs empower you to
           explore, build, and experiment with Digital Brain Models — from single neurons to small
