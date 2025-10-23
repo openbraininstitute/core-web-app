@@ -341,8 +341,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isDisplayable: true,
     isSortable: true,
     defaultConstraint: {
-      lte: 'temperature__lte',
-      gte: 'temperature__gte',
+      lte: 'temperature_celsius__lte',
+      gte: 'temperature_celsius__gte',
     },
     render: (r) => {
       if (
