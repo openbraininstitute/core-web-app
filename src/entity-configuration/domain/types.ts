@@ -27,7 +27,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
     };
     expand?: Record<string, (source: T, ctx?: WorkspaceContext, ...other: any) => Promise<any>>;
   };
-  explore: {
+  explore?: {
     basePrefix?: string;
     routePrefix?: string;
   };
@@ -37,7 +37,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   };
   viewDefinition?: ViewDefinitionConfig | null;
   isBookmarkable: boolean;
-  detailViewSections: DetailViewSection[];
+  detailViewSections?: DetailViewSection[];
   isDownloadable?: boolean;
   isCopyable?: boolean;
   isSimulatable: boolean | ((scale: TCircuitScaleDictionary) => boolean);

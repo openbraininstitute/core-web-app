@@ -1,128 +1,133 @@
 'use client';
 
-import {
-  DeleteOutlined,
-  LoadingOutlined,
-  PlayCircleOutlined,
-  PlusOutlined,
-} from '@ant-design/icons';
+import { Modal } from 'antd';
+import { useState } from 'react';
+import { PlayCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { Popover } from 'antd/lib';
 
 import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
 import { EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
-import { Notebook } from '@/util/virtual-lab/types';
+import { INotebook } from '@/api/entitycore/types/entities/notebook';
+
+import { downloadArchive } from '@/services/entity-download';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { useAppNotification } from '@/components/notification';
+import { NotebookStartResponse, startNotebook } from '@/services/notebooks';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 interface ActionPopoverProps {
-  notebook: Notebook;
-  loadingZip: boolean;
-  onReadmeClick: (notebook: Notebook) => void;
-  onDownloadClick: (notebook: Notebook) => void;
-  onDeleteClick?: (id: string) => void;
-  onRunOnEksClick?: (notebook: Notebook) => void;
+  notebook: INotebook;
 }
 
-export default function ActionPopover({
-  notebook,
-  loadingZip,
-  onReadmeClick,
-  onDownloadClick,
-  onDeleteClick,
-  onRunOnEksClick,
-}: ActionPopoverProps) {
-  return (
-    <div id="popover">
-      <Popover
-        content={
-          <div className="text-primary-9 flex min-w-[120px] flex-col gap-2">
-            <div className="flex gap-4">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onReadmeClick(notebook);
-                }}
-                className="hover:text-primary-4 inline-flex items-center gap-[10px]"
-              >
-                <EyeIconWhiteWithinBox className="text-primary-9 text-xs" aria-label="Readme" />
-                Readme
-              </button>
-            </div>
-            <div className="flex gap-4">
-              <button
-                type="button"
-                className="hover:text-primary-4 inline-flex items-center gap-[10px]"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDownloadClick(notebook);
-                }}
-              >
-                <DownloadIconWhiteWithCorners
-                  className="text-primary-9 text-xs"
-                  aria-label="Download"
-                />
-                Download
-              </button>
-              {loadingZip && <LoadingOutlined />}
-            </div>
+export default function ActionPopover({ notebook }: ActionPopoverProps) {
+  const [open, setOpen] = useState(false);
+  const notification = useAppNotification();
+  const { virtualLabId, projectId } = useWorkspace();
 
-            {onDeleteClick && (
-              <div className="text-error flex gap-4">
+  async function handleRunNotebook() {
+    const asset = notebook.assets.find((n) => n.label === 'jupyter_notebook');
+    if (!asset) return;
+
+    try {
+      const retval: NotebookStartResponse = await startNotebook(
+        notebook.id,
+        asset.path,
+        virtualLabId,
+        projectId
+      );
+      notification.success({
+        message: `Notebook starting`,
+        key: 'notebook-started-successfully',
+        placement: 'topRight',
+      });
+      window.open(retval.url, '_blank');
+    } catch (error) {
+      // Just show the hint message if we get some error
+      if (error instanceof Error && 'cause' in error) {
+        notification.error({
+          message: (error.cause as { error_code: string; hint: string }).hint,
+          key: 'notebook-error',
+          placement: 'topRight',
+        });
+      } else {
+        notification.error({
+          message: `Failed to start notebook, unknown error: ${error}`,
+          key: 'notebook-unknown-error',
+          placement: 'topRight',
+        });
+      }
+    }
+  }
+
+  return (
+    <>
+      <Modal open={open} footer={false} onCancel={() => setOpen(false)} width="40%">
+        <div>
+          <h1 className="text-primary-8 text-3xl font-bold">Readme</h1>
+          <div className="mt-5 text-lg text-black">{notebook.description}</div>
+        </div>
+      </Modal>
+      <div id="popover">
+        <Popover
+          content={
+            <div className="text-primary-9 flex min-w-[120px] flex-col gap-2">
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpen(true);
+                  }}
+                  className="hover:text-primary-4 inline-flex items-center gap-[10px]"
+                >
+                  <EyeIconWhiteWithinBox className="text-primary-9 text-xs" aria-label="Readme" />
+                  Readme
+                </button>
+              </div>
+              <div className="flex gap-4">
                 <button
                   type="button"
                   className="hover:text-primary-4 inline-flex items-center gap-[10px]"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onDeleteClick(notebook.id);
+                    downloadArchive(ExtendedEntitiesTypeDict.Notebook, [notebook.id]);
                   }}
                 >
-                  <DeleteOutlined className="text-error text-xs" aria-label="Delete" />
-                  Delete
+                  <DownloadIconWhiteWithCorners
+                    className="text-primary-9 text-xs"
+                    aria-label="Download"
+                  />
+                  Download
                 </button>
               </div>
-            )}
-            {/* {enableRunNotebook && onRunClick && (
+
               <div className="flex gap-4">
                 <button
                   type="button"
-                  className="inline-flex items-center gap-[10px]"
+                  className="hover:text-primary-4 inline-flex items-center gap-[10px]"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onRunClick(notebook);
+                    handleRunNotebook();
                   }}
                 >
                   <PlayCircleOutlined aria-label="Run" />
                   Run
                 </button>
               </div>
-            )} */}
-            {onRunOnEksClick && (
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  className="hover:text-primary-4 inline-flex items-center gap-[10px]"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRunOnEksClick(notebook);
-                  }}
-                >
-                  <PlayCircleOutlined aria-label="Run" />
-                  Run
-                </button>
-              </div>
-            )}
-          </div>
-        }
-        style={{
-          border: '1px solid #096DD9',
-          backgroundColor: '#fff',
-          color: '#002766',
-        }}
-        trigger="click"
-        placement="bottomRight"
-        arrow={false}
-      >
-        <PlusOutlined className="rounded-full !bg-white p-2 text-lg !text-white shadow-md" />
-      </Popover>
-    </div>
+            </div>
+          }
+          style={{
+            border: '1px solid #096DD9',
+            backgroundColor: '#fff',
+            color: '#002766',
+          }}
+          trigger="click"
+          placement="bottomRight"
+          arrow={false}
+        >
+          <PlusOutlined className="bg-primary-8 rounded-full p-2 text-lg font-bold text-white shadow-md" />
+        </Popover>
+      </div>
+    </>
   );
 }

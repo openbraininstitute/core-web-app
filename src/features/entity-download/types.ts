@@ -55,3 +55,7 @@ export type ReconstructionMorphologyJsonMetadata = {
 export type SingleNeuronSynaptomeJsonMetadata = {
   [key: string]: any;
 };
+
+export type NotebookJsonMetadata = {
+  [key: string]: any;
+};

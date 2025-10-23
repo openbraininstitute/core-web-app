@@ -28,7 +28,7 @@ export default async function Page({
 
   const entityType = getEntityByExtendedType({ type: snakeCase(type) as EntityCoreExtendedType });
 
-  if (!entityType || !entityType.detailViewSections.includes(section)) notFound();
+  if (!entityType || !entityType.detailViewSections?.includes(section)) notFound();
 
   const entity = await downloadEntity({
     type: snakeCase(type) as EntityCoreExtendedType,

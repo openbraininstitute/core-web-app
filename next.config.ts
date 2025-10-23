@@ -124,6 +124,11 @@ const nextConfig = (phase: string): NextConfig => {
           destination: `/app/virtual-lab/sync`,
           permanent: false,
         },
+        {
+          source: '/app/virtual-lab/:vlabId/:projectId/notebooks',
+          destination: '/app/virtual-lab/:vlabId/:projectId/notebooks/public',
+          permanent: false,
+        },
       ];
     },
     async headers() {

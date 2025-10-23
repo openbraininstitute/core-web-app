@@ -1,8 +1,6 @@
-import { Session } from 'next-auth';
-import { notebookSvcBaseUrl } from '@/config';
-import { Notebook } from '@/util/virtual-lab/types';
 import { assertApiResponse } from '@/util/utils';
 import authFetch, { getSession } from '@/authFetch';
+import { notebookSvcBaseUrl } from '@/config';
 
 export type NotebookStartResponse = {
   message: string;
@@ -10,18 +8,30 @@ export type NotebookStartResponse = {
 };
 
 export interface NotebookStartRequest {
-  notebook: Notebook;
+  analysis_notebook_template_id: string;
+  analysis_notebook_template_filename: string;
   vlabId: string;
   projectId: string;
-  session: Session;
+  session: {
+    idToken: string;
+    accessToken: string;
+    user: {
+      email: string;
+      id: string;
+      name: string;
+      username: string;
+    };
+  };
 }
 
 export async function startNotebook(
-  notebook: Notebook,
+  id: string,
+  filename: string,
   vlabId: string,
   projectId: string
 ): Promise<NotebookStartResponse> {
   const session = await getSession();
+
   if (!session) {
     throw Error('no session found', {
       cause: {
@@ -30,13 +40,24 @@ export async function startNotebook(
       },
     });
   }
+
   const request: NotebookStartRequest = {
-    notebook,
+    analysis_notebook_template_id: id,
+    analysis_notebook_template_filename: filename,
     vlabId,
     projectId,
-    session,
+    session: {
+      idToken: session.idToken,
+      accessToken: session.accessToken,
+      user: {
+        email: session.user.email ?? '',
+        id: session.user.id,
+        name: session.user.name ?? '',
+        username: session.user.username,
+      },
+    },
   };
-  const res = await authFetch(`${notebookSvcBaseUrl}/notebook/start`, {
+  const res = await authFetch(`${notebookSvcBaseUrl}/analysis_notebook_template/start`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),

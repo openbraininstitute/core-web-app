@@ -94,6 +94,8 @@ export default async function Layout({
     );
   }
 
+  if (!entityType.detailViewSections) return null;
+
   return (
     <>
       <div className="relative ml-5 flex h-full rounded-md border-[1px] border-[#D9D9D9] py-3">

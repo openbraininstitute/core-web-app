@@ -27,6 +27,7 @@ export const WorkspaceSection = {
   Data: 'data',
   BuildWorkflow: 'workflows/build',
   SimulateWorkflow: 'workflows/simulate',
+  Notebooks: 'notebooks',
 } as const;
 
 export type TWorkspaceSection = (typeof WorkspaceSection)[keyof typeof WorkspaceSection];
