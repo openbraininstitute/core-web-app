@@ -1,21 +1,22 @@
-import { MutableRefObject, useEffect } from 'react';
-import Renderer, {
-  NeuronViewerClickData,
-  NeuronViewerHoverData,
+import { RefObject, useEffect } from 'react';
+import {
+  NeuronViewerRenderer,
+  TNeuronViewerClickData,
+  TNeuronViewerHoverData,
 } from '@/services/bluenaas-single-cell/renderer';
 
-export default function useNeuronViewerActions({
+export function useNeuronViewerActions({
   renderer,
   useActions = false,
   actions,
 }: {
   useActions?: boolean;
-  renderer: MutableRefObject<Renderer | null>;
+  renderer: RefObject<NeuronViewerRenderer | null>;
   actions?: {
-    onClick?: (data: NeuronViewerClickData) => void;
-    onHover?: (data: NeuronViewerHoverData) => void;
-    onHoverEnd?: (data: NeuronViewerHoverData) => void;
-    onZoom?: (data: NeuronViewerHoverData) => void;
+    onClick?: (data: TNeuronViewerClickData) => void;
+    onHover?: (data: TNeuronViewerHoverData) => void;
+    onHoverEnd?: (data: TNeuronViewerHoverData) => void;
+    onZoom?: (data: TNeuronViewerHoverData) => void;
   };
 }) {
   useEffect(() => {

@@ -1,6 +1,4 @@
-import throttle from 'lodash/throttle';
-import isEqual from 'lodash/isEqual';
-import differenceWith from 'lodash/differenceWith';
+import { throttle, isEqual, differenceWith } from 'es-toolkit/compat';
 import {
   AmbientLight,
   Color,
@@ -28,7 +26,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 import RendererCtrl from './renderer-ctrl';
 import type { Morphology, SecMarkerConfig } from './types';
-import { createSegMarkerMesh, createSegmentMesh, NeuronSegementInfo } from './renderer-utils';
+import { createSegMarkerMesh, createSegmentMesh, NeuronSegmentInfo } from './renderer-utils';
 import { Labels } from './labels';
 
 import { basePath } from '@/config';
@@ -47,29 +45,29 @@ const CLICK_POS_TOLERANCE = 5; // px
 
 const TEXTURE_BASE_URL = `${basePath}/images/e-model-interactive`;
 
-export type NeuronViewerClickData = {
+export type TNeuronViewerClickData = {
   type: string;
-  data: NeuronSegementInfo;
+  data: NeuronSegmentInfo;
   position: {
     x: number;
     y: number;
   };
 };
 
-export type NeuronViewerHoverData = {
+export type TNeuronViewerHoverData = {
   type: string;
-  data: NeuronSegementInfo;
+  data: NeuronSegmentInfo;
   position: {
     x: number;
     y: number;
   };
 };
 
-export type NeuronViewerConfig = {
-  onClick?: (data: NeuronViewerClickData) => void;
-  onHover?: (data: NeuronViewerHoverData) => void;
-  onHoverEnd?: (data: NeuronViewerHoverData) => void;
-  onZoom?: (data: NeuronViewerHoverData) => void;
+export type TNeuronViewerConfig = {
+  onClick?: (data: TNeuronViewerClickData) => void;
+  onHover?: (data: TNeuronViewerHoverData) => void;
+  onHoverEnd?: (data: TNeuronViewerHoverData) => void;
+  onZoom?: (data: TNeuronViewerHoverData) => void;
 };
 
 function disposeMesh(mesh: Mesh | LineSegments) {
@@ -122,7 +120,7 @@ function getElementOffset(element: HTMLElement): { x: number; y: number } {
 
 type MorphMesh = Mesh<CylinderGeometry, MeshLambertMaterial>;
 type HoverBox = LineSegments<EdgesGeometry, LineBasicMaterial>;
-export default class NeuronViewerRenderer {
+export class NeuronViewerRenderer {
   public readonly labels: Labels;
 
   private container: HTMLDivElement;
@@ -141,7 +139,7 @@ export default class NeuronViewerRenderer {
 
   private controls: OrbitControls;
 
-  private config: NeuronViewerConfig;
+  private config: TNeuronViewerConfig;
 
   private pointerDownTimestamp: number | null = null;
 
@@ -169,7 +167,7 @@ export default class NeuronViewerRenderer {
 
   private synapses: Array<SynapsesMesh> = [];
 
-  constructor(container: HTMLDivElement, config: NeuronViewerConfig) {
+  constructor(container: HTMLDivElement, config: TNeuronViewerConfig) {
     this.labels = new Labels(() => ({
       scene: this.scene,
       camera: this.camera,
@@ -179,7 +177,6 @@ export default class NeuronViewerRenderer {
 
     this.container = container;
     const { clientWidth, clientHeight } = container;
-
     this.resizeObserver = new ResizeObserver(this.onResize);
     this.resizeObserver.observe(container);
 
@@ -275,7 +272,7 @@ export default class NeuronViewerRenderer {
     if (!clickedMesh) return;
     this.config.onClick({
       type: clickedMesh.name,
-      data: clickedMesh.userData as NeuronSegementInfo,
+      data: clickedMesh.userData as NeuronSegmentInfo,
       position: {
         x: e.clientX,
         y: e.clientY,
@@ -333,7 +330,7 @@ export default class NeuronViewerRenderer {
 
     this.config.onHover?.({
       type: 'morphSection',
-      data: hoverData.mesh?.userData as NeuronSegementInfo,
+      data: hoverData.mesh?.userData as NeuronSegmentInfo,
       position: hoverData.position ?? null,
     });
 
@@ -347,7 +344,7 @@ export default class NeuronViewerRenderer {
 
     this.config.onHoverEnd?.({
       type: 'morphSection',
-      data: mesh.userData as NeuronSegementInfo,
+      data: mesh.userData as NeuronSegmentInfo,
       position,
     });
 
@@ -394,19 +391,19 @@ export default class NeuronViewerRenderer {
     this.animationFrameHandle = requestAnimationFrame(this.startRenderLoop);
   };
 
-  public set configOnClick(onClick: (data: NeuronViewerClickData) => void) {
+  public set configOnClick(onClick: (data: TNeuronViewerClickData) => void) {
     this.config.onClick = onClick;
   }
 
-  public set configOnHover(onHover: (data: NeuronViewerHoverData) => void) {
+  public set configOnHover(onHover: (data: TNeuronViewerHoverData) => void) {
     this.config.onHover = onHover;
   }
 
-  public set configOnHoverEnd(onHoverEnd: (data: NeuronViewerHoverData) => void) {
+  public set configOnHoverEnd(onHoverEnd: (data: TNeuronViewerHoverData) => void) {
     this.config.onHoverEnd = onHoverEnd;
   }
 
-  public set configOnZoom(onZoom: (data: NeuronViewerHoverData) => void) {
+  public set configOnZoom(onZoom: (data: TNeuronViewerHoverData) => void) {
     this.config.onZoom = onZoom;
   }
 

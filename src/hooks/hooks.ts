@@ -6,7 +6,7 @@ import { Loadable } from 'jotai/vanilla/utils/loadable';
 import { Atom } from 'jotai/vanilla';
 import { unwrap, loadable } from 'jotai/utils';
 import { usePathname } from 'next/navigation';
-import debounce from 'lodash/debounce';
+import debounce from 'es-toolkit/compat/debounce';
 import sessionAtom from '@/state/session';
 
 export function usePrevious<T>(value: T) {
@@ -80,14 +80,13 @@ type DebounceParams = RestParameters<typeof debounce>;
 /**
   Creates a debounced callback that delays invoking func until after
   wait milliseconds have elapsed since the last time the debounced function was invoked.
-  See: https://lodash.com/docs/4.17.15#debounce
 
   The callback will be memoized so that it only changes if one of the deps has changed.
 
   @param func The function to debounce.
   @param deps The dependency array.
   @param wait The number of milliseconds to delay.
-  @param options The options object. (See lodash.debounce docs).
+  @param options The options object. (See es-toolkit.debounce docs).
 
   @returns - The memoized, debounced version of the callback.
 */

@@ -1,6 +1,6 @@
 import { JSX } from 'react';
 import { notFound } from 'next/navigation';
-import snakeCase from 'lodash/snakeCase';
+import snakeCase from 'es-toolkit/compat/snakeCase';
 import { downloadEntity } from '../layout';
 import { DetailViewSection } from '@/entity-configuration/definitions/types';
 import {
@@ -24,7 +24,6 @@ export default async function Page({
   null
 >) {
   const { virtualLabId, projectId, section, type, id } = await params;
-
   const ctx = { virtualLabId, projectId };
 
   const entityType = getEntityByExtendedType({ type: snakeCase(type) as EntityCoreExtendedType });

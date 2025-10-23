@@ -2,8 +2,8 @@
 
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { ColumnProps } from 'antd/lib/table';
-import isString from 'lodash/isString';
-import throttle from 'lodash/throttle';
+import isString from 'es-toolkit/compat/isString';
+import throttle from 'es-toolkit/compat/throttle';
 
 import { fieldsDefinitionRegistry, getFieldDefinition } from 'src/entity-configuration/definitions';
 
@@ -17,7 +17,8 @@ import {
 } from '@/api/entitycore/types/extended-entity-type';
 import type { OrderShape } from '@/entity-configuration/definitions/types';
 import type { SortState } from '@/types/explore-section/application';
-import styles from '@/components/explore-section/ExploreSectionListingView/explore.module.css';
+
+import styles from '@/ui/segments/data-table/styles.module.css';
 
 type ResizeInit = {
   key: string | null;

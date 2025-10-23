@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { match, P } from 'ts-pattern';
-import snakeCase from 'lodash/snakeCase';
+import snakeCase from 'es-toolkit/compat/snakeCase';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
@@ -19,6 +19,7 @@ const AllowedEntities = [
   ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
   ExtendedEntitiesTypeDict.CellMorphology,
   ExtendedEntitiesTypeDict.ElectricalCellRecording,
+  ExtendedEntitiesTypeDict.IonChannelRecording,
   ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
   ExtendedEntitiesTypeDict.Memodel,
   ExtendedEntitiesTypeDict.Circuit,
@@ -27,7 +28,7 @@ const AllowedEntities = [
   ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
   ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
   ExtendedEntitiesTypeDict.SingleNeuronSimulation,
-  // ExtendedEntitiesTypeDict.IonChannelModel,
+  ExtendedEntitiesTypeDict.IonChannelModel,
 ] as const;
 
 export default async function Page({
@@ -41,9 +42,7 @@ export default async function Page({
   const { type } = await params;
 
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
-
   const entity = getEntityByExtendedType({ type: dataType });
-
   const content = match({ scope, entity })
     .with({ entity: P.nullish }, () => notFound())
     .with(

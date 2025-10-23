@@ -4,13 +4,13 @@ import {
   CommonSummaryViewFields,
   getViewDefinitionByExtendedType,
 } from '@/entity-configuration/definitions/view-defs';
-import { Field } from '@/features/details-view/overview';
 import MEModelDetails from '@/features/entities/neuron-simulation/elements/me-model-details';
 import SynaptomeDetails from '@/features/entities/neuron-simulation/elements/synaptome-details';
-import CircuitViz from '@/features/entities/circuit/elements/tabs-content/visualization';
-import { circuitTypes, EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
-import { MorphoViewerLoaderMemo } from '@/features/entities/cell-morphology/detail-view';
+import { Visualization as CircuitViz } from '@/ui/segments/explore/circuit/elements/visualization';
+import { circuitTypes, type EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
+import { CellMorphologyViewer } from '@/features/entities/cell-morphology/detail-view';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { Field } from '@/ui/segments/detail-view/overview/field';
 import {
   resolveSimulationByCampaignId,
   resolveSingleNeuronSimulation,
@@ -132,7 +132,7 @@ export default async function Overview({
         )}
       {circuitTypes.includes(extendedType) && <CircuitViz circuit={entity as ICircuit} />}
       {extendedType === ExtendedEntitiesTypeDict.CellMorphology && (
-        <MorphoViewerLoaderMemo resource={entity as ICellMorphology} />
+        <CellMorphologyViewer entity={entity as ICellMorphology} />
       )}
       {extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording && (
         <EphysViewer resource={entity as IElectricalCellRecording} ctx={ctx} />

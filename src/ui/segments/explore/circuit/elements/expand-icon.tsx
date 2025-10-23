@@ -3,7 +3,7 @@ import { Button } from 'antd';
 import ChevronRight from '@/components/icons/ChevronRight';
 import { classNames } from '@/util/utils';
 
-import type { ICircuitEnriched } from '@/features/entities/circuit/elements/helpers';
+import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export const expandIcon = ({

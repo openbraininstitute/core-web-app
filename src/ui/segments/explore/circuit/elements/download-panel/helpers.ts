@@ -1,22 +1,23 @@
 import { atomFamily } from 'jotai/utils';
 import { atom } from 'jotai';
 
-import escapeRegExp from 'lodash/escapeRegExp';
-import isEmpty from 'lodash/isEmpty';
-import toPairs from 'lodash/toPairs';
-import reduce from 'lodash/reduce';
-import values from 'lodash/values';
-import sumBy from 'lodash/sumBy';
-import map from 'lodash/map';
-import get from 'lodash/get';
-import has from 'lodash/has';
+import escapeRegExp from 'es-toolkit/compat/escapeRegExp';
+import isEmpty from 'es-toolkit/compat/isEmpty';
+import toPairs from 'es-toolkit/compat/toPairs';
+import reduce from 'es-toolkit/compat/reduce';
+import values from 'es-toolkit/compat/values';
+import sumBy from 'es-toolkit/compat/sumBy';
+import map from 'es-toolkit/compat/map';
+import get from 'es-toolkit/compat/get';
+import has from 'es-toolkit/compat/has';
 
 import { downloadAsset, listDirectoryOfAssets } from '@/api/entitycore/queries/assets';
 import { EmptyValue } from '@/entity-configuration/definitions/renderer';
 import { EntityTypeDict } from '@/api/entitycore/types';
 
-import type { TCircuitContentConfigurationKeys } from '@/features/entities/circuit/elements/download-panel/content-configuration';
+import type { TCircuitContentConfigurationKeys } from '@/ui/segments/explore/circuit/elements/download-panel/content-configuration';
 import type { DirectoryListContent } from '@/api/entitycore/types/shared/global';
+import type { WorkspaceContext } from '@/types/common';
 import type {
   CircuitConnectivityMatricesConfiguration,
   SonataCircuitComponentConfig,
@@ -24,7 +25,6 @@ import type {
   SonataCircuitNetworkEdgeConfigItem,
   SonataCircuitNetworkNodeConfigItem,
 } from '@/api/entitycore/types/entities/circuit';
-import type { WorkspaceContext } from '@/types/common';
 
 type FilesCount = Record<TCircuitContentConfigurationKeys, number>;
 
@@ -136,7 +136,7 @@ export function getAssetPath(path: string, manifest?: Record<string, string>): s
   while (resolvedPath.includes('$') && iteration < maxIterations) {
     const previousPath = resolvedPath;
 
-    // Use lodash's reduce for efficient variable replacement
+    // Use  es-toolkit's reduce for efficient variable replacement
     resolvedPath = reduce(
       manifest,
       (currentPath, value, key) => {

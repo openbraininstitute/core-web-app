@@ -18,13 +18,13 @@ import type { IMEModel, ISingleNeuronSynaptome } from '@/api/entitycore/types';
 type Props =
   | {
       sessionId: string;
-      type: 'synaptome-simulation';
+      type: typeof SimulationType.SingleNeuronSynaptome;
       synaptome: ISingleNeuronSynaptome;
       memodel: IMEModel;
     }
   | {
       sessionId: string;
-      type: 'single-neuron-simulation';
+      type: typeof SimulationType.SingleNeuron;
       memodel: IMEModel;
       synaptome?: never;
     };

@@ -3,8 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 
-import kebabCase from 'lodash/kebabCase';
-import isNil from 'lodash/isNil';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import isNil from 'es-toolkit/compat/isNil';
 
 import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';

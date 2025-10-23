@@ -1,10 +1,13 @@
 import { notFound } from 'next/navigation';
+import isNil from 'es-toolkit/compat/isNil';
+
 import {
   EntityCoreExtendedType,
   getEntityByExtendedType,
+  applyEntityExpansions,
 } from '@/entity-configuration/domain/helpers';
 
-import EModelConfig from '@/components/build-section/cell-model-assignment/e-model/EModelView';
+import EModelConfig from '@/features/entities/e-model/detail-view/wrapper';
 import { EntityTypeValue } from '@/entity-configuration/domain';
 import { WorkspaceContext, AwaitedType } from '@/types/common';
 import {
@@ -19,13 +22,67 @@ import { getCellMorphology } from '@/api/entitycore/queries';
 import MEModelConfig from '@/features/entities/me-model/detail-view/configuration';
 import SynaptomeConfig from '@/features/entities/single-neuron-synaptome/detail-view/configuration';
 import SynapseGroupList from '@/features/entities/single-neuron-synaptome/detail-view/elements/list-synapses-configuration';
-import { loadExpandedSingleNeuronSynaptome } from '@/page-wrappers/explore/single-neuron-synaptome';
+import { SingleNeuronSynaptome as singleNeuronSynaptomeEntity } from '@/entity-configuration/domain/model/single-neuron-synaptome';
+import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
+import { tryCatch } from '@/api/utils';
 import {
   singleNeuronSimulationApiQueryExpand,
   singleNeuronSynaptomeSimulationApiQueryExpand,
 } from '@/entity-configuration/domain/simulation';
 import SimulationConfigurationTab from '@/components/simulate/SimulationDetails/configuration-tab';
 import { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
+
+import type {
+  ISingleNeuronSynaptome,
+  TSingleNeuronSynaptomeConfiguration,
+} from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import { Prettify } from '@/utils/type';
+
+type ExpandType = Prettify<{
+  memodel: IMEModel;
+  config: {
+    synapses: Array<TSingleNeuronSynaptomeConfiguration>;
+  } | null;
+}>;
+
+export async function loadExpandedSingleNeuronSynaptome({
+  id,
+  virtualLabId,
+  projectId,
+}: WorkspaceContext & {
+  id: string;
+}) {
+  const { data: source, error } = await tryCatch(
+    getSingleNeuronSynaptome({ id, context: { virtualLabId, projectId } })
+  );
+
+  if (error) {
+    throw new Error('Failed to load single neuron synaptome entity details');
+  }
+
+  let data = {} as ExpandType | null;
+  let error1 = null;
+  if (singleNeuronSynaptomeEntity.api.expand) {
+    ({ data, error: error1 } = await tryCatch(
+      applyEntityExpansions<ISingleNeuronSynaptome, ExpandType>(
+        singleNeuronSynaptomeEntity,
+        source,
+        {
+          virtualLabId,
+          projectId,
+        }
+      )
+    ));
+  }
+
+  if (error1 || isNil(data)) {
+    throw new Error('Failed to load single neuron synaptome relative data');
+  }
+  return {
+    source,
+    ...data,
+  };
+}
 
 export default async function Configuration({
   entity,
@@ -53,10 +110,7 @@ export default async function Configuration({
     }
 
     return (
-      <EModelConfig
-        params={{ id: entity.id, virtualLabId: ctx.virtualLabId, projectId: ctx.projectId }}
-        payload={{ source: entity as IEModel, exemplar_morphology: morphology }}
-      />
+      <EModelConfig payload={{ source: entity as IEModel, exemplar_morphology: morphology }} />
     );
   }
 
@@ -125,7 +179,7 @@ export default async function Configuration({
 
     return (
       <SimulationConfigurationTab
-        type="single-neuron-simulation"
+        type="synaptome-simulation"
         simulation={config as SimulationPayload}
       />
     );

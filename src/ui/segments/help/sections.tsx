@@ -24,7 +24,7 @@ export default async function HelpSectionContent({
     .with('glossary', () => <GlossarySection />)
     .with('tutorials', () => <TutorialSection />)
     .with('features', () => <FeaturesSection />)
-    .with('guides', () => <GuidesSection />)
+    .with('guides', () => <GuidesSection searchParams={params ?? {}} />)
     .with('ai-tools', () => <AiChatToolsSection />)
     .with('about', () => <AboutSection searchParams={params ?? {}} />)
     .otherwise(() => <OverviewSection />);

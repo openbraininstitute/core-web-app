@@ -43,34 +43,40 @@ export function MenuSelector({ sessionId, synaptome, memodel, type }: Props) {
     .with(
       { panelId: WorkflowSimulatePanels.Configuration, type: SimulationType.SingleNeuron },
       () => {
-        return <Menu sessionId={sessionId} type={type} />;
-      }
-    )
-    .with({ panelId: WorkflowSimulatePanels.Results, type: SimulationType.SingleNeuron }, () => {
-      return (
-        <ResultMenu
-          sessionId={sessionId}
-          modelId={memodel!.id}
-          memodelId={memodel.id}
-          type={SimulationType.SingleNeuron}
-        />
-      );
-    })
-    .with(
-      { panelId: WorkflowSimulatePanels.Results, type: SimulationType.SingleNeuronSynaptome },
-      () => {
         return (
-          <ResultMenu
+          <Menu
             sessionId={sessionId}
-            modelId={synaptome!.id}
+            simulationType={type}
+            modelId={memodel!.id}
             memodelId={memodel.id}
-            type={SimulationType.SingleNeuronSynaptome}
           />
         );
       }
     )
+    .with(
+      { panelId: WorkflowSimulatePanels.Configuration, type: SimulationType.SingleNeuronSynaptome },
+      () => {
+        return (
+          <Menu
+            sessionId={sessionId}
+            simulationType={type}
+            modelId={synaptome!.id}
+            memodelId={memodel.id}
+          />
+        );
+      }
+    )
+    .with({ panelId: WorkflowSimulatePanels.Results, type: SimulationType.SingleNeuron }, () => {
+      return <ResultMenu sessionId={sessionId} type={SimulationType.SingleNeuron} />;
+    })
+    .with(
+      { panelId: WorkflowSimulatePanels.Results, type: SimulationType.SingleNeuronSynaptome },
+      () => {
+        return <ResultMenu sessionId={sessionId} type={SimulationType.SingleNeuronSynaptome} />;
+      }
+    )
     .otherwise(() => {
-      return <Menu sessionId={sessionId} type={type} />;
+      return null;
     });
 
   return MenuWrapper;

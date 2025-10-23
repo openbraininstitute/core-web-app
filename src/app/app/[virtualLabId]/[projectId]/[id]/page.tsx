@@ -1,7 +1,7 @@
 import { redirect, notFound } from 'next/navigation';
 import { getEntity } from '@/api/entitycore/queries/general/entity';
 import { IEntity } from '@/api/entitycore/types/entities/entity';
-import { resolveExploreDetailsPageUrl2 } from '@/utils/url-builder';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 export default async function EntityDetail({
   params,
@@ -14,7 +14,7 @@ export default async function EntityDetail({
   let url: string;
   try {
     entity = await getEntity({ id });
-    url = resolveExploreDetailsPageUrl2({
+    url = resolveExploreDetailsPageUrl({
       ctx: { virtualLabId, projectId },
       entityId: id,
       dataType: entity.type,

@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useCallback } from 'react';
 import { InputNumber, Switch, Form } from 'antd';
-import { useAtom } from 'jotai';
-import isEqual from 'lodash/isEqual';
-import isNil from 'lodash/isNil';
+import { useAtom, useAtomValue } from 'jotai';
+import isEqual from 'es-toolkit/compat/isEqual';
+import isNil from 'es-toolkit/compat/isNil';
 
-import { AmperageBaseSchema } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { StimuliPreviewPlot } from '@/ui/segments/workflows/simulate/single-neuron/shared/stimuli-preview-plot';
+import { AmperageBaseSchema } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import {
@@ -17,15 +17,17 @@ import {
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 import {
   DEFAULT_STIMULUS_CONFIG,
-  PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
-  PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
-  PREFIX_AMPERAGE_CONFIGURATION_SESSION_KEY,
+  STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
+  SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
+  AMPERAGE_CONFIGURATION_SESSION_KEY,
   PROTOCOL_DETAILS,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
   StimulationConfigurationAtomFamily,
   SynaptomeConfigurationAtomFamily,
   AmperageStateAtomFamily,
+  simulationStatusAtomFamily,
+  SimulationStatus,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
@@ -171,9 +173,9 @@ function rangeReducer(state: AmperageStateType, action: AmperageActionType) {
 export function AmperageConfiguration({ sessionId, memodelId }: Props) {
   const [form] = Form.useForm();
   const breakpoint = useDefaultBreakpoint();
-  const sscKey = getSessionKey(PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
-  const spcKey = getSessionKey(PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
-  const acKey = getSessionKey(PREFIX_AMPERAGE_CONFIGURATION_SESSION_KEY, sessionId);
+  const sscKey = getSessionKey(SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
+  const spcKey = getSessionKey(STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
+  const acKey = getSessionKey(AMPERAGE_CONFIGURATION_SESSION_KEY, sessionId);
 
   const [sscState] = useAtom(SynaptomeConfigurationAtomFamily(sscKey));
   const [spcState, updateSPC] = useAtom(StimulationConfigurationAtomFamily(spcKey));
@@ -181,6 +183,11 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
 
   const synapseIdxWithFrequencyRange = sscState.findIndex((s) => Array.isArray(s.frequency)) ?? -1;
   const disableStepper = synapseIdxWithFrequencyRange !== -1;
+  const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
+
+  const disableForm =
+    simulationStatus?.status === SimulationStatus.LAUNCHED ||
+    simulationStatus?.status === SimulationStatus.SAVING;
 
   const dispatch = useCallback(
     (action: AmperageActionType) => {
@@ -327,7 +334,12 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
           </div>
         ) : null}
       </div>
-      <Form form={form} layout="vertical" className="[&_.ant-form-item-explain-error]:text-sm!">
+      <Form
+        form={form}
+        layout="vertical"
+        className="[&_.ant-form-item-explain-error]:text-sm!"
+        disabled={disableForm}
+      >
         {synapseIdxWithFrequencyRange !== -1 ? (
           <div className="text-left">
             <Form.Item

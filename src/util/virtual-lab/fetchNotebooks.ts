@@ -1,6 +1,6 @@
 'use server';
 
-import capitalize from 'lodash/capitalize';
+import capitalize from 'es-toolkit/compat/capitalize';
 
 import { assertErrorMessage } from '../utils';
 import { fetchGithubFile, getFileCreationDate } from './github';

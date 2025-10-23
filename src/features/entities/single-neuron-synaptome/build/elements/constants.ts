@@ -1,9 +1,10 @@
 export const SECTION_TARGET_MAPPING = {
-  dend: 'Basal dendrites',
-  soma: 'Soma',
   apic: 'Apical dendrites',
-  basal: 'Basal dendrites',
   axon: 'Axon',
+  basal: 'Basal dendrites',
+  dend: 'Basal dendrites',
+  myelin: 'Myelin',
+  soma: 'Soma',
 };
 
 export type SectionTargetMappingKeys = keyof typeof SECTION_TARGET_MAPPING;

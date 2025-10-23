@@ -13,7 +13,11 @@ import { keyBuilder } from '@/ui/use-query-keys/data';
 import { getMEModel } from '@/api/entitycore/queries';
 import { cn } from '@/utils/css-class';
 
-import type { WorkflowSimulatePanelKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import {
+  threeDVisualizerState,
+  type ThreeDVisualizerQueryParamKeys,
+  type WorkflowSimulatePanelKeys,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import type { ExperimentStepKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
@@ -26,10 +30,14 @@ export default function Page({
     step: ExperimentStepKeys;
     sessionId: string;
     panel: WorkflowSimulatePanelKeys;
+    '3d': ThreeDVisualizerQueryParamKeys;
   }
 >) {
   const queryParams = use(searchParams);
   const { virtualLabId, projectId, id: modelId } = use(pathParams);
+
+  const visualizerState =
+    (queryParams['3d'] as ThreeDVisualizerQueryParamKeys) ?? threeDVisualizerState.Expanded;
 
   let sessionId = queryParams?.sessionId;
   if (!sessionId) sessionId = crypto.randomUUID();
@@ -60,7 +68,9 @@ export default function Page({
             id="simulation-panel-wrapper"
             data-testid="simulation-panel-wrapper"
             className={cn(
-              'grid h-full min-h-0 gap-4 overflow-hidden overflow-y-auto xl:grid-cols-[2.5fr_2fr]'
+              'grid h-full min-h-0 gap-4 overflow-hidden overflow-y-auto',
+              { 'grid-cols-[2.5fr_2fr]': visualizerState === threeDVisualizerState.Expanded },
+              { 'grid-cols-[2.5fr_5rem]': visualizerState === threeDVisualizerState.Collapsed }
             )}
           >
             <HydrateWrapper>

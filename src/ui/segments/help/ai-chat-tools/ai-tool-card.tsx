@@ -1,3 +1,5 @@
+'use client';
+
 import { InfoCircleOutlined } from '@ant-design/icons';
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
@@ -7,6 +9,7 @@ import remarkGfm from 'remark-gfm';
 
 import type { AIChatToolsSectionProps } from '@/ui/segments/help/ai-chat-tools';
 
+import { useAITool } from '@/services/ai-agent/tools/tools';
 import slugiy from '@/util/slugify';
 
 function MarkdownCodeBlock({ children }: { children?: React.ReactNode }) {
@@ -19,6 +22,10 @@ function MarkdownCodeBlock({ children }: { children?: React.ReactNode }) {
 }
 
 export default function AIToolCard({ content }: { content: AIChatToolsSectionProps }) {
+  const detailed = useAITool(content.id);
+  const description =
+    detailed?.description || content?.description_frontend || content?.description || '';
+
   return (
     <article
       key={content.name ?? content.id ?? `feature-${Math.random()}`}
@@ -26,7 +33,6 @@ export default function AIToolCard({ content }: { content: AIChatToolsSectionPro
       id={slugiy(content.name)}
     >
       <h2 className="text-primary-9 text-2xl font-bold">{content.name}</h2>
-      {/* <p className="text-[1.2em] leading-normal">{content.description}</p> */}
 
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkBreaks]}
@@ -36,7 +42,7 @@ export default function AIToolCard({ content }: { content: AIChatToolsSectionPro
           code: MarkdownCodeBlock,
         }}
       >
-        {content?.description}
+        {description}
       </ReactMarkdown>
     </article>
   );

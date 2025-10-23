@@ -2,12 +2,15 @@
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
 
-import groupBy from 'lodash/groupBy';
+import groupBy from 'es-toolkit/compat/groupBy';
 import { Select } from 'antd';
-import capitalize from 'lodash/capitalize';
+import capitalize from 'es-toolkit/compat/capitalize';
 import { AllowedTypes } from '@/features/model-analysis/viewer/storage';
 import type { IValidationConstructedResult } from '@/features/model-analysis/explorer/context';
 import type { TAllowedTypes } from '@/features/model-analysis/viewer/storage';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { IEntity } from '@/api/entitycore/types/entities/entity';
+import { EntityCoreBaseAsset } from '@/api/entitycore/types/shared/global';
 
 const Viewer = dynamic(() => import('@/features/model-analysis/viewer/viewer'), {
   ssr: false,
@@ -39,7 +42,11 @@ export function ViewerContainer({ validationResults }: Props) {
   if (!Object.keys(groupedvalidationResults).length) return <div>No validation results found</div>;
 
   const renderViewer = (r: (typeof groupedvalidationResults)[0][0]) => (
-    <Viewer validationResult={r} key={r.id} />
+    <Viewer
+      entity={r as IEntity & EntityCoreBaseAsset}
+      key={r.id}
+      entityType={ExtendedEntitiesTypeDict.ValidationResult}
+    />
   );
 
   return (

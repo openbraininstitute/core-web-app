@@ -13,7 +13,7 @@ import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecording> = {
   group: EntityTypeGroup.Experimental,
-  title: 'Electrophysiology',
+  title: 'Single cell electrophysiology',
   extendedType: ExtendedEntitiesTypeDict.ElectricalCellRecording,
   type: EntityTypeDict.ElectricalCellRecording,
   slug: EntitySlug.ElectricalCellRecording,

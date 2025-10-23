@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import snakeCase from 'lodash/snakeCase';
+import snakeCase from 'es-toolkit/compat/snakeCase';
 
 import { auth } from '@/auth';
 import { TEntityTypeDict } from '@/api/entitycore/types';

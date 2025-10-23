@@ -1,3 +1,5 @@
+import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
+
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 import type { WorkspaceContext } from '@/types/common';
@@ -10,7 +12,7 @@ export const keyBuilder = {
     { virtualLabId, projectId },
   ],
   getOneLab: ({ virtualLabId }: { virtualLabId: string }) => [`${prefix}-lab`, { virtualLabId }],
-  listAllLabs: () => [`${prefix}/all`],
+  listAllLabs: ({ includes }: { includes?: Array<LabTypeEnum> }) => [`${prefix}/all`, { includes }],
   listWorkspaceProjects: ({ virtualLabId }: { virtualLabId: string }) => [
     `${prefix}/projects-list`,
     { virtualLabId },

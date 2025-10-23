@@ -9,12 +9,13 @@ import {
 } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { usePathname, useSearchParams } from 'next/navigation';
+import { useRouter } from '@bprogress/next';
 import { z } from 'zod';
 
-import get from 'lodash/get';
-import kebabCase from 'lodash/kebabCase';
-import omit from 'lodash/omit';
-import Link from 'next/link';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import delay from 'es-toolkit/compat/delay';
+import omit from 'es-toolkit/compat/omit';
+import get from 'es-toolkit/compat/get';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { createModel } from '@/api/small-scale-simulator/single-neuron/single-neuron';
@@ -44,9 +45,10 @@ export function Menu({ sessionId }: { sessionId: string }) {
   const breakpoint = useDefaultBreakpoint();
   const notification = useAppNotification();
   const searchParams = useSearchParams();
-  const queryClient = useQueryClient();
   const pathname = usePathname();
+  const queryClient = useQueryClient();
   const { virtualLabId, projectId } = useWorkspace();
+  const { push: navigate } = useRouter();
   const step = searchParams.get('step');
 
   const { sessionValue } = useBuildMeModelSessionState({
@@ -88,31 +90,23 @@ export function Menu({ sessionId }: { sessionId: string }) {
     onSuccess: (data) => {
       notification.success({
         message: messages.CreationModelSucceed,
-        description: (
-          <div>
-            <Link
-              onClick={() => {
-                notification.destroy('model-saved');
-              }}
-              href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.Memodel)}/${data.data.id}`}
-              className="text-primary-6 hover:underline"
-            >
-              Go to model details
-            </Link>
-          </div>
-        ),
         onClick: () => {
           notification.destroy('model-saved');
         },
         placement: 'topRight',
         key: 'model-saved',
-        duration: 10,
+        duration: 3,
       });
+      delay(() => {
+        navigate(
+          `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.Memodel)}/${data.data.id}`
+        );
+      }, 500);
     },
     onError(err) {
       log('error', 'Build me-model failed:', err);
       const message =
-        get(err, 'cause.error_code') === LOW_FUNDS_ERROR_CODE
+        get(err, 'cause.code') === LOW_FUNDS_ERROR_CODE
           ? messages.LowFundsError
           : messages.DefaultErrorMsg;
 

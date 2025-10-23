@@ -3,8 +3,8 @@ import { ReactNode, useState } from 'react';
 import { Button, Progress } from 'antd';
 import { match } from 'ts-pattern';
 
-import kebabCase from 'lodash/kebabCase';
-import delay from 'lodash/delay';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import delay from 'es-toolkit/compat/delay';
 import saveAs from 'file-saver';
 
 import { renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
@@ -15,7 +15,7 @@ import { DownloadIcon } from '@/components/icons';
 import { formatBytes } from '@/utils/format';
 import { classNames } from '@/util/utils';
 
-import type { TCircuitContentConfigurationKeys } from '@/features/entities/circuit/elements/download-panel/content-configuration';
+import type { TCircuitContentConfigurationKeys } from '@/ui/segments/explore/circuit/elements/download-panel/content-configuration';
 import type { DirectoryItem } from '@/api/entitycore/types/shared/global';
 import type { Nullable } from '@/utils/type';
 

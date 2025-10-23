@@ -15,7 +15,7 @@ import {
 } from 'three';
 import { NeuronSectionInfo } from './types';
 
-export type NeuronSegementInfo = {
+export type NeuronSegmentInfo = {
   segIdx: number;
   section: string;
   section_nseg: number;
@@ -59,7 +59,7 @@ export function createSegmentMesh(
     section_nseg: sec.nseg,
     offset: sec.neuron_segments_offset[segIdx],
     distance_from_soma: sec.segment_distance_from_soma[segIdx].toFixed(2),
-  } as NeuronSegementInfo;
+  } as NeuronSegmentInfo;
 
   mesh.scale.setY(scaleLength);
   mesh.setRotationFromQuaternion(rotQuat);

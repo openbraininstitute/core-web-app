@@ -1,5 +1,5 @@
-import camelCase from 'lodash/camelCase';
-import upperFirst from 'lodash/upperFirst';
+import camelCase from 'es-toolkit/compat/camelCase';
+import upperFirst from 'es-toolkit/compat/upperFirst';
 
 export function toPascalCase(input: string) {
   return upperFirst(camelCase(input));

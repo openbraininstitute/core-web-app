@@ -2,12 +2,12 @@
 
 import { useParams, usePathname } from 'next/navigation';
 import { RightOutlined } from '@ant-design/icons';
-import snakeCase from 'lodash/snakeCase';
+import snakeCase from 'es-toolkit/compat/snakeCase';
 import Link from 'next/link';
 
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { ROOT_ROUTE } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { ROOT_ROUTE } from '@/config';
 import {
   getEntityTypeWorkflowConfigurationItem,
   getCategoryDictItem,

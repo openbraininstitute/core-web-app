@@ -1,46 +1,37 @@
 'use client';
 
-import { useParams, usePathname, useSearchParams } from 'next/navigation';
 import { RightOutlined, SettingFilled, WarningFilled } from '@ant-design/icons';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { useEffect } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAtomValue, useSetAtom } from 'jotai';
 
+import { useSingleNeuronSimulationAtoms } from '@/ui/segments/workflows/simulate/single-neuron/shared/use-simulation-atoms';
 import { launchSimulationAtom } from '@/ui/segments/workflows/simulate/single-neuron/shared/runner';
-import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { simulationStatusAtomFamily } from '@/state/simulate/single-neuron';
+import { getSingleNeuronStimuliPlot } from '@/api/small-scale-simulator';
+import {
+  SimulationStatus,
+  simulationStatusAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import {
   SynapseConfigurationArraySchema,
-  RecordLocationArraySchema,
+  NeuronLocationArraySchema,
   OverviewConfigurationSchema,
   StimulationConfigurationSchema,
   ExperimentalSetupConfigurationSchema,
   AmperageStateSchema,
   FrequencyInputConfigSchema,
+  PlotData,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import {
-  AmperageStateAtomFamily,
-  ExperimentalSetupConfigurationAtomFamily,
-  FrequencyInputConfigurationAtomFamily,
-  OverviewConfigurationAtomFamily,
-  RecordLocationConfigurationAtomFamily,
-  StimulationConfigurationAtomFamily,
-  SynaptomeConfigurationAtomFamily,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import {
-  PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
-  PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
-  PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY,
-  PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
-  PREFIX_FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY,
-  PREFIX_OVERVIEW_CONFIGURATION_SESSION_KEY,
-  PREFIX_AMPERAGE_CONFIGURATION_SESSION_KEY,
   PROTOCOL_DETAILS,
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { useAppNotification } from '@/components/notification';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { browserHistoryReplace } from '@/utils/browser';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
@@ -48,7 +39,6 @@ import {
   SimulationType,
   type TSimulationType,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { browserHistoryReplace } from '@/utils/browser';
 
 export const ExperimentStep = {
   Info: 'info',
@@ -61,20 +51,23 @@ export const ExperimentStep = {
 export type ExperimentStepKeys = (typeof ExperimentStep)[keyof typeof ExperimentStep];
 
 type Props = {
-  type: TSimulationType;
+  simulationType: TSimulationType;
   sessionId: string;
+  modelId: string;
+  memodelId: string;
 };
 
-export function Menu({ sessionId, type }: Props) {
+export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
   const pathname = usePathname();
   const notify = useAppNotification();
   const searchParams = useSearchParams();
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
-  const { id: modelId } = useParams<{ id: string }>();
-  const step = searchParams.get('step') ?? ExperimentStep.Info;
+  const queryClient = useQueryClient();
   const launchSimulation = useSetAtom(launchSimulationAtom);
   const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
+
+  const step = searchParams.get('step') ?? ExperimentStep.Info;
 
   const updatePanelSelection = () => {
     const query = new URLSearchParams(searchParams);
@@ -91,49 +84,71 @@ export function Menu({ sessionId, type }: Props) {
     browserHistoryReplace(null, `${pathname}?${query.toString()}`);
   };
 
-  const spcKey = getSessionKey(PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
-  const sesKey = getSessionKey(PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY, sessionId);
-  const rlcKey = getSessionKey(PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY, sessionId);
-  const sscKey = getSessionKey(PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
-  const freqKey = getSessionKey(PREFIX_FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY, sessionId);
-  const infoKey = getSessionKey(PREFIX_OVERVIEW_CONFIGURATION_SESSION_KEY, sessionId);
-  const ampKey = getSessionKey(PREFIX_AMPERAGE_CONFIGURATION_SESSION_KEY, sessionId);
+  const {
+    overviewConfiguration,
+    amperageConfiguration,
+    experimentalSetupConfiguration,
+    recordLocationConfiguration,
+    synaptomeConfiguration,
+    frequencyConfiguration,
+    stimulationConfiguration,
+  } = useSingleNeuronSimulationAtoms(sessionId);
 
-  const [overviewConfiguration] = useAtom(OverviewConfigurationAtomFamily(infoKey));
-  const [stimulationConfiguration] = useAtom(StimulationConfigurationAtomFamily(spcKey));
-  const [experimentalSetupConfiguration] = useAtom(
-    ExperimentalSetupConfigurationAtomFamily(sesKey)
-  );
-  const [recordLocationConfiguration] = useAtom(RecordLocationConfigurationAtomFamily(rlcKey));
-  const [synaptomeConfiguration] = useAtom(SynaptomeConfigurationAtomFamily(sscKey));
-  const [frequencyConfiguration] = useAtom(FrequencyInputConfigurationAtomFamily(freqKey));
-  const [amperageConfiguration] = useAtom(AmperageStateAtomFamily(ampKey));
-
-  const onRun = () => {
+  const onRun = async () => {
     const protocol = stimulationConfiguration.stimulus.stimulus_protocol;
     let currentInjectionDuration = 0;
+
     if (protocol) {
       currentInjectionDuration = PROTOCOL_DETAILS[protocol].defaults.time.stop_time;
     }
+
+    const stimulusGraphResult = await queryClient.ensureQueryData({
+      queryKey: keyBuilder.stimulationProtocolPreview({
+        virtualLabId,
+        projectId,
+        memodelId,
+        amplitudes: (Array.isArray(stimulationConfiguration.stimulus.amplitudes)
+          ? stimulationConfiguration.stimulus.amplitudes
+          : [stimulationConfiguration.stimulus.amplitudes]
+        ).join(','),
+        protocol: stimulationConfiguration.stimulus.stimulus_protocol!,
+      }),
+      queryFn: () =>
+        getSingleNeuronStimuliPlot({
+          modelId: memodelId,
+          config: {
+            amplitudes: Array.isArray(stimulationConfiguration.stimulus.amplitudes)
+              ? stimulationConfiguration.stimulus.amplitudes
+              : [stimulationConfiguration.stimulus.amplitudes],
+            stimulusProtocol: stimulationConfiguration.stimulus.stimulus_protocol!,
+          },
+          ctx: { projectId, virtualLabId },
+        }),
+    });
+
     launchSimulation(
       virtualLabId,
       projectId,
       modelId,
+      memodelId,
       sessionId,
+      overviewConfiguration,
       stimulationConfiguration,
       experimentalSetupConfiguration,
       recordLocationConfiguration,
       synaptomeConfiguration,
-      type,
+      stimulusGraphResult as PlotData,
+      simulationType,
       experimentalSetupConfiguration.max_time ?? currentInjectionDuration,
-      () => updatePanelSelection()
+      () => updatePanelSelection(),
+      notify
     );
   };
 
   const warnInfo =
     OverviewConfigurationSchema.safeParse(overviewConfiguration).error?.formErrors.fieldErrors;
 
-  const warnRecordLocation = RecordLocationArraySchema.safeParse(recordLocationConfiguration).error
+  const warnRecordLocation = NeuronLocationArraySchema.safeParse(recordLocationConfiguration).error
     ?.formErrors.fieldErrors;
 
   const warnExperimentalSetup = ExperimentalSetupConfigurationSchema.safeParse(
@@ -147,7 +162,7 @@ export function Menu({ sessionId, type }: Props) {
   };
 
   const warnSynaptome =
-    type === SimulationType.SingleNeuronSynaptome
+    simulationType === SimulationType.SingleNeuronSynaptome
       ? {
           ...SynapseConfigurationArraySchema.safeParse(synaptomeConfiguration).error?.formErrors
             .fieldErrors,
@@ -157,25 +172,13 @@ export function Menu({ sessionId, type }: Props) {
       : {};
 
   const disableRunSimulation =
+    !!Object.keys(warnInfo ?? {}).length ||
     !!Object.keys(warnRecordLocation ?? {}).length ||
     !!Object.keys(warnExperimentalSetup ?? {}).length ||
     !!Object.keys(warnStimulationProtocol ?? {}).length ||
-    (type === SimulationType.SingleNeuronSynaptome && !!Object.keys(warnSynaptome ?? {}).length) ||
-    simulationStatus?.status === 'launched';
-
-  useEffect(() => {
-    if (simulationStatus && simulationStatus.status === 'error') {
-      notify.error({
-        message:
-          type === SimulationType.SingleNeuronSynaptome
-            ? 'Synaptome simulation failed'
-            : 'Single neuron simulation failed',
-        description: simulationStatus.description,
-        placement: 'topRight',
-        key: 'simulation-error',
-      });
-    }
-  }, [simulationStatus]); // eslint-disable-line react-hooks/exhaustive-deps
+    (simulationType === SimulationType.SingleNeuronSynaptome &&
+      !!Object.keys(warnSynaptome ?? {}).length) ||
+    simulationStatus?.status === SimulationStatus.LAUNCHED;
 
   return (
     <div className="flex h-full flex-col gap-2">
@@ -275,7 +278,7 @@ export function Menu({ sessionId, type }: Props) {
           </div>
         </div>
       </Button>
-      {type === SimulationType.SingleNeuronSynaptome && (
+      {simulationType === SimulationType.SingleNeuronSynaptome && (
         <Button
           rounded
           variant="outline"
@@ -288,7 +291,7 @@ export function Menu({ sessionId, type }: Props) {
             <div className="flex-shrink-0 font-bold">Synaptic Input</div>
             <div className="flex items-center justify-center gap-3">
               {!!Object.keys(warnSynaptome ?? {}).length && (
-                <Tooltip open>
+                <Tooltip>
                   <TooltipTrigger>
                     <WarningFilled className="text-sm text-yellow-300" />
                   </TooltipTrigger>
@@ -432,7 +435,7 @@ export function Menu({ sessionId, type }: Props) {
             </Button>
           </div>
         </TooltipTrigger>
-        <TooltipContent sideOffset={10} arrowClassName="bg-primary-9">
+        <TooltipContent sideOffset={0} arrowClassName="bg-primary-9">
           <p className={cn('max-w-80 text-left text-base text-balance')}>
             Please fill all the required information <br />
             along with experiment configurations.

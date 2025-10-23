@@ -8,6 +8,7 @@ export const EntityTypeDict = {
   Mesh: 'mesh',
   CellMorphology: 'cell_morphology',
   ElectricalCellRecording: 'electrical_cell_recording',
+  IonChannelRecording: 'ion_channel_recording',
   SingleNeuronSimulation: 'single_neuron_simulation',
   SingleNeuronSynaptome: 'single_neuron_synaptome',
   Subject: 'subject',
@@ -20,6 +21,7 @@ export const EntityTypeDict = {
   SimulationCampaign: 'simulation_campaign',
   Simulation: 'simulation',
   IonChannelModel: 'ion_channel_model',
+  ValidationResult: 'validation_result',
 } as const;
 
 export const EntityTypeWithBrainRegionDict = {

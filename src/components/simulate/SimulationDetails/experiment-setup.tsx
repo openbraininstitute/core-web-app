@@ -6,7 +6,7 @@ import { Spin } from 'antd';
 import SimulationConfigurationTab from '@/components/simulate/SimulationDetails/configuration-tab';
 import AnalysisTab from '@/components/simulate/SimulationDetails/AnalysisTab';
 import ResultsTab from '@/components/simulate/SimulationDetails/recording-tab';
-import ErrorData from '@/components/message-banners/error';
+import { ErrorData } from '@/components/message-banners/error';
 
 import { classNames } from '@/util/utils';
 

@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto';
 
 import { TEntityTypeDict } from '@/api/entitycore/types';
 import { PartialBy } from '@/types/common';
+import { logError, logInfo } from '@/utils/logger';
 
 type DownloadTicket = {
   entityType: TEntityTypeDict;
@@ -52,7 +53,8 @@ class TicketStore {
 
     // Generate a unique ticket ID
     const ticketId = randomUUID();
-    this.tickets.set(ticketId, { ...ticket, createdAt: Date.now() });
+    const newTicket = { ...ticket, createdAt: Date.now() };
+    this.tickets.set(ticketId, newTicket);
 
     return ticketId;
   }
@@ -66,6 +68,12 @@ class TicketStore {
     const ticket = this.tickets.get(ticketId);
 
     if (!ticket) {
+      logError('No ticket with this id:', ticketId);
+      logInfo(
+        'Available ones are:',
+        Array.from(this.tickets.keys()).join(', '),
+        `(${this.tickets.size})`
+      );
       return null;
     }
 
@@ -93,7 +101,7 @@ class TicketStore {
     const now = Date.now();
     for (const [ticketId, ticket] of this.tickets.entries()) {
       if (now - ticket.createdAt > TICKET_EXPIRATION_MS) {
-        this.tickets.delete(ticketId);
+        this.deleteTicket(ticketId);
       }
     }
   }

@@ -1,9 +1,9 @@
 import React, { useState, useCallback, useEffect, ReactNode } from 'react';
-import flatMap from 'lodash/flatMap';
-import map from 'lodash/map';
+import flatMap from 'es-toolkit/compat/flatMap';
+import map from 'es-toolkit/compat/map';
 
-import Node from '@/components/tree/elements/node';
 import { getParentsToRoot, scrollToNode } from '@/components/tree/elements/helpers';
+import { MemoizedNode as Node } from '@/components/tree/elements/node';
 import { classNames } from '@/util/utils';
 
 import type {

@@ -7,9 +7,9 @@ import { parseAsString, Parser, useQueryState } from 'nuqs';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { WarningOutlined } from '@ant-design/icons';
 import { RESET } from 'jotai/utils';
-import compact from 'lodash/compact';
+import compact from 'es-toolkit/compat/compact';
 import dynamic from 'next/dynamic';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
@@ -57,6 +57,7 @@ type Props = {
   mainTableProps?: Partial<ComponentProps<typeof MainTable>>;
   miniViewProps?: Partial<ComponentProps<typeof MiniDetailView>>;
   allowDownload?: boolean;
+  extraQueryParams?: Record<string, any>;
 };
 
 export function BrowseEntityScope({
@@ -71,6 +72,7 @@ export function BrowseEntityScope({
   mainTableProps,
   miniViewProps,
   allowDownload,
+  extraQueryParams,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const { mdv, setMdv } = useMiniDetailView();
@@ -99,7 +101,6 @@ export function BrowseEntityScope({
 
   const activeColumns = useAtomValue(coreActiveColumnsAtom({ dataType, key: dataKey }));
   const columns = allColumns.filter(({ key }) => (activeColumns || []).includes(key as string));
-
   const { data, error, isPlaceholderData, isFetching } = useQueryExtendedEntityType({
     context: {
       key: dataKey,
@@ -109,9 +110,10 @@ export function BrowseEntityScope({
     workspace: { virtualLabId, projectId },
     queryFn: async ({ queryKey }) => {
       const [{ workspace, queryParameters }] = queryKey;
+      const filters = { ...queryParameters, ...extraQueryParams };
       return entity?.api?.query.list?.({
         withFacets: true,
-        filters: { ...queryParameters },
+        filters,
         context: workspace,
       });
     },

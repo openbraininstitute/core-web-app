@@ -1,7 +1,8 @@
 'use client';
 
-import { usePathname, useSearchParams } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useRouter } from '@bprogress/next';
 import {
   CheckCircleFilled,
   LoadingOutlined,
@@ -11,9 +12,9 @@ import {
 } from '@ant-design/icons';
 import { z } from 'zod';
 
-import kebabCase from 'lodash/kebabCase';
-import isNil from 'lodash/isNil';
-import Link from 'next/link';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import isNil from 'es-toolkit/compat/isNil';
+import delay from 'es-toolkit/compat/delay';
 
 import { SynapseSetMenuItems } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-set-menu-item';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -59,6 +60,7 @@ export function Menu({ sessionId }: Props) {
   const queryClient = useQueryClient();
   const pathname = usePathname();
   const { virtualLabId, projectId } = useWorkspace();
+  const { push: navigate } = useRouter();
   const step = searchParams.get('step');
 
   const { sessionValue, setSessionValue } = useBuildSingleNeuronSynaptomeSessionState({
@@ -149,26 +151,18 @@ export function Menu({ sessionId }: Props) {
     onSuccess: (data) => {
       notification.success({
         message: messages.CreationModelSucceed,
-        description: (
-          <div>
-            <Link
-              onClick={() => {
-                notification.destroy('model-saved');
-              }}
-              href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSynaptome)}/${data?.entity.id}`}
-              className="text-primary-6 hover:underline"
-            >
-              Go to model details
-            </Link>
-          </div>
-        ),
         onClick: () => {
           notification.destroy('model-saved');
         },
         placement: 'topRight',
         key: 'model-saved',
-        duration: 10,
+        duration: 3,
       });
+      delay(() => {
+        navigate(
+          `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSynaptome)}/${data?.entity.id}`
+        );
+      }, 500);
     },
     onError: (error) => {
       const errorMessage =

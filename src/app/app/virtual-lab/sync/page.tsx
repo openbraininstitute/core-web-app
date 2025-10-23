@@ -3,8 +3,9 @@ import { match, P } from 'ts-pattern';
 
 import { resolveWorkspace, WizardSteps } from '@/ui/segments/app-setup/helpers';
 import { WorkspaceWizard } from '@/ui/segments/app-setup/bootsync-wizard';
-import { ROOT_ROUTE } from '@/config';
+import { getSession } from '@/authFetch';
 import { tryCatch } from '@/api/utils';
+import { ROOT_ROUTE } from '@/config';
 
 import type { ServerSideComponentProp } from '@/types/common';
 
@@ -12,9 +13,15 @@ export default async function Page({
   searchParams,
 }: ServerSideComponentProp<null, { redirectUrl: string | undefined }>) {
   const queryParams = await searchParams;
+  const session = await getSession();
   const { data: workspace, error } = await tryCatch(resolveWorkspace());
 
-  if (!workspace || error) throw new Error('Workspace resolution failed');
+  if (!session || !workspace?.profile) {
+    redirect(`/app/login`);
+  }
+  if (!workspace || error) {
+    throw new Error('Workspace resolution failed');
+  }
 
   const { virtualLab, project } = workspace;
 

@@ -28,7 +28,7 @@ export function MenuItem<T>({
   return (
     <Card
       className={cn(
-        'flex flex-col gap-20 border-white bg-white px-4 py-2',
+        'flex flex-col border-white bg-white px-4 py-2',
         'shadow-[16px_16px_30px_0px_#0000000,-12px_-8px_32px_0px_#FFFFFF52]',
         'h-full cursor-pointer select-none',
         'group hover:bg-primary-9 hover:text-white',
@@ -42,27 +42,31 @@ export function MenuItem<T>({
       aria-disabled={disabled}
       onClick={() => onClick(value)}
     >
-      {group && <div className="text-neutral-3 mb-1 gap-0 group-hover:text-white">{group}</div>}
       <CardTitle
         className={cn(
           'text-primary-9 text-2xl font-bold group-hover:text-white',
           {
-            'text-primary-9/50 mb-20': disabled,
+            'text-primary-9/50': disabled,
           },
-          {
-            '-mt-22': group,
-          },
+          // {
+          //   '-mt-22': group,
+          // },
           { 'text-white!': active }
         )}
       >
+        {group && (
+          <div className="text-neutral-3 mb-1 gap-0 text-base font-light group-hover:text-white">
+            {group}
+          </div>
+        )}
         {title}
       </CardTitle>
       {!disabled && (
         <div
           className={cn(
-            'text-neutral-3 group-hover:text-primary-9 mt-auto flex items-center justify-center gap-1 self-end border text-sm',
-            'group-hover:border-primary-9/40 rounded-full px-4 py-1 group-hover:bg-white group-hover:shadow-sm',
-            { 'bg-primary-9! text-white!': active }
+            'text-neutral-3 group-hover:text-primary-9 flex items-center justify-center gap-1 self-end text-sm',
+            'rounded-full px-4 py-1 group-hover:bg-white group-hover:shadow-sm',
+            { 'bg-primary-9! group-hover:border-primary-9/40 border text-white!': active }
           )}
         >
           <span>Start</span>

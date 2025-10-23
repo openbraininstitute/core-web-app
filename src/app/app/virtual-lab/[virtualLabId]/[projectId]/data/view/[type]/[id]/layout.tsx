@@ -1,19 +1,21 @@
-import { ReactNode } from 'react';
-import NextLink from 'next/link';
-import snakeCase from 'lodash/snakeCase';
+import { snakeCase } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
-import Breadcrumb from '@/ui/molecules/breadcrumb';
-import { ROOT_ROUTE } from '@/config';
+import { ReactNode } from 'react';
+
 import {
   EntityCoreExtendedType,
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
 import DetailMenu from '@/ui/segments/explore/detail-menu';
 import ActionMenu from '@/ui/segments/action-menu';
-import type { WorkspaceContext, AwaitedType } from '@/types/common';
 import Close from '@/ui/molecules/close';
 import { DownloadPanel as CircuitDownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { BackToDataButton, BackToEntityType } from '@/ui/segments/explore/back-data-btn';
+import { WorkspaceScope } from '@/constants';
+import { ROOT_ROUTE } from '@/config';
+
+import type { WorkspaceContext, AwaitedType, ServerSideComponentProp } from '@/types/common';
 
 interface Params {
   id: string;
@@ -51,15 +53,13 @@ export async function downloadEntity({
 export default async function Layout({
   children,
   params,
-}: {
+}: ServerSideComponentProp<WorkspaceContext & Params, null> & {
   children: ReactNode;
-  params: Promise<Params & WorkspaceContext>;
 }) {
   const awaitedParams = await params;
+
   const { virtualLabId, projectId, id } = awaitedParams;
   const type = snakeCase(awaitedParams.type) as EntityCoreExtendedType;
-  // Temporarily hide ion channel model
-  if (type === ExtendedEntitiesTypeDict.IonChannelModel) notFound();
 
   const entityType = getEntityByExtendedType({ type });
 
@@ -71,17 +71,13 @@ export default async function Layout({
     ctx: { virtualLabId, projectId },
   });
 
-  const parentLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}`;
+  const isPublicEntity = entity.authorized_public;
+  const parentLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}&scope=${isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project}`;
 
   const breadcrumbs = (
     <div className="flex flex-wrap gap-3">
-      <Breadcrumb>
-        <NextLink href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data`}>Explore</NextLink>
-      </Breadcrumb>
-      <Breadcrumb>
-        <NextLink href={parentLink}>{entityType.title}</NextLink>
-      </Breadcrumb>
-      <Breadcrumb showChevron={false}>{entity.name}</Breadcrumb>
+      <BackToDataButton {...{ virtualLabId, projectId }} />
+      <BackToEntityType {...{ virtualLabId, projectId, type, title: entityType.title }} />
     </div>
   );
 
@@ -100,23 +96,23 @@ export default async function Layout({
 
   return (
     <>
-      <div className="relative ml-5 flex h-full rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
+      <div className="relative ml-5 flex h-full rounded-md border-[1px] border-[#D9D9D9] py-3">
         <Close href={parentLink} />
-        <div className="w-1/5">
+        <div className="w-1/5 pl-5">
           {breadcrumbs}
           <div className="mt-5 flex flex-col gap-5">
             <DetailMenu sections={entityType.detailViewSections} />
           </div>
           <ActionMenu entity={entity} type={type} ctx={{ virtualLabId, projectId }} />
         </div>
-        <div className="w-4/5">
-          <div className="h-full w-full overflow-x-auto overflow-y-auto p-10">
-            <div className="h-[9%]">
+        <div className="w-4/5 pr-1">
+          <div className="secondary-scrollbar h-full w-full overflow-x-auto overflow-y-auto p-10">
+            <div className="mb-4 select-none">
               <div className="text-neutral-4 uppercase">Name</div>
-              <div className="text-primary-8 text-2xl font-bold">{entity.name}</div>
+              <div className="text-primary-8 line-clamp-3 text-2xl font-bold">{entity.name}</div>
             </div>
 
-            <div className="h-[91%]">{children}</div>
+            <div className="h-[calc(100%-7rem)]">{children}</div>
           </div>
         </div>
       </div>

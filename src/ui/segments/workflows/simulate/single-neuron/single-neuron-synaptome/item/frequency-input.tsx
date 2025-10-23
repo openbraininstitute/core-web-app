@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Switch } from '@/components/common/Switch';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { PREFIX_FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { FrequencyInputConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import {
   calculateRangeOutput,
@@ -39,7 +39,7 @@ export function FrequencyFormItem({
 }) {
   const breakpoint = useDefaultBreakpoint();
   const frequencyKey = getSessionKey(
-    PREFIX_FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY,
+    FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY,
     `${sessionId}_${index}`
   );
   const [frequencyConfig, setFrequencyConfig] = useAtom(

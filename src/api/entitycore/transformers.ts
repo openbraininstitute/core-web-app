@@ -1,7 +1,7 @@
-import isEmpty from 'lodash/isEmpty';
-import sortBy from 'lodash/sortBy';
-import omit from 'lodash/omit';
-import map from 'lodash/map';
+import isEmpty from 'es-toolkit/compat/isEmpty';
+import sortBy from 'es-toolkit/compat/sortBy';
+import omit from 'es-toolkit/compat/omit';
+import map from 'es-toolkit/compat/map';
 
 import type { Agent, IContributor } from '@/api/entitycore/types/shared/global';
 import type { CoreFilter } from '@/entity-configuration/definitions/types';
@@ -77,12 +77,12 @@ export function transformFiltersToQuery(
     }
 
     // handle different value types with their constraints
-    if (filter.value !== null && typeof filter.value === 'object' && !Array.isArray(filter.value)) {
+    if (typeof filter.value === 'object' && !Array.isArray(filter.value)) {
       // case: filter.value is an object (e.g., { gte: "...", lte: "..." })
       Object.entries(filter.value).forEach(([op, val]) => {
-        if (val !== null) {
+        if (val !== null && filter.constraint) {
           // If constraint is an object with matching keys (e.g., { gte: "creation_date__gte" })
-          if (filter.constraint && typeof filter.constraint === 'object') {
+          if (typeof filter.constraint === 'object') {
             const constraintObj = filter.constraint as Record<string, string>;
             if (op in constraintObj) {
               const constraintKey = constraintObj[op];
@@ -97,7 +97,7 @@ export function transformFiltersToQuery(
             }
           }
           // if constraint is a string, append the operation (e.g., "creation_date__gte")
-          else if (filter.constraint && typeof filter.constraint === 'string') {
+          else if (typeof filter.constraint === 'string') {
             const constraintKey = `${filter.constraint}__${op}`;
             // Apply transformToIlikePattern for ilike constraints
             if (typeof val === 'string' && constraintKey.endsWith('__ilike')) {

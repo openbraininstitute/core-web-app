@@ -1,7 +1,7 @@
 /* eslint-disable no-param-reassign */
-import transform from 'lodash/transform';
-import isObject from 'lodash/isObject';
-import isArray from 'lodash/isArray';
+import transform from 'es-toolkit/compat/transform';
+import isObject from 'es-toolkit/compat/isObject';
+import isArray from 'es-toolkit/compat/isArray';
 
 import type { TTreeNode } from '@/components/tree/types';
 

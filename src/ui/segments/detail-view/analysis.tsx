@@ -7,7 +7,7 @@ import {
 
 import { EntityTypeValue } from '@/entity-configuration/domain';
 
-import Overview from '@/features/entities/circuit/elements/tabs-content/overview';
+import Overview from '@/ui/segments/explore/circuit/elements/overview';
 import Analysis from '@/features/model-analysis/explorer/container';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 

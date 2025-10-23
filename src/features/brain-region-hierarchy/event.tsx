@@ -1,4 +1,4 @@
-import noop from 'lodash/noop';
+import noop from 'es-toolkit/compat/noop';
 import { isBrowser } from '@/utils/environment';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';

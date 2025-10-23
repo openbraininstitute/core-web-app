@@ -1,5 +1,5 @@
-import groupBy from 'lodash/groupBy';
-import omit from 'lodash/omit';
+import groupBy from 'es-toolkit/compat/groupBy';
+import omit from 'es-toolkit/compat/omit';
 
 import { fieldsDefinitionRegistry, getFieldDefinition } from '@/entity-configuration/definitions';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
