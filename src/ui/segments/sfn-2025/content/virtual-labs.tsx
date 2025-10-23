@@ -6,8 +6,6 @@ import { useRef } from 'react';
 
 import Divider from '@/ui/segments/sfn-2025/content/divider';
 
-import image from '../images/brain-region_image-01.png';
-
 export default function SFNVirtualLabs() {
   const ref = useRef(null);
   const isInView = useInView(ref, {
@@ -52,7 +50,7 @@ export default function SFNVirtualLabs() {
         style={{ rotate: springRotate }}
       >
         <Image
-          src={image}
+          src="/images/sfn/brain-region_image-01.webp"
           className="relative -left-[20vw] h-full w-auto"
           alt="Multiple brain region image"
           width={990}

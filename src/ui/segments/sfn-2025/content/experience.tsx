@@ -4,8 +4,6 @@ import { motion, useInView } from 'framer-motion';
 import Image from 'next/image';
 import { useRef } from 'react';
 
-import image from '../images/background_white-brain.jpg';
-
 import Divider from '@/ui/segments/sfn-2025/content/divider';
 
 export default function SFNExperience() {
@@ -44,7 +42,12 @@ export default function SFNExperience() {
           ease: 'easeOut',
         }}
       >
-        <Image src={image} alt="Experience image" width={1512} height={814} />
+        <Image
+          src="/images/sfn/background_white-brain.webp"
+          alt="Experience image"
+          width={1512}
+          height={814}
+        />
       </motion.div>
     </div>
   );
