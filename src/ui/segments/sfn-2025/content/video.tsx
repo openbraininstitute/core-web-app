@@ -24,7 +24,7 @@ export default function SFNVideo() {
           .then(() => {
             setIsPaused(false);
           })
-          .catch((error) => {
+          .catch((_error) => {
             setIsPaused(true);
             // Video might not play due to browser autoplay policies
           });
@@ -50,7 +50,7 @@ export default function SFNVideo() {
           .then(() => {
             setIsPaused(false);
           })
-          .catch((error) => {
+          .catch((_error) => {
             setIsPaused(true);
           });
       } else {
