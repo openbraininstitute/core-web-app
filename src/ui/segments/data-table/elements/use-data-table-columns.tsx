@@ -27,7 +27,6 @@ type ResizeInit = {
 const COL_SIZING = {
   min: 75,
   default: 125,
-  wide: 500,
 };
 
 /**

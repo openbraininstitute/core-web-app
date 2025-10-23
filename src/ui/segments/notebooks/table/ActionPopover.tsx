@@ -4,7 +4,6 @@ import { Modal } from 'antd';
 import { useState } from 'react';
 import { PlayCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { Popover } from 'antd/lib';
-import { useParams } from 'next/navigation';
 
 import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
 import { EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
@@ -14,7 +13,7 @@ import { downloadArchive } from '@/services/entity-download';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { useAppNotification } from '@/components/notification';
 import { NotebookStartResponse, startNotebook } from '@/services/notebooks';
-import { WorkspaceContext } from '@/types/common';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 interface ActionPopoverProps {
   notebook: INotebook;
@@ -23,8 +22,42 @@ interface ActionPopoverProps {
 export default function ActionPopover({ notebook }: ActionPopoverProps) {
   const [open, setOpen] = useState(false);
   const notification = useAppNotification();
-  const params = useParams<WorkspaceContext>();
-  const { virtualLabId, projectId } = params;
+  const { virtualLabId, projectId } = useWorkspace();
+
+  async function handleRunNotebook() {
+    const asset = notebook.assets.find((n) => n.label === 'jupyter_notebook');
+    if (!asset) return;
+
+    try {
+      const retval: NotebookStartResponse = await startNotebook(
+        notebook.id,
+        asset.path,
+        virtualLabId,
+        projectId
+      );
+      notification.success({
+        message: `Notebook starting`,
+        key: 'notebook-started-successfully',
+        placement: 'topRight',
+      });
+      window.open(retval.url, '_blank');
+    } catch (error) {
+      // Just show the hint message if we get some error
+      if (error instanceof Error && 'cause' in error) {
+        notification.error({
+          message: (error.cause as { error_code: string; hint: string }).hint,
+          key: 'notebook-error',
+          placement: 'topRight',
+        });
+      } else {
+        notification.error({
+          message: `Failed to start notebook, unknown error: ${error}`,
+          key: 'notebook-unknown-error',
+          placement: 'topRight',
+        });
+      }
+    }
+  }
 
   return (
     <>
@@ -72,41 +105,9 @@ export default function ActionPopover({ notebook }: ActionPopoverProps) {
                 <button
                   type="button"
                   className="hover:text-primary-4 inline-flex items-center gap-[10px]"
-                  onClick={async (e) => {
+                  onClick={(e) => {
                     e.stopPropagation();
-
-                    const asset = notebook.assets.find((n) => n.label === 'jupyter_notebook');
-                    if (!asset) return;
-
-                    try {
-                      const retval: NotebookStartResponse = await startNotebook(
-                        notebook.id,
-                        asset.path,
-                        virtualLabId,
-                        projectId
-                      );
-                      notification.success({
-                        message: `Notebook starting`,
-                        key: 'notebook-started-successfully',
-                        placement: 'topRight',
-                      });
-                      window.open(retval.url, '_blank');
-                    } catch (error) {
-                      // Just show the hint message if we get some error
-                      if (error instanceof Error && 'cause' in error) {
-                        notification.error({
-                          message: (error.cause as { error_code: string; hint: string }).hint,
-                          key: 'notebook-error',
-                          placement: 'topRight',
-                        });
-                      } else {
-                        notification.error({
-                          message: `Failed to start notebook, unknown error: ${error}`,
-                          key: 'notebook-unknown-error',
-                          placement: 'topRight',
-                        });
-                      }
-                    }
+                    handleRunNotebook();
                   }}
                 >
                   <PlayCircleOutlined aria-label="Run" />
