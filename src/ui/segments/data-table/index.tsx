@@ -55,6 +55,7 @@ export type Props<T> = {
   rowClassName?: string | TableProps<T>['rowClassName'];
   tableStyle?: CSSProperties | undefined;
   allowDownload?: boolean;
+  searchEnabled?: boolean;
 };
 
 export function MainTable<T extends EntityCoreIdentifiableNamed>({
@@ -79,6 +80,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
   onCellClick,
   tableStyle,
   allowDownload,
+  searchEnabled = true,
 }: Props<T>) {
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
   const onDisplayControlPanel = (value: boolean) => setDisplayControlPanel(value);
@@ -112,9 +114,11 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
             '[grid-template-areas:"search_pagination_filter"]'
           )}
         >
-          <div className="w-full [grid-area:search]">
-            <Search {...{ dataType, dataKey, className: 'pl-2' }} />
-          </div>
+          {searchEnabled && (
+            <div className="w-full [grid-area:search]">
+              <Search {...{ dataType, dataKey, className: 'pl-2' }} />
+            </div>
+          )}
           <div className="[grid-area:filter]">
             <div className="ml-auto flex h-12 items-stretch justify-center gap-3">
               {(dataScope === WorkspaceScope.BuildMeModelM ||
