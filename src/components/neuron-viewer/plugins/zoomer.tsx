@@ -1,8 +1,8 @@
-import { ZoomInOutlined, ZoomOutOutlined } from '@ant-design/icons';
-import { ComponentProps } from 'react';
 import { Slider } from 'antd';
+import { ComponentProps } from 'react';
+import { ZoomInOutlined, ZoomOutOutlined } from '@ant-design/icons';
 
-import { cn } from '@/utils/css-class';
+import { classNames } from '@/util/utils';
 
 type Props = {
   value: number;
@@ -14,7 +14,7 @@ type Props = {
 
 export function Zoomer({ className, value, onChange, onZoomIn, onZoomOut }: Props) {
   return (
-    <div className={cn('flex flex-col items-center justify-center gap-2', className)}>
+    <div className={classNames('flex flex-col items-center justify-center gap-2', className)}>
       {onZoomIn && <ZoomInOutlined className="text-white" onClick={onZoomIn} />}
       <Slider
         vertical
