@@ -68,22 +68,6 @@ export default function ActionPopover({ notebook }: ActionPopoverProps) {
                 </button>
               </div>
 
-              {/* {onDeleteClick && (
-              <div className="text-error flex gap-4">
-                <button
-                  type="button"
-                  className="hover:text-primary-4 inline-flex items-center gap-[10px]"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // onDeleteClick(notebook.id);
-                  }}
-                >
-                  <DeleteOutlined className="text-error text-xs" aria-label="Delete" />
-                  Delete
-                </button>
-              </div>
-            )} */}
-
               <div className="flex gap-4">
                 <button
                   type="button"

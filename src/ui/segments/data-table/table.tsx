@@ -111,6 +111,7 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
   sticky,
   expandableConfig,
   rowClassName,
+  tableStyle,
   className,
   onRow,
   dataType,
@@ -126,6 +127,7 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
     showLoadMore?: (value?: boolean) => void;
     scrollable?: boolean;
     expandableConfig?: ExpandableConfig<T>;
+    tableStyle?: CSSProperties | undefined;
     dataType: TExtendedEntitiesTypeDict;
     wrapperClassname?: ComponentProps<'div'>['className'];
   }) {
@@ -180,7 +182,7 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
           size={size}
           ref={tableRef}
           sticky={sticky}
-          // style={tableStyle}
+          style={tableStyle}
           aria-label="listing-view-table"
           className={cn(styles.table, 'grow [&_.ant-table-sticky-holder]:shadow-md', className)}
           columns={
