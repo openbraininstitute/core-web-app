@@ -35,5 +35,5 @@ export default function Page({
   //   }
   // }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return <NotebooksLayout>{children}</NotebooksLayout>;
+  return <NotebooksLayout active="public">{children}</NotebooksLayout>;
 }

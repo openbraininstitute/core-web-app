@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
@@ -6,15 +7,16 @@ import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 export default async function NotebooksPage({
   params: promisedParams,
-}: ServerSideComponentProp<WorkspaceContext, null>) {
+}: ServerSideComponentProp<WorkspaceContext & { scope: string }, null>) {
   const params = await promisedParams;
-  const { projectId, virtualLabId } = params;
+  const { scope } = params;
+  if (!['public', 'private'].includes(scope)) notFound();
 
   return (
     <BrowseEntityScope
       section={WorkspaceSection.Notebooks}
       dataType={ExtendedEntitiesTypeDict.Notebook}
-      scope={WorkspaceScope.Public}
+      scope={scope === 'public' ? WorkspaceScope.Public : WorkspaceScope.Project}
       requireBrainRegion={false}
       requireMiniDetailView={false}
     />
