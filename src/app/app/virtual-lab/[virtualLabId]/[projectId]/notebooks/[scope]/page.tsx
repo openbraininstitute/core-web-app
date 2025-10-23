@@ -7,7 +7,7 @@ import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 export default async function NotebooksPage({
   params: promisedParams,
-}: ServerSideComponentProp<WorkspaceContext & { scope: string }, null>) {
+}: ServerSideComponentProp<WorkspaceContext & { scope: 'public' | 'private' }, null>) {
   const params = await promisedParams;
   const { scope } = params;
   if (!['public', 'private'].includes(scope)) notFound();
