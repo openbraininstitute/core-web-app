@@ -1,10 +1,14 @@
-import { ChangeEvent } from 'react';
+import React, { ChangeEvent } from 'react';
+import { Button } from 'antd';
+
 import { classNames } from '@/util/utils';
+
+import styles from './sweep-selector.module.css';
 
 type TraceSelectorGroupProps = {
   selectedSweeps: string[];
   sweepOptions: { label: string; value: string }[];
-  handlePreviewSweep: (value?: string) => void;
+  onPreviewSweep: (value?: string) => void;
   setSelectedSweeps: (sweeps: string[]) => void;
   colorMap: Map<string, string>;
   previewItem?: string;
@@ -14,10 +18,15 @@ function SweepSelector({
   previewItem,
   selectedSweeps,
   sweepOptions,
-  handlePreviewSweep,
+  onPreviewSweep,
   setSelectedSweeps,
   colorMap,
 }: TraceSelectorGroupProps) {
+  const [preview, setPreview] = React.useState<string | undefined>(undefined);
+  const handlePreviewSweep = (id: string | undefined) => {
+    onPreviewSweep(id);
+    setPreview(id);
+  };
   const sweeps = sweepOptions.map(({ label, value }) => {
     const isSelected = selectedSweeps.includes(value);
     const isEmptySelection = !selectedSweeps.length;
@@ -38,14 +47,19 @@ function SweepSelector({
     return (
       <div
         key={label}
-        className="px-1 pb-1 last:pr-0"
+        className={classNames(
+          'px-1 pb-1 last:pr-0',
+          styles.main,
+          preview ? styles.previewOn : styles.previewOff,
+          selectedSweeps.length > 0 ? styles.selectionOn : styles.selectionOff
+        )}
         onMouseEnter={() => handlePreviewSweep(value)}
         onMouseLeave={() => handlePreviewSweep(undefined)}
       >
         <label // eslint-disable-line jsx-a11y/label-has-associated-control
           className={classNames(
             'flex h-[32px] w-[32px] cursor-pointer items-center rounded border-1 hover:opacity-75',
-            isSelected ? 'border-[#1890ff]' : 'border-[#1890ff00]'
+            isSelected && styles.selected
           )}
           style={{
             background: colorMap.get(value) ?? '#1890ff',
@@ -67,11 +81,23 @@ function SweepSelector({
   });
 
   return (
-    <div className="flex flex-col gap-3">
-      <span className="text-dark font-bold">
-        Sweep <small className="text-sm font-light">({sweepOptions.length} available)</small>
-      </span>
-      <div className="flex flex-wrap items-center">{sweeps}</div>
+    <div className={styles.flex}>
+      <div className="flex flex-col gap-3">
+        <span className="text-dark font-bold">
+          Sweep <small className="text-sm font-light">({sweepOptions.length} available)</small>
+        </span>
+        <div className="flex flex-wrap items-center">{sweeps}</div>
+      </div>
+      {selectedSweeps.length > 0 && (
+        <Button
+          onClick={() => {
+            setSelectedSweeps([]);
+            handlePreviewSweep(undefined);
+          }}
+        >
+          Reset
+        </Button>
+      )}
     </div>
   );
 }

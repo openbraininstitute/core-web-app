@@ -1,7 +1,37 @@
 /* eslint-disable max-classes-per-file */
-import { File, Group, Dataset, ready, Entity } from 'h5wasm';
+import { Dataset, File, ready } from 'h5wasm';
+import { H5Parser } from './h5-parser';
 
-export class IonChannelRecordingParser {
+type IonChannelRecordingProtocolNames =
+  | 'Activation'
+  | 'Inactivation'
+  | 'Deactivation'
+  | 'Ramp'
+  | 'AP';
+
+export interface IonChannelRecordingProtocol {
+  name: string;
+  repetitions: IonChannelRecordingRepetition[];
+}
+
+export interface IonChannelRecordingRepetition {
+  name: string;
+  plot: IonChannelRecordingPlot;
+}
+
+export interface IonChannelRecordingPlot {
+  xAxisLabel: string;
+  yAxisLabel: string;
+  lines: IonChannelRecordingPlotLine[];
+}
+
+export interface IonChannelRecordingPlotLine {
+  id: string;
+  x: number[];
+  y: number[];
+}
+
+export class IonChannelRecordingParser extends H5Parser {
   static async create(id: string, nwbArrayBuffer: ArrayBuffer) {
     const { FS } = await ready;
 
@@ -18,85 +48,105 @@ export class IonChannelRecordingParser {
 
     const file = new File(`${id}.nwb`, 'r');
     const trace = new IonChannelRecordingParser(file);
-    trace.debug();
     return trace;
   }
 
-  private constructor(private readonly file: File) {}
+  static readonly ProtocolNames: IonChannelRecordingProtocolNames[] = [
+    'Activation',
+    'Inactivation',
+    'Deactivation',
+    'Ramp',
+    'AP',
+  ];
 
-  public debug() {
-    // eslint-disable-next-line no-console
-    console.log('Hierarchy of the H5 file:');
-    for (const key of this.file.keys()) {
-      const group = this.file.get(key);
-      this.debugGroup(key, group);
-    }
-  }
+  public readonly protocols: ReadonlyArray<IonChannelRecordingProtocol>;
 
-  private debugGroup(name: string, entity: Entity | null, indentation: number = 0) {
-    if (!entity) return;
+  protected constructor(file: File) {
+    super(file);
 
-    const indent = `${'|  '.repeat(indentation)}`;
-    if (entity instanceof Group) {
-      const group = entity;
-      // eslint-disable-next-line no-console
-      console.log(
-        `${indent}${name}`,
-        `{${Object.keys(group.attrs)
-          .map((key) => `${key}: ${JSON.stringify(group.attrs[key])}`)
-          .join(', ')}}`
-      );
-      for (const key of group.keys()) {
-        this.debugGroup(key, group.get(key), indentation + 1);
+    const protocols: IonChannelRecordingProtocol[] = [];
+    for (const protocolName of IonChannelRecordingParser.ProtocolNames) {
+      const protocolPath = ['acquisition', 'timeseries', protocolName];
+      const protocolGroup = this.get(...protocolPath);
+      if (!protocolGroup) continue;
+
+      const protocol: IonChannelRecordingProtocol = {
+        name: protocolName,
+        repetitions: [],
+      };
+      const repetitionsPath = [...protocolPath, 'repetitions'];
+      const repetitionsGroup = this.get(...repetitionsPath);
+      if (!repetitionsGroup || repetitionsGroup instanceof Dataset) continue;
+
+      for (const repetitionName of repetitionsGroup.keys()) {
+        const repetitionPath = [...repetitionsPath, repetitionName];
+        const repetitionGroup = this.get(...repetitionPath);
+        if (!this.isGroup(repetitionGroup)) continue;
+
+        const repetition: IonChannelRecordingRepetition = {
+          name: repetitionName,
+          plot: {
+            xAxisLabel: 'Time (ms)',
+            yAxisLabel: 'Current (nA)',
+            lines: this.extractPlotLines(repetitionPath),
+          },
+        };
+        protocol.repetitions.push(repetition);
       }
-      return;
+      if (protocol.repetitions.length === 0) continue;
+
+      protocols.push(protocol);
     }
-    if (entity instanceof Dataset) {
-      const dataset = entity;
-      // eslint-disable-next-line no-console
-      console.log(
-        `${indent}${name} {${Object.keys(dataset.attrs)
-          .map((key) => `${key}: ${JSON.stringify(dataset.attrs[key])}`)
-          .join(', ')}}  -  dataset(${dataset.shape})`
-      );
-    }
+    this.protocols = protocols;
   }
 
-  /**
-   * Utility method to retrieve a group from the NWB file.
-   * @param key
-   * @returns
-   */
-  private getGroup(key: string): Group {
-    const group = this.file.get(key);
-    if (!(group instanceof Group)) {
-      throw new Error(`Group ${key} not found`);
-    }
-    return group;
+  public findRepetition(
+    protocolName: string,
+    repetitionName: string
+  ): IonChannelRecordingRepetition | undefined {
+    const protocol = this.protocols.find((p) => p.name === protocolName);
+    if (!protocol) return undefined;
+
+    const repetition = protocol.repetitions.find((r) => r.name === repetitionName);
+    return repetition;
   }
 
-  /**
-   * The standard error thrown by `dataset.get_attribute()`
-   * does not output the name of the missing attribute.
-   *
-   * This function does.
-   */
-  private getAttribute(entity: Group | Dataset, name: string) {
-    try {
-      return entity.get_attribute(name, true);
-    } catch {
-      const attributesNames = Object.keys(entity.attrs);
-      throw new Error(
-        `Attribute "${name}" not found in dataset!\n${
-          attributesNames.length === 0
-            ? `This ${entity instanceof Group ? 'Group' : 'Dataset'} has no attribute.`
-            : `Available attributes are: ${attributesNames.join(', ')}.`
-        }`
-      );
-    }
+  private extractPlotLines(path: string[]): IonChannelRecordingPlotLine[] {
+    const data = this.extractData(path);
+    return data.map((y, i) => ({
+      id: this.extractId(path, i),
+      x: this.extractTimeAxis(path, i, y.length),
+      y,
+    }));
   }
 
-  public destroy() {
-    this.file.close();
+  private extractTimeAxis(path: string[], index: number, length: number): number[] {
+    const start = (this.getArrayNumber2D(...path, 'x_start') ?? [])[index]?.[0] ?? 0;
+    const interval = (this.getArrayNumber2D(...path, 'x_interval') ?? [])[index]?.[0] ?? 1;
+    const array: number[] = [];
+    for (let i = 0; i < length; i++) {
+      // Convert seconds into milliseconds (hence the `* 1e3`)
+      array.push((start + interval * i) * 1e3);
+    }
+    return array;
+  }
+
+  private extractData(path: string[]): number[][] {
+    const rawData = this.getArrayNumber2D(...path, 'data');
+    if (!rawData) return [];
+
+    const data: number[][] = [];
+    const count = rawData[0].length;
+    for (let i = 0; i < count; i++) {
+      const array: number[] = rawData.map((serie) => serie[i]);
+      data.push(array);
+    }
+    return data;
+  }
+
+  private extractId(path: string[], index: number): string {
+    const dataset = this.getArrayNumber2D(...path, 'trace_ids');
+    const id = dataset?.[index]?.[0];
+    return id ? `${id}` : `#${index + 1}`;
   }
 }
