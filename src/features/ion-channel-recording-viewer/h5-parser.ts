@@ -7,6 +7,7 @@ export class H5Parser {
 
   public debug(item?: File | Group | Dataset) {
     if (item instanceof Dataset) {
+      // eslint-disable-next-line no-console
       console.log(`Dataset(${item.shape})`, this.stringifyAttributes(item));
       return;
     }
