@@ -323,6 +323,11 @@ export default function SimulationCampaignConfiguration({
               editing &&
               (isRootCategory(schema, configTab) || selectedCatSchema) && (
                 <JSONSchemaForm
+                  key={
+                    isRootCategory(schema, configTab)
+                      ? configTab
+                      : resolveKey(schema, configTab, selectedItemIdx)
+                  }
                   selectedCategory={selectedCategory}
                   onAddReferenceClick={handleAddReferenceClick}
                   disabled={!!campaignId || loading}

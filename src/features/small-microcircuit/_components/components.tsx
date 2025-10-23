@@ -46,6 +46,7 @@ export function JSONSchemaForm({
   const skip = ['type']; // , 'circuit'];
 
   const [state, setState] = useAtom(stateAtom);
+
   const [addingElement, setAddingElement] = useState(false);
   const [newElement, setNewElement] = useState<number | string | null>(null);
 
