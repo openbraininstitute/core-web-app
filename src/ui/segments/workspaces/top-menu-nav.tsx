@@ -3,7 +3,7 @@ import React from 'react';
 
 import { MenuOutlined } from '@ant-design/icons';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 
 import {
   ExploreIcon,
@@ -106,7 +106,7 @@ const links: Array<LinkItem> = [
     key: 'help',
     title: 'Help',
     url: 'help',
-    icon: <HelpIcon className="group-hover:text-primary-3 text-lg" />,
+    icon: <HelpIcon className="group-hover:text-primary-3 h-8 w-8" />,
     allowText: false,
     className: '',
     hasAction: false,
@@ -116,8 +116,8 @@ const links: Array<LinkItem> = [
 export function TopMenuNavigation() {
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
-
   const pathname = usePathname();
+  const queryParams = useSearchParams();
   const activeSection = getActiveSection(pathname);
 
   const hashedLinks = links.map((link) => ({
@@ -152,7 +152,12 @@ export function TopMenuNavigation() {
                         className="text-primary-9 hover:text-primary-7! flex items-center gap-2 px-3 py-2"
                         asChild
                       >
-                        <Link prefetch href={link.url}>
+                        <Link
+                          href={{
+                            pathname: link.url,
+                            query: queryParams ? queryParams.toString() : undefined,
+                          }}
+                        >
                           {link.icon}
                           <span className="text-lg">{link.title}</span>
                         </Link>
@@ -180,7 +185,13 @@ export function TopMenuNavigation() {
                   className="text-primary-9 hover:text-primary-7! flex cursor-pointer items-center gap-2 px-3 py-2"
                   asChild
                 >
-                  <Link prefetch href={link.url}>
+                  <Link
+                    prefetch
+                    href={{
+                      pathname: link.url,
+                      query: queryParams ? queryParams.toString() : undefined,
+                    }}
+                  >
                     {link.icon}
                     <span className="text-lg">{link.title}</span>
                   </Link>
@@ -204,7 +215,8 @@ export function TopMenuNavigation() {
             variant="outline"
             size={breakpoint === 'xl' ? 'lg' : 'md'}
             className={cn(
-              { 'w-12! justify-center!': !allowText },
+              { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
+              { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
               'group relative flex items-center justify-between',
               { 'group-hover:rounded-r-none group-hover:border-r-0': hasAction },
               'transition-all duration-400 ease-out',
@@ -212,7 +224,13 @@ export function TopMenuNavigation() {
             )}
             active={activeSection === baseUrl || isActive?.(pathname)}
           >
-            <Link prefetch href={url}>
+            <Link
+              prefetch
+              href={{
+                pathname: url,
+                query: queryParams ? queryParams.toString() : undefined,
+              }}
+            >
               {allowText && <span>{title}</span>}
               {icon}
             </Link>

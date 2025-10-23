@@ -1,25 +1,22 @@
 'use client';
 
 import { CloseCircleTwoTone, LoadingOutlined } from '@ant-design/icons';
-import { Empty, List } from 'antd';
-import { useEffect, useState } from 'react';
 import { notFound, useParams } from 'next/navigation';
-import type { EntityTypeValue } from '@/entity-configuration/domain';
+import { useQuery } from '@tanstack/react-query';
+import { Empty, List } from 'antd';
+import { useState } from 'react';
 
 import { getScientificArtifactPublicationLinks } from '@/api/entitycore/queries/general/scientific-artifact-publication-link';
 import { PublicationTypeDictionary } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
-import { Card } from '@/features/entities/circuit/elements/publication-item/card';
-import type { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
-import { tryCatch } from '@/api/utils';
-import Tabs, { Tab } from '@/ui/molecules/tabbed-page';
-
-import type {
-  IScientificArtifactPublicationLink,
-  TPublicationTypeDictionary,
-} from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
-import type { WorkspaceContext } from '@/types/common';
+import { Card } from '@/ui/segments/explore/circuit/elements/publication-item/card';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { DEFAULT_PAGE_SIZE } from '@/constants';
+import Tabs, { Tab } from '@/ui/molecules/tabbed-page';
+import { keyBuilder } from '@/ui/use-query-keys/data';
+
+import type { TPublicationTypeDictionary } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
+import type { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
+import type { EntityTypeValue } from '@/entity-configuration/domain';
+import type { WorkspaceContext } from '@/types/common';
 
 export default function RelatedPublications({
   entity,
@@ -55,65 +52,48 @@ function PerTypePublications({
   type: TPublicationTypeDictionary;
 }) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
-  const [relatedPublications, setRelatedPublications] = useState<
-    IScientificArtifactPublicationLink[]
-  >([]);
   const [pagination, setPagination] = useState<{
-    loading: boolean;
     page: number;
     pageSize: number;
-    error: string | null;
   }>({
-    loading: false,
     page: 1,
-    pageSize: DEFAULT_PAGE_SIZE,
-    error: null,
+    pageSize: 5,
   });
 
-  useEffect(() => {
-    async function getRelatedPublications() {
-      setPagination((prev) => ({
-        ...prev,
-        loading: true,
-        error: null,
-      }));
-      const { data: result, error } = await tryCatch(
-        getScientificArtifactPublicationLinks({
-          filters: {
-            scientific_artifact__id: entity.id,
-            publication_type: type,
-            page: pagination.page,
-            page_size: pagination.pageSize,
-          },
-          context: { virtualLabId, projectId },
-        })
-      );
-
-      if (error) {
-        setPagination((prev) => ({
-          ...prev,
-          error: error.message ?? 'An error occurred while fetching related publications',
-          loading: false,
-        }));
-        return;
-      }
-
-      setRelatedPublications(result?.data ?? []);
-      setPagination((prev) => ({
-        ...prev,
-        loading: false,
-      }));
-    }
-
-    getRelatedPublications();
-  }, [pagination.page, pagination.pageSize, type, entity.id, virtualLabId, projectId]);
+  const {
+    isLoading,
+    error,
+    isError,
+    data: result,
+  } = useQuery({
+    queryKey: keyBuilder.scientificArtifactPublicationLinks({
+      context: { virtualLabId, projectId },
+      props: {
+        scientific_artifact__id: entity.id,
+        publication_type: type,
+        page: pagination.page,
+        page_size: pagination.pageSize,
+      },
+    }),
+    queryFn: async () => {
+      return await getScientificArtifactPublicationLinks({
+        filters: {
+          scientific_artifact__id: entity.id,
+          publication_type: type,
+          page: pagination.page,
+          page_size: pagination.pageSize,
+        },
+        context: { virtualLabId, projectId },
+      });
+    },
+  });
 
   return (
     <div className="flex flex-col gap-2">
       <List
         loading={{
           indicator: <LoadingOutlined spin />,
-          spinning: pagination.loading,
+          spinning: isLoading,
         }}
         pagination={{
           position: 'bottom',
@@ -125,8 +105,7 @@ function PerTypePublications({
           hideOnSinglePage: true,
           pageSize: pagination.pageSize,
           onChange: (page, pageSize) => {
-            setPagination((prev) => ({
-              ...prev,
+            setPagination(() => ({
               page,
               pageSize,
             }));
@@ -134,7 +113,7 @@ function PerTypePublications({
         }}
         className="[&_.ant-pagination]:gap-1"
         rowKey={(link) => link.id}
-        dataSource={relatedPublications}
+        dataSource={result?.data ?? []}
         locale={{
           emptyText: (
             <div className="flex flex-col items-center justify-center">
@@ -146,7 +125,7 @@ function PerTypePublications({
           ),
         }}
         renderItem={(publication) => (
-          <List.Item key={publication.id} className="cursor-default">
+          <List.Item key={publication.id}>
             <Card
               publication={publication.publication}
               scientificArtifact={publication.scientific_artifact}
@@ -154,10 +133,10 @@ function PerTypePublications({
           </List.Item>
         )}
       />
-      {pagination.error && (
+      {isError && (
         <div className="my-5 flex flex-col items-center justify-center">
           <div className="flex w-max items-center justify-between gap-6 rounded-md bg-red-50 p-4">
-            <p className="text-primary-8">{pagination.error}</p>
+            <p className="text-primary-8">{error.message}</p>
             <CloseCircleTwoTone
               twoToneColor="#ff4d4f"
               className="text-md cursor-pointer hover:scale-110"

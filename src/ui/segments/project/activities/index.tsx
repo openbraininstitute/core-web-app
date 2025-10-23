@@ -4,9 +4,9 @@ import { RightSquareOutlined } from '@ant-design/icons';
 import { Empty, Table, ConfigProvider } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 import { useState } from 'react';
-import kebabCase from 'lodash/kebabCase';
+import kebabCase from 'es-toolkit/compat/kebabCase';
 import Link from 'next/link';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -37,7 +37,6 @@ export function ProjectActivities() {
 
   const [activity, setActivity] = useState<TActivityValue>(ActivityValues.Build);
   const entity = getEntityByExtendedType({
-    // eslint-disable-next-line lodash/path-style
     type: get(Scales, [entityType, activity], null),
   });
 

@@ -4,7 +4,7 @@ import { DownOutlined, LoadingOutlined, RightOutlined } from '@ant-design/icons'
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import orderBy from 'lodash/orderBy';
+import orderBy from 'es-toolkit/compat/orderBy';
 
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';

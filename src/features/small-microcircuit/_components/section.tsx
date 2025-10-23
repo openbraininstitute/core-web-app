@@ -77,6 +77,7 @@ export function Section({
 
           setConfigTab(k);
           setSelectedItemIdx(null);
+          setSelectedCategory('');
           if (!sectionSchema.additionalProperties) setEditing(true);
           else setEditing(false);
         }}

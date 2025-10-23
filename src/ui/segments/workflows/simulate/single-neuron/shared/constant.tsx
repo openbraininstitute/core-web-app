@@ -1,8 +1,13 @@
-import { StimulusModuleDict } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { SimulationColors } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import {
+  NeuronLocationOriginDict,
+  StimulusModuleDict,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import {
+  DefaultColor,
+  SimulationColors,
+} from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 
 import type {
-  RecordLocation,
   SimulationExperimentalSetup,
   StimulusConfig,
   TStimulationConfiguration,
@@ -18,6 +23,15 @@ export const WorkflowSimulatePanels = {
 
 export type WorkflowSimulatePanelKeys =
   (typeof WorkflowSimulatePanels)[keyof typeof WorkflowSimulatePanels];
+
+export const threeDVisualizerQueryParam = '3d';
+export const threeDVisualizerState = {
+  Collapsed: 'collapsed',
+  Expanded: 'expanded',
+} as const;
+
+export type ThreeDVisualizerQueryParamKeys =
+  (typeof threeDVisualizerState)[keyof typeof threeDVisualizerState];
 
 export const PROTOCOL_DETAILS: Record<TStimulusModuleValue, TProtocolDetails> = {
   [StimulusModuleDict.Idrest]: {
@@ -112,15 +126,19 @@ export const PROTOCOL_DETAILS: Record<TStimulusModuleValue, TProtocolDetails> = 
 
 const DEFAULT_SECTION = 'soma[0]';
 
-export const DEFAULT_RECORDING_LOCATION: RecordLocation = {
-  section: DEFAULT_SECTION,
-  offset: 0.5,
-  record_currents: false,
-};
+export function buildDefaultRecordingLocation(color: string = DefaultColor) {
+  return {
+    section: DEFAULT_SECTION,
+    offset: 0.5,
+    record_currents: false,
+    color,
+    origin: NeuronLocationOriginDict.recording,
+  };
+}
 
 export const DEFAULT_SIMULATION_EXPERIMENTAL_SETUP: SimulationExperimentalSetup = {
   celsius: 34,
-  vinit: -73,
+  vinit: -80,
   hypamp: 0,
   max_time: 2000,
   time_step: 0.05,
@@ -142,13 +160,13 @@ export const DEFAULT_CURRENT_INJECTION_CONFIG: TStimulationConfiguration = {
   stimulus: DEFAULT_STIMULUS_CONFIG,
 };
 
-export const PREFIX_STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY = 'spc_sk';
-export const PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY = 'rlc_sk';
-export const PREFIX_EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY = 'esc_sk';
-export const PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY = 'sic_sk';
-export const PREFIX_OVERVIEW_CONFIGURATION_SESSION_KEY = 'oc_sk';
-export const PREFIX_AMPERAGE_CONFIGURATION_SESSION_KEY = 'ac_sk';
-export const PREFIX_FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY = 'fic_sk';
+export const STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY = 'spc_sk';
+export const RECORDING_LOCATION_CONFIGURATION_SESSION_KEY = 'rlc_sk';
+export const EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY = 'esc_sk';
+export const SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY = 'sic_sk';
+export const OVERVIEW_CONFIGURATION_SESSION_KEY = 'oc_sk';
+export const AMPERAGE_CONFIGURATION_SESSION_KEY = 'ac_sk';
+export const FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY = 'fic_sk';
 
 export function getSimulationColor(index: number) {
   return SimulationColors[index % SimulationColors.length];

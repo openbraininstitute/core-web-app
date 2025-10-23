@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { match, P } from 'ts-pattern';
-import kebabCase from 'lodash/kebabCase';
-import get from 'lodash/get';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import get from 'es-toolkit/compat/get';
 
 import { ExploreDataTypeTabs, tabsConfigItems } from '@/ui/segments/explore/entity-link-count';
 import { getProjectBookmarkCategories } from '@/api/virtual-lab-svc/queries/bookmark';
@@ -40,7 +40,7 @@ export function LibraryLeftMenu() {
     return {
       title: entity?.title,
       value,
-      type,
+      type: type as TExtendedEntitiesTypeDict,
       group: entity?.group,
     };
   });

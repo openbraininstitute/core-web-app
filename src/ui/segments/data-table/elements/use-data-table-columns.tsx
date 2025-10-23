@@ -2,8 +2,8 @@
 
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { ColumnProps } from 'antd/lib/table';
-import throttle from 'lodash/throttle';
-import isString from 'lodash/isString';
+import throttle from 'es-toolkit/compat/throttle';
+import isString from 'es-toolkit/compat/isString';
 
 import { fieldsDefinitionRegistry, getFieldDefinition } from '@/entity-configuration/definitions';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
@@ -239,12 +239,19 @@ export function useDataTableColumns<T>({
   );
 
   if (dataType) {
-    return columns.sort((a, b) =>
-      a.key && b.key
-        ? ViewsDefinitionRegistry[dataType].columns.indexOf(a.key as EntityCoreFields) -
-          ViewsDefinitionRegistry[dataType].columns.indexOf(b.key as EntityCoreFields)
-        : -1
-    );
+    return columns.sort((a, b) => {
+      const defs = ViewsDefinitionRegistry[dataType];
+      if (!defs) {
+        throw new Error('Unable to display the table! Please contact support.', {
+          cause: `Cannot find any item in ViewsDefinitionRegistry for dataType "${dataType}"!`,
+        });
+      }
+
+      return a.key && b.key
+        ? defs.columns.indexOf(a.key as EntityCoreFields) -
+            defs.columns.indexOf(b.key as EntityCoreFields)
+        : -1;
+    });
   }
 
   return columns;

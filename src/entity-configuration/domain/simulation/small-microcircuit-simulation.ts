@@ -1,5 +1,5 @@
-import flatMap from 'lodash/flatMap';
-import keyBy from 'lodash/keyBy';
+import flatMap from 'es-toolkit/compat/flatMap';
+import keyBy from 'es-toolkit/compat/keyBy';
 
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
@@ -28,6 +28,34 @@ import type {
 import type { WorkspaceContext } from '@/types/common';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 
+export async function resolveExecutions({
+  context,
+  allSimIds,
+}: {
+  context: WorkspaceContext | undefined;
+  allSimIds: string[];
+}) {
+  const chunkSize = 30;
+
+  const promises: ReturnType<typeof getCircuitSimulationExecutions>[] = [];
+
+  for (let i = 0; i < allSimIds.length; i += chunkSize) {
+    const chunk = allSimIds.slice(i, i + chunkSize);
+
+    promises.push(
+      getCircuitSimulationExecutions({
+        context,
+        withFacets: false,
+        filters: { used__id__in: [...chunk] },
+      })
+    );
+  }
+
+  const executionsResponses = await Promise.all(promises);
+
+  return executionsResponses.map((r) => r.data).flat();
+}
+
 // NOTE: this is due entitycore do not support yet the circuit inclusion
 async function resolveSimulationCampaigns({
   withFacets,
@@ -47,18 +75,14 @@ async function resolveSimulationCampaigns({
     withFacets,
     filters: { ...filters, circuit__scale: CircuitScaleDictionary.SmallMicrocircuit },
   });
+
   // extract all simulation IDs
   const allSimIds = flatMap(
     source.data,
     (campaign) => campaign.simulations?.map((sim) => sim.id) ?? []
   );
-  // fetch executions related to those simulation IDs
-  const executionsResponse = await getCircuitSimulationExecutions({
-    context,
-    withFacets: false,
-    filters: { used__id__in: allSimIds },
-  });
-  const executions = executionsResponse.data;
+
+  const executions = await resolveExecutions({ context, allSimIds });
 
   // map simulationId -> array of executions that use it
   const executionsBySimId = executions.reduce<Record<string, typeof executions>>((acc, exec) => {

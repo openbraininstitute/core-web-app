@@ -1,4 +1,4 @@
-import isEmpty from 'lodash/isEmpty';
+import isEmpty from 'es-toolkit/compat/isEmpty';
 
 import { LabTypeEnum, VirtualLabPayload } from '@/api/virtual-lab-svc/types';
 import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';

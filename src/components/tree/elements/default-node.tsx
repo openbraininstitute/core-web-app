@@ -1,3 +1,5 @@
+'use client';
+
 import React, { type CSSProperties } from 'react';
 import { CaretRightFilled } from '@ant-design/icons';
 

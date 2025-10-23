@@ -1,5 +1,5 @@
 import { atom } from 'jotai';
-import isEqual from 'lodash/isEqual';
+import isEqual from 'es-toolkit/compat/isEqual';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { IElectricalCellRecording } from '@/api/entitycore/types';

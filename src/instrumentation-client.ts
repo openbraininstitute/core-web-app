@@ -12,9 +12,13 @@ Sentry.init({
   enableLogs: true,
   replaysSessionSampleRate: env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'production' ? 0.1 : 1,
   replaysOnErrorSampleRate: 1.0,
-  debug: !['staging', 'production'].includes(env.NEXT_PUBLIC_DEPLOYMENT_ENV),
+  debug: !['staging', 'production', 'local'].includes(env.NEXT_PUBLIC_DEPLOYMENT_ENV),
   beforeSend(event) {
-    if (['development', 'test', 'preview'].includes(process.env.NEXT_PUBLIC_DEPLOYMENT_ENV || '')) {
+    if (
+      ['development', 'test', 'preview', 'local'].includes(
+        process.env.NEXT_PUBLIC_DEPLOYMENT_ENV || ''
+      )
+    ) {
       return null;
     }
     return event;

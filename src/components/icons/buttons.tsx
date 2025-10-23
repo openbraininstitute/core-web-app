@@ -1,19 +1,21 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
-export function HelpIcon(props: React.SVGProps<SVGSVGElement>) {
+export function HelpIcon({ className, ...props }: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" {...props}>
+    <svg
+      width="134"
+      height="134"
+      viewBox="0 0 134 134"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
       <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M54.276 54.6149C54.276 57.4952 51.9427 59.8285 49.0886 59.8285C46.2083 59.8285 43.875 57.4952 43.875 54.6149C43.875 48.3285 46.4166 42.6461 50.526 38.5322C54.6406 34.4177 60.323 31.8812 66.6087 31.8812C72.8951 31.8812 78.5775 34.4228 82.6914 38.5322C86.8059 42.6468 89.3424 48.3292 89.3424 54.6149C89.3424 60.9013 86.8008 66.5837 82.6914 70.6976C79.7591 73.6298 76.0091 75.7809 71.8216 76.7497V79.0049C71.8216 81.8852 69.4883 84.2185 66.608 84.2185C63.7278 84.2185 61.3944 81.8852 61.3944 79.0049V72.1404C61.3944 69.2862 63.7278 66.9529 66.608 66.9529C70.0143 66.9529 73.1028 65.5622 75.332 63.3384C77.5612 61.1092 78.9466 58.0206 78.9466 54.6144C78.9466 51.2081 77.5559 48.1196 75.332 45.8904C73.1028 43.6612 70.0143 42.2758 66.608 42.2758C63.2018 42.2758 60.1132 43.6665 57.884 45.8904C55.6548 48.1196 54.2695 51.2081 54.2695 54.6144L54.276 54.6149ZM66.0886 101.427C63.2083 101.427 60.875 99.1196 60.875 96.2394C60.875 93.3592 63.2083 91.0258 66.0886 91.0258H67.2396C70.1199 91.0258 72.4532 93.3592 72.4532 96.2394C72.4532 99.1197 70.1199 101.427 67.2396 101.427H66.0886ZM66.6667 122.906C82.1973 122.906 96.2653 116.619 106.432 106.427C116.619 96.2654 122.911 82.1976 122.911 66.6616C122.911 51.1309 116.624 37.0629 106.432 26.8696C96.2705 16.7081 82.2027 10.3909 66.6667 10.3909C51.136 10.3909 37.068 16.7034 26.8747 26.8696C16.7132 37.057 10.396 51.1242 10.396 66.6616C10.396 82.1922 16.7085 96.2602 26.8747 106.427C37.0621 116.614 51.1293 122.906 66.6667 122.906ZM113.792 113.791C101.74 125.869 85.0573 133.332 66.6667 133.332C48.2507 133.332 31.5933 125.869 19.516 113.791C7.46387 101.739 0 85.0564 0 66.6657C0 48.2497 7.4636 31.5924 19.516 19.515C31.5941 7.46289 48.2507 -0.000976562 66.6667 -0.000976562C85.0573 -0.000976562 101.74 7.46262 113.792 19.515C125.87 31.5932 133.333 48.2497 133.333 66.6657C133.333 85.0564 125.87 101.739 113.792 113.791Z"
         fill="currentColor"
-        d="M10 7a3 3 0 1 0-6 0 3 3 0 0 0 6 0Zm1 0a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"
-      />
-      <path
-        fill="currentColor"
-        d="M13 7A6 6 0 1 0 1 7a6 6 0 0 0 12 0Zm1 0A7 7 0 1 1 0 7a7 7 0 0 1 14 0Z"
-      />
-      <path
-        fill="currentColor"
-        d="M4.707 4.293 4 5 2 3l.707-.707 2 2ZM4.707 9.707 4 9l-2 2 .707.707 2-2ZM9.293 4.293 10 5l2-2-.707-.707-2 2ZM9.293 9.707 10 9l2 2-.707.707-2-2Z"
       />
     </svg>
   );
@@ -62,7 +64,14 @@ export function WorkflowIcon(props: React.SVGProps<SVGSVGElement>) {
 
 export function Home(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" {...props}>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="1em"
+      height="1em"
+      fill="none"
+      viewBox="-1 -1 16 16"
+      {...props}
+    >
       <path
         fill="currentColor"
         d="m14.297 5.406.203.15V14.5H9.321V8.88H5.68v5.62H.5V5.556l.203-.15L7.5.378l6.797 5.028ZM1.5 6.06v7.44h3.179V7.88h5.642v5.62H13.5V6.06l-6-4.439-6 4.439Z"
@@ -74,8 +83,11 @@ export function Home(props: React.SVGProps<SVGSVGElement>) {
 export function ExploreIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" {...props}>
-      <path fill="#003A8C" d="M4.326 1.5v1H1v10h10V8.218h1V13.5H0v-12h4.326Z" />
-      <path fill="#003A8C" d="M12 3a2 2 0 1 0-2 2v1a3 3 0 1 1 0-6 3 3 0 0 1 0 6V5a2 2 0 0 0 2-2Z" />
+      <path fill="currentColor" d="M4.326 1.5v1H1v10h10V8.218h1V13.5H0v-12h4.326Z" />
+      <path
+        fill="currentColor"
+        d="M12 3a2 2 0 1 0-2 2v1a3 3 0 1 1 0-6 3 3 0 0 1 0 6V5a2 2 0 0 0 2-2Z"
+      />
       <path
         fill="currentColor"
         d="M13.707 6.293 13 7l-2-2 .707-.707 2 2ZM4 4v1H2V4h2ZM4 7v1H2V7h2ZM4 10v1H2v-1h2ZM9 7v1H5V7h4ZM10 10v1H5v-1h5ZM6 4v1H5V4h1Z"
@@ -177,6 +189,21 @@ export function DownloadIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+export function DownloadAsBoxIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
+      <path
+        fill="currentColor"
+        d="M21.086 8.804v2.21a.75.75 0 1 1-1.5 0v-2.21a2 2 0 0 0-.13-.76l-7.3 4.38v8.19q.172-.051.33-.14l2.53-1.4a.75.75 0 0 1 1 .29a.75.75 0 0 1-.3 1l-2.52 1.4a3.72 3.72 0 0 1-3.62 0l-6-3.3a3.79 3.79 0 0 1-1.92-3.27v-6.39c0-.669.18-1.325.52-1.9q.086-.155.2-.29l.12-.15a3.45 3.45 0 0 1 1.08-.93l6-3.31a3.81 3.81 0 0 1 3.62 0l6 3.31c.42.231.788.548 1.08.93a1 1 0 0 1 .12.15q.113.135.2.29a3.64 3.64 0 0 1 .49 1.9"
+      />
+      <path
+        fill="currentColor"
+        d="m22.196 17.624l-2 2a1.2 1.2 0 0 1-.39.26a1.1 1.1 0 0 1-.46.1q-.239 0-.46-.09a1.3 1.3 0 0 1-.4-.27l-2-2a.74.74 0 0 1 0-1.06a.75.75 0 0 1 1.06 0l1 1v-3.36a.75.75 0 0 1 1.5 0v3.38l1-1a.75.75 0 0 1 1.079-.02a.75.75 0 0 1-.02 1.08z"
+      />
+    </svg>
+  );
+}
+
 export function ArrowOpenRight(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
@@ -256,6 +283,41 @@ export function UserFilled(props: React.SVGProps<SVGSVGElement>) {
         <path
           fill="currentColor"
           d="M12 13c2.396 0 4.575.694 6.178 1.672c.8.488 1.484 1.064 1.978 1.69c.486.615.844 1.351.844 2.138c0 .845-.411 1.511-1.003 1.986c-.56.45-1.299.748-2.084.956c-1.578.417-3.684.558-5.913.558s-4.335-.14-5.913-.558c-.785-.208-1.524-.506-2.084-.956C3.41 20.01 3 19.345 3 18.5c0-.787.358-1.523.844-2.139c.494-.625 1.177-1.2 1.978-1.69C7.425 13.695 9.605 13 12 13m0-11a5 5 0 1 1 0 10a5 5 0 0 1 0-10"
+        />
+      </g>
+    </svg>
+  );
+}
+
+export function HorizontalResize(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
+      <g fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M10 20V4m4 16V4m-4 8H6" />
+        <path d="M2 12.05c-.03-1.035 4.008-3.47 4.389-2.987c.431.548-.6 2.177-.832 2.695c-.14.312-.136.448.023.76c.717 1.406 1.075 2.11.856 2.414l-.002.003C6.08 15.42 2.03 13.061 2 12.05Zm20-.1c.03 1.035-4.008 3.47-4.389 2.987c-.431-.548.6-2.177.832-2.695c.14-.312.136-.448-.023-.76c-.717-1.406-1.075-2.11-.856-2.414l.002-.003C17.92 8.58 21.97 10.939 22 11.95Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M18 12h-4" />
+      </g>
+    </svg>
+  );
+}
+
+export function IconInjection(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 48 48" {...props}>
+      {/* Icon from IconPark Outline by ByteDance - https://github.com/bytedance/IconPark/blob/master/LICENSE */}
+      <g fill="none">
+        <path d="M38.168 22.262L19.077 41.354L6.349 28.626L25.44 9.534" clipRule="evenodd" />
+        <path
+          stroke="currentColor"
+          strokeLinejoin="round"
+          strokeWidth="4"
+          d="M38.168 22.262L19.077 41.354L6.349 28.626L25.44 9.534"
+        />
+        <path
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeWidth="4"
+          d="m21.905 5.999l19.8 19.799m-26.871 2.828l4.243 4.243M6.35 41.353l6.363-6.363m19.092-19.092l3.534-3.535"
         />
       </g>
     </svg>

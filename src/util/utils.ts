@@ -1,8 +1,8 @@
 import { ReactNode } from 'react';
 import { format } from 'date-fns';
-import capitalize from 'lodash/capitalize';
-import isString from 'lodash/isString';
-import _memoize from 'lodash/memoize';
+import capitalize from 'es-toolkit/compat/capitalize';
+import isString from 'es-toolkit/compat/isString';
+import _memoize from 'es-toolkit/compat/memoize';
 
 export function createHeaders(
   token: string,
@@ -71,13 +71,10 @@ export function brainRegionTitleCaseExceptConjunctions(phrase: string) {
 }
 
 export function fieldTitleSentenceCase(title: string | ReactNode) {
-  const SKIP_LOWER = ['SEM', 'Mean ± STD', 'ME-model'];
-  // eslint-disable-next-line
-  return isString(title)
-    ? SKIP_LOWER.includes(title)
-      ? title
-      : title.charAt(0) + title.slice(1).toLowerCase()
-    : '';
+  const SKIP_LOWER = ['SEM', 'Mean ± STD', 'ME-model', 'Temperature (°C)', 'LJP corrected'];
+  if (!isString(title)) return '';
+
+  return SKIP_LOWER.includes(title) ? title : title.charAt(0) + title.slice(1).toLowerCase();
 }
 
 /* Creates an LRU (Least Recently Used) Map.

@@ -1,6 +1,6 @@
-import isNil from 'lodash/isNil';
-import isArray from 'lodash/isArray';
-import isEmpty from 'lodash/isEmpty';
+import isNil from 'es-toolkit/compat/isNil';
+import isArray from 'es-toolkit/compat/isArray';
+import isEmpty from 'es-toolkit/compat/isEmpty';
 
 // Overload 1: checkNotEmpty is true, returns boolean
 export function ensureArray<TElement>(options: {

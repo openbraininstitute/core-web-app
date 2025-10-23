@@ -2,7 +2,7 @@ import { useState, useCallback, ReactNode, useEffect } from 'react';
 import { useAtomValue } from 'jotai';
 import type { ExpandableConfig } from 'antd/es/table/interface';
 
-import { resetFilterSignalAtom } from '@/ui/segments/explore/circuit/context';
+import { resetFilterSignalAtom } from '@/ui/segments/explore/circuit/helpers';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 

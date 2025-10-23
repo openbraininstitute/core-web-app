@@ -277,6 +277,24 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     defaultConstraint: 'updated_by__pref_label__in',
     isDisplayable: true,
   },
+  [EntityCoreFields.IonChannel]: {
+    title: 'Ion Channel',
+    description: 'Name of ion channel',
+    filter: CoreFieldFilterTypeEnum.Text,
+    render: (r) => renderEmptyOrValue(r.name),
+    vocabulary: {
+      plural: 'ion channels',
+      singular: 'Ion channel',
+    },
+    defaultConstraint: 'ion_channel__ilike',
+    isSortable: true,
+    order: {
+      property: 'order_by',
+      value: 'ion_channel',
+    },
+    isFilterable: true,
+    isDisplayable: true,
+  },
 };
 
 function DownloadButton({ entity }: { entity: EntityCoreObjectTypes }) {

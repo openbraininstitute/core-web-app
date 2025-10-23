@@ -1,4 +1,4 @@
-export const LOW_FUNDS_ERROR_CODE = 'INSUFFICIENT_FUNDS';
+export const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
 
 export const messages = {
   DefaultErrorMsg: 'Something went wrong while creating the ME-model, please try again later',

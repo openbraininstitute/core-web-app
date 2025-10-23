@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { LoadingOutlined } from '@ant-design/icons';
 import { FormEvent } from 'react';
 import { format } from 'date-fns';
-import isObject from 'lodash/isObject';
+import isObject from 'es-toolkit/compat/isObject';
 
 import { TextArea } from '@/components/VirtualLab/create-entity-flows/common/inputs';
 import { cancelSubscription } from '@/api/virtual-lab-svc/queries/subscription';

@@ -7,9 +7,9 @@ import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { Image } from 'antd';
 
-import kebabCase from 'lodash/kebabCase';
-import compact from 'lodash/compact';
-import omit from 'lodash/omit';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import compact from 'es-toolkit/compat/compact';
+import omit from 'es-toolkit/compat/omit';
 
 import { useBuildMeModelSessionState, label } from '@/ui/segments/workflows/build/memodel/helpers';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';

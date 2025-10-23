@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 import { atomWithRefresh } from 'jotai/utils';
-import isEqual from 'lodash/isEqual';
+import isEqual from 'es-toolkit/compat/isEqual';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
@@ -10,12 +10,16 @@ import { getCircuitSimulationResult } from '@/api/entitycore/queries/simulation/
 import { TEntityTypeDict } from '@/api/entitycore/types';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/circuit-simulation-execution';
+import {
+  CircuitSimulationExecutionStatus,
+  ICircuitSimulationExecution,
+} from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import { getLatestSimExecStatus } from '@/features/small-microcircuit/_components/utils';
 import { SimExecStatusMap } from '@/features/small-microcircuit/types';
 import { WorkspaceContext } from '@/types/common';
 import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';
+import { resolveExecutions } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 
 const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
   ({ simulationId, context }: { simulationId: string; context: WorkspaceContext }) =>
@@ -37,13 +41,9 @@ const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
 export const simExecRemoteStatusMapAtomFamily = atomFamilyWithExpiration(
   ({ simulationIds, context }: { simulationIds: string[]; context: WorkspaceContext }) =>
     atomWithRefresh<Promise<SimExecStatusMap>>(async () => {
-      const simulationExecutionFilters = { used__id__in: simulationIds.join(',') };
-      const res = await getCircuitSimulationExecutions({
-        filters: simulationExecutionFilters,
-        context,
-      });
+      const executions = await resolveExecutions({ context, allSimIds: simulationIds });
 
-      return res.data.reduce(
+      return executions.reduce(
         (map, simExec) => map.set(simExec.used[0].id, simExec.status),
         new Map()
       );
@@ -70,8 +70,7 @@ export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
         const remoteStatusMap = await get(simExecRemoteStatusMapAtom);
         const localStatusMap = get(localStatusMapAtom);
 
-        const simIds = Array.from(new Set([...remoteStatusMap.keys(), ...localStatusMap.keys()]));
-        const statusMap = simIds.reduce((map, simId) => {
+        const statusMap = simulationIds.reduce((map, simId) => {
           const remoteStatus = remoteStatusMap.get(simId);
           const localStatus = localStatusMap.get(simId);
           // If both are set we take the latest possible one,
@@ -80,7 +79,7 @@ export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
           const status =
             remoteStatus && localStatus
               ? getLatestSimExecStatus(remoteStatus, localStatus)
-              : (localStatus ?? remoteStatus);
+              : (localStatus ?? remoteStatus ?? CircuitSimulationExecutionStatus.CREATED);
           return map.set(simId, status);
         }, new Map());
 
@@ -118,7 +117,10 @@ export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
       const filters = { simulation_campaign_id: campaignId };
       const res = await getCircuitSimulations({ filters, context });
 
-      return res.data;
+      const simulations = res.data;
+      const sortedSimulations = simulations.sort((a, b) => a.name.localeCompare(b.name));
+
+      return sortedSimulations;
     }),
   {
     ttl: 120000, // 2 minutes

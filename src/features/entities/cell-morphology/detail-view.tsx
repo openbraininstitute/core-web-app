@@ -1,34 +1,31 @@
 'use client';
 
-import { LoadingOutlined } from '@ant-design/icons';
-import { Spin } from 'antd';
-import { useAtomValue } from 'jotai';
-import { loadable } from 'jotai/utils';
-import { useParams } from 'next/navigation';
-import { memo, useMemo } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
+import { LoadingOutlined } from '@ant-design/icons';
+import { useParams } from 'next/navigation';
+import { Spin } from 'antd';
 
 // We disable enhanced somas until they are fixed on the backend.
 // import { useSwcContentUrl } from '@/util/content-url';
 
-import { withErrorConfig } from '@/components/GenericErrorFallback';
-import createMorphologyDataAtom from '@/state/morpho-viewer';
-
 import { Morphometrics } from '@/features/entities/cell-morphology/morphometrics';
+import { useLoadCellMorphology3DAsset } from '@/state/morpho-viewer';
+import { withErrorConfig } from '@/components/GenericErrorFallback';
 import { MorphoViewer } from '@/components/MorphoViewer';
 import { ensureArray } from '@/utils/array';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
-import { WorkspaceContext } from '@/types/common';
+import type { WorkspaceContext } from '@/types/common';
 
-export default function MorphologyDetailView({ detail }: { detail: ICellMorphology }) {
-  if (!detail) return null;
+export function CellMorphologyViewer({ entity }: { entity: ICellMorphology }) {
+  if (!entity) return null;
 
   return (
     <>
-      {ensureArray({ input: detail.legacy_id, checkNotEmpty: true }) && (
-        <Morphometrics morphology={detail} />
+      {ensureArray({ input: entity.legacy_id, checkNotEmpty: true }) && (
+        <Morphometrics morphology={entity} />
       )}
+
       <ErrorBoundary
         FallbackComponent={withErrorConfig({
           cls: { container: 'bg-white' },
@@ -36,69 +33,48 @@ export default function MorphologyDetailView({ detail }: { detail: ICellMorpholo
           customError: 'Error while loading morphology viewer',
         })}
       >
-        <MorphoViewerLoaderMemo resource={detail} />
+        <MorphoViewerLoader morphology={entity} />
       </ErrorBoundary>
-      {/* <ErrorBoundary
-        FallbackComponent={withErrorConfig({
-          cls: { container: 'bg-white' },
-          showButtons: false,
-          customError: 'Error while loading similarity filter controls',
-        })}
-      >
-        <GeneralizationControls dataType={DataType.ExperimentalNeuronMorphology} />
-      </ErrorBoundary>
-      {ensureArray({ input: detail.legacy_id, checkNotEmpty: true }) && (
-        <GeneralizationContainer>
-          <WithGeneralization
-            legacyId={ensureArray({ input: detail.legacy_id }).at(0)!}
-            dataType={DataType.ExperimentalNeuronMorphology}
-          />
-        </GeneralizationContainer>
-      )} */}
     </>
   );
 }
 
-function MorphoViewerLoader({ resource }: { resource: ICellMorphology }) {
+function MorphoViewerLoader({ morphology }: { morphology: ICellMorphology }) {
   const ctx = useParams<WorkspaceContext>();
 
-  const morphologyDataAtom = useMemo(
-    () => loadable(createMorphologyDataAtom(resource, ctx)),
-    [resource, ctx]
-  );
+  const { isLoading, result, error } = useLoadCellMorphology3DAsset({ morphology, ctx });
   // We disable enhanced somas until they are fixed on the backend.
   // const swcContentUrl = useSwcContentUrl(resource.distribution);
-  const morphologyData = useAtomValue(morphologyDataAtom);
-  const { state } = morphologyData;
-  switch (state) {
-    case 'hasData':
-      return morphologyData.data ? (
-        <MorphoViewer
-          className="h-full"
-          swc={morphologyData.data}
-          // We disable enhanced somas until they are fixed on the backend.
-          // contentUrl={swcContentUrl}
-        />
-      ) : (
-        <div className="border-neutral-3 flex w-full flex-col items-center justify-center gap-3 border py-20">
-          No morphology data available.
-        </div>
-      );
-
-    case 'loading':
-      return (
-        <div className="flex w-full flex-col items-center justify-center gap-3 py-20">
-          <Spin indicator={<LoadingOutlined />} size="large" />
-          <h2 className="text-primary-9 font-light">Loading morphology...</h2>
-        </div>
-      );
-    case 'hasError':
-      return morphologyData.error ? (
-        <div>{(morphologyData.error as { message: string }).message}</div>
-      ) : null;
-    default:
-      throw Error(`Unknown state for morphologyData: "${state}"!`);
+  if (isLoading) {
+    return (
+      <div className="flex w-full flex-col items-center justify-center gap-3 py-20">
+        <Spin indicator={<LoadingOutlined />} size="large" />
+        <h2 className="text-primary-9 font-light">Loading morphology...</h2>
+      </div>
+    );
+  }
+  if (result) {
+    return (
+      <MorphoViewer
+        className="h-full"
+        swc={result}
+        // We disable enhanced somas until they are fixed on the backend.
+        // contentUrl={swcContentUrl}
+      />
+    );
+  }
+  if (!isLoading && !result) {
+    return (
+      <div className="border-neutral-3 flex w-full flex-col items-center justify-center gap-3 border py-20">
+        No morphology data available.
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="flex w-full flex-col items-center justify-center gap-3 py-20">
+        <h3>{error instanceof Error ? error.message : 'Error loading morphology viewer'}</h3>
+      </div>
+    );
   }
 }
-
-export const MorphoViewerLoaderMemo = memo(MorphoViewerLoader);

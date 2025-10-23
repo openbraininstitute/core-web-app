@@ -4,9 +4,9 @@ import { match, P } from 'ts-pattern';
 import { useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 
-import isString from 'lodash/isString';
-import compact from 'lodash/compact';
-import get from 'lodash/get';
+import isString from 'es-toolkit/compat/isString';
+import compact from 'es-toolkit/compat/compact';
+import get from 'es-toolkit/compat/get';
 
 import { NetworkConfigItem } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
 import { SkeletonItem } from '@/ui/segments/explore/circuit/elements/download-panel/skeleton';

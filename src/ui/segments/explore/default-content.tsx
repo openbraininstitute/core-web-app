@@ -3,7 +3,7 @@
 import { parseAsString, useQueryState, type Parser } from 'nuqs';
 import { useSelectedLayoutSegments } from 'next/navigation';
 import { match, P } from 'ts-pattern';
-import last from 'lodash/last';
+import last from 'es-toolkit/compat/last';
 import type { ReactNode } from 'react';
 
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';

@@ -3,9 +3,9 @@
 import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
 import Ajv, { AnySchema } from 'ajv';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
-import { Fragment, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Progress } from 'antd';
+import { Checkbox, ConfigProvider } from 'antd';
 import { match } from 'ts-pattern';
 import {
   simExecRemoteStatusMapAtomFamily,
@@ -35,13 +35,15 @@ import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entitie
 import ApiError from '@/api/error';
 import authFetch from '@/authFetch';
 import { useAppNotification } from '@/components/notification';
-import { ButtonCopyId } from '@/features/details-view/button-copy-id';
+import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
+import { simulationStatusColorMap } from '@/features/small-microcircuit/constants';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/simulation';
-import { runSimulation } from '@/services/small-scale-simulator/circuit';
+import { runSimulationBatch } from '@/services/small-scale-simulator/circuit';
 import { MessageType } from '@/services/small-scale-simulator/types';
 import { assertErrorMessage, classNames } from '@/util/utils';
 import { getErrorMessage } from '@/utils/error';
+
 import styles from './small-microcircuit.module.css';
 
 export default function SimulationCampaignConfiguration({
@@ -185,6 +187,32 @@ export default function SimulationCampaignConfiguration({
 
                   setLoading(true);
                   try {
+                    const configCopy = { ...config };
+                    configCopy.type = 'CircuitSimulationScanConfig';
+
+                    const coordinateCountRes = await authFetch(
+                      `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/declared/scan_config/grid-scan-coordinate-count`,
+                      {
+                        method: 'POST',
+                        body: JSON.stringify(config),
+                        headers: {
+                          Accept: 'application/json',
+                          'Content-Type': 'application/json',
+                          'virtual-lab-id': virtualLabId,
+                          'project-id': projectId,
+                        },
+                      }
+                    );
+
+                    if (coordinateCountRes.status !== 200) {
+                      const message = await coordinateCountRes.json();
+                      notification.error({
+                        message: 'An error ocurred generating the simulation campaign',
+                        description: message.detail,
+                      });
+                      return;
+                    }
+
                     const res = await authFetch(
                       `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/generated/simulations-generate-grid-save`,
                       {
@@ -295,6 +323,7 @@ export default function SimulationCampaignConfiguration({
               editing &&
               (isRootCategory(schema, configTab) || selectedCatSchema) && (
                 <JSONSchemaForm
+                  selectedCategory={selectedCategory}
                   onAddReferenceClick={handleAddReferenceClick}
                   disabled={!!campaignId || loading}
                   config={config}
@@ -309,6 +338,8 @@ export default function SimulationCampaignConfiguration({
                       : atomsMap[configTab][resolveKey(schema, configTab, selectedItemIdx)]
                   }
                   circuit={circuit}
+                  virtualLabId={virtualLabId}
+                  projectId={projectId}
                 />
               )}
           </div>
@@ -358,9 +389,12 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
   const [selectedSimulation, setSelectedSimulation] = useState<null | ICircuitSimulation>(null);
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
 
-  const [progress, setProgress] = useState<number | null>(null);
-
   const activeSimulationExecStatus = selectedSimulation && statusMap?.get(selectedSimulation.id);
+
+  const onSimulationSelect = useCallback((simulation: ICircuitSimulation) => {
+    setSelectedSimulation(simulation);
+    setSelectedFile(undefined);
+  }, []);
 
   useEffect(() => {
     // Auto select all simulations with status "created" on page load.
@@ -374,14 +408,16 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
   }, [simulations, statusMap]);
 
   useEffect(() => {
-    // If there is only one simulation in the campaign - make it active on page load.
-    if (simulations.length === 1) setSelectedSimulation(simulations[0]);
-  }, [simulations]);
+    // Select first simulation from the list
+    onSimulationSelect(simulations[0]);
+  }, [onSimulationSelect, simulations]);
 
   useEffect(() => {
     // Poll simulation statuses if there are active (running/pending) simulations
     // and no active simulation request with the status streaming
     if (simRequestInProgress) return;
+
+    // TODO Optimize the polling when there are multiple simulation requests
 
     const hasActiveSimulations = statusMap
       ? Array.from(statusMap.values()).some((status) =>
@@ -403,33 +439,37 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
   const run = async () => {
     setSimRequestInProgress(true);
     try {
-      for (const simId of simExecSelectedSimulationIds) {
-        await runSimulation({
-          ctx: { virtualLabId, projectId },
-          simulationId: simulations[0].id,
-          onMessage: (message) => {
-            match(message)
-              .with({ message_type: MessageType.STATUS }, (msg) => {
-                // TODO: fix types
+      await runSimulationBatch({
+        ctx: { virtualLabId, projectId },
+        simulationIds: simExecSelectedSimulationIds,
+        onInit: () =>
+          setTimeout(() => {
+            // Pending statuses are sent via the stream asynchronously after the init.
+            // This timeout prevents the "Run simulations" button from flashing.
+            setSimRequestInProgress(false);
+            setSimExecSelectedSimulationIds([]);
+          }, 1000),
+        onMessage: (message) => {
+          match(message)
+            .with({ message_type: MessageType.STATUS }, (msg) => {
+              // TODO: fix types
+              const simId = msg.ctx?.simulation_id;
+              if (simId) {
                 updateStatusMap(
                   statusMap!.set(simId, msg.status as unknown as CircuitSimulationExecutionStatus)
                 );
+              }
 
-                if (msg.status === 'running' && msg.extra) {
-                  const progressParsed = parseInt(msg.extra, 10);
-                  if (Number.isFinite(progressParsed) && progressParsed > 0) {
-                    setProgress(progressParsed);
-                  }
-                }
+              if (msg.status !== 'done') return;
 
-                if (msg.status !== 'done') return;
+              const simulation = simulations.find((s) => s.id === simId);
+              if (!simulation) return;
 
-                notification.success({ message: `Simulation ${simulations[0].name} done` });
-              })
-              .otherwise(() => null);
-          },
-        });
-      }
+              notification.success({ message: `Simulation ${simulation?.name} done` });
+            })
+            .otherwise(() => null);
+        },
+      });
     } catch (error) {
       const defaultMsg = messages.RunningSimulationDefaultError;
 
@@ -448,19 +488,36 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
     ? `(${simExecSelectedSimulationIds.length})`
     : '';
 
+  const loading = !statusMap;
+  // TODO: Add loading skeleton animation
+
   return (
     <div className={styles.threeColumns}>
-      {/* List of simulations */}
-      <div className="flex flex-col gap-5 overflow-y-auto border-r border-gray-200 pr-4">
-        {simulations.map((simulation) => (
-          <SimulationListItem
-            key={simulation.id}
-            simulation={simulation}
-            execStatus={statusMap?.get(simulation.id)}
-            onSelect={() => {}}
-            progress={progress}
-          />
-        ))}
+      <div className="flex border-r border-gray-200 pr-4">
+        {/* List of simulations */}
+        <div className="flex flex-col justify-start gap-5 overflow-y-auto">
+          {!loading &&
+            simulations.map((simulation) => (
+              <SimulationListItem
+                key={simulation.id}
+                selected={selectedSimulation?.id === simulation.id}
+                simulation={simulation}
+                execStatus={statusMap?.get(simulation.id)}
+                onSelect={() => onSimulationSelect(simulation)}
+                onSelectedForSimChange={(simulationId, selected) => {
+                  if (selected) {
+                    setSimExecSelectedSimulationIds((prev) => [...prev, simulationId]);
+                  } else {
+                    setSimExecSelectedSimulationIds((prev) =>
+                      prev.filter((id) => id !== simulationId)
+                    );
+                  }
+                }}
+                selectedForSim={simExecSelectedSimulationIds.includes(simulation.id)}
+                selectionForSimDisabled={simRequestInProgress}
+              />
+            ))}
+        </div>
         <button
           className={classNames(
             'min-h-[50] w-full cursor-pointer rounded-3xl p-2 text-white',
@@ -471,7 +528,10 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
           onClick={run}
           disabled={simRequestInProgress || simExecSelectedSimulationIds.length === 0}
         >
-          Launch simulations {launchSimBtnLabelPrefix}
+          <div className="flex justify-center gap-4">
+            <span className="pl-10">Launch simulations {launchSimBtnLabelPrefix}</span>
+            <div className="w-6">{simRequestInProgress && <LoadingOutlined />}</div>
+          </div>
         </button>
       </div>
 
@@ -502,25 +562,94 @@ type SimulationBlockProps = {
   simulation: ICircuitSimulation;
   execStatus?: CircuitSimulationExecutionStatus;
   onSelect: (simulationId: string) => void;
-  progress: number | null;
+  selected?: boolean;
+  onSelectedForSimChange: (simulationId: string, selected: boolean) => void;
+  selectedForSim: boolean;
+  selectionForSimDisabled?: boolean;
 };
 
-function SimulationListItem({ simulation, execStatus, onSelect, progress }: SimulationBlockProps) {
+function SimulationListItem({
+  simulation,
+  execStatus,
+  onSelect,
+  selected,
+  onSelectedForSimChange,
+  selectedForSim,
+  selectionForSimDisabled,
+}: SimulationBlockProps) {
+  const color = simulationStatusColorMap[execStatus ?? CircuitSimulationExecutionStatus.CREATED];
+
   return (
-    <button
-      type="button"
-      title={simulation.name}
-      className="h-20 w-full cursor-pointer rounded-lg bg-white p-4"
-      onClick={() => onSelect(simulation.id)}
-    >
-      <div className="flex items-center justify-between">
-        <div className="truncate overflow-hidden whitespace-nowrap">{simulation.name}</div>
-        <div className="ml-4 flex flex-shrink-0">
-          <SimulationStatusBadge status={execStatus} />
-          <RightOutlined className="ml-2 text-sm" />
-        </div>
+    <div className="flex-none">
+      <div
+        className="rounded-lg px-4 pb-4 transition-colors duration-300"
+        style={{
+          border: `2px solid ${selected ? color : 'transparent'}`,
+          backgroundColor: selected ? `${color}0f` : 'white', // 6% opacity for bg color
+        }}
+      >
+        <button
+          type="button"
+          title={simulation.name}
+          className="mb-2 h-18 w-full cursor-pointer"
+          onClick={() => onSelect(simulation.id)}
+        >
+          <div className="flex items-center justify-between">
+            <div className="font-bold">
+              {!execStatus || execStatus === CircuitSimulationExecutionStatus.CREATED ? (
+                <ConfigProvider theme={{ token: { colorPrimary: '#1890ff' } }}>
+                  <Checkbox
+                    className="mr-2 transition-colors duration-300"
+                    disabled={selectionForSimDisabled}
+                    onChange={(e) => onSelectedForSimChange(simulation.id, e.target.checked)}
+                    checked={selectedForSim}
+                    style={{ color }}
+                  >
+                    <span className="truncate overflow-hidden text-lg whitespace-nowrap transition-colors duration-300">
+                      {simulation.name}
+                    </span>
+                  </Checkbox>
+                </ConfigProvider>
+              ) : (
+                <span
+                  style={{ color }}
+                  className="truncate overflow-hidden text-lg whitespace-nowrap transition-colors duration-300"
+                >
+                  {simulation.name}
+                </span>
+              )}
+            </div>
+            <div className="ml-4 flex flex-shrink-0">
+              <SimulationStatusBadge status={execStatus} />
+              <RightOutlined className="ml-2 text-sm" />
+            </div>
+          </div>
+        </button>
+
+        <ScanParams scanParams={simulation.scan_parameters} color={color} />
       </div>
-      {progress && <Progress className="mt-2" size="small" percent={progress} status="active" />}
-    </button>
+    </div>
+  );
+}
+
+type SimulationScanParams = { [key: string]: string | number };
+
+function ScanParams({ scanParams, color }: { scanParams: SimulationScanParams; color: string }) {
+  return (
+    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+      {Object.entries(scanParams).map(([key, value]) => (
+        <div key={key} className="overflow-x-hidden">
+          <div title={key} className="truncate text-ellipsis text-gray-400">
+            {key}
+          </div>
+          <div
+            className="truncate font-bold text-ellipsis transition-colors duration-300"
+            style={{ color }}
+          >
+            {value}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }

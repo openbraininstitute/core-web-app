@@ -11,7 +11,7 @@ import {
   DeleteOutlined,
   EyeOutlined,
 } from '@ant-design/icons';
-import find from 'lodash/find';
+import find from 'es-toolkit/compat/find';
 
 import { FrequencyFormItem } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome/item/frequency-input';
 import { OptionRender } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome/item/config-list-render';
@@ -28,7 +28,7 @@ import {
   label,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 import {
-  PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
+  SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
   SectionTargetMapping,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { useAppNotification } from '@/components/notification';
@@ -57,6 +57,7 @@ type Props = {
   synapsesConfiguration: SynapsesConfiguration;
   placementConfig: TSingleNeuronSynaptomeConfiguration;
   sessionId: string;
+  disableControls: boolean;
 };
 
 export function SynapticInputItem({
@@ -68,6 +69,7 @@ export function SynapticInputItem({
   synapsesConfiguration,
   placementConfig,
   sessionId,
+  disableControls,
 }: Props) {
   const breakpoint = useDefaultBreakpoint();
   const { error: notifyError } = useAppNotification();
@@ -75,7 +77,7 @@ export function SynapticInputItem({
   const [synapseDisplayed, setSynapseDisplayed] = useState(false);
   const [visualizeLoading, setLoadingVisualize] = useState(false);
   const [synapsesPlacement, setSynapsesPlacementAtom] = useAtom(synapsesPlacementAtom);
-  const key = getSessionKey(PREFIX_SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
+  const key = getSessionKey(SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
 
   const [state] = useAtom(SynaptomeConfigurationAtomFamily(key));
   const synapseWithFrequencyStep = state.findIndex((s) => Array.isArray(s.frequency));
@@ -215,8 +217,8 @@ export function SynapticInputItem({
                   title={synapseDisplayed ? 'Hide synapses' : 'Show synapses'}
                   variant="outline"
                   onClick={synapseDisplayed ? onHideSynapse : onVisualize}
-                  disabled={visualizeLoading}
-                  className="text-primary-9 group h-12 w-12"
+                  disabled={visualizeLoading || disableControls}
+                  className="text-primary-9 group disabled:bg-neutral-1 disabled:text-neutral-2 h-12 w-12"
                 >
                   {/* eslint-disable-next-line no-nested-ternary */}
                   {synapseDisplayed ? (
@@ -246,7 +248,8 @@ export function SynapticInputItem({
                   type="button"
                   title="Delete synapses"
                   variant="outline"
-                  className="text-primary-9 h-12 w-12 hover:text-white"
+                  className="text-primary-9 hover:text-primary-8 disabled:bg-neutral-1 disabled:text-neutral-2 h-12 w-12"
+                  disabled={disableControls}
                 >
                   <DeleteOutlined />
                 </Button>

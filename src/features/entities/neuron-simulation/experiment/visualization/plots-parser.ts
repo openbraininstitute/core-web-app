@@ -1,7 +1,9 @@
+import { TgdColor } from '@tolokoban/tgd';
 import { PlotDataEntry } from '@/services/bluenaas-single-cell/types';
 import { logError } from '@/util/logger';
 
 export interface PlotInstance {
+  recording: string;
   /** If specified, it will appear above the plot. */
   title?: string;
   /** X axis label. */
@@ -58,6 +60,7 @@ function createPlotInstance(base: PlotInstance | undefined, entry: PlotDataEntry
       xaxis: 'Time (ms)',
       yaxis: `Voltage (${entry.unit ?? 'mV'})`,
       lines: updatePlots(base?.lines, makeLineForVoltage(entry)),
+      recording: entry.recording ?? 'recording',
     };
   }
   return {
@@ -66,6 +69,7 @@ function createPlotInstance(base: PlotInstance | undefined, entry: PlotDataEntry
     xaxis: 'Time (ms)',
     yaxis: `Current (${entry.unit ?? '?'})`,
     lines: updatePlots(base?.lines, makeLineForCurrent(entry)),
+    recording: entry.recording ?? 'recording',
   };
 }
 
@@ -108,11 +112,10 @@ function distributeColors(plotInstance: PlotInstance): PlotInstance {
   if (plotInstance.lines.length === 0) return plotInstance;
 
   const step = 360 / plotInstance.lines.length;
-  let angle = 0;
+  let angle = 240; // Start with blue.
   for (const line of plotInstance.lines) {
-    if (!line.color) {
-      line.color = `hsl(${angle}deg 100% 50%)`;
-    }
+    const color = new TgdColor(`hsl(${angle}deg 80% 50%)`);
+    line.color = color.toString();
     angle += step;
   }
   return plotInstance;

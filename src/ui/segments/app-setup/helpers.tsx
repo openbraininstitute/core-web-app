@@ -1,5 +1,5 @@
 import { isMatching, P } from 'ts-pattern';
-import head from 'lodash/head';
+import head from 'es-toolkit/compat/head';
 
 import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
@@ -33,8 +33,8 @@ export const resolveWorkspace = async () => {
   ]);
   const profile = profileResult.data?.profile ?? null;
   recentWorkspace = recentWorkspaceResult.data?.data?.recent_workspace.workspace ?? null;
-
   virtualLab = virtualLabResult?.data?.data?.virtual_lab ?? null;
+
   if (virtualLab) {
     virtualLabId = virtualLab.id;
     const { data: projectResult } = await tryCatch(

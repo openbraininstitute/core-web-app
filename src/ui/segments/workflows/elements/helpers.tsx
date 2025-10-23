@@ -1,8 +1,8 @@
-import groupBy from 'lodash/groupBy';
-import values from 'lodash/values';
-import sortBy from 'lodash/sortBy';
-import find from 'lodash/find';
-import get from 'lodash/get';
+import groupBy from 'es-toolkit/compat/groupBy';
+import values from 'es-toolkit/compat/values';
+import sortBy from 'es-toolkit/compat/sortBy';
+import find from 'es-toolkit/compat/find';
+import get from 'es-toolkit/compat/get';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 

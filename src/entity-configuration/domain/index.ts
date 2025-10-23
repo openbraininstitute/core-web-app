@@ -4,6 +4,7 @@ import { MEmodel } from './model/me-model';
 import { SingleNeuronSynaptome } from './model/single-neuron-synaptome';
 import { CellMorphology } from './experimental/cell-morphology';
 import { ElectricalCellRecording } from './experimental/electrical-cell-recording';
+import { IonChannelRecording } from './experimental/ion-channel-recording';
 import { NeuronDensity } from './experimental/neuron-density';
 import { BoutonDensity } from './experimental/bouton-density';
 import { SynapsePerConnection } from './experimental/synapse-per-connection';
@@ -23,8 +24,9 @@ import {
 } from '@/entity-configuration/domain/simulation';
 
 export const EntityCoreExperimentalConfiguration = {
-  ReconstructionMorphology: CellMorphology,
+  CellMorphology,
   ElectricalCellRecording,
+  IonChannelRecording,
   NeuronDensity,
   BoutonDensity,
   SynapsePerConnection,

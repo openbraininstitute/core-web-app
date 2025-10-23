@@ -39,7 +39,7 @@ export const IonChannelModel: EntityCoreTypeConfig<IIonChannelModel> = {
     extension: 'application/json',
   },
 
-  detailViewSections: ['overview'],
+  detailViewSections: ['overview', 'related-artifacts'],
   isBookmarkable: false,
   isDownloadable: true,
   isCopyable: true,

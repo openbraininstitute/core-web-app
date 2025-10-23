@@ -4,20 +4,27 @@ import { useAtom, useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import z from 'zod';
 
-import { RecordLocationConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import { RecordLocationSchema } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import {
+  neuronSectionNamesAtomFamily,
+  RecordLocationConfigurationAtomFamily,
+  SimulationStatus,
+  simulationStatusAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import {
   getSessionKey,
   label,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 import {
-  PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
-  DEFAULT_RECORDING_LOCATION,
+  RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
+  buildDefaultRecordingLocation,
   getSimulationColor,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import {
+  type NeuronLocation,
+  NeuronLocationSchema,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { secNamesAtom } from '@/state/simulate/single-neuron';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
@@ -33,9 +40,10 @@ type RecordItemProps = {
   disableDelete: boolean;
   sections: Array<string>;
   onRemove: (idx: number) => void;
+  record?: NeuronLocation;
 };
 
-function ColorMarker({ index }: { index: number }) {
+function ColorMarker({ color }: { color?: string }) {
   return (
     <div className="flex h-11 items-center justify-center">
       <div
@@ -45,7 +53,7 @@ function ColorMarker({ index }: { index: number }) {
           height: '1em',
           border: '1px solid currentColor',
           borderRadius: '50%',
-          background: getSimulationColor(index),
+          background: color,
           verticalAlign: 'center',
         }}
       />
@@ -53,9 +61,16 @@ function ColorMarker({ index }: { index: number }) {
   );
 }
 
-function RecordItem({ index, name, disable, disableDelete, sections, onRemove }: RecordItemProps) {
+function RecordItem({
+  index,
+  name,
+  disable,
+  disableDelete,
+  sections,
+  record,
+  onRemove,
+}: RecordItemProps) {
   const breakpoint = useDefaultBreakpoint();
-
   return (
     <div className="flex w-full flex-col items-start justify-start pr-2">
       <div className="grid w-full grid-cols-[.5fr_.5fr_.5fr_max-content] items-start justify-center gap-4">
@@ -68,7 +83,7 @@ function RecordItem({ index, name, disable, disableDelete, sections, onRemove }:
             {
               validator: async (_rule, value) => {
                 try {
-                  await RecordLocationSchema.pick({ section: true }).shape.section.parseAsync(
+                  await NeuronLocationSchema.pick({ section: true }).shape.section.parseAsync(
                     value
                   );
                 } catch (error) {
@@ -96,7 +111,7 @@ function RecordItem({ index, name, disable, disableDelete, sections, onRemove }:
             placement="bottomLeft"
             disabled={disable}
             size={breakpoint === 'l' ? 'middle' : 'large'}
-            prefix={<ColorMarker index={index + 1} />}
+            prefix={<ColorMarker color={record?.color} />}
           />
         </Form.Item>
         <Form.Item
@@ -107,7 +122,7 @@ function RecordItem({ index, name, disable, disableDelete, sections, onRemove }:
             {
               validator: async (_rule, value) => {
                 try {
-                  await RecordLocationSchema.pick({ offset: true }).shape.offset.parseAsync(value);
+                  await NeuronLocationSchema.pick({ offset: true }).shape.offset.parseAsync(value);
                 } catch (error) {
                   return Promise.reject(
                     error instanceof z.ZodError ? error.errors.at(0)?.message : 'Offset is required'
@@ -158,7 +173,7 @@ function RecordItem({ index, name, disable, disableDelete, sections, onRemove }:
             {
               validator: async (_rule, value) => {
                 try {
-                  await RecordLocationSchema.pick({
+                  await NeuronLocationSchema.pick({
                     record_currents: true,
                   }).shape.record_currents.parseAsync(value);
                 } catch (error) {
@@ -195,12 +210,13 @@ function RecordItem({ index, name, disable, disableDelete, sections, onRemove }:
 }
 
 export function Recording({ sessionId }: Props) {
-  const key = getSessionKey(PREFIX_RECORDING_LOCATION_CONFIGURATION_SESSION_KEY, sessionId);
-  const [state, update] = useAtom(RecordLocationConfigurationAtomFamily(key));
-
   const [form] = Form.useForm();
-  const sectionNames = useAtomValue(secNamesAtom);
   const breakpoint = useDefaultBreakpoint();
+
+  const key = getSessionKey(RECORDING_LOCATION_CONFIGURATION_SESSION_KEY, sessionId);
+  const [state, update] = useAtom(RecordLocationConfigurationAtomFamily(key));
+  const morphologySectionNames = useAtomValue(neuronSectionNamesAtomFamily(sessionId));
+  const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
 
   useEffect(() => {
     form.setFieldsValue({ record_from: state });
@@ -208,7 +224,8 @@ export function Recording({ sessionId }: Props) {
 
   const onAdd = () => {
     try {
-      const newRecording = { ...DEFAULT_RECORDING_LOCATION };
+      const colorIndex = state.length;
+      const newRecording = { ...buildDefaultRecordingLocation(getSimulationColor(colorIndex)) };
 
       const updatedState = [...state, newRecording];
       update(updatedState);
@@ -242,6 +259,10 @@ export function Recording({ sessionId }: Props) {
     }
   };
 
+  const disableForm =
+    simulationStatus?.status === SimulationStatus.LAUNCHED ||
+    simulationStatus?.status === SimulationStatus.SAVING;
+
   return (
     <div
       id="recording-container"
@@ -254,12 +275,16 @@ export function Recording({ sessionId }: Props) {
         form={form}
         layout="vertical"
         initialValues={{ record_from: state }}
-        className="secondary-scrollbar relative flex h-auto w-full flex-col items-start overflow-x-hidden overflow-y-auto select-none [&_.ant-form-item-explain-error]:text-sm! [&_.ant-form-item-label]:pb-0.5!"
+        className={cn(
+          'secondary-scrollbar relative flex h-auto w-full flex-col items-start overflow-x-hidden overflow-y-auto',
+          'select-none [&_.ant-form-item-explain-error]:text-sm! [&_.ant-form-item-label]:pb-0.5!'
+        )}
         onValuesChange={onValuesChange}
         validateTrigger={['onChange']}
         requiredMark={false}
         id="recording-form"
         data-testid="recording-form"
+        disabled={disableForm}
       >
         <Form.List name="record_from">
           {(fields) =>
@@ -268,10 +293,11 @@ export function Recording({ sessionId }: Props) {
                 key={`recording-${f.name}`}
                 index={index}
                 name={f.name}
-                disable={!sectionNames.length}
-                disableDelete={fields.length <= 1}
-                sections={sectionNames}
+                disable={!morphologySectionNames.length || disableForm}
+                disableDelete={fields.length <= 1 || disableForm}
+                sections={morphologySectionNames}
                 onRemove={onRemove}
+                record={state.at(index)}
               />
             ))
           }
@@ -281,10 +307,10 @@ export function Recording({ sessionId }: Props) {
         rounded
         title="Add new Record Location"
         onClick={onAdd}
-        disabled={!sectionNames.length}
+        disabled={!morphologySectionNames.length || disableForm}
         type="button"
         variant="outline"
-        className="mt-2 mb-1 w-max shadow-sm"
+        className="disabled:bg-neutral-1 disabled:text-label mt-2 mb-1 w-max shadow-sm"
         size={breakpoint === 'l' ? 'md' : 'lg'}
       >
         Add recording

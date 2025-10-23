@@ -24,6 +24,10 @@ export type ElectricalCellRecordingJsonMetadata = {
   [key: string]: any;
 };
 
+export type IonChannelRecordingJsonMetadata = {
+  [key: string]: any;
+};
+
 export type EmodelJsonMetadata = {
   [key: string]: any;
 };

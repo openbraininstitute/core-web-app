@@ -1,6 +1,6 @@
 import { atomFamily, atomWithDefault } from 'jotai/utils';
 import { atom } from 'jotai';
-import _get from 'lodash/get';
+import _get from 'es-toolkit/compat/get';
 
 import { columnKeyToFilter } from '@/ui/segments/data-table/elements/column-key-to-filter';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
@@ -29,8 +29,7 @@ export const coreFiltersAtom = atomFamily(
     const childAtom = atomWithDefault<Array<CoreFilter>>(() => {
       const columns = getViewDefinitionByExtendedType(dataType)?.columns;
       const fields = columns ? getFieldsDefinition(columns) : [];
-
-      return [
+      const filteredColumns = [
         ...(columns
           ?.filter(
             (o) =>
@@ -39,6 +38,7 @@ export const coreFiltersAtom = atomFamily(
           )
           ?.map((colKey) => columnKeyToFilter(colKey, dataType)) ?? []),
       ];
+      return filteredColumns;
     });
     childAtom.debugLabel = `filter-atom/${key}`;
     return childAtom;

@@ -7,9 +7,9 @@ import { parseAsString, Parser, useQueryStates } from 'nuqs';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { WarningOutlined } from '@ant-design/icons';
 import { RESET } from 'jotai/utils';
-import compact from 'lodash/compact';
+import compact from 'es-toolkit/compat/compact';
 import dynamic from 'next/dynamic';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import { RecursiveExpandableTable } from '@/ui/segments/explore/circuit/elements/recursive-expandable-table';
 import { createExpandableTableConfig } from '@/ui/segments/explore/circuit/elements/expandable-base-table';
@@ -18,6 +18,7 @@ import { useExpandableTable } from '@/ui/segments/explore/circuit/elements/use-e
 import { useFilterStateWatcher } from '@/ui/segments/explore/circuit/use-filter-state-watcher';
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { DEFAULT_PAGE_NUMBER, WorkspaceScope, WorkspaceSection } from '@/constants';
 import { expandIcon } from '@/ui/segments/explore/circuit/elements/expand-icon';
@@ -41,10 +42,7 @@ import {
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
 
-import {
-  ExtendedEntitiesTypeDict,
-  type TExtendedEntitiesTypeDict,
-} from '@/api/entitycore/types/extended-entity-type';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { Facets, Pagination } from '@/api/entitycore/types/shared/response';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -81,6 +79,7 @@ export function BrowseCircuit({
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const { mdv, setMdv } = useMiniDetailView();
+
   const [{ scope, view }] = useQueryStates({
     view: parseAsString
       .withDefault(CircuitView.Hierarchy)
@@ -91,8 +90,8 @@ export function BrowseCircuit({
       Parser<TWorkspaceScope>
     >,
   });
-  const dataKey = compact([virtualLabId, projectId, section, dataType, scope, view, id]).join('/');
 
+  const dataKey = compact([virtualLabId, projectId, section, dataType, scope, view, id]).join('/');
   const resetFilterOnExit = useSetAtom(coreFiltersAtom({ dataType, key: dataKey }));
   const activeColumns = useAtomValue(coreActiveColumnsAtom({ dataType, key: dataKey }));
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));

@@ -1,12 +1,8 @@
 import React from 'react';
 import { FullscreenOutlined } from '@ant-design/icons';
 import { tgdFullscreenToggle } from '@bbp/morphoviewer';
-import Plotly from 'plotly.js-dist-min';
 
-import {
-  PLOT_CONFIG,
-  PLOT_LAYOUT,
-} from '@/features/entities/neuron-simulation/experiment/visualization/layout-config';
+import { usePlotly, useResizeObserver } from './hooks';
 import { PlotInstance } from '@/features/entities/neuron-simulation/experiment/visualization/plots-parser';
 import { classNames } from '@/util/utils';
 
@@ -33,39 +29,8 @@ function PlotView({ instance }: { instance: PlotInstance }) {
   const refPlot = React.useRef<HTMLDivElement | null>(null);
   const refContainer = React.useRef<HTMLDivElement | null>(null);
 
-  React.useEffect(() => {
-    const container = refPlot.current;
-    if (!container) return;
-
-    const data: Plotly.Data[] = instance.lines.map((line) => {
-      const item: Plotly.Data = {
-        x: line.x,
-        y: line.y,
-        name: line.name,
-        line: {
-          color: line.color,
-        },
-        visible: !disabledLines.includes(line.name),
-      };
-      return item;
-    });
-    const layout = structuredClone(PLOT_LAYOUT);
-    if (!layout.xaxis) layout.xaxis = { title: instance.xaxis };
-    else layout.xaxis.title = instance.xaxis;
-    if (!layout.yaxis) layout.yaxis = { title: instance.yaxis };
-    else layout.yaxis.title = instance.yaxis;
-    layout.showlegend = false;
-    layout.datarevision = performance.now();
-    delete layout.height;
-    Plotly.react(container, data, layout, PLOT_CONFIG);
-
-    const observer = new ResizeObserver(() => {
-      // Redraw the graph after resize
-      Plotly.relayout(container, {});
-    });
-    observer.observe(container);
-    return () => observer.unobserve(container);
-  }, [instance, disabledLines]);
+  usePlotly(refPlot, instance, disabledLines);
+  useResizeObserver(refPlot);
   const handleFullscreen = () => {
     const container = refContainer.current;
     tgdFullscreenToggle(container, { navigationUI: 'show' });

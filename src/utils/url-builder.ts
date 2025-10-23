@@ -1,62 +1,18 @@
-import kebabCase from 'lodash/kebabCase';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+
+import { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { ROOT_ROUTE } from '@/config';
 import {
   getEntityByCoreType,
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
-import { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
-
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkspaceContext } from '@/types/common';
-import { ROOT_ROUTE } from '@/config';
 
 export const baseUri = '/app/virtual-lab';
 
 export function resolveExploreDetailsPageUrl({
-  ctx,
-  entityId,
-  dataType,
-  entityType,
-}: {
-  ctx?: Partial<WorkspaceContext>;
-  entityId?: string;
-  dataType?: TExtendedEntitiesTypeDict;
-  entityType?: TEntityTypeDict;
-}) {
-  if (dataType && entityType)
-    throw Error('Only one of dataType and entityType should be specified');
-  if (!dataType && !entityType) return '/';
-
-  const entityConfig = dataType
-    ? getEntityByExtendedType({ type: dataType })
-    : getEntityByCoreType({ type: entityType });
-
-  if (!entityConfig) throw new Error('Invalid Entity');
-
-  const slug = entityConfig?.slug; // morphology, e-model, ...
-  const usedSlug: string | undefined = slug;
-  const routePrefix = entityConfig?.explore.routePrefix; // interactive/experimental, model, simulate
-
-  let baseUrl = `${baseUri}/explore/${routePrefix}/${usedSlug}`;
-  if (entityId) {
-    baseUrl = `${baseUrl}/${entityId}`;
-  }
-  if (ctx && ctx.virtualLabId && ctx.projectId) {
-    if (entityId && usedSlug) {
-      return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/${routePrefix}/${usedSlug}/${entityId}`;
-    }
-    if (usedSlug) {
-      return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/${routePrefix}/${usedSlug}`;
-    }
-    return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/explore/interactive`;
-  }
-  if (!dataType && !entityId) {
-    baseUrl = `${baseUri}/explore/interactive`;
-  }
-  return baseUrl;
-}
-
-export function resolveExploreDetailsPageUrl2({
   ctx,
   entityId,
   dataType,

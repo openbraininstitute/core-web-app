@@ -1,10 +1,11 @@
 import { LoadingOutlined, WarningFilled } from '@ant-design/icons';
-import isNil from 'lodash/isNil';
-import find from 'lodash/find';
-import map from 'lodash/map';
+import isNil from 'es-toolkit/compat/isNil';
+import find from 'es-toolkit/compat/find';
+import map from 'es-toolkit/compat/map';
 
 import { CircuitBuildCategory, CircuitScale } from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { countDeepSubCircuits } from '@/ui/segments/explore/circuit/helpers';
 import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 import {
   EmptyPreview,
@@ -23,17 +24,15 @@ import {
 } from '@/entity-configuration/definitions/fields-defs/enums';
 import { hasAssets } from '@/api/entitycore/guards';
 
-import { type FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
+import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
+import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
 import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
-import {
-  countDeepSubCircuits,
-  ICircuitEnriched,
-} from '@/features/entities/circuit/elements/helpers';
-import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import { isNumber } from '@/util/type-guards';
 
 function iCMBooleanField(title: string, field: keyof IonChannelModel) {
   return {
@@ -340,12 +339,17 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isFilterable: true,
     filter: CoreFieldFilterTypeEnum.ValueRange,
     isDisplayable: true,
+    isSortable: true,
     defaultConstraint: {
       lte: 'temperature_celsius__lte',
       gte: 'temperature_celsius__gte',
     },
     render: (r) => {
-      if ('temperature_celsius' in r && !isNil(r.temperature_celsius)) return r.temperature_celsius;
+      if (
+        EntityCoreFields.TemperatureCelsius in r &&
+        isNumber(r[EntityCoreFields.TemperatureCelsius])
+      )
+        return `${r[EntityCoreFields.TemperatureCelsius]} °C`;
       return EmptyValue;
     },
   },

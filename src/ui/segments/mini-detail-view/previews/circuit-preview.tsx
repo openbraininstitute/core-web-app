@@ -1,6 +1,6 @@
 import { Empty } from 'antd';
 
-import { ProgressiveEntityImage } from '@/features/entities/circuit/elements/use-progressive-img';
+import { ProgressiveEntityImage } from '@/ui/segments/explore/circuit/elements/use-progressive-img';
 import { EmptyPreview } from '@/entity-configuration/definitions/renderer';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';

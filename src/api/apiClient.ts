@@ -1,5 +1,5 @@
-import isNil from 'lodash/isNil';
-import omitBy from 'lodash/omitBy';
+import isNil from 'es-toolkit/compat/isNil';
+import omitBy from 'es-toolkit/compat/omitBy';
 
 import { parseApiError } from '@/api/utils';
 import { getSession } from '@/authFetch';
@@ -448,7 +448,7 @@ class ApiClient {
  * @param {CacheConfiguration} [cacheConfig] - optional cache configuration
  * @returns {Promise<ApiClient>} a promise that resolves to an instance of ApiClient
  */
-export default async function authApiClient(rootUri: string, cacheConfig?: CacheConfiguration) {
+export async function authApiClient(rootUri: string, cacheConfig?: CacheConfiguration) {
   const session = await getSession();
 
   return new ApiClient({
@@ -457,3 +457,5 @@ export default async function authApiClient(rootUri: string, cacheConfig?: Cache
     cache: cacheConfig,
   });
 }
+
+export default authApiClient;

@@ -21,6 +21,7 @@ export interface IValidationResult
   name: string;
   validated_entity_id: string;
   validated_entity: any;
+  type: 'validation_result';
 }
 
 export interface IValidationResultFilter

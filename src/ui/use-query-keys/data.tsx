@@ -1,3 +1,7 @@
+import type { IScientificArtifactPublicationLinkFilter } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
+import type { ISingleNeuronSynaptomeSimulationFilter } from '@/api/entitycore/types/entities/single-neuron-synaptome-simulation';
+import type { ISingleNeuronSimulationFilter } from '@/api/entitycore/types/entities/single-neuron-simulation';
+import type { ElectricalCellRecordingFilter } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
@@ -40,7 +44,21 @@ export const keyBuilder = {
     `${prefix}-electrical-cell-recordings-count`,
     { virtualLabId, projectId, brainRegionId: brainRegionId ?? '' },
   ],
-
+  electricalCellRecordings: ({
+    virtualLabId,
+    projectId,
+    brainRegionId,
+    page,
+    pageSize,
+    ...props
+  }: WorkspaceContext & {
+    brainRegionId?: string;
+    page?: number;
+    pageSize?: number;
+  } & ElectricalCellRecordingFilter) => [
+    `${prefix}-electrical-cell-recordings`,
+    { virtualLabId, projectId, brainRegionId: brainRegionId ?? '', page, pageSize, ...props },
+  ],
   meModel: ({ virtualLabId, projectId, entityId }: WorkspaceContext & { entityId: string }) => [
     `${prefix}-single-neuron-model`,
     { virtualLabId, projectId, entityId },
@@ -99,9 +117,9 @@ export const keyBuilder = {
   }: {
     entityId: string;
     assetId: string;
-    assetPath: string;
+    assetPath?: string;
     assetType?: TEntityTypeDict;
-    context: WorkspaceContext;
+    context?: WorkspaceContext;
     asRawResponse?: boolean;
   }) => [
     `${prefix}-entity-asset`,
@@ -117,4 +135,67 @@ export const keyBuilder = {
     `${prefix}-neuron-morphology-3d-data`,
     { virtualLabId, projectId, modelId },
   ],
+  agents: ({ agentType }: { agentType: 'person' | 'organization' | 'consortium' }) => [
+    `${prefix}-agents`,
+    { agentType },
+  ],
+  roles: ({ roleType }: { roleType: 'contributor' | 'owner' | 'viewer' }) => [
+    `${prefix}-roles`,
+    { roleType },
+  ],
+  derivations: ({
+    virtualLabId,
+    projectId,
+    entityId,
+    entityRoute,
+    derivationType,
+    page,
+    pageSize,
+  }: WorkspaceContext & {
+    entityId: string;
+    entityRoute: TEntityTypeDict;
+    derivationType: TDerivationType;
+    page: number;
+    pageSize: number;
+  }) => [
+    `${prefix}-derivations`,
+    { virtualLabId, projectId, entityId, entityRoute, derivationType, page, pageSize },
+  ],
+  ionChannelsFile: ({ entityName }: { entityName: string }) => [
+    `${prefix}-ion-channels-file`,
+    { entityName },
+  ],
+  scientificArtifactPublicationLinks: ({
+    context,
+    ...props
+  }: {
+    context: WorkspaceContext;
+    props: Partial<IScientificArtifactPublicationLinkFilter>;
+  }) => [`${prefix}-scientific-artifact-publication-links`, { ...context, ...props }],
+  singleNeuronSimulations: ({
+    context,
+    ...props
+  }: {
+    context: WorkspaceContext;
+    props: Partial<ISingleNeuronSimulationFilter>;
+  }) => [`${prefix}-single-neuron-simulations`, { ...context, ...props }],
+  singleNeuronSynaptomeSimulations: ({
+    context,
+    ...props
+  }: {
+    context: WorkspaceContext;
+    props: Partial<ISingleNeuronSynaptomeSimulationFilter>;
+  }) => [`${prefix}-single-neuron-synaptome-simulations`, { ...context, ...props }],
+  circuitProperties: ({ circuitId }: { circuitId: string }) => {
+    return [`${prefix}-circuit-properties`, circuitId];
+  },
+  mtype: ({ virtualLabId, projectId }: WorkspaceContext) => [
+    `${prefix}-mtype-class`,
+    { context: { virtualLabId, projectId } },
+  ],
+  subject: ({ virtualLabId, projectId }: WorkspaceContext) => [
+    `${prefix}-subject`,
+    { context: { virtualLabId, projectId } },
+  ],
+  license: (context?: WorkspaceContext) => [`${prefix}-license`, { context }],
 };

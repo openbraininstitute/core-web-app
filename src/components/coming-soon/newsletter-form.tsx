@@ -6,7 +6,7 @@ import { HTMLProps, useState } from 'react';
 import Link from 'next/link';
 import { Form, Button, ConfigProvider, Checkbox, Result, Alert } from 'antd';
 import { z } from 'zod';
-import delay from 'lodash/delay';
+import delay from 'es-toolkit/compat/delay';
 
 import { classNames } from '@/util/utils';
 import { Input } from '@/components/inputs/input-outline';

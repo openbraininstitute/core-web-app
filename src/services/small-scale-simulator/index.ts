@@ -1,1 +1,1 @@
-export { runSimulation as runCircuitSimulation } from './circuit';
+export { runSimulationBatch as runCircuitSimulation } from './circuit';

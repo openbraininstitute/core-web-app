@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import snakeCase from 'lodash/snakeCase';
+import snakeCase from 'es-toolkit/compat/snakeCase';
 
 import { getBuildTypeFromSimulateType } from '@/ui/segments/workflows/elements/helpers';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';

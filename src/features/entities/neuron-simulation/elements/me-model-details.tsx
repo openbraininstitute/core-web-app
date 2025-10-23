@@ -34,21 +34,21 @@ export default function ModelDetails({ virtualLabId, projectId, meModel }: Props
         <div className="flex flex-col">
           <span className="text-neutral-4 mb-2 text-base uppercase">Single neuron model</span>
           <div className="flex items-start gap-2">
-            <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border">
+            <div className="border-neutral-3 flex h-60 w-60 items-center justify-center border bg-white">
               <PreviewThumbnail resource={meModel.morphology} height={196} width={196} />
             </div>
 
-            <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border">
+            <div className="border-neutral-3 flex h-60 w-60 items-center justify-center border bg-white">
               <PreviewThumbnail resource={meModel.emodel} height={196} width={196} />
             </div>
           </div>
         </div>
-        <div className="mt-6 flex flex-col gap-3">
+        <div className="mt-6 flex max-w-max min-w-0 grow flex-col gap-3">
           <div className="pl-12">
             <Field
               label="Name"
               value={meModel.name}
-              className="text-primary-8 my-1 text-3xl font-bold"
+              className="text-primary-8 my-1 line-clamp-2 min-w-0 text-3xl font-bold"
             />
           </div>
 

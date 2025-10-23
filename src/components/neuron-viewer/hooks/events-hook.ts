@@ -1,20 +1,20 @@
-import { MutableRefObject, useEffect } from 'react';
+import { RefObject, useEffect } from 'react';
 
+import { NeuronViewerRenderer } from '@/services/bluenaas-single-cell/renderer';
 import {
   DISPLAY_SYNAPSES_3D_EVENT,
   REMOVE_SYNAPSES_3D_EVENT,
   RESET_SYNAPSES_3D_EVENT,
   DisplaySynapses3DEvent,
   RemoveSynapses3DEvent,
-} from './events';
-import Renderer from '@/services/bluenaas-single-cell/renderer';
+} from '@/components/neuron-viewer/hooks/events';
 
-export default function useNeuronViewerEvents({
+export function useNeuronViewerEvents({
   renderer,
   useEvents = false,
 }: {
   useEvents?: boolean;
-  renderer: MutableRefObject<Renderer | null>;
+  renderer: RefObject<NeuronViewerRenderer | null>;
 }) {
   useEffect(() => {
     if (!useEvents) return;

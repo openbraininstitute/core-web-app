@@ -7,18 +7,18 @@ import NextLink from 'next/link';
 import { useAtom } from 'jotai';
 
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
-import Action from '@/ui/molecules/side-menu-action';
+import { EntityTypeValue } from '@/entity-configuration/domain';
 import { downloadArchive } from '@/services/entity-download';
+import Action from '@/ui/molecules/side-menu-action';
 import {
   EntityCoreExtendedType,
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
-import { ROOT_ROUTE } from '@/config';
-import { EntityTypeValue } from '@/entity-configuration/domain';
 import {
   PanelQueryParam,
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { ROOT_ROUTE } from '@/config';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
@@ -119,7 +119,7 @@ export default function ActionMenu({
       : 'scale' in entity && entityType.isSimulatable(entity.scale);
 
   return (
-    <div className="text-primary-9 mt-10 flex flex-col gap-5 pr-20 pl-10 text-lg font-bold">
+    <div className="text-primary-9 mt-10 flex flex-col gap-5 px-5 text-lg font-bold">
       <Action
         icon={
           !copied ? (

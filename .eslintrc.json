@@ -1,13 +1,6 @@
 {
-  "plugins": ["lodash", "jsx-a11y"],
-  "extends": [
-    "airbnb",
-    "airbnb-typescript",
-    "next",
-    "next/core-web-vitals",
-    "plugin:lodash/recommended",
-    "prettier"
-  ],
+  "plugins": ["jsx-a11y"],
+  "extends": ["airbnb", "airbnb-typescript", "next", "next/core-web-vitals", "prettier"],
   "parserOptions": {
     "project": "./tsconfig.json"
   },
@@ -50,14 +43,6 @@
       }
     ],
     "import/prefer-default-export": "off",
-    "lodash/chaining": "off",
-    "lodash/import-scope": [2, "method"],
-    "lodash/matches-prop-shorthand": "off",
-    "lodash/prefer-constant": "off",
-    "lodash/prefer-lodash-method": "off",
-    "lodash/prefer-lodash-typecheck": "off",
-    "lodash/prefer-noop": "off",
-    "lodash/prop-shorthand": "off",
     "no-await-in-loop": "off",
     "no-continue": "off",
     "no-restricted-exports": "off",

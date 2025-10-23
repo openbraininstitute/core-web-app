@@ -24,10 +24,6 @@ export default function AboutNavigation() {
       name: 'Terms and condition',
       id: 'terms-and-conditions',
     },
-    {
-      name: 'About the app',
-      id: 'about-the-app',
-    },
   ];
 
   const searchParams = useSearchParams();

@@ -6,9 +6,10 @@ import { match, P } from 'ts-pattern';
 import { useAtom } from 'jotai';
 import { Image } from 'antd';
 
-import kebabCase from 'lodash/kebabCase';
+import kebabCase from 'es-toolkit/compat/kebabCase';
 import Link from 'next/link';
 
+import { useSearchParams } from 'next/navigation';
 import { SingleNeuronSimulationPreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-simulation-preview';
 import { SingleNeuronSynaptomePreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-synaptome-preview';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
@@ -290,6 +291,7 @@ function ExploreActions<T extends EntityCoreObjectTypes>({
   record: T;
   dataType?: TExtendedEntitiesTypeDict;
 }) {
+  const queryParams = useSearchParams();
   const { virtualLabId, projectId } = useWorkspace();
   const [, copy, , copying] = useCopyToClipboard();
   const onCopyClipboard = () => copy(record.id);
@@ -419,7 +421,10 @@ function ExploreActions<T extends EntityCoreObjectTypes>({
         className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
       >
         <Link
-          href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(dataType)}/${record.id}`}
+          href={{
+            pathname: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(dataType)}/${record.id}`,
+            query: queryParams.toString(),
+          }}
         >
           View details
         </Link>

@@ -3,8 +3,8 @@
 import { useParams, usePathname } from 'next/navigation';
 import { useRouter } from '@bprogress/next/app';
 import { useState } from 'react';
-import snakeCase from 'lodash/snakeCase';
-import kebabCase from 'lodash/kebabCase';
+import snakeCase from 'es-toolkit/compat/snakeCase';
+import kebabCase from 'es-toolkit/compat/kebabCase';
 
 import {
   CategorySelectScrollable,
@@ -118,15 +118,15 @@ export function ActivityAndTypeSelectors({
 
   return (
     <div
-      id="workflow-category-selector"
-      data-testid="workflow-category-selector"
-      className="inline-flex w-full max-w-max items-center justify-start gap-2 px-2 py-2"
+      id="workflow-category-and-type-selector"
+      data-testid="workflow-category-and-type-selector"
+      className="inline-flex w-full max-w-max items-center justify-start gap-2 px-2 py-2 select-none"
     >
-      <div id="workflow-category-content" className="flex items-center justify-center gap-2">
+      <div className="shadow-bnb flex items-center justify-center gap-2 rounded-full bg-white py-1 pr-1 pl-5">
         Category
         <CategorySelectScrollable value={activity} onSelect={handleActivitySelect} />
       </div>
-      <div className="flex items-center justify-center gap-2">
+      <div className="shadow-bnb flex items-center justify-center gap-2 rounded-full bg-white py-1 pr-1 pl-5">
         Type
         <EntityTypeSelectScrollable
           category={activity}

@@ -11,14 +11,33 @@ const logColors = {
 };
 const resetColor = '\x1b[0m';
 
-export function log(
-  type: 'log' | 'error' | 'warn' | 'debug' | 'trace' | 'info',
-  ...args: Parameters<
-    typeof console.log | typeof console.error | typeof console.warn | typeof console.debug
-  >
-) {
+type LogArgs = Parameters<
+  typeof console.log | typeof console.error | typeof console.warn | typeof console.debug
+>;
+
+export function log(type: 'log' | 'error' | 'warn' | 'debug' | 'trace' | 'info', ...args: LogArgs) {
   if (env.NEXT_PUBLIC_DEPLOYMENT_ENV !== 'production') {
     // eslint-disable-next-line no-console
-    console[type](`${logColors[type]}${args[0]}${resetColor}\n`, ...args.slice(1));
+    console[type](`${logColors[type]}${args[0]}${resetColor}`, ...args.slice(1), '\n');
   }
+}
+
+export function logError(...args: LogArgs) {
+  log('error', ...args);
+}
+
+export function logWarn(...args: LogArgs) {
+  log('warn', ...args);
+}
+
+export function logDebug(...args: LogArgs) {
+  log('debug', ...args);
+}
+
+export function logTrace(...args: LogArgs) {
+  log('trace', ...args);
+}
+
+export function logInfo(...args: LogArgs) {
+  log('info', ...args);
 }

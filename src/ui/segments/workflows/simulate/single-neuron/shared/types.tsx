@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import isNil from 'lodash/isNil';
+import isNil from 'es-toolkit/compat/isNil';
 
 import { DefaultColor } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 
@@ -120,8 +120,8 @@ export const ExperimentalSetupConfigurationSchema = z.object({
     .max(50, 'Temperature must be between 0 and 50°C'),
   vinit: z
     .number({ message: 'Please enter a valid numeric value for initial membrane voltage (mV).' })
-    .min(-200, 'Initial voltage must be between -200 and 200 mV')
-    .max(200, 'Initial voltage must be between -200 and 200 mV'),
+    .min(-200, 'Initial voltage must be between -200 and 100 mV')
+    .max(100, 'Initial voltage must be between -200 and 100 mV'),
   hypamp: z
     .number({ message: 'Please enter a valid numeric value for holding current (nA).' })
     .min(-20, 'Holding current must be between -20 and 20 nA')
@@ -186,7 +186,14 @@ export const StimulationConfigurationSchema = z.object({
 
 export type TStimulationConfiguration = z.infer<typeof StimulationConfigurationSchema>;
 
-export const RecordLocationSchema = z.object({
+export const NeuronLocationOriginSchema = z.enum(['injection', 'recording']);
+export type TNeuronLocationOrigin = z.infer<typeof NeuronLocationOriginSchema>;
+
+export const NeuronLocationOriginDict = Object.fromEntries(
+  NeuronLocationOriginSchema.options.map((value) => [value, value])
+) as Record<TNeuronLocationOrigin, TNeuronLocationOrigin>;
+
+export const NeuronLocationSchema = z.object({
   section: z.string({ message: 'Recording section name is required' }),
   offset: z
     .number({
@@ -201,13 +208,15 @@ export const RecordLocationSchema = z.object({
       'Recording position offset must be between 0 and 1 (0 = start of section, 1 = end of section)'
     ),
   record_currents: z.boolean(),
+  color: z.string().optional(),
+  origin: NeuronLocationOriginSchema,
 });
 
-export type RecordLocation = z.infer<typeof RecordLocationSchema>;
+export type NeuronLocation = z.infer<typeof NeuronLocationSchema>;
 
-export const RecordLocationArraySchema = z.array(RecordLocationSchema);
+export const NeuronLocationArraySchema = z.array(NeuronLocationSchema);
 
-export type RecordLocationArray = z.infer<typeof RecordLocationArraySchema>;
+export type NeuronLocationArray = z.infer<typeof NeuronLocationArraySchema>;
 
 export const SynapseConfigSchema = z.object({
   id: z.string(),
@@ -257,7 +266,7 @@ export const OverviewConfigurationSchema = z.object({
   description: z.string().optional(),
 });
 
-export type OverviewConfiguration = z.infer<typeof OverviewConfigurationSchema>;
+export type TOverviewConfiguration = z.infer<typeof OverviewConfigurationSchema>;
 
 export type SynapseConfiguration = z.infer<typeof SynapseConfigSchema>;
 

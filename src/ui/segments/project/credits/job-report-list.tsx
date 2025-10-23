@@ -1,7 +1,7 @@
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { Table } from 'antd';
-import find from 'lodash/find';
+import find from 'es-toolkit/compat/find';
 
 import { getProjectJobReports } from '@/services/virtual-lab/projects';
 import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';

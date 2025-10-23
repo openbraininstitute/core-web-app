@@ -7,7 +7,7 @@ import ChevronIcon from './Chevron';
 import ChevronLeft from './ChevronLeft';
 import ChevronRight from './ChevronRight';
 import CloseIcon from './CloseIcon';
-import DocumentationIcon from './Documentation';
+import { DocumentationIcon } from './Documentation';
 import DownloadIcon from './DownloadIcon';
 import EyeIcon from './EyeIcon';
 import FileIcon from './File';

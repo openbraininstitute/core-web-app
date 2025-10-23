@@ -328,6 +328,7 @@ export function Modal({
 
   // get container element
   const getContainer = () => {
+    if (typeof window === 'undefined') return null;
     if (typeof container === 'function') return container();
     if (container) return container;
     return document.body;
@@ -425,7 +426,10 @@ export function Modal({
     </div>
   );
 
-  return createPortal(modalContent, getContainer());
+  const containerElement = getContainer();
+  if (!containerElement) return null;
+
+  return createPortal(modalContent, containerElement);
 }
 
 // modal hook options interface

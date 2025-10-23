@@ -1,6 +1,6 @@
-import find from 'lodash/find';
-import get from 'lodash/get';
-import isEmpty from 'lodash/isEmpty';
+import find from 'es-toolkit/compat/find';
+import get from 'es-toolkit/compat/get';
+import isEmpty from 'es-toolkit/compat/isEmpty';
 
 import getMeasurements, {
   EmptyValue,
@@ -30,6 +30,7 @@ import type {
 } from '@/api/entitycore/types';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
+import { ensureString, isNumber, isString } from '@/util/type-guards';
 
 const morphologyMtypes = (morphology?: ICellMorphology) => {
   if (!morphology) return [];
@@ -569,5 +570,45 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     render: (r) =>
       renderMorphologyMeasurement(r as ICellMorphology, 'Soma', 'soma_radius', 'raw', true),
+  },
+  [EntityCoreFields.IonChannel]: {
+    className: 'text-left',
+    title: 'Ion channel',
+    isFilterable: true,
+    filter: CoreFieldFilterTypeEnum.Text,
+    isDisplayable: true,
+    isSortable: true,
+    render: (r) => {
+      const ionChannel = 'ion_channel' in r ? (r.ion_channel as Record<string, unknown>) : {};
+      const name = ensureString(ionChannel.name, EmptyValue);
+      return name;
+    },
+    defaultConstraint: 'ion_channel__name__ilike',
+  },
+  [EntityCoreFields.Temperature]: {
+    className: 'text-left',
+    title: 'Temperature (°C)',
+    isFilterable: true,
+    filter: CoreFieldFilterTypeEnum.ValueOrRange,
+    isDisplayable: true,
+    isSortable: true,
+    render: (r) => {
+      const temperature =
+        EntityCoreFields.Temperature in r ? (r[EntityCoreFields.Temperature] as number) : null;
+      return isNumber(temperature) || isString(temperature) ? `${temperature} °C` : EmptyValue;
+    },
+  },
+  [EntityCoreFields.CellLine]: {
+    className: 'text-left',
+    title: 'Cell line',
+    isFilterable: true,
+    filter: CoreFieldFilterTypeEnum.Text,
+    isDisplayable: true,
+    isSortable: true,
+    render: (r) => {
+      const cellLine = ensureString('cell_line' in r ? r.cell_line : null, '—');
+      return cellLine;
+    },
+    defaultConstraint: 'cell_line__ilike',
   },
 };

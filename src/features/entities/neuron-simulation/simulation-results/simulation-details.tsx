@@ -4,9 +4,9 @@ import { ConfigProvider, Segmented, Spin } from 'antd';
 import { SegmentedValue } from 'antd/lib/segmented';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import startsWith from 'lodash/startsWith';
-import some from 'lodash/some';
-import get from 'lodash/get';
+import startsWith from 'es-toolkit/compat/startsWith';
+import some from 'es-toolkit/compat/some';
+import get from 'es-toolkit/compat/get';
 
 import SimulationPlot from '@/features/entities/neuron-simulation/simulation-results/simulation-plot-dynamic';
 
@@ -27,7 +27,7 @@ import type {
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
-import { ButtonCopyId } from '@/features/details-view/button-copy-id';
+import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 const subtitleStyle = 'font-thin text-neutral-4';
@@ -53,11 +53,13 @@ export default function SimulationDetail<T extends GenericSimulation>({
   const [error, setError] = useState<Error | null>(null);
 
   const simulationEntity = getEntityByCoreType({ type: simulation.type });
-  const detailsPageUrl = resolveExploreDetailsPageUrl({
-    ctx: { virtualLabId, projectId },
-    dataType: simulationEntity?.extendedType,
-    entityId: simulation.id,
-  });
+  const detailsPageUrl = simulationEntity
+    ? resolveExploreDetailsPageUrl({
+        ctx: { virtualLabId, projectId },
+        dataType: simulationEntity.extendedType,
+        entityId: simulation.id,
+      })
+    : '';
 
   useEffect(() => {
     async function getConfigurationAsset() {

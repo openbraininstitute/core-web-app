@@ -1,5 +1,5 @@
 import { captureException } from '@sentry/nextjs';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 import ApiError from './error';
 
 type Ok<T> = {
