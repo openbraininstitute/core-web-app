@@ -82,10 +82,7 @@ export default function ParameterSwep({
                       const updated = [...values];
                       updated[i] = newValue;
                       setValues(updated);
-
-                      const filteredValues = updated.filter((_v) => _v !== null);
-
-                      onChange(filteredValues.length > 0 ? filteredValues : [null]);
+                      onChange(updated);
                     }}
                   />
                   {!disabled && (
@@ -106,8 +103,7 @@ export default function ParameterSwep({
                               const updated = [...values];
                               updated.splice(i, 1);
                               setValues(updated);
-                              const filteredValues = updated.filter((_v) => _v !== null);
-                              onChange(filteredValues.length > 0 ? filteredValues : [null]);
+                              onChange(updated);
                             }}
                           />
                         )}
