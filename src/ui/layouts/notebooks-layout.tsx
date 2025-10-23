@@ -28,9 +28,10 @@ export function NotebooksLayout({ children, active }: Props) {
             active === 'private' ? 'bg-primary-9 font-bold text-white' : 'text-primary-9 bg-white'
           )}
         >
-          Private
+          Project
         </NextLink>
       </div>
+
       <div
         id="notebooks-layout"
         className="bg-background border-neutral-2 ml-5 h-[calc(100vh-11rem)] rounded-2xl border p-5"
