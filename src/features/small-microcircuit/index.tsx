@@ -9,6 +9,7 @@ import { Checkbox, ConfigProvider } from 'antd';
 import type { CheckboxProps } from 'antd';
 import { match } from 'ts-pattern';
 import {
+  circuitAtomFamily,
   simExecRemoteStatusMapAtomFamily,
   simExecStatusMapAtomFamily,
   simulationsByCampaignIdAtomFamily,
@@ -33,6 +34,7 @@ import { cn } from '@/utils/css-class';
 
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import ApiError from '@/api/error';
 import authFetch from '@/authFetch';
 import { useAppNotification } from '@/components/notification';
@@ -395,7 +397,6 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
 
   const onActiveSimulationChange = useCallback((simulation: ICircuitSimulation) => {
     setActiveSimulation(simulation);
-    setSelectedFile(undefined);
   }, []);
 
   const onSelectedForSimChange = useCallback((simulationId: string, selected: boolean) => {
@@ -426,6 +427,8 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
       onActiveSimulationChange(simulations[0]);
     }
   }, [onActiveSimulationChange, simulations]);
+
+
 
   useEffect(() => {
     // Poll simulation statuses if there are active (running/pending) simulations
@@ -564,6 +567,12 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
       <div className="border-r border-gray-200 px-4">
         {!!activeSimulation && (
           <Suspense fallback={<div className="text-neutral-5 mt-4 font-semibold">Loading...</div>}>
+            <AutoSelectCircuitConfig
+              simulation={activeSimulation}
+              context={context}
+              onSelect={setSelectedFile}
+              currentSelectedFile={selectedFile}
+            />
             <SimulationFiles
               simulation={activeSimulation}
               execStatus={activeSimulationExecStatus}
@@ -581,6 +590,70 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
       </div>
     </div>
   );
+}
+
+type AutoSelectCircuitConfigProps = {
+  simulation: ICircuitSimulation;
+  context: { virtualLabId: string; projectId: string };
+  onSelect: (file: File) => void;
+  currentSelectedFile?: File;
+};
+
+function AutoSelectCircuitConfig({
+  simulation,
+  context,
+  onSelect,
+  currentSelectedFile,
+}: AutoSelectCircuitConfigProps) {
+  const circuit = useAtomValue(circuitAtomFamily({ circuitId: simulation.entity_id, context }));
+  const previousSimulationIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    // Only run when simulation changes, not when selected file changes
+    if (previousSimulationIdRef.current === simulation.id) {
+      return;
+    }
+    previousSimulationIdRef.current = simulation.id;
+
+    // Get the name of the currently selected file to try to find the same file in the new simulation
+    const currentFileName = currentSelectedFile?.assetPath?.split('/').at(-1) ?? 
+                           currentSelectedFile?.asset.path.split('/').at(-1);
+
+    // Try to find a file with the same name as the currently selected file
+    let matchingFile = currentFileName 
+      ? simulation.assets.find((asset) => {
+          const fileName = asset.path.split('/').at(-1);
+          return fileName === currentFileName;
+        })
+      : null;
+
+    // If no match by current file name, try matching by simulation name
+    if (!matchingFile) {
+      matchingFile = simulation.assets.find((asset) => {
+        const fileName = asset.path.split('/').at(-1);
+        return fileName?.includes(simulation.name);
+      });
+    }
+
+    if (matchingFile) {
+      // If found, select the matching file
+      onSelect({ asset: matchingFile, entity: simulation });
+    } else {
+      // Fall back to circuit config
+      const sonataCircuitAsset = circuit.assets.find(
+        (asset) => asset.label === AssetLabel.sonata_circuit
+      );
+      if (sonataCircuitAsset) {
+        onSelect({
+          entity: circuit,
+          asset: sonataCircuitAsset,
+          assetPath: 'circuit_config.json',
+        });
+      }
+    }
+  }, [circuit, onSelect, simulation, currentSelectedFile]);
+
+  return null;
 }
 
 type SimulationBlockProps = {
