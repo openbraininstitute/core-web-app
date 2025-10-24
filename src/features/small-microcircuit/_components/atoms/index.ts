@@ -96,7 +96,7 @@ export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
     );
   },
   {
-    ttl: 10 * 60 * 1000, // 10 minutes
+    ttl: 2 * 60 * 1000, // 2 minutes
     areEqual: isEqual,
   }
 );
