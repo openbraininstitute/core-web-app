@@ -140,7 +140,7 @@ export class IonChannelRecordingParser extends H5Parser {
         plot.lines.push({
           id: `${id++}`,
           x: [start, start, end, end],
-          y: [0, value, value, 0],
+          y: [voltageMin, value, value, voltageMin],
         });
       }
       start = end;
