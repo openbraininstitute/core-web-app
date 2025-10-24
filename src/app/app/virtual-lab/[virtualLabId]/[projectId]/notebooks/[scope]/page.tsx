@@ -19,7 +19,6 @@ export default async function NotebooksPage({
       scope={scope === 'public' ? WorkspaceScope.Public : WorkspaceScope.Project}
       requireBrainRegion={false}
       requireMiniDetailView={false}
-      mainTableProps={{ searchEnabled: false }}
     />
   );
 }
