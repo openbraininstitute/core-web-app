@@ -1,5 +1,8 @@
+import { TgdColor } from '@tolokoban/tgd';
 import { Dataset, File, ready } from 'h5wasm';
+
 import { H5Parser } from './h5-parser';
+import { createPalette } from './colors';
 
 export interface IonChannelRecordingProtocol {
   name: string;
@@ -22,6 +25,7 @@ export interface IonChannelRecordingPlotLine {
   id: string;
   x: number[];
   y: number[];
+  color?: string;
 }
 
 export class IonChannelRecordingParser extends H5Parser {
@@ -53,16 +57,13 @@ export class IonChannelRecordingParser extends H5Parser {
     const timeseriesPath = ['acquisition', 'timeseries'];
     const timeseriesGroup = this.get(...timeseriesPath);
     const protocolsNames: string[] = this.isGroup(timeseriesGroup) ? timeseriesGroup.keys() : [];
+    let maxLinesPerPlot = 0;
     for (const protocolName of protocolsNames) {
       const protocolPath = [...timeseriesPath, protocolName];
       const protocolGroup = this.get(...protocolPath);
       if (!protocolGroup) continue;
 
-      const protocol: IonChannelRecordingProtocol = {
-        name: protocolName,
-        repetitions: [],
-        stimuli: this.extractStimuli(protocolName),
-      };
+      const repetitions: IonChannelRecordingRepetition[] = [];
       const repetitionsPath = [...protocolPath, 'repetitions'];
       const repetitionsGroup = this.get(...repetitionsPath);
       if (!repetitionsGroup || repetitionsGroup instanceof Dataset) continue;
@@ -80,9 +81,14 @@ export class IonChannelRecordingParser extends H5Parser {
             lines: this.extractPlotLines(repetitionPath),
           },
         };
-        protocol.repetitions.push(repetition);
+        maxLinesPerPlot = Math.max(maxLinesPerPlot, repetition.plot.lines.length);
+        repetitions.push(repetition);
       }
-      if (protocol.repetitions.length === 0) continue;
+      const protocol: IonChannelRecordingProtocol = {
+        name: protocolName,
+        repetitions,
+        stimuli: this.extractStimuli(protocolName, maxLinesPerPlot),
+      };
 
       protocols.push(protocol);
     }
@@ -113,7 +119,8 @@ export class IonChannelRecordingParser extends H5Parser {
    *
    * The parts are in sequence.
    */
-  private extractStimuli(protocolName: string): IonChannelRecordingPlot {
+  private extractStimuli(protocolName: string, linesPerPlot: number): IonChannelRecordingPlot {
+    console.log('PROTOCOL:', protocolName);
     const plot: IonChannelRecordingPlot = {
       xAxisLabel: 'Time (ms)',
       yAxisLabel: 'Voltage (mV)',
@@ -125,24 +132,60 @@ export class IonChannelRecordingParser extends H5Parser {
     const [command] = commands;
     if (!command) return plot;
 
-    const parts = command.split(';');
+    const stimuli = parseStimuli(command);
+    const [lowestVoltage, highestVoltage] = computeVoltageBounds(stimuli);
+    const palette = createPalette(linesPerPlot);
+    console.log(
+      '🚀 [ion-channel-recording-parser] palette, lowestVoltage, highestVoltage =',
+      palette,
+      lowestVoltage,
+      highestVoltage
+    ); // @FIXME: Remove this line written on 2025-10-24 at 17:04
+    const pickColor = makeColorPicker(palette, lowestVoltage, highestVoltage);
     let id = 1;
     let start = 0;
-    for (const part of parts) {
-      const stimulus = part.split(':').map(parseFloat);
-      if (!isStimulus(stimulus)) continue;
-
-      const [voltageMin, voltageStep, voltageMax, duration] = stimulus;
+    let lastMin = 0;
+    let lastMax = 0;
+    let firstPart = true;
+    for (const [voltageMin, voltageStep, voltageMax, duration] of stimuli) {
       const steps = voltageStep > 0 ? Math.ceil((voltageMax - voltageMin) / voltageStep) + 1 : 1;
       const end = start + duration;
+      let lastValue = voltageMin;
       for (let step = 0; step < steps; step++) {
         const value = Math.min(voltageMin + step * voltageStep, voltageMax);
         plot.lines.push({
           id: `${id++}`,
           x: [start, start, end, end],
-          y: [voltageMin, value, value, voltageMin],
+          y: [lastValue, value, value, lastValue],
+          color: pickColor(value),
         });
+        lastValue = value;
       }
+      if (firstPart) {
+        firstPart = false;
+      } else if (
+        !isBetween(voltageMin, lastMin, lastMax) &&
+        !isBetween(voltageMax, lastMin, lastMax)
+      ) {
+        // We need to add a vertical line to connect consecutive boxes.
+        if (voltageMin > lastMax) {
+          plot.lines.push({
+            id: `${id++}`,
+            x: [start, start],
+            y: [lastMax, voltageMin],
+            color: pickColor(voltageMin),
+          });
+        } else {
+          plot.lines.push({
+            id: `${id++}`,
+            x: [start, start],
+            y: [lastMin, voltageMax],
+            color: pickColor(voltageMax),
+          });
+        }
+      }
+      lastMin = voltageMin;
+      lastMax = voltageMax;
       start = end;
     }
     return plot;
@@ -150,10 +193,12 @@ export class IonChannelRecordingParser extends H5Parser {
 
   private extractPlotLines(path: string[]): IonChannelRecordingPlotLine[] {
     const data = this.extractData(path);
+    const palette = createPalette(data.length);
     return data.map((y, i) => ({
       id: this.extractId(path, i),
       x: this.extractTimeAxis(path, i, y.length),
       y,
+      color: palette[i],
     }));
   }
 
@@ -188,11 +233,58 @@ export class IonChannelRecordingParser extends H5Parser {
   }
 }
 
-function isStimulus(stimulus: unknown): stimulus is [number, number, number, number] {
+type Stimulus = [coltageMin: number, voltageStep: number, voltageMax: number, duration: number];
+
+function isStimulus(stimulus: unknown): stimulus is Stimulus {
   if (!Array.isArray(stimulus)) return false;
   if (stimulus.length < 4) return false;
   for (const value of stimulus) {
     if (typeof value !== 'number') return false;
   }
   return true;
+}
+
+function isBetween(value: number, min: number, max: number) {
+  const actualMin = Math.min(min, max);
+  const actualMax = Math.max(min, max);
+  return actualMin <= value && value <= actualMax;
+}
+
+function parseStimuli(command: string): Stimulus[] {
+  const stimuli: Stimulus[] = [];
+  const parts = command.split(';');
+  for (const part of parts) {
+    const stimulus = part.split(':').map(parseFloat);
+    if (!isStimulus(stimulus)) continue;
+
+    stimuli.push(stimulus);
+  }
+  return stimuli;
+}
+
+function computeVoltageBounds(stimuli: Stimulus[]) {
+  let min = Number.POSITIVE_INFINITY;
+  let max = Number.NEGATIVE_INFINITY;
+  for (const [voltageMin, , voltageMax] of stimuli) {
+    min = Math.min(min, voltageMin);
+    max = Math.max(max, voltageMax);
+  }
+  return [min, max];
+}
+
+function makeColorPicker(
+  palette: string[],
+  lowestVoltage: number,
+  highestVoltage: number
+): (voltage: number) => string {
+  if (lowestVoltage === highestVoltage)
+    return () => TgdColor.fromPaletteLinear(0, palette).toString();
+
+  const divisor = 1 / (highestVoltage - lowestVoltage);
+  return (voltage: number) => {
+    const factor = (voltage - lowestVoltage) * divisor;
+    const color = TgdColor.fromPaletteClosest(factor, palette).toString();
+    console.log(voltage, `mV (${Math.round(100 * factor)}%) -> `, color);
+    return color;
+  };
 }
