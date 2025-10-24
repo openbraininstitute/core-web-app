@@ -65,7 +65,7 @@ export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
 
     const localStatusMapAtom = atom<SimExecStatusMap>(new Map());
 
-    return atom<Promise<SimExecStatusMap>, [SimExecStatusMap], void>(
+    return atom<Promise<SimExecStatusMap>, [string, CircuitSimulationExecutionStatus], void>(
       async (get) => {
         const remoteStatusMap = await get(simExecRemoteStatusMapAtom);
         const localStatusMap = get(localStatusMapAtom);
@@ -80,16 +80,23 @@ export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
             remoteStatus && localStatus
               ? getLatestSimExecStatus(remoteStatus, localStatus)
               : (localStatus ?? remoteStatus ?? CircuitSimulationExecutionStatus.CREATED);
+
           return map.set(simId, status);
         }, new Map());
 
         return statusMap;
       },
-      (get, set, newStatusMap) => set(localStatusMapAtom, new Map(newStatusMap))
+      (get, set, simId, status) => {
+        const newStatusMap = new Map(get(localStatusMapAtom)).set(
+          simId,
+          status as CircuitSimulationExecutionStatus
+        );
+        set(localStatusMapAtom, newStatusMap);
+      }
     );
   },
   {
-    ttl: 120000, // 2 minutes
+    ttl: 2 * 60 * 1000, // 2 minutes
     areEqual: isEqual,
   }
 );
@@ -118,7 +125,10 @@ export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
       const res = await getCircuitSimulations({ filters, context });
 
       const simulations = res.data;
-      const sortedSimulations = simulations.sort((a, b) => a.name.localeCompare(b.name));
+
+      // To correctly sort simulations by name which might contain a simulation index.
+      const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+      const sortedSimulations = simulations.sort((a, b) => collator.compare(a.name, b.name));
 
       return sortedSimulations;
     }),
