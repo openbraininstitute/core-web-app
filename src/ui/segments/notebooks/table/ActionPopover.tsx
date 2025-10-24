@@ -2,7 +2,7 @@
 
 import { Modal } from 'antd';
 import { useState } from 'react';
-import { PlayCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import { LoadingOutlined, PlayCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { Popover } from 'antd/lib';
 
 import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
@@ -23,10 +23,14 @@ export default function ActionPopover({ notebook }: ActionPopoverProps) {
   const [open, setOpen] = useState(false);
   const notification = useAppNotification();
   const { virtualLabId, projectId } = useWorkspace();
+  const [loading, setLoading] = useState(false);
 
   async function handleRunNotebook() {
+    if (loading) return;
     const asset = notebook.assets.find((n) => n.label === 'jupyter_notebook');
     if (!asset) return;
+
+    setLoading(true);
 
     try {
       const retval: NotebookStartResponse = await startNotebook(
@@ -56,6 +60,8 @@ export default function ActionPopover({ notebook }: ActionPopoverProps) {
           placement: 'topRight',
         });
       }
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -103,6 +109,7 @@ export default function ActionPopover({ notebook }: ActionPopoverProps) {
 
               <div className="flex gap-4">
                 <button
+                  disabled={loading}
                   type="button"
                   className="hover:text-primary-4 inline-flex items-center gap-[10px]"
                   onClick={(e) => {
@@ -110,7 +117,8 @@ export default function ActionPopover({ notebook }: ActionPopoverProps) {
                     handleRunNotebook();
                   }}
                 >
-                  <PlayCircleOutlined aria-label="Run" />
+                  {!loading && <PlayCircleOutlined aria-label="Run" />}
+                  {loading && <LoadingOutlined />}
                   Run
                 </button>
               </div>
