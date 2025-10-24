@@ -3,11 +3,7 @@ import { File, Group, Dataset, Entity } from 'h5wasm';
 import { logWarn } from '@/utils/logger';
 
 export class H5Parser {
-  protected constructor(private readonly file: File) {
-    console.log();
-    this.debug();
-    console.log();
-  }
+  protected constructor(private readonly file: File) {}
 
   public debug(item?: File | Group | Dataset) {
     if (item instanceof Dataset) {
