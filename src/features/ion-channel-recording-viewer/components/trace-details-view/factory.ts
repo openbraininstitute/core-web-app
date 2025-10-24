@@ -2,6 +2,7 @@ import { Data, Layout } from 'plotly.js-dist-min';
 
 import { IonChannelRecordingPlotLine } from '../../ion-channel-recording-parser';
 import { usePlotParams } from './hooks';
+import { TgdColor } from '@bbp/morphoviewer';
 
 export function factory(params: ReturnType<typeof usePlotParams>): {
   data: Data[];
@@ -16,7 +17,8 @@ export function factory(params: ReturnType<typeof usePlotParams>): {
         y: line.y,
         name: line.id,
         line: {
-          color: '#00000007',
+          color: addTransparency(colorMap.get(line.id)),
+          width: 0.75,
         },
       };
 
@@ -29,6 +31,7 @@ export function factory(params: ReturnType<typeof usePlotParams>): {
         name: line.id,
         line: {
           color: colorMap.get(line.id),
+          width: 0.75,
         },
       };
 
@@ -61,4 +64,15 @@ function splitLinesByVisibility(
   const isInvisible = (line: IonChannelRecordingPlotLine) => !isVisible(line);
 
   return [lines.filter(isInvisible), lines.filter(isVisible)];
+}
+
+function addTransparency(cssColor: string | undefined, alpha = 0x10): string {
+  if (!cssColor) {
+    return `#000000${alpha.toString(16).padStart(2, '0')}`;
+  }
+
+  const color = new TgdColor();
+  color.parse(cssColor);
+  color.A = alpha / 0xff;
+  return color.toString();
 }

@@ -3,7 +3,11 @@ import { File, Group, Dataset, Entity } from 'h5wasm';
 import { logWarn } from '@/utils/logger';
 
 export class H5Parser {
-  protected constructor(private readonly file: File) {}
+  protected constructor(private readonly file: File) {
+    console.log();
+    this.debug();
+    console.log();
+  }
 
   public debug(item?: File | Group | Dataset) {
     if (item instanceof Dataset) {
@@ -60,6 +64,10 @@ export class H5Parser {
     if (!typeguard(array)) return null;
 
     return array;
+  }
+
+  protected getArrayString(...path: string[]): string[] | null {
+    return this.getArray(path, isArrayString);
   }
 
   protected getArrayNumber(...path: string[]): number[] | null {
@@ -151,6 +159,15 @@ export class H5Parser {
 
 function isArray<T>(value: unknown): value is T {
   return Array.isArray(value);
+}
+
+function isArrayString(value: unknown): value is string[] {
+  if (!Array.isArray(value)) return false;
+
+  for (const item of value) {
+    if (typeof item !== 'string') return false;
+  }
+  return true;
 }
 
 function isArrayNumber(value: unknown): value is number[] {

@@ -42,9 +42,17 @@ function plotlyParamsFactory(plot: IonChannelRecordingPlot | undefined): {
 } {
   const data: Data[] = (plot?.lines ?? []).map((line) => {
     const LineData: Data = {
+      mode: 'lines',
       x: line.x,
       y: line.y,
       name: line.id,
+      line: {
+        width: 0.75,
+      },
+      marker: {
+        size: 0,
+        opacity: 0,
+      },
     };
 
     return LineData;

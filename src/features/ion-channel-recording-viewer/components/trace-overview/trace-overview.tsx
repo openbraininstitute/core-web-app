@@ -19,6 +19,12 @@ export function TraceOverview({ trace }: TraceOverviewProps) {
             </small>
           </h2>
           <div className={styles.repetitions}>
+            {protocol.stimuli.lines.length > 0 && (
+              <div key="Stimulis">
+                <h3>Stimuli</h3>
+                <TraceOverviewPlot plot={protocol.stimuli} />
+              </div>
+            )}
             {protocol.repetitions.map((repetition) => (
               <div key={repetition.name}>
                 <h3>{repetition.name}</h3>
