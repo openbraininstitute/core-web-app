@@ -106,7 +106,7 @@ const links: Array<LinkItem> = [
     key: 'help',
     title: 'Help',
     url: 'help',
-    icon: <HelpIcon className="group-hover:text-primary-3 h-8 w-8" />,
+    icon: <HelpIcon className="group-hover:text-primary-3 h-5! w-5!" />,
     allowText: false,
     className: '',
     hasAction: false,

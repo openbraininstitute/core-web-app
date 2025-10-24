@@ -10,7 +10,7 @@ const CONTENT_SECTIONS = [
     icon: <BuildOutlined />,
   },
   {
-    title: 'Simulate',
+    title: 'Experiment',
     icon: <SettingFilled />,
   },
 ];
