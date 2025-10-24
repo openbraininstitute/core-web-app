@@ -70,6 +70,8 @@ export function FileViewer({ file, context, className = '' }: FileViewerProps) {
   );
 }
 
+const VIEWABLE_FILE_EXTENSIONS = ['json', 'nwb'];
+
 type FilePreloaderProps = {
   file: File;
   context: WorkspaceContext;
@@ -80,17 +82,31 @@ function FilePreloader({ file, context, onLoaded }: FilePreloaderProps) {
   const fileName = file?.assetPath?.split('/').at(-1) ?? file?.asset.path.split('/').at(-1);
   const fileExt = fileName?.split('.').at(-1)?.toLowerCase();
 
-  if (fileExt === 'json') {
-    useAtomValue(
-      fileAtomFamily({
-        id: file.asset.id,
-        entityId: file.entity.id,
-        entityType: file.entity.type,
-        assetPath: file.assetPath,
-        context,
-      })
-    );
+  const isViewable = VIEWABLE_FILE_EXTENSIONS.includes(fileExt!);
+
+  useEffect(() => {
+    if (!isViewable) {
+      onLoaded();
+    }
+  }, [isViewable, onLoaded]);
+
+  if (!isViewable) {
+    return null;
   }
+
+  return <DataPreloader file={file} context={context} onLoaded={onLoaded} />;
+}
+
+function DataPreloader({ file, context, onLoaded }: FilePreloaderProps) {
+  useAtomValue(
+    fileAtomFamily({
+      id: file.asset.id,
+      entityId: file.entity.id,
+      entityType: file.entity.type,
+      assetPath: file.assetPath,
+      context,
+    })
+  );
 
   useEffect(() => {
     onLoaded();

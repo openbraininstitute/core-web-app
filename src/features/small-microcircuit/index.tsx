@@ -428,8 +428,6 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
     }
   }, [onActiveSimulationChange, simulations]);
 
-
-
   useEffect(() => {
     // Poll simulation statuses if there are active (running/pending) simulations
     // and no active simulation request with the status streaming
@@ -454,16 +452,14 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
   }, [fetchRemoteSimExecStatuseMap, simRequestInProgress, statusMap]);
 
   // TODO Refactor
-  const run = async (simulationIds: string[]) => {
+  const run = async (simIds: string[]) => {
     setSimRequestInProgress(true);
     try {
       await runSimulationBatch({
         ctx: { virtualLabId, projectId },
-        simulationIds,
+        simulationIds: simIds,
         onInit: () => {
-          simulationIds.forEach((simId) =>
-            setSimStatus(simId, CircuitSimulationExecutionStatus.PENDING)
-          );
+          simIds.forEach((simId) => setSimStatus(simId, CircuitSimulationExecutionStatus.PENDING));
           setSelectedSimulationIds([]);
           setSimRequestInProgress(false);
         },
@@ -616,11 +612,12 @@ function AutoSelectCircuitConfig({
     previousSimulationIdRef.current = simulation.id;
 
     // Get the name of the currently selected file to try to find the same file in the new simulation
-    const currentFileName = currentSelectedFile?.assetPath?.split('/').at(-1) ?? 
-                           currentSelectedFile?.asset.path.split('/').at(-1);
+    const currentFileName =
+      currentSelectedFile?.assetPath?.split('/').at(-1) ??
+      currentSelectedFile?.asset.path.split('/').at(-1);
 
     // Try to find a file with the same name as the currently selected file
-    let matchingFile = currentFileName 
+    let matchingFile = currentFileName
       ? simulation.assets.find((asset) => {
           const fileName = asset.path.split('/').at(-1);
           return fileName === currentFileName;
