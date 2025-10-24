@@ -6,6 +6,7 @@ import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { Fragment, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Checkbox, ConfigProvider } from 'antd';
+import type { CheckboxProps } from 'antd';
 import { match } from 'ts-pattern';
 import {
   simExecRemoteStatusMapAtomFamily,
@@ -382,35 +383,43 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
   );
 
   const statusMap = useLastTruthyValue(simExecStatusMapAtom);
-  const updateStatusMap = useSetAtom(simExecStatusMapAtom);
+  const setSimStatus = useSetAtom(simExecStatusMapAtom);
 
   const [simRequestInProgress, setSimRequestInProgress] = useState<boolean>(false);
-  const [simExecSelectedSimulationIds, setSimExecSelectedSimulationIds] = useState<string[]>([]);
-  const [selectedSimulation, setSelectedSimulation] = useState<null | ICircuitSimulation>(null);
+  const [selectedSimulationIds, setSelectedSimulationIds] = useState<string[]>([]);
+  const [activeSimulation, setActiveSimulation] = useState<null | ICircuitSimulation>(null);
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
+  const [initialSelectionDone, setInitialSelectionDone] = useState(false);
 
-  const activeSimulationExecStatus = selectedSimulation && statusMap?.get(selectedSimulation.id);
+  const activeSimulationExecStatus = activeSimulation && statusMap?.get(activeSimulation.id);
 
-  const onSimulationSelect = useCallback((simulation: ICircuitSimulation) => {
-    setSelectedSimulation(simulation);
+  const onActiveSimulationChange = useCallback((simulation: ICircuitSimulation) => {
+    setActiveSimulation(simulation);
     setSelectedFile(undefined);
   }, []);
 
+  const isInCreatedState = useMemo(
+    () => (simulation: ICircuitSimulation) =>
+      ['created', undefined].includes(statusMap?.get(simulation.id)),
+    [statusMap]
+  );
+
+  const selectableSimulationIds = useMemo(() => {
+    return simulations.filter(isInCreatedState).map((s) => s.id);
+  }, [simulations, isInCreatedState]);
+
   useEffect(() => {
     // Auto select all simulations with status "created" on page load.
-    if (statusMap) {
-      setSimExecSelectedSimulationIds(
-        simulations
-          .filter((s) => ['created', undefined].includes(statusMap.get(s.id)))
-          .map((s) => s.id)
-      );
+    if (statusMap && simulations && !initialSelectionDone) {
+      setSelectedSimulationIds(simulations.filter(isInCreatedState).map((s) => s.id));
+      setInitialSelectionDone(true);
     }
-  }, [simulations, statusMap]);
+  }, [simulations, statusMap, initialSelectionDone]);
 
   useEffect(() => {
     // Select first simulation from the list
-    onSimulationSelect(simulations[0]);
-  }, [onSimulationSelect, simulations]);
+    onActiveSimulationChange(simulations[0]);
+  }, [onActiveSimulationChange, simulations]);
 
   useEffect(() => {
     // Poll simulation statuses if there are active (running/pending) simulations
@@ -436,41 +445,36 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
   }, [fetchRemoteSimExecStatuseMap, simRequestInProgress, statusMap]);
 
   // TODO Refactor
-  const run = async () => {
+  const run = async (simulationIds: string[]) => {
     setSimRequestInProgress(true);
     try {
       await runSimulationBatch({
         ctx: { virtualLabId, projectId },
-        simulationIds: simExecSelectedSimulationIds,
-        onInit: () =>
-          setTimeout(() => {
-            // Pending statuses are sent via the stream asynchronously after the init.
-            // This timeout prevents the "Run simulations" button from flashing.
-            setSimRequestInProgress(false);
-            setSimExecSelectedSimulationIds([]);
-          }, 1000),
+        simulationIds,
+        onInit: () => {
+          simulationIds.forEach((simId) =>
+            setSimStatus(simId, CircuitSimulationExecutionStatus.PENDING)
+          );
+          setSelectedSimulationIds([]);
+          setSimRequestInProgress(false);
+        },
         onMessage: (message) => {
           match(message)
             .with({ message_type: MessageType.STATUS }, (msg) => {
-              // TODO: fix types
               const simId = msg.ctx?.simulation_id;
               if (simId) {
-                updateStatusMap(
-                  statusMap!.set(simId, msg.status as unknown as CircuitSimulationExecutionStatus)
-                );
+                setSimStatus(simId, msg.status as unknown as CircuitSimulationExecutionStatus);
               }
-
               if (msg.status !== 'done') return;
-
               const simulation = simulations.find((s) => s.id === simId);
               if (!simulation) return;
-
               notification.success({ message: `Simulation ${simulation?.name} done` });
             })
             .otherwise(() => null);
         },
       });
     } catch (error) {
+      setSimRequestInProgress(false);
       const defaultMsg = messages.RunningSimulationDefaultError;
 
       if (error instanceof ApiError) {
@@ -479,13 +483,20 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
       }
 
       notification.error({ message: defaultMsg, duration: 20 });
-    } finally {
-      setSimRequestInProgress(false);
     }
   };
 
-  const launchSimBtnLabelPrefix = simExecSelectedSimulationIds.length
-    ? `(${simExecSelectedSimulationIds.length})`
+  const onSelectedAll: CheckboxProps['onChange'] = (e) => {
+    setSelectedSimulationIds(e.target.checked ? selectableSimulationIds : []);
+  };
+
+  const allSelected = useMemo(
+    () => selectableSimulationIds.length === selectedSimulationIds.length,
+    [selectableSimulationIds, selectedSimulationIds]
+  );
+
+  const launchSimBtnLabelPrefix = selectedSimulationIds.length
+    ? `(${selectedSimulationIds.length})`
     : '';
 
   const loading = !statusMap;
@@ -493,54 +504,65 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
 
   return (
     <div className={styles.threeColumns}>
-      <div className="flex border-r border-gray-200 pr-4">
-        {/* List of simulations */}
-        <div className="flex flex-col justify-start gap-5 overflow-y-auto">
-          {!loading &&
-            simulations.map((simulation) => (
-              <SimulationListItem
-                key={simulation.id}
-                selected={selectedSimulation?.id === simulation.id}
-                simulation={simulation}
-                execStatus={statusMap?.get(simulation.id)}
-                onSelect={() => onSimulationSelect(simulation)}
-                onSelectedForSimChange={(simulationId, selected) => {
-                  if (selected) {
-                    setSimExecSelectedSimulationIds((prev) => [...prev, simulationId]);
-                  } else {
-                    setSimExecSelectedSimulationIds((prev) =>
-                      prev.filter((id) => id !== simulationId)
-                    );
-                  }
-                }}
-                selectedForSim={simExecSelectedSimulationIds.includes(simulation.id)}
-                selectionForSimDisabled={simRequestInProgress}
-              />
-            ))}
-        </div>
-        <button
-          className={classNames(
-            'min-h-[50] w-full cursor-pointer rounded-3xl p-2 text-white',
-            'bg-[linear-gradient(94.93deg,_#389E0D_18.84%,_#143805_116.7%)]',
-            'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none'
-          )}
-          type="button"
-          onClick={run}
-          disabled={simRequestInProgress || simExecSelectedSimulationIds.length === 0}
-        >
-          <div className="flex justify-center gap-4">
-            <span className="pl-10">Launch simulations {launchSimBtnLabelPrefix}</span>
-            <div className="w-6">{simRequestInProgress && <LoadingOutlined />}</div>
+      <div className="border-r border-gray-200 pr-4">
+        <div className="flex h-full flex-col gap-4 overflow-y-hidden">
+          <Checkbox
+            indeterminate={
+              selectedSimulationIds.length > 0 &&
+              selectedSimulationIds.length < selectableSimulationIds.length
+            }
+            onChange={onSelectedAll}
+            checked={allSelected}
+            disabled={simRequestInProgress || selectableSimulationIds.length === 0}
+          >
+            Check all
+          </Checkbox>
+          {/* List of simulations */}
+          <div className="flex flex-grow flex-col justify-start gap-5 overflow-y-auto">
+            {!loading &&
+              simulations.map((simulation) => (
+                <SimulationListItem
+                  key={simulation.id}
+                  selected={activeSimulation?.id === simulation.id}
+                  simulation={simulation}
+                  execStatus={statusMap?.get(simulation.id)}
+                  onSelect={() => onActiveSimulationChange(simulation)}
+                  onSelectedForSimChange={(simulationId, selected) => {
+                    if (selected) {
+                      setSelectedSimulationIds((prev) => [...prev, simulationId]);
+                    } else {
+                      setSelectedSimulationIds((prev) => prev.filter((id) => id !== simulationId));
+                    }
+                  }}
+                  selectedForSim={selectedSimulationIds.includes(simulation.id)}
+                  selectionForSimDisabled={simRequestInProgress}
+                />
+              ))}
           </div>
-        </button>
+          <button
+            className={classNames(
+              'min-h-[50] w-full cursor-pointer rounded-3xl p-2 text-white',
+              'bg-[linear-gradient(94.93deg,_#389E0D_18.84%,_#143805_116.7%)]',
+              'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none'
+            )}
+            type="button"
+            onClick={() => run(selectedSimulationIds)}
+            disabled={simRequestInProgress || selectedSimulationIds.length === 0}
+          >
+            <div className="flex justify-center gap-4">
+              <span className="pl-10">Launch simulations {launchSimBtnLabelPrefix}</span>
+              <div className="w-6">{simRequestInProgress && <LoadingOutlined />}</div>
+            </div>
+          </button>
+        </div>
       </div>
 
       {/* List of input/output files for selected simulation */}
       <div className="border-r border-gray-200 px-4">
-        {!!selectedSimulation && (
+        {!!activeSimulation && (
           <Suspense fallback={<div className="text-neutral-5 mt-4 font-semibold">Loading...</div>}>
             <SimulationFiles
-              simulation={selectedSimulation}
+              simulation={activeSimulation}
               execStatus={activeSimulationExecStatus}
               selectedFile={selectedFile}
               context={context}
@@ -640,7 +662,7 @@ function ScanParams({ scanParams, color }: { scanParams: SimulationScanParams; c
       {Object.entries(scanParams).map(([key, value]) => (
         <div key={key} className="overflow-x-hidden">
           <div title={key} className="truncate text-ellipsis text-gray-400">
-            {key}
+            {key.split('.').at(-1)}
           </div>
           <div
             className="truncate font-bold text-ellipsis transition-colors duration-300"
