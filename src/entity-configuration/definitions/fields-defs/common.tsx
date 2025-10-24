@@ -259,7 +259,15 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Species',
       singular: 'Species',
     },
-    defaultConstraint: 'subject__species__name__in',
+    defaultConstraint: 'species__name__in',
+    perTypeConstraint: {
+      [ExtendedEntitiesTypeDict.CellMorphology]: 'subject__species__name__in',
+      [ExtendedEntitiesTypeDict.ElectricalCellRecording]: 'subject__species__name__in',
+      [ExtendedEntitiesTypeDict.ExperimentalNeuronDensity]: 'subject__species__name__in',
+      [ExtendedEntitiesTypeDict.ExperimentalBoutonDensity]: 'subject__species__name__in',
+      [ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection]: 'subject__species__name__in',
+      [ExtendedEntitiesTypeDict.IonChannelModel]: 'subject__species__name__in',
+    },
     order: [
       {
         types: [
