@@ -1,17 +1,10 @@
-/* eslint-disable max-classes-per-file */
 import { Dataset, File, ready } from 'h5wasm';
 import { H5Parser } from './h5-parser';
-
-type IonChannelRecordingProtocolNames =
-  | 'Activation'
-  | 'Inactivation'
-  | 'Deactivation'
-  | 'Ramp'
-  | 'AP';
 
 export interface IonChannelRecordingProtocol {
   name: string;
   repetitions: IonChannelRecordingRepetition[];
+  stimuli: IonChannelRecordingPlot;
 }
 
 export interface IonChannelRecordingRepetition {
@@ -51,28 +44,24 @@ export class IonChannelRecordingParser extends H5Parser {
     return trace;
   }
 
-  static readonly ProtocolNames: IonChannelRecordingProtocolNames[] = [
-    'Activation',
-    'Inactivation',
-    'Deactivation',
-    'Ramp',
-    'AP',
-  ];
-
   public readonly protocols: ReadonlyArray<IonChannelRecordingProtocol>;
 
   protected constructor(file: File) {
     super(file);
 
     const protocols: IonChannelRecordingProtocol[] = [];
-    for (const protocolName of IonChannelRecordingParser.ProtocolNames) {
-      const protocolPath = ['acquisition', 'timeseries', protocolName];
+    const timeseriesPath = ['acquisition', 'timeseries'];
+    const timeseriesGroup = this.get(...timeseriesPath);
+    const protocolsNames: string[] = this.isGroup(timeseriesGroup) ? timeseriesGroup.keys() : [];
+    for (const protocolName of protocolsNames) {
+      const protocolPath = [...timeseriesPath, protocolName];
       const protocolGroup = this.get(...protocolPath);
       if (!protocolGroup) continue;
 
       const protocol: IonChannelRecordingProtocol = {
         name: protocolName,
         repetitions: [],
+        stimuli: this.extractStimuli(protocolName),
       };
       const repetitionsPath = [...protocolPath, 'repetitions'];
       const repetitionsGroup = this.get(...repetitionsPath);
@@ -109,6 +98,54 @@ export class IonChannelRecordingParser extends H5Parser {
 
     const repetition = protocol.repetitions.find((r) => r.name === repetitionName);
     return repetition;
+  }
+
+  /**
+   * `command` for stimuli look like this:
+   * `-80:0:-80:40;-90:0:-90:10;-80:0:-80:50;-90:10:80:500;-80:0:-80:100;`
+   *
+   * Each part is separated by a semicolon. Inside each part there are 4 numbers
+   * separated by colons:
+   * - lowest voltage (mV)
+   * - voltage step
+   * - highest voltage (mV)
+   * - duration (ms)
+   *
+   * The parts are in sequence.
+   */
+  private extractStimuli(protocolName: string): IonChannelRecordingPlot {
+    const plot: IonChannelRecordingPlot = {
+      xAxisLabel: 'Time (ms)',
+      yAxisLabel: 'Voltage (mV)',
+      lines: [],
+    };
+    const commands = this.getArrayString('stimulus', 'presentation', protocolName, 'command');
+    if (!commands) return plot;
+
+    const [command] = commands;
+    if (!command) return plot;
+
+    const parts = command.split(';');
+    let id = 1;
+    let start = 0;
+    for (const part of parts) {
+      const stimulus = part.split(':').map(parseFloat);
+      if (!isStimulus(stimulus)) continue;
+
+      const [voltageMin, voltageStep, voltageMax, duration] = stimulus;
+      const steps = voltageStep > 0 ? Math.ceil((voltageMax - voltageMin) / voltageStep) + 1 : 1;
+      const end = start + duration;
+      for (let step = 0; step < steps; step++) {
+        const value = Math.min(voltageMin + step * voltageStep, voltageMax);
+        plot.lines.push({
+          id: `${id++}`,
+          x: [start, start, end, end],
+          y: [voltageMin, value, value, voltageMin],
+        });
+      }
+      start = end;
+    }
+    return plot;
   }
 
   private extractPlotLines(path: string[]): IonChannelRecordingPlotLine[] {
@@ -149,4 +186,13 @@ export class IonChannelRecordingParser extends H5Parser {
     const id = dataset?.[index]?.[0];
     return id ? `${id}` : `#${index + 1}`;
   }
+}
+
+function isStimulus(stimulus: unknown): stimulus is [number, number, number, number] {
+  if (!Array.isArray(stimulus)) return false;
+  if (stimulus.length < 4) return false;
+  for (const value of stimulus) {
+    if (typeof value !== 'number') return false;
+  }
+  return true;
 }

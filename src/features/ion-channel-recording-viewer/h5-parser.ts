@@ -62,6 +62,10 @@ export class H5Parser {
     return array;
   }
 
+  protected getArrayString(...path: string[]): string[] | null {
+    return this.getArray(path, isArrayString);
+  }
+
   protected getArrayNumber(...path: string[]): number[] | null {
     return this.getArray(path, isArrayNumber);
   }
@@ -151,6 +155,15 @@ export class H5Parser {
 
 function isArray<T>(value: unknown): value is T {
   return Array.isArray(value);
+}
+
+function isArrayString(value: unknown): value is string[] {
+  if (!Array.isArray(value)) return false;
+
+  for (const item of value) {
+    if (typeof item !== 'string') return false;
+  }
+  return true;
 }
 
 function isArrayNumber(value: unknown): value is number[] {
