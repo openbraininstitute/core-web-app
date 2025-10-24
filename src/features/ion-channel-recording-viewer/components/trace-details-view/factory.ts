@@ -3,6 +3,7 @@ import { Data, Layout } from 'plotly.js-dist-min';
 import { TgdColor } from '@bbp/morphoviewer';
 import { IonChannelRecordingPlotLine } from '../../ion-channel-recording-parser';
 import { usePlotParams } from './hooks';
+import { TgdColor } from '@bbp/morphoviewer';
 
 export function factory(params: ReturnType<typeof usePlotParams>): {
   data: Data[];
