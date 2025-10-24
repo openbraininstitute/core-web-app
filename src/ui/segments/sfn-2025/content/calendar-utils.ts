@@ -2,6 +2,7 @@ type AgendaItem = {
   title: string;
   subtitle: string;
   time: string;
+  agendaText?: string;
 };
 
 export function generateICalendar(item: AgendaItem): void {
@@ -18,7 +19,7 @@ export function generateICalendar(item: AgendaItem): void {
                         DTSTART:${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z
                         DTEND:${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z
                         SUMMARY:${item.title} - ${item.subtitle}
-                        DESCRIPTION:${item.subtitle} at SFN 2025. Open Brain Platform booth #3631.
+                        DESCRIPTION:${item.agendaText || `${item.subtitle} at SFN 2025. Open Brain Platform booth #3631.`}
                         LOCATION:San Diego Convention Center, booth #3631
                         END:VEVENT
                         END:VCALENDAR`;
@@ -42,7 +43,7 @@ export function generateGoogleCalendar(item: AgendaItem): void {
   const startISO = startDate.toISOString();
   const endISO = endDate.toISOString();
 
-  const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(item.title + ' - ' + item.subtitle)}&dates=${startISO.replace(/[-:]/g, '').split('.')[0]}Z/${endISO.replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(item.subtitle + ' at SFN 2025. Open Brain Platform booth #3631.')}&location=${encodeURIComponent('San Diego Convention Center, booth #3631')}`;
+  const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(item.title + ' - ' + item.subtitle)}&dates=${startISO.replace(/[-:]/g, '').split('.')[0]}Z/${endISO.replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(item.agendaText || `${item.subtitle} at SFN 2025. Open Brain Platform booth #3631.`)}&location=${encodeURIComponent('San Diego Convention Center, booth #3631')}`;
 
   window.open(googleUrl, '_blank');
 }

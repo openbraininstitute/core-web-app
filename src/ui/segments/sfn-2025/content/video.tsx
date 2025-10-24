@@ -61,7 +61,7 @@ export default function SFNVideo() {
   };
 
   return (
-    <div ref={ref} className="relative h-full w-full px-8 py-12 md:px-[8vw] md:py-[15vh]">
+    <div ref={ref} className="relative h-full w-full px-8 py-12 md:px-[10vw] md:py-[15vh]">
       <video
         ref={videoRef}
         muted={isMuted}
