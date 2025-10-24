@@ -17,7 +17,7 @@ export function factory(params: ReturnType<typeof usePlotParams>): {
         y: line.y,
         name: line.id,
         line: {
-          color: addTransparency(colorMap.get(line.id)),
+          color: addTransparency(line.color ?? colorMap.get(line.id)),
           width: 0.75,
         },
       };
@@ -30,7 +30,7 @@ export function factory(params: ReturnType<typeof usePlotParams>): {
         y: line.y,
         name: line.id,
         line: {
-          color: colorMap.get(line.id),
+          color: line.color ?? colorMap.get(line.id),
           width: 0.75,
         },
       };

@@ -46,8 +46,10 @@ function plotlyParamsFactory(plot: IonChannelRecordingPlot | undefined): {
       x: line.x,
       y: line.y,
       name: line.id,
+      opacity: 1,
       line: {
-        width: 0.75,
+        width: 1,
+        color: line.color,
       },
       marker: {
         size: 0,
