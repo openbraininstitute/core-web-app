@@ -398,27 +398,33 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
     setSelectedFile(undefined);
   }, []);
 
-  const isInCreatedState = useMemo(
-    () => (simulation: ICircuitSimulation) =>
-      ['created', undefined].includes(statusMap?.get(simulation.id)),
-    [statusMap]
-  );
+  const onSelectedForSimChange = useCallback((simulationId: string, selected: boolean) => {
+    if (selected) {
+      setSelectedSimulationIds((prev) => [...prev, simulationId]);
+    } else {
+      setSelectedSimulationIds((prev) => prev.filter((id) => id !== simulationId));
+    }
+  }, []);
 
   const selectableSimulationIds = useMemo(() => {
-    return simulations.filter(isInCreatedState).map((s) => s.id);
-  }, [simulations, isInCreatedState]);
+    return simulations
+      .filter((simulation) => ['created', undefined].includes(statusMap?.get(simulation.id)))
+      .map((s) => s.id);
+  }, [simulations, statusMap]);
 
   useEffect(() => {
     // Auto select all simulations with status "created" on page load.
     if (statusMap && simulations && !initialSelectionDone) {
-      setSelectedSimulationIds(simulations.filter(isInCreatedState).map((s) => s.id));
+      setSelectedSimulationIds(selectableSimulationIds);
       setInitialSelectionDone(true);
     }
-  }, [simulations, statusMap, initialSelectionDone]);
+  }, [simulations, statusMap, initialSelectionDone, selectableSimulationIds]);
 
   useEffect(() => {
     // Select first simulation from the list
-    onActiveSimulationChange(simulations[0]);
+    if (simulations.length > 0) {
+      onActiveSimulationChange(simulations[0]);
+    }
   }, [onActiveSimulationChange, simulations]);
 
   useEffect(() => {
@@ -474,7 +480,6 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
         },
       });
     } catch (error) {
-      setSimRequestInProgress(false);
       const defaultMsg = messages.RunningSimulationDefaultError;
 
       if (error instanceof ApiError) {
@@ -483,6 +488,8 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
       }
 
       notification.error({ message: defaultMsg, duration: 20 });
+    } finally {
+      setSimRequestInProgress(false);
     }
   };
 
@@ -491,7 +498,9 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
   };
 
   const allSelected = useMemo(
-    () => selectableSimulationIds.length === selectedSimulationIds.length,
+    () =>
+      selectableSimulationIds.length > 0 &&
+      selectableSimulationIds.length === selectedSimulationIds.length,
     [selectableSimulationIds, selectedSimulationIds]
   );
 
@@ -527,13 +536,7 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
                   simulation={simulation}
                   execStatus={statusMap?.get(simulation.id)}
                   onSelect={() => onActiveSimulationChange(simulation)}
-                  onSelectedForSimChange={(simulationId, selected) => {
-                    if (selected) {
-                      setSelectedSimulationIds((prev) => [...prev, simulationId]);
-                    } else {
-                      setSelectedSimulationIds((prev) => prev.filter((id) => id !== simulationId));
-                    }
-                  }}
+                  onSelectedForSimChange={onSelectedForSimChange}
                   selectedForSim={selectedSimulationIds.includes(simulation.id)}
                   selectionForSimDisabled={simRequestInProgress}
                 />
