@@ -29,6 +29,7 @@ const AllowedEntities = [
   ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
   ExtendedEntitiesTypeDict.SingleNeuronSimulation,
   ExtendedEntitiesTypeDict.IonChannelModel,
+  ExtendedEntitiesTypeDict.MEModelWithSynapses,
 ] as const;
 
 export default async function Page({
@@ -42,7 +43,9 @@ export default async function Page({
   const { type } = await params;
 
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
+  console.log('–– – Page – dataType––', dataType);
   const entity = getEntityByExtendedType({ type: dataType });
+  console.log('–– – Page – entity––', entity);
 
   const content = match({ scope, entity })
     .with({ entity: P.nullish }, () => notFound())

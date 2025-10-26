@@ -25,6 +25,10 @@ export const CircuitBuildCategory = {
 } as const;
 
 export const CircuitScale = {
+  Single: {
+    key: 'single',
+    label: 'Single',
+  },
   Microcircuit: {
     key: 'microcircuit',
     label: 'Microcircuit',

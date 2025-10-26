@@ -10,6 +10,8 @@ import { ElectricalCellRecording } from '@/entity-configuration/domain/experimen
 import { getElectricalCellRecordings } from '@/api/entitycore/queries/experimental/electrical-cell-recording';
 import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation/single-neuron-simulation';
 import { SynapsePerConnection } from '@/entity-configuration/domain/experimental/synapse-per-connection';
+import { MEModelWithSynapsesCircuit } from '@/entity-configuration/domain/model/me-model-with-synapses';
+import { IonChannelRecording } from '@/entity-configuration/domain/experimental/ion-channel-recording';
 import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import { CellMorphology } from '@/entity-configuration/domain/experimental/cell-morphology';
 import { NeuronDensity } from '@/entity-configuration/domain/experimental/neuron-density';
@@ -26,7 +28,6 @@ import { env } from '@/env';
 
 import type { WorkspaceContext } from '@/types/common';
 import type { TWorkspaceScope } from '@/constants';
-import { IonChannelRecording } from '@/entity-configuration/domain/experimental/ion-channel-recording';
 
 export const ExperimentalEntitiesTileTypes = {
   ReconstructionMorphology: CellMorphology,
@@ -43,6 +44,7 @@ export const ModelEntitiesTileTypes = {
   MEmodel,
   Circuit,
   IonChannelModel,
+  MEModelWithSynapsesCircuit,
 } as const;
 
 export const SimulationEntitiesTileTypes = {

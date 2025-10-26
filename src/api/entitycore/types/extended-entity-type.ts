@@ -14,6 +14,7 @@ export const ExtendedEntitiesTypeDict = {
   WholeBrain: 'whole_brain', // this is temporary
   Metabolism: 'metabolism', // this is temporary
   NGVUnit: 'ngv_unit', // this is temporary
+  MEModelWithSynapses: 'me_model_with_synapses',
 } as const;
 
 export type TExtendedEntitiesTypeDict =

@@ -5,12 +5,14 @@ export const MODEL_DATATYPES = [
   ExtendedEntitiesTypeDict.Emodel,
   ExtendedEntitiesTypeDict.Memodel,
   ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
+  ExtendedEntitiesTypeDict.MEModelWithSynapses,
 ] as const;
 
 export enum ModelTypeNames {
   E_MODEL = 'e-model',
   ME_MODEL = 'me-model',
   SINGLE_NEURON_SYNAPTOME = 'synaptome',
+  ME_MODEL_WITH_SYNAPSES_CIRCUIT = 'ME-model with Synapses',
   CIRCUIT = 'circuit',
 }
 

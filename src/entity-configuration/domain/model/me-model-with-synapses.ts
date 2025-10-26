@@ -5,16 +5,12 @@ import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
-import {
-  CircuitScaleDictionary,
-  TCircuitScaleDictionary,
-  type ICircuit,
-} from '@/api/entitycore/types/entities/circuit';
+import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
 
-export const Circuit: EntityCoreTypeConfig<ICircuit> = {
+export const MEModelWithSynapsesCircuit: EntityCoreTypeConfig<ICircuit> = {
   group: EntityTypeGroup.Models,
-  title: 'Circuit',
-  extendedType: ExtendedEntitiesTypeDict.Circuit,
+  title: 'ME-model with Synapses',
+  extendedType: ExtendedEntitiesTypeDict.MEModelWithSynapses,
   type: EntityTypeDict.Circuit,
   slug: EntitySlug.Circuit,
   api: {
@@ -26,7 +22,7 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
         return getCircuits({
           ...params,
           withFacets: params[0].withFacets,
-          filters: { ...params[0].filters },
+          filters: { ...params[0].filters, scale__in: [CircuitScaleDictionary.Single] },
         });
       },
       one: getCircuit,
@@ -34,16 +30,13 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
   },
   explore: {
     basePrefix: 'model',
-    routePrefix: 'interactive/model',
   },
   asset: {
     extension: 'application/json',
   },
-
-  detailViewSections: ['overview', 'analysis', 'related-publications', 'related-artifacts'],
+  detailViewSections: ['overview', 'related-publications'],
   isBookmarkable: false,
   isDownloadable: true,
   isCopyable: true,
-  isSimulatable: (scale: TCircuitScaleDictionary) =>
-    [CircuitScaleDictionary.SmallMicrocircuit, CircuitScaleDictionary.PairNeuron].includes(scale),
+  isSimulatable: false,
 } as const;
