@@ -57,46 +57,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isFilterable: false,
     isDisplayable: true,
   },
-  [EntityCoreFields.Species]: {
-    title: 'Species',
-    filter: CoreFieldFilterTypeEnum.CheckList,
-    render: (r) => {
-      if ('species' in r)
-        return renderEmptyOrValue(
-          renderArray(ensureArray({ input: r.species }).map((s) => s.name))
-        );
-      if ('subject' in r && 'species' in r.subject)
-        return renderEmptyOrValue(r.subject.species.name);
-      return EmptyValue;
-    },
-    vocabulary: {
-      plural: 'Species',
-      singular: 'Species',
-    },
-    defaultConstraint: 'species__name__in',
-    perTypeConstraint: {
-      [ExtendedEntitiesTypeDict.CellMorphology]: 'subject__species__name__in',
-      [ExtendedEntitiesTypeDict.ElectricalCellRecording]: 'subject__species__name__in',
-      [ExtendedEntitiesTypeDict.ExperimentalNeuronDensity]: 'subject__species__name__in',
-      [ExtendedEntitiesTypeDict.ExperimentalBoutonDensity]: 'subject__species__name__in',
-      [ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection]: 'subject__species__name__in',
-    },
-    order: [
-      {
-        types: [
-          ExtendedEntitiesTypeDict.ElectricalCellRecording,
-          ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
-          ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
-          ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
-        ],
-        property: 'order_by',
-        value: 'subject__species__name',
-      },
-    ],
-    isSortable: true,
-    isFilterable: true,
-    isDisplayable: true,
-  },
+
   [EntityCoreFields.MType]: {
     fieldType: CoreFieldType.CellType,
     title: 'M-Type',
