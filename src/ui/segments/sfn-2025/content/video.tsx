@@ -1,6 +1,6 @@
 'use client';
 
-import { PlayCircleOutlined, SoundFilled, SoundOutlined } from '@ant-design/icons';
+import { SoundFilled, SoundOutlined } from '@ant-design/icons';
 import { motion, useInView } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 
