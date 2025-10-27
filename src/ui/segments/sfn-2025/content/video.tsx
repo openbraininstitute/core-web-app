@@ -1,7 +1,7 @@
 'use client';
 
 import { SoundFilled, SoundOutlined } from '@ant-design/icons';
-import { useInView } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 
 import { cn } from '@/utils/css-class';
@@ -11,7 +11,7 @@ export default function SFNVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isMuted, setIsMuted] = useState(true);
   const isInView = useInView(ref, {
-    amount: 0.8,
+    amount: 0.5,
     once: false,
   });
 
@@ -33,14 +33,17 @@ export default function SFNVideo() {
   };
 
   return (
-    <div ref={ref} className="relative h-full w-full px-8 py-12 md:py-[15vh]">
-      <video
+    <div ref={ref} className="relative h-full w-full px-8 py-12 md:px-[10vw] md:py-[15vh]">
+      <motion.video
         ref={videoRef}
         muted={isMuted}
         loop
         playsInline
         className="h-full w-full object-cover"
         src="https://player.vimeo.com/progressive_redirect/playback/1129196270/rendition/1080p/file.mp4?loc=external&log_user=0&signature=b8ed690f71165397f6349edadb8b953ff25ccf7235228c949a6a6c0420b0d4bf"
+        initial={{ scale: 0 }}
+        animate={{ scale: isInView ? 1 : 0 }}
+        transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
         <track
           kind="captions"
@@ -49,13 +52,13 @@ export default function SFNVideo() {
           label="English captions"
           default
         />
-      </video>
+      </motion.video>
 
       <button
         type="button"
         onClick={toggleMute}
         className={cn(
-          'bg-opacity-50 hover:bg-opacity-70 absolute top-52 right-16 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-black text-white transition-all',
+          'bg-opacity-50 hover:bg-opacity-70 absolute top-52 right-[12vw] z-10 flex h-12 w-12 items-center justify-center rounded-full bg-black text-white transition-all',
           isMuted ? 'Unmute video' : 'Mute video'
         )}
         aria-label={isMuted ? 'Unmute video' : 'Mute video'}
