@@ -31,8 +31,15 @@ function skipParam(k: string, v: JSONSchema, referenceTypesToConfigKeys: Record<
   return !!v.is_block_reference && !referenceTypesToConfigKeys[v.properties?.type.const ?? ''];
 }
 
+function isNullableRef(schema: JSONSchema) {
+  return (
+    schema.anyOf?.find((s) => s.is_block_reference) && schema.anyOf.find((s) => s.type === 'null')
+  );
+}
+
 function getRefDefaultLabel(schema: JSONSchema, labels: Record<string, string>) {
-  return labels[schema.properties?.type.const ?? ''] ?? '—';
+  if (!isNullableRef(schema)) return null;
+  return labels[schema.properties?.type.const ?? ''] ?? 'Default';
 }
 
 export function JSONSchemaForm({

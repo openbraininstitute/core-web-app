@@ -14,7 +14,7 @@ export default function Reference({
   value: string | null;
   onChange: (value: string | null) => void;
   disabled: boolean;
-  defaultLabel: string;
+  defaultLabel: string | null;
   referees: [string, ConfigObject][];
   refTitle: string;
 }) {
@@ -26,21 +26,23 @@ export default function Reference({
     );
   }
 
+  const options: { label: string; value: string | null }[] = referees.map(([subkey]) => {
+    return {
+      label: subkey,
+      value: subkey,
+    };
+  });
+
+  if (defaultLabel) options.unshift({ label: defaultLabel, value: null });
+
   return (
     <Select
+      placeholder={`Select ${refTitle}`}
       className="w-full"
       disabled={disabled}
       onChange={onChange}
       value={value}
-      options={[
-        { label: defaultLabel, value: null },
-        ...referees.map(([subkey]) => {
-          return {
-            label: subkey,
-            value: subkey,
-          };
-        }),
-      ]}
+      options={options}
     />
   );
 }
