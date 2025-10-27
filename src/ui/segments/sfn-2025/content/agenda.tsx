@@ -39,7 +39,7 @@ const agenda: AgendaItemProps[][] = [
       videoUrl:
         'https://player.vimeo.com/progressive_redirect/playback/1129947343/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&log_user=0&signature=e55eaaaef143bdbc0130b74114c774cd4988d6a8c402f99ecde9957d903c16c3',
       agendaText:
-        "Learn more on Simulations of Single Neurons & Synaptoms on the Open Brain Institute's Virtual Labs at booth #3631.",
+        'Learn how to run single neuron and synaptoms simulations in our Virtual Labs. Open Brain Institute - Booth #3631',
     },
     {
       title: 'Modeling',
@@ -79,7 +79,7 @@ const agenda: AgendaItemProps[][] = [
       videoUrl:
         'https://player.vimeo.com/progressive_redirect/playback/1129947343/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&log_user=0&signature=e55eaaaef143bdbc0130b74114c774cd4988d6a8c402f99ecde9957d903c16c3',
       agendaText:
-        "Learn more on Simulations of Single Neurons & Synaptoms on the Open Brain Institute's Virtual Labs at booth #3631.",
+        'Learn how to run single neuron and synaptoms simulations in our Virtual Labs. Open Brain Institute - Booth #3631',
     },
     {
       title: 'Modeling',
