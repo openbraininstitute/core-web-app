@@ -1,4 +1,4 @@
-import { snakeCase } from 'es-toolkit/compat';
+import { includes, snakeCase } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
 import { ReactNode } from 'react';
 
@@ -118,7 +118,10 @@ export default async function Layout({
           </div>
         </div>
       </div>
-      {entityType.extendedType === 'circuit' && <CircuitDownloadPanel />}
+      {includes(
+        [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.MEModelWithSynapses],
+        entityType.extendedType
+      ) && <CircuitDownloadPanel />}
     </>
   );
 }

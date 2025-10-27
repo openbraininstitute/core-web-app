@@ -1,8 +1,9 @@
 import { Button } from 'antd';
 import { useAtom } from 'jotai';
 
-import { transformAgentToNames } from '@/api/entitycore/transformers';
+import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { transformAgentToNames } from '@/api/entitycore/transformers';
 import { hasAssets } from '@/api/entitycore/guards';
 import {
   CoreFieldFilterTypeEnum,
@@ -22,7 +23,6 @@ import { DownloadIcon } from '@/components/icons';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { IContributor } from '@/api/entitycore/types/shared/global';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
-import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { EntityTypeValue } from '@/entity-configuration/domain';
@@ -153,7 +153,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     filter: CoreFieldFilterTypeEnum.Text,
     style: { width: 250 },
     render: (r) => (
-      <div className="line-clamp-2 h-[50px] overflow-hidden whitespace-normal">
+      <div className="line-clamp-2 truncate overflow-hidden text-ellipsis whitespace-normal">
         {renderEmptyOrValue(r.description)}
       </div>
     ),

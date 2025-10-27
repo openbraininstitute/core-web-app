@@ -1,11 +1,12 @@
+import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import {
   getSingleNeuronSynaptomeSimulationIOResult,
   createSingleNeuronSynaptomeSimulation,
   getSingleNeuronSynaptomeSimulation,
   getSingleNeuronSynaptomeSimulations,
 } from '@/api/entitycore/queries/simulation/single-neuron-synaptome-simulation';
-import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getMEModel } from '@/api/entitycore/queries/model/me-model';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
@@ -74,7 +75,11 @@ export const SingleNeuronSynaptomeSimulation: EntityCoreTypeConfig<ISingleNeuron
       configfile: AssetLabel.single_neuron_synaptome_simulation_data,
     },
     isBookmarkable: true,
-    detailViewSections: ['overview', 'configuration', 'results'],
+    detailViewSections: [
+      DetailViewSectionsDict.Overview,
+      DetailViewSectionsDict.Configuration,
+      DetailViewSectionsDict.Results,
+    ],
     isDownloadable: true,
     isCopyable: true,
     isSimulatable: false,

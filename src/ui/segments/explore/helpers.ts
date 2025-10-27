@@ -43,8 +43,8 @@ export const ModelEntitiesTileTypes = {
   Emodel,
   MEmodel,
   Circuit,
-  IonChannelModel,
   MEModelWithSynapsesCircuit,
+  IonChannelModel,
 } as const;
 
 export const SimulationEntitiesTileTypes = {
