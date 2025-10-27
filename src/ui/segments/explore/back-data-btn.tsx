@@ -3,16 +3,17 @@
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-import Breadcrumb from '@/ui/molecules/breadcrumb';
+import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { MiniDetailViewSearchParam } from '@/ui/segments/mini-detail-view/event';
 import { ROOT_ROUTE } from '@/config';
+import Breadcrumb from '@/ui/molecules/breadcrumb';
 
 import type { WorkspaceContext } from '@/types/common';
-import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 export function BackToDataButton({ virtualLabId, projectId }: WorkspaceContext) {
   const queryParams = useSearchParams();
   const query = new URLSearchParams(queryParams);
-  query.delete('mdv');
+  query.delete(MiniDetailViewSearchParam);
 
   return (
     <Breadcrumb>
@@ -36,7 +37,7 @@ export function BackToEntityType({
 }: WorkspaceContext & { type: TExtendedEntitiesTypeDict; title: string }) {
   const queryParams = useSearchParams();
   const query = new URLSearchParams(queryParams);
-  query.delete('mdv');
+  query.delete(MiniDetailViewSearchParam);
 
   return (
     <Breadcrumb showChevron={false}>
