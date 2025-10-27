@@ -1,11 +1,12 @@
+import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export const SmallMicrocircuit: EntityCoreTypeConfig<ICircuit> = {
   group: EntityTypeGroup.Models,
@@ -21,7 +22,7 @@ export const SmallMicrocircuit: EntityCoreTypeConfig<ICircuit> = {
       list: (...params) =>
         getCircuits({
           ...params,
-          filters: { ...params[0].filters, scale__in: ['small'] },
+          filters: { ...params[0].filters, scale__in: [CircuitScaleDictionary.SmallMicrocircuit] },
         }),
       one: getCircuit,
     },
@@ -33,7 +34,12 @@ export const SmallMicrocircuit: EntityCoreTypeConfig<ICircuit> = {
   asset: {
     extension: 'application/json',
   },
-  detailViewSections: ['overview', 'analysis', 'related-publications', 'related-artifacts'],
+  detailViewSections: [
+    DetailViewSectionsDict.Overview,
+    DetailViewSectionsDict.Analysis,
+    DetailViewSectionsDict.RelatedPublications,
+    DetailViewSectionsDict.RelatedArtifacts,
+  ],
   isBookmarkable: false,
   isDownloadable: true,
   isCopyable: true,

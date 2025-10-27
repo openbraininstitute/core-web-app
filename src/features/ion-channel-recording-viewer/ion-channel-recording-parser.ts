@@ -120,7 +120,6 @@ export class IonChannelRecordingParser extends H5Parser {
    * The parts are in sequence.
    */
   private extractStimuli(protocolName: string, linesPerPlot: number): IonChannelRecordingPlot {
-    console.log('PROTOCOL:', protocolName);
     const plot: IonChannelRecordingPlot = {
       xAxisLabel: 'Time (ms)',
       yAxisLabel: 'Voltage (mV)',
@@ -135,12 +134,6 @@ export class IonChannelRecordingParser extends H5Parser {
     const stimuli = parseStimuli(command);
     const [lowestVoltage, highestVoltage] = computeVoltageBounds(stimuli);
     const palette = createPalette(linesPerPlot);
-    console.log(
-      '🚀 [ion-channel-recording-parser] palette, lowestVoltage, highestVoltage =',
-      palette,
-      lowestVoltage,
-      highestVoltage
-    ); // @FIXME: Remove this line written on 2025-10-24 at 17:04
     const pickColor = makeColorPicker(palette, lowestVoltage, highestVoltage);
     let id = 1;
     let start = 0;
@@ -284,7 +277,6 @@ function makeColorPicker(
   return (voltage: number) => {
     const factor = (voltage - lowestVoltage) * divisor;
     const color = TgdColor.fromPaletteClosest(factor, palette).toString();
-    console.log(voltage, `mV (${Math.round(100 * factor)}%) -> `, color);
     return color;
   };
 }

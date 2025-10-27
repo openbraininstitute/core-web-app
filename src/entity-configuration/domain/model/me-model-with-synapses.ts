@@ -1,44 +1,47 @@
-import { getMEModel, getMEModels, createMEModel } from '@/api/entitycore/queries/model/me-model';
+import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
+import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
-import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 
-export const MEmodel: EntityCoreTypeConfig<IMEModel> = {
+export const MEModelWithSynapsesCircuit: EntityCoreTypeConfig<ICircuit> = {
   group: EntityTypeGroup.Models,
-  title: 'ME-model',
-  extendedType: ExtendedEntitiesTypeDict.Memodel,
-  type: EntityTypeDict.Memodel,
-  slug: EntitySlug.MeModel,
+  title: 'ME-model with Synapses',
+  extendedType: ExtendedEntitiesTypeDict.MEModelWithSynapses,
+  type: EntityTypeDict.Circuit,
+  slug: EntitySlug.Circuit,
   api: {
     config: {
       allowedFacets: true,
     },
     query: {
-      list: getMEModels,
-      one: getMEModel,
-      create: createMEModel,
+      list: (...params) => {
+        return getCircuits({
+          ...params,
+          withFacets: params[0].withFacets,
+          filters: { ...params[0].filters, scale__in: [CircuitScaleDictionary.Single] },
+        });
+      },
+      one: getCircuit,
     },
   },
   explore: {
     basePrefix: 'model',
-    routePrefix: 'interactive/model',
   },
   asset: {
-    extension: undefined,
+    extension: 'application/json',
   },
   detailViewSections: [
     DetailViewSectionsDict.Overview,
-    DetailViewSectionsDict.Analysis,
-    DetailViewSectionsDict.Configuration,
+    DetailViewSectionsDict.RelatedPublications,
     DetailViewSectionsDict.RelatedArtifacts,
   ],
+  isBookmarkable: false,
   isDownloadable: true,
-  isBookmarkable: true,
   isCopyable: true,
-  isSimulatable: true,
+  isSimulatable: false,
 } as const;

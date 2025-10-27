@@ -1,13 +1,14 @@
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
+import { EntityTypeGroup } from '@/entity-configuration/domain/group';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import {
   getSingleNeuronSynaptome,
   getSingleNeuronSynaptomes,
   createSingleNeuronSynaptome,
   getSingleNeuronSynaptomeConfiguration,
 } from '@/api/entitycore/queries/model/single-neuron-synaptome';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { EntityTypeGroup } from '@/entity-configuration/domain/group';
-import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { getMEModel } from '@/api/entitycore/queries';
 
@@ -47,7 +48,11 @@ export const SingleNeuronSynaptome: EntityCoreTypeConfig<ISingleNeuronSynaptome>
     extension: 'application/json',
     configfile: AssetLabel.single_neuron_synaptome_config,
   },
-  detailViewSections: ['overview', 'configuration', 'related-artifacts'],
+  detailViewSections: [
+    DetailViewSectionsDict.Overview,
+    DetailViewSectionsDict.Configuration,
+    DetailViewSectionsDict.RelatedArtifacts,
+  ],
   isBookmarkable: true,
   isDownloadable: true,
   isCopyable: true,

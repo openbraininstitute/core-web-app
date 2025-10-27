@@ -29,6 +29,7 @@ const AllowedEntities = [
   ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
   ExtendedEntitiesTypeDict.SingleNeuronSimulation,
   ExtendedEntitiesTypeDict.IonChannelModel,
+  ExtendedEntitiesTypeDict.MEModelWithSynapses,
 ] as const;
 
 export default async function Page({

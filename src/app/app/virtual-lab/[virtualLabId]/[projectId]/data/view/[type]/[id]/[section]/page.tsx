@@ -1,8 +1,12 @@
 import { JSX } from 'react';
 import { notFound } from 'next/navigation';
-import snakeCase from 'es-toolkit/compat/snakeCase';
+import { snakeCase } from 'es-toolkit/compat';
+
 import { downloadEntity } from '../layout';
-import { DetailViewSection } from '@/entity-configuration/definitions/types';
+import {
+  DetailViewSectionsDict,
+  TDetailViewSectionDict,
+} from '@/entity-configuration/definitions/types';
 import {
   EntityCoreExtendedType,
   getEntityByExtendedType,
@@ -20,7 +24,7 @@ import Results from '@/ui/segments/detail-view/results';
 export default async function Page({
   params,
 }: ServerSideComponentProp<
-  WorkspaceContext & { section: DetailViewSection; id: string; type: string },
+  WorkspaceContext & { section: TDetailViewSectionDict; id: string; type: string },
   null
 >) {
   const { virtualLabId, projectId, section, type, id } = await params;
@@ -38,26 +42,26 @@ export default async function Page({
 
   let content: JSX.Element | undefined;
 
-  if (section === 'overview') {
+  if (section === DetailViewSectionsDict.Overview) {
     return <Overview entity={entity} extendedType={entityType.extendedType} ctx={ctx} />;
   }
-  if (section === 'analysis') {
+  if (section === DetailViewSectionsDict.Analysis) {
     return <Analysis entity={entity} extendedType={entityType.extendedType} />;
   }
 
-  if (section === 'configuration') {
+  if (section === DetailViewSectionsDict.Configuration) {
     return <Configuration entity={entity} extendedType={entityType.extendedType} ctx={ctx} />;
   }
 
-  if (section === 'related-publications') {
+  if (section === DetailViewSectionsDict.RelatedPublications) {
     return <RelatedPublications entity={entity} extendedType={entityType.extendedType} />;
   }
 
-  if (section === 'related-artifacts') {
+  if (section === DetailViewSectionsDict.RelatedArtifacts) {
     return <RelatedArtifacts extendedType={entityType.extendedType} entity={entity} />;
   }
 
-  if (section === 'results') {
+  if (section === DetailViewSectionsDict.Results) {
     return <Results extendedType={entityType.extendedType} entity={entity} ctx={ctx} />;
   }
 

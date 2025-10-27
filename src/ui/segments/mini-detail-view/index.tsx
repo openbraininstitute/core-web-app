@@ -1,6 +1,7 @@
 import { CheckCircleFilled, CloseOutlined, CopyOutlined, LoadingOutlined } from '@ant-design/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import { useMutation } from '@tanstack/react-query';
+import { includes } from 'es-toolkit/compat';
 import { useState, useEffect } from 'react';
 import { match, P } from 'ts-pattern';
 import { useAtom } from 'jotai';
@@ -29,7 +30,6 @@ import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
 import { DownloadIcon } from '@/components/icons/buttons';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { EntityTypeDict } from '@/api/entitycore/types';
 import { Card, CardTitle } from '@/ui/molecules/card';
 import { WorkspaceSection } from '@/constants';
 import { Button } from '@/ui/molecules/button';
@@ -84,7 +84,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
 
   if (!record) return null;
 
-  const viewConfig = getViewDefinitionByExtendedType(record.type);
+  const viewConfig = getViewDefinitionByExtendedType(dataType ?? record.type);
   const miniConfig = viewConfig?.miniDetailView;
 
   const preview = match({ type: record.type })
@@ -316,7 +316,12 @@ function ExploreActions<T extends EntityCoreObjectTypes>({
 
   // const onBookmark = () => saveAsync();
   const onDownload = () => {
-    if (EntityTypeDict.Circuit === record.type) {
+    if (
+      includes(
+        [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.MEModelWithSynapses],
+        dataType
+      )
+    ) {
       setDownloadPanelCircuit(record as ICircuit);
     } else {
       downloadAsync();

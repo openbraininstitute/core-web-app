@@ -4,13 +4,14 @@ import keyBy from 'es-toolkit/compat/keyBy';
 import { resolveExecutions } from './small-microcircuit-simulation';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import { getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getAssetElement } from '@/api/entitycore/utils';
 import {
   createSimulationCampaign,
@@ -152,7 +153,7 @@ export const PairedNeuronCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulat
   asset: {
     extension: 'application/json',
   },
-  detailViewSections: ['overview'],
+  detailViewSections: [DetailViewSectionsDict.Overview],
   isBookmarkable: false,
   isDownloadable: false,
   isCopyable: true,
