@@ -53,9 +53,11 @@ export const useSelectEntityClickEvent = <T>(
   }, [cb]);
 };
 
+export const MiniDetailViewSearchParam = 'mdv';
+
 export function useMiniDetailView() {
   const [mdv, setMdv] = useQueryState(
-    'mdv',
+    MiniDetailViewSearchParam,
     parseAsBoolean.withDefault(false).withOptions({ clearOnDefault: true, shallow: true })
   );
   return { mdv, setMdv };

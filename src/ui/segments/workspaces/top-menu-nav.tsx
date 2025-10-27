@@ -1,10 +1,23 @@
-import type { ReactNode } from 'react';
-import React from 'react';
-
+import { usePathname, useSearchParams } from 'next/navigation';
 import { MenuOutlined } from '@ant-design/icons';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import React from 'react';
 
+import type { ReactNode } from 'react';
+
+import { createBreakpoint, useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { MiniDetailViewSearchParam } from '@/ui/segments/mini-detail-view/event';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { getActiveSection } from '@/utils/get-section';
+import { Button } from '@/ui/molecules/button';
+import { cn } from '@/utils/css-class';
+import { ROOT_ROUTE } from '@/config';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/ui/molecules/dropdown-menu';
 import {
   ExploreIcon,
   HelpIcon,
@@ -13,18 +26,6 @@ import {
   ReportsIcon,
   WorkflowIcon,
 } from '@/components/icons/buttons';
-import { ROOT_ROUTE } from '@/config';
-import { createBreakpoint, useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Button } from '@/ui/molecules/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/ui/molecules/dropdown-menu';
-import { cn } from '@/utils/css-class';
-import { getActiveSection } from '@/utils/get-section';
 
 type LinkItem = {
   id: string;
@@ -144,6 +145,10 @@ export function TopMenuNavigation() {
             className="border-neutral-1 w-56 rounded-xl bg-white p-1"
           >
             {hashedLinks.map((link) => {
+              const searchParams = new URLSearchParams(queryParams);
+              searchParams.delete(MiniDetailViewSearchParam);
+              const linkSearchParams = searchParams.toString();
+
               if (link.hasAction && link.action) {
                 return (
                   <div key={link.key} className="space-y-1">
@@ -155,7 +160,7 @@ export function TopMenuNavigation() {
                         <Link
                           href={{
                             pathname: link.url,
-                            query: queryParams ? queryParams.toString() : undefined,
+                            query: linkSearchParams,
                           }}
                         >
                           {link.icon}
@@ -189,7 +194,7 @@ export function TopMenuNavigation() {
                     prefetch
                     href={{
                       pathname: link.url,
-                      query: queryParams ? queryParams.toString() : undefined,
+                      query: searchParams ? searchParams.toString() : undefined,
                     }}
                   >
                     {link.icon}
@@ -205,37 +210,42 @@ export function TopMenuNavigation() {
   }
 
   return hashedLinks.map(
-    ({ id, key, title, url, baseUrl, icon, allowText, className: clx, isActive, hasAction }) => (
-      <div key={key} className="group flex w-max items-center justify-center gap-0">
-        <div className="relative flex items-center">
-          <Button
-            asChild
-            rounded
-            id={id}
-            variant="outline"
-            size={breakpoint === 'xl' ? 'lg' : 'md'}
-            className={cn(
-              { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
-              { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
-              'group relative flex items-center justify-between',
-              { 'group-hover:rounded-r-none group-hover:border-r-0': hasAction },
-              'transition-all duration-400 ease-out',
-              clx
-            )}
-            active={activeSection === baseUrl || isActive?.(pathname)}
-          >
-            <Link
-              prefetch
-              href={{
-                pathname: url,
-                query: queryParams ? queryParams.toString() : undefined,
-              }}
+    ({ id, key, title, url, baseUrl, icon, allowText, className: clx, isActive, hasAction }) => {
+      const searchParams = new URLSearchParams(queryParams);
+      searchParams.delete(MiniDetailViewSearchParam);
+      const linkSearchParams = searchParams.toString();
+
+      return (
+        <div key={key} className="group flex w-max items-center justify-center gap-0">
+          <div className="relative flex items-center">
+            <Button
+              asChild
+              rounded
+              id={id}
+              variant="outline"
+              size={breakpoint === 'xl' ? 'lg' : 'md'}
+              className={cn(
+                { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
+                { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
+                'group relative flex items-center justify-between',
+                { 'group-hover:rounded-r-none group-hover:border-r-0': hasAction },
+                'transition-all duration-400 ease-out',
+                clx
+              )}
+              active={activeSection === baseUrl || isActive?.(pathname)}
             >
-              {allowText && <span>{title}</span>}
-              {icon}
-            </Link>
-          </Button>
-          {/* {hasAction && action && (
+              <Link
+                prefetch
+                href={{
+                  pathname: url,
+                  query: linkSearchParams,
+                }}
+              >
+                {allowText && <span>{title}</span>}
+                {icon}
+              </Link>
+            </Button>
+            {/* {hasAction && action && (
             <div
               className={cn(
                 'transition-all duration-900 ease-out',
@@ -272,8 +282,9 @@ export function TopMenuNavigation() {
               </Button>
             </div>
           )} */}
+          </div>
         </div>
-      </div>
-    )
+      );
+    }
   );
 }
