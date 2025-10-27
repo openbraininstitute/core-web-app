@@ -149,7 +149,7 @@ export const circuitAtomFamily = readAtomFamilyWithExpiration(
   }
 );
 
-export const fileAtomFamily = readAtomFamilyWithExpiration(
+export const jsonFileAtomFamily = readAtomFamilyWithExpiration(
   ({
     id,
     entityId,
@@ -163,7 +163,7 @@ export const fileAtomFamily = readAtomFamilyWithExpiration(
     assetPath?: string;
     context: WorkspaceContext;
   }) =>
-    atom<Promise<ICircuit>>(async () => {
+    atom<Promise<any>>(async () => {
       const res = await downloadAsset({
         ctx: context,
         entityId,
