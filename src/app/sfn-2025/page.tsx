@@ -31,7 +31,7 @@ export default function Page() {
           posterURL="/video/thumb.jpg"
           posterWidth={1920}
           posterHeight={108}
-          title="SfN 2025 Neuroscience at the Speed of Thought"
+          title="Visit Us at SfN 2025 and Experience Our Virtual Labs in Action!"
         />
         <ContentSFN />
         <FooterPanel />

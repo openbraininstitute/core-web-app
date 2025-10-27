@@ -12,51 +12,89 @@ type AgendaItemProps = {
   title: string;
   subtitle: string;
   time: string;
+  videoUrl: string;
+  agendaText?: string;
 };
 
 const agenda: AgendaItemProps[][] = [
   [
     {
       title: 'Explore & AI',
-      subtitle: 'Explore Data & AI Functionalities',
+      subtitle:
+        'Explore datasets interactively and reveal hidden patterns through AI-driven insights',
       time: '9:30 – 10:00',
+      videoUrl:
+        'https://player.vimeo.com/progressive_redirect/playback/1129947181/rendition/1080p/file.mp4?loc=external&log_user=0&signature=736d65d94e55d92d57a5259c4c031ef837eb22c48104a25361cea38fdfb68ed1',
+      agendaText:
+        "Learn more on Data Exploration & AI Functionalities accessible on the Open Brain Institute's Virtual Labs at booth #3631.",
     },
     {
       title: 'Simulate',
-      subtitle: 'Simulate Single Neurons & Synaptoms',
+      subtitle:
+        'Simulate, test and analyze microcircuits to study emergent network-level behaviors',
       time: '10:00 – 10:30',
+      videoUrl:
+        'https://player.vimeo.com/progressive_redirect/playback/1129947343/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&log_user=0&signature=e55eaaaef143bdbc0130b74114c774cd4988d6a8c402f99ecde9957d903c16c3',
+      agendaText:
+        'Learn how to run single neuron and synaptoms simulations in our Virtual Labs. Open Brain Institute - Booth #3631',
     },
     {
       title: 'Modeling',
-      subtitle: 'Model Small Microcircuits',
+      subtitle: 'Model single neurons and synaptoms to visualize function and structure',
       time: '10:30 – 11:00',
+      videoUrl:
+        'https://player.vimeo.com/progressive_redirect/playback/1129947455/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&log_user=0&signature=fbbf0b61ed56cf2667fe11ae2fe68e7151b5713857a64633abc50c3502917465',
+      agendaText:
+        "Learn more on modeling small microcircuits accessible on the Open Brain Institute's Virtual Labs at booth #3631.",
     },
     {
       title: 'EM Skeletonization',
-      subtitle: 'EM Skeletonization & Notebooks',
+      subtitle: 'Generate EM Skeletonized Morphologies & Run Notebooks',
       time: '11:00 – 11:30',
+      videoUrl:
+        'https://player.vimeo.com/progressive_redirect/playback/1129947485/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&log_user=0&signature=57960071b0e97d216e5ebf23f865e39561c24a24f754bc47001185f9a4e0370d',
+      agendaText:
+        "Learn more on EM Skeletonization & Notebooks accessible on the Open Brain Institute's Virtual Labs at booth #3631.",
     },
   ],
   [
     {
       title: 'Explore & AI',
-      subtitle: 'Explore Data & AI Functionalities',
+      subtitle:
+        'Explore datasets interactively and reveal hidden patterns through AI-driven insights',
       time: '13:00 – 13:30',
+      videoUrl:
+        'https://player.vimeo.com/progressive_redirect/playback/1129947181/rendition/1080p/file.mp4?loc=external&log_user=0&signature=736d65d94e55d92d57a5259c4c031ef837eb22c48104a25361cea38fdfb68ed1',
+      agendaText:
+        "Learn more on Data Exploration & AI Functionalities accessible on the Open Brain Institute's Virtual Labs at booth #3631.",
     },
     {
       title: 'Simulate',
-      subtitle: 'Simulate Single Neurons & Synaptoms',
+      subtitle:
+        'Simulate, test and analyze microcircuits to study emergent network-level behaviors',
       time: '13:30 – 14:00',
+      videoUrl:
+        'https://player.vimeo.com/progressive_redirect/playback/1129947343/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&log_user=0&signature=e55eaaaef143bdbc0130b74114c774cd4988d6a8c402f99ecde9957d903c16c3',
+      agendaText:
+        'Learn how to run single neuron and synaptoms simulations in our Virtual Labs. Open Brain Institute - Booth #3631',
     },
     {
       title: 'Modeling',
-      subtitle: 'Model Small Microcircuits',
+      subtitle: 'Model single neurons and synaptoms to visualize function and structure',
       time: '14:00 – 14:30',
+      videoUrl:
+        'https://player.vimeo.com/progressive_redirect/playback/1129947455/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&log_user=0&signature=fbbf0b61ed56cf2667fe11ae2fe68e7151b5713857a64633abc50c3502917465',
+      agendaText:
+        "Learn more on modeling small microcircuits accessible on the Open Brain Institute's Virtual Labs at booth #3631.",
     },
     {
       title: 'EM Skeletonization',
-      subtitle: 'EM Skeletonization & Notebooks',
+      subtitle: 'Generate EM Skeletonized Morphologies & Run Notebooks',
       time: '14:30 – 15:00',
+      videoUrl:
+        'https://player.vimeo.com/progressive_redirect/playback/1129947485/rendition/1080p/file.mp4%20%281080p%29.mp4?loc=external&log_user=0&signature=57960071b0e97d216e5ebf23f865e39561c24a24f754bc47001185f9a4e0370d',
+      agendaText:
+        "Learn more on EM Skeletonization & Notebooks accessible on the Open Brain Institute's Virtual Labs at booth #3631.",
     },
   ],
 ];
@@ -72,7 +110,7 @@ function AgendaCard({ item }: { item: AgendaItemProps }) {
           </p>
         </header>
 
-        <p className="relative -top-1 text-2xl! md:text-xl!">{item.subtitle}</p>
+        <p className="mt-1 w-2/3 text-2xl! md:text-xl!">{item.subtitle}</p>
       </div>
 
       <div className="text-neutral-4 text-xl">
@@ -116,12 +154,12 @@ export default function SFNAgenda() {
         <h2 className="font-serif text-6xl! leading-[1.2]! font-normal">Agenda</h2>
         <Divider />
 
-        <p className="font-title text-xl! leading-normal md:text-lg!">
+        <p className="font-title text-xl! leading-normal md:text-2xl!">
           Outside of our scheduled events and workshops, we warmly invite you to stop by our booth
-          and explore the Open Brain Platform. Our team is here throughout the day, eager to
-          introduce you to our tools, answer your questions, and guide you through the possibilities
-          of collaborative neuroscience. Don&apos;t hesitate to come by — we&apos;re ready to
-          welcome you and help you get started.
+          and explore our Virtual Labs. Our team is here throughout the day, eager to introduce you
+          to our tools, answer your questions, and guide you through the possibilities of
+          collaborative neuroscience. Don&apos;t hesitate to come by — we&apos;re ready to welcome
+          you and help you get started.
         </p>
       </div>
       <div className="w-full md:w-1/2">
