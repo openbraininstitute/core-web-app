@@ -1,8 +1,9 @@
 import { Button } from 'antd';
 import { useAtom } from 'jotai';
 
-import { transformAgentToNames } from '@/api/entitycore/transformers';
+import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { transformAgentToNames } from '@/api/entitycore/transformers';
 import { hasAssets } from '@/api/entitycore/guards';
 import {
   CoreFieldFilterTypeEnum,
@@ -11,6 +12,7 @@ import {
 import {
   EmptyPreview,
   EmptyValue,
+  renderArray,
   renderContributorsModal,
   renderDate,
   renderEmptyOrValue,
@@ -22,10 +24,10 @@ import { DownloadIcon } from '@/components/icons';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { IContributor } from '@/api/entitycore/types/shared/global';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
-import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { EntityTypeValue } from '@/entity-configuration/domain';
+import { ensureArray } from '@/utils/array';
 
 const renderContributors = (r: EntityTypeValue, filter: 'person' | 'organization') => {
   if (!('contributions' in r) || !r.contributions) return EmptyValue;
@@ -151,7 +153,13 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.Description]: {
     title: 'Description',
     filter: CoreFieldFilterTypeEnum.Text,
-    render: (r) => renderEmptyOrValue(r.description),
+    style: { width: 250 },
+    render: (r) => (
+      <div className="line-clamp-2 truncate overflow-hidden text-ellipsis whitespace-normal">
+        {renderEmptyOrValue(r.description)}
+      </div>
+    ),
+    renderForDetailView: (r) => renderEmptyOrValue(r.description),
     vocabulary: {
       plural: 'Descriptions',
       singular: 'Description',
@@ -234,6 +242,47 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         value: 'brain_region__name',
       },
     ],
+  },
+  [EntityCoreFields.Species]: {
+    title: 'Species',
+    filter: CoreFieldFilterTypeEnum.CheckList,
+    render: (r) => {
+      if ('species' in r)
+        return renderEmptyOrValue(
+          renderArray(ensureArray({ input: r.species }).map((s) => s.name))
+        );
+      if ('subject' in r && 'species' in r.subject)
+        return renderEmptyOrValue(r.subject.species.name);
+      return EmptyValue;
+    },
+    vocabulary: {
+      plural: 'Species',
+      singular: 'Species',
+    },
+    defaultConstraint: 'species__name__in',
+    perTypeConstraint: {
+      [ExtendedEntitiesTypeDict.CellMorphology]: 'subject__species__name__in',
+      [ExtendedEntitiesTypeDict.ElectricalCellRecording]: 'subject__species__name__in',
+      [ExtendedEntitiesTypeDict.ExperimentalNeuronDensity]: 'subject__species__name__in',
+      [ExtendedEntitiesTypeDict.ExperimentalBoutonDensity]: 'subject__species__name__in',
+      [ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection]: 'subject__species__name__in',
+      [ExtendedEntitiesTypeDict.IonChannelModel]: 'subject__species__name__in',
+    },
+    order: [
+      {
+        types: [
+          ExtendedEntitiesTypeDict.ElectricalCellRecording,
+          ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
+          ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
+          ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
+        ],
+        property: 'order_by',
+        value: 'subject__species__name',
+      },
+    ],
+    isSortable: true,
+    isFilterable: true,
+    isDisplayable: true,
   },
   [EntityCoreFields.CreatedBy]: {
     title: 'Created by',

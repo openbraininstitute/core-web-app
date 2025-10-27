@@ -1,9 +1,7 @@
-import { ReactNode } from 'react';
-import NextLink from 'next/link';
-import snakeCase from 'es-toolkit/compat/snakeCase';
+import { includes, snakeCase } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
-import Breadcrumb from '@/ui/molecules/breadcrumb';
-import { ROOT_ROUTE } from '@/config';
+import { ReactNode } from 'react';
+
 import {
   EntityCoreExtendedType,
   getEntityByExtendedType,
@@ -13,9 +11,11 @@ import ActionMenu from '@/ui/segments/action-menu';
 import Close from '@/ui/molecules/close';
 import { DownloadPanel as CircuitDownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { BackToDataButton, BackToEntityType } from '@/ui/segments/explore/back-data-btn';
 import { WorkspaceScope } from '@/constants';
+import { ROOT_ROUTE } from '@/config';
 
-import type { WorkspaceContext, AwaitedType } from '@/types/common';
+import type { WorkspaceContext, AwaitedType, ServerSideComponentProp } from '@/types/common';
 
 interface Params {
   id: string;
@@ -53,11 +53,11 @@ export async function downloadEntity({
 export default async function Layout({
   children,
   params,
-}: {
+}: ServerSideComponentProp<WorkspaceContext & Params, null> & {
   children: ReactNode;
-  params: Promise<Params & WorkspaceContext>;
 }) {
   const awaitedParams = await params;
+
   const { virtualLabId, projectId, id } = awaitedParams;
   const type = snakeCase(awaitedParams.type) as EntityCoreExtendedType;
 
@@ -76,12 +76,8 @@ export default async function Layout({
 
   const breadcrumbs = (
     <div className="flex flex-wrap gap-3">
-      <Breadcrumb>
-        <NextLink href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data`}>Data</NextLink>
-      </Breadcrumb>
-      <Breadcrumb showChevron={false}>
-        <NextLink href={parentLink}>{entityType.title}</NextLink>
-      </Breadcrumb>
+      <BackToDataButton {...{ virtualLabId, projectId }} />
+      <BackToEntityType {...{ virtualLabId, projectId, type, title: entityType.title }} />
     </div>
   );
 
@@ -97,6 +93,8 @@ export default async function Layout({
       </div>
     );
   }
+
+  if (!entityType.detailViewSections) return null;
 
   return (
     <>
@@ -120,7 +118,10 @@ export default async function Layout({
           </div>
         </div>
       </div>
-      {entityType.extendedType === 'circuit' && <CircuitDownloadPanel />}
+      {includes(
+        [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.MEModelWithSynapses],
+        entityType.extendedType
+      ) && <CircuitDownloadPanel />}
     </>
   );
 }

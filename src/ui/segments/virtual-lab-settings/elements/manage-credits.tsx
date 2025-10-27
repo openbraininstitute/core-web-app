@@ -94,6 +94,7 @@ export function ManageCreditsStep({
   const notify = useAppNotification();
   const amountInputRef = useRef<HTMLInputElement>(null);
   const { projectId } = useWorkspace();
+
   const [labDetails, accountingRes, projectsRes] = useQueries({
     queries: [
       {
@@ -164,7 +165,7 @@ export function ManageCreditsStep({
         placement: 'topRight',
         key: 'transfer-credits-success',
       });
-      setAmount('');
+      setAmount(undefined);
     },
     onError: (error) => {
       notify.error({

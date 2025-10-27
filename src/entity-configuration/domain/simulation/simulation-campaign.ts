@@ -4,6 +4,7 @@ import keyBy from 'es-toolkit/compat/keyBy';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getCircuits } from '@/api/entitycore/queries/model/circuit';
@@ -147,7 +148,7 @@ export const SimulationCampaign: EntityCoreTypeConfig<ICircuitSimulationCampaign
   asset: {
     extension: 'application/json',
   },
-  detailViewSections: ['overview'],
+  detailViewSections: [DetailViewSectionsDict.Overview],
   isBookmarkable: true,
   isDownloadable: false,
   isCopyable: true,

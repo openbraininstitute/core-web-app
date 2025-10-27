@@ -30,6 +30,8 @@ import type {
 
 import SmallMicrocircuitSimulation from '@/features/small-microcircuit';
 import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
+import { IonChannelRecordingViewer } from '@/features/ion-channel-recording-viewer';
 
 export default async function Overview({
   entity,
@@ -136,6 +138,9 @@ export default async function Overview({
       )}
       {extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording && (
         <EphysViewer resource={entity as IElectricalCellRecording} ctx={ctx} />
+      )}
+      {extendedType === ExtendedEntitiesTypeDict.IonChannelRecording && (
+        <IonChannelRecordingViewer resource={entity as IIonChannelRecording} ctx={ctx} />
       )}
       {extendedType === ExtendedEntitiesTypeDict.IonChannelModel && (
         <IonChannelModelOverview icm={entity as IonChannelModel} ctx={ctx} />

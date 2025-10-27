@@ -88,7 +88,7 @@ export const EntityWorkflowConfiguration: Partial<
   },
   [ExtendedEntitiesTypeDict.NGVUnit]: {
     group: EntityScopeDict.Subcellular,
-    label: 'NGV Unit',
+    label: 'NGV unit',
     properties: {
       build: {
         disabled: true,
@@ -130,7 +130,7 @@ export const EntityWorkflowConfiguration: Partial<
   },
   [ExtendedEntitiesTypeDict.PairedNeuronCircuit]: {
     group: EntityScopeDict.Cellular,
-    label: 'Paired Neurons',
+    label: 'Paired neurons',
     properties: {
       build: {
         disabled: true,
@@ -172,7 +172,7 @@ export const EntityWorkflowConfiguration: Partial<
   },
   [ExtendedEntitiesTypeDict.NGVCircuit]: {
     group: EntityScopeDict.Circuit,
-    label: 'NGV Circuit',
+    label: 'NGV circuit',
     properties: {
       build: {
         disabled: true,

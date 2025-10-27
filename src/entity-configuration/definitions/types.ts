@@ -132,10 +132,14 @@ export type FieldsDefinitionRegistry<T extends EntityCoreIdentifiable> = Record<
   FieldDefinition<T>
 >;
 
-export type DetailViewSection =
-  | 'overview'
-  | 'results'
-  | 'analysis'
-  | 'related-publications'
-  | 'related-artifacts'
-  | 'configuration';
+export const DetailViewSectionsDict = {
+  Overview: 'overview',
+  Results: 'results',
+  Analysis: 'analysis',
+  RelatedPublications: 'related-publications',
+  RelatedArtifacts: 'related-artifacts',
+  Configuration: 'configuration',
+} as const;
+
+export type TDetailViewSectionDict =
+  (typeof DetailViewSectionsDict)[keyof typeof DetailViewSectionsDict];

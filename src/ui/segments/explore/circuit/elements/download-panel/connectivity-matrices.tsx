@@ -45,7 +45,7 @@ export default function ConnectivityMatrices({ circuit }: { circuit: ICircuit })
   const connectivityMetrics = useQuery({
     queryKey: keyBuilder.asset({
       entityId: circuit.id,
-      assetId: configAsset!.id,
+      assetId: configAsset?.id!,
       assetPath: AssetDefaultPath,
       context: { virtualLabId, projectId },
     }),
@@ -56,7 +56,7 @@ export default function ConnectivityMatrices({ circuit }: { circuit: ICircuit })
         assetPath: AssetDefaultPath,
         context: { virtualLabId, projectId },
       }),
-    enabled: !!circuit && !!configAsset!.id,
+    enabled: !!circuit && !!configAsset?.id,
     select: (result) => {
       return {
         directory: result.directory,

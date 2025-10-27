@@ -163,6 +163,7 @@ export enum AssetLabel {
   compressed_sonata_circuit = 'compressed_sonata_circuit',
   ion_channel_model_figure = 'ion_channel_model_figure',
   ion_channel_model_figure_summary_json = 'ion_channel_model_figure_summary_json',
+  jupyter_notebook = 'jupyter_notebook',
 }
 
 type AssetBase = {

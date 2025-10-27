@@ -13,7 +13,9 @@ import { TeamTable } from '@/ui/segments/virtual-lab-settings/sections/team';
 import { Credits } from '@/ui/segments/virtual-lab-settings/sections/credits';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useAppNotification } from '@/components/notification';
+import { ExpandableText } from '@/ui/molecules/more-less-text';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import { useTabs } from '@/components/detail-view-tabs';
 import { useUserRole } from '@/hooks/use-user-role';
 import { messages } from '@/i18n/en/virtual-lab';
@@ -21,7 +23,6 @@ import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
 import type { VirtualLab, VirtualLabListResponse } from '@/api/virtual-lab-svc/queries/types';
-import { ExpandableText } from '@/ui/molecules/more-less-text';
 
 const baseNameSchema = z
   .string()
@@ -79,42 +80,50 @@ function EditableName({
     },
     onMutate: async (name) => {
       await queryClient.cancelQueries({
-        queryKey: keyBuilder.listAllLabs(),
+        queryKey: keyBuilder.listAllLabs({
+          includes: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS],
+        }),
       });
 
       const previousData = queryClient.getQueryData(
-        keyBuilder.listAllLabs()
+        keyBuilder.listAllLabs({ includes: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS] })
       ) as VirtualLabListResponse;
-      queryClient.setQueryData(keyBuilder.listAllLabs(), (old: VirtualLabListResponse) => {
-        if (!old?.data) return old;
-        const updatedVirtualLab = {
-          ...old.data.virtual_lab,
-          name,
-        };
+      queryClient.setQueryData(
+        keyBuilder.listAllLabs({ includes: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS] }),
+        (old: VirtualLabListResponse) => {
+          if (!old?.data) return old;
+          const updatedVirtualLab = {
+            ...old.data.virtual_lab,
+            name,
+          };
 
-        const updatedMembershipLabs = {
-          ...old.data.membership_labs,
-          results:
-            old.data.membership_labs?.results?.map((lab) =>
-              lab.id === virtualLabId ? { ...lab, name } : lab
-            ) || [],
-        };
+          const updatedMembershipLabs = {
+            ...old.data.membership_labs,
+            results:
+              old.data.membership_labs?.results?.map((lab) =>
+                lab.id === virtualLabId ? { ...lab, name } : lab
+              ) || [],
+          };
 
-        return {
-          ...old,
-          data: {
-            ...old.data,
-            virtual_lab: updatedVirtualLab,
-            membership_labs: updatedMembershipLabs,
-          },
-        };
-      });
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              virtual_lab: updatedVirtualLab,
+              membership_labs: updatedMembershipLabs,
+            },
+          };
+        }
+      );
 
       return { previousData };
     },
     onError: (__, _, context: { previousData?: VirtualLabListResponse } | undefined) => {
       if (context?.previousData) {
-        queryClient.setQueryData(keyBuilder.listAllLabs(), context.previousData);
+        queryClient.setQueryData(
+          keyBuilder.listAllLabs({ includes: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS] }),
+          context.previousData
+        );
         const prevData = context.previousData;
         if (prevData?.data) {
           const previousName =
@@ -145,7 +154,9 @@ function EditableName({
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: keyBuilder.listAllLabs(),
+        queryKey: keyBuilder.listAllLabs({
+          includes: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS],
+        }),
       });
     },
   });

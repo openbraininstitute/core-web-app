@@ -7,7 +7,7 @@ interface OptionSelectProps {
     numberOfAvailable: number;
   };
   value: string;
-  handleChange: (value: string) => void;
+  onChange: (value: string) => void;
   options: JSX.Element[] | null;
   hideWhenSingle?: boolean;
 }
@@ -15,7 +15,7 @@ interface OptionSelectProps {
 function OptionSelect({
   label: { numberOfAvailable, title },
   value,
-  handleChange,
+  onChange: handleChange,
   options,
   hideWhenSingle = false,
 }: OptionSelectProps) {

@@ -189,4 +189,13 @@ export const keyBuilder = {
   circuitProperties: ({ circuitId }: { circuitId: string }) => {
     return [`${prefix}-circuit-properties`, circuitId];
   },
+  mtype: ({ virtualLabId, projectId }: WorkspaceContext) => [
+    `${prefix}-mtype-class`,
+    { context: { virtualLabId, projectId } },
+  ],
+  subject: ({ virtualLabId, projectId }: WorkspaceContext) => [
+    `${prefix}-subject`,
+    { context: { virtualLabId, projectId } },
+  ],
+  license: (context?: WorkspaceContext) => [`${prefix}-license`, { context }],
 };

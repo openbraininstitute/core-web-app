@@ -2,7 +2,7 @@
 
 import { VerticalAlignMiddleOutlined } from '@ant-design/icons';
 import { ConfigProvider, Table, TableProps } from 'antd';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import isString from 'es-toolkit/compat/isString';
 
 import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
@@ -135,6 +135,7 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
     height: 0,
     width: 0,
   });
+
   const tableRef = useRef<TableRef>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const tableElement: HTMLElement | null | undefined =
@@ -142,6 +143,11 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
   const headerElement: HTMLElement | null | undefined =
     tableRef.current?.nativeElement.querySelector('.ant-table-header');
   const headerHeight = headerElement?.getBoundingClientRect()?.height ?? 0;
+
+  useLayoutEffect(() => {
+    if (!tableRef.current) return;
+    setContainerDimension(tableRef.current.nativeElement.getBoundingClientRect());
+  }, []);
 
   const onResize = useCallback((target: HTMLElement) => {
     setContainerDimension(target.getBoundingClientRect());

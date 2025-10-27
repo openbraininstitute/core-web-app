@@ -6,7 +6,8 @@ import AIChatToolsNavigation from '@/ui/segments/help/ai-chat-tools/navigation';
 import { useAITools } from '@/services/ai-agent/tools/tools';
 
 export type AIChatToolsSectionProps = {
-  description: string;
+  description?: string;
+  description_frontend?: string;
   icon: React.FC;
   id: string;
   name: string;

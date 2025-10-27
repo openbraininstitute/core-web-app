@@ -1,6 +1,7 @@
 import { CheckCircleFilled, CloseOutlined, CopyOutlined, LoadingOutlined } from '@ant-design/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import { useMutation } from '@tanstack/react-query';
+import { includes } from 'es-toolkit/compat';
 import { useState, useEffect } from 'react';
 import { match, P } from 'ts-pattern';
 import { useAtom } from 'jotai';
@@ -9,6 +10,7 @@ import { Image } from 'antd';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 import Link from 'next/link';
 
+import { useSearchParams } from 'next/navigation';
 import { SingleNeuronSimulationPreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-simulation-preview';
 import { SingleNeuronSynaptomePreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-synaptome-preview';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
@@ -28,7 +30,6 @@ import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
 import { DownloadIcon } from '@/components/icons/buttons';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { EntityTypeDict } from '@/api/entitycore/types';
 import { Card, CardTitle } from '@/ui/molecules/card';
 import { WorkspaceSection } from '@/constants';
 import { Button } from '@/ui/molecules/button';
@@ -83,7 +84,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
 
   if (!record) return null;
 
-  const viewConfig = getViewDefinitionByExtendedType(record.type);
+  const viewConfig = getViewDefinitionByExtendedType(dataType ?? record.type);
   const miniConfig = viewConfig?.miniDetailView;
 
   const preview = match({ type: record.type })
@@ -102,6 +103,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
         type: P.union(
           ExtendedEntitiesTypeDict.CellMorphology,
           ExtendedEntitiesTypeDict.ElectricalCellRecording,
+          ExtendedEntitiesTypeDict.IonChannelRecording,
           ExtendedEntitiesTypeDict.Emodel
         ),
       },
@@ -290,6 +292,7 @@ function ExploreActions<T extends EntityCoreObjectTypes>({
   record: T;
   dataType?: TExtendedEntitiesTypeDict;
 }) {
+  const queryParams = useSearchParams();
   const { virtualLabId, projectId } = useWorkspace();
   const [, copy, , copying] = useCopyToClipboard();
   const onCopyClipboard = () => copy(record.id);
@@ -313,7 +316,12 @@ function ExploreActions<T extends EntityCoreObjectTypes>({
 
   // const onBookmark = () => saveAsync();
   const onDownload = () => {
-    if (EntityTypeDict.Circuit === record.type) {
+    if (
+      includes(
+        [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.MEModelWithSynapses],
+        dataType
+      )
+    ) {
       setDownloadPanelCircuit(record as ICircuit);
     } else {
       downloadAsync();
@@ -419,7 +427,10 @@ function ExploreActions<T extends EntityCoreObjectTypes>({
         className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
       >
         <Link
-          href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(dataType)}/${record.id}`}
+          href={{
+            pathname: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(dataType)}/${record.id}`,
+            query: queryParams.toString(),
+          }}
         >
           View details
         </Link>

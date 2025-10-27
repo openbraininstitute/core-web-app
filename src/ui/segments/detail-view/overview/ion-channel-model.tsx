@@ -69,13 +69,13 @@ export default async function IonChannelModelOverview({
               return (
                 <div key={key}>
                   <div className="flex justify-between">
-                    <div className="text-primary-8 w-[250px] font-bold uppercase">{key}</div>
+                    <div className="text-primary-8 w-[50px] font-bold uppercase">{key}</div>
                     {i === 0 && (
                       <>
-                        <div className="text-neutral-3 w-[250px] text-center text-sm uppercase">
+                        <div className="text-neutral-3 w-[400px] text-center text-sm uppercase">
                           Stimulus
                         </div>
-                        <div className="text-neutral-3 w-[250px] text-center text-sm uppercase">
+                        <div className="text-neutral-3 w-[400px] text-center text-sm uppercase">
                           Response
                         </div>
                       </>
@@ -83,22 +83,22 @@ export default async function IonChannelModelOverview({
 
                     {i !== 0 && (
                       <>
-                        <div className="w-[250px]" />
-                        <div className="w-[250px]" />
+                        <div className="w-[50px]" />
+                        <div className="w-[50px]" />
                       </>
                     )}
                   </div>
 
                   <div className="mt-5 flex justify-between">
-                    <div className="w-[250px]" />
+                    <div className="w-[50px]" />
                     <PDFViewer
                       key={imagesByPath[value.stimuli].path}
                       entityType={EntityTypeDict.IonChannelModel}
                       entityId={icm.id}
                       assetId={imagesByPath[value.stimuli].id}
                       showPageCount={false}
-                      documentClassName="w-[250px]"
-                      pageWidth={250}
+                      documentClassName="w-[400px]"
+                      pageWidth={400}
                     />
                     <PDFViewer
                       key={imagesByPath[value.traces].path}
@@ -106,8 +106,8 @@ export default async function IonChannelModelOverview({
                       entityId={icm.id}
                       assetId={imagesByPath[value.traces].id}
                       showPageCount={false}
-                      documentClassName="w-[250px]"
-                      pageWidth={250}
+                      documentClassName="w-[400px]"
+                      pageWidth={400}
                     />
                   </div>
                 </div>

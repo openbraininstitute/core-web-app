@@ -13,6 +13,8 @@ import get from 'es-toolkit/compat/get';
 
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
+import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
+
 import { DEFAULT_PAGE_NUMBER, WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { MiniDetailView } from '@/ui/segments/mini-detail-view';
@@ -101,7 +103,6 @@ export function BrowseEntityScope({
 
   const activeColumns = useAtomValue(coreActiveColumnsAtom({ dataType, key: dataKey }));
   const columns = allColumns.filter(({ key }) => (activeColumns || []).includes(key as string));
-
   const { data, error, isPlaceholderData, isFetching } = useQueryExtendedEntityType({
     context: {
       key: dataKey,
@@ -222,6 +223,7 @@ export function BrowseEntityScope({
           <MiniDetailView {...miniViewProps} dataType={dataType} />
         </div>
       )}
+      <DownloadPanel />
     </>
   );
 }

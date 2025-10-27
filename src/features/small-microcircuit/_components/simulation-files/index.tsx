@@ -118,7 +118,7 @@ function SimulationInputFiles({
     <div className={classNames('flex flex-col gap-4', className)}>
       {files.map((file) => (
         <SimulationFile
-          selected={file === selectedFile}
+          selected={file.asset.id === selectedFile?.asset.id}
           key={file.asset.id}
           file={file}
           onSelect={onSelect}
@@ -162,7 +162,7 @@ function SimulationOutputFiles({
         <SimulationFile
           key={file.asset.id}
           file={file}
-          selected={selectedFile === file}
+          selected={selectedFile?.asset.id === file.asset.id}
           onSelect={onSelect}
         />
       ))}

@@ -71,13 +71,10 @@ export function brainRegionTitleCaseExceptConjunctions(phrase: string) {
 }
 
 export function fieldTitleSentenceCase(title: string | ReactNode) {
-  const SKIP_LOWER = ['SEM', 'Mean ± STD', 'ME-model'];
-  // eslint-disable-next-line
-  return isString(title)
-    ? SKIP_LOWER.includes(title)
-      ? title
-      : title.charAt(0) + title.slice(1).toLowerCase()
-    : '';
+  const SKIP_LOWER = ['SEM', 'Mean ± STD', 'ME-model', 'Temperature (°C)', 'LJP corrected'];
+  if (!isString(title)) return '';
+
+  return SKIP_LOWER.includes(title) ? title : title.charAt(0) + title.slice(1).toLowerCase();
 }
 
 /* Creates an LRU (Least Recently Used) Map.

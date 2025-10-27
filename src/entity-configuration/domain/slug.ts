@@ -17,6 +17,7 @@ export const ModelEntitySlug = {
   PairedNeuronsCircuit: 'paired-neurons',
   Circuit: 'circuit',
   IonChannelModel: 'ion-channel-model',
+  MEModelWithSynapses: 'me-model-with-synapses',
 } as const;
 
 const SimulationEntitySlug = {
@@ -31,6 +32,7 @@ export const EntitySlug = {
   ...ExperimentalEntitySlug,
   ...ModelEntitySlug,
   ...SimulationEntitySlug,
+  Notebook: 'notebook',
 } as const;
 
 export type EntitySlugValue = (typeof EntitySlug)[keyof typeof EntitySlug];
