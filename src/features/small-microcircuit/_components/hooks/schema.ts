@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { atom } from 'jotai';
 import { NotificationInstance } from 'antd/es/notification/interface';
 
@@ -12,10 +12,11 @@ import { assertErrorMessage } from '@/util/utils';
 export function useObioneJsonSchema(
   circuitId: string,
   notification: NotificationInstance,
-  setSchema: React.Dispatch<React.SetStateAction<JSONSchema | null>>,
   setAtomsMap: (atomsMap: AtomsMap) => void,
   initialConfig?: Config
 ) {
+  const [schema, setSchema] = useState<JSONSchema | null>(null);
+
   React.useEffect(() => {
     async function fetchSpec() {
       try {
@@ -89,6 +90,25 @@ export function useObioneJsonSchema(
 
     fetchSpec();
   }, [circuitId, notification, setAtomsMap, setSchema, initialConfig]);
+
+  const referenceTypesToConfigKeys: Record<string, string> = {};
+  const referenceTypesToTitles: Record<string, string> = {};
+
+  if (schema?.properties) {
+    Object.entries(schema?.properties).forEach(([k, v]) => {
+      if (v.reference_type) {
+        referenceTypesToConfigKeys[v.reference_type] = k;
+        referenceTypesToTitles[v.reference_type] = v.singular_name ?? '';
+      }
+    });
+  }
+
+  return {
+    schema,
+    refLabels: schema?.default_block_reference_labels,
+    referenceTypesToConfigKeys,
+    referenceTypesToTitles,
+  };
 }
 
 export function isRootCategory(schema: JSONSchema, key: string) {

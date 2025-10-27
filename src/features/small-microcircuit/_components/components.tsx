@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { atom, useAtom } from 'jotai';
-import { InputNumber, Input, Select, Button } from 'antd';
+import { InputNumber, Input, Select } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 
 import { JSONSchema } from '../types';
@@ -10,6 +10,7 @@ import Tooltip from './tooltip';
 import ParameterSwep from './parameter-sweep';
 
 import PredefinedNodeset from './predefined-nodeset';
+import Reference from './reference';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { classNames } from '@/util/utils';
 
@@ -22,6 +23,25 @@ export type ConfigValue = Primitive | Primitive[] | Object;
 
 export type Config = Record<string, Object | string>;
 
+function skipParam(k: string, v: JSONSchema, referenceTypesToConfigKeys: Record<string, string>) {
+  const skip = ['type'];
+  if (skip.includes(k)) return true;
+
+  // If a reference skip if not in the main config dictionary
+  return !!v.is_block_reference && !referenceTypesToConfigKeys[v.properties?.type.const ?? ''];
+}
+
+function isNullableRef(schema: JSONSchema) {
+  return (
+    schema.anyOf?.find((s) => s.is_block_reference) && schema.anyOf.find((s) => s.type === 'null')
+  );
+}
+
+function getRefDefaultLabel(schema: JSONSchema, labels: Record<string, string>) {
+  if (!isNullableRef(schema)) return null;
+  return labels[schema.properties?.type.const ?? ''] ?? 'Default';
+}
+
 export function JSONSchemaForm({
   disabled,
   schema,
@@ -32,6 +52,9 @@ export function JSONSchemaForm({
   selectedCategory,
   virtualLabId,
   projectId,
+  refLabels,
+  referenceTypesToConfigKeys,
+  referenceTypesToTitles,
 }: {
   selectedCategory: string;
   disabled: boolean;
@@ -42,23 +65,14 @@ export function JSONSchemaForm({
   onAddReferenceClick: (reference: string) => void;
   virtualLabId: string;
   projectId: string;
+  refLabels: Record<string, string>;
+  referenceTypesToConfigKeys: Record<string, string>;
+  referenceTypesToTitles: Record<string, string>;
 }) {
-  const skip = ['type']; // , 'circuit'];
-
   const [state, setState] = useAtom(stateAtom);
 
   const [addingElement, setAddingElement] = useState(false);
   const [newElement, setNewElement] = useState<number | string | null>(null);
-
-  const referenceTypesToConfigKeys: Record<string, string> = {
-    NeuronSetReference: 'neuron_sets',
-    TimestampsReference: 'timestamps',
-  };
-
-  const referenceTypesToTitles: Record<string, string> = {
-    NeuronSetReference: 'Neuron Set',
-    TimestampsReference: 'Timestamps',
-  };
 
   useEffect(() => {
     if (!schema.properties) return;
@@ -76,8 +90,6 @@ export function JSONSchemaForm({
   }, [stateAtom, setState, schema.properties]);
 
   function renderInput(k: string, v: JSONSchema) {
-    const obj = { ...v, ...v.anyOf?.find((subv) => subv.type !== 'array') };
-
     if (selectedCategory === 'PredefinedNeuronSet' && k === 'node_set' && circuit) {
       return (
         <PredefinedNodeset
@@ -91,10 +103,15 @@ export function JSONSchemaForm({
 
     if (k === 'circuit' && circuit) return <CircuitDetails circuit={circuit} />;
 
-    if (v.is_block_reference && v.properties && typeof v.properties.type.const === 'string') {
-      const referenceKey = referenceTypesToConfigKeys[v.properties.type.const];
-      const referenceTitle = referenceTypesToTitles[v.properties.type.const];
-      if (!referenceKey) return null;
+    if (v.is_block_reference) {
+      const refType = v.properties?.type.const ?? '';
+      const referenceKey = referenceTypesToConfigKeys[refType];
+
+      const defaultV: string | null =
+        isPlainObject(state[k]) && typeof state[k].block_name === 'string'
+          ? state[k].block_name
+          : null;
+
       const referenceConfig = config[referenceKey];
       if (!isPlainObject(referenceConfig)) return null;
 
@@ -102,26 +119,22 @@ export function JSONSchemaForm({
         return isPlainObject(val);
       });
 
-      if (referees.length === 0) {
-        return (
-          <Button className="w-full" onClick={() => onAddReferenceClick(referenceKey)}>
-            Add {referenceTitle}
-          </Button>
-        );
-      }
-
-      const defaultV =
-        isPlainObject(state[k]) && typeof state[k].block_name === 'string'
-          ? state[k].block_name
-          : null;
-
       return (
-        <Select
-          className="w-full"
+        <Reference
+          referees={referees}
+          refTitle={referenceTypesToTitles[refType]}
+          onAddReferenceClick={() => onAddReferenceClick(referenceKey)}
+          value={defaultV}
           disabled={disabled}
-          onChange={(newV: string) => {
+          defaultLabel={getRefDefaultLabel(v, refLabels)}
+          onChange={(newV: string | null) => {
             if (!v.properties?.type.const || typeof v.properties.type.const !== 'string')
               throw new Error('Invalid reference definition');
+
+            if (newV === null) {
+              setState({ ...state, [k]: null });
+              return;
+            }
 
             setState({
               ...state,
@@ -132,13 +145,6 @@ export function JSONSchemaForm({
               },
             });
           }}
-          value={defaultV}
-          options={referees.map(([subkey]) => {
-            return {
-              label: subkey,
-              value: subkey,
-            };
-          })}
         />
       );
     }
@@ -234,25 +240,25 @@ export function JSONSchemaForm({
       );
     }
 
-    if (obj.enum)
+    if (v.enum)
       return (
         <Select
           disabled={disabled}
           onChange={(newV) => setState({ ...state, [k]: newV })}
           value={state[k]}
           className="w-full"
-          options={obj.enum.map((subv: string) => {
+          options={v.enum.map((subv: string) => {
             return { label: subv, value: subv };
           })}
         />
       );
 
-    if (obj.type === 'number' || obj.type === 'integer') {
+    if (v.type === 'number' || v.type === 'integer') {
       return (
         <ParameterSwep
           k={k}
-          min={obj.minimum ?? null}
-          max={obj.maximum ?? null}
+          min={v.minimum ?? null}
+          max={v.maximum ?? null}
           disabled={disabled}
           value={state[k] as number | null | number[]}
           onChange={(value) => {
@@ -261,7 +267,7 @@ export function JSONSchemaForm({
         />
       );
     }
-    if (obj.type === 'string')
+    if (v.type === 'string')
       return (
         <Input
           disabled={disabled}
@@ -282,8 +288,18 @@ export function JSONSchemaForm({
       <div className="flex flex-col gap-5">
         {schema.properties &&
           Object.entries(schema.properties)
-            .filter(([k]) => {
-              return !skip.includes(k);
+            .map(([k, v]) => {
+              return [
+                k,
+                {
+                  ...v,
+                  ...v.anyOf?.find((subv) => subv.type !== 'array'),
+                  ...v.anyOf?.find((subv) => subv.is_block_reference),
+                },
+              ] as const;
+            })
+            .filter(([k, v]) => {
+              return !skipParam(k, v, referenceTypesToConfigKeys);
             })
             .map(([k, v]) => {
               return (
@@ -299,9 +315,10 @@ export function JSONSchemaForm({
                   </div>
                   <Tooltip value={v.description}>{renderInput(k, v)}</Tooltip>
 
-                  {((schema.required?.includes(k) && !state[k]) ||
-                    state[k] === null ||
-                    state[k] === undefined) && <span className="text-red-500">Required</span>}
+                  {schema.required?.includes(k) &&
+                    (state[k] === null || state[k] === undefined) && (
+                      <span className="text-red-500">Required</span>
+                    )}
                 </div>
               );
             })}

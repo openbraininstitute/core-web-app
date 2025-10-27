@@ -23,9 +23,7 @@ import { isRootCategory, resolveKey, useObioneJsonSchema } from './_components/h
 import { Section } from './_components/section';
 import TabsSelector from './_components/tabs-selector';
 import { CATEGORIES, isAtom, ORDERING } from './_components/utils';
-import { AtomsMap, JSONSchema, TabType } from './types';
-// James asked to only comment it out for now.
-// import CircuitName from './_components/circuit-name';
+import { AtomsMap, TabType } from './types';
 
 import { File, SimulationFiles } from './_components/simulation-files';
 import { SimulationStatusBadge } from './_components/simulation-status';
@@ -70,13 +68,15 @@ export default function SimulationCampaignConfiguration({
   const [tab, setTab] = useState<TabType>('configuration');
   const [configTab, setConfigTab] = useState<string>('info');
   const [editing, setEditing] = useState(true);
-  const [schema, setSchema] = useState<JSONSchema | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedItemIdx, setSelectedItemIdx] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const notification = useAppNotification();
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
   const initialConfigValidated = useRef(false);
+  const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
+  const { schema, refLabels, referenceTypesToConfigKeys, referenceTypesToTitles } =
+    useObioneJsonSchema(circuitId, notification, setAtomsMap, initialConfig);
 
   const selectedCatSchema = schema?.properties?.[configTab]?.additionalProperties?.oneOf?.find(
     (s) => s.properties?.type.const === selectedCategory
@@ -94,7 +94,6 @@ export default function SimulationCampaignConfiguration({
     return ajv.compile(schema as AnySchema);
   }, [schema]);
 
-  const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
   const config = useConfigAtom(schema, atomsMap);
 
   // Validate initial config
@@ -109,9 +108,7 @@ export default function SimulationCampaignConfiguration({
     return validate?.errors;
   }, [validate, config]);
 
-  useObioneJsonSchema(circuitId, notification, setSchema, setAtomsMap, initialConfig);
-
-  if (!schema) {
+  if (!schema || !refLabels || !referenceTypesToConfigKeys || !referenceTypesToTitles) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <LoadingOutlined />
@@ -326,6 +323,9 @@ export default function SimulationCampaignConfiguration({
               editing &&
               (isRootCategory(schema, configTab) || selectedCatSchema) && (
                 <JSONSchemaForm
+                  referenceTypesToConfigKeys={referenceTypesToConfigKeys}
+                  referenceTypesToTitles={referenceTypesToTitles}
+                  refLabels={refLabels}
                   key={
                     isRootCategory(schema, configTab)
                       ? configTab
