@@ -25,6 +25,8 @@ export const env = createEnv({
 
     CI_COMMIT_SHORT_SHA: z.string().optional(),
     npm_package_version: z.string().optional(),
+
+    AUTH_MANAGER_URI: z.string().url(),
   },
 
   client: {
