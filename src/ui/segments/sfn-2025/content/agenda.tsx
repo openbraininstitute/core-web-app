@@ -1,4 +1,7 @@
-import { CalendarFilled } from '@ant-design/icons';
+'use client';
+
+import { CalendarFilled, CloseOutlined } from '@ant-design/icons';
+import { useState } from 'react';
 
 import { PlayIcon } from '@/components/tutorials-carrousel/tutorial-card/play-icon';
 
@@ -99,7 +102,13 @@ const agenda: AgendaItemProps[][] = [
   ],
 ];
 
-function AgendaCard({ item }: { item: AgendaItemProps }) {
+function AgendaCard({
+  item,
+  onVideoClick,
+}: {
+  item: AgendaItemProps;
+  onVideoClick: (videoUrl: string) => void;
+}) {
   return (
     <div className="border-neutral-2 text-primary-9 relative w-full rounded-2xl border border-solid p-6">
       <div className="relative mb-6">
@@ -114,10 +123,16 @@ function AgendaCard({ item }: { item: AgendaItemProps }) {
       </div>
 
       <div className="text-neutral-4 text-xl">
-        <div className="flex flex-row items-center">
+        <button
+          type="button"
+          name="watch-introduction-tutorial"
+          aria-label="Watch introduction tutorial"
+          onClick={() => onVideoClick(item.videoUrl)}
+          className="flex flex-row items-center"
+        >
           <PlayIcon className="h-auto w-12" />{' '}
           <div className="text-xl">Watch introduction tutorial</div>
-        </div>
+        </button>
         <div className="bg-neutral-2 h-px w-full" />
         <div className="flex flex-row gap-x-2">
           <button
@@ -147,7 +162,75 @@ function AgendaCard({ item }: { item: AgendaItemProps }) {
   );
 }
 
+function VideoModal({
+  isOpen,
+  videoUrl,
+  onClose,
+}: {
+  isOpen: boolean;
+  videoUrl: string;
+  onClose: () => void;
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center">
+      <div
+        className="bg-opacity-75 absolute inset-0 bg-black/80"
+        onClick={onClose}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            onClose();
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label="Close video modal backdrop"
+      />
+
+      <div className="relative z-10 w-[80vw]">
+        <button
+          type="button"
+          onClick={onClose}
+          className="bg-opacity-20 hover:bg-opacity-30 absolute -top-12 right-0 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-solid border-white text-white transition-all"
+          aria-label="Close video modal"
+        >
+          <CloseOutlined className="text-xl" />
+        </button>
+
+        <video
+          src={videoUrl}
+          controls
+          autoPlay
+          className="h-auto w-full rounded-lg"
+          style={{ maxHeight: '80vh' }}
+        >
+          <track
+            kind="captions"
+            src="/captions/sfn-video-captions.vtt"
+            srcLang="en"
+            label="English captions"
+            default
+          />
+        </video>
+      </div>
+    </div>
+  );
+}
+
 export default function SFNAgenda() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentVideoUrl, setCurrentVideoUrl] = useState('');
+
+  const handleVideoClick = (videoUrl: string) => {
+    setCurrentVideoUrl(videoUrl);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setCurrentVideoUrl('');
+  };
   return (
     <div className="text-primary-9 relative flex w-full flex-col gap-x-4 px-8 py-12 md:flex-row md:py-[15vh]">
       <div className="relative top-0 mb-12 h-fit w-full pr-0 pl-0 md:sticky md:top-[15vh] md:mb-0 md:w-1/2 md:pr-6 md:pl-[8vw]">
@@ -168,7 +251,7 @@ export default function SFNAgenda() {
             Morning
           </div>
           {agenda[0].map((item) => (
-            <AgendaCard key={item.title} item={item} />
+            <AgendaCard key={item.title} item={item} onVideoClick={handleVideoClick} />
           ))}
         </div>
         <div className="mt-24 flex flex-col gap-y-4">
@@ -176,10 +259,13 @@ export default function SFNAgenda() {
             Afternoon
           </div>
           {agenda[1].map((item) => (
-            <AgendaCard key={item.title} item={item} />
+            <AgendaCard key={item.title} item={item} onVideoClick={handleVideoClick} />
           ))}
         </div>
       </div>
+
+      {/* Video Modal */}
+      <VideoModal isOpen={isModalOpen} videoUrl={currentVideoUrl} onClose={handleCloseModal} />
     </div>
   );
 }

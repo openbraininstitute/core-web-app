@@ -1,11 +1,9 @@
 'use client';
 
 import { motion, useInView } from 'framer-motion';
-import Image, { StaticImageData } from 'next/image';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-
-import image1 from '../images/background_image_buttons-01.jpg';
 
 // Custom hook to detect screen size
 function useScreenSize() {
@@ -28,23 +26,24 @@ type LinkButtonProps = {
   title: string;
   description: string;
   link: string;
-  bgUrl: StaticImageData;
+  bgUrl: string;
 };
 
 const linkButtons: LinkButtonProps[] = [
   {
     title: 'Discover OBI',
-    description: 'Explore our virtual labs and see how they work',
+    description:
+      'Learn more about our mission and how we are democratizing simulation neuroscience',
     link: '/',
-    bgUrl: image1,
+    bgUrl: '/images/sfn/background_image_buttons-01.webp',
   },
 
   {
-    title: 'Your virtual lab',
+    title: 'Access the Virtual Labs',
     description:
-      'Create your Virtual Lab on the Open Brain Platform and join a global network accelerating open neuroscience.',
+      'Create your own Virtual Lab today and join a global network of neuroscientists accelerating research and discovery.',
     link: '/app/virtual-lab',
-    bgUrl: image1,
+    bgUrl: '/images/sfn/background_image_buttons-02.webp',
   },
 ];
 
