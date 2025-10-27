@@ -3,7 +3,7 @@ import { match } from 'ts-pattern';
 import { useAtomValue } from 'jotai';
 
 import { File } from '../simulation-files';
-import { fileAtomFamily } from '../atoms';
+import { jsonFileAtomFamily } from '../atoms';
 
 import { EphysViewer } from '@/features/ephys-viewer';
 import { classNames } from '@/util/utils';
@@ -70,8 +70,6 @@ export function FileViewer({ file, context, className = '' }: FileViewerProps) {
   );
 }
 
-const VIEWABLE_FILE_EXTENSIONS = ['json', 'nwb'];
-
 type FilePreloaderProps = {
   file: File;
   context: WorkspaceContext;
@@ -82,15 +80,15 @@ function FilePreloader({ file, context, onLoaded }: FilePreloaderProps) {
   const fileName = file?.assetPath?.split('/').at(-1) ?? file?.asset.path.split('/').at(-1);
   const fileExt = fileName?.split('.').at(-1)?.toLowerCase();
 
-  const isViewable = VIEWABLE_FILE_EXTENSIONS.includes(fileExt!);
+  const needsPreloading = fileExt === 'json';
 
   useEffect(() => {
-    if (!isViewable) {
+    if (!needsPreloading) {
       onLoaded();
     }
-  }, [isViewable, onLoaded]);
+  }, [needsPreloading, onLoaded]);
 
-  if (!isViewable) {
+  if (!needsPreloading) {
     return null;
   }
 
@@ -99,7 +97,7 @@ function FilePreloader({ file, context, onLoaded }: FilePreloaderProps) {
 
 function DataPreloader({ file, context, onLoaded }: FilePreloaderProps) {
   useAtomValue(
-    fileAtomFamily({
+    jsonFileAtomFamily({
       id: file.asset.id,
       entityId: file.entity.id,
       entityType: file.entity.type,
@@ -122,7 +120,7 @@ type JsonFileViewerProps = {
 
 function JsonFileViewer({ file, context }: JsonFileViewerProps) {
   const parsedJson = useAtomValue(
-    fileAtomFamily({
+    jsonFileAtomFamily({
       id: file.asset.id,
       entityId: file.entity.id,
       entityType: file.entity.type,

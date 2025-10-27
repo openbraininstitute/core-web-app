@@ -528,7 +528,7 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
             checked={allSelected}
             disabled={simRequestInProgress || selectableSimulationIds.length === 0}
           >
-            Check all
+            Select all
           </Checkbox>
           {/* List of simulations */}
           <div className="flex flex-grow flex-col justify-start gap-5 overflow-y-auto">
