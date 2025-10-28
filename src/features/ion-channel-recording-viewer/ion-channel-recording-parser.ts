@@ -8,6 +8,9 @@ import { createPalette } from './colors';
 import APWaveform_50KHz from './APWaveform_50KHz.json';
 import { isType } from '@/util/type-guards';
 
+import APWaveform_50KHz from './APWaveform_50KHz.json';
+import { isType } from '@/util/type-guards';
+
 export interface IonChannelRecordingProtocol {
   name: string;
   repetitions: IonChannelRecordingRepetition[];

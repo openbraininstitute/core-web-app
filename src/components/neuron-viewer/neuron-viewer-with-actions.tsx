@@ -13,7 +13,7 @@ import type {
   TNeuronViewerClickData,
   TNeuronViewerHoverData,
 } from '@/services/bluenaas-single-cell/renderer';
-// import { WebglNeuronSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector/webgl-neuron-selector';
+import { WebglNeuronSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector/webgl-neuron-selector';
 
 type Props = {
   meModelId: string;
@@ -27,7 +27,7 @@ type Props = {
   projectId: string;
   sessionId: string;
 };
-export function NeuronViewerContainer({
+export function xNeuronViewerContainer({
   meModelId,
   zoomPlacement = 'right',
   useZoomer = false,
@@ -44,6 +44,7 @@ export function NeuronViewerContainer({
     useState<TNeuronViewerClickData | null>(null);
   const [neuronViewerHoverData, setNeuronViewerOnHoverData] =
     useState<TNeuronViewerHoverData | null>(null);
+  const newViewer = true;
 
   return (
     <ErrorBoundary
@@ -56,69 +57,73 @@ export function NeuronViewerContainer({
       })}
     >
       <DefaultLoadingSuspense>
-        <NeuronViewer
-          projectId={projectId}
-          virtualLabId={virtualLabId}
-          meModelId={meModelId}
-          sessionId={sessionId}
-          actions={{
-            onClick: (data) => {
-              setNeuronViewerOnClickData(data);
-              setDisableHovering(true);
-            },
-            onHover: setNeuronViewerOnHoverData,
-            onHoverEnd: () => setNeuronViewerOnHoverData(null),
-          }}
-          {...{
-            useZoomer,
-            useCursor,
-            useEvents,
-            useActions,
-            useLabels,
-          }}
-        >
-          {({
-            renderer,
-            useActions: enableActions,
-            useCursor: enableCursor,
-            useZoomer: enableZoom,
-          }) => {
-            return (
-              <>
-                {enableActions && neuronViewerClickData && (
-                  <InjectionRecordingPopover
-                    sessionId={sessionId}
-                    show={!!neuronViewerClickData}
-                    data={{
-                      x: neuronViewerClickData.position.x,
-                      y: neuronViewerClickData.position.y,
-                      section: neuronViewerClickData.data.section,
-                      offset: neuronViewerClickData.data.offset,
-                    }}
-                    onClose={() => {
-                      setNeuronViewerOnClickData(null);
-                      setDisableHovering(false);
-                    }}
-                  />
-                )}
-                {enableCursor && neuronViewerHoverData && !disableHovering && (
-                  <CursorPopover
-                    show={!!neuronViewerHoverData}
-                    x={neuronViewerHoverData.position.x}
-                    y={neuronViewerHoverData.position.y}
-                    data={neuronViewerHoverData.data}
-                  />
-                )}
-                {enableZoom && <CustomZoomer renderer={renderer} placement={zoomPlacement} />}
-              </>
-            );
-          }}
-        </NeuronViewer>
-        {/* <WebglNeuronSelector
-          projectId={projectId}
-          virtualLabId={virtualLabId}
-          meModelId={meModelId}
-        /> */}
+        {!newViewer && (
+          <NeuronViewer
+            projectId={projectId}
+            virtualLabId={virtualLabId}
+            meModelId={meModelId}
+            sessionId={sessionId}
+            actions={{
+              onClick: (data) => {
+                setNeuronViewerOnClickData(data);
+                setDisableHovering(true);
+              },
+              onHover: setNeuronViewerOnHoverData,
+              onHoverEnd: () => setNeuronViewerOnHoverData(null),
+            }}
+            {...{
+              useZoomer,
+              useCursor,
+              useEvents,
+              useActions,
+              useLabels,
+            }}
+          >
+            {({
+              renderer,
+              useActions: enableActions,
+              useCursor: enableCursor,
+              useZoomer: enableZoom,
+            }) => {
+              return (
+                <>
+                  {enableActions && neuronViewerClickData && (
+                    <InjectionRecordingPopover
+                      sessionId={sessionId}
+                      show={!!neuronViewerClickData}
+                      data={{
+                        x: neuronViewerClickData.position.x,
+                        y: neuronViewerClickData.position.y,
+                        section: neuronViewerClickData.data.section,
+                        offset: neuronViewerClickData.data.offset,
+                      }}
+                      onClose={() => {
+                        setNeuronViewerOnClickData(null);
+                        setDisableHovering(false);
+                      }}
+                    />
+                  )}
+                  {enableCursor && neuronViewerHoverData && !disableHovering && (
+                    <CursorPopover
+                      show={!!neuronViewerHoverData}
+                      x={neuronViewerHoverData.position.x}
+                      y={neuronViewerHoverData.position.y}
+                      data={neuronViewerHoverData.data}
+                    />
+                  )}
+                  {enableZoom && <CustomZoomer renderer={renderer} placement={zoomPlacement} />}
+                </>
+              );
+            }}
+          </NeuronViewer>
+        )}
+        {newViewer && (
+          <WebglNeuronSelector
+            projectId={projectId}
+            virtualLabId={virtualLabId}
+            meModelId={meModelId}
+          />
+        )}
       </DefaultLoadingSuspense>
     </ErrorBoundary>
   );
