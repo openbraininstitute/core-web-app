@@ -1,5 +1,6 @@
 import { Button, Select } from 'antd';
 import { ConfigObject } from './utils';
+import def from 'ajv/dist/vocabularies/discriminator';
 
 export default function Reference({
   onAddReferenceClick,
@@ -18,7 +19,7 @@ export default function Reference({
   referees: [string, ConfigObject][];
   refTitle: string;
 }) {
-  if (referees.length === 0) {
+  if (referees.length === 0 && defaultLabel === null) {
     return (
       <Button className="w-full" onClick={onAddReferenceClick}>
         Add {refTitle}
