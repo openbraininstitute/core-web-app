@@ -40,6 +40,7 @@ export default function GenericPlot<T>({
       style={{}}
       data={props.data}
       layout={props.layout}
+      frames={props?.frames}
       useResizeHandler
     />
   );
