@@ -42,7 +42,7 @@ export default function ToolPlotGenerator({ className, results }: ToolPlotGenera
     </>
   );
 }
-
+// prettier-ignore
 const plotters: Record<
   string,
   {
