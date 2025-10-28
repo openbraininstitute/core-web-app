@@ -55,7 +55,7 @@ const plotters: Record<
   'json-scatterplot': { convert: convertScatterChart, assert: assertScatterChart },
   'json-histogram': { convert: convertHistogramChart, assert: assertHistogramChart },
   'json-barplot': { convert: convertBarChart, assert: assertBarChart },
-  json: { convert: convertPlotlyChart, assert: assertPlotlyChart },
+  'json': { convert: convertPlotlyChart, assert: assertPlotlyChart },
 };
 
 function CustomPlot({ storage_id, className }: { storage_id: string; className?: string }) {
