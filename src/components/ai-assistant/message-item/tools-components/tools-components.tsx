@@ -17,7 +17,9 @@ export interface ToolsComponentsProps {
 export default function ToolsComponents({ className, message }: ToolsComponentsProps) {
   return (
     <div className={classNames(className, styles.toolsComponents)}>
-      <ToolPlotGenerator results={extractToolsResults(message, ['run-python'], isToolResult)} />
+      <ToolPlotGenerator
+        results={extractToolsResults(message, ['run-python', 'plot-generator'], isToolResult)}
+      />
       <ToolThumbnailGeneration
         results={extractToolsResults(
           message,

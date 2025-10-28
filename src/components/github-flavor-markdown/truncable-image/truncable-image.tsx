@@ -47,8 +47,8 @@ export default function TruncableImage({ className, src }: TruncableImageProps) 
   };
   if (error && src) {
     return (
-      <Link href={src} target="_blank">
-        {src}
+      <Link className={styles.error} href={src} target="_blank">
+        Unable to load image!
       </Link>
     );
   }

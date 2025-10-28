@@ -1,4 +1,5 @@
 import { logError } from '@/util/logger';
+import { assertType } from '@/util/type-guards';
 
 type StorageIds = string | string[];
 
@@ -7,14 +8,11 @@ export interface ToolResult {
 }
 
 export function isToolResult(data: unknown): data is ToolResult {
-  if (
-    typeof data === 'object' &&
-    data !== null &&
-    'storage_id' in data &&
-    (typeof data.storage_id === 'string' || Array.isArray(data.storage_id))
-  )
+  try {
+    assertType(data, { storage_id: ['|', 'string', ['array', 'string']] }); // string or string[]
     return true;
-
-  logError('This is not a valid tool result:', data);
-  return false;
+  } catch (ex) {
+    logError('This is not a valid tool result:', data, ex);
+    return false;
+  }
 }
