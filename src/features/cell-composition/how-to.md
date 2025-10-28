@@ -26,23 +26,27 @@ flowchart TD
 ## How to process:
 
 1. **Initialization**
+
    - start with a brain region id (selected by the user)
    - retrieve all leaf regions under that brain region (use `brainRegionHierarchyAtom`)
    - create volume maps for each leaf region (using `brainRegionAtlasAtom`)
 
 2. **Node Construction**
+
    - for each leaf region:
      - process mTypes and their child eTypes
      - build tree nodes with cell counts and densities
      - calculate composition data based on volumes
 
 3. **Node Aggregation**
+
    - merge nodes that represent the same mType/eType across different leaf regions
    - sum cell counts across regions
    - recalculate densities based on aggregated volumes
    - create links between parent mTypes and child eTypes
 
 4. **Final Calculations**
+
    - calculate total neuron and glial cell counts
    - determine total volume (not needed for now)
    - compute the whole composition densities
