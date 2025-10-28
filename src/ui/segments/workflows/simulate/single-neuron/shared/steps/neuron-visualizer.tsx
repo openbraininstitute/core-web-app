@@ -1,10 +1,12 @@
 'use client';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
+import { FullscreenOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMemo, useTransition } from 'react';
 import { motion } from 'motion/react';
 import { useAtomValue } from 'jotai';
+
+import { useFullscreenSwitcher } from './hooks';
 
 import { NeuronViewerContainer } from '@/components/neuron-viewer/neuron-viewer-with-actions';
 import {
@@ -18,7 +20,6 @@ import {
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { cn } from '@/utils/css-class';
-
 import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
@@ -27,6 +28,7 @@ type Props = {
 };
 
 export function NeuronVisualizer({ sessionId, memodelId }: Props) {
+  const { refContainer, toggleFullscreen } = useFullscreenSwitcher();
   const { virtualLabId, projectId } = useWorkspace();
   const queryParams = useSearchParams();
   const [, startTransition] = useTransition();
@@ -58,6 +60,7 @@ export function NeuronVisualizer({ sessionId, memodelId }: Props) {
   return (
     memodelId && (
       <motion.div
+        ref={refContainer}
         id="neuron-visualizer"
         data-testid="neuron-visualizer"
         className={cn(
@@ -97,15 +100,26 @@ export function NeuronVisualizer({ sessionId, memodelId }: Props) {
           </button>
         ) : (
           <div className="relative flex h-full w-full flex-col rounded-lg">
-            <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
-              <button
-                type="button"
-                className="inline-flex size-10 items-center justify-center rounded bg-[#3A3A3A] px-3 py-3"
-                aria-label="Collapse 3D visualizer"
-                onClick={() => updateVisualizerState(threeDVisualizerState.Collapsed)}
-              >
-                <MinusOutlined className="text-white" />
-              </button>
+            <div className="absolute top-4 right-4 left-4 z-10 flex items-center justify-between gap-2">
+              <div>Zoom controller</div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="inline-flex size-10 items-center justify-center rounded bg-[#3A3A3A] px-3 py-3"
+                  aria-label="Toggle fullscreen"
+                  onClick={toggleFullscreen}
+                >
+                  <FullscreenOutlined className="text-white" />
+                </button>
+                <button
+                  type="button"
+                  className="inline-flex size-10 items-center justify-center rounded bg-[#3A3A3A] px-3 py-3"
+                  aria-label="Collapse 3D visualizer"
+                  onClick={() => updateVisualizerState(threeDVisualizerState.Collapsed)}
+                >
+                  <MinusOutlined className="text-white" />
+                </button>
+              </div>
             </div>
 
             <ThreeDNeuronVisualizer
@@ -135,7 +149,7 @@ function ThreeDNeuronVisualizer({
     useActions: boolean;
   }) {
   return (
-    <div className="relative w-full flex-1 border-none">
+    <div className="absolute h-full w-full flex-1 border-none">
       <NeuronViewerContainer
         useCursor
         useEvents

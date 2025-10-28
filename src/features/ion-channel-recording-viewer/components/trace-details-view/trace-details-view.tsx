@@ -16,23 +16,32 @@ export interface TraceDetailsViewProps {
 export function TraceDetailsView({ trace }: TraceDetailsViewProps) {
   const protocolsNames = trace.protocols.map(({ name }) => name);
   const [protocolName, setProtocolName] = React.useState<string>(protocolsNames[0] ?? '');
+  const protocol = React.useMemo(
+    () => trace.protocols.find((p) => p.name === protocolName),
+    [protocolName, trace.protocols]
+  );
   const repetitionsNames = React.useMemo(() => {
-    const protocol = trace.protocols.find(({ name }) => name === protocolName);
     if (!protocol) return [];
 
     return protocol.repetitions.map(({ name }) => name);
-  }, [protocolName, trace]);
+  }, [protocol]);
   const [repetitionName, setRepetitionName] = React.useState(repetitionsNames[0] ?? '');
   React.useEffect(() => {
     setRepetitionName(repetitionsNames[0] ?? '');
   }, [protocolName, repetitionsNames]);
-  const plot = React.useMemo(
-    () => trace.findRepetition(protocolName, repetitionName)?.plot,
+  const repetition = React.useMemo(
+    () => trace.findRepetition(protocolName, repetitionName),
     [trace, protocolName, repetitionName]
   );
-  const lines = useVisibleLines(plot);
-  const colorMap = useColorMap(plot);
-  const params = usePlotParams(plot, colorMap, lines.selection, lines.preview);
+  const lines = useVisibleLines(repetition?.plot);
+  const colorMap = useColorMap(repetition?.plot);
+  const { paramsRepetition, paramsStimuli } = usePlotParams(
+    protocol,
+    repetition,
+    colorMap,
+    lines.selection,
+    lines.preview
+  );
   return (
     <div className={styles.main}>
       <header>
@@ -59,9 +68,18 @@ export function TraceDetailsView({ trace }: TraceDetailsViewProps) {
         selectedSweeps={lines.selection}
         setSelectedSweeps={lines.setSelection}
         colorMap={colorMap}
-        sweepOptions={(plot?.lines ?? []).map(({ id }) => ({ label: id, value: id }))}
+        sweepOptions={(repetition?.plot.lines ?? []).map(({ id }) => ({ label: id, value: id }))}
       />
-      <GenericPlot className={styles.plot} data={params} factory={factory} />
+      {(paramsStimuli.plot?.lines ?? []).length > 0 && (
+        <div>
+          <h3>Stimuli</h3>
+          <GenericPlot className={styles.plot} data={paramsStimuli} factory={factory} />
+        </div>
+      )}
+      <div>
+        <h3>Repetition</h3>
+        <GenericPlot className={styles.plot} data={paramsRepetition} factory={factory} />
+      </div>
     </div>
   );
 }
