@@ -10,7 +10,7 @@ import { DataInnerLayout } from '@/ui/layouts/explore-inner-layout';
 import { ContributionModal } from '@/ui/segments/contribute/modal';
 import { DataHeader } from '@/ui/segments/explore/header';
 import { DataLayout } from '@/ui/layouts/explore-layout';
-import { resolveDataKey } from '@/utils/key-builder';
+import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
@@ -21,7 +21,7 @@ export default function Page({
   children: ReactNode;
 }) {
   const { projectId } = use(params);
-  const dataKey = resolveDataKey({ projectId, section: 'explore' });
+  const dataKey = resolveDataKey({ projectId, section: AppUInterfaceSection.Data });
 
   useNextStepOnboarding({ condition: true, tour: dataTour });
 

@@ -2,6 +2,8 @@ import React from 'react';
 import { atom, useAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 
+import { AppUInterfaceSection, type TAppUInterfaceSection } from '@/utils/key-builder';
+
 const atomCollapsedValue = atomWithStorage('AI-assistant/collapsed-panel', false);
 
 export function useCollapsedPanel(): [value: boolean, setValue: (value: boolean) => void] {
@@ -9,7 +11,7 @@ export function useCollapsedPanel(): [value: boolean, setValue: (value: boolean)
 }
 
 interface AiContextType {
-  section: 'explore' | 'build' | 'simulate' | 'bookmark' | 'activity';
+  section: TAppUInterfaceSection;
 }
 
 export function useAiContext(): AiContextType {
@@ -20,7 +22,7 @@ export function useAiContext(): AiContextType {
 export const MINIMAL_PANEL_SIZE = 25;
 
 const AiContext = React.createContext<AiContextType>({
-  section: 'explore',
+  section: AppUInterfaceSection.Data,
 });
 
 export function AiContextProvider({
@@ -28,7 +30,7 @@ export function AiContextProvider({
   section,
 }: {
   children: React.ReactNode;
-  section: 'explore' | 'build' | 'simulate' | 'bookmark' | 'activity';
+  section: TAppUInterfaceSection;
 }) {
   const value = React.useMemo(() => ({ section }), [section]);
   return <AiContext value={value}>{children}</AiContext>;

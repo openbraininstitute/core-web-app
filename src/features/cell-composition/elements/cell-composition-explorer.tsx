@@ -5,7 +5,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { CellCompositionMETypeTree } from '@/features/cell-composition/elements/m-e-type-tree';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
 
-export default function CellCompositionExplorer() {
+export function CellCompositionExplorer() {
   return (
     <ErrorBoundary
       FallbackComponent={withErrorConfig({
@@ -19,3 +19,5 @@ export default function CellCompositionExplorer() {
     </ErrorBoundary>
   );
 }
+
+export default CellCompositionExplorer;

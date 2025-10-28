@@ -2,10 +2,9 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { useAtomValue } from 'jotai';
-
 import { loadable } from 'jotai/utils';
 import { match, P } from 'ts-pattern';
+import { useAtomValue } from 'jotai';
 
 import Node from '@/features/cell-composition/elements/default-node';
 import Tree from '@/components/tree';
@@ -16,7 +15,7 @@ import { cellCompositionAtom, annotationTypesAtom } from '@/features/cell-compos
 import { getMetric, metricToUnit } from '@/features/cell-composition/elements/helpers';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { renderFloatNumber } from '@/entity-configuration/definitions/renderer';
-import { resolveDataKey } from '@/utils/key-builder';
+import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 import { classNames } from '@/util/utils';
 
 import type { DensityOrCount, TreeNode } from '@/features/cell-composition/types';
@@ -26,7 +25,7 @@ import type { WorkspaceContext } from '@/types/common';
 export function CellCompositionMETypeTree() {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
   const { node } = useBrainRegionHierarchy({
-    dataKey: resolveDataKey({ section: 'explore', projectId }),
+    dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
   });
 
   const [densityOrCount, setDensityOrCount] = useState<DensityOrCount>('count');
