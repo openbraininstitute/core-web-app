@@ -13,7 +13,7 @@ import type {
   TNeuronViewerClickData,
   TNeuronViewerHoverData,
 } from '@/services/bluenaas-single-cell/renderer';
-import { WebglNeuronSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector/webgl-neuron-selector';
+// import { WebglNeuronSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector/webgl-neuron-selector';
 
 type Props = {
   meModelId: string;
