@@ -4,6 +4,7 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { usePainterManager } from './painter';
 
 import Hint from './hint';
+import ZoomSlider from './zoom-slider';
 import { useMorphology } from '@/hooks/use-morphology';
 import { Morphology } from '@/services/bluenaas-single-cell/types';
 
@@ -30,24 +31,30 @@ export function WebglNeuronSelector({
     virtualLabId,
   });
   if (error) return <pre>{JSON.stringify(error, null, 2)}</pre>;
-  if (loading) return <Loading />;
 
   return (
     <div className={styles.main}>
-      <canvas
-        key="canvas"
-        ref={(canvas: HTMLCanvasElement | null) => {
-          painterManager.canvas = canvas;
-        }}
-      />
-      <Hint painterManager={painterManager} />
+      {loading ? (
+        <Loading />
+      ) : (
+        <>
+          <canvas
+            key="canvas"
+            ref={(canvas: HTMLCanvasElement | null) => {
+              painterManager.canvas = canvas;
+            }}
+          />
+          <Hint painterManager={painterManager} />
+          <ZoomSlider className={styles.zoomSlider} painterManager={painterManager} />
+        </>
+      )}
     </div>
   );
 }
 
 function Loading() {
   return (
-    <div className="text-neutral-1 flex items-center justify-center text-3xl">
+    <div className={styles.loading}>
       <LoadingOutlined />
     </div>
   );

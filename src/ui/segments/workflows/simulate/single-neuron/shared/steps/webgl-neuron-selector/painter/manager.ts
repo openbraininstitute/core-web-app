@@ -1,10 +1,13 @@
 import React from 'react';
 import {
   ArrayNumber2,
+  tgdCalcClamp,
   tgdCalcDegToRad,
+  tgdCalcMapRange,
   tgdCanvasCreatePalette,
   TgdContext,
   TgdControllerCameraOrbit,
+  TgdLight,
   TgdMaterialDiffuse,
   TgdMaterialFlat,
   TgdPainter,
@@ -13,6 +16,7 @@ import {
   TgdPainterSegmentsData,
   TgdPainterState,
   TgdTexture2D,
+  TgdVec3,
   webglPresetBlend,
   webglPresetDepth,
 } from '@tolokoban/tgd';
@@ -41,6 +45,8 @@ export class PainterManager {
     item: StructureItem | null;
   }>();
 
+  public readonly eventZoom = new GenericEvent<number>();
+
   private _context: TgdContext | null = null;
 
   private _morphology: Morphology | null = null;
@@ -54,6 +60,17 @@ export class PainterManager {
   private _hoverPainter: TgdPainter | null = null;
 
   private _hoverItem: StructureItem | null = null;
+
+  private _zoom = 0;
+
+  get zoom() {
+    return this._zoom;
+  }
+
+  set zoom(value: number) {
+    this._zoom = tgdCalcClamp(value, -1, +1);
+    this.eventZoom.dispatch(this._zoom);
+  }
 
   get canvas() {
     return this._canvas;
@@ -116,6 +133,9 @@ export class PainterManager {
               specularExponent: 1,
               specularIntensity: 0.25,
               lockLightsToCamera: true,
+              light: new TgdLight({
+                direction: new TgdVec3(0, 0, -1),
+              }),
             }),
           }),
           groupHover,
@@ -126,6 +146,9 @@ export class PainterManager {
 
     const maxDistance = context.camera.transfo.distance;
     const minDistance = maxDistance / 10;
+    this.eventZoom.addListener((zoom) => {
+      context.camera.transfo.distance = tgdCalcMapRange(zoom, -1, +1, maxDistance, minDistance);
+    });
     const orbitter = new TgdControllerCameraOrbit(context, {
       geo: {
         minLat: tgdCalcDegToRad(-0),

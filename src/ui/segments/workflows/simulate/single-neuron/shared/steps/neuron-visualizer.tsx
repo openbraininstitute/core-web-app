@@ -100,8 +100,7 @@ export function NeuronVisualizer({ sessionId, memodelId }: Props) {
           </button>
         ) : (
           <div className="relative flex h-full w-full flex-col rounded-lg">
-            <div className="absolute top-4 right-4 left-4 z-10 flex items-center justify-between gap-2">
-              <div>Zoom controller</div>
+            <div className="absolute top-4 right-4 z-10 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <button
                   type="button"

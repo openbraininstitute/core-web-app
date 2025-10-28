@@ -44,7 +44,7 @@ export function NeuronViewerContainer({
     useState<TNeuronViewerClickData | null>(null);
   const [neuronViewerHoverData, setNeuronViewerOnHoverData] =
     useState<TNeuronViewerHoverData | null>(null);
-  const newViewer = false;
+  const newViewer = true;
 
   return (
     <ErrorBoundary
