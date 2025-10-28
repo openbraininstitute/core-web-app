@@ -1,6 +1,5 @@
 import { Button, Select } from 'antd';
 import { ConfigObject } from './utils';
-import def from 'ajv/dist/vocabularies/discriminator';
 
 export default function Reference({
   onAddReferenceClick,
