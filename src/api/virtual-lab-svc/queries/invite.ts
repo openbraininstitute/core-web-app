@@ -1,8 +1,8 @@
-import { getSession } from '@/authFetch';
-
 import { InviteResponse } from '@/api/virtual-lab-svc/queries/types';
-import { virtualLabApi } from '@/config';
-import { Role } from '@/api/virtual-lab-svc/types';
+import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
+
+import type { AcceptInviteResponse, InvitationContentResponse } from '@/types/virtual-lab/invites';
+import type { Role } from '@/api/virtual-lab-svc/types';
 
 export async function inviteToProject({
   virtualLabId,
@@ -15,38 +15,13 @@ export async function inviteToProject({
   email: string;
   role: Role;
 }): Promise<InviteResponse> {
-  const session = await getSession();
-  try {
-    const response = await fetch(
-      `${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects/${projectId}/invites`,
-      {
-        method: 'post',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.accessToken}`,
-        },
-        body: JSON.stringify({
-          email,
-          role,
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const errorBody = await response.json();
-      throw new Error(
-        `Inviting ${email} as ${role} to project failed: ${response.status} - ${errorBody?.message || 'Unknown error'}`
-      );
-    }
-
-    const result: InviteResponse = await response.json();
-    return result;
-  } catch (error) {
-    // TODO: capture exception with sentry
-    // eslint-disable-next-line no-console
-    console.error('Error inviting to project:', error);
-    throw new Error(`Failed to invite user to project: ${(error as Error).message}`);
-  }
+  const api = await virtualLabRootApi();
+  return await api.post(`/virtual-labs/${virtualLabId}/projects/${projectId}/invites`, {
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: { email, role },
+  });
 }
 
 export async function inviteToVirtualLab({
@@ -58,33 +33,25 @@ export async function inviteToVirtualLab({
   email: string;
   role: Role;
 }): Promise<InviteResponse> {
-  const session = await getSession();
-  try {
-    const response = await fetch(`${virtualLabApi.url}/virtual-labs/${virtualLabId}/invites`, {
-      method: 'post',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session?.accessToken}`,
-      },
-      body: JSON.stringify({
-        email,
-        role,
-      }),
-    });
+  const api = await virtualLabRootApi();
+  return await api.post(`/virtual-labs/${virtualLabId}/invites`, {
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: { email, role },
+  });
+}
 
-    if (!response.ok) {
-      const errorBody = await response.json();
-      throw new Error(
-        `Inviting ${email} as ${role} to virtual lab failed: ${response.status} - ${errorBody?.message || 'Unknown error'}`
-      );
-    }
+export async function acceptInvite({ token }: { token: string | null }) {
+  const api = await virtualLabRootApi();
+  return api.post<AcceptInviteResponse>(`/invites?token=${token}`, {
+    headers: {
+      'content-type': 'application/json',
+    },
+  });
+}
 
-    const result: InviteResponse = await response.json();
-    return result;
-  } catch (error) {
-    // TODO: capture exception with sentry
-    // eslint-disable-next-line no-console
-    console.error('Error inviting to project:', error);
-    throw new Error(`Failed to invite user to project: ${(error as Error).message}`);
-  }
+export async function getInviteContent({ token }: { token: string | null }) {
+  const api = await virtualLabRootApi();
+  return api.get<InvitationContentResponse>(`/invites?token=${token}`);
 }

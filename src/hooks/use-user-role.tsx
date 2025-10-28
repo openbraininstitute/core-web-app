@@ -2,7 +2,7 @@ import { useQueries } from '@tanstack/react-query';
 import { groupBy, find } from 'es-toolkit/compat';
 
 import { VlmUserGroupsResponse } from '@/api/virtual-lab-svc/queries/types';
-import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { getVirtualLab, listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
@@ -13,19 +13,27 @@ type Props = {
 };
 
 export function useUserRole({ virtualLabId, projectId }: Props) {
-  const [{ data, isLoading: loadingGroups }, { data: myVirtualLab, isLoading: loadingVirtualLab }] =
-    useQueries({
-      queries: [
-        {
-          queryKey: keyBuilder.roles(),
-          queryFn: getUserGroups,
-        },
-        {
-          queryKey: keyBuilder.listAllLabs({ includes: [LabTypeEnum.MY_LAB] }),
-          queryFn: async () => await listVirtualLabs({ include: [LabTypeEnum.MY_LAB] }),
-        },
-      ],
-    });
+  const [
+    { data, isLoading: loadingGroups },
+    { data: myVirtualLab, isLoading: loadingVirtualLab },
+    { data: currentVirtualLab, isLoading: loadingCurrentVirtualLab },
+  ] = useQueries({
+    queries: [
+      {
+        queryKey: keyBuilder.roles(),
+        queryFn: getUserGroups,
+      },
+      {
+        queryKey: keyBuilder.listAllLabs({ includes: [LabTypeEnum.MY_LAB] }),
+        queryFn: async () => await listVirtualLabs({ include: [LabTypeEnum.MY_LAB] }),
+      },
+      {
+        queryKey: keyBuilder.getOneLab({ virtualLabId: virtualLabId! }),
+        queryFn: async () => await getVirtualLab(virtualLabId!),
+        enabled: !!virtualLabId,
+      },
+    ],
+  });
   const ownerVirtualLabId = myVirtualLab?.data?.virtual_lab.id;
   const { userGroups, isMember, isAdmin, isProjectMember, isProjectAdmin } = makeRoles(
     data,
@@ -33,10 +41,13 @@ export function useUserRole({ virtualLabId, projectId }: Props) {
     projectId
   );
   const isOwner = ownerVirtualLabId === virtualLabId;
+  const virtualLabAdmins = currentVirtualLab?.data?.admins;
+  const isLoading = loadingGroups || loadingVirtualLab || loadingCurrentVirtualLab;
 
   return {
-    loading: loadingGroups || loadingVirtualLab,
+    loading: isLoading,
     userGroups,
+    virtualLabAdmins,
     isMember,
     isAdmin,
     isOwner,

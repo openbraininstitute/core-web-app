@@ -26,9 +26,7 @@ import { match } from 'ts-pattern';
 import z from 'zod';
 
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
-import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
 import { inviteToProject } from '@/api/virtual-lab-svc/queries/invite';
-import { useUserPermissions } from '@/hooks/use-user-permissions';
 import { useAppNotification } from '@/components/notification';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -50,8 +48,7 @@ const roleOptions: { value: Role; label: string }[] = [
   { value: 'admin', label: 'Administrator' },
   { value: 'member', label: 'Member' },
 ];
-
-type Step = 'listing' | 'add-member';
+const emailSchema = z.string().min(3, 'Email is required').email('Email is not valid');
 
 type InvitePayload = {
   email: string;
@@ -60,16 +57,18 @@ type InvitePayload = {
 
 type RoleModifierProps = {
   user: Member;
-  ownerId?: string;
+  projectOwnerId?: string;
+  virtualLabAdmins?: Array<string> | null;
 };
 
-function RoleModifier({ user, ownerId }: RoleModifierProps) {
+function RoleModifier({ user, projectOwnerId, virtualLabAdmins }: RoleModifierProps) {
   const { data } = useSession();
   const { virtualLabId, projectId } = useWorkspace();
   const { error: notifyError, success: notifySuccess } = useAppNotification();
   const [role, updateRole] = useState(user.role);
   const queryClient = useQueryClient();
   const { isAdmin, isProjectAdmin } = useUserRole({ virtualLabId, projectId });
+
   const cancelInviteMutation = useMutation({
     mutationKey: [`${virtualLabId}/${projectId}/delete-item/${user.email}`],
     mutationFn: () =>
@@ -102,7 +101,11 @@ function RoleModifier({ user, ownerId }: RoleModifierProps) {
     },
     async onSuccess() {
       notifySuccess({
-        message: `Invite for ${user.email} cancelled successfully`,
+        message: (
+          <div className="text-primary-9">
+            Invite for <strong> {user.email}</strong> cancelled successfully
+          </div>
+        ),
         placement: 'topRight',
         key: 'user-cancel-invite',
       });
@@ -199,15 +202,20 @@ function RoleModifier({ user, ownerId }: RoleModifierProps) {
     },
   });
 
-  if (user.id === ownerId || user.id === data?.user.id) {
+  if (
+    user.id === projectOwnerId ||
+    virtualLabAdmins?.includes(user.id) ||
+    user.id === data?.user.id
+  ) {
     return (
       <div className="flex w-full flex-col items-center justify-end pr-3 text-right">
         <div className="hover:text-primary-2! text-primary-9 w-max! self-end font-bold">
-          {get(find(roleOptions, { value: user.role }), 'label')}
+          {get(find(roleOptions, { value: user.role }), 'label', 'admin')}
         </div>
       </div>
     );
   }
+
   if (isAdmin || isProjectAdmin) {
     return user.invite_accepted ? (
       <div className="ml-auto text-right text-base text-white">
@@ -271,7 +279,8 @@ function RoleModifier({ user, ownerId }: RoleModifierProps) {
           key="cancel-invite"
           type="button"
           size="md"
-          className="hover:text-primary-2! w-max! self-end text-white! opacity-100!"
+          variant="outline"
+          className="w-max! self-end rounded-none"
           disabled={cancelInviteMutation.isPending}
           onClick={() => cancelInviteMutation.mutateAsync()}
         >
@@ -283,8 +292,6 @@ function RoleModifier({ user, ownerId }: RoleModifierProps) {
   }
   return null;
 }
-
-const emailSchema = z.string().min(3, 'Email is required').email('Email is not valid');
 
 function EmailInput({
   index,
@@ -350,7 +357,7 @@ function EmailInput({
   );
 }
 
-function InviteMemberStep({ onBack }: { onBack: () => void }) {
+function InviteMembers({ onBack }: { onBack: () => void }) {
   const listScrollRef = useRef<HTMLDivElement | null>(null);
   const queryClient = useQueryClient();
   const { virtualLabId, projectId } = useWorkspace();
@@ -406,16 +413,16 @@ function InviteMemberStep({ onBack }: { onBack: () => void }) {
   const mutate = useMutation({
     mutationFn: inviteUsers,
     onSuccess: (data) => {
-      const validInvites = inviteList.filter(
+      const sentInvites = inviteList.filter(
         (invite) => invite.email && emailSchema.safeParse(invite.email).success
       );
       const failedInvites = data
         .map((result, idx) => {
-          if (result.status === 'rejected') return validInvites[idx];
+          if (result.status === 'rejected') return sentInvites[idx];
           return null;
         })
         .filter(Boolean);
-      if (failedInvites.length && validInvites.length !== failedInvites.length) {
+      if (failedInvites.length && sentInvites.length !== failedInvites.length) {
         notifyError({
           message: `Some invitations were sent successfully, but a few may not have been delivered:`,
           description: (
@@ -430,7 +437,7 @@ function InviteMemberStep({ onBack }: { onBack: () => void }) {
           placement: 'topRight',
           key: 'send-invites-partial',
         });
-      } else if (failedInvites.length === validInvites.length) {
+      } else if (failedInvites.length === sentInvites.length) {
         notifyError({
           message: 'Failed to send invitations. Please try again.',
           placement: 'topRight',
@@ -438,11 +445,10 @@ function InviteMemberStep({ onBack }: { onBack: () => void }) {
         });
       } else {
         notifySuccess({
-          message: `${validInvites.length} invitation(s) sent successfully!`,
+          message: `${sentInvites.length} invitation(s) sent successfully!`,
           placement: 'topRight',
           key: 'send-invites-success',
         });
-        // Reset form to single empty invite field after successful submission
         setInviteList([{ email: '', role: 'member' }]);
         onBack();
       }
@@ -456,7 +462,7 @@ function InviteMemberStep({ onBack }: { onBack: () => void }) {
     },
     onSettled: async () => {
       await queryClient.invalidateQueries({
-        queryKey: keyBuilder.listVirtualLabTeam({ virtualLabId }),
+        queryKey: keyBuilder.listProjectTeam({ virtualLabId, projectId }),
       });
     },
   });
@@ -626,22 +632,16 @@ function InviteMemberStep({ onBack }: { onBack: () => void }) {
   );
 }
 
-function ListingStep({
+function ListingMembers({
   onAddMemberClick,
   list,
-  allowedOperation,
 }: {
   onAddMemberClick: () => void;
   list: MembersResponse;
-  allowedOperation: boolean;
 }) {
   const { data } = useSession();
-  const [popoverOpen, setIsPopoverOpen] = useState(false);
-
-  const onOpenChange = (visible: boolean) => {
-    if (!allowedOperation || !visible) setIsPopoverOpen(true);
-    else setIsPopoverOpen(false);
-  };
+  const { virtualLabId, projectId } = useWorkspace();
+  const { virtualLabAdmins } = useUserRole({ virtualLabId, projectId });
 
   const ownerId = list?.data?.owner_id;
   const total = list?.data?.total;
@@ -657,7 +657,7 @@ function ListingStep({
         <div className="flex w-max items-center justify-center">
           <MemberAvatarCasual
             withEmail
-            isOwner={ownerId === record.id}
+            isOwner={ownerId === record.id || virtualLabAdmins?.includes(record.id)}
             shape={record.role === 'admin' ? 'square' : 'circle'}
             key={`project-avatar-${record.id ?? record.email}`}
             index={indx}
@@ -686,6 +686,15 @@ function ListingStep({
                 'text-white  wrap-text',
                 record.invite_accepted ? 'font-bold' : 'font-light'
               ),
+              pending: cn(
+                '[&_.avatar-email]:text-primary-9!',
+                '[&_.avatar-role]:text-primary-8!',
+                '[&_.avatar-icon]:text-primary-9!'
+              ),
+            }}
+            pendingIcon={{
+              envelop: '#d9d9d9',
+              halfCircle: '#002766',
             }}
           />
         </div>
@@ -697,7 +706,9 @@ function ListingStep({
       dataIndex: 'role',
       align: 'right',
       width: '250px',
-      render: (_: Role, record) => <RoleModifier ownerId={ownerId} user={record} />,
+      render: (_: Role, record) => (
+        <RoleModifier projectOwnerId={ownerId} virtualLabAdmins={virtualLabAdmins} user={record} />
+      ),
     },
   ];
 
@@ -715,7 +726,7 @@ function ListingStep({
   );
 
   return (
-    <div className="animate-fade-in flex h-full w-full flex-col pb-8">
+    <div className="animate-fade-in flex h-full w-full flex-col pr-4 pl-8">
       <div className="flex w-full items-center justify-between px-3">
         <div className="flex h-8 justify-center gap-2">
           <span className="text-primary-9 text-lg font-bold capitalize">members</span>
@@ -727,32 +738,22 @@ function ListingStep({
           )}
         </div>
         <div className="mt-auto flex flex-shrink-0 items-center justify-end">
-          <CustomPopover
-            when={['hover']}
-            message="Only on Pro and Premium plans the Owner/Administrator can add members."
-            placement="topLeft"
-            visible={popoverOpen}
-            onOpenChange={onOpenChange}
+          <Button
+            rounded
+            borderless
+            key="add-member"
+            data-testid="add-member-btn"
+            type="button"
+            variant="success"
+            size="md"
+            className="px-6"
+            onClick={onAddMemberClick}
           >
-            <Button
-              rounded
-              borderless
-              key="add-member"
-              data-testid="add-member-btn"
-              type="button"
-              variant="success"
-              size="md"
-              // disabled={!allowedOperation}
-              className={cn('px-6', { 'cursor-not-allowed opacity-50': !allowedOperation })}
-              onClick={onAddMemberClick}
-              onMouseLeave={() => setIsPopoverOpen(false)}
-            >
-              <div className="flex items-center justify-between gap-12 font-bold">
-                <span>Add member</span>
-                <PlusOutlined className="ml-auto text-sm text-current" />
-              </div>
-            </Button>
-          </CustomPopover>
+            <div className="flex items-center justify-between gap-12 font-bold">
+              <span>Add member</span>
+              <PlusOutlined className="ml-auto text-sm text-current" />
+            </div>
+          </Button>
         </div>
       </div>
       <div className="h-full grow overflow-hidden py-5">
@@ -783,7 +784,8 @@ function ListingStep({
               '[&_.ant-table-tbody>tr]:transition-all [&_.ant-table-tbody>tr]:duration-1000',
               '[&_.ant-table-cell-row-hover]:bg-gray-200!',
               '[&_.ant-table-tbody>tr.ant-table-row-remove]:h-0 [&_.ant-table-tbody>tr.ant-table-row-remove]:opacity-40',
-              '[&_.ant-table-body]:primary-scrollbar [&_.ant-table-body]:max-h-full [&_.ant-table-body]:overflow-auto [&_.ant-table-container]:h-full'
+              '[&_.ant-table-body]:max-h-full [&_.ant-table-body]:overflow-auto [&_.ant-table-container]:h-full',
+              '[&_.ant-table-body]:secondary-scrollbar! [&_.ant-table-body]:pr-3'
             )}
             rowClassName={() => {
               return 'hover:bg-primary-9/10 hover:text-white';
@@ -796,49 +798,32 @@ function ListingStep({
   );
 }
 
+const StepDict = {
+  Listing: 'listing',
+  AddMember: 'add-member',
+} as const;
+
+type TStepDict = (typeof StepDict)[keyof typeof StepDict];
+
 export function TeamManager() {
   const { virtualLabId, projectId } = useWorkspace();
-  const [currentStep, setCurrentStep] = useState<Step>('listing');
+  const [currentStep, setCurrentStep] = useState<TStepDict>(StepDict.Listing);
 
   const { data: currentProjectTeam } = useSuspenseQuery({
     queryKey: keyBuilder.listProjectTeam({ virtualLabId, projectId }),
     queryFn: () => listProjectMembers({ virtualLabId, projectId }),
   });
 
-  const {
-    isAllowedBySubscription,
-    isAdmin,
-    isProjectAdmin,
-    loading: loadingPermissions,
-  } = useUserPermissions({
-    virtualLabId,
-    projectId,
-  });
-
-  const allowedOperation =
-    isAllowedBySubscription && (isAdmin || isProjectAdmin) && !loadingPermissions;
-
-  const handleAddMemberClick = () => {
-    if (allowedOperation) {
-      setCurrentStep('add-member');
-    }
-  };
-
-  const handleBackToListing = () => {
-    setCurrentStep('listing');
-  };
+  const handleAddMemberClick = () => setCurrentStep(StepDict.AddMember);
+  const handleBackToListing = () => setCurrentStep(StepDict.Listing);
 
   return match(currentStep)
-    .with('listing', () => (
-      <ListingStep
-        onAddMemberClick={handleAddMemberClick}
-        list={currentProjectTeam}
-        allowedOperation={allowedOperation}
-      />
+    .with(StepDict.Listing, () => (
+      <ListingMembers onAddMemberClick={handleAddMemberClick} list={currentProjectTeam} />
     ))
-    .with('add-member', () => (
+    .with(StepDict.AddMember, () => (
       <div className="animate-fade-in h-full">
-        <InviteMemberStep onBack={handleBackToListing} />
+        <InviteMembers onBack={handleBackToListing} />
       </div>
     ))
     .otherwise(() => null);

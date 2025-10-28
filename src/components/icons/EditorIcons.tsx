@@ -498,7 +498,16 @@ export function SignOutFill(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function PendingInvite({ width = 33, height = 32, ...props }: SVGProps<SVGSVGElement>) {
+export function PendingInvite({
+  width = 33,
+  height = 32,
+  envelop,
+  halfCircle,
+  ...props
+}: SVGProps<SVGSVGElement> & {
+  envelop?: string;
+  halfCircle?: string;
+}) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -510,11 +519,11 @@ export function PendingInvite({ width = 33, height = 32, ...props }: SVGProps<SV
     >
       <rect width={31} height={31} x={0.5} y={0.5} stroke="#096DD9" rx={15.5} />
       <path
-        fill="#fff"
+        fill={envelop ?? '#fff'}
         d="M10.333 12v8h11.333v-8H10.334ZM16 16.133l-3.2-2.8h6.433L16 16.133Zm-2.4-.333-1.933 1.933v-3.6L13.6 15.8Zm1 .867.967.833c.133.1.267.167.433.167.167 0 .3-.067.433-.167l.867-.767 1.933 1.933H12.6l2-2Zm3.733-.8 2-1.733V17.9l-2-2.034Z"
       />
       <path
-        stroke="#fff"
+        stroke={halfCircle ?? '#fff'}
         strokeLinecap="round"
         strokeWidth={3}
         d="M31.281 11.258a16 16 0 0 0-8.439-9.721"

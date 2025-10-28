@@ -58,17 +58,25 @@ const getInviteErrorMessage = (code?: string): { title: string; message: string 
   }
 };
 
-export default function AcceptInviteErrorDialog({ errorCode }: { errorCode: string }) {
+export function InvitationErrorDialog({
+  error,
+}: {
+  error?: {
+    errorcode: string | undefined;
+    original_code: string | undefined;
+    description: string | undefined;
+  };
+}) {
   // This is needed to prevent hydration errors.
   // The Dialog is not rendered correctly on server side, so we need to prevent it from rendering until the client side hydration is complete (and `useEffect` is run).
   // https://github.com/vercel/next.js/discussions/35773
   const [open, setOpen] = useState(false);
-  const isInviteAcceptedError = errorCode === `${InviteErrorCodes.INVITE_ALREADY_ACCEPTED}`;
+  const isInviteAcceptedError = error?.errorcode === `${InviteErrorCodes.INVITE_ALREADY_ACCEPTED}`;
   useEffect(() => {
     setOpen(true);
   }, []);
 
-  const { title, message } = getInviteErrorMessage(errorCode);
+  const { title, message } = getInviteErrorMessage(error?.errorcode);
   const onClose = () => setOpen(false);
 
   return (
@@ -86,6 +94,15 @@ export default function AcceptInviteErrorDialog({ errorCode }: { errorCode: stri
           </button>
         </div>
         <p className="mt-4 text-lg text-gray-700">{message}</p>
+        {error?.original_code && (
+          <div className="bg-background mt-4 rounded-xl px-4 py-2">
+            <small className="text-primary-8">
+              [DEBUG]: This shows up only in testing or staging, not in production.
+            </small>
+            <h2 className="text-destructive font-bold">{error.original_code}</h2>
+            <p className="text-shadow-destructive text-gray-700">{error.description}</p>
+          </div>
+        )}
         <div className="mt-5 ml-auto justify-end">
           {isInviteAcceptedError && <InviteRedirectButton />}
         </div>

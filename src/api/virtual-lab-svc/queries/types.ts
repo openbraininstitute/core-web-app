@@ -67,6 +67,7 @@ export type VirtualLab = {
   updated_at: string; // ISO timestamp
   members_count: number | null;
   projects_count: number | null;
+  created_by: string | null;
 };
 
 export type VirtualLabExistsVerificationResponse = VlmResponse<{
@@ -88,15 +89,9 @@ export type InviteResponse = VlmResponse<{
   invite_id: string;
 }>;
 
-type Invite = {
-  email: string;
-  role: string;
-};
-
 export type VirtualLabResponseData = {
   virtual_lab: VirtualLab;
-  successful_invites: Invite[];
-  failed_invites: Invite[];
+  admins: Array<string> | null;
 };
 
 export type VirtualLabResponse = VlmResponse<VirtualLabResponseData>;

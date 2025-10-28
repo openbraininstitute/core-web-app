@@ -479,10 +479,7 @@ function Content({ id }: { id?: string | null }) {
     clearOnDefault: true,
   });
 
-  if (!id) {
-    return null;
-  }
-
+  if (!id) return null;
   return match(activeTab)
     .with(null, () => <TeamTable virtualLabId={id} />)
     .with('team', () => <TeamTable virtualLabId={id} />)

@@ -17,8 +17,9 @@ export default async function Page({
   const { data: workspace, error } = await tryCatch(resolveWorkspace());
 
   if (!session || !workspace?.profile) {
-    redirect(`/app/login`);
+    redirect(`/app/log-in`);
   }
+
   if (!workspace || error) {
     throw new Error('Workspace resolution failed');
   }

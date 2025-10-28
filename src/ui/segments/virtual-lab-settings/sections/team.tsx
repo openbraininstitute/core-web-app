@@ -25,6 +25,7 @@ import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
 import type { Member, Role } from '@/api/virtual-lab-svc/queries/types';
+import { log } from '@/utils/logger';
 
 const emailSchema = z.string().min(3, 'Email is required').email('Email is not valid');
 
@@ -109,7 +110,7 @@ function EmailInput({
   );
 }
 
-function InviteMemberStep({ onBack, virtualLabId }: InviteMemberStepProps) {
+function InviteMembers({ onBack, virtualLabId }: InviteMemberStepProps) {
   const queryClient = useQueryClient();
   const { error: notifyError, success: notifySuccess } = useAppNotification();
   const [inviteList, setInviteList] = useState<Array<InvitePayload>>([
@@ -143,16 +144,16 @@ function InviteMemberStep({ onBack, virtualLabId }: InviteMemberStepProps) {
   const mutate = useMutation({
     mutationFn: inviteUsers,
     onSuccess: (data) => {
-      const validInvites = inviteList.filter(
+      const requestedInvites = inviteList.filter(
         (invite) => invite.email && emailSchema.safeParse(invite.email).success
       );
       const failedInvites = data
         .map((result, idx) => {
-          if (result.status === 'rejected') return validInvites[idx];
+          if (result.status === 'rejected') return requestedInvites[idx];
           return null;
         })
         .filter(Boolean);
-      if (failedInvites.length && validInvites.length !== failedInvites.length) {
+      if (failedInvites.length && requestedInvites.length !== failedInvites.length) {
         notifyError({
           message: `Some invitations were sent successfully, but a few may not have been delivered:`,
           description: (
@@ -168,7 +169,7 @@ function InviteMemberStep({ onBack, virtualLabId }: InviteMemberStepProps) {
           placement: 'topRight',
           key: 'send-invites-partial',
         });
-      } else if (failedInvites.length === validInvites.length) {
+      } else if (failedInvites.length === requestedInvites.length) {
         notifyError({
           message: 'Failed to send invitations. Please try again.',
           placement: 'topRight',
@@ -176,7 +177,7 @@ function InviteMemberStep({ onBack, virtualLabId }: InviteMemberStepProps) {
         });
       } else {
         notifySuccess({
-          message: `${validInvites.length} invitation(s) sent successfully!`,
+          message: `${requestedInvites.length} invitation(s) sent successfully!`,
           placement: 'topRight',
           key: 'send-invites-success',
         });
@@ -185,7 +186,8 @@ function InviteMemberStep({ onBack, virtualLabId }: InviteMemberStepProps) {
         onBack();
       }
     },
-    onError: () => {
+    onError: (error) => {
+      log('error', 'error when inviting people to virtual lab', error);
       notifyError({
         message: 'Failed to send invitations. Please try again.',
         placement: 'topRight',
@@ -416,7 +418,7 @@ type ListingStepProps = {
   virtualLabId: string;
 };
 
-function ListingStep({ onInviteMemberClick, virtualLabId }: ListingStepProps) {
+function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps) {
   const { data } = useSession();
 
   const { data: team, isLoading } = useQuery({
@@ -581,11 +583,11 @@ export function TeamTable({ virtualLabId }: { virtualLabId: string }) {
 
   return match(currentStep)
     .with(Steps.ListingMembers, () => (
-      <ListingStep onInviteMemberClick={handleInviteMemberClick} virtualLabId={virtualLabId} />
+      <ListingMembers onInviteMemberClick={handleInviteMemberClick} virtualLabId={virtualLabId} />
     ))
     .with(Steps.InviteMember, () => (
       <div className="animate-fade-in h-full">
-        <InviteMemberStep onBack={handleBackToListing} virtualLabId={virtualLabId} />
+        <InviteMembers onBack={handleBackToListing} virtualLabId={virtualLabId} />
       </div>
     ))
     .otherwise(() => null);
