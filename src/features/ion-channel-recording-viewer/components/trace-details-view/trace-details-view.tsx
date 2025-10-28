@@ -53,14 +53,16 @@ export function TraceDetailsView({ trace }: TraceDetailsViewProps) {
             <div key={name}>{name}</div>
           ))}
         />
-        <OptionSelect
-          label={{ title: 'Repetition', numberOfAvailable: repetitionsNames.length }}
-          value={repetitionName}
-          onChange={setRepetitionName}
-          options={repetitionsNames.map((name) => (
-            <div key={name}>{name}</div>
-          ))}
-        />
+        {repetitionsNames.length > 1 && (
+          <OptionSelect
+            label={{ title: 'Repetition', numberOfAvailable: repetitionsNames.length }}
+            value={repetitionName}
+            onChange={setRepetitionName}
+            options={repetitionsNames.map((name) => (
+              <div key={name}>{name}</div>
+            ))}
+          />
+        )}
       </header>
       <SweepSelector
         onPreviewSweep={lines.setPreview}
@@ -70,15 +72,17 @@ export function TraceDetailsView({ trace }: TraceDetailsViewProps) {
         colorMap={colorMap}
         sweepOptions={(repetition?.plot.lines ?? []).map(({ id }) => ({ label: id, value: id }))}
       />
-      {(paramsStimuli.plot?.lines ?? []).length > 0 && (
+      <div className={styles.plots}>
+        {(paramsStimuli.plot?.lines ?? []).length > 0 && (
+          <div>
+            <h3>Stimuli</h3>
+            <GenericPlot className={styles.plot} data={paramsStimuli} factory={factory} />
+          </div>
+        )}
         <div>
-          <h3>Stimuli</h3>
-          <GenericPlot className={styles.plot} data={paramsStimuli} factory={factory} />
+          <h3>Repetition</h3>
+          <GenericPlot className={styles.plot} data={paramsRepetition} factory={factory} />
         </div>
-      )}
-      <div>
-        <h3>Repetition</h3>
-        <GenericPlot className={styles.plot} data={paramsRepetition} factory={factory} />
       </div>
     </div>
   );
