@@ -30,15 +30,14 @@ export default function ToolPlotGenerator({ className, results }: ToolPlotGenera
           return result.storage_id.map((storage_id) => (
             <CustomPlot className={className} key={storage_id} storage_id={storage_id} />
           ));
-        } 
-          return (
-            <CustomPlot
-              className={className}
-              key={result.storage_id}
-              storage_id={result.storage_id}
-            />
-          );
-        
+        }
+        return (
+          <CustomPlot
+            className={className}
+            key={result.storage_id}
+            storage_id={result.storage_id}
+          />
+        );
       })}
     </>
   );
