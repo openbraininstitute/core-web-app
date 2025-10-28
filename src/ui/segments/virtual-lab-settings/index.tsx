@@ -444,7 +444,7 @@ function Tabs({ id }: { id?: string | null }) {
             { 'h-12': breakpoint === 'xl' }
           )}
         >
-          Members
+          Administrators
         </PillTabsTrigger>
         <CustomPopover
           when={['hover']}

@@ -1,41 +1,33 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
+import { filter, uniqBy, compact, sortBy, find, map, get } from 'es-toolkit/compat';
+import { useMemo, useState, useRef, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { ColumnType } from 'antd/es/table';
 import {
   ConfigProvider,
   Popconfirm,
   Select,
   Table,
-  Checkbox,
   Empty,
   List,
   Input,
   Button as AntdButton,
-  type InputRef,
 } from 'antd';
 import {
   PlusOutlined,
-  SearchOutlined,
   ArrowLeftOutlined,
   DeleteOutlined,
   LoadingOutlined,
+  DeleteFilled,
 } from '@ant-design/icons';
-import { useMemo, useState, useDeferredValue, useRef } from 'react';
-import { CheckboxChangeEvent } from 'antd/es/checkbox';
-import { useSession } from 'next-auth/react';
-import { ColumnType } from 'antd/es/table';
 import { match } from 'ts-pattern';
-import isEmpty from 'es-toolkit/compat/isEmpty';
-import compact from 'es-toolkit/compat/compact';
-import sortBy from 'es-toolkit/compat/sortBy';
-import reject from 'es-toolkit/compat/reject';
-import find from 'es-toolkit/compat/find';
-import map from 'es-toolkit/compat/map';
-import get from 'es-toolkit/compat/get';
+import z from 'zod';
 
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
 import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
-import { attachUsersToProject } from '@/api/virtual-lab-svc/queries/project';
+import { inviteToProject } from '@/api/virtual-lab-svc/queries/invite';
 import { useUserPermissions } from '@/hooks/use-user-permissions';
 import { useAppNotification } from '@/components/notification';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
@@ -49,7 +41,6 @@ import {
   listProjectMembers,
   removeUserFromProject,
   updateProjectUserRole,
-  listVirtualLabMembers,
 } from '@/api/virtual-lab-svc/queries/member';
 import { cn } from '@/utils/css-class';
 
@@ -62,21 +53,10 @@ const roleOptions: { value: Role; label: string }[] = [
 
 type Step = 'listing' | 'add-member';
 
-function useFilteredMembers(members: Array<Member>, query: string): Array<Member> {
-  const deferredQuery = useDeferredValue(query.toLowerCase());
-  const filtered = useMemo(() => {
-    if (!deferredQuery) return members;
-
-    return members.filter(
-      (member) =>
-        member.name?.toLowerCase().includes(deferredQuery) ||
-        member.username?.toLowerCase().includes(deferredQuery) ||
-        member.email?.toLowerCase().includes(deferredQuery)
-    );
-  }, [members, deferredQuery]);
-
-  return filtered;
-}
+type InvitePayload = {
+  email: string;
+  role: Role;
+};
 
 type RoleModifierProps = {
   user: Member;
@@ -304,112 +284,184 @@ function RoleModifier({ user, ownerId }: RoleModifierProps) {
   return null;
 }
 
-type AddMemberStepProps = {
-  onBack: () => void;
-  list: MembersResponse;
-  allowedOperation: boolean;
-};
+const emailSchema = z.string().min(3, 'Email is required').email('Email is not valid');
 
-function AddMemberStep({ onBack, list, allowedOperation }: AddMemberStepProps) {
+function EmailInput({
+  index,
+  value,
+  onChange,
+  disabled,
+  inviteList,
+}: {
+  index: number;
+  value: string;
+  onChange: (v: string) => void;
+  disabled: boolean;
+  inviteList: Array<InvitePayload>;
+}) {
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (value.trim() !== '') {
+      const result = emailSchema.safeParse(value);
+      if (!result.success) {
+        const issue = result.error.issues.at(0);
+        setError(issue?.message ?? 'Invalid input');
+      } else {
+        setError(null);
+      }
+    }
+  }, [value]);
+
+  useEffect(() => {
+    const duplicates = map(
+      filter(
+        inviteList,
+        (o) => o.email.toLowerCase() === value.toLowerCase() && value.trim() !== ''
+      ),
+      (item) => inviteList.indexOf(item)
+    );
+
+    if (duplicates.filter((p) => p !== index).length > 0) {
+      setError('This email address is already added. Please remove duplicates.');
+    } else {
+      setError(null);
+    }
+  }, [inviteList, value, index]);
+
+  return (
+    <div>
+      <Input
+        id="email"
+        size="large"
+        placeholder="Enter email address..."
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        status={error ? 'error' : undefined}
+        className={cn(
+          'focus:white hover:bg-background! border-primary-9 hover:text-primary-8! bg-transparent',
+          'focus-within:bg-background! bg-background! text-primary-9! focus-within:text-primary-9!',
+          'placeholder:text-primary-8 placeholder:text-sm!'
+        )}
+        disabled={disabled}
+      />
+      {error && <small style={{ color: 'red', marginTop: 4 }}>{error}</small>}
+    </div>
+  );
+}
+
+function InviteMemberStep({ onBack }: { onBack: () => void }) {
+  const listScrollRef = useRef<HTMLDivElement | null>(null);
   const queryClient = useQueryClient();
-  const { data } = useSession();
   const { virtualLabId, projectId } = useWorkspace();
   const { error: notifyError, success: notifySuccess } = useAppNotification();
-  const [isSearchVisible, setIsSearchVisible] = useState(false);
-  const [searchQuery, setSearchValue] = useState('');
-  const [selectedMembers, setSelectedMembers] = useState<Array<Member>>([]);
-  const searchInputRef = useRef<InputRef>(null);
+  const [inviteList, setInviteList] = useState<Array<InvitePayload>>([
+    { email: '', role: 'member' },
+  ]);
 
-  const { data: virtualLabMembers } = useQuery({
-    queryKey: keyBuilder.listVirtualLabTeam({ virtualLabId }),
-    queryFn: () => listVirtualLabMembers({ virtualLabId }),
-  });
-
-  const availableUsers = reject(
-    virtualLabMembers?.data?.users,
-    (user) =>
-      user.id === virtualLabMembers?.data?.owner_id ||
-      user.id === data?.user.id ||
-      user.invite_accepted === false ||
-      map(list?.data?.users, 'id').includes(user.id)
-  );
-
-  const filteredUsers = useFilteredMembers(availableUsers || [], searchQuery);
-
-  const onSelectUser = (record: Member) => (e: CheckboxChangeEvent) => {
-    const { checked } = e.target;
-    if (checked) {
-      setSelectedMembers((prev) => [...prev, { ...record, role: 'member' }]);
-    } else {
-      const filteredList = reject(selectedMembers, { id: record.id });
-      setSelectedMembers(filteredList);
-    }
+  const addEmailField = () => {
+    setInviteList((prev) => [...prev, { email: '', role: 'member' }]);
+    requestAnimationFrame(() => {
+      listScrollRef.current?.scrollTo({
+        top: listScrollRef.current.scrollHeight,
+        behavior: 'instant',
+      });
+    });
   };
 
-  const onRoleChange = (record: Member, role: Role) => {
-    setSelectedMembers((prev) => {
-      const existingMember = find(prev, { id: record.id });
+  const removeEmailField = (index: number) => {
+    setInviteList((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const updateInvite = (index: number, field: keyof InvitePayload, value: string) => {
+    setInviteList((prev) =>
+      prev.map((invite, i) => (i === index ? { ...invite, [field]: value } : invite))
+    );
+  };
+
+  const inviteUsers = async () => {
+    const validInvites = inviteList.filter(
+      (invite) => invite.email && emailSchema.safeParse(invite.email).success
+    );
+    const invites = await Promise.allSettled(
+      validInvites.map(({ email, role }) =>
+        inviteToProject({ virtualLabId, projectId, email, role })
+      )
+    );
+    return invites;
+  };
+
+  const onRoleChange = (record: InvitePayload, role: Role) => {
+    setInviteList((prev) => {
+      const existingMember = find(prev, (o) => o.email === record.email);
       if (existingMember) {
         return prev.map((member) =>
-          member.id === existingMember.id ? { ...member, role } : member
+          member.email === existingMember.email ? { ...member, role } : member
         );
       }
       return [...prev, { ...record, role }];
     });
   };
 
-  const handleSearchClick = () => {
-    setIsSearchVisible((prev) => {
-      const newValue = !prev;
-      if (newValue) {
-        setTimeout(() => {
-          searchInputRef.current?.focus();
-        }, 100);
+  const mutate = useMutation({
+    mutationFn: inviteUsers,
+    onSuccess: (data) => {
+      const validInvites = inviteList.filter(
+        (invite) => invite.email && emailSchema.safeParse(invite.email).success
+      );
+      const failedInvites = data
+        .map((result, idx) => {
+          if (result.status === 'rejected') return validInvites[idx];
+          return null;
+        })
+        .filter(Boolean);
+      if (failedInvites.length && validInvites.length !== failedInvites.length) {
+        notifyError({
+          message: `Some invitations were sent successfully, but a few may not have been delivered:`,
+          description: (
+            <ul className="text-primary-8">
+              {failedInvites.map((invite) => (
+                <li className="list-decimal" key={invite?.email}>
+                  {invite?.email}
+                </li>
+              ))}
+            </ul>
+          ),
+          placement: 'topRight',
+          key: 'send-invites-partial',
+        });
+      } else if (failedInvites.length === validInvites.length) {
+        notifyError({
+          message: 'Failed to send invitations. Please try again.',
+          placement: 'topRight',
+          key: 'send-invites-error',
+        });
       } else {
-        setSearchValue('');
+        notifySuccess({
+          message: `${validInvites.length} invitation(s) sent successfully!`,
+          placement: 'topRight',
+          key: 'send-invites-success',
+        });
+        // Reset form to single empty invite field after successful submission
+        setInviteList([{ email: '', role: 'member' }]);
+        onBack();
       }
-      return newValue;
-    });
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchValue(e.target.value);
-  };
-
-  const mutation = useMutation({
-    mutationFn: () =>
-      attachUsersToProject({
-        virtualLabId,
-        projectId,
-        users: selectedMembers.map((member) => ({
-          id: member.id,
-          email: member.email,
-          role: member.role,
-        })),
-      }),
-    onSuccess: () => {
-      notifySuccess({
-        message: `${selectedMembers.length} member(s) added successfully!`,
-        placement: 'topRight',
-        key: 'add-members-success',
-      });
-      setSelectedMembers([]);
-      onBack();
     },
     onError: () => {
       notifyError({
-        message: 'Failed to add members. Please try again.',
+        message: 'Failed to send invitations. Please try again.',
         placement: 'topRight',
-        key: 'add-members-error',
+        key: 'send-invites-error',
       });
     },
     onSettled: async () => {
       await queryClient.invalidateQueries({
-        queryKey: keyBuilder.listProjectTeam({ virtualLabId, projectId }),
+        queryKey: keyBuilder.listVirtualLabTeam({ virtualLabId }),
       });
     },
   });
 
+  const disableAddMember = inviteList.some((p) => !emailSchema.safeParse(p.email).success);
   return (
     <div className="flex h-full flex-col pb-10">
       <div className="flex h-8 shrink-0 items-center px-3">
@@ -427,147 +479,119 @@ function AddMemberStep({ onBack, list, allowedOperation }: AddMemberStepProps) {
           </Button>
         </div>
       </div>
-      <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-3 py-4 pb-8">
-        <h2 className="text-primary-8 text-lg font-semibold">
-          Add new members to project
+
+      <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-8 py-4 pb-8">
+        <h2 className="text-primary-9 text-xl font-semibold">
+          Invite new members to virtual lab
           <div className="flex items-center gap-2">
             <small className="text-primary-8 text-sm font-light">
-              {selectedMembers.length} member(s) selected
+              <span className="font-bold">
+                {
+                  uniqBy(
+                    inviteList.filter(
+                      (invite) => invite.email && emailSchema.safeParse(invite.email).success
+                    ),
+                    'email'
+                  ).length
+                }
+              </span>
+              <span className="ml-1">invitation(s) ready</span>
             </small>
           </div>
         </h2>
-        <div className="flex items-center">
-          <div
-            className={cn(
-              'overflow-hidden transition-all duration-300 ease-in-out',
-              isSearchVisible ? 'w-72 opacity-100' : 'w-0 opacity-0'
-            )}
-          >
-            <Input
-              id="search-members"
-              ref={searchInputRef}
-              placeholder="Search members..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              className={cn(
-                'border-primary-7 focus:border-primary-8 transition-all duration-200',
-                'text-primary-9 placeholder:text-primary-7 w-full min-w-[240px] bg-transparent',
-                'h-12! rounded-l-full rounded-r-none border-r-0 pl-8',
-                '[&_input]:text-primary-9 [&_input]:bg-transparent'
-              )}
-              disabled={!availableUsers?.length || mutation.isPending}
-            />
-          </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={handleSearchClick}
-            className={cn(
-              'text-primary-8 hover:text-primary-6 !p-2 transition-colors duration-200',
-              'border-primary-7 border',
-              'hover:border-primary-6 focus:border-primary-8 h-12! w-12!',
-              isSearchVisible
-                ? 'text-primary-6 border-primary-6 rounded-l-none! rounded-r-full! border-l-0! bg-transparent! focus-within:bg-transparent! hover:bg-transparent!'
-                : 'text-primary-8 w-12! rounded-full'
-            )}
-            disabled={!availableUsers?.length || mutation.isPending}
-          >
-            <SearchOutlined className="text-lg" />
-          </Button>
-        </div>
       </div>
 
-      <div className="h-full grow overflow-hidden px-3">
+      <div className="h-auto overflow-hidden px-3">
         <ConfigProvider
           renderEmpty={() => (
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description="No members available to add"
+              description="No invitations to display"
               className="text-white"
             />
           )}
         >
-          <div className="secondary-scrollbar mx-auto h-full w-full max-w-3xl overflow-y-auto">
+          <div
+            ref={listScrollRef}
+            className="secondary-scrollbar mx-auto h-full w-full max-w-3xl overflow-y-auto px-4"
+          >
             <List
-              id="project-list-users"
-              data-testid="project-list-users"
-              dataSource={filteredUsers}
+              id="virtual-lab-list-users"
+              data-testid="virtual-lab-list-users"
+              dataSource={inviteList}
               className="text-white"
-              renderItem={(member, index) => {
-                const isSelected = !!find(selectedMembers, { id: member.id });
-                const selectedMember = find(selectedMembers, { id: member.id });
-
-                return (
-                  <List.Item
-                    key={member.id || member.email}
-                    className="!border-primary-7 hover:bg-primary-9/10 !px-4 !py-3"
-                  >
-                    <div className="flex w-full items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Checkbox
-                          checked={isSelected}
-                          onChange={onSelectUser(member)}
-                          disabled={mutation.isPending}
-                        />
-                        <MemberAvatarCasual
-                          withEmail
-                          shape="circle"
-                          key={`member-${member.id || member.email}`}
-                          index={index}
-                          size="small"
-                          layout="horizontal"
-                          id={member.id || member.email}
-                          email={member.email}
-                          role={member.role}
-                          pending={false}
-                          name={
-                            member.id
-                              ? compact([get(member, 'first_name'), get(member, 'last_name')]).join(
-                                  ' '
-                                ) ||
-                                get(member, 'username') ||
-                                member.email
-                              : member.email
-                          }
-                          initials={extractInitials(
-                            member.id
-                              ? compact([get(member, 'first_name'), get(member, 'last_name')]).join(
-                                  ' '
-                                ) ||
-                                  get(member, 'username') ||
-                                  member.email
-                              : member.email
-                          )}
-                          cls={{
-                            text: 'text-white font-medium',
-                          }}
-                        />
-                      </div>
-                      {isSelected && (
-                        <Select
-                          value={selectedMember?.role || 'member'}
-                          onChange={(role) => onRoleChange(member, role)}
-                          options={roleOptions}
-                          size="large"
-                          className={cn(
-                            'min-w-[120px]',
-                            '[&_.ant-select-selector]:!border-primary-7 [&_.ant-select-selector]:!bg-transparent',
-                            '[&_.ant-select-selection-item]:!text-primary-8 [&_.ant-select-arrow]:!text-primary-8'
-                          )}
-                          disabled={mutation.isPending}
-                        />
-                      )}
+              renderItem={(invite, index) => (
+                <List.Item
+                  key={index}
+                  className="!border-primary-7 hover:bg-neutral-2/20 !px-4 !py-3"
+                >
+                  <div className="flex w-full items-start justify-start gap-3">
+                    <div className="flex-1">
+                      <EmailInput
+                        index={index}
+                        value={invite.email}
+                        onChange={(v) => updateInvite(index, 'email', v)}
+                        disabled={mutate.isPending}
+                        inviteList={inviteList}
+                      />
                     </div>
-                  </List.Item>
-                );
-              }}
+                    <Select
+                      value={invite?.role || 'member'}
+                      onChange={(role) => onRoleChange(invite, role)}
+                      options={roleOptions}
+                      disabled={!emailSchema.safeParse(invite.email).success}
+                      size="large"
+                      className={cn(
+                        'min-w-[120px]',
+                        '[&_.ant-select-selector]:!border-primary-7 [&_.ant-select-selector]:!bg-transparent',
+                        '[&_.ant-select-selection-item]:!text-primary-8 [&_.ant-select-arrow]:!text-primary-8',
+                        '[&.ant-select-disabled_.ant-select-selector]:border-neutral-2!',
+                        '[&.ant-select-disabled_.ant-select-selection-item]:text-neutral-3!',
+                        '[&.ant-select-disabled_.ant-select-arrow]:text-neutral-3!'
+                      )}
+                      // disabled={mutation.isPending}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="lg"
+                      rounded
+                      onClick={() => removeEmailField(index)}
+                      className={cn(
+                        'hover:bg-neutral-1 border-neutral-2 hover:text-destructive disabled:text-destructive/30',
+                        'text-destructive hover:not-disabled:shadow-bnb h-12! w-12 border !p-2'
+                      )}
+                      disabled={mutate.isPending || inviteList.length === 1}
+                    >
+                      <DeleteFilled className="text-lg" />
+                    </Button>
+                  </div>
+                </List.Item>
+              )}
             />
           </div>
         </ConfigProvider>
       </div>
+      <div className="mx-auto flex w-full max-w-3xl items-start justify-start p-4">
+        <Button
+          rounded
+          type="button"
+          variant="outline"
+          size="md"
+          onClick={addEmailField}
+          className={cn(
+            'border-primary-4 group bg-primary-9 hover:text-primary-4',
+            'px-4 text-white select-none hover:border-white',
+            'disabled:text-neutral-4 disabled:border-neutral-2 disabled:bg-transparent'
+          )}
+          disabled={mutate.isPending || disableAddMember}
+        >
+          <PlusOutlined className="mr-2" />
+          Add member
+        </Button>
+      </div>
 
-      <div className="mx-auto mt-auto flex w-full max-w-3xl flex-shrink-0 items-center justify-end px-3 pt-4">
+      <div className="mx-auto mt-auto flex w-full max-w-3xl flex-shrink-0 items-center justify-end px-8 pt-4">
         <div className="flex gap-3 self-end">
           <Button
             rounded
@@ -575,20 +599,26 @@ function AddMemberStep({ onBack, list, allowedOperation }: AddMemberStepProps) {
             variant="outline"
             size="lg"
             onClick={onBack}
-            disabled={mutation.isPending}
+            disabled={mutate.isPending}
           >
             Cancel
           </Button>
           <Button
             rounded
             type="button"
-            variant="default"
+            variant="outline"
             size="lg"
-            onClick={() => mutation.mutateAsync()}
-            disabled={isEmpty(selectedMembers) || mutation.isPending || !allowedOperation}
+            onClick={() => mutate.mutateAsync()}
+            disabled={mutate.isPending || !inviteList.some((invite) => invite.email)}
           >
-            Add {selectedMembers.length} member(s)
-            {mutation.isPending && <LoadingOutlined spin className="ml-2" />}
+            Send{' '}
+            {
+              inviteList.filter(
+                (invite) => invite.email && emailSchema.safeParse(invite.email).success
+              ).length
+            }{' '}
+            invitation(s)
+            {mutate.isPending && <LoadingOutlined spin className="ml-3" />}
           </Button>
         </div>
       </div>
@@ -808,11 +838,7 @@ export function TeamManager() {
     ))
     .with('add-member', () => (
       <div className="animate-fade-in h-full">
-        <AddMemberStep
-          onBack={handleBackToListing}
-          list={currentProjectTeam}
-          allowedOperation={allowedOperation}
-        />
+        <InviteMemberStep onBack={handleBackToListing} />
       </div>
     ))
     .otherwise(() => null);

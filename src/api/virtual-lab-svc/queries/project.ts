@@ -4,7 +4,7 @@ import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
 import { virtualLabApi } from '@/config';
 
 import type { ProjectResponse } from '@/types/virtual-lab/projects';
-import type { ProjectPayload } from '@/api/virtual-lab-svc/types';
+import type { ProjectPayload, Role } from '@/api/virtual-lab-svc/types';
 import type { WorkspaceContext } from '@/types/common';
 import type {
   ProjectCreationResponse,
@@ -174,4 +174,29 @@ export async function updateProject({
     },
     body: payload,
   });
+}
+
+type InvitePayload = {
+  email: string;
+  role: Role;
+};
+
+export async function inviteToProject({
+  virtualLabId,
+  projectId,
+  payload,
+}: WorkspaceContext & {
+  payload: InvitePayload;
+}) {
+  const api = await virtualLabRootApi();
+  return await api.patch<ProjectResponse>(
+    `/virtual-labs/${virtualLabId}/projects/${projectId}/invite`,
+    {
+      headers: {
+        accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: payload,
+    }
+  );
 }
