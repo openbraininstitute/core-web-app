@@ -61,7 +61,7 @@ function plotlyParamsFactory(plot: IonChannelRecordingPlot | undefined): {
   });
   const layout: Partial<Layout> = {
     showlegend: false,
-    margin: { b: 32, t: 4, l: 48, r: 4 },
+    margin: { b: 32, t: 4, l: 64, r: 4 },
     xaxis: { title: plot?.xAxisLabel },
     yaxis: { title: plot?.yAxisLabel },
   };

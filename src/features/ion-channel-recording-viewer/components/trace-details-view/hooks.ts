@@ -1,23 +1,36 @@
 import React from 'react';
 import { TgdColor } from '@tolokoban/tgd';
 
-import { IonChannelRecordingPlot } from '../../ion-channel-recording-parser';
 import { createPalette } from '../../colors';
+import {
+  IonChannelRecordingPlot,
+  IonChannelRecordingProtocol,
+  IonChannelRecordingRepetition,
+} from '../../ion-channel-recording-parser';
 
 export function usePlotParams(
-  plot: IonChannelRecordingPlot | undefined,
+  protocol: IonChannelRecordingProtocol | undefined,
+  repetition: IonChannelRecordingRepetition | undefined,
   colorMap: Map<string, string>,
   selectedLines: string[],
   preview: string | undefined
 ) {
   return React.useMemo(
     () => ({
-      plot,
-      colorMap,
-      selectedLines,
-      preview,
+      paramsRepetition: {
+        plot: repetition?.plot,
+        colorMap,
+        selectedLines,
+        preview,
+      },
+      paramsStimuli: {
+        plot: protocol?.stimuli,
+        colorMap,
+        selectedLines,
+        preview,
+      },
     }),
-    [plot, colorMap, selectedLines, preview]
+    [protocol, repetition, colorMap, selectedLines, preview]
   );
 }
 

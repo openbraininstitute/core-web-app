@@ -1,5 +1,6 @@
 import { TgdColor } from '@tolokoban/tgd';
 import { Dataset, File, ready } from 'h5wasm';
+import range from 'es-toolkit/compat/range';
 
 import { H5Parser } from './h5-parser';
 import { createPalette } from './colors';
@@ -57,7 +58,6 @@ export class IonChannelRecordingParser extends H5Parser {
     const timeseriesPath = ['acquisition', 'timeseries'];
     const timeseriesGroup = this.get(...timeseriesPath);
     const protocolsNames: string[] = this.isGroup(timeseriesGroup) ? timeseriesGroup.keys() : [];
-    let maxLinesPerPlot = 0;
     for (const protocolName of protocolsNames) {
       const protocolPath = [...timeseriesPath, protocolName];
       const protocolGroup = this.get(...protocolPath);
@@ -68,6 +68,7 @@ export class IonChannelRecordingParser extends H5Parser {
       const repetitionsGroup = this.get(...repetitionsPath);
       if (!repetitionsGroup || repetitionsGroup instanceof Dataset) continue;
 
+      let maxLinesPerPlot = 0;
       for (const repetitionName of repetitionsGroup.keys()) {
         const repetitionPath = [...repetitionsPath, repetitionName];
         const repetitionGroup = this.get(...repetitionPath);
@@ -131,56 +132,50 @@ export class IonChannelRecordingParser extends H5Parser {
     const [command] = commands;
     if (!command) return plot;
 
+    console.log(protocolName, '>', command);
     const stimuli = parseStimuli(command);
-    const [lowestVoltage, highestVoltage] = computeVoltageBounds(stimuli);
+    if (stimuli.length === 0) return plot;
+
     const palette = createPalette(linesPerPlot);
-    const pickColor = makeColorPicker(palette, lowestVoltage, highestVoltage);
-    let id = 1;
-    let start = 0;
-    let lastMin = 0;
-    let lastMax = 0;
-    let firstPart = true;
+    const timings: number[] = [];
+    const voltages: number[][] = [];
+    const voltagesTmp: number[] = [];
+    let time = 0;
     for (const [voltageMin, voltageStep, voltageMax, duration] of stimuli) {
-      const steps = voltageStep > 0 ? Math.ceil((voltageMax - voltageMin) / voltageStep) + 1 : 1;
-      const end = start + duration;
-      let lastValue = voltageMin;
-      for (let step = 0; step < steps; step++) {
-        const value = Math.min(voltageMin + step * voltageStep, voltageMax);
-        plot.lines.push({
-          id: `${id++}`,
-          x: [start, start, end, end],
-          y: [lastValue, value, value, lastValue],
-          color: pickColor(value),
-        });
-        lastValue = value;
-      }
-      if (firstPart) {
-        firstPart = false;
-      } else if (
-        !isBetween(voltageMin, lastMin, lastMax) &&
-        !isBetween(voltageMax, lastMin, lastMax)
-      ) {
-        // We need to add a vertical line to connect consecutive boxes.
-        if (voltageMin > lastMax) {
-          plot.lines.push({
-            id: `${id++}`,
-            x: [start, start],
-            y: [lastMax, voltageMin],
-            color: pickColor(voltageMin),
-          });
-        } else {
-          plot.lines.push({
-            id: `${id++}`,
-            x: [start, start],
-            y: [lastMin, voltageMax],
-            color: pickColor(voltageMax),
-          });
+      timings.push(time);
+      time += duration;
+      timings.push(time);
+      if (voltageStep > 0) {
+        for (const value of range(
+          voltageMin,
+          Math.round(voltageMax + voltageStep / 2),
+          voltageStep
+        )) {
+          voltages.push([...voltagesTmp, value, value]);
         }
+      } else if (voltages.length > 0) {
+        for (const voltage of voltages) {
+          voltage.push(voltageMin, voltageMax);
+        }
+      } else {
+        voltagesTmp.push(voltageMin, voltageMax);
       }
-      lastMin = voltageMin;
-      lastMax = voltageMax;
-      start = end;
     }
+    if (voltages.length === 0) voltages.push(voltagesTmp);
+    let id = 0;
+    for (const voltage of voltages) {
+      plot.lines.push({
+        id: `${id}`,
+        x: timings,
+        y: voltage,
+        color: TgdColor.fromPaletteClosest(
+          id / Math.max(1, voltages.length - 1),
+          palette
+        ).toString(),
+      });
+      id++;
+    }
+    console.log('🚀 [ion-channel-recording-parser] linesPerPlot, plot =', linesPerPlot, plot); // @FIXME: Remove this line written on 2025-10-28 at 10:11
     return plot;
   }
 
@@ -188,7 +183,7 @@ export class IonChannelRecordingParser extends H5Parser {
     const data = this.extractData(path);
     const palette = createPalette(data.length);
     return data.map((y, i) => ({
-      id: this.extractId(path, i),
+      id: `${i}`,
       x: this.extractTimeAxis(path, i, y.length),
       y,
       color: palette[i],
@@ -218,12 +213,6 @@ export class IonChannelRecordingParser extends H5Parser {
     }
     return data;
   }
-
-  private extractId(path: string[], index: number): string {
-    const dataset = this.getArrayNumber2D(...path, 'trace_ids');
-    const id = dataset?.[index]?.[0];
-    return id ? `${id}` : `#${index + 1}`;
-  }
 }
 
 type Stimulus = [coltageMin: number, voltageStep: number, voltageMax: number, duration: number];
@@ -237,12 +226,6 @@ function isStimulus(stimulus: unknown): stimulus is Stimulus {
   return true;
 }
 
-function isBetween(value: number, min: number, max: number) {
-  const actualMin = Math.min(min, max);
-  const actualMax = Math.max(min, max);
-  return actualMin <= value && value <= actualMax;
-}
-
 function parseStimuli(command: string): Stimulus[] {
   const stimuli: Stimulus[] = [];
   const parts = command.split(';');
@@ -253,30 +236,4 @@ function parseStimuli(command: string): Stimulus[] {
     stimuli.push(stimulus);
   }
   return stimuli;
-}
-
-function computeVoltageBounds(stimuli: Stimulus[]) {
-  let min = Number.POSITIVE_INFINITY;
-  let max = Number.NEGATIVE_INFINITY;
-  for (const [voltageMin, , voltageMax] of stimuli) {
-    min = Math.min(min, voltageMin);
-    max = Math.max(max, voltageMax);
-  }
-  return [min, max];
-}
-
-function makeColorPicker(
-  palette: string[],
-  lowestVoltage: number,
-  highestVoltage: number
-): (voltage: number) => string {
-  if (lowestVoltage === highestVoltage)
-    return () => TgdColor.fromPaletteLinear(0, palette).toString();
-
-  const divisor = 1 / (highestVoltage - lowestVoltage);
-  return (voltage: number) => {
-    const factor = (voltage - lowestVoltage) * divisor;
-    const color = TgdColor.fromPaletteClosest(factor, palette).toString();
-    return color;
-  };
 }

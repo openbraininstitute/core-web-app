@@ -13,4 +13,13 @@
     width: 100%;
     height: 30vh;
   }
+
+  h3 {
+    text-transform: capitalize;
+    color: var(--color-primary-9);
+    font-weight: var(--font-weight-light);
+    font-size: var(--text-lg);
+    line-height: var(--tw-leading, var(--text-lg--line-height));
+    text-indent: calc(var(--spacing) * 3);
+  }
 }

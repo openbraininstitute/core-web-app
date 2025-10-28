@@ -4,11 +4,12 @@ import { TgdColor } from '@bbp/morphoviewer';
 import { IonChannelRecordingPlotLine } from '../../ion-channel-recording-parser';
 import { usePlotParams } from './hooks';
 
-export function factory(params: ReturnType<typeof usePlotParams>): {
+export function factory(params: ReturnType<typeof usePlotParams>['paramsRepetition']): {
   data: Data[];
   layout: Partial<Layout>;
 } {
   const { plot, colorMap, preview, selectedLines } = params;
+  console.log('🚀 [factory] params =', params); // @FIXME: Remove this line written on 2025-10-28 at 11:06
   const [invisibles, visibles] = splitLinesByVisibility(plot?.lines, selectedLines, preview);
   const data: Data[] = [
     ...invisibles.map((line) => {
@@ -40,7 +41,7 @@ export function factory(params: ReturnType<typeof usePlotParams>): {
   ];
   const layout: Partial<Layout> = {
     showlegend: false,
-    margin: { b: 32, t: 4, l: 48, r: 4 },
+    margin: { b: 32, t: 4, l: 64, r: 4 },
     xaxis: { title: plot?.xAxisLabel },
     yaxis: { title: plot?.yAxisLabel },
   };
