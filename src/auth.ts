@@ -8,6 +8,17 @@ const issuer = env.KEYCLOAK_ISSUER;
 const clientId = env.KEYCLOAK_CLIENT_ID;
 const clientSecret = env.KEYCLOAK_CLIENT_SECRET;
 
+/**
+ * Updates or inserts a refresh token in the authentication manager service.
+ *
+ * This function sends the refresh token to the auth manager's refresh-token endpoint
+ * to keep it synchronized with the current authentication state. It's called during
+ * initial sign-in and token refresh operations to ensure the auth manager has
+ * the latest refresh token available.
+ *
+ * @param accessToken - The current access token used for authorization with the auth manager
+ * @param refreshToken - The refresh token to be stored/updated in the auth manager
+ */
 async function upsertRefreshTokenInAuthManager({
   accessToken,
   refreshToken,
@@ -61,6 +72,7 @@ export async function refreshAccessToken(token: TokenSet) {
     if (!response.ok) {
       throw refreshedTokens;
     }
+    // eslint-disable-next-line no-void
     void (async () => {
       await upsertRefreshTokenInAuthManager({
         accessToken: refreshedTokens.access_token,
@@ -120,14 +132,14 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, account, user, profile }) {
       // Initial sign in
       if (account && user) {
-        if (account.access_token && account.refresh_token) {
-          void (async () => {
+        // eslint-disable-next-line no-void
+        void (async () => {
+          if (account && account.access_token && account.refresh_token)
             await upsertRefreshTokenInAuthManager({
               accessToken: account.access_token,
               refreshToken: account.refresh_token,
             });
-          })();
-        }
+        })();
         return {
           ...token,
           accessToken: account.access_token,
