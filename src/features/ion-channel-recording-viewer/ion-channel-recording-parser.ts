@@ -1,6 +1,5 @@
 import { TgdColor } from '@tolokoban/tgd';
 import { Dataset, File, ready } from 'h5wasm';
-import range from 'es-toolkit/compat/range';
 
 import { H5Parser } from './h5-parser';
 import { createPalette } from './colors';
@@ -132,7 +131,7 @@ export class IonChannelRecordingParser extends H5Parser {
     const commands = this.getArrayString('stimulus', 'presentation', protocolName, 'command');
     if (!commands) return plot;
 
-    const [command] = commands;
+    const command = commands.join(';');
     if (!command) return plot;
 
     const palette = createPalette(linesPerPlot);
@@ -149,43 +148,34 @@ export class IonChannelRecordingParser extends H5Parser {
     const stimuli = parseStimuli(command);
     if (stimuli.length === 0) return plot;
 
-    const timings: number[] = [];
-    const voltages: number[][] = [];
-    const voltagesTmp: number[] = [];
-    let time = 0;
-    for (const [voltageMin, voltageStep, voltageMax, duration] of stimuli) {
-      timings.push(time);
-      time += duration;
-      timings.push(time);
-      if (voltageStep > 0) {
-        for (const value of range(
-          voltageMin,
-          Math.round(voltageMax + voltageStep / 2),
-          voltageStep
-        )) {
-          voltages.push([...voltagesTmp, value, value]);
-        }
-      } else if (voltages.length > 0) {
-        for (const voltage of voltages) {
-          voltage.push(voltageMin, voltageMax);
-        }
-      } else {
-        voltagesTmp.push(voltageMin, voltageMax);
-      }
-    }
-    if (voltages.length === 0) voltages.push(voltagesTmp);
-    let id = 0;
-    for (const voltage of voltages) {
-      plot.lines.push({
-        id: `${id}`,
-        x: timings,
-        y: voltage,
+    const stimuliLinesCount = countStimuliLines(stimuli);
+    for (let lineIndex = 0; lineIndex < stimuliLinesCount; lineIndex++) {
+      const line: IonChannelRecordingPlotLine = {
+        id: `${lineIndex}`,
         color: TgdColor.fromPaletteClosest(
-          id / Math.max(1, voltages.length - 1),
+          lineIndex / Math.max(1, stimuliLinesCount - 1),
           palette
         ).toString(),
-      });
-      id++;
+        x: [],
+        y: [],
+      };
+      plot.lines.push(line);
+      let time = 0;
+      for (const stimulus of stimuli) {
+        if (stimulus.length === 4) {
+          const [voltageMin, voltageStep, , duration] = stimulus;
+          line.x.push(time, time + duration);
+          const voltage = voltageMin + lineIndex * voltageStep;
+          line.y.push(voltage, voltage);
+          time += duration;
+        } else {
+          const [voltageMin, , , durationMin, durationStep] = stimulus;
+          const duration = durationMin + lineIndex * durationStep;
+          line.x.push(time, time + duration);
+          line.y.push(voltageMin, voltageMin);
+          time += duration;
+        }
+      }
     }
     if (plot.lines.length === 1) {
       plot.lines[0].color = '#000';
@@ -217,24 +207,52 @@ export class IonChannelRecordingParser extends H5Parser {
   }
 
   private extractData(path: string[]): number[][] {
-    const rawData = this.getArrayNumber2D(...path, 'data');
-    if (!rawData) return [];
+    const entityData = this.get(...path, 'data');
+    if (!entityData) return [];
 
+    if (this.isDataset(entityData)) {
+      const rawData = this.getArrayNumber2D(...path, 'data');
+      if (!rawData) {
+        const group = this.get(...path);
+        this.debug(group);
+        return [];
+      }
+
+      const data: number[][] = [];
+      const count = rawData[0].length;
+      for (let i = 0; i < count; i++) {
+        const array: number[] = rawData.map((serie) => serie[i]);
+        data.push(array);
+      }
+      return data;
+    }
+    // Special case: `data` is a group with a list of datasets named
+    // `data1`, `data2`, ...
     const data: number[][] = [];
-    const count = rawData[0].length;
-    for (let i = 0; i < count; i++) {
-      const array: number[] = rawData.map((serie) => serie[i]);
-      data.push(array);
+    for (let datasetIndex = 1; datasetIndex < 1e3; datasetIndex++) {
+      const dataset = this.getArrayNumber2D(...path, 'data', `data${datasetIndex}`, 'data');
+      if (!dataset) break;
+
+      data.push(dataset.map((serie) => serie[0]));
     }
     return data;
   }
 }
 
-type Stimulus = [coltageMin: number, voltageStep: number, voltageMax: number, duration: number];
+type Stimulus =
+  | [coltageMin: number, voltageStep: number, voltageMax: number, duration: number]
+  | [
+      coltageMin: number,
+      voltageStep: number,
+      voltageMax: number,
+      durationMin: number,
+      durationStep: number,
+      durationMax: number,
+    ];
 
 function isStimulus(stimulus: unknown): stimulus is Stimulus {
   if (!Array.isArray(stimulus)) return false;
-  if (stimulus.length < 4) return false;
+  if (stimulus.length !== 4 && stimulus.length !== 6) return false;
   for (const value of stimulus) {
     if (typeof value !== 'number') return false;
   }
@@ -255,4 +273,32 @@ function parseStimuli(command: string): Stimulus[] {
 
 function isCoordinates(data: unknown): data is { x: number[]; y: number[] } {
   return isType(data, { x: ['array', 'number'], y: ['array', 'number'] });
+}
+
+function countStimuliLines(stimuli: Stimulus[]) {
+  let count = 0;
+  for (const stimulus of stimuli) {
+    if (stimulus.length === 4) {
+      const [voltageMin, voltageStep, voltageMax] = stimulus;
+      if (voltageMax > voltageMin && voltageStep > 0) {
+        count = Math.max(
+          Math.ceil((0.5 * voltageStep + voltageMax - voltageMin) / voltageStep),
+          count
+        );
+      } else {
+        count = Math.max(1, count);
+      }
+    } else {
+      const [, , , durationMin, durationStep, durationMax] = stimulus;
+      if (durationMax > durationMin && durationStep > 0) {
+        count = Math.max(
+          Math.ceil((0.5 * durationStep + durationMax - durationMin) / durationStep),
+          count
+        );
+      } else {
+        count = Math.max(1, count);
+      }
+    }
+  }
+  return count;
 }

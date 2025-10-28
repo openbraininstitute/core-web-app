@@ -72,15 +72,17 @@ export function TraceDetailsView({ trace }: TraceDetailsViewProps) {
         colorMap={colorMap}
         sweepOptions={(repetition?.plot.lines ?? []).map(({ id }) => ({ label: id, value: id }))}
       />
-      {(paramsStimuli.plot?.lines ?? []).length > 0 && (
+      <div className={styles.plots}>
+        {(paramsStimuli.plot?.lines ?? []).length > 0 && (
+          <div>
+            <h3>Stimuli</h3>
+            <GenericPlot className={styles.plot} data={paramsStimuli} factory={factory} />
+          </div>
+        )}
         <div>
-          <h3>Stimuli</h3>
-          <GenericPlot className={styles.plot} data={paramsStimuli} factory={factory} />
+          <h3>Repetition</h3>
+          <GenericPlot className={styles.plot} data={paramsRepetition} factory={factory} />
         </div>
-      )}
-      <div>
-        <h3>Repetition</h3>
-        <GenericPlot className={styles.plot} data={paramsRepetition} factory={factory} />
       </div>
     </div>
   );

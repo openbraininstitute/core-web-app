@@ -21,5 +21,23 @@
     font-size: var(--text-lg);
     line-height: var(--tw-leading, var(--text-lg--line-height));
     text-indent: calc(var(--spacing) * 3);
+    text-align: center;
+  }
+
+  .plots {
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1em;
+    width: 100%;
+    margin: 1em 0;
+    padding: 0;
+
+    > div {
+      width: 100%;
+      flex: 1 1 auto;
+    }
   }
 }
