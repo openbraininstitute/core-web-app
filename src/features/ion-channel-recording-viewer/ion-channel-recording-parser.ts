@@ -136,7 +136,6 @@ export class IonChannelRecordingParser extends H5Parser {
     if (!command) return plot;
 
     const palette = createPalette(linesPerPlot);
-    console.log(protocolName, '>', command);
     if (command === 'APWaveform_50KHz' && isCoordinates(APWaveform_50KHz)) {
       // Special case. We have a constant plot for that.
       plot.lines.push({
@@ -188,7 +187,6 @@ export class IonChannelRecordingParser extends H5Parser {
       });
       id++;
     }
-    console.log('🚀 [ion-channel-recording-parser] linesPerPlot, plot =', linesPerPlot, plot); // @FIXME: Remove this line written on 2025-10-28 at 10:11
     return plot;
   }
 

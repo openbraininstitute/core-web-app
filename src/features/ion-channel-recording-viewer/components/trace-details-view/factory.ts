@@ -9,7 +9,6 @@ export function factory(params: ReturnType<typeof usePlotParams>['paramsRepetiti
   layout: Partial<Layout>;
 } {
   const { plot, colorMap, preview, selectedLines } = params;
-  console.log('🚀 [factory] params =', params); // @FIXME: Remove this line written on 2025-10-28 at 11:06
   const [invisibles, visibles] = splitLinesByVisibility(plot?.lines, selectedLines, preview);
   const data: Data[] = [
     ...invisibles.map((line) => {
