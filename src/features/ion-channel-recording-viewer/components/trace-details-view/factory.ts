@@ -21,6 +21,10 @@ export function factory(params: ReturnType<typeof usePlotParams>['paramsRepetiti
           color: addTransparency(line.color ?? colorMap.get(line.id)),
           width: 0.75,
         },
+        marker: {
+          size: 0,
+          opacity: 0,
+        },
       };
 
       return LineData;
@@ -33,6 +37,10 @@ export function factory(params: ReturnType<typeof usePlotParams>['paramsRepetiti
         line: {
           color: line.color ?? colorMap.get(line.id),
           width: 0.75,
+        },
+        marker: {
+          size: 0,
+          opacity: 0,
         },
       };
 

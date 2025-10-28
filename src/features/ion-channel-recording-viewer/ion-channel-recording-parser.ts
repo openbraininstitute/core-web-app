@@ -5,6 +5,9 @@ import range from 'es-toolkit/compat/range';
 import { H5Parser } from './h5-parser';
 import { createPalette } from './colors';
 
+import APWaveform_50KHz from './APWaveform_50KHz.json';
+import { isType } from '@/util/type-guards';
+
 export interface IonChannelRecordingProtocol {
   name: string;
   repetitions: IonChannelRecordingRepetition[];
@@ -132,11 +135,21 @@ export class IonChannelRecordingParser extends H5Parser {
     const [command] = commands;
     if (!command) return plot;
 
+    const palette = createPalette(linesPerPlot);
     console.log(protocolName, '>', command);
+    if (command === 'APWaveform_50KHz' && isCoordinates(APWaveform_50KHz)) {
+      // Special case. We have a constant plot for that.
+      plot.lines.push({
+        ...APWaveform_50KHz,
+        id: '0',
+        color: palette[0],
+      });
+      return plot;
+    }
+
     const stimuli = parseStimuli(command);
     if (stimuli.length === 0) return plot;
 
-    const palette = createPalette(linesPerPlot);
     const timings: number[] = [];
     const voltages: number[][] = [];
     const voltagesTmp: number[] = [];
@@ -236,4 +249,8 @@ function parseStimuli(command: string): Stimulus[] {
     stimuli.push(stimulus);
   }
   return stimuli;
+}
+
+function isCoordinates(data: unknown): data is { x: number[]; y: number[] } {
+  return isType(data, { x: ['array', 'number'], y: ['array', 'number'] });
 }
