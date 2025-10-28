@@ -22,12 +22,14 @@ export function usePlotParams(
         colorMap,
         selectedLines,
         preview,
+        lineWidth: 1,
       },
       paramsStimuli: {
         plot: protocol?.stimuli,
         colorMap,
         selectedLines,
         preview,
+        lineWidth: 2,
       },
     }),
     [protocol, repetition, colorMap, selectedLines, preview]

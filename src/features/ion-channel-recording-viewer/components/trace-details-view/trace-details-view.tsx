@@ -53,14 +53,16 @@ export function TraceDetailsView({ trace }: TraceDetailsViewProps) {
             <div key={name}>{name}</div>
           ))}
         />
-        <OptionSelect
-          label={{ title: 'Repetition', numberOfAvailable: repetitionsNames.length }}
-          value={repetitionName}
-          onChange={setRepetitionName}
-          options={repetitionsNames.map((name) => (
-            <div key={name}>{name}</div>
-          ))}
-        />
+        {repetitionsNames.length > 1 && (
+          <OptionSelect
+            label={{ title: 'Repetition', numberOfAvailable: repetitionsNames.length }}
+            value={repetitionName}
+            onChange={setRepetitionName}
+            options={repetitionsNames.map((name) => (
+              <div key={name}>{name}</div>
+            ))}
+          />
+        )}
       </header>
       <SweepSelector
         onPreviewSweep={lines.setPreview}

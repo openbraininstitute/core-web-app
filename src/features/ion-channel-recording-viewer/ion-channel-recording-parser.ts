@@ -8,9 +8,6 @@ import { createPalette } from './colors';
 import APWaveform_50KHz from './APWaveform_50KHz.json';
 import { isType } from '@/util/type-guards';
 
-import APWaveform_50KHz from './APWaveform_50KHz.json';
-import { isType } from '@/util/type-guards';
-
 export interface IonChannelRecordingProtocol {
   name: string;
   repetitions: IonChannelRecordingRepetition[];
@@ -143,8 +140,8 @@ export class IonChannelRecordingParser extends H5Parser {
       // Special case. We have a constant plot for that.
       plot.lines.push({
         ...APWaveform_50KHz,
-        id: '0',
-        color: palette[0],
+        id: 'Single line',
+        color: '#000',
       });
       return plot;
     }
@@ -189,6 +186,10 @@ export class IonChannelRecordingParser extends H5Parser {
         ).toString(),
       });
       id++;
+    }
+    if (plot.lines.length === 1) {
+      plot.lines[0].color = '#000';
+      plot.lines[0].id = 'Single line';
     }
     return plot;
   }

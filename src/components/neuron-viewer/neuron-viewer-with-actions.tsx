@@ -13,6 +13,7 @@ import type {
   TNeuronViewerClickData,
   TNeuronViewerHoverData,
 } from '@/services/bluenaas-single-cell/renderer';
+import { WebglNeuronSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector';
 // import { WebglNeuronSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector/webgl-neuron-selector';
 
 type Props = {
@@ -27,7 +28,7 @@ type Props = {
   projectId: string;
   sessionId: string;
 };
-export function xNeuronViewerContainer({
+export function NeuronViewerContainer({
   meModelId,
   zoomPlacement = 'right',
   useZoomer = false,
@@ -44,7 +45,7 @@ export function xNeuronViewerContainer({
     useState<TNeuronViewerClickData | null>(null);
   const [neuronViewerHoverData, setNeuronViewerOnHoverData] =
     useState<TNeuronViewerHoverData | null>(null);
-  const newViewer = true;
+  const newViewer = false;
 
   return (
     <ErrorBoundary

@@ -8,8 +8,13 @@ export function factory(params: ReturnType<typeof usePlotParams>['paramsRepetiti
   data: Data[];
   layout: Partial<Layout>;
 } {
-  const { plot, colorMap, preview, selectedLines } = params;
-  const [invisibles, visibles] = splitLinesByVisibility(plot?.lines, selectedLines, preview);
+  const { plot, colorMap, preview, selectedLines, lineWidth = 1 } = params;
+  const [invisibles, visibles] = splitLinesByVisibility(
+    plot?.lines,
+    selectedLines,
+    preview,
+    colorMap.size
+  );
   const data: Data[] = [
     ...invisibles.map((line) => {
       const LineData: Data = {
@@ -18,7 +23,7 @@ export function factory(params: ReturnType<typeof usePlotParams>['paramsRepetiti
         name: line.id,
         line: {
           color: addTransparency(line.color ?? colorMap.get(line.id)),
-          width: 0.75,
+          width: lineWidth,
         },
         marker: {
           size: 0,
@@ -35,7 +40,7 @@ export function factory(params: ReturnType<typeof usePlotParams>['paramsRepetiti
         name: line.id,
         line: {
           color: line.color ?? colorMap.get(line.id),
-          width: 0.75,
+          width: lineWidth,
         },
         marker: {
           size: 0,
@@ -59,17 +64,23 @@ export function factory(params: ReturnType<typeof usePlotParams>['paramsRepetiti
 function splitLinesByVisibility(
   lines: IonChannelRecordingPlotLine[] | undefined,
   selectedLines: string[],
-  preview: string | undefined
+  preview: string | undefined,
+  colorsCount: number
 ): [IonChannelRecordingPlotLine[], IonChannelRecordingPlotLine[]] {
   if (!lines) return [[], []];
 
-  const isVisible = (line: IonChannelRecordingPlotLine) => {
-    const { id } = line;
-    if (preview) return [...selectedLines, preview].includes(id);
-    if (selectedLines.length > 0) return selectedLines.includes(id);
-    return true;
-  };
-  const isInvisible = (line: IonChannelRecordingPlotLine) => !isVisible(line);
+  const specialCase = colorsCount !== lines?.length;
+  const isVisible = specialCase
+    ? () => true
+    : (line: IonChannelRecordingPlotLine) => {
+        const { id } = line;
+        if (preview) return [...selectedLines, preview].includes(id);
+        if (selectedLines.length > 0) return selectedLines.includes(id);
+        return true;
+      };
+  const isInvisible = specialCase
+    ? () => false
+    : (line: IonChannelRecordingPlotLine) => !isVisible(line);
 
   return [lines.filter(isInvisible), lines.filter(isVisible)];
 }
