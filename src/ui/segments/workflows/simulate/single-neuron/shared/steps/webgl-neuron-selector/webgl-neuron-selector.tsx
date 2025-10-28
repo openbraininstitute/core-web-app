@@ -7,6 +7,7 @@ import { useMorphology } from '@/hooks/use-morphology';
 import { Morphology } from '@/services/bluenaas-single-cell/types';
 
 import styles from './webgl-neuron-selector.module.css';
+import Hint from './hint';
 
 export interface WebglNeuronSelectorProps {
   projectId: string;
@@ -32,12 +33,15 @@ export function WebglNeuronSelector({
   if (loading) return <Loading />;
 
   return (
-    <canvas
-      className={styles.main}
-      ref={(canvas: HTMLCanvasElement | null) => {
-        painterManager.canvas = canvas;
-      }}
-    />
+    <div className={styles.main}>
+      <canvas
+        key="canvas"
+        ref={(canvas: HTMLCanvasElement | null) => {
+          painterManager.canvas = canvas;
+        }}
+      />
+      <Hint painterManager={painterManager} />
+    </div>
   );
 }
 

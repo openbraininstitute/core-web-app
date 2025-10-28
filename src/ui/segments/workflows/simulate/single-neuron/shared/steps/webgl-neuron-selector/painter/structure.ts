@@ -1,10 +1,13 @@
 import { ArrayNumber3, TgdVec3 } from '@tolokoban/tgd';
 
 import { Morphology } from '@/services/bluenaas-single-cell/types';
+import { logWarn } from '@/utils/logger';
 
 export enum StructureItemType {
   Soma = 0,
   Dendrite,
+  ApicalDendrite,
+  Myelin,
   Axon,
   Selected,
   Unknown,
@@ -12,10 +15,14 @@ export enum StructureItemType {
 export interface StructureItem {
   index: number;
   name: string;
+  sectionIndex: number;
+  segmentIndex: number;
+  segmentsCount: number;
   start: ArrayNumber3;
   end: ArrayNumber3;
   radius: number;
   type: StructureItemType;
+  distanceFromSoma: number;
 }
 
 export interface StructureBoundingBox {
@@ -42,16 +49,29 @@ export class Structure {
     for (const sectionName of sectionNames) {
       const isSoma = sectionName.toLowerCase().startsWith('soma');
       const section = morphology[sectionName];
-      for (let i = 0; i < section.nseg; i++) {
-        const start: ArrayNumber3 = [section.xstart[i], section.ystart[i], section.zstart[i]];
-        const end: ArrayNumber3 = [section.xend[i], section.yend[i], section.zend[i]];
+      let distanceFromSoma = section.distance_from_soma;
+      for (let segmentIndex = 0; segmentIndex < section.nseg; segmentIndex++) {
+        const start: ArrayNumber3 = [
+          section.xstart[segmentIndex],
+          section.ystart[segmentIndex],
+          section.zstart[segmentIndex],
+        ];
+        const end: ArrayNumber3 = [
+          section.xend[segmentIndex],
+          section.yend[segmentIndex],
+          section.zend[segmentIndex],
+        ];
         this.items.push({
           start,
           end,
-          radius: section.diam[i] / 2,
+          radius: section.diam[segmentIndex] / 2,
           index: this.items.length,
-          name: `${sectionName}[${i}]`,
+          name: `${sectionName}[${segmentIndex}]`,
+          sectionIndex: resolveSectionIndex(sectionName),
+          segmentIndex,
+          segmentsCount: section.nseg,
           type: resolveType(sectionName),
+          distanceFromSoma: isSoma ? 0 : distanceFromSoma,
         });
         if (isSoma) {
           somaCounts++;
@@ -59,6 +79,7 @@ export class Structure {
           somaCounts++;
           somaCenter.add(end);
         } else {
+          distanceFromSoma += section.length[segmentIndex];
           bbox.min = computeMin(bbox.min, start);
           bbox.max = computeMax(bbox.max, start);
           bbox.min = computeMin(bbox.min, end);
@@ -103,7 +124,24 @@ function resolveType(sectionName: string): StructureItemType {
       return StructureItemType.Axon;
     case 'dend':
       return StructureItemType.Dendrite;
+    case 'apic':
+      return StructureItemType.ApicalDendrite;
+    case 'myel':
+      return StructureItemType.Myelin;
     default:
+      // eslint-disable-next-line no-console
+      logWarn('Unknown section type:', sectionName);
       return StructureItemType.Unknown;
   }
+}
+
+/**
+ * The section index is at the end of the name, surrounded by square brackets.
+ *
+ * Example: `dend[32]`
+ */
+function resolveSectionIndex(sectionName: string): number {
+  const i = sectionName.indexOf('[');
+  const suffix = sectionName.slice(i + 1);
+  return parseInt(suffix.slice(0, suffix.length - 1), 10);
 }

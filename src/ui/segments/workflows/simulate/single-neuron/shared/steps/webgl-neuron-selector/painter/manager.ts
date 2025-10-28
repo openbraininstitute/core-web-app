@@ -1,32 +1,46 @@
 import React from 'react';
 import {
+  ArrayNumber2,
   tgdCalcDegToRad,
   tgdCanvasCreatePalette,
   TgdContext,
   TgdControllerCameraOrbit,
   TgdMaterialDiffuse,
+  TgdMaterialFlat,
+  TgdPainter,
   TgdPainterClear,
   TgdPainterSegments,
+  TgdPainterSegmentsData,
   TgdPainterState,
   TgdTexture2D,
+  webglPresetBlend,
   webglPresetDepth,
 } from '@tolokoban/tgd';
 
 import { makeSegments } from './segments';
 import { makeCamera } from './camera';
-import { Structure, StructureItemType } from './structure';
+import { Structure, StructureItem, StructureItemType } from './structure';
 import { OffscreenPainter } from './offscreen-painter';
 
 import { Morphology } from '@/services/bluenaas-single-cell/types';
+import GenericEvent from '@/util/generic-event';
 
 const PALETTE: string[] = [];
-PALETTE[StructureItemType.Axon] = '#05c';
-PALETTE[StructureItemType.Dendrite] = '#06b';
-PALETTE[StructureItemType.Selected] = '#fb0';
-PALETTE[StructureItemType.Soma] = '#777';
-PALETTE[StructureItemType.Unknown] = '#00d';
+PALETTE[StructureItemType.Axon] = '#b00';
+PALETTE[StructureItemType.Dendrite] = '#F44';
+PALETTE[StructureItemType.ApicalDendrite] = '#F88';
+PALETTE[StructureItemType.Myelin] = `#f38`;
+PALETTE[StructureItemType.Selected] = '#fc0';
+PALETTE[StructureItemType.Soma] = '#afa';
+PALETTE[StructureItemType.Unknown] = '#a6f';
 
 export class PainterManager {
+  public readonly eventHover = new GenericEvent<{
+    x: number;
+    y: number;
+    item: StructureItem | null;
+  }>();
+
   private _context: TgdContext | null = null;
 
   private _morphology: Morphology | null = null;
@@ -34,6 +48,12 @@ export class PainterManager {
   private _canvas: HTMLCanvasElement | null = null;
 
   private _offscreen: OffscreenPainter | null = null;
+
+  private _palette: TgdTexture2D | null = null;
+
+  private _hoverPainter: TgdPainter | null = null;
+
+  private _hoverItem: StructureItem | null = null;
 
   get canvas() {
     return this._canvas;
@@ -71,6 +91,7 @@ export class PainterManager {
       alpha: false,
       antialias: true,
     });
+    this._context = context;
     context.camera = makeCamera(structure.bbox);
     const palette = new TgdTexture2D(context)
       .loadBitmap(tgdCanvasCreatePalette(PALETTE))
@@ -78,20 +99,26 @@ export class PainterManager {
         magFilter: 'NEAREST',
         minFilter: 'NEAREST',
       });
+    this._palette = palette;
+    const groupHover = new TgdPainterState(context, {
+      blend: webglPresetBlend.add,
+    });
     context.add(
       new TgdPainterClear(context, { color: [0, 0, 0, 1], depth: 1 }),
       new TgdPainterState(context, {
-        depth: webglPresetDepth.lessOrEqual,
+        depth: webglPresetDepth.less,
         children: [
           new TgdPainterSegments(context, {
-            minRadius: 0.25,
+            minRadius: 1,
             makeDataset: segments.makeDataset,
             material: new TgdMaterialDiffuse({
               color: palette,
-              specularExponent: 20,
-              specularIntensity: 0.5,
+              specularExponent: 1,
+              specularIntensity: 0.25,
+              lockLightsToCamera: true,
             }),
           }),
+          groupHover,
         ],
       })
     );
@@ -113,6 +140,48 @@ export class PainterManager {
     orbitter.enabled = true;
 
     this._offscreen = new OffscreenPainter(context, structure);
+    // context.inputs.pointer.eventHover.addListener((evt) => {
+    context.inputs.pointer.eventHover.addListener((evt) => {
+      const { x, y } = evt.current;
+      const item = this._offscreen?.getItemAt(x, y) ?? null;
+      if (item !== this._hoverItem) {
+        if (this._hoverPainter) {
+          groupHover.remove(this._hoverPainter);
+          context.paint();
+        }
+        this._hoverItem = item ?? null;
+        this.eventHover.dispatch({ x, y, item });
+        if (item) {
+          this._hoverPainter = this.makeHoverPainter(item);
+          if (this._hoverPainter) {
+            groupHover.add(this._hoverPainter);
+          }
+        }
+        context.paint();
+      }
+    });
+  }
+
+  private makeHoverPainter(item: StructureItem): TgdPainter | null {
+    const { _context: context, _palette: palette } = this;
+    if (!context || !palette) return null;
+
+    const segments = new TgdPainterSegmentsData();
+    const uv: ArrayNumber2 = [
+      (StructureItemType.Selected + 0.5) / (StructureItemType.Unknown + 1),
+      0,
+    ];
+    const radius = item.radius * 1.4;
+    segments.add([...item.start, radius], [...item.end, radius], uv, uv);
+
+    return new TgdPainterSegments(context, {
+      roundness: 32,
+      minRadius: 1.5,
+      makeDataset: segments.makeDataset,
+      material: new TgdMaterialFlat({
+        color: [0.6, 0.4, 0.1, 1],
+      }),
+    });
   }
 }
 
