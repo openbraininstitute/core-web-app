@@ -8,6 +8,7 @@ import { useMorphology } from '@/hooks/use-morphology';
 import { Morphology } from '@/services/bluenaas-single-cell/types';
 
 import styles from './webgl-neuron-selector.module.css';
+import Hint from './hint';
 
 export interface WebglNeuronSelectorProps {
   projectId: string;
