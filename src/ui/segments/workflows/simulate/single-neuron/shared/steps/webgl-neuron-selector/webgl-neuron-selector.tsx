@@ -1,12 +1,14 @@
 import React from 'react';
-import { LoadingOutlined } from '@ant-design/icons';
 
 import { usePainterManager } from './painter';
-
 import Hint from './hint';
 import ZoomSlider from './zoom-slider';
-import { useMorphology } from '@/hooks/use-morphology';
-import { Morphology } from '@/services/bluenaas-single-cell/types';
+import { useCleanMorphology } from './hooks';
+
+import AddRecordingDialog from './add-recording-dialog';
+import { IconCenter } from '@/components/icons/Center';
+import Tooltip from '@/components/tooltip';
+import { NeuronLoader } from '@/components/neuron-viewer/plugins/neuron-loader';
 
 import styles from './webgl-neuron-selector.module.css';
 
@@ -14,22 +16,23 @@ export interface WebglNeuronSelectorProps {
   projectId: string;
   virtualLabId: string;
   meModelId: string;
+  sessionId: string;
 }
 
 export function WebglNeuronSelector({
   projectId,
   virtualLabId,
   meModelId,
-  // sessionId,
+  sessionId,
 }: WebglNeuronSelectorProps) {
-  const [morphology, setMorphology] = React.useState<Morphology | null>(null);
-  const painterManager = usePainterManager(morphology);
-  const { loading, error } = useMorphology({
-    modelId: meModelId,
-    callback: setMorphology,
+  const painterManager = usePainterManager();
+  const { loading, error } = useCleanMorphology(
+    painterManager,
+    meModelId,
     projectId,
     virtualLabId,
-  });
+    sessionId
+  );
   if (error) return <pre>{JSON.stringify(error, null, 2)}</pre>;
 
   return (
@@ -45,7 +48,15 @@ export function WebglNeuronSelector({
             }}
           />
           <Hint painterManager={painterManager} />
-          <ZoomSlider className={styles.zoomSlider} painterManager={painterManager} />
+          <header>
+            <Tooltip tooltip="Recenter the view" arrow="topLeft" foreColor="#fff" backColor="#05a">
+              <button type="button" onClick={painterManager.resetCamera}>
+                <IconCenter />
+              </button>
+            </Tooltip>
+            <ZoomSlider className={styles.zoomSlider} painterManager={painterManager} />
+          </header>
+          <AddRecordingDialog painterManager={painterManager} sessionId={sessionId} />
         </>
       )}
     </div>
@@ -55,7 +66,7 @@ export function WebglNeuronSelector({
 function Loading() {
   return (
     <div className={styles.loading}>
-      <LoadingOutlined />
+      <NeuronLoader text="Loading Neuron" />
     </div>
   );
 }

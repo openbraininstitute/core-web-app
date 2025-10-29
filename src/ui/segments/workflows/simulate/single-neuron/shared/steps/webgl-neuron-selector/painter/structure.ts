@@ -15,6 +15,7 @@ export enum StructureItemType {
 export interface StructureItem {
   index: number;
   name: string;
+  sectionName: string;
   sectionIndex: number;
   segmentIndex: number;
   segmentsCount: number;
@@ -22,6 +23,7 @@ export interface StructureItem {
   end: ArrayNumber3;
   radius: number;
   type: StructureItemType;
+  length: number;
   distanceFromSoma: number;
 }
 
@@ -35,6 +37,10 @@ export class Structure {
   public readonly bbox: StructureBoundingBox;
 
   private readonly items: StructureItem[] = [];
+
+  private readonly segments = new Map<string, StructureItem>();
+
+  private readonly segmentsPerSection = new Map<string, StructureItem[]>();
 
   constructor(morphology: Morphology) {
     const bbox: StructureBoundingBox = {
@@ -61,18 +67,23 @@ export class Structure {
           section.yend[segmentIndex],
           section.zend[segmentIndex],
         ];
-        this.items.push({
+        const item: StructureItem = {
           start,
           end,
           radius: section.diam[segmentIndex] / 2,
           index: this.items.length,
           name: `${sectionName}[${segmentIndex}]`,
+          sectionName,
           sectionIndex: resolveSectionIndex(sectionName),
           segmentIndex,
           segmentsCount: section.nseg,
+          length: section.length[segmentIndex],
           type: resolveType(sectionName),
           distanceFromSoma: isSoma ? 0 : distanceFromSoma,
-        });
+        };
+        this.segments.set(item.name, item);
+        this.addToSection(item);
+        this.items.push(item);
         if (isSoma) {
           somaCounts++;
           somaCenter.add(start);
@@ -91,6 +102,10 @@ export class Structure {
     bbox.center = [...somaCenter] as ArrayNumber3;
   }
 
+  getSegmentsOfSection(sectionName: string): StructureItem[] {
+    return this.segmentsPerSection.get(sectionName) ?? [];
+  }
+
   get length() {
     return this.items.length;
   }
@@ -104,6 +119,16 @@ export class Structure {
 
   forEach(callback: (item: StructureItem, index: number) => void) {
     this.items.forEach(callback);
+  }
+
+  private addToSection(item: StructureItem) {
+    const sectionFromMap = this.segmentsPerSection.get(item.sectionName);
+    if (sectionFromMap) {
+      sectionFromMap.push(item);
+      sectionFromMap.sort(({ segmentIndex: a }, { segmentIndex: b }) => a - b);
+    } else {
+      this.segmentsPerSection.set(item.sectionName, [item]);
+    }
   }
 }
 

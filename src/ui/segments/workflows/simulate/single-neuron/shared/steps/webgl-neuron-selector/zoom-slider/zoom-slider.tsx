@@ -18,20 +18,14 @@ export interface ZoomSliderProps {
 
 export default function ZoomSlider({ className, painterManager }: ZoomSliderProps) {
   const zoom = painterManager.eventZoom.useValue(painterManager.zoom);
-  const handleZoomOut = () => {
-    painterManager.zoom = Math.max(-1, zoom - 0.1);
-  };
-  const handleZoomIn = () => {
-    painterManager.zoom = Math.min(+1, zoom + 0.1);
-  };
 
   return (
     <div className={classNames(className, styles.zoomSlider)}>
-      <button type="button" onClick={handleZoomOut}>
+      <button type="button" onClick={painterManager.zoomOut}>
         <ZoomOutOutlined />
       </button>
       <Slider
-        value={painterManager.zoom}
+        value={zoom}
         onChange={(value) => {
           painterManager.zoom = value;
         }}
@@ -40,7 +34,7 @@ export default function ZoomSlider({ className, painterManager }: ZoomSliderProp
         step={0.1}
         tooltip={{ formatter: null }}
       />
-      <button type="button" onClick={handleZoomIn}>
+      <button type="button" onClick={painterManager.zoomIn}>
         <ZoomInOutlined />
       </button>
     </div>

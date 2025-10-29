@@ -122,6 +122,7 @@ export function NeuronViewerContainer({
             projectId={projectId}
             virtualLabId={virtualLabId}
             meModelId={meModelId}
+            sessionId={sessionId}
           />
         )}
       </DefaultLoadingSuspense>

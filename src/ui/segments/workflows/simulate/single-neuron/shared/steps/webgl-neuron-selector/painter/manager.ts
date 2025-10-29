@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   ArrayNumber2,
-  tgdCalcClamp,
+  tgdActionCreateCameraInterpolation,
   tgdCalcDegToRad,
   tgdCalcMapRange,
   tgdCanvasCreatePalette,
@@ -15,12 +15,14 @@ import {
   TgdPainterSegments,
   TgdPainterSegmentsData,
   TgdPainterState,
+  TgdQuat,
   TgdTexture2D,
   TgdVec3,
   webglPresetBlend,
   webglPresetDepth,
 } from '@tolokoban/tgd';
 
+import { computeSectionOffset } from './math';
 import { makeSegments } from './segments';
 import { makeCamera } from './camera';
 import { Structure, StructureItem, StructureItemType } from './structure';
@@ -45,38 +47,75 @@ export class PainterManager {
     item: StructureItem | null;
   }>();
 
-  public readonly eventZoom = new GenericEvent<number>();
+  public readonly eventTap = new GenericEvent<{
+    offset: number;
+    item: StructureItem | null;
+  }>();
 
-  private _context: TgdContext | null = null;
+  public readonly eventZoom = new GenericEvent<number>();
 
   private _morphology: Morphology | null = null;
 
   private _canvas: HTMLCanvasElement | null = null;
 
-  private _offscreen: OffscreenPainter | null = null;
+  private context: TgdContext | null = null;
 
-  private _palette: TgdTexture2D | null = null;
+  private offscreen: OffscreenPainter | null = null;
 
-  private _hoverPainter: TgdPainter | null = null;
+  private palette: TgdTexture2D | null = null;
 
-  private _hoverItem: StructureItem | null = null;
+  private hoverPainter: TgdPainter | null = null;
 
-  private _zoom = 0;
+  private hoverItem: StructureItem | null = null;
+
+  private minDistance = 1;
+
+  private maxDistance = 2;
+
+  private initialPosition = new TgdVec3();
+
+  private readonly segmentsPerSection = new Map<string, StructureItem[]>();
 
   get zoom() {
-    return this._zoom;
+    const { context } = this;
+    if (!context) return 0;
+
+    return tgdCalcMapRange(
+      context.camera.transfo.distance,
+      this.maxDistance,
+      this.minDistance,
+      -1,
+      +1
+    );
   }
 
   set zoom(value: number) {
-    this._zoom = tgdCalcClamp(value, -1, +1);
-    this.eventZoom.dispatch(this._zoom);
+    if (Math.abs(value - this.zoom) < 1e-6) return;
+
+    const { context } = this;
+    if (context) {
+      const distance = tgdCalcMapRange(value, -1, +1, this.maxDistance, this.minDistance, true);
+      context.camera.transfo.distance = distance;
+      this.eventZoom.dispatch(value);
+      context.paint();
+    }
   }
+
+  readonly zoomOut = () => {
+    this.zoom -= 0.1;
+  };
+
+  readonly zoomIn = () => {
+    this.zoom += 0.1;
+  };
 
   get canvas() {
     return this._canvas;
   }
 
   set canvas(canvas: HTMLCanvasElement | null) {
+    if (this._canvas === canvas) return;
+
     this._canvas = canvas;
     this.initialize();
   }
@@ -90,12 +129,30 @@ export class PainterManager {
     this.initialize();
   }
 
+  readonly resetCamera = () => {
+    const { context } = this;
+    if (!context) return;
+
+    const action = tgdActionCreateCameraInterpolation(context.camera, {
+      distance: (this.minDistance + this.maxDistance) / 2,
+      orientation: new TgdQuat(),
+      position: this.initialPosition,
+    });
+    context.animSchedule({
+      action: (t: number) => {
+        action(t);
+        this.eventZoom.dispatch(this.zoom);
+      },
+      duration: 0.3,
+    });
+  };
+
   delete() {
-    if (this._context) {
-      this._context.delete();
-      this._context = null;
+    if (this.context) {
+      this.context.delete();
+      this.context = null;
     }
-    this._offscreen?.delete();
+    this.offscreen?.delete();
   }
 
   private initialize() {
@@ -108,15 +165,16 @@ export class PainterManager {
       alpha: false,
       antialias: true,
     });
-    this._context = context;
+    this.context = context;
     context.camera = makeCamera(structure.bbox);
+    this.initialPosition.from(context.camera.transfo.position);
     const palette = new TgdTexture2D(context)
       .loadBitmap(tgdCanvasCreatePalette(PALETTE))
       .setParams({
         magFilter: 'NEAREST',
         minFilter: 'NEAREST',
       });
-    this._palette = palette;
+    this.palette = palette;
     const groupHover = new TgdPainterState(context, {
       blend: webglPresetBlend.add,
     });
@@ -145,48 +203,66 @@ export class PainterManager {
     context.paint();
 
     const maxDistance = context.camera.transfo.distance;
+    this.maxDistance = maxDistance;
     const minDistance = maxDistance / 10;
-    this.eventZoom.addListener((zoom) => {
-      context.camera.transfo.distance = tgdCalcMapRange(zoom, -1, +1, maxDistance, minDistance);
-    });
+    this.minDistance = minDistance;
+    context.camera.transfo.distance = (minDistance + maxDistance) / 2;
     const orbitter = new TgdControllerCameraOrbit(context, {
       geo: {
-        minLat: tgdCalcDegToRad(-0),
-        maxLat: tgdCalcDegToRad(+0),
+        minLat: tgdCalcDegToRad(-60),
+        maxLat: tgdCalcDegToRad(+60),
       },
       inertiaOrbit: 500,
       inertiaZoom: 500,
       minDistance,
       maxDistance,
-      speedZoom: maxDistance,
+      speedZoom: (maxDistance - minDistance) / 2,
     });
     orbitter.enabled = true;
+    orbitter.eventChange.addListener(() => {
+      this.eventZoom.dispatch(
+        tgdCalcMapRange(context.camera.transfo.distance, maxDistance, minDistance, -1, +1)
+      );
+    });
 
-    this._offscreen = new OffscreenPainter(context, structure);
-    // context.inputs.pointer.eventHover.addListener((evt) => {
+    this.offscreen = new OffscreenPainter(context, structure);
     context.inputs.pointer.eventHover.addListener((evt) => {
       const { x, y } = evt.current;
-      const item = this._offscreen?.getItemAt(x, y) ?? null;
-      if (item !== this._hoverItem) {
-        if (this._hoverPainter) {
-          groupHover.remove(this._hoverPainter);
+      const item = this.offscreen?.getItemAt(x, y) ?? null;
+      if (item !== this.hoverItem) {
+        if (this.hoverPainter) {
+          groupHover.remove(this.hoverPainter);
           context.paint();
         }
-        this._hoverItem = item ?? null;
+        this.hoverItem = item ?? null;
         this.eventHover.dispatch({ x, y, item });
         if (item) {
-          this._hoverPainter = this.makeHoverPainter(item);
-          if (this._hoverPainter) {
-            groupHover.add(this._hoverPainter);
+          this.hoverPainter = this.makeHoverPainter(item);
+          if (this.hoverPainter) {
+            groupHover.add(this.hoverPainter);
           }
         }
         context.paint();
       }
     });
+    context.inputs.pointer.eventTap.addListener((evt) => {
+      if (!context) return;
+
+      const { x, y } = evt;
+      const item = this.offscreen?.getItemAt(x, y) ?? null;
+      this.hoverItem = item ?? null;
+      if (item) {
+        const segment = computeSectionOffset(structure, item, context.camera, x, y);
+        this.eventTap.dispatch({
+          offset: segment,
+          item: this.hoverItem,
+        });
+      }
+    });
   }
 
   private makeHoverPainter(item: StructureItem): TgdPainter | null {
-    const { _context: context, _palette: palette } = this;
+    const { context, palette } = this;
     if (!context || !palette) return null;
 
     const segments = new TgdPainterSegmentsData();
@@ -208,12 +284,11 @@ export class PainterManager {
   }
 }
 
-export function usePainterManager(morphology: Morphology | null) {
+export function usePainterManager() {
   const refPainter = React.useRef<PainterManager | null>(null);
-  if (!refPainter.current) refPainter.current = new PainterManager();
-  React.useEffect(() => {
-    if (refPainter.current) refPainter.current.morphology = morphology;
-  }, [morphology]);
+  if (!refPainter.current) {
+    refPainter.current = new PainterManager();
+  }
   React.useEffect(() => {
     return () => refPainter.current?.delete();
   }, []);

@@ -27,10 +27,39 @@
     font-size: 1000%;
   }
 
-  .zoomSlider {
-    color: #fff;
+  > header {
     position: absolute;
     left: 1em;
     top: 1em;
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2em;
+
+    button {
+      width: 2.5em;
+      height: 2.5em;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      cursor: pointer;
+      color: #fff;
+      border-radius: 2px;
+      background: #3a3a3a;
+      transition: all 0.3s;
+
+      &:hover {
+        background-color: #adf;
+        color: #000;
+      }
+    }
+
+    .zoomSlider {
+      color: #fff;
+      flex: 0 0 auto;
+      width: 240px;
+    }
   }
 }
