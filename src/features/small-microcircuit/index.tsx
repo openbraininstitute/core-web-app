@@ -2,48 +2,54 @@
 
 import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
 import Ajv, { AnySchema } from 'ajv';
-import { atom, useAtomValue, useSetAtom } from 'jotai';
-import { Fragment, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-
 import type { CheckboxProps } from 'antd';
 import { Checkbox, ConfigProvider } from 'antd';
+import { atom, useAtomValue, useSetAtom } from 'jotai';
+import { Fragment, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
-import {
-  simExecRemoteStatusMapAtomFamily,
-  simExecStatusMapAtomFamily,
-  simulationsByCampaignIdAtomFamily,
-} from './_components/atoms';
-import CircuitPreview from './_components/circuit-preview';
-import { Config, ConfigValue, JSONSchemaForm } from './_components/components';
-import { FileViewer } from './_components/file-viewer';
-import { useCircuit } from './_components/hooks/circuit';
-import { useConfigAtom } from './_components/hooks/config-atom';
-import { isRootCategory, resolveKey, useObioneJsonSchema } from './_components/hooks/schema';
-import { Section } from './_components/section';
-import TabsSelector from './_components/tabs-selector';
-import { CATEGORIES, isAtom, ORDERING } from './_components/utils';
-import { AtomsMap, TabType } from './types';
-
-import { cn } from '@/utils/css-class';
-import { File, SimulationFiles } from './_components/simulation-files';
-import { SimulationStatusBadge } from './_components/simulation-status';
-import errorRegistry from './error-registry';
 
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import ApiError from '@/api/error';
 import authFetch from '@/authFetch';
 import { useAppNotification } from '@/components/notification';
+import {
+  simExecRemoteStatusMapAtomFamily,
+  simExecStatusMapAtomFamily,
+  simulationsByCampaignIdAtomFamily,
+} from '@/features/small-microcircuit/_components/atoms';
+import CircuitPreview from '@/features/small-microcircuit/_components/circuit-preview';
+import {
+  Config,
+  ConfigValue,
+  JSONSchemaForm,
+} from '@/features/small-microcircuit/_components/components';
+import { FileViewer } from '@/features/small-microcircuit/_components/file-viewer';
+import { useCircuit } from '@/features/small-microcircuit/_components/hooks/circuit';
+import { useConfigAtom } from '@/features/small-microcircuit/_components/hooks/config-atom';
+import {
+  isRootCategory,
+  resolveKey,
+  useObioneJsonSchema,
+} from '@/features/small-microcircuit/_components/hooks/schema';
+import { Section } from '@/features/small-microcircuit/_components/section';
+import { File, SimulationFiles } from '@/features/small-microcircuit/_components/simulation-files';
+import { SimulationStatusBadge } from '@/features/small-microcircuit/_components/simulation-status';
+import TabsSelector from '@/features/small-microcircuit/_components/tabs-selector';
+import { CATEGORIES, isAtom, ORDERING } from '@/features/small-microcircuit/_components/utils';
 import { simulationStatusColorMap } from '@/features/small-microcircuit/constants';
+import errorRegistry from '@/features/small-microcircuit/error-registry';
+import { AtomsMap, TabType } from '@/features/small-microcircuit/types';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/simulation';
 import { runSimulationBatch } from '@/services/small-scale-simulator/circuit';
 import { MessageType } from '@/services/small-scale-simulator/types';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { assertErrorMessage, classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
 import { getErrorMessage } from '@/utils/error';
 
-import styles from './small-microcircuit.module.css';
+import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
 
 export default function SimulationCampaignConfiguration({
   circuitId,

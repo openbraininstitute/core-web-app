@@ -1,12 +1,13 @@
 import sortBy from 'es-toolkit/compat/sortBy';
 import { useAtomValue } from 'jotai';
+import { loadable } from 'jotai/utils';
 import { useEffect, useMemo } from 'react';
 
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import { IEntity } from '@/api/entitycore/types/entities/entity';
 import { AssetLabel, IAsset } from '@/api/entitycore/types/shared/global';
-import Loader from '@/components/loader';
+import { Loader } from '@/components/loader';
 import {
   circuitAtomFamily,
   simResultBySimIdAtomFamily,
@@ -14,7 +15,6 @@ import {
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { WorkspaceContext } from '@/types/common';
 import { classNames } from '@/util/utils';
-import { loadable } from 'jotai/utils';
 
 export type File = {
   asset: IAsset;
@@ -133,7 +133,7 @@ function useInputFiles(
 
   const circuit = circuitLoadable.state === 'hasData' ? circuitLoadable.data : lastCircuit;
 
-  const files: File[] = useMemo(() => {
+  const inputFiles: File[] = useMemo(() => {
     const sonataCircuitAsset = circuit?.assets.find(
       (asset) => asset.label === AssetLabel.sonata_circuit
     );
@@ -156,7 +156,7 @@ function useInputFiles(
     return files;
   }, [circuit, simulation]);
 
-  return [loading, files];
+  return [loading, inputFiles];
 }
 
 function useOutputFiles(
@@ -176,7 +176,7 @@ function useOutputFiles(
   const simResultLoadable = useAtomValue(simResultLoadableAtom);
   const loading = simResultLoadable.state === 'loading';
 
-  const files: File[] = useMemo(
+  const outputFiles: File[] = useMemo(
     () =>
       simResult
         ? sortBy(
@@ -187,7 +187,7 @@ function useOutputFiles(
     [simResult]
   );
 
-  return [loading, files];
+  return [loading, outputFiles];
 }
 
 type SimulationFileProps = {
