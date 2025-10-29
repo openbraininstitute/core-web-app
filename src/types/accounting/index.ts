@@ -47,6 +47,15 @@ export enum ServiceSubtype {
   MlRag = 'ml-rag',
   Notebook = 'notebook',
   SmallCircuitSim = 'small-circuit-sim',
+  // { CircuitScale simulations
+  SingleCellSimulation = 'single-sim',
+  PairCellSimulation = 'pair-sim',
+  SmallMicrocircuitSimulation = 'small-sim',
+  MicrocircuitSimulation = 'microcircuit-sim',
+  RegionSimulation = 'region-sim',
+  SystemSimulation = 'system-sim',
+  WholeBrainSimulation = 'whole-brain-sim',
+  // } CircuitScale simulations
 }
 
 export type JobReport = {
