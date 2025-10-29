@@ -18,7 +18,7 @@ export default function Reference({
   referees: [string, ConfigObject][];
   refTitle: string;
 }) {
-  if (referees.length === 0) {
+  if (referees.length === 0 && defaultLabel === null) {
     return (
       <Button className="w-full" onClick={onAddReferenceClick}>
         Add {refTitle}
