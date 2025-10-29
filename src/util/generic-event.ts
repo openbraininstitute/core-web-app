@@ -7,7 +7,7 @@ export interface GenericEventInterface<T> {
   removeListener(listener: (arg: T) => void): void;
 }
 
-export default class GenericEvent<T> implements GenericEventInterface<T> {
+export default class GenericEvent<T = void> implements GenericEventInterface<T> {
   private listeners: Array<(arg: T) => void> = [];
 
   useValue(initialValue: T): T {

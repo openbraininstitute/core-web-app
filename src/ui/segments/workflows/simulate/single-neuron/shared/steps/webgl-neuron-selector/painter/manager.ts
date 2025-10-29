@@ -8,6 +8,7 @@ import {
   TgdContext,
   TgdControllerCameraOrbit,
   TgdLight,
+  TgdMat4,
   TgdMaterialDiffuse,
   TgdMaterialFlat,
   TgdPainter,
@@ -41,6 +42,8 @@ PALETTE[StructureItemType.Soma] = '#afa';
 PALETTE[StructureItemType.Unknown] = '#a6f';
 
 export class PainterManager {
+  public readonly eventPaint = new GenericEvent<void>();
+
   public readonly eventHover = new GenericEvent<{
     x: number;
     y: number;
@@ -62,6 +65,8 @@ export class PainterManager {
 
   private offscreen: OffscreenPainter | null = null;
 
+  private structure: Structure | null = null;
+
   private palette: TgdTexture2D | null = null;
 
   private hoverPainter: TgdPainter | null = null;
@@ -74,7 +79,14 @@ export class PainterManager {
 
   private initialPosition = new TgdVec3();
 
-  private readonly segmentsPerSection = new Map<string, StructureItem[]>();
+  /**
+   * When is the last time the camera moved?
+   * We use this to prevent a quick camera moved
+   * from being interpreted as a click.
+   * Because a click will bring a modal window to add
+   * recording.
+   */
+  private lastCameraChangeTimestamp = 0;
 
   get zoom() {
     const { context } = this;
@@ -129,6 +141,14 @@ export class PainterManager {
     this.initialize();
   }
 
+  getCameraMatrix(): Readonly<TgdMat4> {
+    const { context } = this;
+    if (!context) return new TgdMat4();
+
+    const { camera } = context;
+    return new TgdMat4(camera.matrixProjection).multiply(camera.matrixModelView);
+  }
+
   readonly resetCamera = () => {
     const { context } = this;
     if (!context) return;
@@ -155,16 +175,61 @@ export class PainterManager {
     this.offscreen?.delete();
   }
 
+  /**
+   * We look for the segment defined by `offset` and
+   * we return the 3D point in it.
+   * @param sectionName
+   * @param offset
+   */
+  getSectionCoordinates(sectionName: string, offset: number): TgdVec3 {
+    const { structure } = this;
+    if (!structure) return new TgdVec3();
+
+    const segments = structure.getSegmentsOfSection(sectionName) ?? [];
+    const totalDistance = segments.reduce((dist, item) => dist + item.length, 0);
+    const targetDistance = totalDistance * offset;
+    let distance = 0;
+    for (const segment of segments) {
+      const previousDistance = distance;
+      distance += segment.length;
+      if (distance >= targetDistance) {
+        const segmentOffset = (targetDistance - previousDistance) / segment.length;
+        const point = TgdVec3.newFromMix(segment.start, segment.end, segmentOffset);
+        return point;
+      }
+    }
+    return new TgdVec3();
+  }
+
+  getSegment(sectionName: string, sectionOffset: number): StructureItem | null {
+    const { structure } = this;
+    if (!structure) return null;
+
+    const segments = structure.getSegmentsOfSection(sectionName);
+    if (!segments) return null;
+
+    const totalDistance = segments.reduce((dist, item) => dist + item.length, 0);
+    const targetDistance = totalDistance * sectionOffset;
+    let distance = 0;
+    for (const segment of segments) {
+      distance += segment.length;
+      if (distance >= targetDistance) return segment;
+    }
+    return null;
+  }
+
   private initialize() {
     const { canvas, morphology } = this;
     if (!canvas || !morphology) return;
 
     const structure = new Structure(morphology);
+    this.structure = structure;
     const segments = makeSegments(structure);
     const context = new TgdContext(canvas, {
       alpha: false,
       antialias: true,
     });
+    context.eventPaint.addListener(() => this.eventPaint.dispatch());
     this.context = context;
     context.camera = makeCamera(structure.bbox);
     this.initialPosition.from(context.camera.transfo.position);
@@ -223,6 +288,7 @@ export class PainterManager {
       this.eventZoom.dispatch(
         tgdCalcMapRange(context.camera.transfo.distance, maxDistance, minDistance, -1, +1)
       );
+      this.lastCameraChangeTimestamp = Date.now();
     });
 
     this.offscreen = new OffscreenPainter(context, structure);
@@ -246,6 +312,9 @@ export class PainterManager {
       }
     });
     context.inputs.pointer.eventTap.addListener((evt) => {
+      // Prevent camera movement to be interpreted as a click.
+      if (Date.now() - this.lastCameraChangeTimestamp < 300) return;
+
       if (!context) return;
 
       const { x, y } = evt;

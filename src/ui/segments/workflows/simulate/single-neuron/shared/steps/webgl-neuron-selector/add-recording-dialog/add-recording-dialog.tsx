@@ -1,11 +1,11 @@
 import React from 'react';
 import { useAtom } from 'jotai';
-import { TgdColor } from '@tolokoban/tgd';
 
 import { PainterManager } from '../painter';
 import { RecordLocationConfigurationAtomFamily } from '../../../context';
 import { RECORDING_LOCATION_CONFIGURATION_SESSION_KEY } from '../../../constant';
 import { getSessionKey } from '../../../helpers';
+import { getColor } from '../colors';
 
 import { classNames } from '@/util/utils';
 import { IconClose } from '@/components/LandingPage/icons/IconClose';
@@ -74,9 +74,4 @@ export default function AddRecordingDialog({
       </div>
     </div>
   );
-}
-
-function getColor(index: number) {
-  const hue = ((index * 92) % 307) / 307;
-  return TgdColor.fromHSL(hue, 0.9, 0.5).toString();
 }

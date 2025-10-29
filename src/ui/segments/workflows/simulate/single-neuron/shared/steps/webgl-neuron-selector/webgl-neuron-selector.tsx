@@ -4,6 +4,7 @@ import { usePainterManager } from './painter';
 import Hint from './hint';
 import ZoomSlider from './zoom-slider';
 import { useCleanMorphology } from './hooks';
+import LegendOverlay from './legend-overlay';
 
 import AddRecordingDialog from './add-recording-dialog';
 import { IconCenter } from '@/components/icons/Center';
@@ -56,6 +57,7 @@ export function WebglNeuronSelector({
             </Tooltip>
             <ZoomSlider className={styles.zoomSlider} painterManager={painterManager} />
           </header>
+          <LegendOverlay painterManager={painterManager} sessionId={sessionId} />
           <AddRecordingDialog painterManager={painterManager} sessionId={sessionId} />
         </>
       )}
