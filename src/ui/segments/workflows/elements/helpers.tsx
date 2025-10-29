@@ -8,6 +8,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
+export const WorkflowSessionIdSearchParam = 'sessionId';
 export const EntityScopeDict = {
   Subcellular: 'Subcellular',
   Cellular: 'Cellular',

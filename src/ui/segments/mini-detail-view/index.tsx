@@ -82,12 +82,19 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
     makeSelectEntityClickEvent({ data: null, display: false });
   };
 
+  useEffect(() => {
+    return () => {
+      setMdv(false);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!record) return null;
 
   const viewConfig = getViewDefinitionByExtendedType(dataType ?? record.type);
   const miniConfig = viewConfig?.miniDetailView;
 
   const preview = match({ type: record.type })
+    .with({ type: P.nullish }, () => null)
     .with(
       {
         type: P.union(
@@ -331,7 +338,7 @@ function ExploreActions<T extends EntityCoreObjectTypes>({
   return (
     <div className="sticky bottom-0 mt-auto flex items-center justify-center gap-2 self-end p-4">
       <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger asChild>
           <Button
             rounded
             title="Copy ID"
@@ -393,7 +400,7 @@ function ExploreActions<T extends EntityCoreObjectTypes>({
         </TooltipContent>
       </Tooltip> */}
       <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger asChild>
           <Button
             rounded
             title="download"

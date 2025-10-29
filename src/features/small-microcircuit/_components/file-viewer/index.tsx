@@ -6,8 +6,8 @@ import { File } from '../simulation-files';
 import { jsonFileAtomFamily } from '../atoms';
 
 import { EphysViewer } from '@/features/ephys-viewer';
+import { Loader } from '@/components/loader';
 import { classNames } from '@/util/utils';
-import Loader from '@/components/loader';
 
 import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import type { WorkspaceContext } from '@/types/common';

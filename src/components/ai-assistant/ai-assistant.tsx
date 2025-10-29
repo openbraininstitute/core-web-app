@@ -11,13 +11,14 @@ import { IconHistory } from './icons/history';
 import PanelContent from './panel-content';
 import { classNames } from '@/util/utils';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
+import type { TAppUInterfaceSection } from '@/utils/key-builder';
 
 import styles from './ai-assistant.module.css';
 
 interface AiAssistantProps {
   className?: string;
   fullscreen: boolean;
-  section: 'explore' | 'build' | 'simulate' | 'bookmark' | 'activity';
+  section: TAppUInterfaceSection;
 }
 
 const Spinner = dynamic(() => import('./spinner/spinner'), { ssr: false });

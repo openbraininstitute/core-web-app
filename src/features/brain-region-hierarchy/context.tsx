@@ -1,11 +1,9 @@
 'use client';
 
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
-import { useEffect, useRef } from 'react';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import lowerCase from 'es-toolkit/compat/lowerCase';
-import find from 'es-toolkit/compat/find';
-import omit from 'es-toolkit/compat/omit';
+import { find, omit, lowerCase } from 'es-toolkit/compat';
+import { useEffect, useRef } from 'react';
 
 import {
   flattenTreeAsObject,
@@ -156,8 +154,7 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
     annotation_value: number;
   } | null>(key, null);
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  const [{ id, annotation_value }, setHierarchyConfig] = useQueryStates(
+  const [{ id, annotation_value: annotationValue }, setSearchParamHierarchyConfig] = useQueryStates(
     {
       id: parseAsString.withDefault(''),
       annotation_value: parseAsInteger.withDefault(0),
@@ -171,13 +168,21 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
       clearOnDefault: false,
     }
   );
-
   // track if config was already initialized to avoid infinite loop
   const isInitializedRef = useRef(false);
 
   useEffect(() => {
-    if (isInitializedRef.current || !brainRegions) return;
-    const hasURLParams = !!id && !!annotation_value;
+    if (!brainRegions) return;
+
+    const hasURLParams = !!id && !!annotationValue;
+
+    // reset initialization if we're missing URL params but have localStorage data
+    // this handles navigation back to /data from other routes
+    if (!hasURLParams && stored?.id && stored?.annotation_value && isInitializedRef.current) {
+      isInitializedRef.current = false;
+    }
+
+    if (isInitializedRef.current) return;
 
     if (hasURLParams) {
       isInitializedRef.current = true;
@@ -191,10 +196,13 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
     }
 
     if (stored?.id && stored?.annotation_value) {
-      if (id !== stored.id || annotation_value !== stored.annotation_value) {
+      if (id !== stored.id || annotationValue !== stored.annotation_value) {
         const foundNode = find(brainRegions?.options, (o) => o.data.id === stored.id)?.data;
         if (foundNode) {
-          setHierarchyConfig({ id: foundNode.id, annotation_value: foundNode.annotation_value });
+          setSearchParamHierarchyConfig({
+            id: foundNode.id,
+            annotation_value: foundNode.annotation_value,
+          });
           updateSelectedBrainRegion(omit(foundNode, 'children'));
         }
       }
@@ -205,10 +213,10 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
     if (defaultSelectedBrainRegion) {
       if (
         id !== defaultSelectedBrainRegion.value ||
-        annotation_value !== defaultSelectedBrainRegion.data.annotation_value
+        annotationValue !== defaultSelectedBrainRegion.data.annotation_value
       ) {
         updateSelectedBrainRegion(omit(defaultSelectedBrainRegion.data, 'children'));
-        setHierarchyConfig({
+        setSearchParamHierarchyConfig({
           id: defaultSelectedBrainRegion.value,
           annotation_value: defaultSelectedBrainRegion.data.annotation_value,
         });
@@ -216,16 +224,17 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
     }
 
     isInitializedRef.current = true;
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [brainRegions, id, annotation_value, stored, defaultSelectedBrainRegion]);
+  }, [brainRegions, id, annotationValue, stored, defaultSelectedBrainRegion]);
 
   // Sync localStorage when URL params change
   useEffect(() => {
-    if (id && annotation_value && defaultSelectedBrainRegion) {
-      const config = { id, annotation_value };
+    if (id && annotationValue && defaultSelectedBrainRegion) {
+      const config = { id, annotation_value: annotationValue };
       updateLocalStorage(config);
     }
-  }, [id, annotation_value, defaultSelectedBrainRegion, updateLocalStorage]);
+  }, [id, annotationValue, defaultSelectedBrainRegion, updateLocalStorage]);
 
   /**
    * Updates the hierarchy configuration state
@@ -240,22 +249,22 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
       : null;
 
     // Only update if the values are actually different
-    if (region && (id !== region.id || annotation_value !== region.annotation_value)) {
+    if (region && (id !== region.id || annotationValue !== region.annotation_value)) {
       // Ensure the UI (e.g., RegionBanner) reflects the new selection immediately
       // before any URL updates that may cause re-renders.
       updateSelectedBrainRegion(omit(node, 'children'));
       updateLocalStorage(region);
-      setHierarchyConfig(region);
-    } else if (!region && (id !== '' || annotation_value !== 0)) {
+      setSearchParamHierarchyConfig(region);
+    } else if (!region && (id !== '' || annotationValue !== 0)) {
       // Clear selection first to keep UI in sync, then update storage and URL
       updateSelectedBrainRegion(null);
       updateLocalStorage(region);
-      setHierarchyConfig(region);
+      setSearchParamHierarchyConfig(region);
     }
   };
 
   return {
-    node: { id, annotation_value },
+    node: { id, annotation_value: annotationValue },
     updateHierarchyConfig,
   };
 };
