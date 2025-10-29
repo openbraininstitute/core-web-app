@@ -1,20 +1,20 @@
+import sortBy from 'es-toolkit/compat/sortBy';
 import { useAtomValue } from 'jotai';
 import { useEffect, useMemo } from 'react';
-import sortBy from 'es-toolkit/compat/sortBy';
 
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import { IEntity } from '@/api/entitycore/types/entities/entity';
 import { AssetLabel, IAsset } from '@/api/entitycore/types/shared/global';
+import Loader from '@/components/loader';
 import {
   circuitAtomFamily,
   simResultBySimIdAtomFamily,
 } from '@/features/small-microcircuit/_components/atoms';
+import { useLastTruthyValue } from '@/hooks/hooks';
 import { WorkspaceContext } from '@/types/common';
 import { classNames } from '@/util/utils';
-import { useLastTruthyValue } from '@/hooks/hooks';
 import { loadable } from 'jotai/utils';
-import Loader from '@/components/loader';
 
 export type File = {
   asset: IAsset;
@@ -119,14 +119,6 @@ export function SimulationFiles({
   );
 }
 
-type SimulationInputFilesProps = {
-  simulation: ICircuitSimulation;
-  context: WorkspaceContext;
-  selectedFile?: File;
-  onSelect: (file: File) => void;
-  className?: string;
-};
-
 function useInputFiles(
   simulation: ICircuitSimulation,
   context: WorkspaceContext
@@ -196,62 +188,6 @@ function useOutputFiles(
   );
 
   return [loading, files];
-}
-
-function SimulationInputFiles({
-  simulation,
-  context,
-  selectedFile,
-  onSelect,
-  className = '',
-}: SimulationInputFilesProps) {
-  const [loading, files] = useInputFiles(simulation, context);
-
-  return (
-    <div className={classNames('flex flex-col gap-4', className)}>
-      {files.map((file) => (
-        <SimulationFile
-          selected={file.asset.id === selectedFile?.asset.id}
-          key={file.asset.id}
-          file={file}
-          onSelect={onSelect}
-        />
-      ))}
-    </div>
-  );
-}
-
-type SimulationOutputFilesProps = {
-  simulation: ICircuitSimulation;
-  context: WorkspaceContext;
-  selectedFile?: File;
-  onSelect: (file: File) => void;
-  className?: string;
-  outputAvailable?: boolean;
-};
-
-function SimulationOutputFiles({
-  simulation,
-  onSelect,
-  selectedFile,
-  context,
-  className = '',
-  outputAvailable = false,
-}: SimulationOutputFilesProps) {
-  const [loading, files] = useOutputFiles(simulation, context, outputAvailable);
-
-  return (
-    <div className={classNames('flex flex-col gap-4', className)}>
-      {files.map((file) => (
-        <SimulationFile
-          key={file.asset.id}
-          file={file}
-          selected={selectedFile?.asset.id === file.asset.id}
-          onSelect={onSelect}
-        />
-      ))}
-    </div>
-  );
 }
 
 type SimulationFileProps = {
