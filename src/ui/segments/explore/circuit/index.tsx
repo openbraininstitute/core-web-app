@@ -64,6 +64,7 @@ type Props = {
   dataType: TExtendedEntitiesTypeDict;
   mainTableProps?: Partial<ComponentProps<typeof CircuitTable>>;
   miniViewProps?: Partial<ComponentProps<typeof MiniDetailView>>;
+  extraQueryParams?: Record<string, any>;
 };
 
 export function BrowseCircuit({
@@ -76,6 +77,7 @@ export function BrowseCircuit({
   scope: defaultScope,
   mainTableProps,
   miniViewProps,
+  extraQueryParams,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const { mdv, setMdv } = useMiniDetailView();
@@ -140,7 +142,7 @@ export function BrowseCircuit({
       const [{ workspace, queryParameters }] = queryKey;
       return await Circuit.api.query.list?.({
         withFacets: true,
-        filters: { ...queryParameters },
+        filters: { ...queryParameters, ...extraQueryParams },
         context: workspace,
       });
     },

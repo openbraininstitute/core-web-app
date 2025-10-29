@@ -22,6 +22,7 @@ export const MEModelWithSynapsesCircuit: EntityCoreTypeConfig<ICircuit> = {
       list: (...params) => {
         return getCircuits({
           ...params,
+          context: params[0].context,
           withFacets: params[0].withFacets,
           filters: { ...params[0].filters, scale__in: [CircuitScaleDictionary.Single] },
         });
