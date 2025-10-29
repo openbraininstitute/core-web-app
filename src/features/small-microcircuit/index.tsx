@@ -335,11 +335,7 @@ export default function SimulationCampaignConfiguration({
                   onAddReferenceClick={handleAddReferenceClick}
                   disabled={!!campaignId || loading}
                   config={config}
-                  schema={
-                    selectedCatSchema ??
-                    schema.properties[configTab]?.additionalProperties ??
-                    schema.properties[configTab]
-                  }
+                  schema={selectedCatSchema ?? schema.properties[configTab]}
                   stateAtom={
                     isAtom(atomsMap[configTab])
                       ? atomsMap[configTab]
