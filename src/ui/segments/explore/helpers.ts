@@ -113,6 +113,7 @@ export async function getAllEntitiesCountScoped({
             ...(scope === WorkspaceScope.Project
               ? {
                   authorized_project_id: projectId,
+                  authorized_public: false,
                 }
               : scope === WorkspaceScope.Public
                 ? {
@@ -135,11 +136,9 @@ export async function getSimulationsCount({
   virtualLabId,
   projectId,
   brainRegionId,
-  personId,
   scope,
 }: WorkspaceContext & {
   brainRegionId: string;
-  personId: string | undefined;
   scope: TWorkspaceScope;
 }) {
   const promises = Object.fromEntries(
@@ -161,7 +160,7 @@ export async function getSimulationsCount({
             ...(scope === WorkspaceScope.Project
               ? {
                   authorized_project_id: projectId,
-                  created_by__id: personId,
+                  authorized_public: false,
                 }
               : scope === WorkspaceScope.Public
                 ? {
@@ -189,11 +188,9 @@ export function getElectricalCellRecordingsCount({
   virtualLabId,
   projectId,
   brainRegionId,
-  personId,
   scope,
 }: WorkspaceContext & {
   brainRegionId: string;
-  personId: string | undefined;
   scope: TWorkspaceScope;
 }) {
   return getElectricalCellRecordings({
@@ -209,7 +206,7 @@ export function getElectricalCellRecordingsCount({
       ...(scope === WorkspaceScope.Project
         ? {
             authorized_project_id: projectId,
-            created_by__id: personId,
+            authorized_public: false,
           }
         : scope === WorkspaceScope.Public
           ? {

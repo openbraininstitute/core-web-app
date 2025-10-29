@@ -1,4 +1,4 @@
-import { includes } from 'es-toolkit/compat';
+import { includes, without } from 'es-toolkit/compat';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
@@ -25,8 +25,15 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
       list: (...params) => {
         return getCircuits({
           ...params,
+          context: params[0].context,
           withFacets: params[0].withFacets,
-          filters: { ...params[0].filters },
+          filters: {
+            ...params[0].filters,
+            scale__in: without(
+              Object.values(CircuitScaleDictionary),
+              CircuitScaleDictionary.Single
+            ),
+          },
         });
       },
       one: getCircuit,
