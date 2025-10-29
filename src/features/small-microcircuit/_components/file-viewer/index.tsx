@@ -15,19 +15,20 @@ import type { WorkspaceContext } from '@/types/common';
 type FileViewerProps = {
   file?: File;
   context: WorkspaceContext;
+  loading?: boolean;
   className?: string;
 };
 
-export function FileViewer({ file, context, className = '' }: FileViewerProps) {
+export function FileViewer({ file, context, loading = false, className = '' }: FileViewerProps) {
   const [displayFile, setDisplayFile] = useState<File | undefined>(file);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isFilePreloading, setIsFilePreloading] = useState(false);
 
   useEffect(() => {
     if (file && file !== displayFile) {
-      setIsLoading(true);
+      setIsFilePreloading(true);
     } else if (!file) {
       setDisplayFile(undefined);
-      setIsLoading(false);
+      setIsFilePreloading(false);
     }
   }, [file, displayFile]);
 
@@ -45,8 +46,13 @@ export function FileViewer({ file, context, className = '' }: FileViewerProps) {
     <div className={classNames('text-primary-9 relative rounded-2xl bg-white p-6', className)}>
       <div className="relative h-full overflow-auto p-6">
         <Suspense>{viewerContent}</Suspense>
-        {isLoading && file && (
-          <div className="pointer-events-none absolute inset-0 z-10">
+        {loading && !isFilePreloading && (
+          <div className="absolute inset-0 z-10 flex h-full cursor-progress items-center justify-center rounded-2xl backdrop-blur-xs">
+            <Loader className="text-neutral-3" />
+          </div>
+        )}
+        {isFilePreloading && file && (
+          <div className="absolute inset-0 z-10 cursor-progress">
             <Suspense
               fallback={
                 <div className="flex h-full items-center justify-center rounded-2xl backdrop-blur-xs">
@@ -59,7 +65,7 @@ export function FileViewer({ file, context, className = '' }: FileViewerProps) {
                 context={context}
                 onLoaded={() => {
                   setDisplayFile(file);
-                  setIsLoading(false);
+                  setIsFilePreloading(false);
                 }}
               />
             </Suspense>
