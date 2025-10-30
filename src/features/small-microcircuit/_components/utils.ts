@@ -1,6 +1,6 @@
 import { Atom } from 'jotai';
 import uniq from 'es-toolkit/compat/uniq';
-import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
+import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 
 export type Primitive = null | boolean | number | string;
 export interface ConfigObject {
@@ -49,16 +49,16 @@ export const ORDERING: Record<string, { order: number; category: string }> = {
 export const CATEGORIES: string[] = uniq(Object.values(ORDERING).map((o) => o.category));
 
 const simExecStatusListordered = [
-  CircuitSimulationExecutionStatus.CREATED,
-  CircuitSimulationExecutionStatus.PENDING,
-  CircuitSimulationExecutionStatus.RUNNING,
-  CircuitSimulationExecutionStatus.DONE,
-  CircuitSimulationExecutionStatus.ERROR,
+  EntitycoreExecutionStatus.CREATED,
+  EntitycoreExecutionStatus.PENDING,
+  EntitycoreExecutionStatus.RUNNING,
+  EntitycoreExecutionStatus.DONE,
+  EntitycoreExecutionStatus.ERROR,
 ];
 
 export function getLatestSimExecStatus(
-  remoteStatus: CircuitSimulationExecutionStatus,
-  localStatus: CircuitSimulationExecutionStatus
+  remoteStatus: EntitycoreExecutionStatus,
+  localStatus: EntitycoreExecutionStatus
 ) {
   const remoteStatusIdx = simExecStatusListordered.indexOf(remoteStatus);
   const localStatusIdx = simExecStatusListordered.indexOf(localStatus);

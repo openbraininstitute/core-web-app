@@ -25,6 +25,7 @@ export const IonChannelModel: EntityCoreTypeConfig<IIonChannelModel> = {
       list: (...params) => {
         return getIonChannelModels({
           ...params,
+          context: params[0].context,
           withFacets: params[0].withFacets,
           filters: { ...params[0].filters },
         });

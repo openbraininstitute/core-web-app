@@ -1,3 +1,5 @@
+'use client';
+
 import { Atom } from 'jotai';
 import { PropsWithChildren, useRef, createContext } from 'react';
 

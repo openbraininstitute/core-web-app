@@ -19,6 +19,7 @@ export const WorkspaceScope = {
   BuildMeModelM: 'build-me-model/m-model',
   BuildMeModelE: 'build-me-model/e-model',
   BuildSynaptomeModel: 'build-single-neuron-synaptome-model/memodel',
+  BuildIonChannelModel: 'build-ion-channel-model',
 } as const;
 
 export type TWorkspaceScope = (typeof WorkspaceScope)[keyof typeof WorkspaceScope];

@@ -2,13 +2,12 @@
 
 import { ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import * as Checkbox from '@radix-ui/react-checkbox';
 import { format } from 'date-fns';
 
 import { getMtype } from '@/api/entitycore/queries/annotations/mtype';
-import { CheckIcon } from '@/components/icons';
 import { getEtype } from '@/api/entitycore/queries/annotations/etype';
 import { keyBuilder } from '@/ui/use-query-keys/data';
+import { Checkbox } from '@/ui/molecules/checkbox';
 
 const DisplayLabel = (filterField: string, key: string): string | null => {
   switch (filterField) {
@@ -47,15 +46,11 @@ export function CheckListOption({
         <span className="font-bold text-white">{DisplayLabel(filterField, label)}</span>
         <span className="flex items-center justify-between gap-2">
           {!!value && <span className="text-primary-5">{`${value} datasets`}</span>}
-          <Checkbox.Root
-            className="h-[14px] w-[14px] rounded-sm border border-white bg-transparent"
+          <Checkbox
+            className="h-[14px] w-[14px] rounded-sm border border-white bg-transparent text-white"
             checked={!!checked}
             onCheckedChange={onCheckedChange}
-          >
-            <Checkbox.Indicator className="flex w-full items-center justify-center">
-              <CheckIcon className="check" fill="#fff" />
-            </Checkbox.Indicator>
-          </Checkbox.Root>
+          />
         </span>
       </div>
       {children}

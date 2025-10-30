@@ -70,7 +70,7 @@ export const EntityWorkflowConfiguration: Partial<
     label: 'Ion channel',
     properties: {
       build: {
-        disabled: true,
+        disabled: false,
         type: ExtendedEntitiesTypeDict.IonChannelModel,
       },
       simulate: {

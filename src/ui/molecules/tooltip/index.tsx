@@ -41,13 +41,15 @@ function TooltipContent({
   showArrow = true,
   sideOffset = 0,
   children,
+  portalProps,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Content> & {
   arrowClassName?: React.ComponentProps<'span'>['className'];
   showArrow?: boolean;
+  portalProps?: TooltipPrimitive.TooltipPortalProps;
 }) {
   return (
-    <TooltipPrimitive.Portal>
+    <TooltipPrimitive.Portal {...portalProps}>
       <TooltipPrimitive.Content
         data-slot="tooltip-content"
         sideOffset={sideOffset}

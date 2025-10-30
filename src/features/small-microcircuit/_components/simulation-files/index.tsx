@@ -4,7 +4,6 @@ import { loadable } from 'jotai/utils';
 import { useEffect, useMemo } from 'react';
 
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import { IEntity } from '@/api/entitycore/types/entities/entity';
 import { AssetLabel, IAsset } from '@/api/entitycore/types/shared/global';
 import { Loader } from '@/components/loader';
@@ -15,6 +14,7 @@ import {
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { WorkspaceContext } from '@/types/common';
 import { classNames } from '@/util/utils';
+import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 
 export type File = {
   asset: IAsset;
@@ -24,7 +24,7 @@ export type File = {
 
 type SimulationFilesProps = {
   simulation: ICircuitSimulation;
-  execStatus: CircuitSimulationExecutionStatus;
+  execStatus: EntitycoreExecutionStatus;
   selectedFile?: File;
   onSelect: (file: File) => void;
   onLoadingChange: (loading: boolean) => void;
@@ -43,9 +43,7 @@ export function SimulationFiles({
 
   const outputAvailable =
     !!execStatus &&
-    [CircuitSimulationExecutionStatus.ERROR, CircuitSimulationExecutionStatus.DONE].includes(
-      execStatus
-    );
+    [EntitycoreExecutionStatus.ERROR, EntitycoreExecutionStatus.DONE].includes(execStatus);
 
   const [outputLoading, outputFiles] = useOutputFiles(simulation, context, outputAvailable);
 

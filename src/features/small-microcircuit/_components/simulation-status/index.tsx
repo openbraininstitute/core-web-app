@@ -1,8 +1,8 @@
-import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
-import { simulationStatusColorMap } from '@/features/small-microcircuit/constants';
+import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import { ExecutionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
 
-export function SimulationStatusBadge({ status }: { status?: CircuitSimulationExecutionStatus }) {
-  const color = status ? simulationStatusColorMap[status] : '#fafafa';
+export function SimulationStatusBadge({ status }: { status?: EntitycoreExecutionStatus }) {
+  const color = status ? ExecutionStatusColorMap[status] : '#fafafa';
   const showSpinner = status && ['pending', 'running'].includes(status);
 
   // TODO: move spinner outside of the module.
