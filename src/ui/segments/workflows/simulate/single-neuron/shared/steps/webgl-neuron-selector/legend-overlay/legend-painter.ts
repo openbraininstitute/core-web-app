@@ -56,7 +56,9 @@ export class LegendPainter {
     ctx.font = `bold ${FONTSIZE}px sans-serif`;
     const { painterManager } = this;
     const labels: LabelToDraw[] = [];
+    let targetIndex = -1;
     for (const target of targets) {
+      targetIndex++;
       const segment = painterManager.getSegment(target.section, target.offset);
       if (!segment) continue;
 
@@ -70,7 +72,7 @@ export class LegendPainter {
         originX: tip.x,
         originY: tip.y,
         text: target.section,
-        color: getColor(segment.segmentIndex),
+        color: getColor(targetIndex),
         tipX: round(tgdCalcMapRange(tip.x, -1, +1, 0, canvas.width)),
         tipY: round(tgdCalcMapRange(tip.y, +1, -1, 0, canvas.height)),
         boxX: 0,
