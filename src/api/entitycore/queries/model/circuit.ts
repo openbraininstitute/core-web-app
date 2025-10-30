@@ -62,6 +62,9 @@ export async function getCircuit({
   id: string;
   context?: WorkspaceContext | null;
 }) {
+  if (id == null) {
+    throw new Error(`circuit id is not valid ${id}`);
+  }
   const api = await entityCoreApi();
   return await api.get<ICircuit>(`${baseUri}/${id}`, {
     headers: {
