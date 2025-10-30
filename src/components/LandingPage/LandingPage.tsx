@@ -26,7 +26,7 @@ interface LandingPageProps {
   section: EnumSection;
   error?: {
     errorcode: string | undefined;
-    original_code: string | undefined;
+    originalCode: string | undefined;
     description: string | undefined;
   };
 }

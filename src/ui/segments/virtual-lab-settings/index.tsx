@@ -69,7 +69,7 @@ function EditableName({
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const { error: notifyError, success: notifySuccess } = useAppNotification();
   const queryClient = useQueryClient();
-  const { isAdmin } = useUserRole({ virtualLabId });
+  const { isVirtualLabAdmin: isAdmin } = useUserRole({ virtualLabId });
 
   const updateMutation = useMutation({
     mutationFn: async (name: string) => {
@@ -411,7 +411,7 @@ function Tabs({ id }: { id?: string | null }) {
     shallow: true,
     clearOnDefault: true,
   });
-  const { isAdmin } = useUserRole({ virtualLabId: id! });
+  const { isVirtualLabAdmin: isAdmin } = useUserRole({ virtualLabId: id! });
   const [popoverOpen, setIsPopoverOpen] = useState(false);
 
   const onOpenChange = (visible: boolean) => {

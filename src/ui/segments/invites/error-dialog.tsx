@@ -63,7 +63,7 @@ export function InvitationErrorDialog({
 }: {
   error?: {
     errorcode: string | undefined;
-    original_code: string | undefined;
+    originalCode: string | undefined;
     description: string | undefined;
   };
 }) {
@@ -94,12 +94,12 @@ export function InvitationErrorDialog({
           </button>
         </div>
         <p className="mt-4 text-lg text-gray-700">{message}</p>
-        {error?.original_code && (
+        {error?.originalCode && (
           <div className="bg-background mt-4 rounded-xl px-4 py-2">
             <small className="text-primary-8">
               [DEBUG]: This shows up only in testing or staging, not in production.
             </small>
-            <h2 className="text-destructive font-bold">{error.original_code}</h2>
+            <h2 className="text-destructive font-bold">{error.originalCode}</h2>
             <p className="text-shadow-destructive text-gray-700">{error.description}</p>
           </div>
         )}

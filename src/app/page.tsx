@@ -24,7 +24,7 @@ export default async function RootPage({
       section={EnumSection.Home}
       error={{
         errorcode: searchParams.errorcode,
-        original_code: searchParams.original_code,
+        originalCode: searchParams.original_code,
         description: searchParams.description,
       }}
     />

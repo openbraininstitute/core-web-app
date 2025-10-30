@@ -1,5 +1,5 @@
 import { LoadingOutlined, WarningOutlined } from '@ant-design/icons';
-import { useQuery } from '@tanstack/react-query';
+import { useQueries } from '@tanstack/react-query';
 import { match, P } from 'ts-pattern';
 import { useState } from 'react';
 
@@ -14,6 +14,8 @@ import { CoinsIcon } from '@/components/icons/buttons';
 import { makeRoles } from '@/hooks/use-user-role';
 import { Badge } from '@/ui/molecules/badge';
 import { cn } from '@/utils/css-class';
+import { ProjectBalance } from '@/types/accounting';
+import { VlmUserGroupsResponse } from '@/api/virtual-lab-svc/queries/types';
 
 export function Wallet() {
   const breakpoint = useDefaultBreakpoint();
@@ -21,27 +23,35 @@ export function Wallet() {
   const [showCreditsManagement, setShowCreditsManagement] = useState(false);
   const handleTransferCredits = () => setShowCreditsManagement((prev) => !prev);
 
-  const { data, isLoading, isError, isSuccess, error } = useQuery({
-    queryKey: keyBuilder.wallet({ virtualLabId, projectId }),
-    queryFn: () => getProjectAccountBalance({ virtualLabId, projectId }),
-    select: (res) => res.balance,
-  });
+  const [{ data, isLoading, isError, isSuccess, error }, { data: roles, isLoading: loadingRoles }] =
+    useQueries({
+      queries: [
+        {
+          queryKey: keyBuilder.wallet({ virtualLabId, projectId }),
+          queryFn: () => getProjectAccountBalance({ virtualLabId, projectId }),
+          select: (res: ProjectBalance) => res.balance,
+        },
+        {
+          queryKey: keyBuilder.roles(),
+          queryFn: getUserGroups,
+          select: (res: VlmUserGroupsResponse) => makeRoles(res, virtualLabId, projectId),
+        },
+      ],
+    });
 
-  const { data: roles, isLoading: loadingRoles } = useQuery({
-    queryKey: keyBuilder.roles(),
-    queryFn: getUserGroups,
-  });
+  const isAdmin = roles?.isVirtualLabAdmin;
 
-  const { isAdmin } = makeRoles(roles, virtualLabId, projectId);
-
-  const content = match({ isError, isLoading, isSuccess, data, error })
-    .with({ isLoading: true }, () => <LoadingOutlined spin />)
+  const content = match({ isError, isLoading, loadingRoles, isSuccess, data, error })
+    .with(
+      P.when((s) => s.isLoading || s.loadingRoles),
+      () => <LoadingOutlined spin />
+    )
     .with({ isError: true, error: P.select() }, (err) => (
       <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger asChild>
           <WarningOutlined />
         </TooltipTrigger>
-        <TooltipContent side="bottom" showArrow={false}>
+        <TooltipContent side="bottom" showArrow={false} className="max-w-48 text-wrap">
           {err?.message}
         </TooltipContent>
       </Tooltip>
