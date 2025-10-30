@@ -2,50 +2,54 @@
 
 import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
 import Ajv, { AnySchema } from 'ajv';
+import type { CheckboxProps } from 'antd';
+import { Checkbox, ConfigProvider } from 'antd';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { Fragment, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-
-import { Checkbox, ConfigProvider } from 'antd';
-import type { CheckboxProps } from 'antd';
 import { match } from 'ts-pattern';
-import {
-  circuitAtomFamily,
-  simExecRemoteStatusMapAtomFamily,
-  simExecStatusMapAtomFamily,
-  simulationsByCampaignIdAtomFamily,
-} from './_components/atoms';
-import CircuitPreview from './_components/circuit-preview';
-import { Config, ConfigValue, JSONSchemaForm } from './_components/components';
-import { FileViewer } from './_components/file-viewer';
-import { useCircuit } from './_components/hooks/circuit';
-import { useConfigAtom } from './_components/hooks/config-atom';
-import { isRootCategory, resolveKey, useObioneJsonSchema } from './_components/hooks/schema';
-import { Section } from './_components/section';
-import TabsSelector from './_components/tabs-selector';
-import { CATEGORIES, isAtom, ORDERING } from './_components/utils';
-import { AtomsMap, TabType } from './types';
-
-import { File, SimulationFiles } from './_components/simulation-files';
-import { SimulationStatusBadge } from './_components/simulation-status';
-import errorRegistry from './error-registry';
-import { cn } from '@/utils/css-class';
 
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import ApiError from '@/api/error';
 import authFetch from '@/authFetch';
 import { useAppNotification } from '@/components/notification';
-import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
+import {
+  simExecRemoteStatusMapAtomFamily,
+  simExecStatusMapAtomFamily,
+  simulationsByCampaignIdAtomFamily,
+} from '@/features/small-microcircuit/_components/atoms';
+import CircuitPreview from '@/features/small-microcircuit/_components/circuit-preview';
+import {
+  Config,
+  ConfigValue,
+  JSONSchemaForm,
+} from '@/features/small-microcircuit/_components/components';
+import { FileViewer } from '@/features/small-microcircuit/_components/file-viewer';
+import { useCircuit } from '@/features/small-microcircuit/_components/hooks/circuit';
+import { useConfigAtom } from '@/features/small-microcircuit/_components/hooks/config-atom';
+import {
+  isRootCategory,
+  resolveKey,
+  useObioneJsonSchema,
+} from '@/features/small-microcircuit/_components/hooks/schema';
+import { Section } from '@/features/small-microcircuit/_components/section';
+import { File, SimulationFiles } from '@/features/small-microcircuit/_components/simulation-files';
+import { SimulationStatusBadge } from '@/features/small-microcircuit/_components/simulation-status';
+import TabsSelector from '@/features/small-microcircuit/_components/tabs-selector';
+import { CATEGORIES, isAtom, ORDERING } from '@/features/small-microcircuit/_components/utils';
 import { simulationStatusColorMap } from '@/features/small-microcircuit/constants';
+import errorRegistry from '@/features/small-microcircuit/error-registry';
+import { AtomsMap, TabType } from '@/features/small-microcircuit/types';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/simulation';
 import { runSimulationBatch } from '@/services/small-scale-simulator/circuit';
 import { MessageType } from '@/services/small-scale-simulator/types';
+import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { assertErrorMessage, classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
 import { getErrorMessage } from '@/utils/error';
 
-import styles from './small-microcircuit.module.css';
+import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
 
 export default function SimulationCampaignConfiguration({
   circuitId,
@@ -397,6 +401,7 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
   const [activeSimulation, setActiveSimulation] = useState<null | ICircuitSimulation>(null);
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
+  const [filesLoading, setFilesLoading] = useState(false);
 
   const activeSimulationExecStatus = activeSimulation && statusMap?.get(activeSimulation.id);
 
@@ -565,97 +570,30 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
       </div>
 
       {/* List of input/output files for selected simulation */}
-      <div className="border-r border-gray-200 px-4">
+      <div className="relative border-r border-gray-200 px-4">
         {!!activeSimulation && (
-          <Suspense fallback={<div className="text-neutral-5 mt-4 font-semibold">Loading...</div>}>
-            <AutoSelectCircuitConfig
-              simulation={activeSimulation}
-              context={context}
-              onSelect={setSelectedFile}
-              currentSelectedFile={selectedFile}
-            />
-            <SimulationFiles
-              simulation={activeSimulation}
-              execStatus={activeSimulationExecStatus}
-              selectedFile={selectedFile}
-              context={context}
-              onSelect={setSelectedFile}
-            />
-          </Suspense>
+          <SimulationFiles
+            simulation={activeSimulation}
+            execStatus={activeSimulationExecStatus}
+            selectedFile={selectedFile}
+            context={context}
+            onSelect={setSelectedFile}
+            onLoadingChange={setFilesLoading}
+          />
         )}
       </div>
 
       {/* Preview for selected file */}
       <div className="relative pl-4">
-        <FileViewer file={selectedFile} className="h-full" context={context} />
+        <FileViewer
+          file={selectedFile}
+          className="h-full"
+          context={context}
+          loading={filesLoading}
+        />
       </div>
     </div>
   );
-}
-
-type AutoSelectCircuitConfigProps = {
-  simulation: ICircuitSimulation;
-  context: { virtualLabId: string; projectId: string };
-  onSelect: (file: File) => void;
-  currentSelectedFile?: File;
-};
-
-function AutoSelectCircuitConfig({
-  simulation,
-  context,
-  onSelect,
-  currentSelectedFile,
-}: AutoSelectCircuitConfigProps) {
-  const circuit = useAtomValue(circuitAtomFamily({ circuitId: simulation.entity_id, context }));
-  const previousSimulationIdRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    // Only run when simulation changes, not when selected file changes
-    if (previousSimulationIdRef.current === simulation.id) {
-      return;
-    }
-    previousSimulationIdRef.current = simulation.id;
-
-    // Get the name of the currently selected file to try to find the same file in the new simulation
-    const currentFileName =
-      currentSelectedFile?.assetPath?.split('/').at(-1) ??
-      currentSelectedFile?.asset.path.split('/').at(-1);
-
-    // Try to find a file with the same name as the currently selected file
-    let matchingFile = currentFileName
-      ? simulation.assets.find((asset) => {
-          const fileName = asset.path.split('/').at(-1);
-          return fileName === currentFileName;
-        })
-      : null;
-
-    // If no match by current file name, try matching by simulation name
-    if (!matchingFile) {
-      matchingFile = simulation.assets.find((asset) => {
-        const fileName = asset.path.split('/').at(-1);
-        return fileName?.includes(simulation.name);
-      });
-    }
-
-    if (matchingFile) {
-      // If found, select the matching file
-      onSelect({ asset: matchingFile, entity: simulation });
-    } else {
-      // Fall back to circuit config
-      const sonataCircuitAsset = circuit.assets.find(
-        (asset) => asset.label === AssetLabel.sonata_circuit
-      );
-      if (sonataCircuitAsset) {
-        onSelect({
-          entity: circuit,
-          asset: sonataCircuitAsset,
-          assetPath: 'circuit_config.json',
-        });
-      }
-    }
-  }, [circuit, onSelect, simulation, currentSelectedFile]);
-
-  return null;
 }
 
 type SimulationBlockProps = {

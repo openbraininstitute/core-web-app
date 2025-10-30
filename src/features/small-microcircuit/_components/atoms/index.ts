@@ -102,8 +102,20 @@ export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
 );
 
 export const simResultBySimIdAtomFamily = readAtomFamilyWithExpiration(
-  ({ simulationId, context }: { simulationId: string; context: WorkspaceContext }) =>
-    atom<Promise<ICircuitSimulationResult>>(async (get) => {
+  ({
+    simulationId,
+    context,
+    enabled = true,
+  }: {
+    simulationId: string;
+    context: WorkspaceContext;
+    enabled?: boolean;
+  }) =>
+    atom<Promise<ICircuitSimulationResult | null>>(async (get) => {
+      if (!enabled) {
+        return null;
+      }
+
       const execution = await get(simExecBySimIdAtomFamily({ simulationId, context }));
 
       if (!execution?.generated?.[0]) {
