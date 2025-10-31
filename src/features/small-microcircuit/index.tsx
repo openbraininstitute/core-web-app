@@ -17,6 +17,7 @@ import ApiError from '@/api/error';
 import authFetch from '@/authFetch';
 import { useAppNotification } from '@/components/notification';
 import {
+  modelAtomFamily,
   simExecRemoteStatusMapAtomFamily,
   simExecStatusMapAtomFamily,
   simulationsByCampaignIdAtomFamily,
@@ -28,7 +29,6 @@ import {
   JSONSchemaForm,
 } from '@/features/small-microcircuit/_components/components';
 import { FileViewer } from '@/features/small-microcircuit/_components/file-viewer';
-import { useModel } from '@/features/small-microcircuit/_components/hooks/circuit';
 import { useConfigAtom } from '@/features/small-microcircuit/_components/hooks/config-atom';
 import {
   isRootCategory,
@@ -42,7 +42,7 @@ import TabsSelector from '@/features/small-microcircuit/_components/tabs-selecto
 import { CATEGORIES, isAtom, ORDERING } from '@/features/small-microcircuit/_components/utils';
 import { simulationStatusColorMap } from '@/features/small-microcircuit/constants';
 import errorRegistry from '@/features/small-microcircuit/error-registry';
-import { AtomsMap, JSONSchema, TabType } from '@/features/small-microcircuit/types';
+import { AtomsMap, TabType } from '@/features/small-microcircuit/types';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/simulation';
 import { runSimulationBatch } from '@/services/small-scale-simulator/circuit';
@@ -51,13 +51,12 @@ import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { assertErrorMessage, classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 import { getErrorMessage } from '@/utils/error';
-import { CircuitOrigin } from '@/services/small-scale-simulator/types';
 
 import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
+import { EntityTypeDict } from '@/api/entitycore/types';
 
 export default function SimulationCampaignConfiguration({
   modelId,
-  circuitOrigin,
   virtualLabId,
   projectId,
   initialCampaignId,
@@ -66,7 +65,6 @@ export default function SimulationCampaignConfiguration({
   className,
 }: {
   modelId: string;
-  circuitOrigin: CircuitOrigin;
   virtualLabId: string;
   projectId: string;
   initialCampaignId?: string;
@@ -74,7 +72,9 @@ export default function SimulationCampaignConfiguration({
   readOnly?: boolean;
   className?: string;
 }) {
-  const model = useModel(modelId, circuitOrigin, { virtualLabId, projectId });
+  const modelAtom = modelAtomFamily({ id: modelId, context: { virtualLabId, projectId } });
+  const model = useAtomValue(modelAtom);
+
   const [tab, setTab] = useState<TabType>('configuration');
   const [configTab, setConfigTab] = useState<string>('info');
   const [editing, setEditing] = useState(true);
@@ -85,8 +85,9 @@ export default function SimulationCampaignConfiguration({
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
   const initialConfigValidated = useRef(false);
   const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
+
   const { schema, refLabels, referenceTypesToConfigKeys, referenceTypesToTitles } =
-    useObioneJsonSchema(modelId, circuitOrigin, notification, setAtomsMap, initialConfig);
+    useObioneJsonSchema(modelId, model.type, notification, setAtomsMap, initialConfig);
 
   const selectedCatSchema = schema?.properties?.[configTab]?.additionalProperties?.oneOf?.find(
     (s) => s.properties?.type.const === selectedCategory
@@ -126,11 +127,13 @@ export default function SimulationCampaignConfiguration({
     );
   }
 
-  const apiBaseUrl = `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/generated`;
-  const apiUrl =
-    circuitOrigin === CircuitOrigin.CIRCUIT
-      ? `${apiBaseUrl}/circuit-simulation-scan-config-generate-grid`
-      : `${apiBaseUrl}/me-model-simulation-scan-config-generate-grid`;
+  const apiPath = match(model.type)
+    .with(EntityTypeDict.Circuit, () => 'circuit-simulation-scan-config-generate-grid')
+    .with(EntityTypeDict.Memodel, () => 'me-model-simulation-scan-config-generate-grid')
+    .otherwise(() => {
+      throw new Error(`Unsupported model type ${model.type}`);
+    });
+  const apiUrl = `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/generated/${apiPath}`;
 
   return (
     <div className={cn('flex h-full flex-col space-y-5', className)}>
@@ -355,7 +358,6 @@ export default function SimulationCampaignConfiguration({
                       : atomsMap[configTab][resolveKey(schema, configTab, selectedItemIdx)]
                   }
                   model={model}
-                  circuitOrigin={circuitOrigin}
                   virtualLabId={virtualLabId}
                   projectId={projectId}
                 />

@@ -9,7 +9,6 @@ import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/sim
 import SimulationConfig from '@/features/small-microcircuit';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
-import { CircuitOrigin } from '@/services/small-scale-simulator/types';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { WorkflowSimulatePanelKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import type { ExperimentStepKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu';
@@ -66,7 +65,6 @@ export default function Page({
       <div className="border-neutral-2 ml-2 h-full rounded-2xl border pt-3">
         <SimulationConfig
           modelId={entity.id}
-          circuitOrigin={CircuitOrigin.CIRCUIT}
           virtualLabId={virtualLabId}
           projectId={projectId}
           initialConfig={campaignData?.config.form}

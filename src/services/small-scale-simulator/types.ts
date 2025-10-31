@@ -29,8 +29,3 @@ type DataMessage<T> = {
   data: T;
   ctx?: MessageCtx;
 };
-
-export enum CircuitOrigin {
-  CIRCUIT = 'circuit',
-  MEMODEL = 'memodel',
-}

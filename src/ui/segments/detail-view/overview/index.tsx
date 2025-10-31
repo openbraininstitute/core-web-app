@@ -32,7 +32,6 @@ import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
 import { IonChannelRecordingViewer } from '@/features/ion-channel-recording-viewer';
 import SmallMicrocircuitSimulation from '@/features/small-microcircuit';
-import { CircuitOrigin } from '@/services/small-scale-simulator/types';
 
 export default async function Overview({
   entity,
@@ -98,15 +97,9 @@ export default async function Overview({
 
     if (!config.simulation?.entity_id) notFound();
 
-    const circuitOrigin =
-      extendedType === ExtendedEntitiesTypeDict.MEModelCircuitSimulation
-        ? CircuitOrigin.MEMODEL
-        : CircuitOrigin.CIRCUIT;
-
     return (
       <SmallMicrocircuitSimulation
         modelId={config.simulation.entity_id}
-        circuitOrigin={circuitOrigin}
         virtualLabId={ctx.virtualLabId}
         projectId={ctx.projectId}
         initialCampaignId={config.campaign.id}

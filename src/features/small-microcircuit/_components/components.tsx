@@ -1,20 +1,19 @@
-import { useEffect, useState } from 'react';
-import { atom, useAtom } from 'jotai';
-import { InputNumber, Input, Select } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import { Input, InputNumber, Select } from 'antd';
+import { atom, useAtom } from 'jotai';
+import { useEffect, useState } from 'react';
 
 import { JSONSchema } from '../types';
-import { isPlainObject } from './utils';
-import Tooltip from './tooltip';
 import ParameterSwep from './parameter-sweep';
+import Tooltip from './tooltip';
+import { isPlainObject } from './utils';
 
-import PredefinedNodeset from './predefined-nodeset';
-import Reference from './reference';
+import { EntityTypeDict, IMEModel } from '@/api/entitycore/types';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { classNames } from '@/util/utils';
-import { EntityTypeDict, IMEModel } from '@/api/entitycore/types';
 import ModelDetails from './model-details';
-import { CircuitOrigin } from '@/services/small-scale-simulator/types';
+import PredefinedNodeset from './predefined-nodeset';
+import Reference from './reference';
 
 type Primitive = null | boolean | number | string;
 interface Object {
@@ -50,7 +49,6 @@ export function JSONSchemaForm({
   stateAtom,
   config,
   model,
-  circuitOrigin,
   onAddReferenceClick,
   selectedCategory,
   virtualLabId,
@@ -64,7 +62,6 @@ export function JSONSchemaForm({
   config: Config;
   schema: JSONSchema;
   model: ICircuit | IMEModel | undefined | null;
-  circuitOrigin: CircuitOrigin;
   stateAtom: ReturnType<typeof atom<{ [key: string]: ConfigValue }>>;
   onAddReferenceClick: (reference: string) => void;
   virtualLabId: string;
@@ -98,7 +95,7 @@ export function JSONSchemaForm({
       selectedCategory === 'PredefinedNeuronSet' &&
       k === 'node_set' &&
       model &&
-      circuitOrigin === CircuitOrigin.CIRCUIT
+      model.type === EntityTypeDict.Circuit
     ) {
       return (
         <PredefinedNodeset
