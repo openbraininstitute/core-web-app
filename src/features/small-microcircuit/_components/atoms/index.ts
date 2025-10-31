@@ -152,8 +152,9 @@ export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
 
 export const circuitAtomFamily = readAtomFamilyWithExpiration(
   ({ circuitId, context }: { circuitId: string; context: WorkspaceContext }) =>
-    atom<Promise<ICircuit>>(async () => {
-      return getCircuit({ id: circuitId, context });
+    atom<Promise<ICircuit | null>>(async () => {
+      if (circuitId) return getCircuit({ id: circuitId, context });
+      return null;
     }),
   {
     ttl: 120000, // 2 minutes

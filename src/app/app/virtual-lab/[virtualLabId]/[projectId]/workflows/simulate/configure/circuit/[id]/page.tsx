@@ -34,7 +34,8 @@ export default function Page({
 
   const { data: entity } = useSuspenseQuery({
     queryKey: [modelId],
-    queryFn: () => getCircuit({ id: modelId, context: { virtualLabId, projectId } }),
+    queryFn: () =>
+      modelId ? getCircuit({ id: modelId, context: { virtualLabId, projectId } }) : null,
   });
 
   const {
@@ -52,7 +53,7 @@ export default function Page({
     },
   });
 
-  if (error) {
+  if (error || !entity) {
     return notFound();
   }
 

@@ -123,7 +123,7 @@ export function RenderCustomField<R extends EntityCoreIdentifiable>({
   useEffect(() => {
     async function getEntity() {
       setPayload({ entity: null, error: null, loading: true });
-      if (entityConfig && entityConfig.api.query.one) {
+      if (entityConfig && entityConfig.api.query.one && entityId) {
         const { data, error } = await tryCatch<R, any>(
           // @ts-ignore
           entityConfig.api.query.one({ id: entityId, context: { virtualLabId, projectId } })
