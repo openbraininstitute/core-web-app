@@ -24,7 +24,7 @@ export default function SFNVirtualLabs() {
   return (
     <div
       ref={ref}
-      className="text-primary-9 relative flex min-h-[80vh] w-full flex-col items-center justify-center overflow-hidden bg-gray-100 px-8 py-4 md:min-h-[50vh] md:flex-row-reverse md:justify-start md:py-8"
+      className="text-primary-9 relative flex w-full flex-col items-center justify-center overflow-hidden bg-gray-100 px-8 py-4 md:h-[50vh] md:min-h-[50vh] md:flex-row-reverse md:justify-start"
       onMouseMove={handleMouseMove}
     >
       <div className="relative z-10 flex w-full flex-col pr-8 md:w-1/2">
@@ -51,7 +51,7 @@ export default function SFNVirtualLabs() {
       >
         <Image
           src="/images/sfn/brain-region_image-01.webp"
-          className="relative -left-[20vw] h-full w-auto"
+          className="relative -left-[32vw] h-full w-auto"
           alt="Multiple brain region image"
           width={990}
           height={558}
