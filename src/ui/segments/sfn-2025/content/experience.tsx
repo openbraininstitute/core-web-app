@@ -16,7 +16,7 @@ export default function SFNExperience() {
   return (
     <div
       ref={ref}
-      className="text-primary-9 relative flex min-h-[50vh] w-full flex-col px-[8vw] py-12 md:py-[25vh]"
+      className="text-primary-9 relative flex w-full flex-col justify-center overflow-hidden px-[8vw] py-12 md:h-[50vh]"
     >
       <div className="relative z-10">
         <h2 className="font-serif text-6xl! leading-none font-normal md:leading-[1.2]!">
@@ -34,9 +34,9 @@ export default function SFNExperience() {
       </div>
 
       <motion.div
-        className="absolute top-0 right-0 z-0"
+        className="absolute inset-y-0 right-0 z-0 flex items-center justify-center"
         initial={{ scale: 0.8, opacity: 0 }}
-        animate={isInView ? { scale: 1, opacity: 1 } : { scale: 0.8, opacity: 0 }}
+        animate={isInView ? { scale: 0.8, opacity: 1 } : { scale: 0.6, opacity: 0 }}
         transition={{
           duration: 0.3,
           ease: 'easeOut',
@@ -44,6 +44,7 @@ export default function SFNExperience() {
       >
         <Image
           src="/images/sfn/background_white-brain.webp"
+          className="relative -right-[20vw]"
           alt="Experience image"
           width={1512}
           height={814}

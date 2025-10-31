@@ -54,10 +54,10 @@ export default function HeroSFN({
         <div>
           <h1 className={styles.largeTitle}>{title}</h1>
         </div>
-        <div className="font-title text-whit flex flex-row gap-x-12 rounded-full border border-solid border-white px-16 py-8 text-3xl!">
+        <div className="font-title flex flex-col gap-5 rounded-lg border border-solid border-white px-5 py-5 text-3xl! text-white md:flex-row md:gap-12 md:rounded-full md:px-16 md:py-8">
           <div>November 15 – 19</div>
-          <div>Booth #3631</div>
           <div>San Diego Convention Center</div>
+          <div>Booth #3631</div>
         </div>
       </div>
     </div>

@@ -17,12 +17,43 @@ interface MenuProps {
 
 export default function Menu({ className, scrollHasStarted, section }: MenuProps) {
   const [showMenu, setShowMenu] = React.useState(false);
+  const [showMenuComponent, setShowMenuComponent] = React.useState(true);
+  const [lastScrollY, setLastScrollY] = React.useState(0);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        // Scrolling down
+        setShowMenuComponent(false);
+      } else if (currentScrollY < lastScrollY) {
+        // Scrolling up
+        setShowMenuComponent(true);
+      }
+
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   return (
     <>
       <div
         id={ID_MENU}
-        className={classNames(className, styles.menuContainer, scrollHasStarted && styles.stuck)}
+        className={classNames(
+          className,
+          styles.menuContainer,
+          scrollHasStarted && styles.stuck,
+          !showMenuComponent && styles.hidden
+        )}
+        style={{
+          transform: showMenuComponent ? 'translateY(0)' : 'translateY(-100%)',
+          transition: 'transform 0.3s ease-in-out',
+        }}
       >
         <Link href="/" className={styles.logo}>
           <h2>Open Brain Institute</h2>
