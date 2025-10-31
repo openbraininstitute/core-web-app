@@ -8,7 +8,6 @@ import {
   TgdLight,
   TgdMat4,
   TgdMaterialDiffuse,
-  TgdMaterialFlat,
   TgdPainter,
   TgdPainterClear,
   TgdPainterGroup,
@@ -92,10 +91,6 @@ export class PainterManager {
    * recording.
    */
   private lastCameraChangeTimestamp = 0;
-
-  constructor() {
-    console.log('new PainterManager()', this.id);
-  }
 
   /**
    * This normalized zoom is between -1 and +1.
@@ -386,15 +381,21 @@ export class PainterManager {
       (StructureItemType.Selected + 0.5) / (StructureItemType.Unknown + 1),
       0,
     ];
-    const radius = item.radius * 1.4;
+    const radius = item.radius * 1.2;
     segments.add([...item.start, radius], [...item.end, radius], uv, uv);
 
     return new TgdPainterSegments(context, {
       roundness: 32,
       minRadius: 1.5,
       makeDataset: segments.makeDataset,
-      material: new TgdMaterialFlat({
-        color: [0.6, 0.4, 0.1, 1],
+      material: new TgdMaterialDiffuse({
+        color: [0.3, 0.4, 0.5, 1],
+        specularExponent: 1,
+        specularIntensity: 0.25,
+        lockLightsToCamera: true,
+        light: new TgdLight({
+          direction: new TgdVec3(0, 0, -1),
+        }),
       }),
     });
   }
@@ -410,7 +411,6 @@ export function usePainterManager() {
       const context = refPainter.current;
       if (!context) return;
 
-      console.log('Delete:', context.id);
       context.delete();
     };
   }, []);
