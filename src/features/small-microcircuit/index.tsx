@@ -472,7 +472,6 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
     setSimRequestInProgress(true);
     try {
       await runSimulationBatch({
-<<<<<<< HEAD
         ctx: { virtualLabId, projectId },
         simulationIds: simIds,
         onInit: () => {
@@ -480,17 +479,6 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
           setSelectedSimulationIds([]);
           setSimRequestInProgress(false);
         },
-=======
-        simulationIds: simExecSelectedSimulationIds,
-        ctx: { virtualLabId, projectId },
-        onInit: () =>
-          setTimeout(() => {
-            // Pending statuses are sent via the stream asynchronously after the init.
-            // This timeout prevents the "Run simulations" button from flashing.
-            setSimRequestInProgress(false);
-            setSimExecSelectedSimulationIds([]);
-          }, 1000),
->>>>>>> af0b24be8 (Add current progress)
         onMessage: (message) => {
           match(message)
             .with({ message_type: MessageType.STATUS }, (msg) => {
