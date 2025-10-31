@@ -35,6 +35,25 @@ export default function AddRecordingDialog({
   }, [item, offset]);
   const handleMoveInjection = () => {
     setOpen(false);
+    if (!item) return;
+
+    const injection = state.find(({ origin }) => origin === 'injection');
+    if (injection) {
+      injection.offset = offset;
+      injection.section = item.sectionName;
+      update([...state]);
+    } else {
+      update([
+        ...state,
+        {
+          offset,
+          origin: 'injection',
+          color: getColor(state.length),
+          record_currents: false,
+          section: item.sectionName,
+        },
+      ]);
+    }
   };
   const handleAddRecording = () => {
     setOpen(false);

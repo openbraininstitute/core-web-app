@@ -1,8 +1,6 @@
 import React from 'react';
 import {
   ArrayNumber2,
-  tgdActionCreateCameraInterpolation,
-  tgdCalcDegToRad,
   tgdCalcMapRange,
   tgdCanvasCreatePalette,
   TgdContext,
@@ -13,10 +11,10 @@ import {
   TgdMaterialFlat,
   TgdPainter,
   TgdPainterClear,
+  TgdPainterGroup,
   TgdPainterSegments,
   TgdPainterSegmentsData,
   TgdPainterState,
-  TgdQuat,
   TgdTexture2D,
   TgdVec3,
   webglPresetBlend,
@@ -42,6 +40,10 @@ PALETTE[StructureItemType.Soma] = '#afa';
 PALETTE[StructureItemType.Unknown] = '#a6f';
 
 export class PainterManager {
+  private static id = 0;
+
+  public readonly id = PainterManager.id++;
+
   public readonly eventPaint = new GenericEvent<void>();
 
   public readonly eventHover = new GenericEvent<{
@@ -55,7 +57,10 @@ export class PainterManager {
     item: StructureItem | null;
   }>();
 
+  /** Event for normalized zoom changes. */
   public readonly eventZoom = new GenericEvent<number>();
+
+  public readonly eventRestingPosition = new GenericEvent<boolean>();
 
   private _morphology: Morphology | null = null;
 
@@ -69,15 +74,15 @@ export class PainterManager {
 
   private palette: TgdTexture2D | null = null;
 
+  private groupHover = new TgdPainterGroup();
+
   private hoverPainter: TgdPainter | null = null;
 
   private hoverItem: StructureItem | null = null;
 
-  private minDistance = 1;
-
-  private maxDistance = 2;
-
   private initialPosition = new TgdVec3();
+
+  private cameraController: TgdControllerCameraOrbit | null = null;
 
   /**
    * When is the last time the camera moved?
@@ -88,29 +93,31 @@ export class PainterManager {
    */
   private lastCameraChangeTimestamp = 0;
 
-  get zoom() {
-    const { context } = this;
-    if (!context) return 0;
+  constructor() {
+    console.log('new PainterManager()', this.id);
+  }
 
-    return tgdCalcMapRange(
-      context.camera.transfo.distance,
-      this.maxDistance,
-      this.minDistance,
-      -1,
-      +1
-    );
+  /**
+   * This normalized zoom is between -1 and +1.
+   */
+  get zoom() {
+    const { context, cameraController } = this;
+    if (!context || !cameraController) return 0;
+
+    return this.toNormalizedZoom(cameraController.zoom);
   }
 
   set zoom(value: number) {
+    const { cameraController } = this;
+    if (!cameraController) return;
+
     if (Math.abs(value - this.zoom) < 1e-6) return;
 
-    const { context } = this;
-    if (context) {
-      const distance = tgdCalcMapRange(value, -1, +1, this.maxDistance, this.minDistance, true);
-      context.camera.transfo.distance = distance;
-      this.eventZoom.dispatch(value);
-      context.paint();
-    }
+    if (value !== 0) this.eventRestingPosition.dispatch(false);
+    const zoom = this.toControllerZoom(value);
+    cameraController.zoom = zoom;
+    this.eventZoom.dispatch(value);
+    this.context?.paint();
   }
 
   readonly zoomOut = () => {
@@ -150,29 +157,28 @@ export class PainterManager {
   }
 
   readonly resetCamera = () => {
-    const { context } = this;
-    if (!context) return;
+    const { context, cameraController } = this;
+    if (!context || !cameraController) return;
 
-    const action = tgdActionCreateCameraInterpolation(context.camera, {
-      distance: (this.minDistance + this.maxDistance) / 2,
-      orientation: new TgdQuat(),
-      position: this.initialPosition,
-    });
-    context.animSchedule({
-      action: (t: number) => {
-        action(t);
-        this.eventZoom.dispatch(this.zoom);
+    const { zoom } = this;
+    cameraController.reset(0.3333, {
+      onAction: (t: number) => {
+        this.eventZoom.dispatch(tgdCalcMapRange(t, 0, 1, zoom, 0));
       },
-      duration: 0.3,
+      onEnd: () => this.eventRestingPosition.dispatch(true),
     });
   };
 
   delete() {
     if (this.context) {
+      this.context.debugHierarchy('Delete this context! ' + this.context.name);
       this.context.delete();
       this.context = null;
     }
-    this.offscreen?.delete();
+    if (this.offscreen) {
+      this.offscreen.delete();
+      this.offscreen = null;
+    }
   }
 
   /**
@@ -222,9 +228,10 @@ export class PainterManager {
     const { canvas, morphology } = this;
     if (!canvas || !morphology) return;
 
+    if (this.context) this.context.delete();
+    if (this.cameraController) this.cameraController.detach();
     const structure = new Structure(morphology);
     this.structure = structure;
-    const segments = makeSegments(structure);
     const context = new TgdContext(canvas, {
       alpha: false,
       antialias: true,
@@ -240,75 +247,32 @@ export class PainterManager {
         minFilter: 'NEAREST',
       });
     this.palette = palette;
-    const groupHover = new TgdPainterState(context, {
-      blend: webglPresetBlend.add,
-    });
-    context.add(
-      new TgdPainterClear(context, { color: [0, 0, 0, 1], depth: 1 }),
-      new TgdPainterState(context, {
-        depth: webglPresetDepth.less,
-        children: [
-          new TgdPainterSegments(context, {
-            minRadius: 1,
-            makeDataset: segments.makeDataset,
-            material: new TgdMaterialDiffuse({
-              color: palette,
-              specularExponent: 1,
-              specularIntensity: 0.25,
-              lockLightsToCamera: true,
-              light: new TgdLight({
-                direction: new TgdVec3(0, 0, -1),
-              }),
-            }),
-          }),
-          groupHover,
-        ],
-      })
-    );
-    context.paint();
+    this.initTgdPainters(context, structure, palette);
+    this.initCameraController(context);
+    this.initOffscreen(context, structure);
+  }
 
-    const maxDistance = context.camera.transfo.distance;
-    this.maxDistance = maxDistance;
-    const minDistance = maxDistance / 10;
-    this.minDistance = minDistance;
-    context.camera.transfo.distance = (minDistance + maxDistance) / 2;
-    const orbitter = new TgdControllerCameraOrbit(context, {
-      geo: {
-        minLat: tgdCalcDegToRad(-60),
-        maxLat: tgdCalcDegToRad(+60),
-      },
-      inertiaOrbit: 500,
-      inertiaZoom: 500,
-      minDistance,
-      maxDistance,
-      speedZoom: (maxDistance - minDistance) / 2,
-    });
-    orbitter.enabled = true;
-    orbitter.eventChange.addListener(() => {
-      this.eventZoom.dispatch(
-        tgdCalcMapRange(context.camera.transfo.distance, maxDistance, minDistance, -1, +1)
-      );
-      this.lastCameraChangeTimestamp = Date.now();
-    });
-
+  private initOffscreen(context: TgdContext, structure: Structure) {
     this.offscreen = new OffscreenPainter(context, structure);
     context.inputs.pointer.eventHover.addListener((evt) => {
+      const { groupHover } = this;
       const { x, y } = evt.current;
       const item = this.offscreen?.getItemAt(x, y) ?? null;
       if (item !== this.hoverItem) {
         if (this.hoverPainter) {
           groupHover.remove(this.hoverPainter);
-          context.paint();
+          this.hoverPainter = null;
         }
         this.hoverItem = item ?? null;
-        this.eventHover.dispatch({ x, y, item });
         if (item) {
           this.hoverPainter = this.makeHoverPainter(item);
           if (this.hoverPainter) {
             groupHover.add(this.hoverPainter);
           }
         }
-        context.paint();
+        this.context?.debugHierarchy('hoverPainter');
+        this.context?.paint();
+        this.eventHover.dispatch({ x, y, item });
       }
     });
     context.inputs.pointer.eventTap.addListener((evt) => {
@@ -328,6 +292,89 @@ export class PainterManager {
         });
       }
     });
+  }
+
+  private initCameraController(context: TgdContext) {
+    const cameraController = new TgdControllerCameraOrbit(context, {
+      inertiaOrbit: 500,
+      inertiaZoom: 250,
+      minZoom: 0.2,
+      maxZoom: 5,
+      speedZoom: 1,
+      onZoomRequest: ({ zoom }) => {
+        this.eventZoom.dispatch(this.toNormalizedZoom(zoom));
+        return true;
+      },
+    });
+    this.cameraController = cameraController;
+    cameraController.eventChange.addListener(() => {
+      // Remember last camera movement to prevent false clicks.
+      this.lastCameraChangeTimestamp = Date.now();
+      this.eventRestingPosition.dispatch(false);
+    });
+  }
+
+  private initTgdPainters(context: TgdContext, structure: Structure, palette: TgdTexture2D) {
+    const groupHover = new TgdPainterState(context, {
+      blend: webglPresetBlend.add,
+    });
+    const segments = makeSegments(structure);
+    context.add(
+      new TgdPainterClear(context, { color: [0, 0, 0, 1], depth: 1 }),
+      new TgdPainterState(context, {
+        depth: webglPresetDepth.less,
+        children: [
+          new TgdPainterSegments(context, {
+            roundness: 6,
+            minRadius: 1,
+            makeDataset: segments.makeDataset,
+            material: new TgdMaterialDiffuse({
+              color: palette,
+              specularExponent: 1,
+              specularIntensity: 0.25,
+              lockLightsToCamera: true,
+              light: new TgdLight({
+                direction: new TgdVec3(0, 0, -1),
+              }),
+            }),
+          }),
+          groupHover,
+        ],
+      })
+    );
+    context.paint();
+    context.debugHierarchy('INIT');
+    this.groupHover = groupHover;
+  }
+
+  /**
+   * @param controllerZoom Between `this.controller.minZoom` and `this.controller.maxZoom`.
+   * @returns The normalized zoom between -1 and +1.
+   */
+  private toNormalizedZoom(controllerZoom: number) {
+    const { cameraController } = this;
+    if (!cameraController) return 0;
+
+    const { minZoom, maxZoom } = cameraController;
+    if (controllerZoom < 1) {
+      return tgdCalcMapRange(controllerZoom, 1, minZoom, 0, -1, true);
+    }
+    return tgdCalcMapRange(controllerZoom, 1, maxZoom, 0, +1, true);
+  }
+
+  /**
+   * @param normalizedZoom Between -1 and +1.
+   * @returns The controller zoom between `this.controller.minZoom` and `this.controller.maxZoom`.
+   */
+  private toControllerZoom(normalizedZoom: number) {
+    const { cameraController } = this;
+    if (!cameraController) return 1;
+
+    const { minZoom, maxZoom } = cameraController;
+    if (normalizedZoom < 0) {
+      return tgdCalcMapRange(normalizedZoom, 0, -1, 1, minZoom, true);
+    }
+    return tgdCalcMapRange(normalizedZoom, 0, +1, 1, maxZoom, true);
   }
 
   private makeHoverPainter(item: StructureItem): TgdPainter | null {
@@ -359,7 +406,13 @@ export function usePainterManager() {
     refPainter.current = new PainterManager();
   }
   React.useEffect(() => {
-    return () => refPainter.current?.delete();
+    return () => {
+      const context = refPainter.current;
+      if (!context) return;
+
+      console.log('Delete:', context.id);
+      context.delete();
+    };
   }, []);
   return refPainter.current;
 }

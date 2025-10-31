@@ -5,10 +5,9 @@ import Hint from './hint';
 import ZoomSlider from './zoom-slider';
 import { useCleanMorphology } from './hooks';
 import LegendOverlay from './legend-overlay';
+import { ButtonResetCamera } from './button-reset-camera';
 
 import AddRecordingDialog from './add-recording-dialog';
-import { IconCenter } from '@/components/icons/Center';
-import Tooltip from '@/components/tooltip';
 import { NeuronLoader } from '@/components/neuron-viewer/plugins/neuron-loader';
 
 import styles from './webgl-neuron-selector.module.css';
@@ -50,12 +49,8 @@ export function WebglNeuronSelector({
           />
           <Hint painterManager={painterManager} />
           <header>
-            <Tooltip tooltip="Recenter the view" arrow="topLeft" foreColor="#fff" backColor="#05a">
-              <button type="button" onClick={painterManager.resetCamera}>
-                <IconCenter />
-              </button>
-            </Tooltip>
             <ZoomSlider className={styles.zoomSlider} painterManager={painterManager} />
+            <ButtonResetCamera painterManager={painterManager} />
           </header>
           <LegendOverlay painterManager={painterManager} sessionId={sessionId} />
           <AddRecordingDialog painterManager={painterManager} sessionId={sessionId} />

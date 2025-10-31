@@ -141,8 +141,8 @@ importers:
         specifier: ^14.5.1
         version: 14.6.1(@testing-library/dom@10.4.0)
       '@tolokoban/tgd':
-        specifier: ^2.0.50
-        version: 2.0.50
+        specifier: file:../../github/game/tgd2/
+        version: file:../../github/game/tgd2
       '@types/d3':
         specifier: ^7.4.0
         version: 7.4.3
@@ -4539,8 +4539,8 @@ packages:
     peerDependencies:
       '@testing-library/dom': '>=7.21.4'
 
-  '@tolokoban/tgd@2.0.50':
-    resolution: {integrity: sha512-XayVEAtsd2xenoUP7CBKPacLezuppwCduWP7NTcPmHMsZpooTAF65h3AnGwgN0cbCSrEDcnyCylbKJ/VXLmuMA==}
+  '@tolokoban/tgd@file:../../github/game/tgd2':
+    resolution: {directory: ../../github/game/tgd2, type: directory}
 
   '@tootallnate/once@2.0.0':
     resolution: {integrity: sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==}
@@ -16927,7 +16927,7 @@ snapshots:
     dependencies:
       '@testing-library/dom': 10.4.0
 
-  '@tolokoban/tgd@2.0.50':
+  '@tolokoban/tgd@file:../../github/game/tgd2':
     dependencies:
       '@loaders.gl/core': 4.3.4
       '@loaders.gl/draco': 4.3.4(@loaders.gl/core@4.3.4)

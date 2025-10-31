@@ -19,6 +19,21 @@ export default class GenericEvent<T = void> implements GenericEventInterface<T> 
     return value;
   }
 
+  useState(initialValue: T): [T, (v: T) => void] {
+    const [value, setValue] = React.useState(initialValue);
+    React.useEffect(() => {
+      this.addListener(setValue);
+      return () => this.removeListener(setValue);
+    }, []);
+    return [
+      value,
+      (v: T) => {
+        setValue(v);
+        this.dispatch(v);
+      },
+    ];
+  }
+
   addListener(listener: (arg: T) => void) {
     const { listeners } = this;
     if (listeners.includes(listener)) return;

@@ -31,7 +31,7 @@ export default function ZoomSlider({ className, painterManager }: ZoomSliderProp
         }}
         min={-1}
         max={1}
-        step={0.1}
+        step={0.01}
         tooltip={{ formatter: null }}
       />
       <button type="button" onClick={painterManager.zoomIn}>

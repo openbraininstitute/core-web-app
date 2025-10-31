@@ -24,6 +24,7 @@ interface LabelToDraw {
   boxH: number;
   text: string;
   color: string;
+  isInjection: boolean;
 }
 
 const FONTSIZE = 16;
@@ -67,11 +68,13 @@ export class LegendPainter {
         1
       ).applyMatrix(painterManager.getCameraMatrix());
       tip.scale(1 / tip.w);
-      const measure = ctx.measureText(target.section);
+      const isInjection = target.origin === 'injection';
+      const text = isInjection ? `🗲 ${target.section}` : target.section;
+      const measure = ctx.measureText(text);
       labels.push({
         originX: tip.x,
         originY: tip.y,
-        text: target.section,
+        text,
         color: getColor(targetIndex),
         tipX: round(tgdCalcMapRange(tip.x, -1, +1, 0, canvas.width)),
         tipY: round(tgdCalcMapRange(tip.y, +1, -1, 0, canvas.height)),
@@ -79,6 +82,7 @@ export class LegendPainter {
         boxY: 0,
         boxW: round(PADDING * 2 + measure.width),
         boxH: round(PADDING * 2 + FONTSIZE),
+        isInjection,
       });
     }
 
@@ -109,38 +113,51 @@ export function useLegendPainter(painterManager: PainterManager): LegendPainter 
 
 function drawLabel(ctx: CanvasRenderingContext2D, label: LabelToDraw) {
   const r = 8;
+  const { text, boxX, boxY, boxW, boxH, tipX, tipY, color, isInjection } = label;
   // Back is all black to help reading the lines.
   ctx.lineWidth = 3;
   ctx.strokeStyle = '#000';
   ctx.beginPath();
-  ctx.ellipse(label.tipX, label.tipY, r, r, 0, 0, 2 * Math.PI);
+  ctx.ellipse(tipX, tipY, r, r, 0, 0, 2 * Math.PI);
   ctx.stroke();
-  if (label.boxX > 0) {
-    ctx.font = `bold ${FONTSIZE}px sans-serif`;
-    ctx.strokeRect(label.boxX, label.boxY, label.boxW, label.boxH);
+  if (boxX > 0) {
+    if (isInjection) {
+      ctx.beginPath();
+      ctx.roundRect(boxX, boxY, boxW, boxH, boxH / 2);
+      ctx.stroke();
+    } else {
+      ctx.strokeRect(boxX, boxY, boxW, boxH);
+    }
   }
   ctx.beginPath();
-  ctx.moveTo(label.tipX, label.tipY);
-  ctx.lineTo(round(label.boxX + label.boxW / 2), round(label.boxY + label.boxH));
+  ctx.moveTo(tipX, tipY);
+  ctx.lineTo(round(boxX + boxW / 2), round(boxY + boxH / 2));
   ctx.stroke();
   // Front with colors.
-  ctx.fillStyle = label.color;
+  ctx.fillStyle = color;
   ctx.beginPath();
-  ctx.ellipse(label.tipX, label.tipY, r, r, 0, 0, 2 * Math.PI);
+  ctx.ellipse(tipX, tipY, r, r, 0, 0, 2 * Math.PI);
   ctx.fill();
-  if (label.boxX > 0) {
-    ctx.font = `bold ${FONTSIZE}px sans-serif`;
-    ctx.fillRect(label.boxX, label.boxY, label.boxW, label.boxH);
+  if (boxX > 0) {
+    if (isInjection) {
+      ctx.beginPath();
+      ctx.roundRect(boxX, boxY, boxW, boxH, boxH / 2);
+      ctx.fill();
+    } else {
+      ctx.fillStyle = color;
+      ctx.fillRect(boxX, boxY, boxW, boxH);
+    }
   }
   ctx.lineWidth = 1;
-  ctx.strokeStyle = label.color;
+  ctx.strokeStyle = color;
   ctx.beginPath();
-  ctx.moveTo(label.tipX, label.tipY);
-  ctx.lineTo(round(label.boxX + label.boxW / 2), round(label.boxY + label.boxH));
+  ctx.moveTo(tipX, tipY);
+  ctx.lineTo(round(boxX + boxW / 2), round(boxY + boxH / 2));
   ctx.stroke();
-  const measure = ctx.measureText(label.text);
+  ctx.font = `bold ${FONTSIZE}px sans-serif`;
+  const measure = ctx.measureText(text);
   ctx.fillStyle = '#000';
-  ctx.fillText(label.text, label.boxX + PADDING, label.boxY + PADDING + measure.emHeightAscent);
+  ctx.fillText(text, boxX + PADDING, boxY + PADDING + measure.emHeightAscent);
 }
 
 /**
@@ -166,15 +183,19 @@ function spreadLabels(labels: LabelToDraw[], width: number, height: number) {
   const topRight: LabelToDraw[] = [];
   const bottomLeft: LabelToDraw[] = [];
   const bottomRight: LabelToDraw[] = [];
+  // We set the center slightly off to force the soma label to always
+  // be in the bottom right corner.
+  const centerX = -1e-3;
+  const centerY = 1e-3;
   for (const label of labels) {
-    if (label.originX < 0) {
+    if (label.originX < centerX) {
       // Left
-      if (label.originY < 0) bottomLeft.push(label);
+      if (label.originY < centerY) bottomLeft.push(label);
       else topLeft.push(label);
     } else {
       // Right
       // eslint-disable-next-line no-lonely-if
-      if (label.originY < 0) bottomRight.push(label);
+      if (label.originY < centerY) bottomRight.push(label);
       else topRight.push(label);
     }
   }

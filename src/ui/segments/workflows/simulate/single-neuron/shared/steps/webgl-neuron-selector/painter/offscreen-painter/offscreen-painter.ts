@@ -1,5 +1,6 @@
 /* eslint-disable no-bitwise */
 import {
+  TgdCameraPerspective,
   TgdContext,
   TgdPainterClear,
   TgdPainterSegments,
@@ -19,13 +20,17 @@ export class OffscreenPainter {
     private readonly onscreenContext: TgdContext,
     private readonly structure: Structure
   ) {
+    onscreenContext.debugHierarchy('On Screen Context: ' + onscreenContext.name);
     onscreenContext.eventPaint.addListener(this.paint);
     const context = new TgdContext(this.offscreenCanvas, {
       preserveDrawingBuffer: true,
       antialias: false,
       alpha: false,
     });
-    context.camera = onscreenContext.camera;
+    context.camera = new TgdCameraPerspective();
+    context.camera.near = onscreenContext.camera.near;
+    context.camera.far = onscreenContext.camera.far;
+    context.camera.fromTransfo(onscreenContext.camera.transfo);
     this.context = context;
     const segments = makeSegments(structure);
     context.add(
@@ -34,6 +39,7 @@ export class OffscreenPainter {
         depth: webglPresetDepth.lessOrEqual,
         children: [
           new TgdPainterSegments(context, {
+            roundness: 3,
             minRadius: 4,
             makeDataset: segments.makeDataset,
             material: new MaterialIndex(),
@@ -70,6 +76,7 @@ export class OffscreenPainter {
     const h = Math.ceil(canvas.height / 2);
     this.offscreenCanvas.width = w;
     this.offscreenCanvas.height = h;
+    this.context.camera.fromTransfo(this.onscreenContext.camera.transfo);
     this.context.paint();
   };
 
