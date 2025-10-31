@@ -1,6 +1,10 @@
 import { VlmResponse } from './common';
 
-type InviteOrigin = 'Lab' | 'Project';
+export const InviteOriginDict = {
+  Lab: 'Lab',
+  Project: 'Project',
+} as const;
+export type InviteOrigin = (typeof InviteOriginDict)[keyof typeof InviteOriginDict];
 
 export type InviteData = {
   virtual_lab_id: string;
@@ -11,18 +15,24 @@ export type InviteData = {
 
 export type AcceptInviteResponse = VlmResponse<InviteData>;
 
-export type InviteDetailsData = {
+export type InvitationContent = {
   accepted: Boolean;
   invite_id: string;
   inviter_full_name: string;
-  origin: InviteOrigin;
-  project_id?: string;
-  project_name?: string;
-  virtual_lab_id: string;
-  virtual_lab_name?: string;
-};
+} & (
+  | {
+      virtual_lab_id: string;
+      virtual_lab_name?: string;
+      origin: 'Lab';
+    }
+  | {
+      origin: 'Project';
+      project_id: string;
+      project_name: string;
+    }
+);
 
-export type InviteDetailsResponse = VlmResponse<InviteDetailsData>;
+export type InvitationContentResponse = VlmResponse<InvitationContent>;
 
 export enum InviteErrorCodes {
   UNAUTHORIZED = 1,

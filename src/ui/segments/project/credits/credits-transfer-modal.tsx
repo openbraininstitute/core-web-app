@@ -25,7 +25,7 @@ export function CreditsTransferModal({ open, onClose }: Props) {
 
   const { virtualLabId, projectId } = useWorkspace();
   const { data: project } = useQuery({
-    queryKey: keyBuilder.getOne({ virtualLabId, projectId }),
+    queryKey: keyBuilder.getWorkspace({ virtualLabId, projectId }),
     queryFn: () => getProject({ virtualLabId, projectId }),
   });
 

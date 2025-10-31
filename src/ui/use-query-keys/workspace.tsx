@@ -7,7 +7,7 @@ import type { WorkspaceContext } from '@/types/common';
 export const prefix = 'workspace';
 
 export const keyBuilder = {
-  getOne: ({ virtualLabId, projectId }: WorkspaceContext) => [
+  getWorkspace: ({ virtualLabId, projectId }: WorkspaceContext) => [
     `${prefix}/project`,
     { virtualLabId, projectId },
   ],

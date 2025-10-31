@@ -22,7 +22,7 @@ export default async function Home({
       queryFn: getUserGroups,
     });
 
-    const { isAdmin } = makeRoles(result, virtualLabId, projectId);
+    const { isVirtualLabAdmin: isAdmin } = makeRoles(result, virtualLabId, projectId);
     if (!isAdmin) {
       throw new Error('User not allowed to access this page');
     }
