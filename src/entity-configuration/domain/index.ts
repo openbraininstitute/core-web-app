@@ -1,26 +1,27 @@
-import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
-import { PairedNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/paired-neurons-simulation';
-import { ElectricalCellRecording } from '@/entity-configuration/domain/experimental/electrical-cell-recording';
-import { SynapsePerConnection } from '@/entity-configuration/domain/experimental/synapse-per-connection';
-import { MEModelWithSynapsesCircuit } from '@/entity-configuration/domain/model/me-model-with-synapses';
-import { IonChannelRecording } from '@/entity-configuration/domain/experimental/ion-channel-recording';
-import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
-import { CellMorphology } from '@/entity-configuration/domain/experimental/cell-morphology';
-import { SmallMicrocircuit } from '@/entity-configuration/domain/model/small-microcircuit';
-import { NeuronDensity } from '@/entity-configuration/domain/experimental/neuron-density';
 import { BoutonDensity } from '@/entity-configuration/domain/experimental/bouton-density';
-import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
-import { PairedNeuronCircuit } from '@/entity-configuration/domain/model/paired-neurons';
-import { Microcircuit } from '@/entity-configuration/domain/model/mirocircuit';
-import { MEmodel } from '@/entity-configuration/domain/model/me-model';
+import { CellMorphology } from '@/entity-configuration/domain/experimental/cell-morphology';
+import { ElectricalCellRecording } from '@/entity-configuration/domain/experimental/electrical-cell-recording';
+import { IonChannelRecording } from '@/entity-configuration/domain/experimental/ion-channel-recording';
+import { NeuronDensity } from '@/entity-configuration/domain/experimental/neuron-density';
+import { SynapsePerConnection } from '@/entity-configuration/domain/experimental/synapse-per-connection';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
+import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
+import { MEmodel } from '@/entity-configuration/domain/model/me-model';
+import { MEModelWithSynapsesCircuit } from '@/entity-configuration/domain/model/me-model-with-synapses';
+import { Microcircuit } from '@/entity-configuration/domain/model/mirocircuit';
+import { PairedNeuronCircuit } from '@/entity-configuration/domain/model/paired-neurons';
+import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
+import { SmallMicrocircuit } from '@/entity-configuration/domain/model/small-microcircuit';
 import { Notebook } from '@/entity-configuration/domain/notebook';
 import {
+  SimulationCampaign,
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
-  SimulationCampaign,
 } from '@/entity-configuration/domain/simulation';
+import { MEModelCircuitSimulation } from '@/entity-configuration/domain/simulation/memodel-circuit-simulation';
+import { PairedNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/paired-neurons-simulation';
+import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
@@ -49,6 +50,7 @@ const EntityCoreSimulationConfiguration = {
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
   SimulationCampaign,
+  MEModelCircuitSimulation,
   SmallMicrocircuitSimulation,
   PairedNeuronCircuitSimulation,
 };

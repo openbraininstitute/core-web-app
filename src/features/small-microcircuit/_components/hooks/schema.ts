@@ -8,9 +8,11 @@ import { AtomsMap, JSONSchema } from '../../types';
 import { ConfigValue, Config } from '../components';
 import { isPlainObject, isAtom } from '../utils';
 import { assertErrorMessage } from '@/util/utils';
+import { CircuitOrigin } from '@/services/small-scale-simulator/types';
 
 export function useObioneJsonSchema(
   circuitId: string,
+  circuitOrigin: CircuitOrigin,
   notification: NotificationInstance,
   setAtomsMap: (atomsMap: AtomsMap) => void,
   initialConfig?: Config
@@ -24,7 +26,11 @@ export function useObioneJsonSchema(
         const json = await res.json();
         const dereferenced = await $RefParser.dereference(json);
         // @ts-ignore
-        const theSchema = dereferenced.components.schemas.SimulationsForm as JSONSchema;
+        const theSchema = dereferenced.components.schemas[
+          circuitOrigin === CircuitOrigin.CIRCUIT
+            ? 'CircuitSimulationScanConfig'
+            : 'MEModelSimulationScanConfig'
+        ] as JSONSchema;
         if (!theSchema.properties) return;
 
         setSchema(theSchema);
@@ -70,7 +76,7 @@ export function useObioneJsonSchema(
 
               if (k === 'initialize') {
                 initial.circuit = {
-                  type: 'CircuitFromID',
+                  type: circuitOrigin === CircuitOrigin.CIRCUIT ? 'CircuitFromID' : 'MEModelFromID',
                   id_str: circuitId,
                 };
               }
@@ -89,7 +95,7 @@ export function useObioneJsonSchema(
     }
 
     fetchSpec();
-  }, [circuitId, notification, setAtomsMap, setSchema, initialConfig]);
+  }, [circuitId, circuitOrigin, notification, setAtomsMap, setSchema, initialConfig]);
 
   const referenceTypesToConfigKeys: Record<string, string> = {};
   const referenceTypesToTitles: Record<string, string> = {};

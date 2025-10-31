@@ -115,6 +115,20 @@ export const EntityWorkflowConfiguration: Partial<
       },
     },
   },
+  [ExtendedEntitiesTypeDict.MEModelCircuit]: {
+    group: EntityScopeDict.Cellular,
+    label: 'ME-model circuit',
+    properties: {
+      build: {
+        disabled: true,
+        type: ExtendedEntitiesTypeDict.Memodel,
+      },
+      simulate: {
+        disabled: false,
+        type: ExtendedEntitiesTypeDict.MEModelCircuitSimulation,
+      },
+    },
+  },
   [ExtendedEntitiesTypeDict.SingleNeuronSynaptome]: {
     group: EntityScopeDict.Cellular,
     label: 'Synaptome',

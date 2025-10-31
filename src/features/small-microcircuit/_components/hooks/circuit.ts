@@ -1,46 +1,53 @@
 import React from 'react';
 
-import { getCircuit } from '@/api/entitycore/queries/model/circuit';
-import { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import { useAppNotification } from '@/components/notification';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { EntityTypeDict } from '@/api/entitycore/types';
+import { getCircuit } from '@/api/entitycore/queries/model/circuit';
+import { getMEModel } from '@/api/entitycore/queries/model/me-model';
+import { EntityTypeDict, IMEModel, TEntityTypeDict } from '@/api/entitycore/types';
+import { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { useAppNotification } from '@/components/notification';
+import { CircuitOrigin } from '@/services/small-scale-simulator/types';
+import { WorkspaceContext } from '@/types/common';
 
-const pendingQueries = new Map<string, Promise<ICircuit | undefined | null>>();
+const pendingQueries = new Map<string, Promise<ICircuit | IMEModel | undefined | null>>();
 
 /**
  * Retrieve a circuit from EntityCore.
- * @param circuitId
+ * @param modelId
  * @returns `undefined` if the query is pending, `null` if an error occured and the circuit in case of success.
  */
-export function useCircuit(circuitId: string | undefined): ICircuit | undefined | null {
+export function useModel(
+  modelId: string | undefined,
+  circuitOrigin: CircuitOrigin,
+  ctx: WorkspaceContext
+): ICircuit | IMEModel | undefined | null {
   const { error } = useAppNotification();
-  const [circuit, setCircuit] = React.useState<ICircuit | undefined | null>(undefined);
+  const [model, setModel] = React.useState<ICircuit | IMEModel | undefined | null>(undefined);
 
   React.useEffect(() => {
-    if (!circuitId) {
-      setCircuit(undefined);
+    if (!modelId) {
+      setModel(undefined);
       return;
     }
 
-    getQuery(circuitId)
-      .then(setCircuit)
+    getModelQuery(modelId, circuitOrigin, ctx)
+      .then(setModel)
       .catch((ex) => {
         error({
-          message: `Unable to retrieve circuit "${circuitId}"!\n${ex}`,
+          message: `Unable to retrieve model "${modelId}"!\n${ex}`,
         });
-        setCircuit(null);
+        setModel(null);
       });
-  }, [circuitId, error]);
+  }, [modelId, error, circuitOrigin, ctx]);
 
-  return circuit;
+  return model;
 }
 
 export function useCircuitImageURL(circuitId: string | undefined) {
   const { error } = useAppNotification();
   const [url, setUrl] = React.useState<string | undefined>(undefined);
-  const circuit = useCircuit(circuitId);
+  const circuit = useModel(circuitId, CircuitOrigin.MEMODEL);
 
   React.useEffect(() => {
     const action = async () => {
@@ -78,11 +85,22 @@ export function useCircuitImageURL(circuitId: string | undefined) {
   return url;
 }
 
-function getQuery(circuitId: string): Promise<ICircuit | undefined | null> {
-  const query = pendingQueries.get(circuitId);
+function getModelQuery(
+  modelId: string,
+  circuitOrigin: CircuitOrigin,
+  context: WorkspaceContext
+): Promise<ICircuit | IMEModel | undefined | null> {
+  const query = pendingQueries.get(modelId);
   if (query) return query;
 
-  const newQuery = getCircuit({ id: circuitId });
-  pendingQueries.set(circuitId, newQuery);
+  if (![CircuitOrigin.CIRCUIT, CircuitOrigin.MEMODEL].includes(circuitOrigin)) {
+    throw new Error('Unsupported model type: ' + circuitOrigin);
+  }
+
+  const newQuery =
+    circuitOrigin === CircuitOrigin.CIRCUIT
+      ? getCircuit({ id: modelId, context })
+      : getMEModel({ id: modelId, context });
+  pendingQueries.set(modelId, newQuery);
   return newQuery;
 }

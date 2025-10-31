@@ -5,7 +5,6 @@ import { CheckCircleOutlined, CloseCircleOutlined, PlusCircleOutlined } from '@a
 
 import { JSONSchema } from '../types';
 import { isPlainObject } from './utils';
-import CircuitDetails from './circuit-details';
 import Tooltip from './tooltip';
 import ParameterSwep from './parameter-sweep';
 
@@ -13,6 +12,9 @@ import PredefinedNodeset from './predefined-nodeset';
 import Reference from './reference';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { classNames } from '@/util/utils';
+import { EntityTypeDict, IMEModel } from '@/api/entitycore/types';
+import ModelDetails from './model-details';
+import { CircuitOrigin } from '@/services/small-scale-simulator/types';
 
 type Primitive = null | boolean | number | string;
 interface Object {
@@ -47,7 +49,8 @@ export function JSONSchemaForm({
   schema,
   stateAtom,
   config,
-  circuit,
+  model,
+  circuitOrigin,
   onAddReferenceClick,
   selectedCategory,
   virtualLabId,
@@ -60,7 +63,8 @@ export function JSONSchemaForm({
   disabled: boolean;
   config: Config;
   schema: JSONSchema;
-  circuit: ICircuit | undefined | null;
+  model: ICircuit | IMEModel | undefined | null;
+  circuitOrigin: CircuitOrigin;
   stateAtom: ReturnType<typeof atom<{ [key: string]: ConfigValue }>>;
   onAddReferenceClick: (reference: string) => void;
   virtualLabId: string;
@@ -90,10 +94,15 @@ export function JSONSchemaForm({
   }, [stateAtom, setState, schema.properties]);
 
   function renderInput(k: string, v: JSONSchema) {
-    if (selectedCategory === 'PredefinedNeuronSet' && k === 'node_set' && circuit) {
+    if (
+      selectedCategory === 'PredefinedNeuronSet' &&
+      k === 'node_set' &&
+      model &&
+      circuitOrigin === CircuitOrigin.CIRCUIT
+    ) {
       return (
         <PredefinedNodeset
-          circuitId={circuit.id}
+          circuitId={model.id}
           virtualLabId={virtualLabId}
           projectId={projectId}
           stateAtom={stateAtom}
@@ -101,7 +110,7 @@ export function JSONSchemaForm({
       );
     }
 
-    if (k === 'circuit' && circuit) return <CircuitDetails circuit={circuit} />;
+    if (k === 'circuit' && model) return <ModelDetails model={model} />;
 
     if (v.is_block_reference) {
       const refType = v.properties?.type.const ?? '';

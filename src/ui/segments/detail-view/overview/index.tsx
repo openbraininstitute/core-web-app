@@ -1,37 +1,38 @@
-import { notFound } from 'next/navigation';
-import IonChannelModelOverview from './ion-channel-model';
+import { getMEModel } from '@/api/entitycore/queries';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
   CommonSummaryViewFields,
   getViewDefinitionByExtendedType,
 } from '@/entity-configuration/definitions/view-defs';
-import MEModelDetails from '@/features/entities/neuron-simulation/elements/me-model-details';
-import SynaptomeDetails from '@/features/entities/neuron-simulation/elements/synaptome-details';
-import { Visualization as CircuitViz } from '@/ui/segments/explore/circuit/elements/visualization';
 import { circuitTypes, type EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
-import { CellMorphologyViewer } from '@/features/entities/cell-morphology/detail-view';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { Field } from '@/ui/segments/detail-view/overview/field';
 import {
   resolveSimulationByCampaignId,
   resolveSingleNeuronSimulation,
   resolveSingleNeuronSynaptomeSimulation,
 } from '@/entity-configuration/domain/simulation';
-import { getMEModel } from '@/api/entitycore/queries';
+import { CellMorphologyViewer } from '@/features/entities/cell-morphology/detail-view';
+import MEModelDetails from '@/features/entities/neuron-simulation/elements/me-model-details';
+import SynaptomeDetails from '@/features/entities/neuron-simulation/elements/synaptome-details';
 import { EphysViewer } from '@/features/ephys-viewer';
+import { Field } from '@/ui/segments/detail-view/overview/field';
+import { Visualization as CircuitViz } from '@/ui/segments/explore/circuit/elements/visualization';
+import { notFound } from 'next/navigation';
+import IonChannelModelOverview from './ion-channel-model';
 
-import type { EntityTypeValue } from '@/entity-configuration/domain';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { AwaitedType, WorkspaceContext } from '@/types/common';
 import type {
   ICellMorphology,
   IElectricalCellRecording,
   ISingleNeuronSynaptome,
 } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { EntityTypeValue } from '@/entity-configuration/domain';
+import type { AwaitedType, WorkspaceContext } from '@/types/common';
 
-import SmallMicrocircuitSimulation from '@/features/small-microcircuit';
 import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
 import { IonChannelRecordingViewer } from '@/features/ion-channel-recording-viewer';
+import SmallMicrocircuitSimulation from '@/features/small-microcircuit';
+import { CircuitOrigin } from '@/services/small-scale-simulator/types';
 
 export default async function Overview({
   entity,
@@ -84,7 +85,8 @@ export default async function Overview({
 
   if (
     extendedType === ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation ||
-    extendedType === ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation
+    extendedType === ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation ||
+    extendedType === ExtendedEntitiesTypeDict.MEModelCircuitSimulation
   ) {
     let config: AwaitedType<ReturnType<typeof resolveSimulationByCampaignId>>;
 
@@ -96,9 +98,15 @@ export default async function Overview({
 
     if (!config.simulation?.entity_id) notFound();
 
+    const circuitOrigin =
+      extendedType === ExtendedEntitiesTypeDict.MEModelCircuitSimulation
+        ? CircuitOrigin.MEMODEL
+        : CircuitOrigin.CIRCUIT;
+
     return (
       <SmallMicrocircuitSimulation
-        circuitId={config.simulation.entity_id}
+        modelId={config.simulation.entity_id}
+        circuitOrigin={circuitOrigin}
         virtualLabId={ctx.virtualLabId}
         projectId={ctx.projectId}
         initialCampaignId={config.campaign.id}

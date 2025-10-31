@@ -8,6 +8,9 @@ import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { Fragment, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
+// James asked to only comment it out for now.
+// import CircuitName from './_components/circuit-name';
+
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import ApiError from '@/api/error';
@@ -25,7 +28,7 @@ import {
   JSONSchemaForm,
 } from '@/features/small-microcircuit/_components/components';
 import { FileViewer } from '@/features/small-microcircuit/_components/file-viewer';
-import { useCircuit } from '@/features/small-microcircuit/_components/hooks/circuit';
+import { useModel } from '@/features/small-microcircuit/_components/hooks/circuit';
 import { useConfigAtom } from '@/features/small-microcircuit/_components/hooks/config-atom';
 import {
   isRootCategory,
@@ -39,7 +42,7 @@ import TabsSelector from '@/features/small-microcircuit/_components/tabs-selecto
 import { CATEGORIES, isAtom, ORDERING } from '@/features/small-microcircuit/_components/utils';
 import { simulationStatusColorMap } from '@/features/small-microcircuit/constants';
 import errorRegistry from '@/features/small-microcircuit/error-registry';
-import { AtomsMap, TabType } from '@/features/small-microcircuit/types';
+import { AtomsMap, JSONSchema, TabType } from '@/features/small-microcircuit/types';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/simulation';
 import { runSimulationBatch } from '@/services/small-scale-simulator/circuit';
@@ -48,11 +51,13 @@ import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { assertErrorMessage, classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 import { getErrorMessage } from '@/utils/error';
+import { CircuitOrigin } from '@/services/small-scale-simulator/types';
 
 import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
 
 export default function SimulationCampaignConfiguration({
-  circuitId,
+  modelId,
+  circuitOrigin,
   virtualLabId,
   projectId,
   initialCampaignId,
@@ -60,7 +65,8 @@ export default function SimulationCampaignConfiguration({
   readOnly,
   className,
 }: {
-  circuitId: string;
+  modelId: string;
+  circuitOrigin: CircuitOrigin;
   virtualLabId: string;
   projectId: string;
   initialCampaignId?: string;
@@ -68,7 +74,7 @@ export default function SimulationCampaignConfiguration({
   readOnly?: boolean;
   className?: string;
 }) {
-  const circuit = useCircuit(circuitId);
+  const model = useModel(modelId, circuitOrigin, { virtualLabId, projectId });
   const [tab, setTab] = useState<TabType>('configuration');
   const [configTab, setConfigTab] = useState<string>('info');
   const [editing, setEditing] = useState(true);
@@ -80,7 +86,7 @@ export default function SimulationCampaignConfiguration({
   const initialConfigValidated = useRef(false);
   const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
   const { schema, refLabels, referenceTypesToConfigKeys, referenceTypesToTitles } =
-    useObioneJsonSchema(circuitId, notification, setAtomsMap, initialConfig);
+    useObioneJsonSchema(modelId, circuitOrigin, notification, setAtomsMap, initialConfig);
 
   const selectedCatSchema = schema?.properties?.[configTab]?.additionalProperties?.oneOf?.find(
     (s) => s.properties?.type.const === selectedCategory
@@ -119,6 +125,12 @@ export default function SimulationCampaignConfiguration({
       </div>
     );
   }
+
+  const apiBaseUrl = `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/generated`;
+  const apiUrl =
+    circuitOrigin === CircuitOrigin.CIRCUIT
+      ? `${apiBaseUrl}/circuit-simulation-scan-config-generate-grid`
+      : `${apiBaseUrl}/me-model-simulation-scan-config-generate-grid`;
 
   return (
     <div className={cn('flex h-full flex-col space-y-5', className)}>
@@ -217,19 +229,16 @@ export default function SimulationCampaignConfiguration({
                       return;
                     }
 
-                    const res = await authFetch(
-                      `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/generated/simulations-generate-grid-save`,
-                      {
-                        method: 'POST',
-                        body: JSON.stringify(config),
-                        headers: {
-                          Accept: 'application/json',
-                          'Content-Type': 'application/json',
-                          'virtual-lab-id': virtualLabId,
-                          'project-id': projectId,
-                        },
-                      }
-                    );
+                    const res = await authFetch(apiUrl, {
+                      method: 'POST',
+                      body: JSON.stringify(config),
+                      headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        'virtual-lab-id': virtualLabId,
+                        'project-id': projectId,
+                      },
+                    });
 
                     if (res.status !== 200) {
                       const errorRes = await res.json();
@@ -345,13 +354,14 @@ export default function SimulationCampaignConfiguration({
                       ? atomsMap[configTab]
                       : atomsMap[configTab][resolveKey(schema, configTab, selectedItemIdx)]
                   }
-                  circuit={circuit}
+                  model={model}
+                  circuitOrigin={circuitOrigin}
                   virtualLabId={virtualLabId}
                   projectId={projectId}
                 />
               )}
           </div>
-          <CircuitPreview circuit={circuit} />
+          {/* <CircuitPreview circuit={model} modelType={modelType} /> */}
         </div>
       )}
 
@@ -462,6 +472,7 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
     setSimRequestInProgress(true);
     try {
       await runSimulationBatch({
+<<<<<<< HEAD
         ctx: { virtualLabId, projectId },
         simulationIds: simIds,
         onInit: () => {
@@ -469,6 +480,17 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
           setSelectedSimulationIds([]);
           setSimRequestInProgress(false);
         },
+=======
+        simulationIds: simExecSelectedSimulationIds,
+        ctx: { virtualLabId, projectId },
+        onInit: () =>
+          setTimeout(() => {
+            // Pending statuses are sent via the stream asynchronously after the init.
+            // This timeout prevents the "Run simulations" button from flashing.
+            setSimRequestInProgress(false);
+            setSimExecSelectedSimulationIds([]);
+          }, 1000),
+>>>>>>> af0b24be8 (Add current progress)
         onMessage: (message) => {
           match(message)
             .with({ message_type: MessageType.STATUS }, (msg) => {

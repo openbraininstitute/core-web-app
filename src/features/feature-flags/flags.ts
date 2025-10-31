@@ -3,7 +3,7 @@ import { FlagDefinition } from './config';
 
 export const flags = [
   {
-    key: 'me-model-obi-one-sim',
+    key: 'meModelObiOneSim',
     defaultValue: false,
     description: 'Enable new ME-model simulation flow with OBI-ONE integration',
     visible: ['local', 'development'].includes(env.NEXT_PUBLIC_DEPLOYMENT_ENV),
