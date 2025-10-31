@@ -1,11 +1,14 @@
 import React from 'react';
-import { LoadingOutlined } from '@ant-design/icons';
 
 import { usePainterManager } from './painter';
-
 import Hint from './hint';
-import { useMorphology } from '@/hooks/use-morphology';
-import { Morphology } from '@/services/bluenaas-single-cell/types';
+import ZoomSlider from './zoom-slider';
+import { useCleanMorphology } from './hooks';
+import LegendOverlay from './legend-overlay';
+import { ButtonResetCamera } from './button-reset-camera';
+
+import AddRecordingDialog from './add-recording-dialog';
+import { NeuronLoader } from '@/components/neuron-viewer/plugins/neuron-loader';
 
 import styles from './webgl-neuron-selector.module.css';
 
@@ -13,42 +16,54 @@ export interface WebglNeuronSelectorProps {
   projectId: string;
   virtualLabId: string;
   meModelId: string;
+  sessionId: string;
 }
 
 export function WebglNeuronSelector({
   projectId,
   virtualLabId,
   meModelId,
-  // sessionId,
+  sessionId,
 }: WebglNeuronSelectorProps) {
-  const [morphology, setMorphology] = React.useState<Morphology | null>(null);
-  const painterManager = usePainterManager(morphology);
-  const { loading, error } = useMorphology({
-    modelId: meModelId,
-    callback: setMorphology,
+  const painterManager = usePainterManager();
+  const { loading, error } = useCleanMorphology(
+    painterManager,
+    meModelId,
     projectId,
     virtualLabId,
-  });
+    sessionId
+  );
   if (error) return <pre>{JSON.stringify(error, null, 2)}</pre>;
-  if (loading) return <Loading />;
 
   return (
     <div className={styles.main}>
-      <canvas
-        key="canvas"
-        ref={(canvas: HTMLCanvasElement | null) => {
-          painterManager.canvas = canvas;
-        }}
-      />
-      <Hint painterManager={painterManager} />
+      {loading ? (
+        <Loading />
+      ) : (
+        <>
+          <canvas
+            key="canvas"
+            ref={(canvas: HTMLCanvasElement | null) => {
+              painterManager.canvas = canvas;
+            }}
+          />
+          <Hint painterManager={painterManager} />
+          <header>
+            <ZoomSlider className={styles.zoomSlider} painterManager={painterManager} />
+            <ButtonResetCamera painterManager={painterManager} />
+          </header>
+          <LegendOverlay painterManager={painterManager} sessionId={sessionId} />
+          <AddRecordingDialog painterManager={painterManager} sessionId={sessionId} />
+        </>
+      )}
     </div>
   );
 }
 
 function Loading() {
   return (
-    <div className="text-neutral-1 flex items-center justify-center text-3xl">
-      <LoadingOutlined />
+    <div className={styles.loading}>
+      <NeuronLoader text="Loading Neuron" />
     </div>
   );
 }

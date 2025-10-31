@@ -14,7 +14,6 @@ import type {
   TNeuronViewerHoverData,
 } from '@/services/bluenaas-single-cell/renderer';
 import { WebglNeuronSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector';
-// import { WebglNeuronSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector/webgl-neuron-selector';
 
 type Props = {
   meModelId: string;
@@ -45,7 +44,7 @@ export function NeuronViewerContainer({
     useState<TNeuronViewerClickData | null>(null);
   const [neuronViewerHoverData, setNeuronViewerOnHoverData] =
     useState<TNeuronViewerHoverData | null>(null);
-  const newViewer = false;
+  const newViewer = true;
 
   return (
     <ErrorBoundary
@@ -123,6 +122,7 @@ export function NeuronViewerContainer({
             projectId={projectId}
             virtualLabId={virtualLabId}
             meModelId={meModelId}
+            sessionId={sessionId}
           />
         )}
       </DefaultLoadingSuspense>

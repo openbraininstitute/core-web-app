@@ -1,18 +1,18 @@
 .container {
   position: relative;
-  --backColor: #fff;
-  --foreColor: #000;
+  --custom-backColor: #fff;
+  --custom-foreColor: #000;
   --arrowWidth: 16px;
   --arrowHeight: 16px;
-  --borderColor: var(--foreColor);
-  --borderColor: color-mix(in srgb, var(--foreColor) 50%, transparent 50%);
+  --borderColor: var(--custom-foreColor);
+  --borderColor: color-mix(in srgb, var(--custom-foreColor) 50%, transparent 50%);
 }
 
 .tooltip {
   border-radius: 0.25em;
   padding: 0.5em 1em;
-  color: var(--foreColor, #000);
-  background-color: var(--backColor, #fff);
+  color: var(--custom-foreColor, #000);
+  background-color: var(--custom-backColor, #fff);
   position: absolute;
   /* width: fit-content; */
   z-index: 999999;
@@ -45,7 +45,7 @@
   .arrow {
     width: var(--arrowWidth);
     height: var(--arrowHeight);
-    fill: var(--backColor);
+    fill: var(--custom-backColor);
     stroke: var(--borderColor);
     position: absolute;
 

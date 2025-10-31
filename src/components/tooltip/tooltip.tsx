@@ -7,6 +7,8 @@ import styles from './tooltip.module.css';
 export interface TooltipProps {
   className?: string;
   classNameTooltip?: string;
+  backColor?: string;
+  foreColor?: string;
   arrow?: 'top' | 'topLeft' | 'topRight';
   arrowWidth?: number;
   arrowHeight?: number;
@@ -21,10 +23,18 @@ export default function Tooltip({
   arrow = 'top',
   arrowWidth = 16,
   arrowHeight = 16,
+  backColor = '#fff',
+  foreColor = '#000',
   children,
 }: TooltipProps) {
   return (
-    <div className={classNames(className, styles.container)}>
+    <div
+      className={classNames(className, styles.container)}
+      style={{
+        '--custom-backColor': backColor,
+        '--custom-foreColor': foreColor,
+      }}
+    >
       {children}
       <div className={classNames(styles.tooltip, styles[arrow], classNameTooltip)}>
         {tooltip}
