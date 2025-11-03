@@ -15,7 +15,6 @@ import {
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { WorkspaceContext } from '@/types/common';
 import { classNames } from '@/util/utils';
-import { EntityTypeDict } from '@/api/entitycore/types';
 
 export type File = {
   asset: IAsset;

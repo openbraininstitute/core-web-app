@@ -1,4 +1,8 @@
+import { notFound } from 'next/navigation';
+
 import { getMEModel } from '@/api/entitycore/queries';
+import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
   CommonSummaryViewFields,
@@ -14,10 +18,11 @@ import { CellMorphologyViewer } from '@/features/entities/cell-morphology/detail
 import MEModelDetails from '@/features/entities/neuron-simulation/elements/me-model-details';
 import SynaptomeDetails from '@/features/entities/neuron-simulation/elements/synaptome-details';
 import { EphysViewer } from '@/features/ephys-viewer';
+import { IonChannelRecordingViewer } from '@/features/ion-channel-recording-viewer';
+import SmallMicrocircuitSimulation from '@/features/small-microcircuit';
 import { Field } from '@/ui/segments/detail-view/overview/field';
+import IonChannelModelOverview from '@/ui/segments/detail-view/overview/ion-channel-model';
 import { Visualization as CircuitViz } from '@/ui/segments/explore/circuit/elements/visualization';
-import { notFound } from 'next/navigation';
-import IonChannelModelOverview from './ion-channel-model';
 
 import type {
   ICellMorphology,
@@ -27,11 +32,6 @@ import type {
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityTypeValue } from '@/entity-configuration/domain';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
-
-import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
-import { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
-import { IonChannelRecordingViewer } from '@/features/ion-channel-recording-viewer';
-import SmallMicrocircuitSimulation from '@/features/small-microcircuit';
 
 export default async function Overview({
   entity,

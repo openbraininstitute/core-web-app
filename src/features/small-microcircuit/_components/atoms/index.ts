@@ -1,8 +1,11 @@
+import isEqual from 'es-toolkit/compat/isEqual';
 import { atom } from 'jotai';
 import { atomWithRefresh } from 'jotai/utils';
-import isEqual from 'es-toolkit/compat/isEqual';
+import { match } from 'ts-pattern';
 
+import { getMEModel } from '@/api/entitycore/queries';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { getEntity } from '@/api/entitycore/queries/general/entity';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
@@ -15,14 +18,11 @@ import {
   ICircuitSimulationExecution,
 } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
+import { resolveExecutions } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { getLatestSimExecStatus } from '@/features/small-microcircuit/_components/utils';
 import { SimExecStatusMap } from '@/features/small-microcircuit/types';
 import { WorkspaceContext } from '@/types/common';
 import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';
-import { resolveExecutions } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
-import { getEntity } from '@/api/entitycore/queries/general/entity';
-import { match } from 'ts-pattern';
-import { getMEModel } from '@/api/entitycore/queries';
 
 const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
   ({ simulationId, context }: { simulationId: string; context: WorkspaceContext }) =>

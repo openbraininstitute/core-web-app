@@ -23,12 +23,10 @@ type HelpSectionsKeys = (typeof HelpSections)[keyof typeof HelpSections];
 const tabsConfigItems: Array<{
   key: HelpSectionsKeys;
   title: string;
-  position: 'first' | 'middle' | 'last';
 }> = [
   {
     key: HelpSections.Overview,
     title: 'Overview',
-    position: 'first',
   },
   // {
   //   key: HelpSections.Tutorials,
@@ -38,32 +36,26 @@ const tabsConfigItems: Array<{
   {
     key: HelpSections.Glossary,
     title: 'Glossary',
-    position: 'middle',
   },
   {
     key: HelpSections.Guides,
     title: 'Guides',
-    position: 'middle',
   },
   {
     key: HelpSections.Features,
     title: 'Features',
-    position: 'middle',
   },
   {
     key: HelpSections.PriceList,
     title: 'Price List',
-    position: 'middle',
   },
   {
     key: HelpSections.AIChatTools,
     title: 'AI Chat Tools',
-    position: 'middle',
   },
   {
     key: HelpSections.About,
     title: 'About',
-    position: 'last',
   },
 ];
 
@@ -98,7 +90,6 @@ function HelpTabs() {
           <PillTabsTrigger
             key={tab.key}
             value={tab.key}
-            position={tab.position}
             className={cn(
               'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3 text-base select-none data-[state=active]:font-bold data-[state=active]:text-white',
               { 'h-12': breakpoint === 'xl' }

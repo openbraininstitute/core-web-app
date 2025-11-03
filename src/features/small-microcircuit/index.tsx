@@ -22,7 +22,7 @@ import {
   simExecStatusMapAtomFamily,
   simulationsByCampaignIdAtomFamily,
 } from '@/features/small-microcircuit/_components/atoms';
-import CircuitPreview from '@/features/small-microcircuit/_components/circuit-preview';
+import ModelPreview from '@/features/small-microcircuit/_components/model-preview';
 import {
   Config,
   ConfigValue,
@@ -51,9 +51,9 @@ import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { assertErrorMessage, classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 import { getErrorMessage } from '@/utils/error';
+import { EntityTypeDict } from '@/api/entitycore/types';
 
 import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
-import { EntityTypeDict } from '@/api/entitycore/types';
 
 export default function SimulationCampaignConfiguration({
   modelId,
@@ -363,7 +363,7 @@ export default function SimulationCampaignConfiguration({
                 />
               )}
           </div>
-          {/* <CircuitPreview circuit={model} modelType={modelType} /> */}
+          <ModelPreview model={model} />
         </div>
       )}
 

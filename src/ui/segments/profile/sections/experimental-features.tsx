@@ -63,11 +63,16 @@ export function ExperimentalFeatures() {
         <div className="w-full max-w-3xl">
           <div className="space-y-3">
             {visibleFlags.map(({ key, description }) => (
-              <label key={key} className="flex items-start justify-between gap-4 py-2">
+              <label
+                key={key}
+                htmlFor={key}
+                className="flex items-start justify-between gap-4 py-2"
+              >
                 <div className="flex-1">
                   <div className="font-medium">{description}</div>
                 </div>
                 <Switch
+                  id={key}
                   checked={optimisticFlags[key] ?? flagValues[key]}
                   onChange={(checked) => handleFlagChange(key, checked)}
                   loading={updatingFlags.has(key)}
@@ -77,6 +82,7 @@ export function ExperimentalFeatures() {
           </div>
           <div className="mt-8 text-right">
             <button
+              type="button"
               onClick={() => resetFlags()}
               className="bg-destructive mt-4 rounded px-4 py-2 text-sm text-white hover:bg-red-600"
             >

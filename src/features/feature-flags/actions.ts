@@ -1,10 +1,15 @@
 'use server';
 
-import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
 
 import { env } from '@/env';
-import { COOKIE_MAX_AGE, FEATURE_FLAGS_COOKIE, defaultFlags, FeatureFlags } from './config';
+import {
+  COOKIE_MAX_AGE,
+  defaultFlags,
+  FEATURE_FLAGS_COOKIE,
+  FeatureFlags,
+} from '@/features/feature-flags/config';
 
 export async function getAllFlags(): Promise<FeatureFlags> {
   const cookieStore = await cookies();

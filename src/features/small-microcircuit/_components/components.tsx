@@ -3,17 +3,18 @@ import { Input, InputNumber, Select } from 'antd';
 import { atom, useAtom } from 'jotai';
 import { useEffect, useState } from 'react';
 
-import { JSONSchema } from '../types';
-import ParameterSwep from './parameter-sweep';
-import Tooltip from './tooltip';
-import { isPlainObject } from './utils';
-
 import { EntityTypeDict, IMEModel } from '@/api/entitycore/types';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
+
+import ModelDetails from '@/features/small-microcircuit/_components/model-details';
+import ParameterSwep from '@/features/small-microcircuit/_components/parameter-sweep';
+import PredefinedNodeset from '@/features/small-microcircuit/_components/predefined-nodeset';
+import Reference from '@/features/small-microcircuit/_components/reference';
+import Tooltip from '@/features/small-microcircuit/_components/tooltip';
+import { isPlainObject } from '@/features/small-microcircuit/_components/utils';
+import { JSONSchema } from '@/features/small-microcircuit/types';
+
 import { classNames } from '@/util/utils';
-import ModelDetails from './model-details';
-import PredefinedNodeset from './predefined-nodeset';
-import Reference from './reference';
 
 type Primitive = null | boolean | number | string;
 interface Object {

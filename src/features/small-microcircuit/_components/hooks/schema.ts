@@ -1,15 +1,16 @@
+import $RefParser from '@apidevtools/json-schema-ref-parser';
 import { NotificationInstance } from 'antd/es/notification/interface';
 import { atom } from 'jotai';
 import React, { useState } from 'react';
-
-import $RefParser from '@apidevtools/json-schema-ref-parser';
+import { match } from 'ts-pattern';
 
 import { EntityTypeDict, TEntityTypeDict } from '@/api/entitycore/types';
+
+import { Config, ConfigValue } from '@/features/small-microcircuit/_components/components';
+import { isAtom, isPlainObject } from '@/features/small-microcircuit/_components/utils';
+import { AtomsMap, JSONSchema } from '@/features/small-microcircuit/types';
+
 import { assertErrorMessage } from '@/util/utils';
-import { match } from 'ts-pattern';
-import { AtomsMap, JSONSchema } from '../../types';
-import { Config, ConfigValue } from '../components';
-import { isAtom, isPlainObject } from '../utils';
 
 export function useObioneJsonSchema(
   circuitId: string,
