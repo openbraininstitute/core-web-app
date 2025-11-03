@@ -157,7 +157,8 @@ function drawLabel(ctx: CanvasRenderingContext2D, label: LabelToDraw) {
   ctx.font = `bold ${FONTSIZE}px sans-serif`;
   const measure = ctx.measureText(text);
   ctx.fillStyle = '#000';
-  ctx.fillText(text, boxX + PADDING, boxY + PADDING + measure.emHeightAscent);
+  const fontHeight = measure.emHeightAscent ?? measure.actualBoundingBoxAscent ?? FONTSIZE;
+  ctx.fillText(text, boxX + PADDING, boxY + PADDING + fontHeight);
 }
 
 /**
