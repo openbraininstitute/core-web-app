@@ -28,11 +28,11 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
           context: params[0].context,
           withFacets: params[0].withFacets,
           filters: {
-            ...params[0].filters,
             scale__in: without(
               Object.values(CircuitScaleDictionary),
               CircuitScaleDictionary.Single
             ),
+            ...params[0].filters,
           },
         });
       },
