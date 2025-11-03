@@ -18,8 +18,13 @@ import {
   type ThreeDVisualizerQueryParamKeys,
   type WorkflowSimulatePanelKeys,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import SimulationConfig from '@/features/small-microcircuit';
 import type { ExperimentStepKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import {
+  ExtendedEntitiesTypeDict,
+  TExtendedEntitiesTypeDict,
+} from '@/api/entitycore/types/extended-entity-type';
 
 export default function Page({
   searchParams,
@@ -30,6 +35,7 @@ export default function Page({
     step: ExperimentStepKeys;
     sessionId: string;
     panel: WorkflowSimulatePanelKeys;
+    dataType: TExtendedEntitiesTypeDict;
     '3d': ThreeDVisualizerQueryParamKeys;
   }
 >) {
@@ -46,6 +52,19 @@ export default function Page({
     queryKey: keyBuilder.meModel({ virtualLabId, projectId, entityId: modelId }),
     queryFn: () => getMEModel({ id: modelId, context: { virtualLabId, projectId } }),
   });
+
+  if (queryParams.dataType === ExtendedEntitiesTypeDict.MemodelCircuit) {
+    return (
+      <div className="border-neutral-2 ml-2 h-full rounded-2xl border pt-3">
+        <SimulationConfig
+          modelId={entity.id}
+          virtualLabId={virtualLabId}
+          projectId={projectId}
+          className="px-10 pt-2"
+        />
+      </div>
+    );
+  }
 
   return (
     <>
