@@ -69,7 +69,7 @@ export class LegendPainter {
       ).applyMatrix(painterManager.getCameraMatrix());
       tip.scale(1 / tip.w);
       const isInjection = target.origin === 'injection';
-      const text = isInjection ? `🗲 ${target.section}` : target.section;
+      const text = target.section;
       const measure = ctx.measureText(text);
       labels.push({
         originX: tip.x,
@@ -80,7 +80,7 @@ export class LegendPainter {
         tipY: round(tgdCalcMapRange(tip.y, +1, -1, 0, canvas.height)),
         boxX: 0,
         boxY: 0,
-        boxW: round(PADDING * 2 + measure.width),
+        boxW: round(PADDING * 2 + measure.width + (isInjection ? FONTSIZE * 1.5 : 0)),
         boxH: round(PADDING * 2 + FONTSIZE),
         isInjection,
       });
@@ -159,6 +159,24 @@ function drawLabel(ctx: CanvasRenderingContext2D, label: LabelToDraw) {
   ctx.fillStyle = '#000';
   const fontHeight = measure.emHeightAscent ?? measure.actualBoundingBoxAscent ?? FONTSIZE;
   ctx.fillText(text, boxX + PADDING, boxY + PADDING + fontHeight);
+  if (isInjection) {
+    // Draw little bolt
+    const s = FONTSIZE;
+    const x = boxX + boxW - s;
+    const y = boxY + PADDING;
+    ctx.fillStyle = '#ff0';
+    ctx.strokeStyle = '#000';
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x, y + s * 0.4);
+    ctx.lineTo(x + s / 3, y + s * 0.4);
+    ctx.lineTo(x, y + s);
+    ctx.lineTo(x, y + s * 0.6);
+    ctx.lineTo(x - s / 3, y + s * 0.6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
 }
 
 /**
