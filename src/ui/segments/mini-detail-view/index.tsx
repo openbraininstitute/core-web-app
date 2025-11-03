@@ -196,7 +196,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
       <ExploreActions record={record} dataType={dataType} />
     ))
     .with({ section: WorkspaceSection.SimulateWorkflow }, () => (
-      <WorkflowSimulateActions record={record} />
+      <WorkflowSimulateActions record={record} dataType={dataType} />
     ))
     .with({ section: WorkspaceSection.BuildWorkflow }, () => (
       <WorkflowBuildActions record={record} />
@@ -446,7 +446,13 @@ function ExploreActions<T extends EntityCoreObjectTypes>({
   );
 }
 
-function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({ record }: { record: T }) {
+function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({
+  record,
+  dataType,
+}: {
+  record: T;
+  dataType?: TExtendedEntitiesTypeDict;
+}) {
   const { virtualLabId, projectId } = useWorkspace();
 
   return (
@@ -473,7 +479,8 @@ function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({ record }: { 
       >
         <Link
           href={{
-            pathname: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/${kebabCase(record.type)}/${record.id}`,
+            // pathname: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/${kebabCase(record.type)}/${record.id}`,
+            pathname: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/${kebabCase(dataType)}/${record.id}`,
             query: {
               sessionId: crypto.randomUUID(),
               [PanelQueryParam]: WorkflowSimulatePanels.Configuration,

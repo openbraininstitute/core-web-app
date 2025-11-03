@@ -92,7 +92,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     ],
   },
   [ExtendedEntitiesTypeDict.MemodelCircuitSimulation]: {
-    title: 'ME-model circuit simulation',
+    title: 'Single neuron [circuit] simulation',
     group: DataTypeGroup.SimulationData,
     name: EntitySlug.MEModelCircuitSimulation,
     curated: false,

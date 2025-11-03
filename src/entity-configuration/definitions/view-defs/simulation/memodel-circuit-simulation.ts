@@ -6,7 +6,7 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
 export const viewDefForMEModelCircuitSimulation: ViewDefinitionConfig = {
-  title: 'ME-model circuit simulation',
+  title: 'Single neuron [circuit] simulation',
   group: DataTypeGroup.SimulationData,
   name: EntitySlug.MEModelCircuitSimulation,
   curated: false,

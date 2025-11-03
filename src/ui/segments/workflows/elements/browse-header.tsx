@@ -20,6 +20,7 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 import type { KebabCase } from '@/utils/type';
+import { useFlags } from '@/features/feature-flags';
 
 const WorkflowScope = {
   Public: 'public',
@@ -102,10 +103,14 @@ export function ActivityAndTypeSelectors({
   onEntityTypeChange,
   onNavigate,
 }: WorkflowMenuProps) {
+  const featureFlags = useFlags();
+
   const handleActivitySelect = (v: TActivityValue | undefined) => {
     onActivityChange(v);
     if (v) {
-      const type = getDropdownOptionsByCategory(v).enabledOptions.at(0)?.options.at(0)?.value;
+      const type = getDropdownOptionsByCategory(v, featureFlags)
+        .enabledOptions.at(0)
+        ?.options.at(0)?.value;
       onEntityTypeChange(type);
       onNavigate?.(type);
     }
