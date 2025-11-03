@@ -21,6 +21,7 @@ export default function Analysis() {
       [virtualLabId, projectId, id]
     )
   );
+  console.log('🚀 [container] results =', results); // @FIXME: Remove this line written on 2025-11-03 at 14:46
 
   return match(results)
     .with({ state: 'loading' }, () => {

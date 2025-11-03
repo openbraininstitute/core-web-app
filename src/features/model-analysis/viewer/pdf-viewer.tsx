@@ -71,34 +71,39 @@ export default function PDFViewer({
   }
 
   return (
-    <Document
-      key={`${entityId}/${assetId}`}
-      options={options}
-      file={cachedUrl}
-      loading={<Skeleton.Image active style={{ width: '478.25px', height: '286.945px' }} />}
-      renderMode="canvas"
-      onLoadSuccess={onLoadSuccess}
-      className={
-        documentClassName ?? classNames('lg:w-2/3 xl:w-1/2 [&_canvas]:h-auto! [&_canvas]:w-full!')
-      }
-    >
-      {Array.from(new Array(totalPages), (_, index) => (
-        <Fragment key={`page_${index + 1}`}>
-          <Page
-            key={`page_${index + 1}`}
-            pageNumber={index + 1}
-            renderTextLayer={false}
-            renderAnnotationLayer={false}
-            className="border-primary-8 border"
-            width={pageWidth}
-          />
-          {showPageCount && (
-            <div className="text-center">
-              Page {index + 1} of {totalPages}
-            </div>
-          )}
-        </Fragment>
-      ))}
-    </Document>
+    <>
+      <Document
+        key={`${entityId}/${assetId}`}
+        options={options}
+        file={cachedUrl}
+        loading={<Skeleton.Image active style={{ width: '478.25px', height: '286.945px' }} />}
+        renderMode="canvas"
+        onLoadSuccess={onLoadSuccess}
+        className={
+          documentClassName ?? classNames('lg:w-2/3 xl:w-1/2 [&_canvas]:h-auto! [&_canvas]:w-full!')
+        }
+      >
+        {Array.from(new Array(totalPages), (_, index) => (
+          <Fragment key={`page_${index + 1}`}>
+            <Page
+              key={`page_${index + 1}`}
+              pageNumber={index + 1}
+              renderTextLayer={false}
+              renderAnnotationLayer={false}
+              className="border-primary-8 border"
+              width={pageWidth}
+            />
+            {showPageCount && (
+              <div className="text-center">
+                Page {index + 1} of {totalPages}
+              </div>
+            )}
+          </Fragment>
+        ))}
+      </Document>
+      <a href={cachedUrl} target="PDF" download={`${assetId}.pdf`}>
+        Download as PDF
+      </a>
+    </>
   );
 }

@@ -100,6 +100,12 @@ const nextConfig = (phase: string): NextConfig => {
       remotePatterns: [
         {
           protocol: 'https',
+          hostname: 'staging.openbraininstitute.org',
+          port: '',
+          pathname: '/**',
+        },
+        {
+          protocol: 'https',
           hostname: 'cdn.sanity.io',
           port: '',
           pathname: '/images/**',

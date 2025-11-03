@@ -25,11 +25,11 @@ export function ViewerContainer({ validationResults }: Props) {
     o.assets?.some((obj) => AllowedTypes.includes(obj.content_type as TAllowedTypes))
   );
 
-  const groupedvalidationResults = groupBy(allowedValidationResults, 'name');
+  const groupedValidationResults = groupBy(allowedValidationResults, 'name');
 
   const options = [
     { label: 'All', value: 'all' },
-    ...Object.keys(groupedvalidationResults).map((k) => {
+    ...Object.keys(groupedValidationResults).map((k) => {
       return {
         label: capitalize(k.replaceAll('_', ' ')),
         value: k,
@@ -39,9 +39,9 @@ export function ViewerContainer({ validationResults }: Props) {
 
   const [selected, setSelected] = useState<string>('all');
 
-  if (!Object.keys(groupedvalidationResults).length) return <div>No validation results found</div>;
+  if (!Object.keys(groupedValidationResults).length) return <div>No validation results found</div>;
 
-  const renderViewer = (r: (typeof groupedvalidationResults)[0][0]) => (
+  const renderViewer = (r: (typeof groupedValidationResults)[0][0]) => (
     <Viewer
       entity={r as IEntity & EntityCoreBaseAsset}
       key={r.id}
@@ -63,9 +63,9 @@ export function ViewerContainer({ validationResults }: Props) {
         />
       </div>
 
-      {selected === 'all' && Object.values(groupedvalidationResults).flat().map(renderViewer)}
+      {selected === 'all' && Object.values(groupedValidationResults).flat().map(renderViewer)}
 
-      {selected !== 'all' && groupedvalidationResults[selected].map(renderViewer)}
+      {selected !== 'all' && groupedValidationResults[selected].map(renderViewer)}
     </>
   );
 }
