@@ -196,7 +196,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
       <ExploreActions record={record} dataType={dataType} />
     ))
     .with({ section: WorkspaceSection.SimulateWorkflow }, () => (
-      <WorkflowSimulateActions record={record} extendedEntityType={dataType} />
+      <WorkflowSimulateActions record={record} dataType={dataType} />
     ))
     .with({ section: WorkspaceSection.BuildWorkflow }, () => (
       <WorkflowBuildActions record={record} />
