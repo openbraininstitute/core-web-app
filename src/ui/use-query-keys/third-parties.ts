@@ -6,4 +6,5 @@ export const keyBuilder = {
     { virtualLabId },
   ],
   stripeInstance: () => [`${prefix}-stripe-instance`],
+  s3presignedUrl: (props: Record<string, any>) => [`${prefix}-presigned-url`, { ...props }],
 };
