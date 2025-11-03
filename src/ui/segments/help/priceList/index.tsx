@@ -1,43 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
+import { useCredits } from '@/hooks/use-credits';
+import { usePrices } from '@/hooks/use-prices';
 import PriceTable from '@/ui/segments/help/priceList/price-table';
 
-import type { SinglePrice } from '@/app/api/help/prices/route';
-
 export default function PriceList() {
-  const [prices, setPrices] = useState<SinglePrice[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { prices, loading: pricesLoading, error: pricesError } = usePrices();
+  const { creditsPacks, loading: creditsLoading, error: creditsError } = useCredits();
 
-  useEffect(() => {
-    async function fetchPrices() {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/help/prices');
-        if (!response.ok) {
-          throw new Error('Failed to fetch prices');
-        }
-        const data = await response.json();
-        setPrices(data.prices ?? []);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
-        setPrices([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchPrices();
-  }, []);
+  const loading = pricesLoading || creditsLoading;
+  const error = pricesError || creditsError;
 
   return (
-    <div className="flex flex-col">
+    <div className="flex h-full flex-col overflow-auto">
       {loading && <div>Loading prices...</div>}
       {error && <div>Error: {error}</div>}
-      {!loading && !error && <PriceTable prices={prices} />}
+      {!loading && !error && <PriceTable prices={prices} creditsPacks={creditsPacks} />}
     </div>
   );
 }

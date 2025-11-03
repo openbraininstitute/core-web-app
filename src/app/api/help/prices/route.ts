@@ -8,13 +8,15 @@ export type SinglePrice = {
   freePrice: number | null;
   proPrice: number | null;
   costUnit: string | null;
+  section: string | null;
 };
 
 const queryForSinglePrice = `*[_type == "singlePrice"][] {
   itemName,
   freePrice,
   proPrice,
-  costUnit
+  costUnit,
+  section
 }`;
 
 export async function GET() {
