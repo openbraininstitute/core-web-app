@@ -153,7 +153,7 @@ export async function resolveSimulationByCampaignId({
 export const MEModelCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
   group: EntityTypeGroup.Simulations,
   title: 'ME-model circuit simulation',
-  extendedType: ExtendedEntitiesTypeDict.MEModelCircuitSimulation,
+  extendedType: ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.MEModelCircuitSimulation,
   api: {

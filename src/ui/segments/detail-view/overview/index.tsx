@@ -85,7 +85,7 @@ export default async function Overview({
   if (
     extendedType === ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation ||
     extendedType === ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation ||
-    extendedType === ExtendedEntitiesTypeDict.MEModelCircuitSimulation
+    extendedType === ExtendedEntitiesTypeDict.MemodelCircuitSimulation
   ) {
     let config: AwaitedType<ReturnType<typeof resolveSimulationByCampaignId>>;
 

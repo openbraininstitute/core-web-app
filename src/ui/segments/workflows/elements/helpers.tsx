@@ -115,17 +115,17 @@ export const EntityWorkflowConfiguration: Partial<
       },
     },
   },
-  [ExtendedEntitiesTypeDict.MEModelCircuit]: {
+  [ExtendedEntitiesTypeDict.MemodelCircuit]: {
     group: EntityScopeDict.Cellular,
     label: 'ME-model circuit',
     properties: {
       build: {
         disabled: true,
-        type: ExtendedEntitiesTypeDict.Memodel,
+        type: ExtendedEntitiesTypeDict.MemodelCircuit,
       },
       simulate: {
         disabled: false,
-        type: ExtendedEntitiesTypeDict.MEModelCircuitSimulation,
+        type: ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
       },
     },
   },

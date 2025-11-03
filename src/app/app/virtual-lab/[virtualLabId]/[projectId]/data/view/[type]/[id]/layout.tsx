@@ -84,7 +84,7 @@ export default async function Layout({
   if (
     type === ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation ||
     type === ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation ||
-    type === ExtendedEntitiesTypeDict.MEModelCircuitSimulation
+    type === ExtendedEntitiesTypeDict.MemodelCircuitSimulation
   ) {
     return (
       <div className="relative ml-5 flex h-full flex-col rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">

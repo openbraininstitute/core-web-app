@@ -16,5 +16,5 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [ExtendedEntitiesTypeDict.SimulationCampaign]: viewDefForSimulationCampaign,
   [ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation]: viewDefForPairedNeuronCircuitSimulation,
   [ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation]: viewDefForSmallMicrocircuitSimulation,
-  [ExtendedEntitiesTypeDict.MEModelCircuitSimulation]: viewDefForMEModelCircuitSimulation,
+  [ExtendedEntitiesTypeDict.MemodelCircuitSimulation]: viewDefForMEModelCircuitSimulation,
 };

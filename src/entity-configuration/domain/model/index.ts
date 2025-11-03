@@ -4,6 +4,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 export const MODEL_DATATYPES = [
   ExtendedEntitiesTypeDict.Emodel,
   ExtendedEntitiesTypeDict.Memodel,
+  ExtendedEntitiesTypeDict.MemodelCircuit,
   ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
   ExtendedEntitiesTypeDict.MEModelWithSynapses,
 ] as const;
@@ -11,6 +12,7 @@ export const MODEL_DATATYPES = [
 export enum ModelTypeNames {
   E_MODEL = 'e-model',
   ME_MODEL = 'me-model',
+  ME_MODEL_CIRCUIT = 'me-model-circuit',
   SINGLE_NEURON_SYNAPTOME = 'synaptome',
   ME_MODEL_WITH_SYNAPSES_CIRCUIT = 'ME-model with Synapses',
   CIRCUIT = 'circuit',

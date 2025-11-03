@@ -91,7 +91,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.CreationDate },
     ],
   },
-  [ExtendedEntitiesTypeDict.MEModelCircuitSimulation]: {
+  [ExtendedEntitiesTypeDict.MemodelCircuitSimulation]: {
     title: 'ME-model circuit simulation',
     group: DataTypeGroup.SimulationData,
     name: EntitySlug.MEModelCircuitSimulation,

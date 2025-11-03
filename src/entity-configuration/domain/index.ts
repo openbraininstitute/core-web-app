@@ -8,6 +8,7 @@ import { Circuit } from '@/entity-configuration/domain/model/circuit';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
 import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
+import { MEModelCircuit } from '@/entity-configuration/domain/model/me-model-circuit';
 import { MEModelWithSynapsesCircuit } from '@/entity-configuration/domain/model/me-model-with-synapses';
 import { Microcircuit } from '@/entity-configuration/domain/model/mirocircuit';
 import { PairedNeuronCircuit } from '@/entity-configuration/domain/model/paired-neurons';
@@ -37,6 +38,7 @@ export const EntityCoreExperimentalConfiguration = {
 export const EntityCoreModelConfiguration = {
   Emodel,
   MEmodel,
+  MEModelCircuit,
   SingleNeuronSynaptome,
   Circuit,
   SmallMicrocircuit,
