@@ -6,6 +6,7 @@ import FeaturesSection from '@/ui/segments/help/features';
 import GlossarySection from '@/ui/segments/help/glossary';
 import GuidesSection from '@/ui/segments/help/guides';
 import OverviewSection from '@/ui/segments/help/overview';
+import PriceListSection from '@/ui/segments/help/priceList';
 import TutorialSection from '@/ui/segments/help/tutorials';
 import { getSearchParam } from '@/utils/getSearchParams';
 
@@ -25,6 +26,7 @@ export default async function HelpSectionContent({
     .with('tutorials', () => <TutorialSection />)
     .with('features', () => <FeaturesSection />)
     .with('guides', () => <GuidesSection searchParams={params ?? {}} />)
+    .with('prices', () => <PriceListSection />)
     .with('ai-tools', () => <AiChatToolsSection />)
     .with('about', () => <AboutSection searchParams={params ?? {}} />)
     .otherwise(() => <OverviewSection />);
