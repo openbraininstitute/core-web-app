@@ -58,30 +58,48 @@ export function SimulationFiles({
 
   /*
     Handle file auto-selection
-    - On page load select the circuit config
-    - On simulation change select the file with the same asset path,
-      if not available - circuit config
+    - On page load select the voltage report if available, otherwise - circuit config.
+    - On simulation change select the file with the same asset path falling back
+      to the default selection on page load.
   */
   useEffect(() => {
     if (loading) {
       return;
     }
 
+    const circuitConfigFile = inputFiles.find(
+      (file) => file.asset.label === AssetLabel.sonata_circuit
+    );
+
+    const voltageReportFile = outputFiles.find(
+      (file) => file.asset.label === AssetLabel.voltage_report
+    );
+
     if (!selectedFile) {
-      const circuitConfigFile = inputFiles.find(
-        (file) => file.asset.label === AssetLabel.sonata_circuit
-      );
+      if (voltageReportFile) {
+        onSelect(voltageReportFile);
+        return;
+      }
+
       if (circuitConfigFile) {
         onSelect(circuitConfigFile);
+        return;
       }
+
       return;
     }
 
-    const fileToSelect = [...inputFiles, ...outputFiles].find(
-      (file) => file.asset.path === selectedFile.asset.path
-    );
+    if (selectedFile.asset.label === AssetLabel.sonata_circuit) {
+      onSelect(selectedFile);
+      return;
+    }
 
-    if (fileToSelect && fileToSelect !== selectedFile) {
+    const fileToSelect =
+      [...inputFiles, ...outputFiles].find((file) => file.asset.path === selectedFile.asset.path) ??
+      voltageReportFile ??
+      circuitConfigFile;
+
+    if (fileToSelect) {
       onSelect(fileToSelect);
     }
   }, [loading, inputFiles, outputFiles, onSelect, selectedFile]);
@@ -170,24 +188,26 @@ function useOutputFiles(
     enabled,
   });
   const simResultLoadableAtom = useMemo(() => loadable(simResultAtom), [simResultAtom]);
-
   const simResult = useLastTruthyValue(simResultAtom);
-
   const simResultLoadable = useAtomValue(simResultLoadableAtom);
-  const loading = simResultLoadable.state === 'loading';
 
-  const outputFiles: File[] = useMemo(
-    () =>
-      simResult
-        ? sortBy(
-            simResult.assets.map((asset) => ({ asset, entity: simResult })),
-            (file) => file.asset.path
-          )
-        : [],
-    [simResult]
-  );
+  return useMemo(() => {
+    const loading = simResultLoadable.state === 'loading';
+    const hasData = simResultLoadable.state === 'hasData';
 
-  return [loading, outputFiles];
+    const simResultEntity = hasData ? simResultLoadable.data : simResult;
+
+    const assets = simResultEntity?.assets ?? [];
+
+    if (!simResultEntity) return [loading, []];
+
+    const files = sortBy(
+      assets.map((asset) => ({ asset, entity: simResultEntity })),
+      (file) => file.asset.path
+    );
+
+    return [loading, files];
+  }, [simResult, simResultLoadable]);
 }
 
 type SimulationFileProps = {
