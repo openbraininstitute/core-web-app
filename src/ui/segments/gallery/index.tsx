@@ -3,12 +3,19 @@
 import { useEffect } from 'react';
 
 import Menu from '@/components/LandingPage/layout/Menu';
+import GalleryContent from '@/ui/segments/gallery/content';
 import HeroGallery from '@/ui/segments/gallery/hero';
 import { useScrollHasStarted } from '@/utils/scroll-has-started';
 
+import type { GalleryContentProps } from '@/api/sanity/gallery/route';
+
 import styles from '@/components/LandingPage/LandingPage.module.css';
 
-export default function GalleryPage() {
+type GalleryPageProps = {
+  galleryContent: GalleryContentProps[];
+};
+
+export default function GalleryPage({ galleryContent }: GalleryPageProps) {
   const scrollHasStarted = useScrollHasStarted();
 
   useEffect(() => {
@@ -28,6 +35,7 @@ export default function GalleryPage() {
         posterHeight={1080}
         title="Gallery"
       />
+      <GalleryContent galleryContent={galleryContent} />
     </div>
   );
 }
