@@ -13,11 +13,11 @@ import {
 import { getSessionKey } from '../../../helpers';
 import { getColorFromGeneratedPalette } from '../colors';
 
+import { HintContent } from '../hint';
 import { classNames } from '@/util/utils';
 import { IconClose } from '@/components/LandingPage/icons/IconClose';
 
 import styles from './add-recording-dialog.module.css';
-import { HintContent } from '../hint';
 
 export interface AddRecordingDialogProps {
   className?: string;
