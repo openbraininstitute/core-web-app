@@ -38,6 +38,12 @@ PALETTE[StructureItemType.Soma] = '#dde';
 PALETTE[StructureItemType.Selected] = '#fc0';
 PALETTE[StructureItemType.Unknown] = '#a6f';
 
+interface SelectedItem {
+  x: number;
+  y: number;
+  item: StructureItem | null;
+  offset: number;
+}
 export class PainterManager {
   private static id = 0;
 
@@ -45,12 +51,7 @@ export class PainterManager {
 
   public readonly eventPaint = new GenericEvent<void>();
 
-  public readonly eventHover = new GenericEvent<{
-    x: number;
-    y: number;
-    item: StructureItem | null;
-    offset: number;
-  }>();
+  public readonly eventHover = new GenericEvent<SelectedItem>();
 
   public readonly eventTap = new GenericEvent<{
     x: number;
@@ -82,7 +83,7 @@ export class PainterManager {
 
   private hoverPainter: TgdPainter | null = null;
 
-  private hoverItem: StructureItem | null = null;
+  private _hoverItem: SelectedItem = { x: 0, y: 0, offset: 0, item: null };
 
   private initialPosition = new TgdVec3();
 
@@ -96,6 +97,15 @@ export class PainterManager {
    * recording.
    */
   private lastCameraChangeTimestamp = 0;
+
+  get hoverItem() {
+    return this._hoverItem;
+  }
+
+  set hoverItem(value: SelectedItem) {
+    this._hoverItem = value;
+    this.eventHover.dispatch(value);
+  }
 
   /**
    * This normalized zoom is between -1 and +1.
@@ -260,12 +270,11 @@ export class PainterManager {
       const { groupHover } = this;
       const { x, y } = evt.current;
       const item = this.offscreen?.getItemAt(x, y) ?? null;
-      if (item !== this.hoverItem) {
+      if (item !== this.hoverItem.item) {
         if (this.hoverPainter) {
           groupHover.remove(this.hoverPainter);
           this.hoverPainter = null;
         }
-        this.hoverItem = item ?? null;
         let offset = 0;
         if (item) {
           this.hoverPainter = this.makeHoverPainter(item);
@@ -274,8 +283,8 @@ export class PainterManager {
             offset = computeSectionOffset(structure, item, context.camera, x, y);
           }
         }
+        this.hoverItem = { x, y, offset, item: item ?? null };
         this.context?.paint();
-        this.eventHover.dispatch({ x, y, item, offset });
         this.eventHintVisible.dispatch(true);
       }
     });
@@ -287,13 +296,13 @@ export class PainterManager {
 
       const { x, y } = evt;
       const item = this.offscreen?.getItemAt(x, y) ?? null;
-      this.hoverItem = item ?? null;
       if (item) {
         const segment = computeSectionOffset(structure, item, context.camera, x, y);
+        this.hoverItem = { x, y, offset: segment, item: item ?? null };
         this.eventTap.dispatch({
           x,
           y,
-          item: this.hoverItem,
+          item: this.hoverItem.item,
           offset: segment,
         });
         this.eventHintVisible.dispatch(false);

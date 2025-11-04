@@ -16,7 +16,9 @@ export function HintPanel({ className, painterManager }: HintProps) {
   const hovered = painterManager.eventHover.useValue({ x: 0, y: 0, item: null, offset: 0 });
   const visible = painterManager.eventHintVisible.useValue(false);
 
-  if (!visible || !hovered.item) return null;
+  if (!visible || !hovered.item) {
+    return null;
+  }
 
   return (
     <div
@@ -30,9 +32,11 @@ export function HintPanel({ className, painterManager }: HintProps) {
 }
 
 export function HintContent({ className, painterManager }: HintProps) {
-  const hovered = painterManager.eventHover.useValue({ x: 0, y: 0, item: null, offset: 0 });
+  const hovered = painterManager.hoverItem;
 
-  if (!hovered.item) return null;
+  if (!hovered.item) {
+    return null;
+  }
 
   return (
     <div className={classNames(className, styles.hintContent)}>
