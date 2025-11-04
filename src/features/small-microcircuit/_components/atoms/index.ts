@@ -153,6 +153,7 @@ export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
   }
 );
 
+// TODO Refactor to use tanstack query
 export const modelAtomFamily = readAtomFamilyWithExpiration(
   ({ id, context }: { id: string; context: WorkspaceContext }) =>
     atom<Promise<ICircuit | IMEModel>>(async () => {
