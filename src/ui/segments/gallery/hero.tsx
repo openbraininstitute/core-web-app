@@ -1,14 +1,10 @@
 /* eslint-disable @next/next/no-img-element */
-import Link from 'next/link';
 import React from 'react';
-
-import useFullHeight from '@/hooks/useFullHeight';
-import { classNames } from '@/util/utils';
 
 import ProgressiveImage from '@/components/LandingPage/components/ProgressiveImage';
 import { cn } from '@/utils/css-class';
 
-import styles from './hero.module.css';
+import styles from '@/components/LandingPage/LandingPage.module.css';
 
 type HeroProps = {
   videoURL: string;
@@ -19,7 +15,7 @@ type HeroProps = {
   className?: string;
 };
 
-export default function HeroSFN({
+export default function HeroGallery({
   videoURL,
   posterURL,
   posterWidth,
@@ -28,9 +24,8 @@ export default function HeroSFN({
   className,
 }: HeroProps) {
   const [videoReady, setVideoReady] = React.useState(false);
-  const height = useFullHeight();
   return (
-    <div className={classNames(className, styles.hero)} style={{ height }}>
+    <div className={cn(className, styles.hero)} style={{ height: '100vh' }}>
       <div className={cn(styles.background)}>
         {posterURL && posterWidth && posterHeight && (
           <ProgressiveImage
@@ -51,22 +46,11 @@ export default function HeroSFN({
           onCanPlay={() => setVideoReady(true)}
         />
       </div>
-      <div className={styles.text}>
-        <div>
-          <h1 className={styles.largeTitle}>{title}</h1>
-        </div>
-        <div className="font-title flex flex-col gap-5 rounded-lg text-3xl! text-white md:flex-row md:gap-12">
-          <div>November 15 – 19</div>
-          <div>San Diego Convention Center</div>
-          <div>Booth #3631</div>
-          <Link
-            href="/app/virtual-lab"
-            aria-label="Create virtual lab"
-            className="font-gabarito text-primary-8 relative rounded-full bg-white px-16 py-4 text-3xl! font-medium! whitespace-nowrap"
-          >
-            Create your Virtual Lab
-          </Link>
-        </div>
+      <div className="relative top-0 left-0 z-10 flex flex-col">
+        <h1 className="text-[10vmin] text-white">{title}</h1>
+        <h2 className="font-gabarito text-2xl font-bold text-white">
+          Discover image and video assets created by our team. Made with our tools and technologies.
+        </h2>
       </div>
     </div>
   );
