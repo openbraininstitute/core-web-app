@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { usePainterManager } from './painter';
-import Hint from './hint';
+import { HintPanel } from './hint';
 import ZoomSlider from './zoom-slider';
 import { useCleanMorphology } from './hooks';
 import LegendOverlay from './legend-overlay';
@@ -47,7 +47,7 @@ export function WebglNeuronSelector({
               painterManager.canvas = canvas;
             }}
           />
-          <Hint painterManager={painterManager} />
+          <HintPanel painterManager={painterManager} />
           <header>
             <ZoomSlider className={styles.zoomSlider} painterManager={painterManager} />
             <ButtonResetCamera painterManager={painterManager} />

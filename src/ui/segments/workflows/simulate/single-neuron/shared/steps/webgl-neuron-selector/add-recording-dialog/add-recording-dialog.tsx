@@ -17,6 +17,7 @@ import { classNames } from '@/util/utils';
 import { IconClose } from '@/components/LandingPage/icons/IconClose';
 
 import styles from './add-recording-dialog.module.css';
+import { HintContent } from '../hint';
 
 export interface AddRecordingDialogProps {
   className?: string;
@@ -100,6 +101,7 @@ export default function AddRecordingDialog({
             <div>Cancel</div>
           </button>
         </header>
+        <HintContent painterManager={painterManager} />
         <div className={styles.buttons}>
           <button type="button" onClick={handleMoveInjection}>
             Move injection here
