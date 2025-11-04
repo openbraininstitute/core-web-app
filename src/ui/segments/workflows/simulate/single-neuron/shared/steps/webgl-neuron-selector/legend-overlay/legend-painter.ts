@@ -75,7 +75,7 @@ export class LegendPainter {
         originX: tip.x,
         originY: tip.y,
         text,
-        color: getColorFromGeneratedPalette(targetIndex),
+        color: isInjection ? '#fff' : getColorFromGeneratedPalette(targetIndex),
         tipX: round(tgdCalcMapRange(tip.x, -1, +1, 0, canvas.width)),
         tipY: round(tgdCalcMapRange(tip.y, +1, -1, 0, canvas.height)),
         boxX: 0,

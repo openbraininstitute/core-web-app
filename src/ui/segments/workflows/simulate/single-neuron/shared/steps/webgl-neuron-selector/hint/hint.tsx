@@ -44,7 +44,7 @@ function resolveName(item: StructureItem): React.ReactNode {
     case StructureItemType.Soma:
       return 'Soma';
     case StructureItemType.Dendrite:
-      return 'Dendrite';
+      return 'GetColorFromDendrite';
     case StructureItemType.BasalDendrite:
       return 'Basal Dendrite';
     case StructureItemType.ApicalDendrite:

@@ -34,9 +34,11 @@ export default function AddRecordingDialog({
   const spcKey = getSessionKey(STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
   const [spcState, updateSPC] = useAtom(StimulationConfigurationAtomFamily(spcKey));
   const [open, setOpen] = React.useState(false);
-  const { offset, item } = painterManager.eventTap.useValue({
-    offset: 0,
+  const { offset, item, y } = painterManager.eventTap.useValue({
+    x: 0,
+    y: 0,
     item: null,
+    offset: 0,
   });
   React.useEffect(() => {
     if (item) setOpen(true);
@@ -84,9 +86,20 @@ export default function AddRecordingDialog({
   };
 
   return (
-    <div className={classNames(className, styles.addRecordingDialog, open && styles.open)}>
-      <div>
-        <h2>{item?.name}</h2>
+    <div
+      className={classNames(className, styles.addRecordingDialog, open && styles.open)}
+      title={`y = ${y}`}
+    >
+      <div className={y < 0 ? styles.top : styles.bottom}>
+        <header>
+          <h2>
+            {item?.sectionName} ({offset.toFixed(2)})
+          </h2>
+          <button type="button" onClick={() => setOpen(false)}>
+            <IconClose />
+            <div>Cancel</div>
+          </button>
+        </header>
         <div className={styles.buttons}>
           <button type="button" onClick={handleMoveInjection}>
             Move injection here
@@ -95,13 +108,6 @@ export default function AddRecordingDialog({
             Add recording
           </button>
         </div>
-        <hr />
-        <footer>
-          <button type="button" onClick={() => setOpen(false)}>
-            <IconClose />
-            <div>Cancel</div>
-          </button>
-        </footer>
       </div>
     </div>
   );

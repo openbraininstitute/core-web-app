@@ -6,7 +6,7 @@
   height: 100%;
   display: grid;
   place-items: center;
-  background-color: #000a;
+  background-color: #0001;
   z-index: 10;
   opacity: 0;
   pointer-events: none;
@@ -19,15 +19,53 @@
 
   > div {
     background-color: #3333;
-    backdrop-filter: blur(6px);
+    backdrop-filter: blur(4px);
     color: #fff;
     padding: 1em;
     border-radius: 0.5em;
     border: 2px solid #fff4;
+    transition: all 0.3s;
 
-    > h2 {
-      font-size: 200%;
+    &.top {
+      transform: translateY(-60%);
+    }
+
+    &.bottom {
+      transform: translateY(60%);
+    }
+
+    > header {
+      width: 100%;
+      display: flex;
+      flex-wrap: nowrap;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1em;
       margin-bottom: 1em;
+
+      > h2 {
+        font-size: 150%;
+        flex: 1 1 auto;
+      }
+
+      > button {
+        flex: 0 0 auto;
+        white-space: nowrap;
+        font: inherit;
+        font-weight: bold;
+        color: #7bf;
+        display: flex;
+        flex-wrap: nowrap;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 0.5em;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
     }
 
     hr {
@@ -62,29 +100,6 @@
         &:hover,
         &:active {
           filter: brightness(120%);
-        }
-      }
-    }
-
-    > footer {
-      display: flex;
-      flex-wrap: nowrap;
-      flex-direction: row;
-      justify-content: flex-end;
-
-      > button {
-        font: inherit;
-        font-weight: bold;
-        color: #7bf;
-        display: flex;
-        flex-wrap: nowrap;
-        flex-direction: row;
-        justify-content: flex-start;
-        align-items: center;
-        gap: 0.5em;
-
-        &:hover {
-          text-decoration: underline;
         }
       }
     }
