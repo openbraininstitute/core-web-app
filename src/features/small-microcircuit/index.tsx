@@ -119,6 +119,15 @@ export default function SimulationCampaignConfiguration({
     return validate?.errors;
   }, [validate, config]);
 
+  const isNonEmptyCategory = useCallback(
+    (category: string) =>
+      schema?.properties &&
+      Object.entries(schema.properties).filter(
+        ([k]) => k !== 'type' && ORDERING[k]?.category === category
+      ).length > 0,
+    [schema]
+  );
+
   if (!schema || !refLabels || !referenceTypesToConfigKeys || !referenceTypesToTitles) {
     return (
       <div className="flex h-full w-full items-center justify-center">
@@ -151,39 +160,41 @@ export default function SimulationCampaignConfiguration({
             <div className="flex flex-grow flex-col items-center gap-5 overflow-y-auto pr-5 pb-5">
               {CATEGORIES.map((c) => {
                 return (
-                  <Fragment key={c}>
-                    <div className="self-start text-gray-500 uppercase">{c}</div>
-                    {schema.properties &&
-                      Object.entries(schema.properties)
-                        .filter(([k]) => k !== 'type' && ORDERING[k]?.category === c)
-                        .sort((a, b) => {
-                          const order = (k: string) => ORDERING[k]?.order ?? 999;
-                          return order(a[0]) - order(b[0]);
-                        })
-                        .map(([k, v]) => {
-                          return (
-                            <Section
-                              key={k}
-                              k={k}
-                              schema={schema}
-                              sectionSchema={v}
-                              atomsMap={atomsMap}
-                              setAtomsMap={setAtomsMap}
-                              configTab={configTab}
-                              setConfigTab={setConfigTab}
-                              config={config}
-                              campaignId={campaignId}
-                              loading={loading}
-                              errors={errors}
-                              selectedItemIdx={selectedItemIdx}
-                              setSelectedItemIdx={setSelectedItemIdx}
-                              setEditing={setEditing}
-                              setSelectedCategory={setSelectedCategory}
-                              readOnly={readOnly}
-                            />
-                          );
-                        })}
-                  </Fragment>
+                  isNonEmptyCategory(c) && (
+                    <Fragment key={c}>
+                      <div className="self-start text-gray-500 uppercase">{c}</div>
+                      {schema.properties &&
+                        Object.entries(schema.properties)
+                          .filter(([k]) => k !== 'type' && ORDERING[k]?.category === c)
+                          .sort((a, b) => {
+                            const order = (k: string) => ORDERING[k]?.order ?? 999;
+                            return order(a[0]) - order(b[0]);
+                          })
+                          .map(([k, v]) => {
+                            return (
+                              <Section
+                                key={k}
+                                k={k}
+                                schema={schema}
+                                sectionSchema={v}
+                                atomsMap={atomsMap}
+                                setAtomsMap={setAtomsMap}
+                                configTab={configTab}
+                                setConfigTab={setConfigTab}
+                                config={config}
+                                campaignId={campaignId}
+                                loading={loading}
+                                errors={errors}
+                                selectedItemIdx={selectedItemIdx}
+                                setSelectedItemIdx={setSelectedItemIdx}
+                                setEditing={setEditing}
+                                setSelectedCategory={setSelectedCategory}
+                                readOnly={readOnly}
+                              />
+                            );
+                          })}
+                    </Fragment>
+                  )
                 );
               })}
             </div>
