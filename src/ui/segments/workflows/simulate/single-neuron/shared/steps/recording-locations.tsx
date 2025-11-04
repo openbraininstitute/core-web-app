@@ -112,6 +112,7 @@ function RecordItem({
             placement="bottomLeft"
             disabled={disable}
             size={breakpoint === 'l' ? 'middle' : 'large'}
+            title={`origin = ${record?.origin}`}
             prefix={
               <ColorMarker
                 color={
@@ -304,7 +305,7 @@ export function Recording({ sessionId }: Props) {
                 disableDelete={fields.length <= 1 || disableForm}
                 sections={morphologySectionNames}
                 onRemove={onRemove}
-                // record={state.at(index)}
+                record={state.at(index)}
               />
             ))
           }
