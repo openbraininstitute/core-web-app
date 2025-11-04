@@ -1,62 +1,82 @@
 'use client';
 
-import Image from 'next/image';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+
+import Media, { MediaModal } from '@/ui/segments/gallery/media';
 
 import type { GalleryContentProps } from '@/api/sanity/gallery/route';
+import GalleryFilters from '@/ui/segments/gallery/filters';
 
 type GalleryContentComponentProps = {
   galleryContent: GalleryContentProps[];
 };
 
 export default function GalleryContent({ galleryContent }: GalleryContentComponentProps) {
-  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
+  const [loadedMedia, setLoadedMedia] = useState<Set<string>>(new Set());
+  const [selectedMedia, setSelectedMedia] = useState<GalleryContentProps | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedBrainRegion, setSelectedBrainRegion] = useState<string | null>(null);
+  const [selectedMediaType, setSelectedMediaType] = useState<string | null>(null);
 
-  const handleImageLoad = (imageUrl: string) => {
-    setLoadedImages((prev) => new Set(prev).add(imageUrl));
+  const filteredContent = useMemo(() => {
+    return galleryContent.filter((item) => {
+      if (selectedBrainRegion && item.brainRegion !== selectedBrainRegion) {
+        return false;
+      }
+      if (selectedMediaType && item.mediaType !== selectedMediaType) {
+        return false;
+      }
+      return true;
+    });
+  }, [galleryContent, selectedBrainRegion, selectedMediaType]);
+
+  const handleMediaLoad = (mediaUrl: string) => {
+    setLoadedMedia((prev) => new Set(prev).add(mediaUrl));
+  };
+
+  const handleOpenModal = (item: GalleryContentProps) => {
+    setSelectedMedia(item);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedMedia(null);
   };
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col gap-6 px-6 py-8">
-      <div>
-        <h2 className="text-2xl font-bold">Gallery</h2>
-      </div>
-      <div className="grid h-full w-full grid-cols-4 gap-6">
-        {galleryContent.map((item) => {
-          const imageUrl = item.image;
-          const isLoaded = imageUrl ? loadedImages.has(imageUrl) : false;
+    <>
+      <div className="relative flex min-h-screen w-full flex-col gap-6 px-6 py-8">
+        <div>
+          <h2 className="text-2xl font-bold">Gallery</h2>
+        </div>
+        <GalleryFilters
+          galleryContent={galleryContent}
+          selectedBrainRegion={selectedBrainRegion}
+          selectedMediaType={selectedMediaType}
+          onBrainRegionChange={setSelectedBrainRegion}
+          onMediaTypeChange={setSelectedMediaType}
+        />
+        <div className="grid h-full w-full grid-cols-5 gap-6">
+          {filteredContent.map((item) => {
+            const mediaUrl = item.mediaType === 'video' ? item.video : item.image;
+            const isLoaded = mediaUrl ? loadedMedia.has(mediaUrl) : false;
 
-          if (!imageUrl) return null;
+            if (!mediaUrl) return null;
 
-          const uniqueKey = `${item.title}-${imageUrl}`;
-
-          return (
-            <div
-              key={uniqueKey}
-              className="relative aspect-square w-full overflow-hidden rounded-lg"
-            >
-              {!isLoaded && (
-                <div
-                  className="absolute inset-0 animate-pulse bg-gray-200"
-                  style={{
-                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                  }}
-                />
-              )}
-              <Image
-                src={imageUrl}
-                alt={item.title || 'Gallery image'}
-                fill
-                className={`object-cover transition-opacity duration-300 ${
-                  isLoaded ? 'opacity-100' : 'opacity-0'
-                }`}
-                onLoad={() => handleImageLoad(imageUrl)}
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+            return (
+              <Media
+                key={`${item.title}-${mediaUrl}`}
+                item={item}
+                isLoaded={isLoaded}
+                onLoad={() => handleMediaLoad(mediaUrl)}
+                onOpenModal={() => handleOpenModal(item)}
               />
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
-    </div>
+      <MediaModal open={isModalOpen} onClose={handleCloseModal} item={selectedMedia} />
+    </>
   );
 }

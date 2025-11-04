@@ -7,6 +7,7 @@ export type GalleryContentProps = {
   mediaType: string;
   image: string | null;
   video: string | null;
+  brainRegion: string | null;
 };
 
 const queryForGalleryContent = `*[_type == "gallery"] {
@@ -14,7 +15,8 @@ const queryForGalleryContent = `*[_type == "gallery"] {
   description,
   mediaType,
   "image": image.asset->url,
-  video
+  video,
+  brainRegion,
 }`;
 
 function isContentForGallery(data: unknown): data is GalleryContentProps {
@@ -22,7 +24,6 @@ function isContentForGallery(data: unknown): data is GalleryContentProps {
     if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
     const item = data as Record<string, unknown>;
 
-    // Check if it's an empty object
     if (Object.keys(item).length === 0) return false;
 
     return (
@@ -30,7 +31,8 @@ function isContentForGallery(data: unknown): data is GalleryContentProps {
       (typeof item.description === 'string' || item.description === null) &&
       typeof item.mediaType === 'string' &&
       (typeof item.image === 'string' || item.image === null) &&
-      (typeof item.video === 'string' || item.video === null)
+      (typeof item.video === 'string' || item.video === null) &&
+      (typeof item.brainRegion === 'string' || item.brainRegion === null)
     );
   } catch (ex) {
     logError(ex);
@@ -44,19 +46,10 @@ export async function getGalleryContent(): Promise<GalleryContentProps[]> {
       query: queryForGalleryContent,
     });
 
-    logError('Raw gallery data:', data);
-    logError('Is array?', Array.isArray(data));
-    logError('Array length:', Array.isArray(data) ? data.length : 'not an array');
-
     if (Array.isArray(data)) {
       const filtered = data.filter((item) => {
-        const isValid = isContentForGallery(item);
-        if (!isValid) {
-          logError('Invalid gallery item:', item);
-        }
-        return isValid;
+        return isContentForGallery(item);
       });
-      logError('Filtered gallery items:', filtered.length);
       return filtered;
     }
   } catch (err) {
