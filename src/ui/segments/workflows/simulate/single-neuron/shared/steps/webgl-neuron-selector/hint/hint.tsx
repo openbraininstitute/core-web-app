@@ -13,7 +13,7 @@ export interface HintProps {
 }
 
 export default function Hint({ className, painterManager }: HintProps) {
-  const hovered = painterManager.eventHover.useValue({ x: 0, y: 0, item: null });
+  const hovered = painterManager.eventHover.useValue({ x: 0, y: 0, item: null, offset: 0 });
 
   if (!hovered.item) return null;
 
@@ -31,6 +31,8 @@ export default function Hint({ className, painterManager }: HintProps) {
       <div>{hovered.item.segmentIndex}</div>
       <div>Number of segments:</div>
       <div>{hovered.item.segmentsCount}</div>
+      <div>Offset:</div>
+      <div>{hovered.offset.toFixed(3)}</div>
       <div>Distance from soma:</div>
       <div>{hovered.item.distanceFromSoma.toFixed(2)} µm</div>
     </div>
@@ -43,6 +45,8 @@ function resolveName(item: StructureItem): React.ReactNode {
       return 'Soma';
     case StructureItemType.Dendrite:
       return 'Dendrite';
+    case StructureItemType.BasalDendrite:
+      return 'Basal Dendrite';
     case StructureItemType.ApicalDendrite:
       return 'Apical dendrite';
     case StructureItemType.Myelin:

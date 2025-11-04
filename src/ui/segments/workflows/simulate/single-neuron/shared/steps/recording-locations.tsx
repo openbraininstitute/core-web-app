@@ -4,6 +4,7 @@ import { useAtom, useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import z from 'zod';
 
+import { getColorFromGeneratedPalette } from './webgl-neuron-selector/colors';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import {
   neuronSectionNamesAtomFamily,
@@ -21,7 +22,7 @@ import {
   getSimulationColor,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
-  type NeuronLocation,
+  // type NeuronLocation,
   NeuronLocationSchema,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
@@ -40,7 +41,7 @@ type RecordItemProps = {
   disableDelete: boolean;
   sections: Array<string>;
   onRemove: (idx: number) => void;
-  record?: NeuronLocation;
+  // record?: NeuronLocation;
 };
 
 function ColorMarker({ color }: { color?: string }) {
@@ -61,15 +62,7 @@ function ColorMarker({ color }: { color?: string }) {
   );
 }
 
-function RecordItem({
-  index,
-  name,
-  disable,
-  disableDelete,
-  sections,
-  record,
-  onRemove,
-}: RecordItemProps) {
+function RecordItem({ index, name, disable, disableDelete, sections, onRemove }: RecordItemProps) {
   const breakpoint = useDefaultBreakpoint();
   return (
     <div className="flex w-full flex-col items-start justify-start pr-2">
@@ -111,7 +104,7 @@ function RecordItem({
             placement="bottomLeft"
             disabled={disable}
             size={breakpoint === 'l' ? 'middle' : 'large'}
-            prefix={<ColorMarker color={record?.color} />}
+            prefix={<ColorMarker color={getColorFromGeneratedPalette(index) /* record?.color */} />}
           />
         </Form.Item>
         <Form.Item
@@ -297,7 +290,7 @@ export function Recording({ sessionId }: Props) {
                 disableDelete={fields.length <= 1 || disableForm}
                 sections={morphologySectionNames}
                 onRemove={onRemove}
-                record={state.at(index)}
+                // record={state.at(index)}
               />
             ))
           }

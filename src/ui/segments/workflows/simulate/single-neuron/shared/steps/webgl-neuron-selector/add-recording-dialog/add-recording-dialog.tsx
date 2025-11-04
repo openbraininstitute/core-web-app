@@ -2,10 +2,16 @@ import React from 'react';
 import { useAtom } from 'jotai';
 
 import { PainterManager } from '../painter';
-import { RecordLocationConfigurationAtomFamily } from '../../../context';
-import { RECORDING_LOCATION_CONFIGURATION_SESSION_KEY } from '../../../constant';
+import {
+  RecordLocationConfigurationAtomFamily,
+  StimulationConfigurationAtomFamily,
+} from '../../../context';
+import {
+  RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
+  STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
+} from '../../../constant';
 import { getSessionKey } from '../../../helpers';
-import { getColor } from '../colors';
+import { getColorFromGeneratedPalette } from '../colors';
 
 import { classNames } from '@/util/utils';
 import { IconClose } from '@/components/LandingPage/icons/IconClose';
@@ -25,6 +31,8 @@ export default function AddRecordingDialog({
 }: AddRecordingDialogProps) {
   const key = getSessionKey(RECORDING_LOCATION_CONFIGURATION_SESSION_KEY, sessionId);
   const [state, update] = useAtom(RecordLocationConfigurationAtomFamily(key));
+  const spcKey = getSessionKey(STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
+  const [spcState, updateSPC] = useAtom(StimulationConfigurationAtomFamily(spcKey));
   const [open, setOpen] = React.useState(false);
   const { offset, item } = painterManager.eventTap.useValue({
     offset: 0,
@@ -37,6 +45,10 @@ export default function AddRecordingDialog({
     setOpen(false);
     if (!item) return;
 
+    updateSPC({
+      ...spcState,
+      inject_to: item.sectionName,
+    });
     const injection = state.find(({ origin }) => origin === 'injection');
     if (injection) {
       injection.offset = offset;
@@ -48,7 +60,7 @@ export default function AddRecordingDialog({
         {
           offset,
           origin: 'injection',
-          color: getColor(state.length),
+          color: getColorFromGeneratedPalette(state.length),
           record_currents: false,
           section: item.sectionName,
         },
@@ -64,7 +76,7 @@ export default function AddRecordingDialog({
       {
         offset,
         origin: 'recording',
-        color: getColor(state.length),
+        color: getColorFromGeneratedPalette(state.length),
         record_currents: false,
         section: item.sectionName,
       },

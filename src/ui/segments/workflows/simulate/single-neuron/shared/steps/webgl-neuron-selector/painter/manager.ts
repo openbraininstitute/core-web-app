@@ -30,12 +30,12 @@ import { Morphology } from '@/services/bluenaas-single-cell/types';
 import GenericEvent from '@/util/generic-event';
 
 const PALETTE: string[] = [];
-PALETTE[StructureItemType.Axon] = '#b00';
+PALETTE[StructureItemType.Axon] = '#07f';
 PALETTE[StructureItemType.Dendrite] = '#F44';
-PALETTE[StructureItemType.ApicalDendrite] = '#F88';
-PALETTE[StructureItemType.Myelin] = `#f38`;
+PALETTE[StructureItemType.ApicalDendrite] = '#F8f';
+PALETTE[StructureItemType.Myelin] = `#778`;
+PALETTE[StructureItemType.Soma] = '#dde';
 PALETTE[StructureItemType.Selected] = '#fc0';
-PALETTE[StructureItemType.Soma] = '#afa';
 PALETTE[StructureItemType.Unknown] = '#a6f';
 
 export class PainterManager {
@@ -49,6 +49,7 @@ export class PainterManager {
     x: number;
     y: number;
     item: StructureItem | null;
+    offset: number;
   }>();
 
   public readonly eventTap = new GenericEvent<{
@@ -259,15 +260,16 @@ export class PainterManager {
           this.hoverPainter = null;
         }
         this.hoverItem = item ?? null;
+        let offset = 0;
         if (item) {
           this.hoverPainter = this.makeHoverPainter(item);
           if (this.hoverPainter) {
             groupHover.add(this.hoverPainter);
+            offset = computeSectionOffset(structure, item, context.camera, x, y);
           }
         }
-        this.context?.debugHierarchy('hoverPainter');
         this.context?.paint();
-        this.eventHover.dispatch({ x, y, item });
+        this.eventHover.dispatch({ x, y, item, offset });
       }
     });
     context.inputs.pointer.eventTap.addListener((evt) => {
