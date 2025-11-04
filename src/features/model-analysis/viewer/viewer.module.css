@@ -1,0 +1,15 @@
+.row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2em;
+
+  > div {
+    flex: 1 1 auto;
+    min-width: 300px;
+  }
+
+  > div:first-child {
+    flex: 0 0 auto;
+    max-width: auto;
+  }
+}
