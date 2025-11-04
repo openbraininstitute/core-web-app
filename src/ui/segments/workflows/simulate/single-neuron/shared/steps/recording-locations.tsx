@@ -22,7 +22,7 @@ import {
   getSimulationColor,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
-  // type NeuronLocation,
+  type NeuronLocation,
   NeuronLocationSchema,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
@@ -41,7 +41,7 @@ type RecordItemProps = {
   disableDelete: boolean;
   sections: Array<string>;
   onRemove: (idx: number) => void;
-  // record?: NeuronLocation;
+  record?: NeuronLocation;
 };
 
 function ColorMarker({ color }: { color?: string }) {
@@ -62,7 +62,15 @@ function ColorMarker({ color }: { color?: string }) {
   );
 }
 
-function RecordItem({ index, name, disable, disableDelete, sections, onRemove }: RecordItemProps) {
+function RecordItem({
+  index,
+  name,
+  disable,
+  disableDelete,
+  sections,
+  record,
+  onRemove,
+}: RecordItemProps) {
   const breakpoint = useDefaultBreakpoint();
   return (
     <div className="flex w-full flex-col items-start justify-start pr-2">
@@ -104,7 +112,13 @@ function RecordItem({ index, name, disable, disableDelete, sections, onRemove }:
             placement="bottomLeft"
             disabled={disable}
             size={breakpoint === 'l' ? 'middle' : 'large'}
-            prefix={<ColorMarker color={getColorFromGeneratedPalette(index) /* record?.color */} />}
+            prefix={
+              <ColorMarker
+                color={
+                  record?.origin === 'injection' ? '#fff' : getColorFromGeneratedPalette(index)
+                }
+              />
+            }
           />
         </Form.Item>
         <Form.Item

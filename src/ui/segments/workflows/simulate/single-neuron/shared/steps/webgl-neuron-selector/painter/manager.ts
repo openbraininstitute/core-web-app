@@ -53,8 +53,10 @@ export class PainterManager {
   }>();
 
   public readonly eventTap = new GenericEvent<{
-    offset: number;
+    x: number;
+    y: number;
     item: StructureItem | null;
+    offset: number;
   }>();
 
   /** Event for normalized zoom changes. */
@@ -284,8 +286,10 @@ export class PainterManager {
       if (item) {
         const segment = computeSectionOffset(structure, item, context.camera, x, y);
         this.eventTap.dispatch({
-          offset: segment,
+          x,
+          y,
           item: this.hoverItem,
+          offset: segment,
         });
       }
     });
@@ -340,7 +344,6 @@ export class PainterManager {
       })
     );
     context.paint();
-    context.debugHierarchy('INIT');
     this.groupHover = groupHover;
   }
 
@@ -383,17 +386,17 @@ export class PainterManager {
       (StructureItemType.Selected + 0.5) / (StructureItemType.Unknown + 1),
       0,
     ];
-    const radius = item.radius * 1.2;
+    const radius = item.radius * 1.5;
     segments.add([...item.start, radius], [...item.end, radius], uv, uv);
 
     return new TgdPainterSegments(context, {
       roundness: 32,
-      minRadius: 1.5,
+      minRadius: 2,
       makeDataset: segments.makeDataset,
       material: new TgdMaterialDiffuse({
-        color: [0.3, 0.4, 0.5, 1],
+        color: [0.8, 0.6, 0.3, 1],
         specularExponent: 1,
-        specularIntensity: 0.25,
+        specularIntensity: 0.5,
         lockLightsToCamera: true,
         light: new TgdLight({
           direction: new TgdVec3(0, 0, -1),
