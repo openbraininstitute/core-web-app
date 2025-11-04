@@ -1,0 +1,18 @@
+.link {
+  display: inline flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1em;
+  color: #06d;
+  border-radius: 999vmax;
+  padding: 0.25em 1em;
+  transition: all 0.3s;
+
+  &:hover {
+    text-decoration: underline;
+    background-color: #06d;
+    color: #fff;
+  }
+}
