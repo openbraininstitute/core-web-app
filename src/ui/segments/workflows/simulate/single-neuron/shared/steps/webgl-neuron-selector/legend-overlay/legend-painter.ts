@@ -3,7 +3,7 @@ import React from 'react';
 import { tgdCalcMapRange, TgdVec4 } from '@tolokoban/tgd';
 
 import { PainterManager } from '../painter';
-import { getColor } from '../colors';
+import { getColorFromGeneratedPalette } from '../colors';
 
 export interface LegendTarget {
   section: string;
@@ -75,7 +75,7 @@ export class LegendPainter {
         originX: tip.x,
         originY: tip.y,
         text,
-        color: getColor(targetIndex),
+        color: getColorFromGeneratedPalette(targetIndex),
         tipX: round(tgdCalcMapRange(tip.x, -1, +1, 0, canvas.width)),
         tipY: round(tgdCalcMapRange(tip.y, +1, -1, 0, canvas.height)),
         boxX: 0,
