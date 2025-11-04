@@ -6,8 +6,12 @@ import { CircuitPreview } from '@/features/small-microcircuit/_components/model-
 import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
 
 export default function ModelPreview({ model }: { model: ICircuit | IMEModel }) {
+  const sessionId = crypto.randomUUID();
+
   return match(model.type)
     .with(EntityTypeDict.Circuit, () => <CircuitPreview circuit={model as ICircuit} />)
-    .with(EntityTypeDict.Memodel, () => <NeuronVisualizer sessionId="abc" memodelId={model.id} />)
+    .with(EntityTypeDict.Memodel, () => (
+      <NeuronVisualizer memodelId={model.id} sessionId={sessionId} />
+    ))
     .otherwise(() => null);
 }

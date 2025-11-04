@@ -55,14 +55,12 @@ export default function Page({
 
   if (queryParams.dataType === ExtendedEntitiesTypeDict.MemodelCircuit) {
     return (
-      <div className="border-neutral-2 ml-2 h-full rounded-2xl border pt-3">
-        <SimulationConfig
-          modelId={entity.id}
-          virtualLabId={virtualLabId}
-          projectId={projectId}
-          className="px-10 pt-2"
-        />
-      </div>
+      <SimulationConfig
+        modelId={entity.id}
+        virtualLabId={virtualLabId}
+        projectId={projectId}
+        className="px-8 pt-1"
+      />
     );
   }
 
