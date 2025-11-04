@@ -567,7 +567,7 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
 
       {/* List of input/output files for selected simulation */}
       <div className="relative border-r border-gray-200 px-4">
-        {!!activeSimulation && (
+        {!!activeSimulation && activeSimulationExecStatus && (
           <SimulationFiles
             simulation={activeSimulation}
             execStatus={activeSimulationExecStatus}

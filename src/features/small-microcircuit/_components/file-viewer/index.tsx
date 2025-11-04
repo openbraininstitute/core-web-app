@@ -144,7 +144,10 @@ type NwbFileViewerProps = {
 };
 
 function NwbFileViewer({ file, context }: NwbFileViewerProps) {
-  return <EphysViewer resource={file.entity as ICircuitSimulationResult} ctx={context} />;
+  const { entity } = file;
+  return (
+    <EphysViewer key={entity.id} resource={entity as ICircuitSimulationResult} ctx={context} />
+  );
 }
 
 type PlaceholderFileViewerProps = {

@@ -24,7 +24,7 @@ export type File = {
 
 type SimulationFilesProps = {
   simulation: ICircuitSimulation;
-  execStatus?: CircuitSimulationExecutionStatus | null;
+  execStatus: CircuitSimulationExecutionStatus;
   selectedFile?: File;
   onSelect: (file: File) => void;
   onLoadingChange: (loading: boolean) => void;
