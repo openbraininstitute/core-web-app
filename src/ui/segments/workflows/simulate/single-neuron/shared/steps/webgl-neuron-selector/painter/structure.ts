@@ -5,7 +5,13 @@ import { logWarn } from '@/utils/logger';
 
 export enum StructureItemType {
   Soma = 0,
+  /**
+   * We make a difference between Dendrite and BasalDendrite.
+   * If the morphology has no ApicalDendrite, then the basal dendrites
+   * are called simply Dendrite.
+   */
   Dendrite,
+  BasalDendrite,
   ApicalDendrite,
   Myelin,
   Axon,
@@ -36,6 +42,8 @@ export interface StructureBoundingBox {
 export class Structure {
   public readonly bbox: StructureBoundingBox;
 
+  public readonly hasApicalDendrites: boolean;
+
   private readonly items: StructureItem[] = [];
 
   private readonly segments = new Map<string, StructureItem>();
@@ -52,6 +60,7 @@ export class Structure {
     let somaCounts = 0;
     const somaCenter = new TgdVec3();
     const sectionNames = Object.keys(morphology);
+    let hasApicalDendrites = false;
     for (const sectionName of sectionNames) {
       const isSoma = sectionName.toLowerCase().startsWith('soma');
       const section = morphology[sectionName];
@@ -67,6 +76,8 @@ export class Structure {
           section.yend[segmentIndex],
           section.zend[segmentIndex],
         ];
+        const type = resolveType(sectionName);
+        if (type === StructureItemType.ApicalDendrite) hasApicalDendrites = true;
         const item: StructureItem = {
           start,
           end,
@@ -78,7 +89,7 @@ export class Structure {
           segmentIndex,
           segmentsCount: section.nseg,
           length: section.length[segmentIndex],
-          type: resolveType(sectionName),
+          type,
           distanceFromSoma: isSoma ? 0 : distanceFromSoma,
         };
         this.segments.set(item.name, item);
@@ -98,8 +109,17 @@ export class Structure {
         }
       }
     }
+    if (!hasApicalDendrites) {
+      // If no apical dendrite, then we need to display Dendrite instead of BasalDendrite.
+      for (const item of this.items) {
+        if (item.type === StructureItemType.BasalDendrite) {
+          item.type = StructureItemType.Dendrite;
+        }
+      }
+    }
     if (somaCounts > 0) somaCenter.scale(1 / somaCounts);
     bbox.center = [...somaCenter] as ArrayNumber3;
+    this.hasApicalDendrites = hasApicalDendrites;
   }
 
   getSegmentsOfSection(sectionName: string): StructureItem[] {
@@ -148,7 +168,7 @@ function resolveType(sectionName: string): StructureItemType {
     case 'axon':
       return StructureItemType.Axon;
     case 'dend':
-      return StructureItemType.Dendrite;
+      return StructureItemType.BasalDendrite;
     case 'apic':
       return StructureItemType.ApicalDendrite;
     case 'myel':
