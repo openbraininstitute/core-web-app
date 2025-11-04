@@ -3,6 +3,7 @@ import { viewDefForSingleNeuronSynaptomeSimulation } from './single-neuron-synap
 import { viewDefForSimulationCampaign } from './simulation-campaign';
 import { viewDefForPairedNeuronCircuitSimulation } from './paired-neuron-circuit-simulation';
 import { viewDefForSmallMicrocircuitSimulation } from './small-microcircuit-simulation';
+import { viewDefForMEModelCircuitSimulation } from './memodel-circuit-simulation';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
@@ -15,4 +16,5 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [ExtendedEntitiesTypeDict.SimulationCampaign]: viewDefForSimulationCampaign,
   [ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation]: viewDefForPairedNeuronCircuitSimulation,
   [ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation]: viewDefForSmallMicrocircuitSimulation,
+  [ExtendedEntitiesTypeDict.MemodelCircuitSimulation]: viewDefForMEModelCircuitSimulation,
 };

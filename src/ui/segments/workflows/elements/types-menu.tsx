@@ -1,8 +1,9 @@
 import { WheelGesturesPlugin } from 'embla-carousel-wheel-gestures';
 
-import { getAllOptionsOrdered } from '@/ui/segments/workflows/elements/helpers';
-import { CarouselButtons } from '@/ui/segments/workflows/elements/carousel-buttons';
+import { useFlags } from '@/features/feature-flags';
 import { Carousel, CarouselContent, CarouselItem } from '@/ui/molecules/carousel';
+import { CarouselButtons } from '@/ui/segments/workflows/elements/carousel-buttons';
+import { getAllOptionsOrdered } from '@/ui/segments/workflows/elements/helpers';
 import { MenuItem } from '@/ui/segments/workflows/elements/menu-item';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -17,6 +18,8 @@ export function TypesMenu({
   category: TActivityValue | undefined;
   onItemClick: (v: TExtendedEntitiesTypeDict | undefined) => void;
 }) {
+  const featureFlags = useFlags();
+
   if (!category) return null;
   return (
     <Carousel
@@ -33,7 +36,7 @@ export function TypesMenu({
         </div>
       </div>
       <CarouselContent className="items-stretch">
-        {getAllOptionsOrdered(category).map(({ value, disabled, group, label }) => (
+        {getAllOptionsOrdered(category, featureFlags).map(({ value, disabled, group, label }) => (
           <CarouselItem
             key={`category-selector-${value}`}
             className="w-max basis-1/2 py-2 md:basis-1/3! lg:basis-1/5! 2xl:basis-1/6!"

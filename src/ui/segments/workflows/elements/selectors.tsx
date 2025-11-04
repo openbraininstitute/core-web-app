@@ -16,6 +16,7 @@ import {
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
+import { useFlags } from '@/features/feature-flags';
 
 export function EntityTypeSelectScrollable({
   value,
@@ -26,6 +27,8 @@ export function EntityTypeSelectScrollable({
   value: TExtendedEntitiesTypeDict | undefined;
   onSelect: (v: TExtendedEntitiesTypeDict | undefined) => void;
 }) {
+  const featureFlags = useFlags();
+
   const breakpoint = useDefaultBreakpoint();
   if (!category) return null;
   return (
@@ -45,23 +48,25 @@ export function EntityTypeSelectScrollable({
         side="bottom"
         sideOffset={3}
       >
-        {getDropdownOptionsByCategory(category).enabledOptions.map(({ group, options }) => (
-          <SelectGroup key={`entity-type-group-${group}`}>
-            <SelectLabel className="text-neutral-3 text-base">{group}</SelectLabel>
-            {options.map(({ label, value: _value }) => (
-              <SelectItem
-                key={`entity-type-${_value}`}
-                value={_value!}
-                className={cn(
-                  'text-primary-9 text-lg font-bold',
-                  'data-[highlighted]:text-primary-7!'
-                )}
-              >
-                {label}
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        ))}
+        {getDropdownOptionsByCategory(category, featureFlags).enabledOptions.map(
+          ({ group, options }) => (
+            <SelectGroup key={`entity-type-group-${group}`}>
+              <SelectLabel className="text-neutral-3 text-base">{group}</SelectLabel>
+              {options.map(({ label, value: _value }) => (
+                <SelectItem
+                  key={`entity-type-${_value}`}
+                  value={_value!}
+                  className={cn(
+                    'text-primary-9 text-lg font-bold',
+                    'data-[highlighted]:text-primary-7!'
+                  )}
+                >
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          )
+        )}
       </SelectContent>
     </Select>
   );

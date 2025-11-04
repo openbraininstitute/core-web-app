@@ -387,17 +387,14 @@ function Header({
 const tabsConfigItems: Array<{
   key: 'team' | 'credits';
   title: string;
-  position: 'first' | 'middle' | 'last';
 }> = [
   {
     key: 'team',
     title: 'Members',
-    position: 'first',
   },
   {
     key: 'credits',
     title: 'Credits',
-    position: 'last',
   },
 ];
 
@@ -438,7 +435,6 @@ function Tabs({ id }: { id?: string | null }) {
         <PillTabsTrigger
           key="team"
           value="team"
-          position="first"
           className={cn(
             'hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:text-primary-9 h-10 px-14! py-3 text-base text-white select-none data-[state=active]:bg-white data-[state=active]:font-bold',
             { 'h-12': breakpoint === 'xl' }
@@ -456,7 +452,6 @@ function Tabs({ id }: { id?: string | null }) {
           <PillTabsTrigger
             key="credits"
             value="credits"
-            position="last"
             className={cn(
               'hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:text-primary-9 h-10 px-14! py-3 text-base text-white select-none data-[state=active]:bg-white data-[state=active]:font-bold',
               { 'h-12': breakpoint === 'xl', 'cursor-not-allowed opacity-50': !isAdmin }

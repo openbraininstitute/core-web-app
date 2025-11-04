@@ -14,6 +14,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [ExtendedEntitiesTypeDict.Emodel]: ViewDefForEmodel,
   [ExtendedEntitiesTypeDict.Memodel]: ViewDefForMemodel,
   [ExtendedEntitiesTypeDict.SingleNeuronSynaptome]: ViewDefForSingleNeuronSynaptome,
+  [ExtendedEntitiesTypeDict.MemodelCircuit]: ViewDefForMemodel,
   [ExtendedEntitiesTypeDict.Circuit]: ViewDefForCircuit,
   [ExtendedEntitiesTypeDict.SmallMicrocircuit]: ViewDefForSmallMicrocircuit,
   [ExtendedEntitiesTypeDict.PairedNeuronCircuit]: ViewDefForPairedNeuronCircuit,

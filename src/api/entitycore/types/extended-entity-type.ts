@@ -5,6 +5,8 @@ export const ExtendedEntitiesTypeDict = {
   SmallMicrocircuit: 'small_micro_circuit',
   Microcircuit: 'micro_circuit',
   PairedNeuronCircuit: 'paired_neuron_circuit',
+  MemodelCircuit: 'me_model_circuit',
+  MemodelCircuitSimulation: 'me_model_circuit_simulation',
   PairedNeuronCircuitSimulation: 'paired_neuron_circuit_simulation',
   SmallMicrocircuitSimulation: 'small_microcircuit_simulation',
   MicrocircuitSimulation: 'micro_circuit_simulation',

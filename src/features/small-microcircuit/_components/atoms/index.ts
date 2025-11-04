@@ -1,13 +1,16 @@
+import isEqual from 'es-toolkit/compat/isEqual';
 import { atom } from 'jotai';
 import { atomWithRefresh } from 'jotai/utils';
-import isEqual from 'es-toolkit/compat/isEqual';
+import { match } from 'ts-pattern';
 
+import { getMEModel } from '@/api/entitycore/queries';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { getEntity } from '@/api/entitycore/queries/general/entity';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulationResult } from '@/api/entitycore/queries/simulation/circuit-simulation-result';
-import { TEntityTypeDict } from '@/api/entitycore/types';
+import { EntityTypeDict, IMEModel, TEntityTypeDict } from '@/api/entitycore/types';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import {
@@ -15,11 +18,11 @@ import {
   ICircuitSimulationExecution,
 } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
+import { resolveExecutions } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { getLatestSimExecStatus } from '@/features/small-microcircuit/_components/utils';
 import { SimExecStatusMap } from '@/features/small-microcircuit/types';
 import { WorkspaceContext } from '@/types/common';
 import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';
-import { resolveExecutions } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 
 const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
   ({ simulationId, context }: { simulationId: string; context: WorkspaceContext }) =>
@@ -150,11 +153,24 @@ export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
   }
 );
 
-export const circuitAtomFamily = readAtomFamilyWithExpiration(
-  ({ circuitId, context }: { circuitId: string; context: WorkspaceContext }) =>
-    atom<Promise<ICircuit | null>>(async () => {
-      if (circuitId) return getCircuit({ id: circuitId, context });
-      return null;
+// TODO Refactor to use tanstack query
+export const modelAtomFamily = readAtomFamilyWithExpiration(
+  ({ id, context }: { id: string; context: WorkspaceContext }) =>
+    atom<Promise<ICircuit | IMEModel>>(async () => {
+      if (!id) {
+        throw new Error(`No model ID provided`);
+      }
+
+      const params = { id, context };
+
+      const modelEntityBase = await getEntity(params);
+
+      return match(modelEntityBase.type)
+        .with(EntityTypeDict.Circuit, () => getCircuit(params))
+        .with(EntityTypeDict.Memodel, () => getMEModel(params))
+        .otherwise((entityType) => {
+          throw new Error(`Unsupported model entity type ${entityType}`);
+        });
     }),
   {
     ttl: 120000, // 2 minutes

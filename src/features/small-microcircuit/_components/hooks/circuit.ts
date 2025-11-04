@@ -1,50 +1,27 @@
-import React from 'react';
+import { useAtomValue } from 'jotai';
+import { useEffect, useState } from 'react';
 
-import { getCircuit } from '@/api/entitycore/queries/model/circuit';
-import { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import { useAppNotification } from '@/components/notification';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 
-const pendingQueries = new Map<string, Promise<ICircuit | undefined | null>>();
+import { useAppNotification } from '@/components/notification';
 
-/**
- * Retrieve a circuit from EntityCore.
- * @param circuitId
- * @returns `undefined` if the query is pending, `null` if an error occured and the circuit in case of success.
- */
-export function useCircuit(circuitId: string | undefined): ICircuit | undefined | null {
+import { modelAtomFamily } from '@/features/small-microcircuit/_components/atoms';
+
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+
+export function useCircuitImageURL(circuitId: string) {
+  const context = useWorkspace();
+  const modelAtom = modelAtomFamily({ id: circuitId, context });
+  const circuit = useAtomValue(modelAtom);
+
   const { error } = useAppNotification();
-  const [circuit, setCircuit] = React.useState<ICircuit | undefined | null>(undefined);
+  const [url, setUrl] = useState<string | undefined>(undefined);
 
-  React.useEffect(() => {
-    if (!circuitId) {
-      setCircuit(undefined);
-      return;
-    }
-
-    getQuery(circuitId)
-      .then(setCircuit)
-      .catch((ex) => {
-        error({
-          message: `Unable to retrieve circuit "${circuitId}"!\n${ex}`,
-        });
-        setCircuit(null);
-      });
-  }, [circuitId, error]);
-
-  return circuit;
-}
-
-export function useCircuitImageURL(circuitId: string | undefined) {
-  const { error } = useAppNotification();
-  const [url, setUrl] = React.useState<string | undefined>(undefined);
-  const circuit = useCircuit(circuitId);
-
-  React.useEffect(() => {
+  useEffect(() => {
     const action = async () => {
-      if (!circuit) return;
+      if (!circuit || !('assets' in circuit)) return;
 
       const asset = circuit.assets.find(
         (item) => item.label === AssetLabel.simulation_designer_image
@@ -76,13 +53,4 @@ export function useCircuitImageURL(circuitId: string | undefined) {
   }, [circuit, circuitId, error]);
 
   return url;
-}
-
-function getQuery(circuitId: string): Promise<ICircuit | undefined | null> {
-  const query = pendingQueries.get(circuitId);
-  if (query) return query;
-
-  const newQuery = getCircuit({ id: circuitId });
-  pendingQueries.set(circuitId, newQuery);
-  return newQuery;
 }

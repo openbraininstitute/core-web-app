@@ -9,7 +9,7 @@ import { IEntity } from '@/api/entitycore/types/entities/entity';
 import { AssetLabel, IAsset } from '@/api/entitycore/types/shared/global';
 import { Loader } from '@/components/loader';
 import {
-  circuitAtomFamily,
+  modelAtomFamily,
   simResultBySimIdAtomFamily,
 } from '@/features/small-microcircuit/_components/atoms';
 import { useLastTruthyValue } from '@/hooks/hooks';
@@ -141,26 +141,27 @@ function useInputFiles(
   simulation: ICircuitSimulation,
   context: WorkspaceContext
 ): [boolean, File[]] {
-  const circuitAtom = circuitAtomFamily({ circuitId: simulation.entity_id, context });
-  const circuitLoadableAtom = useMemo(() => loadable(circuitAtom), [circuitAtom]);
+  const modelAtom = modelAtomFamily({ id: simulation.entity_id, context });
+  const modelLoadableAtom = useMemo(() => loadable(modelAtom), [modelAtom]);
 
-  const circuitLoadable = useAtomValue(circuitLoadableAtom);
-  const loading = circuitLoadable.state === 'loading';
+  const modelLoadable = useAtomValue(modelLoadableAtom);
+  const loading = modelLoadable.state === 'loading';
 
-  const lastCircuit = useLastTruthyValue(circuitAtom);
+  const lastModel = useLastTruthyValue(modelAtom);
 
-  const circuit = circuitLoadable.state === 'hasData' ? circuitLoadable.data : lastCircuit;
+  const model = modelLoadable.state === 'hasData' ? modelLoadable.data : lastModel;
 
   const inputFiles: File[] = useMemo(() => {
-    const sonataCircuitAsset = circuit?.assets.find(
-      (asset) => asset.label === AssetLabel.sonata_circuit
-    );
+    const sonataCircuitAsset =
+      model && 'assets' in model
+        ? model.assets?.find((asset) => asset.label === AssetLabel.sonata_circuit)
+        : null;
 
     const files: File[] = [];
 
-    if (circuit && sonataCircuitAsset) {
+    if (model && sonataCircuitAsset) {
       files.push({
-        entity: circuit,
+        entity: model,
         asset: sonataCircuitAsset,
         assetPath: 'circuit_config.json',
       });
@@ -172,7 +173,7 @@ function useInputFiles(
     ).forEach((file) => files.push(file));
 
     return files;
-  }, [circuit, simulation]);
+  }, [model, simulation]);
 
   return [loading, inputFiles];
 }

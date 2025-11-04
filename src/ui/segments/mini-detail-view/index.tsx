@@ -196,7 +196,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
       <ExploreActions record={record} dataType={dataType} />
     ))
     .with({ section: WorkspaceSection.SimulateWorkflow }, () => (
-      <WorkflowSimulateActions record={record} />
+      <WorkflowSimulateActions record={record} dataType={dataType} />
     ))
     .with({ section: WorkspaceSection.BuildWorkflow }, () => (
       <WorkflowBuildActions record={record} />
@@ -446,7 +446,13 @@ function ExploreActions<T extends EntityCoreObjectTypes>({
   );
 }
 
-function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({ record }: { record: T }) {
+function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({
+  record,
+  dataType,
+}: {
+  record: T;
+  dataType?: TExtendedEntitiesTypeDict;
+}) {
   const { virtualLabId, projectId } = useWorkspace();
 
   return (
@@ -477,6 +483,7 @@ function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({ record }: { 
             query: {
               sessionId: crypto.randomUUID(),
               [PanelQueryParam]: WorkflowSimulatePanels.Configuration,
+              dataType,
             },
           }}
         >

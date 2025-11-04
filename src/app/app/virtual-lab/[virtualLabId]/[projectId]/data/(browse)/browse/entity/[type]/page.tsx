@@ -24,6 +24,7 @@ const AllowedEntities = [
   ExtendedEntitiesTypeDict.Memodel,
   ExtendedEntitiesTypeDict.Circuit,
   ExtendedEntitiesTypeDict.Emodel,
+  ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
   ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
   ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
   ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,

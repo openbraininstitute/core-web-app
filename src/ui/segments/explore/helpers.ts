@@ -2,6 +2,7 @@
 
 import pProps from 'p-props';
 
+import { MEModelCircuitSimulation } from '@/entity-configuration/domain/simulation/memodel-circuit-simulation';
 import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/simulation/single-neuron-synaptome-simulation';
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { PairedNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/paired-neurons-simulation';
@@ -49,6 +50,7 @@ export const ModelEntitiesTileTypes = {
 
 export const SimulationEntitiesTileTypes = {
   SingleNeuronSimulation,
+  MEModelCircuitSimulation,
   SingleNeuronSynaptomeSimulation,
   PairedNeuronCircuitSimulation,
   SmallMicrocircuitSimulation,

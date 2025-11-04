@@ -7,6 +7,11 @@ import get from 'es-toolkit/compat/get';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import {
+  FeatureFlags,
+  FlagKey,
+  inifiedSingleNeuronSimulationFlowFlag,
+} from '@/features/feature-flags/flags';
 
 export const WorkflowSessionIdSearchParam = 'sessionId';
 export const EntityScopeDict = {
@@ -56,6 +61,7 @@ export const EntityWorkflowConfiguration: Partial<
       group: TEntityScopeValue;
       label: string;
       properties: Partial<Record<TActivityValue, EntityTypeProperties>>;
+      requiredFeatures?: Array<FlagKey>;
     }
   >
 > = {
@@ -112,6 +118,21 @@ export const EntityWorkflowConfiguration: Partial<
       simulate: {
         disabled: false,
         type: ExtendedEntitiesTypeDict.SingleNeuronSimulation,
+      },
+    },
+  },
+  [ExtendedEntitiesTypeDict.MemodelCircuit]: {
+    group: EntityScopeDict.Cellular,
+    label: 'Single neuron [circuit]',
+    requiredFeatures: [inifiedSingleNeuronSimulationFlowFlag.key],
+    properties: {
+      build: {
+        disabled: true,
+        type: ExtendedEntitiesTypeDict.MemodelCircuit,
+      },
+      simulate: {
+        disabled: false,
+        type: ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
       },
     },
   },
@@ -239,12 +260,19 @@ export type TEntityDropdownOptionsGrouped = Array<{
   options: Array<EntityDropdownOption>;
 }>;
 
-export function getDropdownOptionsByCategory(category: TActivityValue): {
+export function getDropdownOptionsByCategory(
+  category: TActivityValue,
+  featureFlags?: FeatureFlags
+): {
   allOptions: Array<EntityTypeGroupedOptions>;
   enabledOptions: Array<EntityTypeGroupedOptions>;
 } {
   const options = Object.values(EntityWorkflowConfiguration)
     .filter((config): config is NonNullable<typeof config> => config !== undefined)
+    .filter(
+      (config) =>
+        !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
+    )
     .map((config) => ({
       group: config.group,
       label: config.label,
@@ -286,9 +314,16 @@ export function getDropdownOptionsByCategory(category: TActivityValue): {
   };
 }
 
-export function getAllOptionsOrdered(category: TActivityValue): Array<EntityTypeOption> {
+export function getAllOptionsOrdered(
+  category: TActivityValue,
+  featureFlags: FeatureFlags
+): Array<EntityTypeOption> {
   const options = Object.values(EntityWorkflowConfiguration)
     .filter((config): config is NonNullable<typeof config> => config !== undefined)
+    .filter(
+      (config) =>
+        !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
+    )
     .map((config) => ({
       group: config.group,
       label: config.label,

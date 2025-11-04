@@ -9,9 +9,11 @@ import { match } from 'ts-pattern';
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import { useTabs } from '@/components/detail-view-tabs';
 import { SignOutFill } from '@/components/icons/EditorIcons';
+import { hasVisibleFlags } from '@/features/feature-flags/flags';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
+import { ExperimentalFeatures } from '@/ui/segments/profile/sections/experimental-features';
 import { Invoices } from '@/ui/segments/profile/sections/invoices';
 import { UserProfile } from '@/ui/segments/profile/sections/profile';
 import { Subscription } from '@/ui/segments/profile/sections/subscription';
@@ -49,26 +51,29 @@ function Header({ onClose }: { onClose: () => void }) {
 }
 
 const tabsConfigItems: Array<{
-  key: 'profile' | 'subscription' | 'invoices';
+  key: 'profile' | 'subscription' | 'invoices' | 'experimental-features';
   title: string;
-  position: 'first' | 'middle' | 'last';
 }> = [
   {
     key: 'profile',
     title: 'Profile',
-    position: 'first',
   },
   {
     key: 'subscription',
     title: 'Subscription',
-    position: 'middle',
   },
   {
     key: 'invoices',
     title: 'Invoices',
-    position: 'last',
   },
 ];
+
+if (hasVisibleFlags) {
+  tabsConfigItems.push({
+    key: 'experimental-features',
+    title: 'Experimental Features',
+  });
+}
 
 type TabKeys = (typeof tabsConfigItems)[number]['key'];
 
@@ -93,7 +98,7 @@ function Tabs({ defaultKey }: { defaultKey?: string }) {
       }}
     >
       <PillTabsList
-        className={cn('bg-primary-9 grid h-10 w-full grid-cols-3 p-0', {
+        className={cn('bg-primary-9 grid h-10 w-full auto-cols-fr grid-flow-col p-0', {
           'h-12': breakpoint === 'xl',
         })}
       >
@@ -101,7 +106,6 @@ function Tabs({ defaultKey }: { defaultKey?: string }) {
           <PillTabsTrigger
             key={tab.key}
             value={tab.key}
-            position={tab.position}
             className={cn(
               'hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:text-primary-9 h-10 px-14! py-3 text-base text-white select-none data-[state=active]:bg-white data-[state=active]:font-bold',
               { 'h-12': breakpoint === 'xl' }
@@ -129,6 +133,7 @@ function Content({ defaultKey }: { defaultKey?: string }) {
     .with('profile', () => <UserProfile />)
     .with('subscription', () => <Subscription />)
     .with('invoices', () => <Invoices />)
+    .with('experimental-features', () => <ExperimentalFeatures />)
     .otherwise(() => {
       return <UserProfile />;
     });

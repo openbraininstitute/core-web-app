@@ -1,16 +1,20 @@
-import React, { useState } from 'react';
-import { atom } from 'jotai';
-import { NotificationInstance } from 'antd/es/notification/interface';
-
 import $RefParser from '@apidevtools/json-schema-ref-parser';
+import { NotificationInstance } from 'antd/es/notification/interface';
+import { atom } from 'jotai';
+import React, { useState } from 'react';
+import { match } from 'ts-pattern';
 
-import { AtomsMap, JSONSchema } from '../../types';
-import { ConfigValue, Config } from '../components';
-import { isPlainObject, isAtom } from '../utils';
+import { EntityTypeDict, TEntityTypeDict } from '@/api/entitycore/types';
+
+import { Config, ConfigValue } from '@/features/small-microcircuit/_components/components';
+import { isAtom, isPlainObject } from '@/features/small-microcircuit/_components/utils';
+import { AtomsMap, JSONSchema } from '@/features/small-microcircuit/types';
+
 import { assertErrorMessage } from '@/util/utils';
 
 export function useObioneJsonSchema(
   circuitId: string,
+  modelEntityType: TEntityTypeDict,
   notification: NotificationInstance,
   setAtomsMap: (atomsMap: AtomsMap) => void,
   initialConfig?: Config
@@ -23,8 +27,14 @@ export function useObioneJsonSchema(
         const res = await fetch(`${process.env.NEXT_PUBLIC_OBI_ONE_URL}/openapi.json`);
         const json = await res.json();
         const dereferenced = await $RefParser.dereference(json);
+        const schemaName = match(modelEntityType)
+          .with(EntityTypeDict.Circuit, () => 'CircuitSimulationScanConfig')
+          .with(EntityTypeDict.Memodel, () => 'MEModelSimulationScanConfig')
+          .otherwise(() => {
+            throw new Error(`Unsupported entity type: ${modelEntityType}`);
+          });
         // @ts-ignore
-        const theSchema = dereferenced.components.schemas.SimulationsForm as JSONSchema;
+        const theSchema = dereferenced.components.schemas[schemaName] as JSONSchema;
         if (!theSchema.properties) return;
 
         setSchema(theSchema);
@@ -68,9 +78,16 @@ export function useObioneJsonSchema(
                   else initial[subkey] = subValue.default ?? null;
                 });
 
+              const formCircuitType = match(modelEntityType)
+                .with(EntityTypeDict.Circuit, () => 'CircuitFromID')
+                .with(EntityTypeDict.Memodel, () => 'MEModelFromID')
+                .otherwise(() => {
+                  throw new Error(`Unsupported entity type: ${modelEntityType}`);
+                });
+
               if (k === 'initialize') {
                 initial.circuit = {
-                  type: 'CircuitFromID',
+                  type: formCircuitType,
                   id_str: circuitId,
                 };
               }
@@ -89,7 +106,7 @@ export function useObioneJsonSchema(
     }
 
     fetchSpec();
-  }, [circuitId, notification, setAtomsMap, setSchema, initialConfig]);
+  }, [circuitId, modelEntityType, notification, setAtomsMap, setSchema, initialConfig]);
 
   const referenceTypesToConfigKeys: Record<string, string> = {};
   const referenceTypesToTitles: Record<string, string> = {};

@@ -1,17 +1,19 @@
-import { useEffect, useState } from 'react';
-import { atom, useAtom } from 'jotai';
-import { InputNumber, Input, Select } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import { Input, InputNumber, Select } from 'antd';
+import { atom, useAtom } from 'jotai';
+import { useEffect, useState } from 'react';
 
-import { JSONSchema } from '../types';
-import { isPlainObject } from './utils';
-import CircuitDetails from './circuit-details';
-import Tooltip from './tooltip';
-import ParameterSwep from './parameter-sweep';
-
-import PredefinedNodeset from './predefined-nodeset';
-import Reference from './reference';
+import { EntityTypeDict, IMEModel } from '@/api/entitycore/types';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
+
+import ModelDetails from '@/features/small-microcircuit/_components/model-details';
+import ParameterSwep from '@/features/small-microcircuit/_components/parameter-sweep';
+import PredefinedNodeset from '@/features/small-microcircuit/_components/predefined-nodeset';
+import Reference from '@/features/small-microcircuit/_components/reference';
+import Tooltip from '@/features/small-microcircuit/_components/tooltip';
+import { isPlainObject } from '@/features/small-microcircuit/_components/utils';
+import { JSONSchema } from '@/features/small-microcircuit/types';
+
 import { classNames } from '@/util/utils';
 
 type Primitive = null | boolean | number | string;
@@ -47,7 +49,7 @@ export function JSONSchemaForm({
   schema,
   stateAtom,
   config,
-  circuit,
+  model,
   onAddReferenceClick,
   selectedCategory,
   virtualLabId,
@@ -60,7 +62,7 @@ export function JSONSchemaForm({
   disabled: boolean;
   config: Config;
   schema: JSONSchema;
-  circuit: ICircuit | undefined | null;
+  model: ICircuit | IMEModel | undefined | null;
   stateAtom: ReturnType<typeof atom<{ [key: string]: ConfigValue }>>;
   onAddReferenceClick: (reference: string) => void;
   virtualLabId: string;
@@ -90,10 +92,15 @@ export function JSONSchemaForm({
   }, [stateAtom, setState, schema.properties]);
 
   function renderInput(k: string, v: JSONSchema) {
-    if (selectedCategory === 'PredefinedNeuronSet' && k === 'node_set' && circuit) {
+    if (
+      selectedCategory === 'PredefinedNeuronSet' &&
+      k === 'node_set' &&
+      model &&
+      model.type === EntityTypeDict.Circuit
+    ) {
       return (
         <PredefinedNodeset
-          circuitId={circuit.id}
+          circuitId={model.id}
           virtualLabId={virtualLabId}
           projectId={projectId}
           stateAtom={stateAtom}
@@ -101,7 +108,7 @@ export function JSONSchemaForm({
       );
     }
 
-    if (k === 'circuit' && circuit) return <CircuitDetails circuit={circuit} />;
+    if (k === 'circuit' && model) return <ModelDetails model={model} />;
 
     if (v.is_block_reference) {
       const refType = v.properties?.type.const ?? '';

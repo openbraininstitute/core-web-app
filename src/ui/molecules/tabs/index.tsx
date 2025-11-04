@@ -25,16 +25,12 @@ PillTabsList.displayName = TabsPrimitive.List.displayName;
 
 const PillTabsTrigger = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger> & {
-    position?: 'first' | 'middle' | 'last';
-  }
->(({ className, position, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
+>(({ className, ...props }, ref) => (
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      'ring-offset-background focus-visible:ring-ring inline-flex h-full items-center justify-center px-6 py-3 text-sm font-medium whitespace-nowrap transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-slate-800 data-[state=active]:text-white data-[state=active]:shadow-sm',
-      position === 'first' && 'rounded-l-full',
-      position === 'last' && 'rounded-r-full',
+      'ring-offset-background focus-visible:ring-ring inline-flex h-full items-center justify-center px-6 py-3 text-sm font-medium whitespace-nowrap transition-all first:rounded-l-full last:rounded-r-full focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-slate-800 data-[state=active]:text-white data-[state=active]:shadow-sm',
       className
     )}
     {...props}

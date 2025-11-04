@@ -8,24 +8,27 @@ import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { Fragment, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
+// James asked to only comment it out for now.
+// import CircuitName from './_components/circuit-name';
+
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import ApiError from '@/api/error';
 import authFetch from '@/authFetch';
 import { useAppNotification } from '@/components/notification';
 import {
+  modelAtomFamily,
   simExecRemoteStatusMapAtomFamily,
   simExecStatusMapAtomFamily,
   simulationsByCampaignIdAtomFamily,
 } from '@/features/small-microcircuit/_components/atoms';
-import CircuitPreview from '@/features/small-microcircuit/_components/circuit-preview';
+import ModelPreview from '@/features/small-microcircuit/_components/model-preview';
 import {
   Config,
   ConfigValue,
   JSONSchemaForm,
 } from '@/features/small-microcircuit/_components/components';
 import { FileViewer } from '@/features/small-microcircuit/_components/file-viewer';
-import { useCircuit } from '@/features/small-microcircuit/_components/hooks/circuit';
 import { useConfigAtom } from '@/features/small-microcircuit/_components/hooks/config-atom';
 import {
   isRootCategory,
@@ -48,11 +51,12 @@ import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { assertErrorMessage, classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 import { getErrorMessage } from '@/utils/error';
+import { EntityTypeDict } from '@/api/entitycore/types';
 
 import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
 
 export default function SimulationCampaignConfiguration({
-  circuitId,
+  modelId,
   virtualLabId,
   projectId,
   initialCampaignId,
@@ -60,7 +64,7 @@ export default function SimulationCampaignConfiguration({
   readOnly,
   className,
 }: {
-  circuitId: string;
+  modelId: string;
   virtualLabId: string;
   projectId: string;
   initialCampaignId?: string;
@@ -68,7 +72,9 @@ export default function SimulationCampaignConfiguration({
   readOnly?: boolean;
   className?: string;
 }) {
-  const circuit = useCircuit(circuitId);
+  const modelAtom = modelAtomFamily({ id: modelId, context: { virtualLabId, projectId } });
+  const model = useAtomValue(modelAtom);
+
   const [tab, setTab] = useState<TabType>('configuration');
   const [configTab, setConfigTab] = useState<string>('info');
   const [editing, setEditing] = useState(true);
@@ -79,8 +85,9 @@ export default function SimulationCampaignConfiguration({
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
   const initialConfigValidated = useRef(false);
   const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
+
   const { schema, refLabels, referenceTypesToConfigKeys, referenceTypesToTitles } =
-    useObioneJsonSchema(circuitId, notification, setAtomsMap, initialConfig);
+    useObioneJsonSchema(modelId, model.type, notification, setAtomsMap, initialConfig);
 
   const selectedCatSchema = schema?.properties?.[configTab]?.additionalProperties?.oneOf?.find(
     (s) => s.properties?.type.const === selectedCategory
@@ -112,6 +119,15 @@ export default function SimulationCampaignConfiguration({
     return validate?.errors;
   }, [validate, config]);
 
+  const isNonEmptyCategory = useCallback(
+    (category: string) =>
+      schema?.properties &&
+      Object.entries(schema.properties).filter(
+        ([k]) => k !== 'type' && ORDERING[k]?.category === category
+      ).length > 0,
+    [schema]
+  );
+
   if (!schema || !refLabels || !referenceTypesToConfigKeys || !referenceTypesToTitles) {
     return (
       <div className="flex h-full w-full items-center justify-center">
@@ -119,6 +135,14 @@ export default function SimulationCampaignConfiguration({
       </div>
     );
   }
+
+  const apiPath = match(model.type)
+    .with(EntityTypeDict.Circuit, () => 'circuit-simulation-scan-config-generate-grid')
+    .with(EntityTypeDict.Memodel, () => 'me-model-simulation-scan-config-generate-grid')
+    .otherwise(() => {
+      throw new Error(`Unsupported model type ${model.type}`);
+    });
+  const apiUrl = `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/generated/${apiPath}`;
 
   return (
     <div className={cn('flex h-full flex-col space-y-5', className)}>
@@ -136,39 +160,41 @@ export default function SimulationCampaignConfiguration({
             <div className="flex flex-grow flex-col items-center gap-5 overflow-y-auto pr-5 pb-5">
               {CATEGORIES.map((c) => {
                 return (
-                  <Fragment key={c}>
-                    <div className="self-start text-gray-500 uppercase">{c}</div>
-                    {schema.properties &&
-                      Object.entries(schema.properties)
-                        .filter(([k]) => k !== 'type' && ORDERING[k]?.category === c)
-                        .sort((a, b) => {
-                          const order = (k: string) => ORDERING[k]?.order ?? 999;
-                          return order(a[0]) - order(b[0]);
-                        })
-                        .map(([k, v]) => {
-                          return (
-                            <Section
-                              key={k}
-                              k={k}
-                              schema={schema}
-                              sectionSchema={v}
-                              atomsMap={atomsMap}
-                              setAtomsMap={setAtomsMap}
-                              configTab={configTab}
-                              setConfigTab={setConfigTab}
-                              config={config}
-                              campaignId={campaignId}
-                              loading={loading}
-                              errors={errors}
-                              selectedItemIdx={selectedItemIdx}
-                              setSelectedItemIdx={setSelectedItemIdx}
-                              setEditing={setEditing}
-                              setSelectedCategory={setSelectedCategory}
-                              readOnly={readOnly}
-                            />
-                          );
-                        })}
-                  </Fragment>
+                  isNonEmptyCategory(c) && (
+                    <Fragment key={c}>
+                      <div className="self-start text-gray-500 uppercase">{c}</div>
+                      {schema.properties &&
+                        Object.entries(schema.properties)
+                          .filter(([k]) => k !== 'type' && ORDERING[k]?.category === c)
+                          .sort((a, b) => {
+                            const order = (k: string) => ORDERING[k]?.order ?? 999;
+                            return order(a[0]) - order(b[0]);
+                          })
+                          .map(([k, v]) => {
+                            return (
+                              <Section
+                                key={k}
+                                k={k}
+                                schema={schema}
+                                sectionSchema={v}
+                                atomsMap={atomsMap}
+                                setAtomsMap={setAtomsMap}
+                                configTab={configTab}
+                                setConfigTab={setConfigTab}
+                                config={config}
+                                campaignId={campaignId}
+                                loading={loading}
+                                errors={errors}
+                                selectedItemIdx={selectedItemIdx}
+                                setSelectedItemIdx={setSelectedItemIdx}
+                                setEditing={setEditing}
+                                setSelectedCategory={setSelectedCategory}
+                                readOnly={readOnly}
+                              />
+                            );
+                          })}
+                    </Fragment>
+                  )
                 );
               })}
             </div>
@@ -217,19 +243,16 @@ export default function SimulationCampaignConfiguration({
                       return;
                     }
 
-                    const res = await authFetch(
-                      `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/generated/simulations-generate-grid-save`,
-                      {
-                        method: 'POST',
-                        body: JSON.stringify(config),
-                        headers: {
-                          Accept: 'application/json',
-                          'Content-Type': 'application/json',
-                          'virtual-lab-id': virtualLabId,
-                          'project-id': projectId,
-                        },
-                      }
-                    );
+                    const res = await authFetch(apiUrl, {
+                      method: 'POST',
+                      body: JSON.stringify(config),
+                      headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        'virtual-lab-id': virtualLabId,
+                        'project-id': projectId,
+                      },
+                    });
 
                     if (res.status !== 200) {
                       const errorRes = await res.json();
@@ -345,13 +368,15 @@ export default function SimulationCampaignConfiguration({
                       ? atomsMap[configTab]
                       : atomsMap[configTab][resolveKey(schema, configTab, selectedItemIdx)]
                   }
-                  circuit={circuit}
+                  model={model}
                   virtualLabId={virtualLabId}
                   projectId={projectId}
                 />
               )}
           </div>
-          <CircuitPreview circuit={circuit} />
+          <div className="overflow-hidden rounded-lg">
+            <ModelPreview model={model} />
+          </div>
         </div>
       )}
 

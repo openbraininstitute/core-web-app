@@ -53,6 +53,7 @@ export enum EntityCoreFields {
   EModelScore = 'eModelScore',
   EModelResponse = 'eModelResponse',
   MEModelMorphologyPreview = 'meModelMorphologyPreview',
+  MEModelName = 'meModelName',
   MEModelTracePreview = 'meModelTracePreview',
   MEModelValidationStatus = 'validation_status',
   SynaptomeUsedMEModelName = 'me_model',
