@@ -12,17 +12,30 @@ export interface HintProps {
   painterManager: PainterManager;
 }
 
-export default function Hint({ className, painterManager }: HintProps) {
+export function HintPanel({ className, painterManager }: HintProps) {
+  const hovered = painterManager.eventHover.useValue({ x: 0, y: 0, item: null, offset: 0 });
+  const visible = painterManager.eventHintVisible.useValue(false);
+
+  if (!visible || !hovered.item) return null;
+
+  return (
+    <div
+      className={classNames(className, styles.hintPanel)}
+      key="hint"
+      style={hovered.y > 0 ? { bottom: '1em' } : { top: '4em' }}
+    >
+      <HintContent painterManager={painterManager} />
+    </div>
+  );
+}
+
+export function HintContent({ className, painterManager }: HintProps) {
   const hovered = painterManager.eventHover.useValue({ x: 0, y: 0, item: null, offset: 0 });
 
   if (!hovered.item) return null;
 
   return (
-    <div
-      className={classNames(className, styles.hint)}
-      key="hint"
-      style={hovered.y > 0 ? { bottom: '1em' } : { top: '4em' }}
-    >
+    <div className={classNames(className, styles.hintContent)}>
       <div>Section:</div>
       <div>{resolveName(hovered.item)}</div>
       <div>Section index:</div>

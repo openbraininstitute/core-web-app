@@ -42,7 +42,7 @@
       justify-content: space-between;
       align-items: center;
       gap: 1em;
-      margin-bottom: 1em;
+      margin-top: -0.5em;
 
       > h2 {
         font-size: 150%;
@@ -88,7 +88,7 @@
         text-align: center;
         display: grid;
         place-items: center;
-        height: 3em;
+        height: 2.5em;
         border-radius: 99vmax;
         background-color: #05a;
         border: 1px solid #fff7;

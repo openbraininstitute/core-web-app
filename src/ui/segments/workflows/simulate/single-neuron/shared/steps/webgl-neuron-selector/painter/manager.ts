@@ -64,6 +64,8 @@ export class PainterManager {
 
   public readonly eventRestingPosition = new GenericEvent<boolean>();
 
+  public readonly eventHintVisible = new GenericEvent<boolean>();
+
   private _morphology: Morphology | null = null;
 
   private _canvas: HTMLCanvasElement | null = null;
@@ -248,6 +250,8 @@ export class PainterManager {
     this.initTgdPainters(context, structure, palette);
     this.initCameraController(context);
     this.initOffscreen(context, structure);
+    this.eventHintVisible.dispatch(false);
+    this.eventRestingPosition.dispatch(true);
   }
 
   private initOffscreen(context: TgdContext, structure: Structure) {
@@ -272,6 +276,7 @@ export class PainterManager {
         }
         this.context?.paint();
         this.eventHover.dispatch({ x, y, item, offset });
+        this.eventHintVisible.dispatch(true);
       }
     });
     context.inputs.pointer.eventTap.addListener((evt) => {
@@ -291,6 +296,7 @@ export class PainterManager {
           item: this.hoverItem,
           offset: segment,
         });
+        this.eventHintVisible.dispatch(false);
       }
     });
   }

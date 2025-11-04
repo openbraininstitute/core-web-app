@@ -13,6 +13,7 @@ import {
 import { getSessionKey } from '../../../helpers';
 import { getColorFromGeneratedPalette } from '../colors';
 
+import { HintContent } from '../hint';
 import { classNames } from '@/util/utils';
 import { IconClose } from '@/components/LandingPage/icons/IconClose';
 
@@ -100,6 +101,7 @@ export default function AddRecordingDialog({
             <div>Cancel</div>
           </button>
         </header>
+        <HintContent painterManager={painterManager} />
         <div className={styles.buttons}>
           <button type="button" onClick={handleMoveInjection}>
             Move injection here
