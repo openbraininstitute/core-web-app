@@ -123,7 +123,7 @@ export const EntityWorkflowConfiguration: Partial<
   },
   [ExtendedEntitiesTypeDict.MemodelCircuit]: {
     group: EntityScopeDict.Cellular,
-    label: 'Single neuron [circuit]',
+    label: 'Single neuron [unified UI]',
     requiredFeatures: [inifiedSingleNeuronSimulationFlowFlag.key],
     properties: {
       build: {
@@ -150,8 +150,22 @@ export const EntityWorkflowConfiguration: Partial<
       },
     },
   },
-  [ExtendedEntitiesTypeDict.PairedNeuronCircuit]: {
+  [ExtendedEntitiesTypeDict.SingleNeuronCircuit]: {
     group: EntityScopeDict.Cellular,
+    label: 'Single neuron with synapses',
+    properties: {
+      build: {
+        disabled: true,
+        type: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+      },
+      simulate: {
+        disabled: false,
+        type: ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
+      },
+    },
+  },
+  [ExtendedEntitiesTypeDict.PairedNeuronCircuit]: {
+    group: EntityScopeDict.Circuit,
     label: 'Paired neurons',
     properties: {
       build: {

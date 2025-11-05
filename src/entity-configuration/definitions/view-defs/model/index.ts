@@ -1,5 +1,6 @@
 import { ViewDefForMEModelWithSynapsesCircuit } from '@/entity-configuration/definitions/view-defs/model/me-model-with-synapses';
 import { ViewDefForSingleNeuronSynaptome } from '@/entity-configuration/definitions/view-defs/model/single-neuron-synaptome';
+import { ViewDefForSingleNeuronCircuit } from '@/entity-configuration/definitions/view-defs/model/single-neuron-circuit';
 import { ViewDefForPairedNeuronCircuit } from '@/entity-configuration/definitions/view-defs/model/paired-neuron-circuit';
 import { ViewDefForSmallMicrocircuit } from '@/entity-configuration/definitions/view-defs/model/small-micro-circuit';
 import { ViewDefForIonChannelModel } from '@/entity-configuration/definitions/view-defs/model/ion-channel-model';
@@ -15,9 +16,10 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [ExtendedEntitiesTypeDict.Memodel]: ViewDefForMemodel,
   [ExtendedEntitiesTypeDict.SingleNeuronSynaptome]: ViewDefForSingleNeuronSynaptome,
   [ExtendedEntitiesTypeDict.MemodelCircuit]: ViewDefForMemodel,
-  [ExtendedEntitiesTypeDict.Circuit]: ViewDefForCircuit,
-  [ExtendedEntitiesTypeDict.SmallMicrocircuit]: ViewDefForSmallMicrocircuit,
+  [ExtendedEntitiesTypeDict.SingleNeuronCircuit]: ViewDefForSingleNeuronCircuit,
   [ExtendedEntitiesTypeDict.PairedNeuronCircuit]: ViewDefForPairedNeuronCircuit,
+  [ExtendedEntitiesTypeDict.SmallMicrocircuit]: ViewDefForSmallMicrocircuit,
+  [ExtendedEntitiesTypeDict.Circuit]: ViewDefForCircuit,
   [ExtendedEntitiesTypeDict.IonChannelModel]: ViewDefForIonChannelModel,
   [ExtendedEntitiesTypeDict.MEModelWithSynapses]: ViewDefForMEModelWithSynapsesCircuit,
 };

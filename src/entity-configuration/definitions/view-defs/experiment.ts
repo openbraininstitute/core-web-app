@@ -92,9 +92,40 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     ],
   },
   [ExtendedEntitiesTypeDict.MemodelCircuitSimulation]: {
-    title: 'Single neuron [circuit] simulation',
+    title: 'Single neuron [unified UI] simulation',
     group: DataTypeGroup.SimulationData,
     name: EntitySlug.MEModelCircuitSimulation,
+    curated: false,
+    columns: [
+      EntityCoreFields.Name,
+      EntityCoreFields.Description,
+      EntityCoreFields.CircuitName,
+      EntityCoreFields.SimulationCampaignStatus,
+      EntityCoreFields.CreatedBy,
+      EntityCoreFields.CreationDate,
+    ],
+    filterableFields: [
+      EntityCoreFields.Name,
+      EntityCoreFields.Contributions,
+      EntityCoreFields.CreatedBy,
+      EntityCoreFields.CreationDate,
+    ],
+    displayableFields: [
+      EntityCoreFields.Name,
+      EntityCoreFields.Contributions,
+      EntityCoreFields.CreatedBy,
+      EntityCoreFields.CreationDate,
+    ],
+    miniDetailView: [
+      { field: EntityCoreFields.CircuitName },
+      { field: EntityCoreFields.SimulationCampaignStatus },
+      { field: EntityCoreFields.CreationDate },
+    ],
+  },
+  [ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation]: {
+    title: 'Single Neuron Simulation',
+    group: DataTypeGroup.SimulationData,
+    name: EntitySlug.SingleNeuronCircuitSimulation,
     curated: false,
     columns: [
       EntityCoreFields.Name,

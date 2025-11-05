@@ -83,6 +83,7 @@ export default async function Layout({
 
   if (
     type === ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation ||
+    type === ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation ||
     type === ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation ||
     type === ExtendedEntitiesTypeDict.MemodelCircuitSimulation
   ) {

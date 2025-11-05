@@ -5,6 +5,7 @@ import pProps from 'p-props';
 import { MEModelCircuitSimulation } from '@/entity-configuration/domain/simulation/memodel-circuit-simulation';
 import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/simulation/single-neuron-synaptome-simulation';
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
+import { SingeNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/single-neuron-circuit-simulation';
 import { PairedNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/paired-neurons-simulation';
 import { ElectricalRecordingOriginDictionary } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import { ElectricalCellRecording } from '@/entity-configuration/domain/experimental/electrical-cell-recording';
@@ -52,6 +53,7 @@ export const SimulationEntitiesTileTypes = {
   SingleNeuronSimulation,
   MEModelCircuitSimulation,
   SingleNeuronSynaptomeSimulation,
+  SingeNeuronCircuitSimulation,
   PairedNeuronCircuitSimulation,
   SmallMicrocircuitSimulation,
 } as const;

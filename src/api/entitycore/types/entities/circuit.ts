@@ -29,21 +29,29 @@ export const CircuitScale = {
     key: 'single',
     label: 'Single',
   },
-  Microcircuit: {
-    key: 'microcircuit',
-    label: 'Microcircuit',
+  PairNeuron: {
+    key: 'pair',
+    label: 'Pair neuron',
   },
   SmallMicrocircuit: {
     key: 'small',
     label: 'Small Microcircuit',
   },
-  PairNeuron: {
-    key: 'pair',
-    label: 'Pair neuron',
+  Microcircuit: {
+    key: 'microcircuit',
+    label: 'Microcircuit',
   },
   Region: {
     key: 'region',
     label: 'Region',
+  },
+  System: {
+    key: 'system',
+    label: 'System',
+  },
+  WholeBrain: {
+    key: 'whole_brain',
+    label: 'Whole brain',
   },
 } as const;
 

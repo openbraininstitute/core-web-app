@@ -5,15 +5,15 @@ import {
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
-export const viewDefForMEModelCircuitSimulation: ViewDefinitionConfig = {
-  title: 'Single neuron [unified UI] simulation',
+export const viewDefForSingleNeuronCircuitSimulation: ViewDefinitionConfig = {
+  title: 'Single Neuron Simulation',
   group: DataTypeGroup.SimulationData,
-  name: EntitySlug.MEModelCircuitSimulation,
+  name: EntitySlug.PairedNeuronCircuitSimulation,
   curated: false,
   columns: [
     EntityCoreFields.Name,
     EntityCoreFields.Description,
-    EntityCoreFields.MEModelName,
+    EntityCoreFields.CircuitName,
     EntityCoreFields.SimulationCampaignStatus,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.CreationDate,
@@ -31,7 +31,7 @@ export const viewDefForMEModelCircuitSimulation: ViewDefinitionConfig = {
     EntityCoreFields.CreationDate,
   ],
   miniDetailView: [
-    { field: EntityCoreFields.MEModelName },
+    { field: EntityCoreFields.CircuitName },
     { field: EntityCoreFields.SimulationCampaignStatus },
     { field: EntityCoreFields.CreationDate },
   ],
