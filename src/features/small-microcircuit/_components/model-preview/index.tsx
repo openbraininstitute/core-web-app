@@ -7,11 +7,17 @@ import { CircuitPreview } from '@/features/small-microcircuit/_components/model-
 import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
 
 function ModelPreview({ model }: { model: ICircuit | IMEModel }) {
-  return match(model.type)
-    .with(EntityTypeDict.Circuit, () => <CircuitPreview circuit={model as ICircuit} />)
-    .with(EntityTypeDict.Memodel, () => (
+  return match(model)
+    .with({ type: EntityTypeDict.Memodel }, () => (
       <NeuronVisualizer memodelId={model.id} sessionId={model.id} />
     ))
+    .with({ type: EntityTypeDict.Circuit, scale: 'single' }, () => (
+      <div className="px-5 text-gray-500">
+        <div className="text-lg uppercase">Preview</div>
+        <div className="mt-2">Coming soon</div>
+      </div>
+    ))
+    .with({ type: EntityTypeDict.Circuit }, () => <CircuitPreview circuit={model as ICircuit} />)
     .otherwise(() => null);
 }
 
