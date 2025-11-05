@@ -88,7 +88,7 @@ export function useObioneJsonSchema(
                 .with({ type: EntityTypeDict.Memodel }, () => 'MEModelFromID')
                 .with(
                   { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single },
-                  () => 'MEModelWithSynapsesCircuit'
+                  () => 'MEModelWithSynapsesCircuitFromID'
                 )
                 .with({ type: EntityTypeDict.Circuit }, () => 'CircuitFromID')
 
