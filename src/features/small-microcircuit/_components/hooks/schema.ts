@@ -84,16 +84,21 @@ export function useObioneJsonSchema(
                   else initial[subkey] = subValue.default ?? null;
                 });
 
-              const formCircuitType = match(model.type)
-                .with(EntityTypeDict.Circuit, () => 'CircuitFromID')
-                .with(EntityTypeDict.Memodel, () => 'MEModelFromID')
+              const formModelType = match(model)
+                .with({ type: EntityTypeDict.Memodel }, () => 'MEModelFromID')
+                .with(
+                  { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single },
+                  () => 'MEModelWithSynapsesCircuit'
+                )
+                .with({ type: EntityTypeDict.Circuit }, () => 'CircuitFromID')
+
                 .otherwise(() => {
                   throw new Error(`Unsupported entity type: ${model.type}`);
                 });
 
               if (k === 'initialize') {
                 initial.circuit = {
-                  type: formCircuitType,
+                  type: formModelType,
                   id_str: model.id,
                 };
               }
