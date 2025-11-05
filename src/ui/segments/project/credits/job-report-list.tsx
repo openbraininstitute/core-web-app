@@ -18,6 +18,8 @@ const { Column } = Table;
 
 const activityLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.Notebook]: 'Notebook',
+  [ServiceSubtype.NeuronMeshSkeletonization]: 'Build',
+  [ServiceSubtype.IonChannelBuild]: 'Build',
   [ServiceSubtype.SingleCellBuild]: 'Build',
   [ServiceSubtype.SingleCellSim]: 'Simulate',
   [ServiceSubtype.SmallCircuitSim]: 'Simulate',
@@ -44,6 +46,8 @@ function activityRenderFn(subtype: ServiceSubtype) {
 
 const scaleLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.Notebook]: 'Notebook',
+  [ServiceSubtype.NeuronMeshSkeletonization]: 'Neuron morphology',
+  [ServiceSubtype.IonChannelBuild]: 'Ion channel',
   [ServiceSubtype.SingleCellBuild]: 'Single cell',
   [ServiceSubtype.SingleCellSim]: 'Single cell',
   [ServiceSubtype.SmallCircuitSim]: 'Small circuit',
