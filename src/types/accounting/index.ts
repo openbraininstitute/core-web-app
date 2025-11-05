@@ -38,6 +38,8 @@ export enum ServiceType {
 
 export enum ServiceSubtype {
   Storage = 'storage',
+  IonChannelBuild = 'ion-channel-build',
+  NeuronMeshSkeletonization = 'neuron-mesh-skeletonization',
   SingleCellSim = 'single-cell-sim',
   SingleCellBuild = 'single-cell-build',
   SynaptomeSim = 'synaptome-sim',
