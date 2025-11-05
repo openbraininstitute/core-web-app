@@ -46,7 +46,7 @@ async function resolveSimulationCampaigns({
   const source = await getCircuitSimulationCampaigns({
     context,
     withFacets,
-    filters: { ...filters, circuit__scale: CircuitScaleDictionary.PairNeuron },
+    filters: { ...filters, circuit__scale: CircuitScaleDictionary.Single },
   });
   // extract all simulation IDs
   const allSimIds = flatMap(
