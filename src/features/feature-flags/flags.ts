@@ -5,7 +5,7 @@ export const inifiedSingleNeuronSimulationFlowFlag = {
   key: 'unifiedSingleNeuronSimulationFlow',
   defaultValue: false,
   description: 'Enable new single neuron unified (circuit) simulation flow with OBI-ONE',
-  visible: ['local', 'development'].includes(env.NEXT_PUBLIC_DEPLOYMENT_ENV),
+  visible: ['local', 'development', 'staging'].includes(env.NEXT_PUBLIC_DEPLOYMENT_ENV),
 } satisfies FlagDefinition;
 
 export const flags = [inifiedSingleNeuronSimulationFlowFlag] as const satisfies FlagDefinition[];

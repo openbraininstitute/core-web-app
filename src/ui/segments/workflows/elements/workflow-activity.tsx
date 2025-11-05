@@ -327,6 +327,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                       <Link href={configurationLink}>View configuration</Link>
                     </Button>
                     {entityType !== ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation &&
+                      entityType !== ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation &&
                       entityType !== ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation && (
                         <Button
                           rounded

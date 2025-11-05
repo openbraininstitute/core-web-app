@@ -84,6 +84,7 @@ export default async function Overview({
 
   if (
     extendedType === ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation ||
+    extendedType === ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation ||
     extendedType === ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation ||
     extendedType === ExtendedEntitiesTypeDict.MemodelCircuitSimulation
   ) {

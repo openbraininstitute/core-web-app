@@ -11,6 +11,7 @@ import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { MEModelCircuit } from '@/entity-configuration/domain/model/me-model-circuit';
 import { MEModelWithSynapsesCircuit } from '@/entity-configuration/domain/model/me-model-with-synapses';
 import { Microcircuit } from '@/entity-configuration/domain/model/mirocircuit';
+import { SingleNeuronCircuit } from '@/entity-configuration/domain/model/single-neuron-circuit';
 import { PairedNeuronCircuit } from '@/entity-configuration/domain/model/paired-neurons';
 import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import { SmallMicrocircuit } from '@/entity-configuration/domain/model/small-microcircuit';
@@ -21,6 +22,7 @@ import {
   SingleNeuronSynaptomeSimulation,
 } from '@/entity-configuration/domain/simulation';
 import { MEModelCircuitSimulation } from '@/entity-configuration/domain/simulation/memodel-circuit-simulation';
+import { SingeNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/single-neuron-circuit-simulation';
 import { PairedNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/paired-neurons-simulation';
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 
@@ -40,10 +42,11 @@ export const EntityCoreModelConfiguration = {
   MEmodel,
   MEModelCircuit,
   SingleNeuronSynaptome,
-  Circuit,
+  SingleNeuronCircuit,
+  PairedNeuronCircuit,
   SmallMicrocircuit,
   Microcircuit,
-  PairedNeuronCircuit,
+  Circuit,
   IonChannelModel,
   MEModelWithSynapsesCircuit,
 } as const;
@@ -53,8 +56,9 @@ const EntityCoreSimulationConfiguration = {
   SingleNeuronSynaptomeSimulation,
   SimulationCampaign,
   MEModelCircuitSimulation,
-  SmallMicrocircuitSimulation,
+  SingeNeuronCircuitSimulation,
   PairedNeuronCircuitSimulation,
+  SmallMicrocircuitSimulation,
 };
 
 export const EntityCoreConfiguration = {
