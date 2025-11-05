@@ -1,5 +1,6 @@
 /* eslint-disable no-param-reassign */
-import { useAtom, useSetAtom } from 'jotai';
+import React from 'react';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 
 import {
   neuronSectionNamesAtomFamily,
@@ -17,6 +18,39 @@ import { getColorFromGeneratedPalette } from './colors';
 
 import { useMorphology } from '@/hooks/use-morphology';
 import { Morphology } from '@/services/bluenaas-single-cell/types';
+import { synapsesPlacementAtom } from '@/state/synaptome';
+
+export function useVisibleSynapses(): Array<{
+  type: string;
+  data: Float32Array;
+}> {
+  const synaptomes = useAtomValue(synapsesPlacementAtom);
+  const synapses = React.useMemo(() => {
+    const result: Record<string, number[]> = {};
+    if (!synaptomes) return [];
+
+    for (const value of Object.values(synaptomes)) {
+      if (!value) continue;
+
+      const { sectionSynapses } = value;
+      for (const section of sectionSynapses) {
+        const key = section.section_id.slice(0, 4).toLocaleLowerCase();
+        const data = result[key] ?? [];
+        for (const synapse of section.synapses) {
+          // We set a unit radius because we will multiply it in PainterCloud.
+          data.push(...synapse.coordinates, 1);
+        }
+        result[key] = data;
+      }
+    }
+    return Object.keys(result).map((key) => ({
+      type: key,
+      data: new Float32Array(result[key]),
+    }));
+  }, [synaptomes]);
+  console.log('🚀 [hooks] synapses =', synapses); // @FIXME: Remove this line written on 2025-11-05 at 17:13
+  return synapses;
+}
 
 export function useRecordingsAndInjection(sessionId: string) {
   const recordingsKey = getSessionKey(RECORDING_LOCATION_CONFIGURATION_SESSION_KEY, sessionId);

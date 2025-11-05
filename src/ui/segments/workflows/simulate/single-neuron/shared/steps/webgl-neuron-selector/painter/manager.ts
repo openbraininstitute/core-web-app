@@ -2,6 +2,7 @@ import React from 'react';
 import {
   ArrayNumber2,
   tgdCalcMapRange,
+  tgdCanvasCreateFill,
   tgdCanvasCreatePalette,
   TgdContext,
   TgdControllerCameraOrbit,
@@ -11,6 +12,7 @@ import {
   TgdPainter,
   TgdPainterClear,
   TgdPainterGroup,
+  TgdPainterPointsCloud,
   TgdPainterSegments,
   TgdPainterSegmentsData,
   TgdPainterState,
@@ -20,6 +22,7 @@ import {
   webglPresetDepth,
 } from '@tolokoban/tgd';
 
+import { useVisibleSynapses } from '../hooks';
 import { computeSectionOffset } from './math';
 import { makeSegments } from './segments';
 import { makeCamera } from './camera';
@@ -88,6 +91,12 @@ export class PainterManager {
   private initialPosition = new TgdVec3();
 
   private cameraController: TgdControllerCameraOrbit | null = null;
+
+  private groupSynapses = new TgdPainterGroup({
+    name: `Synapses#${Math.round(1e9 * Math.random())}`,
+  });
+
+  private synapses: Array<{ type: string; data: Float32Array }> = [];
 
   /**
    * When is the last time the camera moved?
@@ -181,7 +190,6 @@ export class PainterManager {
 
   delete() {
     if (this.context) {
-      this.context.debugHierarchy('Delete this context! ' + this.context.name);
       this.context.delete();
       this.context = null;
     }
@@ -234,12 +242,35 @@ export class PainterManager {
     return null;
   }
 
+  showSynapses(synapses: Array<{ type: string; data: Float32Array }>) {
+    const { context, groupSynapses } = this;
+    if (!context) return;
+
+    this.synapses = synapses;
+    groupSynapses.removeAll();
+    for (const { type, data } of synapses) {
+      const dataPoint = data;
+      const color = resolveSynapseColor(type);
+      const cloud = new TgdPainterPointsCloud(context, {
+        name: `TgdPainterPointsCloud[${type}]`,
+        dataPoint,
+        minSizeInPixels: 4,
+        radiusMultiplier: 5,
+        texture: new TgdTexture2D(context).loadBitmap(tgdCanvasCreateFill(1, 1, color)),
+        mustDeleteTexture: true,
+      });
+      groupSynapses.add(cloud);
+    }
+    context.paint();
+  }
+
   private initialize() {
     const { canvas, morphology } = this;
     if (!canvas || !morphology) return;
 
     if (this.context) this.context.delete();
     if (this.cameraController) this.cameraController.detach();
+    this.groupSynapses.delete();
     const structure = new Structure(morphology);
     this.structure = structure;
     const context = new TgdContext(canvas, {
@@ -262,6 +293,7 @@ export class PainterManager {
     this.initOffscreen(context, structure);
     this.eventHintVisible.dispatch(false);
     this.eventRestingPosition.dispatch(true);
+    this.showSynapses(this.synapses);
   }
 
   private initOffscreen(context: TgdContext, structure: Structure) {
@@ -335,6 +367,9 @@ export class PainterManager {
       blend: webglPresetBlend.add,
     });
     const segments = makeSegments(structure);
+    this.groupSynapses = new TgdPainterGroup({
+      name: `Synapses#${Math.round(1e9 * Math.random())}`,
+    });
     context.add(
       new TgdPainterClear(context, { color: [0, 0, 0, 1], depth: 1 }),
       new TgdPainterState(context, {
@@ -342,7 +377,7 @@ export class PainterManager {
         children: [
           new TgdPainterSegments(context, {
             roundness: 6,
-            minRadius: 1,
+            minRadius: 0.5,
             makeDataset: segments.makeDataset,
             material: new TgdMaterialDiffuse({
               color: palette,
@@ -354,6 +389,7 @@ export class PainterManager {
               }),
             }),
           }),
+          this.groupSynapses,
           groupHover,
         ],
       })
@@ -422,6 +458,7 @@ export class PainterManager {
 }
 
 export function usePainterManager() {
+  const synapses = useVisibleSynapses();
   const refPainter = React.useRef<PainterManager | null>(null);
   if (!refPainter.current) {
     refPainter.current = new PainterManager();
@@ -434,5 +471,23 @@ export function usePainterManager() {
       context.delete();
     };
   }, []);
+  React.useEffect(() => {
+    refPainter.current?.showSynapses(synapses);
+  }, [synapses]);
   return refPainter.current;
+}
+
+function resolveSynapseColor(prefix: string) {
+  switch (prefix) {
+    case 'dend':
+      return '#7f7';
+    case 'apic':
+      return '#ff7';
+    case 'myel':
+      return '#eee';
+    case 'axon':
+      return '#fb7';
+    default:
+      return '#7cf';
+  }
 }
