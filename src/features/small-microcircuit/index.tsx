@@ -11,6 +11,8 @@ import { match } from 'ts-pattern';
 // James asked to only comment it out for now.
 // import CircuitName from './_components/circuit-name';
 
+import { EntityTypeDict } from '@/api/entitycore/types';
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import ApiError from '@/api/error';
@@ -22,7 +24,6 @@ import {
   simExecStatusMapAtomFamily,
   simulationsByCampaignIdAtomFamily,
 } from '@/features/small-microcircuit/_components/atoms';
-import ModelPreview from '@/features/small-microcircuit/_components/model-preview';
 import {
   Config,
   ConfigValue,
@@ -35,6 +36,7 @@ import {
   resolveKey,
   useObioneJsonSchema,
 } from '@/features/small-microcircuit/_components/hooks/schema';
+import ModelPreview from '@/features/small-microcircuit/_components/model-preview';
 import { Section } from '@/features/small-microcircuit/_components/section';
 import { File, SimulationFiles } from '@/features/small-microcircuit/_components/simulation-files';
 import { SimulationStatusBadge } from '@/features/small-microcircuit/_components/simulation-status';
@@ -51,10 +53,8 @@ import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { assertErrorMessage, classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 import { getErrorMessage } from '@/utils/error';
-import { EntityTypeDict } from '@/api/entitycore/types';
 
 import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
-import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 
 export default function SimulationCampaignConfiguration({
   modelId,
