@@ -1,19 +1,12 @@
+/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
 import React from 'react';
-import { useAtom } from 'jotai';
 
+import { useRecordingsAndInjection } from '../hooks';
 import { PainterManager } from '../painter';
-import {
-  RecordLocationConfigurationAtomFamily,
-  StimulationConfigurationAtomFamily,
-} from '../../../context';
-import {
-  RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
-  STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
-} from '../../../constant';
-import { getSessionKey } from '../../../helpers';
-import { getColorFromGeneratedPalette } from '../colors';
-
 import { HintContent } from '../hint';
+import { useEscapeHandler } from './hooks';
+
 import { classNames } from '@/util/utils';
 import { IconClose } from '@/components/LandingPage/icons/IconClose';
 
@@ -30,10 +23,7 @@ export default function AddRecordingDialog({
   sessionId,
   painterManager,
 }: AddRecordingDialogProps) {
-  const key = getSessionKey(RECORDING_LOCATION_CONFIGURATION_SESSION_KEY, sessionId);
-  const [state, update] = useAtom(RecordLocationConfigurationAtomFamily(key));
-  const spcKey = getSessionKey(STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
-  const [spcState, updateSPC] = useAtom(StimulationConfigurationAtomFamily(spcKey));
+  const data = useRecordingsAndInjection(sessionId);
   const [open, setOpen] = React.useState(false);
   const { offset, item, y } = painterManager.eventTap.useValue({
     x: 0,
@@ -44,59 +34,39 @@ export default function AddRecordingDialog({
   React.useEffect(() => {
     if (item) setOpen(true);
   }, [item, offset]);
-  const handleMoveInjection = () => {
+  const handleClose = React.useCallback(() => {
     setOpen(false);
-    if (!item) return;
-
-    updateSPC({
-      ...spcState,
-      inject_to: item.sectionName,
-    });
-    const injection = state.find(({ origin }) => origin === 'injection');
-    if (injection) {
-      injection.offset = offset;
-      injection.section = item.sectionName;
-      update([...state]);
-    } else {
-      update([
-        ...state,
-        {
-          offset,
-          origin: 'injection',
-          color: getColorFromGeneratedPalette(state.length),
-          record_currents: false,
-          section: item.sectionName,
-        },
-      ]);
-    }
+  }, [setOpen]);
+  const handleMoveInjection = () => {
+    handleClose();
+    if (item) data.moveInjection(item.sectionName);
   };
   const handleAddRecording = () => {
-    setOpen(false);
-    if (!item) return;
-
-    update([
-      ...state,
-      {
-        offset,
-        origin: 'recording',
-        color: getColorFromGeneratedPalette(state.length),
-        record_currents: false,
-        section: item.sectionName,
-      },
-    ]);
+    handleClose();
+    if (item) data.addRecording(item.sectionName, offset);
   };
+  useEscapeHandler(handleClose);
 
   return (
     <div
       className={classNames(className, styles.addRecordingDialog, open && styles.open)}
       title={`y = ${y}`}
+      onClick={handleClose}
+      role="alertdialog"
     >
-      <div className={y < 0 ? styles.top : styles.bottom}>
+      <div
+        className={y < 0 ? styles.top : styles.bottom}
+        onClick={(evt) => {
+          evt.preventDefault();
+          evt.stopPropagation();
+        }}
+        role="dialog"
+      >
         <header>
           <h2>
             {item?.sectionName} ({offset.toFixed(2)})
           </h2>
-          <button type="button" onClick={() => setOpen(false)}>
+          <button type="button" onClick={handleClose}>
             <IconClose />
             <div>Cancel</div>
           </button>

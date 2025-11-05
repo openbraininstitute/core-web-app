@@ -1,11 +1,8 @@
 import React from 'react';
-import { useAtomValue } from 'jotai';
 
+import { useRecordingsAndInjection } from '../hooks';
 import { PainterManager } from '../painter';
-import { RecordLocationConfigurationAtomFamily } from '../../../context';
-import { RECORDING_LOCATION_CONFIGURATION_SESSION_KEY } from '../../../constant';
-import { getSessionKey } from '../../../helpers';
-import { useLegendPainter } from './legend-painter';
+import { LegendTarget, useLegendPainter } from './legend-painter';
 
 import { classNames } from '@/util/utils';
 
@@ -23,12 +20,40 @@ export default function LegendOverlay({
   sessionId,
 }: LegendOverlayProps) {
   const refCanvas = React.useRef<HTMLCanvasElement | null>(null);
-  const key = getSessionKey(RECORDING_LOCATION_CONFIGURATION_SESSION_KEY, sessionId);
-  const targets = useAtomValue(RecordLocationConfigurationAtomFamily(key));
+  const data = useRecordingsAndInjection(sessionId);
   const legendPainter = useLegendPainter(painterManager);
   React.useEffect(() => {
-    legendPainter.paint(refCanvas.current, targets);
-  }, [targets, legendPainter]);
+    legendPainter.paint(refCanvas.current, resolveLegendTargets(data));
+  }, [data, legendPainter]);
 
   return <canvas className={classNames(className, styles.legendOverlay)} ref={refCanvas} />;
+}
+
+function resolveLegendTargets(data: {
+  recordings: {
+    section: string;
+    offset: number;
+    color?: string | undefined;
+  }[];
+  injection: {
+    inject_to: string;
+  };
+}): import('./legend-painter').LegendTarget[] {
+  return [
+    ...data.recordings.map(
+      ({ section, offset, color }) =>
+        ({
+          section,
+          origin: 'recording',
+          offset,
+          color,
+        }) satisfies LegendTarget
+    ),
+    {
+      section: data.injection.inject_to,
+      origin: 'injection',
+      offset: 0.5,
+      color: '#fff',
+    },
+  ];
 }
