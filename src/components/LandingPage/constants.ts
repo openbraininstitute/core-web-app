@@ -23,6 +23,7 @@ export const SECTIONS: Readonly<Section[]> = [
   { index: EnumSection.Contact, caption: 'Contact', slug: '/contact' },
   { index: EnumSection.PrivacyPolicy, caption: 'Privacy', slug: '/privacy' },
   { index: EnumSection.Sfn2025, caption: 'SfN 2025', slug: '/sfn-2025' },
+  { index: EnumSection.Gallery, caption: 'Gallery', slug: '/gallery' },
   {
     index: EnumSection.TermsAndConditions,
     caption: 'Terms',
@@ -49,6 +50,7 @@ export const MENU_ITEMS: Readonly<Array<{ caption: string; index: EnumSection; s
   EnumSection.Team,
   EnumSection.Resources,
   EnumSection.Sfn2025,
+  EnumSection.Gallery,
   EnumSection.Contact,
 ].map((index) => SECTIONS.find((section) => section.index === index) ?? DEFAULT_SECTION);
 

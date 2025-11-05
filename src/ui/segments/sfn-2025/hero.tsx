@@ -1,4 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
+import Link from 'next/link';
 import React from 'react';
 
 import useFullHeight from '@/hooks/useFullHeight';
@@ -54,10 +55,17 @@ export default function HeroSFN({
         <div>
           <h1 className={styles.largeTitle}>{title}</h1>
         </div>
-        <div className="font-title flex flex-col gap-5 rounded-lg border border-solid border-white px-5 py-5 text-3xl! text-white md:flex-row md:gap-12 md:rounded-full md:px-16 md:py-8">
+        <div className="font-title flex flex-col gap-5 rounded-lg text-3xl! text-white md:flex-row md:gap-12">
           <div>November 15 – 19</div>
           <div>San Diego Convention Center</div>
           <div>Booth #3631</div>
+          <Link
+            href="/app/virtual-lab"
+            aria-label="Create virtual lab"
+            className="font-gabarito text-primary-8 relative rounded-full bg-white px-16 py-4 text-3xl! font-medium! whitespace-nowrap"
+          >
+            Create your Virtual Lab
+          </Link>
         </div>
       </div>
     </div>
