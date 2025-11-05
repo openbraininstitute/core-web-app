@@ -9,7 +9,6 @@ export interface LegendTarget {
   section: string;
   origin: 'injection' | 'recording';
   offset: number;
-  record_currents: boolean;
   color?: string | undefined;
 }
 
