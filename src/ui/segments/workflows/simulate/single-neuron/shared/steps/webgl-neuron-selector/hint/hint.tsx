@@ -58,6 +58,8 @@ export function HintContent({ className, painterManager }: HintProps) {
 
 function resolveName(item: StructureItem): React.ReactNode {
   switch (item.type) {
+    case StructureItemType.Axon:
+      return 'Axon';
     case StructureItemType.Soma:
       return 'Soma';
     case StructureItemType.Dendrite:
