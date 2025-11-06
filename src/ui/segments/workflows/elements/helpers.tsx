@@ -121,6 +121,20 @@ export const EntityWorkflowConfiguration: Partial<
       },
     },
   },
+  [ExtendedEntitiesTypeDict.SingleNeuronSynaptome]: {
+    group: EntityScopeDict.Cellular,
+    label: 'Synaptome',
+    properties: {
+      build: {
+        disabled: false,
+        type: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
+      },
+      simulate: {
+        disabled: false,
+        type: ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
+      },
+    },
+  },
   [ExtendedEntitiesTypeDict.MemodelCircuit]: {
     group: EntityScopeDict.Cellular,
     label: 'Single neuron [Unified UI]',
@@ -133,20 +147,6 @@ export const EntityWorkflowConfiguration: Partial<
       simulate: {
         disabled: false,
         type: ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
-      },
-    },
-  },
-  [ExtendedEntitiesTypeDict.SingleNeuronSynaptome]: {
-    group: EntityScopeDict.Cellular,
-    label: 'Synaptome',
-    properties: {
-      build: {
-        disabled: false,
-        type: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
-      },
-      simulate: {
-        disabled: false,
-        type: ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
       },
     },
   },

@@ -51,8 +51,8 @@ export const ModelEntitiesTileTypes = {
 
 export const SimulationEntitiesTileTypes = {
   SingleNeuronSimulation,
-  MEModelCircuitSimulation,
   SingleNeuronSynaptomeSimulation,
+  MEModelCircuitSimulation,
   SingeNeuronCircuitSimulation,
   PairedNeuronCircuitSimulation,
   SmallMicrocircuitSimulation,
