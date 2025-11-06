@@ -153,7 +153,7 @@ export async function resolveSimulationByCampaignId({
 
 export const MEModelCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
   group: EntityTypeGroup.Simulations,
-  title: 'Single neuron [Unified UI]',
+  title: 'Single neuron (beta)',
   extendedType: ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.MEModelCircuitSimulation,
