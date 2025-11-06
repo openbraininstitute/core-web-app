@@ -30,12 +30,12 @@ export function useUserRole({ virtualLabId, projectId }: Props) {
         queryFn: async () => await listVirtualLabs({ include: [LabTypeEnum.MY_LAB] }),
       },
       {
-        queryKey: keyBuilder.getOneLab({ virtualLabId: virtualLabId! }),
+        queryKey: keyBuilder.getOneLab({ virtualLabId: virtualLabId || '' }),
         queryFn: async () => await getVirtualLab(virtualLabId!),
         enabled: !!virtualLabId,
       },
       {
-        queryKey: keyBuilder.getWorkspace({ virtualLabId: virtualLabId!, projectId: projectId! }),
+        queryKey: keyBuilder.getWorkspace({ virtualLabId: virtualLabId || '', projectId: projectId || '' }),
         queryFn: async () =>
           await getProject({ virtualLabId: virtualLabId!, projectId: projectId! }),
         enabled: !!virtualLabId && !!projectId,

@@ -1,4 +1,5 @@
 import { MenuOutlined } from '@ant-design/icons';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import React, { useState } from 'react';
@@ -28,10 +29,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/ui/molecules/dropdown-menu';
-import FeedbackModal from '@/ui/segments/feedbacks/feedback-modal';
 import { cn } from '@/utils/css-class';
 import { getActiveSection } from '@/utils/get-section';
 import { cleanSearchParams } from '@/utils/search-params';
+
+// Dynamically import FeedbackModal with SSR disabled to prevent Suspense boundary issues
+const FeedbackModal = dynamic(() => import('@/ui/segments/feedbacks/feedback-modal'), {
+  ssr: false,
+});
 
 type LinkItem = {
   id: string;
@@ -228,7 +233,9 @@ export function TopMenuNavigation() {
             })}
           </DropdownMenuContent>
         </DropdownMenu>
-        <FeedbackModal open={isFeedbackModalOpen} onClose={() => setIsFeedbackModalOpen(false)} />
+        {isFeedbackModalOpen && (
+          <FeedbackModal open={isFeedbackModalOpen} onClose={() => setIsFeedbackModalOpen(false)} />
+        )}
       </div>
     );
   }
@@ -316,7 +323,9 @@ export function TopMenuNavigation() {
           );
         }
       )}
-      <FeedbackModal open={isFeedbackModalOpen} onClose={() => setIsFeedbackModalOpen(false)} />
+      {isFeedbackModalOpen && (
+        <FeedbackModal open={isFeedbackModalOpen} onClose={() => setIsFeedbackModalOpen(false)} />
+      )}
     </>
   );
 }

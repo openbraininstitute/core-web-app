@@ -2,12 +2,12 @@
 
 import { CloseOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import ChevronDownIcon from '@/components/icons/ChevronDownIcon';
+import { Loader } from '@/components/loader';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
@@ -23,20 +23,39 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
   const [feedback, setFeedback] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [currentUrl, setCurrentUrl] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  // Always call hooks, but guard their usage
   const { virtualLabId, projectId } = useWorkspace();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+
+  // Ensure component only runs on client
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Get current URL only on client side to avoid hydration mismatch
+  useEffect(() => {
+    if (mounted && typeof window !== 'undefined') {
+      const { pathname, search, origin } = window.location;
+      const searchParams = new URLSearchParams(search);
+      const url = `${origin}${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+      setCurrentUrl(url);
+    }
+  }, [mounted]);
 
   const { data: projectData } = useQuery({
     queryKey: keyBuilder.getWorkspace({ virtualLabId, projectId }),
     queryFn: () => getProject({ virtualLabId, projectId }),
-    enabled: Boolean(virtualLabId && projectId),
+    enabled: mounted && Boolean(virtualLabId && projectId),
+    retry: false,
   });
 
   const { data: virtualLabData } = useQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId }),
     queryFn: () => getVirtualLab(virtualLabId),
-    enabled: Boolean(virtualLabId),
+    enabled: mounted && Boolean(virtualLabId),
+    retry: false,
   });
 
   const projectName = projectData?.data?.project?.name ?? '';
@@ -49,24 +68,95 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
     return `${month}-${year}`;
   };
 
+  const captureScreenshot = async (): Promise<string | null> => {
+    try {
+      // Hide the modal temporarily for screenshot
+      const modal = document.querySelector('[role="dialog"]') as HTMLElement;
+      const modalOverlay = document.querySelector('.ant-modal-mask') as HTMLElement;
+
+      const originalModalDisplay = modal?.style.display;
+      const originalOverlayDisplay = modalOverlay?.style.display;
+
+      // Hide modal and overlay for screenshot
+      if (modal) modal.style.display = 'none';
+      if (modalOverlay) modalOverlay.style.display = 'none';
+
+      // Use dom-to-image which handles modern CSS better than html2canvas
+      // @ts-expect-error - dom-to-image doesn't have TypeScript types
+      const domtoimage = await import('dom-to-image');
+
+      // Capture the body element
+      const dataUrl = await domtoimage.toPng(document.body, {
+        quality: 0.9,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        filter: (node: Node) => {
+          // Filter out the modal if it's still in the DOM
+          if (node instanceof HTMLElement) {
+            const role = node.getAttribute('role');
+            if (role === 'dialog' || node.classList.contains('ant-modal')) {
+              return false;
+            }
+          }
+          return true;
+        },
+      });
+
+      // Restore modal visibility
+      if (modal) modal.style.display = originalModalDisplay || '';
+      if (modalOverlay) modalOverlay.style.display = originalOverlayDisplay || '';
+
+      return dataUrl;
+    } catch (error) {
+      // Screenshot capture failed - log in development but continue without screenshot
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.warn(
+          'Screenshot capture unavailable. Form will continue without screenshot.',
+          error
+        );
+      }
+
+      // Restore modal visibility even on error
+      const modal = document.querySelector('[role="dialog"]') as HTMLElement;
+      const modalOverlay = document.querySelector('.ant-modal-mask') as HTMLElement;
+      if (modal) modal.style.display = '';
+      if (modalOverlay) modalOverlay.style.display = '';
+
+      return null;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
 
-    // Get current page URL
-    const currentUrl =
-      typeof window !== 'undefined'
-        ? `${window.location.origin}${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
-        : '';
+    // Capture screenshot before submitting (continue even if it fails)
+    // Screenshot capture may fail due to unsupported CSS colors, but that's okay
+    const screenshot = await captureScreenshot().catch(() => {
+      // Silently fail - screenshot is optional
+      return null;
+    });
 
     // Use first 60 characters of feedback as title
     const title = feedback.substring(0, 60).trim() || `[${type.toUpperCase()}] in ${section}`;
 
     // Build body with project, virtual lab info, and current URL
-    const body = `**Feedback Type:** ${type}\n**Section:** ${section}\n\n${feedback}\n\n---\n\nProject: ${projectName}\n\nVirtual Lab: ${virtualLabName}\n\nURL: ${currentUrl}`;
+    // Screenshot will be added by the API after upload
+    const body = `${feedback}\n\n---\n\n🗳️ Project: ${projectName}\n\n🏠 Virtual Lab: ${virtualLabName}\n\nURL: ${currentUrl}`;
+
+    // Create labels array with feedback type and section
+    const labels = [type, section].filter(Boolean);
 
     try {
+      // eslint-disable-next-line no-console
+      console.log('Submitting feedback:', {
+        title,
+        body: body.substring(0, 100) + '...',
+        label: getMonthYearLabel(),
+      });
+
       const res = await fetch('/api/feedback/create-ticket', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -74,13 +164,26 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
           title,
           body,
           label: getMonthYearLabel(),
+          labels,
+          screenshot,
         }),
       });
 
-      if (!res.ok) throw new Error('Failed to create ticket');
+      const responseData = await res.json().catch(() => ({ error: 'Failed to parse response' }));
 
-      const data = await res.json();
-      setMessage(`Ticket created: ${data.issueUrl}`);
+      // eslint-disable-next-line no-console
+      console.log('API response:', { status: res.status, data: responseData });
+
+      if (!res.ok) {
+        throw new Error(responseData.error || 'Failed to create ticket');
+      }
+
+      if (responseData.warning) {
+        // eslint-disable-next-line no-console
+        console.warn('Warning:', responseData.warning);
+      }
+
+      setMessage(`Ticket created: ${responseData.issueUrl}`);
       // Reset form
       setType('');
       setSection('');
@@ -91,16 +194,50 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
         setMessage('');
       }, 2000);
     } catch (error) {
-      setMessage('Error creating ticket');
+      const errorMessage = error instanceof Error ? error.message : 'Error creating ticket';
+      setMessage(`Error: ${errorMessage}`);
+      // eslint-disable-next-line no-console
+      console.error('Error creating ticket:', error);
     } finally {
       setLoading(false);
     }
   };
 
+  // Don't render until mounted to avoid SSR issues
+  if (!mounted) {
+    return (
+      <div className="flex flex-col p-6">
+        <div className="border-neutral-2 mb-6 flex items-start justify-between border-b pb-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-primary-9 text-2xl font-bold">Submit Feedback</h2>
+            <p className="text-neutral-4 text-sm">
+              Help us improve by sharing your thoughts, reporting bugs, or suggesting new features.
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center justify-center py-8">
+          <div className="text-neutral-4 text-sm">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col p-6">
+    <div className="relative flex flex-col p-6">
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center">
+          <Loader size="large" className="text-primary-9" />
+        </div>
+      )}
+
       {/* Header */}
-      <div className="border-neutral-2 mb-6 flex items-start justify-between border-b pb-4">
+      <div
+        className={cn(
+          'border-neutral-2 mb-6 flex items-start justify-between border-b pb-4',
+          loading && 'pointer-events-none opacity-40 blur-sm'
+        )}
+      >
         <div className="flex flex-col gap-1">
           <h2 className="text-primary-9 text-2xl font-bold">Submit Feedback</h2>
           <p className="text-neutral-4 text-sm">
@@ -112,13 +249,17 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
           variant="ghost"
           onClick={onClose}
           className="hover:bg-neutral-1 h-8 w-8 p-0"
+          disabled={loading}
         >
           <CloseOutlined className="text-lg" />
         </Button>
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <form
+        onSubmit={handleSubmit}
+        className={cn('flex flex-col gap-6', loading && 'pointer-events-none opacity-40 blur-sm')}
+      >
         <div className="grid grid-cols-2 gap-4">
           <label htmlFor="type" className="flex flex-col gap-2">
             <span className="text-primary-9 text-base font-normal">Feedback Type</span>
@@ -129,7 +270,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
                 onChange={(e) => setType(e.target.value)}
                 required
                 className={cn(
-                  'border-neutral-2 w-full rounded-lg border text-sm',
+                  'border-neutral-2 text-primary-9 w-full rounded-lg border text-lg font-semibold',
                   'focus:border-primary-4 focus:ring-primary-4/20 rounded-full bg-white focus:ring-2 focus:outline-none',
                   'appearance-none py-3 pr-12 pl-6',
                   !type && 'text-neutral-5 text-base font-normal'
@@ -156,7 +297,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
                 onChange={(e) => setSection(e.target.value)}
                 required
                 className={cn(
-                  'border-neutral-2 w-full rounded-lg border text-sm',
+                  'border-neutral-2 text-primary-9 w-full rounded-lg border text-lg font-semibold',
                   'focus:border-primary-4 focus:ring-primary-4/20 rounded-full bg-white focus:ring-2 focus:outline-none',
                   'appearance-none py-3 pr-12 pl-6',
                   !section && 'text-neutral-5 text-base font-normal'
@@ -189,7 +330,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
             required
             rows={6}
             className={cn(
-              'border-neutral-2 rounded-lg border px-3 py-2 text-sm',
+              'border-neutral-2 text-primary-8 rounded-lg border px-3 py-2 text-lg',
               'focus:border-primary-4 focus:ring-primary-4/20 focus:ring-2 focus:outline-none',
               'resize-none',
               'placeholder:text-neutral-5 placeholder:text-base placeholder:font-normal'
