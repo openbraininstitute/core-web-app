@@ -120,7 +120,7 @@ export function EntityLinkCount() {
           return { ...config, isLoading: allLoading || rootLoading };
         }),
     ],
-    [allLoading, rootLoading]
+    [allLoading, rootLoading, featureFlags]
   );
 
   const modelState = useMemo(
@@ -136,7 +136,7 @@ export function EntityLinkCount() {
           isLoading: allLoading || rootLoading,
         })),
     ],
-    [allLoading, rootLoading]
+    [allLoading, rootLoading, featureFlags]
   );
 
   const simulationState = useMemo(
@@ -152,7 +152,7 @@ export function EntityLinkCount() {
           isLoading: simsLoading,
         })),
     ],
-    [simsLoading]
+    [simsLoading, featureFlags]
   );
 
   const content = match(activeTab)
