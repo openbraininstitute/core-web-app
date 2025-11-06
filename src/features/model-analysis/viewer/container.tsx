@@ -49,28 +49,6 @@ export function ViewerContainer({ validationResults }: Props) {
     />
   );
 
-  const options = [
-    { label: 'All', value: 'all' },
-    ...Object.keys(groupedvalidationResults).map((k) => {
-      return {
-        label: capitalize(k.replaceAll('_', ' ')),
-        value: k,
-      };
-    }),
-  ];
-
-  const [selected, setSelected] = useState<string>('all');
-
-  if (!Object.keys(groupedvalidationResults).length) return <div>No validation results found</div>;
-
-  const renderViewer = (r: (typeof groupedvalidationResults)[0][0]) => (
-    <Viewer
-      entity={r as IEntity & EntityCoreBaseAsset}
-      key={r.id}
-      entityType={ExtendedEntitiesTypeDict.ValidationResult}
-    />
-  );
-
   return (
     <>
       <div className="flex items-center gap-3">

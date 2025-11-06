@@ -23,7 +23,6 @@ import { getLatestSimExecStatus } from '@/features/small-microcircuit/_component
 import { SimExecStatusMap } from '@/features/small-microcircuit/types';
 import { WorkspaceContext } from '@/types/common';
 import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';
-import { resolveExecutions } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 
 const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
   ({ simulationId, context }: { simulationId: string; context: WorkspaceContext }) =>

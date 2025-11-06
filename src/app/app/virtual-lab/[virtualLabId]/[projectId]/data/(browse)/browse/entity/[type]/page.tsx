@@ -46,6 +46,7 @@ export default async function Page({
 
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
   const entity = getEntityByExtendedType({ type: dataType });
+
   const content = match({ scope, entity })
     .with({ entity: P.nullish }, () => notFound())
     .with(
