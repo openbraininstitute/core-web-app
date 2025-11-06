@@ -43,9 +43,17 @@ function Header({ onClose }: { onClose: () => void }) {
           <span className="text-3xl font-bold text-white">{userName}</span>
         </h2>
       </div>
-      <Button type="button" onClick={onClose} className="h-10 w-10 hover:bg-white/10">
-        <CloseOutlined />
-      </Button>
+      <div className="flex flex-row items-center gap-x-2">
+        <div className="border-primary-7 flex w-full flex-row-reverse items-center gap-x-2 rounded-full border border-solid px-6 py-2">
+          <Link href="/app/log-out" className="text-lg! font-semibold text-white">
+            Logout
+          </Link>
+          <SignOutFill className="text-primary-3 ml-auto" />
+        </div>
+        <Button type="button" onClick={onClose} className="h-10 w-10 hover:bg-white/10">
+          <CloseOutlined />
+        </Button>
+      </div>
     </div>
   );
 }
@@ -177,12 +185,6 @@ export function AccountSettings({ onClose, data }: Props) {
         )}
       >
         <Content defaultKey={data?.section} />
-      </div>
-      <div className="flex w-full flex-row-reverse items-center gap-x-2">
-        <Link href="/app/log-out" className="text-lg! text-white">
-          Logout
-        </Link>
-        <SignOutFill className="text-primary-2 ml-auto" />
       </div>
     </div>
   );
