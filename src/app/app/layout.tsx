@@ -3,6 +3,7 @@ import { ReactNode, Suspense } from 'react';
 import { AppOnboardingProvider } from '@/ui/segments/app-setup/discover-app';
 import { Providers } from '@/app/app/providers';
 import { auth } from '@/auth';
+import { getAllFlags } from '@/features/feature-flags';
 
 type RootLayoutProps = {
   children: ReactNode;
@@ -10,8 +11,10 @@ type RootLayoutProps = {
 
 export default async function AppLayout({ children }: RootLayoutProps) {
   const session = await auth();
+  const flags = await getAllFlags();
+
   return (
-    <Providers session={session}>
+    <Providers session={session} flags={flags}>
       <AppOnboardingProvider>
         <Suspense fallback={null}>{children}</Suspense>
       </AppOnboardingProvider>

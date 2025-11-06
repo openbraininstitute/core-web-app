@@ -2,12 +2,13 @@ import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/vi
 import type { AssetLabel, EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TCircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
-import type { DetailViewSection } from '@/entity-configuration/definitions/types';
+import type { TDetailViewSectionDict } from '@/entity-configuration/definitions/types';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
+import { FlagKey } from '@/features/feature-flags/flags';
 
 export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   group: TEntityTypeGroup;
@@ -16,6 +17,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   slug: EntitySlugValue;
   title: string;
   alternateTitle?: string;
+  requiredFeatures?: Array<FlagKey>;
   api: {
     config: {
       allowedFacets?: boolean;
@@ -27,7 +29,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
     };
     expand?: Record<string, (source: T, ctx?: WorkspaceContext, ...other: any) => Promise<any>>;
   };
-  explore: {
+  explore?: {
     basePrefix?: string;
     routePrefix?: string;
   };
@@ -37,7 +39,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   };
   viewDefinition?: ViewDefinitionConfig | null;
   isBookmarkable: boolean;
-  detailViewSections: DetailViewSection[];
+  detailViewSections?: TDetailViewSectionDict[];
   isDownloadable?: boolean;
   isCopyable?: boolean;
   isSimulatable: boolean | ((scale: TCircuitScaleDictionary) => boolean);

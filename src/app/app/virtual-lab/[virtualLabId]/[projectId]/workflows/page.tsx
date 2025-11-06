@@ -1,15 +1,18 @@
 'use client';
 
 import { motion, AnimatePresence } from 'motion/react';
-import { use, useRef, useState } from 'react';
 import { kebabCase } from 'es-toolkit/compat';
+import { use, useRef, useState } from 'react';
 import { useRouter } from '@bprogress/next';
 
+import {
+  ActivityValues,
+  WorkflowSessionIdSearchParam,
+} from '@/ui/segments/workflows/elements/helpers';
 import { useNextStepOnboarding, workflowTour } from '@/ui/segments/app-setup/discover-app';
 import { WorkflowActivity } from '@/ui/segments/workflows/elements/workflow-activity';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { CategoryMenu } from '@/ui/segments/workflows/elements/category-menu';
-import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
 import {
   PanelQueryParam,
   WorkflowSimulatePanels,
@@ -45,7 +48,7 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
     if (activity === ActivityValues.Build) {
       const sessionId = crypto.randomUUID();
       const query = new URLSearchParams();
-      query.set('sessionId', sessionId);
+      query.set(WorkflowSessionIdSearchParam, sessionId);
       query.set(PanelQueryParam, WorkflowSimulatePanels.Configuration);
       navigate(
         `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/configure/${kebabCase(value)}?${query.toString()}`

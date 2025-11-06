@@ -2,8 +2,8 @@
 
 import { CloseOutlined } from '@ant-design/icons';
 
-import { useGetSelectedBrainRegion } from '@/features/brain-region-hierarchy/context';
 import { HierarchySquare } from '@/components/icons/buttons';
+import { useGetSelectedBrainRegion } from '@/features/brain-region-hierarchy/context';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
@@ -54,14 +54,16 @@ export function RegionBanner({ view, onSwitchView }: Props) {
         <div className="flex items-center justify-center gap-2">
           {selectedBrainRegion && (
             <div className="flex items-center justify-center gap-1 select-none">
-              <span className="text-label text-base">Region:</span>
+              <span className="text-neutral-5 mr-2 text-lg">Region:</span>
               <div className="text-primary-9/90 flex items-center justify-center gap-1.5">
                 <div
                   key={`color-${selectedBrainRegion.id}-${selectedBrainRegion.color_hex_triplet}`}
                   className="block h-3! w-3! min-w-3! rounded-full"
                   style={{ backgroundColor: `#${selectedBrainRegion.color_hex_triplet}` }}
                 />
-                <span className="line-clamp-2 leading-5 font-bold">{selectedBrainRegion.name}</span>
+                <span className="line-clamp-2 text-lg leading-5 font-bold">
+                  {selectedBrainRegion.name}
+                </span>
               </div>
             </div>
           )}

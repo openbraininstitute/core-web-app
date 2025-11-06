@@ -110,6 +110,7 @@ export function MemberAvatarCasual({
   cls,
   withEmail = false,
   isOwner = false,
+  pendingIcon,
 }: TMember & {
   pending: boolean;
   shape?: 'circle' | 'square';
@@ -123,6 +124,11 @@ export function MemberAvatarCasual({
     role?: string;
     avatar?: string;
     email?: string;
+    pending?: string;
+  };
+  pendingIcon?: {
+    envelop?: string;
+    halfCircle?: string;
   };
 }) {
   const color = nth(COLOR_DICTIONARY, index)?.color ?? '#fff';
@@ -139,8 +145,14 @@ export function MemberAvatarCasual({
         )}
       >
         {pending ? (
-          <div className="flex items-center justify-center gap-2">
-            <PendingInvite width={48} height={48} />
+          <div className={cn('flex items-center justify-center gap-2', cls?.pending)}>
+            <PendingInvite
+              width={48}
+              height={48}
+              className="avatar-icon"
+              envelop={pendingIcon?.envelop}
+              halfCircle={pendingIcon?.halfCircle}
+            />
             <div
               className={cn(
                 'text-primary-8 text-xl font-bold',
@@ -148,8 +160,8 @@ export function MemberAvatarCasual({
                 cls?.text
               )}
             >
-              <div> {email} </div>
-              <div className="text-sm capitalize">{MemberRoleMap[role]}</div>
+              <div className="avatar-email"> {email} </div>
+              <div className="avatar-role text-sm capitalize">{MemberRoleMap[role]}</div>
             </div>
           </div>
         ) : (

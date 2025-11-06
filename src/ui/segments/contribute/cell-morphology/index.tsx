@@ -23,6 +23,7 @@ import { usePipeline } from '@/ui/segments/contribute/cell-morphology/use-pipeli
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { Subject } from '@/ui/segments/contribute/cell-morphology/subject';
+import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 import { Setup } from '@/ui/segments/contribute/cell-morphology/setup';
 import {
   SubmitButton,
@@ -34,7 +35,6 @@ import {
   type TCellMorphologyForm,
 } from '@/ui/segments/contribute/cell-morphology/helpers';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { resolveDataKey } from '@/utils/key-builder';
 import { Button } from '@/ui/molecules/button';
 import {
   Breadcrumb,
@@ -402,7 +402,7 @@ function UploadCellMorphology({ brainRegionId, sessionId }: Props) {
 export function CellMorphology({ sessionId }: { sessionId: string }) {
   const { projectId } = useWorkspace();
   const { node: defaultBrainRegion } = useBrainRegionHierarchy({
-    dataKey: resolveDataKey({ section: 'explore', projectId }),
+    dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
   });
 
   return <UploadCellMorphology brainRegionId={defaultBrainRegion.id} sessionId={sessionId} />;

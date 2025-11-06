@@ -5,6 +5,7 @@ import { FieldsDefinition as ExperimentalFieldsDefinition } from '@/entity-confi
 import { FieldsDefinition as ExperimentFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/experiment';
 import { FieldsDefinition as CommonFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/common';
 import { FieldsDefinition as ModelFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/model';
+import { FieldsDefinition as NotebookFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/notebook';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
 import type {
@@ -19,6 +20,7 @@ export const fieldsDefinitionRegistry: Partial<FieldsDefinitionRegistry<EntityCo
   ...ExperimentalFieldsDefinition,
   ...ExperimentFieldsDefinition,
   ...ModelFieldsDefinition,
+  ...NotebookFieldsDefinition,
 };
 
 export default fieldsDefinitionRegistry;

@@ -4,13 +4,13 @@ import dayjs from 'dayjs';
 
 import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
+import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 import {
   label,
   CellMorphologySchema,
   zodFieldValidator,
 } from '@/ui/segments/contribute/cell-morphology/helpers';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { resolveDataKey } from '@/utils/key-builder';
 import { cn } from '@/utils/css-class';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
@@ -20,7 +20,7 @@ export function Setup() {
   const { projectId } = useWorkspace();
 
   const { node: defaultBrainRegion } = useBrainRegionHierarchy({
-    dataKey: resolveDataKey({ section: 'explore', projectId }),
+    dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
   });
 
   const BrainRegionDropdown = BrainRegionDropdownWithFormItem({

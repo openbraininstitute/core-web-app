@@ -6,9 +6,13 @@ import React from 'react';
 import type { ReactNode } from 'react';
 
 import { createBreakpoint, useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { MiniDetailViewSearchParam } from '@/ui/segments/mini-detail-view/event';
+import { cleanSearchParams } from '@/utils/search-params';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { getActiveSection } from '@/utils/get-section';
+import {
+  DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
+  DEFAULT_BRAIN_REGION_QUERY_ID,
+} from '@/features/brain-region-hierarchy/context';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 import { ROOT_ROUTE } from '@/config';
@@ -146,8 +150,13 @@ export function TopMenuNavigation() {
           >
             {hashedLinks.map((link) => {
               const searchParams = new URLSearchParams(queryParams);
-              searchParams.delete(MiniDetailViewSearchParam);
-              const linkSearchParams = searchParams.toString();
+              const linkSearchParams = cleanSearchParams({
+                searchParams,
+                keepKeys: [
+                  DEFAULT_BRAIN_REGION_QUERY_ID,
+                  DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
+                ],
+              }).toString();
 
               if (link.hasAction && link.action) {
                 return (
@@ -167,18 +176,6 @@ export function TopMenuNavigation() {
                           <span className="text-lg">{link.title}</span>
                         </Link>
                       </DropdownMenuItem>
-                      {/* <DropdownMenuItem
-                        className="text-primary-9 hover:text-primary-7! ml-4 h-0 cursor-pointer overflow-hidden px-3 py-0 transition-all duration-200 group-hover:h-auto group-hover:py-2 group-hover:opacity-100"
-                        asChild
-                      >
-                        <Link
-                          href={link.action({ virtualLabId, projectId })}
-                          className="flex items-center gap-2"
-                        >
-                          <PlusOutlined />
-                          <span className="text-lg">New {link.title.slice(0, -1)}</span>
-                        </Link>
-                      </DropdownMenuItem> */}
                     </div>
                   </div>
                 );
@@ -212,8 +209,10 @@ export function TopMenuNavigation() {
   return hashedLinks.map(
     ({ id, key, title, url, baseUrl, icon, allowText, className: clx, isActive, hasAction }) => {
       const searchParams = new URLSearchParams(queryParams);
-      searchParams.delete(MiniDetailViewSearchParam);
-      const linkSearchParams = searchParams.toString();
+      const linkSearchParams = cleanSearchParams({
+        searchParams,
+        keepKeys: [DEFAULT_BRAIN_REGION_QUERY_ID, DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE],
+      }).toString();
 
       return (
         <div key={key} className="group flex w-max items-center justify-center gap-0">
@@ -245,43 +244,6 @@ export function TopMenuNavigation() {
                 {icon}
               </Link>
             </Button>
-            {/* {hasAction && action && (
-            <div
-              className={cn(
-                'transition-all duration-900 ease-out',
-                'w-0 scale-0 opacity-0',
-                'group-hover:w-auto group-hover:scale-100 group-hover:opacity-100',
-                'flex origin-left items-center'
-              )}
-            >
-              <div
-                className={cn(
-                  'bg-neutral-2 h-[1px] w-0',
-                  'transition-all duration-900 ease-out group-hover:w-2',
-                  'opacity-0 group-hover:opacity-100'
-                )}
-              />
-              <Button
-                variant="outline"
-                rounded
-                className={cn(
-                  'border-neutral-2 hover:bg-primary-9 hover:border-primary-9',
-                  'h-12 w-12! bg-transparent p-0 hover:text-white',
-                  'rounded-l-none border-l-0',
-                  'transition-all duration-900 ease-out',
-                  'shadow-md group-hover:shadow-xl',
-                  'group-hover:scale-100',
-                  { 'h-10! w-10!': breakpoint === 'l' },
-                  { 'h-12! w-12!': breakpoint === 'xl' }
-                )}
-                asChild
-              >
-                <Link href={action({ virtualLabId, projectId })}>
-                  <PlusOutlined />
-                </Link>
-              </Button>
-            </div>
-          )} */}
           </div>
         </div>
       );

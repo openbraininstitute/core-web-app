@@ -147,7 +147,6 @@ export function LibraryLeftMenu() {
             <PillTabsTrigger
               key={tab.key}
               value={tab.key}
-              position={tab.position}
               className={cn(
                 'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3 text-base select-none data-[state=active]:font-bold data-[state=active]:text-white',
                 { 'h-12': breakpoint === 'xl' }

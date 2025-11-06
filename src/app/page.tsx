@@ -12,8 +12,21 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootPage({
   searchParams: promisedParams,
 }: {
-  searchParams: Promise<{ errorcode: string | undefined }>;
+  searchParams: Promise<{
+    errorcode: string | undefined;
+    original_code: string | undefined;
+    description: string | undefined;
+  }>;
 }) {
   const searchParams = await promisedParams;
-  return <LandingPage section={EnumSection.Home} errorCode={searchParams.errorcode} />;
+  return (
+    <LandingPage
+      section={EnumSection.Home}
+      error={{
+        errorcode: searchParams.errorcode,
+        originalCode: searchParams.original_code,
+        description: searchParams.description,
+      }}
+    />
+  );
 }

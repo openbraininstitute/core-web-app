@@ -1,42 +1,31 @@
 'use client';
 
 import { PlusOutlined, ArrowLeftOutlined, DeleteFilled, LoadingOutlined } from '@ant-design/icons';
-import { Button, ConfigProvider, Select, Table, Popconfirm, Input, Empty, List } from 'antd';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Button, ConfigProvider, Table, Input, Empty, List } from 'antd';
+import { compact, sortBy, get, uniqBy, map, filter } from 'es-toolkit/compat';
 import { useMemo, useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { ColumnType } from 'antd/es/table';
 import { match } from 'ts-pattern';
 import { z } from 'zod';
 
-import compact from 'es-toolkit/compat/compact';
-import sortBy from 'es-toolkit/compat/sortBy';
-import find from 'es-toolkit/compat/find';
-import get from 'es-toolkit/compat/get';
-
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
 import { inviteToVirtualLab } from '@/api/virtual-lab-svc/queries/invite';
 import { useAppNotification } from '@/components/notification';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { Button as UiButton } from '@/ui/molecules/button';
-import { useUserRole } from '@/hooks/use-user-role';
 import { extractInitials } from '@/util/slugify';
 import { Badge } from '@/ui/molecules/badge';
 import {
   cancelVirtualLabInvite,
   listVirtualLabMembers,
-  removeUserFromVirtualLab,
-  updateVirtualLabUserRole,
 } from '@/api/virtual-lab-svc/queries/member';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
 import type { Member, Role } from '@/api/virtual-lab-svc/queries/types';
-
-const roleOptions: { value: Role; label: string }[] = [
-  { value: 'admin', label: 'Administrator' },
-  { value: 'member', label: 'Member' },
-];
+import { log } from '@/utils/logger';
 
 const emailSchema = z.string().min(3, 'Email is required').email('Email is not valid');
 
@@ -58,13 +47,17 @@ type InviteMemberStepProps = {
 };
 
 function EmailInput({
+  index,
   value,
   onChange,
   disabled,
+  inviteList,
 }: {
+  index: number;
   value: string;
   onChange: (v: string) => void;
   disabled: boolean;
+  inviteList: Array<InvitePayload>;
 }) {
   const [error, setError] = useState<string | null>(null);
 
@@ -80,6 +73,22 @@ function EmailInput({
     }
   }, [value]);
 
+  useEffect(() => {
+    const duplicates = map(
+      filter(
+        inviteList,
+        (o) => o.email.toLowerCase() === value.toLowerCase() && value.trim() !== ''
+      ),
+      (item) => inviteList.indexOf(item)
+    );
+
+    if (duplicates.filter((p) => p !== index).length > 0) {
+      setError('This email address is already added. Please remove duplicates.');
+    } else {
+      setError(null);
+    }
+  }, [inviteList, value, index]);
+
   return (
     <div>
       <Input
@@ -90,8 +99,9 @@ function EmailInput({
         onChange={(e) => onChange(e.target.value)}
         status={error ? 'error' : undefined}
         className={cn(
-          'focus:white hover:bg-primary-9! border-white bg-transparent placeholder:text-sm! hover:text-white!',
-          'focus-within:bg-primary-9! bg-primary-9! text-white! placeholder:text-white focus-within:text-white!'
+          'focus:white hover:bg-primary-9! border-white bg-transparent hover:text-white!',
+          'focus-within:bg-primary-9! bg-primary-9! text-white! focus-within:text-white!',
+          'placeholder:text-sm! placeholder:text-white'
         )}
         disabled={disabled}
       />
@@ -100,15 +110,15 @@ function EmailInput({
   );
 }
 
-function InviteMemberStep({ onBack, virtualLabId }: InviteMemberStepProps) {
+function InviteMembers({ onBack, virtualLabId }: InviteMemberStepProps) {
   const queryClient = useQueryClient();
   const { error: notifyError, success: notifySuccess } = useAppNotification();
   const [inviteList, setInviteList] = useState<Array<InvitePayload>>([
-    { email: '', role: 'member' },
+    { email: '', role: 'admin' },
   ]);
 
   const addEmailField = () => {
-    setInviteList((prev) => [...prev, { email: '', role: 'member' }]);
+    setInviteList((prev) => [...prev, { email: '', role: 'admin' }]);
   };
 
   const removeEmailField = (index: number) => {
@@ -126,7 +136,7 @@ function InviteMemberStep({ onBack, virtualLabId }: InviteMemberStepProps) {
       (invite) => invite.email && emailSchema.safeParse(invite.email).success
     );
     const invites = await Promise.allSettled(
-      validInvites.map(({ email, role }) => inviteToVirtualLab({ virtualLabId, email, role }))
+      validInvites.map(({ email }) => inviteToVirtualLab({ virtualLabId, email, role: 'admin' }))
     );
     return invites;
   };
@@ -134,16 +144,16 @@ function InviteMemberStep({ onBack, virtualLabId }: InviteMemberStepProps) {
   const mutate = useMutation({
     mutationFn: inviteUsers,
     onSuccess: (data) => {
-      const validInvites = inviteList.filter(
+      const requestedInvites = inviteList.filter(
         (invite) => invite.email && emailSchema.safeParse(invite.email).success
       );
       const failedInvites = data
         .map((result, idx) => {
-          if (result.status === 'rejected') return validInvites[idx];
+          if (result.status === 'rejected') return requestedInvites[idx];
           return null;
         })
         .filter(Boolean);
-      if (failedInvites.length && validInvites.length !== failedInvites.length) {
+      if (failedInvites.length && requestedInvites.length !== failedInvites.length) {
         notifyError({
           message: `Some invitations were sent successfully, but a few may not have been delivered:`,
           description: (
@@ -159,7 +169,7 @@ function InviteMemberStep({ onBack, virtualLabId }: InviteMemberStepProps) {
           placement: 'topRight',
           key: 'send-invites-partial',
         });
-      } else if (failedInvites.length === validInvites.length) {
+      } else if (failedInvites.length === requestedInvites.length) {
         notifyError({
           message: 'Failed to send invitations. Please try again.',
           placement: 'topRight',
@@ -167,7 +177,7 @@ function InviteMemberStep({ onBack, virtualLabId }: InviteMemberStepProps) {
         });
       } else {
         notifySuccess({
-          message: `${validInvites.length} invitation(s) sent successfully!`,
+          message: `${requestedInvites.length} invitation(s) sent successfully!`,
           placement: 'topRight',
           key: 'send-invites-success',
         });
@@ -176,7 +186,8 @@ function InviteMemberStep({ onBack, virtualLabId }: InviteMemberStepProps) {
         onBack();
       }
     },
-    onError: () => {
+    onError: (error) => {
+      log('error', 'error when inviting people to virtual lab', error);
       notifyError({
         message: 'Failed to send invitations. Please try again.',
         placement: 'topRight',
@@ -203,22 +214,27 @@ function InviteMemberStep({ onBack, virtualLabId }: InviteMemberStepProps) {
             className="hover:bg-neutral-2/20 h-auto !px-4 py-2! text-white hover:text-white"
           >
             <ArrowLeftOutlined className="text-lg" />
-            <span className="ml-4 text-lg font-bold text-white">Members</span>
+            <span className="ml-4 text-lg font-bold text-white">Administrators</span>
           </UiButton>
         </div>
       </div>
 
       <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-8 py-4 pb-8">
         <h2 className="text-xl font-semibold text-white">
-          Invite new members to virtual lab
+          Invite new administrators to virtual lab
           <div className="flex items-center gap-2">
             <small className="text-sm font-light text-white">
-              {
-                inviteList.filter(
-                  (invite) => invite.email && emailSchema.safeParse(invite.email).success
-                ).length
-              }{' '}
-              invitation(s) ready
+              <span className="font-bold">
+                {
+                  uniqBy(
+                    inviteList.filter(
+                      (invite) => invite.email && emailSchema.safeParse(invite.email).success
+                    ),
+                    'email'
+                  ).length
+                }
+              </span>
+              <span className="ml-1">invitation(s) ready</span>
             </small>
           </div>
         </h2>
@@ -248,24 +264,13 @@ function InviteMemberStep({ onBack, virtualLabId }: InviteMemberStepProps) {
                   <div className="flex w-full items-start justify-start gap-3">
                     <div className="flex-1">
                       <EmailInput
+                        index={index}
                         value={invite.email}
                         onChange={(v) => updateInvite(index, 'email', v)}
                         disabled={mutate.isPending}
+                        inviteList={inviteList}
                       />
                     </div>
-                    <Select
-                      id="role"
-                      value={invite.role}
-                      onChange={(role) => updateInvite(index, 'role', role)}
-                      options={roleOptions}
-                      size="large"
-                      className={cn(
-                        'min-w-[140px]',
-                        '[&_.ant-select-selector]:!border-white [&_.ant-select-selector]:!bg-transparent',
-                        '[&_.ant-select-arrow]:!text-white [&_.ant-select-selection-item]:!text-white'
-                      )}
-                      disabled={mutate.isPending}
-                    />
                     <UiButton
                       type="button"
                       variant="ghost"
@@ -287,11 +292,14 @@ function InviteMemberStep({ onBack, virtualLabId }: InviteMemberStepProps) {
                 variant="outline"
                 size="md"
                 onClick={addEmailField}
-                className="border-primary-4 group bg-primary-9 hover:text-primary-4 px-4 text-white select-none hover:border-white"
+                className={cn(
+                  'border-primary-4 group bg-primary-9 hover:text-primary-4',
+                  'px-4 text-white select-none hover:border-white'
+                )}
                 disabled={mutate.isPending}
               >
                 <PlusOutlined className="mr-2" />
-                Add member
+                Add administrator
               </UiButton>
             </div>
           </div>
@@ -333,52 +341,9 @@ function InviteMemberStep({ onBack, virtualLabId }: InviteMemberStepProps) {
   );
 }
 
-function RoleModifier({
-  user,
-  ownerId,
-  virtualLabId,
-}: {
-  user: Member;
-  ownerId?: string;
-  virtualLabId: string;
-}) {
-  const { data } = useSession();
-  const [role, updateRole] = useState(user.role);
-  const [removeLoading] = useState(false);
-  const { error: notifyError, success: notifySuccess } = useAppNotification();
+function CancelInvitation({ user, virtualLabId }: { user: Member; virtualLabId: string }) {
   const queryClient = useQueryClient();
-  const { isAdmin } = useUserRole({ virtualLabId });
-
-  const mutateRole = useMutation({
-    mutationFn: (_role: Role) =>
-      updateVirtualLabUserRole({
-        virtualLabId,
-        userId: user.id,
-        newRole: _role,
-      }),
-    onError() {
-      notifyError({
-        message:
-          'Failed to update user role. Please try again or contact support if the issue persists.',
-        placement: 'topRight',
-        key: 'user-role-update',
-      });
-      updateRole(user.role); // revert to previous role
-    },
-    async onSuccess(_, _role) {
-      updateRole(_role);
-      notifySuccess({
-        message: `User "${user.name}" role updated to ${get(find(roleOptions, { value: _role }), 'label')} successfully`,
-        placement: 'topRight',
-        key: 'user-role-update',
-      });
-    },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: keyBuilder.listVirtualLabTeam({ virtualLabId }),
-      });
-    },
-  });
+  const { error: notifyError, success: notifySuccess } = useAppNotification();
 
   const mutateInvite = useMutation({
     mutationKey: [`${virtualLabId}/delete-item/${user.email}`],
@@ -427,115 +392,8 @@ function RoleModifier({
     },
   });
 
-  const deleteUser = useMutation({
-    mutationKey: [`${virtualLabId}/delete-item/${user.id}`],
-    mutationFn: () =>
-      removeUserFromVirtualLab({
-        virtualLabId,
-        userId: user.id,
-      }),
-    onMutate: () => {
-      const row = document.querySelector(`tr[data-row-key="${user.id}"]`);
-      if (row) {
-        row.classList.add('ant-table-row-remove');
-      }
-      return { row };
-    },
-    onError: (error, _v, ctx) => {
-      if (get(error, 'cause.error_code') === 'FORBIDDEN_OPERATION') {
-        notifyError({
-          message: 'You are not authorized to remove this user from the virtual lab.',
-          placement: 'topRight',
-          key: 'user-remove-from-vlab',
-        });
-      } else {
-        notifyError({
-          message:
-            'Failed to remove user from virtual lab. Please try again or contact support if the issue persists.',
-          placement: 'topRight',
-          key: 'user-remove-from-vlab',
-        });
-      }
-      if (ctx?.row) {
-        ctx.row.classList.remove('ant-table-row-remove');
-      }
-    },
-    async onSuccess() {
-      notifySuccess({
-        message: `User "${user.name}" removed from virtual lab successfully`,
-        placement: 'topRight',
-        key: 'user-remove-from-vlab',
-      });
-    },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: keyBuilder.listVirtualLabTeam({ virtualLabId }),
-      });
-    },
-  });
-
-  if (user.id === ownerId || user.id === data?.user.id) {
-    return (
-      <div className="flex w-full flex-col items-center justify-end pr-3 text-right">
-        <div className="hover:text-primary-2! w-max! self-end font-bold text-white">
-          {get(find(roleOptions, { value: user.role }), 'label')}
-        </div>
-      </div>
-    );
-  }
-
-  if (isAdmin) {
-    return user.invite_accepted ? (
-      <div className="ml-auto flex w-full flex-col items-end justify-end text-right text-base text-white">
-        <div className="flex w-max flex-row items-center justify-center gap-2">
-          <Select
-            data-testid="role-select"
-            className={classNames(
-              'focus:border-primary-8 w-full bg-transparent shadow-none ring-0 focus:border-2',
-              '[&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-transparent',
-              '[&_.ant-select-selector]:!border-primary-7 [&_.ant-select-selector]:!border',
-              '[&_.ant-select-selection-item]:!font-bold [&_.ant-select-selection-item]:!text-white',
-              '!min-w-[140px] [&_.ant-select-arrow]:!text-white [&_.ant-select-selection-item]:!text-left'
-            )}
-            onChange={(_role) => mutateRole.mutateAsync(_role)}
-            value={role}
-            size="large"
-            options={roleOptions}
-            popupClassName="rounded-none!"
-            disabled={mutateRole.isPending}
-            loading={mutateRole.isPending}
-          />
-          <Popconfirm
-            placement="bottomLeft"
-            title="Remove member"
-            description="Are you sure to remove this member from the virtual lab ?"
-            onConfirm={() => deleteUser.mutateAsync()}
-            okText="Yes"
-            cancelText="No"
-            disabled={removeLoading}
-            classNames={{
-              root: classNames(
-                '[&_.ant-popover-inner]:bg-primary-9! [&_.ant-popover-inner]:text-white! ',
-                '[&_.ant-popover-inner]:rounded-none! [&_.ant-popconfirm-description]:text-white!',
-                '[&_.ant-popconfirm-title]:text-white!',
-                '[&_.ant-popconfirm-buttons>button]:rounded-none! [&_.ant-popconfirm-buttons>button]:px-5!',
-                '[&_.ant-popover-arrow]:after:bg-primary-9!'
-              ),
-            }}
-          >
-            <Button
-              type="default"
-              size="large"
-              className="hover:bg-primary-8! bg-primary-9 w-max! self-end rounded-none text-white! opacity-100! hover:text-white!"
-              disabled={deleteUser.isPending}
-              loading={deleteUser.isPending}
-            >
-              Remove member
-            </Button>
-          </Popconfirm>
-        </div>
-      </div>
-    ) : (
+  return (
+    !user.invite_accepted && (
       <div className="flex w-full flex-col items-center justify-end text-right">
         <Button
           data-testid="cancel-invite-btn"
@@ -551,10 +409,8 @@ function RoleModifier({
           Cancel invitation
         </Button>
       </div>
-    );
-  }
-
-  return null;
+    )
+  );
 }
 
 type ListingStepProps = {
@@ -562,7 +418,7 @@ type ListingStepProps = {
   virtualLabId: string;
 };
 
-function ListingStep({ onInviteMemberClick, virtualLabId }: ListingStepProps) {
+function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps) {
   const { data } = useSession();
 
   const { data: team, isLoading } = useQuery({
@@ -623,7 +479,7 @@ function ListingStep({ onInviteMemberClick, virtualLabId }: ListingStepProps) {
         title: 'Last active',
         dataIndex: 'last_active',
         key: 'last_active',
-        render: () => <span className="text-primary-3" />, // Empty element for now, to be included when 'active' info is available
+        render: () => <span className="text-primary-3" />,
       },
       {
         title: 'Action',
@@ -631,9 +487,7 @@ function ListingStep({ onInviteMemberClick, virtualLabId }: ListingStepProps) {
         dataIndex: 'role',
         align: 'right',
         width: '200px',
-        render: (_: Role, record) => (
-          <RoleModifier virtualLabId={virtualLabId} ownerId={ownerId} user={record} />
-        ),
+        render: (_: Role, record) => <CancelInvitation virtualLabId={virtualLabId} user={record} />,
       },
     ],
     [ownerId, virtualLabId]
@@ -656,7 +510,7 @@ function ListingStep({ onInviteMemberClick, virtualLabId }: ListingStepProps) {
     <div className="flex h-full flex-col py-2">
       <div className="bg-primary-9 sticky top-0 z-10 flex shrink-0 items-center justify-between px-6 py-5">
         <div className="flex items-center justify-center gap-2">
-          <span className="text-primary-3 text-lg font-bold">Members</span>
+          <span className="text-primary-3 text-lg font-bold">Administrators</span>
           {total && (
             <Badge
               variant="outline"
@@ -676,8 +530,8 @@ function ListingStep({ onInviteMemberClick, virtualLabId }: ListingStepProps) {
           className="border-primary-4 bg-primary-9 hover:text-primary-4 px-4 text-white hover:border-white"
           onClick={onInviteMemberClick}
         >
-          <div className="flex gap-10">
-            Invite Member
+          <div className="flex gap-5">
+            Add administrator
             <PlusOutlined />
           </div>
         </UiButton>
@@ -729,11 +583,11 @@ export function TeamTable({ virtualLabId }: { virtualLabId: string }) {
 
   return match(currentStep)
     .with(Steps.ListingMembers, () => (
-      <ListingStep onInviteMemberClick={handleInviteMemberClick} virtualLabId={virtualLabId} />
+      <ListingMembers onInviteMemberClick={handleInviteMemberClick} virtualLabId={virtualLabId} />
     ))
     .with(Steps.InviteMember, () => (
       <div className="animate-fade-in h-full">
-        <InviteMemberStep onBack={handleBackToListing} virtualLabId={virtualLabId} />
+        <InviteMembers onBack={handleBackToListing} virtualLabId={virtualLabId} />
       </div>
     ))
     .otherwise(() => null);

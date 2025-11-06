@@ -100,6 +100,12 @@ const nextConfig = (phase: string): NextConfig => {
       remotePatterns: [
         {
           protocol: 'https',
+          hostname: 'staging.openbraininstitute.org',
+          port: '',
+          pathname: '/**',
+        },
+        {
+          protocol: 'https',
           hostname: 'cdn.sanity.io',
           port: '',
           pathname: '/images/**',
@@ -122,6 +128,11 @@ const nextConfig = (phase: string): NextConfig => {
         {
           source: '/app/virtual-lab/lab/:path*',
           destination: `/app/virtual-lab/sync`,
+          permanent: false,
+        },
+        {
+          source: '/app/virtual-lab/:vlabId/:projectId/notebooks',
+          destination: '/app/virtual-lab/:vlabId/:projectId/notebooks/public',
           permanent: false,
         },
       ];

@@ -12,17 +12,21 @@ export const ModelEntitySlug = {
   MeModel: 'me-model',
   SingleNeuronSynaptome: 'synaptome',
   SingleNeuronSimulation: 'single-neuron-simulation',
+  SingleNeuronCircuit: 'single-neuron-circuit',
+  PairedNeuronsCircuit: 'paired-neurons',
   SmallMicrocircuit: 'small-microcircuit',
   Microcircuit: 'microcircuit',
-  PairedNeuronsCircuit: 'paired-neurons',
   Circuit: 'circuit',
   IonChannelModel: 'ion-channel-model',
+  MEModelWithSynapses: 'me-model-with-synapses',
 } as const;
 
 const SimulationEntitySlug = {
   SingleNeuronSimulation: 'single-neuron-simulation',
   SingleNeuronSynaptomeSimulation: 'synaptome-simulation',
   SimulationCampaign: 'simulation-campaign',
+  MEModelCircuitSimulation: 'me-model-circuit-simulation',
+  SingleNeuronCircuitSimulation: 'single-neuron-circuit-simulation',
   PairedNeuronCircuitSimulation: 'paired-neurons-simulation',
   SmallMicrocircuitSimulation: 'small-microcircuit-simulation',
 } as const;
@@ -31,6 +35,7 @@ export const EntitySlug = {
   ...ExperimentalEntitySlug,
   ...ModelEntitySlug,
   ...SimulationEntitySlug,
+  Notebook: 'notebook',
 } as const;
 
 export type EntitySlugValue = (typeof EntitySlug)[keyof typeof EntitySlug];

@@ -1,0 +1,73 @@
+.traceOverviewPlot {
+  position: relative;
+  width: min(250px, calc(100vw - 2em));
+  height: 190px;
+  background: #fff;
+  padding: 0;
+  overflow: hidden;
+
+  .container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+
+    > .plot {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  button.buttonFullscreen {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    font: inherit;
+    border: none;
+    color: #000;
+    background: #fff;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.5s;
+
+    div {
+      position: static;
+      width: 70%;
+      height: auto;
+      display: inline-flex;
+      flex-wrap: nowrap;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5em;
+
+      span,
+      span > svg {
+        position: static;
+        width: 1.5em;
+        height: 1.5em;
+        margin: 0;
+        padding: 0;
+      }
+
+      div {
+        white-space: nowrap;
+      }
+    }
+  }
+
+  &:hover {
+    button.buttonFullscreen {
+      opacity: 0.9;
+    }
+  }
+}

@@ -9,11 +9,11 @@ type Props = {
 export function useUserPermissions({ virtualLabId, projectId }: Props) {
   const { data, forbiddenOperation, loading: subscriptionLoading } = useActiveSubscription();
   const {
-    isAdmin,
-    isMember,
+    isVirtualLabAdmin,
+    isVirtualLabMember,
     isProjectAdmin,
     isProjectMember,
-    loading: userRoleLoading,
+    isLoading: userRoleLoading,
   } = useUserRole({
     virtualLabId,
     projectId,
@@ -23,9 +23,9 @@ export function useUserPermissions({ virtualLabId, projectId }: Props) {
     loading: subscriptionLoading || userRoleLoading,
     subscription: data,
     isAllowedBySubscription: !forbiddenOperation,
-    isAdmin,
+    isVirtualLabAdmin,
     isProjectAdmin,
-    isMember,
+    isVirtualLabMember,
     isProjectMember,
   };
 }

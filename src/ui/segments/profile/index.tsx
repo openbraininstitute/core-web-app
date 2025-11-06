@@ -1,17 +1,22 @@
 'use client';
 
+import Link from 'next/link';
+
 import { CloseOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { match } from 'ts-pattern';
 
-import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
-import { Subscription } from '@/ui/segments/profile/sections/subscription';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { UserProfile } from '@/ui/segments/profile/sections/profile';
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
-import { Invoices } from '@/ui/segments/profile/sections/invoices';
 import { useTabs } from '@/components/detail-view-tabs';
+import { SignOutFill } from '@/components/icons/EditorIcons';
+import { hasVisibleFlags } from '@/features/feature-flags/flags';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
+import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
+import { ExperimentalFeatures } from '@/ui/segments/profile/sections/experimental-features';
+import { Invoices } from '@/ui/segments/profile/sections/invoices';
+import { UserProfile } from '@/ui/segments/profile/sections/profile';
+import { Subscription } from '@/ui/segments/profile/sections/subscription';
 import { keyBuilder } from '@/ui/use-query-keys/user';
 import { cn } from '@/utils/css-class';
 
@@ -38,34 +43,45 @@ function Header({ onClose }: { onClose: () => void }) {
           <span className="text-3xl font-bold text-white">{userName}</span>
         </h2>
       </div>
-      <Button type="button" onClick={onClose} className="h-10 w-10 hover:bg-white/10">
-        <CloseOutlined />
-      </Button>
+      <div className="flex flex-row items-center gap-x-2">
+        <div className="border-primary-7 flex w-full flex-row-reverse items-center gap-x-2 rounded-full border border-solid px-6 py-2">
+          <Link href="/app/log-out" className="text-lg! font-semibold text-white">
+            Logout
+          </Link>
+          <SignOutFill className="text-primary-3 ml-auto" />
+        </div>
+        <Button type="button" onClick={onClose} className="h-10 w-10 hover:bg-white/10">
+          <CloseOutlined />
+        </Button>
+      </div>
     </div>
   );
 }
 
 const tabsConfigItems: Array<{
-  key: 'profile' | 'subscription' | 'invoices';
+  key: 'profile' | 'subscription' | 'invoices' | 'experimental-features';
   title: string;
-  position: 'first' | 'middle' | 'last';
 }> = [
   {
     key: 'profile',
     title: 'Profile',
-    position: 'first',
   },
   {
     key: 'subscription',
     title: 'Subscription',
-    position: 'middle',
   },
   {
     key: 'invoices',
     title: 'Invoices',
-    position: 'last',
   },
 ];
+
+if (hasVisibleFlags) {
+  tabsConfigItems.push({
+    key: 'experimental-features',
+    title: 'Experimental Features',
+  });
+}
 
 type TabKeys = (typeof tabsConfigItems)[number]['key'];
 
@@ -90,7 +106,7 @@ function Tabs({ defaultKey }: { defaultKey?: string }) {
       }}
     >
       <PillTabsList
-        className={cn('bg-primary-9 grid h-10 w-full grid-cols-3 p-0', {
+        className={cn('bg-primary-9 grid h-10 w-full auto-cols-fr grid-flow-col p-0', {
           'h-12': breakpoint === 'xl',
         })}
       >
@@ -98,7 +114,6 @@ function Tabs({ defaultKey }: { defaultKey?: string }) {
           <PillTabsTrigger
             key={tab.key}
             value={tab.key}
-            position={tab.position}
             className={cn(
               'hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:text-primary-9 h-10 px-14! py-3 text-base text-white select-none data-[state=active]:bg-white data-[state=active]:font-bold',
               { 'h-12': breakpoint === 'xl' }
@@ -126,6 +141,7 @@ function Content({ defaultKey }: { defaultKey?: string }) {
     .with('profile', () => <UserProfile />)
     .with('subscription', () => <Subscription />)
     .with('invoices', () => <Invoices />)
+    .with('experimental-features', () => <ExperimentalFeatures />)
     .otherwise(() => {
       return <UserProfile />;
     });

@@ -1,4 +1,5 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
@@ -34,7 +35,7 @@ export async function resolveSingleNeuronSimulation(
 
 export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulation> = {
   group: EntityTypeGroup.Simulations,
-  title: 'Single neuron simulation',
+  title: 'Single neuron',
   extendedType: ExtendedEntitiesTypeDict.SingleNeuronSimulation,
   type: EntityTypeDict.SingleNeuronSimulation,
   slug: EntitySlug.SingleNeuronSimulation,
@@ -57,7 +58,11 @@ export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulatio
     extension: 'application/json',
     configfile: AssetLabel.single_neuron_simulation_data,
   },
-  detailViewSections: ['overview', 'configuration', 'results'],
+  detailViewSections: [
+    DetailViewSectionsDict.Overview,
+    DetailViewSectionsDict.Configuration,
+    DetailViewSectionsDict.Results,
+  ],
   isBookmarkable: true,
   isDownloadable: true,
   isCopyable: true,

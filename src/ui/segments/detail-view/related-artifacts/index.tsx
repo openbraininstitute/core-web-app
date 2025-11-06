@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { includes } from 'es-toolkit/compat';
 import ICMRelatedArtifacts from './ion-channel-model';
 import {
   EntityCoreExtendedType,
@@ -31,7 +32,12 @@ export default async function RelatedArtifacts({
     return <SynaptomeResults modelId={entity.id} />;
   }
 
-  if (extendedType === ExtendedEntitiesTypeDict.Circuit) {
+  if (
+    includes(
+      [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.MEModelWithSynapses],
+      extendedType
+    )
+  ) {
     return <RelatedCircuits circuit={entity as ICircuit} />;
   }
 

@@ -10,6 +10,9 @@ import { useClientCachedUrl } from '@/features/model-analysis/viewer/storage';
 import { classNames } from '@/util/utils';
 import { entityCoreUrl } from '@/config';
 import { TEntityTypeDict } from '@/api/entitycore/types';
+import { IconDownloadFile } from '@/components/LandingPage/icons/IconDownloadFile';
+
+import styles from './pdf-viewer.module.css';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -57,7 +60,7 @@ export default function PDFViewer({
       <div
         className={classNames(
           'flex h-64! w-96! items-center justify-center rounded-lg',
-          'bg-white px-4 py-3 lg:w-2/3 xl:w-1/2'
+          'bg-white px-4 py-3 lg:w-2/3'
         )}
         role="alert"
       >
@@ -71,34 +74,37 @@ export default function PDFViewer({
   }
 
   return (
-    <Document
-      key={`${entityId}/${assetId}`}
-      options={options}
-      file={cachedUrl}
-      loading={<Skeleton.Image active style={{ width: '478.25px', height: '286.945px' }} />}
-      renderMode="canvas"
-      onLoadSuccess={onLoadSuccess}
-      className={
-        documentClassName ?? classNames('lg:w-2/3 xl:w-1/2 [&_canvas]:h-auto! [&_canvas]:w-full!')
-      }
-    >
-      {Array.from(new Array(totalPages), (_, index) => (
-        <Fragment key={`page_${index + 1}`}>
-          <Page
-            key={`page_${index + 1}`}
-            pageNumber={index + 1}
-            renderTextLayer={false}
-            renderAnnotationLayer={false}
-            className="border-primary-8 border"
-            width={pageWidth}
-          />
-          {showPageCount && (
-            <div className="text-center">
-              Page {index + 1} of {totalPages}
-            </div>
-          )}
-        </Fragment>
-      ))}
-    </Document>
+    <div>
+      <Document
+        key={`${entityId}/${assetId}`}
+        options={options}
+        file={cachedUrl}
+        loading={<Skeleton.Image active style={{ width: '478.25px', height: '286.945px' }} />}
+        renderMode="canvas"
+        onLoadSuccess={onLoadSuccess}
+        className={documentClassName ?? classNames('[&_canvas]:h-auto! [&_canvas]:w-full!')}
+      >
+        {Array.from(new Array(totalPages), (_, index) => (
+          <Fragment key={`page_${index + 1}`}>
+            <Page
+              key={`page_${index + 1}`}
+              pageNumber={index + 1}
+              renderTextLayer={false}
+              renderAnnotationLayer={false}
+              className="border-primary-8 border"
+              width={pageWidth}
+            />
+            {showPageCount && (
+              <div className="text-center">
+                Page {index + 1} of {totalPages}
+              </div>
+            )}
+          </Fragment>
+        ))}
+      </Document>
+      <a className={styles.link} href={cachedUrl} target="PDF" download={`${assetId}.pdf`}>
+        <IconDownloadFile /> <div>Download as PDF</div>
+      </a>
+    </div>
   );
 }

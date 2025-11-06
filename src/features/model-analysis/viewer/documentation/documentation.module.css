@@ -1,0 +1,11 @@
+.documentation {
+  p {
+    margin: 1em 0;
+  }
+
+  > .grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0 1em;
+  }
+}

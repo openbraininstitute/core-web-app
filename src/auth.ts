@@ -1,11 +1,49 @@
 import { getServerSession, type NextAuthOptions, type TokenSet, type Session } from 'next-auth';
 import { GetServerSidePropsContext, NextApiRequest, NextApiResponse } from 'next';
 
+import { log } from './utils/logger';
 import { env } from '@/env';
 
 const issuer = env.KEYCLOAK_ISSUER;
 const clientId = env.KEYCLOAK_CLIENT_ID;
 const clientSecret = env.KEYCLOAK_CLIENT_SECRET;
+
+/**
+ * Updates or inserts a refresh token in the authentication manager service.
+ *
+ * This function sends the refresh token to the auth manager's refresh-token endpoint
+ * to keep it synchronized with the current authentication state. It's called during
+ * initial sign-in and token refresh operations to ensure the auth manager has
+ * the latest refresh token available.
+ *
+ * @param accessToken - The current access token used for authorization with the auth manager
+ * @param refreshToken - The refresh token to be stored/updated in the auth manager
+ */
+async function upsertRefreshTokenInAuthManager({
+  accessToken,
+  refreshToken,
+}: {
+  accessToken: string;
+  refreshToken: string;
+}) {
+  try {
+    const response = await fetch(`${env.AUTH_MANAGER_URI}/refresh-token`, {
+      method: 'post',
+      headers: {
+        'content-type': 'application/json',
+        accept: 'application/json',
+        authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        refresh_token: refreshToken,
+      }),
+    });
+    const result = await response.json();
+    log('debug', 'update refresh token for auth manager succeed', result);
+  } catch (error) {
+    log('error', 'failed to update refresh token for auth manager', error);
+  }
+}
 
 /**
  * Takes a token, and returns a new token with updated
@@ -34,6 +72,13 @@ export async function refreshAccessToken(token: TokenSet) {
     if (!response.ok) {
       throw refreshedTokens;
     }
+    // eslint-disable-next-line no-void
+    void (async () => {
+      await upsertRefreshTokenInAuthManager({
+        accessToken: refreshedTokens.access_token,
+        refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
+      });
+    })();
 
     return {
       ...token,
@@ -87,6 +132,14 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, account, user, profile }) {
       // Initial sign in
       if (account && user) {
+        // eslint-disable-next-line no-void
+        void (async () => {
+          if (account && account.access_token && account.refresh_token)
+            await upsertRefreshTokenInAuthManager({
+              accessToken: account.access_token,
+              refreshToken: account.refresh_token,
+            });
+        })();
         return {
           ...token,
           accessToken: account.access_token,

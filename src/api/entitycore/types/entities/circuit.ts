@@ -25,21 +25,33 @@ export const CircuitBuildCategory = {
 } as const;
 
 export const CircuitScale = {
-  Microcircuit: {
-    key: 'microcircuit',
-    label: 'Microcircuit',
-  },
-  SmallMicrocircuit: {
-    key: 'small',
-    label: 'Small Microcircuit',
+  Single: {
+    key: 'single',
+    label: 'Single',
   },
   PairNeuron: {
     key: 'pair',
     label: 'Pair neuron',
   },
+  SmallMicrocircuit: {
+    key: 'small',
+    label: 'Small Microcircuit',
+  },
+  Microcircuit: {
+    key: 'microcircuit',
+    label: 'Microcircuit',
+  },
   Region: {
     key: 'region',
     label: 'Region',
+  },
+  System: {
+    key: 'system',
+    label: 'System',
+  },
+  WholeBrain: {
+    key: 'whole_brain',
+    label: 'Whole brain',
   },
 } as const;
 

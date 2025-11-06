@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import React from 'react';
 import { logError } from '@/util/logger';
 
@@ -6,8 +7,32 @@ export interface GenericEventInterface<T> {
   removeListener(listener: (arg: T) => void): void;
 }
 
-export default class GenericEvent<T> implements GenericEventInterface<T> {
+export default class GenericEvent<T = void> implements GenericEventInterface<T> {
   private listeners: Array<(arg: T) => void> = [];
+
+  useValue(initialValue: T): T {
+    const [value, setValue] = React.useState(initialValue);
+    React.useEffect(() => {
+      this.addListener(setValue);
+      return () => this.removeListener(setValue);
+    }, []);
+    return value;
+  }
+
+  useState(initialValue: T): [T, (v: T) => void] {
+    const [value, setValue] = React.useState(initialValue);
+    React.useEffect(() => {
+      this.addListener(setValue);
+      return () => this.removeListener(setValue);
+    }, []);
+    return [
+      value,
+      (v: T) => {
+        setValue(v);
+        this.dispatch(v);
+      },
+    ];
+  }
 
   addListener(listener: (arg: T) => void) {
     const { listeners } = this;

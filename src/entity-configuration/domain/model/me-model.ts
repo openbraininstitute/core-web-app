@@ -1,5 +1,6 @@
 import { getMEModel, getMEModels, createMEModel } from '@/api/entitycore/queries/model/me-model';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
@@ -30,7 +31,12 @@ export const MEmodel: EntityCoreTypeConfig<IMEModel> = {
   asset: {
     extension: undefined,
   },
-  detailViewSections: ['overview', 'analysis', 'configuration', 'related-artifacts'],
+  detailViewSections: [
+    DetailViewSectionsDict.Overview,
+    DetailViewSectionsDict.Analysis,
+    DetailViewSectionsDict.Configuration,
+    DetailViewSectionsDict.RelatedArtifacts,
+  ],
   isDownloadable: true,
   isBookmarkable: true,
   isCopyable: true,

@@ -5,6 +5,7 @@
   height: max(100vh, 600px);
   color: #fffe;
   background-color: var(--color-primary);
+  hyphens: auto;
 
   --color-bg: var(--color-primary);
   --gradient-angle: 150deg;
@@ -64,6 +65,12 @@
   padding: 0 14vw;
   text-wrap: balance;
   max-width: auto;
+}
+
+@media (max-width: 768px) {
+  .hero .text {
+    padding: 0 5vw;
+  }
 }
 
 .hero .text h1 {

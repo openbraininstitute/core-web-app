@@ -285,12 +285,12 @@ class NWBLNMCTrace extends NWBTrace {
 
     const dataset = this.getDataset(datasetKey);
 
-    const unit = dataset.get_attribute('unit', true);
+    const unit = tryGetAttribute(dataset, 'unit');
     if (typeof unit !== 'string') {
       throw new Error(`Incompatible ${recordingType} unit: ${unit}, expected string`);
     }
 
-    const conversionFactorRaw = dataset.get_attribute('conversion', true);
+    const conversionFactorRaw = tryGetAttribute(dataset, 'conversion');
     const conversionFactor = typeof conversionFactorRaw === 'number' ? conversionFactorRaw : 1;
 
     const timeDatasetKey =
@@ -300,12 +300,12 @@ class NWBLNMCTrace extends NWBTrace {
 
     const timeDataset = this.getDataset(timeDatasetKey);
 
-    const timeUnit = timeDataset.get_attribute('unit', true);
+    const timeUnit = tryGetAttribute(timeDataset, 'unit');
     if (typeof timeUnit !== 'string') {
       throw new Error(`Incompatible ${recordingType} time unit: ${timeUnit}, expected string`);
     }
 
-    const timeRate = timeDataset.get_attribute('rate', true);
+    const timeRate = tryGetAttribute(timeDataset, 'rate');
     if (typeof timeRate !== 'number') {
       throw new Error(`Incompatible ${recordingType} time rate: ${timeRate}, expected number`);
     }
@@ -382,12 +382,12 @@ class NWBGenericTrace extends NWBTrace {
 
     const dataset = this.getDataset(datasetKey);
 
-    const unit = dataset.get_attribute('unit', true);
+    const unit = tryGetAttribute(dataset, 'unit');
     if (typeof unit !== 'string') {
       throw new Error(`Incompatible ${recordingType} unit: ${unit}, expected string`);
     }
 
-    const conversionFactorRaw = dataset.get_attribute('conversion', true);
+    const conversionFactorRaw = tryGetAttribute(dataset, 'conversion');
     const conversionFactor = typeof conversionFactorRaw === 'number' ? conversionFactorRaw : 1;
 
     const timeDatasetKey =
@@ -397,12 +397,12 @@ class NWBGenericTrace extends NWBTrace {
 
     const timeDataset = this.getDataset(timeDatasetKey);
 
-    const timeUnit = timeDataset.get_attribute('unit', true);
+    const timeUnit = tryGetAttribute(timeDataset, 'unit');
     if (typeof timeUnit !== 'string') {
       throw new Error(`Incompatible ${recordingType} time unit: ${timeUnit}, expected string`);
     }
 
-    const timeRate = timeDataset.get_attribute('rate', true);
+    const timeRate = tryGetAttribute(timeDataset, 'rate');
     if (typeof timeRate !== 'number') {
       throw new Error(`Incompatible ${recordingType} time rate: ${timeRate}, expected number`);
     }
@@ -466,12 +466,12 @@ class NWBCircuitSimulationTrace extends NWBTrace {
       return { timeUnit: 's', timeRate: 1 };
     }
 
-    const timeUnit = timeDataset.get_attribute('unit', true);
+    const timeUnit = tryGetAttribute(timeDataset, 'unit');
     if (typeof timeUnit !== 'string') {
       throw new Error(`Incompatible time unit: ${timeUnit}, expected string`);
     }
 
-    const timeRate = timeDataset.get_attribute('rate', true);
+    const timeRate = tryGetAttribute(timeDataset, 'rate');
     if (typeof timeRate !== 'number') {
       throw new Error(`Incompatible time rate: ${timeRate}, expected number`);
     }
@@ -490,12 +490,12 @@ class NWBCircuitSimulationTrace extends NWBTrace {
 
     const dataset = this.getDataset(datasetKey);
 
-    const unit = dataset.get_attribute('unit', true);
+    const unit = tryGetAttribute(dataset, 'unit');
     if (typeof unit !== 'string') {
       throw new Error(`Incompatible ${recordingType} unit: ${unit}, expected string`);
     }
 
-    const conversionFactorRaw = dataset.get_attribute('conversion', true);
+    const conversionFactorRaw = tryGetAttribute(dataset, 'conversion');
     const conversionFactor = typeof conversionFactorRaw === 'number' ? conversionFactorRaw : 1;
 
     const { timeUnit, timeRate } = this.getTimeData(cellId);
@@ -509,5 +509,26 @@ class NWBCircuitSimulationTrace extends NWBTrace {
       timeUnit,
       timeRate,
     };
+  }
+}
+
+/**
+ * The standard error thrown by `dataset.get_attribute()`
+ * does not output the name of the missing attribute.
+ *
+ * This function does.
+ */
+function tryGetAttribute(dataset: Dataset, name: string) {
+  try {
+    return dataset.get_attribute(name, true);
+  } catch {
+    const attributesNames = Object.keys(dataset.attrs);
+    throw new Error(
+      `Attribute "${name}" not found in dataset!\n${
+        attributesNames.length === 0
+          ? 'This dataset has no attribute.'
+          : `Available attributes are: ${attributesNames.join(', ')}.`
+      }`
+    );
   }
 }

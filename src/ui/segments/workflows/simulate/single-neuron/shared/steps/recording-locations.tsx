@@ -4,6 +4,7 @@ import { useAtom, useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import z from 'zod';
 
+import { getColorFromGeneratedPalette } from './webgl-neuron-selector/colors';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import {
   neuronSectionNamesAtomFamily,
@@ -111,7 +112,14 @@ function RecordItem({
             placement="bottomLeft"
             disabled={disable}
             size={breakpoint === 'l' ? 'middle' : 'large'}
-            prefix={<ColorMarker color={record?.color} />}
+            title={`origin = ${record?.origin}`}
+            prefix={
+              <ColorMarker
+                color={
+                  record?.origin === 'injection' ? '#fff' : getColorFromGeneratedPalette(index)
+                }
+              />
+            }
           />
         </Form.Item>
         <Form.Item

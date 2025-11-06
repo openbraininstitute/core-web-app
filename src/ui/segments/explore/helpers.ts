@@ -2,14 +2,18 @@
 
 import pProps from 'p-props';
 
+import { MEModelCircuitSimulation } from '@/entity-configuration/domain/simulation/memodel-circuit-simulation';
 import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/simulation/single-neuron-synaptome-simulation';
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
+import { SingeNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/single-neuron-circuit-simulation';
 import { PairedNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/paired-neurons-simulation';
 import { ElectricalRecordingOriginDictionary } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import { ElectricalCellRecording } from '@/entity-configuration/domain/experimental/electrical-cell-recording';
 import { getElectricalCellRecordings } from '@/api/entitycore/queries/experimental/electrical-cell-recording';
 import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation/single-neuron-simulation';
 import { SynapsePerConnection } from '@/entity-configuration/domain/experimental/synapse-per-connection';
+import { MEModelWithSynapsesCircuit } from '@/entity-configuration/domain/model/me-model-with-synapses';
+import { IonChannelRecording } from '@/entity-configuration/domain/experimental/ion-channel-recording';
 import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import { CellMorphology } from '@/entity-configuration/domain/experimental/cell-morphology';
 import { NeuronDensity } from '@/entity-configuration/domain/experimental/neuron-density';
@@ -42,12 +46,15 @@ export const ModelEntitiesTileTypes = {
   Emodel,
   MEmodel,
   Circuit,
+  MEModelWithSynapsesCircuit,
   IonChannelModel,
 } as const;
 
 export const SimulationEntitiesTileTypes = {
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
+  MEModelCircuitSimulation,
+  SingeNeuronCircuitSimulation,
   PairedNeuronCircuitSimulation,
   SmallMicrocircuitSimulation,
 } as const;
@@ -111,6 +118,7 @@ export async function getAllEntitiesCountScoped({
             ...(scope === WorkspaceScope.Project
               ? {
                   authorized_project_id: projectId,
+                  authorized_public: false,
                 }
               : scope === WorkspaceScope.Public
                 ? {
@@ -133,11 +141,9 @@ export async function getSimulationsCount({
   virtualLabId,
   projectId,
   brainRegionId,
-  personId,
   scope,
 }: WorkspaceContext & {
   brainRegionId: string;
-  personId: string | undefined;
   scope: TWorkspaceScope;
 }) {
   const promises = Object.fromEntries(
@@ -159,7 +165,7 @@ export async function getSimulationsCount({
             ...(scope === WorkspaceScope.Project
               ? {
                   authorized_project_id: projectId,
-                  created_by__id: personId,
+                  authorized_public: false,
                 }
               : scope === WorkspaceScope.Public
                 ? {
@@ -187,11 +193,9 @@ export function getElectricalCellRecordingsCount({
   virtualLabId,
   projectId,
   brainRegionId,
-  personId,
   scope,
 }: WorkspaceContext & {
   brainRegionId: string;
-  personId: string | undefined;
   scope: TWorkspaceScope;
 }) {
   return getElectricalCellRecordings({
@@ -207,7 +211,7 @@ export function getElectricalCellRecordingsCount({
       ...(scope === WorkspaceScope.Project
         ? {
             authorized_project_id: projectId,
-            created_by__id: personId,
+            authorized_public: false,
           }
         : scope === WorkspaceScope.Public
           ? {

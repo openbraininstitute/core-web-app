@@ -20,6 +20,7 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 import type { KebabCase } from '@/utils/type';
+import { useFlags } from '@/features/feature-flags';
 
 const WorkflowScope = {
   Public: 'public',
@@ -39,17 +40,14 @@ interface WorkflowMenuProps {
 // const tabsConfigItems: Array<{
 //   key: WorkflowScopeKeys;
 //   title: string;
-//   position: 'first' | 'middle' | 'last';
 // }> = [
 //   {
 //     key: WorkflowScope.Public,
 //     title: 'Public',
-//     position: 'first',
 //   },
 //   {
 //     key: WorkflowScope.Project,
 //     title: 'Project',
-//     position: 'last',
 //   },
 // ];
 
@@ -81,7 +79,6 @@ interface WorkflowMenuProps {
 //           <PillTabsTrigger
 //             key={tab.key}
 //             value={tab.key}
-//             position={tab.position}
 //             className={cn(
 //               'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3 text-base select-none data-[state=active]:font-bold data-[state=active]:text-white',
 //               { 'h-12': breakpoint === 'xl' }
@@ -102,10 +99,14 @@ export function ActivityAndTypeSelectors({
   onEntityTypeChange,
   onNavigate,
 }: WorkflowMenuProps) {
+  const featureFlags = useFlags();
+
   const handleActivitySelect = (v: TActivityValue | undefined) => {
     onActivityChange(v);
     if (v) {
-      const type = getDropdownOptionsByCategory(v).enabledOptions.at(0)?.options.at(0)?.value;
+      const type = getDropdownOptionsByCategory(v, featureFlags)
+        .enabledOptions.at(0)
+        ?.options.at(0)?.value;
       onEntityTypeChange(type);
       onNavigate?.(type);
     }
