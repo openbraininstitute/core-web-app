@@ -1,21 +1,14 @@
-import { useQueries, useQuery } from '@tanstack/react-query';
+import { kebabCase, isNil, get } from 'es-toolkit/compat';
+import { useQueries } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { match } from 'ts-pattern';
 import { useMemo } from 'react';
 
-import kebabCase from 'es-toolkit/compat/kebabCase';
-import isNil from 'es-toolkit/compat/isNil';
-import get from 'es-toolkit/compat/get';
-
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
-import { getPersons } from '@/api/entitycore/queries/general/person-agent';
-import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { BrowseLink } from '@/ui/segments/explore/browse-link';
-import { ROOT_ROUTE } from '@/config';
 import { useTabs } from '@/components/detail-view-tabs';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
@@ -32,8 +25,10 @@ import {
   getAllEntitiesCountScoped,
 } from '@/ui/segments/explore/helpers';
 import { cn } from '@/utils/css-class';
+import { ROOT_ROUTE } from '@/config';
 
 import { type TWorkspaceScope } from '@/constants';
+import { useFlags } from '@/features/feature-flags';
 
 export const ExploreDataTypeTabs = {
   Experimental: 'experimental',
@@ -45,28 +40,25 @@ export type TExploreDataTypeTabs = (typeof ExploreDataTypeTabs)[keyof typeof Exp
 export const tabsConfigItems: Array<{
   key: TExploreDataTypeTabs;
   title: string;
-  position: 'first' | 'middle' | 'last';
 }> = [
   {
     key: ExploreDataTypeTabs.Experimental,
     title: 'Experimental',
-    position: 'first',
   },
   {
     key: ExploreDataTypeTabs.Models,
     title: 'Model',
-    position: 'middle',
   },
   {
     key: ExploreDataTypeTabs.Simulations,
     title: 'Simulations',
-    position: 'last',
   },
 ];
 
 export function EntityLinkCount() {
+  const featureFlags = useFlags();
+
   const breakpoint = useDefaultBreakpoint();
-  const session = useSession();
   const scope = (useSearchParams().get('scope') ?? WorkspaceScope.Public) as TWorkspaceScope;
 
   const { virtualLabId, projectId } = useWorkspace();
@@ -81,19 +73,11 @@ export function EntityLinkCount() {
     shallow: true,
   });
 
-  const { data: personId } = useQuery({
-    queryKey: userKeyBuilder.person({ userId: session.data?.user.id }),
-    queryFn: () => getPersons({ filters: { sub_id: session.data?.user.id } }),
-    enabled: Boolean(session.data?.user.id),
-    select: (data) => data?.data.at(0)?.id,
-  });
-
   const params = {
     virtualLabId,
     projectId,
     brainRegionId: selectedBrainRegion?.id!,
     scope,
-    personId,
   };
 
   const [
@@ -113,7 +97,7 @@ export function EntityLinkCount() {
           getSimulationsCount({
             ...params,
           }),
-        enabled: Boolean(selectedBrainRegion?.id) && Boolean(personId),
+        enabled: Boolean(selectedBrainRegion?.id),
       },
       {
         queryKey: keyBuilder.dataCount({ ...params, brainRegionId: brainRegionHierarchy?.root.id }),
@@ -126,31 +110,49 @@ export function EntityLinkCount() {
 
   const experimentalState = useMemo(
     () => [
-      ...Object.entries(ExperimentalEntitiesTileTypes).map(([, value]) => {
-        return { ...value, isLoading: allLoading || rootLoading };
-      }),
+      ...Object.values(ExperimentalEntitiesTileTypes)
+        .filter(
+          (config) =>
+            !config.requiredFeatures ||
+            config.requiredFeatures.every((flag) => featureFlags?.[flag])
+        )
+        .map((config) => {
+          return { ...config, isLoading: allLoading || rootLoading };
+        }),
     ],
-    [allLoading, rootLoading]
+    [allLoading, rootLoading, featureFlags]
   );
 
   const modelState = useMemo(
     () => [
-      ...Object.entries(ModelEntitiesTileTypes).map(([, value]) => ({
-        ...value,
-        isLoading: allLoading || rootLoading,
-      })),
+      ...Object.values(ModelEntitiesTileTypes)
+        .filter(
+          (config) =>
+            !config.requiredFeatures ||
+            config.requiredFeatures.every((flag) => featureFlags?.[flag])
+        )
+        .map((config) => ({
+          ...config,
+          isLoading: allLoading || rootLoading,
+        })),
     ],
-    [allLoading, rootLoading]
+    [allLoading, rootLoading, featureFlags]
   );
 
   const simulationState = useMemo(
     () => [
-      ...Object.entries(SimulationEntitiesTileTypes).map(([, value]) => ({
-        ...value,
-        isLoading: simsLoading,
-      })),
+      ...Object.values(SimulationEntitiesTileTypes)
+        .filter(
+          (config) =>
+            !config.requiredFeatures ||
+            config.requiredFeatures.every((flag) => featureFlags?.[flag])
+        )
+        .map((config) => ({
+          ...config,
+          isLoading: simsLoading,
+        })),
     ],
-    [simsLoading]
+    [simsLoading, featureFlags]
   );
 
   const content = match(activeTab)
@@ -168,9 +170,9 @@ export function EntityLinkCount() {
               type={value.extendedType}
               title={value.title}
               count={
-                <span>
+                <span className="flex items-center justify-center gap-1">
                   <span className="font-bold">{count}</span> <span className="font-light">of</span>
-                  <span className="font-bold"> {rootCount}</span>
+                  <span className="font-bold">{rootCount}</span>
                 </span>
               }
               isLoading={value.isLoading || isNil(count) || isNil(rootCount)}
@@ -193,7 +195,7 @@ export function EntityLinkCount() {
               type={value.extendedType}
               title={value.title}
               count={
-                <span>
+                <span className="flex items-center justify-center gap-1">
                   <span className="font-bold">{count}</span> <span className="font-light">of</span>
                   <span className="font-bold">{rootCount}</span>
                 </span>
@@ -217,7 +219,7 @@ export function EntityLinkCount() {
               href={link}
               type={value.extendedType}
               title={value.title}
-              count={count ? `${count}` : 0}
+              count={<span className="font-bold">{count}</span>}
               isLoading={value.isLoading || isNil(count)}
               isUploadable={value.isUploadable}
             />
@@ -250,7 +252,6 @@ export function EntityLinkCount() {
               <PillTabsTrigger
                 key={tab.key}
                 value={tab.key}
-                position={tab.position}
                 className={cn(
                   'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3 text-base select-none',
                   'data-[state=active]:font-bold data-[state=active]:text-white',

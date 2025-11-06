@@ -24,11 +24,14 @@ const AllowedEntities = [
   ExtendedEntitiesTypeDict.Memodel,
   ExtendedEntitiesTypeDict.Circuit,
   ExtendedEntitiesTypeDict.Emodel,
+  ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
   ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
+  ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
   ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
   ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
   ExtendedEntitiesTypeDict.SingleNeuronSimulation,
   ExtendedEntitiesTypeDict.IonChannelModel,
+  ExtendedEntitiesTypeDict.MEModelWithSynapses,
 ] as const;
 
 export default async function Page({
@@ -43,16 +46,14 @@ export default async function Page({
 
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
   const entity = getEntityByExtendedType({ type: dataType });
+
   const content = match({ scope, entity })
     .with({ entity: P.nullish }, () => notFound())
     .with(
       {
         scope: P.union(P.nullish, WorkspaceScope.Public, WorkspaceScope.Project),
-        entity: P.intersection(
-          P.when((e) =>
-            AllowedEntities.includes(e?.extendedType as unknown as (typeof AllowedEntities)[number])
-          ),
-          P.not(P.nullish)
+        entity: P.when((e) =>
+          AllowedEntities.includes(e?.extendedType as unknown as (typeof AllowedEntities)[number])
         ),
       },
       () => {

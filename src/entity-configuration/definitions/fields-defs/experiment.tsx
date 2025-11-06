@@ -251,4 +251,11 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isDisplayable: true,
     isFilterable: false,
   },
+  [EntityCoreFields.MEModelName]: {
+    title: 'ME-model',
+    filter: null,
+    render: (r) => renderEmptyOrValue(get(r, 'memodel.name', '')),
+    isDisplayable: true,
+    isFilterable: false,
+  },
 };

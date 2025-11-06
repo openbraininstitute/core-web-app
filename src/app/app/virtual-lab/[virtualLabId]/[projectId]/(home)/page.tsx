@@ -21,7 +21,7 @@ export default async function Home({
 
   const { data, error } = await tryCatch(
     queryClient.fetchQuery({
-      queryKey: keyBuilder.getOne({ virtualLabId, projectId }),
+      queryKey: keyBuilder.getWorkspace({ virtualLabId, projectId }),
       queryFn: () => getProject({ virtualLabId, projectId }),
     })
   );

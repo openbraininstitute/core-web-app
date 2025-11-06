@@ -12,4 +12,5 @@ export type Project = {
   updated_at: string;
   virtual_lab_id: string;
   user_count?: number;
+  admins?: Array<string>;
 };

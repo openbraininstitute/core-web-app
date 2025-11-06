@@ -4,6 +4,8 @@ import keyBy from 'es-toolkit/compat/keyBy';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
+import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
@@ -26,7 +28,6 @@ import type {
   ICircuitSimulationCampaignFilter,
 } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { WorkspaceContext } from '@/types/common';
-import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 
 export async function resolveExecutions({
   context,
@@ -156,7 +157,7 @@ export async function resolveSimulationByCampaignId({
 
 export const SmallMicrocircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
   group: EntityTypeGroup.Simulations,
-  title: 'Small microcircuit simulation',
+  title: 'Small microcircuit',
   extendedType: ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.SmallMicrocircuitSimulation,
@@ -181,7 +182,11 @@ export const SmallMicrocircuitSimulation: EntityCoreTypeConfig<ICircuitSimulatio
   asset: {
     extension: 'application/json',
   },
-  detailViewSections: ['overview'],
+  detailViewSections: [
+    DetailViewSectionsDict.Overview,
+    DetailViewSectionsDict.Configuration,
+    DetailViewSectionsDict.Results,
+  ],
   isBookmarkable: true,
   isDownloadable: false,
   isCopyable: true,

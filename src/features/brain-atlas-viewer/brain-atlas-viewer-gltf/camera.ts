@@ -20,21 +20,24 @@ export function setCamera(context: TgdContext, eventChange: GenericEvent<TgdCame
   };
   context.camera = new TgdCameraPerspective({
     near: 1,
-    far: 40000,
+    far: 80000,
     fovy: tgdCalcDegToRad(55),
     transfo: { ...restTransfo },
   });
   const controller = new TgdControllerCameraOrbit(context, {
     inertiaOrbit: 1000,
-    speedZoom: 1000,
-    minDistance: 5000,
-    maxDistance: 30000,
+    speedZoom: 1,
+    minZoom: 0.5,
+    maxZoom: 20,
   });
   controller.eventChange.addListener((camera) => eventChange.dispatch(camera));
   return () => {
     context.animSchedule({
       action: tgdActionCreateCameraInterpolation(context.camera, { ...restTransfo }),
       duration: 0.5,
+      onEnd: () => {
+        controller.resetZoom();
+      },
     });
   };
 }

@@ -14,9 +14,9 @@ import SectionGeneric from './sections/SectionGeneric';
 import SectionNews from './sections/SectionNews';
 import { EnumSection } from './sections/sections';
 
-import AcceptInviteErrorDialog from '@/components/Invites/AcceptInviteErrorDialog';
-import { logError } from '@/util/logger';
+import { InvitationErrorDialog } from '@/ui/segments/invites/error-dialog';
 import { classNames } from '@/util/utils';
+import { logError } from '@/util/logger';
 
 import styles from './LandingPage.module.css';
 import './global.css';
@@ -24,10 +24,14 @@ import './global.css';
 interface LandingPageProps {
   className?: string;
   section: EnumSection;
-  errorCode?: string;
+  error?: {
+    errorcode: string | undefined;
+    originalCode: string | undefined;
+    description: string | undefined;
+  };
 }
 
-export default function LandingPage({ className, section, errorCode }: LandingPageProps) {
+export default function LandingPage({ className, section, error }: LandingPageProps) {
   const scrollHasStarted = useScrollHasStarted();
 
   useEffect(() => {
@@ -45,7 +49,7 @@ export default function LandingPage({ className, section, errorCode }: LandingPa
         <PaddedBlock>{renderSection(section)}</PaddedBlock>
         <VerticalSpace height="30px" />
         <FooterPanel />
-        {errorCode && <AcceptInviteErrorDialog errorCode={errorCode} />}
+        {error?.errorcode && <InvitationErrorDialog error={error} />}
       </div>
     </>
   );

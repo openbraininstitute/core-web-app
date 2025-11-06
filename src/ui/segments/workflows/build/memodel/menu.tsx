@@ -161,7 +161,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
           <div className="flex items-center justify-center gap-3">
             {!sessionValue?.name && (
               <Tooltip>
-                <TooltipTrigger>
+                <TooltipTrigger asChild>
                   <WarningFilled className="text-sm text-yellow-300" />
                 </TooltipTrigger>
                 <TooltipContent

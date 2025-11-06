@@ -35,16 +35,15 @@ export function ProjectCard(): ReactElement {
   const [form] = Form.useForm<ProjectFormValues>();
 
   const { data: result, refetch } = useSuspenseQuery({
-    queryKey: keyBuilder.getOne({ virtualLabId, projectId }),
+    queryKey: keyBuilder.getWorkspace({ virtualLabId, projectId }),
     queryFn: () => getProject({ virtualLabId, projectId }),
   });
 
-  const { isAdmin } = useUserPermissions({ virtualLabId, projectId });
+  const { isVirtualLabAdmin } = useUserPermissions({ virtualLabId, projectId });
   const [isEditing, setIsEditing] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
   const nameRef = useRef<any>(null);
 
-  // Animation for name character counter
   const maxNameLength = 60;
   const nameValue = Form.useWatch('name', form) || '';
   const nameCharactersRemaining = maxNameLength - nameValue.length;
@@ -68,7 +67,6 @@ export function ProjectCard(): ReactElement {
     );
   }, [animateName, nameCharactersRemaining, isEditing]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Animation for description character counter
   const maxDescriptionLength = 600;
   const descriptionValue = Form.useWatch('description', form) || '';
   const descriptionCharactersRemaining = maxDescriptionLength - descriptionValue.length;
@@ -176,7 +174,7 @@ export function ProjectCard(): ReactElement {
             </Button>
           </>
         ) : (
-          isAdmin && (
+          isVirtualLabAdmin && (
             <Button
               rounded
               size="md"
@@ -185,7 +183,7 @@ export function ProjectCard(): ReactElement {
               onClick={handleEdit}
               className="transform bg-white/20 transition-all duration-200 hover:scale-105 hover:bg-white/30"
               aria-label="edit project details"
-              disabled={!isAdmin}
+              disabled={!isVirtualLabAdmin}
             >
               <EditOutlined className="text-white" />
             </Button>

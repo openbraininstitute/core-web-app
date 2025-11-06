@@ -1,9 +1,10 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { getEModel, getEModels } from '@/api/entitycore/queries/model/e-model';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
-import { getCellMorphology } from '@/api/entitycore/queries';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+import { getCellMorphology } from '@/api/entitycore/queries';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
@@ -34,7 +35,11 @@ export const Emodel: EntityCoreTypeConfig<IEModel> = {
   asset: {
     extension: undefined,
   },
-  detailViewSections: ['overview', 'analysis', 'configuration'],
+  detailViewSections: [
+    DetailViewSectionsDict.Overview,
+    DetailViewSectionsDict.Analysis,
+    DetailViewSectionsDict.Configuration,
+  ],
   isDownloadable: true,
   isBookmarkable: true,
   isCopyable: true,

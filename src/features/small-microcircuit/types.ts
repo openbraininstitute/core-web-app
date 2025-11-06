@@ -22,6 +22,9 @@ export type JSONSchema = {
   examples?: any[];
   [key: string]: any;
   singular_name?: string;
+  is_block_reference?: boolean;
+  default_block_reference_labels: Record<string, string>;
+  reference_type?: string;
 };
 
 export interface AtomsMap {

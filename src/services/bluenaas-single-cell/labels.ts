@@ -38,7 +38,7 @@ interface LabelsOptions {
  *
  * For better clarity and to avoid labels overlapping, we divide the screen
  * in four parts: topLeft, topRight, bottomLeft and bottomRight.
- * Then we distribute the lables in these regions evenly.
+ * Then we distribute the labels in these regions evenly.
  */
 export class Labels {
   private _canvas: HTMLCanvasElement | null = null;

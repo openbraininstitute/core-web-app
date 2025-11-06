@@ -3,15 +3,13 @@
 import { ReactNode, useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
 
-import { BrainAtlasViewerGltf } from './brain-atlas-viewer-gltf';
-
-import FullScreen from '@/features/brain-atlas-viewer/full-screen';
-import Loader from '@/components/loader';
+import { BrainAtlasViewerGltf } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf';
+import { FullScreen } from '@/features/brain-atlas-viewer/full-screen';
+import { Loader } from '@/components/loader';
 
 export function AtlasViewer({ dataKey, children }: { dataKey: string; children?: ReactNode }) {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-
   const handleFullScreenToggle = () => {
     setIsFullScreen((prev) => !prev);
   };

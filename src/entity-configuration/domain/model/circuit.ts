@@ -1,11 +1,15 @@
-import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
+import { includes, without } from 'es-toolkit/compat';
+
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
+import type { ICircuit, TCircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export const Circuit: EntityCoreTypeConfig<ICircuit> = {
   group: EntityTypeGroup.Models,
@@ -21,8 +25,15 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
       list: (...params) => {
         return getCircuits({
           ...params,
+          context: params[0].context,
           withFacets: params[0].withFacets,
-          filters: { ...params[0].filters },
+          filters: {
+            scale__in: without(
+              Object.values(CircuitScaleDictionary),
+              CircuitScaleDictionary.Single
+            ),
+            ...params[0].filters,
+          },
         });
       },
       one: getCircuit,
@@ -35,10 +46,15 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
   asset: {
     extension: 'application/json',
   },
-
-  detailViewSections: ['overview', 'analysis', 'related-publications', 'related-artifacts'],
+  detailViewSections: [
+    DetailViewSectionsDict.Overview,
+    DetailViewSectionsDict.Analysis,
+    DetailViewSectionsDict.RelatedPublications,
+    DetailViewSectionsDict.RelatedArtifacts,
+  ],
   isBookmarkable: false,
   isDownloadable: true,
   isCopyable: true,
-  isSimulatable: (scale) => ['small', 'pair'].includes(scale),
+  isSimulatable: (scale: TCircuitScaleDictionary) =>
+    includes([CircuitScaleDictionary.SmallMicrocircuit, CircuitScaleDictionary.PairNeuron], scale),
 } as const;

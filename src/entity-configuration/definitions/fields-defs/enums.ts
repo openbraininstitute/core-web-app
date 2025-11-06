@@ -53,6 +53,7 @@ export enum EntityCoreFields {
   EModelScore = 'eModelScore',
   EModelResponse = 'eModelResponse',
   MEModelMorphologyPreview = 'meModelMorphologyPreview',
+  MEModelName = 'meModelName',
   MEModelTracePreview = 'meModelTracePreview',
   MEModelValidationStatus = 'validation_status',
   SynaptomeUsedMEModelName = 'me_model',
@@ -87,6 +88,8 @@ export enum EntityCoreFields {
   CellLine = 'cell_line',
   IonChannel = 'ion_channel',
   ICMThumbnail = 'icm_thumbnail',
+  NotebookScale = 'notebook_scale',
+  NotebookActions = 'notebook_actions',
 }
 
 export type EntityCoreFieldsValue = `${EntityCoreFields}`;

@@ -42,7 +42,7 @@ const links = [
 export function LeftMenu({ className }: Props) {
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
-  const { isAdmin } = useUserRole({ virtualLabId, projectId });
+  const { isVirtualLabAdmin: isAdmin } = useUserRole({ virtualLabId, projectId });
   const pathname = usePathname();
   const activeSection = getActiveSection(pathname);
 

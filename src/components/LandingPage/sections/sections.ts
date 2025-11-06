@@ -11,6 +11,7 @@ export enum EnumSection {
   Team,
   Resources,
   Sfn2025,
+  Gallery,
   Contact,
   Story,
 }

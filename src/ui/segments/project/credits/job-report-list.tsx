@@ -18,6 +18,8 @@ const { Column } = Table;
 
 const activityLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.Notebook]: 'Notebook',
+  [ServiceSubtype.NeuronMeshSkeletonization]: 'Build',
+  [ServiceSubtype.IonChannelBuild]: 'Build',
   [ServiceSubtype.SingleCellBuild]: 'Build',
   [ServiceSubtype.SingleCellSim]: 'Simulate',
   [ServiceSubtype.SmallCircuitSim]: 'Simulate',
@@ -28,6 +30,14 @@ const activityLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.MlRetrieval]: 'ML',
   [ServiceSubtype.MlLlm]: 'ML',
   [ServiceSubtype.MlRag]: 'ML',
+
+  [ServiceSubtype.SingleCellSimulation]: 'Simulate',
+  [ServiceSubtype.PairCellSimulation]: 'Simulate',
+  [ServiceSubtype.SmallMicrocircuitSimulation]: 'Simulate',
+  [ServiceSubtype.MicrocircuitSimulation]: 'Simulate',
+  [ServiceSubtype.RegionSimulation]: 'Simulate',
+  [ServiceSubtype.SystemSimulation]: 'Simulate',
+  [ServiceSubtype.WholeBrainSimulation]: 'Simulate',
 };
 
 function activityRenderFn(subtype: ServiceSubtype) {
@@ -36,6 +46,8 @@ function activityRenderFn(subtype: ServiceSubtype) {
 
 const scaleLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.Notebook]: 'Notebook',
+  [ServiceSubtype.NeuronMeshSkeletonization]: 'Neuron morphology',
+  [ServiceSubtype.IonChannelBuild]: 'Ion channel',
   [ServiceSubtype.SingleCellBuild]: 'Single cell',
   [ServiceSubtype.SingleCellSim]: 'Single cell',
   [ServiceSubtype.SmallCircuitSim]: 'Small circuit',
@@ -46,6 +58,19 @@ const scaleLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.MlRetrieval]: 'ML',
   [ServiceSubtype.MlLlm]: 'AI Assistant',
   [ServiceSubtype.MlRag]: 'ML',
+
+  [ServiceSubtype.SingleCellSimulation]: 'Single: Single neuron + extrinsic connectivity',
+  [ServiceSubtype.PairCellSimulation]:
+    'Pair: Two connected neurons + intrinsic connectivity + extrinsic connectivity',
+  [ServiceSubtype.SmallMicrocircuitSimulation]:
+    'Small: Microcircuit (3-20 neurons) + intrinsic connectivity + extrinsic connectivity',
+  [ServiceSubtype.MicrocircuitSimulation]:
+    'Microcircuit: Any circuit larger than 20 neurons but not being a region, system, or whole-brain circuit',
+  [ServiceSubtype.RegionSimulation]:
+    'Region: Atlas-based continuous volume of an entire brain region or a set of continuous sub-regions',
+  [ServiceSubtype.SystemSimulation]:
+    'System: Non-continuous circuit consisting of at least two microcircuits/regions that are connected by inter-region connectivity',
+  [ServiceSubtype.WholeBrainSimulation]: 'Circuit representing an entire brain',
 };
 
 function scaleRenderFn(subtype: ServiceSubtype) {

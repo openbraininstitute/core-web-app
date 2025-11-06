@@ -1,4 +1,4 @@
-interface ApiErrorCause {
+export interface ApiErrorCause {
   code?: string;
   message?: string;
   status?: number;

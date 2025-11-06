@@ -2,7 +2,8 @@
 
 import type { ReactNode } from 'react';
 import dynamic from 'next/dynamic';
-import Loader from '@/components/loader';
+
+import { Loader } from '@/components/loader';
 
 const AtlasViewer = dynamic(() => import('@/features/brain-atlas-viewer'), {
   ssr: false,

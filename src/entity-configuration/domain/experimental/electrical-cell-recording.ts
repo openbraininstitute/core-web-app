@@ -1,5 +1,6 @@
 import { ElectricalRecordingOriginDictionary } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
@@ -40,7 +41,7 @@ export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecord
   asset: {
     extension: 'application/nwb',
   },
-  detailViewSections: ['overview'],
+  detailViewSections: [DetailViewSectionsDict.Overview],
   isDownloadable: true,
   isBookmarkable: true,
   isCopyable: true,

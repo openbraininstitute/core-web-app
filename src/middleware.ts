@@ -21,6 +21,8 @@ const FREE_ACCESS_PAGES = [
   '/the-real-digital-brain-story',
   '/app/documentation',
   '/app/documentation/*',
+  '/gallery',
+  '/gallery/*',
 
   '/app/log-in',
 

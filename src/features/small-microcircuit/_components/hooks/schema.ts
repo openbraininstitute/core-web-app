@@ -1,29 +1,46 @@
-import React from 'react';
-import { atom } from 'jotai';
-import { NotificationInstance } from 'antd/es/notification/interface';
-
 import $RefParser from '@apidevtools/json-schema-ref-parser';
+import { NotificationInstance } from 'antd/es/notification/interface';
+import { atom } from 'jotai';
+import React, { useState } from 'react';
+import { match } from 'ts-pattern';
 
-import { AtomsMap, JSONSchema } from '../../types';
-import { ConfigValue, Config } from '../components';
-import { isPlainObject, isAtom } from '../utils';
+import { EntityTypeDict, IMEModel } from '@/api/entitycore/types';
+import { CircuitScaleDictionary, ICircuit } from '@/api/entitycore/types/entities/circuit';
+
+import { Config, ConfigValue } from '@/features/small-microcircuit/_components/components';
+import { isAtom, isPlainObject } from '@/features/small-microcircuit/_components/utils';
+import { AtomsMap, JSONSchema } from '@/features/small-microcircuit/types';
+
 import { assertErrorMessage } from '@/util/utils';
 
 export function useObioneJsonSchema(
-  circuitId: string,
+  model: ICircuit | IMEModel,
   notification: NotificationInstance,
-  setSchema: React.Dispatch<React.SetStateAction<JSONSchema | null>>,
   setAtomsMap: (atomsMap: AtomsMap) => void,
   initialConfig?: Config
 ) {
+  const [schema, setSchema] = useState<JSONSchema | null>(null);
+
   React.useEffect(() => {
     async function fetchSpec() {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_OBI_ONE_URL}/openapi.json`);
         const json = await res.json();
         const dereferenced = await $RefParser.dereference(json);
+
+        const schemaName = match(model)
+          .with({ type: EntityTypeDict.Memodel }, () => 'MEModelSimulationScanConfig')
+          .with(
+            { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single },
+            () => 'MEModelWithSynapsesCircuitSimulationScanConfig'
+          )
+          .with({ type: EntityTypeDict.Circuit }, () => 'CircuitSimulationScanConfig')
+          .otherwise(() => {
+            throw new Error(`Unsupported entity type: ${model.type}`);
+          });
+
         // @ts-ignore
-        const theSchema = dereferenced.components.schemas.SimulationsForm as JSONSchema;
+        const theSchema = dereferenced.components.schemas[schemaName] as JSONSchema;
         if (!theSchema.properties) return;
 
         setSchema(theSchema);
@@ -67,10 +84,22 @@ export function useObioneJsonSchema(
                   else initial[subkey] = subValue.default ?? null;
                 });
 
+              const formModelType = match(model)
+                .with({ type: EntityTypeDict.Memodel }, () => 'MEModelFromID')
+                .with(
+                  { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single },
+                  () => 'MEModelWithSynapsesCircuitFromID'
+                )
+                .with({ type: EntityTypeDict.Circuit }, () => 'CircuitFromID')
+
+                .otherwise(() => {
+                  throw new Error(`Unsupported entity type: ${model.type}`);
+                });
+
               if (k === 'initialize') {
                 initial.circuit = {
-                  type: 'CircuitFromID',
-                  id_str: circuitId,
+                  type: formModelType,
+                  id_str: model.id,
                 };
               }
 
@@ -88,7 +117,26 @@ export function useObioneJsonSchema(
     }
 
     fetchSpec();
-  }, [circuitId, notification, setAtomsMap, setSchema, initialConfig]);
+  }, [model, notification, setAtomsMap, setSchema, initialConfig]);
+
+  const referenceTypesToConfigKeys: Record<string, string> = {};
+  const referenceTypesToTitles: Record<string, string> = {};
+
+  if (schema?.properties) {
+    Object.entries(schema?.properties).forEach(([k, v]) => {
+      if (v.reference_type) {
+        referenceTypesToConfigKeys[v.reference_type] = k;
+        referenceTypesToTitles[v.reference_type] = v.singular_name ?? '';
+      }
+    });
+  }
+
+  return {
+    schema,
+    refLabels: schema?.default_block_reference_labels,
+    referenceTypesToConfigKeys,
+    referenceTypesToTitles,
+  };
 }
 
 export function isRootCategory(schema: JSONSchema, key: string) {

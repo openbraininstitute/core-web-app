@@ -1,5 +1,6 @@
 import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
@@ -37,7 +38,7 @@ export const CellMorphology: EntityCoreTypeConfig<ICellMorphology | ICellMorphol
     extension: 'application/swc',
   },
   viewDefinition: ViewsDefinitionRegistry[ExtendedEntitiesTypeDict.CellMorphology],
-  detailViewSections: ['overview'],
+  detailViewSections: [DetailViewSectionsDict.Overview],
   isDownloadable: true,
   isBookmarkable: true,
   isCopyable: true,

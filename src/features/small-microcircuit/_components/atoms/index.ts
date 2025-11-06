@@ -1,13 +1,16 @@
+import isEqual from 'es-toolkit/compat/isEqual';
 import { atom } from 'jotai';
 import { atomWithRefresh } from 'jotai/utils';
-import isEqual from 'es-toolkit/compat/isEqual';
+import { match } from 'ts-pattern';
 
+import { getMEModel } from '@/api/entitycore/queries';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { getEntity } from '@/api/entitycore/queries/general/entity';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulationResult } from '@/api/entitycore/queries/simulation/circuit-simulation-result';
-import { TEntityTypeDict } from '@/api/entitycore/types';
+import { EntityTypeDict, IMEModel, TEntityTypeDict } from '@/api/entitycore/types';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import {
@@ -15,11 +18,11 @@ import {
   ICircuitSimulationExecution,
 } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
+import { resolveExecutions } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { getLatestSimExecStatus } from '@/features/small-microcircuit/_components/utils';
 import { SimExecStatusMap } from '@/features/small-microcircuit/types';
 import { WorkspaceContext } from '@/types/common';
 import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';
-import { resolveExecutions } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 
 const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
   ({ simulationId, context }: { simulationId: string; context: WorkspaceContext }) =>
@@ -65,7 +68,7 @@ export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
 
     const localStatusMapAtom = atom<SimExecStatusMap>(new Map());
 
-    return atom<Promise<SimExecStatusMap>, [SimExecStatusMap], void>(
+    return atom<Promise<SimExecStatusMap>, [string, CircuitSimulationExecutionStatus], void>(
       async (get) => {
         const remoteStatusMap = await get(simExecRemoteStatusMapAtom);
         const localStatusMap = get(localStatusMapAtom);
@@ -80,23 +83,42 @@ export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
             remoteStatus && localStatus
               ? getLatestSimExecStatus(remoteStatus, localStatus)
               : (localStatus ?? remoteStatus ?? CircuitSimulationExecutionStatus.CREATED);
+
           return map.set(simId, status);
         }, new Map());
 
         return statusMap;
       },
-      (get, set, newStatusMap) => set(localStatusMapAtom, new Map(newStatusMap))
+      (get, set, simId, status) => {
+        const newStatusMap = new Map(get(localStatusMapAtom)).set(
+          simId,
+          status as CircuitSimulationExecutionStatus
+        );
+        set(localStatusMapAtom, newStatusMap);
+      }
     );
   },
   {
-    ttl: 120000, // 2 minutes
+    ttl: 2 * 60 * 1000, // 2 minutes
     areEqual: isEqual,
   }
 );
 
 export const simResultBySimIdAtomFamily = readAtomFamilyWithExpiration(
-  ({ simulationId, context }: { simulationId: string; context: WorkspaceContext }) =>
-    atom<Promise<ICircuitSimulationResult>>(async (get) => {
+  ({
+    simulationId,
+    context,
+    enabled = true,
+  }: {
+    simulationId: string;
+    context: WorkspaceContext;
+    enabled?: boolean;
+  }) =>
+    atom<Promise<ICircuitSimulationResult | null>>(async (get) => {
+      if (!enabled) {
+        return null;
+      }
+
       const execution = await get(simExecBySimIdAtomFamily({ simulationId, context }));
 
       if (!execution?.generated?.[0]) {
@@ -118,7 +140,10 @@ export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
       const res = await getCircuitSimulations({ filters, context });
 
       const simulations = res.data;
-      const sortedSimulations = simulations.sort((a, b) => a.name.localeCompare(b.name));
+
+      // To correctly sort simulations by name which might contain a simulation index.
+      const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+      const sortedSimulations = simulations.sort((a, b) => collator.compare(a.name, b.name));
 
       return sortedSimulations;
     }),
@@ -128,10 +153,24 @@ export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
   }
 );
 
-export const circuitAtomFamily = readAtomFamilyWithExpiration(
-  ({ circuitId, context }: { circuitId: string; context: WorkspaceContext }) =>
-    atom<Promise<ICircuit>>(async () => {
-      return getCircuit({ id: circuitId, context });
+// TODO Refactor to use tanstack query
+export const modelAtomFamily = readAtomFamilyWithExpiration(
+  ({ id, context }: { id: string; context: WorkspaceContext }) =>
+    atom<Promise<ICircuit | IMEModel>>(async () => {
+      if (!id) {
+        throw new Error(`No model ID provided`);
+      }
+
+      const params = { id, context };
+
+      const modelEntityBase = await getEntity(params);
+
+      return match(modelEntityBase.type)
+        .with(EntityTypeDict.Circuit, () => getCircuit(params))
+        .with(EntityTypeDict.Memodel, () => getMEModel(params))
+        .otherwise((entityType) => {
+          throw new Error(`Unsupported model entity type ${entityType}`);
+        });
     }),
   {
     ttl: 120000, // 2 minutes
@@ -139,7 +178,7 @@ export const circuitAtomFamily = readAtomFamilyWithExpiration(
   }
 );
 
-export const fileAtomFamily = readAtomFamilyWithExpiration(
+export const jsonFileAtomFamily = readAtomFamilyWithExpiration(
   ({
     id,
     entityId,
@@ -153,7 +192,7 @@ export const fileAtomFamily = readAtomFamilyWithExpiration(
     assetPath?: string;
     context: WorkspaceContext;
   }) =>
-    atom<Promise<ICircuit>>(async () => {
+    atom<Promise<any>>(async () => {
       const res = await downloadAsset({
         ctx: context,
         entityId,

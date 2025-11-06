@@ -16,15 +16,17 @@ import { ProgressBarProvider } from '@/app/app/progress-provider';
 import { QueryProvider } from '@/query-provider/client';
 import { SessionOrNull } from '@/hooks/session';
 import { AtomProvider } from '@/state/state';
+import { FeatureFlags, FlagsProvider } from '@/features/feature-flags';
 
 import 'jotai-devtools/styles.css';
 
 type ProvidersProps = {
   children: ReactNode;
   session: SessionOrNull;
+  flags: FeatureFlags;
 };
 
-export function Providers({ children, session }: ProvidersProps) {
+export function Providers({ children, session, flags }: ProvidersProps) {
   return (
     <ConfigProvider theme={commonAntdTheme}>
       <App>
@@ -39,7 +41,9 @@ export function Providers({ children, session }: ProvidersProps) {
                   <ThemeProvider>
                     <SessionProvider session={session} refetchInterval={2 * 60}>
                       <SessionStateProvider>
-                        <ProgressBarProvider>{children}</ProgressBarProvider>
+                        <FlagsProvider flags={flags}>
+                          <ProgressBarProvider>{children}</ProgressBarProvider>
+                        </FlagsProvider>
                       </SessionStateProvider>
                     </SessionProvider>
                   </ThemeProvider>

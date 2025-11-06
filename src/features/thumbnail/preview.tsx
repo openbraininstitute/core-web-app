@@ -144,14 +144,11 @@ export function PreviewThumbnail({
           />
         )
     )
-    .with({ error: P.nonNullable }, ({ error }) => {
+    .with({ error: P.nonNullable }, () => {
       return (
         <Empty
           key={`thumbnail-error-${resource.id}`}
-          description={
-            (error as { cause?: { message: string; code: string } }).cause?.message ??
-            'No thumbnail available'
-          }
+          description="Thumbnail generation in progress"
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           className={cn(
             `thumbnail-error-${resource.id}`,

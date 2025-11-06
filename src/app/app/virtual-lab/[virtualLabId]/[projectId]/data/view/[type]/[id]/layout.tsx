@@ -1,4 +1,4 @@
-import { snakeCase } from 'es-toolkit/compat';
+import { includes, snakeCase } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
 import { ReactNode } from 'react';
 
@@ -83,7 +83,9 @@ export default async function Layout({
 
   if (
     type === ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation ||
-    type === ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation
+    type === ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation ||
+    type === ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation ||
+    type === ExtendedEntitiesTypeDict.MemodelCircuitSimulation
   ) {
     return (
       <div className="relative ml-5 flex h-full flex-col rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
@@ -93,6 +95,8 @@ export default async function Layout({
       </div>
     );
   }
+
+  if (!entityType.detailViewSections) return null;
 
   return (
     <>
@@ -116,7 +120,10 @@ export default async function Layout({
           </div>
         </div>
       </div>
-      {entityType.extendedType === 'circuit' && <CircuitDownloadPanel />}
+      {includes(
+        [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.MEModelWithSynapses],
+        entityType.extendedType
+      ) && <CircuitDownloadPanel />}
     </>
   );
 }

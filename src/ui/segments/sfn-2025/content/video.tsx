@@ -1,10 +1,13 @@
 'use client';
 
-import { PlayCircleOutlined, SoundFilled, SoundOutlined } from '@ant-design/icons';
+import {
+  FullscreenOutlined,
+  PlayCircleOutlined,
+  SoundFilled,
+  SoundOutlined,
+} from '@ant-design/icons';
 import { motion, useInView } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
-
-import { cn } from '@/utils/css-class';
 
 export default function SFNVideo() {
   const ref = useRef(null);
@@ -42,6 +45,20 @@ export default function SFNVideo() {
     }
   };
 
+  const toggleFullscreen = () => {
+    if (videoRef.current) {
+      if (!document.fullscreenElement) {
+        videoRef.current.requestFullscreen().catch((_error) => {
+          // Fullscreen might not be available
+        });
+      } else {
+        document.exitFullscreen().catch((_error) => {
+          // Exit fullscreen might fail
+        });
+      }
+    }
+  };
+
   const handleVideoClick = () => {
     if (videoRef.current) {
       if (videoRef.current.paused) {
@@ -61,7 +78,7 @@ export default function SFNVideo() {
   };
 
   return (
-    <div ref={ref} className="relative h-full w-full px-8 py-12 md:px-[10vw] md:py-[15vh]">
+    <div ref={ref} className="relative h-full w-full px-8 py-12 md:px-[15vw] md:py-[15vh]">
       <motion.video
         ref={videoRef}
         muted={isMuted}
@@ -95,18 +112,28 @@ export default function SFNVideo() {
         </button>
       )}
 
-      {/* Mute Button */}
-      <button
-        type="button"
-        onClick={toggleMute}
-        className={cn(
-          'bg-opacity-50 hover:bg-opacity-70 absolute top-52 right-[12vw] z-10 flex h-12 w-12 items-center justify-center rounded-full bg-black text-white transition-all',
-          isMuted ? 'Unmute video' : 'Mute video'
-        )}
-        aria-label={isMuted ? 'Unmute video' : 'Mute video'}
-      >
-        {isMuted ? <SoundOutlined className="text-xl" /> : <SoundFilled className="text-xl" />}
-      </button>
+      {/* Control Buttons */}
+      <div className="absolute top-52 right-[17vw] z-10 flex gap-3">
+        {/* Mute Button */}
+        <button
+          type="button"
+          onClick={toggleMute}
+          className="bg-opacity-50 hover:bg-opacity-70 flex h-12 w-12 items-center justify-center rounded-full bg-black text-white transition-all"
+          aria-label={isMuted ? 'Unmute video' : 'Mute video'}
+        >
+          {isMuted ? <SoundOutlined className="text-xl" /> : <SoundFilled className="text-xl" />}
+        </button>
+
+        {/* Fullscreen Button */}
+        <button
+          type="button"
+          onClick={toggleFullscreen}
+          className="bg-opacity-50 hover:bg-opacity-70 flex h-12 w-12 items-center justify-center rounded-full bg-black text-white transition-all"
+          aria-label="Toggle fullscreen"
+        >
+          <FullscreenOutlined className="text-xl" />
+        </button>
+      </div>
     </div>
   );
 }

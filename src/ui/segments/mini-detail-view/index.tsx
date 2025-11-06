@@ -1,6 +1,7 @@
 import { CheckCircleFilled, CloseOutlined, CopyOutlined, LoadingOutlined } from '@ant-design/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import { useMutation } from '@tanstack/react-query';
+import { includes } from 'es-toolkit/compat';
 import { useState, useEffect } from 'react';
 import { match, P } from 'ts-pattern';
 import { useAtom } from 'jotai';
@@ -29,7 +30,6 @@ import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
 import { DownloadIcon } from '@/components/icons/buttons';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { EntityTypeDict } from '@/api/entitycore/types';
 import { Card, CardTitle } from '@/ui/molecules/card';
 import { WorkspaceSection } from '@/constants';
 import { Button } from '@/ui/molecules/button';
@@ -82,12 +82,19 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
     makeSelectEntityClickEvent({ data: null, display: false });
   };
 
+  useEffect(() => {
+    return () => {
+      setMdv(false);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!record) return null;
 
-  const viewConfig = getViewDefinitionByExtendedType(record.type);
+  const viewConfig = getViewDefinitionByExtendedType(dataType ?? record.type);
   const miniConfig = viewConfig?.miniDetailView;
 
   const preview = match({ type: record.type })
+    .with({ type: P.nullish }, () => null)
     .with(
       {
         type: P.union(
@@ -103,6 +110,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
         type: P.union(
           ExtendedEntitiesTypeDict.CellMorphology,
           ExtendedEntitiesTypeDict.ElectricalCellRecording,
+          ExtendedEntitiesTypeDict.IonChannelRecording,
           ExtendedEntitiesTypeDict.Emodel
         ),
       },
@@ -188,7 +196,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
       <ExploreActions record={record} dataType={dataType} />
     ))
     .with({ section: WorkspaceSection.SimulateWorkflow }, () => (
-      <WorkflowSimulateActions record={record} />
+      <WorkflowSimulateActions record={record} dataType={dataType} />
     ))
     .with({ section: WorkspaceSection.BuildWorkflow }, () => (
       <WorkflowBuildActions record={record} />
@@ -315,7 +323,12 @@ function ExploreActions<T extends EntityCoreObjectTypes>({
 
   // const onBookmark = () => saveAsync();
   const onDownload = () => {
-    if (EntityTypeDict.Circuit === record.type) {
+    if (
+      includes(
+        [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.MEModelWithSynapses],
+        dataType
+      )
+    ) {
       setDownloadPanelCircuit(record as ICircuit);
     } else {
       downloadAsync();
@@ -325,7 +338,7 @@ function ExploreActions<T extends EntityCoreObjectTypes>({
   return (
     <div className="sticky bottom-0 mt-auto flex items-center justify-center gap-2 self-end p-4">
       <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger asChild>
           <Button
             rounded
             title="Copy ID"
@@ -387,7 +400,7 @@ function ExploreActions<T extends EntityCoreObjectTypes>({
         </TooltipContent>
       </Tooltip> */}
       <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger asChild>
           <Button
             rounded
             title="download"
@@ -433,7 +446,13 @@ function ExploreActions<T extends EntityCoreObjectTypes>({
   );
 }
 
-function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({ record }: { record: T }) {
+function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({
+  record,
+  dataType,
+}: {
+  record: T;
+  dataType?: TExtendedEntitiesTypeDict;
+}) {
   const { virtualLabId, projectId } = useWorkspace();
 
   return (
@@ -464,6 +483,7 @@ function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({ record }: { 
             query: {
               sessionId: crypto.randomUUID(),
               [PanelQueryParam]: WorkflowSimulatePanels.Configuration,
+              dataType,
             },
           }}
         >

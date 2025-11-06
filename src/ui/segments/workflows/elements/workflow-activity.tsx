@@ -166,11 +166,11 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
   });
 
   const selectedRow = selectedRows.at(0);
-  const configurationLink = entity?.detailViewSections.includes('configuration')
+  const configurationLink = entity?.detailViewSections?.includes('configuration')
     ? `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}/configuration`
     : `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}`;
 
-  const resultsLink = entity?.detailViewSections.includes('results')
+  const resultsLink = entity?.detailViewSections?.includes('results')
     ? `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}/results`
     : `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}`;
 
@@ -327,6 +327,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                       <Link href={configurationLink}>View configuration</Link>
                     </Button>
                     {entityType !== ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation &&
+                      entityType !== ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation &&
                       entityType !== ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation && (
                         <Button
                           rounded

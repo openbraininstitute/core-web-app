@@ -69,7 +69,7 @@ function EditableName({
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const { error: notifyError, success: notifySuccess } = useAppNotification();
   const queryClient = useQueryClient();
-  const { isAdmin } = useUserRole({ virtualLabId });
+  const { isVirtualLabAdmin: isAdmin } = useUserRole({ virtualLabId });
 
   const updateMutation = useMutation({
     mutationFn: async (name: string) => {
@@ -387,17 +387,14 @@ function Header({
 const tabsConfigItems: Array<{
   key: 'team' | 'credits';
   title: string;
-  position: 'first' | 'middle' | 'last';
 }> = [
   {
     key: 'team',
     title: 'Members',
-    position: 'first',
   },
   {
     key: 'credits',
     title: 'Credits',
-    position: 'last',
   },
 ];
 
@@ -411,7 +408,7 @@ function Tabs({ id }: { id?: string | null }) {
     shallow: true,
     clearOnDefault: true,
   });
-  const { isAdmin } = useUserRole({ virtualLabId: id! });
+  const { isVirtualLabAdmin: isAdmin } = useUserRole({ virtualLabId: id! });
   const [popoverOpen, setIsPopoverOpen] = useState(false);
 
   const onOpenChange = (visible: boolean) => {
@@ -438,13 +435,12 @@ function Tabs({ id }: { id?: string | null }) {
         <PillTabsTrigger
           key="team"
           value="team"
-          position="first"
           className={cn(
             'hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:text-primary-9 h-10 px-14! py-3 text-base text-white select-none data-[state=active]:bg-white data-[state=active]:font-bold',
             { 'h-12': breakpoint === 'xl' }
           )}
         >
-          Members
+          Administrators
         </PillTabsTrigger>
         <CustomPopover
           when={['hover']}
@@ -456,7 +452,6 @@ function Tabs({ id }: { id?: string | null }) {
           <PillTabsTrigger
             key="credits"
             value="credits"
-            position="last"
             className={cn(
               'hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:text-primary-9 h-10 px-14! py-3 text-base text-white select-none data-[state=active]:bg-white data-[state=active]:font-bold',
               { 'h-12': breakpoint === 'xl', 'cursor-not-allowed opacity-50': !isAdmin }
@@ -479,10 +474,7 @@ function Content({ id }: { id?: string | null }) {
     clearOnDefault: true,
   });
 
-  if (!id) {
-    return null;
-  }
-
+  if (!id) return null;
   return match(activeTab)
     .with(null, () => <TeamTable virtualLabId={id} />)
     .with('team', () => <TeamTable virtualLabId={id} />)

@@ -1,8 +1,6 @@
-import { Session } from 'next-auth';
-import { notebookSvcBaseUrl } from '@/config';
-import { Notebook } from '@/util/virtual-lab/types';
 import { assertApiResponse } from '@/util/utils';
 import authFetch, { getSession } from '@/authFetch';
+import { notebookSvcBaseUrl } from '@/config';
 
 export type NotebookStartResponse = {
   message: string;
@@ -10,18 +8,45 @@ export type NotebookStartResponse = {
 };
 
 export interface NotebookStartRequest {
-  notebook: Notebook;
+  analysis_notebook_template_id: string;
+  analysis_notebook_template_filename: string;
   vlabId: string;
   projectId: string;
-  session: Session;
+  session: {
+    idToken: string;
+    accessToken: string;
+    user: {
+      email: string;
+      id: string;
+      name: string;
+      username: string;
+    };
+  };
+}
+
+export interface EmptyNotebookStartRequest {
+  vlabId: string;
+  projectId: string;
+  session: {
+    idToken: string;
+    accessToken: string;
+    user: {
+      email: string;
+      id: string;
+      name: string;
+      username: string;
+    };
+  };
 }
 
 export async function startNotebook(
-  notebook: Notebook,
+  id: string,
+  filename: string,
   vlabId: string,
   projectId: string
 ): Promise<NotebookStartResponse> {
   const session = await getSession();
+
   if (!session) {
     throw Error('no session found', {
       cause: {
@@ -30,13 +55,89 @@ export async function startNotebook(
       },
     });
   }
+
   const request: NotebookStartRequest = {
-    notebook,
+    analysis_notebook_template_id: id,
+    analysis_notebook_template_filename: filename,
     vlabId,
     projectId,
-    session,
+    session: {
+      idToken: session.idToken,
+      accessToken: session.accessToken,
+      user: {
+        email: session.user.email ?? '',
+        id: session.user.id,
+        name: session.user.name ?? '',
+        username: session.user.username,
+      },
+    },
   };
-  const res = await authFetch(`${notebookSvcBaseUrl}/notebook/start`, {
+  const res = await authFetch(`${notebookSvcBaseUrl}/analysis_notebook_template/start`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
+
+  if (!res.ok) {
+    if (res.status === 460) {
+      throw Error('AccountingReservationError', {
+        cause: {
+          error_code: 'ACCOUNTING_RESERVATION_ERROR',
+          hint: 'No reservation could be made in the accounting service',
+        },
+      });
+    }
+    if (res.status === 461) {
+      throw Error('InsufficientFundsError', {
+        cause: {
+          error_code: 'INSUFFICIENT_FUNDS_ERROR',
+          hint: 'Not enough credits to run the notebook',
+        },
+      });
+    }
+    if (res.status === 462) {
+      throw Error('JupyterError', {
+        cause: {
+          error_code: 'JUPYTER_ERROR',
+          hint: 'The notebook could not be launched in Jupyter',
+        },
+      });
+    }
+  }
+
+  return assertApiResponse(res);
+}
+
+export async function startEmptyNotebook(
+  vlabId: string,
+  projectId: string
+): Promise<NotebookStartResponse> {
+  const session = await getSession();
+
+  if (!session) {
+    throw Error('no session found', {
+      cause: {
+        error_code: 'SESSION_NOT_FOUND',
+        hint: 'You need to be logged in to start a notebook',
+      },
+    });
+  }
+
+  const request = {
+    vlabId,
+    projectId,
+    session: {
+      idToken: session.idToken,
+      accessToken: session.accessToken,
+      user: {
+        email: session.user.email ?? '',
+        id: session.user.id,
+        name: session.user.name ?? '',
+        username: session.user.username,
+      },
+    },
+  };
+  const res = await authFetch(`${notebookSvcBaseUrl}/empty/start`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),

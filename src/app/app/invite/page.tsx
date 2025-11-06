@@ -1,12 +1,46 @@
 import { ErrorBoundary } from 'react-error-boundary';
+import { redirect } from 'next/navigation';
 
-import SimpleErrorComponent from '@/components/GenericErrorFallback';
-import InviteLoader from '@/components/Invites';
+import { ErrorComponent as SimpleErrorComponent } from '@/components/GenericErrorFallback';
+import { getInviteContent } from '@/api/virtual-lab-svc/queries/invite';
+import { InvitationProcessing } from '@/ui/segments/invites';
+import { getErrorUrl } from '@/ui/segments/invites/helpers';
+import { ServerSideComponentProp } from '@/types/common';
+import { ApiErrorCause } from '@/api/error';
+import { getSession } from '@/authFetch';
+import { tryCatch } from '@/api/utils';
 
-export default function InvitePage() {
+export default async function InvitePage({
+  searchParams,
+}: ServerSideComponentProp<null, { token: string | null }>) {
+  const session = await getSession();
+  const params = await searchParams;
+  const { token } = params;
+  if (!session?.accessToken || !token) {
+    redirect(
+      getErrorUrl({
+        error: null,
+        accessToken: session?.accessToken,
+        inviteToken: token,
+      })
+    );
+  }
+
+  const { data, error } = await tryCatch(getInviteContent({ token }));
+
+  if (error) {
+    return redirect(
+      getErrorUrl({
+        error: error.cause as ApiErrorCause,
+        accessToken: session?.accessToken,
+        inviteToken: token,
+      })
+    );
+  }
+
   return (
     <ErrorBoundary FallbackComponent={SimpleErrorComponent}>
-      <InviteLoader />
+      <InvitationProcessing data={data} />
     </ErrorBoundary>
   );
 }

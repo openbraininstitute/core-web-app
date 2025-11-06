@@ -1,4 +1,4 @@
-import { ElectricalRecordingOrigin, IRecordingFilter } from './electrical-cell-recording';
+import { IRecordingFilter } from './electrical-cell-recording';
 
 import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type {
@@ -43,15 +43,6 @@ export const RecordingTypeDictionary = Object.fromEntries(
   Object.entries(RecordingType).map(([name, value]) => [name, value.key])
 ) as {
   [K in keyof typeof RecordingType]: (typeof RecordingType)[K]['key'];
-};
-
-export type TRecordingTypeDictionary =
-  (typeof RecordingTypeDictionary)[keyof typeof RecordingTypeDictionary];
-
-export const ElectricalRecordingOriginDictionary = Object.fromEntries(
-  Object.entries(ElectricalRecordingOrigin).map(([name, value]) => [name, value.key])
-) as {
-  [K in keyof typeof ElectricalRecordingOrigin]: (typeof ElectricalRecordingOrigin)[K]['key'];
 };
 
 export type IonChannelRecordingFilter = Partial<

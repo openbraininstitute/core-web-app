@@ -23,7 +23,7 @@ export function CreditsManagement({
   onManageProjectCreditsClick,
 }: Props) {
   const [pagination, setPagination] = useState({ page: 1, pageSize: 5 });
-  const { isAdmin } = useUserRole({ virtualLabId });
+  const { isVirtualLabAdmin: isAdmin } = useUserRole({ virtualLabId });
 
   const { balanceMap, virtualLabBalance, projects, isLoading } = useQueries({
     queries: [

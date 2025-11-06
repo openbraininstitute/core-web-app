@@ -1,20 +1,13 @@
 'use client';
 
+import { ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DownOutlined, PlusOutlined, RightOutlined } from '@ant-design/icons';
-import { useState, useRef, useEffect, ComponentProps, useMemo, useCallback } from 'react';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { usePathname, useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
-import compact from 'es-toolkit/compat/compact';
-import Link from 'next/link';
+import { compact } from 'es-toolkit/compat';
 
-import {
-  makeTriggerWorkspaceConfigurationClickEvent,
-  type TTriggerWorkspaceConfigurationClickEvent,
-  useWorkspaceConfigurationClickEvent,
-  WorkspaceActions,
-} from '@/ui/segments/workspaces/space-manager/event';
 import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscription';
 import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
@@ -26,6 +19,12 @@ import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import { UserFilled } from '@/components/icons/buttons';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import {
+  makeTriggerWorkspaceConfigurationClickEvent,
+  type TTriggerWorkspaceConfigurationClickEvent,
+  useWorkspaceConfigurationClickEvent,
+  WorkspaceActions,
+} from '@/ui/segments/workspaces/space-manager/event';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
@@ -341,9 +340,6 @@ export function SpaceSwitcher({ className }: Props) {
                 >
                   <ProfileButton username={username} onProfileClick={onProfileClick} />
                   <div className="ml-2 flex flex-shrink-0 items-center gap-2">
-                    <Link href="/app/log-out" className="hover:underline">
-                      Logout
-                    </Link>
                     <motion.div
                       className="hover:bg-neutral-2/50 group flex size-8 items-center justify-center rounded-full"
                       animate={{ rotate: isExpanded ? 180 : 0 }}

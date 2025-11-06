@@ -1,0 +1,47 @@
+.main {
+  label {
+    transition:
+      transform 0.2s,
+      opacity 0.5s;
+    border: none;
+    opacity: 0.3;
+
+    &.selected {
+      opacity: 1;
+      outline: 2px solid #000;
+      outline-offset: 0;
+
+      &:hover {
+        transform: scale(1);
+      }
+    }
+
+    &:hover {
+      transform: scale(1.1);
+      opacity: 1;
+    }
+  }
+}
+
+.main.selectionOff.previewOff {
+  label {
+    opacity: 1;
+  }
+}
+
+.flex {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-end;
+  gap: 1em;
+
+  > * {
+    flex: 0 0 auto;
+  }
+
+  > div:first-child {
+    flex: 1 1 auto;
+  }
+}
