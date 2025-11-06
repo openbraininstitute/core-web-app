@@ -1,8 +1,9 @@
 'use client';
 
-import { CloseOutlined, SwapOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, CloseOutlined, SwapOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { match } from 'ts-pattern';
 
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -14,9 +15,11 @@ import {
   ManageCreditsStepHandle,
 } from '@/ui/segments/virtual-lab-settings/elements/manage-credits';
 import {
+  PaymentModeSelection,
   PurchaseModeDictionary,
   type TPurchaseModeDictionary,
 } from '@/ui/segments/virtual-lab-settings/elements/payment-mode-selection';
+import { PromotionCode } from '@/ui/segments/virtual-lab-settings/elements/promotion-code-form';
 import { StripePaymentFlow } from '@/ui/segments/virtual-lab-settings/elements/stripe-payment';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
@@ -26,17 +29,78 @@ type Props = {
   onClose: () => void;
 };
 
-function BuyCreditsTab({ virtualLabId, onClose }: { virtualLabId: string; onClose: () => void }) {
-  const handleModeChange = (mode: TPurchaseModeDictionary) => {
+function BuyCreditsTab({
+  virtualLabId,
+  onClose,
+  mode,
+  onModeChange,
+}: {
+  virtualLabId: string;
+  onClose: () => void;
+  mode: TPurchaseModeDictionary;
+  onModeChange: (mode: TPurchaseModeDictionary) => void;
+}) {
+  const handleModeChange = (newMode: TPurchaseModeDictionary) => {
     // When user goes back to selection (either from cancel or after successful payment), close the modal
-    if (mode === PurchaseModeDictionary.Selection) {
+    if (newMode === PurchaseModeDictionary.Selection) {
       onClose();
+    } else {
+      onModeChange(newMode);
     }
   };
 
+  const handleBackToSelection = () => {
+    // Directly set mode to Selection without triggering close
+    onModeChange(PurchaseModeDictionary.Selection);
+  };
+
+  // Override handleModeChange to prevent closing when going back via back button
+  // Only close when coming from StripePaymentFlow or PromotionCode components
+  const handleModeChangeFromComponents = (newMode: TPurchaseModeDictionary) => {
+    // When user goes back to selection from components (cancel or success), close the modal
+    if (newMode === PurchaseModeDictionary.Selection) {
+      onClose();
+    } else {
+      onModeChange(newMode);
+    }
+  };
+
+  const showBackButton =
+    mode === PurchaseModeDictionary.Buy || mode === PurchaseModeDictionary.Promo;
+
+  const content = match({ mode })
+    .with({ mode: PurchaseModeDictionary.Selection }, () => (
+      <PaymentModeSelection virtualLabId={virtualLabId} onModeChange={handleModeChange} />
+    ))
+    .with({ mode: PurchaseModeDictionary.Buy }, () => (
+      <StripePaymentFlow
+        virtualLabId={virtualLabId}
+        onModeChange={handleModeChangeFromComponents}
+      />
+    ))
+    .with({ mode: PurchaseModeDictionary.Promo }, () => (
+      <PromotionCode virtualLabId={virtualLabId} onModeChange={handleModeChangeFromComponents} />
+    ))
+    .otherwise(() => null);
+
   return (
     <div className="flex h-full w-full flex-col">
-      <StripePaymentFlow virtualLabId={virtualLabId} onModeChange={handleModeChange} />
+      {showBackButton && (
+        <div className="mb-4 flex items-center">
+          <Button
+            rounded
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleBackToSelection}
+            className="hover:bg-neutral-2/20 h-auto !px-4 py-2! text-white hover:text-white"
+          >
+            <ArrowLeftOutlined className="text-lg" />
+            <span className="ml-2 text-base font-semibold text-white select-none">Back</span>
+          </Button>
+        </div>
+      )}
+      {content}
     </div>
   );
 }
@@ -44,12 +108,29 @@ function BuyCreditsTab({ virtualLabId, onClose }: { virtualLabId: string; onClos
 export function CreditsTransferModal({ open, onClose }: Props) {
   const creditsRef = useRef<ManageCreditsStepHandle>(null);
   const [activeTab, setActiveTab] = useState('transfer');
+  const [buyMode, setBuyMode] = useState<TPurchaseModeDictionary>(PurchaseModeDictionary.Selection);
 
   const { virtualLabId, projectId } = useWorkspace();
   const { data: project } = useQuery({
     queryKey: keyBuilder.getWorkspace({ virtualLabId, projectId }),
     queryFn: () => getProject({ virtualLabId, projectId }),
   });
+
+  // Reset buy mode when switching tabs or closing modal
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    if (tab !== 'buy') {
+      setBuyMode(PurchaseModeDictionary.Selection);
+    }
+  };
+
+  // Reset buy mode when modal closes
+  useEffect(() => {
+    if (!open) {
+      setBuyMode(PurchaseModeDictionary.Selection);
+      setActiveTab('transfer');
+    }
+  }, [open]);
 
   return (
     <Modal
@@ -77,7 +158,7 @@ export function CreditsTransferModal({ open, onClose }: Props) {
           </div>
           <PillTabs
             value={activeTab}
-            onValueChange={setActiveTab}
+            onValueChange={handleTabChange}
             className="w-full"
             activationMode="manual"
           >
@@ -106,7 +187,7 @@ export function CreditsTransferModal({ open, onClose }: Props) {
       className="!bg-primary-9 !fixed !top-1/2 !left-1/2 !z-[1000] !-translate-x-1/2 !-translate-y-1/2 !transform"
       headerClassName={cn('[&>div]:w-full')}
     >
-      <PillTabs value={activeTab} onValueChange={setActiveTab} activationMode="manual">
+      <PillTabs value={activeTab} onValueChange={handleTabChange} activationMode="manual">
         <PillTabsContent value="transfer">
           <div className="flex flex-col">
             <div className="mb-4 flex justify-end">
@@ -131,7 +212,12 @@ export function CreditsTransferModal({ open, onClose }: Props) {
           </div>
         </PillTabsContent>
         <PillTabsContent value="buy">
-          <BuyCreditsTab virtualLabId={virtualLabId} onClose={onClose} />
+          <BuyCreditsTab
+            virtualLabId={virtualLabId}
+            onClose={onClose}
+            mode={buyMode}
+            onModeChange={setBuyMode}
+          />
         </PillTabsContent>
       </PillTabs>
     </Modal>
