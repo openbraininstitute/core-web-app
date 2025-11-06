@@ -1,6 +1,7 @@
+/* eslint-disable no-param-reassign */
 import React from 'react';
 
-import { usePainterManager } from './painter';
+import { PainterManager, usePainterController, usePainterManager } from './painter';
 import { HintPanel } from './hint';
 import ZoomSlider from './zoom-slider';
 import { useCleanMorphology } from './hooks';
@@ -26,6 +27,30 @@ export function WebglNeuronSelector({
   sessionId,
 }: WebglNeuronSelectorProps) {
   const painterManager = usePainterManager();
+
+  return (
+    <WebglNeuronSelectorContent
+      painterManager={painterManager}
+      projectId={projectId}
+      virtualLabId={virtualLabId}
+      meModelId={meModelId}
+      sessionId={sessionId}
+    />
+  );
+}
+
+type WebglNeuronSelectorContentProps = WebglNeuronSelectorProps & {
+  painterManager: PainterManager;
+};
+
+function WebglNeuronSelectorContent({
+  projectId,
+  virtualLabId,
+  meModelId,
+  sessionId,
+  painterManager,
+}: WebglNeuronSelectorContentProps) {
+  usePainterController(painterManager, sessionId);
   const { loading, error } = useCleanMorphology(
     painterManager,
     meModelId,
