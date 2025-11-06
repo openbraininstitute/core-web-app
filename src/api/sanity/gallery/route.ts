@@ -8,6 +8,8 @@ export type GalleryContentProps = {
   image: string | null;
   video: string | null;
   brainRegion: string | null;
+  has_background: boolean;
+  backgroundColor: string | null;
 };
 
 const queryForGalleryContent = `*[_type == "gallery"] {
@@ -17,6 +19,8 @@ const queryForGalleryContent = `*[_type == "gallery"] {
   "image": image.asset->url,
   video,
   brainRegion,
+  has_background,
+  backgroundColor,
 }`;
 
 function isContentForGallery(data: unknown): data is GalleryContentProps {
