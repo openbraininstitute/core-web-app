@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import React from 'react';
 import {
   ArrayNumber2,
@@ -22,7 +23,9 @@ import {
   webglPresetDepth,
 } from '@tolokoban/tgd';
 
+import { useAtomValue } from 'jotai';
 import { useVisibleSynapses } from '../hooks';
+import { SimulationStatus, simulationStatusAtomFamily } from '../../../context';
 import { computeSectionOffset } from './math';
 import { makeSegments } from './segments';
 import { makeCamera } from './camera';
@@ -31,6 +34,7 @@ import { OffscreenPainter } from './offscreen-painter';
 
 import { Morphology } from '@/services/bluenaas-single-cell/types';
 import GenericEvent from '@/util/generic-event';
+import { useAppNotification } from '@/components/notification';
 
 const PALETTE: string[] = [];
 PALETTE[StructureItemType.Axon] = '#07f';
@@ -70,6 +74,8 @@ export class PainterManager {
 
   public readonly eventHintVisible = new GenericEvent<boolean>();
 
+  public readonly eventForbiddenClick = new GenericEvent();
+
   private _morphology: Morphology | null = null;
 
   private _canvas: HTMLCanvasElement | null = null;
@@ -96,7 +102,7 @@ export class PainterManager {
     name: `Synapses#${Math.round(1e9 * Math.random())}`,
   });
 
-  private synapses: Array<{ type: string; data: Float32Array }> = [];
+  private synapses: Array<{ color: string; data: Float32Array }> = [];
 
   /**
    * When is the last time the camera moved?
@@ -106,6 +112,17 @@ export class PainterManager {
    * recording.
    */
   private lastCameraChangeTimestamp = 0;
+
+  private _clickable = true;
+
+  get clickable() {
+    return this._clickable;
+  }
+
+  set clickable(value: boolean) {
+    this._clickable = value;
+    this.context?.paint();
+  }
 
   get hoverItem() {
     return this._hoverItem;
@@ -242,17 +259,15 @@ export class PainterManager {
     return null;
   }
 
-  showSynapses(synapses: Array<{ type: string; data: Float32Array }>) {
+  showSynapses(synapses: Array<{ color: string; data: Float32Array }>) {
     const { context, groupSynapses } = this;
     if (!context) return;
 
     this.synapses = synapses;
     groupSynapses.removeAll();
-    for (const { type, data } of synapses) {
-      const dataPoint = data;
-      const color = resolveSynapseColor(type);
+    for (const { color, data: dataPoint } of synapses) {
       const cloud = new TgdPainterPointsCloud(context, {
-        name: `TgdPainterPointsCloud[${type}]`,
+        name: `TgdPainterPointsCloud[${color}]`,
         dataPoint,
         minSizeInPixels: 4,
         radiusMultiplier: 5,
@@ -321,6 +336,11 @@ export class PainterManager {
       }
     });
     context.inputs.pointer.eventTap.addListener((evt) => {
+      if (!this.clickable) {
+        this.eventForbiddenClick.dispatch();
+        return;
+      }
+
       // Prevent camera movement to be interpreted as a click.
       if (Date.now() - this.lastCameraChangeTimestamp < 300) return;
 
@@ -458,7 +478,6 @@ export class PainterManager {
 }
 
 export function usePainterManager() {
-  const synapses = useVisibleSynapses();
   const refPainter = React.useRef<PainterManager | null>(null);
   if (!refPainter.current) {
     refPainter.current = new PainterManager();
@@ -470,24 +489,34 @@ export function usePainterManager() {
 
       context.delete();
     };
-  }, []);
-  React.useEffect(() => {
-    refPainter.current?.showSynapses(synapses);
-  }, [synapses]);
+  });
   return refPainter.current;
 }
 
-function resolveSynapseColor(prefix: string) {
-  switch (prefix) {
-    case 'dend':
-      return '#7f7';
-    case 'apic':
-      return '#ff7';
-    case 'myel':
-      return '#eee';
-    case 'axon':
-      return '#fb7';
-    default:
-      return '#7cf';
-  }
+export function usePainterController(painter: PainterManager, sessionId: string) {
+  const notif = useAppNotification();
+  React.useEffect(() => {
+    const action = () => {
+      notif.error({
+        message: `You cannot add recordings nor move injection while a simulation is running!`,
+        key: `ForbidenClick[${painter.id}]`,
+      });
+    };
+    painter.eventForbiddenClick.addListener(action);
+    return () => painter.eventForbiddenClick.removeListener(action);
+  }, [notif, painter]);
+
+  const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
+  React.useEffect(() => {
+    const s = simulationStatus?.status;
+    if (painter) {
+      painter.clickable = s !== SimulationStatus.LAUNCHED;
+    }
+  }, [simulationStatus, painter]);
+
+  const synapses = useVisibleSynapses(sessionId);
+  console.log('🚀 [manager] synapses =', synapses); // @FIXME: Remove this line written on 2025-11-06 at 16:00
+  React.useEffect(() => {
+    painter.showSynapses(synapses);
+  }, [synapses, painter]);
 }

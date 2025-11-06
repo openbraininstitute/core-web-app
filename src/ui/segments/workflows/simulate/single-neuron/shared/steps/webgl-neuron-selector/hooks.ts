@@ -6,12 +6,14 @@ import {
   neuronSectionNamesAtomFamily,
   RecordLocationConfigurationAtomFamily,
   StimulationConfigurationAtomFamily,
+  SynaptomeConfigurationAtomFamily,
 } from '../../context';
 import { getSessionKey } from '../../helpers';
 import {
   DEFAULT_CURRENT_INJECTION_CONFIG,
   RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
   STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
+  SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
 } from '../../constant';
 import { PainterManager } from './painter/manager';
 import { getColorFromGeneratedPalette } from './colors';
@@ -20,35 +22,42 @@ import { useMorphology } from '@/hooks/use-morphology';
 import { Morphology } from '@/services/bluenaas-single-cell/types';
 import { synapsesPlacementAtom } from '@/state/synaptome';
 
-export function useVisibleSynapses(): Array<{
-  type: string;
+export function useVisibleSynapses(sessionId: string): Array<{
+  color: string;
   data: Float32Array;
 }> {
+  const configsKey = getSessionKey(SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
+  const configs = useAtomValue(SynaptomeConfigurationAtomFamily(configsKey));
   const synaptomes = useAtomValue(synapsesPlacementAtom);
   const synapses = React.useMemo(() => {
     const result: Record<string, number[]> = {};
     if (!synaptomes) return [];
 
+    const colors = new Map<string, string | undefined>();
+    for (const config of configs) {
+      colors.set(config.id, config.color);
+    }
+    let index = 0;
     for (const value of Object.values(synaptomes)) {
       if (!value) continue;
 
+      const color =
+        colors.get(value.synapsePlacementConfigId) ?? getColorFromGeneratedPalette(index++);
       const { sectionSynapses } = value;
       for (const section of sectionSynapses) {
-        const key = section.section_id.slice(0, 4).toLocaleLowerCase();
-        const data = result[key] ?? [];
+        const data = result[color] ?? [];
         for (const synapse of section.synapses) {
           // We set a unit radius because we will multiply it in PainterCloud.
           data.push(...synapse.coordinates, 1);
         }
-        result[key] = data;
+        result[color] = data;
       }
     }
-    return Object.keys(result).map((key) => ({
-      type: key,
-      data: new Float32Array(result[key]),
+    return Object.keys(result).map((color) => ({
+      color,
+      data: new Float32Array(result[color]),
     }));
-  }, [synaptomes]);
-  console.log('🚀 [hooks] synapses =', synapses); // @FIXME: Remove this line written on 2025-11-05 at 17:13
+  }, [synaptomes, configs]);
   return synapses;
 }
 
