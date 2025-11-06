@@ -23,6 +23,7 @@ import {
 } from '@/api/virtual-lab-svc/queries/member';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
+import { useUserRole } from '@/hooks/use-user-role';
 
 import type { Member, Role } from '@/api/virtual-lab-svc/queries/types';
 import { log } from '@/utils/logger';
@@ -420,6 +421,7 @@ type ListingStepProps = {
 
 function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps) {
   const { data } = useSession();
+  const { isVirtualLabAdmin } = useUserRole({ virtualLabId });
 
   const { data: team, isLoading } = useQuery({
     queryKey: keyBuilder.listVirtualLabTeam({ virtualLabId }),
@@ -520,21 +522,23 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
             </Badge>
           )}
         </div>
-        <UiButton
-          rounded
-          key="add-member"
-          data-testid="add-member-btn"
-          type="button"
-          size="md"
-          variant="outline"
-          className="border-primary-4 bg-primary-9 hover:text-primary-4 px-4 text-white hover:border-white"
-          onClick={onInviteMemberClick}
-        >
-          <div className="flex gap-5">
-            Add administrator
-            <PlusOutlined />
-          </div>
-        </UiButton>
+        {isVirtualLabAdmin && (
+          <UiButton
+            rounded
+            key="add-member"
+            data-testid="add-member-btn"
+            type="button"
+            size="md"
+            variant="outline"
+            className="border-primary-4 bg-primary-9 hover:text-primary-4 px-4 text-white hover:border-white"
+            onClick={onInviteMemberClick}
+          >
+            <div className="flex gap-5">
+              Add administrator
+              <PlusOutlined />
+            </div>
+          </UiButton>
+        )}
       </div>
       <div className="h-full grow overflow-hidden px-6">
         <ConfigProvider
