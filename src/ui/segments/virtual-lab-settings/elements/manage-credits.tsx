@@ -1,27 +1,27 @@
 'use client';
 
-import { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'motion/react';
-import { Select } from 'antd';
 import {
   ArrowLeftOutlined,
   ArrowRightOutlined,
   LoadingOutlined,
   SwapOutlined,
 } from '@ant-design/icons';
+import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
+import { Select } from 'antd';
+import { AnimatePresence, motion } from 'motion/react';
+import { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
-import { assignProjectBudget, reverseProjectBudget } from '@/services/virtual-lab/projects';
-import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
-import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
-import { Button, Button as UiButton } from '@/ui/molecules/button';
-import { useAppNotification } from '@/components/notification';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { CoinsIcon } from '@/components/icons/buttons';
+import { useAppNotification } from '@/components/notification';
+import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
+import { assignProjectBudget, reverseProjectBudget } from '@/services/virtual-lab/projects';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge } from '@/ui/molecules/badge';
+import { Button, Button as UiButton } from '@/ui/molecules/button';
 import { Input } from '@/ui/molecules/input';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
 import type { ProjectBalance } from '@/types/accounting';
@@ -337,8 +337,8 @@ export function ManageCreditsStep({
         </div>
 
         <div className="flex w-10 shrink-0 items-center">
-          <div className="bg-primary-8 flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 text-white">
-            <ArrowRightOutlined className="text-lg" />
+          <div className="bg-primary-9 flex h-10 w-10 items-center justify-center rounded-lg text-white">
+            <ArrowRightOutlined className="text-2xl" />
           </div>
         </div>
 
@@ -393,7 +393,7 @@ export function ManageCreditsStep({
       </div>
 
       <div className="mx-auto max-w-3xl px-3">
-        <div className="bg-primary-8 rounded-2xl border border-white/10 p-5 text-white">
+        <div className="bg-primary-9 rounded-2xl border border-white/10 p-5 text-white">
           <div className="mb-3 text-lg font-semibold">Amount</div>
           <div className="relative w-full max-w-md">
             <Input
@@ -405,12 +405,12 @@ export function ManageCreditsStep({
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0"
               className={cn(
-                'bg-primary-8 h-16 rounded-xl border-white/20 pr-28 text-xl! font-bold text-white placeholder:text-white/50',
+                'text-primary-9 placeholder:text-neutral-3 h-16 rounded-xl border-white/20 bg-white pr-28 text-xl! font-bold',
                 '[appearance:textfield] border px-4 py-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
               )}
               disabled={isPending}
             />
-            <div className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg text-white">
+            <div className="text-primary-9 pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-lg">
               Credits
             </div>
           </div>

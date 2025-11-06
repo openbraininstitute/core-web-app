@@ -47,7 +47,7 @@ const tabsConfigItems: Array<{
   },
   {
     key: HelpSections.PriceList,
-    title: 'Price List',
+    title: 'Pricing',
   },
   {
     key: HelpSections.AIChatTools,
