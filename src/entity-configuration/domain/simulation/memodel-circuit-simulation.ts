@@ -25,6 +25,7 @@ import type {
 } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { WorkspaceContext } from '@/types/common';
+import { inifiedSingleNeuronSimulationFlowFlag } from '@/features/feature-flags/flags';
 
 export async function resolveExecutions({
   context,
@@ -152,10 +153,11 @@ export async function resolveSimulationByCampaignId({
 
 export const MEModelCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
   group: EntityTypeGroup.Simulations,
-  title: 'Single neuron [unified UI] simulation',
+  title: 'Single neuron [Unified UI]',
   extendedType: ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.MEModelCircuitSimulation,
+  requiredFeatures: [inifiedSingleNeuronSimulationFlowFlag.key],
   api: {
     config: { allowedFacets: true },
     query: {

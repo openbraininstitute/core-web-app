@@ -28,6 +28,7 @@ import { cn } from '@/utils/css-class';
 import { ROOT_ROUTE } from '@/config';
 
 import { type TWorkspaceScope } from '@/constants';
+import { useFlags } from '@/features/feature-flags';
 
 export const ExploreDataTypeTabs = {
   Experimental: 'experimental',
@@ -55,6 +56,8 @@ export const tabsConfigItems: Array<{
 ];
 
 export function EntityLinkCount() {
+  const featureFlags = useFlags();
+
   const breakpoint = useDefaultBreakpoint();
   const scope = (useSearchParams().get('scope') ?? WorkspaceScope.Public) as TWorkspaceScope;
 
@@ -107,31 +110,49 @@ export function EntityLinkCount() {
 
   const experimentalState = useMemo(
     () => [
-      ...Object.entries(ExperimentalEntitiesTileTypes).map(([, value]) => {
-        return { ...value, isLoading: allLoading || rootLoading };
-      }),
+      ...Object.values(ExperimentalEntitiesTileTypes)
+        .filter(
+          (config) =>
+            !config.requiredFeatures ||
+            config.requiredFeatures.every((flag) => featureFlags?.[flag])
+        )
+        .map((config) => {
+          return { ...config, isLoading: allLoading || rootLoading };
+        }),
     ],
-    [allLoading, rootLoading]
+    [allLoading, rootLoading, featureFlags]
   );
 
   const modelState = useMemo(
     () => [
-      ...Object.entries(ModelEntitiesTileTypes).map(([, value]) => ({
-        ...value,
-        isLoading: allLoading || rootLoading,
-      })),
+      ...Object.values(ModelEntitiesTileTypes)
+        .filter(
+          (config) =>
+            !config.requiredFeatures ||
+            config.requiredFeatures.every((flag) => featureFlags?.[flag])
+        )
+        .map((config) => ({
+          ...config,
+          isLoading: allLoading || rootLoading,
+        })),
     ],
-    [allLoading, rootLoading]
+    [allLoading, rootLoading, featureFlags]
   );
 
   const simulationState = useMemo(
     () => [
-      ...Object.entries(SimulationEntitiesTileTypes).map(([, value]) => ({
-        ...value,
-        isLoading: simsLoading,
-      })),
+      ...Object.values(SimulationEntitiesTileTypes)
+        .filter(
+          (config) =>
+            !config.requiredFeatures ||
+            config.requiredFeatures.every((flag) => featureFlags?.[flag])
+        )
+        .map((config) => ({
+          ...config,
+          isLoading: simsLoading,
+        })),
     ],
-    [simsLoading]
+    [simsLoading, featureFlags]
   );
 
   const content = match(activeTab)

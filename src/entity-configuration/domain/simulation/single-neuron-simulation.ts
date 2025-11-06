@@ -35,7 +35,7 @@ export async function resolveSingleNeuronSimulation(
 
 export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulation> = {
   group: EntityTypeGroup.Simulations,
-  title: 'Single neuron simulation',
+  title: 'Single neuron',
   extendedType: ExtendedEntitiesTypeDict.SingleNeuronSimulation,
   type: EntityTypeDict.SingleNeuronSimulation,
   slug: EntitySlug.SingleNeuronSimulation,

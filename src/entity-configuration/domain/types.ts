@@ -8,6 +8,7 @@ import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
+import { FlagKey } from '@/features/feature-flags/flags';
 
 export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   group: TEntityTypeGroup;
@@ -16,6 +17,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   slug: EntitySlugValue;
   title: string;
   alternateTitle?: string;
+  requiredFeatures?: Array<FlagKey>;
   api: {
     config: {
       allowedFacets?: boolean;
