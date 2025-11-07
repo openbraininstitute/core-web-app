@@ -123,7 +123,6 @@ export function NeuronViewerContainer({
             virtualLabId={virtualLabId}
             meModelId={meModelId}
             sessionId={sessionId}
-            disableElectrodes
           />
         )}
       </DefaultLoadingSuspense>
