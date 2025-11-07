@@ -28,8 +28,8 @@ import {
 } from '@/ui/segments/data-table/elements/context';
 import {
   makeSelectEntityClickEvent,
-  useMiniDetailView,
   useSelectEntityClickEvent,
+  useMiniDetailView,
 } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
@@ -214,9 +214,7 @@ export function BrowseEntityScope({
           className={cn(
             'h-full max-h-[calc(100vh-11.8rem)] w-full min-w-0',
             '[grid-area:mini-view]',
-            {
-              hidden: !mdv,
-            },
+            { hidden: !mdv },
             classNames?.miniView
           )}
         >

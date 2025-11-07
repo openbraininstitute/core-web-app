@@ -1,31 +1,31 @@
 import flatMap from 'es-toolkit/compat/flatMap';
 import keyBy from 'es-toolkit/compat/keyBy';
 
-import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
-import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { CircuitScaleDictionary, ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
+import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { getAssetElement } from '@/api/entitycore/utils';
+import { unifiedSingleNeuronSimulationFlowFlag } from '@/features/feature-flags/flags';
+import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
+import { getCircuits } from '@/api/entitycore/queries/model/circuit';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-
+import { getAssetElement } from '@/api/entitycore/utils';
 import {
   createSimulationCampaign,
   getCircuitSimulationCampaign,
   getCircuitSimulationCampaigns,
 } from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
 
-import { getMEModels } from '@/api/entitycore/queries';
-import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
+import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type {
   ICircuitSimulationCampaign,
   ICircuitSimulationCampaignFilter,
 } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
-import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { WorkspaceContext } from '@/types/common';
-import { inifiedSingleNeuronSimulationFlowFlag } from '@/features/feature-flags/flags';
 
 export async function resolveExecutions({
   context,
@@ -60,17 +60,19 @@ async function resolveSimulationCampaigns({
   withFacets,
   context,
   filters,
+  circuitScaleFilter,
 }: {
   withFacets?: boolean;
   context: WorkspaceContext | undefined;
   filters?: Partial<ICircuitSimulationCampaignFilter>;
+  circuitScaleFilter?: Partial<ICircuitFilter>;
 }) {
   // eslint-disable-next-line no-param-reassign
   filters = discardBrainRegionQueryParams(filters);
   const source = await getCircuitSimulationCampaigns({
     context,
     withFacets,
-    filters: { ...filters },
+    filters: { ...filters, circuit__scale: CircuitScaleDictionary.Single },
   });
 
   // extract all simulation IDs
@@ -99,14 +101,14 @@ async function resolveSimulationCampaigns({
     })),
   }));
 
-  const memodels = await getMEModels({
+  const circuits = await getCircuits({
     context,
-    filters: { id__in: source.data.map((l) => l.entity_id) },
+    filters: { id__in: source.data.map((l) => l.entity_id), ...circuitScaleFilter },
   });
-  const memodelMap = keyBy(memodels.data, 'id');
+  const circuitMap = keyBy(circuits.data, 'id');
   const result = enrichedData.map((entity) => ({
     ...entity,
-    memodel: memodelMap[entity.entity_id] || null,
+    circuit: circuitMap[entity.entity_id] || null,
   }));
 
   return {
@@ -157,12 +159,17 @@ export const MEModelCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCa
   extendedType: ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.MEModelCircuitSimulation,
-  requiredFeatures: [inifiedSingleNeuronSimulationFlowFlag.key],
+  requiredFeatures: [unifiedSingleNeuronSimulationFlowFlag.key],
   api: {
     config: { allowedFacets: true },
     query: {
       list: (params: Parameters<typeof resolveSimulationCampaigns>[0]) =>
-        resolveSimulationCampaigns(params),
+        resolveSimulationCampaigns({
+          ...params,
+          circuitScaleFilter: {
+            scale: 'single',
+          },
+        }),
       one: getCircuitSimulationCampaign,
       create: createSimulationCampaign,
     },

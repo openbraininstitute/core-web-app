@@ -14,9 +14,9 @@ export function TypesMenu({
   category,
   onItemClick,
 }: {
-  current: TExtendedEntitiesTypeDict | undefined;
-  category: TActivityValue | undefined;
-  onItemClick: (v: TExtendedEntitiesTypeDict | undefined) => void;
+  current: TExtendedEntitiesTypeDict | null;
+  category: TActivityValue | null;
+  onItemClick: (v: TExtendedEntitiesTypeDict | null) => void;
 }) {
   const featureFlags = useFlags();
 
@@ -41,10 +41,10 @@ export function TypesMenu({
             key={`category-selector-${value}`}
             className="w-max basis-1/2 py-2 md:basis-1/3! lg:basis-1/5! 2xl:basis-1/6!"
           >
-            <MenuItem<TExtendedEntitiesTypeDict | undefined>
+            <MenuItem<TExtendedEntitiesTypeDict | null>
               group={group}
               active={current === value}
-              value={value}
+              value={value ?? null}
               disabled={disabled}
               title={label}
               onClick={onItemClick}

@@ -48,9 +48,6 @@ export function MenuItem<T>({
           {
             'text-primary-9/50': disabled,
           },
-          // {
-          //   '-mt-22': group,
-          // },
           { 'text-white!': active }
         )}
       >
