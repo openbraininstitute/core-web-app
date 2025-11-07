@@ -3,6 +3,7 @@
 import Image from 'next/image';
 
 import type { GalleryContentProps } from '@/api/sanity/gallery/route';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { cn } from '@/utils/css-class';
 
 type MediaProps = {
@@ -15,6 +16,8 @@ type MediaProps = {
 export default function Media({ item, isLoaded, onLoad, onOpenModal }: MediaProps) {
   const { mediaType, image, video, title, brainRegion } = item;
   const mediaUrl = mediaType === 'video' ? video : image;
+  const breakpoint = useDefaultBreakpoint();
+  const isDesktop = breakpoint === 'l' || breakpoint === 'xl';
 
   if (!mediaUrl) return null;
 
@@ -65,13 +68,28 @@ export default function Media({ item, isLoaded, onLoad, onOpenModal }: MediaProp
         )}
       </button>
       <aside className="flex flex-col">
-        <div className="text-base font-semibold">{title}</div>
+        <div
+          className="text-base font-semibold"
+          style={
+            !isDesktop && title && title.length > 22
+              ? {
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  maxWidth: '100%',
+                }
+              : undefined
+          }
+          title={!isDesktop && title && title.length > 22 ? title : undefined}
+        >
+          {!isDesktop && title && title.length > 22 ? `${title.substring(0, 22)}...` : title}
+        </div>
         {brainRegion && (
           <div className="text-sm font-normal capitalize">
             <span className="text-neutral-4">Brain Region:</span> {brainRegion}
           </div>
         )}
-        <div className="text-sm font-normal">Copyright OBI – 2025</div>
+        {isDesktop && <div className="text-sm font-normal">Copyright OBI – 2025</div>}
       </aside>
     </div>
   );
