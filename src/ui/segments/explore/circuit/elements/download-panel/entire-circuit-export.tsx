@@ -3,6 +3,7 @@ import { useParams } from 'next/navigation';
 import { get } from 'es-toolkit/compat';
 import { Button } from 'antd';
 
+import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { keyBuilder } from '@/ui/use-query-keys/third-parties';
 import { getAssetElement } from '@/api/entitycore/utils';
@@ -26,29 +27,6 @@ export default function EntireCircuitExport({ circuit }: Props) {
     filter: (asset) => asset.label === AssetLabel.compressed_sonata_circuit,
   });
   const extension = configAsset?.content_type.split('/').pop();
-  // TODO: this should be refactored after SFN
-  const getPresignedUrl = async () => {
-    const url = `${window.location.origin}/api/entity-download/presigned-url`;
-    const query = new URLSearchParams();
-    query.set('entityType', EntityTypeDict.Circuit);
-    query.set('entityId', circuit.id);
-    query.set('virtualLabId', virtualLabId);
-    query.set('projectId', projectId);
-    query.set('configAssetId', configAsset?.id!);
-
-    const response = await fetch(`${url}?${query.toString()}`, {
-      method: 'get',
-      headers: {
-        accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-    });
-    if (response.ok) {
-      const result = await response.json();
-      return result;
-    }
-    throw new Error(`Error #${response.status} creating presigned url: ${response.statusText}`);
-  };
 
   const { isLoading, data } = useQuery({
     queryKey: keyBuilder.s3presignedUrl({
@@ -58,7 +36,14 @@ export default function EntireCircuitExport({ circuit }: Props) {
       virtualLabId,
       projectId,
     }),
-    queryFn: getPresignedUrl,
+    queryFn: () =>
+      getEntityCorePresignedUrl({
+        configAssetId: configAsset?.id!,
+        entityId: circuit.id,
+        entityType: EntityTypeDict.Circuit,
+        virtualLabId,
+        projectId,
+      }),
   });
 
   const totalSize =
@@ -96,7 +81,7 @@ export default function EntireCircuitExport({ circuit }: Props) {
                 title={`download ${circuit.name}`}
                 icon={<DownloadIcon className="text-white!" />}
                 loading={isLoading}
-                href={get(data, 'url', null)}
+                href={get(data, 'url', undefined)}
                 target="_blank"
                 rel="noopener noreferrer"
                 download={`${circuit.name}.${circuit.id}`}
