@@ -42,6 +42,16 @@ export interface StructureBoundingBox {
 export class Structure {
   public readonly bbox: StructureBoundingBox;
 
+  /**
+   * Bounding box of the axon
+   */
+  public readonly bboxSoma: StructureBoundingBox;
+
+  /**
+   * Bounding box of the dendrites only (no axon nor myelin)
+   */
+  public readonly bboxDendrites: StructureBoundingBox;
+
   public readonly hasApicalDendrites: boolean;
 
   private readonly items: StructureItem[] = [];
@@ -56,7 +66,19 @@ export class Structure {
       max: [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY],
       center: [0, 0, 0],
     };
+    const bboxSoma: StructureBoundingBox = {
+      min: [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY],
+      max: [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY],
+      center: [0, 0, 0],
+    };
+    const bboxDendrites: StructureBoundingBox = {
+      min: [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY],
+      max: [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY],
+      center: [0, 0, 0],
+    };
     this.bbox = bbox;
+    this.bboxSoma = bboxSoma;
+    this.bboxDendrites = bboxDendrites;
     let somaCounts = 0;
     const somaCenter = new TgdVec3();
     const sectionNames = Object.keys(morphology);
@@ -100,12 +122,29 @@ export class Structure {
           somaCenter.add(start);
           somaCounts++;
           somaCenter.add(end);
+          bboxSoma.min = computeMin(bboxSoma.min, start, item.radius);
+          bboxSoma.max = computeMax(bboxSoma.max, start, item.radius);
+          bboxSoma.min = computeMin(bboxSoma.min, end, item.radius);
+          bboxSoma.max = computeMax(bboxSoma.max, end, item.radius);
         } else {
           distanceFromSoma += section.length[segmentIndex];
           bbox.min = computeMin(bbox.min, start);
           bbox.max = computeMax(bbox.max, start);
           bbox.min = computeMin(bbox.min, end);
           bbox.max = computeMax(bbox.max, end);
+          if (
+            [
+              StructureItemType.Dendrite,
+              StructureItemType.BasalDendrite,
+              StructureItemType.ApicalDendrite,
+              StructureItemType.Soma,
+            ].includes(type)
+          ) {
+            bboxDendrites.min = computeMin(bboxDendrites.min, start);
+            bboxDendrites.max = computeMax(bboxDendrites.max, start);
+            bboxDendrites.min = computeMin(bboxDendrites.min, end);
+            bboxDendrites.max = computeMax(bboxDendrites.max, end);
+          }
         }
       }
     }
@@ -152,12 +191,12 @@ export class Structure {
   }
 }
 
-function computeMin(a: ArrayNumber3, b: ArrayNumber3): ArrayNumber3 {
-  return [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.min(a[2], b[2])];
+function computeMin(a: ArrayNumber3, b: ArrayNumber3, r = 0): ArrayNumber3 {
+  return [Math.min(a[0], b[0] - r), Math.min(a[1], b[1] - r), Math.min(a[2], b[2] - r)];
 }
 
-function computeMax(a: ArrayNumber3, b: ArrayNumber3): ArrayNumber3 {
-  return [Math.max(a[0], b[0]), Math.max(a[1], b[1]), Math.max(a[2], b[2])];
+function computeMax(a: ArrayNumber3, b: ArrayNumber3, r = 0): ArrayNumber3 {
+  return [Math.max(a[0], b[0] + r), Math.max(a[1], b[1] + r), Math.max(a[2], b[2] + r)];
 }
 
 function resolveType(sectionName: string): StructureItemType {

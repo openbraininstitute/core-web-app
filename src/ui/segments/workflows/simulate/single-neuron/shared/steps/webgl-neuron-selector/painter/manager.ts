@@ -54,6 +54,8 @@ interface SelectedItem {
 export class PainterManager {
   private static id = 0;
 
+  public disableElectrodes = false;
+
   public readonly id = PainterManager.id++;
 
   public readonly eventPaint = new GenericEvent<void>();
@@ -294,7 +296,8 @@ export class PainterManager {
     });
     context.eventPaint.addListener(() => this.eventPaint.dispatch());
     this.context = context;
-    context.camera = makeCamera(structure.bbox);
+    const { camera, zoomMin, zoomMax } = makeCamera(structure);
+    context.camera = camera;
     this.initialPosition.from(context.camera.transfo.position);
     const palette = new TgdTexture2D(context)
       .loadBitmap(tgdCanvasCreatePalette(PALETTE))
@@ -304,7 +307,7 @@ export class PainterManager {
       });
     this.palette = palette;
     this.initTgdPainters(context, structure, palette);
-    this.initCameraController(context);
+    this.initCameraController(context, zoomMin, zoomMax);
     this.initOffscreen(context, structure);
     this.eventHintVisible.dispatch(false);
     this.eventRestingPosition.dispatch(true);
@@ -336,6 +339,8 @@ export class PainterManager {
       }
     });
     context.inputs.pointer.eventTap.addListener((evt) => {
+      if (this.disableElectrodes) return;
+
       if (!this.clickable) {
         this.eventForbiddenClick.dispatch();
         return;
@@ -362,12 +367,12 @@ export class PainterManager {
     });
   }
 
-  private initCameraController(context: TgdContext) {
+  private initCameraController(context: TgdContext, minZoom: number, maxZoom: number) {
     const cameraController = new TgdControllerCameraOrbit(context, {
       inertiaOrbit: 500,
       inertiaZoom: 250,
-      minZoom: 0.2,
-      maxZoom: 5,
+      minZoom,
+      maxZoom,
       speedZoom: 1,
       onZoomRequest: ({ zoom }) => {
         this.eventZoom.dispatch(this.toNormalizedZoom(zoom));
@@ -493,7 +498,11 @@ export function usePainterManager() {
   return refPainter.current;
 }
 
-export function usePainterController(painter: PainterManager, sessionId: string) {
+export function usePainterController(
+  painter: PainterManager,
+  sessionId: string,
+  disableElectrodes: boolean
+) {
   const notif = useAppNotification();
   React.useEffect(() => {
     const action = () => {
@@ -515,8 +524,11 @@ export function usePainterController(painter: PainterManager, sessionId: string)
   }, [simulationStatus, painter]);
 
   const synapses = useVisibleSynapses(sessionId);
-  console.log('🚀 [manager] synapses =', synapses); // @FIXME: Remove this line written on 2025-11-06 at 16:00
   React.useEffect(() => {
     painter.showSynapses(synapses);
   }, [synapses, painter]);
+
+  React.useEffect(() => {
+    painter.disableElectrodes = disableElectrodes;
+  }, [disableElectrodes, painter]);
 }
