@@ -66,13 +66,49 @@ const formatNumber = (value: number | string): string => {
   return num.toLocaleString('en-US');
 };
 
+const formatQuantityRange = (value: string): string => {
+  // Check if the value contains a range (e.g., "500-999" or "25000-49999")
+  if (value.includes('-')) {
+    const parts = value.split('-').map((part) => part.trim());
+    if (parts.length === 2) {
+      const start = Number.parseFloat(parts[0]);
+      const end = Number.parseFloat(parts[1]);
+
+      // Format each number with commas if > 999
+      const formattedStart =
+        !Number.isNaN(start) && start > 999 ? start.toLocaleString('en-US') : parts[0];
+      const formattedEnd = !Number.isNaN(end) && end > 999 ? end.toLocaleString('en-US') : parts[1];
+
+      return `${formattedStart}-${formattedEnd}`;
+    }
+  }
+  // If not a range, format as single number
+  const num = Number.parseFloat(value);
+  if (!Number.isNaN(num) && num > 999) {
+    return num.toLocaleString('en-US');
+  }
+  return value;
+};
+
+const formatSectionName = (section: string): string => {
+  // Special case for aiAssistant
+  if (section.toLowerCase() === 'aiassistant') {
+    return 'AI Assistant';
+  }
+  // Convert camelCase to Title Case
+  return section
+    .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+    .replace(/^./, (str) => str.toUpperCase()) // Capitalize first letter
+    .trim();
+};
+
 const creditsPackColumns: ColumnsType<CreditsPack> = [
   {
     title: 'Credits',
     dataIndex: 'quantity',
     key: 'quantity',
     render: (value: string) => (
-      <span style={{ fontWeight: 'bold', color: '#002766' }}>{formatNumber(value)}</span>
+      <span style={{ fontWeight: 'bold', color: '#002766' }}>{formatQuantityRange(value)}</span>
     ),
   },
   {
@@ -236,8 +272,8 @@ export default function PriceTable({ prices, creditsPacks }: PriceTableProps) {
       {Object.entries(pricesBySection).map(([section, sectionPrices]) => (
         <div key={section}>
           {section !== 'Other' && (
-            <h3 className="text-primary-8 mt-12 mb-4 rounded-full bg-white/50 px-12 py-6 text-2xl font-bold capitalize">
-              {section}
+            <h3 className="text-primary-8 mt-12 mb-4 rounded-full bg-white/50 px-12 py-6 text-2xl font-bold">
+              {formatSectionName(section)}
             </h3>
           )}
           <Table
