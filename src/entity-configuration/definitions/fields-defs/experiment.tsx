@@ -90,7 +90,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
 
       return (
         <PreviewThumbnail
-          resource={r}
+          entity={r}
           target="stimulus"
           width={184}
           height={116}
@@ -119,7 +119,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
 
       return (
         <PreviewThumbnail
-          resource={r}
+          entity={r}
           target="simulation"
           width={184}
           height={116}

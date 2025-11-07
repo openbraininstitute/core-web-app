@@ -42,7 +42,7 @@ import { cn } from '@/utils/css-class';
 import { ROOT_ROUTE } from '@/config';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import { AssetLabel, type EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TWorkspaceSection } from '@/constants';
 import type {
@@ -135,6 +135,38 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
                   className="max-h-full w-full rounded-md object-contain"
                 />
               )
+            )}
+          </div>
+        );
+      }
+    )
+    .with(
+      {
+        type: P.union(ExtendedEntitiesTypeDict.IonChannelModel),
+      },
+      () => {
+        return (
+          <div
+            className="mt-5 flex w-full items-center justify-center rounded-md bg-white"
+            key={record.id}
+          >
+            {renderPreview(
+              record as unknown as EntityCoreResource,
+              undefined,
+              undefined,
+              'rounded-md h-full relative w-full!',
+              'w-full! h-[200px]! flex!',
+              true,
+              (src) => (
+                <Image
+                  alt={`${record.name} preview`}
+                  src={src}
+                  rootClassName=" w-full  h-80"
+                  className="max-h-full w-full rounded-md object-contain"
+                />
+              ),
+              'assetLabel',
+              AssetLabel.ion_channel_model_thumbnail
             )}
           </div>
         );

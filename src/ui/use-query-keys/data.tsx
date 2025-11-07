@@ -198,4 +198,8 @@ export const keyBuilder = {
     { context: { virtualLabId, projectId } },
   ],
   license: (context?: WorkspaceContext) => [`${prefix}-license`, { context }],
+  preview: (context: WorkspaceContext, params?: Record<string, any>) => [
+    `${prefix}-asset-preview`,
+    { context, params },
+  ],
 };
