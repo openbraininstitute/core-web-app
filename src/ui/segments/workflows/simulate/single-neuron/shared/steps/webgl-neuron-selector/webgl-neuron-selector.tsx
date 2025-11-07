@@ -18,6 +18,7 @@ export interface WebglNeuronSelectorProps {
   virtualLabId: string;
   meModelId: string;
   sessionId: string;
+  disableElectrodes?: boolean;
 }
 
 export function WebglNeuronSelector({
@@ -25,6 +26,7 @@ export function WebglNeuronSelector({
   virtualLabId,
   meModelId,
   sessionId,
+  disableElectrodes,
 }: WebglNeuronSelectorProps) {
   const painterManager = usePainterManager();
 
@@ -35,6 +37,7 @@ export function WebglNeuronSelector({
       virtualLabId={virtualLabId}
       meModelId={meModelId}
       sessionId={sessionId}
+      disableElectrodes={disableElectrodes}
     />
   );
 }
@@ -49,8 +52,9 @@ function WebglNeuronSelectorContent({
   meModelId,
   sessionId,
   painterManager,
+  disableElectrodes = false,
 }: WebglNeuronSelectorContentProps) {
-  usePainterController(painterManager, sessionId);
+  usePainterController(painterManager, sessionId, disableElectrodes);
   const { loading, error } = useCleanMorphology(
     painterManager,
     meModelId,
@@ -77,7 +81,9 @@ function WebglNeuronSelectorContent({
             <ZoomSlider className={styles.zoomSlider} painterManager={painterManager} />
             <ButtonResetCamera painterManager={painterManager} />
           </header>
-          <LegendOverlay painterManager={painterManager} sessionId={sessionId} />
+          {!disableElectrodes && (
+            <LegendOverlay painterManager={painterManager} sessionId={sessionId} />
+          )}
           <AddRecordingDialog painterManager={painterManager} sessionId={sessionId} />
         </>
       )}
