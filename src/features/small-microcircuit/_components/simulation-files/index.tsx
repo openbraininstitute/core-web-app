@@ -117,17 +117,21 @@ export function SimulationFiles({
           />
         ))}
       </div>
-      <h4 className="uppercase">Output files</h4>
-      <div className="mt-4 flex flex-col gap-4">
-        {outputFiles.map((file) => (
-          <SimulationFile
-            selected={file.asset.path === selectedFile?.asset.path}
-            key={file.asset.id}
-            file={file}
-            onSelect={onSelect}
-          />
-        ))}
-      </div>
+      {outputAvailable && (
+        <>
+          <h4 className="uppercase">Output files</h4>
+          <div className="mt-4 flex flex-col gap-4">
+            {outputFiles.map((file) => (
+              <SimulationFile
+                selected={file.asset.path === selectedFile?.asset.path}
+                key={file.asset.id}
+                file={file}
+                onSelect={onSelect}
+              />
+            ))}
+          </div>
+        </>
+      )}
       {loading && (
         <div className="absolute inset-0 z-10 flex cursor-progress items-center justify-center rounded-2xl bg-black/4">
           <Loader className="text-neutral-3" />
