@@ -15,7 +15,6 @@ export function makeCamera({
   bboxSoma: BoundingBox;
   bboxDendrites: BoundingBox;
 }) {
-  console.log('🚀 [camera] bboxAxon =', bboxSoma); // @FIXME: Remove this line written on 2025-11-07 at 10:48
   const camera = new TgdCameraPerspective({
     transfo: {
       distance: 5,
