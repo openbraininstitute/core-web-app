@@ -17,6 +17,7 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { EntityCoreDensityObjectTypes, ICellMorphology } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 import type {
+  AssetLabel,
   EntityCoreIdentifiable,
   EntityCoreResource,
   IContributor,
@@ -144,6 +145,17 @@ export const renderTimestamp = (timestamp: Date) => {
   if (isValid(timestamp)) return formatDistanceToNow(timestamp, { addSuffix: true });
 };
 
+export const PreviewTarget = {
+  Simulation: 'simulation',
+  Stimulus: 'stimulus',
+  AssetLabel: 'assetLabel',
+} as const;
+
+export type TPreviewTarget = (typeof PreviewTarget)[keyof typeof PreviewTarget];
+
+export type TThumbnailServiceTarget = Exclude<TPreviewTarget, 'assetLabel'>;
+export type TEntityAssetTarget = Extract<TPreviewTarget, 'assetLabel'>;
+
 export function renderPreview<T extends EntityCoreResource>(
   resource: T,
   size?: { height?: number | string; width?: number | string },
@@ -152,18 +164,58 @@ export function renderPreview<T extends EntityCoreResource>(
   loadingClassName?: string,
   fill?: boolean,
   customRender?: (src: string) => ReactNode,
-  target?: 'simulation' | 'stimulus'
+  target?: TThumbnailServiceTarget
+): JSX.Element;
+
+export function renderPreview<T extends EntityCoreResource>(
+  resource: T,
+  size?: { height?: number | string; width?: number | string },
+  className?: string,
+  rootClassName?: string,
+  loadingClassName?: string,
+  fill?: boolean,
+  customRender?: (src: string) => ReactNode,
+  target?: TEntityAssetTarget,
+  label?: AssetLabel
+): JSX.Element;
+
+export function renderPreview<T extends EntityCoreResource>(
+  resource: T,
+  size?: { height?: number | string; width?: number | string },
+  className?: string,
+  rootClassName?: string,
+  loadingClassName?: string,
+  fill?: boolean,
+  customRender?: (src: string) => ReactNode,
+  target?: TThumbnailServiceTarget | TEntityAssetTarget,
+  label?: AssetLabel
 ) {
+  if (target === PreviewTarget.AssetLabel) {
+    return (
+      <PreviewThumbnail
+        entity={resource}
+        width={size?.width}
+        height={size?.height}
+        className={className}
+        rootClassName={rootClassName}
+        loadingClassName={loadingClassName}
+        fill={fill}
+        target={target as TEntityAssetTarget}
+        label={label as AssetLabel}
+        customRender={customRender}
+      />
+    );
+  }
   return (
     <PreviewThumbnail
-      resource={resource}
+      entity={resource}
       width={size?.width}
       height={size?.height}
       className={className}
       rootClassName={rootClassName}
       loadingClassName={loadingClassName}
       fill={fill}
-      target={target}
+      target={target as TThumbnailServiceTarget}
       customRender={customRender}
     />
   );
