@@ -21,8 +21,15 @@ const costUnitDictionary: Record<string, string> = {
   creditsNeuronSecond: 'credit / neuron / second of biological time',
 };
 
-const getCostUnitDisplay = (costUnit: string | null): string => {
+const getCostUnitDisplay = (
+  costUnit: string | null,
+  customCostUnit: string | null = null
+): string => {
   if (!costUnit) return '';
+  // If costUnit is "custom", use customCostUnit instead
+  if (costUnit === 'custom' && customCostUnit) {
+    return customCostUnit;
+  }
   return costUnitDictionary[costUnit] ?? costUnit;
 };
 
@@ -53,13 +60,19 @@ function CustomHeaderCell({
   );
 }
 
+const formatNumber = (value: number | string): string => {
+  const num = typeof value === 'string' ? Number.parseFloat(value) : value;
+  if (Number.isNaN(num)) return String(value);
+  return num.toLocaleString('en-US');
+};
+
 const creditsPackColumns: ColumnsType<CreditsPack> = [
   {
     title: 'Credits',
     dataIndex: 'quantity',
     key: 'quantity',
     render: (value: string) => (
-      <span style={{ fontWeight: 'bold', color: '#002766' }}>{value}</span>
+      <span style={{ fontWeight: 'bold', color: '#002766' }}>{formatNumber(value)}</span>
     ),
   },
   {
@@ -79,22 +92,12 @@ const creditsPackColumns: ColumnsType<CreditsPack> = [
     },
   },
   {
-    title: 'Price (CHF)',
-    dataIndex: 'price',
-    key: 'price',
-    render: (value: number) => (
-      <span style={{ color: '#002766' }}>
-        <span style={{ fontWeight: 'bold' }}>{value}</span> CHF
-      </span>
-    ),
-  },
-  {
     title: 'Price/Credit (CHF)',
     dataIndex: 'pricePerCredit',
     key: 'pricePerCredit',
     render: (value: number) => (
       <span style={{ color: '#002766' }}>
-        <span style={{ fontWeight: 'bold' }}>{value}</span> CHF
+        <span style={{ fontWeight: 'bold' }}>{formatNumber(value)}</span> CHF
       </span>
     ),
   },
@@ -113,12 +116,14 @@ const priceColumns: ColumnsType<SinglePrice> = [
     title: 'Free plan',
     dataIndex: 'freePrice',
     key: 'freePrice',
-    render: (value: number | null, record: SinglePrice) => {
+    render: (value: string | null, record: SinglePrice) => {
       if (value === null) return <span style={{ color: '#002766' }}>-</span>;
-      const unitDisplay = getCostUnitDisplay(record.costUnit);
+      const unitDisplay = getCostUnitDisplay(record.costUnit, record.customCostUnit);
+      const numValue = Number.parseFloat(value);
       return (
         <span style={{ color: '#002766' }}>
-          <span style={{ fontWeight: 'bold' }}>{value}</span> {unitDisplay ? ` ${unitDisplay}` : ''}
+          <span style={{ fontWeight: 'bold' }}>{Number.isNaN(numValue) ? value : numValue}</span>{' '}
+          {unitDisplay ? ` ${unitDisplay}` : ''}
         </span>
       );
     },
@@ -127,12 +132,14 @@ const priceColumns: ColumnsType<SinglePrice> = [
     title: 'Pro plan',
     dataIndex: 'proPrice',
     key: 'proPrice',
-    render: (value: number | null, record: SinglePrice) => {
+    render: (value: string | null, record: SinglePrice) => {
       if (value === null) return <span style={{ color: '#002766' }}>-</span>;
-      const unitDisplay = getCostUnitDisplay(record.costUnit);
+      const unitDisplay = getCostUnitDisplay(record.costUnit, record.customCostUnit);
+      const numValue = Number.parseFloat(value);
       return (
         <span style={{ color: '#002766' }}>
-          <span style={{ fontWeight: 'bold' }}>{value}</span> {unitDisplay ? ` ${unitDisplay}` : ''}
+          <span style={{ fontWeight: 'bold' }}>{Number.isNaN(numValue) ? value : numValue}</span>{' '}
+          {unitDisplay ? ` ${unitDisplay}` : ''}
         </span>
       );
     },
@@ -143,8 +150,8 @@ export default function PriceTable({ prices, creditsPacks }: PriceTableProps) {
   const sortedPrices = useMemo(() => {
     return [...prices].sort((a, b) => {
       // Sort by freePrice (smallest to greatest), handling null values
-      const priceA = a.freePrice ?? Infinity;
-      const priceB = b.freePrice ?? Infinity;
+      const priceA = a.freePrice ? Number.parseFloat(a.freePrice) : Infinity;
+      const priceB = b.freePrice ? Number.parseFloat(b.freePrice) : Infinity;
       if (priceA !== priceB) {
         return priceA - priceB;
       }
@@ -167,8 +174,8 @@ export default function PriceTable({ prices, creditsPacks }: PriceTableProps) {
     // Sort each section by freePrice (smallest to greatest)
     Object.keys(grouped).forEach((section) => {
       grouped[section].sort((a, b) => {
-        const priceA = a.freePrice ?? Infinity;
-        const priceB = b.freePrice ?? Infinity;
+        const priceA = a.freePrice ? Number.parseFloat(a.freePrice) : Infinity;
+        const priceB = b.freePrice ? Number.parseFloat(b.freePrice) : Infinity;
         if (priceA !== priceB) {
           return priceA - priceB;
         }
@@ -229,7 +236,7 @@ export default function PriceTable({ prices, creditsPacks }: PriceTableProps) {
       {Object.entries(pricesBySection).map(([section, sectionPrices]) => (
         <div key={section}>
           {section !== 'Other' && (
-            <h3 className="text-primary-8 mt-12 mb-4 rounded-full bg-white/50 px-12 py-6 text-2xl font-bold">
+            <h3 className="text-primary-8 mt-12 mb-4 rounded-full bg-white/50 px-12 py-6 text-2xl font-bold capitalize">
               {section}
             </h3>
           )}
