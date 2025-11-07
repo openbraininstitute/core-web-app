@@ -6,7 +6,7 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
 export const viewDefForSmallMicrocircuitSimulation: ViewDefinitionConfig = {
-  title: 'Small microcircuit Simulation',
+  title: 'Small microcircuit Simulation (beta)',
   group: DataTypeGroup.SimulationData,
   name: EntitySlug.SmallMicrocircuitSimulation,
   curated: false,

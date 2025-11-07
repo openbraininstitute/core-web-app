@@ -87,7 +87,7 @@ export const Scales: Partial<
     link: 'explore',
   },
   [ExtendedEntitiesTypeDict.SingleNeuronSynaptome]: {
-    title: 'Single neuron synaptome',
+    title: 'Synaptome',
     build: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
     simulate: ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
     link: 'explore',

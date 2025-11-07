@@ -46,7 +46,7 @@ export function TypesMenu({
               active={current === value}
               value={value}
               disabled={disabled}
-              title={`${label}`}
+              title={label}
               onClick={onItemClick}
             />
           </CarouselItem>

@@ -1,8 +1,8 @@
-import groupBy from 'es-toolkit/compat/groupBy';
-import values from 'es-toolkit/compat/values';
-import sortBy from 'es-toolkit/compat/sortBy';
 import find from 'es-toolkit/compat/find';
 import get from 'es-toolkit/compat/get';
+import groupBy from 'es-toolkit/compat/groupBy';
+import sortBy from 'es-toolkit/compat/sortBy';
+import values from 'es-toolkit/compat/values';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
@@ -137,7 +137,7 @@ export const EntityWorkflowConfiguration: Partial<
   },
   [ExtendedEntitiesTypeDict.MemodelCircuit]: {
     group: EntityScopeDict.Cellular,
-    label: 'Single neuron [Unified UI]',
+    label: 'Single neuron (beta)',
     requiredFeatures: [inifiedSingleNeuronSimulationFlowFlag.key],
     properties: {
       build: {
@@ -152,7 +152,7 @@ export const EntityWorkflowConfiguration: Partial<
   },
   [ExtendedEntitiesTypeDict.SingleNeuronCircuit]: {
     group: EntityScopeDict.Cellular,
-    label: 'Single neuron with synapses [Unified UI]',
+    label: 'Synaptome (beta)',
     properties: {
       build: {
         disabled: true,
@@ -166,7 +166,7 @@ export const EntityWorkflowConfiguration: Partial<
   },
   [ExtendedEntitiesTypeDict.PairedNeuronCircuit]: {
     group: EntityScopeDict.Circuit,
-    label: 'Paired neurons',
+    label: 'Paired neurons (beta)',
     properties: {
       build: {
         disabled: true,
@@ -180,7 +180,7 @@ export const EntityWorkflowConfiguration: Partial<
   },
   [ExtendedEntitiesTypeDict.SmallMicrocircuit]: {
     group: EntityScopeDict.Circuit,
-    label: 'Small microcircuit',
+    label: 'Small microcircuit (beta)',
     properties: {
       build: {
         disabled: true,

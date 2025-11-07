@@ -128,7 +128,7 @@ export async function resolveSimulationByCampaignId({
 
 export const PairedNeuronCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
   group: EntityTypeGroup.Simulations,
-  title: 'Paired neurons',
+  title: 'Paired neurons (beta)',
   extendedType: ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.PairedNeuronCircuitSimulation,
