@@ -5,9 +5,10 @@ import { logError } from '@/util/logger';
 
 export type SinglePrice = {
   itemName: string;
-  freePrice: number | null;
-  proPrice: number | null;
+  freePrice: string | null;
+  proPrice: string | null;
   costUnit: string | null;
+  customCostUnit: string | null;
   section: string | null;
 };
 
@@ -16,7 +17,8 @@ const queryForSinglePrice = `*[_type == "singlePrice"][] {
   freePrice,
   proPrice,
   costUnit,
-  section
+  section,
+  customCostUnit
 }`;
 
 export async function GET() {
