@@ -3,6 +3,7 @@ import React from 'react';
 import {
   ArrayNumber2,
   tgdCalcMapRange,
+  TgdCameraState,
   tgdCanvasCreateFill,
   tgdCanvasCreatePalette,
   TgdContext,
@@ -115,6 +116,12 @@ export class PainterManager {
    */
   private lastCameraChangeTimestamp = 0;
 
+  /**
+   * Remember the camera position, so if we initialize with the
+   * same morphology, we can restore camera state.
+   */
+  private lastCameraState: TgdCameraState | null = null;
+
   private _clickable = true;
 
   get clickable() {
@@ -182,6 +189,10 @@ export class PainterManager {
   }
 
   set morphology(morphology: Morphology | null) {
+    if (!morphology || JSON.stringify(this._morphology) !== JSON.stringify(morphology)) {
+      this.lastCameraState = null;
+    }
+
     this._morphology = morphology;
     this.initialize();
   }
@@ -285,7 +296,10 @@ export class PainterManager {
     const { canvas, morphology } = this;
     if (!canvas || !morphology) return;
 
-    if (this.context) this.context.delete();
+    if (this.context) {
+      this.context.eventPaint.removeListener(this.handlePaint);
+      this.context.delete();
+    }
     if (this.cameraController) this.cameraController.detach();
     this.groupSynapses.delete();
     const structure = new Structure(morphology);
@@ -294,7 +308,7 @@ export class PainterManager {
       alpha: false,
       antialias: true,
     });
-    context.eventPaint.addListener(() => this.eventPaint.dispatch());
+    context.eventPaint.addListener(this.handlePaint);
     this.context = context;
     const { camera, zoomMin, zoomMax } = makeCamera(structure);
     context.camera = camera;
@@ -310,8 +324,12 @@ export class PainterManager {
     this.initCameraController(context, zoomMin, zoomMax);
     this.initOffscreen(context, structure);
     this.eventHintVisible.dispatch(false);
-    this.eventRestingPosition.dispatch(true);
     this.showSynapses(this.synapses);
+    if (this.lastCameraState) {
+      // Restore camera state
+      camera.setCurrentState(this.lastCameraState);
+      this.eventRestingPosition.dispatch(false);
+    }
   }
 
   private initOffscreen(context: TgdContext, structure: Structure) {
@@ -422,6 +440,14 @@ export class PainterManager {
     context.paint();
     this.groupHover = groupHover;
   }
+
+  private readonly handlePaint = () => {
+    const { context } = this;
+    if (!context) return;
+
+    this.lastCameraState = context.camera.getCurrentState();
+    this.eventPaint.dispatch();
+  };
 
   /**
    * @param controllerZoom Between `this.controller.minZoom` and `this.controller.maxZoom`.
