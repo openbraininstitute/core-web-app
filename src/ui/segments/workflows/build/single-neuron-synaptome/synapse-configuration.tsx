@@ -16,7 +16,7 @@ export function SynapseSetConfiguration({ sessionId }: Props) {
   return (
     <div className="grid h-full w-full grid-cols-2 flex-col items-start gap-4">
       <SynapseSet sessionId={sessionId} />
-      <div className="h-full max-h-full flex-1">
+      <div className="relative h-full max-h-full flex-1">
         {sessionValue?.memodel?.id && (
           <NeuronViewerContainer
             useCursor
