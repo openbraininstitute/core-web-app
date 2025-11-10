@@ -260,7 +260,7 @@ export default function PriceTable({
         <div>
           <h3
             className={cn(
-              'text-primary-8 mb-4 rounded-full px-12 py-6 text-4xl! font-bold',
+              'text-primary-8 mb-4 rounded-full px-12 py-6 text-3xl! font-bold',
               backgroundTitle
             )}
           >
@@ -285,7 +285,7 @@ export default function PriceTable({
           {section !== 'Other' && (
             <h3
               className={cn(
-                'text-primary-8 mt-12 mb-4 rounded-full px-12 py-6 text-4xl! font-bold',
+                'text-primary-8 mt-12 mb-4 rounded-full px-12 py-6 text-3xl! font-bold',
                 backgroundTitle
               )}
             >

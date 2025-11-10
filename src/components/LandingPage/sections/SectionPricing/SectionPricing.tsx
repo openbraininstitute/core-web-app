@@ -45,7 +45,7 @@ export default function SectionPricing() {
                 <PriceTable
                   prices={prices}
                   creditsPacks={creditsPacks}
-                  backgroundTitle="bg-black/6"
+                  backgroundTitle="bg-black/5"
                 />
               </div>
             )}
