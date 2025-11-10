@@ -1,19 +1,16 @@
-import { CheckCircleOutlined } from '@ant-design/icons';
-import { ReactNode, useState } from 'react';
-import { Button, Progress } from 'antd';
-import { match } from 'ts-pattern';
+import { kebabCase, get } from 'es-toolkit/compat';
+import { ReactNode } from 'react';
+import { Button } from 'antd';
 
-import kebabCase from 'es-toolkit/compat/kebabCase';
-import delay from 'es-toolkit/compat/delay';
-import saveAs from 'file-saver';
-
+import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
 import { renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
-import { trackDownloadProgress } from '@/utils/track-download-progress';
-import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { useAppNotification } from '@/components/notification';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { DownloadIcon } from '@/components/icons';
 import { formatBytes } from '@/utils/format';
 import { classNames } from '@/util/utils';
+import { tryCatch } from '@/api/utils';
+import { log } from '@/utils/logger';
 
 import type { TCircuitContentConfigurationKeys } from '@/ui/segments/explore/circuit/elements/download-panel/content-configuration';
 import type { DirectoryItem } from '@/api/entitycore/types/shared/global';
@@ -30,7 +27,7 @@ export type TConfigChild = {
 type TConfigChildProps = TConfigChild & {
   showType: string | null;
   showPrefix: string | null;
-  onDownload: ({ path, onProgress }: { path: string; onProgress: (p: number) => void }) => void;
+  onDownload: ({ path }: { path: string }) => void;
 };
 
 function ConfigChild({
@@ -43,64 +40,31 @@ function ConfigChild({
   description,
   onDownload,
 }: TConfigChildProps) {
-  const [downloadProgress, updateDownloadProgress] = useState(0);
-  const [status, setStatus] = useState<'idle' | 'downloading' | 'done'>('idle');
-
   const onClick = async () => {
     if (asset.path) {
-      setStatus('downloading');
-      await onDownload({
-        path: asset.path,
-        onProgress: (p: number) => {
-          updateDownloadProgress(p);
-          if (p >= 100) {
-            setStatus('done');
-            delay(() => setStatus('idle'), 3000);
-          }
-        },
-      });
-      updateDownloadProgress(0);
+      onDownload({ path: asset.path });
     }
   };
 
   const shouldBeDisabled = !asset.path || !asset.size;
-  const action = match({ status })
-    .with({ status: 'idle' }, () => (
-      <Button
-        onClick={onClick}
-        type="text"
-        htmlType="button"
-        disabled={shouldBeDisabled}
-        className={classNames(
-          'flex items-center justify-center rounded-none border border-solid',
-          'hover:text-primary-6!',
-          shouldBeDisabled
-            ? 'pointer-events-none cursor-not-allowed border-gray-300 bg-transparent text-gray-400!'
-            : 'border-primary-6 text-white'
-        )}
-        aria-label={`download ${title}`}
-        title={`download ${title}`}
-        icon={<DownloadIcon className="text-current!" />}
-      />
-    ))
-    .with({ status: 'downloading' }, () => (
-      <div className="flex flex-col items-center justify-center gap-0.5">
-        <Progress
-          type="circle"
-          percent={Math.round(downloadProgress)}
-          size={32}
-          strokeColor="#1890ff"
-          showInfo
-          className="[&_.ant-progress-text]:text-white!"
-          style={{ marginLeft: 8 }}
-        />
-        <span className="text-[8px]">downloading</span>
-      </div>
-    ))
-    .with({ status: 'done' }, () => (
-      <CheckCircleOutlined className="px-1 text-3xl text-green-400" />
-    ))
-    .otherwise(() => null);
+  const action = (
+    <Button
+      onClick={onClick}
+      type="text"
+      htmlType="button"
+      disabled={shouldBeDisabled}
+      className={classNames(
+        'flex items-center justify-center rounded-none border border-solid',
+        'hover:text-primary-6!',
+        shouldBeDisabled
+          ? 'pointer-events-none cursor-not-allowed border-gray-300 bg-transparent text-gray-400!'
+          : 'border-primary-6 text-white'
+      )}
+      aria-label={`Download ${title}`}
+      title={`Download ${title}`}
+      icon={<DownloadIcon className="text-current!" />}
+    />
+  );
 
   return (
     <div className="flex w-full flex-col">
@@ -166,38 +130,29 @@ export function NetworkConfigItem({
   className,
   downloadConfig,
 }: ConfigItemProps) {
-  const onDownload = async ({
-    path,
-    onProgress,
-  }: {
-    path: string;
-    onProgress?: (p: number) => void;
-  }) => {
+  const notify = useAppNotification();
+  const onDownload = async ({ path }: { path: string }) => {
     const { entityId, assetConfigId, context } = downloadConfig;
-    if (typeof entityId === 'string' && typeof assetConfigId === 'string') {
-      const pathSplit = path.split('/');
-      let filename = '';
-      if (pathSplit.length === 1) {
-        [filename] = pathSplit;
-      } else if (pathSplit.length > 1) {
-        const [population, nodeTile] = pathSplit;
-        filename = `${population}_${nodeTile}`;
-      }
-      const extension = pathSplit.pop()?.split('.').pop();
-      const result = await trackDownloadProgress(
-        () =>
-          downloadAsset({
-            entityId,
-            entityType: EntityTypeDict.Circuit,
-            id: assetConfigId,
-            ctx: context,
-            asRawResponse: true,
-            assetPath: path,
-          }),
-        onProgress
-      );
-      const blob = new Blob(result, { type: extension });
-      saveAs(blob, `${filename}`);
+    const { data, error } = await tryCatch(
+      getEntityCorePresignedUrl({
+        configAssetId: assetConfigId!,
+        entityId: entityId!,
+        entityType: EntityTypeDict.Circuit,
+        virtualLabId: context.virtualLabId,
+        projectId: context.projectId,
+        assetPath: path,
+      })
+    );
+    if (data) {
+      window.open(data.url, '_blank', 'noopener,noreferrer');
+    }
+    if (error) {
+      log('error', 'Error downloading entire circuit:', error);
+      notify.error({
+        message: 'Download Error',
+        description: get(error, 'message', 'An error occurred while downloading the circuit.'),
+        placement: 'topRight',
+      });
     }
   };
 
