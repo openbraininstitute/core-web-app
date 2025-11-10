@@ -22,8 +22,8 @@ import {
   webglPresetBlend,
   webglPresetDepth,
 } from '@tolokoban/tgd';
-
 import { useAtomValue } from 'jotai';
+
 import { useVisibleSynapses } from '../hooks';
 import { SimulationStatus, simulationStatusAtomFamily } from '../../../context';
 import { computeSectionOffset } from './math';
