@@ -128,7 +128,7 @@ export async function resolveSimulationByCampaignId({
 
 export const SingeNeuronCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
   group: EntityTypeGroup.Simulations,
-  title: 'Single neuron with synapses [Unified UI]',
+  title: 'Synaptome (beta)',
   extendedType: ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.SingleNeuronCircuitSimulation,

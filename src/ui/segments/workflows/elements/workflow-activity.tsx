@@ -1,11 +1,9 @@
 'use client';
 
+import { parseAsInteger, parseAsString, SingleParserBuilder, useQueryStates } from 'nuqs';
 import { Card, ConfigProvider, Empty, Pagination as AntPagination } from 'antd';
+import { kebabCase, find, get } from 'es-toolkit/compat';
 import { useRouter } from '@bprogress/next';
-import { useState } from 'react';
-import kebabCase from 'es-toolkit/compat/kebabCase';
-import find from 'es-toolkit/compat/find';
-import get from 'es-toolkit/compat/get';
 import Link from 'next/link';
 import type { ColumnsType } from 'antd/es/table/interface';
 
@@ -51,26 +49,61 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
 
-  const [{ activity: activityType, entityType, page, pageSize }, updateActivityState] = useState<{
-    activity: TActivityValue | undefined;
-    entityType: TExtendedEntitiesTypeDict | undefined;
-    page: number;
-    pageSize: number;
-  }>({
-    activity: ActivityValues.Build,
-    entityType: ExtendedEntitiesTypeDict.Memodel,
-    page: 1,
-    pageSize: DEFAULT_PAGE_MEDIUM_SIZE,
-  });
+  const [{ activityType, entityType, page, pageSize }, updateActivityState] = useQueryStates(
+    {
+      activityType: parseAsString
+        .withOptions({
+          clearOnDefault: false,
+          shallow: true,
+        })
+        .withDefault(ActivityValues.Build) as SingleParserBuilder<TActivityValue>,
+      entityType: parseAsString
+        .withOptions({
+          clearOnDefault: false,
+          shallow: true,
+        })
+        .withDefault(
+          ExtendedEntitiesTypeDict.Memodel
+        ) as SingleParserBuilder<TExtendedEntitiesTypeDict>,
+      page: parseAsInteger
+        .withOptions({
+          clearOnDefault: false,
+          shallow: true,
+        })
+        .withDefault(1) as SingleParserBuilder<number>,
+      pageSize: parseAsInteger
+        .withOptions({
+          clearOnDefault: false,
+          shallow: true,
+        })
+        .withDefault(DEFAULT_PAGE_MEDIUM_SIZE) as SingleParserBuilder<number>,
+    },
+    {
+      urlKeys: {
+        activityType: 'tactivity',
+        entityType: 'ttype',
+        page: 'page',
+        pageSize: 'size',
+      },
+    }
+  );
 
   const previousActivityType = usePrevious(activityType);
 
-  const updateActivity = (activity: TActivityValue | undefined) => {
-    updateActivityState((prev) => ({ ...prev, activity, page: 1 }));
+  const updateActivity = (activity: TActivityValue | null) => {
+    updateActivityState({
+      activityType: activity,
+      page: 1,
+      pageSize: DEFAULT_PAGE_MEDIUM_SIZE,
+    });
   };
 
-  const updateEntityType = (et: TExtendedEntitiesTypeDict | undefined) => {
-    updateActivityState((prev) => ({ ...prev, entityType: et, page: 1 }));
+  const updateEntityType = (et: TExtendedEntitiesTypeDict | null) => {
+    updateActivityState({
+      entityType: et,
+      page: 1,
+      pageSize: DEFAULT_PAGE_MEDIUM_SIZE,
+    });
   };
 
   const columns: ColumnsType<EntityCoreObjectTypes> = [
@@ -93,7 +126,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
       render: () => {
         return (
           <span className={cn('text-primary-9 flex items-center capitalize')}>
-            {find(ActivityDict, { value: activityType })?.name}
+            {find(ActivityDict, { value: activityType ?? undefined })?.name}
           </span>
         );
       },
@@ -151,8 +184,8 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
     activity: activityType!,
     selectionType: entityType!,
     entityType: entityType!,
-    page,
-    pageSize,
+    page: page ?? 1,
+    pageSize: pageSize ?? DEFAULT_PAGE_MEDIUM_SIZE,
     useKeepPreviousData: previousActivityType === activityType,
   });
 
@@ -166,13 +199,19 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
   });
 
   const selectedRow = selectedRows.at(0);
-  const configurationLink = entity?.detailViewSections?.includes('configuration')
-    ? `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}/configuration`
-    : `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}`;
+  // eslint-disable-next-line  no-nested-ternary
+  const configurationLink = entityType
+    ? entity?.detailViewSections?.includes('configuration')
+      ? `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}/configuration`
+      : `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}`
+    : null;
 
-  const resultsLink = entity?.detailViewSections?.includes('results')
-    ? `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}/results`
-    : `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}`;
+  // eslint-disable-next-line  no-nested-ternary
+  const resultsLink = entityType
+    ? entity?.detailViewSections?.includes('results')
+      ? `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}/results`
+      : `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}`
+    : null;
 
   const onDuplicate = () => {
     if (selectedRow?.type === ExtendedEntitiesTypeDict.SimulationCampaign) {
@@ -284,7 +323,10 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                       description={
                         <span className="text-primary-9">
                           You don’t have any activities yet
-                          <strong>{getEntityByExtendedType({ type: entityType })?.title}</strong>.
+                          <strong>
+                            {getEntityByExtendedType({ type: entityType ?? undefined })?.title}
+                          </strong>
+                          .
                         </span>
                       }
                     />
@@ -305,7 +347,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                       updateActivityState((prev) => ({ ...prev, page: _page }));
                     }}
                     size="default"
-                    current={page}
+                    current={page ?? 1}
                     total={activityResult?.pagination?.total_items}
                     showSizeChanger={false}
                     aria-label="pagination for listing results"
@@ -315,7 +357,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                     )}
                   />
                 </div>
-                {selectedRow && (
+                {selectedRow && configurationLink && (
                   <div className="flex h-[60px] shrink-0 items-center justify-center gap-2">
                     <Button
                       rounded
@@ -326,7 +368,8 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                     >
                       <Link href={configurationLink}>View configuration</Link>
                     </Button>
-                    {entityType !== ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation &&
+                    {resultsLink &&
+                      entityType !== ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation &&
                       entityType !== ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation &&
                       entityType !== ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation && (
                         <Button

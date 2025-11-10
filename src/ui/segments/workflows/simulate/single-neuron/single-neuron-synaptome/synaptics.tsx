@@ -52,10 +52,10 @@ export type UpdateSynapseSimulationProperty = {
 
 export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Props) {
   const breakpoint = useDefaultBreakpoint();
-  const key = getSessionKey(SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
   const spcKey = getSessionKey(STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
   const { virtualLabId, projectId } = useWorkspace();
   const [visualizedSynaptomes] = useAtom(synapsesPlacementAtom);
+  const key = getSessionKey(SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
   const [state, update] = useAtom(SynaptomeConfigurationAtomFamily(key));
   const [stimulationState, updateStimulation] = useAtom(StimulationConfigurationAtomFamily(spcKey));
   const ref = useRef<boolean | null>(null);
@@ -69,7 +69,6 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
     }),
     queryFn: () => getSingleNeuronSynaptomeConfiguration(synaptome, { virtualLabId, projectId }),
   });
-
   const placementConfigForForm = (
     simFormIndex: number
   ): TSingleNeuronSynaptomeConfiguration | undefined => {

@@ -1,6 +1,7 @@
+/* eslint-disable no-param-reassign */
 import React from 'react';
 
-import { usePainterManager } from './painter';
+import { PainterManager, usePainterController, usePainterManager } from './painter';
 import { HintPanel } from './hint';
 import ZoomSlider from './zoom-slider';
 import { useCleanMorphology } from './hooks';
@@ -17,6 +18,7 @@ export interface WebglNeuronSelectorProps {
   virtualLabId: string;
   meModelId: string;
   sessionId: string;
+  disableElectrodes?: boolean;
 }
 
 export function WebglNeuronSelector({
@@ -24,8 +26,35 @@ export function WebglNeuronSelector({
   virtualLabId,
   meModelId,
   sessionId,
+  disableElectrodes,
 }: WebglNeuronSelectorProps) {
   const painterManager = usePainterManager();
+
+  return (
+    <WebglNeuronSelectorContent
+      painterManager={painterManager}
+      projectId={projectId}
+      virtualLabId={virtualLabId}
+      meModelId={meModelId}
+      sessionId={sessionId}
+      disableElectrodes={disableElectrodes}
+    />
+  );
+}
+
+type WebglNeuronSelectorContentProps = WebglNeuronSelectorProps & {
+  painterManager: PainterManager;
+};
+
+function WebglNeuronSelectorContent({
+  projectId,
+  virtualLabId,
+  meModelId,
+  sessionId,
+  painterManager,
+  disableElectrodes = false,
+}: WebglNeuronSelectorContentProps) {
+  usePainterController(painterManager, sessionId, disableElectrodes);
   const { loading, error } = useCleanMorphology(
     painterManager,
     meModelId,
@@ -52,7 +81,9 @@ export function WebglNeuronSelector({
             <ZoomSlider className={styles.zoomSlider} painterManager={painterManager} />
             <ButtonResetCamera painterManager={painterManager} />
           </header>
-          <LegendOverlay painterManager={painterManager} sessionId={sessionId} />
+          {!disableElectrodes && (
+            <LegendOverlay painterManager={painterManager} sessionId={sessionId} />
+          )}
           <AddRecordingDialog painterManager={painterManager} sessionId={sessionId} />
         </>
       )}

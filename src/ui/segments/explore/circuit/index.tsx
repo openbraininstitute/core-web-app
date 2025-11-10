@@ -2,14 +2,13 @@
 
 'use client';
 
+import { parseAsString, SingleParserBuilder, useQueryStates } from 'nuqs';
 import { ReactNode, useEffect, type ComponentProps } from 'react';
-import { parseAsString, Parser, useQueryStates } from 'nuqs';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { WarningOutlined } from '@ant-design/icons';
+import { compact, get } from 'es-toolkit/compat';
 import { RESET } from 'jotai/utils';
-import compact from 'es-toolkit/compat/compact';
 import dynamic from 'next/dynamic';
-import get from 'es-toolkit/compat/get';
 
 import { RecursiveExpandableTable } from '@/ui/segments/explore/circuit/elements/recursive-expandable-table';
 import { createExpandableTableConfig } from '@/ui/segments/explore/circuit/elements/expandable-base-table';
@@ -85,11 +84,13 @@ export function BrowseCircuit({
   const [{ scope, view }] = useQueryStates({
     view: parseAsString
       .withDefault(CircuitView.Hierarchy)
-      .withOptions({ shallow: true, clearOnDefault: false }) as NonNullable<Parser<TCircuitView>>,
+      .withOptions({ shallow: true, clearOnDefault: false }) as NonNullable<
+      SingleParserBuilder<TCircuitView>
+    >,
     scope: parseAsString
       .withDefault(defaultScope ?? WorkspaceScope.Public)
       .withOptions({ shallow: true, clearOnDefault: false }) as NonNullable<
-      Parser<TWorkspaceScope>
+      SingleParserBuilder<TWorkspaceScope>
     >,
   });
 

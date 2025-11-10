@@ -1,14 +1,11 @@
 'use client';
 
+import { parseAsString, SingleParserBuilder, useQueryStates } from 'nuqs';
 import { motion, AnimatePresence } from 'motion/react';
 import { kebabCase } from 'es-toolkit/compat';
-import { use, useRef, useState } from 'react';
 import { useRouter } from '@bprogress/next';
+import { use, useRef } from 'react';
 
-import {
-  ActivityValues,
-  WorkflowSessionIdSearchParam,
-} from '@/ui/segments/workflows/elements/helpers';
 import { useNextStepOnboarding, workflowTour } from '@/ui/segments/app-setup/discover-app';
 import { WorkflowActivity } from '@/ui/segments/workflows/elements/workflow-activity';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
@@ -18,6 +15,10 @@ import {
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { TypesMenu } from '@/ui/segments/workflows/elements/types-menu';
+import {
+  ActivityValues,
+  WorkflowSessionIdSearchParam,
+} from '@/ui/segments/workflows/elements/helpers';
 import { ROOT_ROUTE } from '@/config';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -26,34 +27,43 @@ import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 
 export default function Page({ params }: ServerSideComponentProp<WorkspaceContext, null>) {
   useDisableElementOverflow({ id: 'workspace-body' });
-
-  const { push: navigate } = useRouter();
   const { virtualLabId, projectId } = use(params);
-
+  const { push: navigate } = useRouter();
   const tableRef = useRef<HTMLDivElement>(null);
-  const [{ activity, entityType }, updateWorkflowState] = useState<{
-    activity: TActivityValue | undefined;
-    entityType: TExtendedEntitiesTypeDict | undefined;
-  }>({
-    activity: undefined,
-    entityType: undefined,
-  });
+  const [{ activity, entityType }, updateWorkflowState] = useQueryStates(
+    {
+      activity: parseAsString.withOptions({
+        clearOnDefault: false,
+        shallow: true,
+      }) as SingleParserBuilder<TActivityValue>,
+      entityType: parseAsString.withOptions({
+        clearOnDefault: false,
+        shallow: true,
+      }) as SingleParserBuilder<TExtendedEntitiesTypeDict>,
+    },
+    {
+      urlKeys: {
+        activity: 'activity',
+        entityType: 'type',
+      },
+    }
+  );
 
-  const onSelectCategory = (value: TActivityValue | undefined) => {
-    updateWorkflowState(() => ({ activity: value, entityType: undefined }));
+  const onSelectCategory = (value: TActivityValue | null) => {
+    updateWorkflowState(() => ({ activity: value, entityType: null }));
   };
 
-  const onSelectType = (value: TExtendedEntitiesTypeDict | undefined) => {
-    updateWorkflowState((prev) => ({ ...prev, entityType: value }));
+  const onSelectType = (value: TExtendedEntitiesTypeDict | null) => {
     if (activity === ActivityValues.Build) {
       const sessionId = crypto.randomUUID();
       const query = new URLSearchParams();
       query.set(WorkflowSessionIdSearchParam, sessionId);
       query.set(PanelQueryParam, WorkflowSimulatePanels.Configuration);
-      navigate(
-        `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/configure/${kebabCase(value)}?${query.toString()}`
-      );
-    } else if (activity === ActivityValues.Simulate) {
+      if (value)
+        navigate(
+          `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/configure/${kebabCase(value)}?${query.toString()}`
+        );
+    } else if (activity === ActivityValues.Simulate && value) {
       navigate(
         `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}`
       );

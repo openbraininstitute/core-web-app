@@ -23,16 +23,19 @@ export function EntityTypeSelectScrollable({
   category,
   onSelect,
 }: {
-  category: TActivityValue | undefined;
-  value: TExtendedEntitiesTypeDict | undefined;
-  onSelect: (v: TExtendedEntitiesTypeDict | undefined) => void;
+  category: TActivityValue | null;
+  value: TExtendedEntitiesTypeDict | null;
+  onSelect: (v: TExtendedEntitiesTypeDict | null) => void;
 }) {
   const featureFlags = useFlags();
-
   const breakpoint = useDefaultBreakpoint();
+
   if (!category) return null;
   return (
-    <Select value={value} onValueChange={(v: TExtendedEntitiesTypeDict) => onSelect(v)}>
+    <Select
+      value={value ?? undefined}
+      onValueChange={(v: TExtendedEntitiesTypeDict) => onSelect(v)}
+    >
       <SelectTrigger
         size={breakpoint === 'l' ? 'sm' : 'default'}
         className={cn(
@@ -76,12 +79,12 @@ export function CategorySelectScrollable({
   value,
   onSelect,
 }: {
-  value: TActivityValue | undefined;
-  onSelect: (v: TActivityValue | undefined) => void;
+  value: TActivityValue | null;
+  onSelect: (v: TActivityValue | null) => void;
 }) {
   const breakpoint = useDefaultBreakpoint();
   return (
-    <Select value={value} onValueChange={(v: TActivityValue) => onSelect(v)}>
+    <Select value={value ?? undefined} onValueChange={(v: TActivityValue) => onSelect(v)}>
       <SelectTrigger
         size={breakpoint === 'l' ? 'sm' : 'default'}
         className={cn(

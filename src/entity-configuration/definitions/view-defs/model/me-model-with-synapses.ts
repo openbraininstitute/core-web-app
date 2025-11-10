@@ -4,7 +4,7 @@ import { EntityCoreFields } from '../../fields-defs/enums';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 export const ViewDefForMEModelWithSynapsesCircuit: ViewDefinitionConfig = {
-  title: 'ME-model with Synapses',
+  title: 'Synaptome (beta)',
   name: EntitySlug.MEModelWithSynapses,
   curated: false,
   columns: [

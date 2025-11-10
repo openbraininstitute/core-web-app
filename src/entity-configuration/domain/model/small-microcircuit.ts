@@ -10,7 +10,7 @@ import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 export const SmallMicrocircuit: EntityCoreTypeConfig<ICircuit> = {
   group: EntityTypeGroup.Models,
-  title: 'Small microcircuit',
+  title: 'Small microcircuit (beta)',
   extendedType: ExtendedEntitiesTypeDict.SmallMicrocircuit,
   type: EntityTypeDict.Circuit,
   slug: EntitySlug.SmallMicrocircuit,

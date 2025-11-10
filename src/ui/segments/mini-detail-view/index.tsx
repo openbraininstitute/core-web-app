@@ -1,13 +1,11 @@
 import { CheckCircleFilled, CloseOutlined, CopyOutlined, LoadingOutlined } from '@ant-design/icons';
 import { AnimatePresence, motion } from 'motion/react';
+import { includes, kebabCase } from 'es-toolkit/compat';
 import { useMutation } from '@tanstack/react-query';
-import { includes } from 'es-toolkit/compat';
 import { useState, useEffect } from 'react';
 import { match, P } from 'ts-pattern';
 import { useAtom } from 'jotai';
 import { Image } from 'antd';
-
-import kebabCase from 'es-toolkit/compat/kebabCase';
 import Link from 'next/link';
 
 import { useSearchParams } from 'next/navigation';
@@ -25,6 +23,7 @@ import {
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { ExpandableText } from '@/ui/molecules/more-less-text';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
@@ -35,8 +34,8 @@ import { WorkspaceSection } from '@/constants';
 import { Button } from '@/ui/molecules/button';
 import {
   makeSelectEntityClickEvent,
-  useSelectEntityClickEvent,
   useMiniDetailView,
+  useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
 import { ROOT_ROUTE } from '@/config';
@@ -69,7 +68,6 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
     setRecord(event.detail.data);
   });
 
-  // Reset record when mdv becomes false
   useEffect(() => {
     if (!mdv && record) {
       setRecord(null);
@@ -135,6 +133,38 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
                   className="max-h-full w-full rounded-md object-contain"
                 />
               )
+            )}
+          </div>
+        );
+      }
+    )
+    .with(
+      {
+        type: P.union(ExtendedEntitiesTypeDict.IonChannelModel),
+      },
+      () => {
+        return (
+          <div
+            className="mt-5 flex w-full items-center justify-center rounded-md bg-white"
+            key={record.id}
+          >
+            {renderPreview(
+              record as unknown as EntityCoreResource,
+              undefined,
+              undefined,
+              'rounded-md h-full relative w-full!',
+              'w-full! h-[200px]! flex!',
+              true,
+              (src) => (
+                <Image
+                  alt={`${record.name} preview`}
+                  src={src}
+                  rootClassName=" w-full  h-80"
+                  className="max-h-full w-full rounded-md object-contain"
+                />
+              ),
+              'assetLabel',
+              AssetLabel.ion_channel_model_thumbnail
             )}
           </div>
         );

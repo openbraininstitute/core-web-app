@@ -92,7 +92,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     ],
   },
   [ExtendedEntitiesTypeDict.MemodelCircuitSimulation]: {
-    title: 'Single neuron [unified UI] simulation',
+    title: 'Single neuron simulation (beta)',
     group: DataTypeGroup.SimulationData,
     name: EntitySlug.MEModelCircuitSimulation,
     curated: false,
@@ -154,7 +154,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     ],
   },
   [ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation]: {
-    title: 'Paired Neurons Simulation',
+    title: 'Paired Neurons Simulation (beta)',
     group: DataTypeGroup.SimulationData,
     name: EntitySlug.PairedNeuronCircuitSimulation,
     curated: false,
@@ -185,7 +185,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     ],
   },
   [ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation]: {
-    title: 'Small microcircuit Simulation',
+    title: 'Small microcircuit Simulation (beta)',
     group: DataTypeGroup.SimulationData,
     name: EntitySlug.SmallMicrocircuitSimulation,
     curated: false,

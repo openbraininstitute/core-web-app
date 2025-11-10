@@ -20,7 +20,6 @@ export class OffscreenPainter {
     private readonly onscreenContext: TgdContext,
     private readonly structure: Structure
   ) {
-    onscreenContext.debugHierarchy('On Screen Context: ' + onscreenContext.name);
     onscreenContext.eventPaint.addListener(this.paint);
     const context = new TgdContext(this.offscreenCanvas, {
       preserveDrawingBuffer: true,

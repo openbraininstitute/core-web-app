@@ -23,10 +23,6 @@ export default function FeaturesNavigation() {
       name: 'Circuit',
       id: 'circuit',
     },
-    {
-      name: 'System',
-      id: 'system',
-    },
   ];
 
   const searchParams = useSearchParams();

@@ -10,8 +10,8 @@ import { MenuItem } from '@/ui/segments/workflows/elements/menu-item';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 
 type Props = {
-  current: TActivityValue | undefined;
-  onItemClick: (v: TActivityValue | undefined) => void;
+  current: TActivityValue | null;
+  onItemClick: (v: TActivityValue | null) => void;
 };
 
 export function CategoryMenu({ current, onItemClick }: Props) {
@@ -33,7 +33,7 @@ export function CategoryMenu({ current, onItemClick }: Props) {
             key={`category-selector-${o.value}`}
             className="w-max basis-1/2 py-2 md:basis-1/3! lg:basis-1/5! 2xl:basis-1/6!"
           >
-            <MenuItem<TActivityValue | undefined>
+            <MenuItem<TActivityValue | null>
               disabled={o.disabled}
               active={current === o.value}
               title={o.label}

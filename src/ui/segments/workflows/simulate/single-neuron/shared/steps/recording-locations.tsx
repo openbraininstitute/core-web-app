@@ -150,6 +150,8 @@ function RecordItem({
             )}
             step={0.01}
             disabled={disable}
+            min={0}
+            max={1}
             suffix={
               <div className="pointer-events-auto">
                 <Tooltip>

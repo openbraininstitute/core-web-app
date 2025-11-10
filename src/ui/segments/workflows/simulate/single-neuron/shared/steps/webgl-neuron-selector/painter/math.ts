@@ -1,4 +1,4 @@
-import { TgdVec4, TgdCamera, TgdMat4, TgdVec2 } from '@tolokoban/tgd';
+import { TgdVec4, TgdCamera, TgdMat4, TgdVec2, tgdCalcClamp } from '@tolokoban/tgd';
 
 import { Structure, StructureItem } from './structure';
 
@@ -42,5 +42,5 @@ function computeSegmentOffset(
   vecU.normalize();
   const vecV = new TgdVec2(xScreen - start.x, yScreen - start.y);
   const distance = vecU.dot(vecV);
-  return length > 0 ? distance / length : 0;
+  return tgdCalcClamp(length > 0 ? distance / length : 0, 0, 1);
 }
