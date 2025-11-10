@@ -3,9 +3,9 @@ import React from 'react';
 import {
   ArrayNumber2,
   tgdCalcMapRange,
+  TgdCameraState,
   tgdCanvasCreateFill,
   tgdCanvasCreatePalette,
-  TgdCamera,
   TgdContext,
   TgdControllerCameraOrbit,
   TgdLight,
@@ -22,7 +22,6 @@ import {
   TgdVec3,
   webglPresetBlend,
   webglPresetDepth,
-  TgdCameraState,
 } from '@tolokoban/tgd';
 import { useAtomValue } from 'jotai';
 
@@ -84,12 +83,6 @@ export class PainterManager {
 
   private _canvas: HTMLCanvasElement | null = null;
 
-  private camera: TgdCamera | null = null;
-
-  private zoomMin = 0.1;
-
-  private zoomMax = 10;
-
   private context: TgdContext | null = null;
 
   private offscreen: OffscreenPainter | null = null;
@@ -104,7 +97,7 @@ export class PainterManager {
 
   private _hoverItem: SelectedItem = { x: 0, y: 0, offset: 0, item: null };
 
-  private cameraInitialState: TgdCameraState | undefined = undefined;
+  private initialPosition = new TgdVec3();
 
   private cameraController: TgdControllerCameraOrbit | null = null;
 
@@ -122,6 +115,12 @@ export class PainterManager {
    * recording.
    */
   private lastCameraChangeTimestamp = 0;
+
+  /**
+   * Remember the camera position, so if we initialize with the
+   * same morphology, we can restore camera state.
+   */
+  private lastCameraState: TgdCameraState | null = null;
 
   private _clickable = true;
 
@@ -182,7 +181,6 @@ export class PainterManager {
     if (this._canvas === canvas) return;
 
     this._canvas = canvas;
-    console.log('New CANVAS');
     this.initialize();
   }
 
@@ -191,13 +189,11 @@ export class PainterManager {
   }
 
   set morphology(morphology: Morphology | null) {
-    if (JSON.stringify(this.morphology) === JSON.stringify(morphology)) return;
+    if (!morphology || JSON.stringify(this._morphology) !== JSON.stringify(morphology)) {
+      this.lastCameraState = null;
+    }
 
     this._morphology = morphology;
-    this.camera = null;
-    this.cameraController?.detach();
-    this.cameraController = null;
-    console.log('New MORPHOLOGY');
     this.initialize();
   }
 
@@ -300,8 +296,11 @@ export class PainterManager {
     const { canvas, morphology } = this;
     if (!canvas || !morphology) return;
 
-    console.log(`initialize() #${this.id}`);
-    if (this.context) this.context.delete();
+    if (this.context) {
+      this.context.eventPaint.removeListener(this.handlePaint);
+      this.context.delete();
+    }
+    if (this.cameraController) this.cameraController.detach();
     this.groupSynapses.delete();
     const structure = new Structure(morphology);
     this.structure = structure;
@@ -309,25 +308,11 @@ export class PainterManager {
       alpha: false,
       antialias: true,
     });
-    context.eventPaint.addListener(() => this.eventPaint.dispatch());
+    context.eventPaint.addListener(this.handlePaint);
     this.context = context;
-    if (this.camera) {
-      // We already have a camera setted for this morphology.
-      console.debug('Using OLD camera');
-      context.camera = this.camera;
-      this.cameraController?.detach();
-      this.initCameraController(context, this.zoomMin, this.zoomMax);
-    } else {
-      // We need to create a new camera.
-      const { camera, zoomMin, zoomMax } = makeCamera(structure);
-      console.debug('Creating NEW camera');
-      this.cameraInitialState = camera.getCurrentState();
-      this.zoomMin = zoomMin;
-      this.zoomMax = zoomMax;
-      context.camera = camera;
-      this.camera = camera;
-      this.initCameraController(context, zoomMin, zoomMax);
-    }
+    const { camera, zoomMin, zoomMax } = makeCamera(structure);
+    context.camera = camera;
+    this.initialPosition.from(context.camera.transfo.position);
     const palette = new TgdTexture2D(context)
       .loadBitmap(tgdCanvasCreatePalette(PALETTE))
       .setParams({
@@ -336,10 +321,15 @@ export class PainterManager {
       });
     this.palette = palette;
     this.initTgdPainters(context, structure, palette);
+    this.initCameraController(context, zoomMin, zoomMax);
     this.initOffscreen(context, structure);
     this.eventHintVisible.dispatch(false);
-    this.eventRestingPosition.dispatch(true);
     this.showSynapses(this.synapses);
+    if (this.lastCameraState) {
+      // Restore camera state
+      camera.setCurrentState(this.lastCameraState);
+      this.eventRestingPosition.dispatch(false);
+    }
   }
 
   private initOffscreen(context: TgdContext, structure: Structure) {
@@ -397,20 +387,17 @@ export class PainterManager {
 
   private initCameraController(context: TgdContext, minZoom: number, maxZoom: number) {
     const cameraController = new TgdControllerCameraOrbit(context, {
-      debug: true,
       inertiaOrbit: 500,
       inertiaZoom: 250,
       minZoom,
       maxZoom,
       speedZoom: 1,
-      cameraInitialState: this.cameraInitialState,
       onZoomRequest: ({ zoom }) => {
         this.eventZoom.dispatch(this.toNormalizedZoom(zoom));
         return true;
       },
     });
     this.cameraController = cameraController;
-    cameraController.enabled = true;
     cameraController.eventChange.addListener(() => {
       // Remember last camera movement to prevent false clicks.
       this.lastCameraChangeTimestamp = Date.now();
@@ -453,6 +440,14 @@ export class PainterManager {
     context.paint();
     this.groupHover = groupHover;
   }
+
+  private readonly handlePaint = () => {
+    const { context } = this;
+    if (!context) return;
+
+    this.lastCameraState = context.camera.getCurrentState();
+    this.eventPaint.dispatch();
+  };
 
   /**
    * @param controllerZoom Between `this.controller.minZoom` and `this.controller.maxZoom`.
