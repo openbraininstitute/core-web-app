@@ -1,15 +1,15 @@
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-import type { IMType, EntityCoreType } from '@/api/entitycore/types/shared/global';
 import type { IExperimentalDensity } from '@/api/entitycore/types/shared/density';
+import type { EntityCoreType, IMType } from '@/api/entitycore/types/shared/global';
 import type {
-  TimestampsFilter,
+  BrainRegionFilter,
+  ContributionFilter,
+  EtypeFilter,
   PaginationFilter,
   SharedFilter,
-  ContributionFilter,
-  BrainRegionFilter,
-  SpeciesFilter,
-  EtypeFilter,
   StainFilter,
+  SubjectFilter,
+  TimestampsFilter,
 } from '@/api/entitycore/types/shared/request';
 
 export interface IExperimentalSynapsesPerConnection extends IExperimentalDensity, EntityCoreType {
@@ -58,15 +58,15 @@ type PostMtypeFilter = {
 
 export type ExperimentalSynapsesPerConnectionFilter = Partial<
   SharedFilter &
-    TimestampsFilter &
-    PaginationFilter &
-    ContributionFilter &
     BrainRegionFilter &
-    SpeciesFilter &
-    StainFilter &
+    ContributionFilter &
     EtypeFilter &
-    PreMtypeFilter &
+    PaginationFilter &
     PostMtypeFilter &
+    PostRegionFilter &
+    PreMtypeFilter &
     PreRegionFilter &
-    PostRegionFilter
+    StainFilter &
+    SubjectFilter &
+    TimestampsFilter
 >;

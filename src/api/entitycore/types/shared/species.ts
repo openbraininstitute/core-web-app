@@ -5,13 +5,11 @@ import type {
   OwnershipFilter,
   PaginationFilter,
   SearchFilter,
-  SpeciesFilter,
 } from '@/api/entitycore/types/shared/request';
 
 export interface ISpeciesFilter
   extends PaginationFilter,
     OwnershipFilter,
-    SpeciesFilter,
     IDFilter,
     SearchFilter,
     ContributionFilter {}

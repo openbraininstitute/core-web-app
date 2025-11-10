@@ -281,6 +281,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       [ExtendedEntitiesTypeDict.ExperimentalBoutonDensity]: 'subject__species__name__in',
       [ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection]: 'subject__species__name__in',
       [ExtendedEntitiesTypeDict.IonChannelModel]: 'subject__species__name__in',
+      [ExtendedEntitiesTypeDict.IonChannelRecording]: 'subject__species__name__in',
       [ExtendedEntitiesTypeDict.Circuit]: 'subject__species__name__in',
       [ExtendedEntitiesTypeDict.MEModelWithSynapses]: 'subject__species__name__in',
     },
