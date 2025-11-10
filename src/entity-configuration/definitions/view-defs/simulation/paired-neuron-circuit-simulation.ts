@@ -6,7 +6,7 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
 export const viewDefForPairedNeuronCircuitSimulation: ViewDefinitionConfig = {
-  title: 'Paired Neurons Simulation',
+  title: 'Paired Neurons Simulation (beta)',
   group: DataTypeGroup.SimulationData,
   name: EntitySlug.PairedNeuronCircuitSimulation,
   curated: false,

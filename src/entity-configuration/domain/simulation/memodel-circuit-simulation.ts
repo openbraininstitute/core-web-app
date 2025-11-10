@@ -1,31 +1,30 @@
 import flatMap from 'es-toolkit/compat/flatMap';
 import keyBy from 'es-toolkit/compat/keyBy';
 
-import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
-import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { getAssetElement } from '@/api/entitycore/utils';
+import { unifiedSingleNeuronSimulationFlowFlag } from '@/features/feature-flags/flags';
+import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-
+import { getAssetElement } from '@/api/entitycore/utils';
+import { getMEModels } from '@/api/entitycore/queries';
 import {
   createSimulationCampaign,
   getCircuitSimulationCampaign,
   getCircuitSimulationCampaigns,
 } from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
 
-import { getMEModels } from '@/api/entitycore/queries';
-import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
+import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type {
   ICircuitSimulationCampaign,
   ICircuitSimulationCampaignFilter,
 } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
-import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { WorkspaceContext } from '@/types/common';
-import { inifiedSingleNeuronSimulationFlowFlag } from '@/features/feature-flags/flags';
 
 export async function resolveExecutions({
   context,
@@ -106,7 +105,7 @@ async function resolveSimulationCampaigns({
   const memodelMap = keyBy(memodels.data, 'id');
   const result = enrichedData.map((entity) => ({
     ...entity,
-    memodel: memodelMap[entity.entity_id] || null,
+    circuit: memodelMap[entity.entity_id] || null,
   }));
 
   return {
@@ -153,11 +152,11 @@ export async function resolveSimulationByCampaignId({
 
 export const MEModelCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
   group: EntityTypeGroup.Simulations,
-  title: 'Single neuron [Unified UI]',
+  title: 'Single neuron (beta)',
   extendedType: ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.MEModelCircuitSimulation,
-  requiredFeatures: [inifiedSingleNeuronSimulationFlowFlag.key],
+  requiredFeatures: [unifiedSingleNeuronSimulationFlowFlag.key],
   api: {
     config: { allowedFacets: true },
     query: {

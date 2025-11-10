@@ -10,7 +10,7 @@ import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 export const MEModelWithSynapsesCircuit: EntityCoreTypeConfig<ICircuit> = {
   group: EntityTypeGroup.Models,
-  title: 'ME-model with Synapses',
+  title: 'Synaptome (beta)',
   extendedType: ExtendedEntitiesTypeDict.MEModelWithSynapses,
   type: EntityTypeDict.Circuit,
   slug: EntitySlug.Circuit,

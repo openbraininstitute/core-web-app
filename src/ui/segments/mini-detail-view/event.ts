@@ -1,6 +1,7 @@
-import { parseAsBoolean, useQueryState } from 'nuqs';
+import { noop } from 'es-toolkit/compat';
+import { useAtom } from 'jotai/react';
 import { useEffect } from 'react';
-import noop from 'es-toolkit/compat/noop';
+import { atom } from 'jotai';
 
 import { isBrowser } from '@/utils/environment';
 
@@ -55,10 +56,9 @@ export const useSelectEntityClickEvent = <T>(
 
 export const MiniDetailViewSearchParam = 'mdv';
 
-export function useMiniDetailView() {
-  const [mdv, setMdv] = useQueryState(
-    MiniDetailViewSearchParam,
-    parseAsBoolean.withDefault(false).withOptions({ clearOnDefault: true, shallow: true })
-  );
+export const miniDetailViewDisplayAtom = atom(false);
+
+export const useMiniDetailView = () => {
+  const [mdv, setMdv] = useAtom(miniDetailViewDisplayAtom);
   return { mdv, setMdv };
-}
+};

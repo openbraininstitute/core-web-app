@@ -7,10 +7,12 @@ import { useMemo } from 'react';
 
 import type { CreditsPack } from '@/app/api/help/credits/route';
 import type { SinglePrice } from '@/app/api/help/prices/route';
+import { cn } from '@/utils/css-class';
 
 type PriceTableProps = {
   prices: SinglePrice[];
   creditsPacks: CreditsPack[];
+  backgroundTitle?: string;
 };
 
 const costUnitDictionary: Record<string, string> = {
@@ -21,8 +23,15 @@ const costUnitDictionary: Record<string, string> = {
   creditsNeuronSecond: 'credit / neuron / second of biological time',
 };
 
-const getCostUnitDisplay = (costUnit: string | null): string => {
+const getCostUnitDisplay = (
+  costUnit: string | null,
+  customCostUnit: string | null = null
+): string => {
   if (!costUnit) return '';
+  // If costUnit is "custom", use customCostUnit instead
+  if (costUnit === 'custom' && customCostUnit) {
+    return customCostUnit;
+  }
   return costUnitDictionary[costUnit] ?? costUnit;
 };
 
@@ -53,13 +62,55 @@ function CustomHeaderCell({
   );
 }
 
+const formatNumber = (value: number | string): string => {
+  const num = typeof value === 'string' ? Number.parseFloat(value) : value;
+  if (Number.isNaN(num)) return String(value);
+  return num.toLocaleString('en-US');
+};
+
+const formatQuantityRange = (value: string): string => {
+  // Check if the value contains a range (e.g., "500-999" or "25000-49999")
+  if (value.includes('-')) {
+    const parts = value.split('-').map((part) => part.trim());
+    if (parts.length === 2) {
+      const start = Number.parseFloat(parts[0]);
+      const end = Number.parseFloat(parts[1]);
+
+      // Format each number with commas if > 999
+      const formattedStart =
+        !Number.isNaN(start) && start > 999 ? start.toLocaleString('en-US') : parts[0];
+      const formattedEnd = !Number.isNaN(end) && end > 999 ? end.toLocaleString('en-US') : parts[1];
+
+      return `${formattedStart}-${formattedEnd}`;
+    }
+  }
+  // If not a range, format as single number
+  const num = Number.parseFloat(value);
+  if (!Number.isNaN(num) && num > 999) {
+    return num.toLocaleString('en-US');
+  }
+  return value;
+};
+
+const formatSectionName = (section: string): string => {
+  // Special case for aiAssistant
+  if (section.toLowerCase() === 'aiassistant') {
+    return 'AI Assistant';
+  }
+  // Convert camelCase to Title Case
+  return section
+    .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+    .replace(/^./, (str) => str.toUpperCase()) // Capitalize first letter
+    .trim();
+};
+
 const creditsPackColumns: ColumnsType<CreditsPack> = [
   {
     title: 'Credits',
     dataIndex: 'quantity',
     key: 'quantity',
     render: (value: string) => (
-      <span style={{ fontWeight: 'bold', color: '#002766' }}>{value}</span>
+      <span style={{ fontWeight: 'bold', color: '#002766' }}>{formatQuantityRange(value)}</span>
     ),
   },
   {
@@ -79,22 +130,12 @@ const creditsPackColumns: ColumnsType<CreditsPack> = [
     },
   },
   {
-    title: 'Price (CHF)',
-    dataIndex: 'price',
-    key: 'price',
-    render: (value: number) => (
-      <span style={{ color: '#002766' }}>
-        <span style={{ fontWeight: 'bold' }}>{value}</span> CHF
-      </span>
-    ),
-  },
-  {
     title: 'Price/Credit (CHF)',
     dataIndex: 'pricePerCredit',
     key: 'pricePerCredit',
     render: (value: number) => (
       <span style={{ color: '#002766' }}>
-        <span style={{ fontWeight: 'bold' }}>{value}</span> CHF
+        <span style={{ fontWeight: 'bold' }}>{formatNumber(value)}</span> CHF
       </span>
     ),
   },
@@ -113,12 +154,14 @@ const priceColumns: ColumnsType<SinglePrice> = [
     title: 'Free plan',
     dataIndex: 'freePrice',
     key: 'freePrice',
-    render: (value: number | null, record: SinglePrice) => {
+    render: (value: string | null, record: SinglePrice) => {
       if (value === null) return <span style={{ color: '#002766' }}>-</span>;
-      const unitDisplay = getCostUnitDisplay(record.costUnit);
+      const unitDisplay = getCostUnitDisplay(record.costUnit, record.customCostUnit);
+      const numValue = Number.parseFloat(value);
       return (
         <span style={{ color: '#002766' }}>
-          <span style={{ fontWeight: 'bold' }}>{value}</span> {unitDisplay ? ` ${unitDisplay}` : ''}
+          <span style={{ fontWeight: 'bold' }}>{Number.isNaN(numValue) ? value : numValue}</span>{' '}
+          {unitDisplay ? ` ${unitDisplay}` : ''}
         </span>
       );
     },
@@ -127,24 +170,30 @@ const priceColumns: ColumnsType<SinglePrice> = [
     title: 'Pro plan',
     dataIndex: 'proPrice',
     key: 'proPrice',
-    render: (value: number | null, record: SinglePrice) => {
+    render: (value: string | null, record: SinglePrice) => {
       if (value === null) return <span style={{ color: '#002766' }}>-</span>;
-      const unitDisplay = getCostUnitDisplay(record.costUnit);
+      const unitDisplay = getCostUnitDisplay(record.costUnit, record.customCostUnit);
+      const numValue = Number.parseFloat(value);
       return (
         <span style={{ color: '#002766' }}>
-          <span style={{ fontWeight: 'bold' }}>{value}</span> {unitDisplay ? ` ${unitDisplay}` : ''}
+          <span style={{ fontWeight: 'bold' }}>{Number.isNaN(numValue) ? value : numValue}</span>{' '}
+          {unitDisplay ? ` ${unitDisplay}` : ''}
         </span>
       );
     },
   },
 ];
 
-export default function PriceTable({ prices, creditsPacks }: PriceTableProps) {
+export default function PriceTable({
+  prices,
+  creditsPacks,
+  backgroundTitle = 'white/50',
+}: PriceTableProps) {
   const sortedPrices = useMemo(() => {
     return [...prices].sort((a, b) => {
       // Sort by freePrice (smallest to greatest), handling null values
-      const priceA = a.freePrice ?? Infinity;
-      const priceB = b.freePrice ?? Infinity;
+      const priceA = a.freePrice ? Number.parseFloat(a.freePrice) : Infinity;
+      const priceB = b.freePrice ? Number.parseFloat(b.freePrice) : Infinity;
       if (priceA !== priceB) {
         return priceA - priceB;
       }
@@ -167,8 +216,8 @@ export default function PriceTable({ prices, creditsPacks }: PriceTableProps) {
     // Sort each section by freePrice (smallest to greatest)
     Object.keys(grouped).forEach((section) => {
       grouped[section].sort((a, b) => {
-        const priceA = a.freePrice ?? Infinity;
-        const priceB = b.freePrice ?? Infinity;
+        const priceA = a.freePrice ? Number.parseFloat(a.freePrice) : Infinity;
+        const priceB = b.freePrice ? Number.parseFloat(b.freePrice) : Infinity;
         if (priceA !== priceB) {
           return priceA - priceB;
         }
@@ -209,13 +258,18 @@ export default function PriceTable({ prices, creditsPacks }: PriceTableProps) {
       {/* Credits Packs Table */}
       {creditsPacks.length > 0 && (
         <div>
-          <h3 className="text-primary-8 mb-4 rounded-full bg-white/50 px-12 py-6 text-2xl font-bold">
+          <h3
+            className={cn(
+              'text-primary-8 mb-4 rounded-full px-12 py-6 text-3xl! font-bold',
+              backgroundTitle
+            )}
+          >
             Credits
           </h3>
           <Table
             dataSource={sortedCreditsPacks}
             columns={creditsPackColumns}
-            rowKey={(record, index) => `credits-${record.quantity}-${index}`}
+            rowKey={(record) => `credits-${record.quantity}-${record.price}-${record.discount}`}
             pagination={false}
             locale={{ emptyText: 'No credits packs available' }}
             style={tableStyle}
@@ -229,8 +283,13 @@ export default function PriceTable({ prices, creditsPacks }: PriceTableProps) {
       {Object.entries(pricesBySection).map(([section, sectionPrices]) => (
         <div key={section}>
           {section !== 'Other' && (
-            <h3 className="text-primary-8 mt-12 mb-4 rounded-full bg-white/50 px-12 py-6 text-2xl font-bold">
-              {section}
+            <h3
+              className={cn(
+                'text-primary-8 mt-12 mb-4 rounded-full px-12 py-6 text-3xl! font-bold',
+                backgroundTitle
+              )}
+            >
+              {formatSectionName(section)}
             </h3>
           )}
           <Table

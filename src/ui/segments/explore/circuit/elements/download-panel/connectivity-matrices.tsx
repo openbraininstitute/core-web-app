@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
 import { match, P } from 'ts-pattern';
 import { useSetAtom } from 'jotai';
 import { useEffect } from 'react';
@@ -21,10 +20,10 @@ import {
 } from '@/ui/segments/explore/circuit/elements/download-panel/helpers';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { ConfigItemProps } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
-import type { WorkspaceContext } from '@/types/common';
 import type {
   CircuitConnectivityMatricesConfiguration,
   ICircuit,
@@ -33,7 +32,7 @@ import type {
 const AssetDefaultPath = 'matrix_config.json';
 
 export default function ConnectivityMatrices({ circuit }: { circuit: ICircuit }) {
-  const { virtualLabId, projectId } = useParams<WorkspaceContext>();
+  const { virtualLabId, projectId } = useWorkspace();
 
   const updateFileCounter = useSetAtom(updateFileCounterAtom(circuit.id));
   const assets = circuit?.assets;

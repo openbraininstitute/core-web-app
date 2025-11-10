@@ -1,14 +1,16 @@
-import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import { get } from 'es-toolkit/compat';
 import { Button } from 'antd';
 
+import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { keyBuilder } from '@/ui/use-query-keys/third-parties';
+import { useAppNotification } from '@/components/notification';
 import { getAssetElement } from '@/api/entitycore/utils';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { DownloadIcon } from '@/components/icons';
 import { formatBytes } from '@/utils/format';
+import { tryCatch } from '@/api/utils';
+import { log } from '@/utils/logger';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { WorkspaceContext } from '@/types/common';
@@ -19,47 +21,36 @@ type Props = {
 
 export default function EntireCircuitExport({ circuit }: Props) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
-
+  const notify = useAppNotification();
   const assets = circuit?.assets;
   const configAsset = getAssetElement({
     assets,
     filter: (asset) => asset.label === AssetLabel.compressed_sonata_circuit,
   });
   const extension = configAsset?.content_type.split('/').pop();
-  // TODO: this should be refactored after SFN
-  const getPresignedUrl = async () => {
-    const url = `${window.location.origin}/api/entity-download/presigned-url`;
-    const query = new URLSearchParams();
-    query.set('entityType', EntityTypeDict.Circuit);
-    query.set('entityId', circuit.id);
-    query.set('virtualLabId', virtualLabId);
-    query.set('projectId', projectId);
-    query.set('configAssetId', configAsset?.id!);
 
-    const response = await fetch(`${url}?${query.toString()}`, {
-      method: 'get',
-      headers: {
-        accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-    });
-    if (response.ok) {
-      const result = await response.json();
-      return result;
+  const onDownload = async () => {
+    const { data, error } = await tryCatch(
+      getEntityCorePresignedUrl({
+        configAssetId: configAsset?.id!,
+        entityId: circuit.id,
+        entityType: EntityTypeDict.Circuit,
+        virtualLabId,
+        projectId,
+      })
+    );
+    if (data) {
+      window.open(data.url, '_blank', 'noopener,noreferrer');
     }
-    throw new Error(`Error #${response.status} creating presigned url: ${response.statusText}`);
+    if (error) {
+      log('error', 'Error downloading entire circuit:', error);
+      notify.error({
+        message: 'Download Error',
+        description: get(error, 'message', 'An error occurred while downloading the circuit.'),
+        placement: 'topRight',
+      });
+    }
   };
-
-  const { isLoading, data } = useQuery({
-    queryKey: keyBuilder.s3presignedUrl({
-      entityType: EntityTypeDict.Circuit,
-      entity: circuit.id,
-      asset: configAsset?.id!,
-      virtualLabId,
-      projectId,
-    }),
-    queryFn: getPresignedUrl,
-  });
 
   const totalSize =
     configAsset?.size && configAsset?.size > 1 ? formatBytes(configAsset?.size) : '';
@@ -83,27 +74,19 @@ export default function EntireCircuitExport({ circuit }: Props) {
             </a>
           </p>
         </div>
-        {!isLoading && data && (
-          <div className="text-primary-1 flex flex-row gap-x-3 font-semibold">
-            <div>{get(data, 'size', totalSize)}</div>
-            <div>{extension}</div>
-            {get(data, 'url', null) && (
-              <Button
-                htmlType="button"
-                type="link"
-                className="border-primary-6 flex items-center justify-center rounded-none border border-solid"
-                aria-label={`download ${circuit.name}`}
-                title={`download ${circuit.name}`}
-                icon={<DownloadIcon className="text-white!" />}
-                loading={isLoading}
-                href={get(data, 'url', null)}
-                target="_blank"
-                rel="noopener noreferrer"
-                download={`${circuit.name}.${circuit.id}`}
-              />
-            )}
-          </div>
-        )}
+        <div className="text-primary-1 flex flex-row gap-x-3 font-semibold">
+          <div>{totalSize}</div>
+          <div>{extension}</div>
+          <Button
+            htmlType="button"
+            type="link"
+            className="border-primary-6 flex items-center justify-center rounded-none border border-solid"
+            aria-label={`Download ${circuit.name}`}
+            title={`Download ${circuit.name}`}
+            icon={<DownloadIcon className="text-white!" />}
+            onClick={onDownload}
+          />
+        </div>
       </div>
     </div>
   );

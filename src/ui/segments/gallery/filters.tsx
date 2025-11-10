@@ -8,17 +8,17 @@ import type { GalleryContentProps } from '@/api/sanity/gallery/route';
 type GalleryFiltersProps = {
   galleryContent: GalleryContentProps[];
   selectedBrainRegion: string | null;
-  selectedMediaType: string | null;
+  // selectedMediaType: string | null;
   onBrainRegionChange: (value: string | null) => void;
-  onMediaTypeChange: (value: string | null) => void;
+  // onMediaTypeChange: (value: string | null) => void;
 };
 
 export default function GalleryFilters({
   galleryContent,
   selectedBrainRegion,
-  selectedMediaType,
+  // selectedMediaType,
   onBrainRegionChange,
-  onMediaTypeChange,
+  // onMediaTypeChange,
 }: GalleryFiltersProps) {
   const brainRegions = useMemo(() => {
     const regions = new Set<string>();
@@ -30,18 +30,21 @@ export default function GalleryFilters({
     return Array.from(regions).sort();
   }, [galleryContent]);
 
-  const mediaTypes = useMemo(() => {
-    const types = new Set<string>();
-    galleryContent.forEach((item) => {
-      if (item.mediaType) {
-        types.add(item.mediaType);
-      }
-    });
-    return Array.from(types).sort();
-  }, [galleryContent]);
+  // const mediaTypes = useMemo(() => {
+  //   const types = new Set<string>();
+  //   galleryContent.forEach((item) => {
+  //     if (item.mediaType) {
+  //       types.add(item.mediaType);
+  //     }
+  //   });
+  //   return Array.from(types).sort();
+  // }, [galleryContent]);
 
   return (
-    <div className="flex gap-4" style={{ fontFamily: 'var(--font-titillium-web)' }}>
+    <div
+      className="grid grid-cols-2 gap-4 md:flex"
+      style={{ fontFamily: 'var(--font-titillium-web)' }}
+    >
       <div className="flex flex-col gap-2">
         <div className="text-sm font-semibold">Brain Region</div>
         <Select
@@ -60,7 +63,7 @@ export default function GalleryFilters({
           ]}
         />
       </div>
-      <div className="flex flex-col gap-2">
+      {/* <div className="flex flex-col gap-2">
         <div className="text-sm font-semibold">Media Type</div>
         <Select
           aria-label="Media Type filter"
@@ -77,7 +80,7 @@ export default function GalleryFilters({
             })),
           ]}
         />
-      </div>
+      </div> */}
     </div>
   );
 }

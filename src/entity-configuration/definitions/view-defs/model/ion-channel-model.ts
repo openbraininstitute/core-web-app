@@ -8,6 +8,7 @@ export const ViewDefForIonChannelModel: ViewDefinitionConfig = {
   group: DataTypeGroup.ModelData,
   name: EntitySlug.IonChannelModel,
   columns: [
+    EntityCoreFields.Preview,
     EntityCoreFields.Name,
     EntityCoreFields.BrainRegion,
     EntityCoreFields.Species,

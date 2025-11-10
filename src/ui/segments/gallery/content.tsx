@@ -17,7 +17,7 @@ export default function GalleryContent({ galleryContent }: GalleryContentCompone
   const [selectedMedia, setSelectedMedia] = useState<GalleryContentProps | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBrainRegion, setSelectedBrainRegion] = useState<string | null>(null);
-  const [selectedMediaType, setSelectedMediaType] = useState<string | null>(null);
+  const [selectedMediaType] = useState<string | null>(null);
 
   const filteredContent = useMemo(() => {
     return galleryContent.filter((item) => {
@@ -47,18 +47,15 @@ export default function GalleryContent({ galleryContent }: GalleryContentCompone
 
   return (
     <>
-      <div className="relative flex min-h-screen w-full flex-col gap-6 px-6 py-8">
-        <div>
-          <h2 className="text-2xl font-bold">Gallery</h2>
-        </div>
+      <div className="relative flex min-h-screen w-full flex-col gap-6 px-4 py-8 md:px-6">
         <GalleryFilters
           galleryContent={galleryContent}
           selectedBrainRegion={selectedBrainRegion}
-          selectedMediaType={selectedMediaType}
+          // selectedMediaType={selectedMediaType}
           onBrainRegionChange={setSelectedBrainRegion}
-          onMediaTypeChange={setSelectedMediaType}
+          // onMediaTypeChange={setSelectedMediaType}
         />
-        <div className="grid h-full w-full grid-cols-5 gap-6">
+        <div className="grid h-full w-full grid-cols-2 gap-6 md:grid-cols-5">
           {filteredContent.map((item) => {
             const mediaUrl = item.mediaType === 'video' ? item.video : item.image;
             const isLoaded = mediaUrl ? loadedMedia.has(mediaUrl) : false;

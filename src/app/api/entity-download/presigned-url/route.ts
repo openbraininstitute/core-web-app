@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
   const virtualLabId = query.get('virtualLabId')!;
   const projectId = query.get('projectId')!;
   const configAssetId = query.get('configAssetId')!;
+  const assetPath = query.get('assetPath')!;
 
   const session = await auth();
 
@@ -27,6 +28,7 @@ export async function GET(request: NextRequest) {
       entityType,
       entityId: entityId!,
       id: configAssetId!,
+      assetPath,
       asRawResponse: true,
       ctx: { virtualLabId, projectId },
     });
