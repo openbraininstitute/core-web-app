@@ -1,12 +1,15 @@
 'use client';
 
-import { parseAsInteger, parseAsString, SingleParserBuilder, useQueryStates } from 'nuqs';
 import { Card, ConfigProvider, Empty, Pagination as AntPagination } from 'antd';
+import { parseAsString, SingleParserBuilder, useQueryStates } from 'nuqs';
 import { kebabCase, find, get } from 'es-toolkit/compat';
 import { useRouter } from '@bprogress/next';
+import { useState } from 'react';
 import Link from 'next/link';
+
 import type { ColumnsType } from 'antd/es/table/interface';
 
+import { useSearchParams } from 'next/navigation';
 import { EntityCoreObjectTypes, EntityTypeDict, TEntityTypeDict } from '@/api/entitycore/types';
 import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
 import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/browse-header';
@@ -48,8 +51,10 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
   const { push: navigate } = useRouter();
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
+  const queryParams = useSearchParams();
+  const query = new URLSearchParams(queryParams);
 
-  const [{ activityType, entityType, page, pageSize }, updateActivityState] = useQueryStates(
+  const [{ activityType, entityType }, updateActivityState] = useQueryStates(
     {
       activityType: parseAsString
         .withOptions({
@@ -65,44 +70,34 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
         .withDefault(
           ExtendedEntitiesTypeDict.Memodel
         ) as SingleParserBuilder<TExtendedEntitiesTypeDict>,
-      page: parseAsInteger
-        .withOptions({
-          clearOnDefault: false,
-          shallow: true,
-        })
-        .withDefault(1) as SingleParserBuilder<number>,
-      pageSize: parseAsInteger
-        .withOptions({
-          clearOnDefault: false,
-          shallow: true,
-        })
-        .withDefault(DEFAULT_PAGE_MEDIUM_SIZE) as SingleParserBuilder<number>,
     },
     {
       urlKeys: {
         activityType: 'tactivity',
         entityType: 'ttype',
-        page: 'page',
-        pageSize: 'size',
       },
     }
   );
-
+  const [{ page, pageSize }, updatePagination] = useState<{
+    page: number;
+    pageSize: number;
+  }>({
+    page: 1,
+    pageSize: DEFAULT_PAGE_MEDIUM_SIZE,
+  });
   const previousActivityType = usePrevious(activityType);
 
   const updateActivity = (activity: TActivityValue | null) => {
+    updatePagination({ page: 1, pageSize: DEFAULT_PAGE_MEDIUM_SIZE });
     updateActivityState({
       activityType: activity,
-      page: 1,
-      pageSize: DEFAULT_PAGE_MEDIUM_SIZE,
     });
   };
 
   const updateEntityType = (et: TExtendedEntitiesTypeDict | null) => {
+    updatePagination({ page: 1, pageSize: DEFAULT_PAGE_MEDIUM_SIZE });
     updateActivityState({
       entityType: et,
-      page: 1,
-      pageSize: DEFAULT_PAGE_MEDIUM_SIZE,
     });
   };
 
@@ -199,18 +194,19 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
   });
 
   const selectedRow = selectedRows.at(0);
+
   // eslint-disable-next-line  no-nested-ternary
   const configurationLink = entityType
     ? entity?.detailViewSections?.includes('configuration')
-      ? `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}/configuration`
-      : `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}`
+      ? `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}/configuration`
+      : `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}`
     : null;
 
   // eslint-disable-next-line  no-nested-ternary
   const resultsLink = entityType
     ? entity?.detailViewSections?.includes('results')
-      ? `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}/results`
-      : `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}`
+      ? `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}/results`
+      : `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}`
     : null;
 
   const onDuplicate = () => {
@@ -344,7 +340,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                     pageSize={DEFAULT_PAGE_MEDIUM_SIZE}
                     defaultPageSize={DEFAULT_PAGE_MEDIUM_SIZE}
                     onChange={(_page, _pageSize) => {
-                      updateActivityState((prev) => ({ ...prev, page: _page }));
+                      updatePagination({ page: _page, pageSize: _pageSize });
                     }}
                     size="default"
                     current={page ?? 1}
@@ -366,7 +362,9 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                       size={breakpoint === 'l' ? 'md' : 'lg'}
                       className="select-none"
                     >
-                      <Link href={configurationLink}>View configuration</Link>
+                      <Link href={{ pathname: configurationLink, query: query.toString() }}>
+                        View configuration
+                      </Link>
                     </Button>
                     {resultsLink &&
                       entityType !== ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation &&

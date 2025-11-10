@@ -21,7 +21,9 @@ export default async function Page({
 
   const entityType = getEntityByExtendedType({ type: snakeCase(type) as EntityCoreExtendedType });
 
-  if (!entityType || !entityType.detailViewSections?.includes(section)) notFound();
+  if (!entityType || !entityType.detailViewSections?.includes(section)) {
+    return notFound();
+  }
 
   const { data: entity, error } = await tryCatch(
     retrieveEntity({
@@ -40,7 +42,5 @@ export default async function Page({
     section,
   });
 
-  if (!content) notFound();
-
-  return content;
+  return content ?? notFound();
 }
