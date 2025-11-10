@@ -2,18 +2,17 @@ import flatMap from 'es-toolkit/compat/flatMap';
 import keyBy from 'es-toolkit/compat/keyBy';
 
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
-import { CircuitScaleDictionary, ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { unifiedSingleNeuronSimulationFlowFlag } from '@/features/feature-flags/flags';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
-import { getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { getAssetElement } from '@/api/entitycore/utils';
+import { getMEModels } from '@/api/entitycore/queries';
 import {
   createSimulationCampaign,
   getCircuitSimulationCampaign,
@@ -60,19 +59,17 @@ async function resolveSimulationCampaigns({
   withFacets,
   context,
   filters,
-  circuitScaleFilter,
 }: {
   withFacets?: boolean;
   context: WorkspaceContext | undefined;
   filters?: Partial<ICircuitSimulationCampaignFilter>;
-  circuitScaleFilter?: Partial<ICircuitFilter>;
 }) {
   // eslint-disable-next-line no-param-reassign
   filters = discardBrainRegionQueryParams(filters);
   const source = await getCircuitSimulationCampaigns({
     context,
     withFacets,
-    filters: { ...filters, circuit__scale: CircuitScaleDictionary.Single },
+    filters: { ...filters },
   });
 
   // extract all simulation IDs
@@ -101,14 +98,14 @@ async function resolveSimulationCampaigns({
     })),
   }));
 
-  const circuits = await getCircuits({
+  const memodels = await getMEModels({
     context,
-    filters: { id__in: source.data.map((l) => l.entity_id), ...circuitScaleFilter },
+    filters: { id__in: source.data.map((l) => l.entity_id) },
   });
-  const circuitMap = keyBy(circuits.data, 'id');
+  const memodelMap = keyBy(memodels.data, 'id');
   const result = enrichedData.map((entity) => ({
     ...entity,
-    circuit: circuitMap[entity.entity_id] || null,
+    circuit: memodelMap[entity.entity_id] || null,
   }));
 
   return {
@@ -164,12 +161,7 @@ export const MEModelCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCa
     config: { allowedFacets: true },
     query: {
       list: (params: Parameters<typeof resolveSimulationCampaigns>[0]) =>
-        resolveSimulationCampaigns({
-          ...params,
-          circuitScaleFilter: {
-            scale: 'single',
-          },
-        }),
+        resolveSimulationCampaigns(params),
       one: getCircuitSimulationCampaign,
       create: createSimulationCampaign,
     },
