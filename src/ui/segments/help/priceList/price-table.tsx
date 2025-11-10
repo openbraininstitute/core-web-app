@@ -7,10 +7,12 @@ import { useMemo } from 'react';
 
 import type { CreditsPack } from '@/app/api/help/credits/route';
 import type { SinglePrice } from '@/app/api/help/prices/route';
+import { cn } from '@/utils/css-class';
 
 type PriceTableProps = {
   prices: SinglePrice[];
   creditsPacks: CreditsPack[];
+  backgroundTitle?: string;
 };
 
 const costUnitDictionary: Record<string, string> = {
@@ -182,7 +184,11 @@ const priceColumns: ColumnsType<SinglePrice> = [
   },
 ];
 
-export default function PriceTable({ prices, creditsPacks }: PriceTableProps) {
+export default function PriceTable({
+  prices,
+  creditsPacks,
+  backgroundTitle = 'white/50',
+}: PriceTableProps) {
   const sortedPrices = useMemo(() => {
     return [...prices].sort((a, b) => {
       // Sort by freePrice (smallest to greatest), handling null values
@@ -252,13 +258,18 @@ export default function PriceTable({ prices, creditsPacks }: PriceTableProps) {
       {/* Credits Packs Table */}
       {creditsPacks.length > 0 && (
         <div>
-          <h3 className="text-primary-8 mb-4 rounded-full bg-white/50 px-12 py-6 text-2xl font-bold">
+          <h3
+            className={cn(
+              'text-primary-8 mb-4 rounded-full px-12 py-6 text-3xl! font-bold',
+              backgroundTitle
+            )}
+          >
             Credits
           </h3>
           <Table
             dataSource={sortedCreditsPacks}
             columns={creditsPackColumns}
-            rowKey={(record, index) => `credits-${record.quantity}-${index}`}
+            rowKey={(record) => `credits-${record.quantity}-${record.price}-${record.discount}`}
             pagination={false}
             locale={{ emptyText: 'No credits packs available' }}
             style={tableStyle}
@@ -272,7 +283,12 @@ export default function PriceTable({ prices, creditsPacks }: PriceTableProps) {
       {Object.entries(pricesBySection).map(([section, sectionPrices]) => (
         <div key={section}>
           {section !== 'Other' && (
-            <h3 className="text-primary-8 mt-12 mb-4 rounded-full bg-white/50 px-12 py-6 text-2xl font-bold">
+            <h3
+              className={cn(
+                'text-primary-8 mt-12 mb-4 rounded-full px-12 py-6 text-3xl! font-bold',
+                backgroundTitle
+              )}
+            >
               {formatSectionName(section)}
             </h3>
           )}

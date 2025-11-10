@@ -12,11 +12,12 @@ import Menu from './layout/Menu';
 import SectionContact from './sections/SectionContact';
 import SectionGeneric from './sections/SectionGeneric';
 import SectionNews from './sections/SectionNews';
+import SectionPricing from './sections/SectionPricing';
 import { EnumSection } from './sections/sections';
 
 import { InvitationErrorDialog } from '@/ui/segments/invites/error-dialog';
-import { classNames } from '@/util/utils';
 import { logError } from '@/util/logger';
+import { classNames } from '@/util/utils';
 
 import styles from './LandingPage.module.css';
 import './global.css';
@@ -60,7 +61,6 @@ function renderSection(section: EnumSection): React.ReactNode {
     case EnumSection.Home:
     case EnumSection.About:
     case EnumSection.Mission:
-    case EnumSection.Pricing:
     case EnumSection.Team:
     case EnumSection.Resources:
     case EnumSection.TermsAndConditions:
@@ -69,6 +69,8 @@ function renderSection(section: EnumSection): React.ReactNode {
     case EnumSection.ComingSoon:
     case EnumSection.Story:
       return <SectionGeneric section={section} />;
+    case EnumSection.Pricing:
+      return <SectionPricing />;
     case EnumSection.Contact:
       return <SectionContact />;
     case EnumSection.News:
