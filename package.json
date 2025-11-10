@@ -70,7 +70,7 @@
     "@tanstack/react-query-devtools": "^5.84.1",
     "@tanstack/react-virtual": "^3.13.12",
     "@testing-library/user-event": "^14.5.1",
-    "@tolokoban/tgd": "^2.0.60",
+    "@tolokoban/tgd": "^2.0.61",
     "@types/d3": "^7.4.0",
     "ajv": "^8.17.1",
     "antd": "^5.13.3",
