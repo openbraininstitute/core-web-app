@@ -1,26 +1,14 @@
 'use client';
 
-import { useParams, usePathname } from 'next/navigation';
-import { useRouter } from '@bprogress/next/app';
-import { useState } from 'react';
-import snakeCase from 'es-toolkit/compat/snakeCase';
-import kebabCase from 'es-toolkit/compat/kebabCase';
-
+import { getDropdownOptionsByCategory } from '@/ui/segments/workflows/elements/helpers';
 import {
   CategorySelectScrollable,
   EntityTypeSelectScrollable,
 } from '@/ui/segments/workflows/elements/selectors';
-import {
-  getDropdownOptionsByCategory,
-  getWorkflowSegment,
-} from '@/ui/segments/workflows/elements/helpers';
-import { ROOT_ROUTE } from '@/config';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { useFlags } from '@/features/feature-flags';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
-import type { KebabCase } from '@/utils/type';
-import { useFlags } from '@/features/feature-flags';
 
 const WorkflowScope = {
   Public: 'public',
@@ -30,11 +18,11 @@ const WorkflowScope = {
 export type WorkflowScopeKeys = (typeof WorkflowScope)[keyof typeof WorkflowScope];
 
 interface WorkflowMenuProps {
-  activity: TActivityValue | undefined;
-  entityType: TExtendedEntitiesTypeDict | undefined;
-  onActivityChange: (activity: TActivityValue | undefined) => void;
-  onEntityTypeChange: (entityType: TExtendedEntitiesTypeDict | undefined) => void;
-  onNavigate?: (entityType: TExtendedEntitiesTypeDict | undefined) => void;
+  activity: TActivityValue | null;
+  entityType: TExtendedEntitiesTypeDict | null;
+  onActivityChange: (activity: TActivityValue | null) => void;
+  onEntityTypeChange: (entityType: TExtendedEntitiesTypeDict | null) => void;
+  onNavigate?: (entityType: TExtendedEntitiesTypeDict | null) => void;
 }
 
 // const tabsConfigItems: Array<{
@@ -101,18 +89,18 @@ export function ActivityAndTypeSelectors({
 }: WorkflowMenuProps) {
   const featureFlags = useFlags();
 
-  const handleActivitySelect = (v: TActivityValue | undefined) => {
+  const handleActivitySelect = (v: TActivityValue | null) => {
     onActivityChange(v);
     if (v) {
-      const type = getDropdownOptionsByCategory(v, featureFlags)
-        .enabledOptions.at(0)
-        ?.options.at(0)?.value;
+      const type =
+        getDropdownOptionsByCategory(v, featureFlags).enabledOptions.at(0)?.options.at(0)?.value ??
+        null;
       onEntityTypeChange(type);
       onNavigate?.(type);
     }
   };
 
-  const handleEntityTypeSelect = (v: TExtendedEntitiesTypeDict | undefined) => {
+  const handleEntityTypeSelect = (v: TExtendedEntitiesTypeDict | null) => {
     onEntityTypeChange(v);
     onNavigate?.(v);
   };
@@ -135,67 +123,6 @@ export function ActivityAndTypeSelectors({
           onSelect={handleEntityTypeSelect}
         />
       </div>
-    </div>
-  );
-}
-
-function WorkflowSelectMenu() {
-  const pathname = usePathname();
-  const navigate = useRouter().push;
-  const segment = getWorkflowSegment(pathname);
-  const { virtualLabId, projectId } = useWorkspace();
-  const { type } = useParams<{ type: KebabCase<TExtendedEntitiesTypeDict> }>();
-
-  const [{ activity, entityType }, updateWorkflowState] = useState<{
-    activity: TActivityValue | undefined;
-    entityType: TExtendedEntitiesTypeDict | undefined;
-  }>({
-    activity: segment ?? undefined,
-    entityType: (snakeCase(type) as TExtendedEntitiesTypeDict) ?? undefined,
-  });
-
-  const handleActivityChange = (v: TActivityValue | undefined) =>
-    updateWorkflowState({ activity: v, entityType: undefined });
-
-  const handleEntityTypeChange = (v: TExtendedEntitiesTypeDict | undefined) => {
-    updateWorkflowState((prev) => ({ ...prev, entityType: v }));
-  };
-
-  const handleNavigate = (v: TExtendedEntitiesTypeDict | undefined) => {
-    if (v && activity) {
-      navigate(
-        `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/browse/${kebabCase(v)}`,
-        {
-          showProgress: true,
-          disableSameURL: true,
-        }
-      );
-    }
-  };
-
-  return (
-    <ActivityAndTypeSelectors
-      activity={activity}
-      entityType={entityType}
-      onActivityChange={handleActivityChange}
-      onEntityTypeChange={handleEntityTypeChange}
-      onNavigate={handleNavigate}
-    />
-  );
-}
-
-export function Header() {
-  return (
-    <div className="flex w-full items-center justify-between">
-      <div
-        id="workflow-menu-category-type-selector"
-        className="border-neutral-2 rounded-full border py-1 pr-1 pl-4"
-      >
-        <WorkflowSelectMenu />
-      </div>
-      {/* <div id="workflow-menu-scope" className="max-w-max">
-        <WorkflowScopeTabs />
-      </div> */}
     </div>
   );
 }

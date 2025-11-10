@@ -1,13 +1,11 @@
 import { CheckCircleFilled, CloseOutlined, CopyOutlined, LoadingOutlined } from '@ant-design/icons';
 import { AnimatePresence, motion } from 'motion/react';
+import { includes, kebabCase } from 'es-toolkit/compat';
 import { useMutation } from '@tanstack/react-query';
-import { includes } from 'es-toolkit/compat';
 import { useState, useEffect } from 'react';
 import { match, P } from 'ts-pattern';
 import { useAtom } from 'jotai';
 import { Image } from 'antd';
-
-import kebabCase from 'es-toolkit/compat/kebabCase';
 import Link from 'next/link';
 
 import { useSearchParams } from 'next/navigation';
@@ -25,6 +23,7 @@ import {
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { ExpandableText } from '@/ui/molecules/more-less-text';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
@@ -35,14 +34,14 @@ import { WorkspaceSection } from '@/constants';
 import { Button } from '@/ui/molecules/button';
 import {
   makeSelectEntityClickEvent,
-  useSelectEntityClickEvent,
   useMiniDetailView,
+  useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
 import { ROOT_ROUTE } from '@/config';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { AssetLabel, type EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TWorkspaceSection } from '@/constants';
 import type {
@@ -69,7 +68,6 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
     setRecord(event.detail.data);
   });
 
-  // Reset record when mdv becomes false
   useEffect(() => {
     if (!mdv && record) {
       setRecord(null);
