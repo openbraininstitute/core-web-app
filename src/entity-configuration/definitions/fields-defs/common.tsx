@@ -21,8 +21,8 @@ import {
 } from '@/entity-configuration/definitions/renderer';
 import { DownloadIcon } from '@/components/icons';
 
-import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
-import type { IContributor } from '@/api/entitycore/types/shared/global';
+import { EntityTypeDict, type EntityCoreObjectTypes } from '@/api/entitycore/types';
+import { AssetLabel, type IContributor } from '@/api/entitycore/types/shared/global';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -46,8 +46,22 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Preview',
     filter: null,
     render: (r) => {
-      if (hasAssets(r))
+      if (hasAssets(r)) {
+        if (r.type === EntityTypeDict.IonChannelModel) {
+          return renderPreview(
+            r,
+            { width: 184, height: 116 },
+            'border border-neutral-3 h-full',
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            'assetLabel',
+            AssetLabel.ion_channel_model_thumbnail
+          );
+        }
         return renderPreview(r, { width: 184, height: 116 }, 'border border-neutral-3 h-full');
+      }
       return EmptyPreview;
     },
     vocabulary: {
