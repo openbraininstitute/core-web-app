@@ -105,12 +105,10 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
     const currentSynapsesPlacementConfig = synapsesPlacement?.[id];
     if (currentSynapsesPlacementConfig?.meshId) {
       sendRemoveSynapses3DEvent(id, currentSynapsesPlacementConfig.meshId);
-      setSynapsesPlacement({
-        ...synapsesPlacement,
-        [id]: {
-          ...currentSynapsesPlacementConfig,
-          meshId: undefined,
-        },
+      setSynapsesPlacement((prev) => {
+        const newValue = structuredClone(prev);
+        if (newValue) delete newValue[id];
+        return newValue;
       });
     }
     if (currentSet === id) {
@@ -123,12 +121,6 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
   const onToggleVisibility = (id: string) => {
     const currentSynapsesPlacementConfig = synapsesPlacement?.[id];
     const synapseSet = sessionValue?.synapseSets?.get(id);
-    console.log(
-      '🚀 [synapse-set-menu-item] id, currentSynapsesPlacementConfig, synapseSet =',
-      id,
-      currentSynapsesPlacementConfig,
-      synapseSet
-    ); // @FIXME: Remove this line written on 2025-11-11 at 13:40
     if (currentSynapsesPlacementConfig?.meshId) {
       sendRemoveSynapses3DEvent(id, currentSynapsesPlacementConfig.meshId);
       setSynapsesPlacement((prev) => {

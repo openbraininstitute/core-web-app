@@ -84,7 +84,11 @@ export default function Page({
                 type={SimulationType.SingleNeuronSynaptome}
               />
             </HydrateWrapper>
-            <NeuronVisualizer sessionId={sessionId} memodelId={entity.me_model.id} />
+            <NeuronVisualizer
+              sessionId={sessionId}
+              memodelId={entity.me_model.id}
+              disableSynapses={false}
+            />
           </div>
         </div>
       </div>
