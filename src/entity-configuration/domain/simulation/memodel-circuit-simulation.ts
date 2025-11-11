@@ -20,9 +20,10 @@ import {
 } from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
-import type {
-  ICircuitSimulationCampaign,
-  ICircuitSimulationCampaignFilter,
+import {
+  SimulationCampaignEntityTypeDict,
+  type ICircuitSimulationCampaign,
+  type ICircuitSimulationCampaignFilter,
 } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -69,7 +70,7 @@ async function resolveSimulationCampaigns({
   const source = await getCircuitSimulationCampaigns({
     context,
     withFacets,
-    filters: { ...filters },
+    filters: { ...filters, entity__type: SimulationCampaignEntityTypeDict.memodel },
   });
 
   // extract all simulation IDs

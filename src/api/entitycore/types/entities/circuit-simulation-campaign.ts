@@ -1,22 +1,32 @@
 import z from 'zod';
 
-import type {
-  EntityCoreIdentifiable,
-  EntityAuthorization,
-  Timestamps,
-  EntityCoreBaseAsset,
-  EntityCoreType,
-} from '@/api/entitycore/types/shared/global';
-import type {
-  BrainRegionFilter,
-  PaginationFilter,
-  NameFilter,
-  IEntityFilter,
-} from '@/api/entitycore/types/shared/request';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+
 import type {
   TCircuitBuildCategoryDictionary,
   TCircuitScaleDictionary,
 } from '@/api/entitycore/types/entities/circuit';
+import type {
+  EntityAuthorization,
+  EntityCoreBaseAsset,
+  EntityCoreIdentifiable,
+  EntityCoreType,
+  Timestamps,
+} from '@/api/entitycore/types/shared/global';
+import type {
+  BrainRegionFilter,
+  IEntityFilter,
+  NameFilter,
+  PaginationFilter,
+} from '@/api/entitycore/types/shared/request';
+
+export const SimulationCampaignEntityTypeDict = {
+  circuit: EntityTypeDict.Circuit,
+  memodel: EntityTypeDict.Memodel,
+} as const;
+
+export type TSimulationCampaignEntityTypeDict =
+  (typeof SimulationCampaignEntityTypeDict)[keyof typeof SimulationCampaignEntityTypeDict];
 
 interface ISimulationBase extends EntityCoreIdentifiable {
   name: string;
@@ -49,6 +59,8 @@ export interface ISimulationCampaignCircuitFilter {
 
   circuit__id?: string | null;
   circuit__id__in?: Array<string> | null;
+
+  entity__type?: TSimulationCampaignEntityTypeDict | null;
 
   circuit__scale?: TCircuitScaleDictionary | null;
   circuit__scale__in?: Array<TCircuitScaleDictionary> | null;
