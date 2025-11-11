@@ -178,6 +178,7 @@ export class PainterManager {
   }
 
   set canvas(canvas: HTMLCanvasElement | null) {
+    console.log('🚀 [manager] canvas =', canvas); // @FIXME: Remove this line written on 2025-11-11 at 11:11
     if (this._canvas === canvas) return;
 
     this._canvas = canvas;
@@ -189,6 +190,7 @@ export class PainterManager {
   }
 
   set morphology(morphology: Morphology | null) {
+    console.log('🚀 [manager] morphology =', morphology); // @FIXME: Remove this line written on 2025-11-11 at 11:12
     if (!morphology || JSON.stringify(this._morphology) !== JSON.stringify(morphology)) {
       this.lastCameraState = null;
     }
@@ -274,6 +276,7 @@ export class PainterManager {
 
   showSynapses(synapses: Array<{ color: string; data: Float32Array }>) {
     const { context, groupSynapses } = this;
+    console.log('🚀 [manager] synapses, context =', synapses, context); // @FIXME: Remove this line written on 2025-11-11 at 11:08
     if (!context) return;
 
     this.synapses = synapses;
@@ -527,7 +530,8 @@ export function usePainterManager() {
 export function usePainterController(
   painter: PainterManager,
   sessionId: string,
-  disableElectrodes: boolean
+  disableElectrodes: boolean,
+  mode: 'build' | 'simulation'
 ) {
   const notif = useAppNotification();
   React.useEffect(() => {
@@ -549,7 +553,7 @@ export function usePainterController(
     }
   }, [simulationStatus, painter]);
 
-  const synapses = useVisibleSynapses(sessionId);
+  const synapses = useVisibleSynapses(sessionId, mode);
   React.useEffect(() => {
     painter.showSynapses(synapses);
   }, [synapses, painter]);
