@@ -14,7 +14,7 @@ export interface ButtonResetCameraProps {
 }
 
 export function ButtonResetCamera({ className, painterManager }: ButtonResetCameraProps) {
-  const restPosition = painterManager.eventRestingPosition.useValue(false);
+  const restPosition = painterManager.eventRestingPosition.useValue(true);
 
   return (
     <div className={classNames(className, styles.buttonResetCamera, restPosition && styles.hide)}>

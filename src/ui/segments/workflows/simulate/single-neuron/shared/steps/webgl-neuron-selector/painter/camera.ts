@@ -14,7 +14,7 @@ export function makeCamera({
   bbox: BoundingBox;
   bboxSoma: BoundingBox;
   bboxDendrites: BoundingBox;
-}): { camera: TgdCamera; zoomMin: number; zoomMax: number } {
+}) {
   const camera = new TgdCameraPerspective({
     transfo: {
       distance: 5,
