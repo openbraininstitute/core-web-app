@@ -5,7 +5,6 @@ import type {
   SharedFilter,
   ContributionFilter,
   BrainRegionFilter,
-  SpeciesFilter,
   StainFilter,
   MtypeFilter,
 } from '@/api/entitycore/types/shared/request';
@@ -21,7 +20,6 @@ export type ExperimentalBoutonDensityFilter = Partial<
     PaginationFilter &
     ContributionFilter &
     BrainRegionFilter &
-    SpeciesFilter &
     StainFilter &
     MtypeFilter
 >;

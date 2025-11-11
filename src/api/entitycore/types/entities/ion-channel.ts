@@ -11,12 +11,12 @@ import type {
 } from '@/api/entitycore/types/shared/global';
 
 import type {
+  BrainRegionFilter,
   ContributionFilter,
   IMorphologyFilter,
-  BrainRegionFilter,
-  SpeciesFilter,
-  SharedFilter,
   PaginationFilter,
+  SharedFilter,
+  SubjectFilter,
 } from '@/api/entitycore/types/shared/request';
 
 type UseIon = {
@@ -60,8 +60,8 @@ export interface IonChannelModel
 
 export interface IonChannelModelFilter
   extends ContributionFilter,
-    SpeciesFilter,
     BrainRegionFilter,
-    SharedFilter,
     IMorphologyFilter,
-    PaginationFilter {}
+    PaginationFilter,
+    SharedFilter,
+    SubjectFilter {}
