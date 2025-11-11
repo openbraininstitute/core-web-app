@@ -15,34 +15,64 @@ import {
   STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
   SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
 } from '../../constant';
-import { PainterManager } from './painter/manager';
 import { getColorFromGeneratedPalette } from './colors';
+import { PainterManager } from './painter';
 
 import { useMorphology } from '@/hooks/use-morphology';
 import { Morphology } from '@/services/bluenaas-single-cell/types';
 import { synapsesPlacementAtom } from '@/state/synaptome';
+import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 
-export function useVisibleSynapses(sessionId: string): Array<{
+export function useVisibleSynapses(
+  sessionId: string,
+  mode: 'simulation' | 'build'
+): Array<{
   color: string;
   data: Float32Array;
 }> {
-  const configsKey = getSessionKey(SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
-  const configs = useAtomValue(SynaptomeConfigurationAtomFamily(configsKey));
+  const simulationConfigsKey = getSessionKey(SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
+  const simulationConfigs = useAtomValue(SynaptomeConfigurationAtomFamily(simulationConfigsKey));
+  const { sessionValue: buildConfigs } = useBuildSingleNeuronSynaptomeSessionState({
+    sessionId,
+  });
   const synaptomes = useAtomValue(synapsesPlacementAtom);
   const synapses = React.useMemo(() => {
     const result: Record<string, number[]> = {};
     if (!synaptomes) return [];
 
     const colors = new Map<string, string | undefined>();
-    for (const config of configs) {
-      colors.set(config.id, config.color);
+    console.log('🚀 [hooks] mode =', mode); // @FIXME: Remove this line written on 2025-11-11 at 10:49
+    if (mode === 'simulation') {
+      for (const config of simulationConfigs) {
+        colors.set(config.id, config.color);
+        console.log(
+          `Simul: ${short(config.id)} %c${config.color}`,
+          `color:#fff;background:${config.color}`
+        );
+      }
+    } else {
+      // Build
+      console.log('🚀 [hooks] buildConfigs =', buildConfigs); // @FIXME: Remove this line written on 2025-11-11 at 10:42
+      for (const [, config] of Array.from(buildConfigs?.synapseSets ?? [])) {
+        colors.set(config.id, config.color);
+        console.log(
+          `Build: ${short(config.id)} %c${config.color} %c ${config.name} / ${config.type}`,
+          `color:#fff;background:${config.color}`,
+          'background:transparent'
+        );
+      }
     }
+    console.log('-'.repeat(40));
     let index = 0;
     for (const value of Object.values(synaptomes)) {
       if (!value) continue;
 
-      const color =
-        colors.get(value.synapsePlacementConfigId) ?? getColorFromGeneratedPalette(index++);
+      const configColor = colors.get(value.synapsePlacementConfigId);
+      console.log(
+        `Selected: ${short(value.synapsePlacementConfigId)} %c${configColor}`,
+        `color:#fff;background:${configColor}`
+      );
+      const color = configColor ?? getColorFromGeneratedPalette(index++);
       const { sectionSynapses } = value;
       for (const section of sectionSynapses) {
         const data = result[color] ?? [];
@@ -53,12 +83,17 @@ export function useVisibleSynapses(sessionId: string): Array<{
         result[color] = data;
       }
     }
+    console.log('🚀 [hooks] result =', result); // @FIXME: Remove this line written on 2025-11-11 at 08:36
     return Object.keys(result).map((color) => ({
       color,
       data: new Float32Array(result[color]),
     }));
-  }, [synaptomes, configs]);
+  }, [synaptomes, mode, simulationConfigs, buildConfigs]);
   return synapses;
+}
+
+function short(id: string) {
+  return id.split('-').at(-1);
 }
 
 export function useRecordingsAndInjection(sessionId: string) {

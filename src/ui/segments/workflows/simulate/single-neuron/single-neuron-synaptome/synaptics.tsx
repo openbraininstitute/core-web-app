@@ -54,7 +54,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
   const breakpoint = useDefaultBreakpoint();
   const spcKey = getSessionKey(STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
   const { virtualLabId, projectId } = useWorkspace();
-  const [visualizedSynaptomes] = useAtom(synapsesPlacementAtom);
+  const [synapsesPlacement] = useAtom(synapsesPlacementAtom);
   const key = getSessionKey(SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
   const [state, update] = useAtom(SynaptomeConfigurationAtomFamily(key));
   const [stimulationState, updateStimulation] = useAtom(StimulationConfigurationAtomFamily(spcKey));
@@ -206,7 +206,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
               <div className="flex w-full flex-col items-start justify-start gap-4">
                 {fields.map((field) => {
                   const formName = `${field.name}`;
-                  const meshForForm = visualizedSynaptomes?.[formName]?.meshId;
+                  const meshForForm = synapsesPlacement?.[formName]?.meshId;
                   return (
                     <SynapticInputItem
                       key={field.key}

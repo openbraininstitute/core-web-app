@@ -21,6 +21,7 @@ import {
   TgdTexture2D,
   TgdVec3,
   webglPresetBlend,
+  webglPresetCull,
   webglPresetDepth,
 } from '@tolokoban/tgd';
 import { useAtomValue } from 'jotai';
@@ -273,10 +274,10 @@ export class PainterManager {
   }
 
   showSynapses(synapses: Array<{ color: string; data: Float32Array }>) {
+    this.synapses = synapses;
     const { context, groupSynapses } = this;
     if (!context) return;
 
-    this.synapses = synapses;
     groupSynapses.removeAll();
     for (const { color, data: dataPoint } of synapses) {
       const cloud = new TgdPainterPointsCloud(context, {
@@ -408,6 +409,8 @@ export class PainterManager {
   private initTgdPainters(context: TgdContext, structure: Structure, palette: TgdTexture2D) {
     const groupHover = new TgdPainterState(context, {
       blend: webglPresetBlend.add,
+      cull: webglPresetCull.back,
+      depth: webglPresetDepth.always,
     });
     const segments = makeSegments(structure);
     this.groupSynapses = new TgdPainterGroup({
@@ -527,7 +530,8 @@ export function usePainterManager() {
 export function usePainterController(
   painter: PainterManager,
   sessionId: string,
-  disableElectrodes: boolean
+  disableElectrodes: boolean,
+  mode: 'build' | 'simulation'
 ) {
   const notif = useAppNotification();
   React.useEffect(() => {
@@ -549,7 +553,7 @@ export function usePainterController(
     }
   }, [simulationStatus, painter]);
 
-  const synapses = useVisibleSynapses(sessionId);
+  const synapses = useVisibleSynapses(sessionId, mode);
   React.useEffect(() => {
     painter.showSynapses(synapses);
   }, [synapses, painter]);

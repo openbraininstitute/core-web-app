@@ -188,8 +188,8 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
                       )}
                       {isVisible && (
                         <div
-                          className="h-2 w-2 flex-shrink-0 rounded-full"
-                          style={{ background: o.color }}
+                          className="h-5 w-5 flex-shrink-0 rounded-full"
+                          style={{ background: o.color, marginRight: '-8px' }}
                           title="Synaptome visible"
                         />
                       )}
