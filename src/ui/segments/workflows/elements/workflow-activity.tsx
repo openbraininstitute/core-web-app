@@ -32,6 +32,7 @@ import { ROOT_ROUTE } from '@/config';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ExtendedCampaignsType } from '@/entity-configuration/domain/simulation';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
+import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 
 const AllowedDuplicateEntityTypes: TEntityTypeDict[] = [EntityTypeDict.SimulationCampaign];
 export interface WorkflowActivityRef {
@@ -202,11 +203,19 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
       : `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}`
     : null;
 
+  // eslint-disable-next-line no-nested-ternary
+  const resultsPath = entity?.detailViewSections?.includes(DetailViewSectionsDict.Results)
+    ? (DetailViewSectionsDict.Results ??
+      entity?.detailViewSections?.includes(DetailViewSectionsDict.RelatedArtifacts))
+      ? DetailViewSectionsDict.RelatedArtifacts
+      : null
+    : null;
+
   // eslint-disable-next-line  no-nested-ternary
   const resultsLink = entityType
-    ? entity?.detailViewSections?.includes('results')
-      ? `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}/results`
-      : `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}`
+    ? resultsPath
+      ? `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}/${resultsPath}`
+      : `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}`
     : null;
 
   const onDuplicate = () => {

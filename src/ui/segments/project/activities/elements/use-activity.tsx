@@ -3,11 +3,11 @@
 import { hashKey, keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
 
+import { ACTIVITY_DEFAULT_PAGE_SIZE } from '@/ui/segments/project/activities/elements/helpers';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import { getPersons } from '@/api/entitycore/queries/general/person-agent';
 import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
-import { ACTIVITY_DEFAULT_PAGE_SIZE } from '@/ui/segments/project/activities/elements/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 

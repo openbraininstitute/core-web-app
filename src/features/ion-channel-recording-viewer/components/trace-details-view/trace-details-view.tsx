@@ -7,13 +7,16 @@ import { factory } from './factory';
 import OptionSelect from '@/features/ephys-viewer/components/option-select';
 
 import SweepSelector from '@/features/ephys-viewer/components/sweep-selector';
+import { cn } from '@/utils/css-class';
+
 import styles from './trace-details-view.module.css';
 
 export interface TraceDetailsViewProps {
   trace: IonChannelRecordingParser;
+  cls?: { plots: string };
 }
 
-export function TraceDetailsView({ trace }: TraceDetailsViewProps) {
+export function TraceDetailsView({ trace, cls }: TraceDetailsViewProps) {
   const protocolsNames = trace.protocols.map(({ name }) => name);
   const [protocolName, setProtocolName] = React.useState<string>(protocolsNames[0] ?? '');
   const protocol = React.useMemo(
@@ -72,7 +75,7 @@ export function TraceDetailsView({ trace }: TraceDetailsViewProps) {
         colorMap={colorMap}
         sweepOptions={(repetition?.plot.lines ?? []).map(({ id }) => ({ label: id, value: id }))}
       />
-      <div className={styles.plots}>
+      <div className={cn(styles.plots, cls?.plots)}>
         {(paramsStimuli.plot?.lines ?? []).length > 0 && (
           <div>
             <h3>Stimuli</h3>

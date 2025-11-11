@@ -17,7 +17,7 @@ type UseTraceArgs = {
 export default function useTrace({
   resource,
   ctx,
-}: UseTraceArgs): [IonChannelRecordingParser | null, Error | null] {
+}: UseTraceArgs): [IonChannelRecordingParser | null, Error | null, boolean] {
   const nwbAtom = useMemo(
     () => loadable(nwbArrayBufferAtomFamily({ entity: resource, ctx })),
     [ctx, resource]
@@ -30,6 +30,7 @@ export default function useTrace({
   const traceRef = useRef<IonChannelRecordingParser | null>(null);
 
   const nwbArrayBuffer = nwb.state === 'hasData' ? nwb.data : null;
+  const loading = nwb.state === 'loading';
 
   useEffect(() => {
     if (nwb.state === 'hasError') {
@@ -46,10 +47,13 @@ export default function useTrace({
 
     IonChannelRecordingParser.create(resource.id, nwbArrayBuffer)
       .then((t) => {
+        setError(null);
         traceRef.current = t;
         setTrace(t);
       })
-      .catch((e) => setError(e));
+      .catch((e) => {
+        setError(e);
+      });
 
     return () => {
       traceRef.current?.destroy();
@@ -57,5 +61,5 @@ export default function useTrace({
     };
   }, [nwbArrayBuffer, resource]);
 
-  return [trace, error];
+  return [trace, error, loading];
 }

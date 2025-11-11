@@ -13,16 +13,14 @@ import { getCircuitSimulationResult } from '@/api/entitycore/queries/simulation/
 import { EntityTypeDict, IMEModel, TEntityTypeDict } from '@/api/entitycore/types';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import {
-  CircuitSimulationExecutionStatus,
-  ICircuitSimulationExecution,
-} from '@/api/entitycore/types/entities/circuit-simulation-execution';
+import { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import { resolveExecutions } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { getLatestSimExecStatus } from '@/features/small-microcircuit/_components/utils';
 import { SimExecStatusMap } from '@/features/small-microcircuit/types';
 import { WorkspaceContext } from '@/types/common';
 import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';
+import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 
 const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
   ({ simulationId, context }: { simulationId: string; context: WorkspaceContext }) =>
@@ -68,7 +66,7 @@ export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
 
     const localStatusMapAtom = atom<SimExecStatusMap>(new Map());
 
-    return atom<Promise<SimExecStatusMap>, [string, CircuitSimulationExecutionStatus], void>(
+    return atom<Promise<SimExecStatusMap>, [string, EntitycoreExecutionStatus], void>(
       async (get) => {
         const remoteStatusMap = await get(simExecRemoteStatusMapAtom);
         const localStatusMap = get(localStatusMapAtom);
@@ -82,7 +80,7 @@ export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
           const status =
             remoteStatus && localStatus
               ? getLatestSimExecStatus(remoteStatus, localStatus)
-              : (localStatus ?? remoteStatus ?? CircuitSimulationExecutionStatus.CREATED);
+              : (localStatus ?? remoteStatus ?? EntitycoreExecutionStatus.CREATED);
 
           return map.set(simId, status);
         }, new Map());
@@ -92,7 +90,7 @@ export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
       (get, set, simId, status) => {
         const newStatusMap = new Map(get(localStatusMapAtom)).set(
           simId,
-          status as CircuitSimulationExecutionStatus
+          status as EntitycoreExecutionStatus
         );
         set(localStatusMapAtom, newStatusMap);
       }

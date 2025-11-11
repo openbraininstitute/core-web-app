@@ -14,7 +14,6 @@ import { match } from 'ts-pattern';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import ApiError from '@/api/error';
 import authFetch from '@/authFetch';
 import { useAppNotification } from '@/components/notification';
@@ -42,7 +41,6 @@ import { File, SimulationFiles } from '@/features/small-microcircuit/_components
 import { SimulationStatusBadge } from '@/features/small-microcircuit/_components/simulation-status';
 import TabsSelector from '@/features/small-microcircuit/_components/tabs-selector';
 import { CATEGORIES, isAtom, ORDERING } from '@/features/small-microcircuit/_components/utils';
-import { simulationStatusColorMap } from '@/features/small-microcircuit/constants';
 import errorRegistry from '@/features/small-microcircuit/error-registry';
 import { AtomsMap, TabType } from '@/features/small-microcircuit/types';
 import { useLastTruthyValue } from '@/hooks/hooks';
@@ -53,6 +51,8 @@ import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { assertErrorMessage, classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 import { getErrorMessage } from '@/utils/error';
+import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import { ExecutionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
 
 import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
 
@@ -473,10 +473,7 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
 
     const hasActiveSimulations = statusMap
       ? Array.from(statusMap.values()).some((status) =>
-          [
-            CircuitSimulationExecutionStatus.PENDING,
-            CircuitSimulationExecutionStatus.RUNNING,
-          ].includes(status)
+          [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING].includes(status)
         )
       : false;
 
@@ -495,7 +492,7 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
         ctx: { virtualLabId, projectId },
         simulationIds: simIds,
         onInit: () => {
-          simIds.forEach((simId) => setSimStatus(simId, CircuitSimulationExecutionStatus.PENDING));
+          simIds.forEach((simId) => setSimStatus(simId, EntitycoreExecutionStatus.PENDING));
           setSelectedSimulationIds([]);
           setSimRequestInProgress(false);
         },
@@ -504,7 +501,7 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
             .with({ message_type: MessageType.STATUS }, (msg) => {
               const simId = msg.ctx?.simulation_id;
               if (simId) {
-                setSimStatus(simId, msg.status as unknown as CircuitSimulationExecutionStatus);
+                setSimStatus(simId, msg.status as unknown as EntitycoreExecutionStatus);
               }
               if (msg.status !== 'done') return;
               const simulation = simulations.find((s) => s.id === simId);
@@ -624,7 +621,7 @@ function SimulationsTab({ campaignId, virtualLabId, projectId }: SimulationTabPr
 
 type SimulationBlockProps = {
   simulation: ICircuitSimulation;
-  execStatus?: CircuitSimulationExecutionStatus;
+  execStatus?: EntitycoreExecutionStatus;
   onSelect: (simulationId: string) => void;
   selected?: boolean;
   onSelectedForSimChange: (simulationId: string, selected: boolean) => void;
@@ -641,7 +638,7 @@ function SimulationListItem({
   selectedForSim,
   selectionForSimDisabled,
 }: SimulationBlockProps) {
-  const color = simulationStatusColorMap[execStatus ?? CircuitSimulationExecutionStatus.CREATED];
+  const color = ExecutionStatusColorMap[execStatus ?? EntitycoreExecutionStatus.CREATED];
 
   return (
     <div className="flex-none">
@@ -660,7 +657,7 @@ function SimulationListItem({
         >
           <div className="flex items-center justify-between">
             <div className="font-bold">
-              {!execStatus || execStatus === CircuitSimulationExecutionStatus.CREATED ? (
+              {!execStatus || execStatus === EntitycoreExecutionStatus.CREATED ? (
                 <ConfigProvider theme={{ token: { colorPrimary: '#1890ff' } }}>
                   <Checkbox
                     className="mr-2 transition-colors duration-300"

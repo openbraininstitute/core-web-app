@@ -6,5 +6,7 @@ export const keyBuilder = {
     { virtualLabId },
   ],
   stripeInstance: () => [`${prefix}-stripe-instance`],
+  obioneOpenapi: () => [`${prefix}-obione-open-api`],
+  obioneOpenapiSchema: ({ form }: { form: string }) => [`${prefix}-obione-open-api`, { form }],
   s3presignedUrl: (props: Record<string, any>) => [`${prefix}-presigned-url`, { ...props }],
 };
