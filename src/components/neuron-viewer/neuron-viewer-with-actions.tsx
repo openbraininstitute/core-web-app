@@ -28,7 +28,6 @@ type Props = {
   virtualLabId: string;
   projectId: string;
   sessionId: string;
-  mode?: 'build' | 'simulation';
 };
 export function NeuronViewerContainer({
   meModelId,
@@ -43,7 +42,6 @@ export function NeuronViewerContainer({
   virtualLabId,
   projectId,
   sessionId,
-  mode,
 }: Props) {
   const [disableHovering, setDisableHovering] = useState(() => !useActions);
   const [neuronViewerClickData, setNeuronViewerOnClickData] =
@@ -131,7 +129,6 @@ export function NeuronViewerContainer({
             disableSynapses={disableSynapses}
             meModelId={meModelId}
             sessionId={sessionId}
-            mode={mode}
           />
         )}
       </DefaultLoadingSuspense>

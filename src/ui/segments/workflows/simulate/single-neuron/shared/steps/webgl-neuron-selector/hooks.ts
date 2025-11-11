@@ -1,79 +1,111 @@
 /* eslint-disable no-param-reassign */
-import React from 'react';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 
 import {
   neuronSectionNamesAtomFamily,
   RecordLocationConfigurationAtomFamily,
   StimulationConfigurationAtomFamily,
-  SynaptomeConfigurationAtomFamily,
 } from '../../context';
 import { getSessionKey } from '../../helpers';
 import {
   DEFAULT_CURRENT_INJECTION_CONFIG,
   RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
   STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
-  SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
 } from '../../constant';
 import { getColorFromGeneratedPalette } from './colors';
 import { PainterManager } from './painter';
 
 import { useMorphology } from '@/hooks/use-morphology';
 import { Morphology } from '@/services/bluenaas-single-cell/types';
-import { synapsesPlacementAtom } from '@/state/synaptome';
-import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 
-export function useVisibleSynapses(
-  sessionId: string,
-  mode: 'simulation' | 'build'
-): Array<{
-  color: string;
-  data: Float32Array;
-}> {
-  const simulationConfigsKey = getSessionKey(SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
-  const simulationConfigs = useAtomValue(SynaptomeConfigurationAtomFamily(simulationConfigsKey));
-  const { sessionValue: buildConfigs } = useBuildSingleNeuronSynaptomeSessionState({
-    sessionId,
-  });
-  const synaptomes = useAtomValue(synapsesPlacementAtom);
-  const synapses = React.useMemo(() => {
-    const result: Record<string, number[]> = {};
-    if (!synaptomes) return [];
+const atomSynapsesToShowInViewer = atom<Array<{ color: string; data: Float32Array }>>([]);
 
-    const colors = new Map<string, string | undefined>();
-    if (mode === 'simulation') {
-      for (const config of simulationConfigs) {
-        colors.set(config.id, config.color);
-      }
-    } else {
-      // Build
-      for (const [, config] of Array.from(buildConfigs?.synapseSets ?? [])) {
-        colors.set(config.id, config.color);
-      }
-    }
-    for (const value of Object.values(synaptomes)) {
-      if (!value) continue;
-
-      const color = colors.get(value.synapsePlacementConfigId);
-      if (!color) continue;
-
-      const { sectionSynapses } = value;
-      for (const section of sectionSynapses) {
-        const data = result[color] ?? [];
-        for (const synapse of section.synapses) {
-          // We set a unit radius because we will multiply it in PainterCloud.
-          data.push(...synapse.coordinates, 1);
-        }
-        result[color] = data;
-      }
-    }
-    return Object.keys(result).map((color) => ({
-      color,
-      data: new Float32Array(result[color]),
-    }));
-  }, [synaptomes, mode, simulationConfigs, buildConfigs]);
-  return synapses;
+export function useVisibleSynapsesSetter() {
+  return useSetAtom(atomSynapsesToShowInViewer);
 }
+
+export function useVisibleSynapses() {
+  return useAtomValue(atomSynapsesToShowInViewer);
+}
+
+//   sessionId: string,
+//   mode: 'simulation' | 'build'
+// ): Array<{
+//   color: string;
+//   data: Float32Array;
+// }> {
+//   const synapsesConfigurations = useAtomValue(atomSynapsesConfigurationForViewer);
+//   const simulationConfigsKey = getSessionKey(SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
+//   const simulationConfigs = useAtomValue(SynaptomeConfigurationAtomFamily(simulationConfigsKey));
+//   const { sessionValue: buildConfigs } = useBuildSingleNeuronSynaptomeSessionState({
+//     sessionId,
+//   });
+//   const synaptomes = useAtomValue(synapsesPlacementAtom);
+//   const synapses = React.useMemo(() => {
+//     const result: Record<string, number[]> = {};
+//     const items = Object.values(synaptomes ?? {}).filter(
+//       (item) => !!item
+//     ) as SectionSynapsesWith3D[];
+//     console.log(
+//       `Visible(${items.length}): ${items.map((item) => `${item.synapsePlacementConfigId.slice(-6)}`).join(', ')}`
+//     );
+//     if (!synaptomes) return [];
+
+//     const colors = new Map<string, string | undefined>();
+//     if (mode === 'simulation') {
+//       if (synapsesConfigurations.length === 0) {
+//         for (const config of simulationConfigs) {
+//           colors.set(config.id, config.color);
+//         }
+//       } else {
+//         for (const config of synapsesConfigurations) {
+//           if (!config) continue;
+
+//           const { color } = config;
+//           colors.set(config.id, color ?? getColorFromGeneratedPalette(colors.size));
+//         }
+//       }
+//     } else {
+//       // Build
+//       for (const [, config] of Array.from(buildConfigs?.synapseSets ?? [])) {
+//         colors.set(config.id, config.color);
+//       }
+//     }
+//     console.log(
+//       `Colors(${colors.size}): ${Array.from(colors.keys())
+//         .map((id) => `%c ${id.slice(-6)} `)
+//         .join('')}`,
+//       ...colors.values().map((color) => `color:#000;background:${color}`)
+//     );
+//     for (const value of items) {
+//       const color = colors.get(value.synapsePlacementConfigId);
+//       if (!color) {
+//         console.warn(
+//           'Could not find:',
+//           value.synapsePlacementConfigId,
+//           'in',
+//           mode === 'simulation' ? simulationConfigs : buildConfigs
+//         );
+//         continue;
+//       }
+
+//       const { sectionSynapses } = value;
+//       for (const section of sectionSynapses) {
+//         const data = result[color] ?? [];
+//         for (const synapse of section.synapses) {
+//           // We set a unit radius because we will multiply it in PainterCloud.
+//           data.push(...synapse.coordinates, 1);
+//         }
+//         result[color] = data;
+//       }
+//     }
+//     return Object.keys(result).map((color) => ({
+//       color,
+//       data: new Float32Array(result[color]),
+//     }));
+//   }, [mode, simulationConfigs, buildConfigs, synaptomes, synapsesConfigurations]);
+//   return synapses;
+// }
 
 export function useRecordingsAndInjection(sessionId: string) {
   const recordingsKey = getSessionKey(RECORDING_LOCATION_CONFIGURATION_SESSION_KEY, sessionId);
