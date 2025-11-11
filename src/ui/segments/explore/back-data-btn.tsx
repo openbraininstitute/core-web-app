@@ -1,19 +1,19 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { MiniDetailViewSearchParam } from '@/ui/segments/mini-detail-view/event';
+import { getRouteSegmentsAfterWorkspace } from '@/utils/path';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { ROOT_ROUTE } from '@/config';
 import Breadcrumb from '@/ui/molecules/breadcrumb';
 
 import type { WorkspaceContext } from '@/types/common';
 
-export function BackToDataButton({ virtualLabId, projectId }: WorkspaceContext) {
+export function BackToListingOriginButton({ virtualLabId, projectId }: WorkspaceContext) {
   const queryParams = useSearchParams();
   const query = new URLSearchParams(queryParams);
-  query.delete(MiniDetailViewSearchParam);
 
   return (
     <Breadcrumb>
@@ -22,6 +22,7 @@ export function BackToDataButton({ virtualLabId, projectId }: WorkspaceContext) 
           pathname: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data`,
           query: query.toString(),
         }}
+        className="capitalize"
       >
         Data
       </Link>
@@ -37,7 +38,6 @@ export function BackToEntityType({
 }: WorkspaceContext & { type: TExtendedEntitiesTypeDict; title: string }) {
   const queryParams = useSearchParams();
   const query = new URLSearchParams(queryParams);
-  query.delete(MiniDetailViewSearchParam);
 
   return (
     <Breadcrumb showChevron={false}>
@@ -50,5 +50,25 @@ export function BackToEntityType({
         {title}
       </Link>
     </Breadcrumb>
+  );
+}
+
+export function DataBreadcrumb({
+  type,
+  title,
+}: {
+  type: TExtendedEntitiesTypeDict;
+  title: string;
+}) {
+  const { virtualLabId, projectId } = useWorkspace();
+  const routeSegments = getRouteSegmentsAfterWorkspace(usePathname(), ROOT_ROUTE);
+  const section = routeSegments.at(0);
+  if (section !== 'data') return null;
+
+  return (
+    <div className="flex flex-wrap gap-3">
+      <BackToListingOriginButton {...{ virtualLabId, projectId }} />
+      <BackToEntityType {...{ virtualLabId, projectId, type, title }} />
+    </div>
   );
 }
