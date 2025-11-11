@@ -13,31 +13,14 @@ interface CodeBlockProps extends ComponentPropsWithoutRef<'pre'>, ExtraProps {
  * Uses react-syntax-highlighter with Prism backend for syntax highlighting.
  */
 export default function CodeBlock({ children, className, id }: CodeBlockProps) {
-  // Extract language and code content from the code element
-  // react-markdown passes children as a <code> element with props.children containing the code string
-  // and props.className containing "language-xxx"
-  let language: string | null = null;
-  let codeContent = '';
+  const codeElement = children as React.ReactElement<{ children: string; className: string }>;
+  const codeContent = codeElement.props.children;
+  const codeClassName = codeElement.props.className;
 
-  if (React.isValidElement(children) && children.type === 'code') {
-    const codeProps = children.props as { children?: string; className?: string };
-    codeContent =
-      typeof codeProps.children === 'string'
-        ? codeProps.children
-        : String(codeProps.children || '');
+  const languageMatch = codeClassName.match(/language-(\w+)/);
+  const language = languageMatch ? languageMatch[1] : null;
 
-    // Extract language from the code element's className
-    const codeClassName = codeProps.className || className;
-    const languageMatch = codeClassName?.match(/language-(\w+)/);
-    language = languageMatch ? languageMatch[1] : null;
-  } else if (typeof children === 'string') {
-    // Fallback: if children is a string, try to get language from className prop
-    codeContent = children;
-    const languageMatch = className?.match(/language-(\w+)/);
-    language = languageMatch ? languageMatch[1] : null;
-  }
-
-  if (language && codeContent) {
+  if (language) {
     return (
       <SyntaxHighlighter
         language={language}
