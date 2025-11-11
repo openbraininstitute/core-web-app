@@ -33,7 +33,7 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
   const pathname = usePathname();
   const breakpoint = useDefaultBreakpoint();
   const { replace } = useRouter();
-  const [synapsesPlacement, setSynapsesPlacementAtom] = useAtom(synapsesPlacementAtom);
+  const [synapsesPlacement, setSynapsesPlacement] = useAtom(synapsesPlacementAtom);
   const { sessionValue, setSessionValue } = useBuildSingleNeuronSynaptomeSessionState({
     sessionId,
   });
@@ -105,7 +105,7 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
     const currentSynapsesPlacementConfig = synapsesPlacement?.[id];
     if (currentSynapsesPlacementConfig?.meshId) {
       sendRemoveSynapses3DEvent(id, currentSynapsesPlacementConfig.meshId);
-      setSynapsesPlacementAtom({
+      setSynapsesPlacement({
         ...synapsesPlacement,
         [id]: {
           ...currentSynapsesPlacementConfig,
@@ -123,15 +123,20 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
   const onToggleVisibility = (id: string) => {
     const currentSynapsesPlacementConfig = synapsesPlacement?.[id];
     const synapseSet = sessionValue?.synapseSets?.get(id);
-
+    console.log(
+      '🚀 [synapse-set-menu-item] id, currentSynapsesPlacementConfig, synapseSet =',
+      id,
+      currentSynapsesPlacementConfig,
+      synapseSet
+    ); // @FIXME: Remove this line written on 2025-11-11 at 13:40
     if (currentSynapsesPlacementConfig?.meshId) {
       sendRemoveSynapses3DEvent(id, currentSynapsesPlacementConfig.meshId);
-      setSynapsesPlacementAtom({
-        ...synapsesPlacement,
-        [id]: {
-          ...currentSynapsesPlacementConfig,
-          meshId: undefined,
-        },
+      setSynapsesPlacement((prev) => {
+        const newValue = structuredClone(prev);
+        if (!newValue) return newValue;
+
+        delete newValue[id];
+        return newValue;
       });
     } else if (currentSynapsesPlacementConfig?.sectionSynapses && synapseSet) {
       const synapsePositions = currentSynapsesPlacementConfig.sectionSynapses
@@ -142,13 +147,13 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
       const mesh = createBubblesInstanced(synapsePositions, new Color(synapseSet.color));
       sendDisplaySynapses3DEvent(id, mesh);
 
-      setSynapsesPlacementAtom({
-        ...synapsesPlacement,
+      setSynapsesPlacement((prev) => ({
+        ...prev,
         [id]: {
           ...currentSynapsesPlacementConfig,
           meshId: mesh.uuid,
         },
-      });
+      }));
     }
   };
 
@@ -208,40 +213,13 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="mt-auto w-full">
-                        <Button
-                          rounded
-                          variant="outline"
-                          className={cn(
-                            'border-neutral-2 hover:text-white',
-                            'h-10 w-10 bg-transparent p-0',
-                            'rounded-r-none border-r-0',
-                            'transition-all duration-200 ease-out',
-                            'shadow-md',
-                            { 'h-8 w-8': breakpoint === 'l' },
-                            { 'h-10 w-10': breakpoint === 'xl' },
-                            // eslint-disable-next-line no-nested-ternary
-                            isVisible
-                              ? 'hover:border-orange-500 hover:bg-orange-500'
-                              : canShow
-                                ? 'hover:border-secondary-4 hover:bg-secondary-3'
-                                : 'opacity-50 hover:border-gray-400 hover:bg-gray-400'
-                          )}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onToggleVisibility(o.id);
-                          }}
-                          title={
-                            // eslint-disable-next-line no-nested-ternary
-                            isVisible
-                              ? 'Hide synaptome'
-                              : canShow
-                                ? 'Show synaptome'
-                                : 'Apply changes first to generate synaptome'
-                          }
-                          disabled={!isVisible && !canShow}
-                        >
-                          {isVisible ? <EyeInvisibleOutlined /> : <EyeOutlined />}
-                        </Button>
+                        <VisibilityButton
+                          breakpoint={breakpoint}
+                          isVisible={isVisible}
+                          canShow={canShow}
+                          id={o.id}
+                          onToggleVisibility={onToggleVisibility}
+                        />
                       </div>
                     </TooltipTrigger>
                     {!isVisible && !canShow && (
@@ -294,5 +272,56 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
         </div>
       </Button>
     </div>
+  );
+}
+
+function VisibilityButton({
+  id,
+  isVisible,
+  canShow,
+  breakpoint,
+  onToggleVisibility,
+}: {
+  id: string;
+  isVisible: boolean;
+  canShow: boolean;
+  breakpoint: string;
+  onToggleVisibility: (id: string) => void;
+}) {
+  return (
+    <Button
+      rounded
+      variant="outline"
+      className={cn(
+        'border-neutral-2 hover:text-white',
+        'h-10 w-10 bg-transparent p-0',
+        'rounded-r-none border-r-0',
+        'transition-all duration-200 ease-out',
+        'shadow-md',
+        { 'h-8 w-8': breakpoint === 'l' },
+        { 'h-10 w-10': breakpoint === 'xl' },
+        // eslint-disable-next-line no-nested-ternary
+        isVisible
+          ? 'hover:border-orange-500 hover:bg-orange-500'
+          : canShow
+            ? 'hover:border-secondary-4 hover:bg-secondary-3'
+            : 'opacity-50 hover:border-gray-400 hover:bg-gray-400'
+      )}
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggleVisibility(id);
+      }}
+      title={
+        // eslint-disable-next-line no-nested-ternary
+        isVisible
+          ? 'Hide synaptome'
+          : canShow
+            ? 'Show synaptome'
+            : 'Apply changes first to generate synaptome'
+      }
+      disabled={!isVisible && !canShow}
+    >
+      {isVisible ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+    </Button>
   );
 }
