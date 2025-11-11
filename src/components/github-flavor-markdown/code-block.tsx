@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { ComponentPropsWithoutRef } from 'react';
 import type { ExtraProps } from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -29,22 +29,43 @@ export default function CodeBlock({ children, className, id }: CodeBlockProps) {
   const languageMatch = codeClassName.match(/language-(\w+)/);
   const language = languageMatch ? languageMatch[1] : null;
 
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(codeContent.trim());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
   if (language) {
-    return (
-      <div className="relative">
-        <div className="absolute top-2 right-2 text-xs text-gray-500 uppercase z-10 font-mono">
-          {language}
-        </div>
-        <SyntaxHighlighter
-          language={language}
-          style={vscDarkPlus}
-          PreTag="div"
-          className={className}
-          id={id}
+    const CustomPre = ({ children, ...props }: React.HTMLAttributes<HTMLPreElement>) => (
+      <pre {...props} className={`relative ${props.className || ''}`}>
+        <button
+          onClick={handleCopy}
+          className="absolute top-2 right-2 z-10 px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors"
+          type="button"
         >
-          {codeContent.trim()}
-        </SyntaxHighlighter>
-      </div>
+          {copied ? 'Copied!' : 'Copy'}
+        </button>
+        {children}
+      </pre>
+    );
+
+    return (
+      <SyntaxHighlighter
+        language={language}
+        style={vscDarkPlus}
+        PreTag={CustomPre}
+        customStyle={{ paddingTop: '2.5rem' }}
+        className={className}
+        id={id}
+      >
+        {codeContent.trim()}
+      </SyntaxHighlighter>
     );
   }
 
