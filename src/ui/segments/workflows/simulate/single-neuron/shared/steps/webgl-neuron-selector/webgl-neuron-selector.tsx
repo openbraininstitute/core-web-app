@@ -31,7 +31,13 @@ export function WebglNeuronSelector({
   disableElectrodes,
 }: WebglNeuronSelectorProps) {
   const painterManager = usePainterManager();
-
+  console.log(
+    '🚀 [webgl-neuron-selector] meModelId, sessionId, mode, disableElectrodes =',
+    meModelId,
+    sessionId,
+    mode,
+    disableElectrodes
+  ); // @FIXME: Remove this line written on 2025-11-11 at 11:25
   return (
     <WebglNeuronSelectorContent
       painterManager={painterManager}
