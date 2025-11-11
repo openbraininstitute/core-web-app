@@ -49,7 +49,6 @@ export function NeuronViewerContainer({
   const [neuronViewerHoverData, setNeuronViewerOnHoverData] =
     useState<TNeuronViewerHoverData | null>(null);
   const newViewer = true;
-  console.log('🚀 [synapse-configuration] sessionId =', sessionId); // @FIXME: Remove this line written on 2025-11-11 at 11:17
 
   return (
     <ErrorBoundary

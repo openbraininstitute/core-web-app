@@ -278,7 +278,8 @@ export class PainterManager {
   showSynapses(synapses: Array<{ color: string; data: Float32Array }>) {
     this.synapses = synapses;
     const { context, groupSynapses } = this;
-    console.log('🚀 [manager] synapses, context =', synapses, context); // @FIXME: Remove this line written on 2025-11-11 at 11:08
+    this.synapses = synapses;
+    console.log('🚀 [manager] synapses, context.name =', synapses, context?.name); // @FIXME: Remove this line written on 2025-11-11 at 11:08
     if (!context) return;
 
     groupSynapses.removeAll();
