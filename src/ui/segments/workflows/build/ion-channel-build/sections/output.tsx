@@ -18,6 +18,7 @@ import {
 import { isFormValid } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers/validate-form';
 import { FileViewer } from '@/ui/segments/workflows/build/ion-channel-build/sections/file-viewer';
 import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
+import { getStatusColor } from '@/ui/segments/activity-execution/color-map';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { keyBuilder } from '@/ui/use-query-keys/third-parties';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -51,7 +52,6 @@ import {
   type IEntitycoreExecution,
   type TEntitycoreExecutionStatus,
 } from '@/api/entitycore/types/entities/execution';
-import { getStatusColor } from '@/ui/segments/activity-execution/color-map';
 
 type IonChannelModelFigureSummaryJson = {
   [key: string]: {
@@ -177,7 +177,8 @@ export function Output({ sessionId }: { sessionId: string | null }) {
       buildsMap.forEach((build, key) => {
         buildsMap.set(key, {
           ...build,
-          executionStatus: 'status' in message ? message.status : build.executionStatus,
+          status: 'status' in message ? message.status : build.status,
+          executionStatus: build.executionStatus,
         });
       });
     });
@@ -292,48 +293,54 @@ export function Output({ sessionId }: { sessionId: string | null }) {
             </div>
           </Card>
         ) : (
-          builds.map((build, index) => (
-            <Card
-              key={build.executionId}
-              className={cn('cursor-pointer p-4 transition-all select-none', {
-                'border-primary-9 border-2': selectedBuildIndex === index,
-              })}
-              onClick={() => {
-                setSelectedBuildIndex(index);
-                setSelectedAsset(null);
-              }}
-              aria-checked={selectedBuildIndex === index}
-            >
-              <CardTitle className="flex items-center justify-between gap-2">
-                <div className="text-primary-9 font-bold">Build {index}</div>
-                <div className="flex items-center gap-2">
-                  {(build.executionStatus === 'running' || build.executionStatus === 'pending') && (
-                    <LoadingOutlined
-                      spin
-                      className="text-lg"
+          builds.map((build, index) => {
+            const statusColor = getStatusColor(build.status as EntitycoreExecutionStatus);
+            const isSelected = selectedBuildIndex === index;
+
+            return (
+              <Card
+                key={build.executionId}
+                className={cn('cursor-pointer p-4 transition-all select-none', {
+                  'border-2': isSelected,
+                })}
+                style={{
+                  borderColor: isSelected ? statusColor : undefined,
+                  backgroundColor: `${statusColor}15`,
+                }}
+                onClick={() => {
+                  setSelectedBuildIndex(index);
+                  setSelectedAsset(null);
+                }}
+                aria-checked={isSelected}
+              >
+                <CardTitle className="flex items-center justify-between gap-2">
+                  <div className="text-primary-9 font-bold">Build {index}</div>
+                  <div className="flex items-center gap-2">
+                    {(build.status === EntitycoreExecutionStatus.RUNNING ||
+                      build.status === EntitycoreExecutionStatus.PENDING) && (
+                      <LoadingOutlined
+                        spin
+                        className="text-lg"
+                        style={{
+                          color: statusColor,
+                        }}
+                      />
+                    )}
+                    <Badge
+                      rounded
+                      className="px-4"
                       style={{
-                        color: getStatusColor(
-                          (build.executionStatus || build.status) as EntitycoreExecutionStatus
-                        ),
+                        backgroundColor: statusColor,
+                        color: '#fff',
                       }}
-                    />
-                  )}
-                  <Badge
-                    rounded
-                    className="px-4"
-                    style={{
-                      backgroundColor: getStatusColor(
-                        (build.executionStatus || build.status) as EntitycoreExecutionStatus
-                      ),
-                      color: '#fff',
-                    }}
-                  >
-                    {build.executionStatus || build.status}
-                  </Badge>
-                </div>
-              </CardTitle>
-            </Card>
-          ))
+                    >
+                      {build.status || build.executionStatus}
+                    </Badge>
+                  </div>
+                </CardTitle>
+              </Card>
+            );
+          })
         )}
       </div>
 

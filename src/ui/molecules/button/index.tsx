@@ -1,5 +1,7 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
+'use client';
+
 import { cva, type VariantProps } from 'class-variance-authority';
 import Icon, { DownOutlined } from '@ant-design/icons';
 import { Slot } from '@radix-ui/react-slot';
@@ -102,7 +104,7 @@ function Button({
 }
 
 interface ButtonArrowProps extends React.SVGProps<SVGSVGElement> {
-  icon?: typeof Icon; // Allows passing any Lucide icon
+  icon?: typeof Icon;
 }
 
 function ButtonArrow({ icon: UIcon = DownOutlined, className }: ButtonArrowProps) {
