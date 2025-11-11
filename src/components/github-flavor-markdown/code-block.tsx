@@ -13,24 +13,38 @@ interface CodeBlockProps extends ComponentPropsWithoutRef<'pre'>, ExtraProps {
  * Uses react-syntax-highlighter with Prism backend for syntax highlighting.
  */
 export default function CodeBlock({ children, className, id }: CodeBlockProps) {
-  const codeElement = children as React.ReactElement<{ children: string; className: string }>;
+  const codeElement = children as React.ReactElement<{ children?: string; className?: string }>;
   const codeContent = codeElement.props.children;
   const codeClassName = codeElement.props.className;
+
+  if (!codeClassName || !codeContent) {
+    // Fallback: render pre normally if no className or content
+    return (
+      <pre className={className} id={id}>
+        {children}
+      </pre>
+    );
+  }
 
   const languageMatch = codeClassName.match(/language-(\w+)/);
   const language = languageMatch ? languageMatch[1] : null;
 
   if (language) {
     return (
-      <SyntaxHighlighter
-        language={language}
-        style={vscDarkPlus}
-        PreTag="div"
-        className={className}
-        id={id}
-      >
-        {codeContent.trim()}
-      </SyntaxHighlighter>
+      <div className="relative">
+        <div className="absolute top-2 right-2 text-xs text-gray-500 uppercase z-10 font-mono">
+          {language}
+        </div>
+        <SyntaxHighlighter
+          language={language}
+          style={vscDarkPlus}
+          PreTag="div"
+          className={className}
+          id={id}
+        >
+          {codeContent.trim()}
+        </SyntaxHighlighter>
+      </div>
     );
   }
 
