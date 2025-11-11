@@ -51,12 +51,12 @@ export function useVisibleSynapses(
         colors.set(config.id, config.color);
       }
     }
-    let index = 0;
     for (const value of Object.values(synaptomes)) {
       if (!value) continue;
 
-      const configColor = colors.get(value.synapsePlacementConfigId);
-      const color = configColor ?? getColorFromGeneratedPalette(index++);
+      const color = colors.get(value.synapsePlacementConfigId);
+      if (!color) continue;
+
       const { sectionSynapses } = value;
       for (const section of sectionSynapses) {
         const data = result[color] ?? [];
