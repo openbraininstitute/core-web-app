@@ -107,3 +107,52 @@
   display: grid;
   place-items: center;
 }
+
+/* Animated Rainbow Gradient Button */
+.rainbowButton {
+  display: inline-block;
+  align-self: flex-start;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, #ff0000 0%, #5295f3 28.56%, #0000ff 57.12%, #ff0000 100%);
+  background-size: 200% 100%;
+  animation: rainbowFlow 3s linear infinite;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* .rainbowButton::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  background: white;
+  border-radius: inherit;
+  z-index: 1;
+} */
+
+.rainbowButton span {
+  position: relative;
+  z-index: 2;
+}
+
+.rainbowButton:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.rainbowButton:active {
+  transform: scale(0.98);
+}
+
+@keyframes rainbowFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
