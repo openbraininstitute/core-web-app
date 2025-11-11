@@ -20,6 +20,7 @@ export interface WebglNeuronSelectorProps {
   sessionId: string;
   mode?: 'build' | 'simulation';
   disableElectrodes?: boolean;
+  disableSynapses?: boolean;
 }
 
 export function WebglNeuronSelector({
@@ -29,6 +30,7 @@ export function WebglNeuronSelector({
   sessionId,
   mode,
   disableElectrodes,
+  disableSynapses,
 }: WebglNeuronSelectorProps) {
   const painterManager = usePainterManager();
   console.log(
@@ -36,7 +38,8 @@ export function WebglNeuronSelector({
     meModelId,
     sessionId,
     mode,
-    disableElectrodes
+    disableElectrodes,
+    disableSynapses
   ); // @FIXME: Remove this line written on 2025-11-11 at 11:25
   return (
     <WebglNeuronSelectorContent
@@ -47,6 +50,7 @@ export function WebglNeuronSelector({
       sessionId={sessionId}
       mode={mode}
       disableElectrodes={disableElectrodes}
+      disableSynapses={disableSynapses}
     />
   );
 }
@@ -63,8 +67,9 @@ function WebglNeuronSelectorContent({
   painterManager,
   mode = 'simulation',
   disableElectrodes = false,
+  disableSynapses = false,
 }: WebglNeuronSelectorContentProps) {
-  usePainterController(painterManager, sessionId, disableElectrodes, mode);
+  usePainterController(painterManager, sessionId, disableElectrodes, disableSynapses, mode);
   const { loading, error } = useCleanMorphology(
     painterManager,
     meModelId,

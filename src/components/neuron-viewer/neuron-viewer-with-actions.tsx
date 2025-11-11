@@ -24,6 +24,7 @@ type Props = {
   useActions?: boolean;
   useLabels?: boolean;
   disableElectrodes?: boolean;
+  disableSynapses?: boolean;
   virtualLabId: string;
   projectId: string;
   sessionId: string;
@@ -38,6 +39,7 @@ export function NeuronViewerContainer({
   useActions = false,
   useLabels = false,
   disableElectrodes,
+  disableSynapses,
   virtualLabId,
   projectId,
   sessionId,
@@ -126,6 +128,7 @@ export function NeuronViewerContainer({
             projectId={projectId}
             virtualLabId={virtualLabId}
             disableElectrodes={disableElectrodes}
+            disableSynapses={disableSynapses}
             meModelId={meModelId}
             sessionId={sessionId}
             mode={mode}

@@ -80,6 +80,8 @@ export class PainterManager {
 
   public readonly eventForbiddenClick = new GenericEvent();
 
+  private _disableSynapses = false;
+
   private _morphology: Morphology | null = null;
 
   private _canvas: HTMLCanvasElement | null = null;
@@ -124,6 +126,15 @@ export class PainterManager {
   private lastCameraState: TgdCameraState | null = null;
 
   private _clickable = true;
+
+  get disableSynapses() {
+    return this._disableSynapses;
+  }
+
+  set disableSynapses(value: boolean) {
+    this._disableSynapses = value;
+    this.groupSynapses.active = !value;
+  }
 
   get clickable() {
     return this._clickable;
@@ -416,6 +427,7 @@ export class PainterManager {
     this.groupSynapses = new TgdPainterGroup({
       name: `Synapses#${Math.round(1e9 * Math.random())}`,
     });
+    this.groupSynapses.active = !this._disableSynapses;
     context.add(
       new TgdPainterClear(context, { color: [0, 0, 0, 1], depth: 1 }),
       new TgdPainterState(context, {
@@ -531,6 +543,7 @@ export function usePainterController(
   painter: PainterManager,
   sessionId: string,
   disableElectrodes: boolean,
+  disableSynapses: boolean,
   mode: 'build' | 'simulation'
 ) {
   const notif = useAppNotification();
@@ -561,4 +574,8 @@ export function usePainterController(
   React.useEffect(() => {
     painter.disableElectrodes = disableElectrodes;
   }, [disableElectrodes, painter]);
+
+  React.useEffect(() => {
+    painter.disableSynapses = disableSynapses;
+  }, [disableSynapses, painter]);
 }
