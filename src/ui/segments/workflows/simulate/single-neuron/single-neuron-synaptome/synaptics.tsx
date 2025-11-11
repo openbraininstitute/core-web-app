@@ -168,7 +168,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
     }
   });
 
-  useViewer3D(form.getFieldValue('synapses') ?? [], synapsesPlacement ?? {});
+  useViewer3D(form.getFieldValue('synapses') ?? [], synapsesPlacement ?? {}, data);
 
   if (isLoading) {
     return (
@@ -260,10 +260,12 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
 
 function useViewer3D(
   synapticInputs: SynapseConfiguration[],
-  selection: Record<string, SectionSynapsesWith3D | null>
+  selection: Record<string, SectionSynapsesWith3D | null>,
+  data: { synapses: Array<{ id: string; color?: string }> } | null | undefined
 ) {
   const update = useVisibleSynapsesSetter();
   useEffect(() => {
+    console.log('🚀 [synaptics] data =', data); // @FIXME: Remove this line written on 2025-11-11 at 20:51
     const synapses: {
       color: string;
       data: Float32Array;
@@ -274,14 +276,18 @@ function useViewer3D(
         (item) => item?.synapsePlacementConfigId === synapticInput.id
       );
       if (match) {
+        console.log('🚀 [synaptics] index, match, synapticInput =', index, match, synapticInput); // @FIXME: Remove this line written on 2025-11-11 at 20:46
         synapses.push({
-          color: synapticInput.color ?? getColorFromGeneratedPalette(index),
+          color:
+            findColor(data?.synapses, synapticInput.id) ??
+            synapticInput.color ??
+            getColorFromGeneratedPalette(index),
           data: makeData(match.sectionSynapses),
         });
       }
     }
     update(synapses);
-  }, [synapticInputs, selection, update]);
+  }, [synapticInputs, selection, data, update]);
 }
 
 function makeData(
@@ -299,4 +305,13 @@ function makeData(
     }
   }
   return new Float32Array(data);
+}
+
+function findColor(
+  synapses: { id: string; color?: string }[] | undefined,
+  id: string
+): string | null | undefined {
+  if (!synapses) return null;
+
+  return synapses.find((item) => item.id === id)?.color;
 }
