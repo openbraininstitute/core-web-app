@@ -179,6 +179,7 @@ export class PainterManager {
   }
 
   set canvas(canvas: HTMLCanvasElement | null) {
+    console.log('🚀 [manager] canvas =', canvas); // @FIXME: Remove this line written on 2025-11-11 at 11:11
     if (this._canvas === canvas) return;
 
     this._canvas = canvas;
@@ -190,6 +191,7 @@ export class PainterManager {
   }
 
   set morphology(morphology: Morphology | null) {
+    console.log('🚀 [manager] morphology =', morphology); // @FIXME: Remove this line written on 2025-11-11 at 11:12
     if (!morphology || JSON.stringify(this._morphology) !== JSON.stringify(morphology)) {
       this.lastCameraState = null;
     }
@@ -276,6 +278,7 @@ export class PainterManager {
   showSynapses(synapses: Array<{ color: string; data: Float32Array }>) {
     this.synapses = synapses;
     const { context, groupSynapses } = this;
+    console.log('🚀 [manager] synapses, context =', synapses, context); // @FIXME: Remove this line written on 2025-11-11 at 11:08
     if (!context) return;
 
     groupSynapses.removeAll();
