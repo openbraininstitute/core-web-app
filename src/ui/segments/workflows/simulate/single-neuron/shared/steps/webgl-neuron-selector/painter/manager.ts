@@ -22,7 +22,6 @@ import {
   TgdVec3,
   webglPresetBlend,
   webglPresetCull,
-  webglPresetCull,
   webglPresetDepth,
 } from '@tolokoban/tgd';
 import { useAtomValue } from 'jotai';
