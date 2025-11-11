@@ -33,10 +33,7 @@ import {
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { useAppNotification } from '@/components/notification';
 import { synapsesPlacementAtom } from '@/state/synaptome';
-import {
-  sendDisplaySynapses3DEvent,
-  sendRemoveSynapses3DEvent,
-} from '@/components/neuron-viewer/hooks/events';
+import { sendDisplaySynapses3DEvent } from '@/components/neuron-viewer/hooks/events';
 import { Button } from '@/ui/molecules/button';
 import { getSession } from '@/authFetch';
 import { tryCatch } from '@/api/utils';
@@ -74,7 +71,6 @@ export function SynapticInputItem({
   const breakpoint = useDefaultBreakpoint();
   const { error: notifyError } = useAppNotification();
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
-  // const [synapseDisplayed, setSynapseDisplayed] = useState(false);
   const [visualizeLoading, setLoadingVisualize] = useState(false);
   const [synapsesPlacement, setSynapsesPlacement] = useAtom(synapsesPlacementAtom);
   const key = getSessionKey(SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
@@ -101,7 +97,12 @@ export function SynapticInputItem({
     color: op.color ?? DefaultColor,
   }));
 
-  const onHideSynapse = useHideSynapseHandler(synapsesPlacement, setSynapsesPlacement, index);
+  const onHideSynapse = useHideSynapseHandler(
+    synapsesPlacement,
+    setSynapsesPlacement,
+    index,
+    synapsesConfiguration.synapses[index]?.id
+  );
 
   const onShowSynapse = async () => {
     setLoadingVisualize(true);
@@ -174,7 +175,6 @@ export function SynapticInputItem({
       abortController.current.abort();
     };
   }, []);
-
   return (
     <div className="flex w-full flex-col items-start justify-start gap-1.5">
       <div
@@ -341,20 +341,31 @@ function useHideSynapseHandler(
         > | null)
       | null
   ) => void,
-  index: number
+  index: number,
+  id: string | undefined
 ) {
   return () => {
-    const currentSynapsesPlacementConfig = synapsesPlacement?.[`${index}`];
-    if (currentSynapsesPlacementConfig && currentSynapsesPlacementConfig.meshId) {
-      sendRemoveSynapses3DEvent(`${index}`, currentSynapsesPlacementConfig.meshId);
-      setSynapsesPlacement((prev) => {
-        const newValue = structuredClone(prev);
-        if (!newValue) return newValue;
+    if (synapsesPlacement) {
+      if (id && synapsesPlacement[id]) {
+        setSynapsesPlacement((prev) => {
+          const newValue = structuredClone(prev);
+          if (!newValue) return newValue;
 
-        delete newValue[`${index}`];
-        return newValue;
-      });
+          delete newValue[id];
+          return newValue;
+        });
+      } else if (synapsesPlacement[`${index}`]) {
+        setSynapsesPlacement((prev) => {
+          const newValue = structuredClone(prev);
+          if (!newValue) return newValue;
+
+          delete newValue[`${index}`];
+          return newValue;
+        });
+      }
     }
+
+    //   // sendRemoveSynapses3DEvent(`${index}`, currentSynapsesPlacementConfig.meshId);
   };
 }
 

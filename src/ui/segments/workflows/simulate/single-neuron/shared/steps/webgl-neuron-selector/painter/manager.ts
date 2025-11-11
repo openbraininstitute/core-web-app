@@ -543,8 +543,7 @@ export function usePainterController(
   painter: PainterManager,
   sessionId: string,
   disableElectrodes: boolean,
-  disableSynapses: boolean,
-  mode: 'build' | 'simulation'
+  disableSynapses: boolean
 ) {
   const notif = useAppNotification();
   React.useEffect(() => {
@@ -566,7 +565,7 @@ export function usePainterController(
     }
   }, [simulationStatus, painter]);
 
-  const synapses = useVisibleSynapses(sessionId, mode);
+  const synapses = useVisibleSynapses();
   React.useEffect(() => {
     painter.showSynapses(synapses);
   }, [synapses, painter]);

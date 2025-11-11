@@ -15,7 +15,9 @@ export function OptionRender({ data }: Parameters<NonNullable<SelectProps['optio
           <div
             className="mt-1 h-2 w-2 rounded-full leading-7"
             // eslint-disable-next-line @typescript-eslint/dot-notation
-            style={{ backgroundColor: data['color'] }}
+            style={{
+              backgroundColor: data.color,
+            }}
           />
           <div>{data.label}</div>
         </div>

@@ -1,10 +1,14 @@
 'use client';
 
+import React from 'react';
 import { DeleteOutlined, EyeInvisibleOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import sample from 'es-toolkit/compat/sample';
 import { useAtom } from 'jotai';
 import { Color } from 'three';
+
+import { getColorFromGeneratedPalette } from '../../simulate/single-neuron/shared/steps/webgl-neuron-selector/colors';
+import { useVisibleSynapsesSetter } from '../../simulate/single-neuron/shared/steps/webgl-neuron-selector/hooks';
 
 import { SingleNeuronSynaptomeBaseSchema } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
@@ -16,7 +20,7 @@ import {
   useBuildSingleNeuronSynaptomeSessionState,
 } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { synapsesPlacementAtom } from '@/state/synaptome';
+import { SectionSynapsesWith3D, synapsesPlacementAtom } from '@/state/synaptome';
 import { formatCompactNumber } from '@/utils/format';
 import { getRandomIntInclusive } from '@/util/utils';
 import { Button } from '@/ui/molecules/button';
@@ -148,6 +152,8 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
       }));
     }
   };
+  const values = sessionValue?.synapseSets?.values();
+  useViewer3D(values ? Array.from(values) : [], synapsesPlacement ?? {});
 
   return (
     <div className="flex max-h-[300px] flex-col gap-1.5">
@@ -316,4 +322,47 @@ function VisibilityButton({
       {isVisible ? <EyeInvisibleOutlined /> : <EyeOutlined />}
     </Button>
   );
+}
+
+function useViewer3D(
+  synapticInputs: { id: string; color?: string }[],
+  selection: Record<string, SectionSynapsesWith3D | null>
+) {
+  const update = useVisibleSynapsesSetter();
+  React.useEffect(() => {
+    const synapses: {
+      color: string;
+      data: Float32Array;
+    }[] = [];
+    for (let index = 0; index < synapticInputs.length; index++) {
+      const synapticInput = synapticInputs[index];
+      const match = Object.values(selection).find(
+        (item) => item?.synapsePlacementConfigId === synapticInput.id
+      );
+      if (match) {
+        synapses.push({
+          color: synapticInput.color ?? getColorFromGeneratedPalette(index),
+          data: makeData(match.sectionSynapses),
+        });
+      }
+    }
+    update(synapses);
+  }, [synapticInputs, selection, update]);
+}
+
+function makeData(
+  sections: {
+    synapses: Array<{
+      coordinates: number[];
+    }>;
+  }[]
+) {
+  const data: number[] = [];
+  for (const section of sections) {
+    for (const { coordinates } of section.synapses) {
+      const [x, y, z] = coordinates;
+      data.push(x, y, z, 1);
+    }
+  }
+  return new Float32Array(data);
 }
