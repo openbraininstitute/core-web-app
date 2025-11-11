@@ -182,11 +182,7 @@ export const SmallMicrocircuitSimulation: EntityCoreTypeConfig<ICircuitSimulatio
   asset: {
     extension: 'application/json',
   },
-  detailViewSections: [
-    DetailViewSectionsDict.Overview,
-    DetailViewSectionsDict.Configuration,
-    DetailViewSectionsDict.Results,
-  ],
+  detailViewSections: [DetailViewSectionsDict.Overview],
   isBookmarkable: true,
   isDownloadable: false,
   isCopyable: true,
