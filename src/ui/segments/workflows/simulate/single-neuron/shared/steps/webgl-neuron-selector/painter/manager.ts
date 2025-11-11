@@ -21,6 +21,7 @@ import {
   TgdTexture2D,
   TgdVec3,
   webglPresetBlend,
+  webglPresetCull,
   webglPresetDepth,
 } from '@tolokoban/tgd';
 import { useAtomValue } from 'jotai';
@@ -178,7 +179,6 @@ export class PainterManager {
   }
 
   set canvas(canvas: HTMLCanvasElement | null) {
-    console.log('🚀 [manager] canvas =', canvas); // @FIXME: Remove this line written on 2025-11-11 at 11:11
     if (this._canvas === canvas) return;
 
     this._canvas = canvas;
@@ -190,7 +190,6 @@ export class PainterManager {
   }
 
   set morphology(morphology: Morphology | null) {
-    console.log('🚀 [manager] morphology =', morphology); // @FIXME: Remove this line written on 2025-11-11 at 11:12
     if (!morphology || JSON.stringify(this._morphology) !== JSON.stringify(morphology)) {
       this.lastCameraState = null;
     }
@@ -275,9 +274,8 @@ export class PainterManager {
   }
 
   showSynapses(synapses: Array<{ color: string; data: Float32Array }>) {
-    const { context, groupSynapses } = this;
     this.synapses = synapses;
-    console.log('🚀 [manager] synapses, context.name =', synapses, context?.name); // @FIXME: Remove this line written on 2025-11-11 at 11:08
+    const { context, groupSynapses } = this;
     if (!context) return;
 
     groupSynapses.removeAll();
@@ -411,6 +409,8 @@ export class PainterManager {
   private initTgdPainters(context: TgdContext, structure: Structure, palette: TgdTexture2D) {
     const groupHover = new TgdPainterState(context, {
       blend: webglPresetBlend.add,
+      cull: webglPresetCull.back,
+      depth: webglPresetDepth.always,
     });
     const segments = makeSegments(structure);
     this.groupSynapses = new TgdPainterGroup({

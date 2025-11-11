@@ -46,15 +46,20 @@ export function useVisibleSynapses(
       for (const config of simulationConfigs) {
         colors.set(config.id, config.color);
         console.log(
-          `Cfg: ${short(config.id)} %c${config.color}`,
+          `Simul: ${short(config.id)} %c${config.color}`,
           `color:#fff;background:${config.color}`
         );
       }
     } else {
-      // Simulation
+      // Build
       console.log('🚀 [hooks] buildConfigs =', buildConfigs); // @FIXME: Remove this line written on 2025-11-11 at 10:42
       for (const [, config] of Array.from(buildConfigs?.synapseSets ?? [])) {
         colors.set(config.id, config.color);
+        console.log(
+          `Build: ${short(config.id)} %c${config.color} %c ${config.name} / ${config.type}`,
+          `color:#fff;background:${config.color}`,
+          'background:transparent'
+        );
       }
     }
     console.log('-'.repeat(40));
@@ -64,7 +69,7 @@ export function useVisibleSynapses(
 
       const configColor = colors.get(value.synapsePlacementConfigId);
       console.log(
-        `Syn: ${short(value.synapsePlacementConfigId)} %c${configColor}`,
+        `Selected: ${short(value.synapsePlacementConfigId)} %c${configColor}`,
         `color:#fff;background:${configColor}`
       );
       const color = configColor ?? getColorFromGeneratedPalette(index++);
