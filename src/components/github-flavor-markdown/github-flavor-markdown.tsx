@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import remarkMath from 'remark-math';
 import TruncableImage from './truncable-image';
+import CodeBlock from './code-block';
 
 import { classNames } from '@/util/utils';
 
@@ -29,6 +30,7 @@ export function GithubFlavorMarkdown({
       components={{
         a: makeLink(onLinkClicked),
         img: TruncableImage,
+        pre: CodeBlock,
       }}
     >
       {children}
