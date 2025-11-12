@@ -1,6 +1,4 @@
-import filter from 'es-toolkit/compat/filter';
-import find from 'es-toolkit/compat/find';
-import set from 'es-toolkit/compat/set';
+import { filter, find, set } from 'es-toolkit/compat';
 
 import { EntityCoreConfiguration } from '@/entity-configuration/domain';
 
@@ -22,6 +20,8 @@ export const circuitTypes: EntityCoreExtendedType[] = [
 
 export const getEntityByExtendedType = ({ type }: { type?: EntityCoreExtendedType }) =>
   find(EntityCoreConfiguration, { extendedType: type });
+
+export type TEntityByExtendedTypeConfig = ReturnType<typeof getEntityByExtendedType>;
 
 // TODO: fix type to be a list of available types in entitycore
 export const getEntityByCoreType = ({ type }: { type?: TEntityTypeDict }) =>

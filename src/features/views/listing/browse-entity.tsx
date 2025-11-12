@@ -52,6 +52,9 @@ type Props = {
   classNames?: {
     container?: ComponentProps<'div'>['className'];
     miniView?: ComponentProps<'div'>['className'];
+    filterClassNames?: {
+      container?: string;
+    };
   };
   scope?: TWorkspaceScope;
   defaultBrainRegion?: string;
@@ -122,6 +125,7 @@ export function BrowseEntityScope({
     requireBrainRegion,
     defaultBrainRegion,
     useKeepPreviousData: true,
+    extraQueryParams,
     enabled: ({ queryKey }) => {
       const [{ queryParameters }] = queryKey;
       if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
@@ -205,6 +209,7 @@ export function BrowseEntityScope({
               ),
             }}
             {...mainTableProps}
+            filterClassNames={classNames?.filterClassNames}
           />
         </div>
       </div>

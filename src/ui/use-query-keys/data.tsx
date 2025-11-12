@@ -97,6 +97,15 @@ export const keyBuilder = {
     `${prefix}-full-circuit-hierarchy`,
     { virtualLabId, projectId },
   ],
+  singleCircuit: ({
+    virtualLabId,
+    projectId,
+    entityId,
+    ...props
+  }: WorkspaceContext & { entityId: string } & Record<string, any>) => [
+    `${prefix}-single-circuits`,
+    { virtualLabId, projectId, entityId, ...props },
+  ],
   manyCircuits: ({
     virtualLabId,
     projectId,
@@ -106,6 +115,14 @@ export const keyBuilder = {
   }: WorkspaceContext & { page: number; page_size: number } & Record<string, any>) => [
     `${prefix}-many-circuits`,
     { virtualLabId, projectId, page, page_size, ...props },
+  ],
+  oneCircuit: ({
+    virtualLabId,
+    projectId,
+    entityId,
+  }: WorkspaceContext & { entityId: string } & Record<string, any>) => [
+    `${prefix}-single-circuit`,
+    { virtualLabId, projectId, entityId },
   ],
   asset: ({
     entityId,
@@ -201,5 +218,16 @@ export const keyBuilder = {
   preview: (context: WorkspaceContext, params?: Record<string, any>) => [
     `${prefix}-asset-preview`,
     { context, params },
+  ],
+  singleIonChannelModelingCampaign: ({
+    context,
+    id,
+    ...props
+  }: {
+    context: WorkspaceContext;
+    id: string;
+  } & Record<string, any>) => [
+    `${prefix}-ion-channel-modeling-campaign`,
+    { context, id, ...props },
   ],
 };

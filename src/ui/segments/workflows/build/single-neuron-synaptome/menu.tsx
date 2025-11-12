@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useRouter } from '@bprogress/next';
@@ -15,6 +16,8 @@ import { z } from 'zod';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 import isNil from 'es-toolkit/compat/isNil';
 import delay from 'es-toolkit/compat/delay';
+
+import { useVisibleSynapsesSetter } from '../../simulate/single-neuron/shared/steps/webgl-neuron-selector/hooks';
 
 import { SynapseSetMenuItems } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-set-menu-item';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -62,7 +65,14 @@ export function Menu({ sessionId }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const { push: navigate } = useRouter();
   const step = searchParams.get('step');
-
+  const setVisibleSynapses = useVisibleSynapsesSetter();
+  useEffect(() => {
+    if (step === BuildStep.Info) {
+      // Reset the synapses in the info panel.
+      // Go to "Synaptic Inputs" to see the synapses.
+      setVisibleSynapses([]);
+    }
+  }, [step, setVisibleSynapses]);
   const { sessionValue, setSessionValue } = useBuildSingleNeuronSynaptomeSessionState({
     sessionId,
   });

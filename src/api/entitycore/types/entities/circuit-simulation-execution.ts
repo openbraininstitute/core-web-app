@@ -1,26 +1,21 @@
 import { z } from 'zod';
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+
 import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
-import { type IActivity, IActivityFilter } from '@/api/entitycore/types/shared/activity';
+import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import type { IActivity, IActivityFilter } from '@/api/entitycore/types/shared/activity';
 import type {
   ActivityType,
   EntityAuthorization,
   EntityCoreIdentifiable,
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
-
-export enum CircuitSimulationExecutionStatus {
-  CREATED = 'created',
-  PENDING = 'pending',
-  RUNNING = 'running',
-  DONE = 'done',
-  ERROR = 'error',
-}
-
-export type TCircuitSimulationExecutionStatus = `${CircuitSimulationExecutionStatus}`;
+import {
+  EntitycoreExecutionStatus,
+  type TEntitycoreExecutionStatus,
+} from '@/api/entitycore/types/entities/execution';
 
 interface ICircuitSimulationExecutionBase {
-  status: CircuitSimulationExecutionStatus;
+  status: TEntitycoreExecutionStatus;
 }
 
 export interface ICircuitSimulationExecution
@@ -45,7 +40,7 @@ const activityCreateSchema = z.object({
 
 const simulationExecutionCreateSchema = z
   .object({
-    status: z.nativeEnum(CircuitSimulationExecutionStatus),
+    status: z.nativeEnum(EntitycoreExecutionStatus),
   })
   .merge(activityCreateSchema);
 

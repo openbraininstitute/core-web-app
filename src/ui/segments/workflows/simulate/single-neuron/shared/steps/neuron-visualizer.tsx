@@ -26,9 +26,15 @@ type Props = {
   sessionId: string;
   memodelId: string;
   disableElectrodes?: boolean;
+  disableSynapses?: boolean;
 };
 
-export function NeuronVisualizer({ sessionId, memodelId, disableElectrodes }: Props) {
+export function NeuronVisualizer({
+  sessionId,
+  memodelId,
+  disableElectrodes,
+  disableSynapses,
+}: Props) {
   const { refContainer, toggleFullscreen } = useFullscreenSwitcher();
   const { virtualLabId, projectId } = useWorkspace();
   const queryParams = useSearchParams();
@@ -129,6 +135,7 @@ export function NeuronVisualizer({ sessionId, memodelId, disableElectrodes }: Pr
                 memodelId,
                 sessionId,
                 disableElectrodes,
+                disableSynapses,
                 useActions: enableActions,
               }}
             />
@@ -146,10 +153,12 @@ function ThreeDNeuronVisualizer({
   sessionId,
   useActions,
   disableElectrodes,
+  disableSynapses,
 }: WorkspaceContext &
   Props & {
     useActions: boolean;
     disableElectrodes?: boolean;
+    disableSynapses?: boolean;
   }) {
   return (
     <div className="absolute h-full w-full flex-1 border-none">
@@ -161,6 +170,7 @@ function ThreeDNeuronVisualizer({
         useActions={useActions}
         virtualLabId={virtualLabId}
         disableElectrodes={disableElectrodes}
+        disableSynapses={disableSynapses}
         projectId={projectId}
         meModelId={memodelId}
         sessionId={sessionId}

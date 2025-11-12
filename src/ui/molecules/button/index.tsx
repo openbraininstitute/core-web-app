@@ -1,6 +1,9 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
+'use client';
+
 import { cva, type VariantProps } from 'class-variance-authority';
+import Icon, { DownOutlined } from '@ant-design/icons';
 import { Slot } from '@radix-ui/react-slot';
 import type { ComponentProps } from 'react';
 
@@ -21,6 +24,7 @@ const buttonVariants = cva(
         ghost: 'hover:bg-neutral-1 hover:text-primary-9',
         link: 'text-primary underline-offset-4 hover:underline',
         icon: '',
+        shadow: 'flex w-full px-8 py-6 bg-gradient-to-r from-[#003A8C] to-[#001026] text-white',
       },
       size: {
         default: 'h-9 px-4 py-2 has-[>svg]:px-3',
@@ -99,4 +103,14 @@ function Button({
   );
 }
 
-export { Button, buttonVariants };
+interface ButtonArrowProps extends React.SVGProps<SVGSVGElement> {
+  icon?: typeof Icon;
+}
+
+function ButtonArrow({ icon: UIcon = DownOutlined, className }: ButtonArrowProps) {
+  return (
+    <Icon component={UIcon} data-slot="button-arrow" className={cn('ms-auto -me-1', className)} />
+  );
+}
+
+export { Button, ButtonArrow, buttonVariants };
