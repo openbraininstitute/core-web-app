@@ -1,9 +1,12 @@
 'use client';
 
+import { useEffect } from 'react';
 import { RightOutlined, SettingFilled, WarningFilled } from '@ant-design/icons';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAtomValue, useSetAtom } from 'jotai';
+
+import { useVisibleSynapsesSetter } from '../steps/webgl-neuron-selector/hooks';
 
 import { useSingleNeuronSimulationAtoms } from '@/ui/segments/workflows/simulate/single-neuron/shared/use-simulation-atoms';
 import { launchSimulationAtom } from '@/ui/segments/workflows/simulate/single-neuron/shared/runner';
@@ -34,7 +37,6 @@ import { browserHistoryReplace } from '@/utils/browser';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
-
 import {
   SimulationType,
   type TSimulationType,
@@ -66,8 +68,15 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
   const queryClient = useQueryClient();
   const launchSimulation = useSetAtom(launchSimulationAtom);
   const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
-
   const step = searchParams.get('step') ?? ExperimentStep.Info;
+  const setVisibleSynapses = useVisibleSynapsesSetter();
+  useEffect(() => {
+    if (step === ExperimentStep.Info) {
+      // Reset the synapses in the info panel.
+      // Go to "Synaptic Inputs" to see the synapses.
+      setVisibleSynapses([]);
+    }
+  }, [step, setVisibleSynapses]);
 
   const updatePanelSelection = () => {
     const query = new URLSearchParams(searchParams);

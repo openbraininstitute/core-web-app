@@ -1,25 +1,14 @@
-import { JSX } from 'react';
-import { notFound } from 'next/navigation';
 import { snakeCase } from 'es-toolkit/compat';
+import { notFound } from 'next/navigation';
 
-import { downloadEntity } from '../layout';
-import {
-  DetailViewSectionsDict,
-  TDetailViewSectionDict,
-} from '@/entity-configuration/definitions/types';
-import {
-  EntityCoreExtendedType,
-  getEntityByExtendedType,
-} from '@/entity-configuration/domain/helpers';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { retrieveEntity } from '@/entity-configuration/domain/requests';
+import { detailPageSectionRenderer } from '@/features/details-page';
+import { tryCatch } from '@/api/utils';
 
+import type { TDetailViewSectionDict } from '@/entity-configuration/definitions/types';
+import type { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
-
-import Overview from '@/ui/segments/detail-view/overview';
-import Analysis from '@/ui/segments/detail-view/analysis';
-import RelatedArtifacts from '@/ui/segments/detail-view/related-artifacts';
-import RelatedPublications from '@/ui/segments/detail-view/related-publications';
-import Configuration from '@/ui/segments/detail-view/configuration';
-import Results from '@/ui/segments/detail-view/results';
 
 export default async function Page({
   params,
@@ -28,42 +17,28 @@ export default async function Page({
   null
 >) {
   const { virtualLabId, projectId, section, type, id } = await params;
-  const ctx = { virtualLabId, projectId };
+  const context = { virtualLabId, projectId };
 
   const entityType = getEntityByExtendedType({ type: snakeCase(type) as EntityCoreExtendedType });
 
   if (!entityType || !entityType.detailViewSections?.includes(section)) notFound();
 
-  const entity = await downloadEntity({
-    type: snakeCase(type) as EntityCoreExtendedType,
-    ctx,
-    id,
+  const { data: entity, error } = await tryCatch(
+    retrieveEntity({
+      type: snakeCase(type) as EntityCoreExtendedType,
+      ctx: context,
+      id,
+    })
+  );
+
+  if (!entity || error) notFound();
+
+  const content = detailPageSectionRenderer({
+    context,
+    entity,
+    entityType,
+    section,
   });
-
-  let content: JSX.Element | undefined;
-
-  if (section === DetailViewSectionsDict.Overview) {
-    return <Overview entity={entity} extendedType={entityType.extendedType} ctx={ctx} />;
-  }
-  if (section === DetailViewSectionsDict.Analysis) {
-    return <Analysis entity={entity} extendedType={entityType.extendedType} />;
-  }
-
-  if (section === DetailViewSectionsDict.Configuration) {
-    return <Configuration entity={entity} extendedType={entityType.extendedType} ctx={ctx} />;
-  }
-
-  if (section === DetailViewSectionsDict.RelatedPublications) {
-    return <RelatedPublications entity={entity} extendedType={entityType.extendedType} />;
-  }
-
-  if (section === DetailViewSectionsDict.RelatedArtifacts) {
-    return <RelatedArtifacts extendedType={entityType.extendedType} entity={entity} />;
-  }
-
-  if (section === DetailViewSectionsDict.Results) {
-    return <Results extendedType={entityType.extendedType} entity={entity} ctx={ctx} />;
-  }
 
   if (!content) notFound();
 

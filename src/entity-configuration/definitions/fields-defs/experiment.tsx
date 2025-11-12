@@ -2,6 +2,7 @@ import get from 'es-toolkit/compat/get';
 
 import { ReactNode } from 'react';
 
+import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import { PreviewThumbnail } from '@/features/thumbnail/preview';
 import {
   renderArray,
@@ -15,7 +16,6 @@ import {
 } from '@/entity-configuration/definitions/fields-defs/enums';
 import { hasAssets } from '@/api/entitycore/guards';
 
-import type { TCircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type {
   EntityCoreObjectTypes,
@@ -197,12 +197,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Status',
     filter: null,
     render: (r) => {
-      const status = get(
-        r,
-        'simulations[0].executions[0].status',
-        ''
-      ) as TCircuitSimulationExecutionStatus;
-      const statusMap: Record<TCircuitSimulationExecutionStatus, ReactNode> = {
+      const status = get(r, 'simulations[0].executions[0].status', '') as EntitycoreExecutionStatus;
+      const statusMap: Record<EntitycoreExecutionStatus, ReactNode> = {
         created: (
           <div className="text-primary-8 w-max rounded-full px-3 py-1 text-sm font-bold shadow-sm">
             Created

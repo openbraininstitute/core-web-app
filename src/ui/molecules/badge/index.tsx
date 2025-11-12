@@ -50,4 +50,36 @@ function Badge({
   );
 }
 
-export { Badge, badgeVariants };
+const badgeButtonVariants = cva(
+  'cursor-pointer transition-all inline-flex items-center justify-center leading-none size-3.5 [&>svg]:opacity-100! [&>svg]:size-3.5! p-0 rounded-md -me-0.5 opacity-60 hover:opacity-100',
+  {
+    variants: {
+      variant: {
+        default: '',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+    },
+  }
+);
+
+function BadgeButton({
+  className,
+  variant,
+  asChild = false,
+  ...props
+}: React.ComponentProps<'button'> &
+  VariantProps<typeof badgeButtonVariants> & { asChild?: boolean }) {
+  const Comp = asChild ? Slot : 'span';
+  return (
+    <Comp
+      data-slot="badge-button"
+      className={cn(badgeButtonVariants({ variant, className }))}
+      role="button"
+      {...props}
+    />
+  );
+}
+
+export { Badge, BadgeButton, badgeVariants };

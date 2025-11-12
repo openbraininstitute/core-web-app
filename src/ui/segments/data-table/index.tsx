@@ -56,6 +56,9 @@ export type Props<T> = {
   tableStyle?: CSSProperties | undefined;
   allowDownload?: boolean;
   searchEnabled?: boolean;
+  filterClassNames?: {
+    container?: string;
+  };
 };
 
 export function MainTable<T extends EntityCoreIdentifiableNamed>({
@@ -81,6 +84,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
   tableStyle,
   allowDownload,
   searchEnabled = true,
+  filterClassNames,
 }: Props<T>) {
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
   const onDisplayControlPanel = (value: boolean) => setDisplayControlPanel(value);
@@ -169,6 +173,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           dataKey={dataKey}
           facets={facets}
           workspace={workspace}
+          classNames={filterClassNames}
         />
       )}
     </>

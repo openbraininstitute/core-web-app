@@ -1,7 +1,11 @@
+'use client';
+
+import { PropsWithChildren } from 'react';
 import Image from 'next/image';
+
 import Logo from '@/components/logo/as-svg';
 
-export function SharedLayout({ children }: { children: React.ReactNode }) {
+export function SharedLayout({ children }: PropsWithChildren) {
   return (
     <div className="relative min-h-screen overflow-hidden bg-gray-50">
       <div className="absolute right-0 bottom-0 h-[285px] w-[503px] opacity-90">

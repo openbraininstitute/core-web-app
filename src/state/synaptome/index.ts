@@ -18,7 +18,7 @@ export type SectionSynapses = {
   synapses: Array<SynapsePosition>;
 };
 
-type SectionSynapsesWith3D = {
+export type SectionSynapsesWith3D = {
   sectionSynapses: Array<SectionSynapses>;
   synapsePlacementConfigId: string;
   count?: number;

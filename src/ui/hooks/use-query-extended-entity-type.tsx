@@ -102,6 +102,7 @@ export function useQueryExtendedEntityType<TData = unknown, TError = unknown>({
   queryFn,
   requireBrainRegion,
   defaultBrainRegion,
+  extraQueryParams,
   ...rest
 }: {
   context: QueryContext;
@@ -125,6 +126,7 @@ export function useQueryExtendedEntityType<TData = unknown, TError = unknown>({
   useKeepPreviousData?: boolean;
   requireBrainRegion?: boolean;
   defaultBrainRegion?: string;
+  extraQueryParams?: Record<string, any>;
 } & Omit<
   UseQueryOptions<
     TData,
@@ -147,7 +149,12 @@ export function useQueryExtendedEntityType<TData = unknown, TError = unknown>({
     { context, workspace },
     { requireBrainRegion, defaultBrainRegion }
   );
-  const queryKey = buildQueryKey({ workspace, context, queryParameters, requireBrainRegion });
+  const queryKey = buildQueryKey({
+    workspace,
+    context,
+    queryParameters: { ...queryParameters, ...extraQueryParams },
+    requireBrainRegion,
+  });
   const queryKeyHash = hashKey(queryKey);
 
   const query = useQuery({

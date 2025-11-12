@@ -97,7 +97,7 @@ export default function Page({
                 memodel={entity}
               />
             </HydrateWrapper>
-            <NeuronVisualizer sessionId={sessionId} memodelId={entity.id} />
+            <NeuronVisualizer sessionId={sessionId} memodelId={entity.id} disableSynapses />
           </div>
         </div>
       </div>

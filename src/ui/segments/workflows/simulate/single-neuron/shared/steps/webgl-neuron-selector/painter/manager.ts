@@ -20,6 +20,7 @@ import {
   TgdTexture2D,
   TgdVec3,
   webglPresetBlend,
+  webglPresetCull,
   webglPresetDepth,
 } from '@tolokoban/tgd';
 import { useAtomValue } from 'jotai';
@@ -78,6 +79,8 @@ export class PainterManager {
 
   public readonly eventForbiddenClick = new GenericEvent();
 
+  private _disableSynapses = false;
+
   private _morphology: Morphology | null = null;
 
   private _canvas: HTMLCanvasElement | null = null;
@@ -116,6 +119,15 @@ export class PainterManager {
   private lastCameraChangeTimestamp = 0;
 
   private _clickable = true;
+
+  get disableSynapses() {
+    return this._disableSynapses;
+  }
+
+  set disableSynapses(value: boolean) {
+    this._disableSynapses = value;
+    this.groupSynapses.active = !value;
+  }
 
   get clickable() {
     return this._clickable;
@@ -262,10 +274,10 @@ export class PainterManager {
   }
 
   showSynapses(synapses: Array<{ color: string; data: Float32Array }>) {
+    this.synapses = synapses;
     const { context, groupSynapses } = this;
     if (!context) return;
 
-    this.synapses = synapses;
     groupSynapses.removeAll();
     for (const { color, data: dataPoint } of synapses) {
       const cloud = new TgdPainterPointsCloud(context, {
@@ -390,11 +402,14 @@ export class PainterManager {
   private initTgdPainters(context: TgdContext, structure: Structure, palette: TgdTexture2D) {
     const groupHover = new TgdPainterState(context, {
       blend: webglPresetBlend.add,
+      cull: webglPresetCull.back,
+      depth: webglPresetDepth.always,
     });
     const segments = makeSegments(structure);
     this.groupSynapses = new TgdPainterGroup({
       name: `Synapses#${Math.round(1e9 * Math.random())}`,
     });
+    this.groupSynapses.active = !this._disableSynapses;
     context.add(
       new TgdPainterClear(context, { color: [0, 0, 0, 1], depth: 1 }),
       new TgdPainterState(context, {
@@ -501,7 +516,8 @@ export function usePainterManager() {
 export function usePainterController(
   painter: PainterManager,
   sessionId: string,
-  disableElectrodes: boolean
+  disableElectrodes: boolean,
+  disableSynapses: boolean
 ) {
   const notif = useAppNotification();
   React.useEffect(() => {
@@ -523,7 +539,7 @@ export function usePainterController(
     }
   }, [simulationStatus, painter]);
 
-  const synapses = useVisibleSynapses(sessionId);
+  const synapses = useVisibleSynapses();
   React.useEffect(() => {
     painter.showSynapses(synapses);
   }, [synapses, painter]);
@@ -531,4 +547,8 @@ export function usePainterController(
   React.useEffect(() => {
     painter.disableElectrodes = disableElectrodes;
   }, [disableElectrodes, painter]);
+
+  React.useEffect(() => {
+    painter.disableSynapses = disableSynapses;
+  }, [disableSynapses, painter]);
 }
