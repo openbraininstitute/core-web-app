@@ -8,7 +8,6 @@ import { assertHistogramChart, convertHistogramChart } from './charts/histogram'
 import { assertLineChart, convertLineChart } from './charts/line';
 import { assertPieChart, convertPieChart } from './charts/pie';
 import { assertScatterChart, convertScatterChart } from './charts/scatter';
-import { assertPlotlyChart, convertPlotlyChart } from './charts/plotly';
 import GenericPlot from './generic-plot';
 
 import { isString } from '@/util/type-guards';
@@ -25,24 +24,12 @@ export default function ToolPlotGenerator({ className, results }: ToolPlotGenera
   return (
     <>
       {results.map((result) => {
-        // python-tool can return a list of storage_ids
-        if (Array.isArray(result.storage_id)) {
-          return result.storage_id.map((storage_id) => (
-            <CustomPlot className={className} key={storage_id} storage_id={storage_id} />
-          ));
-        }
-        return (
-          <CustomPlot
-            className={className}
-            key={result.storage_id}
-            storage_id={result.storage_id}
-          />
-        );
+        return <CustomPlot className={className} key={result.storage_id} result={result} />;
       })}
     </>
   );
 }
-// prettier-ignore
+
 const plotters: Record<
   string,
   {
@@ -55,11 +42,10 @@ const plotters: Record<
   'json-scatterplot': { convert: convertScatterChart, assert: assertScatterChart },
   'json-histogram': { convert: convertHistogramChart, assert: assertHistogramChart },
   'json-barplot': { convert: convertBarChart, assert: assertBarChart },
-  'json': { convert: convertPlotlyChart, assert: assertPlotlyChart },
 };
 
-function CustomPlot({ storage_id, className }: { storage_id: string; className?: string }) {
-  const { data } = usePlotFile(storage_id);
+function CustomPlot({ result, className }: { result: ToolResult; className?: string }) {
+  const { data } = usePlotFile(result.storage_id);
   if (!data) return null;
 
   const plotter = plotters[data.type];
