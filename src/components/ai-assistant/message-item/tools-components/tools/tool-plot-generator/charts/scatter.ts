@@ -23,9 +23,7 @@ export function convertScatterChart(
       },
     ],
     layout: {
-      title: {
-        text: obj.title,
-      },
+      title: obj.title,
       autosize: true,
     },
   };

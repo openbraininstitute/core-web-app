@@ -2,7 +2,10 @@
 
 import { atomFamily, atomWithReset } from 'jotai/utils';
 
-import { makeStorageAtomFamily, memoryStorage } from '@/ui/hooks/use-storage-atom-with-validation';
+import {
+  makeStorageAtomWithValidationFamily,
+  safeStorage,
+} from '@/ui/hooks/use-storage-atom-with-validation';
 import {
   StimulationConfigurationSchema,
   ExperimentalSetupConfigurationSchema,
@@ -21,45 +24,43 @@ import { getSimulationColor } from '@/constants/simulate/single-neuron';
 
 import type { PlotData } from '@/services/bluenaas-single-cell/types';
 
-const safeStorage: Storage = typeof window !== 'undefined' ? sessionStorage : memoryStorage;
-
-export const StimulationConfigurationAtomFamily = makeStorageAtomFamily(
+export const StimulationConfigurationAtomFamily = makeStorageAtomWithValidationFamily(
   StimulationConfigurationSchema,
   DEFAULT_CURRENT_INJECTION_CONFIG,
   safeStorage
 );
 
-export const ExperimentalSetupConfigurationAtomFamily = makeStorageAtomFamily(
+export const ExperimentalSetupConfigurationAtomFamily = makeStorageAtomWithValidationFamily(
   ExperimentalSetupConfigurationSchema,
   DEFAULT_SIMULATION_EXPERIMENTAL_SETUP,
   safeStorage
 );
 
-export const RecordLocationConfigurationAtomFamily = makeStorageAtomFamily(
+export const RecordLocationConfigurationAtomFamily = makeStorageAtomWithValidationFamily(
   NeuronLocationArraySchema,
   [buildDefaultRecordingLocation(getSimulationColor(0))],
   safeStorage
 );
 
-export const SynaptomeConfigurationAtomFamily = makeStorageAtomFamily(
+export const SynaptomeConfigurationAtomFamily = makeStorageAtomWithValidationFamily(
   SynapseConfigurationArraySchema,
   [],
   safeStorage
 );
 
-export const OverviewConfigurationAtomFamily = makeStorageAtomFamily(
+export const OverviewConfigurationAtomFamily = makeStorageAtomWithValidationFamily(
   OverviewConfigurationSchema,
   { name: '', description: undefined },
   safeStorage
 );
 
-export const FrequencyInputConfigurationAtomFamily = makeStorageAtomFamily(
+export const FrequencyInputConfigurationAtomFamily = makeStorageAtomWithValidationFamily(
   FrequencyInputConfigSchema,
   { constantOrSteps: 'constant', stepFrequencyState: null },
   safeStorage
 );
 
-export const AmperageStateAtomFamily = makeStorageAtomFamily(
+export const AmperageStateAtomFamily = makeStorageAtomWithValidationFamily(
   AmperageStateSchema,
   {
     protocol: 'idrest',

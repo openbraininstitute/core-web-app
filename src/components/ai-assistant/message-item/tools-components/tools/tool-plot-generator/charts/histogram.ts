@@ -29,9 +29,7 @@ export function convertHistogramChart(
       },
     ],
     layout: {
-      title: {
-        text: obj.title,
-      },
+      title: obj.title,
       autosize: true,
     },
   };

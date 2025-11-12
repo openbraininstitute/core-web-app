@@ -558,6 +558,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         EntityCoreFields.Temperature in r ? (r[EntityCoreFields.Temperature] as number) : null;
       return isNumber(temperature) || isString(temperature) ? `${temperature} °C` : EmptyValue;
     },
+    defaultConstraint: 'temperature',
   },
   [EntityCoreFields.CellLine]: {
     className: 'text-left',

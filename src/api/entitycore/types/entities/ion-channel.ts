@@ -3,6 +3,7 @@ import type {
   EntityAuthorization,
   EntityCoreBaseAsset,
   EntityCoreIdentifiable,
+  EntityCoreIdentifiableNamed,
   EntityCoreType,
   IContributor,
   ISpecies,
@@ -11,12 +12,12 @@ import type {
 } from '@/api/entitycore/types/shared/global';
 
 import type {
+  BrainRegionFilter,
   ContributionFilter,
   IMorphologyFilter,
-  BrainRegionFilter,
-  SpeciesFilter,
-  SharedFilter,
   PaginationFilter,
+  SharedFilter,
+  SubjectFilter,
 } from '@/api/entitycore/types/shared/request';
 
 type UseIon = {
@@ -34,16 +35,15 @@ interface NeuronBlock {
   nonspecific: Array<Record<string, string | null>>;
 }
 
-type IonChannelModelBase = {
+interface IonChannelModelBase extends EntityCoreIdentifiableNamed {
   description: string;
-  name: string;
   nmodl_suffix: string;
   is_ljp_corrected: boolean;
   is_temperature_dependent: boolean;
   temperature_celsius: number;
   is_stochastic: boolean;
   neuron_block: NeuronBlock;
-};
+}
 
 export interface IonChannelModel
   extends IonChannelModelBase,
@@ -60,8 +60,8 @@ export interface IonChannelModel
 
 export interface IonChannelModelFilter
   extends ContributionFilter,
-    SpeciesFilter,
     BrainRegionFilter,
-    SharedFilter,
     IMorphologyFilter,
-    PaginationFilter {}
+    PaginationFilter,
+    SharedFilter,
+    SubjectFilter {}

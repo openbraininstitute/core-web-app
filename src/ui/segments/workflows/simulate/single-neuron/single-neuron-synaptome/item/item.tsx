@@ -33,10 +33,7 @@ import {
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { useAppNotification } from '@/components/notification';
 import { synapsesPlacementAtom } from '@/state/synaptome';
-import {
-  sendDisplaySynapses3DEvent,
-  sendRemoveSynapses3DEvent,
-} from '@/components/neuron-viewer/hooks/events';
+import { sendDisplaySynapses3DEvent } from '@/components/neuron-viewer/hooks/events';
 import { Button } from '@/ui/molecules/button';
 import { getSession } from '@/authFetch';
 import { tryCatch } from '@/api/utils';
@@ -74,15 +71,13 @@ export function SynapticInputItem({
   const breakpoint = useDefaultBreakpoint();
   const { error: notifyError } = useAppNotification();
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
-  const [synapseDisplayed, setSynapseDisplayed] = useState(false);
   const [visualizeLoading, setLoadingVisualize] = useState(false);
-  const [synapsesPlacement, setSynapsesPlacementAtom] = useAtom(synapsesPlacementAtom);
+  const [synapsesPlacement, setSynapsesPlacement] = useAtom(synapsesPlacementAtom);
   const key = getSessionKey(SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
-
   const [state] = useAtom(SynaptomeConfigurationAtomFamily(key));
   const synapseWithFrequencyStep = state.findIndex((s) => Array.isArray(s.frequency));
   const abortController = useRef(new AbortController());
-
+  const synapseDisplayed = isSynapseDisplayed(synapsesPlacement, Object.values(state)[index].id);
   const color = placementConfig?.color;
 
   const onVisualizationError = () => {
@@ -102,25 +97,15 @@ export function SynapticInputItem({
     color: op.color ?? DefaultColor,
   }));
 
-  const onHideSynapse = () => {
-    setSynapseDisplayed(false);
-    const currentSynapsesPlacementConfig = synapsesPlacement?.[`${index}`];
-    if (currentSynapsesPlacementConfig && currentSynapsesPlacementConfig.meshId) {
-      sendRemoveSynapses3DEvent(`${index}`, currentSynapsesPlacementConfig.meshId);
-      setSynapsesPlacementAtom({
-        ...synapsesPlacement,
-        [`${index}`]: {
-          ...currentSynapsesPlacementConfig,
-          count: undefined,
-          meshId: undefined,
-        },
-      });
-    }
-  };
+  const onHideSynapse = useHideSynapseHandler(
+    synapsesPlacement,
+    setSynapsesPlacement,
+    index,
+    synapsesConfiguration.synapses[index]?.id
+  );
 
-  const onVisualize = async () => {
+  const onShowSynapse = async () => {
     setLoadingVisualize(true);
-    onHideSynapse();
 
     try {
       const session = await getSession();
@@ -155,16 +140,18 @@ export function SynapticInputItem({
 
       sendDisplaySynapses3DEvent(`${index}`, mesh);
 
-      setSynapsesPlacementAtom({
-        ...synapsesPlacement,
-        [`${index}`]: {
-          sectionSynapses: result.synapses,
-          count: synapsePositions.length,
-          meshId: mesh.uuid,
-          synapsePlacementConfigId: placementConfig?.id!,
-        },
+      setSynapsesPlacement((prev) => {
+        return {
+          ...prev,
+          [`${index}`]: {
+            sectionSynapses: result.synapses,
+            count: synapsePositions.length,
+            meshId: mesh.uuid,
+            synapsePlacementConfigId: placementConfig?.id!,
+          },
+        };
       });
-      setSynapseDisplayed(true);
+      // setSynapseDisplayed(true);
     } catch (error) {
       if (error instanceof Error && error.name !== 'AbortError') {
         return onVisualizationError();
@@ -188,7 +175,6 @@ export function SynapticInputItem({
       abortController.current.abort();
     };
   }, []);
-
   return (
     <div className="flex w-full flex-col items-start justify-start gap-1.5">
       <div
@@ -216,18 +202,11 @@ export function SynapticInputItem({
                   aria-label={synapseDisplayed ? 'Hide synapses' : 'Show synapses'}
                   title={synapseDisplayed ? 'Hide synapses' : 'Show synapses'}
                   variant="outline"
-                  onClick={synapseDisplayed ? onHideSynapse : onVisualize}
+                  onClick={synapseDisplayed ? onHideSynapse : onShowSynapse}
                   disabled={visualizeLoading || disableControls}
                   className="text-primary-9 group disabled:bg-neutral-1 disabled:text-neutral-2 h-12 w-12"
                 >
-                  {/* eslint-disable-next-line no-nested-ternary */}
-                  {synapseDisplayed ? (
-                    <EyeInvisibleOutlined className="group-hover:text-primary-6 h-8 w-8 px-2 text-current" />
-                  ) : visualizeLoading ? (
-                    <LoadingOutlined className="group-hover:text-primary-6 h-8 w-8 px-2 text-current" />
-                  ) : (
-                    <EyeOutlined className="text-curren group-hover:text-primary-6 h-8 w-8 px-2" />
-                  )}
+                  {resolveIcon(synapseDisplayed, visualizeLoading)}
                 </Button>
               </TooltipTrigger>
               <TooltipContent
@@ -318,4 +297,104 @@ export function SynapticInputItem({
       </div>
     </div>
   );
+}
+
+function useHideSynapseHandler(
+  synapsesPlacement: Record<
+    string,
+    {
+      sectionSynapses: Array<SectionSynapses>;
+      synapsePlacementConfigId: string;
+      count?: number;
+      meshId?: string;
+    } | null
+  > | null,
+  setSynapsesPlacement: (
+    args_0:
+      | Record<
+          string,
+          {
+            sectionSynapses: Array<SectionSynapses>;
+            synapsePlacementConfigId: string;
+            count?: number;
+            meshId?: string;
+          } | null
+        >
+      | ((
+          prev: Record<
+            string,
+            {
+              sectionSynapses: Array<SectionSynapses>;
+              synapsePlacementConfigId: string;
+              count?: number;
+              meshId?: string;
+            } | null
+          > | null
+        ) => Record<
+          string,
+          {
+            sectionSynapses: Array<SectionSynapses>;
+            synapsePlacementConfigId: string;
+            count?: number;
+            meshId?: string;
+          } | null
+        > | null)
+      | null
+  ) => void,
+  index: number,
+  id: string | undefined
+) {
+  return () => {
+    if (synapsesPlacement) {
+      if (id && synapsesPlacement[id]) {
+        setSynapsesPlacement((prev) => {
+          const newValue = structuredClone(prev);
+          if (!newValue) return newValue;
+
+          delete newValue[id];
+          return newValue;
+        });
+      } else if (synapsesPlacement[`${index}`]) {
+        setSynapsesPlacement((prev) => {
+          const newValue = structuredClone(prev);
+          if (!newValue) return newValue;
+
+          delete newValue[`${index}`];
+          return newValue;
+        });
+      }
+    }
+
+    //   // sendRemoveSynapses3DEvent(`${index}`, currentSynapsesPlacementConfig.meshId);
+  };
+}
+
+function isSynapseDisplayed(
+  synapsesPlacement: Record<
+    string,
+    {
+      sectionSynapses: Array<SectionSynapses>;
+      synapsePlacementConfigId: string;
+      count?: number;
+      meshId?: string;
+    } | null
+  > | null,
+  key: string
+) {
+  if (!synapsesPlacement) return false;
+
+  for (const item of Object.values(synapsesPlacement)) {
+    if (!item) continue;
+
+    const { synapsePlacementConfigId } = item;
+    if (synapsePlacementConfigId === key) return true;
+  }
+  return false;
+}
+
+function resolveIcon(synapseDisplayed: boolean, visualizeLoading: boolean) {
+  const cls = 'group-hover:text-primary-6 h-8 w-8 px-2 text-current';
+  if (synapseDisplayed) return <EyeInvisibleOutlined className={cls} />;
+  if (visualizeLoading) return <LoadingOutlined className={cls} />;
+  return <EyeOutlined className={cls} />;
 }

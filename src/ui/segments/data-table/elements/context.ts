@@ -76,5 +76,10 @@ export const corePageNumberAtom = atomFamily((key: string) => {
 });
 
 export const coreSelectedRowsAtom = atomFamily(
-  (_key: string) => atom<Array<any>>([]) // FIXME: get the right type
+  (_key: string) => {
+    const childAtom = atom<Array<any>>([]);
+    childAtom.debugLabel = `selected-rows/${_key}`;
+    return childAtom;
+  },
+  (a, b) => a === b
 );

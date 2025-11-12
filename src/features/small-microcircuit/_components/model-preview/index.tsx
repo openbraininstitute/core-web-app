@@ -9,7 +9,12 @@ import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron
 function ModelPreview({ model }: { model: ICircuit | IMEModel }) {
   return match(model)
     .with({ type: EntityTypeDict.Memodel }, () => (
-      <NeuronVisualizer memodelId={model.id} sessionId={model.id} disableElectrodes />
+      <NeuronVisualizer
+        memodelId={model.id}
+        sessionId={model.id}
+        disableElectrodes
+        disableSynapses
+      />
     ))
     .with({ type: EntityTypeDict.Circuit, scale: 'single' }, () => (
       <div className="px-5 text-gray-500">

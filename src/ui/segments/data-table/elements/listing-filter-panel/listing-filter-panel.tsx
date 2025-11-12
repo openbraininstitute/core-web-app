@@ -65,6 +65,9 @@ type Props = {
   // eslint-disable-next-line react/no-unused-prop-types
   workspace?: WorkspaceContext;
   isLoading?: boolean;
+  classNames?: {
+    container?: string;
+  };
 };
 
 function createFilterItemComponent(
@@ -199,6 +202,7 @@ export function ListingFilterPanel({
   facets,
   showDisplayTrigger = true,
   isLoading,
+  classNames,
 }: Props) {
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
   const [filterValues, setFilterValues] = useState<CoreFilterValues>({});
@@ -331,7 +335,11 @@ export function ListingFilterPanel({
       <div
         id="main-table-filter-panel"
         data-testid="listing-view-filter-panel"
-        className="bg-primary-8 fixed top-0 right-0 z-100 flex h-full min-h-screen w-1/3 shrink-0 flex-col space-y-4 overflow-y-auto px-8 pt-6"
+        className={cn(
+          'bg-primary-8 fixed top-0 right-0 z-100 flex',
+          'h-full min-h-screen w-1/3 shrink-0 flex-col space-y-4 overflow-y-auto px-8 pt-6',
+          classNames?.container
+        )}
       >
         <div className="mb-auto">
           <div className="mb-2 flex items-center justify-between gap-4">

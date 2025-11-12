@@ -23,22 +23,19 @@ export default function ToolThumbnailGeneration({
 }: ToolThumbnailGenerationProps) {
   return (
     <>
-      {results.map(
-        (result) =>
-          typeof result.storage_id === 'string' && (
-            <CustomThumbnail
-              key={result.storage_id}
-              className={classNames(className, styles.toolThumbnailGenerationMorphologyGetone)}
-              storage_id={result.storage_id}
-            />
-          )
-      )}
+      {results.map((result) => (
+        <CustomThumbnail
+          key={result.storage_id}
+          className={classNames(className, styles.toolThumbnailGenerationMorphologyGetone)}
+          result={result}
+        />
+      ))}
     </>
   );
 }
 
-function CustomThumbnail({ className, storage_id }: { className?: string; storage_id: string }) {
-  const file = usePlotFile(storage_id);
+function CustomThumbnail({ className, result }: { className?: string; result: ToolResult }) {
+  const file = usePlotFile(result.storage_id);
   if (!file) return null;
 
   const { content, type } = file;

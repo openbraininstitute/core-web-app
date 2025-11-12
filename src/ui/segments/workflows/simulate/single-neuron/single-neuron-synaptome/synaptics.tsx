@@ -5,6 +5,9 @@ import { useAtom, useAtomValue } from 'jotai';
 import { Form } from 'antd';
 import sample from 'es-toolkit/compat/sample';
 
+import { getColorFromGeneratedPalette } from '../shared/steps/webgl-neuron-selector/colors';
+import { useVisibleSynapsesSetter } from '../shared/steps/webgl-neuron-selector/hooks';
+
 import { SynapticInputItem } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome/item/item';
 import { getSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/queries/model/single-neuron-synaptome';
 import { SimulationColors } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
@@ -20,7 +23,7 @@ import {
   getSessionKey,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { synapsesPlacementAtom } from '@/state/synaptome';
+import { SectionSynapsesWith3D, synapsesPlacementAtom } from '@/state/synaptome';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import {
@@ -31,7 +34,6 @@ import {
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
-
 import type { SynapseConfiguration } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import type {
   ISingleNeuronSynaptome,
@@ -54,7 +56,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
   const breakpoint = useDefaultBreakpoint();
   const spcKey = getSessionKey(STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
   const { virtualLabId, projectId } = useWorkspace();
-  const [visualizedSynaptomes] = useAtom(synapsesPlacementAtom);
+  const [synapsesPlacement] = useAtom(synapsesPlacementAtom);
   const key = getSessionKey(SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
   const [state, update] = useAtom(SynaptomeConfigurationAtomFamily(key));
   const [stimulationState, updateStimulation] = useAtom(StimulationConfigurationAtomFamily(spcKey));
@@ -166,6 +168,8 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
     }
   });
 
+  useViewer3D(form.getFieldValue('synapses') ?? [], synapsesPlacement ?? {}, data);
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center">
@@ -206,7 +210,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
               <div className="flex w-full flex-col items-start justify-start gap-4">
                 {fields.map((field) => {
                   const formName = `${field.name}`;
-                  const meshForForm = visualizedSynaptomes?.[formName]?.meshId;
+                  const meshForForm = synapsesPlacement?.[formName]?.meshId;
                   return (
                     <SynapticInputItem
                       key={field.key}
@@ -252,4 +256,62 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
       </Form>
     </div>
   );
+}
+
+function useViewer3D(
+  synapticInputs: SynapseConfiguration[],
+  selection: Record<string, SectionSynapsesWith3D | null>,
+  data: { synapses: Array<{ id: string; color?: string }> } | null | undefined
+) {
+  const update = useVisibleSynapsesSetter();
+  useEffect(() => {
+    console.log('🚀 [synaptics] data =', data); // @FIXME: Remove this line written on 2025-11-11 at 20:51
+    const synapses: {
+      color: string;
+      data: Float32Array;
+    }[] = [];
+    for (let index = 0; index < synapticInputs.length; index++) {
+      const synapticInput = synapticInputs[index];
+      const match = Object.values(selection).find(
+        (item) => item?.synapsePlacementConfigId === synapticInput.id
+      );
+      if (match) {
+        console.log('🚀 [synaptics] index, match, synapticInput =', index, match, synapticInput); // @FIXME: Remove this line written on 2025-11-11 at 20:46
+        synapses.push({
+          color:
+            findColor(data?.synapses, synapticInput.id) ??
+            synapticInput.color ??
+            getColorFromGeneratedPalette(index),
+          data: makeData(match.sectionSynapses),
+        });
+      }
+    }
+    update(synapses);
+  }, [synapticInputs, selection, data, update]);
+}
+
+function makeData(
+  sections: {
+    synapses: Array<{
+      coordinates: number[];
+    }>;
+  }[]
+) {
+  const data: number[] = [];
+  for (const section of sections) {
+    for (const { coordinates } of section.synapses) {
+      const [x, y, z] = coordinates;
+      data.push(x, y, z, 1);
+    }
+  }
+  return new Float32Array(data);
+}
+
+function findColor(
+  synapses: { id: string; color?: string }[] | undefined,
+  id: string
+): string | null | undefined {
+  if (!synapses) return null;
+
+  return synapses.find((item) => item.id === id)?.color;
 }

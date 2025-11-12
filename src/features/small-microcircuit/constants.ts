@@ -1,9 +1,9 @@
-import { CircuitSimulationExecutionStatus } from '@/api/entitycore/types/entities/circuit-simulation-execution';
+import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 
 export const simulationStatusColorMap = {
-  [CircuitSimulationExecutionStatus.CREATED]: '#1890ff',
-  [CircuitSimulationExecutionStatus.PENDING]: '#fa8c16',
-  [CircuitSimulationExecutionStatus.RUNNING]: '#389e0d',
-  [CircuitSimulationExecutionStatus.ERROR]: '#f5222d',
-  [CircuitSimulationExecutionStatus.DONE]: '#002766',
+  [EntitycoreExecutionStatus.CREATED]: '#1890ff',
+  [EntitycoreExecutionStatus.PENDING]: '#fa8c16',
+  [EntitycoreExecutionStatus.RUNNING]: '#389e0d',
+  [EntitycoreExecutionStatus.ERROR]: '#f5222d',
+  [EntitycoreExecutionStatus.DONE]: '#002766',
 };

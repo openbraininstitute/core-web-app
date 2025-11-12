@@ -85,7 +85,6 @@ export function SynapseSet({ sessionId }: Props) {
   const { sessionValue, setSessionValue } = useBuildSingleNeuronSynaptomeSessionState({
     sessionId,
   });
-
   const setId = params.get('set');
   const modelId = sessionValue?.memodel?.id;
   const synapses = sessionValue?.synapseSets;

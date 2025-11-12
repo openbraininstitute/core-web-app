@@ -1,16 +1,16 @@
+import type { IExperimentalDensity } from '@/api/entitycore/types/shared/density';
 import type { EntityCoreType, IEType, IMType } from '@/api/entitycore/types/shared/global';
 import type {
-  TimestampsFilter,
-  PaginationFilter,
-  SharedFilter,
-  ContributionFilter,
   BrainRegionFilter,
-  SpeciesFilter,
-  StainFilter,
+  ContributionFilter,
   EtypeFilter,
   MtypeFilter,
+  PaginationFilter,
+  SharedFilter,
+  StainFilter,
+  SubjectFilter,
+  TimestampsFilter,
 } from '@/api/entitycore/types/shared/request';
-import type { IExperimentalDensity } from '@/api/entitycore/types/shared/density';
 
 export interface IExperimentalNeuronDensity extends IExperimentalDensity, EntityCoreType {
   mtypes: Array<IMType> | null;
@@ -19,12 +19,12 @@ export interface IExperimentalNeuronDensity extends IExperimentalDensity, Entity
 
 export type ExperimentalNeuronDensityFilter = Partial<
   SharedFilter &
-    TimestampsFilter &
-    PaginationFilter &
-    ContributionFilter &
     BrainRegionFilter &
-    SpeciesFilter &
-    StainFilter &
+    ContributionFilter &
     EtypeFilter &
-    MtypeFilter
+    MtypeFilter &
+    PaginationFilter &
+    StainFilter &
+    SubjectFilter &
+    TimestampsFilter
 >;

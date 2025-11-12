@@ -61,6 +61,15 @@ interface IIonChannelRecordingBase extends EntityCoreIdentifiable, EntityCoreOwn
   brain_location?: IBrainLocation | null;
 }
 
+export interface IonChannel {
+  id: string;
+  name: string;
+  description: string;
+  label: string;
+  gene: string;
+  synonyms: Array<string>;
+}
+
 export interface IIonChannelRecording
   extends IIonChannelRecordingBase,
     Timestamps,
@@ -69,4 +78,5 @@ export interface IIonChannelRecording
     EntityCoreType {
   license?: ILicense | null;
   brain_region: BrainRegionHierarchyBase;
+  ion_channel: IonChannel;
 }

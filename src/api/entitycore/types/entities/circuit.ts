@@ -4,7 +4,7 @@ import type {
   EntityCoreOwnership,
   EntityCoreType,
   EntityCoreBaseAsset,
-  EntityCoreIdentifiable,
+  EntityCoreIdentifiableNamed,
 } from '@/api/entitycore/types/shared/global';
 import type {
   BrainRegionFilter,
@@ -73,7 +73,6 @@ export type TCircuitBuildCategoryDictionary =
   (typeof CircuitBuildCategory)[keyof typeof CircuitBuildCategory]['key'];
 
 interface CircuitBase {
-  name: string;
   description: string;
   number_neurons: number;
   number_synapses: number;
@@ -87,7 +86,7 @@ interface CircuitBase {
 }
 
 export interface ICircuit
-  extends EntityCoreIdentifiable,
+  extends EntityCoreIdentifiableNamed,
     EntityAuthorization,
     CircuitBase,
     Timestamps,
