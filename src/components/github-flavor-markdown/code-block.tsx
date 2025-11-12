@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import type { ComponentPropsWithoutRef } from 'react';
 import type { ExtraProps } from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface CodeBlockProps extends ComponentPropsWithoutRef<'pre'>, ExtraProps {
   children?: React.ReactNode;
@@ -58,9 +58,9 @@ export default function CodeBlock({ children, className, id }: CodeBlockProps) {
     return (
       <SyntaxHighlighter
         language={language}
-        style={vscDarkPlus}
+        style={oneDark}
         PreTag={CustomPre}
-        customStyle={{ paddingTop: '2.5rem' }}
+        customStyle={{ paddingTop: '0.5rem' }}
         className={className}
         id={id}
       >
