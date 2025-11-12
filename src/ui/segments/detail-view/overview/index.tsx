@@ -37,10 +37,12 @@ export default async function Overview({
   entity,
   extendedType,
   ctx,
+  isWorkflow,
 }: {
   entity?: EntityTypeValue;
   extendedType: EntityCoreExtendedType;
   ctx: WorkspaceContext;
+  isWorkflow: boolean;
 }) {
   const fields = getViewDefinitionByExtendedType(extendedType)?.summaryViewFields ?? [];
 
@@ -105,7 +107,7 @@ export default async function Overview({
         projectId={ctx.projectId}
         initialCampaignId={config.campaign.id}
         initialConfig={config.config.form}
-        readOnly
+        readOnly={!isWorkflow}
       />
     );
   }

@@ -21,15 +21,24 @@ export function detailPageSectionRenderer({
   context,
   section,
   entityType,
+  isWorkflow,
 }: {
   entity: TRetrieveEntityOutput;
   entityType: NonNullable<TEntityByExtendedTypeConfig>;
   context: WorkspaceContext;
   section: TDetailViewSectionDict;
+  isWorkflow: boolean;
 }) {
   const content = match({ section })
     .with({ section: DetailViewSectionsDict.Overview }, () => {
-      return <Overview entity={entity} extendedType={entityType.extendedType} ctx={context} />;
+      return (
+        <Overview
+          entity={entity}
+          extendedType={entityType.extendedType}
+          ctx={context}
+          isWorkflow={isWorkflow}
+        />
+      );
     })
     .with({ section: DetailViewSectionsDict.Analysis }, () => {
       return <Analysis entity={entity} extendedType={entityType.extendedType} />;
