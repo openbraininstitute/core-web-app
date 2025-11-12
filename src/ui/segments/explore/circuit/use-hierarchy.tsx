@@ -15,6 +15,7 @@ import pMap from 'p-map';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
 import { DerivationTypeDictionary } from '@/api/entitycore/types/entities/derivation';
+import { circuitScaleFilter } from '@/entity-configuration/domain/model/circuit';
 import { DEFAULT_PAGE_SIZE, WorkspaceScope } from '@/constants';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
@@ -75,12 +76,18 @@ export function useFullRawHierarchy({ view = CircuitView.Flat }: { view: TCircui
               withFacets: true,
               virtualLabId,
               projectId,
+              ...circuitScaleFilter,
             }),
             queryFn: () =>
               getCircuits({
                 withFacets: true,
                 context: virtualLabId && projectId ? { virtualLabId, projectId } : undefined,
-                filters: { page: 1, page_size: DEFAULT_PAGE_SIZE, id__in: chunkIDs },
+                filters: {
+                  page: 1,
+                  page_size: DEFAULT_PAGE_SIZE,
+                  id__in: chunkIDs,
+                  ...circuitScaleFilter,
+                },
               }),
           }),
         { concurrency: 5 }
@@ -174,12 +181,14 @@ export function useHierarchy({
       key: dataKey,
       workspaceScope: scope!,
       extendedEntityType: ExtendedEntitiesTypeDict.Circuit,
+      hierarchy: true,
     },
     workspace: { virtualLabId, projectId },
     queryFn: async ({ queryKey }) => {
       const [{ workspace, queryParameters }] = queryKey;
       const first = await queryClient.ensureQueryData<EntityCoreResponse<ICircuit>>({
         queryKey: keyBuilder.manyCircuits({
+          ...circuitScaleFilter,
           ...queryParameters,
           ...workspace,
           page: 1,
@@ -189,7 +198,12 @@ export function useHierarchy({
           getCircuits({
             withFacets: true,
             context: workspace,
-            filters: { ...queryParameters, page: 1, page_size: DEFAULT_PAGE_SIZE },
+            filters: {
+              ...circuitScaleFilter,
+              ...queryParameters,
+              page: 1,
+              page_size: DEFAULT_PAGE_SIZE,
+            },
           }),
       });
       const totalPages = Math.ceil(first.pagination.total_items / first.pagination.page_size);
@@ -210,7 +224,12 @@ export function useHierarchy({
               getCircuits({
                 withFacets: true,
                 context: virtualLabId && projectId ? { virtualLabId, projectId } : undefined,
-                filters: { ...queryParameters, page, page_size: DEFAULT_PAGE_SIZE },
+                filters: {
+                  ...circuitScaleFilter,
+                  ...queryParameters,
+                  page,
+                  page_size: DEFAULT_PAGE_SIZE,
+                },
               }),
           }),
         { concurrency: 5 }

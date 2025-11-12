@@ -11,6 +11,10 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 import type { ICircuit, TCircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
+export const circuitScaleFilter = {
+  scale__in: without(Object.values(CircuitScaleDictionary), CircuitScaleDictionary.Single),
+};
+
 export const Circuit: EntityCoreTypeConfig<ICircuit> = {
   group: EntityTypeGroup.Models,
   title: 'Circuit',
@@ -28,10 +32,7 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
           context: params[0].context,
           withFacets: params[0].withFacets,
           filters: {
-            scale__in: without(
-              Object.values(CircuitScaleDictionary),
-              CircuitScaleDictionary.Single
-            ),
+            ...circuitScaleFilter,
             ...params[0].filters,
           },
         });
