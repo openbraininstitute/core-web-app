@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import * as React from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import type { ComponentPropsWithoutRef } from 'react';
 import type { ExtraProps } from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -8,12 +9,15 @@ interface CodeBlockProps extends ComponentPropsWithoutRef<'pre'>, ExtraProps {
   children?: React.ReactNode;
 }
 
-const createCustomPre = (onCopy: () => void, copied: boolean) => {
-  const CustomPreComponent = function CustomPreComponent({
+const createCustomPre = (
+  onCopy: () => void,
+  copied: boolean
+): React.ComponentType<React.HTMLAttributes<HTMLPreElement>> => {
+  function CustomPreComponent({
     children,
     className: propsClassName,
     ...props
-  }: React.HTMLAttributes<HTMLPreElement>) {
+  }: React.HTMLAttributes<HTMLPreElement>): React.JSX.Element {
     return (
       // eslint-disable-next-line react/jsx-props-no-spreading
       <pre {...props} className={`relative ${propsClassName || ''}`}>
@@ -27,7 +31,7 @@ const createCustomPre = (onCopy: () => void, copied: boolean) => {
         {children}
       </pre>
     );
-  };
+  }
   CustomPreComponent.displayName = 'CustomPre';
   return CustomPreComponent;
 };
