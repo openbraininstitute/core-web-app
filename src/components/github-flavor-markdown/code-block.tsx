@@ -41,6 +41,7 @@ const createCustomPre = (
  * Uses react-syntax-highlighter with Prism backend for syntax highlighting.
  */
 export default function CodeBlock({ children, className, id }: CodeBlockProps) {
+  const postponeHighlighting = usePostponeHighlighting(children);
   const codeElement = children as React.ReactElement<{ children?: string; className?: string }>;
   const codeContent = codeElement.props.children;
   const codeClassName = codeElement.props.className;
@@ -63,7 +64,7 @@ export default function CodeBlock({ children, className, id }: CodeBlockProps) {
 
   const CustomPre = useMemo(() => createCustomPre(handleCopy, copied), [handleCopy, copied]);
 
-  if (!codeClassName || !codeContent || !language) {
+  if (postponeHighlighting || !codeClassName || !codeContent || !language) {
     // Fallback: render pre normally if no className or content or language is found
     return (
       <pre className={className} id={id}>
@@ -84,4 +85,18 @@ export default function CodeBlock({ children, className, id }: CodeBlockProps) {
       {codeContent.trim()}
     </SyntaxHighlighter>
   );
+}
+
+function usePostponeHighlighting(children: React.ReactNode): boolean {
+  const [postponeHighlighting, setPostponeHighlighting] = React.useState(false);
+  const refDebouncing = React.useRef<NodeJS.Timeout | undefined>(undefined);
+  React.useEffect(() => {
+    setPostponeHighlighting(true);
+    globalThis.clearTimeout(refDebouncing.current);
+    refDebouncing.current = globalThis.setTimeout(() => {
+      refDebouncing.current = undefined;
+      setPostponeHighlighting(false);
+    }, 1000);
+  }, [children]);
+  return postponeHighlighting;
 }
