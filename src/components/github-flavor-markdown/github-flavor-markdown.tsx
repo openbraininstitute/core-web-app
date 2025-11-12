@@ -5,7 +5,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import remarkMath from 'remark-math';
 import TruncableImage from './truncable-image';
-import CodeBlcok from './code-block';
+import CodeBlock from './code-block';
 
 import { classNames } from '@/util/utils';
 
