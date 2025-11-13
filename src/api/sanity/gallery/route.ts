@@ -48,6 +48,7 @@ export async function getGalleryContent(): Promise<GalleryContentProps[]> {
   try {
     const data = await client.fetch<GalleryContentProps[]>({
       query: queryForGalleryContent,
+      config: { cache: 'no-cache' },
     });
 
     if (Array.isArray(data)) {
