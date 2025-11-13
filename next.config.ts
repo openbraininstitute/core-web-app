@@ -96,6 +96,7 @@ const nextConfig = (phase: string): NextConfig => {
         hmrRefreshes: true,
       },
     },
+    productionBrowserSourceMaps: process.env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'development',
     images: {
       remotePatterns: [
         {

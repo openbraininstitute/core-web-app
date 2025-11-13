@@ -18,7 +18,7 @@ Sentry.init({
   environment: process.env.NEXT_PUBLIC_DEPLOYMENT_ENV || 'development',
   release: process.env.NEXT_PUBLIC_GIT_SHA,
   beforeSend(event) {
-    if (['development', 'test', 'preview'].includes(process.env.NEXT_PUBLIC_DEPLOYMENT_ENV || '')) {
+    if (['test', 'preview', 'local'].includes(process.env.NEXT_PUBLIC_DEPLOYMENT_ENV || '')) {
       return null;
     }
     return event;
