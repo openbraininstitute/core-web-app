@@ -22,7 +22,7 @@ export function useServiceAiAgentChat(threadId: string) {
   const initialMessages = assistant.initialMessages.useValue();
   const { accessToken } = assistant.useContext();
   const activeTools = useAIActiveTools();
-  const [rateLimit, setRateLimit] = React.useState<AiAgentRateLimit | null>(null);
+  const [rateLimitRemaining, setRateLimitRemaining] = React.useState(0);
   const chat = useChat({
     api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
     id: threadId,
@@ -45,13 +45,13 @@ export function useServiceAiAgentChat(threadId: string) {
         remaining: parseInt(resp.headers.get('x-ratelimit-remaining') ?? '-1', 10),
         reset: parseInt(resp.headers.get('x-ratelimit-reset') ?? '-1', 10),
       };
-      setRateLimit(newRateLimit);
+      setRateLimitRemaining(newRateLimit.remaining);
       return resp;
     },
   });
 
   return {
-    rateLimit,
+    rateLimitRemaining,
     messages: chat.messages,
     append: (message: Message | CreateMessage, chatRequestOptions?: ChatRequestOptions) => {
       chat.append(message, chatRequestOptions);
