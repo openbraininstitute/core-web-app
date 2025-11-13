@@ -14,11 +14,7 @@ Sentry.init({
   replaysOnErrorSampleRate: 1.0,
   debug: !['staging', 'production', 'local'].includes(env.NEXT_PUBLIC_DEPLOYMENT_ENV),
   beforeSend(event) {
-    if (
-      ['development', 'test', 'preview', 'local'].includes(
-        process.env.NEXT_PUBLIC_DEPLOYMENT_ENV || ''
-      )
-    ) {
+    if (['test', 'preview', 'local'].includes(process.env.NEXT_PUBLIC_DEPLOYMENT_ENV || '')) {
       return null;
     }
     return event;

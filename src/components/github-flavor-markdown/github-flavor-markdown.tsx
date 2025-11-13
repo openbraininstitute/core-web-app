@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import React, { AnchorHTMLAttributes } from 'react';
+import React, { AnchorHTMLAttributes, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
@@ -22,13 +22,15 @@ export function GithubFlavorMarkdown({
   children,
   onLinkClicked,
 }: GithubFlavorMarkdownProps) {
+  const LinkComponent = useMemo(() => makeLink(onLinkClicked), [onLinkClicked]);
+
   return (
     <ReactMarkdown
       className={classNames(className, styles.githubFlavorMarkdown)}
       remarkPlugins={[remarkGfm, remarkMath]}
       rehypePlugins={[rehypeKatex]}
       components={{
-        a: makeLink(onLinkClicked),
+        a: LinkComponent,
         img: TruncableImage,
         pre: CodeBlock,
       }}
@@ -47,6 +49,7 @@ function makeLink(onLinkClicked: (external: boolean, href: string) => void | boo
       <Link
         href={info.href}
         target={info.target}
+        prefetch={false}
         onClick={(evt) => {
           if (onLinkClicked(!!info.target, info.href)) {
             evt.stopPropagation();
@@ -62,6 +65,14 @@ function makeLink(onLinkClicked: (external: boolean, href: string) => void | boo
 }
 
 function resolveLinkTarget(href: string): { href: string; target?: string } {
+  if (!href.startsWith('http://') && !href.startsWith('https://')) {
+    return { href };
+  }
+
+  if (typeof window === 'undefined' || !globalThis.location) {
+    return { href, target: href };
+  }
+
   const url = new URL(href);
   if (url.origin === globalThis.location.origin) return { href };
 

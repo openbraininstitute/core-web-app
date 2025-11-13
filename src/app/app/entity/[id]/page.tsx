@@ -29,12 +29,13 @@ export default async function EntityDetail({ params }: { params: Promise<{ id: s
     redirect(
       resolveExploreDetailsPageUrl({ ctx: redirectCtx, entityId: id, dataType: entity.type })
     );
+    return;
   }
 
   // Find out the virtual lab for the "authorized_project_id" for private entities
   const { data: groups, error } = await tryCatch(getUserGroups);
 
-  if (!groups?.data?.groups ?? error) notFound();
+  if (!groups?.data?.groups || error) notFound();
 
   const group = groups.data.groups.find((g) => g.project_id === entity.authorized_project_id);
   if (!group) notFound();
