@@ -1,4 +1,5 @@
 import React from 'react';
+import { logDebug } from '@/utils/logger';
 
 /**
  * Sometime a component is rendering more than it should.
@@ -8,6 +9,6 @@ import React from 'react';
 export function useDebugPropHasChanged(label: string, prop: unknown) {
   React.useEffect(() => {
     // eslint-disable-next-line no-console
-    console.log('[Changed!] ', label, ':', prop);
+    logDebug('[Changed!] ', label, ':', prop);
   }, [label, prop]);
 }
