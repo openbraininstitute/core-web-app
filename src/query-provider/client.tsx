@@ -33,7 +33,9 @@ export function QueryProvider({
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
+      {process.env.NEXT_PUBLIC_REACTQUERY_DEVTOOLS_ENABLED === 'true' && (
+        <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
+      )}
     </QueryClientProvider>
   );
 }
