@@ -19,7 +19,12 @@ export function usePrices(): UsePricesReturn {
     async function fetchPrices() {
       try {
         setLoading(true);
-        const response = await fetch('/api/help/prices');
+        const response = await fetch('/api/help/prices', {
+          headers: {
+            accept: 'application/json',
+            'content-type': 'application/json',
+          },
+        });
 
         // Check content type first to detect HTML responses
         const contentType = response.headers.get('content-type') || '';

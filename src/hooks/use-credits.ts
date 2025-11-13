@@ -19,7 +19,12 @@ export function useCredits(): UseCreditsReturn {
     async function fetchCredits() {
       try {
         setLoading(true);
-        const response = await fetch('/api/help/credits');
+        const response = await fetch('/api/help/credits', {
+          headers: {
+            accept: 'application/json',
+            'content-type': 'application/json',
+          },
+        });
 
         // Check content type first to detect HTML responses
         const contentType = response.headers.get('content-type') || '';
