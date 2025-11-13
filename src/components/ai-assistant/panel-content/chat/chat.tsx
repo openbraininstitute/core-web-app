@@ -79,7 +79,7 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
             key={item.id}
             value={item}
             hideTools={messageIndex === messages.length - 1 && status !== 'ready'}
-            rateLimitRemaining={rateLimit?.remaining ?? null}
+            rateLimit={rateLimit}
           />
         ))}
         {status === 'ready' && messages.length > 0 && (
