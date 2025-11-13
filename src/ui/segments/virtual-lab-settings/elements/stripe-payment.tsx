@@ -98,7 +98,7 @@ function AmountForm({
   showControls,
 }: {
   credits: number | undefined;
-  onCreditsChange: (credits: number) => void;
+  onCreditsChange: (credits: number | undefined) => void;
   formLoading: boolean;
   onModeChange?: (m: TPurchaseModeDictionary) => void;
   onStepChange?: (s: TPaymentModeDictionary) => void;
@@ -111,9 +111,10 @@ function AmountForm({
           <Input
             id="amount"
             type="number"
-            min={0}
+            // min={0}
+            defaultValue={undefined}
             value={credits}
-            onChange={(e) => onCreditsChange(Number(e.target.value) || 0)}
+            onChange={(e) => onCreditsChange(Number(e.target.value) || undefined)}
             placeholder="0"
             className={cn(
               'h-16 w-full rounded-xl border-white/20 bg-[#052f66] pr-28 text-xl! font-bold text-white placeholder:text-white/50',
@@ -169,7 +170,7 @@ function PaymentForm({
   virtualLabId: string;
   credits: number;
   onCancel: () => void;
-  onCreditsChange: (credits: number) => void;
+  onCreditsChange: (credits: number | undefined) => void;
 }) {
   const queryClient = useQueryClient();
   const elements = useElements();
@@ -323,7 +324,7 @@ function StripePayment({
 }: {
   virtualLabId: string;
   credits: number;
-  onCreditsChange: (credits: number) => void;
+  onCreditsChange: (credits: number | undefined) => void;
   onModeChange: (m: TPurchaseModeDictionary) => void;
 }) {
   const [
@@ -377,7 +378,9 @@ export function StripePaymentFlow({
 }) {
   const [step, setStep] = useState<TPaymentModeDictionary>(PaymentModeDictionary.SetCredits);
   const [credits, setCredits] = useState<number | undefined>(undefined);
-  const onCreditsChange = (c: number) => setCredits(c);
+  const onCreditsChange = (c: number | undefined) => {
+    setCredits(c);
+  };
 
   const onStepChange = (s: TPaymentModeDictionary) => setStep(s);
 
