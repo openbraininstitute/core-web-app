@@ -29,6 +29,7 @@ const FREE_ACCESS_PAGES = [
   '/api/newsletter',
   '/api/auth*',
   '/api/marketing',
+  '/api/help*',
 ];
 const ASSETS = ['/static*', '/images*', '/downloads*', '/_next*', '/favicon.ico', '/video*'];
 

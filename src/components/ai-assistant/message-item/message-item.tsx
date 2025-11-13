@@ -10,9 +10,8 @@ import ToolsProgress from './tools-progress';
 import ToolsComponents from './tools-components';
 
 import { classNames } from '@/util/utils';
-import { AiAgentRateLimit } from '@/services/ai-agent';
 import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
-import { isString } from '@/util/type-guards';
+import { isNumber, isString } from '@/util/type-guards';
 
 import styles from './message-item.module.css';
 
@@ -20,14 +19,24 @@ interface MessageItemProps {
   className?: string;
   value: UIMessage;
   hideTools: boolean;
-  rateLimit: AiAgentRateLimit | null;
+  rateLimitRemaining: number | null;
 }
 
-export default function MessageItem({ className, value, hideTools, rateLimit }: MessageItemProps) {
+export default function MessageItem({
+  className,
+  value,
+  hideTools,
+  rateLimitRemaining,
+}: MessageItemProps) {
   const debug = useDebug();
   return (
     <div className={classNames(className, styles.messageItem)}>
-      <MessageChild value={value} hideTools={hideTools} debug={debug} rateLimit={rateLimit} />
+      <MessageChild
+        value={value}
+        hideTools={hideTools}
+        debug={debug}
+        rateLimitRemaining={rateLimitRemaining}
+      />
     </div>
   );
 }
@@ -36,12 +45,12 @@ function MessageChild({
   value,
   hideTools,
   debug,
-  rateLimit,
+  rateLimitRemaining,
 }: {
   value: UIMessage;
   hideTools: boolean;
   debug: boolean;
-  rateLimit: AiAgentRateLimit | null;
+  rateLimitRemaining: number | null;
 }): React.ReactNode {
   const { setPanelWidth } = usePanelWidth();
   switch (value.role) {
@@ -53,12 +62,12 @@ function MessageChild({
           </div>
           <div className={styles.info}>
             <div className={styles.timestamp}>{value.createdAt && formatDate(value.createdAt)}</div>
-            {rateLimit && (
+            {isNumber(rateLimitRemaining) && (
               <div className={styles.price}>
                 <IconPrice />
                 <div>
-                  {Math.max(0, rateLimit.remaining)} free credit
-                  {rateLimit.remaining > 1 ? 's' : ''} left
+                  {Math.max(0, rateLimitRemaining)} free credit
+                  {rateLimitRemaining > 1 ? 's' : ''} left
                 </div>
               </div>
             )}

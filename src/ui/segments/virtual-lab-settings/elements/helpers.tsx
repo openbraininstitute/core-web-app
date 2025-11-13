@@ -1,1 +1,1 @@
-export const CONVERSION_RATE = 0.5; // CHF per credit
+export const CONVERSION_RATE = 0.1; // CHF per credit

@@ -20,7 +20,7 @@ const costUnitDictionary: Record<string, string> = {
   creditsNeuron: 'credits / neuron',
   creditsBuild: 'credits / build',
   creditsHour: 'credits / hour',
-  creditsNeuronSecond: 'credit / neuron / second of biological time',
+  creditsNeuronSecond: 'credits / neuron / second of biological time',
 };
 
 const getCostUnitDisplay = (
@@ -28,9 +28,9 @@ const getCostUnitDisplay = (
   customCostUnit: string | null = null
 ): string => {
   if (!costUnit) return '';
-  // If costUnit is "custom", use customCostUnit instead
-  if (costUnit === 'custom' && customCostUnit) {
-    return customCostUnit;
+  // If costUnit is "custom", always use customCostUnit (even if empty, to show price)
+  if (costUnit === 'custom') {
+    return customCostUnit || '';
   }
   return costUnitDictionary[costUnit] ?? costUnit;
 };
@@ -66,6 +66,13 @@ const formatNumber = (value: number | string): string => {
   const num = typeof value === 'string' ? Number.parseFloat(value) : value;
   if (Number.isNaN(num)) return String(value);
   return num.toLocaleString('en-US');
+};
+
+// Check if a string value is a pure number (only digits, decimal point, and whitespace)
+const isPureNumber = (value: string): boolean => {
+  // Remove whitespace and check if it's a valid number
+  const trimmed = value.trim();
+  return /^-?\d*\.?\d+$/.test(trimmed);
 };
 
 const formatQuantityRange = (value: string): string => {
@@ -155,7 +162,49 @@ const priceColumns: ColumnsType<SinglePrice> = [
     dataIndex: 'freePrice',
     key: 'freePrice',
     render: (value: string | null, record: SinglePrice) => {
+      // eslint-disable-next-line no-console
+      console.log(
+        'Free plan - Item:',
+        record.itemName,
+        'freePrice:',
+        value,
+        'Full record:',
+        record
+      );
       if (value === null) return <span style={{ color: '#002766' }}>-</span>;
+
+      // If value contains text (not a pure number), display the full string
+      if (!isPureNumber(value)) {
+        // If costUnit is custom, add customCostUnit after the full text
+        if (record.costUnit === 'custom' && record.customCostUnit) {
+          return (
+            <span style={{ color: '#002766' }}>
+              <span style={{ fontWeight: 'bold' }}>{value}</span>
+              {` ${record.customCostUnit}`}
+            </span>
+          );
+        }
+        // Otherwise, just display the full text without unit
+        return (
+          <span style={{ color: '#002766' }}>
+            <span style={{ fontWeight: 'bold' }}>{value}</span>
+          </span>
+        );
+      }
+
+      // If costUnit is custom, display price with customCostUnit directly
+      if (record.costUnit === 'custom') {
+        const numValue = Number.parseFloat(value);
+        const displayValue = Number.isNaN(numValue) ? value : numValue;
+        return (
+          <span style={{ color: '#002766' }}>
+            <span style={{ fontWeight: 'bold' }}>{displayValue}</span>
+            {record.customCostUnit ? ` ${record.customCostUnit}` : ''}
+          </span>
+        );
+      }
+
+      // Otherwise, use the standard unit display logic
       const unitDisplay = getCostUnitDisplay(record.costUnit, record.customCostUnit);
       const numValue = Number.parseFloat(value);
       return (
@@ -171,7 +220,42 @@ const priceColumns: ColumnsType<SinglePrice> = [
     dataIndex: 'proPrice',
     key: 'proPrice',
     render: (value: string | null, record: SinglePrice) => {
+      // eslint-disable-next-line no-console
+      console.log('Pro plan - Item:', record.itemName, 'proPrice:', value, 'Full record:', record);
       if (value === null) return <span style={{ color: '#002766' }}>-</span>;
+
+      // If value contains text (not a pure number), display the full string
+      if (!isPureNumber(value)) {
+        // If costUnit is custom, add customCostUnit after the full text
+        if (record.costUnit === 'custom' && record.customCostUnit) {
+          return (
+            <span style={{ color: '#002766' }}>
+              <span style={{ fontWeight: 'bold' }}>{value}</span>
+              {` ${record.customCostUnit}`}
+            </span>
+          );
+        }
+        // Otherwise, just display the full text without unit
+        return (
+          <span style={{ color: '#002766' }}>
+            <span style={{ fontWeight: 'bold' }}>{value}</span>
+          </span>
+        );
+      }
+
+      // If costUnit is custom, display price with customCostUnit directly
+      if (record.costUnit === 'custom') {
+        const numValue = Number.parseFloat(value);
+        const displayValue = Number.isNaN(numValue) ? value : numValue;
+        return (
+          <span style={{ color: '#002766' }}>
+            <span style={{ fontWeight: 'bold' }}>{displayValue}</span>
+            {record.customCostUnit ? ` ${record.customCostUnit}` : ''}
+          </span>
+        );
+      }
+
+      // Otherwise, use the standard unit display logic
       const unitDisplay = getCostUnitDisplay(record.costUnit, record.customCostUnit);
       const numValue = Number.parseFloat(value);
       return (
