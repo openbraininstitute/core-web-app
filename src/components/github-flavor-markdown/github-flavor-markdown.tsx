@@ -16,7 +16,10 @@ interface GithubFlavorMarkdownProps {
   onLinkClicked(external: boolean): void;
 }
 
-export const GithubFlavorMarkdown = React.memo(RawGithubFlavorMarkdown);
+export const GithubFlavorMarkdown = React.memo(
+  RawGithubFlavorMarkdown,
+  (prevProps, nextProps) => prevProps.children === nextProps.children
+);
 
 function RawGithubFlavorMarkdown({
   className,
@@ -24,7 +27,6 @@ function RawGithubFlavorMarkdown({
   onLinkClicked,
 }: GithubFlavorMarkdownProps) {
   const LinkComponent = useMemo(() => makeLink(onLinkClicked), [onLinkClicked]);
-
   return (
     <ReactMarkdown
       className={classNames(className, styles.githubFlavorMarkdown)}
