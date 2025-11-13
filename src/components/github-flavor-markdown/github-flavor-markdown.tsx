@@ -16,7 +16,9 @@ interface GithubFlavorMarkdownProps {
   onLinkClicked(external: boolean): void;
 }
 
-export function GithubFlavorMarkdown({
+export const GithubFlavorMarkdown = React.memo(RawGithubFlavorMarkdown);
+
+function RawGithubFlavorMarkdown({
   className,
   children,
   onLinkClicked,
