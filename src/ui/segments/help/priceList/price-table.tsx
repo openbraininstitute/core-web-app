@@ -20,7 +20,7 @@ const costUnitDictionary: Record<string, string> = {
   creditsNeuron: 'credits / neuron',
   creditsBuild: 'credits / build',
   creditsHour: 'credits / hour',
-  creditsNeuronSecond: 'credit / neuron / second of biological time',
+  creditsNeuronSecond: 'credits / neuron / second of biological time',
 };
 
 const getCostUnitDisplay = (
