@@ -99,7 +99,7 @@ function stripFirstPathSegment(pathname: string): string {
  * - allows free-access application and API routes as configured.
  * - delegates remaining routes to next-auth middleware for authentication.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const requestPathname = request.nextUrl.pathname;
   const pathnameWithoutLeadingSegment = stripFirstPathSegment(requestPathname);
 

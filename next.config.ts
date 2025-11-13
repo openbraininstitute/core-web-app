@@ -40,6 +40,9 @@ const SentryOptions: SentryBuildOptions = {
 const nextConfig = (phase: string): NextConfig => {
   const isDev = phase === PHASE_DEVELOPMENT_SERVER;
   return {
+    experimental: {
+      turbopackFileSystemCacheForDev: true,
+    },
     turbopack: {
       rules: {
         '*.groq': {
@@ -83,9 +86,6 @@ const nextConfig = (phase: string): NextConfig => {
     reactStrictMode: true,
     compress: false,
     output: 'standalone',
-    eslint: {
-      ignoreDuringBuilds: true,
-    },
     typescript: {
       ignoreBuildErrors: true,
     },
