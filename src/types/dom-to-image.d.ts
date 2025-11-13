@@ -16,4 +16,3 @@ declare module 'dom-to-image' {
   export function toPixelData(node: HTMLElement, options?: Options): Promise<Uint8ClampedArray>;
   export function toSvg(node: HTMLElement, options?: Options): Promise<string>;
 }
-

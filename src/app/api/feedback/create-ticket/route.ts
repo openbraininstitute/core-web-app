@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { Octokit } from '@octokit/core';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -9,22 +10,62 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Title and body required' }, { status: 400 });
     }
 
-    if (!process.env.GITHUB_TOKEN) {
+    if (!process.env.GITHUB_FEEDBACK_TOKEN) {
       // eslint-disable-next-line no-console
-      console.error('GITHUB_TOKEN is not configured');
+      console.error('GITHUB_FEEDBACK_TOKEN is not configured');
       return NextResponse.json({ error: 'GitHub token not configured' }, { status: 500 });
     }
 
-    const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+    // eslint-disable-next-line no-console
+    console.log(
+      'GITHUB_FEEDBACK_TOKEN is configured:',
+      process.env.GITHUB_FEEDBACK_TOKEN ? 'Yes' : 'No'
+    );
 
-    // Check token permissions
+    const octokit = new Octokit({ auth: process.env.GITHUB_FEEDBACK_TOKEN });
+
+    // Check token validity early - fail fast if token is invalid
     try {
       const tokenInfo = await octokit.request('GET /user');
       // eslint-disable-next-line no-console
       console.log('Token authenticated as:', tokenInfo.data.login);
+
+      // Try to check organization access (this helps diagnose private repo access issues)
+      try {
+        const orgInfo = await octokit.request('GET /orgs/{org}', {
+          org: 'openbraininstitute',
+        });
+        // eslint-disable-next-line no-console
+        console.log('Organization access verified:', orgInfo.data.login);
+      } catch (orgError) {
+        const orgErr = orgError as { status?: number; message?: string };
+        // eslint-disable-next-line no-console
+        console.warn(
+          'Could not verify organization access (this may be normal for private orgs):',
+          orgErr.status,
+          orgErr.message
+        );
+        // Don't fail here - organization access check may fail even with valid tokens
+      }
     } catch (tokenError) {
+      const error = tokenError as { status?: number; message?: string };
       // eslint-disable-next-line no-console
-      console.warn('Could not verify token:', tokenError);
+      console.error('Token validation failed:', error);
+
+      if (error.status === 401) {
+        return NextResponse.json(
+          {
+            error:
+              'GitHub token is invalid or expired. Please check your GITHUB_FEEDBACK_TOKEN environment variable.',
+            help: 'You can create a new token at https://github.com/settings/tokens with the following scopes: repo, project (if using projects)',
+          },
+          { status: 401 }
+        );
+      }
+
+      // For other token errors, still try to proceed but log the warning
+      // eslint-disable-next-line no-console
+      console.warn('Could not verify token, but continuing:', tokenError);
     }
 
     // eslint-disable-next-line no-console
@@ -36,14 +77,24 @@ export async function POST(req: NextRequest) {
       // First, verify the repository exists and is accessible
       try {
         await octokit.request('GET /repos/{owner}/{repo}', {
-          owner: 'loris-olivier-obi',
-          repo: 'feedbacks',
+          owner: 'openbraininstitute',
+          repo: 'feedback',
         });
       } catch (repoError) {
         const error = repoError as { status?: number; message?: string };
+        if (error.status === 401) {
+          throw new Error(
+            'GitHub token is invalid or expired. Please check your GITHUB_FEEDBACK_TOKEN environment variable and ensure it has the "repo" scope.'
+          );
+        }
+        if (error.status === 403) {
+          throw new Error(
+            'GitHub token does not have permission to access this repository. Please ensure the token has the "repo" scope and access to the "openbraininstitute/feedback" repository.'
+          );
+        }
         if (error.status === 404) {
           throw new Error(
-            'Repository "loris-olivier-obi/feedbacks" not found. Please verify the repository exists and the token has access.'
+            'Repository "openbraininstitute/feedback" not found or token does not have access. For private repositories, ensure: 1) The token has the "repo" scope, 2) The token has been granted access to the "openbraininstitute" organization (if required), and 3) The repository name is correct.'
           );
         }
         throw new Error(`Cannot access repository: ${error.message || 'Unknown error'}`);
@@ -58,8 +109,8 @@ export async function POST(req: NextRequest) {
 
       // Try creating issue with labels
       createIssueResponse = await octokit.request('POST /repos/{owner}/{repo}/issues', {
-        owner: 'loris-olivier-obi',
-        repo: 'feedbacks',
+        owner: 'openbraininstitute',
+        repo: 'feedback',
         title,
         body,
         labels: allLabels,
@@ -71,12 +122,20 @@ export async function POST(req: NextRequest) {
         // Try again without the month-year label, but keep feedback type and section labels
         const labelsWithoutMonthYear = Array.isArray(labels) ? labels : [];
         createIssueResponse = await octokit.request('POST /repos/{owner}/{repo}/issues', {
-          owner: 'loris-olivier-obi',
-          repo: 'feedbacks',
+          owner: 'openbraininstitute',
+          repo: 'feedback',
           title,
           body,
           labels: labelsWithoutMonthYear,
         });
+      } else if (error.status === 401) {
+        throw new Error(
+          'GitHub token is invalid or expired. Please check your GITHUB_FEEDBACK_TOKEN environment variable.'
+        );
+      } else if (error.status === 403) {
+        throw new Error(
+          'GitHub token does not have permission to create issues. Please ensure the token has the "repo" scope.'
+        );
       } else {
         throw labelError;
       }
@@ -95,7 +154,6 @@ export async function POST(req: NextRequest) {
       try {
         // Extract base64 data from data URL
         const base64Data = screenshot.replace(/^data:image\/\w+;base64,/, '');
-        const buffer = Buffer.from(base64Data, 'base64');
 
         // Create a unique filename
         const timestamp = Date.now();
@@ -103,8 +161,8 @@ export async function POST(req: NextRequest) {
 
         // Upload to repository
         const uploadResponse = await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', {
-          owner: 'loris-olivier-obi',
-          repo: 'feedbacks',
+          owner: 'openbraininstitute',
+          repo: 'feedback',
           path: filename,
           message: `Add screenshot for issue #${issueNumber}`,
           content: base64Data,
@@ -122,8 +180,8 @@ export async function POST(req: NextRequest) {
           if (screenshotUrl) {
             const updatedBody = `${body}\n\n## Screenshot\n\n![Screenshot](${screenshotUrl})`;
             await octokit.request('PATCH /repos/{owner}/{repo}/issues/{issue_number}', {
-              owner: 'loris-olivier-obi',
-              repo: 'feedbacks',
+              owner: 'openbraininstitute',
+              repo: 'feedback',
               issue_number: issueNumber,
               body: updatedBody,
             });
@@ -137,14 +195,14 @@ export async function POST(req: NextRequest) {
     }
 
     // ADD TO PROJECT (optional, continue even if it fails)
-    if (!process.env.GITHUB_PROJECT_ID) {
+    if (!process.env.GITHUB_FEEDBACK_PROJECT_ID) {
       // eslint-disable-next-line no-console
-      console.warn('GITHUB_PROJECT_ID is not configured, skipping project addition');
+      console.warn('GITHUB_FEEDBACK_PROJECT_ID is not configured, skipping project addition');
     } else {
       try {
         // eslint-disable-next-line no-console
         console.log('Adding issue to project:', {
-          projectId: process.env.GITHUB_PROJECT_ID,
+          projectId: process.env.GITHUB_FEEDBACK_PROJECT_ID,
           issueNodeId,
         });
 
@@ -163,7 +221,7 @@ export async function POST(req: NextRequest) {
             }
             `,
             {
-              projectId: process.env.GITHUB_PROJECT_ID,
+              projectId: process.env.GITHUB_FEEDBACK_PROJECT_ID,
             }
           );
           // eslint-disable-next-line no-console
@@ -188,7 +246,7 @@ export async function POST(req: NextRequest) {
           }
           `,
           {
-            projectId: process.env.GITHUB_PROJECT_ID,
+            projectId: process.env.GITHUB_FEEDBACK_PROJECT_ID,
             contentId: issueNodeId,
           }
         );
@@ -236,7 +294,7 @@ export async function POST(req: NextRequest) {
               }
               `,
               {
-                projectId: process.env.GITHUB_PROJECT_ID,
+                projectId: process.env.GITHUB_FEEDBACK_PROJECT_ID,
                 itemId,
                 fieldId: process.env.STATUS_FIELD_ID,
                 optionId: process.env.RECEIVED_ID,
@@ -274,7 +332,7 @@ export async function POST(req: NextRequest) {
         console.error('Failed to add to project:', {
           error: errorMessage,
           projectError,
-          projectId: process.env.GITHUB_PROJECT_ID,
+          projectId: process.env.GITHUB_FEEDBACK_PROJECT_ID,
           issueNodeId,
           help: 'The token may need the "project" scope. Check token permissions at: https://github.com/settings/tokens',
         });

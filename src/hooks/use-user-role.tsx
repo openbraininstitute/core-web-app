@@ -35,7 +35,10 @@ export function useUserRole({ virtualLabId, projectId }: Props) {
         enabled: !!virtualLabId,
       },
       {
-        queryKey: keyBuilder.getWorkspace({ virtualLabId: virtualLabId || '', projectId: projectId || '' }),
+        queryKey: keyBuilder.getWorkspace({
+          virtualLabId: virtualLabId || '',
+          projectId: projectId || '',
+        }),
         queryFn: async () =>
           await getProject({ virtualLabId: virtualLabId!, projectId: projectId! }),
         enabled: !!virtualLabId && !!projectId,

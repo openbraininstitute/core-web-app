@@ -82,7 +82,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
       if (modalOverlay) modalOverlay.style.display = 'none';
 
       // Use dom-to-image which handles modern CSS better than html2canvas
-      // @ts-expect-error - dom-to-image doesn't have TypeScript types
+      // eslint-disable-next-line import/no-extraneous-dependencies
       const domtoimage = await import('dom-to-image');
 
       // Capture the body element
