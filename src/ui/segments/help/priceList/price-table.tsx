@@ -28,7 +28,7 @@ const getCostUnitDisplay = (
   customCostUnit: string | null = null
 ): string => {
   if (!costUnit) return '';
-  // If costUnit is "custom", always use customCostUnit (even if empty, to show price)
+
   if (costUnit === 'custom') {
     return customCostUnit || '';
   }
@@ -68,81 +68,73 @@ const formatNumber = (value: number | string): string => {
   return num.toLocaleString('en-US');
 };
 
-// Check if a string value is a pure number (only digits, decimal point, and whitespace)
 const isPureNumber = (value: string): boolean => {
-  // Remove whitespace and check if it's a valid number
   const trimmed = value.trim();
   return /^-?\d*\.?\d+$/.test(trimmed);
 };
 
 const formatQuantityRange = (value: string): string => {
-  // Check if the value contains a range (e.g., "500-999" or "25000-49999")
-  if (value.includes('-')) {
-    const parts = value.split('-').map((part) => part.trim());
+  // Check if value ends with "+" and preserve it
+  const trimmedValue = value.trim();
+  const hasPlus = trimmedValue.endsWith('+');
+  const valueWithoutPlus = hasPlus ? trimmedValue.slice(0, -1).trim() : trimmedValue;
+
+  // Handle range values (e.g., "500-999" or "500-999+")
+  if (valueWithoutPlus.includes('-')) {
+    const parts = valueWithoutPlus.split('-').map((part) => part.trim());
     if (parts.length === 2) {
       const start = Number.parseFloat(parts[0]);
       const end = Number.parseFloat(parts[1]);
 
-      // Format each number with commas if > 999
       const formattedStart =
         !Number.isNaN(start) && start > 999 ? start.toLocaleString('en-US') : parts[0];
       const formattedEnd = !Number.isNaN(end) && end > 999 ? end.toLocaleString('en-US') : parts[1];
 
-      return `${formattedStart}-${formattedEnd}`;
+      return `${formattedStart}-${formattedEnd}${hasPlus ? '+' : ''}`;
     }
   }
-  // If not a range, format as single number
-  const num = Number.parseFloat(value);
-  if (!Number.isNaN(num) && num > 999) {
-    return num.toLocaleString('en-US');
+
+  // Handle single values (e.g., "50000" or "50000+")
+  const num = Number.parseFloat(valueWithoutPlus);
+  if (!Number.isNaN(num)) {
+    if (num > 999) {
+      return `${num.toLocaleString('en-US')}${hasPlus ? '+' : ''}`;
+    }
+    // Even if <= 999, preserve the "+" if it was there
+    return `${num}${hasPlus ? '+' : ''}`;
   }
+
+  // If not a valid number, return original value (preserving "+")
   return value;
 };
 
 const formatSectionName = (section: string): string => {
-  // Special case for aiAssistant
   if (section.toLowerCase() === 'aiassistant') {
     return 'AI Assistant';
   }
-  // Convert camelCase to Title Case
+
   return section
-    .replace(/([A-Z])/g, ' $1') // Add space before capital letters
-    .replace(/^./, (str) => str.toUpperCase()) // Capitalize first letter
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (str) => str.toUpperCase())
     .trim();
 };
 
-// Normalize section name for matching (case-insensitive, handle variations)
 const normalizeSectionName = (section: string): string => {
   return section.toLowerCase().replace(/\s+/g, ' ').trim();
 };
 
-// Get section order priority (lower number = higher priority)
-// Sections are ordered by parent category first, then by sub-section order
 const getSectionOrder = (section: string): number => {
   const normalized = normalizeSectionName(section);
   const sectionLower = section.toLowerCase();
 
-  // Debug logging for Microcircuits sections
-  if (normalized.includes('microcircuit')) {
-    // eslint-disable-next-line no-console
-    console.log(
-      `[Section Order] Microcircuit section found: "${section}" | normalized: "${normalized}" | includes >10: ${normalized.includes('>10') || normalized.includes('> 10') || section.includes('>10') || section.includes('> 10')}`
-    );
-  }
-
-  // Determine parent category and sub-section order
-  // Build section: 1) Single cell; 2) Synaptome; 3) Ion channel
   if (sectionLower.includes('build')) {
     if (normalized.includes('single cell')) return 101;
     if (normalized.includes('synaptome')) return 102;
     if (normalized.includes('ion channel')) return 103;
-    return 100; // Other build sections
+    return 100;
   }
 
-  // Simulate section: 1) E-models; 2) Ion channel; 3) Single cell; 4) Synaptome; 5) Small Microcircuits (<= 10 neurons); 6) Microcircuits (>10 neurons)
   if (sectionLower.includes('simulate')) {
-    // Check for Microcircuits (>10 neurons) FIRST to ensure it gets the highest order (209)
-    // This must be checked before other microcircuit checks
     if (
       normalized.includes('microcircuit') &&
       (normalized.includes('>10') ||
@@ -151,26 +143,23 @@ const getSectionOrder = (section: string): number => {
         section.includes('>10') ||
         section.includes('> 10'))
     ) {
-      return 209; // Microcircuits (>10 neurons) at the end
+      return 209;
     }
     if (normalized.includes('e-model') || normalized.includes('emodel')) return 201;
     if (normalized.includes('ion channel')) return 202;
     if (normalized.includes('single cell')) return 203;
     if (normalized.includes('synaptome')) return 204;
     if (normalized.includes('small microcircuit') || normalized.includes('<= 10')) return 205;
-    return 200; // Other simulate sections
+    return 200;
   }
 
   // Notebooks section: 1) Running notebooks; 2) EM Skeletonization
   if (sectionLower.includes('notebook')) {
     if (normalized.includes('running notebook')) return 301;
     if (normalized.includes('skeletonization') || normalized.includes('em skeleton')) return 302;
-    return 300; // Other notebook sections
+    return 300;
   }
 
-  // Check for sections without explicit parent category (try to match by name)
-  // IMPORTANT: Check Microcircuits (>10 neurons) FIRST to ensure it gets order 209 (highest in Simulate)
-  // This must be checked before other microcircuit checks to avoid early matching
   if (
     normalized.includes('microcircuit') &&
     (normalized.includes('>10') ||
@@ -179,9 +168,8 @@ const getSectionOrder = (section: string): number => {
       section.includes('>10') ||
       section.includes('> 10'))
   ) {
-    return 209; // Microcircuits (>10 neurons) at the end of Simulate - highest order
+    return 209;
   }
-  // Now check other simulate items
   if (normalized.includes('e-model') || normalized.includes('emodel')) {
     return 201;
   }
@@ -197,7 +185,6 @@ const getSectionOrder = (section: string): number => {
   if (normalized.includes('small microcircuit') || normalized.includes('<= 10')) {
     return 205;
   }
-  // Check build items
   if (normalized.includes('single cell') && normalized.includes('build')) {
     return 101;
   }
@@ -207,9 +194,8 @@ const getSectionOrder = (section: string): number => {
   if (normalized.includes('ion channel') && normalized.includes('build')) {
     return 103;
   }
-  // Any other microcircuit (without >10) should come before the >10 one
   if (normalized.includes('microcircuit')) {
-    return 205; // Treat as small microcircuit if no size specified
+    return 205;
   }
   if (normalized.includes('running notebook')) {
     return 301;
@@ -218,7 +204,6 @@ const getSectionOrder = (section: string): number => {
     return 302;
   }
 
-  // Default: put at the end
   return 999;
 };
 
@@ -273,20 +258,9 @@ const priceColumns: ColumnsType<SinglePrice> = [
     dataIndex: 'freePrice',
     key: 'freePrice',
     render: (value: string | null, record: SinglePrice) => {
-      // eslint-disable-next-line no-console
-      console.log(
-        'Free plan - Item:',
-        record.itemName,
-        'freePrice:',
-        value,
-        'Full record:',
-        record
-      );
       if (value === null) return <span style={{ color: '#002766' }}>-</span>;
 
-      // If value contains text (not a pure number), display the full string
       if (!isPureNumber(value)) {
-        // If costUnit is custom, add customCostUnit after the full text
         if (record.costUnit === 'custom' && record.customCostUnit) {
           return (
             <span style={{ color: '#002766' }}>
@@ -295,7 +269,6 @@ const priceColumns: ColumnsType<SinglePrice> = [
             </span>
           );
         }
-        // Otherwise, just display the full text without unit
         return (
           <span style={{ color: '#002766' }}>
             <span style={{ fontWeight: 'bold' }}>{value}</span>
@@ -303,7 +276,6 @@ const priceColumns: ColumnsType<SinglePrice> = [
         );
       }
 
-      // If costUnit is custom, display price with customCostUnit directly
       if (record.costUnit === 'custom') {
         const numValue = Number.parseFloat(value);
         const displayValue = Number.isNaN(numValue) ? value : numValue;
@@ -315,7 +287,6 @@ const priceColumns: ColumnsType<SinglePrice> = [
         );
       }
 
-      // Otherwise, use the standard unit display logic
       const unitDisplay = getCostUnitDisplay(record.costUnit, record.customCostUnit);
       const numValue = Number.parseFloat(value);
       return (
@@ -331,13 +302,9 @@ const priceColumns: ColumnsType<SinglePrice> = [
     dataIndex: 'proPrice',
     key: 'proPrice',
     render: (value: string | null, record: SinglePrice) => {
-      // eslint-disable-next-line no-console
-      console.log('Pro plan - Item:', record.itemName, 'proPrice:', value, 'Full record:', record);
       if (value === null) return <span style={{ color: '#002766' }}>-</span>;
 
-      // If value contains text (not a pure number), display the full string
       if (!isPureNumber(value)) {
-        // If costUnit is custom, add customCostUnit after the full text
         if (record.costUnit === 'custom' && record.customCostUnit) {
           return (
             <span style={{ color: '#002766' }}>
@@ -346,7 +313,6 @@ const priceColumns: ColumnsType<SinglePrice> = [
             </span>
           );
         }
-        // Otherwise, just display the full text without unit
         return (
           <span style={{ color: '#002766' }}>
             <span style={{ fontWeight: 'bold' }}>{value}</span>
@@ -354,7 +320,6 @@ const priceColumns: ColumnsType<SinglePrice> = [
         );
       }
 
-      // If costUnit is custom, display price with customCostUnit directly
       if (record.costUnit === 'custom') {
         const numValue = Number.parseFloat(value);
         const displayValue = Number.isNaN(numValue) ? value : numValue;
@@ -366,7 +331,6 @@ const priceColumns: ColumnsType<SinglePrice> = [
         );
       }
 
-      // Otherwise, use the standard unit display logic
       const unitDisplay = getCostUnitDisplay(record.costUnit, record.customCostUnit);
       const numValue = Number.parseFloat(value);
       return (
@@ -386,13 +350,11 @@ export default function PriceTable({
 }: PriceTableProps) {
   const sortedPrices = useMemo(() => {
     return [...prices].sort((a, b) => {
-      // Sort by freePrice (smallest to greatest), handling null values
       const priceA = a.freePrice ? Number.parseFloat(a.freePrice) : Infinity;
       const priceB = b.freePrice ? Number.parseFloat(b.freePrice) : Infinity;
       if (priceA !== priceB) {
         return priceA - priceB;
       }
-      // If prices are equal, sort by itemName alphabetically
       const nameA = (a.itemName ?? '').toLowerCase();
       const nameB = (b.itemName ?? '').toLowerCase();
       return nameA.localeCompare(nameB);
@@ -408,25 +370,25 @@ export default function PriceTable({
       }
       grouped[section].push(price);
     });
-    // Sort each section by freePrice (smallest to greatest)
-    // Special case: "Microcircuit (>10 neurons)" should always be last in Simulate section
     Object.keys(grouped).forEach((section) => {
       const sectionLower = section.toLowerCase();
       grouped[section].sort((a, b) => {
         const nameA = (a.itemName ?? '').toLowerCase();
         const nameB = (b.itemName ?? '').toLowerCase();
 
-        // In Simulate section, put "Microcircuit (>10 neurons)" at the end
         if (sectionLower.includes('simulate')) {
+          const aIsIonChannel = nameA.includes('ion channel');
+          const bIsIonChannel = nameB.includes('ion channel');
           const aIsLargeMicrocircuit =
             nameA.includes('microcircuit') && (nameA.includes('>10') || nameA.includes('> 10'));
           const bIsLargeMicrocircuit =
             nameB.includes('microcircuit') && (nameB.includes('>10') || nameB.includes('> 10'));
 
-          // If one is large microcircuit and the other isn't, large microcircuit goes last
+          if (aIsIonChannel && !bIsIonChannel) return -1;
+          if (!aIsIonChannel && bIsIonChannel) return 1;
+
           if (aIsLargeMicrocircuit && !bIsLargeMicrocircuit) return 1;
           if (!aIsLargeMicrocircuit && bIsLargeMicrocircuit) return -1;
-          // If both are large microcircuit or both aren't, sort by price as normal
         }
 
         const priceA = a.freePrice ? Number.parseFloat(a.freePrice) : Infinity;
@@ -434,7 +396,6 @@ export default function PriceTable({
         if (priceA !== priceB) {
           return priceA - priceB;
         }
-        // If prices are equal, sort by itemName alphabetically
         return nameA.localeCompare(nameB);
       });
     });
@@ -457,7 +418,6 @@ export default function PriceTable({
 
   const sortedCreditsPacks = useMemo(() => {
     return [...creditsPacks].sort((a, b) => {
-      // Sort by discount (starting with no discount/0, then ascending)
       const discountA = a.discount ?? 0;
       const discountB = b.discount ?? 0;
       return discountA - discountB;
@@ -466,7 +426,6 @@ export default function PriceTable({
 
   return (
     <div className="flex flex-col gap-8 overflow-auto">
-      {/* Credits Packs Table */}
       {creditsPacks.length > 0 && (
         <div>
           <h3
@@ -490,17 +449,14 @@ export default function PriceTable({
         </div>
       )}
 
-      {/* Prices Tables by Section */}
       {Object.entries(pricesBySection)
         .sort(([sectionA], [sectionB]) => {
           const orderA = getSectionOrder(sectionA);
           const orderB = getSectionOrder(sectionB);
-          // eslint-disable-next-line no-console
-          console.log(`Section ordering: "${sectionA}" = ${orderA}, "${sectionB}" = ${orderB}`);
           if (orderA !== orderB) {
             return orderA - orderB;
           }
-          // If same order, sort alphabetically
+
           return sectionA.localeCompare(sectionB);
         })
         .map(([section, sectionPrices]) => (
