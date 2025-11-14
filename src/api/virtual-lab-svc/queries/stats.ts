@@ -3,7 +3,7 @@ import {
   VlmUserStatsResponse,
   VlmVirtualLabStatsResponse,
 } from '@/api/virtual-lab-svc/queries/types';
-import { getSession } from '@/authFetch';
+import { getSession } from '@/auth-fetch';
 import { virtualLabApi } from '@/config';
 
 const BASE_URL = `${virtualLabApi.url}/virtual-labs`;

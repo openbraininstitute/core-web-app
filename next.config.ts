@@ -3,22 +3,20 @@ import { SentryBuildOptions, withSentryConfig } from '@sentry/nextjs';
 import { PHASE_DEVELOPMENT_SERVER } from 'next/constants';
 
 import type { NextConfig } from 'next/dist/types';
-import { env } from './src/env';
-
 const withBundleAnalyzer = NextBundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 });
 
-const basePath = env.NEXT_PUBLIC_BASE_PATH;
-const cdnUri = env.NEXT_PUBLIC_CDN_URI || process.env.NEXT_PUBLIC_CDN_URI;
-const coreWebAppVersion = env.NEXT_PUBLIC_CORE_WEB_APP_VERSION;
+const basePath = process.env.BASE_PATH || '';
+const cdnUri = process.env.CDN_URI;
+const coreWebAppVersion = process.env.CORE_WEB_APP_VERSION;
 
 const SentryOptions: SentryBuildOptions = {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
-  org: env.NEXT_PUBLIC_SENTRY_ORG,
-  project: env.NEXT_PUBLIC_SENTRY_PRJ,
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PRJ,
 
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
@@ -83,13 +81,16 @@ const nextConfig = (phase: string): NextConfig => {
     reactStrictMode: true,
     compress: false,
     output: 'standalone',
+    experimental: {
+      isrMemoryCacheSize: 0,
+    },
     eslint: {
       ignoreDuringBuilds: true,
     },
     typescript: {
       ignoreBuildErrors: true,
     },
-    transpilePackages: ['jotai-devtools', '@t3-oss/env-nextjs', '@t3-oss/env-core'],
+    transpilePackages: ['jotai-devtools'],
     logging: {
       fetches: {
         fullUrl: true,

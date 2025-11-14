@@ -2,7 +2,7 @@ import kebabCase from 'es-toolkit/compat/kebabCase';
 
 import { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 import {
   getEntityByCoreType,
   getEntityByExtendedType,
@@ -21,7 +21,7 @@ export function resolveExploreDetailsPageUrl({
   entityId: string;
   dataType: TExtendedEntitiesTypeDict;
 }) {
-  return `${ROOT_ROUTE}/${ctx.virtualLabId}/${ctx.projectId}/data/view/${kebabCase(dataType)}/${entityId}`;
+  return `${config.ROOT_ROUTE}/${ctx.virtualLabId}/${ctx.projectId}/data/view/${kebabCase(dataType)}/${entityId}`;
 }
 
 export function resolveVirtualLabUrl({ virtualLabId }: { virtualLabId: string }) {

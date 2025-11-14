@@ -1,11 +1,12 @@
-import { atom, useAtom } from 'jotai';
-import { useQuery } from '@tanstack/react-query';
-
-import { Select } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
-import { ConfigValue } from './components';
-import authFetch from '@/authFetch';
+import { useQuery } from '@tanstack/react-query';
+import { Select } from 'antd';
+import { atom, useAtom } from 'jotai';
+
+import authFetch from '@/auth-fetch';
+import { config } from '@/config';
 import { keyBuilder } from '@/ui/use-query-keys/data';
+import { ConfigValue } from './components';
 
 export default function PredefinedNodeset({
   circuitId,
@@ -64,7 +65,7 @@ async function fetchNodesets({
   projectId: string;
 }) {
   const res = await authFetch(
-    `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/declared/mapped-circuit-properties/${circuitId}`,
+    `${config.OBI_ONE_URL}/declared/mapped-circuit-properties/${circuitId}`,
     {
       headers: {
         Accept: 'application/json',

@@ -1,6 +1,6 @@
 import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
-import { virtualLabApi } from '@/config';
-import { getSession } from '@/authFetch';
+import { config } from '@/config';
+import { getSession } from '@/auth-fetch';
 
 import type {
   UpdateUserProfileRequest,
@@ -11,7 +11,7 @@ import type {
 } from '@/api/virtual-lab-svc/queries/types';
 import type { WorkspaceContext } from '@/types/common';
 
-const BASE_URL = `${virtualLabApi.url}/users`;
+const BASE_URL = `${config.VIRTUAL_LAB_API_URL}/users`;
 
 /**
  * get the profile information for the authenticated user

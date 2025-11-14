@@ -6,6 +6,8 @@ import { DEFAULT_SECTION } from '@/components/LandingPage/constants';
 import { getSection } from '@/components/LandingPage/utils';
 import { generateMetadataFromSanity } from '@/components/LandingPage/metadata';
 
+export const revalidate = 3600;
+
 export type ParamProps = {
   params: Promise<{ sanitySectionSlug: string }>;
 };

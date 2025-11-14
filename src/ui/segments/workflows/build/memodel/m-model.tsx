@@ -20,7 +20,7 @@ import {
 } from '@/entity-configuration/definitions/renderer';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 
 import { EntityTypeDict, type ICellMorphology } from '@/api/entitycore/types';
 
@@ -52,7 +52,7 @@ export function MModel({ sessionId }: Props) {
         selectionType: 'radio',
         onCellClick: (_, record) => {
           navigate(
-            `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(EntityTypeDict.CellMorphology)}/${record.id}/overview`
+            `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(EntityTypeDict.CellMorphology)}/${record.id}/overview`
           );
         },
         onRowsSelected: (rows) => {

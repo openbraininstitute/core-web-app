@@ -1,4 +1,4 @@
-import { getSession } from '@/authFetch';
+import { getSession } from '@/auth-fetch';
 
 import {
   SetupIntentResponse,
@@ -6,11 +6,12 @@ import {
   StandalonePaymentResponse,
   SubscriptionPaymentsResponse,
 } from '@/api/virtual-lab-svc/queries/types';
-import { virtualLabApi } from '@/config';
+import { config } from '@/config';
 
-const BASE_URL = `${virtualLabApi.url}/payments`;
-const SUBSCRIPTIONS_URL = `${virtualLabApi.url}/subscriptions`;
-// const BASE_URL = `http://localhost:8000/payments`;
+const { VIRTUAL_LAB_API_URL } = config;
+
+const BASE_URL = `${VIRTUAL_LAB_API_URL}/payments`;
+const SUBSCRIPTIONS_URL = `${VIRTUAL_LAB_API_URL}/subscriptions`;
 
 /**
  * Lists subscriptions with optional filtering.

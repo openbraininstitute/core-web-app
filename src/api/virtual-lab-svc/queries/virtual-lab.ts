@@ -2,18 +2,18 @@ import isEmpty from 'es-toolkit/compat/isEmpty';
 
 import { LabTypeEnum, VirtualLabPayload } from '@/api/virtual-lab-svc/types';
 import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
-import { getSession } from '@/authFetch';
+import { getSession } from '@/auth-fetch';
 import {
   VirtualLab,
   VirtualLabExistsVerificationResponse,
   VirtualLabListResponse,
   VirtualLabResponse,
 } from '@/api/virtual-lab-svc/queries/types';
-import { virtualLabApi } from '@/config';
+import { config } from '@/config';
 
 import type { VlmResponse } from '@/types/virtual-lab/common';
 
-const BASE_URL = `${virtualLabApi.url}/virtual-labs`;
+const BASE_URL = `${config.VIRTUAL_LAB_API_URL}/virtual-labs`;
 
 /**
  * Checks if a virtual lab with the given name already exists.

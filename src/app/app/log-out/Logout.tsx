@@ -1,12 +1,14 @@
 'use client';
 
 import { signOut } from 'next-auth/react';
+import { useEffect } from 'react';
 
-import { basePath, isServer } from '@/config';
+import { config } from '@/config';
 
 export default function Logout() {
-  // Prevent window ref errors during SSR
-  if (!isServer) signOut({ callbackUrl: `${basePath}/` });
+  useEffect(() => {
+    signOut({ callbackUrl: `${config.BASE_PATH}/` });
+  }, []);
 
   return (
     <div className="flex flex-col items-center justify-center space-y-4">

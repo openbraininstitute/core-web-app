@@ -7,7 +7,7 @@ import filter from 'es-toolkit/compat/filter';
 import Link from 'next/link';
 
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { getActiveSection } from '@/utils/get-section';
 import { useUserRole } from '@/hooks/use-user-role';
@@ -50,7 +50,7 @@ export function LeftMenu({ className }: Props) {
     links.map((link) => ({
       ...link,
       baseUrl: link.url,
-      url: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/${link.url}`,
+      url: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${link.url}`,
     })),
     (link) => !link.requireRole || (link.requireRole && isAdmin)
   );

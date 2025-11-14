@@ -1,19 +1,19 @@
-import { getSession } from '@/authFetch';
+import { getSession } from '@/auth-fetch';
 
 import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
-import { virtualLabApi } from '@/config';
+import { config } from '@/config';
 
-import type { ProjectResponse } from '@/types/virtual-lab/projects';
-import type { ProjectPayload, Role } from '@/api/virtual-lab-svc/types';
-import type { WorkspaceContext } from '@/types/common';
 import type {
   ProjectCreationResponse,
   ProjectExistsVerificationResponse,
   VlmAttachUsersToProjectResponse,
   VlmProjectsResponse,
 } from '@/api/virtual-lab-svc/queries/types';
+import type { ProjectPayload, Role } from '@/api/virtual-lab-svc/types';
+import type { WorkspaceContext } from '@/types/common';
+import type { ProjectResponse } from '@/types/virtual-lab/projects';
 
-const BASE_URL = `${virtualLabApi.url}/virtual-labs`;
+const BASE_URL = `${config.VIRTUAL_LAB_API_URL}/virtual-labs`;
 /**
  * Checks if a project with the given name already exists in a virtual lab.
  *

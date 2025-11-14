@@ -6,10 +6,11 @@ import { createClient } from 'next-sanity';
 import { logError } from '@/util/logger';
 import { isUndefined } from '@/util/type-guards';
 import { log } from '@/utils/logger';
+import { config } from '@/config';
 
 const client = createClient({
   projectId: 'fgi7eh1v',
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
+  dataset: config.SANITY_DATASET,
   perspective: 'published',
   apiVersion: '2023-03-25',
   useCdn: process.env.NODE_ENV === 'production',

@@ -3,14 +3,14 @@
 import { useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 
-import { isServer, ROOT_ROUTE } from '@/config';
+import { isServer, config } from '@/config';
 
 export default function Page() {
   const searchParams = useSearchParams();
 
   const redirectURL = searchParams.get('callbackUrl');
 
-  const onboarding = `${typeof window !== 'undefined' ? window.location.origin : ''}${ROOT_ROUTE}/sync?redirectUrl=${encodeURIComponent(redirectURL ?? '')}`;
+  const onboarding = `${typeof window !== 'undefined' ? window.location.origin : ''}${config.ROOT_ROUTE}/sync?redirectUrl=${encodeURIComponent(redirectURL ?? '')}`;
   if (!isServer) signIn('keycloak', { callbackUrl: onboarding });
 
   return (

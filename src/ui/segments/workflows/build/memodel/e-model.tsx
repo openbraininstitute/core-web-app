@@ -23,7 +23,7 @@ import {
   useBrainRegionHierarchy,
   useSetSelectedBrainRegion,
 } from '@/features/brain-region-hierarchy/context';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 import {
   renderArray,
   renderDate,
@@ -102,7 +102,7 @@ export function EModel({ sessionId }: Props) {
         selectionType: 'radio',
         onCellClick: (_, record) => {
           navigate(
-            `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(EntityTypeDict.Emodel)}/${record.id}/overview`
+            `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(EntityTypeDict.Emodel)}/${record.id}/overview`
           );
         },
         onRowsSelected: (rows) => {
@@ -116,7 +116,7 @@ export function EModel({ sessionId }: Props) {
           if (checkSelectedEmodelBlackList(row as IEModel))
             // this new line in the attribute is required to be displayed in two lines
             return {
-              'black-listed': `This e-model cannot be combined 
+              'black-listed': `This e-model cannot be combined
               with any morphology for now.
               `,
             } as HTMLAttributes<any> & TdHTMLAttributes<any>;

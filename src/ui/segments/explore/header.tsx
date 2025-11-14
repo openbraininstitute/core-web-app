@@ -14,7 +14,7 @@ import {
   useMiniDetailView,
 } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 import { TWorkspaceScope, WorkspaceScope } from '@/constants';
 
 const ExploreSections = {
@@ -71,7 +71,7 @@ const tabsConfigItems: Array<{
 //       asChild
 //     >
 //       <Link
-//         href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/bookmarks?group=${EntityTypeGroup.Experimental}`}
+//         href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/bookmarks?group=${EntityTypeGroup.Experimental}`}
 //         className="flex w-full items-center justify-between gap-6"
 //       >
 //         <span>Bookmarks</span>
@@ -100,11 +100,11 @@ function DataTabs() {
     makeSelectEntityClickEvent({ display: false, data: null });
     setMdv(false);
     if (
-      pathname === `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data` ||
-      pathname.startsWith(`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity`)
+      pathname === `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data` ||
+      pathname.startsWith(`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity`)
     ) {
       onChangeTab(value)();
-    } else navigate(`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data?scope=${value}`);
+    } else navigate(`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data?scope=${value}`);
   };
 
   const isBookmark = pathname.endsWith('/browse/bookmarks');

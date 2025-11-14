@@ -1,4 +1,4 @@
-import { basePath } from '@/config';
+import { config } from '@/config';
 
 export default async function subscribeNewsletterHandler({
   email,
@@ -9,7 +9,7 @@ export default async function subscribeNewsletterHandler({
   name: string;
   tags: Array<string>;
 }) {
-  const response = await fetch(`${basePath}/api/newsletter`, {
+  const response = await fetch(`${config.BASE_PATH}/api/newsletter`, {
     method: 'post',
     headers: {
       'Content-Type': 'application/json',

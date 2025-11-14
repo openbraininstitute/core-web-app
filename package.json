@@ -69,7 +69,7 @@
     "@sentry/nextjs": "^10.15.0",
     "@stripe/react-stripe-js": "^3.6.0",
     "@stripe/stripe-js": "^7.0.0",
-    "@t3-oss/env-nextjs": "^0.13.0",
+
     "@tanstack/react-query": "^5.84.1",
     "@tanstack/react-query-devtools": "^5.84.1",
     "@tanstack/react-virtual": "^3.13.12",

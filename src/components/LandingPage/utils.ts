@@ -1,8 +1,10 @@
-import React from 'react';
+'use client';
 
-import { EnumSection } from './sections/sections';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
 import { DEFAULT_SECTION, ID_MENU, Section, SECTIONS } from './constants';
-import { basePath } from '@/config';
+import { EnumSection } from './sections/sections';
+import { config } from '@/config';
 import { isString } from '@/util/type-guards';
 
 /**
@@ -11,7 +13,7 @@ import { isString } from '@/util/type-guards';
  */
 export function sanitizeURL(url: string): string {
   if (url.startsWith('/')) {
-    return `${basePath}${url}`;
+    return `${config.BASE_PATH}${url}`;
   }
   return url;
 }
@@ -36,21 +38,21 @@ export function gotoSection(slugOrIndex: string | EnumSection) {
 }
 
 function useResizeObserver(callback: ResizeObserverCallback): ResizeObserver {
-  const ref = React.useRef<ResizeObserver | null>(null);
+  const ref = useRef<ResizeObserver | null>(null);
   if (!ref.current) ref.current = new ResizeObserver(callback);
   return ref.current;
 }
 
 export function useMenuHeight(): number {
-  const [menuHeight, setMenuHeight] = React.useState(0);
-  const handleResize = React.useCallback(() => {
+  const [menuHeight, setMenuHeight] = useState(0);
+  const handleResize = useCallback(() => {
     const menu = document.getElementById(ID_MENU);
     if (!menu) return;
 
     setMenuHeight(menu.clientHeight);
   }, [setMenuHeight]);
   const observer = useResizeObserver(handleResize);
-  React.useEffect(() => {
+  useEffect(() => {
     observer.observe(document.body);
     return () => observer.unobserve(document.body);
   }, [observer]);

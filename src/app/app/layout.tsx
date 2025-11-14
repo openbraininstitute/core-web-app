@@ -1,9 +1,9 @@
 import { ReactNode, Suspense } from 'react';
 
-import { AppOnboardingProvider } from '@/ui/segments/app-setup/discover-app';
 import { Providers } from '@/app/app/providers';
 import { auth } from '@/auth';
 import { getAllFlags } from '@/features/feature-flags';
+import { AppOnboardingProvider } from '@/ui/segments/app-setup/discover-app';
 
 type RootLayoutProps = {
   children: ReactNode;

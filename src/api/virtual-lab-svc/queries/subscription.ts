@@ -1,6 +1,6 @@
-import { getSession } from '@/authFetch';
+import { getSession } from '@/auth-fetch';
 
-import { virtualLabApi } from '@/config';
+import { config } from '@/config';
 import {
   CancelSubscriptionRequest,
   CreateSubscriptionRequest,
@@ -16,7 +16,7 @@ import {
   UserActiveSubscriptionResponse,
 } from '@/api/virtual-lab-svc/queries/types';
 
-const BASE_URL = `${virtualLabApi.url}/subscriptions`;
+const BASE_URL = `${config.VIRTUAL_LAB_API_URL}/subscriptions`;
 
 /**
  * creates a new subscription for a virtual lab.

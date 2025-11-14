@@ -1,9 +1,11 @@
 import { usePathname as useNextPathname } from 'next/navigation';
 
-import { basePath } from '@/config';
+import { config } from '@/config';
 
 export default function usePathname() {
   const nextPathname = useNextPathname();
 
-  return basePath ? nextPathname?.replace(basePath, '') : nextPathname;
+  const { BASE_PATH } = config;
+
+  return BASE_PATH ? nextPathname?.replace(BASE_PATH, '') : nextPathname;
 }

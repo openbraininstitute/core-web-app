@@ -1,16 +1,17 @@
 import $RefParser, { JSONSchema } from '@apidevtools/json-schema-ref-parser';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { atomWithStorage, atomFamily } from 'jotai/utils';
 import { RJSFSchema } from '@rjsf/utils';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { get } from 'es-toolkit/compat';
+import { atomFamily, atomWithStorage } from 'jotai/utils';
 
-import { normalizePrefixItems } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers';
+import { config } from '@/config';
+import { makeSessionAtomWithDefault } from '@/ui/hooks/use-session-atom';
 import { createSuperJsonStorage, safeStorage } from '@/ui/hooks/use-storage-atom-with-validation';
 import {
   GenerationWorkflowFormPanelKeys,
   type TGenerationWorkflowFormPanelKeys,
 } from '@/ui/segments/workflows/build/ion-channel-build/elements/panel-tabs';
-import { makeSessionAtomWithDefault } from '@/ui/hooks/use-session-atom';
+import { normalizePrefixItems } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/third-parties';
 
 import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
@@ -44,7 +45,7 @@ export function useGenerativeFormSchemaApi({
       const json = await queryClient.ensureQueryData<RJSFSchema>({
         queryKey: keyBuilder.obioneOpenapi(),
         queryFn: async () => {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_OBI_ONE_URL}/openapi.json`);
+          const response = await fetch(`${config.OBI_ONE_URL}/openapi.json`);
           const result = await response.json();
           return result;
         },

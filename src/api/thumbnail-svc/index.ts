@@ -1,9 +1,10 @@
 import find from 'es-toolkit/compat/find';
 import kebabCase from 'es-toolkit/compat/kebabCase';
-import buildQueryString from '@/util/query-params-builder';
+
+import { getSession } from '@/auth-fetch';
+import { config } from '@/config';
 import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
-import { thumbnailGenerationBaseUrl } from '@/config';
-import { getSession } from '@/authFetch';
+import buildQueryString from '@/util/query-params-builder';
 
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 
@@ -37,7 +38,7 @@ function buildAssetUrl(
       },
     });
   }
-  return `${thumbnailGenerationBaseUrl}/core/${type}/preview${queryParams}`;
+  return `${config.THUMBNAIL_GENERATION_BASE_URL}/core/${type}/preview${queryParams}`;
 }
 
 export async function getPreviewBlob(

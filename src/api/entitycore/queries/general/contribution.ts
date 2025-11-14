@@ -1,12 +1,12 @@
 import z from 'zod';
 
-import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { authApiClient } from '@/api/apiClient';
-import { entityCoreUrl } from '@/config';
+import { getEntityCoreContext } from '@/api/entitycore/utils';
+import { config } from '@/config';
 
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { IPersonFilter } from '@/api/entitycore/types/entities/agent';
 import type { IContributor } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/contribution';
@@ -22,7 +22,7 @@ export async function getContributions({
   context: WorkspaceContext;
   filters: Partial<IPersonFilter>;
 }) {
-  const api = await authApiClient(entityCoreUrl);
+  const api = await authApiClient(config.ENTITY_CORE_URL);
   return await api.get<EntityCoreResponse<IContributor>>(baseUri, {
     queryParams: {
       ...filters,
@@ -41,7 +41,7 @@ export async function getContributions({
  * @returns {Promise<IContributor>} A promise that resolves to the single person
  */
 export async function getContribution({ id, context }: { id: string; context: WorkspaceContext }) {
-  const api = await authApiClient(entityCoreUrl);
+  const api = await authApiClient(config.ENTITY_CORE_URL);
   return await api.get<IContributor>(`${baseUri}/${id}`, {
     headers: {
       accept: 'application/json',
@@ -72,7 +72,7 @@ export async function createContribution({
   context: WorkspaceContext;
   contributor: IContributorPayload;
 }) {
-  const api = await authApiClient(entityCoreUrl);
+  const api = await authApiClient(config.ENTITY_CORE_URL);
 
   return await api.post<IContributor>(baseUri, {
     headers: {
