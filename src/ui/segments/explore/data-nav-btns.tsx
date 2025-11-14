@@ -8,6 +8,7 @@ import { getRouteSegmentsAfterWorkspace } from '@/utils/path';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { ROOT_ROUTE } from '@/config';
 import Breadcrumb from '@/ui/molecules/breadcrumb';
+import Close from '@/ui/molecules/close';
 
 import type { WorkspaceContext } from '@/types/common';
 
@@ -71,4 +72,12 @@ export function DataBreadcrumb({
       <BackToEntityType {...{ virtualLabId, projectId, type, title }} />
     </div>
   );
+}
+
+export function ClosePage({ url }: { url: string }) {
+  const routeSegments = getRouteSegmentsAfterWorkspace(usePathname(), ROOT_ROUTE);
+  const section = routeSegments.at(0);
+  if (section !== 'data') return null;
+
+  return <Close href={url} />;
 }

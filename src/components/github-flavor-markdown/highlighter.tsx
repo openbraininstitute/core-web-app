@@ -1,6 +1,7 @@
 import { PropsWithChildren } from 'react';
 import { BundledLanguage } from 'shiki';
-import { CodeBlock as DCodeBlock, CodeBlockCopyButton } from '@/ui/molecules/code-blocks';
+
+import { CodeBlock as DCodeBlock } from '@/ui/molecules/code-blocks';
 
 export function Highlighter({ children }: PropsWithChildren) {
   const codeElement = children as React.ReactElement<{ children?: string; className?: string }>;
@@ -9,9 +10,5 @@ export function Highlighter({ children }: PropsWithChildren) {
   const language = (languageMatch ? languageMatch[1] : 'text') as BundledLanguage;
   const code = codeElement.props.children || '';
 
-  return (
-    <DCodeBlock code={code} language={language}>
-      <CodeBlockCopyButton />
-    </DCodeBlock>
-  );
+  return <DCodeBlock code={code} language={language} />;
 }

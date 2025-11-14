@@ -4,14 +4,13 @@ import React from 'react';
 import { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
 
 import ToolMorphologies from '../../../services/ai-agent/tools/morphologies/tool-morphologies';
-import { IconPrice } from '../icons/price';
 import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
 import ToolsProgress from './tools-progress';
 import ToolsComponents from './tools-components';
 
 import { classNames } from '@/util/utils';
 import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
-import { isNumber, isString } from '@/util/type-guards';
+import { isString } from '@/util/type-guards';
 
 import styles from './message-item.module.css';
 
@@ -19,24 +18,15 @@ interface MessageItemProps {
   className?: string;
   value: UIMessage;
   hideTools: boolean;
-  rateLimitRemaining: number | null;
 }
 
-export default function MessageItem({
-  className,
-  value,
-  hideTools,
-  rateLimitRemaining,
-}: MessageItemProps) {
+export const MessageItem = React.memo(RawMessageItem);
+
+function RawMessageItem({ className, value, hideTools }: MessageItemProps) {
   const debug = useDebug();
   return (
     <div className={classNames(className, styles.messageItem)}>
-      <MessageChild
-        value={value}
-        hideTools={hideTools}
-        debug={debug}
-        rateLimitRemaining={rateLimitRemaining}
-      />
+      <MessageChild value={value} hideTools={hideTools} debug={debug} />
     </div>
   );
 }
@@ -45,12 +35,10 @@ function MessageChild({
   value,
   hideTools,
   debug,
-  rateLimitRemaining,
 }: {
   value: UIMessage;
   hideTools: boolean;
   debug: boolean;
-  rateLimitRemaining: number | null;
 }): React.ReactNode {
   const { setPanelWidth } = usePanelWidth();
   switch (value.role) {
@@ -62,15 +50,6 @@ function MessageChild({
           </div>
           <div className={styles.info}>
             <div className={styles.timestamp}>{value.createdAt && formatDate(value.createdAt)}</div>
-            {isNumber(rateLimitRemaining) && (
-              <div className={styles.price}>
-                <IconPrice />
-                <div>
-                  {Math.max(0, rateLimitRemaining)} free credit
-                  {rateLimitRemaining > 1 ? 's' : ''} left
-                </div>
-              </div>
-            )}
           </div>
         </div>
       );
