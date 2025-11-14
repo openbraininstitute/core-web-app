@@ -3,6 +3,7 @@ import { SentryBuildOptions, withSentryConfig } from '@sentry/nextjs';
 import { PHASE_DEVELOPMENT_SERVER } from 'next/constants';
 
 import type { NextConfig } from 'next/dist/types';
+import { getVersion } from '@/utils/version';
 const withBundleAnalyzer = NextBundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 });
@@ -38,6 +39,10 @@ const SentryOptions: SentryBuildOptions = {
 const nextConfig = (phase: string): NextConfig => {
   const isDev = phase === PHASE_DEVELOPMENT_SERVER;
   return {
+    env: {
+      APP_VERSION: getVersion(),
+      APP_BUILD_TIME: new Date().toISOString(),
+    },
     turbopack: {
       rules: {
         '*.groq': {
