@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import remarkMath from 'remark-math';
 import TruncableImage from './truncable-image';
+import { Highlighter } from './highlighter';
 
 import { classNames } from '@/util/utils';
 
@@ -35,6 +36,7 @@ function RawGithubFlavorMarkdown({
       components={{
         a: LinkComponent,
         img: TruncableImage,
+        pre: Highlighter,
       }}
     >
       {children}

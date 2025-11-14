@@ -26,10 +26,12 @@ type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
 
 type CodeBlockContextType = {
   code: string;
+  language: BundledLanguage;
 };
 
 const CodeBlockContext = createContext<CodeBlockContextType>({
   code: '',
+  language: 'text' as BundledLanguage,
 });
 
 const lineNumberTransformer: ShikiTransformer = {
@@ -102,14 +104,15 @@ export function CodeBlock({
 
   return (
     // eslint-disable-next-line react/jsx-no-constructed-context-values
-    <CodeBlockContext.Provider value={{ code }}>
+    <CodeBlockContext.Provider value={{ code, language }}>
       <div
         className={cn(
-          'group bg-background text-foreground relative w-full overflow-hidden rounded-md border',
+          'group bg-background text-foreground border-neutral-light relative w-full overflow-hidden rounded-md border',
           className
         )}
         {...props}
       >
+        {children}
         <div className="relative">
           <div
             className="[&>pre]:bg-background! [&>pre]:text-foreground! overflow-hidden dark:hidden [&_code]:font-mono [&_code]:text-sm [&>pre]:m-0 [&>pre]:p-4 [&>pre]:text-sm"
@@ -121,9 +124,6 @@ export function CodeBlock({
             // eslint-disable-next-line react/no-danger
             dangerouslySetInnerHTML={{ __html: darkHtml }}
           />
-          {children && (
-            <div className="absolute top-2 right-2 flex items-center gap-2">{children}</div>
-          )}
         </div>
       </div>
     </CodeBlockContext.Provider>
@@ -134,7 +134,24 @@ export type CodeBlockCopyButtonProps = ComponentProps<typeof Button> & {
   onCopy?: () => void;
   onError?: (error: Error) => void;
   timeout?: number;
+  iconClassName?: string;
 };
+
+export function CodeBlockLanguageLabel({ className }: { className?: string }): React.ReactElement {
+  const { language } = useContext(CodeBlockContext);
+
+  return (
+    <span
+      className={cn(
+        'rounded-full border border-gray-300 px-4 py-1 text-xs',
+        'font-medium tracking-wide text-gray-500 uppercase',
+        className
+      )}
+    >
+      {language}
+    </span>
+  );
+}
 
 export function CodeBlockCopyButton({
   onCopy,
@@ -142,6 +159,7 @@ export function CodeBlockCopyButton({
   timeout = 2000,
   children,
   className,
+  iconClassName,
   ...props
 }: CodeBlockCopyButtonProps) {
   const [isCopied, setIsCopied] = useState(false);
@@ -172,7 +190,7 @@ export function CodeBlockCopyButton({
       variant="icon"
       {...props}
     >
-      {children ?? <Icon size={14} />}
+      {children ?? <Icon size={14} className={iconClassName} />}
     </Button>
   );
 }
