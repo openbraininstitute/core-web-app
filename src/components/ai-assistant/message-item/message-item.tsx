@@ -41,6 +41,9 @@ function MessageChild({
   debug: boolean;
 }): React.ReactNode {
   const { setPanelWidth } = usePanelWidth();
+  const deferredContent = React.useDeferredValue(value.content);
+  const isContentPending = value.content !== deferredContent;
+
   switch (value.role) {
     case 'user':
       return (
@@ -57,15 +60,17 @@ function MessageChild({
       return (
         <>
           <ToolsProgress message={value} />
-          {value.content.trim().length > 0 && (
-            <GithubFlavorMarkdown
-              className={styles.markdown}
-              onLinkClicked={(external) => {
-                if (!external) setPanelWidth(MINIMAL_PANEL_SIZE);
-              }}
-            >
-              {value.content}
-            </GithubFlavorMarkdown>
+          {deferredContent.trim().length > 0 && (
+            <div style={{ opacity: isContentPending ? 0.8 : 1, transition: 'opacity 0.2s' }}>
+              <GithubFlavorMarkdown
+                className={styles.markdown}
+                onLinkClicked={(external) => {
+                  if (!external) setPanelWidth(MINIMAL_PANEL_SIZE);
+                }}
+              >
+                {deferredContent}
+              </GithubFlavorMarkdown>
+            </div>
           )}
           {!hideTools && (
             <>
