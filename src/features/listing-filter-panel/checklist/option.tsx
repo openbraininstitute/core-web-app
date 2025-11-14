@@ -72,5 +72,5 @@ export function CheckListDescription({ id, type }: { id: string; type: 'mtype' |
     gcTime: Infinity,
   });
 
-  return <span className="text-primary-1 text-justify text-balance">{data?.definition}</span>;
+  return <span className="text-primary-1 text-left">{data?.definition}</span>;
 }
