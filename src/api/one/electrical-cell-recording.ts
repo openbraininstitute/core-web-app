@@ -1,0 +1,26 @@
+import { obioneApi } from '@/api/one/utils';
+
+export type NWBResolution = {
+  isValid: boolean;
+  buffer: ArrayBuffer;
+};
+
+export async function resolveNWBFile(file: File): Promise<NWBResolution> {
+  const api = await obioneApi();
+  const formData = new FormData();
+  formData.append('file', file, file.name);
+  const response = await api.post<Response>(
+    '/declared/validate-nwb-file',
+    {
+      headers: {
+        accept: 'application/json',
+      },
+      body: formData,
+    },
+    { asRawResponse: true }
+  );
+  return {
+    isValid: response.ok,
+    buffer: await response.arrayBuffer(),
+  };
+}

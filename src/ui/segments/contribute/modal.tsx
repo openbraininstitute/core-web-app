@@ -9,6 +9,7 @@ import {
 } from '@/ui/segments/contribute/event';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { CellMorphology } from '@/ui/segments/contribute/cell-morphology';
+import { ElectricalCellRecording } from '@/ui/segments/contribute/electrical-cell-recording';
 import { EntityCoreConfiguration } from '@/entity-configuration/domain';
 import { SelectPopover } from '@/ui/molecules/select-popover';
 import {
@@ -65,6 +66,9 @@ function RenderEntityTypeContent({ type, sId }: { type: TExtendedEntitiesTypeDic
   return match({ type })
     .with({ type: ExtendedEntitiesTypeDict.CellMorphology }, () => (
       <CellMorphology sessionId={sId} />
+    ))
+    .with({ type: ExtendedEntitiesTypeDict.ElectricalCellRecording }, () => (
+      <ElectricalCellRecording sessionId={sId} />
     ))
     .otherwise(() => null);
 }

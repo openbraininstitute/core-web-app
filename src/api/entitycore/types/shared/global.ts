@@ -74,6 +74,13 @@ export type MeasurementBase = {
   value: number;
 };
 
+export interface IEtypeFilter extends PaginationFilter {
+  id: string | null;
+  pref_label: string | null;
+  pref_label__in: string | null;
+  order_by: string | null;
+}
+
 export interface IMtypeFilter extends PaginationFilter {
   id: string | null;
   pref_label: string | null;
@@ -204,7 +211,13 @@ export interface IMTypeClassification
   mtype_class_id: string;
   entity_id: string;
 }
-
+export interface IETypeClassification
+  extends EntityCoreIdentifiable,
+    Timestamps,
+    EntityAuthorization {
+  etype_class_id: string;
+  entity_id: string;
+}
 export type DirectoryItem = {
   name: string;
   size: number;
