@@ -4,7 +4,7 @@ import type { PropsWithChildren } from 'react';
 
 import { DownloadPanel as CircuitDownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { DataBreadcrumb } from '@/ui/segments/explore/back-data-btn';
+import { ClosePage, DataBreadcrumb } from '@/ui/segments/explore/data-nav-btns';
 import {
   ExtendedEntitiesTypeDict,
   TExtendedEntitiesTypeDict,
@@ -13,7 +13,6 @@ import { retrieveEntity } from '@/entity-configuration/domain/requests';
 import DetailMenu from '@/ui/segments/explore/detail-menu';
 import ActionMenu from '@/ui/segments/action-menu';
 import { WorkspaceScope } from '@/constants';
-import Close from '@/ui/molecules/close';
 import { tryCatch } from '@/api/utils';
 import { ROOT_ROUTE } from '@/config';
 
@@ -48,6 +47,7 @@ export async function DataViewLayout({
   const parentLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}&scope=${isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project}`;
 
   const breadcrumbs = <DataBreadcrumb title={entityType.title} type={type} />;
+  const closePage = <ClosePage url={parentLink} />;
 
   if (
     type === ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation ||
@@ -57,7 +57,7 @@ export async function DataViewLayout({
   ) {
     return (
       <div className="relative ml-5 flex h-full flex-col rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
-        <Close href={parentLink} />
+        {closePage}
         {breadcrumbs}
         {children}
       </div>
@@ -69,7 +69,7 @@ export async function DataViewLayout({
   return (
     <>
       <div className="relative ml-5 flex h-full rounded-md border-[1px] border-[#D9D9D9] py-3">
-        <Close href={parentLink} />
+        {closePage}
         <div className="w-1/5 pl-5">
           {breadcrumbs}
           <div className="mt-5 flex flex-col gap-5">
