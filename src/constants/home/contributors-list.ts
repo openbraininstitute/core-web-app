@@ -25,6 +25,13 @@ export const CONTRIBUTORS_LIST: ContributorProps[] = [
     full_name: 'Marwan Abdellah',
     last_name: 'Abdellah',
     ORCID: '0000-0003-0751-2300',
+    google_scholar: 'BWoDazUAAAAJ',
+    'bbp-member': true,
+  },
+  {
+    full_name: 'Sergio Rivas-Gomez',
+    last_name: 'Rivas-Gomez',
+    ORCID: null,
     google_scholar: null,
     'bbp-member': true,
   },
