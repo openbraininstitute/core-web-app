@@ -136,7 +136,7 @@ export interface CellMorphologyProtocolBase {
 
 export const CellMorphologyProtocolDesign = {
   EM: {
-    key: 'em',
+    key: 'electron_microscopy',
     label: 'Electron microscopy (EM)',
   },
   CellPatch: {
@@ -148,8 +148,8 @@ export const CellMorphologyProtocolDesign = {
     label: 'Fluorophore',
   },
   Imp: {
-    key: 'imp',
-    label: 'Imp',
+    key: 'topological_synthesis',
+    label: 'Topological synthesis',
   },
 } as const;
 
@@ -229,8 +229,11 @@ export type NestedCellMorphologyProtocolRead = Prettify<
 >;
 
 export type CellMorphologyProtocolNestedFilter = {
-  cell_morphology_protocol__id: string | null;
-  cell_morphology_protocol__id__in: string | Array<string> | null;
+  cell_morphology_protocol__id: TCellMorphologyGenerationType | null;
+  cell_morphology_protocol__id__in:
+    | TCellMorphologyGenerationType
+    | Array<TCellMorphologyGenerationType>
+    | null;
   cell_morphology_protocol__generation_type: TCellMorphologyGenerationType | null;
   cell_morphology_protocol__generation_type__in: Array<TCellMorphologyGenerationType> | null;
 };

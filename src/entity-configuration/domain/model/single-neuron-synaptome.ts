@@ -40,10 +40,6 @@ export const SingleNeuronSynaptome: EntityCoreTypeConfig<ISingleNeuronSynaptome>
     },
     expand: apiQueryExpand,
   },
-  explore: {
-    basePrefix: 'model',
-    routePrefix: 'interactive/model',
-  },
   asset: {
     extension: 'application/json',
     configfile: AssetLabel.single_neuron_synaptome_config,

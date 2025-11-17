@@ -1,3 +1,4 @@
+import { ViewDefForComputationallySynthesizedCellMorphology } from '@/entity-configuration/definitions/view-defs/model/computationally-synthesized-morphology';
 import { ViewDefForMEModelWithSynapsesCircuit } from '@/entity-configuration/definitions/view-defs/model/me-model-with-synapses';
 import { ViewDefForSingleNeuronSynaptome } from '@/entity-configuration/definitions/view-defs/model/single-neuron-synaptome';
 import { ViewDefForSingleNeuronCircuit } from '@/entity-configuration/definitions/view-defs/model/single-neuron-circuit';
@@ -24,4 +25,6 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [ExtendedEntitiesTypeDict.Circuit]: ViewDefForCircuit,
   [ExtendedEntitiesTypeDict.IonChannelModel]: ViewDefForIonChannelModel,
   [ExtendedEntitiesTypeDict.MEModelWithSynapses]: ViewDefForMEModelWithSynapsesCircuit,
+  [ExtendedEntitiesTypeDict.ComputationallySynthesizedCellMorphology]:
+    ViewDefForComputationallySynthesizedCellMorphology,
 };

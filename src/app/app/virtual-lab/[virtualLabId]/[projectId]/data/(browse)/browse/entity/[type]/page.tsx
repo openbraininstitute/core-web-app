@@ -32,6 +32,7 @@ const AllowedEntities = [
   ExtendedEntitiesTypeDict.SingleNeuronSimulation,
   ExtendedEntitiesTypeDict.IonChannelModel,
   ExtendedEntitiesTypeDict.MEModelWithSynapses,
+  ExtendedEntitiesTypeDict.ComputationallySynthesizedCellMorphology,
   ExtendedEntitiesTypeDict.EMCellMesh,
 ] as const;
 

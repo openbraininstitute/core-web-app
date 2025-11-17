@@ -66,10 +66,6 @@ export const SingleNeuronSynaptomeSimulation: EntityCoreTypeConfig<ISingleNeuron
       },
       expand: singleNeuronSynaptomeSimulationApiQueryExpand,
     },
-    explore: {
-      basePrefix: 'simulate',
-      routePrefix: 'simulate',
-    },
     asset: {
       extension: 'application/json',
       configfile: AssetLabel.single_neuron_synaptome_simulation_data,

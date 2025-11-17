@@ -33,10 +33,6 @@ export const IonChannelModel: EntityCoreTypeConfig<IIonChannelModel> = {
       one: getIonChannelModel,
     },
   },
-  explore: {
-    basePrefix: 'model',
-    routePrefix: 'interactive/model',
-  },
   asset: {
     extension: 'application/json',
   },

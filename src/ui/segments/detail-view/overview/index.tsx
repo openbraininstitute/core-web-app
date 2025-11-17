@@ -1,3 +1,4 @@
+import { includes } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
 
 import { getMEModel } from '@/api/entitycore/queries';
@@ -192,9 +193,13 @@ export default async function Overview({
           />
         )}
       {circuitTypes.includes(extendedType) && <CircuitViz circuit={entity as ICircuit} />}
-      {extendedType === ExtendedEntitiesTypeDict.CellMorphology && (
-        <CellMorphologyViewer entity={entity as ICellMorphology} />
-      )}
+      {includes(
+        [
+          ExtendedEntitiesTypeDict.CellMorphology,
+          ExtendedEntitiesTypeDict.ComputationallySynthesizedCellMorphology,
+        ],
+        extendedType
+      ) && <CellMorphologyViewer entity={entity as ICellMorphology} />}
       {extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording && (
         <EphysViewer resource={entity as IElectricalCellRecording} ctx={ctx} />
       )}

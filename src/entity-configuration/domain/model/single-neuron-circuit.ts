@@ -22,7 +22,7 @@ export const SingleNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
     config: {
       allowedFacets: true,
       ilikeSearchEnabled: true,
-      extraRequiredListFilters: circuitScaleFilter,
+      extraQueryKeyBuilder: circuitScaleFilter,
     },
     query: {
       list: (...params) => {
@@ -38,10 +38,6 @@ export const SingleNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
       },
       one: getCircuit,
     },
-  },
-  explore: {
-    basePrefix: 'model',
-    routePrefix: 'interactive/model',
   },
   asset: {
     extension: 'application/json',

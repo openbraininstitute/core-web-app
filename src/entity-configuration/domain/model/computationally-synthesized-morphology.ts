@@ -1,8 +1,4 @@
-import { without } from 'es-toolkit/compat';
-
 import {
-  createCellMorphology,
-  deleteCellMorphology,
   getCellMorphologies,
   getCellMorphology,
 } from '@/api/entitycore/queries/experimental/cell-morphology';
@@ -18,54 +14,45 @@ import type {
   ICellMorphology,
   ICellMorphologyExpanded,
 } from '@/api/entitycore/types/entities/cell-morphology';
-
-export const cellMorphologyGenerationTypeFilter = {
-  cell_morphology_protocol__generation_type__in: without(
-    Object.values(CellMorphologyGenerationTypeDictionary),
-    CellMorphologyGenerationTypeDictionary.ComputationallySynthesized
-  ),
-};
-
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
-export const CellMorphology: EntityCoreTypeConfig<ICellMorphology | ICellMorphologyExpanded> = {
-  group: EntityTypeGroup.Experimental,
-  title: 'Morphology',
-  extendedType: ExtendedEntitiesTypeDict.CellMorphology,
+export const protocolTypeFilter = {
+  cell_morphology_protocol__generation_type:
+    CellMorphologyGenerationTypeDictionary.ComputationallySynthesized,
+};
+
+export const ComputationallySynthesizedCellMorphology: EntityCoreTypeConfig<
+  ICellMorphology | ICellMorphologyExpanded
+> = {
+  group: EntityTypeGroup.Models,
+  title: 'Synthesized morphology',
+  extendedType: ExtendedEntitiesTypeDict.ComputationallySynthesizedCellMorphology,
   type: EntityTypeDict.CellMorphology,
   slug: EntitySlug.CellMorphology,
   api: {
     config: {
       allowedFacets: true,
-      extraQueryKeyBuilder: { ...cellMorphologyGenerationTypeFilter },
       ilikeSearchEnabled: true,
+      extraQueryKeyBuilder: { ...protocolTypeFilter },
     },
     query: {
-      list: (...params) => {
-        return getCellMorphologies({
+      list: (params: Parameters<typeof getCellMorphologies>[0]) =>
+        getCellMorphologies({
           ...params,
-          context: params[0].context,
-          withFacets: params[0].withFacets,
           filters: {
-            ...params[0].filters,
-            ...cellMorphologyGenerationTypeFilter,
+            ...params.filters,
+            ...protocolTypeFilter,
           },
-        });
-      },
+        }),
       one: getCellMorphology,
-      delete: deleteCellMorphology,
-      create: createCellMorphology,
     },
   },
-  asset: {
-    extension: 'application/swc',
-  },
+  asset: { extension: 'application/swc' },
   viewDefinition: ViewsDefinitionRegistry[ExtendedEntitiesTypeDict.CellMorphology],
   detailViewSections: [DetailViewSectionsDict.Overview],
   isDownloadable: true,
   isBookmarkable: true,
   isCopyable: true,
-  isDeletable: true,
   isSimulatable: false,
   isUploadable: true,
 } as const;
