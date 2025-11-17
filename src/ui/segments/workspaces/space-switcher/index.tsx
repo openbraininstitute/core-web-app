@@ -404,6 +404,7 @@ export function SpaceSwitcher({ className }: Props) {
                       key={lab.id}
                       lab={lab}
                       activeProjectId={projectId}
+                      isActive={virtualLabId === lab.id}
                       isOpen={currentVirtualLabId === lab.id}
                       expandedLabs={expandedLabs}
                       tryingToExpand={tryingToExpand}
