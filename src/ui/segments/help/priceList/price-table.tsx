@@ -25,14 +25,23 @@ const costUnitDictionary: Record<string, string> = {
 
 const getCostUnitDisplay = (
   costUnit: string | null,
-  customCostUnit: string | null = null
+  customCostUnit: string | null = null,
+  priceValue: number | null = null
 ): string => {
   if (!costUnit) return '';
 
   if (costUnit === 'custom') {
     return customCostUnit || '';
   }
-  return costUnitDictionary[costUnit] ?? costUnit;
+
+  let unitDisplay = costUnitDictionary[costUnit] ?? costUnit;
+
+  // If price is 1, use singular "credit" instead of "credits"
+  if (priceValue === 1 && unitDisplay.startsWith('credits')) {
+    unitDisplay = unitDisplay.replace(/^credits/, 'credit');
+  }
+
+  return unitDisplay;
 };
 
 function CustomHeaderCell({
@@ -128,9 +137,9 @@ const getSectionOrder = (section: string): number => {
   const sectionLower = section.toLowerCase();
 
   if (sectionLower.includes('build')) {
-    if (normalized.includes('single cell')) return 101;
-    if (normalized.includes('synaptome')) return 102;
-    if (normalized.includes('ion channel')) return 103;
+    if (normalized.includes('ion channel')) return 101;
+    if (normalized.includes('single cell')) return 102;
+    if (normalized.includes('synaptome')) return 103;
     return 100;
   }
 
@@ -185,13 +194,13 @@ const getSectionOrder = (section: string): number => {
   if (normalized.includes('small microcircuit') || normalized.includes('<= 10')) {
     return 205;
   }
-  if (normalized.includes('single cell') && normalized.includes('build')) {
+  if (normalized.includes('ion channel') && normalized.includes('build')) {
     return 101;
   }
-  if (normalized.includes('synaptome') && normalized.includes('build')) {
+  if (normalized.includes('single cell') && normalized.includes('build')) {
     return 102;
   }
-  if (normalized.includes('ion channel') && normalized.includes('build')) {
+  if (normalized.includes('synaptome') && normalized.includes('build')) {
     return 103;
   }
   if (normalized.includes('microcircuit')) {
@@ -287,8 +296,12 @@ const priceColumns: ColumnsType<SinglePrice> = [
         );
       }
 
-      const unitDisplay = getCostUnitDisplay(record.costUnit, record.customCostUnit);
       const numValue = Number.parseFloat(value);
+      const unitDisplay = getCostUnitDisplay(
+        record.costUnit,
+        record.customCostUnit,
+        Number.isNaN(numValue) ? null : numValue
+      );
       return (
         <span style={{ color: '#002766' }}>
           <span style={{ fontWeight: 'bold' }}>{Number.isNaN(numValue) ? value : numValue}</span>{' '}
@@ -331,8 +344,12 @@ const priceColumns: ColumnsType<SinglePrice> = [
         );
       }
 
-      const unitDisplay = getCostUnitDisplay(record.costUnit, record.customCostUnit);
       const numValue = Number.parseFloat(value);
+      const unitDisplay = getCostUnitDisplay(
+        record.costUnit,
+        record.customCostUnit,
+        Number.isNaN(numValue) ? null : numValue
+      );
       return (
         <span style={{ color: '#002766' }}>
           <span style={{ fontWeight: 'bold' }}>{Number.isNaN(numValue) ? value : numValue}</span>{' '}
@@ -375,6 +392,21 @@ export default function PriceTable({
       grouped[section].sort((a, b) => {
         const nameA = (a.itemName ?? '').toLowerCase();
         const nameB = (b.itemName ?? '').toLowerCase();
+
+        if (sectionLower.includes('build')) {
+          const getBuildPriority = (name: string): number => {
+            if (name.includes('ion channel')) return 1;
+            if (name.includes('single cell')) return 2;
+            if (name.includes('synaptome')) return 3;
+            return 999;
+          };
+
+          const priorityA = getBuildPriority(nameA);
+          const priorityB = getBuildPriority(nameB);
+          if (priorityA !== priorityB) {
+            return priorityA - priorityB;
+          }
+        }
 
         if (sectionLower.includes('simulate')) {
           const aIsIonChannel = nameA.includes('ion channel');
