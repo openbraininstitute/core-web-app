@@ -11,7 +11,8 @@ export default function SinglePriceColumn({ content }: { content: PricePerPlanPr
         <div>
           <div className="text-[19px]">Single Neuron Simulation</div>
           <div className="text-2xl font-bold">
-            {content.singleNeuronSimulation.price} {getCreditLabel(content.singleNeuronSimulation.price)}
+            {content.singleNeuronSimulation.price}{' '}
+            {getCreditLabel(content.singleNeuronSimulation.price)}
           </div>
           {content.singleNeuronSimulation.note && (
             <div className="relative -top-px text-lg leading-[1.3]">
