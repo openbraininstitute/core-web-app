@@ -16,44 +16,49 @@ interface ToolsProgressProps {
 }
 
 // If someone has a better idea on where to put this component, please tell me.
-const LoadingDots: React.FC = () => (
-  <span className="inline-flex items-center gap-1" aria-hidden>
-    <span className="fade-dot h-1 w-1 rounded-full bg-current" style={{ animationDelay: '0s' }} />
-    <span
-      className="fade-dot h-1 w-1 rounded-full bg-current"
-      style={{ animationDelay: '0.15s' }}
-    />
-    <span className="fade-dot h-1 w-1 rounded-full bg-current" style={{ animationDelay: '0.3s' }} />
+function LoadingDots(): React.ReactElement {
+  return (
+    <span className="inline-flex items-center gap-1" aria-hidden="true">
+      <span className="fade-dot h-1 w-1 rounded-full bg-current" style={{ animationDelay: '0s' }} />
+      <span
+        className="fade-dot h-1 w-1 rounded-full bg-current"
+        style={{ animationDelay: '0.15s' }}
+      />
+      <span
+        className="fade-dot h-1 w-1 rounded-full bg-current"
+        style={{ animationDelay: '0.3s' }}
+      />
 
-    <style jsx>{`
-      .fade-dot {
-        display: inline-block;
-        opacity: 0;
-        animation-name: fade-dot;
-        animation-duration: 1.2s;
-        animation-timing-function: ease-in-out;
-        animation-iteration-count: infinite;
-        animation-fill-mode: both;
-      }
+      <style jsx>{`
+        .fade-dot {
+          display: inline-block;
+          opacity: 0;
+          animation-name: fade-dot;
+          animation-duration: 1.2s;
+          animation-timing-function: ease-in-out;
+          animation-iteration-count: infinite;
+          animation-fill-mode: both;
+        }
 
-      @keyframes fade-dot {
-        0% {
-          opacity: 0;
-          transform: translateY(0);
+        @keyframes fade-dot {
+          0% {
+            opacity: 0;
+            transform: translateY(0);
+          }
+          20% {
+            opacity: 1;
+          }
+          60% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0;
+          }
         }
-        20% {
-          opacity: 1;
-        }
-        60% {
-          opacity: 1;
-        }
-        100% {
-          opacity: 0;
-        }
-      }
-    `}</style>
-  </span>
-);
+      `}</style>
+    </span>
+  );
+}
 
 export default function ToolsProgress({ className, message }: ToolsProgressProps) {
   const tools = useAITools();
