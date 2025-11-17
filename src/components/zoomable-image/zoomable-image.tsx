@@ -28,7 +28,7 @@ export default function ZoomableImage({ className, src }: ZoomableImageProps) {
     };
   }, [src]);
   const styleImage: React.CSSProperties = {
-    backgroundImage: `url(${src})`,
+    ...(src && { backgroundImage: `url(${src})` }),
     transform: `scale(${zoom})`,
     transformOrigin: `${x * 100}% ${y * 100}`,
   };
