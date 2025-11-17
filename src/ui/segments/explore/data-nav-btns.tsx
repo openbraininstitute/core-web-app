@@ -9,8 +9,20 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { ROOT_ROUTE } from '@/config';
 import Breadcrumb from '@/ui/molecules/breadcrumb';
 import Close from '@/ui/molecules/close';
+import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 
 import type { WorkspaceContext } from '@/types/common';
+import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
+
+function getGroupDisplayName(group: TEntityTypeGroup): string {
+  const groupLabels: Record<TEntityTypeGroup, string> = {
+    [EntityTypeGroup.Models]: 'Model',
+    [EntityTypeGroup.Experimental]: 'Experimental',
+    [EntityTypeGroup.Simulations]: 'Simulation',
+    [EntityTypeGroup.Notebooks]: 'Notebook',
+  };
+  return groupLabels[group] || group;
+}
 
 export function BackToListingOriginButton({ virtualLabId, projectId }: WorkspaceContext) {
   const queryParams = useSearchParams();
@@ -26,6 +38,29 @@ export function BackToListingOriginButton({ virtualLabId, projectId }: Workspace
         className="capitalize"
       >
         Data
+      </Link>
+    </Breadcrumb>
+  );
+}
+
+export function BackToCategory({
+  virtualLabId,
+  projectId,
+  group,
+}: WorkspaceContext & { group: TEntityTypeGroup }) {
+  const queryParams = useSearchParams();
+  const groupDisplayName = getGroupDisplayName(group);
+
+  return (
+    <Breadcrumb>
+      <Link
+        href={{
+          pathname: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data`,
+          query: { ...Object.fromEntries(queryParams.entries()), group },
+        }}
+        className="capitalize"
+      >
+        {groupDisplayName}
       </Link>
     </Breadcrumb>
   );
@@ -57,9 +92,11 @@ export function BackToEntityType({
 export function DataBreadcrumb({
   type,
   title,
+  group,
 }: {
   type: TExtendedEntitiesTypeDict;
   title: string;
+  group: TEntityTypeGroup;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
   const routeSegments = getRouteSegmentsAfterWorkspace(usePathname(), ROOT_ROUTE);
@@ -69,6 +106,7 @@ export function DataBreadcrumb({
   return (
     <div className="flex flex-wrap gap-3">
       <BackToListingOriginButton {...{ virtualLabId, projectId }} />
+      <BackToCategory {...{ virtualLabId, projectId, group }} />
       <BackToEntityType {...{ virtualLabId, projectId, type, title }} />
     </div>
   );
