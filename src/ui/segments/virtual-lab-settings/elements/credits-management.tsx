@@ -34,7 +34,7 @@ export function CreditsManagement({
       },
       {
         queryKey: keyBuilder.listWorkspaceProjects({ virtualLabId }),
-        queryFn: () => listProjects({ virtualLabId, page: 1, size: 20 }),
+        queryFn: () => listProjects({ virtualLabId, page: 1, size: 40 }),
         enabled: isAdmin,
       },
     ],
