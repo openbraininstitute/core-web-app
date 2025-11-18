@@ -81,7 +81,7 @@ export default function ToolsProgress({ className, message }: ToolsProgressProps
             className={`overflow-hidden rounded-lg border bg-white transition-all duration-200 ease-out hover:border-gray-300 hover:shadow-md ${isRunning ? 'border-blue-200 bg-blue-50/30' : 'border-gray-200'} ${isExpanded ? 'shadow-sm' : ''}`}
             key={key}
             style={{
-              animation: 'slide-up 260ms cubic-bezier(0.245, 0.425, 0.345, 0.015) both',
+              animation: 'slide-up 260ms ease-out both',
             }}
           >
             {/* Header */}
@@ -152,8 +152,7 @@ export default function ToolsProgress({ className, message }: ToolsProgressProps
               <div
                 className="border-t border-gray-200 bg-gray-50 px-3 py-3"
                 style={{
-                  animation:
-                    'slide-up 280ms cubic-bezier(0.8, 0, 1, 1) both, fade-in 240ms cubic-bezier(0.39, 0.575, 0.565, 1) both',
+                  animation: 'slide-up 280ms ease-out both, fade-in 240ms ease-out both',
                 }}
               >
                 {invocation.args && Object.keys(invocation.args).length > 0 && (
