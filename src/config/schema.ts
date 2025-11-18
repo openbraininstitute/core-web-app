@@ -1,97 +1,127 @@
 import { z } from 'zod';
 
-export const serverSchema = z.object({
-  APP_VERSION: z.string().optional(),
+const DEFAULT_API_BASE_PATH = '/api';
 
-  DEPLOYMENT_ENV: z.enum(['local', 'preview', 'development', 'staging', 'production']),
+// ! WARNING: public configuration properties are exposed in the browser.
+// ! Only enable this for entries which are safe to be public. NO SECRETS.
+const configFields = {
+  APP_VERSION: { schema: z.string().optional(), public: true },
 
-  KEYCLOAK_CLIENT_ID: z.string().min(3),
-  KEYCLOAK_CLIENT_SECRET: z.string().min(5),
-  KEYCLOAK_ISSUER: z.string().url(),
+  DEPLOYMENT_ENV: {
+    schema: z.enum(['local', 'preview', 'development', 'staging', 'production']),
+    public: true,
+  },
 
-  NEXTAUTH_SECRET: z.string().min(5),
+  KEYCLOAK_CLIENT_ID: { schema: z.string().min(3), public: false },
+  KEYCLOAK_CLIENT_SECRET: { schema: z.string().min(5), public: false },
+  KEYCLOAK_ISSUER: { schema: z.string().url(), public: false },
 
-  MAILCHIMP_API_KEY: z.string().min(1),
-  MAILCHIMP_API_SERVER: z.string().min(1),
-  MAILCHIMP_AUDIENCE_ID: z.string().min(1),
+  NEXTAUTH_SECRET: { schema: z.string().min(5), public: false },
 
-  GITHUB_TOKEN: z.string().optional(),
+  MAILCHIMP_API_KEY: { schema: z.string().min(1), public: false },
+  MAILCHIMP_API_SERVER: { schema: z.string().min(1), public: false },
+  MAILCHIMP_AUDIENCE_ID: { schema: z.string().min(1), public: false },
 
-  AI_AGENT_URL: z.string().url().optional(),
-  AUTH_MANAGER_URL: z.string().url().optional(),
-  CELL_API_URL: z.string().url(),
-  ENTITY_CORE_URL: z.string().url(),
-  NOTEBOOK_API_URL: z.string().optional(),
-  OBI_ONE_URL: z.string().nonempty(),
-  SMALL_SCALE_SIMULATOR_URL: z.string().url(),
-  THUMBNAIL_API_URL: z.string().url(),
-  VIRTUAL_LAB_API_URL: z.string().url(),
+  GITHUB_TOKEN: { schema: z.string().optional(), public: false },
 
-  ROOT_ROUTE: z.string(),
+  API_ORIGIN: { schema: z.string().url().optional(), public: true },
 
-  CDN_URI: z.string().url().optional(),
+  AI_AGENT_URL: { schema: z.string().url().optional(), public: true },
+  AUTH_MANAGER_URL: { schema: z.string().url().optional(), public: true },
+  CELL_API_URL: { schema: z.string().url().optional(), public: true },
+  ENTITY_CORE_URL: { schema: z.string().url().optional(), public: true },
+  NOTEBOOK_API_URL: { schema: z.string().optional(), public: true },
+  OBI_ONE_URL: { schema: z.string().url().optional(), public: true },
+  SMALL_SCALE_SIMULATOR_URL: { schema: z.string().url().optional(), public: true },
+  THUMBNAIL_API_URL: { schema: z.string().url().optional(), public: true },
+  VIRTUAL_LAB_API_URL: { schema: z.string().url().optional(), public: true },
 
-  SENTRY_DSN: z.preprocess((sentryDsn) => sentryDsn || undefined, z.string().url().optional()),
-  SENTRY_ORG: z.string().optional(),
-  SENTRY_PRJ: z.string().optional(),
+  ROOT_ROUTE: { schema: z.string(), public: true },
 
-  STRIPE_PUBLISHABLE_KEY: z.string().startsWith('pk_'),
+  CDN_URI: { schema: z.string().url().optional(), public: true },
 
-  MATOMO_CDN_URL: z.string().optional(),
-  MATOMO_SITE_ID: z.string().optional(),
-  MATOMO_URL: z.string().optional(),
+  SENTRY_DSN: {
+    schema: z.preprocess((sentryDsn) => sentryDsn || undefined, z.string().url().optional()),
+    public: true,
+  },
+  SENTRY_ORG: { schema: z.string().optional(), public: true },
+  SENTRY_PRJ: { schema: z.string().optional(), public: true },
 
-  SANITY_DATASET: z.enum(['staging', 'production']),
+  STRIPE_PUBLISHABLE_KEY: { schema: z.string().startsWith('pk_'), public: true },
 
-  ENTITY_CORE_PUBLIC_PROJECT_ID: z.string().nonempty(),
-  ENTITY_CORE_PUBLIC_VIRTUAL_LAB_ID: z.string().nonempty(),
+  MATOMO_CDN_URL: { schema: z.string().optional(), public: true },
+  MATOMO_SITE_ID: { schema: z.string().optional(), public: true },
+  MATOMO_URL: { schema: z.string().optional(), public: true },
 
-  BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE: z.string().nonempty(),
-  DEFAULT_BRAIN_ATLAS_ID: z.string().nonempty(),
-  DEFAULT_BRAIN_REGION_HIERARCHY_ID: z.string().nonempty(),
-  DEFAULT_SELECTED_BRAIN_REGION_ID: z.string().nonempty(),
-  LEGACY_DEFAULT_CIRCUIT_ID: z.string().url().optional(),
-  ROOT_BRAIN_REGION_ANNOTATION_VALUE: z.string().nonempty(),
-  ROOT_BRAIN_REGION_ID: z.string().nonempty(),
+  SANITY_DATASET: { schema: z.enum(['staging', 'production']), public: true },
 
-  NOTEBOOK_REPO_URL: z.string().url(),
-});
+  ENTITY_CORE_PUBLIC_PROJECT_ID: { schema: z.string().nonempty(), public: true },
+  ENTITY_CORE_PUBLIC_VIRTUAL_LAB_ID: { schema: z.string().nonempty(), public: true },
 
-// ! WARNING: clientSchema configurations are exposed in the browser.
-// ! Only add configurations that are safe to be public. NO SECRETS.
-export const clientSchema = serverSchema.pick({
-  AI_AGENT_URL: true,
-  APP_VERSION: true,
-  AUTH_MANAGER_URL: true,
-  BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE: true,
-  CDN_URI: true,
-  CELL_API_URL: true,
-  DEFAULT_BRAIN_ATLAS_ID: true,
-  DEFAULT_BRAIN_REGION_HIERARCHY_ID: true,
-  DEFAULT_SELECTED_BRAIN_REGION_ID: true,
-  DEPLOYMENT_ENV: true,
-  ENTITY_CORE_PUBLIC_PROJECT_ID: true,
-  ENTITY_CORE_PUBLIC_VIRTUAL_LAB_ID: true,
-  ENTITY_CORE_URL: true,
-  LEGACY_DEFAULT_CIRCUIT_ID: true,
-  MATOMO_CDN_URL: true,
-  MATOMO_SITE_ID: true,
-  MATOMO_URL: true,
-  NOTEBOOK_REPO_URL: true,
-  NOTEBOOK_API_URL: true,
-  OBI_ONE_URL: true,
-  ROOT_BRAIN_REGION_ANNOTATION_VALUE: true,
-  ROOT_BRAIN_REGION_ID: true,
-  ROOT_ROUTE: true,
-  SANITY_DATASET: true,
-  SENTRY_DSN: true,
-  SENTRY_ORG: true,
-  SENTRY_PRJ: true,
-  SMALL_SCALE_SIMULATOR_URL: true,
-  STRIPE_PUBLISHABLE_KEY: true,
-  THUMBNAIL_API_URL: true,
-  VIRTUAL_LAB_API_URL: true,
-});
+  BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE: {
+    schema: z.string().nonempty(),
+    public: true,
+  },
+  DEFAULT_BRAIN_ATLAS_ID: { schema: z.string().nonempty(), public: true },
+  DEFAULT_BRAIN_REGION_HIERARCHY_ID: { schema: z.string().nonempty(), public: true },
+  DEFAULT_SELECTED_BRAIN_REGION_ID: { schema: z.string().nonempty(), public: true },
+  LEGACY_DEFAULT_CIRCUIT_ID: { schema: z.string().url().optional(), public: true },
+  ROOT_BRAIN_REGION_ANNOTATION_VALUE: { schema: z.string().nonempty(), public: true },
+  ROOT_BRAIN_REGION_ID: { schema: z.string().nonempty(), public: true },
+
+  NOTEBOOK_REPO_URL: { schema: z.string().url(), public: true },
+} as const;
+
+const platformApiUrlFields = {
+  AI_AGENT_URL: '/agent',
+  AUTH_MANAGER_URL: '/auth-manager/v1',
+  CELL_API_URL: '/circuit',
+  ENTITY_CORE_URL: '/entitycore',
+  NOTEBOOK_API_URL: '/notebook_service',
+  OBI_ONE_URL: '/obi-one',
+  SMALL_SCALE_SIMULATOR_URL: '/small-scale-simulator',
+  THUMBNAIL_API_URL: '/thumbnail-generation',
+  VIRTUAL_LAB_API_URL: '/virtual-lab-manager',
+} as const satisfies Partial<Record<keyof typeof configFields, string>>;
+
+const baseServerSchema = z.object(
+  Object.fromEntries(Object.entries(configFields).map(([key, { schema }]) => [key, schema]))
+);
+
+const applyApiUrlTransforms = <T extends z.ZodTypeAny>(schema: T) =>
+  schema
+    .superRefine((data, ctx) => {
+      Object.keys(platformApiUrlFields).forEach((field) => {
+        if (!data[field] && !data.API_ORIGIN) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Either ${field} or API_ORIGIN must be provided`,
+            path: [field],
+          });
+        }
+      });
+    })
+    .transform((data) => ({
+      ...data,
+      ...Object.fromEntries(
+        Object.entries(platformApiUrlFields).map(([field, path]) => [
+          field,
+          data[field] ?? `${data.API_ORIGIN}${DEFAULT_API_BASE_PATH}${path}`,
+        ])
+      ),
+    }));
+
+export const serverSchema = applyApiUrlTransforms(baseServerSchema);
+
+const baseClientSchema = baseServerSchema.pick(
+  Object.fromEntries(
+    Object.entries(configFields)
+      .filter(([, { public: isPublic }]) => isPublic)
+      .map(([key]) => [key, true])
+  )
+);
+
+export const clientSchema = applyApiUrlTransforms(baseClientSchema);
 
 export type ServerConfig = z.infer<typeof serverSchema>;
 export type ClientConfig = z.infer<typeof clientSchema>;
