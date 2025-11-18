@@ -9,7 +9,7 @@ import { useConfig } from '@/config';
 function Matomo() {
   const config = useConfig();
 
-  const { MATOMO_URL, MATOMO_CDN_URL, MATOMO_SITE_ID } = config.MATOMO_URL;
+  const { MATOMO_URL, MATOMO_CDN_URL, MATOMO_SITE_ID } = config;
 
   const searchParams = useSearchParams();
   const pathname = usePathname();
