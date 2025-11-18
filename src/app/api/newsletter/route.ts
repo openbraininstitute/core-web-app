@@ -4,11 +4,6 @@ import { z } from 'zod';
 
 import { serverConfig as config } from '@/config/server';
 
-const API_KEY = config.MAILCHIMP_API_KEY;
-const API_SERVER = config.MAILCHIMP_API_SERVER;
-const AUDIENCE_ID = config.MAILCHIMP_AUDIENCE_ID;
-const url = `https://${API_SERVER}.api.mailchimp.com/3.0/lists/${AUDIENCE_ID}/members`;
-
 const newsletterFormSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
   name: z
@@ -43,6 +38,8 @@ function getErrorMessage(key: ErrorMessageMapType) {
 }
 
 export async function POST(req: Request) {
+  const url = `https://${config.MAILCHIMP_API_SERVER}.api.mailchimp.com/3.0/lists/${config.MAILCHIMP_AUDIENCE_ID}/members`;
+
   let formValidation: RequestBody | null = null;
 
   try {
@@ -109,7 +106,7 @@ export async function POST(req: Request) {
       method: 'put',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `api_key ${API_KEY}`,
+        Authorization: `api_key ${config.MAILCHIMP_API_KEY}`,
       },
       body: JSON.stringify(data),
     });

@@ -5,22 +5,23 @@ const DEFAULT_API_BASE_PATH = '/api';
 // ! WARNING: public configuration properties are exposed in the browser.
 // ! Only enable this for entries which are safe to be public. NO SECRETS.
 const configFields = {
-  APP_VERSION: { schema: z.string().optional(), public: true },
+  // TODO validate non-optional entries for staging/production, e.g. matomo, sentry, mailchimp.
+  APP_VERSION: { schema: z.string().nonempty(), public: true },
 
   DEPLOYMENT_ENV: {
     schema: z.enum(['local', 'preview', 'development', 'staging', 'production']),
     public: true,
   },
 
-  KEYCLOAK_CLIENT_ID: { schema: z.string().min(3), public: false },
-  KEYCLOAK_CLIENT_SECRET: { schema: z.string().min(5), public: false },
+  KEYCLOAK_CLIENT_ID: { schema: z.string().nonempty(), public: false },
+  KEYCLOAK_CLIENT_SECRET: { schema: z.string().nonempty(), public: false },
   KEYCLOAK_ISSUER: { schema: z.string().url(), public: false },
 
-  NEXTAUTH_SECRET: { schema: z.string().min(5), public: false },
+  NEXTAUTH_SECRET: { schema: z.string().nonempty(), public: false },
 
-  MAILCHIMP_API_KEY: { schema: z.string().min(1), public: false },
-  MAILCHIMP_API_SERVER: { schema: z.string().min(1), public: false },
-  MAILCHIMP_AUDIENCE_ID: { schema: z.string().min(1), public: false },
+  MAILCHIMP_API_KEY: { schema: z.string().nonempty().optional(), public: false },
+  MAILCHIMP_API_SERVER: { schema: z.string().nonempty().optional(), public: false },
+  MAILCHIMP_AUDIENCE_ID: { schema: z.string().nonempty().optional(), public: false },
 
   GITHUB_TOKEN: { schema: z.string().optional(), public: false },
 
@@ -49,9 +50,9 @@ const configFields = {
 
   STRIPE_PUBLISHABLE_KEY: { schema: z.string().startsWith('pk_'), public: true },
 
-  MATOMO_CDN_URL: { schema: z.string().optional(), public: true },
-  MATOMO_SITE_ID: { schema: z.string().optional(), public: true },
-  MATOMO_URL: { schema: z.string().optional(), public: true },
+  MATOMO_CDN_URL: { schema: z.string().nonempty().optional(), public: true },
+  MATOMO_SITE_ID: { schema: z.string().nonempty().optional(), public: true },
+  MATOMO_URL: { schema: z.string().nonempty().optional(), public: true },
 
   SANITY_DATASET: { schema: z.enum(['staging', 'production']), public: true },
 
@@ -65,7 +66,7 @@ const configFields = {
   DEFAULT_BRAIN_ATLAS_ID: { schema: z.string().nonempty(), public: true },
   DEFAULT_BRAIN_REGION_HIERARCHY_ID: { schema: z.string().nonempty(), public: true },
   DEFAULT_SELECTED_BRAIN_REGION_ID: { schema: z.string().nonempty(), public: true },
-  LEGACY_DEFAULT_CIRCUIT_ID: { schema: z.string().url().optional(), public: true },
+  LEGACY_DEFAULT_CIRCUIT_ID: { schema: z.string().url().nonempty(), public: true },
   ROOT_BRAIN_REGION_ANNOTATION_VALUE: { schema: z.string().nonempty(), public: true },
   ROOT_BRAIN_REGION_ID: { schema: z.string().nonempty(), public: true },
 
