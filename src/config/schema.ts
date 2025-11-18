@@ -113,7 +113,7 @@ const applyApiUrlTransforms = <T extends z.ZodTypeAny>(schema: T) =>
 
 export const serverSchema = applyApiUrlTransforms(baseServerSchema);
 
-const baseClientSchema = baseServerSchema.pick(
+export const baseClientSchema = baseServerSchema.pick(
   Object.fromEntries(
     Object.entries(configFields)
       .filter(([, { public: isPublic }]) => isPublic)

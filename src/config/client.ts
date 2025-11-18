@@ -1,4 +1,4 @@
-import { clientSchema, type ClientConfig } from './schema';
+import { clientSchema, baseClientSchema, type ClientConfig } from './schema';
 
 declare global {
   interface Window {
@@ -37,7 +37,7 @@ export const clientConfig = new Proxy({} as ClientConfig, {
 });
 
 export function getClientEnvInjectionConfig() {
-  const clientEnvKeys = Object.keys(clientSchema.shape);
+  const clientEnvKeys = Object.keys(baseClientSchema.shape);
   return Object.fromEntries(
     clientEnvKeys.map((key) => [key, clientConfig[key as keyof typeof clientConfig]])
   );
