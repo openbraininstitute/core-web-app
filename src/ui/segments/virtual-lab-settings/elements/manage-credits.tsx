@@ -109,7 +109,7 @@ export function ManageCreditsStep({
       },
       {
         queryKey: keyBuilder.listWorkspaceProjects({ virtualLabId }),
-        queryFn: () => listProjects({ virtualLabId, page: 1, size: 100 }),
+        queryFn: () => listProjects({ virtualLabId, page: 1, size: 40 }),
         enabled: Boolean(virtualLabId),
       },
     ],
