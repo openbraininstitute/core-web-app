@@ -41,6 +41,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       <head>
         <script
           dangerouslySetInnerHTML={{
+            // eslint-disable-next-line react/no-danger
             __html: `window.__ENV__=${JSON.stringify(getClientEnvInjectionConfig())};`,
           }}
         />

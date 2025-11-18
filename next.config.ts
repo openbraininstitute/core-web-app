@@ -84,9 +84,6 @@ const nextConfig = (phase: string): NextConfig => {
     reactStrictMode: true,
     compress: false,
     output: 'standalone',
-    experimental: {
-      isrMemoryCacheSize: 0,
-    },
     eslint: {
       ignoreDuringBuilds: true,
     },

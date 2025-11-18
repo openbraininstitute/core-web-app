@@ -4,9 +4,9 @@ import {
   VlmVirtualLabStatsResponse,
 } from '@/api/virtual-lab-svc/queries/types';
 import { getSession } from '@/auth-fetch';
-import { virtualLabApi } from '@/config';
+import { serverConfig } from '@/config/server';
 
-const BASE_URL = `${virtualLabApi.url}/virtual-labs`;
+const BASE_URL = `${serverConfig.VIRTUAL_LAB_API_URL}/virtual-labs`;
 
 /**
  * Get statistics for the current user.
@@ -16,7 +16,7 @@ const BASE_URL = `${virtualLabApi.url}/virtual-labs`;
  */
 export async function getUserStats(): Promise<VlmUserStatsResponse> {
   const session = await getSession();
-  const response = await fetch(`${virtualLabApi.url}/users/stats`, {
+  const response = await fetch(`${serverConfig.VIRTUAL_LAB_API_URL}/users/stats`, {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${session?.accessToken}`,
