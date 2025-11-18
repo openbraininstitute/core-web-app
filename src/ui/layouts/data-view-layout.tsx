@@ -63,8 +63,10 @@ export async function DataViewLayout({
   ) {
     return (
       <div className="relative ml-5 flex h-full flex-col rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
-        {closePage}
-        {breadcrumbs}
+        <div className="mb-5">
+          {closePage}
+          {breadcrumbs}
+        </div>
         {children}
       </div>
     );
