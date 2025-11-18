@@ -5,8 +5,8 @@ import { atom, useAtom } from 'jotai';
 
 import authFetch from '@/auth-fetch';
 import { config } from '@/config';
+import { ConfigValue } from '@/features/small-microcircuit/_components/components';
 import { keyBuilder } from '@/ui/use-query-keys/data';
-import { ConfigValue } from './components';
 
 export default function PredefinedNodeset({
   circuitId,

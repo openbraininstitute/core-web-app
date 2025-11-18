@@ -8,9 +8,9 @@ import { useConfig } from '@/config';
 
 function Matomo() {
   const config = useConfig();
-  const MATOMO_URL = config.MATOMO_URL;
-  const MATOMO_CDN_URL = config.MATOMO_CDN_URL;
-  const MATOMO_SITE_ID = config.MATOMO_SITE_ID;
+
+  const { MATOMO_URL, MATOMO_CDN_URL, MATOMO_SITE_ID } = config.MATOMO_URL;
+
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const [initialized, setInitialized] = useState(false);
@@ -30,7 +30,7 @@ function Matomo() {
     return () => {
       setInitialized(true);
     };
-  }, [initialized, setInitialized]);
+  }, [initialized, setInitialized, MATOMO_URL, MATOMO_CDN_URL, MATOMO_SITE_ID]);
 
   useEffect(() => {
     if (!pathname) return;

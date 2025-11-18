@@ -3,8 +3,6 @@
 import { signOut } from 'next-auth/react';
 import { useEffect } from 'react';
 
-import { config } from '@/config';
-
 export default function Logout() {
   useEffect(() => {
     signOut({ callbackUrl: '/' });

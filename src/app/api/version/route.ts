@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 
-import { config } from '@/config';
 import { getVersionInfo } from '@/utils/version-info';
 
 export function GET(req: Request) {

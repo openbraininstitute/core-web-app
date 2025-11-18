@@ -1,3 +1,4 @@
+import isNil from 'es-toolkit/compat/isNil';
 import { atom } from 'jotai';
 import { atomFamily } from 'jotai/utils';
 
@@ -11,7 +12,6 @@ import { EntityTypeDict } from '@/api/entitycore/types';
 import { tryCatch } from '@/api/utils';
 import { config } from '@/config';
 import { arrayBufferToString } from '@/utils/buffer';
-import isNil from 'es-toolkit/compat/isNil';
 
 const defaultAtlasName = 'BlueBrain Atlas';
 export const brainAtlasAtom = atom(async () => {

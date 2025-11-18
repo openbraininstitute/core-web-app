@@ -5,7 +5,6 @@ import { useState } from 'react';
 
 import { useSanityContentForHero } from '@/components/LandingPage/content/hero';
 import { EnumSection } from '@/components/LandingPage/sections/sections';
-import { config } from '@/config';
 import { classNames } from '@/util/utils';
 
 export default function Hero() {
@@ -19,7 +18,7 @@ export default function Hero() {
           fill
           priority
           alt="coming-soon"
-          src={'/images/coming-soon/background.webp'}
+          src="/images/coming-soon/background.webp"
           className="absolute inset-0 h-screen min-h-screen w-screen object-cover"
         />
         <video
