@@ -88,7 +88,7 @@ export async function createProject(
 export async function listProjects({
   virtualLabId,
   page = 1,
-  size = 20,
+  size = 40,
 }: {
   virtualLabId: string;
   page?: number;

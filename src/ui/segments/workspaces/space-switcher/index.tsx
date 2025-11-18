@@ -105,7 +105,7 @@ export function SpaceSwitcher({ className }: Props) {
 
   const { isLoading: projectsLoading, data: projects } = useQuery({
     queryKey: keyBuilder.listWorkspaceProjects({ virtualLabId: virtualLabId! }),
-    queryFn: async () => await listProjects({ virtualLabId: virtualLabId!, page: 1, size: 20 }),
+    queryFn: async () => await listProjects({ virtualLabId: virtualLabId!, page: 1, size: 40 }),
     enabled: !!virtualLabId,
   });
 
