@@ -1,7 +1,5 @@
 import { EntitySlugValue } from './entity-configuration/domain/slug';
-import { serverConfig } from '@/config/server';
-
-const config = serverConfig;
+import { serverConfig as config } from '@/config/server';
 
 export function tempCheckCircuitInDev(type: string): EntitySlugValue {
   if (config.DEPLOYMENT_ENV === 'development') {

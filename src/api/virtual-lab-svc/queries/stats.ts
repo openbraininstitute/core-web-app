@@ -4,9 +4,7 @@ import {
   VlmVirtualLabStatsResponse,
 } from '@/api/virtual-lab-svc/queries/types';
 import { getSession } from '@/auth-fetch';
-import { serverConfig } from '@/config/server';
-
-const BASE_URL = `${serverConfig.VIRTUAL_LAB_API_URL}/virtual-labs`;
+import { config } from '@/config';
 
 /**
  * Get statistics for the current user.
@@ -16,7 +14,7 @@ const BASE_URL = `${serverConfig.VIRTUAL_LAB_API_URL}/virtual-labs`;
  */
 export async function getUserStats(): Promise<VlmUserStatsResponse> {
   const session = await getSession();
-  const response = await fetch(`${serverConfig.VIRTUAL_LAB_API_URL}/users/stats`, {
+  const response = await fetch(`${config.VIRTUAL_LAB_API_URL}/users/stats`, {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${session?.accessToken}`,
@@ -49,12 +47,15 @@ export async function getProjectStats(
   projectId: string
 ): Promise<VlmProjectStatsResponse> {
   const session = await getSession();
-  const response = await fetch(`${BASE_URL}/${virtualLabId}/projects/${projectId}/stats`, {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
-    },
-  });
+  const response = await fetch(
+    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/projects/${projectId}/stats`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session?.accessToken}`,
+      },
+    }
+  );
 
   if (!response.ok) {
     throw new Error(`Getting project stats failed`, {
@@ -77,7 +78,7 @@ export async function getVirtualLabStats(
   virtualLabId: string
 ): Promise<VlmVirtualLabStatsResponse> {
   const session = await getSession();
-  const response = await fetch(`${BASE_URL}/${virtualLabId}/stats`, {
+  const response = await fetch(`${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/stats`, {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${session?.accessToken}`,

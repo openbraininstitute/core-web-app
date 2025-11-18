@@ -7,7 +7,7 @@
     "dev": "next dev --turbopack",
     "dev:next": "npx dotenv -e .env.development-next -- next dev --turbopack",
     "build": "next build --turbopack",
-    "start": "next start --turbopack",
+    "start": "next start",
     "lint": "npx eslint src && npx tsc --noEmit",
     "lint:only": "next lint",
     "lint:fix": "next lint --fix",
@@ -69,7 +69,6 @@
     "@sentry/nextjs": "^10.15.0",
     "@stripe/react-stripe-js": "^3.6.0",
     "@stripe/stripe-js": "^7.0.0",
-
     "@tanstack/react-query": "^5.84.1",
     "@tanstack/react-query-devtools": "^5.84.1",
     "@tanstack/react-virtual": "^3.13.12",
