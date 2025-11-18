@@ -18,9 +18,6 @@ RUN pnpm add sharp
 # Rebuild the source code only when needed
 FROM node:24-alpine AS builder
 
-ARG APP_VERSION
-ENV NEXT_PUBLIC_APP_VERSION=${APP_VERSION}
-
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@10 --activate
 
@@ -36,7 +33,7 @@ FROM node:24-alpine AS runner
 WORKDIR /app
 
 ARG APP_VERSION
-ENV NEXT_PUBLIC_APP_VERSION=${APP_VERSION}
+ENV APP_VERSION=${APP_VERSION}
 
 ENV NODE_ENV=production
 

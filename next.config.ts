@@ -9,7 +9,7 @@ const withBundleAnalyzer = NextBundleAnalyzer({
 });
 
 const cdnUri = process.env.CDN_URI;
-const coreWebAppVersion = process.env.CORE_WEB_APP_VERSION;
+const appVersion = process.env.APP_VERSION;
 
 const SentryOptions: SentryBuildOptions = {
   // For all available options, see:
@@ -31,7 +31,7 @@ const SentryOptions: SentryBuildOptions = {
   disableLogger: true,
   automaticVercelMonitors: false,
   release: {
-    name: coreWebAppVersion,
+    name: appVersion,
   },
 };
 
@@ -80,7 +80,7 @@ const nextConfig = (phase: string): NextConfig => {
             >['position']) ?? 'top-right',
         }
       : false,
-    assetPrefix: isDev || !cdnUri ? undefined : `${cdnUri}/${coreWebAppVersion}`,
+    assetPrefix: isDev || !cdnUri ? undefined : `${cdnUri}/${appVersion}`,
     reactStrictMode: true,
     compress: false,
     output: 'standalone',

@@ -27,7 +27,7 @@ async function upsertRefreshTokenInAuthManager({
   refreshToken: string;
 }) {
   try {
-    const response = await fetch(`${config.AUTH_MANAGER_URI}/refresh-token`, {
+    const response = await fetch(`${config.AUTH_MANAGER_URL}/refresh-token`, {
       method: 'post',
       headers: {
         'content-type': 'application/json',

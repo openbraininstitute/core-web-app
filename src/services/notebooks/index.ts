@@ -72,14 +72,11 @@ export async function startNotebook(
       },
     },
   };
-  const res = await authFetch(
-    `${config.NOTEBOOK_SERVICE_BASE_URL}/analysis_notebook_template/start`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(request),
-    }
-  );
+  const res = await authFetch(`${config.NOTEBOOK_API_URL}/analysis_notebook_template/start`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
 
   if (!res.ok) {
     if (res.status === 460) {
@@ -140,7 +137,7 @@ export async function startEmptyNotebook(
       },
     },
   };
-  const res = await authFetch(`${config.NOTEBOOK_SERVICE_BASE_URL}/empty/start`, {
+  const res = await authFetch(`${config.NOTEBOOK_API_URL}/empty/start`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),

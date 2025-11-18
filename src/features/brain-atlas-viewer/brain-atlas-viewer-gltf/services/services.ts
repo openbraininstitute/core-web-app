@@ -149,7 +149,7 @@ export async function getPointCouldData(annotationValue: number, accessToken: st
 
 async function actualGetPointCouldData(annotationValue: number, accessToken: string) {
   const time = performance.now();
-  const url = `${config.CELL_SVC_BASE_URL}/circuit?circuit_id=${encodeURIComponent(
+  const url = `${config.CELL_API_URL}/circuit?circuit_id=${encodeURIComponent(
     config.LEGACY_DEFAULT_CIRCUIT_ID || ''
   )}&region=${annotationValue}&how=arrow`;
   const rawData = await fetchPointCloud(url, accessToken);

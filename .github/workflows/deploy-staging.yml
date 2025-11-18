@@ -45,8 +45,7 @@ jobs:
       - name: Build a Docker image
         run: |
           docker build \
-            --build-arg DEPLOYMENT_ENV=staging \
-            --build-arg CORE_WEB_APP_VERSION=${{ steps.extract_version.outputs.version }} \
+            --build-arg APP_VERSION=${{ steps.extract_version.outputs.version }} \
             -t ${{ vars.PUBLICECR_URI }}:staging .
 
       - name: Publish To AWS ECR

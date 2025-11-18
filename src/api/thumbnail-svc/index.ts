@@ -38,7 +38,7 @@ function buildAssetUrl(
       },
     });
   }
-  return `${config.THUMBNAIL_GENERATION_BASE_URL}/core/${type}/preview${queryParams}`;
+  return `${config.THUMBNAIL_API_URL}/core/${type}/preview${queryParams}`;
 }
 
 export async function getPreviewBlob(
