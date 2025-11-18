@@ -4,19 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { DEFAULT_SECTION, ID_MENU, Section, SECTIONS } from './constants';
 import { EnumSection } from './sections/sections';
-import { config } from '@/config';
 import { isString } from '@/util/type-guards';
-
-/**
- * When an URL starts with a "/", that is an application page.
- * So we need to prepend the `basePath`.
- */
-export function sanitizeURL(url: string): string {
-  if (url.startsWith('/')) {
-    return `${config.BASE_PATH}${url}`;
-  }
-  return url;
-}
 
 export function getSection(slugOrIndex: string | EnumSection): Section {
   return isString(slugOrIndex) ? getSectionFromSlug(slugOrIndex) : getSectionFromIndex(slugOrIndex);
@@ -33,8 +21,7 @@ function getSectionFromIndex(index: EnumSection): Section {
 
 export function gotoSection(slugOrIndex: string | EnumSection) {
   const section = getSection(slugOrIndex);
-  const url = sanitizeURL(section.slug);
-  window.location.href = url;
+  window.location.href = section.slug;
 }
 
 function useResizeObserver(callback: ResizeObserverCallback): ResizeObserver {

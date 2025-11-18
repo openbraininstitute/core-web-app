@@ -11,7 +11,6 @@ export const serverSchema = z.object({
   GITHUB_TOKEN: z.string().optional(),
   AUTH_MANAGER_URI: z.string().url().optional(),
 
-  BASE_PATH: z.preprocess((basePath) => basePath ?? '', z.string()),
   CDN_URI: z.string().url().optional(),
   SENTRY_DSN: z.preprocess((sentryDsn) => sentryDsn || undefined, z.string().url().optional()),
   SENTRY_ORG: z.string().optional(),
@@ -48,7 +47,6 @@ export const serverSchema = z.object({
 // ! WARNING: clientSchema configurations are exposed in the browser.
 // ! Only add configurations that are safe to be public. NO SECRETS.
 export const clientSchema = serverSchema.pick({
-  BASE_PATH: true,
   CDN_URI: true,
   SENTRY_DSN: true,
   SENTRY_ORG: true,

@@ -8,7 +8,6 @@ const withBundleAnalyzer = NextBundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 });
 
-const basePath = process.env.BASE_PATH || '';
 const cdnUri = process.env.CDN_URI;
 const coreWebAppVersion = process.env.CORE_WEB_APP_VERSION;
 
@@ -72,7 +71,6 @@ const nextConfig = (phase: string): NextConfig => {
         canvas: './empty-module.ts',
       },
     },
-    basePath,
     devIndicators: process.env.NEXT_PUBLIC_NEXT_DEVTOOLS_POSITION
       ? {
           position:

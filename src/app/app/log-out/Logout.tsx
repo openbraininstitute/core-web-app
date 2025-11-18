@@ -7,7 +7,7 @@ import { config } from '@/config';
 
 export default function Logout() {
   useEffect(() => {
-    signOut({ callbackUrl: `${config.BASE_PATH}/` });
+    signOut({ callbackUrl: '/' });
   }, []);
 
   return (

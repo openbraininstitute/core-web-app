@@ -9,7 +9,7 @@ export default async function subscribeNewsletterHandler({
   name: string;
   tags: Array<string>;
 }) {
-  const response = await fetch(`${config.BASE_PATH}/api/newsletter`, {
+  const response = await fetch('/api/newsletter', {
     method: 'post',
     headers: {
       'Content-Type': 'application/json',

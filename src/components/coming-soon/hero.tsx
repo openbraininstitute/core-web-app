@@ -19,7 +19,7 @@ export default function Hero() {
           fill
           priority
           alt="coming-soon"
-          src={`${config.BASE_PATH}/images/coming-soon/background.webp`}
+          src={'/images/coming-soon/background.webp'}
           className="absolute inset-0 h-screen min-h-screen w-screen object-cover"
         />
         <video
