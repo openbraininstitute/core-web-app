@@ -147,8 +147,8 @@ importers:
         specifier: ^14.5.1
         version: 14.6.1(@testing-library/dom@10.4.0)
       '@tolokoban/tgd':
-        specifier: ^2.0.62
-        version: 2.0.62
+        specifier: ^2.0.65
+        version: 2.0.65
       '@types/d3':
         specifier: ^7.4.0
         version: 7.4.3
@@ -4600,8 +4600,8 @@ packages:
     peerDependencies:
       '@testing-library/dom': '>=7.21.4'
 
-  '@tolokoban/tgd@2.0.62':
-    resolution: {integrity: sha512-/vku0PW/XTJOSSA9JFRAdm8XqTglTE4Exjt1/JQCF7DdYK6xh/NModKR69b+kVCIucF8Uy0q5lIfuG3bt3cdqA==}
+  '@tolokoban/tgd@2.0.65':
+    resolution: {integrity: sha512-xE7BWGaRJIKGfpXPWWQF4JdUY/g9KiCDYxJmMu9PSepRULiK3QPN63AIntfq5HGSfl5nyVvHM+rNbYTqtUXP5Q==}
 
   '@tootallnate/once@2.0.0':
     resolution: {integrity: sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==}
@@ -17079,7 +17079,7 @@ snapshots:
     dependencies:
       '@testing-library/dom': 10.4.0
 
-  '@tolokoban/tgd@2.0.62':
+  '@tolokoban/tgd@2.0.65':
     dependencies:
       '@loaders.gl/core': 4.3.4
       '@loaders.gl/draco': 4.3.4(@loaders.gl/core@4.3.4)

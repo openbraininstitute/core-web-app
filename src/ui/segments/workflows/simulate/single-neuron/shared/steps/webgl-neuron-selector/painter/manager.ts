@@ -40,7 +40,8 @@ import { useAppNotification } from '@/components/notification';
 
 const PALETTE: string[] = [];
 PALETTE[StructureItemType.Axon] = '#07f';
-PALETTE[StructureItemType.Dendrite] = '#F44';
+PALETTE[StructureItemType.Dendrite] = '#F55';
+PALETTE[StructureItemType.BasalDendrite] = '#F33';
 PALETTE[StructureItemType.ApicalDendrite] = '#F8f';
 PALETTE[StructureItemType.Myelin] = `#778`;
 PALETTE[StructureItemType.Soma] = '#dde';
@@ -204,8 +205,11 @@ export class PainterManager {
     if (!morphology || JSON.stringify(this._morphology) !== JSON.stringify(morphology)) {
       this.lastCameraState = null;
     }
-
     this._morphology = morphology;
+    if (!morphology) return;
+
+    const structure = new Structure(morphology);
+    this.structure = structure;
     this.initialize();
   }
 
@@ -231,6 +235,7 @@ export class PainterManager {
   };
 
   delete() {
+    this.groupSynapses.delete();
     if (this.context) {
       this.context.delete();
       this.context = null;
@@ -304,21 +309,19 @@ export class PainterManager {
     context.paint();
   }
 
-  private initialize() {
-    const { canvas, morphology } = this;
-    if (!canvas || !morphology) return;
+  initialize({ preventDelete = false }: Partial<{ preventDelete: boolean }> = {}) {
+    const { canvas, morphology, structure } = this;
+    if (!canvas || !morphology || !structure) return;
 
-    if (this.context) {
-      this.context.eventPaint.removeListener(this.handlePaint);
-      this.context.delete();
-    }
-    if (this.cameraController) this.cameraController.detach();
-    this.groupSynapses.delete();
-    const structure = new Structure(morphology);
-    this.structure = structure;
+    if (!preventDelete) this.delete();
     const context = new TgdContext(canvas, {
       alpha: false,
       antialias: true,
+    });
+    console.log('NEW CONTEXT:', context.gl);
+    context.eventWebGLContextRestored.addListener((ctx) => {
+      ctx.delete();
+      globalThis.requestAnimationFrame(() => this.initialize({ preventDelete: true }));
     });
     context.eventPaint.addListener(this.handlePaint);
     this.context = context;
@@ -398,6 +401,7 @@ export class PainterManager {
   }
 
   private initCameraController(context: TgdContext, minZoom: number, maxZoom: number) {
+    if (this.cameraController) this.cameraController.detach();
     const cameraController = new TgdControllerCameraOrbit(context, {
       inertiaOrbit: 500,
       inertiaZoom: 250,
@@ -529,11 +533,13 @@ export function usePainterManager() {
     refPainter.current = new PainterManager();
   }
   React.useEffect(() => {
-    return () => {
-      const context = refPainter.current;
-      if (!context) return;
+    refPainter.current?.initialize();
 
-      context.delete();
+    return () => {
+      const painterManager = refPainter.current;
+      if (!painterManager) return;
+
+      painterManager.delete();
     };
   });
   return refPainter.current;

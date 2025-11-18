@@ -48,51 +48,58 @@ type WebglNeuronSelectorContentProps = WebglNeuronSelectorProps & {
   painterManager: PainterManager;
 };
 
-function WebglNeuronSelectorContent({
-  projectId,
-  virtualLabId,
-  meModelId,
-  sessionId,
-  painterManager,
-  disableElectrodes = false,
-  disableSynapses = false,
-}: WebglNeuronSelectorContentProps) {
-  usePainterController(painterManager, sessionId, disableElectrodes, disableSynapses);
-  const { loading, error } = useCleanMorphology(
-    painterManager,
-    meModelId,
+// eslint-disable-next-line react/display-name
+const WebglNeuronSelectorContent = React.memo(
+  ({
     projectId,
     virtualLabId,
-    sessionId
-  );
-  if (error) return <pre>{JSON.stringify(error, null, 2)}</pre>;
+    meModelId,
+    sessionId,
+    painterManager,
+    disableElectrodes = false,
+    disableSynapses = false,
+  }: WebglNeuronSelectorContentProps) => {
+    usePainterController(painterManager, sessionId, disableElectrodes, disableSynapses);
+    const { loading, error } = useCleanMorphology(
+      painterManager,
+      meModelId,
+      projectId,
+      virtualLabId,
+      sessionId
+    );
+    if (error) return <pre>{JSON.stringify(error, null, 2)}</pre>;
 
-  return (
-    <div className={styles.main}>
-      {loading ? (
-        <Loading />
-      ) : (
-        <>
-          <canvas
-            key="canvas"
-            ref={(canvas: HTMLCanvasElement | null) => {
-              painterManager.canvas = canvas;
-            }}
-          />
-          <HintPanel painterManager={painterManager} />
-          <header>
-            <ZoomSlider className={styles.zoomSlider} painterManager={painterManager} />
-            <ButtonResetCamera painterManager={painterManager} />
-          </header>
-          {!disableElectrodes && (
-            <LegendOverlay painterManager={painterManager} sessionId={sessionId} />
-          )}
-          <AddRecordingDialog painterManager={painterManager} sessionId={sessionId} />
-        </>
-      )}
-    </div>
-  );
-}
+    return (
+      <div className={styles.main}>
+        {loading ? (
+          <Loading />
+        ) : (
+          <>
+            <canvas
+              key="canvas"
+              ref={(canvas: HTMLCanvasElement | null) => {
+                painterManager.canvas = canvas;
+                painterManager.initialize();
+                return () => {
+                  painterManager.delete();
+                };
+              }}
+            />
+            <HintPanel painterManager={painterManager} />
+            <header>
+              <ZoomSlider className={styles.zoomSlider} painterManager={painterManager} />
+              <ButtonResetCamera painterManager={painterManager} />
+            </header>
+            {!disableElectrodes && (
+              <LegendOverlay painterManager={painterManager} sessionId={sessionId} />
+            )}
+            <AddRecordingDialog painterManager={painterManager} sessionId={sessionId} />
+          </>
+        )}
+      </div>
+    );
+  }
+);
 
 function Loading() {
   return (

@@ -14,7 +14,7 @@ import { MaterialIndex } from './material-index';
 export class OffscreenPainter {
   private readonly offscreenCanvas = new OffscreenCanvas(1, 1);
 
-  private readonly context: TgdContext;
+  private readonly offscreenContext: TgdContext;
 
   constructor(
     private readonly onscreenContext: TgdContext,
@@ -30,7 +30,7 @@ export class OffscreenPainter {
     context.camera.near = onscreenContext.camera.near;
     context.camera.far = onscreenContext.camera.far;
     context.camera.fromTransfo(onscreenContext.camera.transfo);
-    this.context = context;
+    this.offscreenContext = context;
     const segments = makeSegments(structure);
     context.add(
       new TgdPainterClear(context, { color: [0, 0, 0, 1], depth: 1 }),
@@ -50,7 +50,7 @@ export class OffscreenPainter {
   }
 
   getItemAt(xScreen: number, yScreen: number) {
-    const { structure, context } = this;
+    const { structure, offscreenContext: context } = this;
     const data = new Uint8Array(context.width * context.height * 4);
     context.gl.readPixels(
       0,
@@ -75,12 +75,12 @@ export class OffscreenPainter {
     const h = Math.ceil(canvas.height / 2);
     this.offscreenCanvas.width = w;
     this.offscreenCanvas.height = h;
-    this.context.camera.fromTransfo(this.onscreenContext.camera.transfo);
-    this.context.paint();
+    this.offscreenContext.camera.fromTransfo(this.onscreenContext.camera.transfo);
+    this.offscreenContext.paint();
   };
 
   delete() {
     this.onscreenContext.eventPaint.removeListener(this.paint);
-    this.context.delete();
+    this.offscreenContext.delete();
   }
 }
