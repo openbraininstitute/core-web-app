@@ -13,7 +13,10 @@ import type { ProjectPayload, Role } from '@/api/virtual-lab-svc/types';
 import type { WorkspaceContext } from '@/types/common';
 import type { ProjectResponse } from '@/types/virtual-lab/projects';
 
-const BASE_URL = `${config.VIRTUAL_LAB_API_URL}/virtual-labs`;
+function getBaseUrl() {
+  return `${config.VIRTUAL_LAB_API_URL}/virtual-labs`;
+}
+
 /**
  * Checks if a project with the given name already exists in a virtual lab.
  *
@@ -31,7 +34,7 @@ export async function checkProjectExists({
 }): Promise<boolean | null> {
   const session = await getSession();
   const response = await fetch(
-    `${BASE_URL}/${vlabId}/projects/_check?q=${encodeURIComponent(name)}`,
+    `${getBaseUrl()}/${vlabId}/projects/_check?q=${encodeURIComponent(name)}`,
     {
       method: 'get',
       headers: {
@@ -54,7 +57,7 @@ export async function createProject(
   { name, description, include_members }: ProjectPayload
 ): Promise<ProjectCreationResponse> {
   const session = await getSession();
-  const response = await fetch(`${BASE_URL}/${virtualLabId}/projects`, {
+  const response = await fetch(`${getBaseUrl()}/${virtualLabId}/projects`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -96,13 +99,16 @@ export async function listProjects({
 }): Promise<VlmProjectsResponse> {
   const session = await getSession();
 
-  const response = await fetch(`${BASE_URL}/${virtualLabId}/projects?page=${page}&size=${size}`, {
-    method: 'get',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
-    },
-  });
+  const response = await fetch(
+    `${getBaseUrl()}/${virtualLabId}/projects?page=${page}&size=${size}`,
+    {
+      method: 'get',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session?.accessToken}`,
+      },
+    }
+  );
 
   if (!response.ok) {
     throw new Error(`Fetching projects failed`, { cause: await response.json() });
@@ -132,16 +138,19 @@ export async function attachUsersToProject({
 }): Promise<VlmAttachUsersToProjectResponse> {
   const session = await getSession();
 
-  const response = await fetch(`${BASE_URL}/${virtualLabId}/projects/${projectId}/users/attach`, {
-    method: 'post',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
-    },
-    body: JSON.stringify({
-      users,
-    }),
-  });
+  const response = await fetch(
+    `${getBaseUrl()}/${virtualLabId}/projects/${projectId}/users/attach`,
+    {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session?.accessToken}`,
+      },
+      body: JSON.stringify({
+        users,
+      }),
+    }
+  );
 
   if (!response.ok) {
     throw new Error(`Attaching users to project failed`, { cause: await response.json() });

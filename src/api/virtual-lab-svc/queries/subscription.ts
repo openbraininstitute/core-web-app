@@ -16,7 +16,9 @@ import {
   UserActiveSubscriptionResponse,
 } from '@/api/virtual-lab-svc/queries/types';
 
-const BASE_URL = `${config.VIRTUAL_LAB_API_URL}/subscriptions`;
+function getBaseUrl() {
+  return `${config.VIRTUAL_LAB_API_URL}/subscriptions`;
+}
 
 /**
  * creates a new subscription for a virtual lab.
@@ -29,7 +31,7 @@ export async function createSubscription(
   payload: CreateSubscriptionRequest
 ): Promise<CreateSubscriptionResponse | null> {
   const session = await getSession();
-  const response = await fetch(BASE_URL, {
+  const response = await fetch(getBaseUrl(), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -59,7 +61,7 @@ export async function cancelSubscription(
   request: CancelSubscriptionRequest
 ): Promise<CancelSubscriptionResponse | null> {
   const session = await getSession();
-  const response = await fetch(`${BASE_URL}`, {
+  const response = await fetch(getBaseUrl(), {
     method: 'delete',
     headers: {
       'Content-Type': 'application/json',
@@ -86,7 +88,7 @@ export async function cancelSubscription(
  */
 export async function listSubscriptionTiers(): Promise<SubscriptionTiersResponse | null> {
   const session = await getSession();
-  const response = await fetch(`${BASE_URL}/tiers`, {
+  const response = await fetch(`${getBaseUrl()}/tiers`, {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${session?.accessToken}`,
@@ -110,7 +112,7 @@ export async function listSubscriptionTiers(): Promise<SubscriptionTiersResponse
  */
 export async function getUserActiveSubscription(): Promise<UserActiveSubscriptionResponse | null> {
   const session = await getSession();
-  const response = await fetch(`${BASE_URL}/active`, {
+  const response = await fetch(`${getBaseUrl()}/active`, {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${session?.accessToken}`,
@@ -139,7 +141,7 @@ export async function getUserActiveSubscription(): Promise<UserActiveSubscriptio
  */
 export async function listUserSubscriptionsHistory(): Promise<UserSubscriptionsResponse | null> {
   const session = await getSession();
-  const response = await fetch(`${BASE_URL}/history`, {
+  const response = await fetch(`${getBaseUrl()}/history`, {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${session?.accessToken}`,

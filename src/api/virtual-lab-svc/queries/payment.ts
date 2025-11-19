@@ -8,10 +8,13 @@ import {
 } from '@/api/virtual-lab-svc/queries/types';
 import { config } from '@/config';
 
-const { VIRTUAL_LAB_API_URL } = config;
+function getPaymentsPrl() {
+  return `${config.VIRTUAL_LAB_API_URL}/payments`;
+}
 
-const BASE_URL = `${VIRTUAL_LAB_API_URL}/payments`;
-const SUBSCRIPTIONS_URL = `${VIRTUAL_LAB_API_URL}/subscriptions`;
+function getSubscriptionUrl() {
+  return `${config.VIRTUAL_LAB_API_URL}/subscriptions`;
+}
 
 /**
  * Lists subscriptions with optional filtering.
@@ -25,7 +28,7 @@ const SUBSCRIPTIONS_URL = `${VIRTUAL_LAB_API_URL}/subscriptions`;
  */
 export async function getSetupIntent(): Promise<SetupIntentResponse> {
   const session = await getSession();
-  const url = `${BASE_URL}/setup-intent`;
+  const url = `${getPaymentsPrl()}/setup-intent`;
   const response = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
@@ -52,7 +55,7 @@ export async function createStandalonePayment(
   payload: StandalonePaymentRequest
 ): Promise<StandalonePaymentResponse> {
   const session = await getSession();
-  const response = await fetch(`${BASE_URL}/standalone`, {
+  const response = await fetch(`${getPaymentsPrl()}/standalone`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -90,7 +93,7 @@ export async function listStandalonePayments({
   const session = await getSession();
 
   // Build the URL with query parameters
-  const url = new URL(`${SUBSCRIPTIONS_URL}/payments`);
+  const url = new URL(`${getSubscriptionUrl()}/payments`);
   url.searchParams.append('payment_type', 'standalone');
   url.searchParams.append('page', page.toString());
   url.searchParams.append('page_size', pageSize.toString());

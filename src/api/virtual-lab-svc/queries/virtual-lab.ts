@@ -13,7 +13,9 @@ import { config } from '@/config';
 
 import type { VlmResponse } from '@/types/virtual-lab/common';
 
-const BASE_URL = `${config.VIRTUAL_LAB_API_URL}/virtual-labs`;
+function getBaseUrl() {
+  return `${config.VIRTUAL_LAB_API_URL}/virtual-labs`;
+}
 
 /**
  * Checks if a virtual lab with the given name already exists.
@@ -25,7 +27,7 @@ const BASE_URL = `${config.VIRTUAL_LAB_API_URL}/virtual-labs`;
 export async function checkVirtualLabExists({ name }: { name: string }): Promise<boolean | null> {
   try {
     const session = await getSession();
-    const response = await fetch(`${BASE_URL}/_check?q=${encodeURIComponent(name)}`, {
+    const response = await fetch(`${getBaseUrl()}/_check?q=${encodeURIComponent(name)}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -55,7 +57,7 @@ export async function checkVirtualLabExists({ name }: { name: string }): Promise
  */
 export async function createVirtualLab({ ...lab }: VirtualLabPayload): Promise<VirtualLabResponse> {
   const session = await getSession();
-  const response = await fetch(BASE_URL, {
+  const response = await fetch(getBaseUrl(), {
     method: 'post',
     headers: {
       'Content-Type': 'application/json',
@@ -100,7 +102,7 @@ export async function listVirtualLabs({
   for (const item of include) {
     params.append('include', item);
   }
-  const url = `${BASE_URL}?${params.toString()}`;
+  const url = `${getBaseUrl()}?${params.toString()}`;
 
   const response = await fetch(url, {
     method: 'get',
@@ -131,7 +133,7 @@ export async function listVirtualLabs({
  */
 export async function getVirtualLab(id: string): Promise<VirtualLabResponse> {
   const session = await getSession();
-  const response = await fetch(`${BASE_URL}/${id}`, {
+  const response = await fetch(`${getBaseUrl()}/${id}`, {
     method: 'get',
     headers: {
       'Content-Type': 'application/json',
@@ -157,7 +159,7 @@ export interface VirtualLabUpdate {
 /**
  * Update a Virtual Lab by sending a PATCH request to the virtual lab service.
  *
- * Sends a JSON PATCH request to `${BASE_URL}/virtual-lab/{virtualLabId}` using the
+ * Sends a JSON PATCH request to `${getBaseUrl()}/virtual-lab/{virtualLabId}` using the
  * configured virtual lab API client. The provided `updatePayload` is stringified
  * and sent as the request body with `Content-Type: application/json`.
  *

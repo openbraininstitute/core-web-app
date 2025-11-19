@@ -1,9 +1,10 @@
 .PHONY: build run stop clean
 
 COMMIT_SHA := $(shell git rev-parse --short=8 HEAD)
+APP_VERSION := $(shell git describe --tags --always --dirty)
 
 
-COMPOSE_FILE := docker-compose.dev.yml
+COMPOSE_FILE := docker-compose.yml
 
 
 all: build

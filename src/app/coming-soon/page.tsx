@@ -9,6 +9,8 @@ import Hero from '@/components/coming-soon/hero';
 import useFullHeight from '@/hooks/useFullHeight';
 import { classNames } from '@/util/utils';
 
+export const dynamic = 'force-dynamic';
+
 export default function Page() {
   const height = useFullHeight();
   const [hydrated, setHydrated] = useState(false);

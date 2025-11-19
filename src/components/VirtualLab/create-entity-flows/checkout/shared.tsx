@@ -179,7 +179,7 @@ const renameAndRemove = (arr: Array<any>, oldKey: string, newKey: string) =>
 export async function getAllTiers(): Promise<Array<ExtendedTier>> {
   const [appTiers, sanityTiers] = await Promise.all([
     listSubscriptionTiers(),
-    getSanityTiers({ next: { revalidate: 3600 } }),
+    getSanityTiers()({ next: { revalidate: 3600 } }),
   ]);
   if (!appTiers || !sanityTiers) {
     throw new Error('Tiers can not be fetched');

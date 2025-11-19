@@ -1,5 +1,7 @@
 import { getVersionInfo } from '@/utils/version-info';
 
+export const dynamic = 'force-dynamic';
+
 export default async function VersionPage() {
   const versionInfo = getVersionInfo();
 

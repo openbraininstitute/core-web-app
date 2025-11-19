@@ -11,7 +11,9 @@ import type {
 } from '@/api/virtual-lab-svc/queries/types';
 import type { WorkspaceContext } from '@/types/common';
 
-const BASE_URL = `${config.VIRTUAL_LAB_API_URL}/users`;
+function getBaseUrl() {
+  return `${config.VIRTUAL_LAB_API_URL}/users`;
+}
 
 /**
  * get the profile information for the authenticated user
@@ -20,7 +22,7 @@ const BASE_URL = `${config.VIRTUAL_LAB_API_URL}/users`;
  */
 export const getUserProfile = async (): Promise<{ profile: UserProfileResponse } | null> => {
   const session = await getSession();
-  const response = await fetch(`${BASE_URL}/profile`, {
+  const response = await fetch(`${getBaseUrl()}/profile`, {
     method: 'get',
     headers: {
       'Content-Type': 'application/json',
@@ -46,7 +48,7 @@ export const updateUserProfile = async (
   payload: UpdateUserProfileRequest
 ): Promise<{ profile: UserProfileResponse } | null> => {
   const session = await getSession();
-  const response = await fetch(`${BASE_URL}/profile`, {
+  const response = await fetch(`${getBaseUrl()}/profile`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
@@ -81,7 +83,7 @@ export const updateUserProfile = async (
  */
 export const getUserGroups = async (): Promise<VlmUserGroupsResponse> => {
   const session = await getSession();
-  const response = await fetch(`${BASE_URL}/groups`, {
+  const response = await fetch(`${getBaseUrl()}/groups`, {
     method: 'GET',
     headers: {
       accept: 'application/json',
