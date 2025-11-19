@@ -22,84 +22,83 @@ export interface WebglNeuronSelectorProps {
   disableSynapses?: boolean;
 }
 
-export function WebglNeuronSelector({
-  projectId,
-  virtualLabId,
-  meModelId,
-  sessionId,
-  disableElectrodes,
-  disableSynapses,
-}: WebglNeuronSelectorProps) {
-  const painterManager = usePainterManager();
-  return (
-    <WebglNeuronSelectorContent
-      painterManager={painterManager}
-      projectId={projectId}
-      virtualLabId={virtualLabId}
-      meModelId={meModelId}
-      sessionId={sessionId}
-      disableElectrodes={disableElectrodes}
-      disableSynapses={disableSynapses}
-    />
-  );
-}
-
-type WebglNeuronSelectorContentProps = WebglNeuronSelectorProps & {
-  painterManager: PainterManager;
-};
-
 // eslint-disable-next-line react/display-name
-const WebglNeuronSelectorContent = React.memo(
+export const WebglNeuronSelector = React.memo(
   ({
     projectId,
     virtualLabId,
     meModelId,
     sessionId,
-    painterManager,
-    disableElectrodes = false,
-    disableSynapses = false,
-  }: WebglNeuronSelectorContentProps) => {
-    usePainterController(painterManager, sessionId, disableElectrodes, disableSynapses);
-    const { loading, error } = useCleanMorphology(
-      painterManager,
-      meModelId,
-      projectId,
-      virtualLabId,
-      sessionId
-    );
-    if (error) return <pre>{JSON.stringify(error, null, 2)}</pre>;
-
+    disableElectrodes,
+    disableSynapses,
+  }: WebglNeuronSelectorProps) => {
+    const painterManager = usePainterManager();
     return (
-      <div className={styles.main}>
-        {loading ? (
-          <Loading />
-        ) : (
-          <>
-            <canvas
-              key="canvas"
-              ref={(canvas: HTMLCanvasElement | null) => {
-                painterManager.canvas = canvas;
-                painterManager.initialize();
-                return () => {
-                  painterManager.delete();
-                };
-              }}
-            />
-            <HintPanel painterManager={painterManager} />
-            <header>
-              <ZoomSlider className={styles.zoomSlider} painterManager={painterManager} />
-              <ButtonResetCamera painterManager={painterManager} />
-            </header>
-            {!disableElectrodes && (
-              <LegendOverlay painterManager={painterManager} sessionId={sessionId} />
-            )}
-            <AddRecordingDialog painterManager={painterManager} sessionId={sessionId} />
-          </>
-        )}
-      </div>
+      <WebglNeuronSelectorContent
+        painterManager={painterManager}
+        projectId={projectId}
+        virtualLabId={virtualLabId}
+        meModelId={meModelId}
+        sessionId={sessionId}
+        disableElectrodes={disableElectrodes}
+        disableSynapses={disableSynapses}
+      />
     );
   }
 );
+
+type WebglNeuronSelectorContentProps = WebglNeuronSelectorProps & {
+  painterManager: PainterManager;
+};
+
+function WebglNeuronSelectorContent({
+  projectId,
+  virtualLabId,
+  meModelId,
+  sessionId,
+  painterManager,
+  disableElectrodes = false,
+  disableSynapses = false,
+}: WebglNeuronSelectorContentProps) {
+  usePainterController(painterManager, sessionId, disableElectrodes, disableSynapses);
+  const { loading, error } = useCleanMorphology(
+    painterManager,
+    meModelId,
+    projectId,
+    virtualLabId,
+    sessionId
+  );
+  if (error) return <pre>{JSON.stringify(error, null, 2)}</pre>;
+
+  return (
+    <div className={styles.main}>
+      {loading ? (
+        <Loading />
+      ) : (
+        <>
+          <canvas
+            key="canvas"
+            ref={(canvas: HTMLCanvasElement | null) => {
+              painterManager.canvas = canvas;
+              return () => {
+                painterManager.canvas = null;
+              };
+            }}
+          />
+          <HintPanel painterManager={painterManager} />
+          <header>
+            <ZoomSlider className={styles.zoomSlider} painterManager={painterManager} />
+            <ButtonResetCamera painterManager={painterManager} />
+          </header>
+          {!disableElectrodes && (
+            <LegendOverlay painterManager={painterManager} sessionId={sessionId} />
+          )}
+          <AddRecordingDialog painterManager={painterManager} sessionId={sessionId} />
+        </>
+      )}
+    </div>
+  );
+}
 
 function Loading() {
   return (

@@ -3,11 +3,12 @@ import {
   TgdCameraPerspective,
   TgdContext,
   TgdPainterClear,
+  TgdPainterGroup,
   TgdPainterSegments,
   TgdPainterState,
   webglPresetDepth,
 } from '@tolokoban/tgd';
-import { Structure } from '../structure';
+import { Structure, StructureItem } from '../structure';
 import { makeSegments } from '../segments';
 import { MaterialIndex } from './material-index';
 
@@ -16,10 +17,11 @@ export class OffscreenPainter {
 
   private readonly offscreenContext: TgdContext;
 
-  constructor(
-    private readonly onscreenContext: TgdContext,
-    private readonly structure: Structure
-  ) {
+  private _structure: Structure | null = null;
+
+  private readonly group = new TgdPainterGroup();
+
+  constructor(private readonly onscreenContext: TgdContext) {
     onscreenContext.eventPaint.addListener(this.paint);
     const context = new TgdContext(this.offscreenCanvas, {
       preserveDrawingBuffer: true,
@@ -31,26 +33,42 @@ export class OffscreenPainter {
     context.camera.far = onscreenContext.camera.far;
     context.camera.fromTransfo(onscreenContext.camera.transfo);
     this.offscreenContext = context;
-    const segments = makeSegments(structure);
-    context.add(
-      new TgdPainterClear(context, { color: [0, 0, 0, 1], depth: 1 }),
-      new TgdPainterState(context, {
-        depth: webglPresetDepth.lessOrEqual,
-        children: [
-          new TgdPainterSegments(context, {
-            roundness: 3,
-            minRadius: 4,
-            makeDataset: segments.makeDataset,
-            material: new MaterialIndex(),
-          }),
-        ],
-      })
-    );
+    context.add(this.group);
     this.paint();
   }
 
-  getItemAt(xScreen: number, yScreen: number) {
+  get structure() {
+    return this._structure;
+  }
+
+  set structure(value: Structure | null) {
+    if (value === this._structure) return;
+
+    this._structure = value;
+    this.group.delete();
+    if (value) {
+      const segments = makeSegments(value);
+      const context = this.offscreenContext;
+      this.group.add(
+        new TgdPainterClear(context, { color: [0, 0, 0, 1], depth: 1 }),
+        new TgdPainterState(context, {
+          depth: webglPresetDepth.lessOrEqual,
+          children: [
+            new TgdPainterSegments(context, {
+              roundness: 3,
+              minRadius: 4,
+              makeDataset: segments.makeDataset,
+              material: new MaterialIndex(),
+            }),
+          ],
+        })
+      );
+    }
+  }
+
+  getItemAt(xScreen: number, yScreen: number): StructureItem | null {
     const { structure, offscreenContext: context } = this;
+    if (!structure) return null;
     const data = new Uint8Array(context.width * context.height * 4);
     context.gl.readPixels(
       0,
