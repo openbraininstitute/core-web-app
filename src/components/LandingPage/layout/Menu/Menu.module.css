@@ -43,9 +43,16 @@
   justify-content: flex-end;
   align-items: flex-start;
   line-height: 2;
+  position: relative;
 }
 
-.menuContainer div.items a {
+.menuItemContainer {
+  position: relative;
+  margin: 0;
+  padding: 0;
+}
+
+.menuLink {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -53,9 +60,11 @@
   gap: 6px;
   margin: 0;
   padding: 0 1em;
+  text-decoration: none;
+  color: inherit;
 }
 
-.menuContainer div.items a::after {
+.menuLink::after {
   content: '';
   display: block;
   height: 4px;
@@ -66,29 +75,139 @@
   transition: all 0.5s;
 }
 
-.menuContainer div.items a:hover::after {
+.menuLink:hover::after {
   opacity: 0.5;
 }
 
-.menuContainer div.items a.selected::after {
+.menuLink.selected::after {
   opacity: 1;
 }
 
-.menuContainer div.items a.loginButton::after {
-  display: none;
+.menuItemWithSubmenu {
+  position: relative;
 }
 
-.menuContainer div.items a.loginButton {
-  border: 1px solid currentColor;
-  border-radius: 4px;
-  color: var(--color-primary);
+.menuButton {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0 1em;
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.menuButtonContent {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chevron {
+  margin-left: 4px;
+  font-size: 0.75em;
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
+  opacity: 0.5;
+  transform: rotate(90deg);
+}
+
+.menuItemWithSubmenu:hover .chevron {
+  transform: rotate(-90deg);
+  opacity: 1;
+}
+
+.menuButton::after {
+  content: '';
+  display: block;
+  height: 4px;
+  width: 48px;
   background-color: #fffe;
-  transition: all 0.6s;
+  border-radius: 999vmax;
+  opacity: 0;
+  transition: all 0.5s;
 }
 
-.menuContainer div.items a.loginButton:hover {
-  background-color: var(--color-primary);
-  color: #fffe;
+.menuItemWithSubmenu:hover .menuButton::after {
+  opacity: 0.5;
+}
+
+.menuButton.selected::after {
+  opacity: 1;
+}
+
+.submenu {
+  position: absolute;
+  top: calc(100% - 4px);
+  left: 0;
+  padding-left: 18px;
+  padding-top: 4px;
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  opacity: 0;
+  transform: translateX(20px);
+  pointer-events: none;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+.submenuVisible {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.submenuItem {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+  opacity: 0;
+  padding-bottom: 4px;
+  transform: translateX(20px);
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease,
+    background-color 0.2s ease;
+}
+
+.submenuVisible .submenuItem {
+  opacity: 1;
+  transform: translateX(0);
+  animation: slideInFromRight 0.3s ease forwards;
+}
+
+.submenuItem:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.submenuItem:nth-child(2) {
+  animation-delay: 0.05s;
+}
+
+.submenuItem:nth-child(3) {
+  animation-delay: 0.1s;
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .menuContainer > div.hamburger {
