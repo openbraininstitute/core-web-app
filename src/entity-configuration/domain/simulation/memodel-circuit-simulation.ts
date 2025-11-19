@@ -27,6 +27,8 @@ import {
 } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { WorkspaceContext } from '@/types/common';
 
+const ENTITY_TYPE = SimulationCampaignEntityTypeDict.memodel;
+
 export async function resolveExecutions({
   context,
   allSimIds,
@@ -70,7 +72,7 @@ async function resolveSimulationCampaigns({
   const source = await getCircuitSimulationCampaigns({
     context,
     withFacets,
-    filters: { ...filters, entity__type: SimulationCampaignEntityTypeDict.memodel },
+    filters: { ...filters, entity__type: ENTITY_TYPE },
   });
 
   // extract all simulation IDs
@@ -161,6 +163,18 @@ export const MEModelCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCa
   api: {
     config: { allowedFacets: true },
     query: {
+      count: (...params) => {
+        const filters = discardBrainRegionQueryParams(params[0].filters);
+        return getCircuitSimulationCampaigns({
+          ...params,
+          context: params[0].context,
+          withFacets: params[0].withFacets,
+          filters: {
+            ...filters,
+            entity__type: ENTITY_TYPE,
+          },
+        });
+      },
       list: (params: Parameters<typeof resolveSimulationCampaigns>[0]) =>
         resolveSimulationCampaigns(params),
       one: getCircuitSimulationCampaign,

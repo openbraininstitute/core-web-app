@@ -1,6 +1,6 @@
 'use client';
 
-import { parseAsString, type Parser, useQueryState } from 'nuqs';
+import { parseAsString, SingleParserBuilder, useQueryState } from 'nuqs';
 import { match } from 'ts-pattern';
 
 import { Menu as ResultMenu } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/results-menu';
@@ -36,7 +36,9 @@ export function MenuSelector({ sessionId, synaptome, memodel, type }: Props) {
         clearOnDefault: false,
         shallow: true,
       })
-      .withDefault(WorkflowSimulatePanels.Configuration) as Parser<WorkflowSimulatePanelKeys>
+      .withDefault(
+        WorkflowSimulatePanels.Configuration
+      ) as SingleParserBuilder<WorkflowSimulatePanelKeys>
   );
 
   const MenuWrapper = match({ panelId, type })

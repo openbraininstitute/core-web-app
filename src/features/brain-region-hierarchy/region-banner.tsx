@@ -26,9 +26,10 @@ export function RegionBanner({ view, onSwitchView }: Props) {
   if (!selectedBrainRegion)
     return (
       <div className="relative mb-2 px-2 py-4">
-        <div className="shine h-10 rounded-full bg-gray-100" />
+        <div className="h-12 animate-pulse rounded-full bg-gray-100" />
       </div>
     );
+
   return (
     <div
       id="brain-region-entities-switcher"
@@ -61,7 +62,7 @@ export function RegionBanner({ view, onSwitchView }: Props) {
                   className="block h-3! w-3! min-w-3! rounded-full"
                   style={{ backgroundColor: `#${selectedBrainRegion.color_hex_triplet}` }}
                 />
-                <span className="line-clamp-2 text-lg leading-5 font-bold">
+                <span className="line-clamp-2 text-lg leading-6 font-bold">
                   {selectedBrainRegion.name}
                 </span>
               </div>

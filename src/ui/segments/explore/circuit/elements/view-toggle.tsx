@@ -1,4 +1,4 @@
-import { parseAsString, Parser, useQueryState } from 'nuqs';
+import { parseAsString, SingleParserBuilder, useQueryState } from 'nuqs';
 import { Tooltip } from 'antd';
 
 import { CircuitView, TCircuitView } from '@/ui/segments/explore/circuit/helpers';
@@ -10,7 +10,7 @@ export function CircuitViewToggle() {
     'view',
     parseAsString
       .withDefault(CircuitView.Hierarchy)
-      .withOptions({ shallow: true, clearOnDefault: false }) as Parser<TCircuitView>
+      .withOptions({ shallow: true, clearOnDefault: false }) as SingleParserBuilder<TCircuitView>
   );
 
   const handleViewChange = () => {
