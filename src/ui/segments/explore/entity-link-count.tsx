@@ -1,6 +1,5 @@
-import { kebabCase, isNil, get } from 'es-toolkit/compat';
-import { useQueries } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
+import { kebabCase } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { match } from 'ts-pattern';
@@ -11,24 +10,23 @@ import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { BrowseLink } from '@/ui/segments/explore/browse-link';
 import { useTabs } from '@/components/detail-view-tabs';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { keyBuilder } from '@/ui/use-query-keys/data';
+import { useFlags } from '@/features/feature-flags';
 import {
   brainRegionBasicCellGroupsRegionsHierarchyAtom,
   useGetSelectedBrainRegion,
 } from '@/features/brain-region-hierarchy/context';
+import { WorkspaceContext } from '@/types/common';
 import { WorkspaceScope } from '@/constants';
 import {
   ExperimentalEntitiesTileTypes,
   ModelEntitiesTileTypes,
   SimulationEntitiesTileTypes,
-  getSimulationsCount,
-  getAllEntitiesCountScoped,
 } from '@/ui/segments/explore/helpers';
 import { cn } from '@/utils/css-class';
 import { ROOT_ROUTE } from '@/config';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { type TWorkspaceScope } from '@/constants';
-import { useFlags } from '@/features/feature-flags';
 
 export const ExploreDataTypeTabs = {
   Experimental: 'experimental',
@@ -55,6 +53,14 @@ export const tabsConfigItems: Array<{
   },
 ];
 
+function buildUrl({
+  virtualLabId,
+  projectId,
+  extendedType,
+}: WorkspaceContext & { extendedType: TExtendedEntitiesTypeDict }) {
+  return `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(extendedType)}`;
+}
+
 export function EntityLinkCount() {
   const featureFlags = useFlags();
 
@@ -73,160 +79,68 @@ export function EntityLinkCount() {
     shallow: true,
   });
 
-  const params = {
-    virtualLabId,
-    projectId,
-    brainRegionId: selectedBrainRegion?.id!,
-    scope,
-  };
-
-  const [
-    { isLoading: allLoading, data: allData },
-    { isLoading: simsLoading, data: simsData },
-    { isLoading: rootLoading, data: rootData },
-  ] = useQueries({
-    queries: [
-      {
-        queryKey: keyBuilder.dataCount({ ...params }),
-        queryFn: () => getAllEntitiesCountScoped({ ...params }),
-        enabled: Boolean(selectedBrainRegion?.id),
-      },
-      {
-        queryKey: keyBuilder.userSimulationsCount({ ...params }),
-        queryFn: () =>
-          getSimulationsCount({
-            ...params,
-          }),
-        enabled: Boolean(selectedBrainRegion?.id),
-      },
-      {
-        queryKey: keyBuilder.dataCount({ ...params, brainRegionId: brainRegionHierarchy?.root.id }),
-        queryFn: () =>
-          getAllEntitiesCountScoped({ ...params, brainRegionId: brainRegionHierarchy?.root.id! }),
-        enabled: Boolean(brainRegionHierarchy?.root.id),
-      },
-    ],
-  });
-
-  const experimentalState = useMemo(
-    () => [
-      ...Object.values(ExperimentalEntitiesTileTypes)
-        .filter(
-          (config) =>
-            !config.requiredFeatures ||
-            config.requiredFeatures.every((flag) => featureFlags?.[flag])
-        )
-        .map((config) => {
-          return { ...config, isLoading: allLoading || rootLoading };
-        }),
-    ],
-    [allLoading, rootLoading, featureFlags]
+  const experimental = Object.values(ExperimentalEntitiesTileTypes).filter(
+    (config) =>
+      !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
   );
-
-  const modelState = useMemo(
-    () => [
-      ...Object.values(ModelEntitiesTileTypes)
-        .filter(
-          (config) =>
-            !config.requiredFeatures ||
-            config.requiredFeatures.every((flag) => featureFlags?.[flag])
-        )
-        .map((config) => ({
-          ...config,
-          isLoading: allLoading || rootLoading,
-        })),
-    ],
-    [allLoading, rootLoading, featureFlags]
+  const models = Object.values(ModelEntitiesTileTypes).filter(
+    (config) =>
+      !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
   );
-
-  const simulationState = useMemo(
-    () => [
-      ...Object.values(SimulationEntitiesTileTypes)
-        .filter(
-          (config) =>
-            !config.requiredFeatures ||
-            config.requiredFeatures.every((flag) => featureFlags?.[flag])
-        )
-        .map((config) => ({
-          ...config,
-          isLoading: simsLoading,
-        })),
-    ],
-    [simsLoading, featureFlags]
+  const simulations = Object.values(SimulationEntitiesTileTypes).filter(
+    (config) =>
+      !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
   );
 
   const content = match(activeTab)
-    .with(ExploreDataTypeTabs.Experimental, () => (
-      <>
-        {experimentalState.map((value) => {
-          const count: number | null = get(allData, value.extendedType, null);
-          const rootCount: number | null = get(rootData, value.extendedType, null);
-          const link = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(value.extendedType)}`;
-
-          return (
-            <BrowseLink
-              key={`link-${value.title}/${value.type}`}
-              href={link}
-              type={value.extendedType}
-              title={value.title}
-              count={
-                <span className="flex items-center justify-center gap-1">
-                  <span className="font-bold">{count}</span> <span className="font-light">of</span>
-                  <span className="font-bold">{rootCount}</span>
-                </span>
-              }
-              isLoading={value.isLoading || isNil(count) || isNil(rootCount)}
-              isUploadable={value.isUploadable}
-            />
-          );
-        })}
-      </>
-    ))
-    .with(ExploreDataTypeTabs.Models, () => (
-      <>
-        {modelState.map((value) => {
-          const count = get(allData, value.extendedType, null);
-          const rootCount: number | null = get(rootData, value.extendedType, null);
-          const link = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(value.extendedType)}`;
-          return (
-            <BrowseLink
-              key={`link-${value.title}/${value.type}`}
-              href={link}
-              type={value.extendedType}
-              title={value.title}
-              count={
-                <span className="flex items-center justify-center gap-1">
-                  <span className="font-bold">{count}</span> <span className="font-light">of</span>
-                  <span className="font-bold">{rootCount}</span>
-                </span>
-              }
-              isLoading={value.isLoading || isNil(count) || isNil(rootCount)}
-              isUploadable={value.isUploadable}
-            />
-          );
-        })}
-      </>
-    ))
-    .with(ExploreDataTypeTabs.Simulations, () => (
-      <>
-        {simulationState.map((value) => {
-          const count = get(simsData, value.extendedType, null);
-          const link = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(value.extendedType)}`;
-
-          return (
-            <BrowseLink
-              key={`link-${value.title}/${value.type}`}
-              href={link}
-              type={value.extendedType}
-              title={value.title}
-              count={<span className="font-bold">{count}</span>}
-              isLoading={value.isLoading || isNil(count)}
-              isUploadable={value.isUploadable}
-            />
-          );
-        })}
-      </>
-    ))
+    .with(ExploreDataTypeTabs.Experimental, () =>
+      experimental.map((value) => {
+        const link = buildUrl({ virtualLabId, projectId, extendedType: value.extendedType });
+        return (
+          <BrowseLink
+            enabled
+            key={`link-${value.title}/${value.type}`}
+            href={link}
+            scope={scope}
+            extendedType={value.extendedType}
+            currentBrainRegionId={selectedBrainRegion?.id}
+            defaultBrainRegionId={brainRegionHierarchy?.root.id}
+          />
+        );
+      })
+    )
+    .with(ExploreDataTypeTabs.Models, () =>
+      models.map((value) => {
+        const link = buildUrl({ virtualLabId, projectId, extendedType: value.extendedType });
+        return (
+          <BrowseLink
+            enabled
+            key={`link-${value.title}/${value.type}`}
+            href={link}
+            extendedType={value.extendedType}
+            scope={scope}
+            currentBrainRegionId={selectedBrainRegion?.id}
+            defaultBrainRegionId={brainRegionHierarchy?.root.id}
+          />
+        );
+      })
+    )
+    .with(ExploreDataTypeTabs.Simulations, () =>
+      simulations.map((value) => {
+        const link = buildUrl({ virtualLabId, projectId, extendedType: value.extendedType });
+        return (
+          <BrowseLink
+            enabled={scope === WorkspaceScope.Project}
+            key={`link-${value.title}/${value.type}`}
+            href={link}
+            scope={scope}
+            extendedType={value.extendedType}
+            currentBrainRegionId={selectedBrainRegion?.id}
+            defaultBrainRegionId={brainRegionHierarchy?.root.id}
+          />
+        );
+      })
+    )
     .otherwise(() => null);
 
   return (

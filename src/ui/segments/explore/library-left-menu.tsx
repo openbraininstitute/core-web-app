@@ -98,7 +98,7 @@ export function LibraryLeftMenu() {
             <BrowseLink
               key={`link-${value.title}/${value.type}`}
               href={link}
-              type={value.type}
+              extendedType={value.type}
               title={value.title ?? ''}
               count={count}
               isLoading={isLoading}
@@ -116,7 +116,7 @@ export function LibraryLeftMenu() {
             <BrowseLink
               key={`link-${value.title}/${value.type}`}
               href={link}
-              type={value.type}
+              extendedType={value.type}
               title={value.title ?? ''}
               count={count}
               isLoading={isLoading}
