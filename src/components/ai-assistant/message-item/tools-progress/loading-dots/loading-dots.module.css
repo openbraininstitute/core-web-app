@@ -1,0 +1,35 @@
+.dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dot {
+  height: 4px;
+  width: 4px;
+  border-radius: 50%;
+  background-color: currentColor;
+  opacity: 0;
+  animation: fade 1.2s ease-in-out infinite both;
+}
+
+.first {
+  animation-delay: 0s;
+}
+
+.second {
+  animation-delay: 0.15s;
+}
+
+.third {
+  animation-delay: 0.3s;
+}
+
+@keyframes fade {
+  0%, 100% {
+    opacity: 0;
+  }
+  20%, 60% {
+    opacity: 1;
+  }
+}

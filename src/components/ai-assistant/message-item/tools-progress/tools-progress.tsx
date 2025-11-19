@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { UIMessage, ToolInvocation } from '@ai-sdk/ui-utils';
-
 import Link from 'next/link';
 import { IconGear } from '../../icons/gear';
+import LoadingDots from './loading-dots/loading-dots';
+import { cn } from '@/utils/css-class';
+
 import HelpIconI from '@/components/icons/HelpIcon';
 import { CheckIcon } from '@/components/icons';
 import Chevron from '@/components/icons/Chevron';
@@ -10,54 +12,11 @@ import Chevron from '@/components/icons/Chevron';
 import { useAITools } from '@/services/ai-agent/tools/tools';
 import { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 
+import styles from './tools-progress.module.css';
+
 interface ToolsProgressProps {
   className?: string;
   message: UIMessage;
-}
-
-// If someone has a better idea on where to put this component, please tell me.
-function LoadingDots(): React.ReactElement {
-  return (
-    <span className="inline-flex items-center gap-1" aria-hidden="true">
-      <span className="fade-dot h-1 w-1 rounded-full bg-current" style={{ animationDelay: '0s' }} />
-      <span
-        className="fade-dot h-1 w-1 rounded-full bg-current"
-        style={{ animationDelay: '0.15s' }}
-      />
-      <span
-        className="fade-dot h-1 w-1 rounded-full bg-current"
-        style={{ animationDelay: '0.3s' }}
-      />
-
-      <style jsx>{`
-        .fade-dot {
-          display: inline-block;
-          opacity: 0;
-          animation-name: fade-dot;
-          animation-duration: 1.2s;
-          animation-timing-function: ease-in-out;
-          animation-iteration-count: infinite;
-          animation-fill-mode: both;
-        }
-
-        @keyframes fade-dot {
-          0% {
-            opacity: 0;
-            transform: translateY(0);
-          }
-          20% {
-            opacity: 1;
-          }
-          60% {
-            opacity: 1;
-          }
-          100% {
-            opacity: 0;
-          }
-        }
-      `}</style>
-    </span>
-  );
 }
 
 export default function ToolsProgress({ className, message }: ToolsProgressProps) {
@@ -70,7 +29,7 @@ export default function ToolsProgress({ className, message }: ToolsProgressProps
   if (toolsStates.length === 0) return null;
 
   return (
-    <div className={`flex flex-col gap-2 py-2 ${className || ''}`}>
+    <div className={cn(styles.container, className)}>
       {toolsStates.map(({ tool, state, invocation, key }) => {
         const Icon = tool.icon;
         const isExpanded = expandedToolKey === key;
@@ -78,107 +37,93 @@ export default function ToolsProgress({ className, message }: ToolsProgressProps
 
         return (
           <div
-            className={`overflow-hidden rounded-lg border bg-white transition-all duration-200 ease-out hover:border-gray-300 hover:shadow-md ${isRunning ? 'border-blue-200 bg-blue-50/30' : 'border-gray-200'} ${isExpanded ? 'shadow-sm' : ''}`}
+            className={cn(
+              styles.card,
+              isRunning && styles.cardRunning,
+              isExpanded && styles.cardExpanded
+            )}
             key={key}
-            style={{
-              animation: 'slide-up 260ms ease-out both',
-            }}
           >
             {/* Header */}
-            <div className="flex items-center gap-3 px-3 py-2.5">
-              <div
-                className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg transition-all duration-300 ${isRunning ? 'text-blue-600' : 'bg-gray-100 text-gray-600'}`}
-                style={
-                  isRunning
-                    ? {
-                        background: 'rgba(59,130,246,0.08)',
-                      }
-                    : undefined
-                }
-              >
-                {isRunning ? <IconGear className="animate-spin" /> : <Icon />}
+            <div className={styles.header}>
+              <div className={cn(styles.iconWrapper, isRunning && styles.iconWrapperRunning)}>
+                {isRunning ? <IconGear className={styles.spinningIcon} /> : <Icon />}
               </div>
 
-              <div className="min-w-0 flex-1">
-                <div className="text-sm leading-tight font-semibold text-gray-900">{tool.name}</div>
+              <div className={styles.content}>
+                <div className={styles.toolName}>{tool.name}</div>
+
                 <div
-                  className={`mt-0.5 flex items-center gap-1.5 text-xs font-medium transition-colors duration-200 ${isRunning ? 'text-blue-700' : 'text-emerald-700'}`}
+                  className={cn(
+                    styles.status,
+                    isRunning ? styles.statusRunning : styles.statusComplete
+                  )}
                 >
                   {isRunning ? (
                     <>
                       <LoadingDots />
-                      <span className="ml-1">Running</span>
+                      <span className={styles.statusText}>Running</span>
                     </>
                   ) : (
                     <>
-                      <CheckIcon
-                        className="h-3.5 w-3.5 stroke-[3]"
-                        style={{
-                          animation: 'scale-up 300ms ease-out forwards',
-                        }}
-                      />
+                      <CheckIcon className={styles.checkIcon} />
                       <span>Complete</span>
                     </>
                   )}
                 </div>
               </div>
 
-              <div className="flex items-center gap-1">
+              <div className={styles.actions}>
                 <button
-                  className="flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-all duration-150 hover:scale-110 hover:bg-gray-100 hover:text-gray-700 active:scale-95"
+                  className={styles.expandButton}
                   onClick={() => setExpandedToolKey(isExpanded ? null : key)}
                   aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
+                  aria-expanded={isExpanded}
                   type="button"
                 >
-                  <Chevron
-                    className={`h-2 w-2 origin-center rotate-90 transform fill-gray-500 transition-transform duration-300 ease-out ${isExpanded ? 'rotate-270' : ''} block`}
-                  />
+                  <Chevron className={cn(styles.chevron, isExpanded && styles.chevronExpanded)} />
                 </button>
 
                 <Link
                   href={tool.docURL}
                   target="documentation"
                   aria-label="Tool information"
-                  className="flex h-8 w-8 items-center justify-center rounded-md text-blue-600 transition-all duration-150 hover:scale-110 hover:bg-blue-50 hover:text-blue-700 active:scale-95"
+                  className={cn(styles.helpButton)}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <HelpIconI className="h-4 w-4" />
+                  <HelpIconI className={styles.helpIcon} />
                 </Link>
               </div>
             </div>
 
             {/* Expandable Details */}
-            {isExpanded && invocation && (
+            {invocation && (
               <div
-                className="border-t border-gray-200 bg-gray-50 px-3 py-3"
-                style={{
-                  animation: 'slide-up 280ms ease-out both, fade-in 240ms ease-out both',
-                }}
+                className={cn(
+                  styles.details,
+                  isExpanded ? styles.detailsOpen : styles.detailsClosed
+                )}
+                aria-hidden={!isExpanded}
+                role="region"
+                aria-label={`${tool.name} details`}
               >
-                {invocation.args && Object.keys(invocation.args).length > 0 && (
-                  <div className="mb-3 last:mb-0">
-                    <div className="mb-1.5 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
-                      Arguments
+                <div className={styles.detailsInner}>
+                  {invocation.args && Object.keys(invocation.args).length > 0 && (
+                    <div className={styles.section}>
+                      <div className={styles.sectionTitle}>Arguments</div>
+                      <pre className={styles.codeBlock}>{formatInputOutputs(invocation.args)}</pre>
                     </div>
-                    <pre className="max-h-60 overflow-auto rounded-md border border-gray-200 bg-white px-3 py-2.5 font-mono text-[11px] leading-relaxed text-gray-800 shadow-sm">
-                      {JSON.stringify(invocation.args, null, 2)}
-                    </pre>
-                  </div>
-                )}
+                  )}
 
-                {invocation.state === 'result' && invocation.result && (
-                  <div
-                    className="mb-3 last:mb-0"
-                    style={{ animation: 'fade-in 260ms ease-in-out both', animationDelay: '50ms' }}
-                  >
-                    <div className="mb-1.5 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
-                      Result
+                  {invocation.state === 'result' && invocation.result && (
+                    <div className={styles.section}>
+                      <div className={styles.sectionTitle}>Result</div>
+                      <pre className={styles.codeBlock}>
+                        {formatInputOutputs(invocation.result)}
+                      </pre>
                     </div>
-                    <pre className="max-h-60 overflow-auto rounded-md border border-gray-200 bg-white px-3 py-2.5 font-mono text-[11px] leading-relaxed whitespace-pre text-gray-800 shadow-sm">
-                      {JSON.stringify(JSON.parse(invocation.result), null, 2)}
-                    </pre>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -216,4 +161,17 @@ function getToolsState(message: UIMessage, tools: AIAssistantTool[]): ToolsState
   });
 
   return result;
+}
+
+function formatInputOutputs(r: unknown): string {
+  try {
+    if (typeof r === 'string') {
+      // try parse stringified JSON first
+      return JSON.stringify(JSON.parse(r), null, 2);
+    }
+    return JSON.stringify(r, null, 2);
+  } catch {
+    // fallback to plain string
+    return String(r);
+  }
 }
