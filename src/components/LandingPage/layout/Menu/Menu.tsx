@@ -47,11 +47,8 @@ const MENU_ITEMS: MenuItem[] = [
   },
   {
     caption: 'The Platform',
-    slug: '/features',
-    submenu: [
-      { caption: 'Features', slug: '/features' },
-      { caption: 'Pricing', slug: '/pricing', index: EnumSection.Pricing },
-    ],
+    slug: '/pricing',
+    submenu: [{ caption: 'Pricing', slug: '/pricing', index: EnumSection.Pricing }],
   },
   {
     caption: 'SfN 2025',
