@@ -1,7 +1,5 @@
 import { LoadingOutlined, WarningFilled } from '@ant-design/icons';
-import isNil from 'es-toolkit/compat/isNil';
-import find from 'es-toolkit/compat/find';
-import map from 'es-toolkit/compat/map';
+import { isNil, find, map, omit } from 'es-toolkit/compat';
 
 import { CircuitBuildCategory, CircuitScale } from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -23,6 +21,7 @@ import {
   EntityCoreFields,
 } from '@/entity-configuration/definitions/fields-defs/enums';
 import { hasAssets } from '@/api/entitycore/guards';
+import { isNumber } from '@/util/type-guards';
 
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
@@ -32,7 +31,6 @@ import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
-import { isNumber } from '@/util/type-guards';
 
 function iCMBooleanField(title: string, field: keyof IonChannelModel) {
   return {
@@ -236,7 +234,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     className: 'text-left',
     title: 'Scale',
     filter: CoreFieldFilterTypeEnum.DropdownList,
-    filterData: map(CircuitScale, (item) => ({
+    filterData: map(omit(CircuitScale, ['Single']), (item) => ({
       label: item.label,
       value: item.key,
     })),

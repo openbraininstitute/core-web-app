@@ -30,7 +30,7 @@ export type QueryContext = {
   key: string;
   extendedEntityType: TExtendedEntitiesTypeDict;
   workspaceScope: TWorkspaceScope;
-};
+} & Record<string, string | boolean | number>;
 
 export function buildQueryKey({
   context,

@@ -8,6 +8,7 @@ import { useUnwrappedValue } from '@/hooks/hooks';
 import { ICellMorphology, ICellMorphologyExpanded } from '@/api/entitycore/types';
 import { MeasurementKind } from '@/api/entitycore/types/entities/measurement-annotation';
 import { getMeasurementAnnotations } from '@/api/entitycore/queries/general/measurement-annotation';
+import { cn } from '@/utils/css-class';
 
 const measurementAnnotationsAtomFamily = atomFamily((entityId: string) =>
   atom<Promise<MeasurementKind[]>>(async () => {
@@ -19,7 +20,13 @@ const measurementAnnotationsAtomFamily = atomFamily((entityId: string) =>
   })
 );
 
-export function Morphometrics({ morphology }: { morphology: ICellMorphology }) {
+export function Morphometrics({
+  morphology,
+  className,
+}: {
+  morphology: ICellMorphology;
+  className?: string;
+}) {
   const measurementKinds = useUnwrappedValue(measurementAnnotationsAtomFamily(morphology.id));
 
   const expandedMorphology = {
@@ -32,7 +39,7 @@ export function Morphometrics({ morphology }: { morphology: ICellMorphology }) {
   const { filteredGroupedCardFields, renderMetric } = useMorphometrics(expandedMorphology, true);
 
   return (
-    <div className="flex max-w-(--breakpoint-2xl) flex-col gap-10 pl-2">
+    <div className={cn('flex max-w-(--breakpoint-2xl) flex-col gap-10 pl-2', className)}>
       <Divider className="w-full" />
       <h1 className="text-primary-8 text-xl font-bold">Morphometrics</h1>
       <div className="grid grid-cols-5 gap-4 break-words">

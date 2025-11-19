@@ -12,7 +12,6 @@ import { Morphometrics } from '@/features/entities/cell-morphology/morphometrics
 import { useLoadCellMorphology3DAsset } from '@/state/morpho-viewer';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
 import { MorphoViewer } from '@/components/MorphoViewer';
-import { ensureArray } from '@/utils/array';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { WorkspaceContext } from '@/types/common';
@@ -22,9 +21,7 @@ export function CellMorphologyViewer({ entity }: { entity: ICellMorphology }) {
 
   return (
     <>
-      {ensureArray({ input: entity.legacy_id, checkNotEmpty: true }) && (
-        <Morphometrics morphology={entity} />
-      )}
+      <Morphometrics className="mb-8" morphology={entity} />
 
       <ErrorBoundary
         FallbackComponent={withErrorConfig({

@@ -20,7 +20,7 @@ export const PRICES_PER_PLAN: PricePerPlanProps[] = [
     plan: 'Free',
     notes: '100 Initial Credits*',
     singleNeuronSimulation: {
-      price: 2,
+      price: 1,
       note: null,
     },
     smallMicrocircuitSimulation: {

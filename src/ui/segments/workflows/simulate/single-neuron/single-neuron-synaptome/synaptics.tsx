@@ -265,7 +265,6 @@ function useViewer3D(
 ) {
   const update = useVisibleSynapsesSetter();
   useEffect(() => {
-    console.log('🚀 [synaptics] data =', data); // @FIXME: Remove this line written on 2025-11-11 at 20:51
     const synapses: {
       color: string;
       data: Float32Array;
@@ -276,7 +275,6 @@ function useViewer3D(
         (item) => item?.synapsePlacementConfigId === synapticInput.id
       );
       if (match) {
-        console.log('🚀 [synaptics] index, match, synapticInput =', index, match, synapticInput); // @FIXME: Remove this line written on 2025-11-11 at 20:46
         synapses.push({
           color:
             findColor(data?.synapses, synapticInput.id) ??

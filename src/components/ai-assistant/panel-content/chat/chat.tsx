@@ -1,12 +1,13 @@
 import React from 'react';
 
 import Welcome from '../welcome';
-import MessageItem from '../../message-item';
+import { MessageItem } from '../../message-item';
 import { IconClear } from '../../icons/clear';
 import SuggestedQuestions from '../../suggested-questions';
 import ErrorPanel from '../../error';
 import Footer from '../footer';
 
+import { IconPrice } from '../../icons/price';
 import {
   useServiceAiAgentChat,
   useServiceAiAgentSuggestionFromUserJourney,
@@ -24,9 +25,8 @@ export interface ChatProps {
 export default function Chat({ className, threadId, onClearChat }: ChatProps) {
   const refScrollLocked = React.useRef(true);
   const refScrollTriggered = React.useRef(true);
-  const { messages, clear, status, append, error, stop, rateLimit } = useServiceAiAgentChat(
-    threadId ?? ''
-  );
+  const { messages, clear, status, append, error, stop, rateLimitRemaining } =
+    useServiceAiAgentChat(threadId ?? '');
   const [suggestions] = useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', 3);
   const refChatBottom = React.useRef<HTMLDivElement | null>(null);
   const refContainer = React.useRef<HTMLDivElement | null>(null);
@@ -79,9 +79,9 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
             key={item.id}
             value={item}
             hideTools={messageIndex === messages.length - 1 && status !== 'ready'}
-            rateLimit={rateLimit}
           />
         ))}
+
         {status === 'ready' && messages.length > 0 && (
           <>
             <div className={styles.footerButtons}>
@@ -89,6 +89,13 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
                 <IconClear />
                 <div>New Chat</div>
               </button>
+              <div className={styles.price}>
+                <IconPrice />
+                <div>
+                  {Math.max(0, rateLimitRemaining)} free credit
+                  {rateLimitRemaining > 1 ? 's' : ''} left
+                </div>
+              </div>
             </div>
             <SuggestedQuestions
               threadId={threadId}

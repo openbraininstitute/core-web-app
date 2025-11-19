@@ -13,11 +13,9 @@ import {
 import { CloseOutlined, LoadingOutlined } from '@ant-design/icons';
 import { unwrap, useResetAtom } from 'jotai/utils';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { isNil, map } from 'es-toolkit/compat';
 import { useAtom, useSetAtom } from 'jotai';
 import { Input, Select } from 'antd';
-
-import isNil from 'es-toolkit/compat/isNil';
-import map from 'es-toolkit/compat/map';
 
 import ValueOrRange from '@/ui/segments/data-table/elements/listing-filter-panel/value-or-range';
 import ClearFilters from '@/ui/segments/data-table/elements/listing-filter-panel/clear-filters';

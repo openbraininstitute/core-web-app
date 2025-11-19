@@ -2,20 +2,23 @@ import { includes } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
 import type { PropsWithChildren } from 'react';
 
-import { DownloadPanel as CircuitDownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { DataBreadcrumb } from '@/ui/segments/explore/back-data-btn';
 import {
   ExtendedEntitiesTypeDict,
   TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
-import { retrieveEntity } from '@/entity-configuration/domain/requests';
-import DetailMenu from '@/ui/segments/explore/detail-menu';
-import ActionMenu from '@/ui/segments/action-menu';
-import { WorkspaceScope } from '@/constants';
-import Close from '@/ui/molecules/close';
 import { tryCatch } from '@/api/utils';
 import { ROOT_ROUTE } from '@/config';
+import { WorkspaceScope } from '@/constants';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { retrieveEntity } from '@/entity-configuration/domain/requests';
+import ActionMenu from '@/ui/segments/action-menu';
+import { DownloadPanel as CircuitDownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
+import { ClosePage, DataBreadcrumb } from '@/ui/segments/explore/data-nav-btns';
+import DetailMenu from '@/ui/segments/explore/detail-menu';
+import {
+  EntityNameDisplay,
+  EntityNameDisplayWrapper,
+} from '@/ui/segments/explore/entity-name-display';
 
 import type { WorkspaceContext } from '@/types/common';
 
@@ -47,7 +50,10 @@ export async function DataViewLayout({
   const isPublicEntity = entity.authorized_public;
   const parentLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}&scope=${isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project}`;
 
-  const breadcrumbs = <DataBreadcrumb title={entityType.title} type={type} />;
+  const breadcrumbs = (
+    <DataBreadcrumb title={entityType.title} type={type} group={entityType.group} />
+  );
+  const closePage = <ClosePage url={parentLink} />;
 
   if (
     type === ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation ||
@@ -57,7 +63,7 @@ export async function DataViewLayout({
   ) {
     return (
       <div className="relative ml-5 flex h-full flex-col rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
-        <Close href={parentLink} />
+        {closePage}
         {breadcrumbs}
         {children}
       </div>
@@ -69,7 +75,7 @@ export async function DataViewLayout({
   return (
     <>
       <div className="relative ml-5 flex h-full rounded-md border-[1px] border-[#D9D9D9] py-3">
-        <Close href={parentLink} />
+        {closePage}
         <div className="w-1/5 pl-5">
           {breadcrumbs}
           <div className="mt-5 flex flex-col gap-5">
@@ -79,12 +85,9 @@ export async function DataViewLayout({
         </div>
         <div className="w-4/5 pr-1">
           <div className="secondary-scrollbar h-full w-full overflow-x-auto overflow-y-auto p-10">
-            <div className="mb-4 select-none">
-              <div className="text-neutral-4 uppercase">Name</div>
-              <div className="text-primary-8 line-clamp-3 text-2xl font-bold">{entity.name}</div>
-            </div>
+            <EntityNameDisplay name={entity.name} />
 
-            <div className="h-[calc(100%-7rem)]">{children}</div>
+            <EntityNameDisplayWrapper>{children}</EntityNameDisplayWrapper>
           </div>
         </div>
       </div>

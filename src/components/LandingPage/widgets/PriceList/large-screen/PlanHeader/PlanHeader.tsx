@@ -3,8 +3,6 @@
 import { useState } from 'react';
 
 import ContactUs from '../../contact-us';
-import { PRICES_PER_PLAN } from '../../price-per-plan/content/PRICES_PER_PLAN';
-import SinglePriceColumn from '../../price-per-plan/single-price-column/SinglePriceColumn';
 
 import { useCurrency } from '@/components/LandingPage/atoms';
 import {
@@ -107,16 +105,11 @@ export default function PlanHeader({ className, plan }: PlanHeaderProps) {
               </>
             )}
           </div>
-          <ul className="mt-12 h-40 border-b border-solid border-gray-300 pb-4">
+          <ul className="mt-2">
             {plan.notes.map((note, index) => (
               <li key={index}>{note}</li>
             ))}
           </ul>
-          {plan.title === 'Free' ? (
-            <SinglePriceColumn content={PRICES_PER_PLAN[0]} />
-          ) : (
-            <SinglePriceColumn content={PRICES_PER_PLAN[1]} />
-          )}
         </>
       )}
     </div>
