@@ -6,17 +6,21 @@
 }
 
 .card {
-  overflow: visible; 
+  overflow: visible;
   border-radius: 0.5rem;
   border: 1px solid #e5e7eb;
   background-color: #fff;
-  transition: box-shadow 200ms ease-out, border-color 200ms ease-out;
+  transition:
+    box-shadow 200ms ease-out,
+    border-color 200ms ease-out;
   animation: tp-card-entrance 260ms ease-out both;
 }
 
 .card:hover {
   border-color: #d1d5db;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .cardRunning {
@@ -25,7 +29,9 @@
 }
 
 .cardExpanded {
-  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06);
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.1),
+    0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
 .header {
@@ -58,8 +64,12 @@
 }
 
 @keyframes tp-spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .content {
@@ -84,10 +94,16 @@
   transition: color 200ms;
 }
 
-.statusRunning { color: #1d4ed8; }
-.statusComplete { color: #047857; }
+.statusRunning {
+  color: #1d4ed8;
+}
+.statusComplete {
+  color: #047857;
+}
 
-.statusText { margin-left: 0.25rem; }
+.statusText {
+  margin-left: 0.25rem;
+}
 
 .checkIcon {
   height: 0.875rem;
@@ -126,7 +142,9 @@
   color: #374151;
 }
 
-.expandButton:active { transform: scale(0.95); }
+.expandButton:active {
+  transform: scale(0.95);
+}
 
 .helpButton {
   color: #2563eb;
@@ -139,9 +157,14 @@
   color: #1d4ed8;
 }
 
-.helpButton:active { transform: scale(0.95); }
+.helpButton:active {
+  transform: scale(0.95);
+}
 
-.helpIcon { height: 1rem; width: 1rem; }
+.helpIcon {
+  height: 1rem;
+  width: 1rem;
+}
 
 .chevron {
   height: 0.5rem;
@@ -153,7 +176,9 @@
   display: block;
 }
 
-.chevronExpanded { transform: rotate(270deg); }
+.chevronExpanded {
+  transform: rotate(270deg);
+}
 
 .details {
   overflow: hidden;
@@ -194,7 +219,9 @@
   animation: none;
 }
 
-.section:last-child { margin-bottom: 0; }
+.section:last-child {
+  margin-bottom: 0;
+}
 
 .sectionTitle {
   margin-bottom: 0.375rem;
@@ -216,21 +243,37 @@
   font-size: 0.6875rem;
   line-height: 1.625;
   color: #1f2937;
-  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   white-space: pre;
 }
 
 @keyframes tp-card-entrance {
-  from { transform: translateY(8px); opacity: 0; }
-  to   { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes tp-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes tp-scale-up {
-  from { transform: scale(0); opacity: 0; }
-  to   { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
