@@ -12,11 +12,7 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
-import {
-  AgePeriod,
-  Sex,
-  type ISubject,
-} from '@/api/entitycore/types/shared/global';
+import { AgePeriod, Sex, type ISubject } from '@/api/entitycore/types/shared/global';
 
 export function Subject() {
   const form = Form.useFormInstance();
@@ -109,4 +105,3 @@ export function Subject() {
     </Form.Item>
   );
 }
-
