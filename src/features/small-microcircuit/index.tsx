@@ -5,11 +5,8 @@ import Ajv, { AnySchema } from 'ajv';
 import { atom } from 'jotai';
 import { Fragment, Suspense, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { match } from 'ts-pattern';
 import SimulationsTab from './_components/simulations';
-import useModel from './_components/hooks/model';
-import { EntityTypeDict } from '@/api/entitycore/types';
-import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { useApiUrl, useModel } from './_components/hooks';
 
 import authFetch from '@/authFetch';
 import { useAppNotification } from '@/components/notification';
@@ -102,6 +99,8 @@ export default function SimulationCampaignConfiguration({
     return validate?.errors;
   }, [validate, config]);
 
+  const apiUrl = useApiUrl({ model });
+
   if (!schema || !refLabels || !referenceTypesToConfigKeys || !referenceTypesToTitles) {
     return (
       <div className="flex h-full w-full items-center justify-center">
@@ -109,18 +108,6 @@ export default function SimulationCampaignConfiguration({
       </div>
     );
   }
-
-  const apiPath = match(model)
-    .with({ type: EntityTypeDict.Memodel }, () => 'me-model-simulation-scan-config-generate-grid')
-    .with(
-      { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single },
-      () => 'me-model-with-synapses-circuit-simulation-scan-config-generate-grid'
-    )
-    .with({ type: EntityTypeDict.Circuit }, () => 'circuit-simulation-scan-config-generate-grid')
-    .otherwise(() => {
-      throw new Error(`Unsupported model type ${model.type}`);
-    });
-  const apiUrl = `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/generated/${apiPath}`;
 
   return (
     <div className={cn('flex h-full flex-col space-y-5', className)}>
