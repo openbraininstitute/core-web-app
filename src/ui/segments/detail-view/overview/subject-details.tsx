@@ -33,20 +33,20 @@ const columnFields: { field: EntityCoreFields; target: 'subject' | 'entity' }[][
 export default async function SubjectDetails({
   entity,
   subjectId,
-  ctx,
+  context,
   className,
 }: {
   entity: EntityCoreObjectTypes;
   subjectId: string;
-  ctx: WorkspaceContext;
+  context: WorkspaceContext;
   className?: string;
 }) {
   const queryClient = getQueryClient();
 
   const { data: subject, error } = await tryCatch(
     queryClient.fetchQuery({
-      queryKey: keyBuilder.subject(ctx),
-      queryFn: () => getSubject({ id: subjectId, context: ctx }),
+      queryKey: keyBuilder.subject({ id: subjectId, context }),
+      queryFn: () => getSubject({ id: subjectId, context }),
     })
   );
 

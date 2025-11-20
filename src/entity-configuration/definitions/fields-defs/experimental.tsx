@@ -227,24 +227,24 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isSortable: false,
   },
   [EntityCoreFields.SubjectAgeMax]: {
-    title: 'Age Max',
+    title: 'Age max',
     filter: CoreFieldFilterTypeEnum.ValueRange,
     render: (r) => renderEmptyOrValue(get(r, 'subject.age_max')),
     vocabulary: {
-      plural: 'Age Max',
-      singular: 'Age Max',
+      plural: 'Age max',
+      singular: 'Age max',
     },
     isFilterable: false,
     isDisplayable: false,
     isSortable: false,
   },
   [EntityCoreFields.SubjectAgeMin]: {
-    title: 'Age Min',
+    title: 'Age min',
     filter: CoreFieldFilterTypeEnum.ValueRange,
     render: (r) => renderEmptyOrValue(get(r, 'subject.age_min')),
     vocabulary: {
-      plural: 'Age Min',
-      singular: 'Age Min',
+      plural: 'Age min',
+      singular: 'Age min',
     },
     isFilterable: false,
     isDisplayable: false,
@@ -252,12 +252,12 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   },
 
   [EntityCoreFields.SubjectAgePeriod]: {
-    title: 'Age Period',
+    title: 'Age period',
     filter: CoreFieldFilterTypeEnum.ValueRange,
     render: (r) => renderEmptyOrValue(get(r, 'subject.age_period')),
     vocabulary: {
-      plural: 'Age Period',
-      singular: 'Age Period',
+      plural: 'Age period',
+      singular: 'Age period',
     },
     isFilterable: false,
     isDisplayable: false,
