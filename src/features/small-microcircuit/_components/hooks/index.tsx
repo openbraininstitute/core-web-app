@@ -1,9 +1,9 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { match } from 'ts-pattern';
 import { useAtomValue } from 'jotai';
 import Ajv, { AnySchema } from 'ajv';
 import { modelAtomFamily } from '../atoms';
-
+import { isRootCategory } from './schema';
 import { WorkspaceContext } from '@/types/common';
 
 import { CircuitScaleDictionary, ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -62,4 +62,25 @@ export function useValidateSchema({
   }, [validate, config]);
 
   return errors ?? null;
+}
+
+export function useEntries({
+  initialConfig,
+  schema,
+}: {
+  schema: JSONSchema | null;
+  initialConfig?: Config;
+}) {
+  const allEntries = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!initialConfig || !schema) return;
+    Object.entries(initialConfig)
+      .filter(([k]) => !isRootCategory(schema, k))
+      .forEach(([_key, value]) => {
+        Object.keys(value).forEach((entryKey) => allEntries.current.add(entryKey));
+      });
+  }, [schema, initialConfig]);
+
+  return allEntries.current;
 }

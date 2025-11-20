@@ -1,11 +1,11 @@
 'use client';
 
 import { LoadingOutlined, UpOutlined } from '@ant-design/icons';
-import { Suspense, useRef, useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import SimulationsTab from './_components/simulations';
 import Left from './_components/left';
-import { useModel } from './_components/hooks';
+import { useEntries, useModel } from './_components/hooks';
 
 import Middle from './_components/middle';
 import { useAppNotification } from '@/components/notification';
@@ -56,7 +56,7 @@ export default function SimulationCampaignConfiguration({
     (s) => s.properties?.type.const === selectedCategory
   );
 
-  const allEntries = useRef<Set<string>>(new Set());
+  const allEntries = useEntries({ initialConfig, schema });
 
   const handleAddReferenceClick = (referenceTab: string) => {
     setConfigTab(referenceTab);
@@ -111,7 +111,7 @@ export default function SimulationCampaignConfiguration({
             model={model}
             initialConfig={initialConfig}
             setTab={setTab}
-            allEntries={allEntries.current}
+            allEntries={allEntries}
           />
 
           <Middle
@@ -135,7 +135,7 @@ export default function SimulationCampaignConfiguration({
             model={model}
             virtualLabId={virtualLabId}
             projectId={projectId}
-            allEntries={allEntries.current}
+            allEntries={allEntries}
           />
 
           <div className="overflow-hidden rounded-lg">
