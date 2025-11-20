@@ -1,7 +1,7 @@
 import { CheckOutlined, DownOutlined, LoadingOutlined, SearchOutlined } from '@ant-design/icons';
 import { ComponentProps, startTransition, useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { loadable, unwrap } from 'jotai/utils';
+import { unwrap } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
 
 import { brainRegionBasicCellGroupsRegionsHierarchyAtom } from '@/features/brain-region-hierarchy/context';
@@ -40,7 +40,6 @@ export function BrainRegionDropdown({
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [search, setSearch] = useState('');
 
-  // Set the default brain region on mount or when the prop changes
   useEffect(() => {
     if (defaultBrainRegion && brainRegionHierarchy) {
       const defaultOption = brainRegionHierarchy.options.find(
@@ -50,10 +49,9 @@ export function BrainRegionDropdown({
         setSelected(defaultOption);
       }
     } else if (brainRegionHierarchy && !defaultBrainRegion && !selected) {
-      // Clear selected if defaultBrainRegion is undefined and no selection has been made
       setSelected(undefined);
     }
-  }, [defaultBrainRegion, brainRegionHierarchy]);
+  }, [defaultBrainRegion, brainRegionHierarchy, selected]); 
 
   const filteredOptions = useMemo(() => {
     if (!brainRegionHierarchy) return [];
@@ -261,14 +259,12 @@ export function BrainRegionDropdownWithFormItem({
       }) {
         const handleSelectBrainRegion = useCallback(
           (br: IBrainRegionHierarchy) => {
-            // State update (onChange) is inside startTransition (Previous fix)
             startTransition(() => {
               onChange?.(br.id);
               onSelectBrainRegion?.(br);
             });
           },
-          // Dependency array (Previous fix)
-          [onChange, onSelectBrainRegion] 
+          [onChange] 
         );
 
         return (
