@@ -251,10 +251,10 @@ export function BrainRegionDropdownWithFormItem({
       }) {
         const handleSelectBrainRegion = useCallback(
           (br: IBrainRegionHierarchy) => {
+            onChange?.(br.id);
             startTransition(() => {
-              onChange?.(br.id);
+              onSelectBrainRegion?.(br);
             });
-            onSelectBrainRegion?.(br);
           },
           [onChange]
         );

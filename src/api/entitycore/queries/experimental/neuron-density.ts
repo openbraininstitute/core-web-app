@@ -1,3 +1,4 @@
+import z from 'zod';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type {
@@ -58,5 +59,65 @@ export async function getExperimentalNeuronDensity({
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
     },
+  });
+}
+
+const measurementSchema = z.object({
+  name: z
+    .string({ message: 'Measurement name is required' })
+    .nonempty({ message: 'Measurement name is required' }),
+  unit: z
+    .string({ message: 'Measurement unit is required' })
+    .nonempty({ message: 'Measurement unit is required' }),
+  value: z
+    .number({ message: 'Measurement value must be a number' }) // Assuming 'value' should be a number (like 123)
+    .min(0, { message: 'Measurement value must be non-negative' }), // Example constraint
+});
+
+const ExperimentalNeuronDensitySchema = z.object({
+  name: z
+    .string({ message: 'Experimental cell density name is required' })
+    .nonempty({ message: 'Experimental cell density name is required' }),
+  description: z
+    .string({ message: 'Experimental cell density description is required' })
+    .nonempty({ message: 'Experimental cell density description is required' }),
+  brain_region_id: z
+    .string({ message: 'Brain region is required' })
+    .uuid()
+    .nonempty({ message: 'Brain region is required' }),
+  subject_id: z
+    .string({ message: 'Subject is required' })
+    .uuid()
+    .nonempty({ message: 'Subject is required' }),
+  license_id: z
+    .string({ message: 'License is required' })
+    .uuid()
+    .nonempty({ message: 'License is required' }),
+  // measurements: measurementSchema,
+  measurements: z.array(measurementSchema),
+});
+
+export type TExperimentalNeuronDensityCreate = z.infer<typeof ExperimentalNeuronDensitySchema>;
+
+/**
+ * Creates a new Experimental cell density
+ * @param param0
+ * @returns A promise that resolves to the created Experimental cell density
+ */
+export async function createExperimentalNeuronDensity({
+  context,
+  payload,
+}: {
+  context?: WorkspaceContext | null;
+  payload: TExperimentalNeuronDensityCreate;
+}) {
+  const api = await entityCoreApi();
+  return await api.post<IExperimentalNeuronDensity>(baseUri, {
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+    body: payload,
   });
 }

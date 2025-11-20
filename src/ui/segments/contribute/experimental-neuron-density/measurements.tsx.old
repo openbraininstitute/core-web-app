@@ -1,0 +1,68 @@
+import { Form, InputNumber, Select } from 'antd';
+
+import {
+  label,
+  ExperimentalNeuronDensitySchema,
+  zodFieldValidator,
+} from '@/ui/segments/contribute/experimental-neuron-density/helpers';
+
+export function Measurements() {
+  const form = Form.useFormInstance();
+
+  const NAME_OPTIONS = [
+    'mean',
+    'median',
+    'mode',
+    'variance',
+    'data_point',
+    'sample_size',
+    'standard_error',
+    'standard_deviation',
+    'raw',
+    'minimum',
+    'maximum',
+    'sum',
+  ].map((value) => ({
+    label: value.replace('_', ' '),
+    value,
+  }));
+
+  return (
+    <div className="h-full w-full">
+      <Form.Item
+        name={['measurements', 'name']}
+        label={label('Name', 'main', <sup className="text-destructive">*</sup>)}
+        rules={[
+          {
+            required: true,
+            validator: zodFieldValidator(ExperimentalNeuronDensitySchema, 'setup.name', form),
+          },
+        ]}
+      >
+        <Select className="h-12 w-full" placeholder="Select data type" options={NAME_OPTIONS} />
+      </Form.Item>
+
+      <Form.Item
+        name={['measurements', 'value']}
+        required
+        label={label('Value in cells/mm³', 'main', <sup className="text-destructive">*</sup>)}
+        rules={[
+          {
+            validator: zodFieldValidator(
+              ExperimentalNeuronDensitySchema,
+              'measurements.value',
+              form
+            ),
+          },
+        ]}
+        className="w-1/3"
+      >
+        <InputNumber
+          placeholder="Enter cells/mm³"
+          size="large"
+          className="h-12 w-full rounded-full placeholder:text-sm [&_.ant-input-number-handler-wrap]:hidden"
+        />
+      </Form.Item>
+    </div>
+  );
+}

@@ -1,0 +1,195 @@
+'use client';
+
+import { useMutation } from '@tanstack/react-query';
+import isNil from 'es-toolkit/compat/isNil';
+
+import { createMtypeClassification } from '@/api/entitycore/queries/annotations/mtype-classification';
+import { createEtypeClassification } from '@/api/entitycore/queries/annotations/etype-classification';
+import { createContribution } from '@/api/entitycore/queries/general/contribution';
+import { createExperimentalNeuronDensity } from '@/api/entitycore/queries';
+import {
+  ContributionSchema,
+  type TExperimentalNeuronDensityForm,
+} from '@/ui/segments/contribute/experimental-neuron-density/helpers';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+
+export function buildExperimentalNeuronDensityMutationKeys(sessionId: string) {
+  return {
+    CreateExperimentalNeuronDensity: {
+      key: ['create-experimental-neuron-density', sessionId],
+      label: 'Create experimental cell density',
+    },
+    CreateContribution: {
+      key: ['create-contribution', sessionId],
+      label: 'Create Contribution',
+    },
+    CreateMtypeClassification: {
+      key: ['create-mtype-classification', sessionId],
+      label: 'Create M-Type Classification',
+    },
+    CreateEtypeClassification: {
+      key: ['create-etype-classification', sessionId],
+      label: 'Create E-Type Classification',
+    },
+  };
+}
+
+export const usePipeline = ({ sessionId }: { sessionId: string }) => {
+  const keys = buildExperimentalNeuronDensityMutationKeys(sessionId);
+  const { projectId, virtualLabId } = useWorkspace();
+
+  const createExperimentalNeuronDensityAsync = useMutation({
+    mutationKey: keys.CreateExperimentalNeuronDensity.key,
+    mutationFn: (values: TExperimentalNeuronDensityForm) => {
+      // FIX: Process measurements array correctly
+      // Filter out any null/undefined measurements and construct valid measurement objects
+      const measurements = (values.measurements || [])
+        .filter((m) => !isNil(m) && !isNil(m.name) && !isNil(m.value) && !isNil(m.unit))
+        .map((m) => ({
+          name: m.name,
+          unit: m.unit,
+          value: m.value,
+        }));
+
+      // Ensure we have at least one valid measurement
+      if (measurements.length === 0) {
+        throw new Error('At least one valid measurement is required');
+      }
+
+      return createExperimentalNeuronDensity({
+        context: { projectId, virtualLabId },
+        payload: {
+          name: values.setup.name,
+          description: values.setup.description,
+          brain_region_id: values.setup.brain_region_id,
+          subject_id: values.subject_id,
+          license_id: values.license_id,
+          measurements,
+          authorized_public: false,
+          legacy_id: null,
+        } as any,
+      });
+    },
+  });
+
+  const createContributionAsync = useMutation({
+    mutationKey: keys.CreateContribution.key,
+    mutationFn: ({
+      entityId,
+      contribution,
+    }: {
+      entityId: string;
+      contribution: TExperimentalNeuronDensityForm['contribution'];
+    }) => {
+      return Promise.all(
+        contribution
+          .filter((c) => ContributionSchema.safeParse(c).success)
+          .map((c) =>
+            createContribution({
+              context: { virtualLabId, projectId },
+              contributor: {
+                agent_id: c.agent_id!,
+                role_id: c.role_id!,
+                entity_id: entityId,
+              },
+            })
+          )
+      );
+    },
+  });
+
+  const createMtypeClassificationAsync = useMutation({
+    mutationKey: keys.CreateMtypeClassification.key,
+    mutationFn: ({
+      entityId,
+      mtype_class_id,
+    }: {
+      entityId: string;
+      mtype_class_id: TExperimentalNeuronDensityForm['mtype_class_id'];
+    }) => {
+      return createMtypeClassification({
+        context: { projectId, virtualLabId },
+        payload: {
+          authorized_public: true,
+          entity_id: entityId,
+          mtype_class_id: mtype_class_id!,
+        },
+      });
+    },
+  });
+
+  const createEtypeClassificationAsync = useMutation({
+    mutationKey: keys.CreateEtypeClassification.key,
+    mutationFn: ({
+      entityId,
+      etype_class_id,
+    }: {
+      entityId: string;
+      etype_class_id: TExperimentalNeuronDensityForm['etype_class_id'];
+    }) => {
+      return createEtypeClassification({
+        context: { projectId, virtualLabId },
+        payload: {
+          authorized_public: true,
+          entity_id: entityId,
+          etype_class_id: etype_class_id!,
+        },
+      });
+    },
+  });
+
+  async function createEntity({ values }: { values: TExperimentalNeuronDensityForm }) {
+    const ExperimentalNeuronDensity =
+      await createExperimentalNeuronDensityAsync.mutateAsync(values);
+
+    const mutations: Promise<unknown>[] = [
+      createContributionAsync.mutateAsync({
+        entityId: ExperimentalNeuronDensity.id,
+        contribution: values.contribution,
+      }),
+    ];
+
+    // Only add mtype classification if value exists
+    if (values.mtype_class_id) {
+      mutations.push(
+        createMtypeClassificationAsync.mutateAsync({
+          entityId: ExperimentalNeuronDensity.id,
+          mtype_class_id: values.mtype_class_id,
+        })
+      );
+    }
+
+    // Only add etype classification if value exists
+    if (values.etype_class_id) {
+      mutations.push(
+        createEtypeClassificationAsync.mutateAsync({
+          entityId: ExperimentalNeuronDensity.id,
+          etype_class_id: values.etype_class_id,
+        })
+      );
+    }
+
+    await Promise.allSettled(mutations);
+  }
+
+  const loading =
+    createExperimentalNeuronDensityAsync.isPending ||
+    createContributionAsync.isPending ||
+    createMtypeClassificationAsync.isPending ||
+    createEtypeClassificationAsync.isPending;
+
+  const error =
+    createExperimentalNeuronDensityAsync.error ||
+    createContributionAsync.error ||
+    createMtypeClassificationAsync.error ||
+    createEtypeClassificationAsync.error;
+
+  const status = {
+    createExperimentalNeuronDensity: createExperimentalNeuronDensityAsync.status,
+    createContribution: createContributionAsync.status,
+    createMtypeClassification: createMtypeClassificationAsync.status,
+    createEtypeClassification: createEtypeClassificationAsync.status,
+  };
+
+  return { createEntity, loading, error, status };
+};

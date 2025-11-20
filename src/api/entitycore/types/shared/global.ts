@@ -204,6 +204,13 @@ export interface IMTypeClassification
   mtype_class_id: string;
   entity_id: string;
 }
+export interface IETypeClassification
+  extends EntityCoreIdentifiable,
+    Timestamps,
+    EntityAuthorization {
+  etype_class_id: string;
+  entity_id: string;
+}
 
 export type DirectoryItem = {
   name: string;
