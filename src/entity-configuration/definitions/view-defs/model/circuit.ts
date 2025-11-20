@@ -39,23 +39,11 @@ export const ViewDefForCircuit: ViewDefinitionConfig = {
     { field: EntityCoreFields.CircuitRootCircuit },
     { field: EntityCoreFields.CircuitScale },
     { field: EntityCoreFields.License },
-    {
-      field: EntityCoreFields.CircuitNumberNeurons,
-    },
-    {
-      field: EntityCoreFields.CircuitNumberConnections,
-    },
-    {
-      field: EntityCoreFields.CircuitNumberSynapses,
-    },
-    {
-      field: EntityCoreFields.CircuitPublishedIn,
-    },
-    {
-      field: EntityCoreFields.CircuitExperimentDate,
-    },
-    {
-      field: EntityCoreFields.CircuitContactEmail,
-    },
+    { field: EntityCoreFields.CircuitNumberNeurons },
+    { field: EntityCoreFields.CircuitNumberConnections },
+    { field: EntityCoreFields.CircuitNumberSynapses },
+    { field: EntityCoreFields.CircuitPublishedIn },
+    { field: EntityCoreFields.CircuitExperimentDate },
+    { field: EntityCoreFields.CircuitContactEmail },
   ],
 };

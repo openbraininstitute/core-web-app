@@ -34,6 +34,7 @@ export enum EntityCoreFields {
   SubjectAgePeriod = 'subject_age_period',
   SubjectSex = 'subject_sex',
   SubjectSpeciesName = 'subject_species_name',
+  SubjectStrainName = 'subject_strain_name',
   SubjectWeight = 'subject_weight',
   Sem = 'sem', // TODO: to check new naming
   MeanSTD = 'meanstd', // TODO: to check new naming
@@ -54,7 +55,6 @@ export enum EntityCoreFields {
   PostSynapticBrainRegion = 'post_region',
   PreSynapticCellType = 'pre_mtype',
   PostSynapticCellType = 'post_mtype',
-  Weight = 'weight',
   EModelExemplarMorphology = 'exemplar_morphology',
   EModelScore = 'eModelScore',
   EModelResponse = 'eModelResponse',

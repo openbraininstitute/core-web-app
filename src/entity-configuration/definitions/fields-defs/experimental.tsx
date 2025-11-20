@@ -203,12 +203,22 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Weight',
     filter: CoreFieldFilterTypeEnum.ValueRange,
     unit: 'gramms',
-    render: (r) => {
-      return renderEmptyOrValue(get(r, 'subject.weight', null));
-    },
+    render: (r) => renderEmptyOrValue(get(r, 'subject.weight', null)),
     vocabulary: {
       plural: 'Values',
       singular: 'Value',
+    },
+    isSortable: false,
+    isFilterable: false,
+    isDisplayable: false,
+  },
+  [EntityCoreFields.SubjectStrainName]: {
+    title: 'Strain',
+    filter: CoreFieldFilterTypeEnum.CheckList,
+    render: (r) => renderEmptyOrValue(get(r, 'subject.strain.name', null)),
+    vocabulary: {
+      plural: 'Strains',
+      singular: 'Strain',
     },
     isSortable: false,
     isFilterable: false,
@@ -354,21 +364,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     defaultConstraint: 'post_mtype__pref_label__in',
     isFilterable: true,
     isDisplayable: true,
-  },
-  [EntityCoreFields.Weight]: {
-    title: 'Weight',
-    filter: CoreFieldFilterTypeEnum.CheckList,
-    unit: 'gramms',
-    render: (r) => {
-      return renderEmptyOrValue(get(r, 'subject.weight', null));
-    },
-    vocabulary: {
-      plural: 'Values',
-      singular: 'Value',
-    },
-    isSortable: false,
-    isFilterable: false,
-    isDisplayable: false,
   },
   [EntityCoreFields.NeuronDensity]: {
     title: 'Density',
