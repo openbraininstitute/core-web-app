@@ -291,7 +291,6 @@ export class PainterManager {
     });
     this.painter = new Painter(context);
     context.add(this.painter);
-    // @ts-expect-error
     context.eventWebGLContextRestored.addListener(() => {
       this.delete();
       globalThis.requestAnimationFrame(() => this.initialize());

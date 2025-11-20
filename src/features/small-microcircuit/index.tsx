@@ -2,17 +2,17 @@
 
 import { LoadingOutlined, UpOutlined } from '@ant-design/icons';
 import Ajv, { AnySchema } from 'ajv';
-import { atom, useAtomValue } from 'jotai';
+import { atom } from 'jotai';
 import { Fragment, Suspense, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { match } from 'ts-pattern';
 import SimulationsTab from './_components/simulations';
+import useModel from './_components/hooks/model';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 
 import authFetch from '@/authFetch';
 import { useAppNotification } from '@/components/notification';
-import { modelAtomFamily } from '@/features/small-microcircuit/_components/atoms';
 import {
   Config,
   ConfigValue,
@@ -55,8 +55,6 @@ export default function SimulationCampaignConfiguration({
   className?: string;
 }) {
   const router = useRouter();
-  const modelAtom = modelAtomFamily({ id: modelId, context: { virtualLabId, projectId } });
-  const model = useAtomValue(modelAtom);
 
   const [tab, setTab] = useState<TabType>('configuration');
   const [configTab, setConfigTab] = useState<string>('info');
@@ -68,6 +66,8 @@ export default function SimulationCampaignConfiguration({
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
   const initialConfigValidated = useRef(false);
   const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
+
+  const { model } = useModel({ id: modelId, context: { virtualLabId, projectId } });
 
   const { schema, refLabels, referenceTypesToConfigKeys, referenceTypesToTitles } =
     useObioneJsonSchema(model, notification, setAtomsMap, initialConfig);
