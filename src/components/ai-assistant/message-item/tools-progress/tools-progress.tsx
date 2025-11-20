@@ -21,7 +21,19 @@ interface ToolsProgressProps {
 
 export default function ToolsProgress({ className, message }: ToolsProgressProps) {
   const tools = useAITools();
-  const [expandedToolKey, setExpandedToolKey] = useState<string | null>(null);
+  const [expandedToolKeys, setExpandedToolKeys] = useState<Set<string>>(new Set());
+
+  const toggleExpanded = (key: string) => {
+    setExpandedToolKeys((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(key)) {
+        newSet.delete(key);
+      } else {
+        newSet.add(key);
+      }
+      return newSet;
+    });
+  };
 
   if (!tools) return null;
 
@@ -32,7 +44,7 @@ export default function ToolsProgress({ className, message }: ToolsProgressProps
     <div className={cn(styles.container, className)}>
       {toolsStates.map(({ tool, state, invocation, key }) => {
         const Icon = tool.icon;
-        const isExpanded = expandedToolKey === key;
+        const isExpanded = expandedToolKeys.has(key);
         const isRunning = state !== 'result';
 
         return (
@@ -45,7 +57,20 @@ export default function ToolsProgress({ className, message }: ToolsProgressProps
             key={key}
           >
             {/* Header */}
-            <div className={styles.header}>
+            <div
+              className={styles.header}
+              onClick={() => toggleExpanded(key)}
+              role="button"
+              tabIndex={0}
+              aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  toggleExpanded(key);
+                }
+              }}
+            >
               <div className={cn(styles.iconWrapper, isRunning && styles.iconWrapperRunning)}>
                 {isRunning ? <IconGear className={styles.spinningIcon} /> : <Icon />}
               </div>
@@ -76,7 +101,10 @@ export default function ToolsProgress({ className, message }: ToolsProgressProps
               <div className={styles.actions}>
                 <button
                   className={styles.expandButton}
-                  onClick={() => setExpandedToolKey(isExpanded ? null : key)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleExpanded(key);
+                  }}
                   aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
                   aria-expanded={isExpanded}
                   type="button"
