@@ -252,8 +252,8 @@ export function BrowseLink({
   const rootCount = root?.pagination.total_items;
   const isLoading = loadingCurrent || loadingRoot;
 
-  const countRenderer = match({ isCurrentError, isRootError, enabled, isLoading })
-    .with({ isLoading: false, enabled: true }, () => (
+  const countRenderer = match({ isCurrentError, count, rootCount, isRootError, enabled, isLoading })
+    .with({ isLoading: false, enabled: true, rootCount: P.number, count: P.number }, () => (
       <span className="flex items-center justify-center gap-1">
         <span className="font-bold">{count}</span>
         <span className="font-light">of</span>
@@ -263,13 +263,14 @@ export function BrowseLink({
     .with(P.union({ isCurrentError: true }, { isRootError: true }), () => {
       return <WarningOutlined className="text-warning" />;
     })
-    .otherwise(() => (
+    .with({ enabled: false }, () => (
       <span className="flex items-center justify-center gap-1">
         <span className="font-bold">0</span>
         <span className="font-light">of</span>
         <span className="font-bold">0</span>
       </span>
-    ));
+    ))
+    .otherwise(() => null);
 
   if (!entity) return null;
   return (
