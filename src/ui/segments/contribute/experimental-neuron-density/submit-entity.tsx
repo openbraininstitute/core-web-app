@@ -18,7 +18,6 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
-// FIX: New type to carry optional Mtype and Etype IDs
 type BaseProps = {
   sessionId: string;
   mtypeClassId?: string;
@@ -63,7 +62,6 @@ const useCreateExperimentalNeuronDensityStatus = ({
     select: (mutationState) => mutationState.state.data as { id: string } | undefined,
   }).at(0);
 
-  // FIX: isFinished is now conditional on mtypeClassId and etypeClassId being present
   const isFinished =
     CreateExperimentalNeuronDensityStatus === 'success' &&
     CreateContributionStatus === 'success' &&
@@ -72,7 +70,6 @@ const useCreateExperimentalNeuronDensityStatus = ({
     // Only require Etype success if etypeClassId was provided
     (etypeClassId ? CreateEtypeClassificationStatus === 'success' : true);
 
-  // FIX: isError is now conditional on mtypeClassId and etypeClassId being present
   const isError =
     CreateExperimentalNeuronDensityStatus === 'error' ||
     CreateContributionStatus === 'error' ||
@@ -124,11 +121,10 @@ export function SubmitEntityProgress({ sessionId, mtypeClassId, etypeClassId }: 
     },
   ];
 
-  // FIX: Filter steps to only include Mtype and Etype if their IDs are present
   const steps = allSteps.filter((step) => {
     if (step.key === 'mtype-classification') return !!mtypeClassId;
     if (step.key === 'etype-classification') return !!etypeClassId;
-    return true; // Always keep the core steps (experimental-neuron-density and contribution)
+    return true;
   });
 
   const completedSteps = steps.filter((step) => step.status === 'success');
@@ -199,7 +195,6 @@ export function SubmitButton({
   const values = Form.useWatch([], form);
 
   const isValidForm = ExperimentalNeuronDensitySchema.safeParse(values).success;
-  // FIX: Pass optional IDs to the status hook
   const { CreateExperimentalNeuronDensityData } = useCreateExperimentalNeuronDensityStatus({
     sessionId,
     mtypeClassId,

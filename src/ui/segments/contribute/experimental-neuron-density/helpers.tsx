@@ -61,7 +61,6 @@ export const ContributionSchema = z.object({
 const measurementSchema = z
   .object({
     name: z
-      // Allow null/undefined from an empty Select, then enforce it must be a non-empty string
       .union([z.string(), z.null(), z.undefined()])
       .refine((val) => typeof val === 'string' && val.length > 0, {
         message: 'Measurement name is required',
@@ -73,7 +72,6 @@ const measurementSchema = z
       .nonempty({ message: 'Measurement unit is required' }),
 
     value: z
-      // Allow number, null, or undefined from an InputNumber
       .union([z.number(), z.null(), z.undefined()])
       .refine((val) => val !== null && val !== undefined, {
         message: 'Measurement value is required',
@@ -83,7 +81,7 @@ const measurementSchema = z
       })
       .transform((val) => val as number),
   })
-  .passthrough(); // <--- ADD THIS
+  .passthrough();
 
 const SetupSchema = z.object({
   name: z
@@ -99,7 +97,6 @@ const SetupSchema = z.object({
 });
 
 export type TContribution = z.infer<typeof ContributionSchema>;
-// FIX: Removed the explicit ': ZodTypeAny' type to correctly infer the Zod object schema
 export const ExperimentalNeuronDensitySchema = z.object({
   setup: SetupSchema,
   subject_id: z
@@ -120,14 +117,12 @@ export const ExperimentalNeuronDensitySchema = z.object({
     .array(ContributionSchema)
     .nonempty({ message: 'At least one contributor is required' })
     .superRefine((arr, ctx) => {
-      // check that at least one contribution is fully filled
       let hasFullyFilledContribution = false;
       arr.forEach((contrib, idx) => {
         const filledFields = [contrib.agent_type, contrib.agent_id, contrib.role_id].filter(
           (field) => !isNil(field) && (typeof field !== 'string' || field !== '')
         );
 
-        // if partially filled (some fields but not all), it's invalid
         if (filledFields.length > 0 && filledFields.length < 3) {
           if (isNil(contrib.agent_type)) {
             ctx.addIssue({

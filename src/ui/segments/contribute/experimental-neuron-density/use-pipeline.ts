@@ -41,7 +41,6 @@ export const usePipeline = ({ sessionId }: { sessionId: string }) => {
   const createExperimentalNeuronDensityAsync = useMutation({
     mutationKey: keys.CreateExperimentalNeuronDensity.key,
     mutationFn: (values: TExperimentalNeuronDensityForm) => {
-      // FIX: Process measurements array correctly
       // Filter out any null/undefined measurements and construct valid measurement objects
       const measurements = (values.measurements || [])
         .filter((m) => !isNil(m) && !isNil(m.name) && !isNil(m.value) && !isNil(m.unit))

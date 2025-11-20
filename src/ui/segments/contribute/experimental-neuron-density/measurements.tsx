@@ -16,7 +16,6 @@ export function Measurements() {
   const form = Form.useFormInstance();
 
   const NAME_OPTIONS = [
-    // ... (Your NAME_OPTIONS array)
     'mean',
     'median',
     'mode',
@@ -39,18 +38,17 @@ export function Measurements() {
   return (
     <div className="h-full w-full">
       <Form.List name="measurements">
-        {/* FIX: Prefix unused arguments with underscore */}
+        {}
         {(fields, { add: _add, remove: _remove }) => (
           <>
             <div className="flex flex-col gap-4">
-              {/* FIX: Prefix unused argument with underscore */}
+              {}
               {fields.map((field, _index) => (
                 <Card key={field.key} className="p-4">
                   <div className="flex w-full flex-row items-start justify-between gap-4">
                     <div className="flex w-full flex-col gap-y-4">
                       {/* Measurement Name */}
                       <Form.Item
-                        // FIX: Manually pass props to avoid Prop spreading error
                         name={[field.name, 'name']}
                         key={`${field.key}-name`}
                         label={label('Name', 'main', <sup className="text-destructive">*</sup>)}
@@ -73,7 +71,6 @@ export function Measurements() {
 
                       {/* Measurement Value */}
                       <Form.Item
-                        // FIX: Manually pass props to avoid Prop spreading error
                         name={[field.name, 'value']}
                         key={`${field.key}-value`}
                         label={label(
@@ -90,7 +87,6 @@ export function Measurements() {
                             ),
                           },
                         ]}
-                        // Re-add the conversion to prevent null from InputNumber from causing immediate Zod failure
                         getValueFromEvent={(value) => (value === null ? undefined : value)}
                       >
                         <InputNumber
