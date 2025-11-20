@@ -1,31 +1,21 @@
 'use client';
 
 import { LoadingOutlined, UpOutlined } from '@ant-design/icons';
-import { atom } from 'jotai';
-import { Fragment, Suspense, useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import SimulationsTab from './_components/simulations';
 import Left from './_components/left';
 import { useModel } from './_components/hooks';
 
+import Middle from './_components/middle';
 import { useAppNotification } from '@/components/notification';
-import {
-  Config,
-  ConfigValue,
-  JSONSchemaForm,
-} from '@/features/small-microcircuit/_components/components';
+import { Config } from '@/features/small-microcircuit/_components/components';
 import { useConfigAtom } from '@/features/small-microcircuit/_components/hooks/config-atom';
-import {
-  isRootCategory,
-  resolveKey,
-  useObioneJsonSchema,
-} from '@/features/small-microcircuit/_components/hooks/schema';
+import { useObioneJsonSchema } from '@/features/small-microcircuit/_components/hooks/schema';
 import ModelPreview from '@/features/small-microcircuit/_components/model-preview';
 import TabsSelector from '@/features/small-microcircuit/_components/tabs-selector';
-import { isAtom } from '@/features/small-microcircuit/_components/utils';
 import { AtomsMap, TabType } from '@/features/small-microcircuit/types';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
-import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
 
@@ -123,87 +113,29 @@ export default function SimulationCampaignConfiguration({
             setTab={setTab}
           />
 
-          <div
-            className={classNames(
-              styles.scrollable,
-              'h-full overflow-y-auto border-r border-l border-gray-200 px-5'
-            )}
-          >
-            {schema.properties &&
-              schema.properties?.[configTab]?.additionalProperties?.oneOf &&
-              !selectedCategory &&
-              editing && (
-                <div className="flex flex-col items-center gap-5">
-                  {schema.properties[configTab].additionalProperties.oneOf.map((o) => {
-                    return (
-                      <Fragment key={o.title}>
-                        {/* eslint-disable-next-line */}
-                        <div
-                          className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 hover:bg-white"
-                          onClick={() => {
-                            if (isRootCategory(schema, configTab)) return;
+          <Middle
+            schema={schema}
+            configTab={configTab}
+            selectedCategory={selectedCategory}
+            editing={editing}
+            atomsMap={atomsMap}
+            setAtomsMap={setAtomsMap}
+            setSelectedCategory={setSelectedCategory}
+            selectedItemIdx={selectedItemIdx}
+            setSelectedItemIdx={setSelectedItemIdx}
+            referenceTypesToConfigKeys={referenceTypesToConfigKeys}
+            referenceTypesToTitles={referenceTypesToTitles}
+            refLabels={refLabels}
+            handleAddReferenceClick={handleAddReferenceClick}
+            campaignId={campaignId}
+            loading={loading}
+            config={config}
+            selectedCatSchema={selectedCatSchema}
+            model={model}
+            virtualLabId={virtualLabId}
+            projectId={projectId}
+          />
 
-                            setSelectedCategory(o.properties?.type.const ?? '');
-                            const initial: Record<string, ConfigValue> = {};
-                            if (o.properties)
-                              Object.entries(o.properties).forEach(([subkey, subValue]) => {
-                                if (subkey === 'type') initial[subkey] = subValue.const ?? null;
-                                else initial[subkey] = subValue.default ?? null;
-                              });
-                            const itemIndexes = Object.keys(atomsMap[configTab]).map((subkey) =>
-                              parseInt(subkey.split('_')[1], 10)
-                            );
-                            itemIndexes.sort((a, b) => a - b);
-                            const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
-                            setSelectedItemIdx(itemIdx);
-                            setAtomsMap({
-                              ...atomsMap,
-                              [configTab]: {
-                                ...atomsMap[configTab],
-                                [resolveKey(schema, configTab, itemIdx)]:
-                                  atom<Record<string, ConfigValue>>(initial),
-                              },
-                            });
-                          }}
-                        >
-                          <div className="text-primary-9 text-lg font-bold">{o.title}</div>
-                          <div className="mt-3">{o.description}</div>
-                        </div>
-                      </Fragment>
-                    );
-                  })}
-                </div>
-              )}
-
-            {schema.properties &&
-              schema.properties?.[configTab] &&
-              editing &&
-              (isRootCategory(schema, configTab) || selectedCatSchema) && (
-                <JSONSchemaForm
-                  referenceTypesToConfigKeys={referenceTypesToConfigKeys}
-                  referenceTypesToTitles={referenceTypesToTitles}
-                  refLabels={refLabels}
-                  key={
-                    isRootCategory(schema, configTab)
-                      ? configTab
-                      : resolveKey(schema, configTab, selectedItemIdx)
-                  }
-                  selectedCategory={selectedCategory}
-                  onAddReferenceClick={handleAddReferenceClick}
-                  disabled={!!campaignId || loading}
-                  config={config}
-                  schema={selectedCatSchema ?? schema.properties[configTab]}
-                  stateAtom={
-                    isAtom(atomsMap[configTab])
-                      ? atomsMap[configTab]
-                      : atomsMap[configTab][resolveKey(schema, configTab, selectedItemIdx)]
-                  }
-                  model={model}
-                  virtualLabId={virtualLabId}
-                  projectId={projectId}
-                />
-              )}
-          </div>
           <div className="overflow-hidden rounded-lg">
             <ModelPreview model={model} />
           </div>
