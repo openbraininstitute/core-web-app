@@ -22,27 +22,30 @@ export interface WebglNeuronSelectorProps {
   disableSynapses?: boolean;
 }
 
-export function WebglNeuronSelector({
-  projectId,
-  virtualLabId,
-  meModelId,
-  sessionId,
-  disableElectrodes,
-  disableSynapses,
-}: WebglNeuronSelectorProps) {
-  const painterManager = usePainterManager();
-  return (
-    <WebglNeuronSelectorContent
-      painterManager={painterManager}
-      projectId={projectId}
-      virtualLabId={virtualLabId}
-      meModelId={meModelId}
-      sessionId={sessionId}
-      disableElectrodes={disableElectrodes}
-      disableSynapses={disableSynapses}
-    />
-  );
-}
+// eslint-disable-next-line react/display-name
+export const WebglNeuronSelector = React.memo(
+  ({
+    projectId,
+    virtualLabId,
+    meModelId,
+    sessionId,
+    disableElectrodes,
+    disableSynapses,
+  }: WebglNeuronSelectorProps) => {
+    const painterManager = usePainterManager();
+    return (
+      <WebglNeuronSelectorContent
+        painterManager={painterManager}
+        projectId={projectId}
+        virtualLabId={virtualLabId}
+        meModelId={meModelId}
+        sessionId={sessionId}
+        disableElectrodes={disableElectrodes}
+        disableSynapses={disableSynapses}
+      />
+    );
+  }
+);
 
 type WebglNeuronSelectorContentProps = WebglNeuronSelectorProps & {
   painterManager: PainterManager;
@@ -77,6 +80,9 @@ function WebglNeuronSelectorContent({
             key="canvas"
             ref={(canvas: HTMLCanvasElement | null) => {
               painterManager.canvas = canvas;
+              return () => {
+                painterManager.canvas = null;
+              };
             }}
           />
           <HintPanel painterManager={painterManager} />

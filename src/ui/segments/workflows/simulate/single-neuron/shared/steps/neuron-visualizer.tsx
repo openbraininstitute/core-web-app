@@ -4,15 +4,10 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { FullscreenOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMemo, useTransition } from 'react';
 import { motion } from 'motion/react';
-import { useAtomValue } from 'jotai';
 
 import { useFullscreenSwitcher } from './hooks';
 
 import { NeuronViewerContainer } from '@/components/neuron-viewer/neuron-viewer-with-actions';
-import {
-  SimulationStatus,
-  simulationStatusAtomFamily,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import {
   type ThreeDVisualizerQueryParamKeys,
   threeDVisualizerState,
@@ -20,7 +15,8 @@ import {
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { cn } from '@/utils/css-class';
-import type { WorkspaceContext } from '@/types/common';
+
+import styles from './neuron-visualizer.module.css';
 
 type Props = {
   sessionId: string;
@@ -41,7 +37,6 @@ export function NeuronVisualizer({
   const [, startTransition] = useTransition();
   const { replace } = useRouter();
   const visualizerState = queryParams.get('3d') as ThreeDVisualizerQueryParamKeys;
-  const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
   const isCollapsed = visualizerState === threeDVisualizerState.Collapsed;
   const isExpanded = visualizerState === threeDVisualizerState.Expanded;
 
@@ -50,11 +45,6 @@ export function NeuronVisualizer({
     if (isCollapsed) return '3rem';
     return '100%';
   }, [isCollapsed]);
-
-  const enableActions = !(
-    simulationStatus?.status === SimulationStatus.LAUNCHED ||
-    simulationStatus?.status === SimulationStatus.SAVED
-  );
 
   const updateVisualizerState = (v: ThreeDVisualizerQueryParamKeys) => {
     startTransition(() => {
@@ -119,7 +109,10 @@ export function NeuronVisualizer({
                 </button>
                 <button
                   type="button"
-                  className="inline-flex size-10 items-center justify-center rounded bg-[#3A3A3A] px-3 py-3"
+                  className={cn(
+                    'inline-flex size-10 items-center justify-center rounded bg-[#3A3A3A] px-3 py-3',
+                    styles.hideInFullscreen
+                  )}
                   aria-label="Collapse 3D visualizer"
                   onClick={() => updateVisualizerState(threeDVisualizerState.Collapsed)}
                 >
@@ -128,54 +121,19 @@ export function NeuronVisualizer({
               </div>
             </div>
 
-            <ThreeDNeuronVisualizer
-              {...{
-                virtualLabId,
-                projectId,
-                memodelId,
-                sessionId,
-                disableElectrodes,
-                disableSynapses,
-                useActions: enableActions,
-              }}
-            />
+            <div className="absolute h-full w-full flex-1 border-none">
+              <NeuronViewerContainer
+                virtualLabId={virtualLabId}
+                disableElectrodes={disableElectrodes}
+                disableSynapses={disableSynapses}
+                projectId={projectId}
+                meModelId={memodelId}
+                sessionId={sessionId}
+              />
+            </div>
           </div>
         )}
       </motion.div>
     )
-  );
-}
-
-function ThreeDNeuronVisualizer({
-  virtualLabId,
-  projectId,
-  memodelId,
-  sessionId,
-  useActions,
-  disableElectrodes,
-  disableSynapses,
-}: WorkspaceContext &
-  Props & {
-    useActions: boolean;
-    disableElectrodes?: boolean;
-    disableSynapses?: boolean;
-  }) {
-  return (
-    <div className="absolute h-full w-full flex-1 border-none">
-      <NeuronViewerContainer
-        useCursor
-        useEvents
-        useZoomer
-        useLabels
-        useActions={useActions}
-        virtualLabId={virtualLabId}
-        disableElectrodes={disableElectrodes}
-        disableSynapses={disableSynapses}
-        projectId={projectId}
-        meModelId={memodelId}
-        sessionId={sessionId}
-        zoomPlacement="right"
-      />
-    </div>
   );
 }
