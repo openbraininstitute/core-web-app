@@ -71,19 +71,19 @@ export default function Middle({
         !selectedCategory &&
         editing && (
           <div className="flex flex-col items-center gap-5">
-            {schema.properties[configTab].additionalProperties.oneOf.map((o: any) => {
+            {schema.properties[configTab].additionalProperties.oneOf.map((o) => {
               return (
                 <Fragment key={o.title}>
-                  {/* eslint-disable-next-line */}
-                  <div
-                    className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 hover:bg-white"
+                  <button
+                    type="button"
+                    className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 text-left hover:bg-white"
                     onClick={() => {
                       if (isRootCategory(schema, configTab)) return;
 
                       setSelectedCategory(o.properties?.type.const ?? '');
                       const initial: Record<string, ConfigValue> = {};
                       if (o.properties)
-                        Object.entries(o.properties).forEach(([subkey, subValue]: any) => {
+                        Object.entries(o.properties).forEach(([subkey, subValue]) => {
                           if (subkey === 'type') initial[subkey] = subValue.const ?? null;
                           else initial[subkey] = subValue.default ?? null;
                         });
@@ -103,9 +103,9 @@ export default function Middle({
                       });
                     }}
                   >
-                    <div className="text-primary-9 text-lg font-bold">{o.title}</div>
-                    <div className="mt-3">{o.description}</div>
-                  </div>
+                    <span className="text-primary-9 block text-lg font-bold">{o.title}</span>
+                    <span className="mt-3 block">{o.description}</span>
+                  </button>
                 </Fragment>
               );
             })}
