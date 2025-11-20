@@ -28,16 +28,6 @@ import { Morphology } from '@/services/bluenaas-single-cell/types';
 import GenericEvent from '@/util/generic-event';
 import { useAppNotification } from '@/components/notification';
 
-const PALETTE: string[] = [];
-PALETTE[StructureItemType.Axon] = '#07f';
-PALETTE[StructureItemType.Dendrite] = '#F55';
-PALETTE[StructureItemType.BasalDendrite] = '#F33';
-PALETTE[StructureItemType.ApicalDendrite] = '#F8f';
-PALETTE[StructureItemType.Myelin] = `#778`;
-PALETTE[StructureItemType.Soma] = '#dde';
-PALETTE[StructureItemType.Selected] = '#fc0';
-PALETTE[StructureItemType.Unknown] = '#a6f';
-
 interface SelectedItem {
   x: number;
   y: number;
@@ -177,7 +167,6 @@ export class PainterManager {
     if (this._canvas === canvas) return;
 
     this._canvas = canvas;
-    console.log('Set Canvas:', canvas);
     if (canvas) this.initialize();
     else this.delete();
   }
@@ -191,7 +180,6 @@ export class PainterManager {
       this.lastCameraState = null;
     }
     this._morphology = morphology;
-    console.log('Set Morphology:', morphology);
     if (!morphology) return;
 
     const structure = new Structure(morphology);
@@ -230,7 +218,6 @@ export class PainterManager {
   };
 
   delete() {
-    console.log('DELETE Manager', this.context?.name);
     this.painter?.delete();
     this.painter = null;
     if (this.context) {
@@ -304,7 +291,6 @@ export class PainterManager {
     });
     this.painter = new Painter(context);
     context.add(this.painter);
-    console.log('>>> Initialize:', context.name);
     context.eventWebGLContextRestored.addListener(() => {
       this.delete();
       globalThis.requestAnimationFrame(() => this.initialize());
@@ -328,9 +314,13 @@ export class PainterManager {
       context.camera.setCurrentState(this.lastCameraState);
       this.eventRestingPosition.dispatch(false);
     }
-    console.log('<<< Initialize:', context.name);
   }
 
+  /**
+   * We paint a thicker representation of the neuron in an offsceen canvas.
+   * The color of each segment is the ID of this segment. So we must NOT
+   * use anti-aliasing, or any shading (other than flat).
+   */
   private initOffscreen(context: TgdContext) {
     this.offscreen = new OffscreenPainter(context);
     this.offscreen.structure = this.structure;

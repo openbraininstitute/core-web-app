@@ -1,6 +1,5 @@
 /* eslint-disable no-bitwise */
 import {
-  TgdCameraPerspective,
   TgdContext,
   TgdPainterClear,
   TgdPainterGroup,
@@ -28,10 +27,7 @@ export class OffscreenPainter {
       antialias: false,
       alpha: false,
     });
-    context.camera = new TgdCameraPerspective();
-    context.camera.near = onscreenContext.camera.near;
-    context.camera.far = onscreenContext.camera.far;
-    context.camera.fromTransfo(onscreenContext.camera.transfo);
+    context.camera = onscreenContext.camera;
     this.offscreenContext = context;
     context.add(this.group);
     this.paint();
@@ -88,13 +84,14 @@ export class OffscreenPainter {
   }
 
   private readonly paint = () => {
-    const { canvas } = this.onscreenContext;
+    const { onscreenContext, offscreenContext, offscreenCanvas } = this;
+    offscreenContext.camera = onscreenContext.camera;
+    const { canvas } = onscreenContext;
     const w = Math.ceil(canvas.width / 2);
     const h = Math.ceil(canvas.height / 2);
-    this.offscreenCanvas.width = w;
-    this.offscreenCanvas.height = h;
-    this.offscreenContext.camera.fromTransfo(this.onscreenContext.camera.transfo);
-    this.offscreenContext.paint();
+    offscreenCanvas.width = w;
+    offscreenCanvas.height = h;
+    offscreenContext.paint();
   };
 
   delete() {

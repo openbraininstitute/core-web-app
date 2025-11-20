@@ -77,7 +77,6 @@ export class Painter extends TgdPainterGroup {
     const { context } = this;
     this._structure = value;
     const segments = makeSegments(value);
-    console.log('🚀 [painter] segments =', segments); // @FIXME: Remove this line written on 2025-11-19 at 18:50
     this.groupSegments.delete();
     this.groupSegments.add(
       new TgdPainterSegments(context, {
