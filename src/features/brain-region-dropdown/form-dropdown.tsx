@@ -40,6 +40,7 @@ export function BrainRegionDropdown({
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [search, setSearch] = useState('');
 
+  // Set the default brain region on mount or when the prop changes
   useEffect(() => {
     if (defaultBrainRegion && brainRegionHierarchy) {
       const defaultOption = brainRegionHierarchy.options.find(
@@ -82,6 +83,15 @@ export function BrainRegionDropdown({
   });
 
   const items = virtualizer.getVirtualItems();
+
+  useEffect(() => {
+    if (popoverOpen) {
+      const timer = setTimeout(() => {
+        virtualizer.measure();
+      }, 0); 
+      return () => clearTimeout(timer);
+    }
+  }, [popoverOpen, virtualizer]);
 
   const renderItem = useCallback(
     ({ data, selected: isSelected, onSelect: handleSelect }: BrainRegionHierarchyOption) => {
@@ -259,11 +269,13 @@ export function BrainRegionDropdownWithFormItem({
       }) {
         const handleSelectBrainRegion = useCallback(
           (br: IBrainRegionHierarchy) => {
+            // State update (onChange) is inside startTransition (Previous fix)
             startTransition(() => {
               onChange?.(br.id);
               onSelectBrainRegion?.(br);
             });
           },
+          // Dependency array (Previous fix)
           [onChange] 
         );
 
