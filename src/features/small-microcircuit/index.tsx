@@ -1,7 +1,7 @@
 'use client';
 
 import { LoadingOutlined, UpOutlined } from '@ant-design/icons';
-import { Suspense, useState } from 'react';
+import { Suspense, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import SimulationsTab from './_components/simulations';
 import Left from './_components/left';
@@ -48,15 +48,15 @@ export default function SimulationCampaignConfiguration({
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
 
   const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
-
   const { model } = useModel({ id: modelId, context: { virtualLabId, projectId } });
-
   const { schema, refLabels, referenceTypesToConfigKeys, referenceTypesToTitles } =
     useObioneJsonSchema(model, notification, setAtomsMap, initialConfig);
 
   const selectedCatSchema = schema?.properties?.[configTab]?.additionalProperties?.oneOf?.find(
     (s) => s.properties?.type.const === selectedCategory
   );
+
+  const allEntries = useRef<Set<string>>(new Set());
 
   const handleAddReferenceClick = (referenceTab: string) => {
     setConfigTab(referenceTab);
@@ -111,6 +111,7 @@ export default function SimulationCampaignConfiguration({
             model={model}
             initialConfig={initialConfig}
             setTab={setTab}
+            allEntries={allEntries.current}
           />
 
           <Middle
@@ -134,6 +135,7 @@ export default function SimulationCampaignConfiguration({
             model={model}
             virtualLabId={virtualLabId}
             projectId={projectId}
+            allEntries={allEntries.current}
           />
 
           <div className="overflow-hidden rounded-lg">

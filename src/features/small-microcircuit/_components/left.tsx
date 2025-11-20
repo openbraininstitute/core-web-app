@@ -34,6 +34,7 @@ export default function Left({
   model,
   initialConfig,
   setTab,
+  allEntries,
 }: {
   virtualLabId: string;
   projectId: string;
@@ -55,6 +56,7 @@ export default function Left({
   setTab: React.Dispatch<React.SetStateAction<TabType>>;
   model: ICircuit | IMEModel;
   initialConfig?: Config;
+  allEntries: Set<string>;
 }) {
   const notification = useAppNotification();
   const apiUrl = useApiUrl({ model });
@@ -95,6 +97,7 @@ export default function Left({
                           setEditing={setEditing}
                           setSelectedCategory={setSelectedCategory}
                           readOnly={readOnly}
+                          allEntries={allEntries}
                         />
                       );
                     })}

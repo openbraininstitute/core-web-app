@@ -34,6 +34,7 @@ type MiddleProps = {
   model: ICircuit | IMEModel;
   virtualLabId: string;
   projectId: string;
+  allEntries: Set<string>;
 };
 
 export default function Middle({
@@ -57,6 +58,7 @@ export default function Middle({
   model,
   virtualLabId,
   projectId,
+  allEntries,
 }: MiddleProps) {
   return (
     <div
@@ -92,9 +94,10 @@ export default function Middle({
                     itemIndexes.sort((a, b) => a - b);
                     const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
 
-                    const newEntry = `${schema.properties?.[configTab].singular_name ?? 'Element'}_${itemIdx}`;
+                    const newEntry = `${schema.properties?.[configTab].singular_name ?? 'element'}_${itemIdx}`;
 
                     setSelectedEntry(newEntry);
+                    allEntries.add(newEntry);
 
                     setAtomsMap({
                       ...atomsMap,

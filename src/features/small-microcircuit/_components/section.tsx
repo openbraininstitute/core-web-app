@@ -33,6 +33,7 @@ export function Section({
   setEditing,
   setSelectedCategory,
   readOnly,
+  allEntries,
 }: {
   schema: JSONSchema | null; // The global schema
   k: string; // secition key
@@ -50,6 +51,7 @@ export function Section({
   setEditing: React.Dispatch<React.SetStateAction<boolean>>;
   setSelectedCategory: React.Dispatch<React.SetStateAction<string>>;
   readOnly?: boolean;
+  allEntries: Set<string>;
 }) {
   if (!schema || !schema?.properties) return;
 
@@ -190,6 +192,7 @@ export function Section({
                         }
 
                         setSelectedEntry('');
+                        allEntries.delete(subkey);
                       }}
                     />
                   )}
@@ -206,7 +209,7 @@ export function Section({
                 setSelectedCategory('');
               }}
             >
-              Add {sectionSchema.singular_name ?? sectionSchema.title ?? 'item'}
+              Add {sectionSchema.singular_name ?? sectionSchema.title ?? 'element'}
               <PlusCircleOutlined />
             </button>
           )}
