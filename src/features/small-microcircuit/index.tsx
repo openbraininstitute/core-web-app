@@ -1,12 +1,11 @@
 'use client';
 
 import { LoadingOutlined, UpOutlined } from '@ant-design/icons';
-import Ajv, { AnySchema } from 'ajv';
 import { atom } from 'jotai';
-import { Fragment, Suspense, useMemo, useRef, useState } from 'react';
+import { Fragment, Suspense, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import SimulationsTab from './_components/simulations';
-import { useApiUrl, useModel } from './_components/hooks';
+import { useApiUrl, useModel, useValidateSchema } from './_components/hooks';
 
 import authFetch from '@/authFetch';
 import { useAppNotification } from '@/components/notification';
@@ -61,7 +60,7 @@ export default function SimulationCampaignConfiguration({
   const [loading, setLoading] = useState(false);
   const notification = useAppNotification();
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
-  const initialConfigValidated = useRef(false);
+
   const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
 
   const { model } = useModel({ id: modelId, context: { virtualLabId, projectId } });
@@ -78,28 +77,11 @@ export default function SimulationCampaignConfiguration({
     setEditing(true);
     setSelectedCategory('');
   };
-
-  const validate = useMemo(() => {
-    const ajv = new Ajv({ strictSchema: false, allErrors: true });
-    if (!schema) return;
-    return ajv.compile(schema as AnySchema);
-  }, [schema]);
-
   const config = useConfigAtom(schema, atomsMap);
 
-  // Validate initial config
-  if (validate && initialConfig && !initialConfigValidated.current) {
-    initialConfigValidated.current = true;
-    validate(initialConfig);
-    if (validate.errors) throw new Error('Invalid Simulation Campaign Configuration');
-  }
-
-  const errors = useMemo(() => {
-    if (validate) validate(config);
-    return validate?.errors;
-  }, [validate, config]);
-
   const apiUrl = useApiUrl({ model });
+
+  const errors = useValidateSchema({ initialConfig, config, schema });
 
   if (!schema || !refLabels || !referenceTypesToConfigKeys || !referenceTypesToTitles) {
     return (
