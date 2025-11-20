@@ -3,7 +3,7 @@
 import { LoadingOutlined, UpOutlined } from '@ant-design/icons';
 import Ajv, { AnySchema } from 'ajv';
 import { atom, useAtomValue } from 'jotai';
-import { Fragment, Suspense, useCallback, useMemo, useRef, useState } from 'react';
+import { Fragment, Suspense, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { match } from 'ts-pattern';
 import SimulationsTab from './_components/simulations';
@@ -20,6 +20,7 @@ import {
 } from '@/features/small-microcircuit/_components/components';
 import { useConfigAtom } from '@/features/small-microcircuit/_components/hooks/config-atom';
 import {
+  isNonEmptyCategory,
   isRootCategory,
   resolveKey,
   useObioneJsonSchema,
@@ -101,15 +102,6 @@ export default function SimulationCampaignConfiguration({
     return validate?.errors;
   }, [validate, config]);
 
-  const isNonEmptyCategory = useCallback(
-    (category: string) =>
-      schema?.properties &&
-      Object.entries(schema.properties).filter(
-        ([k]) => k !== 'type' && ORDERING[k]?.category === category
-      ).length > 0,
-    [schema]
-  );
-
   if (!schema || !refLabels || !referenceTypesToConfigKeys || !referenceTypesToTitles) {
     return (
       <div className="flex h-full w-full items-center justify-center">
@@ -151,7 +143,7 @@ export default function SimulationCampaignConfiguration({
             <div className="flex flex-grow flex-col items-center gap-5 overflow-y-auto pr-5 pb-5">
               {CATEGORIES.map((c) => {
                 return (
-                  isNonEmptyCategory(c) && (
+                  isNonEmptyCategory(c, schema) && (
                     <Fragment key={c}>
                       <div className="self-start text-gray-500 uppercase">{c}</div>
                       {schema.properties &&
