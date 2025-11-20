@@ -6,7 +6,7 @@ import {
   JSONSchemaForm,
 } from '@/features/small-microcircuit/_components/components';
 import { AtomsMap, JSONSchema } from '@/features/small-microcircuit/types';
-import { isRootCategory, resolveKey } from '@/features/small-microcircuit/_components/hooks/schema';
+import { isRootCategory } from '@/features/small-microcircuit/_components/hooks/schema';
 import { isAtom } from '@/features/small-microcircuit/_components/utils';
 import { classNames } from '@/util/utils';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -21,8 +21,8 @@ type MiddleProps = {
   atomsMap: AtomsMap;
   setAtomsMap: (v: AtomsMap) => void;
   setSelectedCategory: (s: string) => void;
-  selectedItemIdx: number | null;
-  setSelectedItemIdx: (n: number | null) => void;
+  selectedEntry: string;
+  setSelectedEntry: (entry: string) => void;
   referenceTypesToConfigKeys: Record<string, string>;
   referenceTypesToTitles: Record<string, string>;
   refLabels: Record<string, string>;
@@ -44,8 +44,8 @@ export default function Middle({
   atomsMap,
   setAtomsMap,
   setSelectedCategory,
-  selectedItemIdx,
-  setSelectedItemIdx,
+  selectedEntry,
+  setSelectedEntry,
   referenceTypesToConfigKeys,
   referenceTypesToTitles,
   refLabels,
@@ -91,13 +91,16 @@ export default function Middle({
                     );
                     itemIndexes.sort((a, b) => a - b);
                     const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
-                    setSelectedItemIdx(itemIdx);
+
+                    const newEntry = `${schema.properties?.[configTab].singular_name ?? 'Element'}_${itemIdx}`;
+
+                    setSelectedEntry(newEntry);
+
                     setAtomsMap({
                       ...atomsMap,
                       [configTab]: {
                         ...atomsMap[configTab],
-                        [resolveKey(schema, configTab, itemIdx)]:
-                          atom<Record<string, ConfigValue>>(initial),
+                        [newEntry]: atom<Record<string, ConfigValue>>(initial),
                       },
                     });
                   }}
@@ -118,11 +121,7 @@ export default function Middle({
             referenceTypesToConfigKeys={referenceTypesToConfigKeys}
             referenceTypesToTitles={referenceTypesToTitles}
             refLabels={refLabels}
-            key={
-              isRootCategory(schema, configTab)
-                ? configTab
-                : resolveKey(schema, configTab, selectedItemIdx)
-            }
+            key={isRootCategory(schema, configTab) ? configTab : `${configTab}_${selectedEntry}`}
             selectedCategory={selectedCategory}
             onAddReferenceClick={handleAddReferenceClick}
             disabled={!!campaignId || loading}
@@ -131,7 +130,7 @@ export default function Middle({
             stateAtom={
               isAtom(atomsMap[configTab])
                 ? atomsMap[configTab]
-                : atomsMap[configTab]?.[resolveKey(schema, configTab, selectedItemIdx)]
+                : atomsMap[configTab]?.[selectedEntry]
             }
             model={model}
             virtualLabId={virtualLabId}

@@ -42,7 +42,7 @@ export default function SimulationCampaignConfiguration({
   const [configTab, setConfigTab] = useState<string>('info');
   const [editing, setEditing] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedItemIdx, setSelectedItemIdx] = useState<number | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState('');
   const [loading, setLoading] = useState(false);
   const notification = useAppNotification();
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
@@ -101,8 +101,8 @@ export default function SimulationCampaignConfiguration({
             config={config}
             campaignId={campaignId}
             loading={loading}
-            selectedItemIdx={selectedItemIdx}
-            setSelectedItemIdx={setSelectedItemIdx}
+            selectedEntry={selectedEntry}
+            setSelectedEntry={setSelectedEntry}
             setEditing={setEditing}
             setSelectedCategory={setSelectedCategory}
             readOnly={readOnly}
@@ -121,8 +121,8 @@ export default function SimulationCampaignConfiguration({
             atomsMap={atomsMap}
             setAtomsMap={setAtomsMap}
             setSelectedCategory={setSelectedCategory}
-            selectedItemIdx={selectedItemIdx}
-            setSelectedItemIdx={setSelectedItemIdx}
+            selectedEntry={selectedEntry}
+            setSelectedEntry={setSelectedEntry}
             referenceTypesToConfigKeys={referenceTypesToConfigKeys}
             referenceTypesToTitles={referenceTypesToTitles}
             refLabels={refLabels}

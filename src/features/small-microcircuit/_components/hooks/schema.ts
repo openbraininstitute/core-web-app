@@ -143,14 +143,6 @@ export function isRootCategory(schema: JSONSchema, key: string) {
   return schema.properties?.[key] && !schema.properties[key].additionalProperties;
 }
 
-export function resolveKey(schema: JSONSchema, tabKey: string, itemIdx: number | null) {
-  if (typeof itemIdx === null) throw new Error('Invalid itemIdx');
-  if (!schema.properties?.[tabKey]?.singular_name) throw new Error(`Invalid schema for ${tabKey}`);
-  if (isRootCategory(schema, tabKey)) throw new Error("Shouldn't be a root category");
-
-  return `${schema.properties[tabKey].singular_name.replaceAll(' ', '')}_${itemIdx}`;
-}
-
 export function isNonEmptyCategory(category: string, schema: JSONSchema) {
   return (
     schema?.properties &&

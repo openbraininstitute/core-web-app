@@ -24,8 +24,8 @@ export default function Left({
   config,
   campaignId,
   loading,
-  selectedItemIdx,
-  setSelectedItemIdx,
+  selectedEntry,
+  setSelectedEntry,
   setEditing,
   setSelectedCategory,
   readOnly,
@@ -45,8 +45,8 @@ export default function Left({
   config: Config;
   campaignId: string;
   loading: boolean;
-  selectedItemIdx: number | null;
-  setSelectedItemIdx: (selectedItemIdx: number | null) => void;
+  selectedEntry: string;
+  setSelectedEntry: (selectedEntry: string) => void;
   setEditing: React.Dispatch<React.SetStateAction<boolean>>;
   setSelectedCategory: React.Dispatch<React.SetStateAction<string>>;
   readOnly?: boolean;
@@ -90,8 +90,8 @@ export default function Left({
                           campaignId={campaignId}
                           loading={loading}
                           errors={errors}
-                          selectedItemIdx={selectedItemIdx}
-                          setSelectedItemIdx={setSelectedItemIdx}
+                          selectedEntry={selectedEntry}
+                          setSelectedEntry={setSelectedEntry}
                           setEditing={setEditing}
                           setSelectedCategory={setSelectedCategory}
                           readOnly={readOnly}
