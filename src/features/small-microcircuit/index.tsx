@@ -5,9 +5,9 @@ import { atom } from 'jotai';
 import { Fragment, Suspense, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import SimulationsTab from './_components/simulations';
-import { useApiUrl, useModel, useValidateSchema } from './_components/hooks';
+import Left from './_components/left';
+import { useModel } from './_components/hooks';
 
-import authFetch from '@/authFetch';
 import { useAppNotification } from '@/components/notification';
 import {
   Config,
@@ -16,21 +16,17 @@ import {
 } from '@/features/small-microcircuit/_components/components';
 import { useConfigAtom } from '@/features/small-microcircuit/_components/hooks/config-atom';
 import {
-  isNonEmptyCategory,
   isRootCategory,
   resolveKey,
   useObioneJsonSchema,
 } from '@/features/small-microcircuit/_components/hooks/schema';
 import ModelPreview from '@/features/small-microcircuit/_components/model-preview';
-import { Section } from '@/features/small-microcircuit/_components/section';
 import TabsSelector from '@/features/small-microcircuit/_components/tabs-selector';
-import { CATEGORIES, isAtom, ORDERING } from '@/features/small-microcircuit/_components/utils';
-
+import { isAtom } from '@/features/small-microcircuit/_components/utils';
 import { AtomsMap, TabType } from '@/features/small-microcircuit/types';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
-import { assertErrorMessage, classNames } from '@/util/utils';
+import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
-
 import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
 
 export default function SimulationCampaignConfiguration({
@@ -79,10 +75,6 @@ export default function SimulationCampaignConfiguration({
   };
   const config = useConfigAtom(schema, atomsMap);
 
-  const apiUrl = useApiUrl({ model });
-
-  const errors = useValidateSchema({ initialConfig, config, schema });
-
   if (!schema || !refLabels || !referenceTypesToConfigKeys || !referenceTypesToTitles) {
     return (
       <div className="flex h-full w-full items-center justify-center">
@@ -108,143 +100,29 @@ export default function SimulationCampaignConfiguration({
 
       {tab === 'configuration' && (
         <div className={styles.threeColumns}>
-          <div className={styles.scrollable}>
-            <div className="flex flex-grow flex-col items-center gap-5 overflow-y-auto pr-5 pb-5">
-              {CATEGORIES.map((c) => {
-                return (
-                  isNonEmptyCategory(c, schema) && (
-                    <Fragment key={c}>
-                      <div className="self-start text-gray-500 uppercase">{c}</div>
-                      {schema.properties &&
-                        Object.entries(schema.properties)
-                          .filter(([k]) => k !== 'type' && ORDERING[k]?.category === c)
-                          .sort((a, b) => {
-                            const order = (k: string) => ORDERING[k]?.order ?? 999;
-                            return order(a[0]) - order(b[0]);
-                          })
-                          .map(([k, v]) => {
-                            return (
-                              <Section
-                                key={k}
-                                k={k}
-                                schema={schema}
-                                sectionSchema={v}
-                                atomsMap={atomsMap}
-                                setAtomsMap={setAtomsMap}
-                                configTab={configTab}
-                                setConfigTab={setConfigTab}
-                                config={config}
-                                campaignId={campaignId}
-                                loading={loading}
-                                errors={errors}
-                                selectedItemIdx={selectedItemIdx}
-                                setSelectedItemIdx={setSelectedItemIdx}
-                                setEditing={setEditing}
-                                setSelectedCategory={setSelectedCategory}
-                                readOnly={readOnly}
-                              />
-                            );
-                          })}
-                    </Fragment>
-                  )
-                );
-              })}
-            </div>
+          <Left
+            virtualLabId={virtualLabId}
+            projectId={projectId}
+            schema={schema}
+            atomsMap={atomsMap}
+            setAtomsMap={setAtomsMap}
+            configTab={configTab}
+            setConfigTab={setConfigTab}
+            config={config}
+            campaignId={campaignId}
+            loading={loading}
+            selectedItemIdx={selectedItemIdx}
+            setSelectedItemIdx={setSelectedItemIdx}
+            setEditing={setEditing}
+            setSelectedCategory={setSelectedCategory}
+            readOnly={readOnly}
+            setCampaignId={setCampaignId}
+            setLoading={setLoading}
+            model={model}
+            initialConfig={initialConfig}
+            setTab={setTab}
+          />
 
-            {!readOnly && (
-              <button
-                type="button"
-                className={classNames(
-                  'flex min-h-[50px] w-[95%] items-center justify-center rounded-full text-lg drop-shadow',
-                  (errors && errors.length > 0) || loading
-                    ? 'bg-gray-300 text-gray-500'
-                    : 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
-                )}
-                onClick={async () => {
-                  if (loading) return;
-                  if (campaignId) {
-                    setCampaignId('');
-                    return;
-                  }
-
-                  setLoading(true);
-                  try {
-                    const configCopy = { ...config };
-                    configCopy.type = 'CircuitSimulationScanConfig';
-
-                    const coordinateCountRes = await authFetch(
-                      `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/declared/scan_config/grid-scan-coordinate-count`,
-                      {
-                        method: 'POST',
-                        body: JSON.stringify(config),
-                        headers: {
-                          Accept: 'application/json',
-                          'Content-Type': 'application/json',
-                          'virtual-lab-id': virtualLabId,
-                          'project-id': projectId,
-                        },
-                      }
-                    );
-
-                    if (coordinateCountRes.status !== 200) {
-                      const message = await coordinateCountRes.json();
-                      notification.error({
-                        message: 'An error ocurred generating the simulation campaign',
-                        description: message.detail,
-                      });
-                      return;
-                    }
-
-                    const res = await authFetch(apiUrl, {
-                      method: 'POST',
-                      body: JSON.stringify(config),
-                      headers: {
-                        Accept: 'application/json',
-                        'Content-Type': 'application/json',
-                        'virtual-lab-id': virtualLabId,
-                        'project-id': projectId,
-                      },
-                    });
-
-                    if (res.status !== 200) {
-                      const errorRes = await res.json();
-
-                      const details =
-                        res.status === 500 ? errorRes.detail : (errorRes?.details?.[0].msg ?? '');
-
-                      notification.error({
-                        message: 'An error ocurred generating the simulation campaign',
-                        description: details,
-                      });
-                      return;
-                    }
-
-                    const returnedCampaignId = (await res.json()) as string;
-                    if (returnedCampaignId === '') {
-                      notification.error({
-                        message: 'An error ocurred generating the simulation campaign',
-                      });
-                      return;
-                    }
-
-                    setCampaignId(returnedCampaignId);
-                    setTab('simulations');
-                  } catch (e) {
-                    notification.error({ message: assertErrorMessage(e) });
-                    return;
-                  } finally {
-                    setLoading(false);
-                  }
-                }}
-                disabled={!!(errors && errors.length > 0) || loading || readOnly}
-              >
-                <div className="flex justify-between gap-5">
-                  {!campaignId ? 'Generate simulations' : 'New simulation campaign'}
-                  {loading && <LoadingOutlined />}
-                </div>
-              </button>
-            )}
-          </div>
           <div
             className={classNames(
               styles.scrollable,
