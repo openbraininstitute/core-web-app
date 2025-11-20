@@ -21,12 +21,10 @@ export const viewDefForIonChannelRecording: ViewDefinitionConfig = {
   ],
   summaryViewFields: [
     { field: EntityCoreFields.BrainRegion },
-    { field: EntityCoreFields.Species },
-    { field: EntityCoreFields.License },
     { field: EntityCoreFields.IonChannel },
     { field: EntityCoreFields.Temperature },
     { field: EntityCoreFields.CellLine },
-    { field: EntityCoreFields.SubjectAge },
+    { field: EntityCoreFields.License },
   ],
   miniDetailView: [
     { field: EntityCoreFields.BrainRegion },

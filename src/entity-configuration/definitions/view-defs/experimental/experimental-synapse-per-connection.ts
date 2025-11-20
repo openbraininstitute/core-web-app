@@ -20,18 +20,12 @@ export const viewDefForExperimentalSynapsePerConnection: ViewDefinitionConfig = 
   ],
   summaryViewFields: [
     { field: EntityCoreFields.PreSynapticBrainRegion },
-    { field: EntityCoreFields.Species },
-    { field: EntityCoreFields.License },
     { field: EntityCoreFields.PostSynapticBrainRegion },
-    { field: EntityCoreFields.SubjectAge },
     { field: EntityCoreFields.PreSynapticCellType },
-    { field: EntityCoreFields.Weight },
     { field: EntityCoreFields.PostSynapticCellType },
     { field: EntityCoreFields.MeanSTD },
     { field: EntityCoreFields.Sem },
-    // {
-    //   field: EntityCoreFields.NumberOfConnections,
-    // },
+    { field: EntityCoreFields.License },
   ],
   miniDetailView: [
     { field: EntityCoreFields.PreSynapticBrainRegion },
