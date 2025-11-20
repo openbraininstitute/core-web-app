@@ -166,8 +166,7 @@ export function Section({
                                     !isPlainObject(field) ||
                                     typeof field.block_name !== 'string' ||
                                     isAtom(atomsMap[configK]) || // skip top level atoms (e.g initialize)
-                                    field.block_name !== subkey ||
-                                    configK !== k
+                                    field.block_name !== subkey
                                   )
                                     return;
 
