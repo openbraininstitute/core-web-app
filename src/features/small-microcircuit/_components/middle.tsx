@@ -1,5 +1,4 @@
 import { atom } from 'jotai';
-import { Fragment } from 'react';
 
 import {
   Config,
@@ -73,40 +72,39 @@ export default function Middle({
           <div className="flex flex-col items-center gap-5">
             {schema.properties[configTab].additionalProperties.oneOf.map((o) => {
               return (
-                <Fragment key={o.title}>
-                  <button
-                    type="button"
-                    className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 text-left hover:bg-white"
-                    onClick={() => {
-                      if (isRootCategory(schema, configTab)) return;
+                <button
+                  key={o.title}
+                  type="button"
+                  className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 text-left hover:bg-white"
+                  onClick={() => {
+                    if (isRootCategory(schema, configTab)) return;
 
-                      setSelectedCategory(o.properties?.type.const ?? '');
-                      const initial: Record<string, ConfigValue> = {};
-                      if (o.properties)
-                        Object.entries(o.properties).forEach(([subkey, subValue]) => {
-                          if (subkey === 'type') initial[subkey] = subValue.const ?? null;
-                          else initial[subkey] = subValue.default ?? null;
-                        });
-                      const itemIndexes = Object.keys(atomsMap[configTab] ?? {}).map((subkey) =>
-                        parseInt(subkey.split('_')[1], 10)
-                      );
-                      itemIndexes.sort((a, b) => a - b);
-                      const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
-                      setSelectedItemIdx(itemIdx);
-                      setAtomsMap({
-                        ...atomsMap,
-                        [configTab]: {
-                          ...atomsMap[configTab],
-                          [resolveKey(schema, configTab, itemIdx)]:
-                            atom<Record<string, ConfigValue>>(initial),
-                        },
+                    setSelectedCategory(o.properties?.type.const ?? '');
+                    const initial: Record<string, ConfigValue> = {};
+                    if (o.properties)
+                      Object.entries(o.properties).forEach(([subkey, subValue]) => {
+                        if (subkey === 'type') initial[subkey] = subValue.const ?? null;
+                        else initial[subkey] = subValue.default ?? null;
                       });
-                    }}
-                  >
-                    <span className="text-primary-9 block text-lg font-bold">{o.title}</span>
-                    <span className="mt-3 block">{o.description}</span>
-                  </button>
-                </Fragment>
+                    const itemIndexes = Object.keys(atomsMap[configTab] ?? {}).map((subkey) =>
+                      parseInt(subkey.split('_')[1], 10)
+                    );
+                    itemIndexes.sort((a, b) => a - b);
+                    const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
+                    setSelectedItemIdx(itemIdx);
+                    setAtomsMap({
+                      ...atomsMap,
+                      [configTab]: {
+                        ...atomsMap[configTab],
+                        [resolveKey(schema, configTab, itemIdx)]:
+                          atom<Record<string, ConfigValue>>(initial),
+                      },
+                    });
+                  }}
+                >
+                  <span className="text-primary-9 block text-lg font-bold">{o.title}</span>
+                  <span className="mt-3 block">{o.description}</span>
+                </button>
               );
             })}
           </div>
