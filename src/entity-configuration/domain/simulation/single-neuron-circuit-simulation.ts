@@ -28,6 +28,8 @@ import type {
 } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { WorkspaceContext } from '@/types/common';
 
+const SCALE = CircuitScaleDictionary.Single;
+
 // NOTE: this is due entitycore do not support yet
 async function resolveSimulationCampaigns({
   withFacets,
@@ -46,7 +48,7 @@ async function resolveSimulationCampaigns({
   const source = await getCircuitSimulationCampaigns({
     context,
     withFacets,
-    filters: { ...filters, circuit__scale: CircuitScaleDictionary.Single },
+    filters: { ...filters, circuit__scale: SCALE },
   });
   // extract all simulation IDs
   const allSimIds = flatMap(
@@ -135,11 +137,23 @@ export const SingeNeuronCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulati
   api: {
     config: { allowedFacets: true },
     query: {
+      count: (...params) => {
+        const filters = discardBrainRegionQueryParams(params[0].filters);
+        return getCircuitSimulationCampaigns({
+          ...params,
+          context: params[0].context,
+          withFacets: params[0].withFacets,
+          filters: {
+            ...filters,
+            circuit__scale: SCALE,
+          },
+        });
+      },
       list: (params: Parameters<typeof resolveSimulationCampaigns>[0]) =>
         resolveSimulationCampaigns({
           ...params,
           circuitScaleFilter: {
-            scale: CircuitScaleDictionary.Single,
+            scale: SCALE,
           },
         }),
       one: getCircuitSimulationCampaign,

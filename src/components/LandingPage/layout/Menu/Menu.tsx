@@ -1,10 +1,13 @@
-import Link from 'next/link';
-import React from 'react';
+'use client';
 
-import { ID_MENU, MENU_ITEMS } from '../../constants';
+import Link from 'next/link';
+import React, { useState } from 'react';
+
+import { ID_MENU } from '../../constants';
+import { IconChevronRight } from '../../icons/IconChevronRight';
 import { IconMenu } from '../../icons/IconMenu';
 import { EnumSection } from '../../sections/sections';
-import PopupMenu from './PopupMenu';
+import PopupMenu from './PopupMenu/PopupMenu';
 
 import { classNames } from '@/util/utils';
 import styles from './Menu.module.css';
@@ -15,20 +18,68 @@ interface MenuProps {
   section?: EnumSection;
 }
 
+interface MenuItem {
+  caption: string;
+  slug: string;
+  index?: EnumSection;
+  submenu?: Array<{ caption: string; slug: string; index?: EnumSection }>;
+}
+
+const MENU_ITEMS: MenuItem[] = [
+  {
+    caption: 'About',
+    slug: '/about',
+    index: EnumSection.About,
+    submenu: [
+      { caption: 'Our story', slug: '/the-real-digital-brain-story', index: EnumSection.Story },
+      { caption: 'Mission', slug: '/mission', index: EnumSection.Mission },
+      { caption: 'Team', slug: '/team', index: EnumSection.Team },
+    ],
+  },
+  {
+    caption: 'Resources',
+    slug: '/resources',
+    index: EnumSection.Resources,
+    submenu: [
+      { caption: 'Notebooks', slug: '/resources' },
+      { caption: 'Gallery', slug: '/gallery', index: EnumSection.Gallery },
+    ],
+  },
+  {
+    caption: 'The Platform',
+    slug: '/pricing',
+    submenu: [{ caption: 'Pricing', slug: '/pricing', index: EnumSection.Pricing }],
+  },
+  {
+    caption: 'SfN 2025',
+    slug: '/sfn-2025',
+    index: EnumSection.Sfn2025,
+  },
+  {
+    caption: 'News',
+    slug: '/news',
+    index: EnumSection.News,
+  },
+  {
+    caption: 'Contact',
+    slug: '/contact',
+    index: EnumSection.Contact,
+  },
+];
+
 export default function Menu({ className, scrollHasStarted, section }: MenuProps) {
   const [showMenu, setShowMenu] = React.useState(false);
   const [showMenuComponent, setShowMenuComponent] = React.useState(true);
   const [lastScrollY, setLastScrollY] = React.useState(0);
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   React.useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
 
       if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        // Scrolling down
         setShowMenuComponent(false);
       } else if (currentScrollY < lastScrollY) {
-        // Scrolling up
         setShowMenuComponent(true);
       }
 
@@ -60,18 +111,55 @@ export default function Menu({ className, scrollHasStarted, section }: MenuProps
         </Link>
 
         <div className={styles.items}>
-          {MENU_ITEMS.map(({ caption, index, slug }) => (
-            <Link
-              key={slug}
-              href={slug}
-              className={classNames(index === section && styles.selected)}
+          {MENU_ITEMS.map((item) => (
+            <div
+              key={item.slug}
+              className={styles.menuItemContainer}
+              onMouseEnter={() => item.submenu && setHoveredItem(item.slug)}
+              onMouseLeave={() => setHoveredItem(null)}
             >
-              {caption}
-            </Link>
+              {item.submenu ? (
+                <div className={styles.menuItemWithSubmenu}>
+                  <button
+                    type="button"
+                    className={classNames(
+                      styles.menuButton,
+                      item.index === section && styles.selected
+                    )}
+                  >
+                    <span className={styles.menuButtonContent}>
+                      {item.caption}
+                      <span className={styles.chevron}>
+                        <IconChevronRight />
+                      </span>
+                    </span>
+                  </button>
+                  <div
+                    className={classNames(
+                      styles.submenu,
+                      hoveredItem === item.slug && styles.submenuVisible
+                    )}
+                  >
+                    {item.submenu.map((subItem) => (
+                      <Link key={subItem.slug} href={subItem.slug} className={styles.submenuItem}>
+                        {subItem.caption}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <Link
+                  href={item.slug}
+                  className={classNames(styles.menuLink, item.index === section && styles.selected)}
+                >
+                  {item.caption}
+                </Link>
+              )}
+            </div>
           ))}
 
-          <Link href="/app/virtual-lab" className={styles.loginButton}>
-            Virtual Labs
+          <Link href="/app/virtual-lab" className={classNames(styles.menuLink)}>
+            Login
           </Link>
         </div>
         <div className={styles.hamburger}>

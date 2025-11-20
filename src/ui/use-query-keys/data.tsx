@@ -6,6 +6,7 @@ import type { TDerivationType } from '@/api/entitycore/types/entities/derivation
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 import type { TWorkspaceScope } from '@/constants';
+import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 const prefix = 'data';
 
@@ -19,6 +20,26 @@ export const keyBuilder = {
   }: WorkspaceContext & { brainRegionId?: string; personId?: string; scope: TWorkspaceScope }) => [
     `${prefix}-count`,
     { virtualLabId, projectId, brainRegionId: brainRegionId ?? '', personId, scope },
+  ],
+  dataCountPerEntity: ({
+    virtualLabId,
+    projectId,
+    brainRegionId,
+    extendedEntityType,
+    scope,
+  }: WorkspaceContext & {
+    brainRegionId?: string;
+    scope: TWorkspaceScope;
+    extendedEntityType?: TExtendedEntitiesTypeDict;
+  }) => [
+    `${prefix}-entity-count-${extendedEntityType}`,
+    {
+      virtualLabId,
+      projectId,
+      extendedEntityType,
+      brainRegionId: brainRegionId ?? '',
+      scope,
+    },
   ],
   userSimulationsCount: ({
     virtualLabId,

@@ -1,8 +1,7 @@
-import { kebabCase, isNil, get } from 'es-toolkit/compat';
-import { useQueries } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
-import { useAtomValue } from 'jotai';
+import { map } from 'es-toolkit/compat';
 import { unwrap } from 'jotai/utils';
+import { useAtomValue } from 'jotai';
 import { match } from 'ts-pattern';
 import { useMemo } from 'react';
 
@@ -10,25 +9,21 @@ import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { BrowseLink } from '@/ui/segments/explore/browse-link';
 import { useTabs } from '@/components/detail-view-tabs';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { keyBuilder } from '@/ui/use-query-keys/data';
+import { useFlags } from '@/features/feature-flags';
 import {
   brainRegionBasicCellGroupsRegionsHierarchyAtom,
   useGetSelectedBrainRegion,
 } from '@/features/brain-region-hierarchy/context';
+import { useLoadableValue } from '@/hooks/hooks';
 import { WorkspaceScope } from '@/constants';
 import {
   ExperimentalEntitiesTileTypes,
   ModelEntitiesTileTypes,
   SimulationEntitiesTileTypes,
-  getSimulationsCount,
-  getAllEntitiesCountScoped,
 } from '@/ui/segments/explore/helpers';
 import { cn } from '@/utils/css-class';
-import { ROOT_ROUTE } from '@/config';
 
 import { type TWorkspaceScope } from '@/constants';
-import { useFlags } from '@/features/feature-flags';
 
 export const ExploreDataTypeTabs = {
   Experimental: 'experimental',
@@ -57,15 +52,14 @@ export const tabsConfigItems: Array<{
 
 export function EntityLinkCount() {
   const featureFlags = useFlags();
-
   const breakpoint = useDefaultBreakpoint();
-  const scope = (useSearchParams().get('scope') ?? WorkspaceScope.Public) as TWorkspaceScope;
-
-  const { virtualLabId, projectId } = useWorkspace();
   const { selectedBrainRegion } = useGetSelectedBrainRegion();
+  const scope = (useSearchParams().get('scope') ?? WorkspaceScope.Public) as TWorkspaceScope;
   const brainRegionHierarchy = useAtomValue(
     useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
   );
+  const loadableValue = useLoadableValue(brainRegionBasicCellGroupsRegionsHierarchyAtom);
+  const brainRegionHierarchyLoading = loadableValue.state === 'loading';
 
   const { activeTab, onChangeTab } = useTabs<TExploreDataTypeTabs>({
     tabsConfig: tabsConfigItems,
@@ -73,197 +67,103 @@ export function EntityLinkCount() {
     shallow: true,
   });
 
-  const params = {
-    virtualLabId,
-    projectId,
-    brainRegionId: selectedBrainRegion?.id!,
-    scope,
-  };
-
-  const [
-    { isLoading: allLoading, data: allData },
-    { isLoading: simsLoading, data: simsData },
-    { isLoading: rootLoading, data: rootData },
-  ] = useQueries({
-    queries: [
-      {
-        queryKey: keyBuilder.dataCount({ ...params }),
-        queryFn: () => getAllEntitiesCountScoped({ ...params }),
-        enabled: Boolean(selectedBrainRegion?.id),
-      },
-      {
-        queryKey: keyBuilder.userSimulationsCount({ ...params }),
-        queryFn: () =>
-          getSimulationsCount({
-            ...params,
-          }),
-        enabled: Boolean(selectedBrainRegion?.id),
-      },
-      {
-        queryKey: keyBuilder.dataCount({ ...params, brainRegionId: brainRegionHierarchy?.root.id }),
-        queryFn: () =>
-          getAllEntitiesCountScoped({ ...params, brainRegionId: brainRegionHierarchy?.root.id! }),
-        enabled: Boolean(brainRegionHierarchy?.root.id),
-      },
-    ],
-  });
-
-  const experimentalState = useMemo(
-    () => [
-      ...Object.values(ExperimentalEntitiesTileTypes)
-        .filter(
-          (config) =>
-            !config.requiredFeatures ||
-            config.requiredFeatures.every((flag) => featureFlags?.[flag])
-        )
-        .map((config) => {
-          return { ...config, isLoading: allLoading || rootLoading };
-        }),
-    ],
-    [allLoading, rootLoading, featureFlags]
+  const experimental = Object.values(ExperimentalEntitiesTileTypes).filter(
+    (config) =>
+      !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
   );
-
-  const modelState = useMemo(
-    () => [
-      ...Object.values(ModelEntitiesTileTypes)
-        .filter(
-          (config) =>
-            !config.requiredFeatures ||
-            config.requiredFeatures.every((flag) => featureFlags?.[flag])
-        )
-        .map((config) => ({
-          ...config,
-          isLoading: allLoading || rootLoading,
-        })),
-    ],
-    [allLoading, rootLoading, featureFlags]
+  const models = Object.values(ModelEntitiesTileTypes).filter(
+    (config) =>
+      !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
   );
-
-  const simulationState = useMemo(
-    () => [
-      ...Object.values(SimulationEntitiesTileTypes)
-        .filter(
-          (config) =>
-            !config.requiredFeatures ||
-            config.requiredFeatures.every((flag) => featureFlags?.[flag])
-        )
-        .map((config) => ({
-          ...config,
-          isLoading: simsLoading,
-        })),
-    ],
-    [simsLoading, featureFlags]
+  const simulations = Object.values(SimulationEntitiesTileTypes).filter(
+    (config) =>
+      !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
   );
 
   const content = match(activeTab)
-    .with(ExploreDataTypeTabs.Experimental, () => (
-      <>
-        {experimentalState.map((value) => {
-          const count: number | null = get(allData, value.extendedType, null);
-          const rootCount: number | null = get(rootData, value.extendedType, null);
-          const link = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(value.extendedType)}`;
-
-          return (
-            <BrowseLink
-              key={`link-${value.title}/${value.type}`}
-              href={link}
-              type={value.extendedType}
-              title={value.title}
-              count={
-                <span className="flex items-center justify-center gap-1">
-                  <span className="font-bold">{count}</span> <span className="font-light">of</span>
-                  <span className="font-bold">{rootCount}</span>
-                </span>
-              }
-              isLoading={value.isLoading || isNil(count) || isNil(rootCount)}
-              isUploadable={value.isUploadable}
-            />
-          );
-        })}
-      </>
-    ))
-    .with(ExploreDataTypeTabs.Models, () => (
-      <>
-        {modelState.map((value) => {
-          const count = get(allData, value.extendedType, null);
-          const rootCount: number | null = get(rootData, value.extendedType, null);
-          const link = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(value.extendedType)}`;
-          return (
-            <BrowseLink
-              key={`link-${value.title}/${value.type}`}
-              href={link}
-              type={value.extendedType}
-              title={value.title}
-              count={
-                <span className="flex items-center justify-center gap-1">
-                  <span className="font-bold">{count}</span> <span className="font-light">of</span>
-                  <span className="font-bold">{rootCount}</span>
-                </span>
-              }
-              isLoading={value.isLoading || isNil(count) || isNil(rootCount)}
-              isUploadable={value.isUploadable}
-            />
-          );
-        })}
-      </>
-    ))
-    .with(ExploreDataTypeTabs.Simulations, () => (
-      <>
-        {simulationState.map((value) => {
-          const count = get(simsData, value.extendedType, null);
-          const link = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(value.extendedType)}`;
-
-          return (
-            <BrowseLink
-              key={`link-${value.title}/${value.type}`}
-              href={link}
-              type={value.extendedType}
-              title={value.title}
-              count={<span className="font-bold">{count}</span>}
-              isLoading={value.isLoading || isNil(count)}
-              isUploadable={value.isUploadable}
-            />
-          );
-        })}
-      </>
-    ))
+    .with(ExploreDataTypeTabs.Experimental, () =>
+      map(experimental, (value) => (
+        <BrowseLink
+          enabled
+          key={`link-${value.title}/${value.type}`}
+          scope={scope}
+          extendedType={value.extendedType}
+          currentBrainRegionId={selectedBrainRegion?.id}
+          defaultBrainRegionId={brainRegionHierarchy?.root.id}
+        />
+      ))
+    )
+    .with(ExploreDataTypeTabs.Models, () =>
+      map(models, (value) => {
+        return (
+          <BrowseLink
+            enabled
+            key={`link-${value.title}/${value.type}`}
+            extendedType={value.extendedType}
+            scope={scope}
+            currentBrainRegionId={selectedBrainRegion?.id}
+            defaultBrainRegionId={brainRegionHierarchy?.root.id}
+          />
+        );
+      })
+    )
+    .with(ExploreDataTypeTabs.Simulations, () =>
+      map(simulations, (value) => {
+        return (
+          <BrowseLink
+            enabled={scope === WorkspaceScope.Project}
+            key={`link-${value.title}/${value.type}`}
+            scope={scope}
+            extendedType={value.extendedType}
+            currentBrainRegionId={selectedBrainRegion?.id}
+            defaultBrainRegionId={brainRegionHierarchy?.root.id}
+          />
+        );
+      })
+    )
     .otherwise(() => null);
 
   return (
     <div className="px-2 py-2">
-      <div className="w-full px-2">
-        <PillTabs
-          id="data-type-selector"
-          data-testid="data-type-selector"
-          value={activeTab ?? ExploreDataTypeTabs.Experimental}
-          defaultValue={activeTab ?? ExploreDataTypeTabs.Experimental}
-          className="w-full"
-          activationMode="manual"
-          onValueChange={(value) => {
-            onChangeTab(value as TExploreDataTypeTabs)();
-          }}
-        >
-          <PillTabsList
-            className={cn('grid h-10 w-full grid-cols-3 bg-white p-0 shadow-2xl', {
-              'h-12': breakpoint === 'xl',
-            })}
+      {brainRegionHierarchyLoading ? (
+        <div className="relative">
+          <div className="h-12 animate-pulse rounded-full bg-gray-200/50" />
+        </div>
+      ) : (
+        <div className="w-full px-2">
+          <PillTabs
+            id="data-type-selector"
+            data-testid="data-type-selector"
+            value={activeTab ?? ExploreDataTypeTabs.Experimental}
+            defaultValue={activeTab ?? ExploreDataTypeTabs.Experimental}
+            className="w-full"
+            activationMode="manual"
+            onValueChange={(value) => {
+              onChangeTab(value as TExploreDataTypeTabs)();
+            }}
           >
-            {tabsConfigItems.map((tab) => (
-              <PillTabsTrigger
-                key={tab.key}
-                value={tab.key}
-                className={cn(
-                  'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3 text-base select-none',
-                  'data-[state=active]:font-bold data-[state=active]:text-white',
-                  { 'h-12': breakpoint === 'xl' }
-                )}
-              >
-                {tab.title}
-              </PillTabsTrigger>
-            ))}
-          </PillTabsList>
-        </PillTabs>
-      </div>
+            <PillTabsList
+              className={cn('grid h-10 w-full grid-cols-3 bg-white p-0 shadow-2xl', {
+                'h-12': breakpoint === 'xl',
+              })}
+            >
+              {tabsConfigItems.map((tab) => (
+                <PillTabsTrigger
+                  key={tab.key}
+                  value={tab.key}
+                  className={cn(
+                    'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3 text-base select-none',
+                    'data-[state=active]:font-bold data-[state=active]:text-white',
+                    { 'h-12': breakpoint === 'xl' }
+                  )}
+                >
+                  {tab.title}
+                </PillTabsTrigger>
+              ))}
+            </PillTabsList>
+          </PillTabs>
+        </div>
+      )}
       <div
         id="data-type-items-container"
         data-testid="data-type-items-container"

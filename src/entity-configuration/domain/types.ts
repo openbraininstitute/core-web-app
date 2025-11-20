@@ -24,6 +24,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
       allowedFacets?: boolean;
     };
     query: {
+      count?: (query: any) => Promise<EntityCoreResponse<T>>;
       list?: (query: any) => Promise<EntityCoreResponse<T>>;
       one: (query: { id: string; context?: WorkspaceContext | null }) => Promise<T>;
       create?: (body: any) => Promise<T>;

@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
 import { RightOutlined, SettingFilled, WarningFilled } from '@ant-design/icons';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAtomValue, useSetAtom } from 'jotai';
+import { useEffect } from 'react';
 
 import { useVisibleSynapsesSetter } from '../steps/webgl-neuron-selector/hooks';
 

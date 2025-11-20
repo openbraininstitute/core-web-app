@@ -2,14 +2,13 @@
 
 'use client';
 
+import { parseAsString, SingleParserBuilder, useQueryState } from 'nuqs';
 import { ReactElement, useEffect, type ComponentProps } from 'react';
-import { parseAsString, Parser, useQueryState } from 'nuqs';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { WarningOutlined } from '@ant-design/icons';
+import { compact, get } from 'es-toolkit/compat';
 import { RESET } from 'jotai/utils';
-import compact from 'es-toolkit/compat/compact';
 import dynamic from 'next/dynamic';
-import get from 'es-toolkit/compat/get';
 
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
@@ -85,7 +84,7 @@ export function BrowseEntityScope({
     'scope',
     parseAsString
       .withDefault(defaultScope ?? WorkspaceScope.Public)
-      .withOptions({ shallow: true }) as NonNullable<Parser<TWorkspaceScope>>
+      .withOptions({ shallow: true }) as NonNullable<SingleParserBuilder<TWorkspaceScope>>
   );
 
   const dataKey = compact([virtualLabId, projectId, section, dataType, scope, id]).join('/');
