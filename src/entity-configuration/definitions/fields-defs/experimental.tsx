@@ -2,6 +2,13 @@ import find from 'es-toolkit/compat/find';
 import get from 'es-toolkit/compat/get';
 import isEmpty from 'es-toolkit/compat/isEmpty';
 
+import { isMemodel, isSingleNeuronSynaptome } from '@/api/entitycore/guards';
+import { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import {
+  CoreFieldFilterTypeEnum,
+  EntityCoreFields,
+} from '@/entity-configuration/definitions/fields-defs/enums';
 import getMeasurements, {
   EmptyValue,
   renderArray,
@@ -11,26 +18,19 @@ import getMeasurements, {
   renderMeanStd,
   renderMorphologyMeasurement,
 } from '@/entity-configuration/definitions/renderer';
-import {
-  CoreFieldFilterTypeEnum,
-  EntityCoreFields,
-} from '@/entity-configuration/definitions/fields-defs/enums';
-import { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { isMemodel, isSingleNeuronSynaptome } from '@/api/entitycore/guards';
 import { CoreFieldType } from '@/entity-configuration/definitions/types';
+import { ensureString, isNumber, isString } from '@/util/type-guards';
 import { ensureArray } from '@/utils/array';
 
-import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
 import type {
   EntityCoreDensityObjectTypes,
   EntityCoreObjectTypes,
-  IEModel,
   ICellMorphology,
+  IEModel,
 } from '@/api/entitycore/types';
-import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
+import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
 import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
-import { ensureString, isNumber, isString } from '@/util/type-guards';
+import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 
 const morphologyMtypes = (morphology?: ICellMorphology) => {
   if (!morphology) return [];
@@ -186,6 +186,82 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         value: 'subject__age_value',
       },
     ],
+  },
+  [EntityCoreFields.SubjectSex]: {
+    title: 'Sex',
+    filter: CoreFieldFilterTypeEnum.ValueRange,
+    render: (r) => renderEmptyOrValue(get(r, 'subject.sex')),
+    vocabulary: {
+      plural: 'Sex',
+      singular: 'Sex',
+    },
+    isFilterable: false,
+    isDisplayable: false,
+    isSortable: false,
+  },
+  [EntityCoreFields.SubjectWeight]: {
+    title: 'Weight',
+    filter: CoreFieldFilterTypeEnum.ValueRange,
+    unit: 'gramms',
+    render: (r) => {
+      return renderEmptyOrValue(get(r, 'subject.weight', null));
+    },
+    vocabulary: {
+      plural: 'Values',
+      singular: 'Value',
+    },
+    isSortable: false,
+    isFilterable: false,
+    isDisplayable: false,
+  },
+  [EntityCoreFields.SubjectSpeciesName]: {
+    title: 'Species',
+    filter: CoreFieldFilterTypeEnum.CheckList,
+    render: (r) => renderEmptyOrValue(get(r, 'subject.species.name')),
+    vocabulary: {
+      plural: 'Species',
+      singular: 'Species',
+    },
+    isFilterable: false,
+    isDisplayable: false,
+    isSortable: false,
+  },
+  [EntityCoreFields.SubjectAgeMax]: {
+    title: 'Age Max',
+    filter: CoreFieldFilterTypeEnum.ValueRange,
+    render: (r) => renderEmptyOrValue(get(r, 'subject.age_max')),
+    vocabulary: {
+      plural: 'Age Max',
+      singular: 'Age Max',
+    },
+    isFilterable: false,
+    isDisplayable: false,
+    isSortable: false,
+  },
+  [EntityCoreFields.SubjectAgeMin]: {
+    title: 'Age Min',
+    filter: CoreFieldFilterTypeEnum.ValueRange,
+    render: (r) => renderEmptyOrValue(get(r, 'subject.age_min')),
+    vocabulary: {
+      plural: 'Age Min',
+      singular: 'Age Min',
+    },
+    isFilterable: false,
+    isDisplayable: false,
+    isSortable: false,
+  },
+
+  [EntityCoreFields.SubjectAgePeriod]: {
+    title: 'Age Period',
+    filter: CoreFieldFilterTypeEnum.ValueRange,
+    render: (r) => renderEmptyOrValue(get(r, 'subject.age_period')),
+    vocabulary: {
+      plural: 'Age Period',
+      singular: 'Age Period',
+    },
+    isFilterable: false,
+    isDisplayable: false,
+    isSortable: false,
   },
   [EntityCoreFields.MeanSTD]: {
     title: 'Mean ± STD',

@@ -17,7 +17,6 @@ import {
   renderDate,
   renderEmptyOrValue,
   renderPreview,
-  renderTimestamp,
 } from '@/entity-configuration/definitions/renderer';
 import { DownloadIcon } from '@/components/icons';
 
@@ -147,7 +146,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.UpdateDate]: {
     title: 'Update date',
     filter: CoreFieldFilterTypeEnum.DateRange,
-    render: (r) => renderTimestamp(new Date(r.update_date)),
+    render: (r) => renderDate(r.update_date),
     vocabulary: {
       plural: 'Dates',
       singular: 'Date',

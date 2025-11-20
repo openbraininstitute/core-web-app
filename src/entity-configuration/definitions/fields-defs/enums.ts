@@ -28,7 +28,13 @@ export enum EntityCoreFields {
   EType = 'etype',
   NeuronDensity = 'neuron_density', // TODO: to check new naming
   NumberOfMeasurements = 'number_of_measurements', // TODO: to check new naming
-  SubjectAge = 'subject_age', // TODO: to check new naming
+  SubjectAge = 'subject_age',
+  SubjectAgeMax = 'subject_age_max',
+  SubjectAgeMin = 'subject_age_min',
+  SubjectAgePeriod = 'subject_age_period',
+  SubjectSex = 'subject_sex',
+  SubjectSpeciesName = 'subject_species_name',
+  SubjectWeight = 'subject_weight',
   Sem = 'sem', // TODO: to check new naming
   MeanSTD = 'meanstd', // TODO: to check new naming
   NeuronMorphologyWidth = 'neuronMorphologyWidth',
