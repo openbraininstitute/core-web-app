@@ -57,19 +57,12 @@ export default function ToolsProgress({ className, message }: ToolsProgressProps
             key={key}
           >
             {/* Header */}
-            <div
+            <button
               className={styles.header}
               onClick={() => toggleExpanded(key)}
-              role="button"
-              tabIndex={0}
               aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  toggleExpanded(key);
-                }
-              }}
+              aria-expanded={isExpanded}
+              type="button"
             >
               <div className={cn(styles.iconWrapper, isRunning && styles.iconWrapperRunning)}>
                 {isRunning ? <IconGear className={styles.spinningIcon} /> : <Icon />}
@@ -99,18 +92,9 @@ export default function ToolsProgress({ className, message }: ToolsProgressProps
               </div>
 
               <div className={styles.actions}>
-                <button
-                  className={styles.expandButton}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleExpanded(key);
-                  }}
-                  aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
-                  aria-expanded={isExpanded}
-                  type="button"
-                >
+                <div className={styles.expandButton}>
                   <Chevron className={cn(styles.chevron, isExpanded && styles.chevronExpanded)} />
-                </button>
+                </div>
 
                 <Link
                   href={tool.docURL}
@@ -122,7 +106,7 @@ export default function ToolsProgress({ className, message }: ToolsProgressProps
                   <HelpIconI className={styles.helpIcon} />
                 </Link>
               </div>
-            </div>
+            </button>
 
             {/* Expandable Details */}
             {invocation && (
