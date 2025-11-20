@@ -27,7 +27,7 @@ export function EntityNameDisplay({ name }: EntityNameDisplayProps) {
   }
 
   return (
-    <div className="mb-4 select-none">
+    <div className="mb-4">
       <div className="text-neutral-4 uppercase">Name</div>
       <div className="text-primary-8 line-clamp-3 text-2xl font-bold">{name}</div>
     </div>
