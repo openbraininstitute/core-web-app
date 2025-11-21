@@ -7,11 +7,7 @@ import values from 'es-toolkit/compat/values';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import {
-  FeatureFlags,
-  FlagKey,
-  unifiedSingleNeuronSimulationFlowFlag,
-} from '@/features/feature-flags/flags';
+import { FeatureFlags, FlagKey } from '@/features/feature-flags/flags';
 
 export const WorkflowSessionIdSearchParam = 'sessionId';
 export const EntityScopeDict = {
@@ -138,7 +134,6 @@ export const EntityWorkflowConfiguration: Partial<
   [ExtendedEntitiesTypeDict.MemodelCircuit]: {
     group: EntityScopeDict.Cellular,
     label: 'Single neuron (beta)',
-    requiredFeatures: [unifiedSingleNeuronSimulationFlowFlag.key],
     properties: {
       build: {
         disabled: true,
