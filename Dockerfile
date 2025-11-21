@@ -11,8 +11,8 @@ RUN corepack enable && corepack prepare pnpm@10 --activate
 # Install dependencies based on the preferred package manager
 COPY pnpm-lock.yaml package.json ./
 COPY tarball ./tarball
-RUN pnpm install --frozen-lockfile
-RUN pnpm add sharp
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store pnpm add sharp
 
 
 # Rebuild the source code only when needed
@@ -25,7 +25,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN pnpm run build
+RUN --mount=type=cache,id=next,target=/app/.next/cache pnpm run build
 
 
 # production image, copy all the files and run next
