@@ -146,7 +146,7 @@ export function transformAgentToNames(
 
   return asArray
     ? map(sortBy(processedAgents, ['type', 'name']), 'name')
-    : map(sortBy(processedAgents, ['type', 'name']), 'name').join(',\n');
+    : map(sortBy(processedAgents, ['type', 'name']), 'name').join(';\n');
 }
 
 function resolveAgentName(agent: Agent) {
