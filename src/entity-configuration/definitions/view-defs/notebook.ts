@@ -10,7 +10,7 @@ export const viewDefForNotebook: ViewDefinitionConfig = {
   columns: [
     EntityCoreFields.Name,
     EntityCoreFields.Description,
-    EntityCoreFields.CreatedBy,
+    EntityCoreFields.Contributions,
     EntityCoreFields.CreationDate,
     EntityCoreFields.NotebookScale,
     EntityCoreFields.NotebookActions,

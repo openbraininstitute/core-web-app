@@ -184,11 +184,23 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.Contributions]: {
     title: 'Contributors',
     filter: CoreFieldFilterTypeEnum.CheckList,
-    render: (r) =>
-      transformAgentToNames(
+    style: { width: 150 },
+    render: (r) => {
+      const names = transformAgentToNames(
         (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null }).contributions,
-        false
-      ),
+        true
+      );
+
+      if (!Array.isArray(names)) return;
+
+      return (
+        <div className="flex flex-col">
+          {names.map((n) => (
+            <span key={n}>{n}</span>
+          ))}
+        </div>
+      );
+    },
     renderForDetailView: (r) => renderContributors(r, 'person'),
     vocabulary: {
       plural: 'Contributors',
