@@ -1,5 +1,3 @@
-'use server';
-
 import { isServer } from '@/config';
 import { getClientSession } from '@/hooks/session';
 import { retry } from '@/util/retry';
