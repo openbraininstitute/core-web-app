@@ -24,10 +24,7 @@ export async function getAllFlags(): Promise<FeatureFlags> {
   }
 }
 
-export async function setFlag<K extends keyof FeatureFlags>(
-  key: K,
-  value: FeatureFlags[K]
-) {
+export async function setFlag<K extends keyof FeatureFlags>(key: K, value: FeatureFlags[K]) {
   const cookieStore = await cookies();
   const flags = await getAllFlags();
 
