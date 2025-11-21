@@ -35,6 +35,7 @@ type MiddleProps = {
   virtualLabId: string;
   projectId: string;
   allEntries: Set<string>;
+  onNewBlockClick?: () => void;
 };
 
 export default function Middle({
@@ -59,6 +60,7 @@ export default function Middle({
   virtualLabId,
   projectId,
   allEntries,
+  onNewBlockClick,
 }: MiddleProps) {
   return (
     <div
@@ -80,6 +82,8 @@ export default function Middle({
                   className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 text-left hover:bg-white"
                   onClick={() => {
                     if (isRootCategory(schema, configTab)) return;
+
+                    if (onNewBlockClick) onNewBlockClick();
 
                     setSelectedCategory(o.properties?.type.const ?? '');
                     const initial: Record<string, ConfigValue> = {};

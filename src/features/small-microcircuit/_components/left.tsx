@@ -35,6 +35,10 @@ export default function Left({
   initialConfig,
   setTab,
   allEntries,
+  newKey,
+  setNewKey,
+  editingKey,
+  setEditingKey,
 }: {
   virtualLabId: string;
   projectId: string;
@@ -57,6 +61,10 @@ export default function Left({
   model: ICircuit | IMEModel;
   initialConfig?: Config;
   allEntries: Set<string>;
+  newKey: string;
+  setNewKey: (k: string) => void;
+  editingKey: string;
+  setEditingKey: (k: string) => void;
 }) {
   const notification = useAppNotification();
   const apiUrl = useApiUrl({ model });
@@ -98,6 +106,10 @@ export default function Left({
                           setSelectedCategory={setSelectedCategory}
                           readOnly={readOnly}
                           allEntries={allEntries}
+                          newKey={newKey}
+                          setNewKey={setNewKey}
+                          editingKey={editingKey}
+                          setEditingKey={setEditingKey}
                         />
                       );
                     })}

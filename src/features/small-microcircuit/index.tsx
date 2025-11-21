@@ -47,6 +47,9 @@ export default function SimulationCampaignConfiguration({
   const notification = useAppNotification();
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
 
+  const [editingKey, setEditingKey] = useState('');
+  const [newKey, setNewKey] = useState('');
+
   const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
   const { model } = useModel({ id: modelId, context: { virtualLabId, projectId } });
   const { schema, refLabels, referenceTypesToConfigKeys, referenceTypesToTitles } =
@@ -112,6 +115,10 @@ export default function SimulationCampaignConfiguration({
             initialConfig={initialConfig}
             setTab={setTab}
             allEntries={allEntries}
+            newKey={newKey}
+            setNewKey={setNewKey}
+            editingKey={editingKey}
+            setEditingKey={setEditingKey}
           />
 
           <Middle
@@ -136,6 +143,10 @@ export default function SimulationCampaignConfiguration({
             virtualLabId={virtualLabId}
             projectId={projectId}
             allEntries={allEntries}
+            onNewBlockClick={() => {
+              setNewKey('');
+              setEditingKey('');
+            }}
           />
 
           <div className="overflow-hidden rounded-lg">

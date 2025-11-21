@@ -1,5 +1,5 @@
 /* eslint-disable no-param-reassign */
-import React, { useState } from 'react';
+import React from 'react';
 import { Input } from 'antd';
 import { atom } from 'jotai';
 import {
@@ -38,6 +38,10 @@ export function Section({
   setSelectedCategory,
   readOnly,
   allEntries,
+  newKey,
+  setNewKey,
+  editingKey,
+  setEditingKey,
 }: {
   schema: JSONSchema | null; // The global schema
   k: string; // secition key
@@ -56,10 +60,11 @@ export function Section({
   setSelectedCategory: React.Dispatch<React.SetStateAction<string>>;
   readOnly?: boolean;
   allEntries: Set<string>;
+  newKey: string;
+  setNewKey: (k: string) => void;
+  editingKey: string;
+  setEditingKey: (k: string) => void;
 }) {
-  const [editingKey, setEditingKey] = useState('');
-  const [newKey, setNewKey] = useState('');
-
   if (!schema || !schema?.properties) return;
 
   const handleHeaderClick = (subkey: string, subValue: unknown) => {
@@ -68,6 +73,8 @@ export function Section({
       setSelectedEntry(subkey);
     }
     setEditing(true);
+    setEditingKey('');
+    setNewKey('');
   };
 
   return (
@@ -134,10 +141,6 @@ export function Section({
                         }}
                         ref={(element) => element?.focus()}
                         onChange={(v) => setNewKey(v.currentTarget.value)}
-                        onBlur={() => {
-                          setEditingKey('');
-                          setNewKey('');
-                        }}
                         status={newKey === '' ? 'error' : undefined}
                         size="small"
                       />
@@ -158,7 +161,9 @@ export function Section({
                       {subkey}
                       <EditOutlined
                         className="ml-3"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedEntry(subkey);
                           setEditingKey(subkey);
                           setNewKey(subkey);
                         }}
