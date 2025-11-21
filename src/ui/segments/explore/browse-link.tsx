@@ -169,7 +169,7 @@ function buildQuery({
     filters: {
       page: 1,
       page_size: 1,
-      within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+      within_brain_region_hierarchy_id: config.DEFAULT_BRAIN_REGION_HIERARCHY_ID,
       within_brain_region_brain_region_id: brainRegionId ?? null,
       within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
       ...getWorkspaceScopeFilters(scope, { virtualLabId, projectId }),
