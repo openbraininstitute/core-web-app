@@ -24,8 +24,7 @@ import { WorkspaceContext } from '@/types/common';
 import { Button } from '@/ui/molecules/button';
 import { WorkspaceScope } from '@/constants';
 import { cn } from '@/utils/css-class';
-import { ROOT_ROUTE } from '@/config';
-import { env } from '@/env';
+import { config } from '@/config';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceScope } from '@/constants';
@@ -36,7 +35,7 @@ function buildDataUrl({
   projectId,
   extendedType,
 }: WorkspaceContext & { extendedType: TExtendedEntitiesTypeDict }) {
-  return `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(extendedType)}`;
+  return `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(extendedType)}`;
 }
 
 type BrowseLinkContentProps = {
