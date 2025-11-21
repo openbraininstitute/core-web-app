@@ -1,9 +1,13 @@
 /* eslint-disable no-param-reassign */
-import React, { Fragment } from 'react';
+import React, { useState } from 'react';
+import { Input } from 'antd';
 import { atom } from 'jotai';
 import {
   CheckCircleFilled,
+  CheckOutlined,
+  CloseOutlined,
   DeleteOutlined,
+  EditOutlined,
   PlusCircleOutlined,
   WarningFilled,
 } from '@ant-design/icons';
@@ -53,6 +57,9 @@ export function Section({
   readOnly?: boolean;
   allEntries: Set<string>;
 }) {
+  const [editingKey, setEditingKey] = useState('');
+  const [newKey, setNewKey] = useState('');
+
   if (!schema || !schema?.properties) return;
 
   const handleHeaderClick = (subkey: string, subValue: unknown) => {
@@ -116,7 +123,50 @@ export function Section({
                   }
                 }}
               >
-                {subkey}
+                <div className="w-full">
+                  {subkey === editingKey && (
+                    <>
+                      <Input
+                        value={newKey}
+                        className="inline-block h-[20px] w-[70%] text-sm outline-none"
+                        classNames={{
+                          input: 'border-none !bg-transparent text-white',
+                        }}
+                        ref={(element) => element?.focus()}
+                        onChange={(v) => setNewKey(v.currentTarget.value)}
+                        onBlur={() => {
+                          setEditingKey('');
+                          setNewKey('');
+                        }}
+                        status={newKey === '' ? 'error' : undefined}
+                        size="small"
+                      />
+                      <div className="ml-3 inline-block">
+                        <CheckOutlined className="mr-2" />
+                        <CloseOutlined
+                          onClick={() => {
+                            setEditingKey('');
+                            setNewKey('');
+                          }}
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {subkey !== editingKey && (
+                    <>
+                      {subkey}
+                      <EditOutlined
+                        className="ml-3"
+                        onClick={() => {
+                          setEditingKey(subkey);
+                          setNewKey(subkey);
+                        }}
+                      />
+                    </>
+                  )}
+                </div>
+
                 <div className="flex gap-2">
                   {errors?.find((error) => error.instancePath.startsWith(`/${k}/${subkey}`)) ? (
                     <WarningFilled className="text-yellow-400" />
