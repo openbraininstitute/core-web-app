@@ -1,23 +1,23 @@
 /* eslint-disable react/no-unstable-nested-components */
-import dynamic from 'next/dynamic';
+import { capitalize, groupBy } from 'es-toolkit/compat';
 import { useState } from 'react';
-
-import groupBy from 'es-toolkit/compat/groupBy';
 import { Select } from 'antd';
-import capitalize from 'es-toolkit/compat/capitalize';
-import { AllowedTypes } from '@/features/model-analysis/viewer/storage';
-import type { IValidationConstructedResult } from '@/features/model-analysis/explorer/context';
-import type { TAllowedTypes } from '@/features/model-analysis/viewer/storage';
+import dynamic from 'next/dynamic';
+
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { IEntity } from '@/api/entitycore/types/entities/entity';
-import { EntityCoreBaseAsset } from '@/api/entitycore/types/shared/global';
+import { AllowedTypes } from '@/features/model-analysis/viewer/storage';
+
+import type { TValidationResultNonUndefined } from '@/features/model-analysis/explorer/use-analysis';
+import type { EntityCoreBaseAsset } from '@/api/entitycore/types/shared/global';
+import type { TAllowedTypes } from '@/features/model-analysis/viewer/storage';
+import type { IEntity } from '@/api/entitycore/types/entities/entity';
 
 const Viewer = dynamic(() => import('@/features/model-analysis/viewer/viewer'), {
   ssr: false,
 });
 
 type Props = {
-  validationResults: IValidationConstructedResult | null;
+  validationResults: TValidationResultNonUndefined | null;
 };
 
 export function ViewerContainer({ validationResults }: Props) {
@@ -64,7 +64,6 @@ export function ViewerContainer({ validationResults }: Props) {
       </div>
 
       {selected === 'all' && Object.values(groupedValidationResults).flat().map(renderViewer)}
-
       {selected !== 'all' && groupedValidationResults[selected].map(renderViewer)}
     </>
   );

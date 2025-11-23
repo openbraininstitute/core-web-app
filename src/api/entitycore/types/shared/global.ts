@@ -119,6 +119,14 @@ export interface IConsortium extends Timestamps, EntityCoreIdentifiable {
 
 export type Agent = IPerson | IOrganization | IConsortium;
 
+export const AgentType = {
+  Person: 'person',
+  Organization: 'organization',
+  Consortium: 'consortium',
+} as const;
+
+export type TAgentType = (typeof AgentType)[keyof typeof AgentType];
+
 export interface IContributor extends Timestamps, EntityCoreIdentifiable {
   agent: Agent;
   role: IRole;

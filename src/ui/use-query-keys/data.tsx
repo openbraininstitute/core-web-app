@@ -256,4 +256,12 @@ export const keyBuilder = {
     `${prefix}-ion-channel-modeling-campaign`,
     { context, id, ...props },
   ],
+  validationResults: ({
+    context,
+    id,
+    ...props
+  }: {
+    context: WorkspaceContext;
+    id: string;
+  } & Record<string, any>) => [`${prefix}-validation-results`, { context, id, ...props }],
 };
