@@ -26,28 +26,26 @@ import { ensureArray } from '@/utils/array';
 
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { TAgentType, IContributor } from '@/api/entitycore/types/shared/global';
-import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
 const collator = new Intl.Collator('en', { sensitivity: 'base' });
 
 const renderContributors = (r: EntityTypeValue, filter: TAgentType) => {
   if (!('contributions' in r) || !r.contributions) return EmptyValue;
 
-  const filteredContributions = r.contributions.filter(
-    (c) => c.agent.type === AgentType.Consortium || c.agent.type === filter
-  );
-  const sortedContribution = filteredContributions.sort((a, b) => {
-    if (
-      a.agent.type === AgentType.Person &&
-      b.agent.type === AgentType.Person &&
-      a.agent.familyName &&
-      b.agent.familyName
-    )
-      return collator.compare(a.agent?.familyName, b.agent.familyName);
-    return collator.compare(a.agent.pref_label, b.agent.pref_label);
-  });
-
+  const sortedContribution = r.contributions
+    .filter((c) => c.agent.type === AgentType.Consortium || c.agent.type === filter)
+    .sort((a, b) => {
+      if (
+        a.agent.type === AgentType.Person &&
+        b.agent.type === AgentType.Person &&
+        a.agent.family_name &&
+        b.agent.family_name
+      )
+        return collator.compare(a.agent.family_name, b.agent.family_name);
+      return collator.compare(a.agent.pref_label, b.agent.pref_label);
+    });
   if (!sortedContribution || sortedContribution.length === 0) return EmptyValue;
   return renderContributorsModal(sortedContribution, false, () => {}, 'inline');
 };
@@ -397,7 +395,7 @@ function DownloadButton({ entity }: { entity: EntityCoreObjectTypes }) {
       htmlType="button"
       onClick={(e) => {
         const { type } = entity;
-        if (type !== 'circuit') return;
+        if (type !== EntityTypeDict.Circuit) return;
 
         e.stopPropagation();
         e.preventDefault();
