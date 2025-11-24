@@ -14,6 +14,7 @@ import { userJourneyTracker } from '@/components/explore-section/Literature/user
 import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute/event';
 import { getEntityTypeFromUrlOnEntityScope } from '@/ui/segments/explore/helpers';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -170,7 +171,7 @@ function buildQuery({
       page_size: 1,
       within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
       within_brain_region_brain_region_id: brainRegionId ?? null,
-      within_brain_region_ascendants: false,
+      within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
       // eslint-disable-next-line no-nested-ternary
       ...(scope === WorkspaceScope.Project
         ? {

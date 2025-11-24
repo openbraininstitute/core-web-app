@@ -1,4 +1,5 @@
 import { Pagination as AntPagination, type PaginationProps } from 'antd';
+import { useRef, useEffect } from 'react';
 import { useAtom } from 'jotai';
 import type { ComponentProps } from 'react';
 
@@ -20,6 +21,27 @@ type Props = {
 
 export function Pagination({ dataKey, size, resultPagination, className }: Props) {
   const [page, updatePage] = useAtom(corePageNumberAtom(dataKey));
+  const lastTotalItemsRef = useRef<number | undefined>(undefined);
+  const lastDataKeyRef = useRef<string>(dataKey);
+
+  useEffect(() => {
+    if (lastDataKeyRef.current !== dataKey) {
+      lastTotalItemsRef.current = undefined;
+      lastDataKeyRef.current = dataKey;
+    }
+  }, [dataKey]);
+
+  useEffect(() => {
+    if (resultPagination?.pagination?.total_items !== undefined) {
+      lastTotalItemsRef.current = resultPagination.pagination.total_items;
+    }
+  }, [resultPagination?.pagination?.total_items]);
+
+  const totalItems = resultPagination?.pagination?.total_items ?? lastTotalItemsRef.current;
+
+  if (totalItems === undefined) {
+    return null;
+  }
 
   return (
     <AntPagination
@@ -34,7 +56,7 @@ export function Pagination({ dataKey, size, resultPagination, className }: Props
       align="center"
       size={size}
       current={page}
-      total={resultPagination?.pagination?.total_items}
+      total={totalItems}
       showSizeChanger={false}
       aria-label="pagination for listing results"
       className={cn(

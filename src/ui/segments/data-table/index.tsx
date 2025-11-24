@@ -1,8 +1,10 @@
 'use client';
 
+import { LoadingOutlined } from '@ant-design/icons';
 import { useMemo, useState } from 'react';
 import { unwrap } from 'jotai/utils';
 import { useAtom } from 'jotai';
+import { Spin } from 'antd';
 
 import type { ComponentProps, CSSProperties, ReactNode } from 'react';
 import type { RowSelectionType } from 'antd/es/table/interface';
@@ -143,7 +145,11 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           dataType={dataType}
           columns={columns}
           dataSource={dataSource}
-          loading={showLoadingState && isLoading}
+          loading={{
+            indicator: <Spin indicator={<LoadingOutlined spin className="text-primary-6" />} />,
+            spinning: showLoadingState && isLoading,
+            size: 'large',
+          }}
           onCellClick={onCellClick}
           renderButton={renderButton}
           selectionType={selectionType}
