@@ -190,7 +190,6 @@ export function MainTable({
           dataKey={dataKey}
           facets={facets}
           workspace={workspace}
-          isLoading={isLoading}
         />
       )}
     </>

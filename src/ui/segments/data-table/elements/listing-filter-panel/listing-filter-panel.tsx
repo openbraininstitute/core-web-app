@@ -65,7 +65,6 @@ type Props = {
   showDisplayTrigger?: boolean;
   // eslint-disable-next-line react/no-unused-prop-types
   workspace?: WorkspaceContext;
-  isLoading?: boolean;
   classNames?: {
     container?: string;
   };
@@ -202,7 +201,6 @@ export function ListingFilterPanel({
   setFilters,
   facets,
   showDisplayTrigger = true,
-  isLoading,
   classNames,
 }: Props) {
   useHotkeys('Escape', toggleDisplay);
@@ -401,7 +399,7 @@ export function ListingFilterPanel({
             <span className="text-base font-semibold">Apply</span>
             <LoadingOutlined
               className={cn('text-black/80', {
-                hidden: !(isApplyingFilters && isFetching) || !isLoading,
+                hidden: !(isApplyingFilters && isFetching),
               })}
             />
           </Button>
