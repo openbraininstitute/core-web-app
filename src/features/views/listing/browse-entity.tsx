@@ -105,7 +105,7 @@ export function BrowseEntityScope({
 
   const activeColumns = useAtomValue(coreActiveColumnsAtom({ dataType, key: dataKey }));
   const columns = allColumns.filter(({ key }) => (activeColumns || []).includes(key as string));
-  const { data, error, isPlaceholderData, isFetching } = useQueryExtendedEntityType({
+  const { data, error, isFetching } = useQueryExtendedEntityType({
     context: {
       key: dataKey,
       workspaceScope: scope!,
@@ -188,7 +188,7 @@ export function BrowseEntityScope({
             showLoadingState
             allowDownload={allowDownload}
             sticky={{ offsetHeader: 75.5 }}
-            isLoading={(isPlaceholderData || isFetching) && !(dataSource && dataSource.length > 0)}
+            isLoading={isFetching}
             dataScope={scope!}
             dataSource={dataSource ?? []}
             dataType={dataType}

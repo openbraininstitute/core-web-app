@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import pSettle from 'p-settle';
 
 import { getValidationResults } from '@/api/entitycore/queries/general/validation-result';
 import { getAssets } from '@/api/entitycore/queries/assets';
@@ -25,7 +24,7 @@ export function useAnalysis({ workspace, id }: { id: string; workspace: Workspac
         filters: { validated_entity_id: id, page: pageParam, page_size: DEFAULT_PAGE_XSMALL_SIZE },
       });
       const data = (
-        await pSettle(
+        await Promise.allSettled(
           response.data.map((entity: IValidationResult) => {
             return getAssets({
               ctx: workspace,
@@ -37,8 +36,8 @@ export function useAnalysis({ workspace, id }: { id: string; workspace: Workspac
       ).map((result, i) => {
         return {
           ...response.data[i],
-          assets: result.isFulfilled ? result.value.data : null,
-          error: result.isRejected ? result.reason : null,
+          assets: result.status === 'fulfilled' ? result.value.data : null,
+          error: result.status === 'rejected' ? result.reason : null,
         };
       });
       return {
