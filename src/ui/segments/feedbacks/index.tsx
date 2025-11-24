@@ -66,22 +66,28 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
       const pathSegments = pathname.split('/').filter(Boolean);
       const virtualLabIndex = pathSegments.indexOf('virtual-lab');
 
-      if (virtualLabIndex !== -1 && virtualLabIndex + 3 < pathSegments.length) {
-        const sectionFromUrl = pathSegments[virtualLabIndex + 3];
+      if (virtualLabIndex !== -1) {
+        // Check if there's a section after the project ID
+        if (virtualLabIndex + 3 < pathSegments.length) {
+          const sectionFromUrl = pathSegments[virtualLabIndex + 3];
 
-        if (sectionFromUrl) {
-          const sectionMap: Record<string, string> = {
-            workflows: 'workflow',
-            notebooks: 'notebooks',
-            reports: 'reports',
-            data: 'data explore',
-            help: 'help',
-          };
+          if (sectionFromUrl) {
+            const sectionMap: Record<string, string> = {
+              workflows: 'workflows',
+              notebooks: 'notebooks',
+              reports: 'reports',
+              data: 'data',
+              help: 'help',
+            };
 
-          const mappedSection = sectionMap[sectionFromUrl.toLowerCase()];
-          if (mappedSection) {
-            setSection(mappedSection);
+            const mappedSection = sectionMap[sectionFromUrl.toLowerCase()];
+            if (mappedSection) {
+              setSection(mappedSection);
+            }
           }
+        } else {
+          // If we're on the project home (no section after project ID), set default to "Projects"
+          setSection('projects');
         }
       }
     }
@@ -353,7 +359,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
                 </option>
                 <option value="enhancement">Enhancement</option>
                 <option value="bugs">Bugs</option>
-                <option value="new feature">New Feature</option>
+                <option value="new feature">New feature</option>
                 <option value="payment">Payment</option>
                 <option value="other">Other</option>
               </select>
@@ -379,10 +385,10 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
                 <option value="" disabled className="text-neutral-5 text-base font-normal">
                   Select a section...
                 </option>
-                <option value="data explore">Data Explore</option>
-                <option value="project">Project</option>
-                <option value="virtual lab">Virtual Lab</option>
-                <option value="workflow">Workflow</option>
+                <option value="data">Data</option>
+                <option value="projects">Projects</option>
+                <option value="virtual lab">Virtual lab</option>
+                <option value="workflows">Workflows</option>
                 <option value="notebooks">Notebooks</option>
                 <option value="help">Help</option>
                 <option value="reports">Reports</option>
