@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   try {
-    const { title, body, label, labels, screenshot } = await req.json();
+    const { title, body, label, labels, screenshot, screenshots } = await req.json();
 
     if (!title || !body) {
       return NextResponse.json({ error: 'Title and body required' }, { status: 400 });
@@ -68,8 +68,20 @@ export async function POST(req: NextRequest) {
       console.warn('Could not verify token, but continuing:', tokenError);
     }
 
+    // Format timestamp: DD/MM/YYYY hh:mm
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const timestamp = `🕗 Received at: ${day}/${month}/${year} ${hours}:${minutes}`;
+
+    // Add timestamp to body
+    const bodyWithTimestamp = `${body}\n\n---\n\n${timestamp}`;
+
     // eslint-disable-next-line no-console
-    console.log('Creating issue with:', { title, body: body.substring(0, 100) + '...', label });
+    console.log('Creating issue with:', { title, body: bodyWithTimestamp.substring(0, 100) + '...', label });
 
     // CREATE ISSUE with label (label is optional, so we try without it if it fails)
     let createIssueResponse;
@@ -112,7 +124,7 @@ export async function POST(req: NextRequest) {
         owner: 'openbraininstitute',
         repo: 'feedback',
         title,
-        body,
+        body: bodyWithTimestamp,
         labels: allLabels,
       });
     } catch (labelError) {
@@ -125,7 +137,7 @@ export async function POST(req: NextRequest) {
           owner: 'openbraininstitute',
           repo: 'feedback',
           title,
-          body,
+          body: bodyWithTimestamp,
           labels: labelsWithoutMonthYear,
         });
       } else if (error.status === 401) {
@@ -148,56 +160,148 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line no-console
     console.log('Issue created successfully:', { issueUrl, issueNodeId, issueNumber });
 
-    // Upload screenshot if provided
-    let screenshotUrl: string | null = null;
-    if (screenshot && typeof screenshot === 'string' && screenshot.startsWith('data:image')) {
-      try {
-        // Extract base64 data from data URL
-        const base64Data = screenshot.replace(/^data:image\/\w+;base64,/, '');
+    // Upload screenshots if provided
+    // Support both single screenshot (backward compatibility) and screenshots array
+    const allScreenshots: string[] = [];
+    if (screenshots && Array.isArray(screenshots)) {
+      allScreenshots.push(...screenshots);
+    } else if (screenshot && typeof screenshot === 'string' && screenshot.startsWith('data:image')) {
+      allScreenshots.push(screenshot);
+    }
 
-        // Create a unique filename
-        const timestamp = Date.now();
-        const filename = `screenshots/feedback-${issueNumber}-${timestamp}.png`;
+    // eslint-disable-next-line no-console
+    console.log('Screenshot data received:', {
+      hasScreenshots: !!screenshots,
+      screenshotsIsArray: Array.isArray(screenshots),
+      screenshotsLength: Array.isArray(screenshots) ? screenshots.length : 0,
+      hasScreenshot: !!screenshot,
+      screenshotType: typeof screenshot,
+      allScreenshotsLength: allScreenshots.length,
+    });
 
-        // Upload to repository
-        const uploadResponse = await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', {
-          owner: 'openbraininstitute',
-          repo: 'feedback',
-          path: filename,
-          message: `Add screenshot for issue #${issueNumber}`,
-          content: base64Data,
+    const uploadedScreenshotUrls: string[] = [];
+
+    if (allScreenshots.length > 0) {
+      // eslint-disable-next-line no-console
+      console.log(`Uploading ${allScreenshots.length} screenshot(s)...`);
+
+      for (let i = 0; i < allScreenshots.length; i++) {
+        const screenshotData = allScreenshots[i];
+        // eslint-disable-next-line no-console
+        console.log(`Processing screenshot ${i + 1}:`, {
+          hasData: !!screenshotData,
+          type: typeof screenshotData,
+          startsWithData: typeof screenshotData === 'string' ? screenshotData.substring(0, 20) : 'N/A',
         });
-
-        // Get the raw content URL (GitHub provides download_url for raw files)
-        const { content } = uploadResponse.data;
-        if (content && 'download_url' in content) {
-          // Use the download_url for raw image access
-          screenshotUrl = content.download_url as string;
+        
+        if (!screenshotData || typeof screenshotData !== 'string' || !screenshotData.startsWith('data:image')) {
           // eslint-disable-next-line no-console
-          console.log('Screenshot uploaded:', screenshotUrl);
+          console.warn(`Skipping screenshot ${i + 1}: invalid data`);
+          continue;
+        }
 
-          // Update issue body with screenshot URL
-          if (screenshotUrl) {
-            const updatedBody = `${body}\n\n## Screenshot\n\n![Screenshot](${screenshotUrl})`;
-            await octokit.request('PATCH /repos/{owner}/{repo}/issues/{issue_number}', {
+        try {
+          // Upload to Imgur (free, reliable image hosting)
+          const base64Data = screenshotData.replace(/^data:image\/\w+;base64,/, '');
+          
+          // eslint-disable-next-line no-console
+          console.log(`Uploading screenshot ${i + 1} to Imgur...`);
+          
+          // Use Imgur's anonymous upload API
+          // Default client ID for anonymous uploads (can be overridden with env var)
+          const imgurClientId = process.env.IMGUR_CLIENT_ID || '546c25a59c58ad7';
+          
+          const uploadResponse = await fetch('https://api.imgur.com/3/image', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Client-ID ${imgurClientId}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              image: base64Data,
+              type: 'base64',
+            }),
+          });
+          
+          if (uploadResponse.ok) {
+            const responseData = await uploadResponse.json() as {
+              data?: { link?: string };
+              success?: boolean;
+            };
+            
+            if (responseData.success && responseData.data?.link) {
+              const screenshotUrl = responseData.data.link;
+              uploadedScreenshotUrls.push(screenshotUrl);
+              // eslint-disable-next-line no-console
+              console.log(`Screenshot ${i + 1} uploaded successfully:`, screenshotUrl);
+            } else {
+              throw new Error('No URL returned from Imgur');
+            }
+          } else {
+            const errorText = await uploadResponse.text();
+            throw new Error(`Imgur upload failed: ${uploadResponse.status} ${errorText}`);
+          }
+        } catch (screenshotError) {
+          // eslint-disable-next-line no-console
+          console.error(`Failed to upload screenshot ${i + 1}:`, screenshotError);
+          
+          // Add a warning comment to the issue about failed upload
+          try {
+            await octokit.request('POST /repos/{owner}/{repo}/issues/{issue_number}/comments', {
               owner: 'openbraininstitute',
               repo: 'feedback',
               issue_number: issueNumber,
-              body: updatedBody,
+              body: `⚠️ Screenshot ${i + 1} failed to upload. Error: ${screenshotError instanceof Error ? screenshotError.message : 'Unknown error'}`,
             });
+          } catch (commentError) {
+            // eslint-disable-next-line no-console
+            console.error('Failed to add error comment:', commentError);
           }
         }
-      } catch (screenshotError) {
+      }
+
+      // Update issue body with uploaded screenshots
+      if (uploadedScreenshotUrls.length > 0) {
         // eslint-disable-next-line no-console
-        console.error('Failed to upload screenshot:', screenshotError);
-        // Continue without screenshot - issue was created successfully
+        console.log(`Adding ${uploadedScreenshotUrls.length} screenshot(s) to issue body`);
+        
+        // Add screenshots as markdown images
+        const screenshotSection =
+          uploadedScreenshotUrls.length === 1
+            ? `\n\n## Screenshot\n\n![Screenshot](${uploadedScreenshotUrls[0]})`
+            : `\n\n## Screenshots\n\n${uploadedScreenshotUrls
+                .map((url, idx) => `![Screenshot ${idx + 1}](${url})`)
+                .join('\n\n')}`;
+
+        const updatedBody = `${bodyWithTimestamp}${screenshotSection}`;
+        
+        try {
+          await octokit.request('PATCH /repos/{owner}/{repo}/issues/{issue_number}', {
+            owner: 'openbraininstitute',
+            repo: 'feedback',
+            issue_number: issueNumber,
+            body: updatedBody,
+          });
+          
+          // eslint-disable-next-line no-console
+          console.log('Issue body updated with screenshots');
+        } catch (updateError) {
+          const error = updateError as { status?: number; message?: string; errors?: unknown };
+          // eslint-disable-next-line no-console
+          console.error('Failed to update issue body:', error.status, error.message);
+          // Don't throw - issue was created successfully, but log the error
+        }
+      } else if (allScreenshots.length > 0) {
+        // eslint-disable-next-line no-console
+        console.warn(`Failed to upload all screenshots. Total attempted: ${allScreenshots.length}`);
       }
     }
 
     // ADD TO PROJECT (optional, continue even if it fails)
-    if (!process.env.GITHUB_FEEDBACK_PROJECT_ID) {
+    const projectId = process.env.GITHUB_FEEDBACK_PROJECT_ID;
+    if (!projectId || projectId.startsWith('{{') || projectId.trim() === '') {
       // eslint-disable-next-line no-console
-      console.warn('GITHUB_FEEDBACK_PROJECT_ID is not configured, skipping project addition');
+      console.warn('GITHUB_FEEDBACK_PROJECT_ID is not configured or is a placeholder, skipping project addition');
     } else {
       try {
         // eslint-disable-next-line no-console

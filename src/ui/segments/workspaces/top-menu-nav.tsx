@@ -283,6 +283,48 @@ export function TopMenuNavigation() {
                     {allowText && <span>{title}</span>}
                     {icon}
                   </Button>
+                  <span className="text-primary-9 absolute top-full right-0 text-sm whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    Feedback
+                  </span>
+                </div>
+              </div>
+            );
+          }
+
+          if (id === 'workspace-help') {
+            return (
+              <div key={key} className="group flex w-max items-center justify-center gap-0">
+                <div className="relative flex items-center">
+                  <Button
+                    asChild
+                    rounded
+                    id={id}
+                    variant="outline"
+                    size={breakpoint === 'xl' ? 'lg' : 'md'}
+                    className={cn(
+                      { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
+                      { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
+                      'group relative flex items-center justify-between',
+                      { 'group-hover:rounded-r-none group-hover:border-r-0': hasAction },
+                      'transition-all duration-400 ease-out',
+                      clx
+                    )}
+                    active={activeSection === baseUrl || isActive?.(pathname)}
+                  >
+                    <Link
+                      prefetch
+                      href={{
+                        pathname: url,
+                        query: linkSearchParams,
+                      }}
+                    >
+                      {allowText && <span>{title}</span>}
+                      {icon}
+                    </Link>
+                  </Button>
+                  <span className="text-primary-9 absolute top-full left-1/2 -translate-x-1/2 text-sm whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    Help
+                  </span>
                 </div>
               </div>
             );
