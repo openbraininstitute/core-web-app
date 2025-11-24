@@ -30,11 +30,11 @@ export function Content({ sessionId, memodel, synaptome }: Props) {
     .with({ step: ExperimentStep.ExperimentalSetup }, () => (
       <ExperimentSetup sessionId={sessionId} />
     ))
-    .with({ step: ExperimentStep.StimulationProtocol }, () => (
-      <StimulationProtocol sessionId={sessionId} memodelId={memodel.id} />
-    ))
     .with({ step: ExperimentStep.SynapticInputs }, () => (
       <SynapticsConfiguration sessionId={sessionId} memodelId={memodel.id} synaptome={synaptome} />
+    ))
+    .with({ step: ExperimentStep.StimulationProtocol }, () => (
+      <StimulationProtocol sessionId={sessionId} memodelId={memodel.id} />
     ))
     .with({ step: ExperimentStep.Recording }, () => <Recording sessionId={sessionId} />)
     .otherwise(() => null);
