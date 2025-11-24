@@ -28,34 +28,28 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
   const [uploadedImages, setUploadedImages] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Always call hooks, but guard their usage
   const { virtualLabId, projectId } = useWorkspace();
 
-  // Ensure component only runs on client
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Clear uploaded images when feedback type changes away from "bugs"
   useEffect(() => {
     if (type !== 'bugs' && uploadedImages.length > 0) {
       setUploadedImages([]);
     }
   }, [type, uploadedImages.length]);
 
-  // Create object URLs for previews
   const imageUrls = useMemo(() => {
     return uploadedImages.map((file) => URL.createObjectURL(file));
   }, [uploadedImages]);
 
-  // Cleanup object URLs when images are removed or component unmounts
   useEffect(() => {
     return () => {
       imageUrls.forEach((url) => URL.revokeObjectURL(url));
     };
   }, [imageUrls]);
 
-  // Get current URL only on client side to avoid hydration mismatch
   useEffect(() => {
     if (mounted && typeof window !== 'undefined') {
       const { pathname, search, origin } = window.location;
@@ -155,7 +149,6 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
 
   const captureScreenshot = async (): Promise<string | null> => {
     try {
-      // Hide the modal temporarily for screenshot
       const modal = document.querySelector('[role="dialog"]') as HTMLElement;
       const modalOverlay = document.querySelector('.ant-modal-mask') as HTMLElement;
 
