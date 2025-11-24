@@ -10,11 +10,13 @@ import { Color } from 'three';
 import { getColorFromGeneratedPalette } from '../../simulate/single-neuron/shared/steps/webgl-neuron-selector/colors';
 import { useVisibleSynapsesSetter } from '../../simulate/single-neuron/shared/steps/webgl-neuron-selector/hooks';
 
-import { SingleNeuronSynaptomeBaseSchema } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import {
+  SingleNeuronSynaptomeBaseSchema,
+  TSingleNeuronSynaptomeConfiguration,
+} from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import {
-  DefaultColor,
   DefaultSynapseValue,
   SimulationColors,
   useBuildSingleNeuronSynaptomeSessionState,
@@ -48,21 +50,28 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
     const id = crypto.randomUUID();
     const queryParams = new URLSearchParams(params);
     queryParams.set('set', id);
-    const cloneMap = new Map(sessionValue?.synapseSets);
+    const currentMap =
+      sessionValue?.synapseSets ?? new Map<string, TSingleNeuronSynaptomeConfiguration>();
+    const cloneMap = new Map<string, TSingleNeuronSynaptomeConfiguration>();
+    // Cleanup the dictionary.
+    for (const key of currentMap.keys()) {
+      const val = currentMap.get(key);
+      if (!val?.name || !val?.target) continue;
 
+      cloneMap.set(key, val);
+    }
     cloneMap?.set(id, {
       ...DefaultSynapseValue,
       id,
       seed: (sessionValue?.seed ?? 0) + getRandomIntInclusive(0, sessionValue?.seed ?? 0),
       color: sample(SimulationColors) ?? SimulationColors[cloneMap.size],
     });
-
+    resetColors(cloneMap);
     setSessionValue({
       ...sessionValue,
       seed: sessionValue?.seed ?? 100,
       synapseSets: cloneMap,
     });
-
     replace(`${pathname}?${queryParams.toString()}`);
   };
 
@@ -87,12 +96,11 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
         ...DefaultSynapseValue,
         id: newId,
         seed: (sessionValue?.seed ?? 0) + getRandomIntInclusive(0, sessionValue?.seed ?? 0),
-        color: sample(SimulationColors) ?? SimulationColors.at(0) ?? DefaultColor,
       });
       setSessionValue({
         ...sessionValue,
         seed: sessionValue?.seed ?? 100,
-        synapseSets: newMap,
+        synapseSets: resetColors(newMap),
         synapseCount: new Map(),
       });
       replace(`${pathname}?${queryParams.toString()}`);
@@ -102,7 +110,7 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
     setSessionValue({
       ...sessionValue,
       seed: sessionValue?.seed ?? 100,
-      synapseSets: cloneMap,
+      synapseSets: resetColors(cloneMap),
       synapseCount: cloneCountMap,
     });
 
@@ -365,4 +373,13 @@ function makeData(
     }
   }
   return new Float32Array(data);
+}
+
+// Reset the colors.
+function resetColors(cloneMap: Map<string, TSingleNeuronSynaptomeConfiguration>) {
+  let index = 0;
+  for (const [, val] of cloneMap.entries()) {
+    val.color = getColorFromGeneratedPalette(index++);
+  }
+  return cloneMap;
 }

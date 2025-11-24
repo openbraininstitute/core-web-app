@@ -192,7 +192,6 @@ export class PainterManager {
       this.initialPosition.from(context.camera.transfo.position);
       this.initCameraController(context, zoomMin, zoomMax);
       painter.structure = structure;
-      context.debugHierarchy();
     }
   }
 
