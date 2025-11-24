@@ -106,8 +106,8 @@ export interface IOrganization extends Timestamps, EntityCoreIdentifiable {
 
 export interface IPerson extends Timestamps, EntityCoreIdentifiable {
   type: 'person';
-  givenName: string | null;
-  familyName: string | null;
+  given_name: string | null;
+  family_name: string | null;
   pref_label: string;
 }
 
