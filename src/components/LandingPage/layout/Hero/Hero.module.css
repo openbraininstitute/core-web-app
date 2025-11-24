@@ -67,7 +67,7 @@
 
 .hero .text h1 {
   margin-bottom: 20px;
-  font-size: 10vmin;
+  font-size: 8vmin;
   line-height: 1.2;
   padding: 0;
   text-align: center;
@@ -78,6 +78,7 @@
 }
 
 .hero .text div.content {
+  text-align: center;
   line-height: 1.55;
   max-width: auto;
 }

@@ -81,7 +81,11 @@ export async function POST(req: NextRequest) {
     const bodyWithTimestamp = `${body}\n\n---\n\n${timestamp}`;
 
     // eslint-disable-next-line no-console
-    console.log('Creating issue with:', { title, body: bodyWithTimestamp.substring(0, 100) + '...', label });
+    console.log('Creating issue with:', {
+      title,
+      body: bodyWithTimestamp.substring(0, 100) + '...',
+      label,
+    });
 
     // CREATE ISSUE with label (label is optional, so we try without it if it fails)
     let createIssueResponse;
@@ -165,7 +169,11 @@ export async function POST(req: NextRequest) {
     const allScreenshots: string[] = [];
     if (screenshots && Array.isArray(screenshots)) {
       allScreenshots.push(...screenshots);
-    } else if (screenshot && typeof screenshot === 'string' && screenshot.startsWith('data:image')) {
+    } else if (
+      screenshot &&
+      typeof screenshot === 'string' &&
+      screenshot.startsWith('data:image')
+    ) {
       allScreenshots.push(screenshot);
     }
 
@@ -191,10 +199,15 @@ export async function POST(req: NextRequest) {
         console.log(`Processing screenshot ${i + 1}:`, {
           hasData: !!screenshotData,
           type: typeof screenshotData,
-          startsWithData: typeof screenshotData === 'string' ? screenshotData.substring(0, 20) : 'N/A',
+          startsWithData:
+            typeof screenshotData === 'string' ? screenshotData.substring(0, 20) : 'N/A',
         });
-        
-        if (!screenshotData || typeof screenshotData !== 'string' || !screenshotData.startsWith('data:image')) {
+
+        if (
+          !screenshotData ||
+          typeof screenshotData !== 'string' ||
+          !screenshotData.startsWith('data:image')
+        ) {
           // eslint-disable-next-line no-console
           console.warn(`Skipping screenshot ${i + 1}: invalid data`);
           continue;
@@ -203,18 +216,18 @@ export async function POST(req: NextRequest) {
         try {
           // Upload to Imgur (free, reliable image hosting)
           const base64Data = screenshotData.replace(/^data:image\/\w+;base64,/, '');
-          
+
           // eslint-disable-next-line no-console
           console.log(`Uploading screenshot ${i + 1} to Imgur...`);
-          
+
           // Use Imgur's anonymous upload API
           // Default client ID for anonymous uploads (can be overridden with env var)
           const imgurClientId = process.env.IMGUR_CLIENT_ID || '546c25a59c58ad7';
-          
+
           const uploadResponse = await fetch('https://api.imgur.com/3/image', {
             method: 'POST',
             headers: {
-              'Authorization': `Client-ID ${imgurClientId}`,
+              Authorization: `Client-ID ${imgurClientId}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -222,13 +235,13 @@ export async function POST(req: NextRequest) {
               type: 'base64',
             }),
           });
-          
+
           if (uploadResponse.ok) {
-            const responseData = await uploadResponse.json() as {
+            const responseData = (await uploadResponse.json()) as {
               data?: { link?: string };
               success?: boolean;
             };
-            
+
             if (responseData.success && responseData.data?.link) {
               const screenshotUrl = responseData.data.link;
               uploadedScreenshotUrls.push(screenshotUrl);
@@ -244,7 +257,7 @@ export async function POST(req: NextRequest) {
         } catch (screenshotError) {
           // eslint-disable-next-line no-console
           console.error(`Failed to upload screenshot ${i + 1}:`, screenshotError);
-          
+
           // Add a warning comment to the issue about failed upload
           try {
             await octokit.request('POST /repos/{owner}/{repo}/issues/{issue_number}/comments', {
@@ -264,7 +277,7 @@ export async function POST(req: NextRequest) {
       if (uploadedScreenshotUrls.length > 0) {
         // eslint-disable-next-line no-console
         console.log(`Adding ${uploadedScreenshotUrls.length} screenshot(s) to issue body`);
-        
+
         // Add screenshots as markdown images
         const screenshotSection =
           uploadedScreenshotUrls.length === 1
@@ -274,7 +287,7 @@ export async function POST(req: NextRequest) {
                 .join('\n\n')}`;
 
         const updatedBody = `${bodyWithTimestamp}${screenshotSection}`;
-        
+
         try {
           await octokit.request('PATCH /repos/{owner}/{repo}/issues/{issue_number}', {
             owner: 'openbraininstitute',
@@ -282,7 +295,7 @@ export async function POST(req: NextRequest) {
             issue_number: issueNumber,
             body: updatedBody,
           });
-          
+
           // eslint-disable-next-line no-console
           console.log('Issue body updated with screenshots');
         } catch (updateError) {
@@ -301,7 +314,9 @@ export async function POST(req: NextRequest) {
     const projectId = process.env.GITHUB_FEEDBACK_PROJECT_ID;
     if (!projectId || projectId.startsWith('{{') || projectId.trim() === '') {
       // eslint-disable-next-line no-console
-      console.warn('GITHUB_FEEDBACK_PROJECT_ID is not configured or is a placeholder, skipping project addition');
+      console.warn(
+        'GITHUB_FEEDBACK_PROJECT_ID is not configured or is a placeholder, skipping project addition'
+      );
     } else {
       try {
         // eslint-disable-next-line no-console
