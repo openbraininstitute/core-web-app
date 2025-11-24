@@ -68,7 +68,7 @@
   content: '';
   display: block;
   height: 4px;
-  width: 48px;
+  width: 24px;
   background-color: #fffe;
   border-radius: 999vmax;
   opacity: 0;
@@ -129,7 +129,7 @@
   content: '';
   display: block;
   height: 4px;
-  width: 48px;
+  width: 24px;
   background-color: #fffe;
   border-radius: 999vmax;
   opacity: 0;
