@@ -132,9 +132,7 @@ export const SimulationCampaign: EntityCoreTypeConfig<ICircuitSimulationCampaign
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.SimulationCampaign,
   api: {
-    config: {
-      allowedFacets: true,
-    },
+    config: { allowedFacets: true },
     query: {
       list: resolveSimulationCampaigns,
       one: getCircuitSimulationCampaign,

@@ -1,6 +1,6 @@
 'use client';
 
-import { parseAsString, Parser, useQueryState } from 'nuqs';
+import { parseAsString, SingleParserBuilder, useQueryState } from 'nuqs';
 
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import {
@@ -35,7 +35,9 @@ export function Header() {
         clearOnDefault: false,
         shallow: true,
       })
-      .withDefault(WorkflowSimulatePanels.Configuration) as Parser<WorkflowSimulatePanelKeys>
+      .withDefault(
+        WorkflowSimulatePanels.Configuration
+      ) as SingleParserBuilder<WorkflowSimulatePanelKeys>
   );
 
   const onTabClick = (value: string) => updatePanel(value as WorkflowSimulatePanelKeys);

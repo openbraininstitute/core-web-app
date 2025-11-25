@@ -19,14 +19,11 @@ export const viewDefForExperimentalBoutonDensity: ViewDefinitionConfig = {
   ],
   summaryViewFields: [
     { field: EntityCoreFields.BrainRegion },
-    { field: EntityCoreFields.Species },
-    { field: EntityCoreFields.License },
     { field: EntityCoreFields.MType },
-    { field: EntityCoreFields.SubjectAge },
     { field: EntityCoreFields.MeanSTD },
-    { field: EntityCoreFields.Weight },
     { field: EntityCoreFields.Sem },
     { field: EntityCoreFields.NumberOfMeasurements },
+    { field: EntityCoreFields.License },
   ],
   miniDetailView: [
     { field: EntityCoreFields.BrainRegion },

@@ -278,13 +278,13 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   },
   [EntityCoreFields.CircuitExperimentDate]: {
     className: 'text-left',
-    title: 'Registration Date',
+    title: 'Experiment date',
     filter: null,
     isDisplayable: true,
     render: (r) => renderDate((r as ICircuit).experiment_date),
     vocabulary: {
-      plural: 'Registration Date',
-      singular: 'Registration Date',
+      plural: 'Experiment dates',
+      singular: 'Experiment dates',
     },
   },
   [EntityCoreFields.CircuitContactEmail]: {
@@ -294,8 +294,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isDisplayable: true,
     render: (r) => renderEmptyOrValue(renderEmail((r as ICircuit).contact_email)),
     vocabulary: {
-      plural: 'Registration Date',
-      singular: 'Registration Date',
+      plural: 'Contact emails',
+      singular: 'Contact email',
     },
   },
   [EntityCoreFields.CircuitRootCircuit]: {

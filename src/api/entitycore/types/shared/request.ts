@@ -11,10 +11,20 @@ export type BrainLocationFilter = {
   brain_location_id: number | null;
 };
 
+export const BrainRegionDirection = {
+  ASCENDANTS: 'ascendants',
+  DESCENDANTS: 'descendants',
+  ASCENDANTS_AND_DESCENDANTS: 'ascendants_and_descendants',
+} as const;
+export type TBrainRegionDirection =
+  (typeof BrainRegionDirection)[keyof typeof BrainRegionDirection];
+
 export type BrainRegionFilter = {
-  within_brain_region_hierarchy_id: string | null;
-  within_brain_region_brain_region_id: string | null;
-  within_brain_region_ascendants: boolean;
+  within_brain_region_hierarchy_id: string;
+  within_brain_region_brain_region_id: string;
+  within_brain_region_direction: TBrainRegionDirection;
+  // @deprecated
+  within_brain_region_ascendants?: boolean;
 };
 
 export type ContributionFilter = {

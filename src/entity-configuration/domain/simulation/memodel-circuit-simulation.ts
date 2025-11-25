@@ -4,7 +4,6 @@ import keyBy from 'es-toolkit/compat/keyBy';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { unifiedSingleNeuronSimulationFlowFlag } from '@/features/feature-flags/flags';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
@@ -26,6 +25,8 @@ import {
   type ICircuitSimulationCampaignFilter,
 } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { WorkspaceContext } from '@/types/common';
+
+const ENTITY_TYPE = SimulationCampaignEntityTypeDict.memodel;
 
 export async function resolveExecutions({
   context,
@@ -70,7 +71,7 @@ async function resolveSimulationCampaigns({
   const source = await getCircuitSimulationCampaigns({
     context,
     withFacets,
-    filters: { ...filters, entity__type: SimulationCampaignEntityTypeDict.memodel },
+    filters: { ...filters, entity__type: ENTITY_TYPE },
   });
 
   // extract all simulation IDs
@@ -157,10 +158,21 @@ export const MEModelCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCa
   extendedType: ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.MEModelCircuitSimulation,
-  requiredFeatures: [unifiedSingleNeuronSimulationFlowFlag.key],
   api: {
     config: { allowedFacets: true },
     query: {
+      count: (...params) => {
+        const filters = discardBrainRegionQueryParams(params[0].filters);
+        return getCircuitSimulationCampaigns({
+          ...params,
+          context: params[0].context,
+          withFacets: params[0].withFacets,
+          filters: {
+            ...filters,
+            entity__type: ENTITY_TYPE,
+          },
+        });
+      },
       list: (params: Parameters<typeof resolveSimulationCampaigns>[0]) =>
         resolveSimulationCampaigns(params),
       one: getCircuitSimulationCampaign,

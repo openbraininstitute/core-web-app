@@ -12,21 +12,18 @@ export function SynapseSetConfiguration({ sessionId }: Props) {
   const { sessionValue } = useBuildSingleNeuronSynaptomeSessionState({
     sessionId,
   });
+
   return (
     <div className="grid h-full w-full grid-cols-2 flex-col items-start gap-4">
       <SynapseSet sessionId={sessionId} />
       <div className="relative h-full max-h-full flex-1">
         {sessionValue?.memodel?.id && (
           <NeuronViewerContainer
-            useCursor
-            useEvents
-            useZoomer
             disableElectrodes
             disableSynapses={false}
             virtualLabId={virtualLabId}
             projectId={projectId}
             meModelId={sessionValue?.memodel?.id}
-            zoomPlacement="right"
             sessionId={sessionId}
           />
         )}

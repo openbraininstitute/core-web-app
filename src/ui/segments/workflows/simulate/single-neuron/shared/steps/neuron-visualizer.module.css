@@ -1,0 +1,3 @@
+div:fullscreen > div button.hideInFullscreen {
+  display: none;
+}

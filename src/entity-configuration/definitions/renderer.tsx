@@ -1,12 +1,10 @@
 'use client';
 
 import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
+import { isEmpty, isNil, find, filter, reject } from 'es-toolkit/compat';
 import { JSX, ReactNode, useEffect, useState } from 'react';
 import { Button, Empty, Modal } from 'antd';
 import { useParams } from 'next/navigation';
-import isEmpty from 'es-toolkit/compat/isEmpty';
-import isNil from 'es-toolkit/compat/isNil';
-import find from 'es-toolkit/compat/find';
 
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { PreviewThumbnail } from '@/features/thumbnail/preview';
@@ -16,13 +14,14 @@ import type { ICellMorphologyExpanded } from '@/api/entitycore/types/entities/ce
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreDensityObjectTypes, ICellMorphology } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
-import type {
-  AssetLabel,
-  EntityCoreIdentifiable,
-  EntityCoreResource,
-  IContributor,
-  ILicense,
-  MeasurementBase,
+import {
+  AgentType,
+  type AssetLabel,
+  type EntityCoreIdentifiable,
+  type EntityCoreResource,
+  type IContributor,
+  type ILicense,
+  type MeasurementBase,
 } from '@/api/entitycore/types/shared/global';
 
 export const EmptyValue = '—';
@@ -301,8 +300,6 @@ export const renderMorphologyMeasurement = (
   return `${renderFloatNumber(value)}${unitSuffix}`;
 };
 
-// CONTRIBUTOR MODAL
-
 function ContributorsModalTrigger({
   contributors,
 }: {
@@ -326,16 +323,11 @@ export const renderContributorsModal = (
   mode: 'modal' | 'inline' = 'modal'
 ): ReactNode => {
   const getName = (c: IContributor) =>
-    ('givenName' in c.agent && c.agent.givenName) || c.agent.pref_label;
+    `${('given_name' in c.agent ? c.agent.given_name : '') + ' ' + ('family_name' in c.agent ? c.agent.family_name : '')}`.trim() ||
+    c.agent.pref_label;
 
-  const sortContributors = (a: IContributor, b: IContributor) => {
-    return getName(a).localeCompare(getName(b));
-  };
-
-  const consortia = contributors
-    .filter((c) => c.agent.type === 'consortium')
-    .sort(sortContributors);
-  const other = contributors.filter((c) => c.agent.type !== 'consortium').sort(sortContributors);
+  const consortia = filter(contributors, { agent: { type: AgentType.Consortium } });
+  const other = reject(contributors, { agent: { type: AgentType.Consortium } });
 
   const sortedContributors = [...consortia, ...other];
 
@@ -348,8 +340,8 @@ export const renderContributorsModal = (
         <span className="line-clamp-2">
           {displayContributors.map((contributor, index) => (
             <span key={`${contributor.agent.pref_label}-${contributor.agent.type}`}>
-              {getName(contributor)}
-              {index < displayContributors.length - 1 ? ', ' : ''}
+              {getName(contributor).trim()}
+              {index < displayContributors.length - 1 ? '; ' : ''}
             </span>
           ))}
         </span>
@@ -379,8 +371,8 @@ export const renderContributorsModal = (
       <p className="text-primary-8" style={{ margin: 0, fontSize: '18px' }}>
         {sortedContributors.map((contributor, index) => (
           <span key={`${contributor.agent.pref_label}-${contributor.agent.type}`}>
-            {getName(contributor)}
-            {index < sortedContributors.length - 1 ? ', ' : ''}
+            {getName(contributor).trim()}
+            {index < sortedContributors.length - 1 ? '; ' : ''}
           </span>
         ))}
       </p>

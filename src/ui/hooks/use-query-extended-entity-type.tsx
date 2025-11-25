@@ -8,6 +8,7 @@ import {
 import { useAtomValue } from 'jotai';
 import isEmpty from 'es-toolkit/compat/isEmpty';
 
+import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
 import {
   DEFAULT_BRAIN_REGION_HIERARCHY_ID,
@@ -78,7 +79,7 @@ function useQueryParameters(
       ? {
           within_brain_region_hierarchy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,
           within_brain_region_brain_region_id: defaultBrainRegion ?? selectedBrainRegin?.id,
-          within_brain_region_ascendants: false,
+          within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
         }
       : {}),
     // eslint-disable-next-line no-nested-ternary

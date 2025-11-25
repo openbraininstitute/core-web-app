@@ -21,7 +21,7 @@ export function useFlags(): FeatureFlags {
   return flags;
 }
 
-export function useFlag(key: keyof FeatureFlags): boolean {
+export function useFlag<K extends keyof FeatureFlags>(key: K): FeatureFlags[K] {
   const flags = useFlags();
   return flags[key];
 }

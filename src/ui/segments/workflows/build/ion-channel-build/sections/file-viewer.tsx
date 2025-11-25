@@ -221,7 +221,14 @@ export function CodeFileViewer({
           'border-neutral-3 bg-white! [&_.shiki]:bg-white! [&_.shiki]:shadow-xl!'
         )}
       >
-        <CodeBlockCopyButton onCopy={handleCopy} onError={() => {}} />
+        <div className="bg-neutral-light flex items-center justify-between px-2 py-2">
+          <CodeBlockCopyButton
+            onCopy={handleCopy}
+            onError={() => {}}
+            className="ml-auto size-8 self-end rounded-full px-2 hover:bg-gray-300"
+            iconClassName="text-gray-500 size-4"
+          />
+        </div>
       </CodeBlock>
     </div>
   );

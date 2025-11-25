@@ -22,9 +22,7 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
   type: EntityTypeDict.Circuit,
   slug: EntitySlug.Circuit,
   api: {
-    config: {
-      allowedFacets: true,
-    },
+    config: { allowedFacets: true },
     query: {
       list: (...params) => {
         return getCircuits({

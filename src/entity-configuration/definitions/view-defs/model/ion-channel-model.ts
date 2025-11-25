@@ -20,7 +20,6 @@ export const ViewDefForIonChannelModel: ViewDefinitionConfig = {
   curated: true,
   summaryViewFields: [
     { field: EntityCoreFields.BrainRegion },
-    { field: EntityCoreFields.Species },
     { field: EntityCoreFields.TemperatureCelsius },
     { field: EntityCoreFields.IsTemperatureDependent },
     { field: EntityCoreFields.IsLjpCorrected },

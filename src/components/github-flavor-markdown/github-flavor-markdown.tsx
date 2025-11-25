@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import remarkMath from 'remark-math';
 import TruncableImage from './truncable-image';
+import { Highlighter } from './highlighter';
 
 import { classNames } from '@/util/utils';
 
@@ -16,13 +17,17 @@ interface GithubFlavorMarkdownProps {
   onLinkClicked(external: boolean): void;
 }
 
-export function GithubFlavorMarkdown({
+export const GithubFlavorMarkdown = React.memo(
+  RawGithubFlavorMarkdown,
+  (prevProps, nextProps) => prevProps.children === nextProps.children
+);
+
+function RawGithubFlavorMarkdown({
   className,
   children,
   onLinkClicked,
 }: GithubFlavorMarkdownProps) {
   const LinkComponent = useMemo(() => makeLink(onLinkClicked), [onLinkClicked]);
-
   return (
     <ReactMarkdown
       className={classNames(className, styles.githubFlavorMarkdown)}
@@ -31,6 +36,7 @@ export function GithubFlavorMarkdown({
       components={{
         a: LinkComponent,
         img: TruncableImage,
+        pre: Highlighter,
       }}
     >
       {children}

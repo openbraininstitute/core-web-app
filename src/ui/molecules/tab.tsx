@@ -16,8 +16,8 @@ export default function Tab({
     <NextLink
       href={href}
       className={cn(
-        'hover:bg-primary-8 flex h-[50px] w-full items-center justify-between rounded-full p-3 pl-5 font-bold shadow-sm hover:text-white',
-        highlight ? 'bg-primary-8 text-white' : 'bg-white'
+        'hover:bg-primary-8 flex h-[50px] w-full items-center justify-between rounded-full p-3 pl-5 text-base font-bold shadow-sm hover:text-white',
+        highlight ? 'bg-primary-8 text-white' : 'text-primary-9 bg-white'
       )}
     >
       {children}
