@@ -121,7 +121,14 @@ export default async function Overview({
         })}
       </div>
 
-      {'subject' in entity && <SubjectDetails className="mb-8" entity={entity} />}
+      {'subject' in entity && (
+        <SubjectDetails
+          className="mb-8"
+          entity={entity}
+          context={ctx}
+          subjectId={entity.subject.id}
+        />
+      )}
 
       {extendedType === ExtendedEntitiesTypeDict.SingleNeuronSimulation &&
         singleNeuronSimulationPayload && (
