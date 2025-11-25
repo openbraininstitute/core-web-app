@@ -70,7 +70,6 @@
   font-size: 10vmin;
   line-height: 1.2;
   padding: 0;
-  text-align: center;
 }
 
 .hero .text h1::after {
@@ -80,29 +79,6 @@
 .hero .text div.content {
   line-height: 1.55;
   max-width: auto;
-}
-
-.virtualLabsButton {
-  position: relative;
-  top: -16px;
-  display: flex;
-  flex-direction: column;
-  align-items: start;
-  justify-content: center;
-  gap: 4px;
-  margin: 20px auto 0;
-  padding: 18px 120px 18px 32px;
-  border: 1px solid white;
-  border-radius: 60px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(6px);
-  text-decoration: none;
-  transition: all 0.3s ease;
-  line-height: 1;
-}
-
-.virtualLabsButton:hover {
-  background: rgba(255, 255, 255, 0.15);
 }
 
 .hero > footer {
