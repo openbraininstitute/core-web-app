@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 
 import { Modal } from '@/ui/molecules/modal';
 
+// Dynamically import FeedbackForm with SSR disabled to avoid Suspense boundary issues
 const FeedbackForm = dynamic(() => import('./index'), {
   ssr: false,
   loading: () => (
@@ -29,6 +30,7 @@ type FeedbackModalProps = {
 };
 
 export default function FeedbackModal({ open, onClose }: FeedbackModalProps) {
+  // Component is already dynamically imported with ssr: false, so no need for mounted check
   if (!open) {
     return null;
   }
