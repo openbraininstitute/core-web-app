@@ -1,5 +1,4 @@
 import { EntityCoreObjectTypes } from '@/api/entitycore/types';
-import MouseIcon from '@/components/icons/Mouse';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { cn } from '@/lib/utils';
 import { Field } from '@/ui/segments/detail-view/overview/field';
@@ -32,9 +31,7 @@ export default async function SubjectDetails({
 }) {
   return (
     <div className={cn('mb-5 rounded-lg border border-gray-300 p-5', className)}>
-      <h2 className="text-primary-8 text-xl font-bold">
-        <MouseIcon className="mr-2 inline-block" /> Subject
-      </h2>
+      <h2 className="text-primary-8 text-xl font-bold">Subject</h2>
 
       <div className="flex flex-row flex-wrap">
         {columnFields.map((fields) => (

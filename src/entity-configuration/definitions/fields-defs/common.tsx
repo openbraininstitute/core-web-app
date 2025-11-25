@@ -1,5 +1,6 @@
 import { useAtom } from 'jotai';
 import { Button } from 'antd';
+import get from 'es-toolkit/compat/get';
 
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -27,7 +28,7 @@ import { ensureArray } from '@/utils/array';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { TAgentType, IContributor } from '@/api/entitycore/types/shared/global';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { EntityCoreDensityObjectTypes, EntityCoreObjectTypes } from '@/api/entitycore/types';
 
 const collator = new Intl.Collator('en', { sensitivity: 'base' });
 
@@ -267,7 +268,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       },
     ],
   },
-  [EntityCoreFields.Species]: {
+  [EntityCoreFields.SpeciesName]: {
     title: 'Species',
     filter: CoreFieldFilterTypeEnum.CheckList,
     render: (r) => {
@@ -310,6 +311,132 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isSortable: true,
     isFilterable: true,
     isDisplayable: true,
+  },
+  [EntityCoreFields.StrainName]: {
+    title: 'Strain',
+    filter: CoreFieldFilterTypeEnum.CheckList,
+    render: (r) => {
+      if ('strain' in r)
+        return renderEmptyOrValue(renderArray(ensureArray({ input: r.strain }).map((s) => s.name)));
+      if ('subject' in r && 'strain' in r.subject)
+        return renderEmptyOrValue(r.subject.strain!.name);
+      return EmptyValue;
+    },
+    vocabulary: {
+      plural: 'Strains',
+      singular: 'Strain',
+    },
+    isSortable: false,
+    isFilterable: false,
+    isDisplayable: false,
+  },
+  [EntityCoreFields.SubjectAge]: {
+    title: 'Age',
+    filter: CoreFieldFilterTypeEnum.ValueRange,
+    render: (r) => renderEmptyOrValue((r as EntityCoreDensityObjectTypes).subject.age_value),
+    vocabulary: {
+      plural: 'Ages',
+      singular: 'Age',
+    },
+    isFilterable: false,
+    isDisplayable: true,
+    isSortable: true,
+    order: [
+      {
+        types: [
+          ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
+          ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
+        ],
+        property: 'order_by',
+        value: 'subject__age_value',
+      },
+    ],
+  },
+  [EntityCoreFields.SubjectSex]: {
+    title: 'Sex',
+    filter: CoreFieldFilterTypeEnum.ValueRange,
+    render: (r) => renderEmptyOrValue(get(r, 'subject.sex')),
+    vocabulary: {
+      plural: 'Sex',
+      singular: 'Sex',
+    },
+    isFilterable: false,
+    isDisplayable: false,
+    isSortable: false,
+  },
+  [EntityCoreFields.SubjectWeight]: {
+    title: 'Weight',
+    filter: CoreFieldFilterTypeEnum.ValueRange,
+    unit: 'gramms',
+    render: (r) => renderEmptyOrValue(get(r, 'subject.weight', null)),
+    vocabulary: {
+      plural: 'Values',
+      singular: 'Value',
+    },
+    isSortable: false,
+    isFilterable: false,
+    isDisplayable: false,
+  },
+  [EntityCoreFields.SubjectStrainName]: {
+    title: 'Strain',
+    filter: CoreFieldFilterTypeEnum.CheckList,
+    render: (r) => renderEmptyOrValue(get(r, 'subject.strain.name', null)),
+    vocabulary: {
+      plural: 'Strains',
+      singular: 'Strain',
+    },
+    isSortable: false,
+    isFilterable: false,
+    isDisplayable: false,
+  },
+  [EntityCoreFields.SubjectSpeciesName]: {
+    title: 'Species',
+    filter: CoreFieldFilterTypeEnum.CheckList,
+    render: (r) => renderEmptyOrValue(get(r, 'subject.species.name')),
+    vocabulary: {
+      plural: 'Species',
+      singular: 'Species',
+    },
+    isFilterable: false,
+    isDisplayable: false,
+    isSortable: false,
+  },
+  [EntityCoreFields.SubjectAgeMax]: {
+    title: 'Age max',
+    filter: CoreFieldFilterTypeEnum.ValueRange,
+    render: (r) => renderEmptyOrValue(get(r, 'subject.age_max')),
+    vocabulary: {
+      plural: 'Age max',
+      singular: 'Age max',
+    },
+    isFilterable: false,
+    isDisplayable: false,
+    isSortable: false,
+  },
+  [EntityCoreFields.SubjectAgeMin]: {
+    title: 'Age min',
+    filter: CoreFieldFilterTypeEnum.ValueRange,
+    render: (r) => renderEmptyOrValue(get(r, 'subject.age_min')),
+    vocabulary: {
+      plural: 'Age min',
+      singular: 'Age min',
+    },
+    isFilterable: false,
+    isDisplayable: false,
+    isSortable: false,
+  },
+
+  [EntityCoreFields.SubjectAgePeriod]: {
+    title: 'Age period',
+    filter: CoreFieldFilterTypeEnum.ValueRange,
+    render: (r) => renderEmptyOrValue(get(r, 'subject.age_period')),
+    vocabulary: {
+      plural: 'Age period',
+      singular: 'Age period',
+    },
+    isFilterable: false,
+    isDisplayable: false,
+    isSortable: false,
   },
   [EntityCoreFields.CreatedBy]: {
     title: 'Created by',

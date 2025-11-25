@@ -14,7 +14,7 @@ export const viewDefForExperimentalBoutonDensity: ViewDefinitionConfig = {
     EntityCoreFields.MeanSTD,
     EntityCoreFields.Sem,
     EntityCoreFields.NumberOfMeasurements,
-    EntityCoreFields.Species,
+    EntityCoreFields.SpeciesName,
     EntityCoreFields.Contributions,
   ],
   summaryViewFields: [
@@ -27,7 +27,7 @@ export const viewDefForExperimentalBoutonDensity: ViewDefinitionConfig = {
   ],
   miniDetailView: [
     { field: EntityCoreFields.BrainRegion },
-    { field: EntityCoreFields.Species },
+    { field: EntityCoreFields.SpeciesName },
     { field: EntityCoreFields.MType },
     { field: EntityCoreFields.License },
   ],

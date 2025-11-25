@@ -15,7 +15,7 @@ export const viewDefForExperimentalNeuronDensity: ViewDefinitionConfig = {
     EntityCoreFields.NeuronDensity,
     EntityCoreFields.NumberOfMeasurements,
     EntityCoreFields.Name,
-    EntityCoreFields.Species,
+    EntityCoreFields.SpeciesName,
     EntityCoreFields.SubjectAge,
     EntityCoreFields.Contributions,
     EntityCoreFields.RegistrationDate,
@@ -37,7 +37,7 @@ export const viewDefForExperimentalNeuronDensity: ViewDefinitionConfig = {
     { field: EntityCoreFields.ApicalArborAsymmetryIndex, className: 'col-span-2' },
     { field: EntityCoreFields.BrainRegion, className: 'col-span-2' },
     { field: EntityCoreFields.MType, className: 'col-span-2' },
-    { field: EntityCoreFields.Species, className: 'col-span-2' },
+    { field: EntityCoreFields.SpeciesName, className: 'col-span-2' },
     { field: EntityCoreFields.Contributions, className: 'col-span-2' },
   ],
   summaryViewFields: [
@@ -51,7 +51,7 @@ export const viewDefForExperimentalNeuronDensity: ViewDefinitionConfig = {
   miniDetailView: [
     { field: EntityCoreFields.BrainRegion },
     { field: EntityCoreFields.MType },
-    { field: EntityCoreFields.Species },
+    { field: EntityCoreFields.SpeciesName },
     { field: EntityCoreFields.EType },
     { field: EntityCoreFields.License, className: 'col-start-2 row-start-3' },
   ],
