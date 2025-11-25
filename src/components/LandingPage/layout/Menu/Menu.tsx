@@ -34,7 +34,6 @@ const MENU_ITEMS: MenuItem[] = [
       { caption: 'Our story', slug: '/the-real-digital-brain-story', index: EnumSection.Story },
       { caption: 'Mission', slug: '/mission', index: EnumSection.Mission },
       { caption: 'Team', slug: '/team', index: EnumSection.Team },
-      { caption: 'SfN 2025', slug: '/sfn-2025', index: EnumSection.Sfn2025 },
     ],
   },
   {
@@ -50,6 +49,11 @@ const MENU_ITEMS: MenuItem[] = [
     caption: 'The Platform',
     slug: '/pricing',
     submenu: [{ caption: 'Pricing', slug: '/pricing', index: EnumSection.Pricing }],
+  },
+  {
+    caption: 'SfN 2025',
+    slug: '/sfn-2025',
+    index: EnumSection.Sfn2025,
   },
   {
     caption: 'News',
@@ -68,21 +72,6 @@ export default function Menu({ className, scrollHasStarted, section }: MenuProps
   const [showMenuComponent, setShowMenuComponent] = React.useState(true);
   const [lastScrollY, setLastScrollY] = React.useState(0);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-
-  // Check if current section is in a submenu, and return the parent item if so
-  const getParentItemForSection = (currentSection?: EnumSection): MenuItem | null => {
-    if (!currentSection) return null;
-    return (
-      MENU_ITEMS.find((item) => {
-        if (item.submenu) {
-          return item.submenu.some((subItem) => subItem.index === currentSection);
-        }
-        return false;
-      }) || null
-    );
-  };
-
-  const parentItem = getParentItemForSection(section);
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -135,7 +124,7 @@ export default function Menu({ className, scrollHasStarted, section }: MenuProps
                     type="button"
                     className={classNames(
                       styles.menuButton,
-                      (item.index === section || parentItem?.slug === item.slug) && styles.selected
+                      item.index === section && styles.selected
                     )}
                   >
                     <span className={styles.menuButtonContent}>
