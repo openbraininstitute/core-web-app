@@ -155,7 +155,6 @@ async function actualGetPointCouldData(annotationValue: number, accessToken: str
   )}&region=${annotationValue}&how=arrow`;
   const rawData = await fetchPointCloud(url, accessToken);
   // eslint-disable-next-line no-console
-  console.log('🚀 [services] rawData =', rawData); // @FIXME: Remove this line written on 2025-09-24 at 13:22
   const table = tableFromIPC(rawData);
   const array = table.toArray();
   const dataPoint = new Float32Array(array.length * 4);
