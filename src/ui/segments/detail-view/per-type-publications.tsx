@@ -63,7 +63,7 @@ export function PerTypePublications({
           spinning: isLoading,
         }}
         pagination={{
-          position: 'bottom',
+          position: 'both',
           align: 'end',
           size: 'small',
           responsive: true,
@@ -71,6 +71,7 @@ export function PerTypePublications({
           showQuickJumper: false,
           hideOnSinglePage: true,
           pageSize: pagination.pageSize,
+          total: result?.pagination.total_items ?? pagination.pageSize,
           onChange: (page, pageSize) => {
             setPagination(() => ({
               page,
