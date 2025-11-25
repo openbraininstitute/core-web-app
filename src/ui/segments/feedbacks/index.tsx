@@ -2,7 +2,7 @@
 
 import { CloseOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
@@ -25,31 +25,16 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
   const [message, setMessage] = useState('');
   const [currentUrl, setCurrentUrl] = useState('');
   const [mounted, setMounted] = useState(false);
-  const [uploadedImages, setUploadedImages] = useState<File[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
 
+  // Always call hooks, but guard their usage
   const { virtualLabId, projectId } = useWorkspace();
 
+  // Ensure component only runs on client
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (type !== 'bugs' && uploadedImages.length > 0) {
-      setUploadedImages([]);
-    }
-  }, [type, uploadedImages.length]);
-
-  const imageUrls = useMemo(() => {
-    return uploadedImages.map((file) => URL.createObjectURL(file));
-  }, [uploadedImages]);
-
-  useEffect(() => {
-    return () => {
-      imageUrls.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [imageUrls]);
-
+  // Get current URL only on client side to avoid hydration mismatch
   useEffect(() => {
     if (mounted && typeof window !== 'undefined') {
       const { pathname, search, origin } = window.location;
@@ -58,40 +43,6 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
       setCurrentUrl(url);
     }
   }, [mounted]);
-
-  useEffect(() => {
-    if (mounted && typeof window !== 'undefined' && !section) {
-      const { pathname } = window.location;
-
-      const pathSegments = pathname.split('/').filter(Boolean);
-      const virtualLabIndex = pathSegments.indexOf('virtual-lab');
-
-      if (virtualLabIndex !== -1) {
-        // Check if there's a section after the project ID
-        if (virtualLabIndex + 3 < pathSegments.length) {
-          const sectionFromUrl = pathSegments[virtualLabIndex + 3];
-
-          if (sectionFromUrl) {
-            const sectionMap: Record<string, string> = {
-              workflows: 'workflows',
-              notebooks: 'notebooks',
-              reports: 'reports',
-              data: 'data',
-              help: 'help',
-            };
-
-            const mappedSection = sectionMap[sectionFromUrl.toLowerCase()];
-            if (mappedSection) {
-              setSection(mappedSection);
-            }
-          }
-        } else {
-          // If we're on the project home (no section after project ID), set default to "Projects"
-          setSection('projects');
-        }
-      }
-    }
-  }, [mounted, section]);
 
   const { data: projectData } = useQuery({
     queryKey: keyBuilder.getWorkspace({ virtualLabId, projectId }),
@@ -117,60 +68,30 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
     return `${month}-${year}`;
   };
 
-  const handleImageUpload = (files: FileList | null) => {
-    if (!files) return;
-
-    const imageFiles = Array.from(files).filter((file) => file.type.startsWith('image/'));
-    setUploadedImages((prev) => [...prev, ...imageFiles]);
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(false);
-    handleImageUpload(e.dataTransfer.files);
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
-
-  const removeImage = (index: number) => {
-    setUploadedImages((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const convertFileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
-
   const captureScreenshot = async (): Promise<string | null> => {
     try {
+      // Hide the modal temporarily for screenshot
       const modal = document.querySelector('[role="dialog"]') as HTMLElement;
       const modalOverlay = document.querySelector('.ant-modal-mask') as HTMLElement;
 
       const originalModalDisplay = modal?.style.display;
       const originalOverlayDisplay = modalOverlay?.style.display;
 
+      // Hide modal and overlay for screenshot
       if (modal) modal.style.display = 'none';
       if (modalOverlay) modalOverlay.style.display = 'none';
 
+      // Use dom-to-image which handles modern CSS better than html2canvas
+      // eslint-disable-next-line import/no-extraneous-dependencies
       const domtoimage = await import('dom-to-image');
 
+      // Capture the body element
       const dataUrl = await domtoimage.toPng(document.body, {
         quality: 0.9,
         width: window.innerWidth,
         height: window.innerHeight,
         filter: (node: Node) => {
+          // Filter out the modal if it's still in the DOM
           if (node instanceof HTMLElement) {
             const role = node.getAttribute('role');
             if (role === 'dialog' || node.classList.contains('ant-modal')) {
@@ -181,16 +102,22 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
         },
       });
 
+      // Restore modal visibility
       if (modal) modal.style.display = originalModalDisplay || '';
       if (modalOverlay) modalOverlay.style.display = originalOverlayDisplay || '';
 
       return dataUrl;
     } catch (error) {
+      // Screenshot capture failed - log in development but continue without screenshot
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.warn('Screenshot capture unavailable.', error);
+        console.warn(
+          'Screenshot capture unavailable. Form will continue without screenshot.',
+          error
+        );
       }
 
+      // Restore modal visibility even on error
       const modal = document.querySelector('[role="dialog"]') as HTMLElement;
       const modalOverlay = document.querySelector('.ant-modal-mask') as HTMLElement;
       if (modal) modal.style.display = '';
@@ -205,28 +132,21 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
     setLoading(true);
     setMessage('');
 
-    let allScreenshots: string[] = [];
-    if (type === 'bugs') {
-      const uploadedScreenshots: string[] = [];
-      for (const file of uploadedImages) {
-        try {
-          const base64 = await convertFileToBase64(file);
-          uploadedScreenshots.push(base64);
-        } catch (error) {
-          // eslint-disable-next-line no-console
-          console.warn('Failed to convert image to base64:', error);
-        }
-      }
+    // Capture screenshot before submitting (continue even if it fails)
+    // Screenshot capture may fail due to unsupported CSS colors, but that's okay
+    const screenshot = await captureScreenshot().catch(() => {
+      // Silently fail - screenshot is optional
+      return null;
+    });
 
-      const screenshot = await captureScreenshot().catch(() => {
-        return null;
-      });
-      allScreenshots = screenshot ? [screenshot, ...uploadedScreenshots] : uploadedScreenshots;
-    }
+    // Use first 60 characters of feedback as title
     const title = feedback.substring(0, 60).trim() || `[${type.toUpperCase()}] in ${section}`;
 
+    // Build body with project, virtual lab info, and current URL
+    // Screenshot will be added by the API after upload
     const body = `${feedback}\n\n---\n\n🗳️ Project: ${projectName}\n\n🏠 Virtual Lab: ${virtualLabName}\n\nURL: ${currentUrl}`;
 
+    // Create labels array with feedback type and section
     const labels = [type, section].filter(Boolean);
 
     try {
@@ -245,8 +165,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
           body,
           label: getMonthYearLabel(),
           labels,
-          screenshot: allScreenshots.length > 0 ? allScreenshots[0] : null,
-          screenshots: allScreenshots,
+          screenshot,
         }),
       });
 
@@ -265,12 +184,11 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
       }
 
       setMessage(`Ticket created: ${responseData.issueUrl}`);
-
+      // Reset form
       setType('');
       setSection('');
       setFeedback('');
-      setUploadedImages([]);
-
+      // Close modal after a short delay
       setTimeout(() => {
         onClose();
         setMessage('');
@@ -285,13 +203,14 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
     }
   };
 
+  // Don't render until mounted to avoid SSR issues
   if (!mounted) {
     return (
       <div className="flex flex-col p-6">
         <div className="border-neutral-2 mb-6 flex items-start justify-between border-b pb-4">
           <div className="flex flex-col gap-1">
             <h2 className="text-primary-9 text-2xl font-bold">Submit Feedback</h2>
-            <p className="text-neutral-5 text-base">
+            <p className="text-neutral-4 text-sm">
               Help us improve by sharing your thoughts, reporting bugs, or suggesting new features.
             </p>
           </div>
@@ -305,12 +224,14 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
 
   return (
     <div className="relative flex flex-col p-6">
+      {/* Loading Overlay */}
       {loading && (
         <div className="absolute inset-0 z-50 flex items-center justify-center">
           <Loader size="large" className="text-primary-9" />
         </div>
       )}
 
+      {/* Header */}
       <div
         className={cn(
           'border-neutral-2 mb-6 flex items-start justify-between border-b pb-4',
@@ -319,7 +240,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
       >
         <div className="flex flex-col gap-1">
           <h2 className="text-primary-9 text-2xl font-bold">Submit Feedback</h2>
-          <p className="text-neutral-5 text-base">
+          <p className="text-neutral-4 text-sm">
             Help us improve by sharing your thoughts, reporting bugs, or suggesting new features.
           </p>
         </div>
@@ -334,13 +255,14 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
         </Button>
       </div>
 
+      {/* Form */}
       <form
         onSubmit={handleSubmit}
         className={cn('flex flex-col gap-6', loading && 'pointer-events-none opacity-40 blur-sm')}
       >
         <div className="grid grid-cols-2 gap-4">
           <label htmlFor="type" className="flex flex-col gap-2">
-            <span className="text-primary-9 text-base font-normal">Feedback type</span>
+            <span className="text-primary-9 text-base font-normal">Feedback Type</span>
             <div className="relative">
               <select
                 id="type"
@@ -359,9 +281,8 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
                 </option>
                 <option value="enhancement">Enhancement</option>
                 <option value="bugs">Bugs</option>
-                <option value="new feature">New feature</option>
+                <option value="new feature">New Feature</option>
                 <option value="payment">Payment</option>
-                <option value="other">Other</option>
               </select>
               <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2" />
             </div>
@@ -385,10 +306,10 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
                 <option value="" disabled className="text-neutral-5 text-base font-normal">
                   Select a section...
                 </option>
-                <option value="data">Data</option>
-                <option value="projects">Projects</option>
-                <option value="virtual lab">Virtual lab</option>
-                <option value="workflows">Workflows</option>
+                <option value="data explore">Data Explore</option>
+                <option value="project">Project</option>
+                <option value="virtual lab">Virtual Lab</option>
+                <option value="workflow">Workflow</option>
                 <option value="notebooks">Notebooks</option>
                 <option value="help">Help</option>
                 <option value="reports">Reports</option>
@@ -398,6 +319,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
           </label>
         </div>
 
+        {/* Your feedback */}
         <label htmlFor="feedback" className="flex flex-col gap-2">
           <span className="text-primary-9 text-base font-normal">Your feedback</span>
           <textarea
@@ -416,77 +338,6 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
           />
         </label>
 
-        {type === 'bugs' && (
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-col gap-1">
-              <span className="text-primary-9 text-base font-normal">Screenshot(s)</span>
-              <span className="text-neutral-5 text-sm">
-                This is not mandatory but could help us understand your request
-              </span>
-            </div>
-
-            <div
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              className={cn(
-                'border-neutral-2 rounded-lg border-2 border-dashed p-6 transition-colors',
-                isDragging
-                  ? 'border-primary-4 bg-primary-1'
-                  : 'border-neutral-2 bg-neutral-0 hover:border-primary-3'
-              )}
-            >
-              <label
-                htmlFor="image-upload"
-                className="flex cursor-pointer flex-col items-center justify-center gap-2"
-              >
-                <input
-                  type="file"
-                  id="image-upload"
-                  accept="image/*"
-                  multiple
-                  onChange={(e) => handleImageUpload(e.target.files)}
-                  className="hidden"
-                  aria-label="Upload images"
-                />
-                <span className="text-primary-9 hover:text-primary-7 text-sm font-medium">
-                  Click to upload or drag and drop
-                </span>
-                <span className="text-neutral-5 text-xs">PNG, JPG, GIF up to 10MB each</span>
-              </label>
-            </div>
-
-            {uploadedImages.length > 0 && (
-              <div className="mt-2 grid grid-cols-3 gap-4">
-                {uploadedImages.map((file, index) => {
-                  const fileKey = `${file.name}-${file.size}-${file.lastModified}-${index}`;
-                  return (
-                    <div key={fileKey} className="group relative">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={imageUrls[index]}
-                        alt={`Preview ${index + 1}`}
-                        className="border-neutral-2 h-32 w-full rounded-lg border object-cover"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white opacity-0 transition-opacity group-hover:opacity-100"
-                        aria-label="Remove image"
-                      >
-                        <CloseOutlined className="text-xs" />
-                      </button>
-                      <div className="absolute right-2 bottom-2 left-2 truncate rounded bg-black/50 px-2 py-1 text-xs text-white">
-                        {file.name}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
         {message && (
           <div
             className={cn(
@@ -498,6 +349,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
           </div>
         )}
 
+        {/* Footer buttons */}
         <div className="mt-4 flex items-center justify-end gap-3">
           <Button
             type="button"

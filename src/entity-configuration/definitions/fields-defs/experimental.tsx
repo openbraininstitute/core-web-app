@@ -2,13 +2,6 @@ import find from 'es-toolkit/compat/find';
 import get from 'es-toolkit/compat/get';
 import isEmpty from 'es-toolkit/compat/isEmpty';
 
-import { isMemodel, isSingleNeuronSynaptome } from '@/api/entitycore/guards';
-import { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import {
-  CoreFieldFilterTypeEnum,
-  EntityCoreFields,
-} from '@/entity-configuration/definitions/fields-defs/enums';
 import getMeasurements, {
   EmptyValue,
   renderArray,
@@ -18,19 +11,26 @@ import getMeasurements, {
   renderMeanStd,
   renderMorphologyMeasurement,
 } from '@/entity-configuration/definitions/renderer';
+import {
+  CoreFieldFilterTypeEnum,
+  EntityCoreFields,
+} from '@/entity-configuration/definitions/fields-defs/enums';
+import { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { isMemodel, isSingleNeuronSynaptome } from '@/api/entitycore/guards';
 import { CoreFieldType } from '@/entity-configuration/definitions/types';
-import { ensureString, isNumber, isString } from '@/util/type-guards';
 import { ensureArray } from '@/utils/array';
 
+import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
 import type {
   EntityCoreDensityObjectTypes,
   EntityCoreObjectTypes,
-  ICellMorphology,
   IEModel,
+  ICellMorphology,
 } from '@/api/entitycore/types';
-import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
-import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
+import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
+import { ensureString, isNumber, isString } from '@/util/type-guards';
 
 const morphologyMtypes = (morphology?: ICellMorphology) => {
   if (!morphology) return [];
@@ -187,92 +187,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       },
     ],
   },
-  [EntityCoreFields.SubjectSex]: {
-    title: 'Sex',
-    filter: CoreFieldFilterTypeEnum.ValueRange,
-    render: (r) => renderEmptyOrValue(get(r, 'subject.sex')),
-    vocabulary: {
-      plural: 'Sex',
-      singular: 'Sex',
-    },
-    isFilterable: false,
-    isDisplayable: false,
-    isSortable: false,
-  },
-  [EntityCoreFields.SubjectWeight]: {
-    title: 'Weight',
-    filter: CoreFieldFilterTypeEnum.ValueRange,
-    unit: 'gramms',
-    render: (r) => renderEmptyOrValue(get(r, 'subject.weight', null)),
-    vocabulary: {
-      plural: 'Values',
-      singular: 'Value',
-    },
-    isSortable: false,
-    isFilterable: false,
-    isDisplayable: false,
-  },
-  [EntityCoreFields.SubjectStrainName]: {
-    title: 'Strain',
-    filter: CoreFieldFilterTypeEnum.CheckList,
-    render: (r) => renderEmptyOrValue(get(r, 'subject.strain.name', null)),
-    vocabulary: {
-      plural: 'Strains',
-      singular: 'Strain',
-    },
-    isSortable: false,
-    isFilterable: false,
-    isDisplayable: false,
-  },
-  [EntityCoreFields.SubjectSpeciesName]: {
-    title: 'Species',
-    filter: CoreFieldFilterTypeEnum.CheckList,
-    render: (r) => renderEmptyOrValue(get(r, 'subject.species.name')),
-    vocabulary: {
-      plural: 'Species',
-      singular: 'Species',
-    },
-    isFilterable: false,
-    isDisplayable: false,
-    isSortable: false,
-  },
-  [EntityCoreFields.SubjectAgeMax]: {
-    title: 'Age max',
-    filter: CoreFieldFilterTypeEnum.ValueRange,
-    render: (r) => renderEmptyOrValue(get(r, 'subject.age_max')),
-    vocabulary: {
-      plural: 'Age max',
-      singular: 'Age max',
-    },
-    isFilterable: false,
-    isDisplayable: false,
-    isSortable: false,
-  },
-  [EntityCoreFields.SubjectAgeMin]: {
-    title: 'Age min',
-    filter: CoreFieldFilterTypeEnum.ValueRange,
-    render: (r) => renderEmptyOrValue(get(r, 'subject.age_min')),
-    vocabulary: {
-      plural: 'Age min',
-      singular: 'Age min',
-    },
-    isFilterable: false,
-    isDisplayable: false,
-    isSortable: false,
-  },
-
-  [EntityCoreFields.SubjectAgePeriod]: {
-    title: 'Age period',
-    filter: CoreFieldFilterTypeEnum.ValueRange,
-    render: (r) => renderEmptyOrValue(get(r, 'subject.age_period')),
-    vocabulary: {
-      plural: 'Age period',
-      singular: 'Age period',
-    },
-    isFilterable: false,
-    isDisplayable: false,
-    isSortable: false,
-  },
   [EntityCoreFields.MeanSTD]: {
     title: 'Mean ± STD',
     unit: (
@@ -364,6 +278,21 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     defaultConstraint: 'post_mtype__pref_label__in',
     isFilterable: true,
     isDisplayable: true,
+  },
+  [EntityCoreFields.Weight]: {
+    title: 'Weight',
+    filter: CoreFieldFilterTypeEnum.CheckList,
+    unit: 'gramms',
+    render: (r) => {
+      return renderEmptyOrValue(get(r, 'subject.weight', null));
+    },
+    vocabulary: {
+      plural: 'Values',
+      singular: 'Value',
+    },
+    isSortable: false,
+    isFilterable: false,
+    isDisplayable: false,
   },
   [EntityCoreFields.NeuronDensity]: {
     title: 'Density',

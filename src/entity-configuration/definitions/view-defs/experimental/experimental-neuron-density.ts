@@ -42,11 +42,13 @@ export const viewDefForExperimentalNeuronDensity: ViewDefinitionConfig = {
   ],
   summaryViewFields: [
     { field: EntityCoreFields.BrainRegion },
+    { field: EntityCoreFields.Species },
+    { field: EntityCoreFields.License },
     { field: EntityCoreFields.MType },
+    { field: EntityCoreFields.SubjectAge },
     { field: EntityCoreFields.EType },
     { field: EntityCoreFields.NeuronDensity },
     { field: EntityCoreFields.NumberOfMeasurements },
-    { field: EntityCoreFields.License },
   ],
   miniDetailView: [
     { field: EntityCoreFields.BrainRegion },

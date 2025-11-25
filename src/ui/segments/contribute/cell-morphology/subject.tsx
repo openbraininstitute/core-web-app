@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { Form } from 'antd';
 import isNil from 'es-toolkit/compat/isNil';
-/*
+/* 
 import { getSpecies } from '@/api/entitycore/queries/general/species';
 import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
 import { getStrains } from '@/api/entitycore/queries/general/strain'; */
@@ -91,7 +91,7 @@ export function Subject() {
     () =>
       AsyncSelectFormItem<PaginationFilter & SearchFilter, ISubject>({
         id: 'subject-selector',
-        dataKey: keyBuilder.subjects({ virtualLabId, projectId }),
+        dataKey: keyBuilder.subject({ virtualLabId, projectId }),
         queryFn: getSubjects,
         getOptionLabel: (l) => l.name,
         getOptionValue: (l) => l.id,

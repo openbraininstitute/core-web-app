@@ -94,8 +94,9 @@ export const viewDefForCellMorphology: ViewDefinitionConfig = {
   ],
   summaryViewFields: [
     { field: EntityCoreFields.BrainRegion },
-    { field: EntityCoreFields.MType },
+    { field: EntityCoreFields.Species },
     { field: EntityCoreFields.License },
+    { field: EntityCoreFields.MType },
   ],
   miniDetailView: [
     { field: EntityCoreFields.BrainRegion },
