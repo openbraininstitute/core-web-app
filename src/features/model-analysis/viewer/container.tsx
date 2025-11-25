@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unstable-nested-components */
 import { capitalize, groupBy } from 'es-toolkit/compat';
 import { useState } from 'react';
-import { Select } from 'antd';
+import { Select, Tooltip } from 'antd';
 import dynamic from 'next/dynamic';
 
 import { customSorting } from './custom-sorting';
@@ -18,10 +18,11 @@ const Viewer = dynamic(() => import('@/features/model-analysis/viewer/viewer'), 
 });
 
 type Props = {
+  rin: number | undefined;
   validationResults: TValidationResultNonUndefined | null;
 };
 
-export function ViewerContainer({ validationResults }: Props) {
+export function ViewerContainer({ rin, validationResults }: Props) {
   const allowedValidationResults = validationResults?.filter((o) =>
     o.assets?.some((obj) => AllowedTypes.includes(obj.content_type as TAllowedTypes))
   );
@@ -63,6 +64,13 @@ export function ViewerContainer({ validationResults }: Props) {
           optionRender={(o) => <div className="text-primary-8">{o.label}</div>}
         />
         <div className={passed ? styles.passed : styles.failed}>{passed ? 'passed' : 'failed'}</div>
+        {rin !== undefined && (
+          <Tooltip title="Input Resistance in mega ohms">
+            <div>
+              Rin: <strong>{rin.toFixed(2)}</strong> MΩ
+            </div>
+          </Tooltip>
+        )}
       </div>
       {listToRender.map(renderViewer)}
     </>
