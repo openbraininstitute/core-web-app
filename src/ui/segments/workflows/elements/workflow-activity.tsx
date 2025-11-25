@@ -205,11 +205,10 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
 
   // eslint-disable-next-line no-nested-ternary
   const resultsPath = entity?.detailViewSections?.includes(DetailViewSectionsDict.Results)
-    ? (DetailViewSectionsDict.Results ??
-      entity?.detailViewSections?.includes(DetailViewSectionsDict.RelatedArtifacts))
+    ? DetailViewSectionsDict.Results
+    : entity?.detailViewSections?.includes(DetailViewSectionsDict.RelatedArtifacts)
       ? DetailViewSectionsDict.RelatedArtifacts
-      : null
-    : null;
+      : null;
 
   // eslint-disable-next-line  no-nested-ternary
   const resultsLink = entityType
