@@ -1,12 +1,13 @@
 'use client';
 
-import { LoadingOutlined, RightOutlined, UpOutlined } from '@ant-design/icons';
+// import { LoadingOutlined, RightOutlined, UpOutlined } from '@ant-design/icons';
+import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
 import Ajv, { AnySchema } from 'ajv';
 import type { CheckboxProps } from 'antd';
 import { Checkbox, ConfigProvider } from 'antd';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { Fragment, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 import { match } from 'ts-pattern';
 
 // James asked to only comment it out for now.
@@ -74,7 +75,7 @@ export default function SimulationCampaignConfiguration({
   readOnly?: boolean;
   className?: string;
 }) {
-  const router = useRouter();
+  //  const router = useRouter();
   const modelAtom = modelAtomFamily({ id: modelId, context: { virtualLabId, projectId } });
   const model = useAtomValue(modelAtom);
 
@@ -159,12 +160,12 @@ export default function SimulationCampaignConfiguration({
           {!!campaignId && <ButtonCopyId label="Copy simulation campaign ID" value={campaignId} />}
         </div>
       </header>
-      <div className="relative mb-10">
+      {/* <div className="relative mb-10">
         <div className="w-full border-t border-gray-200" />
         <div className="text-primary-8 absolute -top-5 left-1/2 rounded-full bg-gray-50 p-2 px-3 shadow-sm">
           <UpOutlined onClick={() => router.back()} />
         </div>
-      </div>
+      </div> */}
 
       {tab === 'configuration' && (
         <div className={styles.threeColumns}>
