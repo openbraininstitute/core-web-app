@@ -22,6 +22,7 @@ type Props = {
 };
 
 export function ViewerContainer({ validationResults }: Props) {
+  console.log('🐞 [container@24] validationResults =', validationResults); // @FIXME: Remove this line written on 2025-11-25 at 09:16
   const allowedValidationResults = validationResults?.filter((o) =>
     o.assets?.some((obj) => AllowedTypes.includes(obj.content_type as TAllowedTypes))
   );
