@@ -1,6 +1,11 @@
 'use client';
 
-import { CopyOutlined, DownloadOutlined, ExperimentOutlined } from '@ant-design/icons';
+import {
+  CheckOutlined,
+  CopyOutlined,
+  DownloadOutlined,
+  ExperimentOutlined,
+} from '@ant-design/icons';
 import { useState } from 'react';
 import { notFound } from 'next/navigation';
 import NextLink from 'next/link';
@@ -37,82 +42,6 @@ export default function ActionMenu({
   const entityType = getEntityByExtendedType({ type });
   if (!entityType) notFound();
 
-  // const bookmarks = useQuery({
-  //   queryKey: keyBuilder.bookmarks({
-  //     virtualLabId: ctx.virtualLabId,
-  //     projectId: ctx.projectId,
-  //     category: entityType.extendedType,
-  //   }),
-  //   queryFn: async () => getAllBookmarksByCategory(ctx, { category: entityType.type }),
-  // });
-
-  // const existingBookmarks = bookmarks.data?.data?.[entityType.type]?.map((b) => b.entity_id);
-  // const isBookmarked = !!existingBookmarks && existingBookmarks.includes(entity.id);
-
-  // const mutation = useMutation({
-  //   mutationFn: () =>
-  //     bookmarkToProjectLibrary(ctx, {
-  //       entity_id: entity.id,
-  //       category: entityType.type,
-  //     }),
-  //   onSuccess: async () => {
-  //     await queryClient.invalidateQueries({
-  //       queryKey: keyBuilder.bookmarks({
-  //         virtualLabId: ctx.virtualLabId,
-  //         projectId: ctx.projectId,
-  //         category: entityType.extendedType,
-  //       }),
-  //     });
-  //     notification.success({ message: 'Entity successfully bookmarked' });
-  //   },
-  //   onError: () => {
-  //     notification.error({ message: "Couldn't add entity to bookmarks" });
-  //   },
-  // });
-
-  // const handleBookmark = () => {
-  //   mutation.mutate();
-  // };
-
-  // const removeBookmarkMutation = useMutation({
-  //   mutationFn: () =>
-  //     deleteBookmarksFromProjectLibrary({
-  //       virtualLabId: ctx.virtualLabId,
-  //       projectId: ctx.projectId,
-  //       bookmarks: [
-  //         {
-  //           entity_id: entity.id,
-  //           category: entityType.type,
-  //         },
-  //       ],
-  //     }),
-  //   onSuccess: async () => {
-  //     await queryClient.invalidateQueries({
-  //       queryKey: keyBuilder.bookmarks({
-  //         virtualLabId: ctx.virtualLabId,
-  //         projectId: ctx.projectId,
-  //         category: entityType.extendedType,
-  //       }),
-  //     });
-  //     notification.success({ message: 'Bookmark removed from library' });
-  //   },
-  //   onError: () => {
-  //     notification.error({ message: "Couldn't remove bookmark" });
-  //   },
-  // });
-
-  // const handleRemoveBookmark = () => {
-  //   removeBookmarkMutation.mutate();
-  // };
-
-  // const loading = mutation.isPending || removeBookmarkMutation.isPending;
-
-  // const getBookmarkHandler = () => {
-  //   if (loading) return undefined;
-  //   if (!isBookmarked) return handleBookmark;
-  //   return handleRemoveBookmark;
-  // };
-
   const isSimulatable =
     typeof entityType.isSimulatable === 'boolean'
       ? entityType.isSimulatable
@@ -132,10 +61,7 @@ export default function ActionMenu({
               }}
             />
           ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em">
-              <title>check</title>
-              <path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#3e0" />
-            </svg>
+            <CheckOutlined className="text-teal-400" />
           )
         }
       >
@@ -160,20 +86,6 @@ export default function ActionMenu({
           Simulate
         </Action>
       )}
-
-      {/* {entityType.isBookmarkable && bookmarks.data && (
-        <Action
-          icon={
-            <>
-              {!loading && <BookOutlined onClick={getBookmarkHandler()} />}
-              {loading && <LoadingOutlined />}
-            </>
-          }
-        >
-          <>{!isBookmarked ? 'Bookmark' : 'Remove from bookmarks'}</>
-        </Action>
-      )} */}
-
       {entityType.isDownloadable && (
         <Action
           icon={
