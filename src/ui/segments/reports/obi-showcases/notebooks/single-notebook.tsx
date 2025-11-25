@@ -35,6 +35,7 @@ export default function SingleNotebook({
             href={content.url}
             className="border-primary-9 hover:bg-primary-9 rounded-full border border-solid px-6 py-3 text-lg whitespace-nowrap transition-colors duration-300 hover:text-white"
             target="_blank"
+            rel="noreferrer"
           >
             View Notebook
           </a>

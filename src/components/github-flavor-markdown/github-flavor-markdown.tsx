@@ -35,6 +35,7 @@ function RawGithubFlavorMarkdown({
       rehypePlugins={[rehypeKatex]}
       components={{
         a: LinkComponent,
+        // @ts-expect-error
         img: TruncableImage,
         pre: Highlighter,
       }}

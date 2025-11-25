@@ -27,7 +27,8 @@ export default function Card({ className, contributor }: CardProps) {
         {contributor.googleScholar && (
           <a
             className={styleButtonHoverable}
-            target="_BLANK"
+            target="_blank"
+            rel="noreferrer"
             href={`https://scholar.google.com/citations?user=${contributor.googleScholar}`}
           >
             Google Scholar
@@ -36,7 +37,8 @@ export default function Card({ className, contributor }: CardProps) {
         {contributor.orcid && (
           <a
             className={styleButtonHoverable}
-            target="_BLANK"
+            target="_blank"
+            rel="noreferrer"
             href={`https://orcid.org/${contributor.orcid}`}
           >
             Orcid

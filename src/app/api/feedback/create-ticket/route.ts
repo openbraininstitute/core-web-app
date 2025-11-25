@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { Octokit } from '@octokit/core';
 import { NextRequest, NextResponse } from 'next/server';
 

@@ -7,7 +7,7 @@ permissions:
 on:
   push:
     branches:
-      - task/v2
+      - feat/upgrade-nextjs-v16
   workflow_dispatch:
 
 concurrency:

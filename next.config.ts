@@ -43,6 +43,7 @@ const nextConfig = (phase: string): NextConfig => {
     experimental: {
       turbopackFileSystemCacheForDev: true,
     },
+    reactCompiler: true,
     turbopack: {
       rules: {
         '*.groq': {

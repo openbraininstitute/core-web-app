@@ -58,6 +58,7 @@ export function TreeSkeleton({ isLoading = true, children }: SkeletonTreeProps) 
 
   return (
     <div className="h-full w-full rounded-lg bg-white">
+      {/* eslint-disable-next-line react/no-unknown-property */}
       <style jsx>{`
         @keyframes opacityShimmerTree {
           0% {

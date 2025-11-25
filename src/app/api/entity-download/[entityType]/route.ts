@@ -27,9 +27,12 @@ const downloadRequestSchema = z.object({
  *   entityIds: string[]            // Array of entity UUIDs to download (max 100)
  * }
  */
-export async function POST(request: NextRequest, { params }: { params: { entityType: string } }) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ entityType: string }> }
+) {
   const { entityType: entityTypeRaw } = await params;
-  const entityType = snakeCase(entityTypeRaw) as TEntityTypeDict;
+  const extractedEntityType = snakeCase(entityTypeRaw) as TEntityTypeDict;
 
   const session = await auth();
   if (!session) {
@@ -42,9 +45,12 @@ export async function POST(request: NextRequest, { params }: { params: { entityT
   const reqDataRaw = await request.json();
   const reqData = downloadRequestSchema.parse(reqDataRaw);
 
-  const downloadStream = await createDownloadStream({ entityType, ...reqData });
+  const downloadStream = await createDownloadStream({
+    entityType: extractedEntityType,
+    ...reqData,
+  });
 
   return new NextResponse(downloadStream, {
-    headers: getDownloadStreamHeaders({ filename: `${kebabCase(entityType)}.tar.gz` }),
+    headers: getDownloadStreamHeaders({ filename: `${kebabCase(extractedEntityType)}.tar.gz` }),
   });
 }

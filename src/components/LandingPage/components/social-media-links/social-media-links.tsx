@@ -16,7 +16,7 @@ export default function SocialMediaLinks({ className }: SocialMediaLinksProps) {
   return (
     <div className={classNames(className, styles.socialMediaLinks)}>
       {links.map((link) => (
-        <a key={link.url} href={link.url} target="_BLANK">
+        <a key={link.url} href={link.url} target="_blank" rel="noreferrer">
           <ProgressiveImage
             className={styles.image}
             background="transparent"

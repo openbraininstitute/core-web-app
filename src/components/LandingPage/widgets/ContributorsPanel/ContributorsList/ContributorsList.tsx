@@ -32,7 +32,8 @@ export default function ContributorsList({ className, list }: ContributorsListPr
               {contributor.google_scholar && (
                 <a
                   className={styleButtonHoverable}
-                  target="_BLANK"
+                  target="_blank"
+                  rel="noreferrer"
                   href={`https://scholar.google.com/citations?user=${contributor.google_scholar}`}
                 >
                   Google Scholar
@@ -41,7 +42,8 @@ export default function ContributorsList({ className, list }: ContributorsListPr
               {contributor.ORCID && (
                 <a
                   className={styleButtonHoverable}
-                  target="_BLANK"
+                  target="_blank"
+                  rel="noreferrer"
                   href={`https://orcid.org/${contributor.ORCID}`}
                 >
                   Orcid

@@ -139,7 +139,6 @@ export function transformAgentToNames(
   }
   const agents = map(agentsWithRoles, 'agent');
   const processedAgents = map(agents, (agent) => ({
-    // eslint-disable-next-line no-nested-ternary
     name: resolveAgentName(agent),
     type: agent.type === 'organization' ? 0 : 1, // 0 for Org, 1 for Person
   }));

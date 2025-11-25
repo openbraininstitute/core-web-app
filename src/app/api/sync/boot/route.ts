@@ -1,5 +1,3 @@
-/* eslint-disable prefer-destructuring */
-
 import { NextRequest } from 'next/server';
 import pick from 'es-toolkit/compat/pick';
 

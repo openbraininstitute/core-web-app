@@ -1,5 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
-
 import { ReactNode, CSSProperties } from 'react';
 import { TableProps } from 'antd';
 
@@ -80,6 +78,7 @@ export function createExpandableTableConfig<T extends EntityCoreIdentifiable>(
 
       const baseTable = (
         <div className="flexible-nested-table">
+          {/* eslint-disable-next-line react/no-unknown-property */}
           <style jsx>{`
             .flexible-nested-table {
               width: 100%;

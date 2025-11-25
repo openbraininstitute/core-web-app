@@ -50,10 +50,12 @@ export default function RepositoryCard({ className, value, showHeader }: Reposit
       </div>
       <div className={styles.buttons}>
         {value.buttons.map((btn) => (
+          // TODO: @fabien to check if this need a url or change it to button
+          // eslint-disable-next-line jsx-a11y/anchor-is-valid
           <a
             className={classNames(styles.button, styleButtonHoverable)}
-            href={btn.link}
             target="_blank"
+            rel="noreferrer"
             key={btn.title}
           >
             <div>{btn.title ?? 'View resource'}</div>

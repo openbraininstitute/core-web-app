@@ -1,5 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
-
 import { Card, CardContent } from '@/ui/molecules/card';
 import { cn } from '@/utils/css-class';
 
@@ -19,6 +17,7 @@ export function Bar({ className, ...props }: BarProps) {
     >
       <span className="sr-only">Loading</span>
       <span className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_1.6s_infinite_linear] bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.55),transparent)]" />
+      {/* eslint-disable-next-line react/no-unknown-property */}
       <style jsx>{`
         @keyframes shimmer {
           100% {

@@ -11,6 +11,7 @@ export default function SingleArtifact({ content }: { content: LinkAndDownloadAr
             className="border-primary-9 hover:bg-primary-9 border border-solid bg-white px-6 py-3 text-lg transition-colors duration-300 hover:text-white"
             download
             target="_blank"
+            rel="noreferrer"
           >
             Download
           </a>
@@ -30,6 +31,7 @@ export default function SingleArtifact({ content }: { content: LinkAndDownloadAr
           href={content.url}
           className="border-primary-9 hover:bg-primary-9 border border-solid bg-white px-6 py-3 text-lg transition-colors duration-300 hover:text-white"
           target="_blank"
+          rel="noreferrer"
         >
           View Artifact
         </a>

@@ -89,6 +89,7 @@ export function RecursiveExpandableTable({
 
   return (
     <div className="flexible-nested-table">
+      {/* eslint-disable-next-line react/no-unknown-property */} */
       <style jsx>{`
         .flexible-nested-table {
           width: 100%;

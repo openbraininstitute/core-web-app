@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 
 import { Modal } from '@/ui/molecules/modal';
 
-const FeedbackForm = dynamic(() => import('./index'), {
+const FeedbackForm = dynamic(() => import('.'), {
   ssr: false,
   loading: () => (
     <div className="flex flex-col p-6">
