@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
 import { RightOutlined, SettingFilled, WarningFilled } from '@ant-design/icons';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAtomValue, useSetAtom } from 'jotai';
+import { useEffect, useState } from 'react';
 
 import { useVisibleSynapsesSetter } from '../steps/webgl-neuron-selector/hooks';
 
@@ -70,6 +70,9 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
   const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
   const step = searchParams.get('step') ?? ExperimentStep.Info;
   const setVisibleSynapses = useVisibleSynapsesSetter();
+
+  const [isLaunching, setIsLaunching] = useState(false);
+
   useEffect(() => {
     if (step === ExperimentStep.Info) {
       // Reset the synapses in the info panel.
@@ -104,6 +107,8 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
   } = useSingleNeuronSimulationAtoms(sessionId);
 
   const onRun = async () => {
+    setIsLaunching(true);
+
     const protocol = stimulationConfiguration.stimulus.stimulus_protocol;
     let currentInjectionDuration = 0;
 
@@ -152,6 +157,8 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
       () => updatePanelSelection(),
       notify
     );
+
+    setIsLaunching(false);
   };
 
   const warnInfo =
@@ -187,6 +194,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
     !!Object.keys(warnStimulationProtocol ?? {}).length ||
     (simulationType === SimulationType.SingleNeuronSynaptome &&
       !!Object.keys(warnSynaptome ?? {}).length) ||
+    isLaunching ||
     simulationStatus?.status === SimulationStatus.LAUNCHED;
 
   return (

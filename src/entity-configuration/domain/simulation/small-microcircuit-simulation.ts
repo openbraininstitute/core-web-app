@@ -57,6 +57,8 @@ export async function resolveExecutions({
   return executionsResponses.map((r) => r.data).flat();
 }
 
+const SCALE = CircuitScaleDictionary.SmallMicrocircuit;
+
 // NOTE: this is due entitycore do not support yet the circuit inclusion
 async function resolveSimulationCampaigns({
   withFacets,
@@ -74,7 +76,7 @@ async function resolveSimulationCampaigns({
   const source = await getCircuitSimulationCampaigns({
     context,
     withFacets,
-    filters: { ...filters, circuit__scale: CircuitScaleDictionary.SmallMicrocircuit },
+    filters: { ...filters, circuit__scale: SCALE },
   });
 
   // extract all simulation IDs
@@ -164,11 +166,23 @@ export const SmallMicrocircuitSimulation: EntityCoreTypeConfig<ICircuitSimulatio
   api: {
     config: { allowedFacets: true },
     query: {
+      count: (...params) => {
+        const filters = discardBrainRegionQueryParams(params[0].filters);
+        return getCircuitSimulationCampaigns({
+          ...params,
+          context: params[0].context,
+          withFacets: params[0].withFacets,
+          filters: {
+            ...filters,
+            circuit__scale: SCALE,
+          },
+        });
+      },
       list: (params: Parameters<typeof resolveSimulationCampaigns>[0]) =>
         resolveSimulationCampaigns({
           ...params,
           circuitScaleFilter: {
-            scale: 'small',
+            scale: SCALE,
           },
         }),
       one: getCircuitSimulationCampaign,

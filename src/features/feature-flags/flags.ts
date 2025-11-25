@@ -1,20 +1,21 @@
-import { env } from '@/env';
-import { FlagDefinition } from '@/features/feature-flags/config';
+import { defineFlag } from './define-flag';
 
-// TODO: Feature is considered to be ready for prod, flag to be removed
-export const unifiedSingleNeuronSimulationFlowFlag = {
-  key: 'unifiedSingleNeuronSimulationFlow',
-  defaultValue: true,
-  description: 'Enable new single neuron unified (circuit) simulation flow with OBI-ONE',
-  visible: ['local', 'development', 'staging'].includes(env.NEXT_PUBLIC_DEPLOYMENT_ENV),
-} satisfies FlagDefinition;
+import { PanelState } from '@/ui/segments/ai/types';
 
-export const flags = [unifiedSingleNeuronSimulationFlowFlag] as const satisfies FlagDefinition[];
+export const aiPanelStateFlag = defineFlag<PanelState>({
+  key: 'aiPanelState',
+  defaultValue: PanelState.Collapsed,
+  values: Object.values(PanelState),
+  description: 'State of the AI panel',
+  visible: false,
+});
+
+export const flags = [aiPanelStateFlag] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];
 
 export const hasVisibleFlags = flags.some((flag) => flag.visible);
 
 export type FeatureFlags = {
-  [K in (typeof flags)[number]['key']]: boolean;
+  [K in (typeof flags)[number] as K['key']]: K['defaultValue'];
 };

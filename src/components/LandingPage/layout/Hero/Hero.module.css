@@ -67,9 +67,10 @@
 
 .hero .text h1 {
   margin-bottom: 20px;
-  font-size: 10vmin;
+  font-size: 8vmin;
   line-height: 1.2;
   padding: 0;
+  text-align: center;
 }
 
 .hero .text h1::after {
@@ -77,8 +78,32 @@
 }
 
 .hero .text div.content {
+  text-align: center;
   line-height: 1.55;
   max-width: auto;
+}
+
+.virtualLabsButton {
+  position: relative;
+  top: -16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 20px auto 0;
+  padding: 20px 80px 24px 80px;
+  border: 1px solid white;
+  border-radius: 60px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(6px);
+  text-decoration: none;
+  transition: all 0.3s ease;
+  line-height: 1;
+}
+
+.virtualLabsButton:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .hero > footer {

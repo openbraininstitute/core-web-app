@@ -106,8 +106,8 @@ export interface IOrganization extends Timestamps, EntityCoreIdentifiable {
 
 export interface IPerson extends Timestamps, EntityCoreIdentifiable {
   type: 'person';
-  givenName: string | null;
-  familyName: string | null;
+  given_name: string | null;
+  family_name: string | null;
   pref_label: string;
 }
 
@@ -118,6 +118,14 @@ export interface IConsortium extends Timestamps, EntityCoreIdentifiable {
 }
 
 export type Agent = IPerson | IOrganization | IConsortium;
+
+export const AgentType = {
+  Person: 'person',
+  Organization: 'organization',
+  Consortium: 'consortium',
+} as const;
+
+export type TAgentType = (typeof AgentType)[keyof typeof AgentType];
 
 export interface IContributor extends Timestamps, EntityCoreIdentifiable {
   agent: Agent;

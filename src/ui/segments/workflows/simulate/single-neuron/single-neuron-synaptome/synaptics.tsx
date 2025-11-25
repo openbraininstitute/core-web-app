@@ -77,7 +77,6 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
     const simConfigForForm = state.find((_: SynapseConfiguration, ind) => ind === simFormIndex);
     return data?.synapses.find((s) => s.id === simConfigForForm?.id);
   };
-
   const onRemoveSynapseConfig = (_key: number) => {
     const safeStorage = typeof window !== 'undefined' ? sessionStorage : null;
     if (safeStorage) {

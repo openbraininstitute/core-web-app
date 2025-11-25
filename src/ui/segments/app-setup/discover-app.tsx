@@ -7,8 +7,7 @@ import {
 } from 'nextstepjs';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import { useLayoutEffect, type ReactNode } from 'react';
-import unionBy from 'es-toolkit/compat/unionBy';
-import find from 'es-toolkit/compat/find';
+import { unionBy, find } from 'es-toolkit/compat';
 
 import type { CardComponentProps, Tour } from 'nextstepjs';
 
@@ -17,6 +16,40 @@ import { AUTO_ONBOARDING_TOURS } from '@/constants';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
 import { cn } from '@/utils/css-class';
+
+function QuitOnboardingOnClickOutside({
+  onSkipOrComplete,
+}: {
+  onSkipOrComplete: (tour: string | null) => void;
+}) {
+  const { isNextStepVisible, closeNextStep, currentTour } = useNextStep();
+  const handleClick = () => {
+    if (isNextStepVisible) {
+      onSkipOrComplete(currentTour);
+      closeNextStep();
+    }
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>): void => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleClick();
+    }
+  };
+
+  return (
+    isNextStepVisible && (
+      <div
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        role="button"
+        tabIndex={0}
+        aria-label="Close onboarding tour"
+        className="fixed inset-0 z-[9999] bg-transparent"
+      />
+    )
+  );
+}
 
 export function AppOnboardingProvider({ children }: { children: ReactNode }) {
   const [onboardingState, updateOnboardingState] = useLocalStorage<{
@@ -29,6 +62,15 @@ export function AppOnboardingProvider({ children }: { children: ReactNode }) {
   }>(AUTO_ONBOARDING_TOURS, {
     tours: [],
   });
+  const onSkipOrComplete = (tour: string | null) => {
+    updateOnboardingState({
+      tours: unionBy(
+        [{ tour, done: true, date: new Date().getTime(), step: null }],
+        onboardingState.tours,
+        'tour'
+      ),
+    });
+  };
 
   return (
     <OnboardingProvider>
@@ -45,15 +87,8 @@ export function AppOnboardingProvider({ children }: { children: ReactNode }) {
           stiffness: 100,
           damping: 10,
         }}
-        onSkip={(step, tour) => {
-          updateOnboardingState({
-            tours: unionBy(
-              [{ tour, done: true, date: new Date().getTime(), step: null }],
-              onboardingState.tours,
-              'tour'
-            ),
-          });
-        }}
+        onSkip={(_, tour) => onSkipOrComplete(tour)}
+        onComplete={onSkipOrComplete}
         onStepChange={(step, tour) => {
           updateOnboardingState({
             tours: unionBy(
@@ -63,17 +98,9 @@ export function AppOnboardingProvider({ children }: { children: ReactNode }) {
             ),
           });
         }}
-        onComplete={(tour) => {
-          updateOnboardingState({
-            tours: unionBy(
-              [{ tour, done: true, date: new Date().getTime(), step: null }],
-              onboardingState.tours,
-              'tour'
-            ),
-          });
-        }}
       >
         {children}
+        <QuitOnboardingOnClickOutside onSkipOrComplete={onSkipOrComplete} />
       </OnboardingSteps>
     </OnboardingProvider>
   );

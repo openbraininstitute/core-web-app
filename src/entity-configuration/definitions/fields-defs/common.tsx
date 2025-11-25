@@ -1,14 +1,17 @@
-import { Button } from 'antd';
 import { useAtom } from 'jotai';
+import { Button } from 'antd';
 
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { AgentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { transformAgentToNames } from '@/api/entitycore/transformers';
+import { EntityTypeValue } from '@/entity-configuration/domain';
 import { hasAssets } from '@/api/entitycore/guards';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
 } from '@/entity-configuration/definitions/fields-defs/enums';
+import { EntityTypeDict } from '@/api/entitycore/types';
 import {
   EmptyPreview,
   EmptyValue,
@@ -17,27 +20,34 @@ import {
   renderDate,
   renderEmptyOrValue,
   renderPreview,
-  renderTimestamp,
 } from '@/entity-configuration/definitions/renderer';
 import { DownloadIcon } from '@/components/icons';
-
-import { EntityTypeDict, type EntityCoreObjectTypes } from '@/api/entitycore/types';
-import { AssetLabel, type IContributor } from '@/api/entitycore/types/shared/global';
-import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
-
-import { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import { EntityTypeValue } from '@/entity-configuration/domain';
 import { ensureArray } from '@/utils/array';
 
-const renderContributors = (r: EntityTypeValue, filter: 'person' | 'organization') => {
+import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
+import type { TAgentType, IContributor } from '@/api/entitycore/types/shared/global';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+
+const collator = new Intl.Collator('en', { sensitivity: 'base' });
+
+const renderContributors = (r: EntityTypeValue, filter: TAgentType) => {
   if (!('contributions' in r) || !r.contributions) return EmptyValue;
 
-  const filteredContributions = r.contributions.filter(
-    (c) => c.agent.type === 'consortium' || c.agent.type === filter
-  );
-
-  if (!filteredContributions || filteredContributions.length === 0) return EmptyValue;
-  return renderContributorsModal(filteredContributions, false, () => {}, 'inline');
+  const sortedContribution = r.contributions
+    .filter((c) => c.agent.type === AgentType.Consortium || c.agent.type === filter)
+    .sort((a, b) => {
+      if (
+        a.agent.type === AgentType.Person &&
+        b.agent.type === AgentType.Person &&
+        a.agent.family_name &&
+        b.agent.family_name
+      )
+        return collator.compare(a.agent.family_name, b.agent.family_name);
+      return collator.compare(a.agent.pref_label, b.agent.pref_label);
+    });
+  if (!sortedContribution || sortedContribution.length === 0) return EmptyValue;
+  return renderContributorsModal(sortedContribution, false, () => {}, 'inline');
 };
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
@@ -147,7 +157,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.UpdateDate]: {
     title: 'Update date',
     filter: CoreFieldFilterTypeEnum.DateRange,
-    render: (r) => renderTimestamp(new Date(r.update_date)),
+    render: (r) => renderDate(r.update_date),
     vocabulary: {
       plural: 'Dates',
       singular: 'Date',
@@ -190,7 +200,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null }).contributions,
         false
       ),
-    renderForDetailView: (r) => renderContributors(r, 'person'),
+    renderForDetailView: (r) => renderContributors(r, AgentType.Person),
     vocabulary: {
       plural: 'Contributors',
       singular: 'Contributor',
@@ -212,7 +222,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null }).contributions,
         false
       ),
-    renderForDetailView: (r) => renderContributors(r, 'organization'),
+    renderForDetailView: (r) => renderContributors(r, AgentType.Organization),
     vocabulary: {
       plural: 'Contributors',
       singular: 'Contributor',
@@ -373,7 +383,7 @@ function DownloadButton({ entity }: { entity: EntityCoreObjectTypes }) {
       htmlType="button"
       onClick={(e) => {
         const { type } = entity;
-        if (type !== 'circuit') return;
+        if (type !== EntityTypeDict.Circuit) return;
 
         e.stopPropagation();
         e.preventDefault();

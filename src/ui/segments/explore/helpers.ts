@@ -27,6 +27,7 @@ import { SingeNeuronCircuitSimulation } from '@/entity-configuration/domain/simu
 import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation/single-neuron-simulation';
 import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/simulation/single-neuron-synaptome-simulation';
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
+import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 
 import { env } from '@/env';
 
@@ -85,7 +86,7 @@ export function getAllEntitiesCount({
     brainRegion: {
       within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
       within_brain_region_brain_region_id: brainRegionId ?? null,
-      within_brain_region_ascendants: false,
+      within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
     },
   });
 }
@@ -115,7 +116,7 @@ export async function getAllEntitiesCountScoped({
             page_size: 1,
             within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
             within_brain_region_brain_region_id: brainRegionId ?? null,
-            within_brain_region_ascendants: false,
+            within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
             ...(scope === WorkspaceScope.Project
               ? {
                   authorized_project_id: projectId,
@@ -162,7 +163,7 @@ export async function getSimulationsCount({
             page_size: 1,
             within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
             within_brain_region_brain_region_id: brainRegionId ?? null,
-            within_brain_region_ascendants: false,
+            within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
             ...(scope === WorkspaceScope.Project
               ? {
                   authorized_project_id: projectId,
@@ -177,7 +178,7 @@ export async function getSimulationsCount({
           circuitFilter: {
             within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
             within_brain_region_brain_region_id: brainRegionId ?? null,
-            within_brain_region_ascendants: false,
+            within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
           },
         }),
       ];
@@ -208,7 +209,7 @@ export function getElectricalCellRecordingsCount({
       page_size: 1,
       within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
       within_brain_region_brain_region_id: brainRegionId ?? null,
-      within_brain_region_ascendants: false,
+      within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
       ...(scope === WorkspaceScope.Project
         ? {
             authorized_project_id: projectId,

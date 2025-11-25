@@ -56,3 +56,12 @@ button.actionButton {
   align-items: center;
   gap: 1em;
 }
+
+.price {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1em;
+}

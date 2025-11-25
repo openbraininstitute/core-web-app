@@ -19,10 +19,8 @@ export const viewDefForElectricalCellRecording: ViewDefinitionConfig = {
   ],
   summaryViewFields: [
     { field: EntityCoreFields.BrainRegion },
-    { field: EntityCoreFields.Species },
-    { field: EntityCoreFields.License },
     { field: EntityCoreFields.EType },
-    { field: EntityCoreFields.SubjectAge },
+    { field: EntityCoreFields.License },
   ],
   miniDetailView: [
     { field: EntityCoreFields.BrainRegion },

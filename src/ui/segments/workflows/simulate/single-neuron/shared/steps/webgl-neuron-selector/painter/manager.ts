@@ -4,48 +4,29 @@ import {
   ArrayNumber2,
   tgdCalcMapRange,
   TgdCameraState,
-  tgdCanvasCreateFill,
-  tgdCanvasCreatePalette,
   TgdContext,
   TgdControllerCameraOrbit,
   TgdLight,
   TgdMat4,
   TgdMaterialDiffuse,
   TgdPainter,
-  TgdPainterClear,
-  TgdPainterGroup,
-  TgdPainterPointsCloud,
   TgdPainterSegments,
   TgdPainterSegmentsData,
-  TgdPainterState,
-  TgdTexture2D,
   TgdVec3,
-  webglPresetBlend,
-  webglPresetCull,
-  webglPresetDepth,
 } from '@tolokoban/tgd';
 import { useAtomValue } from 'jotai';
 
 import { useVisibleSynapses } from '../hooks';
 import { SimulationStatus, simulationStatusAtomFamily } from '../../../context';
 import { computeSectionOffset } from './math';
-import { makeSegments } from './segments';
 import { makeCamera } from './camera';
 import { Structure, StructureItem, StructureItemType } from './structure';
 import { OffscreenPainter } from './offscreen-painter';
+import { Painter } from './painters';
 
 import { Morphology } from '@/services/bluenaas-single-cell/types';
 import GenericEvent from '@/util/generic-event';
 import { useAppNotification } from '@/components/notification';
-
-const PALETTE: string[] = [];
-PALETTE[StructureItemType.Axon] = '#07f';
-PALETTE[StructureItemType.Dendrite] = '#F44';
-PALETTE[StructureItemType.ApicalDendrite] = '#F8f';
-PALETTE[StructureItemType.Myelin] = `#778`;
-PALETTE[StructureItemType.Soma] = '#dde';
-PALETTE[StructureItemType.Selected] = '#fc0';
-PALETTE[StructureItemType.Unknown] = '#a6f';
 
 interface SelectedItem {
   x: number;
@@ -80,6 +61,8 @@ export class PainterManager {
 
   public readonly eventForbiddenClick = new GenericEvent();
 
+  private painter: Painter | null = null;
+
   private _disableSynapses = false;
 
   private _morphology: Morphology | null = null;
@@ -92,21 +75,11 @@ export class PainterManager {
 
   private structure: Structure | null = null;
 
-  private palette: TgdTexture2D | null = null;
-
-  private groupHover = new TgdPainterGroup();
-
-  private hoverPainter: TgdPainter | null = null;
-
   private _hoverItem: SelectedItem = { x: 0, y: 0, offset: 0, item: null };
 
   private initialPosition = new TgdVec3();
 
   private cameraController: TgdControllerCameraOrbit | null = null;
-
-  private groupSynapses = new TgdPainterGroup({
-    name: `Synapses#${Math.round(1e9 * Math.random())}`,
-  });
 
   private synapses: Array<{ color: string; data: Float32Array }> = [];
 
@@ -133,7 +106,8 @@ export class PainterManager {
 
   set disableSynapses(value: boolean) {
     this._disableSynapses = value;
-    this.groupSynapses.active = !value;
+    const { painter } = this;
+    if (painter) painter.synapsesEnabled = !value;
   }
 
   get clickable() {
@@ -193,7 +167,8 @@ export class PainterManager {
     if (this._canvas === canvas) return;
 
     this._canvas = canvas;
-    this.initialize();
+    if (canvas) this.initialize();
+    else this.delete();
   }
 
   get morphology() {
@@ -204,9 +179,20 @@ export class PainterManager {
     if (!morphology || JSON.stringify(this._morphology) !== JSON.stringify(morphology)) {
       this.lastCameraState = null;
     }
-
     this._morphology = morphology;
-    this.initialize();
+    if (!morphology) return;
+
+    const structure = new Structure(morphology);
+    this.structure = structure;
+    const { offscreen, painter, context } = this;
+    if (offscreen) offscreen.structure = structure;
+    if (context && painter) {
+      const { camera, zoomMin, zoomMax } = makeCamera(structure);
+      context.camera = camera;
+      this.initialPosition.from(context.camera.transfo.position);
+      this.initCameraController(context, zoomMin, zoomMax);
+      painter.structure = structure;
+    }
   }
 
   getCameraMatrix(): Readonly<TgdMat4> {
@@ -231,6 +217,8 @@ export class PainterManager {
   };
 
   delete() {
+    this.painter?.delete();
+    this.painter = null;
     if (this.context) {
       this.context.delete();
       this.context = null;
@@ -286,82 +274,69 @@ export class PainterManager {
 
   showSynapses(synapses: Array<{ color: string; data: Float32Array }>) {
     this.synapses = synapses;
-    const { context, groupSynapses } = this;
-    if (!context) return;
+    const { context, painter } = this;
+    if (!context || !painter) return;
 
-    groupSynapses.removeAll();
-    for (const { color, data: dataPoint } of synapses) {
-      const cloud = new TgdPainterPointsCloud(context, {
-        name: `TgdPainterPointsCloud[${color}]`,
-        dataPoint,
-        minSizeInPixels: 4,
-        radiusMultiplier: 5,
-        texture: new TgdTexture2D(context).loadBitmap(tgdCanvasCreateFill(1, 1, color)),
-        mustDeleteTexture: true,
-      });
-      groupSynapses.add(cloud);
-    }
-    context.paint();
+    painter.synapses = synapses;
   }
 
   private initialize() {
-    const { canvas, morphology } = this;
-    if (!canvas || !morphology) return;
+    const { canvas } = this;
+    if (this.context || !canvas) return;
 
-    if (this.context) {
-      this.context.eventPaint.removeListener(this.handlePaint);
-      this.context.delete();
-    }
-    if (this.cameraController) this.cameraController.detach();
-    this.groupSynapses.delete();
-    const structure = new Structure(morphology);
-    this.structure = structure;
     const context = new TgdContext(canvas, {
       alpha: false,
       antialias: true,
     });
+    this.painter = new Painter(context);
+    context.add(this.painter);
+    context.eventWebGLContextRestored.addListener(() => {
+      this.delete();
+      globalThis.requestAnimationFrame(() => this.initialize());
+    });
     context.eventPaint.addListener(this.handlePaint);
     this.context = context;
-    const { camera, zoomMin, zoomMax } = makeCamera(structure);
-    context.camera = camera;
-    this.initialPosition.from(context.camera.transfo.position);
-    const palette = new TgdTexture2D(context)
-      .loadBitmap(tgdCanvasCreatePalette(PALETTE))
-      .setParams({
-        magFilter: 'NEAREST',
-        minFilter: 'NEAREST',
-      });
-    this.palette = palette;
-    this.initTgdPainters(context, structure, palette);
-    this.initCameraController(context, zoomMin, zoomMax);
-    this.initOffscreen(context, structure);
+    this.initOffscreen(context);
     this.eventHintVisible.dispatch(false);
-    this.showSynapses(this.synapses);
+    // Initialize painter.
+    const { structure, painter } = this;
+    painter.synapses = this.synapses;
+    if (structure) {
+      const { camera, zoomMin, zoomMax } = makeCamera(structure);
+      context.camera = camera;
+      this.initialPosition.from(context.camera.transfo.position);
+      this.initCameraController(context, zoomMin, zoomMax);
+      painter.structure = structure;
+    }
     if (this.lastCameraState) {
       // Restore camera state
-      camera.setCurrentState(this.lastCameraState);
+      context.camera.setCurrentState(this.lastCameraState);
       this.eventRestingPosition.dispatch(false);
     }
   }
 
-  private initOffscreen(context: TgdContext, structure: Structure) {
-    this.offscreen = new OffscreenPainter(context, structure);
+  /**
+   * We paint a thicker representation of the neuron in an offsceen canvas.
+   * The color of each segment is the ID of this segment. So we must NOT
+   * use anti-aliasing, or any shading (other than flat).
+   */
+  private initOffscreen(context: TgdContext) {
+    this.offscreen = new OffscreenPainter(context);
+    this.offscreen.structure = this.structure;
     context.inputs.pointer.eventHover.addListener((evt) => {
-      const { groupHover } = this;
+      const { painter, structure } = this;
+      if (!painter || !structure) return;
+
       const { x, y } = evt.current;
       const item = this.offscreen?.getItemAt(x, y) ?? null;
       if (item !== this.hoverItem.item) {
-        if (this.hoverPainter) {
-          groupHover.remove(this.hoverPainter);
-          this.hoverPainter = null;
-        }
+        painter.highlight(null);
         let offset = 0;
         if (item) {
-          this.hoverPainter = this.makeHoverPainter(item);
-          if (this.hoverPainter) {
-            groupHover.add(this.hoverPainter);
-            offset = computeSectionOffset(structure, item, context.camera, x, y);
-          }
+          painter.highlight(item);
+          offset = computeSectionOffset(structure, item, context.camera, x, y);
+        } else {
+          painter.highlight(null);
         }
         this.hoverItem = { x, y, offset, item: item ?? null };
         this.context?.paint();
@@ -379,12 +354,13 @@ export class PainterManager {
       // Prevent camera movement to be interpreted as a click.
       if (Date.now() - this.lastCameraChangeTimestamp < 300) return;
 
-      if (!context) return;
+      const { structure } = this;
+      if (!this.context || !structure) return;
 
       const { x, y } = evt;
       const item = this.offscreen?.getItemAt(x, y) ?? null;
       if (item) {
-        const segment = computeSectionOffset(structure, item, context.camera, x, y);
+        const segment = computeSectionOffset(structure, item, this.context.camera, x, y);
         this.hoverItem = { x, y, offset: segment, item: item ?? null };
         this.eventTap.dispatch({
           x,
@@ -398,6 +374,7 @@ export class PainterManager {
   }
 
   private initCameraController(context: TgdContext, minZoom: number, maxZoom: number) {
+    if (this.cameraController) this.cameraController.detach();
     const cameraController = new TgdControllerCameraOrbit(context, {
       inertiaOrbit: 500,
       inertiaZoom: 250,
@@ -415,45 +392,6 @@ export class PainterManager {
       this.lastCameraChangeTimestamp = Date.now();
       this.eventRestingPosition.dispatch(false);
     });
-  }
-
-  private initTgdPainters(context: TgdContext, structure: Structure, palette: TgdTexture2D) {
-    const groupHover = new TgdPainterState(context, {
-      blend: webglPresetBlend.add,
-      cull: webglPresetCull.back,
-      depth: webglPresetDepth.always,
-    });
-    const segments = makeSegments(structure);
-    this.groupSynapses = new TgdPainterGroup({
-      name: `Synapses#${Math.round(1e9 * Math.random())}`,
-    });
-    this.groupSynapses.active = !this._disableSynapses;
-    context.add(
-      new TgdPainterClear(context, { color: [0, 0, 0, 1], depth: 1 }),
-      new TgdPainterState(context, {
-        depth: webglPresetDepth.less,
-        children: [
-          new TgdPainterSegments(context, {
-            roundness: 6,
-            minRadius: 0.5,
-            makeDataset: segments.makeDataset,
-            material: new TgdMaterialDiffuse({
-              color: palette,
-              specularExponent: 1,
-              specularIntensity: 0.25,
-              lockLightsToCamera: true,
-              light: new TgdLight({
-                direction: new TgdVec3(0, 0, -1),
-              }),
-            }),
-          }),
-          this.groupSynapses,
-          groupHover,
-        ],
-      })
-    );
-    context.paint();
-    this.groupHover = groupHover;
   }
 
   private readonly handlePaint = () => {
@@ -495,8 +433,8 @@ export class PainterManager {
   }
 
   private makeHoverPainter(item: StructureItem): TgdPainter | null {
-    const { context, palette } = this;
-    if (!context || !palette) return null;
+    const { context } = this;
+    if (!context) return null;
 
     const segments = new TgdPainterSegmentsData();
     const uv: ArrayNumber2 = [
@@ -530,10 +468,10 @@ export function usePainterManager() {
   }
   React.useEffect(() => {
     return () => {
-      const context = refPainter.current;
-      if (!context) return;
+      const painterManager = refPainter.current;
+      if (!painterManager) return;
 
-      context.delete();
+      painterManager.delete();
     };
   });
   return refPainter.current;

@@ -1,6 +1,6 @@
 'use client';
 
-import { parseAsString, type Parser, useQueryState } from 'nuqs';
+import { parseAsString, SingleParserBuilder, useQueryState } from 'nuqs';
 import { match } from 'ts-pattern';
 
 import { Content as SynaptomeContent } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome';
@@ -37,7 +37,9 @@ export function PanelSelector({ sessionId, synaptome, memodel, type }: Props) {
         clearOnDefault: false,
         shallow: true,
       })
-      .withDefault(WorkflowSimulatePanels.Configuration) as Parser<WorkflowSimulatePanelKeys>
+      .withDefault(
+        WorkflowSimulatePanels.Configuration
+      ) as SingleParserBuilder<WorkflowSimulatePanelKeys>
   );
 
   const Panel = match({ panelId, type })

@@ -4,13 +4,11 @@ import React from 'react';
 import { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
 
 import ToolMorphologies from '../../../services/ai-agent/tools/morphologies/tool-morphologies';
-import { IconPrice } from '../icons/price';
 import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
 import ToolsProgress from './tools-progress';
 import ToolsComponents from './tools-components';
 
 import { classNames } from '@/util/utils';
-import { AiAgentRateLimit } from '@/services/ai-agent';
 import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
 import { isString } from '@/util/type-guards';
 
@@ -20,14 +18,15 @@ interface MessageItemProps {
   className?: string;
   value: UIMessage;
   hideTools: boolean;
-  rateLimit: AiAgentRateLimit | null;
 }
 
-export default function MessageItem({ className, value, hideTools, rateLimit }: MessageItemProps) {
+export const MessageItem = React.memo(RawMessageItem);
+
+function RawMessageItem({ className, value, hideTools }: MessageItemProps) {
   const debug = useDebug();
   return (
     <div className={classNames(className, styles.messageItem)}>
-      <MessageChild value={value} hideTools={hideTools} debug={debug} rateLimit={rateLimit} />
+      <MessageChild value={value} hideTools={hideTools} debug={debug} />
     </div>
   );
 }
@@ -36,14 +35,15 @@ function MessageChild({
   value,
   hideTools,
   debug,
-  rateLimit,
 }: {
   value: UIMessage;
   hideTools: boolean;
   debug: boolean;
-  rateLimit: AiAgentRateLimit | null;
 }): React.ReactNode {
   const { setPanelWidth } = usePanelWidth();
+  const deferredContent = React.useDeferredValue(value.content);
+  const isContentPending = value.content !== deferredContent;
+
   switch (value.role) {
     case 'user':
       return (
@@ -53,15 +53,6 @@ function MessageChild({
           </div>
           <div className={styles.info}>
             <div className={styles.timestamp}>{value.createdAt && formatDate(value.createdAt)}</div>
-            {rateLimit && (
-              <div className={styles.price}>
-                <IconPrice />
-                <div>
-                  {Math.max(0, rateLimit.remaining)} free credit
-                  {rateLimit.remaining > 1 ? 's' : ''} left
-                </div>
-              </div>
-            )}
           </div>
         </div>
       );
@@ -69,15 +60,17 @@ function MessageChild({
       return (
         <>
           <ToolsProgress message={value} />
-          {value.content.trim().length > 0 && (
-            <GithubFlavorMarkdown
-              className={styles.markdown}
-              onLinkClicked={(external) => {
-                if (!external) setPanelWidth(MINIMAL_PANEL_SIZE);
-              }}
-            >
-              {value.content}
-            </GithubFlavorMarkdown>
+          {deferredContent.trim().length > 0 && (
+            <div style={{ opacity: isContentPending ? 0.8 : 1, transition: 'opacity 0.2s' }}>
+              <GithubFlavorMarkdown
+                className={styles.markdown}
+                onLinkClicked={(external) => {
+                  if (!external) setPanelWidth(MINIMAL_PANEL_SIZE);
+                }}
+              >
+                {deferredContent}
+              </GithubFlavorMarkdown>
+            </div>
           )}
           {!hideTools && (
             <>

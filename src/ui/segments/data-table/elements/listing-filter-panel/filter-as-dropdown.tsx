@@ -88,7 +88,9 @@ export function DropdownList({
         )}
         popupClassName={cn(
           'bg-primary-8 border-neutral-3 text-white',
-          '[&_.ant-select-item]:text-white! [&_.ant-select-item-option-selected]:bg-primary-7! [&_.ant-select-item-option-state]:text-white!'
+          '[&_.ant-select-item]:text-white! [&_.ant-select-item-option-selected]:bg-primary-7! [&_.ant-select-item-option-state]:text-white!',
+          '[&_.ant-select-item-option-active]:bg-white! [&_.ant-select-item-option-active]:text-primary-8! select-none!',
+          '[&_.ant-select-item-option-active.ant-select-item-option-selected]:text-white!'
         )}
         size="large"
         options={options}

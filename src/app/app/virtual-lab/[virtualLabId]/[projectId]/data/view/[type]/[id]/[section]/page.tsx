@@ -38,6 +38,7 @@ export default async function Page({
     entity,
     entityType,
     section,
+    isWorkflow: false,
   });
 
   if (!content) notFound();

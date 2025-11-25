@@ -40,6 +40,7 @@ export default async function Page({
     entity,
     entityType,
     section,
+    isWorkflow: true,
   });
 
   return content ?? notFound();

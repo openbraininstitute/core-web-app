@@ -1,23 +1,21 @@
-import { useAtom } from 'jotai';
-import { atomWithStorage } from 'jotai/utils';
+import { useCallback } from 'react';
 
-export const PANEL_STATE = {
-  Collapsed: 'collapsed',
-  Expanded: 'expanded',
-  Fullscreen: 'fullscreen',
-} as const;
-
-export type TPanelState = (typeof PANEL_STATE)[keyof typeof PANEL_STATE];
-
-const panelStateAtom = atomWithStorage<TPanelState>('AI-assistant/panel-state', 'expanded');
+import { setFlag, useFlags, aiPanelStateFlag } from '@/features/feature-flags';
+import { PanelState } from '@/ui/segments/ai/types';
 
 export function usePanelState() {
-  const [state, setState] = useAtom(panelStateAtom);
+  const { aiPanelState: state } = useFlags();
+
+  const setState = useCallback(
+    (newState: PanelState) => setFlag(aiPanelStateFlag.key, newState),
+    []
+  );
+
   return {
     state,
     setState,
-    isCollapsed: state === PANEL_STATE.Collapsed,
-    isExpanded: state === PANEL_STATE.Expanded,
-    isFullscreen: state === PANEL_STATE.Fullscreen,
+    isCollapsed: state === PanelState.Collapsed,
+    isExpanded: state === PanelState.Expanded,
+    isFullscreen: state === PanelState.Fullscreen,
   };
 }

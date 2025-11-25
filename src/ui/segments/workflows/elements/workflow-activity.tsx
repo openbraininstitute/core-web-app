@@ -205,17 +205,16 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
 
   // eslint-disable-next-line no-nested-ternary
   const resultsPath = entity?.detailViewSections?.includes(DetailViewSectionsDict.Results)
-    ? (DetailViewSectionsDict.Results ??
-      entity?.detailViewSections?.includes(DetailViewSectionsDict.RelatedArtifacts))
+    ? DetailViewSectionsDict.Results
+    : entity?.detailViewSections?.includes(DetailViewSectionsDict.RelatedArtifacts)
       ? DetailViewSectionsDict.RelatedArtifacts
-      : null
-    : null;
+      : null;
 
   // eslint-disable-next-line  no-nested-ternary
   const resultsLink = entityType
     ? resultsPath
-      ? `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}/${resultsPath}`
-      : `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}`
+      ? `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}/${resultsPath}`
+      : `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}`
     : null;
 
   const onDuplicate = () => {
@@ -378,7 +377,8 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                     {resultsLink &&
                       entityType !== ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation &&
                       entityType !== ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation &&
-                      entityType !== ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation && (
+                      entityType !== ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation &&
+                      entityType !== ExtendedEntitiesTypeDict.MemodelCircuitSimulation && (
                         <Button
                           rounded
                           asChild={activityType !== ActivityValues.Build}
