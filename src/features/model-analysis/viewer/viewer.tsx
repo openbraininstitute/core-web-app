@@ -79,7 +79,7 @@ export default function AssetViewer({ entity, entityType, pdfShowPageCount = tru
   );
 }
 
-const ACRONYMS = ['AIS', 'BPAP', 'FI'];
+const ACRONYMS = ['AIS', 'BPAP', 'FI', 'IV'];
 
 function resolveCaption(assetPath: string) {
   const prefix = assetPath.split('.')[0];
