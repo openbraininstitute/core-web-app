@@ -7,7 +7,6 @@ import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 import type { TWorkspaceScope } from '@/constants';
 import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { ISubjectFilter } from '@/api/entitycore/types/shared/subject';
 
 const prefix = 'data';
 
@@ -232,13 +231,9 @@ export const keyBuilder = {
     `${prefix}-mtype-class`,
     { context: { virtualLabId, projectId } },
   ],
-  subjects: (context: WorkspaceContext, props?: ISubjectFilter) => [
-    `${prefix}-subjects`,
-    { ...context, ...props },
-  ],
-  subject: ({ id, context }: { id: string; context: WorkspaceContext }) => [
+  subject: ({ virtualLabId, projectId }: WorkspaceContext) => [
     `${prefix}-subject`,
-    { id, context },
+    { context: { virtualLabId, projectId } },
   ],
   license: (context?: WorkspaceContext) => [`${prefix}-license`, { context }],
   preview: (context: WorkspaceContext, params?: Record<string, any>) => [
