@@ -12,7 +12,7 @@ build:
 
 run:
 	@echo "Starting container version: $(APP_VERSION)"
-	docker compose up
+	docker compose up --watch
 
 run-detached:
 	@echo "Starting container in detached mode with version: $(APP_VERSION)"
