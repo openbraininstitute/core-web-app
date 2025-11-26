@@ -1,30 +1,30 @@
 'use client';
 
-import { useSuspenseQuery } from '@tanstack/react-query';
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { use } from 'react';
 
-import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
-import { PanelSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/panel-selector';
-import { MenuSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu-selector';
-import { Header } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/header';
-import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
-import { keyBuilder } from '@/ui/use-query-keys/data';
 import { getMEModel } from '@/api/entitycore/queries';
-import { cn } from '@/utils/css-class';
-
+import {
+  ExtendedEntitiesTypeDict,
+  TExtendedEntitiesTypeDict,
+} from '@/api/entitycore/types/extended-entity-type';
+import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
+import SimulationConfig from '@/features/small-microcircuit';
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import {
   threeDVisualizerState,
   type ThreeDVisualizerQueryParamKeys,
   type WorkflowSimulatePanelKeys,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import SimulationConfig from '@/features/small-microcircuit';
+import { Header } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/header';
 import type { ExperimentStepKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu';
-import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
-import {
-  ExtendedEntitiesTypeDict,
-  TExtendedEntitiesTypeDict,
-} from '@/api/entitycore/types/extended-entity-type';
+import { MenuSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu-selector';
+import { PanelSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/panel-selector';
+import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
+import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { keyBuilder } from '@/ui/use-query-keys/data';
+import { cn } from '@/utils/css-class';
+import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 export default function Page({
   searchParams,
@@ -37,9 +37,11 @@ export default function Page({
     panel: WorkflowSimulatePanelKeys;
     dataType: TExtendedEntitiesTypeDict;
     '3d': ThreeDVisualizerQueryParamKeys;
+    initialCampaignId: string;
   }
 >) {
   const queryParams = use(searchParams);
+  const { initialCampaignId } = queryParams;
   const { virtualLabId, projectId, id: modelId } = use(pathParams);
 
   const visualizerState =
@@ -53,12 +55,24 @@ export default function Page({
     queryFn: () => getMEModel({ id: modelId, context: { virtualLabId, projectId } }),
   });
 
+  const { data: campaignData } = useQuery({
+    queryKey: keyBuilder.simCampaign({ entityId: initialCampaignId }),
+    queryFn: async () => {
+      if (!initialCampaignId) return null;
+      return await resolveSimulationByCampaignId({
+        id: initialCampaignId,
+        context: { virtualLabId, projectId },
+      });
+    },
+  });
+
   if (queryParams.dataType === ExtendedEntitiesTypeDict.MemodelCircuit) {
     return (
       <SimulationConfig
         modelId={entity.id}
         virtualLabId={virtualLabId}
         projectId={projectId}
+        initialConfig={campaignData?.config.form}
         className="px-8 pt-1"
       />
     );
