@@ -160,12 +160,12 @@ export default function SimulationCampaignConfiguration({
           {!!campaignId && <ButtonCopyId label="Copy simulation campaign ID" value={campaignId} />}
         </div>
       </header>
-      {/* <div className="relative mb-10">
+      <div className="relative mb-10">
         <div className="w-full border-t border-gray-200" />
-        <div className="text-primary-8 absolute -top-5 left-1/2 rounded-full bg-gray-50 p-2 px-3 shadow-sm">
+        {/* <div className="text-primary-8 absolute -top-5 left-1/2 rounded-full bg-gray-50 p-2 px-3 shadow-sm">
           <UpOutlined onClick={() => router.back()} />
-        </div>
-      </div> */}
+        </div> */}
+      </div>
 
       {tab === 'configuration' && (
         <div className={styles.threeColumns}>
