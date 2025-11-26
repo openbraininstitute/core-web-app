@@ -87,9 +87,11 @@ const platformApiUrlFields = {
 
 const baseServerSchema = z.object(
   Object.fromEntries(Object.entries(configFields).map(([key, { schema }]) => [key, schema]))
-);
+) as z.ZodObject<{
+  [K in keyof typeof configFields]: (typeof configFields)[K]['schema'];
+}>;
 
-const applyApiUrlTransforms = <T extends z.ZodTypeAny>(schema: T) =>
+const applyApiUrlTransforms = <T extends z.ZodObject<any>>(schema: T) =>
   schema
     .superRefine((data, ctx) => {
       Object.keys(platformApiUrlFields).forEach((field) => {
@@ -110,17 +112,21 @@ const applyApiUrlTransforms = <T extends z.ZodTypeAny>(schema: T) =>
           data[field] ?? `${data.API_ORIGIN}${DEFAULT_API_BASE_PATH}${path}`,
         ])
       ),
-    }));
+    })) as any as z.ZodEffects<T, z.infer<T> & { [K in keyof typeof platformApiUrlFields]: string }>;
 
 export const serverSchema = applyApiUrlTransforms(baseServerSchema);
 
-export const baseClientSchema = baseServerSchema.pick(
+export const baseClientSchema = z.object(
   Object.fromEntries(
     Object.entries(configFields)
       .filter(([, { public: isPublic }]) => isPublic)
-      .map(([key]) => [key, true])
+      .map(([key, { schema }]) => [key, schema])
   )
-);
+) as z.ZodObject<{
+  [K in keyof typeof configFields as (typeof configFields)[K]['public'] extends true
+    ? K
+    : never]: (typeof configFields)[K]['schema'];
+}>;
 
 export const clientSchema = applyApiUrlTransforms(baseClientSchema);
 
