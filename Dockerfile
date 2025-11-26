@@ -30,7 +30,6 @@ RUN --mount=type=cache,id=next,target=/app/.next/cache pnpm run build
 
 # production image, copy all the files and run next
 FROM node:24-alpine AS runner
-WORKDIR /app
 
 ARG APP_VERSION
 ENV APP_VERSION=${APP_VERSION}
@@ -39,6 +38,7 @@ ENV NODE_ENV=production
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
+WORKDIR /app
 
 COPY --from=builder /app/public ./public
 

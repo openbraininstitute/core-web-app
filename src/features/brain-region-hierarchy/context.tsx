@@ -411,7 +411,10 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
       : null;
 
     // Only update if the values are actually different
-    if (regionConfig && (id !== regionConfig.id || annotationValue !== regionConfig.annotation_value)) {
+    if (
+      regionConfig &&
+      (id !== regionConfig.id || annotationValue !== regionConfig.annotation_value)
+    ) {
       // Ensure the UI (e.g., RegionBanner) reflects the new selection immediately
       // before any URL updates that may cause re-renders.
       updateSelectedBrainRegion(omit(node, 'children'));
