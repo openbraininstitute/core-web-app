@@ -13,7 +13,7 @@ export const viewDefForCellMorphology: ViewDefinitionConfig = {
     EntityCoreFields.BrainRegion,
     EntityCoreFields.MType,
     EntityCoreFields.Name,
-    EntityCoreFields.Species,
+    EntityCoreFields.SpeciesName,
     EntityCoreFields.Contributions,
     EntityCoreFields.RegistrationDate,
   ],
@@ -84,7 +84,7 @@ export const viewDefForCellMorphology: ViewDefinitionConfig = {
       className: 'col-span-2',
     },
     {
-      field: EntityCoreFields.Species,
+      field: EntityCoreFields.SpeciesName,
       className: 'col-span-2',
     },
     {
@@ -94,13 +94,12 @@ export const viewDefForCellMorphology: ViewDefinitionConfig = {
   ],
   summaryViewFields: [
     { field: EntityCoreFields.BrainRegion },
-    { field: EntityCoreFields.Species },
-    { field: EntityCoreFields.License },
     { field: EntityCoreFields.MType },
+    { field: EntityCoreFields.License },
   ],
   miniDetailView: [
     { field: EntityCoreFields.BrainRegion },
-    { field: EntityCoreFields.Species },
+    { field: EntityCoreFields.SpeciesName },
     { field: EntityCoreFields.MType },
     { field: EntityCoreFields.License },
   ],

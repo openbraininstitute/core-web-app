@@ -24,6 +24,8 @@ export const ViewDefForMemodel: ViewDefinitionConfig = {
     { field: EntityCoreFields.MEModelValidationStatus },
     { field: EntityCoreFields.MType },
     { field: EntityCoreFields.EType },
+    { field: EntityCoreFields.SpeciesName },
+    { field: EntityCoreFields.StrainName },
   ],
   miniDetailView: [
     { field: EntityCoreFields.BrainRegion },

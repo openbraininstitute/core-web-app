@@ -2,10 +2,7 @@ import { includes } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
 import type { PropsWithChildren } from 'react';
 
-import {
-  ExtendedEntitiesTypeDict,
-  TExtendedEntitiesTypeDict,
-} from '@/api/entitycore/types/extended-entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { tryCatch } from '@/api/utils';
 import { ROOT_ROUTE } from '@/config';
 import { WorkspaceScope } from '@/constants';
@@ -20,6 +17,7 @@ import {
   EntityNameDisplayWrapper,
 } from '@/ui/segments/explore/entity-name-display';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkspaceContext } from '@/types/common';
 
 export async function DataViewLayout({
@@ -80,7 +78,7 @@ export async function DataViewLayout({
         {closePage}
         <div className="w-1/5 pl-5">
           {breadcrumbs}
-          <div className="mt-5 flex flex-col gap-5">
+          <div className="mt-5 flex flex-col gap-3">
             <DetailMenu sections={entityType.detailViewSections} />
           </div>
           <ActionMenu entity={entity} type={type} ctx={{ virtualLabId, projectId }} />

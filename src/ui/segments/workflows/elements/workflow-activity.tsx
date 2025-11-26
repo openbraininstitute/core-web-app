@@ -205,20 +205,29 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
 
   // eslint-disable-next-line no-nested-ternary
   const resultsPath = entity?.detailViewSections?.includes(DetailViewSectionsDict.Results)
-    ? (DetailViewSectionsDict.Results ??
-      entity?.detailViewSections?.includes(DetailViewSectionsDict.RelatedArtifacts))
+    ? DetailViewSectionsDict.Results
+    : entity?.detailViewSections?.includes(DetailViewSectionsDict.RelatedArtifacts)
       ? DetailViewSectionsDict.RelatedArtifacts
-      : null
-    : null;
+      : null;
 
   // eslint-disable-next-line  no-nested-ternary
   const resultsLink = entityType
     ? resultsPath
-      ? `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}/${resultsPath}`
-      : `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entityType)}/${selectedRow?.id}`
+      ? `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}/${resultsPath}`
+      : `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}`
     : null;
 
   const onDuplicate = () => {
+    if (entityType === ExtendedEntitiesTypeDict.MemodelCircuitSimulation) {
+      navigate(
+        `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/memodel/${
+          (selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
+        }?dataType=${ExtendedEntitiesTypeDict.MemodelCircuit}&initialCampaignId=${selectedRow?.id}`
+      );
+
+      return;
+    }
+
     if (selectedRow?.type === ExtendedEntitiesTypeDict.SimulationCampaign) {
       navigate(
         `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${
@@ -378,7 +387,8 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                     {resultsLink &&
                       entityType !== ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation &&
                       entityType !== ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation &&
-                      entityType !== ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation && (
+                      entityType !== ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation &&
+                      entityType !== ExtendedEntitiesTypeDict.MemodelCircuitSimulation && (
                         <Button
                           rounded
                           asChild={activityType !== ActivityValues.Build}

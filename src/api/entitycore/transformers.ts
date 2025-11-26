@@ -3,7 +3,7 @@ import sortBy from 'es-toolkit/compat/sortBy';
 import omit from 'es-toolkit/compat/omit';
 import map from 'es-toolkit/compat/map';
 
-import type { Agent, IContributor } from '@/api/entitycore/types/shared/global';
+import { AgentType, type Agent, type IContributor } from '@/api/entitycore/types/shared/global';
 import type { CoreFilter } from '@/entity-configuration/definitions/types';
 
 type TransformFiltersToQueryReturnValue = Record<
@@ -146,13 +146,13 @@ export function transformAgentToNames(
 
   return asArray
     ? map(sortBy(processedAgents, ['type', 'name']), 'name')
-    : map(sortBy(processedAgents, ['type', 'name']), 'name').join(',\n');
+    : map(sortBy(processedAgents, ['type', 'name']), 'name').join(';\n');
 }
 
 function resolveAgentName(agent: Agent) {
   switch (agent.type) {
-    case 'person':
-    case 'organization':
+    case AgentType.Person:
+    case AgentType.Organization:
       return agent.pref_label;
     default:
       return '';
@@ -163,6 +163,6 @@ export function discardBrainRegionQueryParams(filters?: Record<string, any>) {
   return omit(filters, [
     'within_brain_region_hierarchy_id',
     'within_brain_region_brain_region_id',
-    'within_brain_region_ascendants',
+    'within_brain_region_direction',
   ]);
 }

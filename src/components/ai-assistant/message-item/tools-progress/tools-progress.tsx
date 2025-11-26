@@ -21,7 +21,19 @@ interface ToolsProgressProps {
 
 export default function ToolsProgress({ className, message }: ToolsProgressProps) {
   const tools = useAITools();
-  const [expandedToolKey, setExpandedToolKey] = useState<string | null>(null);
+  const [expandedToolKeys, setExpandedToolKeys] = useState<Set<string>>(new Set());
+
+  const toggleExpanded = (key: string) => {
+    setExpandedToolKeys((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(key)) {
+        newSet.delete(key);
+      } else {
+        newSet.add(key);
+      }
+      return newSet;
+    });
+  };
 
   if (!tools) return null;
 
@@ -32,7 +44,7 @@ export default function ToolsProgress({ className, message }: ToolsProgressProps
     <div className={cn(styles.container, className)}>
       {toolsStates.map(({ tool, state, invocation, key }) => {
         const Icon = tool.icon;
-        const isExpanded = expandedToolKey === key;
+        const isExpanded = expandedToolKeys.has(key);
         const isRunning = state !== 'result';
 
         return (
@@ -45,7 +57,13 @@ export default function ToolsProgress({ className, message }: ToolsProgressProps
             key={key}
           >
             {/* Header */}
-            <div className={styles.header}>
+            <button
+              className={styles.header}
+              onClick={() => toggleExpanded(key)}
+              aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
+              aria-expanded={isExpanded}
+              type="button"
+            >
               <div className={cn(styles.iconWrapper, isRunning && styles.iconWrapperRunning)}>
                 {isRunning ? <IconGear className={styles.spinningIcon} /> : <Icon />}
               </div>
@@ -74,15 +92,9 @@ export default function ToolsProgress({ className, message }: ToolsProgressProps
               </div>
 
               <div className={styles.actions}>
-                <button
-                  className={styles.expandButton}
-                  onClick={() => setExpandedToolKey(isExpanded ? null : key)}
-                  aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
-                  aria-expanded={isExpanded}
-                  type="button"
-                >
+                <div className={styles.expandButton}>
                   <Chevron className={cn(styles.chevron, isExpanded && styles.chevronExpanded)} />
-                </button>
+                </div>
 
                 <Link
                   href={tool.docURL}
@@ -94,7 +106,7 @@ export default function ToolsProgress({ className, message }: ToolsProgressProps
                   <HelpIconI className={styles.helpIcon} />
                 </Link>
               </div>
-            </div>
+            </button>
 
             {/* Expandable Details */}
             {invocation && (

@@ -13,7 +13,7 @@ export default function Breadcrumb({
       <span className="text-primary-8">{children}</span>
       {showChevron && (
         <div className="text-gray-500">
-          <RightOutlined />
+          <RightOutlined className="text-sm" />
         </div>
       )}
     </div>

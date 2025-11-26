@@ -1,9 +1,9 @@
 'use client';
 
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { VerticalAlignMiddleOutlined } from '@ant-design/icons';
 import { ConfigProvider, Table, TableProps } from 'antd';
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
-import isString from 'es-toolkit/compat/isString';
+import { isString } from 'es-toolkit/compat';
 
 import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
 import type { ComponentProps, CSSProperties, ReactNode } from 'react';

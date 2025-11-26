@@ -23,6 +23,7 @@ export async function getValidationResults({
   filters?: Partial<IValidationResultFilter>;
   context?: WorkspaceContext | null;
 }) {
+  console.log('🐞 [validation-result@26] filters =', filters); // @FIXME: Remove this line written on 2025-11-25 at 09:23
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<IValidationResult>>(baseUri, {
     queryParams: {

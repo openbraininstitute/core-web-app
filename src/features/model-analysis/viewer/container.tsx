@@ -1,26 +1,28 @@
 /* eslint-disable react/no-unstable-nested-components */
-import dynamic from 'next/dynamic';
+import { capitalize, groupBy } from 'es-toolkit/compat';
 import { useState } from 'react';
+import { Select, Tooltip } from 'antd';
+import dynamic from 'next/dynamic';
 
-import groupBy from 'es-toolkit/compat/groupBy';
-import { Select } from 'antd';
-import capitalize from 'es-toolkit/compat/capitalize';
-import { AllowedTypes } from '@/features/model-analysis/viewer/storage';
-import type { IValidationConstructedResult } from '@/features/model-analysis/explorer/context';
-import type { TAllowedTypes } from '@/features/model-analysis/viewer/storage';
+import { customSorting } from './custom-sorting';
+
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { IEntity } from '@/api/entitycore/types/entities/entity';
-import { EntityCoreBaseAsset } from '@/api/entitycore/types/shared/global';
+import { AllowedTypes } from '@/features/model-analysis/viewer/storage';
+import type { TValidationResultNonUndefined } from '@/features/model-analysis/explorer/use-analysis';
+import type { TAllowedTypes } from '@/features/model-analysis/viewer/storage';
+
+import styles from './container.module.css';
 
 const Viewer = dynamic(() => import('@/features/model-analysis/viewer/viewer'), {
   ssr: false,
 });
 
 type Props = {
-  validationResults: IValidationConstructedResult | null;
+  rin: number | undefined;
+  validationResults: TValidationResultNonUndefined | null;
 };
 
-export function ViewerContainer({ validationResults }: Props) {
+export function ViewerContainer({ rin, validationResults }: Props) {
   const allowedValidationResults = validationResults?.filter((o) =>
     o.assets?.some((obj) => AllowedTypes.includes(obj.content_type as TAllowedTypes))
   );
@@ -36,18 +38,18 @@ export function ViewerContainer({ validationResults }: Props) {
       };
     }),
   ];
-
   const [selected, setSelected] = useState<string>('all');
-
   if (!Object.keys(groupedValidationResults).length) return <div>No validation results found</div>;
 
   const renderViewer = (r: (typeof groupedValidationResults)[0][0]) => (
-    <Viewer
-      entity={r as IEntity & EntityCoreBaseAsset}
-      key={r.id}
-      entityType={ExtendedEntitiesTypeDict.ValidationResult}
-    />
+    <Viewer entity={r} key={r.id} entityType={ExtendedEntitiesTypeDict.ValidationResult} />
   );
+  const listToRender = (
+    selected === 'all'
+      ? Object.values(groupedValidationResults).flat()
+      : groupedValidationResults[selected]
+  ).sort(customSorting);
+  const passed = listToRender.reduce((accumulator, item) => accumulator && item.passed, true);
 
   return (
     <>
@@ -61,11 +63,16 @@ export function ViewerContainer({ validationResults }: Props) {
           labelRender={(l) => <div className="text-primary-8 font-bold">{l.label}</div>}
           optionRender={(o) => <div className="text-primary-8">{o.label}</div>}
         />
+        <div className={passed ? styles.passed : styles.failed}>{passed ? 'passed' : 'failed'}</div>
+        {rin !== undefined && (
+          <Tooltip title="Input Resistance in mega ohms">
+            <div>
+              Rin: <strong>{rin.toFixed(2)}</strong> MΩ
+            </div>
+          </Tooltip>
+        )}
       </div>
-
-      {selected === 'all' && Object.values(groupedValidationResults).flat().map(renderViewer)}
-
-      {selected !== 'all' && groupedValidationResults[selected].map(renderViewer)}
+      {listToRender.map(renderViewer)}
     </>
   );
 }

@@ -58,6 +58,9 @@ export interface IMEModel
   etypes: Array<IEType> | null;
   morphology: ICellMorphology;
   emodel: IEModel;
+  calibration_result: {
+    rin: number;
+  };
 }
 
 export interface INestedMEModel extends IMEModelBase, Timestamps {

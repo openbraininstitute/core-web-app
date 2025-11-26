@@ -13,3 +13,23 @@
     max-width: auto;
   }
 }
+
+.passed,
+.failed {
+  border-radius: 99vmax;
+  font-weight: bold;
+  font-variant: small-caps;
+  padding: 0 1em;
+  color: #000;
+  font-size: 80%;
+  display: grid;
+  place-items: center;
+}
+
+.passed {
+  background-color: #5f5;
+}
+
+.failed {
+  background-color: #f88;
+}

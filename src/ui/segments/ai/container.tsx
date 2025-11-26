@@ -10,7 +10,8 @@ import {
 } from '@ant-design/icons';
 
 import AiAssistant from '@/components/ai-assistant';
-import { PANEL_STATE, TPanelState, usePanelState } from '@/ui/segments/ai/hooks';
+import { usePanelState } from '@/ui/segments/ai/hooks';
+import { PanelState } from '@/ui/segments/ai/types';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import { cn } from '@/utils/css-class';
 import styles from '@/ui/segments/ai/container.module.css';
@@ -43,7 +44,7 @@ export function Container(): JSX.Element {
     return 'calc(100vh - 5.2rem)';
   }, [isFullscreen, isExpanded, isCollapsed]);
 
-  function beginTransition(next: TPanelState) {
+  function beginTransition(next: PanelState) {
     setAnimationComplete(false);
     setState(next);
   }
@@ -75,7 +76,7 @@ export function Container(): JSX.Element {
       {isCollapsed ? (
         <button
           type="button"
-          onClick={() => beginTransition(PANEL_STATE.Expanded)}
+          onClick={() => beginTransition(PanelState.Expanded)}
           className="relative flex h-full w-full cursor-pointer items-start justify-center px-2 select-none"
           aria-label="expand AI assistant"
         >
@@ -105,7 +106,7 @@ export function Container(): JSX.Element {
                 type="button"
                 onClick={() =>
                   beginTransition(
-                    state === PANEL_STATE.Fullscreen ? PANEL_STATE.Expanded : PANEL_STATE.Fullscreen
+                    state === PanelState.Fullscreen ? PanelState.Expanded : PanelState.Fullscreen
                   )
                 }
                 className="inline-flex h-7 w-7 items-center justify-center rounded hover:bg-white/10"
@@ -115,7 +116,7 @@ export function Container(): JSX.Element {
               </button>
               <button
                 type="button"
-                onClick={() => beginTransition(PANEL_STATE.Collapsed)}
+                onClick={() => beginTransition(PanelState.Collapsed)}
                 className="inline-flex h-7 w-7 items-center justify-center rounded hover:bg-white/10"
                 aria-label="Collapse"
               >

@@ -1,8 +1,9 @@
 'use client';
 
-import { LoadingOutlined, UpOutlined } from '@ant-design/icons';
+// import { LoadingOutlined, UpOutlined } from '@ant-design/icons';
+import { LoadingOutlined } from '@ant-design/icons';
 import { Suspense, useState } from 'react';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 import SimulationsTab from './_components/simulations';
 import Left from './_components/left';
 import { useEntries, useModel } from './_components/hooks';
@@ -36,8 +37,7 @@ export default function SimulationCampaignConfiguration({
   readOnly?: boolean;
   className?: string;
 }) {
-  const router = useRouter();
-
+  //  const router = useRouter();
   const [tab, setTab] = useState<TabType>('configuration');
   const [configTab, setConfigTab] = useState<string>('info');
   const [editing, setEditing] = useState(true);
@@ -84,12 +84,12 @@ export default function SimulationCampaignConfiguration({
           {!!campaignId && <ButtonCopyId label="Copy simulation campaign ID" value={campaignId} />}
         </div>
       </header>
-      <div className="relative mb-10">
+      {/* <div className="relative mb-10">
         <div className="w-full border-t border-gray-200" />
         <div className="text-primary-8 absolute -top-5 left-1/2 rounded-full bg-gray-50 p-2 px-3 shadow-sm">
           <UpOutlined onClick={() => router.back()} />
         </div>
-      </div>
+      </div> */}
 
       {tab === 'configuration' && (
         <div className={styles.threeColumns}>

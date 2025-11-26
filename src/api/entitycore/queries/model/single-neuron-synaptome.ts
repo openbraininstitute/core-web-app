@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import startsWith from 'es-toolkit/compat/startsWith';
 import some from 'es-toolkit/compat/some';
 
@@ -15,6 +16,7 @@ import type {
 } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
+import { getColorFromGeneratedPalette } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector/colors';
 
 const baseUri = '/single-neuron-synaptome';
 
@@ -132,9 +134,17 @@ export async function getSingleNeuronSynaptomeConfiguration(
     if (error) {
       return null;
     }
-    return data as {
+    const result = data as {
       synapses: Array<TSingleNeuronSynaptomeConfiguration>;
     };
+    return assignColors(result);
   }
   return null;
+}
+
+function assignColors(result: { synapses: Array<TSingleNeuronSynaptomeConfiguration> }) {
+  for (let i = 0; i < result.synapses.length; i++) {
+    result.synapses[i].color = getColorFromGeneratedPalette(i);
+  }
+  return result;
 }

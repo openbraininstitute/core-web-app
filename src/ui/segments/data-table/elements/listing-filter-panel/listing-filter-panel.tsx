@@ -8,12 +8,14 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { CloseOutlined, LoadingOutlined } from '@ant-design/icons';
+import { useIsFetching } from '@tanstack/react-query';
+import { get, isNil, map } from 'es-toolkit/compat';
 import { unwrap, useResetAtom } from 'jotai/utils';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { isNil, map } from 'es-toolkit/compat';
 import { useAtom, useSetAtom } from 'jotai';
 import { Input, Select } from 'antd';
 
@@ -48,6 +50,7 @@ import type {
   CoreFilter,
 } from '@/entity-configuration/definitions/types';
 import { cn } from '@/utils/css-class';
+import { Button } from '@/ui/molecules/button';
 
 type Props = {
   children?: ReactNode;
@@ -62,7 +65,6 @@ type Props = {
   showDisplayTrigger?: boolean;
   // eslint-disable-next-line react/no-unused-prop-types
   workspace?: WorkspaceContext;
-  isLoading?: boolean;
   classNames?: {
     container?: string;
   };
@@ -199,11 +201,12 @@ export function ListingFilterPanel({
   setFilters,
   facets,
   showDisplayTrigger = true,
-  isLoading,
   classNames,
 }: Props) {
+  useHotkeys('Escape', toggleDisplay);
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
   const [filterValues, setFilterValues] = useState<CoreFilterValues>({});
+  const [isApplyingFilters, setIsApplyingFilters] = useState(false);
   const resetFilters = useResetAtom(
     coreFiltersAtom({
       dataType,
@@ -212,7 +215,24 @@ export function ListingFilterPanel({
   );
 
   const setSearchString = useSetAtom(coreSearchStringAtom(dataKey));
-  useHotkeys('Escape', toggleDisplay);
+  const isFetchingCount = useIsFetching({
+    predicate: (query) => {
+      const fullQueryKey = query.queryKey.at(0);
+      const key = get(fullQueryKey, 'context.key', '');
+      return key === dataKey;
+    },
+    fetchStatus: 'fetching',
+  });
+
+  const isFetching = isFetchingCount > 0;
+  const prevIsFetchingRef = useRef(isFetching);
+
+  useEffect(() => {
+    if (prevIsFetchingRef.current && !isFetching && isApplyingFilters) {
+      setIsApplyingFilters(false);
+    }
+    prevIsFetchingRef.current = isFetching;
+  }, [isFetching, isApplyingFilters, isFetchingCount]);
 
   const [activeColumns, setActiveColumns] = useAtom(
     useMemo(
@@ -256,6 +276,7 @@ export function ListingFilterPanel({
   }, [filters]);
 
   const submitValues = () => {
+    setIsApplyingFilters(true);
     setPageNumber(DEFAULT_PAGE_NUMBER);
     const appliedFilters = filters?.map((fil: CoreFilter) => ({
       ...fil,
@@ -305,19 +326,19 @@ export function ListingFilterPanel({
     ]
   );
 
-  if (!activeColumns) return null;
-
-  const activeColumnsLength = activeColumns.length ? activeColumns.length - 1 : 0;
-  const activeColumnsText = `${activeColumnsLength} active ${
-    activeColumnsLength === 1 ? 'column' : 'columns'
-  }`;
-
   // The columnKeyToFilter method receives a string (key)
   // and in this case it is the equivalent to a filters[x].field
   const clearFilters = () => {
     resetFilters();
     setSearchString('');
   };
+
+  if (!activeColumns) return null;
+
+  const activeColumnsLength = activeColumns.length ? activeColumns.length - 1 : 0;
+  const activeColumnsText = `${activeColumnsLength} active ${
+    activeColumnsLength === 1 ? 'column' : 'columns'
+  }`;
 
   return (
     <div className="relative w-full">
@@ -369,14 +390,19 @@ export function ListingFilterPanel({
 
         <div className="bg-primary-8 sticky bottom-0 left-0 mt-auto flex w-full items-center justify-between py-6">
           <ClearFilters onClick={clearFilters} />
-          <button
+          <Button
             type="button"
             onClick={submitValues}
-            className="bg-primary-2 text-primary-9 flex items-center justify-center gap-1.5 px-8 py-3"
+            variant="default"
+            className="bg-primary-2 text-primary-9 hover:bg-primary-2/80 flex items-center justify-center gap-1.5 rounded-none px-10 md:h-10 lg:h-12"
           >
-            <div>Apply</div>
-            {isLoading && filters.length > 0 && <LoadingOutlined />}
-          </button>
+            <span className="text-base font-semibold">Apply</span>
+            <LoadingOutlined
+              className={cn('text-black/80', {
+                hidden: !(isApplyingFilters && isFetching),
+              })}
+            />
+          </Button>
         </div>
       </div>
     </div>

@@ -4,7 +4,6 @@ import keyBy from 'es-toolkit/compat/keyBy';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { unifiedSingleNeuronSimulationFlowFlag } from '@/features/feature-flags/flags';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
@@ -159,7 +158,6 @@ export const MEModelCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCa
   extendedType: ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.MEModelCircuitSimulation,
-  requiredFeatures: [unifiedSingleNeuronSimulationFlowFlag.key],
   api: {
     config: { allowedFacets: true },
     query: {

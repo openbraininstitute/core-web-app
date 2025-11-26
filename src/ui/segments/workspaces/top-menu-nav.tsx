@@ -1,27 +1,11 @@
-import { usePathname, useSearchParams } from 'next/navigation';
 import { MenuOutlined } from '@ant-design/icons';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import React from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
+import React, { useState } from 'react';
 
 import type { ReactNode } from 'react';
 
-import { createBreakpoint, useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { cleanSearchParams } from '@/utils/search-params';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { getActiveSection } from '@/utils/get-section';
-import {
-  DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
-  DEFAULT_BRAIN_REGION_QUERY_ID,
-} from '@/features/brain-region-hierarchy/context';
-import { Button } from '@/ui/molecules/button';
-import { cn } from '@/utils/css-class';
-import { ROOT_ROUTE } from '@/config';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/ui/molecules/dropdown-menu';
 import {
   ExploreIcon,
   HelpIcon,
@@ -30,6 +14,29 @@ import {
   ReportsIcon,
   WorkflowIcon,
 } from '@/components/icons/buttons';
+import FeedbacksIcon from '@/components/icons/FeedbacksIcon';
+import { ROOT_ROUTE } from '@/config';
+import {
+  DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
+  DEFAULT_BRAIN_REGION_QUERY_ID,
+} from '@/features/brain-region-hierarchy/context';
+import { createBreakpoint, useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Button } from '@/ui/molecules/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/ui/molecules/dropdown-menu';
+import { cn } from '@/utils/css-class';
+import { getActiveSection } from '@/utils/get-section';
+import { cleanSearchParams } from '@/utils/search-params';
+
+// Dynamically import FeedbackModal with SSR disabled to prevent Suspense boundary issues
+const FeedbackModal = dynamic(() => import('@/ui/segments/feedbacks/feedback-modal'), {
+  ssr: false,
+});
 
 type LinkItem = {
   id: string;
@@ -116,6 +123,16 @@ const links: Array<LinkItem> = [
     className: '',
     hasAction: false,
   },
+  {
+    id: 'workspace-feedbacks',
+    key: 'feedbacks',
+    title: 'Feedback',
+    url: 'feedback',
+    icon: <FeedbacksIcon className="group-hover:text-primary-3 relative left-0.5 h-6! w-6!" />,
+    allowText: false,
+    className: '',
+    hasAction: false,
+  },
 ];
 
 export function TopMenuNavigation() {
@@ -124,6 +141,7 @@ export function TopMenuNavigation() {
   const pathname = usePathname();
   const queryParams = useSearchParams();
   const activeSection = getActiveSection(pathname);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
 
   const hashedLinks = links.map((link) => ({
     ...link,
@@ -157,6 +175,19 @@ export function TopMenuNavigation() {
                   DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
                 ],
               }).toString();
+
+              if (link.id === 'workspace-feedbacks') {
+                return (
+                  <DropdownMenuItem
+                    key={link.key}
+                    className="text-primary-9 hover:text-primary-7! flex cursor-pointer items-center gap-2 px-3 py-2"
+                    onClick={() => setIsFeedbackModalOpen(true)}
+                  >
+                    {link.icon}
+                    <span className="text-lg">{link.title}</span>
+                  </DropdownMenuItem>
+                );
+              }
 
               if (link.hasAction && link.action) {
                 return (
@@ -202,51 +233,141 @@ export function TopMenuNavigation() {
             })}
           </DropdownMenuContent>
         </DropdownMenu>
+        {isFeedbackModalOpen && (
+          <FeedbackModal open={isFeedbackModalOpen} onClose={() => setIsFeedbackModalOpen(false)} />
+        )}
       </div>
     );
   }
 
-  return hashedLinks.map(
-    ({ id, key, title, url, baseUrl, icon, allowText, className: clx, isActive, hasAction }) => {
-      const searchParams = new URLSearchParams(queryParams);
-      const linkSearchParams = cleanSearchParams({
-        searchParams,
-        keepKeys: [DEFAULT_BRAIN_REGION_QUERY_ID, DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE],
-      }).toString();
+  return (
+    <>
+      {hashedLinks.map(
+        ({
+          id,
+          key,
+          title,
+          url,
+          baseUrl,
+          icon,
+          allowText,
+          className: clx,
+          isActive,
+          hasAction,
+        }) => {
+          const searchParams = new URLSearchParams(queryParams);
+          const linkSearchParams = cleanSearchParams({
+            searchParams,
+            keepKeys: [DEFAULT_BRAIN_REGION_QUERY_ID, DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE],
+          }).toString();
 
-      return (
-        <div key={key} className="group flex w-max items-center justify-center gap-0">
-          <div className="relative flex items-center">
-            <Button
-              asChild
-              rounded
-              id={id}
-              variant="outline"
-              size={breakpoint === 'xl' ? 'lg' : 'md'}
-              className={cn(
-                { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
-                { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
-                'group relative flex items-center justify-between',
-                { 'group-hover:rounded-r-none group-hover:border-r-0': hasAction },
-                'transition-all duration-400 ease-out',
-                clx
-              )}
-              active={activeSection === baseUrl || isActive?.(pathname)}
-            >
-              <Link
-                prefetch
-                href={{
-                  pathname: url,
-                  query: linkSearchParams,
-                }}
-              >
-                {allowText && <span>{title}</span>}
-                {icon}
-              </Link>
-            </Button>
-          </div>
-        </div>
-      );
-    }
+          if (id === 'workspace-feedbacks') {
+            return (
+              <div key={key} className="group flex w-max items-center justify-center gap-0">
+                <div className="relative flex items-center">
+                  <Button
+                    rounded
+                    id={id}
+                    variant="outline"
+                    size={breakpoint === 'xl' ? 'lg' : 'md'}
+                    className={cn(
+                      { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
+                      { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
+                      'group relative flex items-center justify-between',
+                      'transition-all duration-400 ease-out',
+                      clx
+                    )}
+                    active={activeSection === baseUrl || isActive?.(pathname)}
+                    onClick={() => setIsFeedbackModalOpen(true)}
+                  >
+                    {allowText && <span>{title}</span>}
+                    {icon}
+                  </Button>
+                  <span className="text-primary-9 absolute top-full right-0 text-sm whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    Feedback
+                  </span>
+                </div>
+              </div>
+            );
+          }
+
+          if (id === 'workspace-help') {
+            return (
+              <div key={key} className="group flex w-max items-center justify-center gap-0">
+                <div className="relative flex items-center">
+                  <Button
+                    asChild
+                    rounded
+                    id={id}
+                    variant="outline"
+                    size={breakpoint === 'xl' ? 'lg' : 'md'}
+                    className={cn(
+                      { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
+                      { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
+                      'group relative flex items-center justify-between',
+                      { 'group-hover:rounded-r-none group-hover:border-r-0': hasAction },
+                      'transition-all duration-400 ease-out',
+                      clx
+                    )}
+                    active={activeSection === baseUrl || isActive?.(pathname)}
+                  >
+                    <Link
+                      prefetch
+                      href={{
+                        pathname: url,
+                        query: linkSearchParams,
+                      }}
+                    >
+                      {allowText && <span>{title}</span>}
+                      {icon}
+                    </Link>
+                  </Button>
+                  <span className="text-primary-9 absolute top-full left-1/2 -translate-x-1/2 text-sm whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    Help
+                  </span>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div key={key} className="group flex w-max items-center justify-center gap-0">
+              <div className="relative flex items-center">
+                <Button
+                  asChild
+                  rounded
+                  id={id}
+                  variant="outline"
+                  size={breakpoint === 'xl' ? 'lg' : 'md'}
+                  className={cn(
+                    { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
+                    { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
+                    'group relative flex items-center justify-between',
+                    { 'group-hover:rounded-r-none group-hover:border-r-0': hasAction },
+                    'transition-all duration-400 ease-out',
+                    clx
+                  )}
+                  active={activeSection === baseUrl || isActive?.(pathname)}
+                >
+                  <Link
+                    prefetch
+                    href={{
+                      pathname: url,
+                      query: linkSearchParams,
+                    }}
+                  >
+                    {allowText && <span>{title}</span>}
+                    {icon}
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          );
+        }
+      )}
+      {isFeedbackModalOpen && (
+        <FeedbackModal open={isFeedbackModalOpen} onClose={() => setIsFeedbackModalOpen(false)} />
+      )}
+    </>
   );
 }
