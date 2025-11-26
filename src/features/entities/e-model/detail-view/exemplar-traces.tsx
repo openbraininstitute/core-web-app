@@ -28,7 +28,7 @@ const defaultColumnsFields = getFieldsDefinition([
   EntityCoreFields.Name,
   EntityCoreFields.MType,
   EntityCoreFields.EType,
-  EntityCoreFields.Species,
+  EntityCoreFields.SpeciesName,
 ]);
 
 function makeColumns(

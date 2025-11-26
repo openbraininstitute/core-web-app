@@ -13,7 +13,7 @@ export const viewDefForElectricalCellRecording: ViewDefinitionConfig = {
     EntityCoreFields.BrainRegion,
     EntityCoreFields.EType,
     EntityCoreFields.Name,
-    EntityCoreFields.Species,
+    EntityCoreFields.SpeciesName,
     EntityCoreFields.Contributions,
     EntityCoreFields.RegistrationDate,
   ],
@@ -25,7 +25,7 @@ export const viewDefForElectricalCellRecording: ViewDefinitionConfig = {
   miniDetailView: [
     { field: EntityCoreFields.BrainRegion },
     { field: EntityCoreFields.EType },
-    { field: EntityCoreFields.Species },
+    { field: EntityCoreFields.SpeciesName },
     { field: EntityCoreFields.License },
   ],
   curated: true,

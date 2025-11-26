@@ -11,7 +11,7 @@ export const ViewDefForIonChannelModel: ViewDefinitionConfig = {
     EntityCoreFields.Preview,
     EntityCoreFields.Name,
     EntityCoreFields.BrainRegion,
-    EntityCoreFields.Species,
+    EntityCoreFields.SpeciesName,
     EntityCoreFields.TemperatureCelsius,
     EntityCoreFields.IsTemperatureDependent,
     EntityCoreFields.IsLjpCorrected,
@@ -27,7 +27,7 @@ export const ViewDefForIonChannelModel: ViewDefinitionConfig = {
   ],
   miniDetailView: [
     { field: EntityCoreFields.BrainRegion },
-    { field: EntityCoreFields.Species },
+    { field: EntityCoreFields.SpeciesName },
     { field: EntityCoreFields.TemperatureCelsius },
     { field: EntityCoreFields.IsTemperatureDependent },
     { field: EntityCoreFields.IsLjpCorrected },
@@ -36,7 +36,7 @@ export const ViewDefForIonChannelModel: ViewDefinitionConfig = {
   filterableFields: [
     EntityCoreFields.Name,
     EntityCoreFields.BrainRegion,
-    EntityCoreFields.Species,
+    EntityCoreFields.SpeciesName,
     EntityCoreFields.TemperatureCelsius,
     EntityCoreFields.IsTemperatureDependent,
     EntityCoreFields.IsLjpCorrected,

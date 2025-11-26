@@ -24,6 +24,8 @@ export const ViewDefForEmodel: ViewDefinitionConfig = {
     { field: EntityCoreFields.EModelScore },
     { field: EntityCoreFields.MType },
     { field: EntityCoreFields.EType },
+    { field: EntityCoreFields.SpeciesName },
+    { field: EntityCoreFields.StrainName },
   ],
   miniDetailView: [
     { field: EntityCoreFields.BrainRegion },
