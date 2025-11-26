@@ -164,6 +164,51 @@ export function Section({
                             selectedTabAtoms[newKey] = selectedTabAtoms[selectedEntry];
                             delete selectedTabAtoms[selectedEntry];
 
+                            // Rename references
+
+                            // Initialize case
+                            const configInitialize = config.initialize;
+                            if (
+                              isPlainObject(configInitialize) &&
+                              isPlainObject(configInitialize.node_set) &&
+                              typeof configInitialize.node_set.block_name === 'string' &&
+                              configInitialize.node_set.block_name === selectedEntry
+                            ) {
+                              atomsMap.initialize = atom<Record<string, ConfigValue>>({
+                                ...configInitialize,
+                                node_set: { ...configInitialize.node_set, block_name: newKey },
+                              });
+                            }
+
+                            // Check all keys in the config
+                            Object.entries(config)
+                              .filter(([configK]) => configK !== 'initialize')
+                              .forEach(([configK, configV]) => {
+                                if (typeof configV !== 'object') return;
+
+                                // Check all keys in a section (e.g stimuli, recordings)
+                                Object.entries(configV).forEach(([_, entryV]) => {
+                                  if (!isPlainObject(entryV)) return;
+
+                                  // Check all values in a particular object (a single stimuli, a single timestamp, etc)
+                                  Object.entries(entryV).forEach(([fieldK, field]) => {
+                                    if (
+                                      !isPlainObject(entryV) ||
+                                      !isPlainObject(field) ||
+                                      typeof field.block_name !== 'string' ||
+                                      isAtom(atomsMap[configK]) || // skip top level atoms (e.g initialize)
+                                      field.block_name !== selectedEntry
+                                    )
+                                      return;
+
+                                    // Renaming the reference to current object
+                                    entryV[fieldK].block_name = newKey;
+                                  });
+                                });
+                              });
+
+                            setAtomsMap({ ...atomsMap });
+
                             setIsEditingKey(false);
                             setSelectedEntry(newKey);
                             setNewKey('');
