@@ -222,7 +222,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
       navigate(
         `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/memodel/${
           (selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
-        }?dataType=me_model_circuit&initialCampaignId=${selectedRow?.id}`
+        }?dataType=${ExtendedEntitiesTypeDict.MemodelCircuit}&initialCampaignId=${selectedRow?.id}`
       );
 
       return;
