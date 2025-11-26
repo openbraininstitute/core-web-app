@@ -11,18 +11,14 @@ import ImageViewer from '@/features/model-analysis/viewer/image-viewer';
 import PDFViewer from '@/features/model-analysis/viewer/pdf-viewer';
 import { AllowedTypes } from '@/features/model-analysis/viewer/storage';
 import type { TAllowedTypes } from '@/features/model-analysis/viewer/storage';
-import type { IAsset } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreBaseAsset, IAsset } from '@/api/entitycore/types/shared/global';
+import { IEntity } from '@/api/entitycore/types/entities/entity';
 import { TEntityTypeDict } from '@/api/entitycore/types';
 
 import styles from './viewer.module.css';
 
 type Props = {
-  entity: {
-    id: string;
-    type: TEntityTypeDict;
-    passed: boolean;
-    assets: IAsset[] | null;
-  };
+  entity: IEntity & EntityCoreBaseAsset;
   entityType: TEntityTypeDict;
   pdfShowPageCount?: boolean;
 };
@@ -50,6 +46,7 @@ export default function AssetViewer({ entity, entityType, pdfShowPageCount = tru
   );
 
   const assets = (entity.assets ?? []).sort(sortByPath);
+
   return (
     <div data-testid="documents-container" className="mt-4 flex flex-col items-center">
       {assets
@@ -63,9 +60,7 @@ export default function AssetViewer({ entity, entityType, pdfShowPageCount = tru
             >
               <h2 className="text-primary-8 border-neutral-2 mb-6 flex w-full justify-between rounded-full border p-3 text-xl font-bold">
                 <span className="ml-4">{resolveCaption(asset.path)}</span>
-                <span className={entity.passed ? styles.passed : styles.failed}>
-                  {entity.passed ? 'passed' : 'failed'}
-                </span>
+                {/* <span>{asset.status}</span> */}
               </h2>
               <div className={styles.row}>
                 {content(asset)}
