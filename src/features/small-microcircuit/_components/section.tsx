@@ -40,8 +40,8 @@ export function Section({
   allEntries,
   newKey,
   setNewKey,
-  editingKey,
-  setEditingKey,
+  isEditingKey,
+  setIsEditingKey,
 }: {
   schema: JSONSchema | null; // The global schema
   k: string; // secition key
@@ -62,8 +62,8 @@ export function Section({
   allEntries: Set<string>;
   newKey: string;
   setNewKey: (k: string) => void;
-  editingKey: string;
-  setEditingKey: (k: string) => void;
+  isEditingKey: boolean;
+  setIsEditingKey: (k: boolean) => void;
 }) {
   if (!schema || !schema?.properties) return;
 
@@ -73,7 +73,7 @@ export function Section({
       setSelectedEntry(subkey);
     }
     setEditing(true);
-    setEditingKey('');
+    setIsEditingKey(false);
     setNewKey('');
   };
 
@@ -131,7 +131,7 @@ export function Section({
                 }}
               >
                 <div className="w-full">
-                  {subkey === editingKey && (
+                  {isSelected && isEditingKey && (
                     <>
                       <Input
                         value={newKey}
@@ -145,10 +145,24 @@ export function Section({
                         size="small"
                       />
                       <div className="ml-3 inline-block">
-                        <CheckOutlined className="mr-2" />
+                        <CheckOutlined
+                          className="mr-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const selectedTabAtoms = atomsMap[configTab];
+                            if (isAtom(selectedTabAtoms)) return;
+                            if (!isPlainObject(config[configTab])) return;
+
+                            selectedTabAtoms[newKey] = selectedTabAtoms[selectedEntry];
+                            delete selectedTabAtoms[selectedEntry];
+
+                            setIsEditingKey(false);
+                            setSelectedEntry(newKey);
+                          }}
+                        />
                         <CloseOutlined
                           onClick={() => {
-                            setEditingKey('');
+                            setIsEditingKey(false);
                             setNewKey('');
                           }}
                         />
@@ -156,7 +170,7 @@ export function Section({
                     </>
                   )}
 
-                  {subkey !== editingKey && (
+                  {(!isSelected || (isSelected && !isEditingKey)) && (
                     <>
                       {subkey}
                       <EditOutlined
@@ -164,7 +178,7 @@ export function Section({
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedEntry(subkey);
-                          setEditingKey(subkey);
+                          setIsEditingKey(true);
                           setNewKey(subkey);
                         }}
                       />
@@ -189,6 +203,7 @@ export function Section({
                         setEditing(false);
 
                         const selectedTabAtoms = atomsMap[configTab];
+
                         if (!isAtom(selectedTabAtoms)) {
                           delete selectedTabAtoms[subkey];
 

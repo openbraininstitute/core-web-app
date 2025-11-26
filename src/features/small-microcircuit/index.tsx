@@ -47,7 +47,7 @@ export default function SimulationCampaignConfiguration({
   const notification = useAppNotification();
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
 
-  const [editingKey, setEditingKey] = useState('');
+  const [isEditingKey, setIsEditingKey] = useState(false);
   const [newKey, setNewKey] = useState('');
 
   const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
@@ -117,8 +117,8 @@ export default function SimulationCampaignConfiguration({
             allEntries={allEntries}
             newKey={newKey}
             setNewKey={setNewKey}
-            editingKey={editingKey}
-            setEditingKey={setEditingKey}
+            isEditingKey={isEditingKey}
+            setIsEditingKey={setIsEditingKey}
           />
 
           <Middle
@@ -145,7 +145,7 @@ export default function SimulationCampaignConfiguration({
             allEntries={allEntries}
             onNewBlockClick={() => {
               setNewKey('');
-              setEditingKey('');
+              setIsEditingKey(false);
             }}
           />
 

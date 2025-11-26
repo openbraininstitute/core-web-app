@@ -92,13 +92,9 @@ export default function Middle({
                         if (subkey === 'type') initial[subkey] = subValue.const ?? null;
                         else initial[subkey] = subValue.default ?? null;
                       });
-                    const itemIndexes = Object.keys(atomsMap[configTab] ?? {}).map((subkey) =>
-                      parseInt(subkey.split('_')[1], 10)
-                    );
-                    itemIndexes.sort((a, b) => a - b);
-                    const itemIdx = (itemIndexes.at(-1) ?? -1) + 1;
+                    const items = Object.keys(atomsMap[configTab] ?? {});
 
-                    const newEntry = `${schema.properties?.[configTab].singular_name ?? 'element'}_${itemIdx}`;
+                    const newEntry = `${schema.properties?.[configTab].singular_name ?? 'element'}_${items.length}`;
 
                     setSelectedEntry(newEntry);
                     allEntries.add(newEntry);

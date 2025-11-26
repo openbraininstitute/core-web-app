@@ -37,8 +37,8 @@ export default function Left({
   allEntries,
   newKey,
   setNewKey,
-  editingKey,
-  setEditingKey,
+  isEditingKey,
+  setIsEditingKey,
 }: {
   virtualLabId: string;
   projectId: string;
@@ -63,8 +63,8 @@ export default function Left({
   allEntries: Set<string>;
   newKey: string;
   setNewKey: (k: string) => void;
-  editingKey: string;
-  setEditingKey: (k: string) => void;
+  isEditingKey: boolean;
+  setIsEditingKey: (k: boolean) => void;
 }) {
   const notification = useAppNotification();
   const apiUrl = useApiUrl({ model });
@@ -108,8 +108,8 @@ export default function Left({
                           allEntries={allEntries}
                           newKey={newKey}
                           setNewKey={setNewKey}
-                          editingKey={editingKey}
-                          setEditingKey={setEditingKey}
+                          isEditingKey={isEditingKey}
+                          setIsEditingKey={setIsEditingKey}
                         />
                       );
                     })}
