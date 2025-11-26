@@ -21,7 +21,7 @@ export const env = createEnv({
     MAILCHIMP_API_KEY: z.string().min(1),
     MAILCHIMP_AUDIENCE_ID: z.string().min(1),
     MAILCHIMP_API_SERVER: z.string().min(1),
-    GITHUB_FEEDBACK_TOKEN: z.string().optional(),
+    GITHUB_TOKEN: z.string().optional(),
 
     CI_COMMIT_SHORT_SHA: z.string().optional(),
     npm_package_version: z.string().optional(),

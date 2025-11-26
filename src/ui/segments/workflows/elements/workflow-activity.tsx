@@ -218,6 +218,16 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
     : null;
 
   const onDuplicate = () => {
+    if (entityType === ExtendedEntitiesTypeDict.MemodelCircuitSimulation) {
+      navigate(
+        `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/memodel/${
+          (selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
+        }?dataType=me_model_circuit&initialCampaignId=${selectedRow?.id}`
+      );
+
+      return;
+    }
+
     if (selectedRow?.type === ExtendedEntitiesTypeDict.SimulationCampaign) {
       navigate(
         `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${
