@@ -33,29 +33,16 @@ type ProjectFormValues = z.infer<typeof projectFormSchema>;
 export function ProjectCard(): ReactElement {
   const { virtualLabId, projectId } = useWorkspace();
   const [form] = Form.useForm<ProjectFormValues>();
-  const [mounted, setMounted] = useState(false);
 
   const { data: result, refetch } = useSuspenseQuery({
     queryKey: keyBuilder.getWorkspace({ virtualLabId, projectId }),
     queryFn: () => getProject({ virtualLabId, projectId }),
   });
 
+  const { isVirtualLabAdmin } = useUserPermissions({ virtualLabId, projectId });
   const [isEditing, setIsEditing] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
   const nameRef = useRef<any>(null);
-
-  // Ensure component only checks permissions after mount to avoid SSR/hydration issues
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Only check permissions on client to avoid Suspense boundary issues
-  // Always call the hook (React rules), but pass undefined during SSR
-  const permissionsResult = useUserPermissions({
-    virtualLabId: mounted ? virtualLabId : undefined,
-    projectId: mounted ? projectId : undefined,
-  });
-  const isVirtualLabAdmin = mounted ? permissionsResult.isVirtualLabAdmin : false;
 
   const maxNameLength = 60;
   const nameValue = Form.useWatch('name', form) || '';
@@ -187,7 +174,6 @@ export function ProjectCard(): ReactElement {
             </Button>
           </>
         ) : (
-          mounted &&
           isVirtualLabAdmin && (
             <Button
               rounded

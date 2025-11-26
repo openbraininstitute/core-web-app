@@ -31,36 +31,22 @@ const FREE_ACCESS_PAGES = [
   '/api/marketing',
   '/api/help*',
 ];
-const ASSETS = [
-  '/static*',
-  '/images*',
-  '/downloads*',
-  '/_next*',
-  '/favicon.ico',
-  '/video*',
-  '*.map',
-];
+const ASSETS = ['/static*', '/images*', '/downloads*', '/_next*', '/favicon.ico', '/video*'];
 
 /**
  * Checks whether a request pathname is allowed to pass without auth/redirect.
  *
  * Don't allow arbitrary regex to avoid accidentally leaking protected pages.
- * Three patterns are supported in `paths`:
+ * Only two patterns are supported in `paths`:
  * - Exact match: '/path'
  * - Prefix match: '/path*' (matches '/path' and all subroutes like '/path/...')
- * - Suffix match: '*.ext' (matches any file ending with '.ext')
  *
  * @param requestUrl - The request pathname (e.g. '/_next/static/...').
- * @param paths - List of allowed route patterns (exact, prefix, or suffix).
+ * @param paths - List of allowed route patterns (exact or prefix).
  * @returns true if the request matches any allowed pattern; otherwise false.
  */
 function isFreeAccessRoute(requestUrl: string, paths: string[]) {
   return paths.some((p) => {
-    if (p.startsWith('*')) {
-      // Suffix match (e.g., '*.map' matches any file ending with '.map')
-      const suffix = p.slice(1);
-      return requestUrl.endsWith(suffix);
-    }
     if (p.endsWith('*')) {
       // Remove the trailing '*' to get the base path
       const basePath = p.slice(0, -1);
