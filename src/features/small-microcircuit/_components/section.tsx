@@ -19,6 +19,7 @@ import { isAtom, isPlainObject } from './utils';
 import { isRootCategory } from './hooks/schema';
 
 import { classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
 
 export function Section({
   schema,
@@ -76,6 +77,8 @@ export function Section({
     setIsEditingKey(false);
     setNewKey('');
   };
+
+  const newKeyError = allEntries.has(newKey) || !newKey || newKey === selectedEntry;
 
   return (
     <>
@@ -141,25 +144,32 @@ export function Section({
                         }}
                         ref={(element) => element?.focus()}
                         onChange={(v) => setNewKey(v.currentTarget.value)}
-                        status={newKey === '' ? 'error' : undefined}
+                        status={newKeyError ? 'error' : undefined}
                         size="small"
                       />
                       <div className="ml-3 inline-block">
                         <CheckOutlined
-                          className="mr-2"
+                          className={cn('mr-2', newKeyError && 'opacity-30')}
+                          disabled={newKeyError}
                           onClick={(e) => {
                             e.stopPropagation();
                             const selectedTabAtoms = atomsMap[configTab];
+                            if (newKey === selectedEntry) return;
                             if (isAtom(selectedTabAtoms)) return;
                             if (!isPlainObject(config[configTab])) return;
+
+                            allEntries.delete(selectedEntry);
+                            allEntries.add(newKey);
 
                             selectedTabAtoms[newKey] = selectedTabAtoms[selectedEntry];
                             delete selectedTabAtoms[selectedEntry];
 
                             setIsEditingKey(false);
                             setSelectedEntry(newKey);
+                            setNewKey('');
                           }}
                         />
+
                         <CloseOutlined
                           onClick={() => {
                             setIsEditingKey(false);
