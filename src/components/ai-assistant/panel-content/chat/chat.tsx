@@ -75,11 +75,7 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
       >
         {messages.length === 0 && <Welcome />}
         {messages.map((item, messageIndex) => (
-          <MessageItem
-            key={item.id}
-            value={item}
-            hideTools={messageIndex === messages.length - 1 && status !== 'ready'}
-          />
+          <MessageItem key={item.id} value={item} />
         ))}
 
         {status === 'ready' && messages.length > 0 && (

@@ -21,24 +21,16 @@ interface MessageItemProps {
 
 export const MessageItem = React.memo(RawMessageItem);
 
-function RawMessageItem({ className, value, hideTools }: MessageItemProps) {
+function RawMessageItem({ className, value }: MessageItemProps) {
   const debug = useDebug();
   return (
     <div className={classNames(className, styles.messageItem)}>
-      <MessageChild value={value} hideTools={hideTools} debug={debug} />
+      <MessageChild value={value} debug={debug} />
     </div>
   );
 }
 
-function MessageChild({
-  value,
-  hideTools,
-  debug,
-}: {
-  value: UIMessage;
-  hideTools: boolean;
-  debug: boolean;
-}): React.ReactNode {
+function MessageChild({ value, debug }: { value: UIMessage; debug: boolean }): React.ReactNode {
   const { setPanelWidth } = usePanelWidth();
   const deferredParts = React.useDeferredValue(value.parts);
   const isContentPending = value.parts !== deferredParts;
@@ -48,7 +40,7 @@ function MessageChild({
       return (
         <div className={styles.user}>
           <div className={styles.userContent}>
-            <div>{value.content}</div>
+            <div>{value.parts.map((part) => part.type === 'text' && part.text)}</div>
           </div>
           <div className={styles.info}>
             <div className={styles.timestamp}>{value.createdAt && formatDate(value.createdAt)}</div>
@@ -77,16 +69,14 @@ function MessageChild({
             }
             if (part.type === 'tool-invocation') {
               return (
-                <div>
+                <>
                   <ToolsProgress key={index} part={part} />
-                  {!hideTools && (
-                    <>
-                      <ToolsComponents part={part} />
-                      {/* This tool component has been disabled yet */}
-                      {/* <ToolArticles message={value} /> */}
-                    </>
-                  )}
-                </div>
+                  <>
+                    <ToolsComponents part={part} />
+                    {/* This tool component has been disabled yet */}
+                    {/* <ToolArticles message={value} /> */}
+                  </>
+                </>
               );
             }
             return null;
