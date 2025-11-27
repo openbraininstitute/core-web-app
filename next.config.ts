@@ -7,7 +7,7 @@ const withBundleAnalyzer = NextBundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 });
 
-const cdnUri = process.env.CDN_URI;
+const cdnUrl = process.env.CDN_URL;
 const appVersion = process.env.APP_VERSION;
 
 const SentryOptions: SentryBuildOptions = {
@@ -78,7 +78,7 @@ const nextConfig = (phase: string): NextConfig => {
             >['position']) ?? 'top-right',
         }
       : false,
-    assetPrefix: isDev || !cdnUri ? undefined : `${cdnUri}/${appVersion}`,
+    assetPrefix: isDev || !cdnUrl ? undefined : `${cdnUrl}/${appVersion}`,
     reactStrictMode: true,
     compress: false,
     output: 'standalone',

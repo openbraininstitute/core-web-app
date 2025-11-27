@@ -203,7 +203,7 @@ Properties with `public: false` are only available via `serverConfig`:
 Properties with `public: true` are available in both contexts:
 
 - `APP_VERSION`, `DEPLOYMENT_ENV`
-- `API_ORIGIN`, `ROOT_ROUTE`, `CDN_URI`
+- `API_ORIGIN`, `ROOT_ROUTE`, `CDN_URL`
 - `SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PRJ`
 - `VIRTUAL_LAB_API_URL`, `ENTITY_CORE_URL`, and other API URLs
 - `STRIPE_PUBLISHABLE_KEY`
