@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unstable-nested-components */
-import { capitalize, groupBy, isNil } from 'es-toolkit/compat';
+import { capitalize, groupBy } from 'es-toolkit/compat';
 import { useState } from 'react';
 import { Select } from 'antd';
 import dynamic from 'next/dynamic';
