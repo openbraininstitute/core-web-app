@@ -34,12 +34,12 @@ import { ensureString, isNumber, isString } from '@/util/type-guards';
 
 const morphologyMtypes = (morphology?: ICellMorphology) => {
   if (!morphology) return [];
-  return renderEmptyOrValue(renderArray(morphology.mtypes?.map((m) => m.pref_label) || []));
+  return renderArray(morphology.mtypes?.map((m) => m.pref_label) || []);
 };
 
 const emodelEtypes = (emodel?: IEModel) => {
   if (!emodel) return [];
-  return renderEmptyOrValue(renderArray(emodel.etypes?.map((m) => m.pref_label) || []));
+  return renderArray(emodel.etypes?.map((m) => m.pref_label) || []);
 };
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
