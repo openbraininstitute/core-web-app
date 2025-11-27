@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unstable-nested-components */
-import { capitalize, groupBy } from 'es-toolkit/compat';
+import { capitalize, groupBy, isNil } from 'es-toolkit/compat';
 import { useState } from 'react';
 import { Select, Tooltip } from 'antd';
 import dynamic from 'next/dynamic';
@@ -64,7 +64,7 @@ export function ViewerContainer({ rin, validationResults }: Props) {
           optionRender={(o) => <div className="text-primary-8">{o.label}</div>}
         />
         <div className={passed ? styles.passed : styles.failed}>{passed ? 'passed' : 'failed'}</div>
-        {rin !== undefined && (
+        {!isNil(rin) && (
           <Tooltip title="Input Resistance in mega ohms">
             <div>
               Rin: <strong>{rin.toFixed(2)}</strong> MΩ
