@@ -52,10 +52,11 @@ function MessageChild({ value, debug }: { value: UIMessage; debug: boolean }): R
           className={styles.assistant}
           style={{ opacity: isContentPending ? 0.8 : 1, transition: 'opacity 0.2s' }}
         >
-          {deferredParts.map((part, index) => {
+          {deferredParts.map((part) => {
             if (part.type === 'text' && part.text !== '') {
               return (
                 <GithubFlavorMarkdown
+                  key={`text-${part.text.slice(0, 50)}`}
                   className={styles.markdown}
                   onLinkClicked={(external) => {
                     if (!external) setPanelWidth(MINIMAL_PANEL_SIZE);
@@ -66,7 +67,7 @@ function MessageChild({ value, debug }: { value: UIMessage; debug: boolean }): R
               );
             }
             if (part.type === 'tool-invocation') {
-              const {toolCallId} = part.toolInvocation;
+              const { toolCallId } = part.toolInvocation;
               return (
                 <div key={`tool-${toolCallId}`}>
                   <ToolsProgress part={part} />
