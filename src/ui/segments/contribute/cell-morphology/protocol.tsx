@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { Form } from 'antd';
-import isNil from 'es-toolkit/compat/isNil';
+// import isNil from 'es-toolkit/compat/isNil'; // <--- REMOVED: 'isNil' is defined but never used
 import { getProtocols } from '@/api/entitycore/queries/general/protocol';
 import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
 import {
@@ -18,8 +18,11 @@ export function Protocol() {
   const form = Form.useFormInstance();
   const { virtualLabId, projectId } = useWorkspace();
 
-  const DataTooltip = useCallback((data: IProtocol) => {
-    const fields = [];
+  // FIX: Unused 'data' parameter in DataTooltip
+  // Renamed 'data' to '_data' to satisfy the rule that unused arguments should start with an underscore.
+  // We also explicitly type 'fields' and ensure 'searchable: true' is present from the previous fixes.
+  const DataTooltip = useCallback((_data: IProtocol) => {
+    const fields: string[] = [];
 
     if (fields.length === 0) {
       return <div className="text-sm text-gray-500">No additional information</div>;
@@ -45,14 +48,13 @@ export function Protocol() {
         id: 'protocol-selector',
         dataKey: keyBuilder.protocols({ virtualLabId, projectId }),
         queryFn: getProtocols,
-        //getOptionLabel: (l) => l.name,
-        getOptionLabel: (l) => l.protocol_design,
+        getOptionLabel: (l) => l.generation_type,
         getOptionValue: (l) => l.id,
         placeholder: 'Select a protocol...',
         searchPlaceholder: 'Search protocol...',
         clsx: { trigger: 'rounded-full h-12', content: 'z-[99999]' },
-        //searchable: true,
-        //searchField: 'search',
+        searchable: true,
+        searchField: 'search',
         tooltip: DataTooltip,
       }),
     [virtualLabId, projectId, DataTooltip]
