@@ -41,8 +41,8 @@ function MessageChild({
   debug: boolean;
 }): React.ReactNode {
   const { setPanelWidth } = usePanelWidth();
-  const deferredContent = React.useDeferredValue(value.content);
-  const isContentPending = value.content !== deferredContent;
+  const deferredParts = React.useDeferredValue(value.parts);
+  const isContentPending = value.parts !== deferredParts;
 
   switch (value.role) {
     case 'user':
@@ -58,28 +58,26 @@ function MessageChild({
       );
     case 'assistant': {
       return (
-        <>
-          {value.parts.map((part, index) => {
+        <div
+          className={styles.assistant}
+          style={{ opacity: isContentPending ? 0.8 : 1, transition: 'opacity 0.2s' }}
+        >
+          {deferredParts.map((part, index) => {
             if (part.type === 'text' && part.text !== '') {
-              const deferredContent = React.useDeferredValue(part.text);
               return (
-                <div
+                <GithubFlavorMarkdown
                   key={index}
-                  style={{ opacity: isContentPending ? 0.8 : 1, transition: 'opacity 0.2s' }}
+                  className={styles.markdown}
+                  onLinkClicked={(external) => {
+                    if (!external) setPanelWidth(MINIMAL_PANEL_SIZE);
+                  }}
                 >
-                  <GithubFlavorMarkdown
-                    className={styles.markdown}
-                    onLinkClicked={(external) => {
-                      if (!external) setPanelWidth(MINIMAL_PANEL_SIZE);
-                    }}
-                  >
-                    {deferredContent}
-                  </GithubFlavorMarkdown>
-                </div>
+                  {part.text}
+                </GithubFlavorMarkdown>
               );
             }
             if (part.type === 'tool-invocation') {
-              return <ToolsProgress part={part} />;
+              return <ToolsProgress key={index} part={part} />;
             }
             return null;
           })}
@@ -102,7 +100,7 @@ function MessageChild({
               Debug...
             </button>
           )}
-        </>
+        </div>
       );
     }
     default:
