@@ -23,6 +23,30 @@ export type ActivityType = {
   type: 'simulation_execution' | 'simulation_generation';
 };
 
+export type CellMorphologyProtocolDesign = {
+  type: 'electron_microscopy' | 'cell_patch' | 'fluorophore' | 'topological_synthesis';
+};
+
+export type CellMorphologyGenerationType = {
+  type:
+    | 'digital_reconstruction'
+    | 'modified_reconstruction'
+    | 'computationally_synthesized'
+    | 'placeholder';
+};
+
+export type SlicingDirectionType = {
+  type: 'coronal' | 'sagittal' | 'horizontal' | 'custom';
+};
+
+export type RepairPipelineType = {
+  type: 'raw' | 'curated' | 'unraveled' | 'repaired';
+};
+
+export type ModifiedMorphologyMethodType = {
+  type: 'cloned' | 'mix_and_match' | 'mousified' | 'ratified';
+};
+
 export type EntityCoreOwnership = {
   created_by: IPerson | null;
   updated_by: IPerson | null;

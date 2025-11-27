@@ -25,6 +25,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 import { Subject } from '@/ui/segments/contribute/cell-morphology/subject';
 import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 import { Setup } from '@/ui/segments/contribute/cell-morphology/setup';
+import { Protocol } from '@/ui/segments/contribute/cell-morphology/protocol';
 import {
   SubmitButton,
   SubmitEntityProgress,
@@ -75,6 +76,7 @@ export function FixModalCloseBug({
 const STEPS = {
   assets: 'assets',
   setup: 'setup',
+  protocol: 'protocol',
   contribution: 'contribution',
   subject: 'subject',
   license: 'license',
@@ -112,6 +114,9 @@ function UploadCellMorphology({ brainRegionId, sessionId }: Props) {
   const parseLicense = CellMorphologySchema.pick({ license_id: true }).safeParse(allValues);
   const parseAssets = CellMorphologySchema.pick({ assets: true }).safeParse(allValues);
   const parseSetup = CellMorphologySchema.pick({ setup: true }).safeParse(allValues);
+  const parseProtocol = CellMorphologySchema.pick({ cell_morphology_protocol_id: true }).safeParse(
+    allValues
+  );
 
   const contributionStatus = getValidationStatus(parseContribution, 'contribution', dirtyFields);
   const licenseStatus = getValidationStatus(parseLicense, 'license_id', dirtyFields);
@@ -119,6 +124,7 @@ function UploadCellMorphology({ brainRegionId, sessionId }: Props) {
   const subjectStatus = getValidationStatus(parseSubject, 'subject_id', dirtyFields);
   const assetsStatus = getValidationStatus(parseAssets, 'assets', dirtyFields);
   const setupStatus = getValidationStatus(parseSetup, 'setup', dirtyFields);
+  const protocolStatus = getValidationStatus(parseProtocol, 'protocol', dirtyFields);
 
   const steps = useMemo(
     () => [
@@ -153,6 +159,22 @@ function UploadCellMorphology({ brainRegionId, sessionId }: Props) {
         ),
         children: <Setup />,
         icon: setupStatus === 'valid' && <CheckCircleFilled className="text-teal-500" />,
+      },
+      {
+        key: 'protocol',
+        label: (
+          <div
+            className={cn('font-light', {
+              'text-error': protocolStatus === 'invalid',
+              'text-primary-8 font-bold': protocolStatus === 'valid',
+              'text-primary-6': protocolStatus !== 'invalid' && activeStep === STEPS.protocol,
+            })}
+          >
+            Protocol
+          </div>
+        ),
+        children: <Protocol />,
+        icon: protocolStatus === 'valid' && <CheckCircleFilled className="text-teal-500" />,
       },
       {
         key: 'contribution',
@@ -250,6 +272,7 @@ function UploadCellMorphology({ brainRegionId, sessionId }: Props) {
       activeStep,
       assetsStatus,
       setupStatus,
+      protocolStatus,
       contributionStatus,
       subjectStatus,
       licenseStatus,

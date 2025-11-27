@@ -82,6 +82,10 @@ const cellMorphologySchema = z.object({
     .string({ message: 'Brain region is required' })
     .uuid()
     .nonempty({ message: 'Brain region is required' }),
+  cell_morphology_protocol_id: z
+    .string({ message: 'Cell morphology protocol ID is required' })
+    .uuid()
+    .nonempty({ message: 'Cell morphology protocol ID is required' }),
   subject_id: z
     .string({ message: 'Subject is required' })
     .uuid()

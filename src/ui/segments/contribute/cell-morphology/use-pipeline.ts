@@ -58,6 +58,7 @@ export const usePipeline = ({ sessionId }: { sessionId: string }) => {
           name: values.setup.name,
           description: values.setup.description,
           brain_region_id: values.setup.brain_region_id,
+          cell_morphology_protocol_id: values.cell_morphology_protocol_id,
           subject_id: values.subject_id,
           license_id: values.license_id,
           experiment_date: values.setup.experiment_date as string,

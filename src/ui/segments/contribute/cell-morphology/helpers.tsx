@@ -121,6 +121,10 @@ export const CellMorphologySchema = z.object({
         }
       ),
   }),
+  cell_morphology_protocol_id: z
+    .string({ message: 'Protocol is required' })
+    .uuid()
+    .nonempty({ message: 'Protocol is required' }),
   // subject: SubjectCreateSchema,
   subject_id: z
     .string({ message: 'Subject is required' })
