@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "APP_VERSION=$(git describe --tags --always --dirty) next dev --turbopack",
+    "dev": "APP_VERSION=$(make version) next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "npx eslint src && npx tsc --noEmit",

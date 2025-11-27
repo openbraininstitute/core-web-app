@@ -1,11 +1,11 @@
 services:
-  web:
+  app:
+    image: "${IMAGE_NAME}:${IMAGE_TAG}"
     container_name: core-web-app
     build:
-      context: .
       dockerfile: Dockerfile
       args:
-        APP_VERSION: ${APP_VERSION:-latest}
+        - APP_VERSION
     develop:
       watch:
         - action: rebuild
@@ -13,7 +13,7 @@ services:
         - action: rebuild
           path: ./package.json
     ports:
-      - '3000:8000'
+      - "127.0.0.1:3000:8000"
     env_file:
       - .env
       - .env.development
