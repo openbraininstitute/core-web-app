@@ -59,19 +59,30 @@ function MessageChild({
     case 'assistant': {
       return (
         <>
-          <ToolsProgress message={value} />
-          {deferredContent.trim().length > 0 && (
-            <div style={{ opacity: isContentPending ? 0.8 : 1, transition: 'opacity 0.2s' }}>
-              <GithubFlavorMarkdown
-                className={styles.markdown}
-                onLinkClicked={(external) => {
-                  if (!external) setPanelWidth(MINIMAL_PANEL_SIZE);
-                }}
-              >
-                {deferredContent}
-              </GithubFlavorMarkdown>
-            </div>
-          )}
+          {value.parts.map((part, index) => {
+            if (part.type === 'text' && part.text !== '') {
+              const deferredContent = React.useDeferredValue(part.text);
+              return (
+                <div
+                  key={index}
+                  style={{ opacity: isContentPending ? 0.8 : 1, transition: 'opacity 0.2s' }}
+                >
+                  <GithubFlavorMarkdown
+                    className={styles.markdown}
+                    onLinkClicked={(external) => {
+                      if (!external) setPanelWidth(MINIMAL_PANEL_SIZE);
+                    }}
+                  >
+                    {deferredContent}
+                  </GithubFlavorMarkdown>
+                </div>
+              );
+            }
+            if (part.type === 'tool-invocation') {
+              return <ToolsProgress part={part} />;
+            }
+            return null;
+          })}
           {!hideTools && (
             <>
               <ToolsComponents message={value} />
