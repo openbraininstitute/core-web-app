@@ -13,24 +13,22 @@ import styles from './tool-thumbnail-generation-morphology-getone.module.css';
 
 export interface ToolThumbnailGenerationProps {
   className?: string;
-  results: ToolResult[];
+  result: ToolResult | null;
 }
 
 export default function ToolThumbnailGeneration({
   className,
-  results,
+  result,
 }: ToolThumbnailGenerationProps) {
+  if (!result) return null;
   return (
     <>
-      {results.map(
-        (result) =>
-          typeof result.storage_id === 'string' && (
-            <CustomThumbnail
-              key={result.storage_id}
-              className={classNames(className, styles.toolThumbnailGenerationMorphologyGetone)}
-              storage_id={result.storage_id}
-            />
-          )
+      {typeof result.storage_id === 'string' && (
+        <CustomThumbnail
+          key={result.storage_id}
+          className={classNames(className, styles.toolThumbnailGenerationMorphologyGetone)}
+          storage_id={result.storage_id}
+        />
       )}
     </>
   );

@@ -1,4 +1,4 @@
-import { UIMessage } from '@ai-sdk/ui-utils';
+import { ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import { logError } from '@/util/logger';
 
 interface ToolResult {
@@ -6,27 +6,24 @@ interface ToolResult {
   output: unknown;
 }
 
-export function extractTool(message: UIMessage, toolName: string): ToolResult[] {
-  const results: ToolResult[] = [];
-  for (const part of message.parts) {
-    if (part.type !== 'tool-invocation') continue;
-    if (part.toolInvocation.toolName !== toolName) continue;
-    if (part.toolInvocation.state !== 'result') continue;
+export function extractTool(part: ToolInvocationUIPart, toolName: string): ToolResult | null {
+  if (part.type !== 'tool-invocation') return null;
+  if (part.toolInvocation.toolName !== toolName) return null;
+  if (part.toolInvocation.state !== 'result') return null;
 
-    const invocation = part.toolInvocation;
-    try {
-      results.push({
-        input: invocation.args,
-        output: JSON.parse(invocation.result),
-      });
-    } catch {
-      logError(
-        `We expected the result for tool "${toolName}" to be JSON parsable:`,
-        invocation.result
-      );
-    }
+  const invocation = part.toolInvocation;
+  try {
+    return {
+      input: invocation.args,
+      output: JSON.parse(invocation.result),
+    };
+  } catch {
+    logError(
+      `We expected the result for tool "${toolName}" to be JSON parsable:`,
+      invocation.result
+    );
+    return null;
   }
-  return results;
 }
 
 export function uniquify<T, Q>(arr: T[], getId: (item: T) => Q): T[] {

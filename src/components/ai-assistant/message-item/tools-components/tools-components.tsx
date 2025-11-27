@@ -1,5 +1,5 @@
 import React from 'react';
-import { UIMessage } from '@ai-sdk/ui-utils';
+import { ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 
 import ToolPlotGenerator from './tools/tool-plot-generator';
 import ToolThumbnailGeneration from './tools/tool-thumbnail-generation-morphology-getone';
@@ -11,18 +11,18 @@ import styles from './tools-components.module.css';
 
 export interface ToolsComponentsProps {
   className?: string;
-  message: UIMessage;
+  part: ToolInvocationUIPart;
 }
 
-export default function ToolsComponents({ className, message }: ToolsComponentsProps) {
+export default function ToolsComponents({ className, part }: ToolsComponentsProps) {
   return (
     <div className={classNames(className, styles.toolsComponents)}>
       <ToolPlotGenerator
-        results={extractToolsResults(message, ['run-python', 'plot-generator'], isToolResult)}
+        result={extractToolResults(part, ['run-python', 'plot-generator'], isToolResult)}
       />
       <ToolThumbnailGeneration
-        results={extractToolsResults(
-          message,
+        result={extractToolResults(
+          part,
           [
             'thumbnail-generation-morphology-getone',
             'thumbnail-generation-electricalcellrecording-getone',
@@ -34,23 +34,21 @@ export default function ToolsComponents({ className, message }: ToolsComponentsP
   );
 }
 
-function extractToolsResults<T>(
-  message: UIMessage,
+function extractToolResults<T>(
+  part: ToolInvocationUIPart,
   toolsIds: string[],
   typeGuard: (data: unknown) => data is T
-): T[] {
-  return message.parts
-    .filter((part) => part.type === 'tool-invocation')
-    .map((part) => part.toolInvocation)
-    .filter((invocation) => invocation.state === 'result' && toolsIds.includes(invocation.toolName))
-    .map((invocation) => {
-      try {
-        if (invocation.state !== 'result') return null;
+): T | null {
+  const invocation = part.toolInvocation;
 
-        return JSON.parse(invocation.result);
-      } catch {
-        return null;
-      }
-    })
-    .filter(typeGuard) as T[];
+  if (invocation.state !== 'result' || !toolsIds.includes(invocation.toolName)) {
+    return null;
+  }
+
+  try {
+    const result = JSON.parse(invocation.result);
+    return typeGuard(result) ? result : null;
+  } catch {
+    return null;
+  }
 }

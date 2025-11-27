@@ -77,18 +77,22 @@ function MessageChild({
               );
             }
             if (part.type === 'tool-invocation') {
-              return <ToolsProgress key={index} part={part} />;
+              return (
+                <div>
+                  <ToolsProgress key={index} part={part} />
+                  {!hideTools && (
+                    <>
+                      <ToolsComponents part={part} />
+                      {/* This tool component has been disabled yet */}
+                      {/* <ToolArticles message={value} /> */}
+                      <ToolMorphologies part={part} />
+                    </>
+                  )}
+                </div>
+              );
             }
             return null;
           })}
-          {!hideTools && (
-            <>
-              <ToolsComponents message={value} />
-              {/* This tool component has been disabled yet */}
-              {/* <ToolArticles message={value} /> */}
-              <ToolMorphologies message={value} />
-            </>
-          )}
           {debug && (
             <button
               type="button"

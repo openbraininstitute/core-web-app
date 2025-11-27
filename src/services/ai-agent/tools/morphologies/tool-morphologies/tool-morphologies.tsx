@@ -1,6 +1,6 @@
 /* eslint-disable react/no-array-index-key */
 import React from 'react';
-import { UIMessage } from '@ai-sdk/ui-utils';
+import { ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 
 import Expand from '../../expand';
 import { useMorphologies } from './hooks';
@@ -8,11 +8,11 @@ import MorphologyCard from './morphology-card';
 
 interface ToolArticlesProps {
   className?: string;
-  message: UIMessage;
+  part: ToolInvocationUIPart;
 }
 
-export default function ToolMorphologies({ className, message }: ToolArticlesProps) {
-  const morphologies = useMorphologies(message);
+export default function ToolMorphologies({ className, part }: ToolArticlesProps) {
+  const morphologies = useMorphologies(part);
 
   if (morphologies.length === 0) return null;
 
