@@ -16,7 +16,6 @@ import styles from './message-item.module.css';
 interface MessageItemProps {
   className?: string;
   value: UIMessage;
-  hideTools: boolean;
 }
 
 export const MessageItem = React.memo(RawMessageItem);
@@ -57,7 +56,7 @@ function MessageChild({ value, debug }: { value: UIMessage; debug: boolean }): R
             if (part.type === 'text' && part.text !== '') {
               return (
                 <GithubFlavorMarkdown
-                  key={index}
+                  key={`text-${index}-${part.text.slice(0, 50)}`}
                   className={styles.markdown}
                   onLinkClicked={(external) => {
                     if (!external) setPanelWidth(MINIMAL_PANEL_SIZE);
@@ -68,15 +67,16 @@ function MessageChild({ value, debug }: { value: UIMessage; debug: boolean }): R
               );
             }
             if (part.type === 'tool-invocation') {
+              const {toolCallId} = part.toolInvocation;
               return (
-                <>
-                  <ToolsProgress key={index} part={part} />
+                <div key={`tool-${toolCallId}`}>
+                  <ToolsProgress part={part} />
                   <>
                     <ToolsComponents part={part} />
                     {/* This tool component has been disabled yet */}
                     {/* <ToolArticles message={value} /> */}
                   </>
-                </>
+                </div>
               );
             }
             return null;
