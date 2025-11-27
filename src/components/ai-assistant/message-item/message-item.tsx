@@ -3,7 +3,6 @@
 import React from 'react';
 import { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
 
-import ToolMorphologies from '../../../services/ai-agent/tools/morphologies/tool-morphologies';
 import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
 import ToolsProgress from './tools-progress';
 import ToolsComponents from './tools-components';
@@ -85,7 +84,6 @@ function MessageChild({
                       <ToolsComponents part={part} />
                       {/* This tool component has been disabled yet */}
                       {/* <ToolArticles message={value} /> */}
-                      <ToolMorphologies part={part} />
                     </>
                   )}
                 </div>
