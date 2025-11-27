@@ -27,6 +27,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
   const [mounted, setMounted] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [errors, setErrors] = useState<{ type?: string; feedback?: string }>({});
 
   const { virtualLabId, projectId } = useWorkspace();
 
@@ -202,6 +203,22 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate required fields
+    const newErrors: { type?: string; feedback?: string } = {};
+    if (!type.trim()) {
+      newErrors.type = 'This field is mandatory';
+    }
+    if (!feedback.trim()) {
+      newErrors.feedback = 'This field is mandatory';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
     setLoading(true);
     setMessage('');
 
@@ -340,18 +357,33 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
       >
         <div className="grid grid-cols-2 gap-4">
           <label htmlFor="type" className="flex flex-col gap-2">
-            <span className="text-primary-9 text-base font-normal">Feedback type</span>
+            <span
+              className={cn(
+                'text-base font-normal',
+                errors.type ? 'text-red-500' : 'text-primary-9'
+              )}
+            >
+              Feedback type
+              <span className="ml-1 text-red-500">*</span>
+            </span>
             <div className="relative">
               <select
                 id="type"
                 value={type}
-                onChange={(e) => setType(e.target.value)}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  setType(newValue);
+                  if (errors.type && newValue.trim()) {
+                    setErrors((prev) => ({ ...prev, type: undefined }));
+                  }
+                }}
                 required
                 className={cn(
                   'border-neutral-2 text-primary-9 w-full rounded-lg border text-lg font-semibold',
                   'focus:border-primary-4 focus:ring-primary-4/20 rounded-full bg-white focus:ring-2 focus:outline-none',
                   'appearance-none py-3 pr-12 pl-6',
-                  !type && 'text-neutral-5 text-base font-normal'
+                  !type && 'text-neutral-5 text-base font-normal',
+                  errors.type && 'border-red-500'
                 )}
               >
                 <option value="" disabled className="text-neutral-5 text-base font-normal">
@@ -365,6 +397,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
               </select>
               <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2" />
             </div>
+            {errors.type && <p className="text-base font-normal text-red-500">{errors.type}</p>}
           </label>
 
           <label htmlFor="section" className="flex flex-col gap-2">
@@ -399,11 +432,25 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
         </div>
 
         <label htmlFor="feedback" className="flex flex-col gap-2">
-          <span className="text-primary-9 text-base font-normal">Your feedback</span>
+          <span
+            className={cn(
+              'text-base font-normal',
+              errors.feedback ? 'text-red-500' : 'text-primary-9'
+            )}
+          >
+            Your feedback
+            <span className="ml-1 text-red-500">*</span>
+          </span>
           <textarea
             id="feedback"
             value={feedback}
-            onChange={(e) => setFeedback(e.target.value)}
+            onChange={(e) => {
+              const newValue = e.target.value;
+              setFeedback(newValue);
+              if (errors.feedback && newValue.trim()) {
+                setErrors((prev) => ({ ...prev, feedback: undefined }));
+              }
+            }}
             placeholder="Enter your feedback here..."
             required
             rows={6}
@@ -411,9 +458,13 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
               'border-neutral-2 text-primary-8 rounded-lg border px-3 py-2 text-lg',
               'focus:border-primary-4 focus:ring-primary-4/20 focus:ring-2 focus:outline-none',
               'resize-none',
-              'placeholder:text-neutral-5 placeholder:text-base placeholder:font-normal'
+              'placeholder:text-neutral-5 placeholder:text-base placeholder:font-normal',
+              errors.feedback && 'border-red-500'
             )}
           />
+          {errors.feedback && (
+            <p className="text-base font-normal text-red-500">{errors.feedback}</p>
+          )}
         </label>
 
         {type === 'bugs' && (
@@ -511,7 +562,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
           <Button
             type="submit"
             variant="default"
-            disabled={loading || !feedback.trim()}
+            disabled={loading}
             className="bg-primary-9 rounded-full px-20 py-8 text-xl font-semibold text-white"
           >
             {loading ? 'Sending...' : 'Send Feedback'}
