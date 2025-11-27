@@ -357,7 +357,12 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
       >
         <div className="grid grid-cols-2 gap-4">
           <label htmlFor="type" className="flex flex-col gap-2">
-            <span className={cn("text-base font-normal", errors.type ? "text-red-500" : "text-primary-9")}>
+            <span
+              className={cn(
+                'text-base font-normal',
+                errors.type ? 'text-red-500' : 'text-primary-9'
+              )}
+            >
               Feedback type
               <span className="ml-1 text-red-500">*</span>
             </span>
@@ -392,9 +397,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
               </select>
               <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2" />
             </div>
-            {errors.type && (
-              <p className="text-base font-normal text-red-500">{errors.type}</p>
-            )}
+            {errors.type && <p className="text-base font-normal text-red-500">{errors.type}</p>}
           </label>
 
           <label htmlFor="section" className="flex flex-col gap-2">
@@ -429,7 +432,12 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
         </div>
 
         <label htmlFor="feedback" className="flex flex-col gap-2">
-          <span className={cn("text-base font-normal", errors.feedback ? "text-red-500" : "text-primary-9")}>
+          <span
+            className={cn(
+              'text-base font-normal',
+              errors.feedback ? 'text-red-500' : 'text-primary-9'
+            )}
+          >
             Your feedback
             <span className="ml-1 text-red-500">*</span>
           </span>
