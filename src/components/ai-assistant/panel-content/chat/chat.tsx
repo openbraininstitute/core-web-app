@@ -74,7 +74,7 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
         onScrollEnd={handleScroll}
       >
         {messages.length === 0 && <Welcome />}
-        {messages.map((item, messageIndex) => (
+        {messages.map((item) => (
           <MessageItem key={item.id} value={item} />
         ))}
 

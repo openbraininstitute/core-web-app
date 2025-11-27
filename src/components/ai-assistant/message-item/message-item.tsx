@@ -56,7 +56,6 @@ function MessageChild({ value, debug }: { value: UIMessage; debug: boolean }): R
             if (part.type === 'text' && part.text !== '') {
               return (
                 <GithubFlavorMarkdown
-                  key={`text-${index}-${part.text.slice(0, 50)}`}
                   className={styles.markdown}
                   onLinkClicked={(external) => {
                     if (!external) setPanelWidth(MINIMAL_PANEL_SIZE);
