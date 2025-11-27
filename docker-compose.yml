@@ -2,6 +2,7 @@ services:
   app:
     image: "${IMAGE_NAME}:${IMAGE_TAG}"
     container_name: core-web-app
+    pull_policy: build
     build:
       dockerfile: Dockerfile
       args:
