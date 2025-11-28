@@ -3,6 +3,7 @@
 import React from 'react';
 import { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
 
+import { isEqual } from 'es-toolkit/predicate';
 import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
 import ToolsProgress from './tools-progress';
 import ToolsComponents from './tools-components';
@@ -10,7 +11,6 @@ import ToolsComponents from './tools-components';
 import { classNames } from '@/util/utils';
 import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
 import { isString } from '@/util/type-guards';
-import { isEqual } from 'es-toolkit/predicate';
 
 import styles from './message-item.module.css';
 
