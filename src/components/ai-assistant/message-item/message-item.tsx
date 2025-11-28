@@ -10,6 +10,7 @@ import ToolsComponents from './tools-components';
 import { classNames } from '@/util/utils';
 import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
 import { isString } from '@/util/type-guards';
+import { isEqual } from 'es-toolkit/predicate';
 
 import styles from './message-item.module.css';
 
@@ -32,7 +33,7 @@ function RawMessageItem({ className, value }: MessageItemProps) {
 function MessageChild({ value, debug }: { value: UIMessage; debug: boolean }): React.ReactNode {
   const { setPanelWidth } = usePanelWidth();
   const deferredParts = React.useDeferredValue(value.parts);
-  const isContentPending = value.parts !== deferredParts;
+  const isContentPending = !isEqual(value.parts, deferredParts);
 
   switch (value.role) {
     case 'user':
