@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 import PlaceholderImage from '@/ui/segments/help/tutorials/thumbnail_placeholder.webp';
@@ -10,15 +10,26 @@ import type { TutorialProps } from '@/components/documentation/type';
 
 export default function TutorialCard({ content }: { content: TutorialProps }) {
   const [mouseHover, setMouseHover] = useState<boolean>(false);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const handleClick = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tutorial', content.slug);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   return (
-    <Link
-      href={`/app/documentation/tutorials/${content.slug}`}
-      className="shadow-skm-l hover:bg-neutral-1 flex w-full flex-col overflow-hidden rounded-lg bg-white p-6 transition-colors duration-500 ease-in-out"
+    <button
+      type="button"
+      onClick={handleClick}
+      className="shadow-skm-l hover:bg-neutral-1 flex w-full flex-col overflow-hidden rounded-lg bg-white p-6 text-left transition-colors duration-500 ease-in-out"
       onMouseOver={() => setMouseHover(true)}
       onFocus={() => setMouseHover(true)}
       onMouseOut={() => setMouseHover(false)}
       onBlur={() => setMouseHover(false)}
+      aria-label={`View ${content.title || 'tutorial'}`}
     >
       <div className="relative h-44 w-full overflow-hidden rounded-lg shadow-lg">
         <Image
@@ -39,6 +50,6 @@ export default function TutorialCard({ content }: { content: TutorialProps }) {
         </p>
       </div>
       <div />
-    </Link>
+    </button>
   );
 }
