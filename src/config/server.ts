@@ -1,4 +1,4 @@
-import { serverSchema, type ServerConfig } from './schema';
+import { serverSchema, type ServerConfig } from '@/config/schema';
 
 let cachedConfig: ServerConfig | null = null;
 const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build';

@@ -1,7 +1,8 @@
 'use client';
 
 import { createContext, useContext, type ReactNode } from 'react';
-import type { ClientConfig } from './schema';
+
+import type { ClientConfig } from '@/config/schema';
 
 const ConfigContext = createContext<ClientConfig | null>(null);
 
