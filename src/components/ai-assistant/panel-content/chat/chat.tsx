@@ -23,47 +23,59 @@ export interface ChatProps {
 }
 
 export default function Chat({ className, threadId, onClearChat }: ChatProps) {
-  const refScrollLocked = React.useRef(true);
-  const refScrollTriggered = React.useRef(true);
+  const [isAutoScrollEnabled, setIsAutoScrollEnabled] = React.useState(true);
   const { messages, clear, status, append, error, stop, rateLimitRemaining } =
     useServiceAiAgentChat(threadId ?? '');
   const [suggestions] = useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', 3);
   const refChatBottom = React.useRef<HTMLDivElement | null>(null);
   const refContainer = React.useRef<HTMLDivElement | null>(null);
-  const scroll = () => {
-    if (!refScrollLocked.current) return;
 
-    const div = refContainer.current;
-    if (!div) return;
+  React.useEffect(() => {
+    if (isAutoScrollEnabled) {
+      refChatBottom.current?.scrollIntoView({ behavior: 'instant' });
+    }
+  }, [messages, error, status, isAutoScrollEnabled]);
 
-    refScrollTriggered.current = true;
-    const scrollTop = Math.max(0, div.scrollHeight - div.clientHeight);
-    div.scrollTo({
-      top: scrollTop,
-      behavior: 'smooth',
-    });
-  };
-  React.useEffect(scroll, [messages, error, status]);
   React.useEffect(() => {
     if (status !== 'ready' || suggestions.length === 0) return;
-
-    scroll();
-    globalThis.setTimeout(scroll, 2000);
+    refChatBottom.current?.scrollIntoView({ behavior: 'instant' });
+    globalThis.setTimeout(
+      () => refChatBottom.current?.scrollIntoView({ behavior: 'instant' }),
+      2000
+    );
   }, [suggestions, status]);
+
+  // Used when plots appear in chat
+  React.useEffect(() => {
+    if (status === 'streaming' && isAutoScrollEnabled) {
+      const interval = setInterval(() => {
+        refChatBottom.current?.scrollIntoView({ behavior: 'instant' });
+      }, 100);
+      return () => clearInterval(interval);
+    }
+  }, [status, isAutoScrollEnabled]);
+
   const handleClearChat = () => {
     onClearChat();
     clear();
   };
   const handlePrompt = (content: string) => {
-    refScrollLocked.current = true;
+    setIsAutoScrollEnabled(true);
     append({
       role: 'user',
       content,
     });
   };
-  const handleScroll = () => {
-    if (!refScrollTriggered.current) refScrollLocked.current = false;
-    refScrollTriggered.current = false;
+  const handleWheel = (event: React.WheelEvent) => {
+    if (event.deltaY < 0) {
+      setIsAutoScrollEnabled(false);
+    } else {
+      const container = refContainer.current;
+      if (!container) return;
+      const isAtBottom =
+        container.scrollHeight - container.scrollTop <= container.clientHeight + 200;
+      setIsAutoScrollEnabled(isAtBottom);
+    }
   };
 
   return (
@@ -71,7 +83,7 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
       <div
         className={classNames(styles.articles, className)}
         ref={refContainer}
-        onScrollEnd={handleScroll}
+        onWheel={handleWheel}
       >
         {messages.length === 0 && <Welcome />}
         {messages.map((item) => (
