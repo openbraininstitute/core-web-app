@@ -36,7 +36,7 @@ export function MyComponent() {
 ### In Server Components
 
 ```typescript
-import { serverConfig } from '@/config';
+import { serverConfig } from '@/config/server';
 
 export default function ServerComponent() {
   // Access both server and client config
@@ -50,7 +50,7 @@ export default function ServerComponent() {
 ### In API Routes
 
 ```typescript
-import { serverConfig } from '@/config';
+import { serverConfig } from '@/config/server';
 
 export async function GET() {
   const response = await fetch(serverConfig.VIRTUAL_LAB_API_URL, {
@@ -76,10 +76,12 @@ export function createApiClient() {
 }
 ```
 
+Note: `config` is an alias for `clientConfig` and only contains public properties.
+
 ### In Middleware
 
 ```typescript
-import { serverConfig } from '@/config';
+import { serverConfig } from '@/config/server';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -102,10 +104,13 @@ Configuration is defined once in `configFields` object with:
 
 ```typescript
 const configFields = {
-  KEYCLOAK_CLIENT_SECRET: { schema: z.string().min(5), public: false },
-  DEPLOYMENT_ENV: { schema: z.enum([...]), public: true },
+  KEYCLOAK_CLIENT_SECRET: { schema: z.string().nonempty(), public: false },
+  DEPLOYMENT_ENV: {
+    schema: z.enum(['local', 'preview', 'development', 'staging', 'production']),
+    public: true,
+  },
   // ...
-}
+};
 ```
 
 ### API URL Fallback
@@ -114,12 +119,19 @@ Platform API URLs can fallback to `API_ORIGIN` if not explicitly set:
 
 ```typescript
 const platformApiUrlFields = {
+  AI_AGENT_URL: '/agent',
+  AUTH_MANAGER_URL: '/auth-manager/v1',
+  CELL_API_URL: '/circuit',
+  ENTITY_CORE_URL: '/entitycore',
+  NOTEBOOK_API_URL: '/notebook_service',
+  OBI_ONE_URL: '/obi-one',
+  SMALL_SCALE_SIMULATOR_URL: '/small-scale-simulator',
+  THUMBNAIL_API_URL: '/thumbnail-generation',
   VIRTUAL_LAB_API_URL: '/virtual-lab-manager',
-  // ...
 };
 ```
 
-If `VIRTUAL_LAB_API_URL` is not provided, it defaults to `${API_ORIGIN}/api/virtual-lab-manager`.
+For example, if `VIRTUAL_LAB_API_URL` is not provided, it defaults to `${API_ORIGIN}/api/virtual-lab-manager`.
 
 ### Server-Side
 
@@ -191,25 +203,34 @@ The property will automatically be:
 
 ### Server-Only Properties
 
-Properties with `public: false` are only available via `serverConfig`:
+Properties with `public: false` are only available via `serverConfig` (imported from `@/config/server`):
 
 - `KEYCLOAK_ISSUER`, `KEYCLOAK_CLIENT_ID`, `KEYCLOAK_CLIENT_SECRET`
 - `NEXTAUTH_SECRET`
-- `MAILCHIMP_API_KEY`, `MAILCHIMP_AUDIENCE_ID`, `MAILCHIMP_API_SERVER`
-- `GITHUB_TOKEN`
+- `MAILCHIMP_API_KEY`, `MAILCHIMP_AUDIENCE_ID`, `MAILCHIMP_API_SERVER` (optional)
+- `GITHUB_TOKEN` (optional)
 
 ### Client & Server Properties
 
 Properties with `public: true` are available in both contexts:
 
 - `APP_VERSION`, `DEPLOYMENT_ENV`
-- `API_ORIGIN`, `ROOT_ROUTE`, `CDN_URL`
-- `SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PRJ`
-- `VIRTUAL_LAB_API_URL`, `ENTITY_CORE_URL`, and other API URLs
+- `API_ORIGIN`, `ROOT_ROUTE`, `CDN_URL` (optional)
+- `SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PRJ` (optional)
+- Platform API URLs (optional, fallback to `API_ORIGIN`):
+  - `AI_AGENT_URL`, `AUTH_MANAGER_URL`, `CELL_API_URL`
+  - `ENTITY_CORE_URL`, `NOTEBOOK_API_URL`, `OBI_ONE_URL`
+  - `SMALL_SCALE_SIMULATOR_URL`, `THUMBNAIL_API_URL`, `VIRTUAL_LAB_API_URL`
 - `STRIPE_PUBLISHABLE_KEY`
-- `MATOMO_CDN_URL`, `MATOMO_SITE_ID`, `MATOMO_URL`
+- `MATOMO_CDN_URL`, `MATOMO_SITE_ID`, `MATOMO_URL` (optional)
 - `SANITY_DATASET`
-- Entity core and brain region configuration
+- Entity core configuration:
+  - `ENTITY_CORE_PUBLIC_PROJECT_ID`, `ENTITY_CORE_PUBLIC_VIRTUAL_LAB_ID`
+- Brain region configuration:
+  - `BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE`
+  - `DEFAULT_BRAIN_ATLAS_ID`, `DEFAULT_BRAIN_REGION_HIERARCHY_ID`
+  - `DEFAULT_SELECTED_BRAIN_REGION_ID`, `LEGACY_DEFAULT_CIRCUIT_ID`
+  - `ROOT_BRAIN_REGION_ANNOTATION_VALUE`, `ROOT_BRAIN_REGION_ID`
 - `NOTEBOOK_REPO_URL`
 
 See `configFields` in `schema.ts` for complete list.
@@ -234,18 +255,7 @@ Configuration is validated at runtime when first accessed:
 const apiUrl = serverConfig.VIRTUAL_LAB_API_URL;
 ```
 
-Validation errors include detailed information about what's wrong:
-
-```
-Invalid server configuration: [
-  {
-    "code": "invalid_string",
-    "validation": "url",
-    "path": ["VIRTUAL_LAB_API_URL"],
-    "message": "Invalid url"
-  }
-]
-```
+Validation errors include detailed information about what's wrong.
 
 ### API URL Validation
 
@@ -263,24 +273,14 @@ API_ORIGIN=https://api.example.com
 // Error: Either VIRTUAL_LAB_API_URL or API_ORIGIN must be provided
 ```
 
+## Build-Time Behavior
+
+- During build time (`NEXT_PHASE=phase-production-build`), validation is skipped
+- Empty config object is returned to avoid validation errors
+- Runtime validation occurs on first access after deployment
+
 ## Performance
 
 - Configuration is validated once and cached
-- Subsequent calls return cached result
+- Subsequent calls return cached result via Proxy
 - No performance overhead after first access
-
-## Testing
-
-For testing, you can mock the config:
-
-```typescript
-import { useConfig } from '@/config';
-
-jest.mock('@/config', () => ({
-  useConfig: () => ({
-    VIRTUAL_LAB_API_URL: 'https://test.example.com',
-    DEPLOYMENT_ENV: 'local',
-    // ... other required properties
-  }),
-}));
-```
