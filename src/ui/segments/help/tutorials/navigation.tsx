@@ -17,11 +17,15 @@ export default function TutorialNavigation() {
   const searchParams = useSearchParams();
   const searchParamsObj = Object.fromEntries(searchParams.entries());
 
-  const activeTutorial = searchParams.get('tutorial');
+  let activeTutorial = searchParams.get('tutorial');
   const content =
     tutorials && !Array.isArray(tutorials) && 'tutorialOrder' in tutorials
       ? tutorials.tutorialOrder
       : [];
+
+  if (!activeTutorial && content.length > 0) {
+    activeTutorial = content[0].slug;
+  }
 
   return (
     <div className="no-scrollbar col-span-1 flex max-h-[82vh] w-full flex-col gap-y-4 overflow-y-scroll">

@@ -16,7 +16,17 @@ export default function TutorialCard({ content }: { content: TutorialProps }) {
 
   const handleClick = () => {
     const params = new URLSearchParams(searchParams.toString());
-    params.set('tutorial', content.slug);
+    const currentSection = params.get('section');
+
+    // If we're in overview section or no section, redirect to tutorials section with the tutorial
+    if (!currentSection || currentSection === 'overview') {
+      params.set('section', 'tutorials');
+      params.set('tutorial', content.slug);
+    } else {
+      // Otherwise, just update the tutorial param
+      params.set('tutorial', content.slug);
+    }
+
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 

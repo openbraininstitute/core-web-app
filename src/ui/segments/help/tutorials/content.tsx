@@ -1,7 +1,7 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
-import { useRef, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 
 import { useSanityForSingleTutorial } from '@/components/documentation/tutorials/fetch-single-tutorial';
 import SliderTimestamps from '@/components/documentation/tutorials/slider-timestamps';
@@ -13,10 +13,30 @@ import type { TutorialProps } from '@/components/documentation/type';
 
 export default function TutorialContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const tutorialSlug = searchParams.get('tutorial');
 
   const tutorials = useSanityContentForTutorialsList();
-  const singleTutorial = useSanityForSingleTutorial({ slug: tutorialSlug || '' });
+
+  const content =
+    tutorials && !Array.isArray(tutorials) && 'tutorialOrder' in tutorials
+      ? tutorials.tutorialOrder
+      : [];
+
+  const effectiveTutorialSlug = tutorialSlug || (content.length > 0 ? content[0].slug : '');
+
+  useEffect(() => {
+    if (!tutorialSlug && content.length > 0) {
+      const firstTutorial = content[0];
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('tutorial', firstTutorial.slug);
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tutorialSlug, content.length]);
+
+  const singleTutorial = useSanityForSingleTutorial({ slug: effectiveTutorialSlug });
 
   const videoRef = useRef<HTMLVideoElement>(null!);
   const [videoTime, setVideoTime] = useState<number>(0);
@@ -27,12 +47,7 @@ export default function TutorialContent() {
     }
   };
 
-  const content =
-    tutorials && !Array.isArray(tutorials) && 'tutorialOrder' in tutorials
-      ? tutorials.tutorialOrder
-      : [];
-
-  if (tutorialSlug && singleTutorial) {
+  if (effectiveTutorialSlug && singleTutorial) {
     return (
       <div className="text-primary-9 no-scrollbar col-span-3 flex max-h-[82vh] w-full flex-col items-start gap-y-4 overflow-y-scroll">
         <div className="relative flex w-full flex-col">
