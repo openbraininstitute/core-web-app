@@ -3,9 +3,9 @@ name: Lint, Format, Test, Build
 on:
   push:
     branches:
-      - "*"
-      - "!main"
-      - "!develop"
+      - '*'
+      - '!main'
+      - '!develop'
   pull_request:
     branches:
       - main
@@ -28,7 +28,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install
@@ -61,7 +61,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: "pnpm"
+          cache: 'pnpm'
 
       # Restore cached dependencies
       - name: Restore pnpm cache
@@ -94,7 +94,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: "pnpm"
+          cache: 'pnpm'
 
       # Restore cached dependencies
       - name: Restore pnpm cache
@@ -129,7 +129,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: "pnpm"
+          cache: 'pnpm'
 
       # Restore cached dependencies
       - name: Restore pnpm cache
