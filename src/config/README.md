@@ -93,6 +93,30 @@ export function middleware(request: NextRequest) {
 }
 ```
 
+## Important: Script Evaluation Timing
+
+**Configuration parameters cannot be accessed during script evaluation (import time).** They must only be accessed inside functions that execute at runtime.
+
+```typescript
+// WRONG: Accessing config during import/evaluation
+import { config } from '@/config';
+const apiUrl = config.VIRTUAL_LAB_API_URL;
+
+export function myFunction() {
+  return apiUrl;
+}
+
+// CORRECT: Accessing config inside function
+import { config } from '@/config';
+
+export function myFunction() {
+  const apiUrl = config.VIRTUAL_LAB_API_URL;
+  return apiUrl;
+}
+```
+
+This applies to both `config` (client) and `serverConfig` (server). Configuration values are only available after the module has fully loaded and the runtime environment is initialized.
+
 ## Architecture
 
 ### Schema Definition
