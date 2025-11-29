@@ -83,7 +83,7 @@ export function getOrderValue(
   return undefined;
 }
 
-export default function useExploreColumns<T>(
+export function useExploreColumns<T>(
   setSortState?: (sortState: SortState) => void,
   sortState?: SortState,
   initialColumns: ColumnProps<T>[] = [],
