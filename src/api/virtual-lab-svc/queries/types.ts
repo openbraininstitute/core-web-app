@@ -473,3 +473,28 @@ export type VlmGetProjectLibraryPerCategory = VlmResponse<{
 
 export type VlmRecentWorkspace = VlmResponse<RecentWorkspace>;
 export type VlmPromotionResponse = VlmResponse<RedemptionResult>;
+
+export const OnboardingFeature = {
+  WorkspaceData: 'workspace-data',
+  WorkspaceProject: 'workspace-project',
+  WorkspaceWorkflow: 'workspace-workflow',
+} as const;
+
+export type TOnboardingFeature = (typeof OnboardingFeature)[keyof typeof OnboardingFeature];
+
+export type OnboardingStatus = {
+  completed: boolean;
+  completed_at: string | null;
+  current_step: number | null;
+  dismissed: boolean;
+};
+
+export type OnboardingUpdateRequest = {
+  completed?: boolean | null;
+  current_step?: number | null;
+  dismissed?: boolean | null;
+};
+
+export type VlmOnboardingResponse = VlmResponse<{
+  [key: string]: OnboardingStatus;
+}>;
