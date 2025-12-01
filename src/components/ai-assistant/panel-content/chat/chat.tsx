@@ -27,7 +27,7 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
   const isStorageQueryFetching = useIsFetching({
     predicate: (query) => {
       const fullQueryKey = query.queryKey.at(0);
-      return fullQueryKey === "storage";
+      return fullQueryKey === 'storage';
     },
     fetchStatus: 'fetching',
   });
