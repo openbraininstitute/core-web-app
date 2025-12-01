@@ -42,14 +42,15 @@ import { ROOT_ROUTE } from '@/config';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TWorkspaceSection } from '@/constants';
-import type {
-  ISingleNeuronSynaptomeSimulation,
-  ISingleNeuronSimulation,
-  ISingleNeuronSynaptome,
-  EntityCoreObjectTypes,
-  IMEModel,
+import {
+  type ISingleNeuronSynaptomeSimulation,
+  type ISingleNeuronSimulation,
+  type ISingleNeuronSynaptome,
+  type EntityCoreObjectTypes,
+  type IMEModel,
+  EntityTypeDict,
 } from '@/api/entitycore/types';
 
 type Props = {
@@ -485,6 +486,14 @@ function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({
 }) {
   const { virtualLabId, projectId } = useWorkspace();
 
+  let detailUrl = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`;
+
+  if (
+    record.type === EntityTypeDict.Circuit &&
+    (record as ICircuit).scale === CircuitScaleDictionary.Single
+  ) {
+    detailUrl = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.MEModelWithSynapses)}/${record.id}`;
+  }
   return (
     <div className="sticky bottom-0 mt-auto flex items-center justify-center gap-2 self-end p-4">
       <Button
@@ -494,11 +503,7 @@ function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({
         variant="default"
         className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
       >
-        <Link
-          href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`}
-        >
-          View details
-        </Link>
+        <Link href={detailUrl}>View details</Link>
       </Button>
       <Button
         rounded

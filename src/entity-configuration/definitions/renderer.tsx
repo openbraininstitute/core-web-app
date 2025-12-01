@@ -1,8 +1,8 @@
 'use client';
 
 import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
-import { isEmpty, isNil, find, filter, reject } from 'es-toolkit/compat';
-import { JSX, ReactNode, useEffect, useState } from 'react';
+import { isEmpty, isNil, find, filter, reject, isString } from 'es-toolkit/compat';
+import { JSX, ReactNode, useEffect, useState, isValidElement } from 'react';
 import { Button, Empty, Modal } from 'antd';
 import { useParams } from 'next/navigation';
 
@@ -59,12 +59,20 @@ export const renderAsString = (value: any) => {
   return String(value);
 };
 
-export const renderArray = (array: string[]) => {
-  return array.map((item) => (
-    <div key={item} className="line-clamp-1 text-ellipsis" title={item}>
-      {item}
-    </div>
-  ));
+export const renderArray = (array: Array<string | JSX.Element | null>) => {
+  return filter(
+    array.map((item) => {
+      if (isString(item))
+        return (
+          <div key={item} className="line-clamp-1 text-ellipsis" title={item}>
+            {item}
+          </div>
+        );
+      if (isValidElement(item)) return item;
+      return null;
+    }),
+    (o) => !isNil(o)
+  );
 };
 
 export const renderDictionaryKeys = (
