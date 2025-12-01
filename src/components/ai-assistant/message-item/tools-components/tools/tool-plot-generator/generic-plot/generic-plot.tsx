@@ -49,7 +49,7 @@ export default function GenericPlot<T>({
   };
   return (
     // Display plot title outside of plotly for reactivity
-    <div className="relative h-full w-full">
+    <div className={classNames('h-full w-full', styles.plotContainer)}>
       {title && (
         <div
           className="px-4 py-2 text-center font-bold break-words hyphens-auto"
@@ -66,7 +66,7 @@ export default function GenericPlot<T>({
       )}
       <Plot
         className={classNames(className, styles.genericPlot)}
-        style={{}}
+        style={{ width: '100%' }}
         data={props.data}
         layout={modifiedLayout}
         frames={props?.frames}

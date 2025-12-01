@@ -24,7 +24,7 @@ export default function SingleTutorialContent() {
 
   if (!content) {
     return (
-      <div className="container mx-auto p-4 text-white">
+      <div className="text-primary-9 container mx-auto p-4">
         <h1 className="text-3xl font-bold">Tutorial Not Found</h1>
         <p>The tutorial with slug &quot;{slug}&quot; could not be found or is still loading.</p>
       </div>
@@ -33,7 +33,7 @@ export default function SingleTutorialContent() {
 
   return (
     <div className="relative flex w-full flex-col">
-      <header className="mb-4 w-full text-white">
+      <header className="text-primary-9 mb-4 w-full">
         <div className="text-base font-normal tracking-wider uppercase">Tutorial</div>
         <h1 className="text-3xl font-bold">{content.title}</h1>
       </header>
@@ -51,7 +51,7 @@ export default function SingleTutorialContent() {
             <track kind="captions" srcLang="en" label="English captions" />
           </video>
         ) : (
-          <p className="text-white">Video URL not available.</p>
+          <p className="text-primary-9">Video URL not available.</p>
         )}
       </div>
       {(content.steps?.length ?? 0) > 0 && (

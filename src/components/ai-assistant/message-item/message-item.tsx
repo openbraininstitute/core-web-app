@@ -3,7 +3,7 @@
 import React from 'react';
 import { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
 
-import ToolMorphologies from '../../../services/ai-agent/tools/morphologies/tool-morphologies';
+import { isEqual } from 'es-toolkit/predicate';
 import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
 import ToolsProgress from './tools-progress';
 import ToolsComponents from './tools-components';
@@ -17,39 +17,30 @@ import styles from './message-item.module.css';
 interface MessageItemProps {
   className?: string;
   value: UIMessage;
-  hideTools: boolean;
 }
 
 export const MessageItem = React.memo(RawMessageItem);
 
-function RawMessageItem({ className, value, hideTools }: MessageItemProps) {
+function RawMessageItem({ className, value }: MessageItemProps) {
   const debug = useDebug();
   return (
     <div className={classNames(className, styles.messageItem)}>
-      <MessageChild value={value} hideTools={hideTools} debug={debug} />
+      <MessageChild value={value} debug={debug} />
     </div>
   );
 }
 
-function MessageChild({
-  value,
-  hideTools,
-  debug,
-}: {
-  value: UIMessage;
-  hideTools: boolean;
-  debug: boolean;
-}): React.ReactNode {
+function MessageChild({ value, debug }: { value: UIMessage; debug: boolean }): React.ReactNode {
   const { setPanelWidth } = usePanelWidth();
-  const deferredContent = React.useDeferredValue(value.content);
-  const isContentPending = value.content !== deferredContent;
+  const deferredParts = React.useDeferredValue(value.parts);
+  const isContentPending = !isEqual(value.parts, deferredParts);
 
   switch (value.role) {
     case 'user':
       return (
         <div className={styles.user}>
           <div className={styles.userContent}>
-            <div>{value.content}</div>
+            <div>{value.parts.map((part) => part.type === 'text' && part.text)}</div>
           </div>
           <div className={styles.info}>
             <div className={styles.timestamp}>{value.createdAt && formatDate(value.createdAt)}</div>
@@ -58,28 +49,39 @@ function MessageChild({
       );
     case 'assistant': {
       return (
-        <>
-          <ToolsProgress message={value} />
-          {deferredContent.trim().length > 0 && (
-            <div style={{ opacity: isContentPending ? 0.8 : 1, transition: 'opacity 0.2s' }}>
-              <GithubFlavorMarkdown
-                className={styles.markdown}
-                onLinkClicked={(external) => {
-                  if (!external) setPanelWidth(MINIMAL_PANEL_SIZE);
-                }}
-              >
-                {deferredContent}
-              </GithubFlavorMarkdown>
-            </div>
-          )}
-          {!hideTools && (
-            <>
-              <ToolsComponents message={value} />
-              {/* This tool component has been disabled yet */}
-              {/* <ToolArticles message={value} /> */}
-              <ToolMorphologies message={value} />
-            </>
-          )}
+        <div
+          className={styles.assistant}
+          style={{ opacity: isContentPending ? 0.8 : 1, transition: 'opacity 0.2s' }}
+        >
+          {deferredParts.map((part) => {
+            if (part.type === 'text' && part.text !== '') {
+              return (
+                <GithubFlavorMarkdown
+                  key={`text-${part.text}`}
+                  className={styles.markdown}
+                  onLinkClicked={(external) => {
+                    if (!external) setPanelWidth(MINIMAL_PANEL_SIZE);
+                  }}
+                >
+                  {part.text}
+                </GithubFlavorMarkdown>
+              );
+            }
+            if (part.type === 'tool-invocation') {
+              const { toolCallId } = part.toolInvocation;
+              return (
+                <div key={`tool-${toolCallId}`}>
+                  <ToolsProgress part={part} />
+                  <>
+                    <ToolsComponents part={part} />
+                    {/* This tool component has been disabled yet */}
+                    {/* <ToolArticles message={value} /> */}
+                  </>
+                </div>
+              );
+            }
+            return null;
+          })}
           {debug && (
             <button
               type="button"
@@ -91,7 +93,7 @@ function MessageChild({
               Debug...
             </button>
           )}
-        </>
+        </div>
       );
     }
     default:
