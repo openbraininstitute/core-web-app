@@ -1,4 +1,5 @@
 import React from 'react';
+import { useIsFetching } from '@tanstack/react-query';
 
 import Welcome from '../welcome';
 import { MessageItem } from '../../message-item';
@@ -23,47 +24,49 @@ export interface ChatProps {
 }
 
 export default function Chat({ className, threadId, onClearChat }: ChatProps) {
-  const refScrollLocked = React.useRef(true);
-  const refScrollTriggered = React.useRef(true);
+  const [isAutoScrollEnabled, setIsAutoScrollEnabled] = React.useState(true);
   const { messages, clear, status, append, error, stop, rateLimitRemaining } =
     useServiceAiAgentChat(threadId ?? '');
   const [suggestions] = useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', 3);
+  const isStorageQueryFetching = useIsFetching({
+    predicate: (query) => {
+      const fullQueryKey = query.queryKey.at(0);
+      return fullQueryKey === 'storage';
+    },
+    fetchStatus: 'fetching',
+  });
   const refChatBottom = React.useRef<HTMLDivElement | null>(null);
   const refContainer = React.useRef<HTMLDivElement | null>(null);
-  const scroll = () => {
-    if (!refScrollLocked.current) return;
 
-    const div = refContainer.current;
-    if (!div) return;
-
-    refScrollTriggered.current = true;
-    const scrollTop = Math.max(0, div.scrollHeight - div.clientHeight);
-    div.scrollTo({
-      top: scrollTop,
-      behavior: 'smooth',
-    });
-  };
-  React.useEffect(scroll, [messages, error, status]);
   React.useEffect(() => {
-    if (status !== 'ready' || suggestions.length === 0) return;
+    if (isAutoScrollEnabled) {
+      requestAnimationFrame(() => {
+        refChatBottom.current?.scrollIntoView({ behavior: 'smooth' });
+      });
+    }
+  }, [messages, error, status, isAutoScrollEnabled, isStorageQueryFetching, suggestions]);
 
-    scroll();
-    globalThis.setTimeout(scroll, 2000);
-  }, [suggestions, status]);
   const handleClearChat = () => {
     onClearChat();
     clear();
   };
   const handlePrompt = (content: string) => {
-    refScrollLocked.current = true;
+    setIsAutoScrollEnabled(true);
     append({
       role: 'user',
       content,
     });
   };
-  const handleScroll = () => {
-    if (!refScrollTriggered.current) refScrollLocked.current = false;
-    refScrollTriggered.current = false;
+  const handleWheel = (event: React.WheelEvent) => {
+    if (event.deltaY < 0) {
+      setIsAutoScrollEnabled(false);
+    } else {
+      const container = refContainer.current;
+      if (!container) return;
+      const isAtBottom =
+        container.scrollHeight - container.scrollTop <= container.clientHeight + 200;
+      setIsAutoScrollEnabled(isAtBottom);
+    }
   };
 
   return (
@@ -71,15 +74,11 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
       <div
         className={classNames(styles.articles, className)}
         ref={refContainer}
-        onScrollEnd={handleScroll}
+        onWheel={handleWheel}
       >
         {messages.length === 0 && <Welcome />}
-        {messages.map((item, messageIndex) => (
-          <MessageItem
-            key={item.id}
-            value={item}
-            hideTools={messageIndex === messages.length - 1 && status !== 'ready'}
-          />
+        {messages.map((item) => (
+          <MessageItem key={item.id} value={item} />
         ))}
 
         {status === 'ready' && messages.length > 0 && (

@@ -18,27 +18,27 @@ import styles from './tool-plot-generator.module.css';
 
 export interface ToolPlotGeneratorProps {
   className?: string;
-  results: ToolResult[];
+  result: ToolResult | null;
 }
 
-export default function ToolPlotGenerator({ className, results }: ToolPlotGeneratorProps) {
+export default function ToolPlotGenerator({ className, result }: ToolPlotGeneratorProps) {
+  if (!result) return null;
   return (
     <>
-      {results.map((result) => {
+      {
         // python-tool can return a list of storage_ids
-        if (Array.isArray(result.storage_id)) {
-          return result.storage_id.map((storage_id) => (
+        Array.isArray(result.storage_id) ? (
+          result.storage_id.map((storage_id: string) => (
             <CustomPlot className={className} key={storage_id} storage_id={storage_id} />
-          ));
-        }
-        return (
+          ))
+        ) : (
           <CustomPlot
             className={className}
             key={result.storage_id}
             storage_id={result.storage_id}
           />
-        );
-      })}
+        )
+      }
     </>
   );
 }
