@@ -1,7 +1,7 @@
 'use client';
 
+import { RiCloseFill, RiMoneyDollarCircleLine } from '@remixicon/react';
 import { useCallback, useEffect, useState } from 'react';
-import { RiCloseFill, RiMoneyDollarCircleLine } from 'react-icons/ri';
 
 import { CreditsTransferModal } from '@/ui/segments/project/credits/credits-transfer-modal';
 import { cn } from '@/utils/css-class';
@@ -57,7 +57,7 @@ export function LowFundsNotification({ title, description, onClose, duration = 1
       >
         <div className="flex gap-4 p-6">
           <div className="min-w-0 flex-1">
-            <div className="flew-row mb-2 flex justify-between">
+            <div className="mb-2 flex justify-between">
               <div className="flex flex-row gap-x-2">
                 <div className="flex-shrink-0 pt-0.5">
                   <RiMoneyDollarCircleLine className="text-warning text-2xl" size={24} />
