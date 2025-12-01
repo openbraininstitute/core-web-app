@@ -2,7 +2,7 @@
 import { memoize } from '@/util/utils';
 import { log } from '@/utils/logger';
 
-import type { BrainRegionHierarchyAtomReturnType } from '@/features/brain-region-hierarchy/context';
+import type { TBrainRegionHierarchyAtomReturnType } from '@/features/brain-region-hierarchy/context';
 import type { IBrainAtlasRegion } from '@/api/entitycore/types/entities/brain-atlas';
 import type {
   CellCompositionBrainRegionEType,
@@ -20,7 +20,7 @@ const NEURON_DENSITY_SCALE = 1e-9;
  * @param id - the id of the brain region.
  * @returns an array of leaf node Ids.
  */
-function getLeaves(hierarchy: BrainRegionHierarchyAtomReturnType, id: string): string[] {
+function getLeaves(hierarchy: TBrainRegionHierarchyAtomReturnType, id: string): string[] {
   if (!hierarchy || !hierarchy.leaves || !(hierarchy.leaves instanceof Map)) {
     log('warn', `Hierarchy or leaves map is invalid for ID: ${id}`);
     return [];
@@ -187,7 +187,7 @@ function resolveBrainRegionCellCompositionFn({
   brainRegionId: string;
   cellCompositionRoot: ICellCompositionRoot;
   atlasRegions: IBrainAtlasRegion[];
-  hierarchy: BrainRegionHierarchyAtomReturnType;
+  hierarchy: TBrainRegionHierarchyAtomReturnType;
 }): {
   nodes: RawTreeNode[];
   links: { source: string; target: string }[];

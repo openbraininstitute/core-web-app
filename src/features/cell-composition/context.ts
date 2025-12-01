@@ -13,13 +13,13 @@ import { renameKeyDeep } from '@/components/tree/elements/helpers';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getAssetElement } from '@/api/entitycore/utils';
+import { EntityTypeDict } from '@/api/entitycore/types';
 import { tryCatch } from '@/api/utils';
 import { log } from '@/utils/logger';
 
 import type { ICellCompositionRoot } from '@/api/entitycore/types/entities/cell-composition';
 import type { WorkspaceContext } from '@/types/common';
 import type { IAnnotation } from '@/api/entitycore/types/shared/global';
-import { EntityTypeDict } from '@/api/entitycore/types';
 
 const defaultCellCompositionName = 'Cell Composition from Blue Brain Atlas';
 

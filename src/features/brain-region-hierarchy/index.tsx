@@ -5,14 +5,15 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import TreeSearch from '@/components/tree/elements/search';
 import Tree from '@/components/tree';
 
+import { BrainRegionHierarchyNodeRender } from '@/features/brain-region-hierarchy/node-render';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { makeBrainRegionClickEvent } from '@/features/brain-region-hierarchy/event';
 import { corePageNumberAtom } from '@/ui/segments/data-table/elements/context';
 import { scrollToNode } from '@/components/tree/elements/helpers';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import {
+  brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom,
   DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE,
-  brainRegionBasicCellGroupsRegionsHierarchyAtom,
   brainRegionSidebarAtom,
   useBrainRegionHierarchy,
   useGetSelectedBrainRegion,
@@ -31,7 +32,9 @@ export function BrainRegionHierarchy({
   onClickCallback?: (node: TTreeNode) => void;
 }) {
   const isCollapsed = useAtomValue(brainRegionSidebarAtom);
-  const brainRegionHierarchyResult = useAtomValue(brainRegionBasicCellGroupsRegionsHierarchyAtom);
+  const brainRegionHierarchyResult = useAtomValue(
+    brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom
+  );
   const { updateHierarchyConfig } = useBrainRegionHierarchy({
     dataKey,
   });
@@ -92,6 +95,7 @@ export function BrainRegionHierarchy({
                   }}
                   selectedNode={(selectedBrainRegion as unknown as TTreeNode) ?? null}
                   onClick={onClick}
+                  renderNode={BrainRegionHierarchyNodeRender as any}
                 />
               </HydrateWrapper>
             )}
