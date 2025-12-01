@@ -19,6 +19,7 @@ export function usePlotFile(fileIdentifier: string) {
         throw new Error(`Unable to retrieve file "${fileIdentifier}": ${message}`);
       }
     },
+    staleTime: Infinity,
   });
 
   return {

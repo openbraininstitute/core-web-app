@@ -1,4 +1,5 @@
 import React from 'react';
+import { useIsFetching } from '@tanstack/react-query';
 
 import Welcome from '../welcome';
 import { MessageItem } from '../../message-item';
@@ -8,10 +9,7 @@ import ErrorPanel from '../../error';
 import Footer from '../footer';
 
 import { IconPrice } from '../../icons/price';
-import {
-  useServiceAiAgentChat,
-  useServiceAiAgentSuggestionFromUserJourney,
-} from '@/services/ai-agent';
+import { useServiceAiAgentChat } from '@/services/ai-agent';
 import { classNames } from '@/util/utils';
 
 import styles from './chat.module.css';
@@ -26,25 +24,23 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = React.useState(true);
   const { messages, clear, status, append, error, stop, rateLimitRemaining } =
     useServiceAiAgentChat(threadId ?? '');
-  const [suggestions] = useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', 3);
+  const isStorageQueryFetching = useIsFetching({
+    predicate: (query) => {
+      const fullQueryKey = query.queryKey.at(0);
+      return fullQueryKey === "storage";
+    },
+    fetchStatus: 'fetching',
+  });
   const refChatBottom = React.useRef<HTMLDivElement | null>(null);
   const refContainer = React.useRef<HTMLDivElement | null>(null);
 
   React.useEffect(() => {
     if (isAutoScrollEnabled) {
-      refChatBottom.current?.scrollIntoView({ behavior: 'instant' });
+      requestAnimationFrame(() => {
+        refChatBottom.current?.scrollIntoView({ behavior: 'smooth' });
+      });
     }
-  }, [messages, error, status, isAutoScrollEnabled]);
-
-  // Used when plots appear in chat
-  React.useEffect(() => {
-    if (status === 'streaming' && isAutoScrollEnabled) {
-      const interval = setInterval(() => {
-        refChatBottom.current?.scrollIntoView({ behavior: 'instant' });
-      }, 100);
-      return () => clearInterval(interval);
-    }
-  }, [status, isAutoScrollEnabled]);
+  }, [messages, error, status, isAutoScrollEnabled, isStorageQueryFetching]);
 
   const handleClearChat = () => {
     onClearChat();
