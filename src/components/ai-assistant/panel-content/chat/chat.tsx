@@ -36,15 +36,6 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
     }
   }, [messages, error, status, isAutoScrollEnabled]);
 
-  React.useEffect(() => {
-    if (status !== 'ready' || suggestions.length === 0) return;
-    refChatBottom.current?.scrollIntoView({ behavior: 'instant' });
-    globalThis.setTimeout(
-      () => refChatBottom.current?.scrollIntoView({ behavior: 'instant' }),
-      2000
-    );
-  }, [suggestions, status]);
-
   // Used when plots appear in chat
   React.useEffect(() => {
     if (status === 'streaming' && isAutoScrollEnabled) {
