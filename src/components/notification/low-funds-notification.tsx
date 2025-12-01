@@ -1,7 +1,7 @@
 'use client';
 
+import { RiCloseFill, RiMoneyDollarCircleLine } from '@remixicon/react';
 import { useCallback, useEffect, useState } from 'react';
-import { RiCloseFill, RiMoneyDollarCircleLine } from 'react-icons/ri';
 
 import { CreditsTransferModal } from '@/ui/segments/project/credits/credits-transfer-modal';
 import { cn } from '@/utils/css-class';
