@@ -80,7 +80,6 @@ export function BrowseCircuit({
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const { mdv, setMdv } = useMiniDetailView();
-
   const [{ scope, view }] = useQueryStates({
     view: parseAsString
       .withDefault(CircuitView.Hierarchy)
