@@ -471,12 +471,12 @@ export function useNextStepOnboarding({
   tour: string;
 }) {
   const { startNextStep } = useNextStep();
-  const { data, isFetched } = useOnboardingStatus();
+  const { data, isFetched, isError } = useOnboardingStatus();
 
   useLayoutEffect(() => {
     const shouldStart = typeof condition === 'function' ? condition() : condition;
 
-    if (!shouldStart || !isFetched) return;
+    if (!shouldStart || !isFetched || isError) return;
 
     // check if tour is completed or dismissed in backend data
     const tourStatus = data?.[tour];
@@ -485,5 +485,5 @@ export function useNextStepOnboarding({
     if (!isDone || !data) {
       startNextStep(tour);
     }
-  }, [condition, tour, data, isFetched, startNextStep]);
+  }, [condition, tour, data, isFetched, isError, startNextStep]);
 }
