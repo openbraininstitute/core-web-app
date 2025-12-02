@@ -1,21 +1,39 @@
-import { parseAsString, SingleParserBuilder, useQueryState } from 'nuqs';
+import { useAtom } from 'jotai';
 import { Tooltip } from 'antd';
 
-import { CircuitView, TCircuitView } from '@/ui/segments/explore/circuit/helpers';
+import {
+  CircuitRepresentationView,
+  circuitRepresentationViewAtom,
+} from '@/ui/segments/explore/circuit/helpers';
 import { FlatListViewIcon, HierarchicalViewIcon } from '@/components/icons';
+import { useDataListStoreSession } from '@/ui/segments/data-table/elements/helpers';
 import { classNames } from '@/util/utils';
 
-export function CircuitViewToggle() {
-  const [view, updateView] = useQueryState(
-    'view',
-    parseAsString
-      .withDefault(CircuitView.Hierarchy)
-      .withOptions({ shallow: true, clearOnDefault: false }) as SingleParserBuilder<TCircuitView>
-  );
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
+type Props = {
+  dataType: TExtendedEntitiesTypeDict;
+  dataKey: string;
+};
+
+export function CircuitViewToggle({ dataType, dataKey }: Props) {
+  const [view, updateView] = useAtom(circuitRepresentationViewAtom);
+  const { sessionValue: dataListStoreSession, setSessionValue: updateDataListStoreSession } =
+    useDataListStoreSession({
+      dataKey,
+      dataType,
+    });
 
   const handleViewChange = () => {
-    const newView = view === 'hierarchy' ? 'flat' : 'hierarchy';
+    const newView =
+      view === CircuitRepresentationView.Hierarchy
+        ? CircuitRepresentationView.Flat
+        : CircuitRepresentationView.Hierarchy;
     updateView(newView);
+    updateDataListStoreSession({
+      ...dataListStoreSession,
+      View: newView,
+    });
   };
 
   return (

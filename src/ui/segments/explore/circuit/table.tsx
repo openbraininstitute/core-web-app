@@ -17,14 +17,14 @@ import { coreFiltersAtom } from '@/ui/segments/data-table/elements/context';
 import { OnCellClick, WrapperTable } from '@/ui/segments/data-table/table';
 import { Pagination } from '@/ui/segments/data-table/elements/pagination';
 import { BrainRegionDropdown } from '@/features/brain-region-dropdown';
-import { CircuitView } from '@/ui/segments/explore/circuit/helpers';
+import { CircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
 import { Search } from '@/ui/segments/data-table/search';
 import { WorkspaceScope } from '@/constants';
 import { cn } from '@/utils/css-class';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
-import type { TCircuitView } from '@/ui/segments/explore/circuit/helpers';
+import type { TCircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { WorkspaceContext } from '@/types/common';
 import type { TWorkspaceScope } from '@/constants';
@@ -58,7 +58,7 @@ export type Props<T> = {
   isLoading?: boolean;
   dataSource: Array<T>;
   tableStyle?: CSSProperties | undefined;
-  view: TCircuitView | null;
+  view: TCircuitRepresentationView | null;
   queryKeyHash?: string;
   expandableConfig?: ExpandableConfig<T>;
 };
@@ -126,7 +126,7 @@ export function MainTable({
                 dataScope === WorkspaceScope.BuildSynaptomeModel) && (
                 <BrainRegionDropdown dataKey={dataKey} />
               )}
-              <CircuitViewToggle />
+              <CircuitViewToggle {...{ dataType, dataKey }} />
               <FilterControls
                 filters={filters}
                 displayControlPanel={displayControlPanel}
@@ -137,7 +137,7 @@ export function MainTable({
           </div>
         </div>
         <WrapperTable<ICircuit>
-          key={view === CircuitView.Hierarchy ? queryKeyHash : 'circuit-table'}
+          key={view === CircuitRepresentationView.Hierarchy ? queryKeyHash : 'circuit-table'}
           dataType={dataType}
           columns={columns}
           dataSource={dataSource}
@@ -170,7 +170,7 @@ export function MainTable({
           sticky={sticky}
           className={cls?.table}
           controls={
-            view === CircuitView.Flat && (
+            view === CircuitRepresentationView.Flat && (
               <div className="w-full">
                 <Pagination {...{ dataKey, dataType, resultPagination }} />
               </div>

@@ -2,17 +2,20 @@
 
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { WarningOutlined } from '@ant-design/icons';
+import { map, snakeCase } from 'es-toolkit/compat';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import { RESET } from 'jotai/utils';
 import { useEffect } from 'react';
-import snakeCase from 'es-toolkit/compat/snakeCase';
-import compact from 'es-toolkit/compat/compact';
 import dynamic from 'next/dynamic';
-import map from 'es-toolkit/compat/map';
 
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
-import { DEFAULT_PAGE_MEDIUM_SIZE, DEFAULT_PAGE_NUMBER, WorkspaceScope } from '@/constants';
+import {
+  DEFAULT_PAGE_MEDIUM_SIZE,
+  DEFAULT_PAGE_NUMBER,
+  WorkspaceScope,
+  WorkspaceSection,
+} from '@/constants';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
 import {
   coreActiveColumnsAtom,
@@ -21,6 +24,7 @@ import {
   coreSortStateAtom,
 } from '@/ui/segments/data-table/elements/context';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import { Card, CardDescription, CardTitle } from '@/ui/molecules/card';
 import { MiniDetailView } from '@/ui/segments/mini-detail-view';
 import { GenericError } from '@/ui/molecules/generic-error';
@@ -50,8 +54,14 @@ const MainTable = dynamic(() => import('@/ui/segments/data-table'), { ssr: false
 export function BrowseLibraryScope() {
   const { virtualLabId, projectId } = useWorkspace();
   const { type } = useParams<WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict> }>();
-  const dataKey = compact([virtualLabId, projectId, type, WorkspaceScope.Bookmarks]).join('/');
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
+  const dataKey = makeDataKey({
+    virtualLabId,
+    projectId,
+    dataType,
+    section: WorkspaceSection.Data,
+    scope: WorkspaceScope.Bookmarks,
+  });
   const [pageNumber, setPageNumber] = useAtom(corePageNumberAtom(dataKey));
   const { mdv, setMdv } = useMiniDetailView();
 

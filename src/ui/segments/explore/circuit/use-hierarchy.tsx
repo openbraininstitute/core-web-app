@@ -19,7 +19,7 @@ import {
 } from '@/api/entitycore/queries/model/circuit';
 import {
   buildFilteredHierarchyTree,
-  CircuitView,
+  CircuitRepresentationView,
   collectIdsFromNode,
   filterAndEnrichTree,
   findNodeInTree,
@@ -27,7 +27,10 @@ import {
   getAllCircuitIds,
 } from '@/ui/segments/explore/circuit/helpers';
 
-import type { HierarchyOutputNode, TCircuitView } from '@/ui/segments/explore/circuit/helpers';
+import type {
+  HierarchyOutputNode,
+  TCircuitRepresentationView,
+} from '@/ui/segments/explore/circuit/helpers';
 import type { HierarchyTreeResponse } from '@/api/entitycore/types/shared/hierarchy';
 import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -39,7 +42,11 @@ import type {
   Pagination,
 } from '@/api/entitycore/types/shared/response';
 
-export function useFullRawHierarchy({ view = CircuitView.Flat }: { view: TCircuitView | null }) {
+export function useFullRawHierarchy({
+  view = CircuitRepresentationView.Flat,
+}: {
+  view: TCircuitRepresentationView | null;
+}) {
   const queryClient = useQueryClient();
   const { virtualLabId, projectId } = useWorkspace();
   const { data: circuitHierarchy, isLoading: isLoadingFullHierarchy } = useQuery({
@@ -109,7 +116,7 @@ export function useFullRawHierarchy({ view = CircuitView.Flat }: { view: TCircui
         },
       };
     },
-    enabled: view === CircuitView.Hierarchy,
+    enabled: view === CircuitRepresentationView.Hierarchy,
     staleTime: Infinity,
     gcTime: 3_600_000, // 1 hour
   });
@@ -121,7 +128,7 @@ export function useHierarchyDerivationTree({
   view,
   derivationType,
 }: {
-  view: TCircuitView | null;
+  view: TCircuitRepresentationView | null;
   derivationType: TDerivationType;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
@@ -137,7 +144,7 @@ export function useHierarchyDerivationTree({
           context: { virtualLabId, projectId },
           derivation_type: derivationType,
         }),
-      enabled: view === CircuitView.Hierarchy,
+      enabled: view === CircuitRepresentationView.Hierarchy,
       staleTime: Infinity,
     });
 
@@ -149,11 +156,11 @@ export function useHierarchyDerivationTree({
 
 export function useHierarchy({
   scope = WorkspaceScope.Public,
-  view = CircuitView.Flat,
+  view = CircuitRepresentationView.Flat,
   dataKey,
 }: {
   scope: TWorkspaceScope | null;
-  view: TCircuitView | null;
+  view: TCircuitRepresentationView | null;
   dataKey: string;
 }) {
   const queryClient = useQueryClient();
@@ -245,7 +252,7 @@ export function useHierarchy({
       const [{ queryParameters }] = queryKey;
       if (
         get(queryParameters, 'within_brain_region_brain_region_id', null) &&
-        view === CircuitView.Hierarchy
+        view === CircuitRepresentationView.Hierarchy
       )
         return true;
       return false;
@@ -286,13 +293,13 @@ export function useHierarchyAllLevels({ entityId }: WorkspaceContext & { entityI
   let extractionParentCircuitAsParent: ICircuit | undefined;
   let rewiringParentCircuitAsDerivedFrom: ICircuit | undefined;
   const { circuitHierarchy, isLoadingFullHierarchy } = useFullRawHierarchy({
-    view: CircuitView.Hierarchy,
+    view: CircuitRepresentationView.Hierarchy,
   });
   const {
     hierarchyByDerivation: hierarchyByExtractionDerivation,
     loadingDerivation: loadingExtractionDerivation,
   } = useHierarchyDerivationTree({
-    view: CircuitView.Hierarchy,
+    view: CircuitRepresentationView.Hierarchy,
     derivationType: DerivationTypeDictionary.CircuitExtraction,
   });
 
@@ -300,7 +307,7 @@ export function useHierarchyAllLevels({ entityId }: WorkspaceContext & { entityI
     hierarchyByDerivation: hierarchyByRewiringDerivation,
     loadingDerivation: loadingRewiringDerivation,
   } = useHierarchyDerivationTree({
-    view: CircuitView.Hierarchy,
+    view: CircuitRepresentationView.Hierarchy,
     derivationType: DerivationTypeDictionary.CircuitRewiring,
   });
 

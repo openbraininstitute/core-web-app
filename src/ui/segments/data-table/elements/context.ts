@@ -11,7 +11,7 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
 import type { CoreFilter } from '@/entity-configuration/definitions/types';
-import type { SortState } from '@/types/explore-section/application';
+import { SortOrder, type SortState } from '@/types/explore-section/application';
 
 export const coreActiveColumnsAtom = atomFamily(
   ({ dataType }: { key: string; dataType: EntityCoreExtendedType }) =>
@@ -44,7 +44,7 @@ export const coreSortStateAtom = atomFamily(
     const initialState: SortState = {
       field: EntityCoreFields.CreationDate,
       backendField: EntityCoreFields.CreationDate,
-      order: 'desc',
+      order: SortOrder.DESC,
     };
 
     const writableAtom = atom<SortState, [SortState], void>(initialState, (_, set, update) => {

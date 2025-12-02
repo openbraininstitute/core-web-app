@@ -6,6 +6,7 @@ import { useResetAtom } from 'jotai/utils';
 import { useEffect, useRef } from 'react';
 import { useAtom } from 'jotai';
 
+import { circuitRepresentationViewAtom } from '@/ui/segments/explore/circuit/helpers';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
@@ -34,7 +35,7 @@ export function SetupDataListStoreOnMount({
   dataKey: string;
 }) {
   const isMounted = useRef(false);
-  const { sessionValue: coreListingSession } = useDataListStoreSession({
+  const { sessionValue: dataListStoreSession } = useDataListStoreSession({
     dataKey,
     dataType,
   });
@@ -43,21 +44,23 @@ export function SetupDataListStoreOnMount({
   const [, updateSearchString] = useAtom(coreSearchStringAtom(dataKey));
   const [, updatePageNumber] = useAtom(corePageNumberAtom(dataKey));
   const [, updateFilters] = useAtom(coreFiltersAtom({ dataType, key: dataKey }));
+  const [, updateCircuitView] = useAtom(circuitRepresentationViewAtom);
 
   useEffect(() => {
     // set from session only in first render
     if (!isMounted.current) {
-      updateSortState(coreListingSession.Sort);
-      updateSearchString(coreListingSession.Search);
-      updatePageNumber(coreListingSession.Page);
-      updateFilters(coreListingSession.Filters);
+      updateSearchString(dataListStoreSession.Search);
+      updateCircuitView(dataListStoreSession.View);
+      updateFilters(dataListStoreSession.Filters);
+      updatePageNumber(dataListStoreSession.Page);
+      updateSortState(dataListStoreSession.Sort);
       isMounted.current = true;
     }
 
     return () => {
       isMounted.current = false;
     };
-  }, [coreListingSession]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [dataListStoreSession]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null;
 }
@@ -77,6 +80,7 @@ export function TeardownDataListStoreOnUnmount() {
   const [, updateSortState] = useAtom(coreSortStateAtom({ key: dataKey }));
   const [, updateSearchString] = useAtom(coreSearchStringAtom(dataKey));
   const [, updateFilters] = useAtom(coreFiltersAtom({ dataType, key: dataKey }));
+  const [, updateCircuitView] = useAtom(circuitRepresentationViewAtom);
   const updatePageNumber = useResetAtom(corePageNumberAtom(dataKey));
 
   const defaultAtomValues = makeDataListStoreAtomsInitialValue({ dataType });
@@ -87,6 +91,7 @@ export function TeardownDataListStoreOnUnmount() {
       updateSearchString('');
       updateSortState(defaultAtomValues.Sort);
       updateFilters(defaultAtomValues.Filters);
+      updateCircuitView(defaultAtomValues.View);
       if (isBrowser()) {
         window.sessionStorage.removeItem(dataKey);
       }

@@ -2,17 +2,18 @@
 
 'use client';
 
-import { parseAsString, SingleParserBuilder, useQueryStates } from 'nuqs';
+import { parseAsString, SingleParserBuilder, useQueryState } from 'nuqs';
 import { ReactNode, useEffect, type ComponentProps } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { WarningOutlined } from '@ant-design/icons';
-import { compact, get } from 'es-toolkit/compat';
+import { get } from 'es-toolkit/compat';
 import { RESET } from 'jotai/utils';
 import dynamic from 'next/dynamic';
 
 import { RecursiveExpandableTable } from '@/ui/segments/explore/circuit/elements/recursive-expandable-table';
 import { createExpandableTableConfig } from '@/ui/segments/explore/circuit/elements/expandable-base-table';
-import { CircuitView, ICircuitEnriched, TCircuitView } from '@/ui/segments/explore/circuit/helpers';
+import { SetupDataListStoreOnMount } from '@/ui/segments/data-table/elements/persistent-data-list';
+import { makeDataKey, useDataListStoreSession } from '@/ui/segments/data-table/elements/helpers';
 import { useExpandableTable } from '@/ui/segments/explore/circuit/elements/use-expandable-table';
 import { useFilterStateWatcher } from '@/ui/segments/explore/circuit/use-filter-state-watcher';
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
@@ -33,6 +34,11 @@ import {
   corePageNumberAtom,
   coreSortStateAtom,
 } from '@/ui/segments/data-table/elements/context';
+import {
+  CircuitRepresentationView,
+  circuitRepresentationViewAtom,
+  type ICircuitEnriched,
+} from '@/ui/segments/explore/circuit/helpers';
 import {
   makeSelectEntityClickEvent,
   useMiniDetailView,
@@ -80,28 +86,41 @@ export function BrowseCircuit({
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const { mdv, setMdv } = useMiniDetailView();
-  const [{ scope, view }] = useQueryStates({
-    view: parseAsString
-      .withDefault(CircuitView.Hierarchy)
-      .withOptions({ shallow: true, clearOnDefault: false }) as NonNullable<
-      SingleParserBuilder<TCircuitView>
-    >,
-    scope: parseAsString
+  const [view] = useAtom(circuitRepresentationViewAtom);
+  const [scope] = useQueryState(
+    'scope',
+    parseAsString
       .withDefault(defaultScope ?? WorkspaceScope.Public)
       .withOptions({ shallow: true, clearOnDefault: false }) as NonNullable<
       SingleParserBuilder<TWorkspaceScope>
-    >,
-  });
+    >
+  );
 
-  const dataKey = compact([virtualLabId, projectId, section, dataType, scope, view, id]).join('/');
+  const dataKey = makeDataKey({
+    virtualLabId,
+    projectId,
+    section,
+    dataType,
+    scope,
+    id,
+  });
   const resetFilterOnExit = useSetAtom(coreFiltersAtom({ dataType, key: dataKey }));
   const activeColumns = useAtomValue(coreActiveColumnsAtom({ dataType, key: dataKey }));
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
   const [sortState, setSortState] = useAtom(coreSortStateAtom({ key: dataKey }));
+  const { sessionValue: dataListStoreSession, setSessionValue: updateDataListStoreSession } =
+    useDataListStoreSession({ dataKey, dataType });
 
   const onSortChange = (newSortState: any) => {
     setPageNumber(DEFAULT_PAGE_NUMBER);
     setSortState(newSortState);
+    if (section === WorkspaceSection.Data) {
+      updateDataListStoreSession({
+        ...dataListStoreSession,
+        Sort: newSortState,
+        Page: DEFAULT_PAGE_NUMBER,
+      });
+    }
   };
 
   const allColumns = useDataTableColumns<ICircuit>({
@@ -162,11 +181,11 @@ export function BrowseCircuit({
   let facets: Facets | undefined;
   let pagination: Pagination | undefined;
 
-  if (view === CircuitView.Flat) {
+  if (view === CircuitRepresentationView.Flat) {
     dataSource = data?.data ?? [];
     facets = data?.facets;
     pagination = data?.pagination;
-  } else if (view === CircuitView.Hierarchy) {
+  } else if (view === CircuitRepresentationView.Hierarchy) {
     dataSource = hierarchyDataSource;
     pagination = hierarchyPagination;
     facets = hierarchyFacets;
@@ -267,6 +286,7 @@ export function BrowseCircuit({
 
   return (
     <>
+      <SetupDataListStoreOnMount {...{ dataType, dataKey }} />
       <div
         id="circuit-table-container"
         data-testid="circuit-table-container"
@@ -281,7 +301,7 @@ export function BrowseCircuit({
             sticky={{ offsetHeader: 75.5 }}
             isLoading={
               // eslint-disable-next-line no-nested-ternary
-              view === CircuitView.Hierarchy
+              view === CircuitRepresentationView.Hierarchy
                 ? loadingHierarchy
                 : isPlaceholderData
                   ? isFetching
@@ -307,7 +327,9 @@ export function BrowseCircuit({
             }}
             {...mainTableProps}
             view={view}
-            queryKeyHash={view === CircuitView.Hierarchy ? queryKeyHash : defaultQueryHash}
+            queryKeyHash={
+              view === CircuitRepresentationView.Hierarchy ? queryKeyHash : defaultQueryHash
+            }
             expandableConfig={expandableConfig}
           />
         </div>

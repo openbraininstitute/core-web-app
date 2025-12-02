@@ -13,10 +13,15 @@ export enum ExploreDataScope {
   BookmarkedResources = 'BookmarkedResources',
 }
 
+export const SortOrder = {
+  ASC: 'asc',
+  DESC: 'desc',
+} as const;
+export type TSortOrder = (typeof SortOrder)[keyof typeof SortOrder];
 export interface SortState {
   field: string;
   backendField: string;
-  order: 'asc' | 'desc' | null;
+  order: TSortOrder | null;
 }
 
 export type DetailViewUrlParams = Prettify<
