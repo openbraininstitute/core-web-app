@@ -179,11 +179,13 @@ export function OnboardingDiscoverCard({
   );
 }
 
+// NOTE: this should match the BE naming
+// in virtual-lab-service this values are an enum
 export const defaultWorkspaceTour = 'workspace';
-export const projectTour = 'workspace-project';
-export const dataTour = 'workspace-data';
-export const workflowTour = 'workspace-workflow';
-export const notebookTour = 'workspace-notebook';
+export const projectTour = `${defaultWorkspaceTour}-project`;
+export const dataTour = `${defaultWorkspaceTour}-data`;
+export const workflowTour = `${defaultWorkspaceTour}-workflow`;
+export const notebookTour = `${defaultWorkspaceTour}-notebook`;
 
 export const OnboardingDiscoverSteps: Tour[] = [
   {
