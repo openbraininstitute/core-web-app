@@ -7,68 +7,77 @@ import {
 } from 'nextstepjs';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import { useLayoutEffect, type ReactNode } from 'react';
-import { unionBy, find } from 'es-toolkit/compat';
-
 import type { CardComponentProps, Tour } from 'nextstepjs';
 
-import { useLocalStorage } from '@/hooks/use-local-storage';
-import { AUTO_ONBOARDING_TOURS } from '@/constants';
+import { useOnboardingStatus, useUpdateOnboardingStatus } from '@/hooks/use-onboarding';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
 import { cn } from '@/utils/css-class';
 
+import type { TOnboardingFeature } from '@/api/virtual-lab-svc/queries/types';
+
+const TourAction = {
+  Skip: 'skip',
+  Complete: 'complete',
+} as const;
+type TTourAction = (typeof TourAction)[keyof typeof TourAction];
+
 function QuitOnboardingOnClickOutside({
   onSkipOrComplete,
 }: {
-  onSkipOrComplete: (tour: string | null) => void;
+  onSkipOrComplete: (tour: string | null, step?: number, action?: TTourAction) => void;
 }) {
   const { isNextStepVisible, closeNextStep, currentTour } = useNextStep();
-  const handleClick = () => {
-    if (isNextStepVisible) {
-      onSkipOrComplete(currentTour);
-      closeNextStep();
-    }
-  };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>): void => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      handleClick();
-    }
-  };
+  useLayoutEffect(() => {
+    if (!isNextStepVisible) return;
 
-  return (
-    isNextStepVisible && (
-      <div
-        onClick={handleClick}
-        onKeyDown={handleKeyDown}
-        role="button"
-        tabIndex={0}
-        aria-label="Close onboarding tour"
-        className="fixed inset-0 z-[9999] bg-transparent"
-      />
-    )
-  );
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      const onboardingCard = document.getElementById('onboarding-card');
+
+      // if click is outside the card, close the tour
+      if (onboardingCard && !onboardingCard.contains(target)) {
+        onSkipOrComplete(currentTour, undefined, TourAction.Skip);
+        closeNextStep();
+      }
+    };
+
+    // add listener with a small delay to avoid immediate triggering
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isNextStepVisible, currentTour, onSkipOrComplete, closeNextStep]);
+
+  return null;
 }
 
 export function AppOnboardingProvider({ children }: { children: ReactNode }) {
-  const [onboardingState, updateOnboardingState] = useLocalStorage<{
-    tours: Array<{
-      tour: string | null;
-      done: boolean | null;
-      date: number | null;
-      step: number | null;
-    }>;
-  }>(AUTO_ONBOARDING_TOURS, {
-    tours: [],
-  });
-  const onSkipOrComplete = (tour: string | null) => {
-    updateOnboardingState({
-      tours: unionBy(
-        [{ tour, done: true, date: new Date().getTime(), step: null }],
-        onboardingState.tours,
-        'tour'
-      ),
+  const { mutate: updateBackend } = useUpdateOnboardingStatus();
+
+  const onSkipOrComplete = (tour: string | null, step?: number, action?: TTourAction) => {
+    if (!tour) return;
+    const isComplete =
+      (OnboardingDiscoverSteps.find((o) => o.tour === tour)?.steps.length ?? 0) - 1 === step;
+    updateBackend({
+      tour: tour as TOnboardingFeature,
+      current_step: step,
+      completed: isComplete || action === TourAction.Complete,
+      dismissed: action === TourAction.Skip,
+    });
+  };
+
+  const onStepChange = (step: number, tour: string | null) => {
+    if (!tour) return;
+
+    updateBackend({
+      tour: tour as TOnboardingFeature,
+      current_step: step,
     });
   };
 
@@ -76,6 +85,7 @@ export function AppOnboardingProvider({ children }: { children: ReactNode }) {
     <OnboardingProvider>
       <OnboardingSteps
         showNextStep
+        disableConsoleLogs
         steps={OnboardingDiscoverSteps}
         shadowRgb="63, 92, 139"
         shadowOpacity="0.8"
@@ -87,17 +97,9 @@ export function AppOnboardingProvider({ children }: { children: ReactNode }) {
           stiffness: 100,
           damping: 10,
         }}
-        onSkip={(_, tour) => onSkipOrComplete(tour)}
-        onComplete={onSkipOrComplete}
-        onStepChange={(step, tour) => {
-          updateOnboardingState({
-            tours: unionBy(
-              [{ tour, done: false, date: new Date().getTime(), step }],
-              onboardingState.tours,
-              'tour'
-            ),
-          });
-        }}
+        onSkip={(step, tour) => onSkipOrComplete(tour, step, TourAction.Skip)}
+        onComplete={(tour) => onSkipOrComplete(tour, undefined, TourAction.Complete)}
+        onStepChange={onStepChange}
       >
         {children}
         <QuitOnboardingOnClickOutside onSkipOrComplete={onSkipOrComplete} />
@@ -178,10 +180,10 @@ export function OnboardingDiscoverCard({
 }
 
 export const defaultWorkspaceTour = 'workspace';
-export const projectTour = `${defaultWorkspaceTour}/projects`;
-export const dataTour = `${defaultWorkspaceTour}/data`;
-export const workflowTour = `${defaultWorkspaceTour}/workflow`;
-export const notebookTour = `${defaultWorkspaceTour}/notebook`;
+export const projectTour = 'workspace-project';
+export const dataTour = 'workspace-data';
+export const workflowTour = 'workspace-workflow';
+export const notebookTour = 'workspace-notebook';
 
 export const OnboardingDiscoverSteps: Tour[] = [
   {
@@ -455,60 +457,10 @@ export const OnboardingDiscoverSteps: Tour[] = [
       },
     ],
   },
-  {
-    tour: notebookTour,
-    steps: [
-      // {
-      //   icon: null,
-      //   title: 'Notebook location',
-      //   content: (
-      //     <>
-      //       To start you will have only one project. You can create as many projects as you want and
-      //       invite collaborators to run experiments. You will also find your virtual lab management
-      //       system for credits.{' '}
-      //     </>
-      //   ),
-      //   selector: '#notebook-scope-selector',
-      //   side: 'left-bottom',
-      //   showControls: true,
-      //   blockKeyboardControl: true,
-      //   pointerPadding: 4,
-      //   pointerRadius: 25,
-      // },
-      // {
-      //   icon: null,
-      //   title: 'Notebook type',
-      //   content: (
-      //     <>
-      //       Lorem ipsum dolor sit amet est tincidunt consequat ultricies justo donec. Labore aliquam
-      //       lectus elit adipiscing consectetur lectus enim fusce velit netus.
-      //     </>
-      //   ),
-      //   selector: '#notebook-type-menu-selector',
-      //   side: 'right',
-      //   showControls: true,
-      //   blockKeyboardControl: true,
-      //   pointerPadding: 4,
-      //   pointerRadius: 16,
-      // },
-      // {
-      //   icon: null,
-      //   title: 'View in JupyterHub',
-      //   content: (
-      //     <>
-      //       Lorem ipsum dolor sit amet est tincidunt consequat ultricies justo donec. Labore aliquam
-      //       lectus elit adipiscing consectetur lectus enim fusce velit netus.
-      //     </>
-      //   ),
-      //   selector: '#view-in-jupyter-selector',
-      //   side: 'bottom-left',
-      //   showControls: true,
-      //   blockKeyboardControl: true,
-      //   pointerPadding: 4,
-      //   pointerRadius: 25,
-      // },
-    ],
-  },
+  // {
+  //   tour: notebookTour,
+  //   steps: [],
+  // },
 ];
 
 export function useNextStepOnboarding({
@@ -519,23 +471,19 @@ export function useNextStepOnboarding({
   tour: string;
 }) {
   const { startNextStep } = useNextStep();
-  const [onboardingState] = useLocalStorage<{
-    tours: Array<{
-      tour: string | null;
-      done: boolean | null;
-      date: number | null;
-      step: number | null;
-    }>;
-  }>(AUTO_ONBOARDING_TOURS, {
-    tours: [],
-  });
+  const { data, isFetched } = useOnboardingStatus();
 
   useLayoutEffect(() => {
-    const tourState = find(onboardingState.tours, { tour });
-    if (condition) {
-      if (!tourState || !tourState.done) {
-        startNextStep(tour);
-      }
+    const shouldStart = typeof condition === 'function' ? condition() : condition;
+
+    if (!shouldStart || !isFetched) return;
+
+    // check if tour is completed or dismissed in backend data
+    const tourStatus = data?.[tour];
+    const isDone = tourStatus?.completed || tourStatus?.dismissed;
+
+    if (!isDone || !data) {
+      startNextStep(tour);
     }
-  }, [condition]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [condition, tour, data, isFetched, startNextStep]);
 }
