@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ToolInvocation, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { IconGear } from '../../icons/gear';
 import LoadingDots from './loading-dots/loading-dots';
 import { cn } from '@/utils/css-class';
@@ -21,6 +22,7 @@ interface ToolsProgressProps {
 
 export default function ToolsProgress({ className, part }: ToolsProgressProps) {
   const tools = useAITools();
+  const currentPath = usePathname();
   const [expandedToolKeys, setExpandedToolKeys] = useState<Set<string>>(new Set());
 
   const toggleExpanded = (key: string) => {
@@ -96,7 +98,7 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
             </div>
 
             <Link
-              href={tool.docURL}
+              href={tool.docURL(currentPath)}
               target="documentation"
               aria-label="Tool information"
               className={cn(styles.helpButton)}

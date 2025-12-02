@@ -1,4 +1,3 @@
-import { usePathname } from 'next/navigation';
 import { IconDefault, IconLiteratureSearchTool, IconWebSearchTool } from './icons';
 
 export class AIAssistantTool {
@@ -29,8 +28,7 @@ export class AIAssistantTool {
     this.icon = getIcon(id);
   }
 
-  get docURL() {
-    const currentPath = usePathname();
+  docURL(currentPath: string) {
     const [vlab, project] = currentPath.split('/').slice(3, 5);
     return `/app/virtual-lab/${vlab}/${project}/help?section=ai-tools&tool=${this.id}`;
   }

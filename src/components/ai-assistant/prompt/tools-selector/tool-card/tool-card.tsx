@@ -4,6 +4,7 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 import { IconChecked } from './icon-checked';
 import { IconUnchecked } from './icon-unchecked';
@@ -19,6 +20,7 @@ interface ToolCardProps {
 }
 
 export default function ToolCard({ className, tool }: ToolCardProps) {
+  const currentPath = usePathname();
   const [invertedSelection, setInvertedSelection] = useAIToolsInvertedSelection();
   /**
    * A tool is checked if it's id is not in invertedSelection array.
@@ -38,7 +40,7 @@ export default function ToolCard({ className, tool }: ToolCardProps) {
         {checked ? <IconChecked /> : <IconUnchecked />}
       </header>
       <p>{tool.description}</p>
-      <Link href={tool.docURL} target="documentation" className={styles.readmore}>
+      <Link href={tool.docURL(currentPath)} target="documentation" className={styles.readmore}>
         Read more
       </Link>
     </div>
