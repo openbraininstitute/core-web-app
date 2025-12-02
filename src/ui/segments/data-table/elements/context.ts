@@ -1,16 +1,14 @@
-import { atomFamily, atomWithDefault } from 'jotai/utils';
-import { atom } from 'jotai';
-import _get from 'es-toolkit/compat/get';
+'use client';
 
-import { columnKeyToFilter } from '@/ui/segments/data-table/elements/column-key-to-filter';
+import { atomFamily, atomWithDefault, atomWithReset } from 'jotai/utils';
+import { atom } from 'jotai';
+
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { getFieldsDefinition } from '@/entity-configuration/definitions';
-import {
-  getViewDefinitionByExtendedType,
-  ViewsDefinitionRegistry,
-} from '@/entity-configuration/definitions/view-defs';
+import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
+import { makeTypeDefaultFilters } from '@/ui/segments/data-table/elements/helpers';
 import { DEFAULT_PAGE_NUMBER } from '@/constants';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
 import type { CoreFilter } from '@/entity-configuration/definitions/types';
 import type { SortState } from '@/types/explore-section/application';
@@ -25,20 +23,9 @@ export const coreActiveColumnsAtom = atomFamily(
 );
 
 export const coreFiltersAtom = atomFamily(
-  ({ dataType, key }: { key: string; dataType: EntityCoreExtendedType }) => {
+  ({ dataType, key }: { key: string; dataType: TExtendedEntitiesTypeDict }) => {
     const childAtom = atomWithDefault<Array<CoreFilter>>(() => {
-      const columns = getViewDefinitionByExtendedType(dataType)?.columns;
-      const fields = columns ? getFieldsDefinition(columns) : [];
-      const filteredColumns = [
-        ...(columns
-          ?.filter(
-            (o) =>
-              _get(fields, o, { isFilterable: false })?.isFilterable === true ||
-              _get(fields, o, { isDisplayable: false })?.isDisplayable === true
-          )
-          ?.map((colKey) => columnKeyToFilter(colKey, dataType)) ?? []),
-      ];
-      return filteredColumns;
+      return makeTypeDefaultFilters({ dataType });
     });
     childAtom.debugLabel = `filter-atom/${key}`;
     return childAtom;
@@ -70,7 +57,7 @@ export const coreSortStateAtom = atomFamily(
 );
 
 export const corePageNumberAtom = atomFamily((key: string) => {
-  const childAtom = atom<number>(DEFAULT_PAGE_NUMBER);
+  const childAtom = atomWithReset<number>(DEFAULT_PAGE_NUMBER);
   childAtom.debugLabel = `page-number/${key}`;
   return childAtom;
 });

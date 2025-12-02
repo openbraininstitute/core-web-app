@@ -172,7 +172,7 @@ export function MainTable({
           controls={
             view === CircuitView.Flat && (
               <div className="w-full">
-                <Pagination {...{ dataKey, resultPagination }} />
+                <Pagination {...{ dataKey, dataType, resultPagination }} />
               </div>
             )
           }

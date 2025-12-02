@@ -2,6 +2,7 @@ import { ChangeEvent, ComponentProps, useDeferredValue, useEffect, useRef, useSt
 import { SearchOutlined, CloseOutlined } from '@ant-design/icons';
 import { useAtom, useSetAtom } from 'jotai';
 
+import { useDataListStoreSession } from '@/ui/segments/data-table/elements/helpers';
 import {
   corePageNumberAtom,
   coreSearchStringAtom,
@@ -9,12 +10,15 @@ import {
 import { DEFAULT_PAGE_NUMBER } from '@/constants';
 import { cn } from '@/utils/css-class';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
 type SearchProps = {
   dataKey: string;
+  dataType: TExtendedEntitiesTypeDict;
   className?: ComponentProps<'div'>['className'];
 };
 
-export function Search({ dataKey, className }: SearchProps) {
+export function Search({ dataKey, dataType, className }: SearchProps) {
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
   const [searchInput, setSearchInput] = useState<string>('');
   const deferredSearchInput = useDeferredValue(searchInput);
@@ -22,10 +26,21 @@ export function Search({ dataKey, className }: SearchProps) {
   const [searchString, setSearchString] = useAtom(coreSearchStringAtom(dataKey));
   const searchInputRef = useRef<HTMLInputElement>(null);
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
+  const previousSearchRef = useRef<string>(deferredSearchInput);
+  const { sessionValue: dataListStoreSession, setSessionValue: updateDataListStoreSession } =
+    useDataListStoreSession({ dataKey, dataType });
 
   useEffect(() => {
-    setPageNumber(DEFAULT_PAGE_NUMBER);
+    // only reset page if search value actually changed (not on mount)
+    const searchChanged = previousSearchRef.current !== deferredSearchInput;
+    previousSearchRef.current = deferredSearchInput;
+
+    if (searchChanged) {
+      setPageNumber(DEFAULT_PAGE_NUMBER);
+      updateDataListStoreSession({ ...dataListStoreSession, Page: DEFAULT_PAGE_NUMBER });
+    }
     setSearchString(deferredSearchInput);
+    updateDataListStoreSession({ ...dataListStoreSession, Search: deferredSearchInput });
   }, [deferredSearchInput]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -46,12 +61,18 @@ export function Search({ dataKey, className }: SearchProps) {
   };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>): void => {
-    setSearchInput(e.target.value);
+    const { value } = e.target;
+    setSearchInput(value);
   };
 
   const handleClearSearch = (): void => {
     setSearchInput('');
     setPageNumber(DEFAULT_PAGE_NUMBER);
+    updateDataListStoreSession({
+      ...dataListStoreSession,
+      Search: '',
+      Page: DEFAULT_PAGE_NUMBER,
+    });
     searchInputRef.current?.focus();
   };
 

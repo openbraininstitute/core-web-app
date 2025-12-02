@@ -31,26 +31,32 @@ import { ValueRange } from '@/ui/segments/data-table/elements/listing-filter-pan
 import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
+import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
 import { fieldTitleSentenceCase } from '@/util/utils';
+import {
+  makeDataListStoreAtomsInitialValue,
+  extractPartsFromDataKey,
+  useDataListStoreSession,
+} from '@/ui/segments/data-table/elements/helpers';
 import {
   coreActiveColumnsAtom,
   coreFiltersAtom,
   corePageNumberAtom,
   coreSearchStringAtom,
 } from '@/ui/segments/data-table/elements/context';
+import { Button } from '@/ui/molecules/button';
+import { cn } from '@/utils/css-class';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { Facets } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
-import { DEFAULT_PAGE_NUMBER, type TWorkspaceScope } from '@/constants';
+import type { TWorkspaceScope } from '@/constants';
 import type {
   ValueOrRangeFilter,
   CoreFilterValues,
   GteLteValue,
   CoreFilter,
 } from '@/entity-configuration/definitions/types';
-import { cn } from '@/utils/css-class';
-import { Button } from '@/ui/molecules/button';
 
 type Props = {
   children?: ReactNode;
@@ -207,6 +213,10 @@ export function ListingFilterPanel({
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
   const [filterValues, setFilterValues] = useState<CoreFilterValues>({});
   const [isApplyingFilters, setIsApplyingFilters] = useState(false);
+  const { sessionValue: dataListStoreSession, setSessionValue: updateDataListStoreSession } =
+    useDataListStoreSession({ dataKey, dataType });
+
+  const { section } = extractPartsFromDataKey(dataKey);
   const resetFilters = useResetAtom(
     coreFiltersAtom({
       dataType,
@@ -283,6 +293,13 @@ export function ListingFilterPanel({
       value: filterValues[fil.field],
     }));
     setFilters(appliedFilters);
+    if (section === WorkspaceSection.Data) {
+      updateDataListStoreSession({
+        ...dataListStoreSession,
+        Filters: appliedFilters as Array<CoreFilter>,
+        Page: DEFAULT_PAGE_NUMBER,
+      });
+    }
   };
 
   const Entity = getViewDefinitionByExtendedType(dataType);
@@ -331,6 +348,7 @@ export function ListingFilterPanel({
   const clearFilters = () => {
     resetFilters();
     setSearchString('');
+    updateDataListStoreSession(makeDataListStoreAtomsInitialValue({ dataType }));
   };
 
   if (!activeColumns) return null;

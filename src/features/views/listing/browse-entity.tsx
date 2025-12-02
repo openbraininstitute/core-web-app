@@ -6,14 +6,15 @@ import { parseAsString, SingleParserBuilder, useQueryState } from 'nuqs';
 import { ReactElement, useEffect, type ComponentProps } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { WarningOutlined } from '@ant-design/icons';
-import { compact, get } from 'es-toolkit/compat';
+import { get } from 'es-toolkit/compat';
 import { RESET } from 'jotai/utils';
 import dynamic from 'next/dynamic';
 
+import { SetupDataListStoreOnMount } from '@/ui/segments/data-table/elements/persistent-data-list';
+import { makeDataKey, useDataListStoreSession } from '@/ui/segments/data-table/elements/helpers';
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
-
 import { DEFAULT_PAGE_NUMBER, WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { MiniDetailView } from '@/ui/segments/mini-detail-view';
@@ -87,14 +88,31 @@ export function BrowseEntityScope({
       .withOptions({ shallow: true }) as NonNullable<SingleParserBuilder<TWorkspaceScope>>
   );
 
-  const dataKey = compact([virtualLabId, projectId, section, dataType, scope, id]).join('/');
+  const dataKey = makeDataKey({
+    virtualLabId,
+    projectId,
+    section,
+    dataType,
+    scope,
+    id,
+  });
+
   const entity = getEntityByExtendedType({ type: dataType });
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
+  const { sessionValue: dataListStoreSession, setSessionValue: updateDataListStoreSession } =
+    useDataListStoreSession({ dataKey, dataType });
 
   const [sortState, setSortState] = useAtom(coreSortStateAtom({ key: dataKey }));
   const onSortChange = (newSortState: any) => {
     setPageNumber(DEFAULT_PAGE_NUMBER);
     setSortState(newSortState);
+    if (section === WorkspaceSection.Data) {
+      updateDataListStoreSession({
+        ...dataListStoreSession,
+        Sort: newSortState,
+        Page: DEFAULT_PAGE_NUMBER,
+      });
+    }
   };
 
   const allColumns = useDataTableColumns<EntityCoreIdentifiableNamed>({
@@ -175,6 +193,7 @@ export function BrowseEntityScope({
 
   return (
     <>
+      <SetupDataListStoreOnMount {...{ dataKey, dataType }} />
       <div
         id="data-table-container"
         data-testid="data-table-container"

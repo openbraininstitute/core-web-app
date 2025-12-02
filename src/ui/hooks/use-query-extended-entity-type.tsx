@@ -1,3 +1,5 @@
+import { isEmpty } from 'es-toolkit/compat';
+import { useAtomValue } from 'jotai';
 import {
   useQuery,
   keepPreviousData,
@@ -5,17 +7,15 @@ import {
   type QueryFunction,
   hashKey,
 } from '@tanstack/react-query';
-import { useAtomValue } from 'jotai';
-import isEmpty from 'es-toolkit/compat/isEmpty';
 
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
+import { DEFAULT_PAGE_SIZE, WorkspaceScope } from '@/constants';
 import {
   DEFAULT_BRAIN_REGION_HIERARCHY_ID,
   selectedBrainRegionAtom,
 } from '@/features/brain-region-hierarchy/context';
 import { compactRecord } from '@/utils/dictionary';
-import { DEFAULT_PAGE_SIZE, WorkspaceScope } from '@/constants';
 import {
   coreFiltersAtom,
   coreSortStateAtom,

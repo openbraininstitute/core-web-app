@@ -3,14 +3,17 @@ import { useRef, useEffect } from 'react';
 import { useAtom } from 'jotai';
 import type { ComponentProps } from 'react';
 
+import { useDataListStoreSession } from '@/ui/segments/data-table/elements/helpers';
 import { corePageNumberAtom } from '@/ui/segments/data-table/elements/context';
 import { DEFAULT_PAGE_SIZE } from '@/constants';
 import { cn } from '@/utils/css-class';
 
 import type { Pagination as EntitycorePagination } from '@/api/entitycore/types/shared/response';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 type Props = {
   dataKey: string;
+  dataType: TExtendedEntitiesTypeDict;
   size?: PaginationProps['size'];
   resultPagination?: {
     pagination: EntitycorePagination;
@@ -19,8 +22,10 @@ type Props = {
   className?: ComponentProps<'ul'>['className'];
 };
 
-export function Pagination({ dataKey, size, resultPagination, className }: Props) {
+export function Pagination({ dataKey, size, resultPagination, className, dataType }: Props) {
   const [page, updatePage] = useAtom(corePageNumberAtom(dataKey));
+  const { sessionValue: dataListStoreSession, setSessionValue: updateDataListStoreSession } =
+    useDataListStoreSession({ dataKey, dataType });
   const lastTotalItemsRef = useRef<number | undefined>(undefined);
   const lastDataKeyRef = useRef<string>(dataKey);
 
@@ -39,6 +44,11 @@ export function Pagination({ dataKey, size, resultPagination, className }: Props
 
   const totalItems = resultPagination?.pagination?.total_items ?? lastTotalItemsRef.current;
 
+  const onUpdatePage = (p: number) => {
+    updateDataListStoreSession({ ...dataListStoreSession, Page: p });
+    updatePage(p);
+  };
+
   if (totalItems === undefined) {
     return null;
   }
@@ -52,7 +62,7 @@ export function Pagination({ dataKey, size, resultPagination, className }: Props
       data-testid="listing-pagination"
       pageSize={DEFAULT_PAGE_SIZE}
       defaultPageSize={DEFAULT_PAGE_SIZE}
-      onChange={updatePage}
+      onChange={onUpdatePage}
       align="center"
       size={size}
       current={page}

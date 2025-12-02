@@ -163,7 +163,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           allowDownload={allowDownload}
           controls={
             <div className="w-full">
-              <Pagination {...{ dataKey, resultPagination }} />
+              <Pagination {...{ dataType, dataKey, resultPagination }} />
             </div>
           }
         />
