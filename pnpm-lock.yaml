@@ -150,8 +150,8 @@ importers:
         specifier: ^3.13.12
         version: 3.13.12(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@tolokoban/tgd':
-        specifier: ^2.0.67
-        version: 2.0.68
+        specifier: ^2.0.69
+        version: 2.0.69
       ajv:
         specifier: ^8.17.1
         version: 8.17.1
@@ -4643,8 +4643,8 @@ packages:
     peerDependencies:
       '@testing-library/dom': '>=7.21.4'
 
-  '@tolokoban/tgd@2.0.68':
-    resolution: {integrity: sha512-80YxoC1JpEAQRworGEYSr189a8w66KlCQMjDkwpLW+4BIWrr7nl81N/hU2a4T6JXjn0IFK6/RIhtSH+VFMVxdA==}
+  '@tolokoban/tgd@2.0.69':
+    resolution: {integrity: sha512-Kp9eYED20fgNvKvAdOmw//ExqxEz8frJr9liB0ZTjeRHaujj+//gxxIL8hdO0E6ayTBSYh7bMpkANtQkvww6dA==}
 
   '@tootallnate/once@2.0.0':
     resolution: {integrity: sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==}
@@ -17190,7 +17190,7 @@ snapshots:
     dependencies:
       '@testing-library/dom': 10.4.0
 
-  '@tolokoban/tgd@2.0.68':
+  '@tolokoban/tgd@2.0.69':
     dependencies:
       '@loaders.gl/core': 4.3.4
       '@loaders.gl/draco': 4.3.4(@loaders.gl/core@4.3.4)
