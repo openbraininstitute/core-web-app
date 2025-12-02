@@ -15,14 +15,13 @@ type Props = {
 };
 
 export default function ImageViewer({ entityId, entityType, assetId }: Props) {
-  const pdfFileUrl = `${entityCoreUrl}/${kebabCase(entityType)}/${entityId}/assets/${assetId}/download`;
-
+  const imageFileUrl = `${entityCoreUrl}/${kebabCase(entityType)}/${entityId}/assets/${assetId}/download`;
   const {
     cachedUrl,
     loading: isCaching,
     error,
   } = useClientCachedUrl({
-    url: pdfFileUrl,
+    url: imageFileUrl,
     urlKey: `${entityId}/${assetId}`,
   });
 

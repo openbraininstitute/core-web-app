@@ -1,30 +1,28 @@
-export function getDocumentation(assetPath: string) {
-  const prefix = assetPath.split('.')[0];
+interface Documentation {
+  description: string;
+  protocol: {
+    type: string;
+    delay: string;
+    duration: string;
+    amplitude: string;
+    totalDuration: string;
+  };
+  validation_condition: string;
+}
+
+export function getDocumentation(assetPath: string): Documentation | undefined {
+  const prefix = assetPath.split('.')[0].toLowerCase();
   const parts = prefix.split('_');
+  let selection: Documentation | undefined;
   for (let { length } = parts; length > 0; length--) {
     const key = parts.slice(0, length).join('_');
     const documentation = DICTIONARY[key];
-    if (documentation) return documentation;
+    if (documentation) selection = documentation;
   }
-  return undefined;
+  return selection;
 }
 
-const DICTIONARY: Readonly<
-  Record<
-    string,
-    {
-      description: string;
-      protocol: {
-        type: string;
-        delay: string;
-        duration: string;
-        amplitude: string;
-        totalDuration: string;
-      };
-      validation_condition: string;
-    }
-  >
-> = {
+const DICTIONARY: Readonly<Record<string, Documentation>> = {
   spiking_test: {
     description:
       'Runs the model with an injected current of 130% of the threshold current (rheobase) in the soma.',

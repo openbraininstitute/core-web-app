@@ -42,7 +42,7 @@ export default function AssetViewer({ entity, entityType, pdfShowPageCount = tru
           );
         })
         .with({ asset: { content_type: P.union('image/png', 'image/jpeg', 'image/jpg') } }, () => {
-          return <ImageViewer entityId={entity.id} assetId={asset.id} entityType={entity.type} />;
+          return <ImageViewer entityId={entity.id} assetId={asset.id} entityType={entityType} />;
         })
         .otherwise(() => null);
     },
