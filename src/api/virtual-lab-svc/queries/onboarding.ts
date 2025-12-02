@@ -16,7 +16,7 @@ const baseUri = '/users/preferences/onboarding';
  */
 export async function getOnboardingStatus(): Promise<VlmOnboardingResponse> {
   const api = await virtualLabRootApi();
-  return await api.get<VlmOnboardingResponse>('');
+  return await api.get<VlmOnboardingResponse>(baseUri);
 }
 
 /**
