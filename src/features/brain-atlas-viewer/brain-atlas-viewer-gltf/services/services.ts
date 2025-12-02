@@ -45,12 +45,12 @@ export async function getBrainRegionMeshArrayBuffer(
   const fromCache = cacheMeshes.get(regionId);
   if (fromCache) return fromCache;
 
-  const promise = actualGetBrainRegionMeshArayBuffer(accessToken, regionId);
+  const promise = actualGetBrainRegionMeshArrayBuffer(accessToken, regionId);
   cacheMeshes.set(regionId, promise);
   return promise;
 }
 
-async function actualGetBrainRegionMeshArayBuffer(
+async function actualGetBrainRegionMeshArrayBuffer(
   accessToken: string,
   regionId: string
 ): Promise<ArrayBuffer> {
