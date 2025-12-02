@@ -1,3 +1,4 @@
+import { usePathname } from 'next/navigation';
 import { IconDefault, IconLiteratureSearchTool, IconWebSearchTool } from './icons';
 
 export class AIAssistantTool {
@@ -29,7 +30,9 @@ export class AIAssistantTool {
   }
 
   get docURL() {
-    return `/app/documentation/ai-chat-tools/${this.id}`;
+    const currentPath = usePathname();
+    const [vlab, project] = currentPath.split('/').slice(3, 5);
+    return `/app/virtual-lab/${vlab}/${project}/help?section=ai-tools&tool=${this.id}`;
   }
 }
 
