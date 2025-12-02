@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 // import { useNextStep } from 'nextstepjs';
 // import find from 'es-toolkit/compat/find';
 
-import { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import { ServerSideLayoutProp, WorkspaceContext } from '@/types/common';
 import { NotebooksLayout } from '@/ui/layouts/notebooks-layout';
 
 // import { notebookTour } from '@/ui/segments/app-setup/discover-app';
@@ -15,7 +15,7 @@ import { NotebooksLayout } from '@/ui/layouts/notebooks-layout';
 export default async function Page({
   children,
   params: promisedParams,
-}: ServerSideComponentProp<WorkspaceContext & { scope: 'public' | 'private' }, null> & {
+}: ServerSideLayoutProp<WorkspaceContext & { scope: string }> & {
   children: ReactNode;
 }) {
   // const { startNextStep } = useNextStep();
@@ -42,5 +42,5 @@ export default async function Page({
   const { scope } = params;
   if (!['public', 'private'].includes(scope)) notFound();
 
-  return <NotebooksLayout active={scope}>{children}</NotebooksLayout>;
+  return <NotebooksLayout active={scope as 'public' | 'private'}>{children}</NotebooksLayout>;
 }

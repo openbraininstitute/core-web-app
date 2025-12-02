@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react';
 
-import { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import { ServerSideLayoutProp, WorkspaceContext } from '@/types/common';
 import { ReportsInnerLayout } from '@/ui/layouts/reports-inner-layout';
 import { ReportsLayout } from '@/ui/layouts/reports-layout';
 import { ConditionalLeftMenu } from '@/ui/segments/reports/conditional-left-menu';
 
 export default async function Page({
   children,
-}: ServerSideComponentProp<WorkspaceContext, null> & { children: ReactNode }) {
+}: ServerSideLayoutProp<WorkspaceContext> & { children: ReactNode }) {
   return (
     <ReportsLayout>
       <ReportsInnerLayout>

@@ -12,12 +12,12 @@ import { DataHeader } from '@/ui/segments/explore/header';
 import { DataLayout } from '@/ui/layouts/explore-layout';
 import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
-import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import type { ServerSideLayoutProp, WorkspaceContext } from '@/types/common';
 
 export default function Page({
   children,
   params,
-}: ServerSideComponentProp<WorkspaceContext, null> & {
+}: ServerSideLayoutProp<WorkspaceContext> & {
   children: ReactNode;
 }) {
   const { projectId } = use(params);

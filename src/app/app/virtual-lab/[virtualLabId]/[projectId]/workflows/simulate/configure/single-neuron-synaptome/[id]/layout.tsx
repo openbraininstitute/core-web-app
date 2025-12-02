@@ -5,12 +5,12 @@ import { WorkflowSimulateLayout } from '@/ui/layouts/workflow-simulate-layout';
 import { getQueryClient, HydrateClient } from '@/query-provider/server';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
-import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import type { ServerSideLayoutProp, WorkspaceContext } from '@/types/common';
 
 export default async function Layout({
   params,
   children,
-}: ServerSideComponentProp<WorkspaceContext & { id: string }, null> & { children: ReactNode }) {
+}: ServerSideLayoutProp<WorkspaceContext & { id: string }> & { children: ReactNode }) {
   const queryClient = getQueryClient();
   const { virtualLabId, projectId, id } = await params;
 

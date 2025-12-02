@@ -37,6 +37,10 @@ export interface ServerSideComponentProp<Params, SearchParams> {
   searchParams: Promise<SearchParams>;
 }
 
+export interface ServerSideLayoutProp<Params> {
+  params: Promise<Params>;
+}
+
 export const WorkspaceContextSchema = z.object({
   virtualLabId: z.string(),
   projectId: z.string(),

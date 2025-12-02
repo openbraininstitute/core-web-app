@@ -163,6 +163,7 @@ export default [
       'react/require-default-props': 'off',
       'no-param-reassign': 'off',
       'no-undef': 'off',
+      'import-x/extensions': 'off',
       'react-hooks/exhaustive-deps': [
         'error',
         {

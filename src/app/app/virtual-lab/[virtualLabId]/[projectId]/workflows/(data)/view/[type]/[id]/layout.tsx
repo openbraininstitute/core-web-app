@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 import { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
 import { DataViewLayout } from '@/ui/layouts/data-view-layout';
 
-import type { WorkspaceContext, ServerSideComponentProp } from '@/types/common';
+import type { WorkspaceContext, ServerSideLayoutProp } from '@/types/common';
 
 interface Params {
   id: string;
@@ -14,7 +14,7 @@ interface Params {
 export default async function Layout({
   children,
   params,
-}: ServerSideComponentProp<WorkspaceContext & Params, null> & {
+}: ServerSideLayoutProp<WorkspaceContext & Params> & {
   children: ReactNode;
 }) {
   const awaitedParams = await params;

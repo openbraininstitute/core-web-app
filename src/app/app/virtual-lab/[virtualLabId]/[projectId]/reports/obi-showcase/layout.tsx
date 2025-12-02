@@ -1,6 +1,6 @@
-import type { ServerSideComponentProp } from '@/types/common';
+import type { ServerSideLayoutProp } from '@/types/common';
 
-type Props = ServerSideComponentProp<{ virtualLabId: string; projectId: string }, null> & {
+type Props = ServerSideLayoutProp<{ virtualLabId: string; projectId: string }> & {
   children: React.ReactNode;
 };
 
