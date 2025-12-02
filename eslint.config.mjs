@@ -12,9 +12,10 @@ import js from '@eslint/js';
 import { configs, plugins } from 'eslint-config-airbnb-extended';
 import prettierConfigImport from 'eslint-config-prettier';
 import prettierPlugin from 'eslint-plugin-prettier';
-const { rules: prettierConfigRules } = prettierConfigImport;
 import plugin from '@stylistic/eslint-plugin';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
+
+const { rules: prettierConfigRules } = prettierConfigImport;
 
 const gitignorePath = path.resolve('.', '.gitignore');
 
@@ -148,7 +149,7 @@ export default [
       'no-restricted-exports': 'off',
       'no-restricted-syntax': ['error', 'ForInStatement', 'LabeledStatement', 'WithStatement'],
       'no-underscore-dangle': 'off',
-
+      'import-x/no-rename-default': 'off',
       'padding-line-between-statements': [
         'error',
         {
@@ -160,7 +161,8 @@ export default [
 
       'prefer-regex-literals': 'off',
       'react/require-default-props': 'off',
-
+      'no-param-reassign': 'off',
+      'no-undef': 'off',
       'react-hooks/exhaustive-deps': [
         'error',
         {
