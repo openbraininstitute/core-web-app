@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 
 import {

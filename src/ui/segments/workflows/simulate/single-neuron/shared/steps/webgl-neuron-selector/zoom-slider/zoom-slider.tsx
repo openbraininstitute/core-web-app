@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 import React from 'react';
 import { Slider } from 'antd';
 import { ZoomInOutlined, ZoomOutOutlined } from '@ant-design/icons';

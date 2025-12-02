@@ -7,7 +7,7 @@ export function ArrowsHorizontal(props: SVGProps<SVGSVGElement>) {
       width="1em"
       height="1em"
       viewBox="0 0 256 256"
-      {...props} // eslint-disable-line react/jsx-props-no-spreading
+      {...props}
     >
       <path
         fill="currentColor"

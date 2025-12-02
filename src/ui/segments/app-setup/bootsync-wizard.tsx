@@ -77,7 +77,7 @@ export function WorkspaceWizard({
     .with(
       { current: WizardSteps.Customization, customizationPayload: P.nonNullable.select('payload') },
       ({ customizationPayload: cp }) => isCustomizationPayload(cp),
-      // eslint-disable-next-line react/jsx-props-no-spreading
+
       ({ payload }) => <WorkspaceCustomization {...payload} />
     )
     .otherwise(() => null);

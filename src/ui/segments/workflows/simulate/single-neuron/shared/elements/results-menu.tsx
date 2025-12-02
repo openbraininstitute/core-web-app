@@ -151,7 +151,6 @@ export function Menu({ sessionId, type }: Props) {
             const record = `${section}_${offset === 0 ? '0.0' : String(offset)}`;
             return (
               <Button
-                // eslint-disable-next-line react/no-array-index-key
                 key={`${record}_${indx}`}
                 rounded
                 variant="outline"

@@ -113,7 +113,6 @@ function CustomInput({
           'placeholder:text-sm placeholder:font-light disabled:font-black disabled:opacity-70',
           'focus-visible:text-primary-9! font-black! focus-visible:font-bold!'
         )}
-        // eslint-disable-next-line react/jsx-props-no-spreading
         {...rest}
       />
       <span className="absolute top-1/2 right-5 -translate-y-1/2 transform">

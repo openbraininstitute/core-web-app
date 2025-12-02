@@ -166,7 +166,7 @@ export function memoize<Param, T>(
   resolver?: (a: Param) => string,
   maxSize?: number
 ) {
-  if (maxSize === undefined) maxSize = 100; // eslint-disable-line
+  if (maxSize === undefined) maxSize = 100;
   const newFamily = _memoize(initialize, resolver);
   newFamily.cache = new (makeLRUMap(maxSize))();
 

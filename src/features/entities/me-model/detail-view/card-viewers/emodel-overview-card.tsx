@@ -96,7 +96,7 @@ function EModelOverviewCard({ mode = 'summary', data, reselectLink = false }: Pr
 export default memo(EModelOverviewCard);
 
 // TODO: keep this one until migrate simulations
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 function EModelThumbnail({ emodel }: { emodel: IEModel }) {
   // if (!emodel.image)
   //   return <Empty description="No thumbnail available" image={Empty.PRESENTED_IMAGE_SIMPLE} />;

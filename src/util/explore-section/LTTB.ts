@@ -10,8 +10,6 @@
  *
  */
 
-/* eslint-disable no-plusplus */
-
 import isDate from 'es-toolkit/compat/isDate';
 import isObject from 'es-toolkit/compat/isObject';
 

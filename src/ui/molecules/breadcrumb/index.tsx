@@ -1,5 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
-
 import { RightOutlined, MoreOutlined } from '@ant-design/icons';
 import { Slot } from '@radix-ui/react-slot';
 import * as React from 'react';

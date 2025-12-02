@@ -17,7 +17,6 @@ export function VerificationCode({ disabled = false, onComplete }: Props) {
       render={({ slots }) => (
         <div className="flex gap-1">
           {slots.slice(0, 6).map((slot, idx) => (
-            // eslint-disable-next-line react/jsx-props-no-spreading
             <Slot key={`${slot.char}${idx}`} {...slot} /> // eslint-disable-line react/no-array-index-key
           ))}
         </div>

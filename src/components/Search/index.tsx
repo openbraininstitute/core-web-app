@@ -87,7 +87,6 @@ export default function Search<T extends DefaultOptionType>({
           tagRender={tagRender}
           value={value}
           defaultValue={defaultValue}
-          // eslint-disable-next-line react/jsx-props-no-spreading
           {...(useSearchInsteadOfFilter
             ? { onSearch: handleSearch, filterOption: false }
             : {

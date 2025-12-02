@@ -1,5 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
-
 import { cn } from '@/utils/css-class';
 
 type CardProps = React.ComponentProps<'div'> & {

@@ -1,5 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
-
 export default function FeedbacksIcon({ className, ...props }: React.SVGProps<SVGSVGElement>) {
   return (
     <svg

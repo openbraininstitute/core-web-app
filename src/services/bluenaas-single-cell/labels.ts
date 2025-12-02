@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 import { Camera, Object3D, Scene, Vector3 } from 'three';
 
 import { getSimulationColor } from '@/constants/simulate/single-neuron';

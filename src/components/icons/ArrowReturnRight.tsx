@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
 import { SVGProps } from 'react';
 
 export function ArrowReturnRight(props: SVGProps<SVGSVGElement>) {

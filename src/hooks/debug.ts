@@ -8,7 +8,6 @@ import { logDebug } from '@/utils/logger';
  */
 export function useDebugPropHasChanged(label: string, prop: unknown) {
   React.useEffect(() => {
-    // eslint-disable-next-line no-console
     logDebug('[Changed!] ', label, ':', prop);
   }, [label, prop]);
 }

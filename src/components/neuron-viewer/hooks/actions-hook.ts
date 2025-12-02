@@ -23,15 +23,12 @@ export function useNeuronViewerActions({
     if (!useActions) return;
     if (renderer.current) {
       if (actions?.onClick) {
-        // eslint-disable-next-line no-param-reassign
         renderer.current.configOnClick = actions.onClick;
       }
       if (actions?.onHover) {
-        // eslint-disable-next-line no-param-reassign
         renderer.current.configOnHover = actions.onHover;
       }
       if (actions?.onHoverEnd) {
-        // eslint-disable-next-line no-param-reassign
         renderer.current.configOnHoverEnd = actions.onHoverEnd;
       }
     }

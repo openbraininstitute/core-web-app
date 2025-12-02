@@ -1,5 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
-
 import { useCallback, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { loadable } from 'jotai/utils';

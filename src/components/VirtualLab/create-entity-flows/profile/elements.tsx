@@ -43,7 +43,6 @@ export function XInput({
         '[&.ant-XInput-status-error]:focus:!ring-0',
         className
       )}
-      // eslint-disable-next-line react/jsx-props-no-spreading
       {...props}
     />
   );

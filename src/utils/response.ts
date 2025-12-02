@@ -59,7 +59,6 @@ export async function readNdjsonResponse<T>(response: Response, onMessage?: (dat
 
   const reader = stream.getReader();
 
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     const { value, done } = await reader.read();
     if (done) break;

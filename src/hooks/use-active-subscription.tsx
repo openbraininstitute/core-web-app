@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-
 import { useQuery } from '@tanstack/react-query';
 
 import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscription';

@@ -10,7 +10,7 @@ export default function useSearch(
 
   return {
     search,
-    // eslint-disable-next-line react/jsx-props-no-spreading
+
     Search: <Search {...props} value={search} onChange={(e) => setSearch(e.currentTarget.value)} />,
   };
 }
@@ -39,7 +39,7 @@ function Search(props: JSX.IntrinsicElements['input'] & { containerClassName?: s
         )}
       >
         <input
-          {...rest} // eslint-disable-line react/jsx-props-no-spreading
+          {...rest}
           className={classNames(
             'text-primary-3 placeholder:text-primary-3 mr-2 bg-transparent outline-hidden',
             className

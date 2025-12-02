@@ -2,8 +2,6 @@ import cloneDeep from 'es-toolkit/compat/cloneDeep';
 import { OriginalComposition, OriginalCompositionNode } from '@/types/composition/original';
 import { CalculatedCompositionNode } from '@/types/composition/calculation';
 
-/* eslint-disable no-param-reassign */
-
 /**
  * Given the previous and new value of a node, calculates the ratio change that it should receive
  *
@@ -126,5 +124,3 @@ const computeModifiedComposition = (
 };
 
 export default computeModifiedComposition;
-
-/* eslint-enable no-param-reassign */

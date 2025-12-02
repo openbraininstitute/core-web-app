@@ -58,7 +58,6 @@ export default function SingleStep({
         backgroundClass,
         mouseHover ? 'border-primary-6' : 'border-primary-9'
       )}
-      // eslint-disable-next-line react/jsx-props-no-spreading
       {...mouseHoverProps}
     >
       <div

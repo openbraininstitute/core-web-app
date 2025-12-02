@@ -88,7 +88,7 @@ export async function refreshAccessToken(token: TokenSet) {
     };
   } catch (error) {
     // TODO: log to Sentry once it's enabled
-    // eslint-disable-next-line no-console
+
     log('error', error);
 
     return {

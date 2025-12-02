@@ -74,7 +74,6 @@ export function SchemaGeneratedForm({
   };
 
   const onRJSFChange = (e: IChangeEvent) => {
-    // eslint-disable-next-line prefer-destructuring
     let errorSchema: ErrorSchema | undefined = e.errorSchema;
 
     if (schema && e.formData !== undefined) {
@@ -108,7 +107,6 @@ export function SchemaGeneratedForm({
       validator={validator}
       uiSchema={mergedUiSchema}
       formData={formData}
-      // eslint-disable-next-line react/jsx-props-no-spreading
       {...rest}
       className="w-full"
     />

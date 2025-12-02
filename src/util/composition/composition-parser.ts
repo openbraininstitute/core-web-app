@@ -14,8 +14,6 @@ import {
 } from '@/types/composition/calculation';
 import { calculateNewExtendedNodeId } from '@/util/composition/utils';
 
-/* eslint-disable no-param-reassign */
-
 /**
  * Converts a composition object to a pair of counts
  * @param composition the original composition
@@ -211,4 +209,3 @@ export default async function calculateCompositions(
     composition: compositionFile,
   };
 }
-/* eslint-enable no-param-reassign */

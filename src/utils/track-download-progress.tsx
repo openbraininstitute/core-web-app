@@ -11,7 +11,6 @@ export async function trackDownloadProgress(
   let receivedLength = 0;
   const chunks: Array<Uint8Array> = [];
 
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     const result = await reader?.read();
     if (!result || result.done) break;

@@ -122,7 +122,7 @@ export function EModel({ sessionId }: Props) {
             } as HTMLAttributes<any> & TdHTMLAttributes<any>;
           return {};
         },
-        // eslint-disable-next-line
+
         rowClassName: (row) => {
           return checkSelectedEmodelBlackList(row as IEModel)
             ? cn(

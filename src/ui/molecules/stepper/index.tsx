@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-nested-ternary */
 
@@ -180,7 +179,6 @@ function StepperItem({
   const { activeStep } = useStepper();
 
   const state: StepState =
-    // eslint-disable-next-line  no-nested-ternary
     completed || step < activeStep ? 'completed' : activeStep === step ? 'active' : 'inactive';
 
   const isLoading = loading && step === activeStep;

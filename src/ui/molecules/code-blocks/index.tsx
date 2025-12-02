@@ -1,5 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
-
 'use client';
 
 import { CheckOutlined as CheckIcon, CopyOutlined as CopyIcon } from '@ant-design/icons';

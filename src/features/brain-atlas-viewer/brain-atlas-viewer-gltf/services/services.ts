@@ -75,7 +75,7 @@ async function actualGetBrainRegionMeshArrayBuffer(
   const time = performance.now();
   const api = await entityCoreApi();
   const data = await api.get(`/brain-atlas-region/${entity.id}/assets/${asset.id}/download`);
-  // eslint-disable-next-line no-console
+
   log('debug', 'GLTF', `${performance.now() - time} msec`, data);
   const mesh = data instanceof ArrayBuffer ? data : null;
   if (!mesh) {
@@ -154,7 +154,7 @@ async function actualGetPointCouldData(annotationValue: number, accessToken: str
     env.NEXT_PUBLIC_LEGACY_DEFAULT_CIRCUIT_ID || ''
   )}&region=${annotationValue}&how=arrow`;
   const rawData = await fetchPointCloud(url, accessToken);
-  // eslint-disable-next-line no-console
+
   const table = tableFromIPC(rawData);
   const array = table.toArray();
   const dataPoint = new Float32Array(array.length * 4);

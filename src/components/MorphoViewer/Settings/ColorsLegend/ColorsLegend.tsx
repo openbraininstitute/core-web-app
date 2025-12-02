@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 import { useEffect, useState } from 'react';
 import { MorphologyCanvas } from '@bbp/morphoviewer';
 

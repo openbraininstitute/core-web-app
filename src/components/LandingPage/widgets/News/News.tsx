@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 /* eslint-disable react/no-array-index-key */
 import React from 'react';
 

@@ -1,6 +1,5 @@
 import { IMEModel } from '@/api/entitycore/types';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default function AnalysisTab({ meModel }: { meModel: IMEModel | null }) {
   // const image = meModel?.image;
 

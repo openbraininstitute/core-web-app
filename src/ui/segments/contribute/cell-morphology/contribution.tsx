@@ -74,7 +74,7 @@ export function Contribution() {
         searchField: 'pref_label__ilike',
       }),
     []
-  ); // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   const RenderOrganizationDropdown = useMemo(
     () =>
@@ -91,7 +91,7 @@ export function Contribution() {
         searchField: 'pref_label__ilike',
       }),
     []
-  ); // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   const RenderConsortiumDropdown = useMemo(
     () =>
@@ -108,7 +108,7 @@ export function Contribution() {
         searchField: 'pref_label__ilike',
       }),
     []
-  ); // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   const renderAgentDropdown = useMemo(
     () => ({

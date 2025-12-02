@@ -213,7 +213,6 @@ function resolveType(sectionName: string): StructureItemType {
     case 'myel':
       return StructureItemType.Myelin;
     default:
-      // eslint-disable-next-line no-console
       logWarn('Unknown section type:', sectionName);
       return StructureItemType.Unknown;
   }

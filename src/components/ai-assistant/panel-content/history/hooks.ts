@@ -18,7 +18,7 @@ export function useSections(history: AiAssistantHistory) {
     let currentList = history.slice();
     for (let caseIndex = 0; caseIndex < cases.length; caseIndex++) {
       const newList: AiAssistantHistoryItem[] = [];
-      // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
+
       const [_, days] = cases[caseIndex];
       for (const thread of currentList) {
         if (deltaDays(thread, days)) {

@@ -1,5 +1,5 @@
 /* eslint-disable react/no-array-index-key */
-/* eslint-disable no-param-reassign */
+
 import React, { CSSProperties, type JSX } from 'react';
 
 import { IconChevronLeft } from '../../icons/IconChevronLeft';

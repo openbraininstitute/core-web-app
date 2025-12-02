@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 import { PortableTextBlock } from 'next-sanity';
 import { tryType, typeImage } from './_common';
 import { ContentForRichText, typeBooleanOrNull, typeStringOrNull } from './types';

@@ -30,7 +30,6 @@ export function EyeIconOutline(props: SVGProps<SVGSVGElement>) {
       width="1em"
       height="1em"
       viewBox="0 0 512 512"
-      // eslint-disable-next-line react/jsx-props-no-spreading
       {...props}
     >
       <path
@@ -64,7 +63,6 @@ export function EyeIconWhiteWithinBox(props: SVGProps<SVGSVGElement>) {
       height="16"
       viewBox="0 0 15 16"
       fill="none"
-      // eslint-disable-next-line react/jsx-props-no-spreading
       {...props}
     >
       <path

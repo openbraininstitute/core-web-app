@@ -82,7 +82,7 @@ export default async function Overview({
       context: ctx,
     });
 
-    (entity as ISingleNeuronSynaptome).me_model = meModel; //eslint-disable-line
+    (entity as ISingleNeuronSynaptome).me_model = meModel;
   }
 
   if (

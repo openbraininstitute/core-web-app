@@ -36,7 +36,6 @@ async function resolveSimulationCampaigns({
   context: WorkspaceContext | undefined;
   filters?: Partial<ICircuitSimulationCampaignFilter>;
 }) {
-  // eslint-disable-next-line no-param-reassign
   filters = discardBrainRegionQueryParams(filters);
 
   const source = await getCircuitSimulationCampaigns({ context, withFacets, filters });

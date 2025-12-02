@@ -55,7 +55,7 @@ function CustomHeaderCell({
 }) {
   return (
     <th
-      {...props} /* eslint-disable-line react/jsx-props-no-spreading */
+      {...props}
       style={{
         ...style,
         fontWeight: 'normal',

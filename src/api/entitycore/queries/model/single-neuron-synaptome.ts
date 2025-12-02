@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 import startsWith from 'es-toolkit/compat/startsWith';
 import some from 'es-toolkit/compat/some';
 

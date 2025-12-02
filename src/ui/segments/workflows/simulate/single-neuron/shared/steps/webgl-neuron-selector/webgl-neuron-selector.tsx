@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 import React from 'react';
 
 import { PainterManager, usePainterController, usePainterManager } from './painter';
@@ -22,7 +21,6 @@ export interface WebglNeuronSelectorProps {
   disableSynapses?: boolean;
 }
 
-// eslint-disable-next-line react/display-name
 export const WebglNeuronSelector = React.memo(
   ({
     projectId,

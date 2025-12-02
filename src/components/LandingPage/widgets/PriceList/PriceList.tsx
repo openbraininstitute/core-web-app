@@ -1,5 +1,3 @@
-/* eslint-disable react/no-array-index-key */
-
 import { styleBlockLarge } from '../../styles';
 import LargeScreen from './large-screen';
 import SmallScreen from './small-screen';

@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { EnumSection } from '../sections/sections';
 import { getSection } from '../utils';
 import { ContentForRichText, isContentForRichText } from './types';

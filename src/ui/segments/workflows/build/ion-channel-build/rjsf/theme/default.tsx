@@ -1,7 +1,5 @@
-/* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable object-shorthand */
 /* eslint-disable no-nested-ternary */
-/* eslint-disable prefer-destructuring */
 
 import renderMathInElement from 'katex/contrib/auto-render';
 import { ObjectFieldTemplateProps } from '@rjsf/utils';

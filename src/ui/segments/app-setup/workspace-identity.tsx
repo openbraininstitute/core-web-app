@@ -1,6 +1,3 @@
-/* eslint-disable no-nested-ternary */
-/* eslint-disable react/jsx-props-no-spreading */
-
 'use client';
 
 import { ComponentProps, ReactNode, useEffect, useState } from 'react';

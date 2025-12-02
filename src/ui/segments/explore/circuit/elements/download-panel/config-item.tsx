@@ -178,7 +178,7 @@ export function NetworkConfigItem({
             return (
               <ConfigChild
                 key={`${kebabCase(item.title)}/${item.asset.size}/${idx}`} // eslint-disable-line react/no-array-index-key
-                {...item} // eslint-disable-line  react/jsx-props-no-spreading
+                {...item}
                 showType={showType}
                 showPrefix={showPrefix}
                 onDownload={onDownload}

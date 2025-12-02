@@ -27,11 +27,7 @@ export default function DownloadIcon({ className }: { className?: string }) {
 export function DownloadIconWhiteWithCorners(props: SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="16" viewBox="0 0 15 16" fill="none">
-      <g
-        id="Vector"
-        // eslint-disable-next-line react/jsx-props-no-spreading
-        {...props}
-      >
+      <g id="Vector" {...props}>
         <path
           d="M7.50216 11.3403C7.60552 11.3403 7.70395 11.3193 7.79325 11.2813C7.88395 11.2426 7.9648 11.1871 8.033 11.1182L12.53 6.62119C12.8232 6.328 12.8232 5.85341 12.53 5.56022C12.2375 5.26773 11.7622 5.26773 11.4697 5.56022L8.25014 8.78049V0.841128C8.25014 0.426997 7.91406 0.0909119 7.49993 0.0909119C7.0858 0.0909119 6.74971 0.426997 6.74971 0.841128V8.78049L3.53016 5.56022C3.23767 5.26773 2.76237 5.26773 2.46988 5.56022C2.17669 5.85341 2.17669 6.328 2.46988 6.62119L6.96974 11.121C7.04286 11.1949 7.12794 11.2497 7.21934 11.2863C7.30371 11.3207 7.39652 11.3397 7.49284 11.3404L7.50216 11.3403Z"
           fill="currentColor"

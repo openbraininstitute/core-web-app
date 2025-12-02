@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 import React from 'react';
 import { tgdCalcMapRange, TgdVec4 } from '@tolokoban/tgd';
 

@@ -1,5 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
-
 'use client';
 
 import { AlertOutlined, LoadingOutlined } from '@ant-design/icons';

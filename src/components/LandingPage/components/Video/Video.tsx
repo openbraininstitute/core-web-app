@@ -1,4 +1,3 @@
-/* eslint-disable jsx-a11y/media-has-caption */
 import { usePathname } from 'next/navigation';
 import React, { CSSProperties, SyntheticEvent, useRef, useState } from 'react';
 
