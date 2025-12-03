@@ -15,7 +15,7 @@ import {
   selectedBrainRegionAtom,
 } from '@/features/brain-region-hierarchy/context';
 import { compactRecord } from '@/utils/dictionary';
-import { DEFAULT_PAGE_SIZE, WorkspaceScope } from '@/constants';
+import { DEFAULT_PAGE_SIZE } from '@/constants';
 import {
   coreFiltersAtom,
   coreSortStateAtom,
@@ -26,6 +26,7 @@ import {
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkspaceContext } from '@/types/common';
 import type { TWorkspaceScope } from '@/constants';
+import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
 export type QueryContext = {
   key: string;
@@ -82,16 +83,7 @@ function useQueryParameters(
           within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
         }
       : {}),
-    // eslint-disable-next-line no-nested-ternary
-    ...(context.workspaceScope === WorkspaceScope.Project
-      ? {
-          authorized_project_id: workspace?.projectId,
-        }
-      : context.workspaceScope === WorkspaceScope.Public
-        ? {
-            authorized_public: true,
-          }
-        : {}),
+    ...getWorkspaceScopeFilters(context.workspaceScope, workspace),
     ...transformFiltersToQuery(filters as any),
   });
   return queryParameters;
