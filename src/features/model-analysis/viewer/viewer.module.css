@@ -33,3 +33,52 @@
 .failed {
   background-color: #f88;
 }
+
+.test {
+  /* "mb-5 flex w-full flex-col items-stretch" */
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 0.5em;
+  margin: 0;
+
+  &::marker {
+    display: none;
+  }
+
+  > summary {
+    display: inline-block;
+
+    > h2 {
+      color: var(--color-primary-8);
+      font-weight: var(--font-weight-bold);
+      font-size: var(--text-xl);
+      line-height: var(--tw-leading, var(--text-xl--line-height));
+      border: 1px solid var(--color-neutral-2);
+      border-radius: 99vmax;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      place-items: center left;
+      gap: 1em;
+      padding: calc(var(--spacing) * 3);
+
+      svg {
+        transform: rotate(90deg);
+        transition: 0.3s all;
+      }
+    }
+  }
+
+  &[open] {
+    > summary {
+      > h2 {
+        svg {
+          transform: rotate(0);
+        }
+      }
+    }
+  }
+}

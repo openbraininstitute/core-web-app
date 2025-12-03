@@ -5,6 +5,7 @@ import { useCallback } from 'react';
 import { Divider } from 'antd';
 import capitalize from 'es-toolkit/compat/capitalize';
 
+import { RightOutlined } from '@ant-design/icons';
 import Documentation from './documentation';
 
 import ImageViewer from '@/features/model-analysis/viewer/image-viewer';
@@ -56,22 +57,26 @@ export default function AssetViewer({ entity, entityType, pdfShowPageCount = tru
         .filter((o) => AllowedTypes.includes(o.content_type as TAllowedTypes))
         .map((asset) => {
           return (
-            <div
+            <details
               id={`document_${asset.id}`}
               key={`document_${asset.id}`}
-              className="mb-5 flex w-full flex-col items-stretch"
+              className={styles.test}
+              open
             >
-              <h2 className="text-primary-8 border-neutral-2 mb-6 flex w-full justify-between rounded-full border p-3 text-xl font-bold">
-                <span className="ml-4">{resolveCaption(asset.path)}</span>
-                <span className={entity.passed ? styles.passed : styles.failed}>
-                  {entity.passed ? 'passed' : 'failed'}
-                </span>
-              </h2>
+              <summary>
+                <h2>
+                  <RightOutlined />
+                  <span className="ml-4">{resolveCaption(asset.path)}</span>
+                  <span className={entity.passed ? styles.passed : styles.failed}>
+                    {entity.passed ? 'passed' : 'failed'}
+                  </span>
+                </h2>
+              </summary>
               <div className={styles.row}>
                 {content(asset)}
                 <Documentation assetPath={asset.path} />
               </div>
-            </div>
+            </details>
           );
         })}
       <Divider />
