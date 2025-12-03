@@ -38,6 +38,7 @@ import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import type { Props as MainTableProps } from '@/ui/segments/data-table';
+import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
 const MainTable = dynamic(() => import('@/ui/segments/data-table'), { ssr: false }) as (
   props: MainTableProps<EntityCoreIdentifiableNamed>
@@ -114,7 +115,11 @@ export function BrowseEntityScope({
     workspace: { virtualLabId, projectId },
     queryFn: async ({ queryKey }) => {
       const [{ workspace, queryParameters }] = queryKey;
-      const filters = { ...queryParameters, ...extraQueryParams };
+      const filters = {
+        ...queryParameters,
+        ...extraQueryParams,
+        ...getWorkspaceScopeFilters(scope!, { virtualLabId, projectId }),
+      };
       return entity?.api?.query.list?.({
         withFacets: true,
         filters,

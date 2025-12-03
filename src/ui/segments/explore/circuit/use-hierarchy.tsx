@@ -38,6 +38,7 @@ import type {
   Facets,
   Pagination,
 } from '@/api/entitycore/types/shared/response';
+import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
 export function useFullRawHierarchy({ view = CircuitView.Flat }: { view: TCircuitView | null }) {
   const queryClient = useQueryClient();
@@ -195,6 +196,7 @@ export function useHierarchy({
             filters: {
               ...circuitScaleFilter,
               ...queryParameters,
+              ...getWorkspaceScopeFilters(scope!, { virtualLabId, projectId }),
               page: 1,
               page_size: DEFAULT_PAGE_SIZE,
             },
