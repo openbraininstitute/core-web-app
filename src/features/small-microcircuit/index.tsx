@@ -149,7 +149,7 @@ export default function SimulationCampaignConfiguration({
             }}
           />
 
-          <div className="overflow-hidden rounded-lg">
+          <div className="rounded-lg">
             <ModelPreview model={model} />
           </div>
         </div>
