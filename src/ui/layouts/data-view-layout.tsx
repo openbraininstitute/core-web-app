@@ -60,12 +60,12 @@ export async function DataViewLayout({
     type === ExtendedEntitiesTypeDict.MemodelCircuitSimulation
   ) {
     return (
-      <div className="relative ml-5 flex h-full flex-col rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
+      <div className="ml-5 flex h-full flex-col rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
         <div className="mb-5">
           {closePage}
           {breadcrumbs}
         </div>
-        {children}
+        <div className="relative flex-1 overflow-auto">{children}</div>
       </div>
     );
   }
