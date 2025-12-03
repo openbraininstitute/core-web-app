@@ -33,3 +33,18 @@
 .failed {
   background-color: #f88;
 }
+
+.validationDescription {
+  margin: 0.5em 0;
+  max-width: 800px;
+
+  p {
+    margin: 0.5em 0;
+    margin-left: 1em;
+    text-wrap: balance;
+  }
+
+  ol {
+    margin-left: 2em;
+  }
+}
