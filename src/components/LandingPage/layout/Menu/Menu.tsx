@@ -34,7 +34,6 @@ const MENU_ITEMS: MenuItem[] = [
       { caption: 'Our story', slug: '/the-real-digital-brain-story', index: EnumSection.Story },
       { caption: 'Mission', slug: '/mission', index: EnumSection.Mission },
       { caption: 'Team', slug: '/team', index: EnumSection.Team },
-      { caption: 'SfN 2025', slug: '/sfn-2025', index: EnumSection.Sfn2025 },
     ],
   },
   {
