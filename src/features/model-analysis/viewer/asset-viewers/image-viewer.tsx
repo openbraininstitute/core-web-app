@@ -3,7 +3,7 @@ import { match, P } from 'ts-pattern';
 import Image from 'next/image';
 
 import kebabCase from 'es-toolkit/compat/kebabCase';
-import { useClientCachedUrl } from '@/features/model-analysis/viewer/storage';
+import { useClientCachedUrl } from '@/features/model-analysis/viewer/asset-viewers/storage';
 import { entityCoreUrl } from '@/config';
 
 import { TEntityTypeDict } from '@/api/entitycore/types';
@@ -15,14 +15,13 @@ type Props = {
 };
 
 export default function ImageViewer({ entityId, entityType, assetId }: Props) {
-  const pdfFileUrl = `${entityCoreUrl}/${kebabCase(entityType)}/${entityId}/assets/${assetId}/download`;
-
+  const imageFileUrl = `${entityCoreUrl}/${kebabCase(entityType)}/${entityId}/assets/${assetId}/download`;
   const {
     cachedUrl,
     loading: isCaching,
     error,
   } = useClientCachedUrl({
-    url: pdfFileUrl,
+    url: imageFileUrl,
     urlKey: `${entityId}/${assetId}`,
   });
 

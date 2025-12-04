@@ -22,15 +22,20 @@ function prefixName(name: string) {
       priority = i;
     }
   }
-  return `${priority}`.padStart(3, '0') + sanitizedName;
+  const prefixedName = `${priority}`.padStart(3, '0') + sanitizedName;
+  return prefixedName;
 }
 
+/**
+ * The following validations must come first,
+ * and in this order.
+ */
 const CUSTOM_ORDER = [
-  'spiking',
-  'depolarization block',
   'hyperpolarization',
-  'rin',
+  'input resistance validation',
+  'spiking',
   'ais spiking',
+  'depolarization block',
   'iv curve',
   'fi curve',
   'bpap',

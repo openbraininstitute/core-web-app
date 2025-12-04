@@ -5,7 +5,7 @@ import { Empty, Skeleton } from 'antd';
 import { Fragment, useState } from 'react';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 
-import { useClientCachedUrl } from '@/features/model-analysis/viewer/storage';
+import { useClientCachedUrl } from '@/features/model-analysis/viewer/asset-viewers/storage';
 
 import { classNames } from '@/util/utils';
 import { entityCoreUrl } from '@/config';
@@ -91,7 +91,6 @@ export default function PDFViewer({
               pageNumber={index + 1}
               renderTextLayer={false}
               renderAnnotationLayer={false}
-              className="border-primary-8 border"
               width={pageWidth}
             />
             {showPageCount && (
