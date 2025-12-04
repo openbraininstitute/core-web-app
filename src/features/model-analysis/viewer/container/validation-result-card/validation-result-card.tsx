@@ -2,8 +2,8 @@ import React from 'react';
 import { RightOutlined } from '@ant-design/icons';
 
 import { FlatValidationResult } from '../hooks';
-import PDFViewer from '../../pdf-viewer';
-import ImageViewer from '../../image-viewer';
+import PDFViewer from '../../asset-viewers/pdf-viewer';
+import ImageViewer from '../../asset-viewers/image-viewer';
 import Documentation from './documentation';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';

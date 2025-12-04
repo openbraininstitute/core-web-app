@@ -3,7 +3,7 @@ import { match, P } from 'ts-pattern';
 import Image from 'next/image';
 
 import kebabCase from 'es-toolkit/compat/kebabCase';
-import { useClientCachedUrl } from '@/features/model-analysis/viewer/storage';
+import { useClientCachedUrl } from '@/features/model-analysis/viewer/asset-viewers/storage';
 import { entityCoreUrl } from '@/config';
 
 import { TEntityTypeDict } from '@/api/entitycore/types';
