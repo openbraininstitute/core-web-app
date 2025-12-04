@@ -82,9 +82,11 @@ export default function TutorialContent() {
               />
             </div>
           )}
-          <div className="w-full">
-            <TextContentBloc content={singleTutorial} />
-          </div>
+          {singleTutorial.transcript && (
+            <div className="w-full">
+              <TextContentBloc content={singleTutorial} />
+            </div>
+          )}
         </div>
       </div>
     );
