@@ -1,16 +1,20 @@
 import { parseAsString, SingleParserBuilder, useQueryState } from 'nuqs';
 import { Tooltip } from 'antd';
 
-import { CircuitView, TCircuitView } from '@/ui/segments/explore/circuit/helpers';
+import {
+  CircuitRepresentationView,
+  TCircuitRepresentationView,
+} from '@/ui/segments/explore/circuit/helpers';
 import { FlatListViewIcon, HierarchicalViewIcon } from '@/components/icons';
 import { classNames } from '@/util/utils';
 
 export function CircuitViewToggle() {
   const [view, updateView] = useQueryState(
     'view',
-    parseAsString
-      .withDefault(CircuitView.Hierarchy)
-      .withOptions({ shallow: true, clearOnDefault: false }) as SingleParserBuilder<TCircuitView>
+    parseAsString.withDefault(CircuitRepresentationView.Hierarchy).withOptions({
+      shallow: true,
+      clearOnDefault: false,
+    }) as SingleParserBuilder<TCircuitRepresentationView>
   );
 
   const handleViewChange = () => {

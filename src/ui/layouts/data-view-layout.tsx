@@ -49,15 +49,25 @@ export async function DataViewLayout({
   const parentLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}&scope=${isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project}`;
 
   const breadcrumbs = (
-    <DataBreadcrumb title={entityType.title} type={type} group={entityType.group} />
+    <DataBreadcrumb
+      title={entityType.title}
+      type={type}
+      group={entityType.group}
+      isPublic={isPublicEntity}
+    />
   );
   const closePage = <ClosePage url={parentLink} />;
 
   if (
-    type === ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation ||
-    type === ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation ||
-    type === ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation ||
-    type === ExtendedEntitiesTypeDict.MemodelCircuitSimulation
+    includes(
+      [
+        ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+        ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
+        ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
+        ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+      ],
+      type
+    )
   ) {
     return (
       <div className="ml-5 flex h-full flex-col rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
@@ -86,14 +96,13 @@ export async function DataViewLayout({
         <div className="w-4/5 pr-1">
           <div className="secondary-scrollbar h-full w-full overflow-x-auto overflow-y-auto p-10">
             <EntityNameDisplay name={entity.name} />
-
             <EntityNameDisplayWrapper>{children}</EntityNameDisplayWrapper>
           </div>
         </div>
       </div>
       {includes(
         [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.MEModelWithSynapses],
-        entityType.extendedType
+        type
       ) && <CircuitDownloadPanel />}
     </>
   );

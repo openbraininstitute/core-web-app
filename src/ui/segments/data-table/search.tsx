@@ -1,39 +1,39 @@
-import { ChangeEvent, ComponentProps, useDeferredValue, useEffect, useRef, useState } from 'react';
+import { ChangeEvent, ComponentProps, useDeferredValue, useRef, useState } from 'react';
 import { SearchOutlined, CloseOutlined } from '@ant-design/icons';
 import { useAtom, useSetAtom } from 'jotai';
 
 import {
   corePageNumberAtom,
   coreSearchStringAtom,
+  useDataListStoreParamsActionSynchronizer,
 } from '@/ui/segments/data-table/elements/context';
 import { DEFAULT_PAGE_NUMBER } from '@/constants';
 import { cn } from '@/utils/css-class';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
 type SearchProps = {
   dataKey: string;
+  dataType: TExtendedEntitiesTypeDict;
   className?: ComponentProps<'div'>['className'];
 };
 
-export function Search({ dataKey, className }: SearchProps) {
+export function Search({ dataKey, dataType, className }: SearchProps) {
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
   const [searchInput, setSearchInput] = useState<string>('');
   const deferredSearchInput = useDeferredValue(searchInput);
-
+  const { sync } = useDataListStoreParamsActionSynchronizer({ dataKey, dataType });
   const [searchString, setSearchString] = useAtom(coreSearchStringAtom(dataKey));
   const searchInputRef = useRef<HTMLInputElement>(null);
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
 
-  useEffect(() => {
+  // sync to atom when deferredSearchInput changes:
+  // Note: this happens during render — so no useEffect required.
+  if (searchString !== deferredSearchInput) {
     setPageNumber(DEFAULT_PAGE_NUMBER);
     setSearchString(deferredSearchInput);
-  }, [deferredSearchInput]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    setSearchInput(searchString);
-    if (searchString && !isSearchOpen) {
-      setIsSearchOpen(true);
-    }
-  }, [searchString, isSearchOpen]);
+    sync({ Search: deferredSearchInput, Page: DEFAULT_PAGE_NUMBER });
+  }
 
   const handleToggleSearch = (): void => {
     if (isSearchOpen) {
@@ -52,6 +52,8 @@ export function Search({ dataKey, className }: SearchProps) {
   const handleClearSearch = (): void => {
     setSearchInput('');
     setPageNumber(DEFAULT_PAGE_NUMBER);
+    setSearchString('');
+    sync({ Search: '', Page: DEFAULT_PAGE_NUMBER });
     searchInputRef.current?.focus();
   };
 

@@ -7,7 +7,7 @@ import { SettingsIcon } from '@/components/icons/Settings';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
-import type { CoreFilter } from '@/entity-configuration/definitions/types';
+import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
 function FilterBtn({ disabled, className, children, onClick }: HTMLProps<HTMLButtonElement>) {
   return (
@@ -40,7 +40,7 @@ export function FilterControls({
   children?: ReactNode;
   displayControlPanel: boolean;
   setDisplayControlPanel: (v: boolean) => void;
-  filters?: CoreFilter[];
+  filters?: TCoreFilter[];
   disabled?: boolean;
   className?: HTMLProps<HTMLElement>['className'];
 }) {

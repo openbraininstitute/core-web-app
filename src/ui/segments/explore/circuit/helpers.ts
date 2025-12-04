@@ -1,11 +1,19 @@
+import { atomWithReset } from 'jotai/utils';
+import { keyBy } from 'es-toolkit/compat';
 import { atom } from 'jotai';
-import keyBy from 'es-toolkit/compat/keyBy';
 
 import type { HierarchyNode, HierarchyTreeResponse } from '@/api/entitycore/types/shared/hierarchy';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
-export const circuitRepresentationAtom = atom<'flat' | 'hierarchy'>('hierarchy');
+export const CircuitRepresentationView = {
+  Flat: 'flat',
+  Hierarchy: 'hierarchy',
+} as const;
+export type TCircuitRepresentationView =
+  (typeof CircuitRepresentationView)[keyof typeof CircuitRepresentationView];
+
+export const circuitRepresentationViewAtom = atomWithReset<TCircuitRepresentationView>('hierarchy');
 export const resetFilterSignalAtom = atom(0);
 
 export interface HierarchyOutputNode extends Omit<HierarchyNode, 'children'>, ICircuit {
@@ -46,12 +54,6 @@ export function countDeepSubCircuits(node: ICircuitEnriched): number {
   // Count direct children + their descendants
   return node.sub_circuits.reduce((sum, child) => sum + 1 + countDeepSubCircuits(child), 0);
 }
-
-export const CircuitView = {
-  Flat: 'flat',
-  Hierarchy: 'hierarchy',
-} as const;
-export type TCircuitView = (typeof CircuitView)[keyof typeof CircuitView];
 
 export function findParentInTree(roots: HierarchyNode[], targetId: string): HierarchyNode | null {
   for (const node of roots) {

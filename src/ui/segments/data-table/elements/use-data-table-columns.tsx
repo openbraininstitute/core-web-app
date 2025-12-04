@@ -1,21 +1,22 @@
 'use client';
 
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { throttle, isString } from 'es-toolkit/compat';
 import { ColumnProps } from 'antd/lib/table';
-import throttle from 'es-toolkit/compat/throttle';
-import isString from 'es-toolkit/compat/isString';
 
 import { fieldsDefinitionRegistry, getFieldDefinition } from '@/entity-configuration/definitions';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { classNames, fieldTitleSentenceCase } from '@/util/utils';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
-  ExtendedEntitiesTypeDict,
-  type TExtendedEntitiesTypeDict,
-} from '@/api/entitycore/types/extended-entity-type';
-import type { OrderShape } from '@/entity-configuration/definitions/types';
-import type { SortState } from '@/types/explore-section/application';
+  SortOrder,
+  type OrderShape,
+  type TSortOrder,
+  type TSortState,
+} from '@/entity-configuration/definitions/types';
 
 import styles from '@/ui/segments/data-table/elements/table.module.css';
 
@@ -89,8 +90,8 @@ export function useDataTableColumns<T>({
   initialColumns = [],
 }: {
   dataType: TExtendedEntitiesTypeDict;
-  setSortState: (sortState: SortState) => void;
-  sortState?: SortState;
+  setSortState?: (sortState: TSortState) => void;
+  sortState?: TSortState;
   initialColumns?: ColumnProps<T>[];
 }): ColumnProps<T>[] {
   const keys = useMemo(() => Object.keys(fieldsDefinitionRegistry), []);
@@ -116,14 +117,14 @@ export function useDataTableColumns<T>({
   }, [keys]);
 
   const columnOrderBy = useCallback(
-    (field: string, backendField: string) => {
-      let order: 'asc' | 'desc' | null = 'asc';
+    (field: EntityCoreFields, backendField: EntityCoreFields) => {
+      let order: TSortOrder | null = SortOrder.ASC;
 
       if (sortState?.order && field === sortState.field) {
-        order = sortState.order === 'desc' ? 'asc' : 'desc';
+        order = sortState.order === SortOrder.DESC ? SortOrder.ASC : SortOrder.DESC;
       }
 
-      setSortState({
+      setSortState?.({
         backendField,
         field,
         order,
@@ -221,7 +222,7 @@ export function useDataTableColumns<T>({
               if (!isSortable || !term.order) return;
               const field = getOrderValue(term.order, dataType);
               if (field) {
-                columnOrderBy(key, field);
+                columnOrderBy(key as EntityCoreFields, field as EntityCoreFields);
               }
             },
             showsortertooltip: {

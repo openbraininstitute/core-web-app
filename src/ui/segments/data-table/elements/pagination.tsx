@@ -3,14 +3,20 @@ import { useRef, useEffect } from 'react';
 import { useAtom } from 'jotai';
 import type { ComponentProps } from 'react';
 
-import { corePageNumberAtom } from '@/ui/segments/data-table/elements/context';
-import { DEFAULT_PAGE_SIZE } from '@/constants';
+import {
+  corePageNumberAtom,
+  useDataListStoreParamsActionSynchronizer,
+} from '@/ui/segments/data-table/elements/context';
+import { DEFAULT_PAGE_SIZE, TWorkspaceSection } from '@/constants';
 import { cn } from '@/utils/css-class';
 
 import type { Pagination as EntitycorePagination } from '@/api/entitycore/types/shared/response';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 type Props = {
   dataKey: string;
+  dataType: TExtendedEntitiesTypeDict;
+  section?: TWorkspaceSection;
   size?: PaginationProps['size'];
   resultPagination?: {
     pagination: EntitycorePagination;
@@ -19,10 +25,18 @@ type Props = {
   className?: ComponentProps<'ul'>['className'];
 };
 
-export function Pagination({ dataKey, size, resultPagination, className }: Props) {
+export function Pagination({
+  dataKey,
+  size,
+  section,
+  dataType,
+  resultPagination,
+  className,
+}: Props) {
   const [page, updatePage] = useAtom(corePageNumberAtom(dataKey));
   const lastTotalItemsRef = useRef<number | undefined>(undefined);
   const lastDataKeyRef = useRef<string>(dataKey);
+  const { sync } = useDataListStoreParamsActionSynchronizer({ dataKey, dataType, section });
 
   useEffect(() => {
     if (lastDataKeyRef.current !== dataKey) {
@@ -38,6 +52,10 @@ export function Pagination({ dataKey, size, resultPagination, className }: Props
   }, [resultPagination?.pagination?.total_items]);
 
   const totalItems = resultPagination?.pagination?.total_items ?? lastTotalItemsRef.current;
+  const onUpdatePage = (p: number) => {
+    updatePage(p);
+    sync({ Page: p });
+  };
 
   if (totalItems === undefined) {
     return null;
@@ -52,7 +70,7 @@ export function Pagination({ dataKey, size, resultPagination, className }: Props
       data-testid="listing-pagination"
       pageSize={DEFAULT_PAGE_SIZE}
       defaultPageSize={DEFAULT_PAGE_SIZE}
-      onChange={updatePage}
+      onChange={onUpdatePage}
       align="center"
       size={size}
       current={page}

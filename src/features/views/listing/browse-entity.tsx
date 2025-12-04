@@ -16,10 +16,12 @@ import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-p
 
 import { DEFAULT_PAGE_NUMBER, WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 import { MiniDetailView } from '@/ui/segments/mini-detail-view';
 import { GenericError } from '@/ui/molecules/generic-error';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
+  useDataListStoreParamsActionSynchronizer,
   coreActiveColumnsAtom,
   coreFiltersAtom,
   corePageNumberAtom,
@@ -38,7 +40,6 @@ import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import type { Props as MainTableProps } from '@/ui/segments/data-table';
-import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
 const MainTable = dynamic(() => import('@/ui/segments/data-table'), { ssr: false }) as (
   props: MainTableProps<EntityCoreIdentifiableNamed>
@@ -91,11 +92,20 @@ export function BrowseEntityScope({
   const dataKey = compact([virtualLabId, projectId, section, dataType, scope, id]).join('/');
   const entity = getEntityByExtendedType({ type: dataType });
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
-
   const [sortState, setSortState] = useAtom(coreSortStateAtom({ key: dataKey }));
+  const activeColumns = useAtomValue(coreActiveColumnsAtom({ dataType, key: dataKey }));
+
+  const { sync: runStorageSync, restore: runStorageRestore } =
+    useDataListStoreParamsActionSynchronizer({
+      dataKey,
+      dataType,
+      section,
+    });
+
   const onSortChange = (newSortState: any) => {
     setPageNumber(DEFAULT_PAGE_NUMBER);
     setSortState(newSortState);
+    runStorageSync({ Sort: newSortState, Page: DEFAULT_PAGE_NUMBER });
   };
 
   const allColumns = useDataTableColumns<EntityCoreIdentifiableNamed>({
@@ -103,9 +113,15 @@ export function BrowseEntityScope({
     sortState,
     setSortState: onSortChange,
   });
-
-  const activeColumns = useAtomValue(coreActiveColumnsAtom({ dataType, key: dataKey }));
   const columns = allColumns.filter(({ key }) => (activeColumns || []).includes(key as string));
+
+  useEffect(() => {
+    // Allow restoring the data table parameters when the section is Data.
+    if (section === WorkspaceSection.Data) {
+      runStorageRestore();
+    }
+  }, [section]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const { data, error, isFetching } = useQueryExtendedEntityType({
     context: {
       key: dataKey,
@@ -195,6 +211,7 @@ export function BrowseEntityScope({
             sticky={{ offsetHeader: 75.5 }}
             isLoading={isFetching}
             dataScope={scope!}
+            section={section}
             dataSource={dataSource ?? []}
             dataType={dataType}
             workspace={{ virtualLabId, projectId }}

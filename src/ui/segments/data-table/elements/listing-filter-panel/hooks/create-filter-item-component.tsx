@@ -1,24 +1,23 @@
 import { Input, Select } from 'antd';
 import { map } from 'es-toolkit/compat';
 
-import DateRange from '../date-range';
-import { ValueRange } from '../value-range';
-import { DropdownList } from '../filter-as-dropdown';
-import CheckList from '../checklist';
-import ValueOrRange from '../value-or-range';
-
 import { defaultList } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/default-checklist';
+import { DropdownList } from '@/ui/segments/data-table/elements/listing-filter-panel/filter-as-dropdown';
+import { ValueOrRange } from '@/ui/segments/data-table/elements/listing-filter-panel/value-or-range';
+import { ValueRange } from '@/ui/segments/data-table/elements/listing-filter-panel/value-range';
 import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
+import { DateRange } from '@/ui/segments/data-table/elements/listing-filter-panel/date-range';
+import { CheckList } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist';
 import { Facets } from '@/api/entitycore/types/shared/response';
 import {
-  CoreFilter,
+  TCoreFilter,
   CoreFilterValues,
   GteLteValue,
   ValueOrRangeFilter,
 } from '@/entity-configuration/definitions/types';
 
 export function createFilterItemComponent(
-  filter: CoreFilter,
+  filter: TCoreFilter,
   facets: Facets | undefined,
   filterValues: CoreFilterValues,
   setFilterValues: React.Dispatch<React.SetStateAction<CoreFilterValues>>,
@@ -27,7 +26,7 @@ export function createFilterItemComponent(
   return function FilterItemComponent() {
     const { type } = filter;
 
-    const updateFilterValues = (field: string, values: CoreFilter['value']) => {
+    const updateFilterValues = (field: string, values: TCoreFilter['value']) => {
       setFilterValues((prevState) => ({
         ...prevState,
         [field]: values,

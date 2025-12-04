@@ -41,7 +41,7 @@ function Radio({
   );
 }
 
-export default function ValueOrRange({
+export function ValueOrRange({
   filter,
   setFilter,
 }: {
@@ -154,3 +154,5 @@ export default function ValueOrRange({
     </fieldset>
   );
 }
+
+export default ValueOrRange;
