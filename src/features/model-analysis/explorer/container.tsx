@@ -7,7 +7,7 @@ import { Spin } from 'antd';
 import { useInputResistance } from './use-input-resistance';
 
 import { useAnalysis } from '@/features/model-analysis/explorer/use-analysis';
-import { ViewerContainer } from '@/features/model-analysis/viewer/container';
+import { ViewerContainer } from '@/features/model-analysis/viewer/container/container';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 export default function Analysis() {
@@ -48,5 +48,6 @@ export default function Analysis() {
     );
   }
 
+  console.log('🐞 [container@51] validationResults =', data?.data); // @FIXME: Remove this line written on 2025-12-04 at 08:47
   return <ViewerContainer rin={rin} validationResults={data?.data ?? []} />;
 }

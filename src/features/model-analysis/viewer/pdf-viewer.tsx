@@ -91,7 +91,6 @@ export default function PDFViewer({
               pageNumber={index + 1}
               renderTextLayer={false}
               renderAnnotationLayer={false}
-              className="border-primary-8 border"
               width={pageWidth}
             />
             {showPageCount && (

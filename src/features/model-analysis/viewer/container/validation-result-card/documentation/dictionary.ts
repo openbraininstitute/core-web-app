@@ -22,6 +22,10 @@ export function getDocumentation(assetPath: string): Documentation | undefined {
   return selection;
 }
 
+/**
+ * The source of this dictionary comes from here:
+ * https://github.com/openbraininstitute/obi_scientific_texts/blob/main/Platform_frontend_and_backend_texts/MEModel_validation/validation_description.json
+ */
 const DICTIONARY: Readonly<Record<string, Documentation>> = {
   hyperpolarization: {
     description:

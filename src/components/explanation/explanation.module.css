@@ -69,4 +69,10 @@
 .title {
   color: var(--color-primary-8);
   font-weight: bold;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1em;
 }

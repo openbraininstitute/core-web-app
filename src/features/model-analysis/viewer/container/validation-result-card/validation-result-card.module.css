@@ -1,40 +1,4 @@
-.row {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 2em;
-
-  > div {
-    flex: 1 1 auto;
-    min-width: 300px;
-  }
-
-  > div:first-child {
-    flex: 0 0 auto;
-    max-width: auto;
-  }
-}
-
-.passed,
-.failed {
-  border-radius: 99vmax;
-  font-weight: bold;
-  font-variant: small-caps;
-  padding: 0 1em;
-  color: #000;
-  font-size: 80%;
-  display: grid;
-  place-items: center;
-}
-
-.passed {
-  background-color: #5f5;
-}
-
-.failed {
-  background-color: #f88;
-}
-
-.test {
+.validationResultCard {
   /* "mb-5 flex w-full flex-col items-stretch" */
   width: 100%;
   display: flex;
@@ -43,7 +7,7 @@
   justify-content: flex-start;
   align-items: stretch;
   gap: 0.5em;
-  margin: 0;
+  margin: 0 0 1em 0;
 
   &::marker {
     display: none;
@@ -80,5 +44,41 @@
         }
       }
     }
+  }
+}
+
+.passed,
+.failed {
+  border-radius: 99vmax;
+  font-weight: bold;
+  font-variant: small-caps;
+  padding: 0 1em;
+  color: #000;
+  font-size: 80%;
+  display: grid;
+  place-items: center;
+}
+
+.passed {
+  background-color: #5f5;
+}
+
+.failed {
+  background-color: #f88;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2em;
+
+  > div {
+    flex: 1 1 auto;
+    min-width: 300px;
+  }
+
+  > div:first-child {
+    flex: 0 0 auto;
+    max-width: auto;
   }
 }

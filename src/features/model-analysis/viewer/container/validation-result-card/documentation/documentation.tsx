@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { getDocumentation } from './dictionary';
+import { FlatValidationResult } from '../../hooks';
 
 import { classNames } from '@/util/utils';
 
@@ -8,17 +8,31 @@ import styles from './documentation.module.css';
 
 export interface DocumentationProps {
   className?: string;
-  assetPath: string;
+  value: FlatValidationResult;
 }
 
-export default function Documentation({ className, assetPath }: DocumentationProps) {
-  const documentation = getDocumentation(assetPath);
+export default function Documentation({ className, value }: DocumentationProps) {
+  const { documentation } = value;
 
   if (!documentation) return null;
 
   const { protocol } = documentation;
   return (
     <div className={classNames(className, styles.documentation)}>
+      {value.extraVariables && (
+        <>
+          <ul>
+            {Object.keys(value.extraVariables).map((key) => (
+              <li key={key}>
+                <span>{key}: </span>
+                <strong>{value.extraVariables?.[key].value}</strong>{' '}
+                <span>{value.extraVariables?.[key].unit}</span>
+              </li>
+            ))}
+          </ul>
+          <hr />
+        </>
+      )}
       <p>{documentation.description}</p>
       <div className={styles.grid}>
         <div>Type:</div>
