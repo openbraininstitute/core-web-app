@@ -97,6 +97,8 @@ const nextConfig = (phase: string): NextConfig => {
       },
     },
     images: {
+      loader: 'default',
+      path: `${cdnUri}/_next/image`,
       remotePatterns: [
         {
           protocol: 'https',
