@@ -1,0 +1,69 @@
+.featureCell {
+  color: #0a0;
+  fill: currentColor;
+}
+
+.featureCell.unavailable {
+  color: var(--color-neutral);
+  fill: currentColor;
+}
+
+svg.featureCell {
+  width: 1.5em;
+  height: 1.5em;
+}
+
+button.tooltip {
+  all: unset;
+  color: #0a0;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5em;
+  position: relative;
+}
+
+button.tooltip::after {
+  pointer-events: none;
+  content: attr(data-tooltip);
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: max-content;
+  max-width: 80vw;
+  overflow: hidden;
+  z-index: 999998;
+  background-color: var(--color-primary);
+  color: #fffe;
+  padding: 1.5em;
+  transform: translateY(calc(-100% - 12px)) translateX(8px);
+  border-radius: 4px;
+  transition: opacity 0.3s;
+  opacity: 0;
+}
+
+button.tooltip::before {
+  pointer-events: none;
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  border: 16px solid;
+  border-color: var(--color-primary) transparent transparent transparent;
+  z-index: 999999;
+  box-sizing: content-box;
+  transform: scaleX(0.5) translate(8px, -12px);
+  transition: opacity 0.3s;
+  opacity: 0;
+}
+
+button.tooltip:hover::before,
+button.tooltip:hover::after,
+button.tooltip:active::before,
+button.tooltip:active::after {
+  opacity: 1;
+}

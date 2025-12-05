@@ -9,6 +9,34 @@
   margin: 1em 0;
 }
 
+.desktopLayout {
+  display: grid;
+}
+
+.mobileLayout {
+  display: none;
+  max-width: 100vw;
+  width: 100%;
+  overflow: hidden;
+}
+
+.priceListCards {
+  max-width: 100vw;
+  width: 100%;
+}
+
+/* Target the scroll container (first direct child div) */
+.priceListCards > :global(div:first-child) {
+  align-items: flex-start !important;
+}
+
+.priceListCards > :global(div:first-child)::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
 .priceList hr {
   width: 100%;
   height: 1px;
@@ -35,6 +63,13 @@
   padding: 22px 0;
   border-top: 1px solid var(--color-neutral-200);
   border-bottom: 1px solid var(--color-neutral-200);
+}
+
+@media (max-width: 1024px) {
+  .notesExplanation {
+    padding: 32px;
+    margin-top: 20px;
+  }
 }
 
 .notesExplanation > li {
@@ -64,6 +99,16 @@
   margin-bottom: 2em;
 }
 
+@media (max-width: 1024px) {
+  .desktopLayout {
+    display: none;
+  }
+
+  .mobileLayout {
+    display: block;
+  }
+}
+
 @media (max-width: 480px) {
   .priceList,
   .notesExplanation {
@@ -78,4 +123,56 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
+}
+
+/* Mobile/Tablet Card Styles */
+.planCard {
+  display: flex;
+  flex-direction: column;
+  min-width: 380px;
+  max-width: 380px;
+  padding: 24px;
+  background-color: #fffe;
+  scroll-snap-align: start;
+  height: fit-content;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .planCard {
+    min-width: 320px;
+    max-width: 320px;
+    padding: 20px;
+  }
+}
+
+.cardTitle {
+  font-size: var(--font-size-L);
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.cardSubtitle {
+  margin-bottom: 24px;
+  color: var(--color-neutral);
+  font-size: var(--font-size-M);
+  line-height: 1.5;
+}
+
+.cardSubtitle > div {
+  margin-bottom: 4px;
+}
+
+.cardFeatures {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.cardDivider {
+  width: 100%;
+  height: 1px;
+  border: none;
+  background-color: var(--color-neutral-light);
+  margin: 6px 0;
 }
