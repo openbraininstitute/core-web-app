@@ -19,7 +19,9 @@
 }
 
 .menuContainer.stuck {
-  background-color: color-mix(in srgb, var(--color-primary) 90%, transparent);
+  /* background-color: color-mix(in srgb, var(--color-primary) 90%, transparent);
+   */
+  background: var(--color-primary-8);
   backdrop-filter: blur(5px);
 }
 
