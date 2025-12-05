@@ -102,6 +102,13 @@
   line-height: 1;
 }
 
+@media (max-width: 768px) {
+  .virtualLabsButton {
+    padding: 16px 40px;
+    gap: 2px;
+  }
+}
+
 .virtualLabsButton:hover {
   background: rgba(255, 255, 255, 0.15);
 }

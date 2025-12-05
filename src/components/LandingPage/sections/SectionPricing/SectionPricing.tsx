@@ -41,7 +41,7 @@ export default function SectionPricing() {
                 No pricing data available. Prices: {prices.length}, Credits: {creditsPacks.length}
               </div>
             ) : (
-              <div className="px-[8.7vw]">
+              <div className="px-8 lg:px-[8.7vw]">
                 <PriceTable
                   prices={prices}
                   creditsPacks={creditsPacks}

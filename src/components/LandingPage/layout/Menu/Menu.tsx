@@ -147,7 +147,8 @@ export default function Menu({ className, scrollHasStarted, section }: MenuProps
                   <div
                     className={classNames(
                       styles.submenu,
-                      hoveredItem === item.slug && styles.submenuVisible
+                      hoveredItem === item.slug && styles.submenuVisible,
+                      'bg-primary-8'
                     )}
                   >
                     {item.submenu.map((subItem) => (

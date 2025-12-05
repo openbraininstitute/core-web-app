@@ -63,8 +63,17 @@
 }
 
 @media (max-width: 480px) {
+  .widgetFromCellToBrain {
+    padding: 0 16px;
+  }
+
+  .widgetFromCellToBrain :global(.scroll) {
+    justify-content: center;
+  }
+
   .column {
-    --width: calc(100vw - 16px);
+    --width: min(calc(100vw - 64px), 320px);
+    margin: 0 auto;
   }
   .image {
     display: none;
