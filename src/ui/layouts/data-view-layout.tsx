@@ -57,10 +57,11 @@ export async function DataViewLayout({
   if (
     includes(
       [
-        ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
-        ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
-        ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
         ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+        ExtendedEntitiesTypeDict.MicrocircuitSimulation,
+        ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
+        ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
+        ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
       ],
       type
     )

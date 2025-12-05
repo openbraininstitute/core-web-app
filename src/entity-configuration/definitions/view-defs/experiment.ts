@@ -215,4 +215,35 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       { field: EntityCoreFields.RegistrationDate },
     ],
   },
+  [ExtendedEntitiesTypeDict.MicrocircuitSimulation]: {
+    title: 'Microcircuit Simulation (alpha)',
+    group: DataTypeGroup.SimulationData,
+    name: EntitySlug.MicrocircuitSimulation,
+    curated: false,
+    columns: [
+      EntityCoreFields.Name,
+      EntityCoreFields.Description,
+      EntityCoreFields.CircuitName,
+      EntityCoreFields.SimulationCampaignStatus,
+      EntityCoreFields.CreatedBy,
+      EntityCoreFields.CreationDate,
+    ],
+    filterableFields: [
+      EntityCoreFields.Name,
+      EntityCoreFields.Contributions,
+      EntityCoreFields.CreatedBy,
+      EntityCoreFields.CreationDate,
+    ],
+    displayableFields: [
+      EntityCoreFields.Name,
+      EntityCoreFields.Contributions,
+      EntityCoreFields.CreatedBy,
+      EntityCoreFields.CreationDate,
+    ],
+    miniDetailView: [
+      { field: EntityCoreFields.CircuitName },
+      { field: EntityCoreFields.SimulationCampaignStatus },
+      { field: EntityCoreFields.CreationDate },
+    ],
+  },
 };

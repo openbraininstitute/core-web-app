@@ -189,14 +189,14 @@ export const EntityWorkflowConfiguration: Partial<
   },
   [ExtendedEntitiesTypeDict.Microcircuit]: {
     group: EntityScopeDict.Circuit,
-    label: 'Microcircuit',
+    label: 'Microcircuit (alpha)',
     properties: {
       build: {
         disabled: true,
         type: ExtendedEntitiesTypeDict.Microcircuit,
       },
       simulate: {
-        disabled: true,
+        disabled: false,
         type: ExtendedEntitiesTypeDict.MicrocircuitSimulation,
       },
     },
