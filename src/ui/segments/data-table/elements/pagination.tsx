@@ -5,7 +5,7 @@ import type { ComponentProps } from 'react';
 
 import {
   corePageNumberAtom,
-  useDataListStoreParamsActionSynchronizer,
+  useDataListStateSnapshotActions,
 } from '@/ui/segments/data-table/elements/context';
 import { DEFAULT_PAGE_SIZE, TWorkspaceSection } from '@/constants';
 import { cn } from '@/utils/css-class';
@@ -36,7 +36,11 @@ export function Pagination({
   const [page, updatePage] = useAtom(corePageNumberAtom(dataKey));
   const lastTotalItemsRef = useRef<number | undefined>(undefined);
   const lastDataKeyRef = useRef<string>(dataKey);
-  const { sync } = useDataListStoreParamsActionSynchronizer({ dataKey, dataType, section });
+  const { sync: runStorageSync } = useDataListStateSnapshotActions({
+    dataKey,
+    dataType,
+    section,
+  });
 
   useEffect(() => {
     if (lastDataKeyRef.current !== dataKey) {
@@ -54,7 +58,7 @@ export function Pagination({
   const totalItems = resultPagination?.pagination?.total_items ?? lastTotalItemsRef.current;
   const onUpdatePage = (p: number) => {
     updatePage(p);
-    sync({ Page: p });
+    runStorageSync({ Page: p });
   };
 
   if (totalItems === undefined) {

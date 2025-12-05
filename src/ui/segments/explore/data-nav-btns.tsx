@@ -4,7 +4,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 import { makeDataKey } from '../data-table/elements/helpers';
-import { useDataListStoreParamsActionSynchronizer } from '@/ui/segments/data-table/elements/context';
+import { useDataListStateSnapshotActions } from '@/ui/segments/data-table/elements/context';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getRouteSegmentsAfterWorkspace } from '@/utils/path';
@@ -124,7 +124,7 @@ export function DataBreadcrumb({
     scope: isPublic ? WorkspaceScope.Public : WorkspaceScope.Project,
   });
 
-  const { reset: runStorageReset } = useDataListStoreParamsActionSynchronizer({
+  const { reset: runStorageReset } = useDataListStateSnapshotActions({
     dataKey,
     dataType: type,
     section: WorkspaceSection.Data,

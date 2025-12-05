@@ -10,7 +10,6 @@ import {
   CircuitRepresentationView,
   type TCircuitRepresentationView,
 } from '@/ui/segments/explore/circuit/helpers';
-import { useSessionStorage } from '@/hooks/use-session-storage';
 import { DEFAULT_PAGE_NUMBER } from '@/constants';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -37,17 +36,19 @@ export const makeTypeDefaultFilters = ({ dataType }: { dataType: TExtendedEntiti
   return filteredColumns;
 };
 
-export const makeDataListStoreAtomsInitialValue = ({
-  dataType,
-}: {
-  dataType: TExtendedEntitiesTypeDict;
-}): {
+type DataListStateSnapshot = {
   Sort: TSortState;
   Search: string;
   Page: number;
   Filters: Array<TCoreFilter>;
   View: TCircuitRepresentationView;
-} => ({
+};
+
+export const makeDataListStateSnapshotAtomsInitialValue = ({
+  dataType,
+}: {
+  dataType: TExtendedEntitiesTypeDict;
+}): DataListStateSnapshot => ({
   Sort: {
     field: EntityCoreFields.CreationDate,
     backendField: EntityCoreFields.CreationDate,
@@ -58,22 +59,6 @@ export const makeDataListStoreAtomsInitialValue = ({
   Filters: makeTypeDefaultFilters({ dataType }),
   View: CircuitRepresentationView.Hierarchy,
 });
-
-export function useDataListStoreSession({
-  dataKey,
-  dataType,
-}: {
-  dataKey: string;
-  dataType: TExtendedEntitiesTypeDict;
-}) {
-  return useSessionStorage<{
-    Sort: TSortState;
-    Search: string;
-    Page: number;
-    Filters: Array<TCoreFilter>;
-    View: TCircuitRepresentationView;
-  }>(dataKey, makeDataListStoreAtomsInitialValue({ dataType }));
-}
 
 type DataKeyParts = {
   virtualLabId?: string;

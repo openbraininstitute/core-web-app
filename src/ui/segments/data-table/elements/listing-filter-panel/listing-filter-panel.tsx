@@ -19,7 +19,7 @@ import {
   coreFiltersAtom,
   corePageNumberAtom,
   coreSearchStringAtom,
-  useDataListStoreParamsActionSynchronizer,
+  useDataListStateSnapshotActions,
 } from '@/ui/segments/data-table/elements/context';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
@@ -70,7 +70,7 @@ export function ListingFilterPanel({
       key: dataKey,
     })
   );
-  const { sync: runStorageSync } = useDataListStoreParamsActionSynchronizer({
+  const { sync: runStorageSync } = useDataListStateSnapshotActions({
     dataKey,
     dataType,
     section,

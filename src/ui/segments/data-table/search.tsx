@@ -5,7 +5,7 @@ import { useAtom, useSetAtom } from 'jotai';
 import {
   corePageNumberAtom,
   coreSearchStringAtom,
-  useDataListStoreParamsActionSynchronizer,
+  useDataListStateSnapshotActions,
 } from '@/ui/segments/data-table/elements/context';
 import { DEFAULT_PAGE_NUMBER } from '@/constants';
 import { cn } from '@/utils/css-class';
@@ -22,7 +22,10 @@ export function Search({ dataKey, dataType, className }: SearchProps) {
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
   const [searchInput, setSearchInput] = useState<string>('');
   const deferredSearchInput = useDeferredValue(searchInput);
-  const { sync } = useDataListStoreParamsActionSynchronizer({ dataKey, dataType });
+  const { sync: runStorageSync } = useDataListStateSnapshotActions({
+    dataKey,
+    dataType,
+  });
   const [searchString, setSearchString] = useAtom(coreSearchStringAtom(dataKey));
   const searchInputRef = useRef<HTMLInputElement>(null);
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
@@ -32,7 +35,7 @@ export function Search({ dataKey, dataType, className }: SearchProps) {
   if (searchString !== deferredSearchInput) {
     setPageNumber(DEFAULT_PAGE_NUMBER);
     setSearchString(deferredSearchInput);
-    sync({ Search: deferredSearchInput, Page: DEFAULT_PAGE_NUMBER });
+    runStorageSync({ Search: deferredSearchInput, Page: DEFAULT_PAGE_NUMBER });
   }
 
   const handleToggleSearch = (): void => {
@@ -53,7 +56,7 @@ export function Search({ dataKey, dataType, className }: SearchProps) {
     setSearchInput('');
     setPageNumber(DEFAULT_PAGE_NUMBER);
     setSearchString('');
-    sync({ Search: '', Page: DEFAULT_PAGE_NUMBER });
+    runStorageSync({ Search: '', Page: DEFAULT_PAGE_NUMBER });
     searchInputRef.current?.focus();
   };
 

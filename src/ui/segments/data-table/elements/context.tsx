@@ -1,10 +1,10 @@
 'use client';
 
 import { atomFamily, atomWithDefault, atomWithReset, atomWithStorage } from 'jotai/utils';
+import { use, useCallback, useEffect, useMemo, createContext } from 'react';
 import { isNil, noop } from 'es-toolkit/compat';
 import { Atom, atom, useSetAtom } from 'jotai';
 import { match } from 'ts-pattern';
-import { useMemo } from 'react';
 
 import { createSuperJsonStorage, memoryStorage } from '@/ui/hooks/use-storage-atom-with-validation';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
@@ -18,7 +18,7 @@ import {
 } from '@/constants';
 import { SortOrder } from '@/entity-configuration/definitions/types';
 import {
-  makeDataListStoreAtomsInitialValue,
+  makeDataListStateSnapshotAtomsInitialValue,
   makeTypeDefaultFilters,
 } from '@/ui/segments/data-table/elements/helpers';
 
@@ -106,10 +106,10 @@ export const coreSelectedRowsAtom = atomFamily(
  *
  * This atom uses either sessionStorage (in browser) or an in-memory fallback for SSR/Node.
  */
-export const dataListStoreParamsStorageAtomFamily = atomFamily(
+export const DataListStateSnapshotStorageAtomFamily = atomFamily(
   ({ dataKey, dataType }: { dataKey: string; dataType: TExtendedEntitiesTypeDict }) => {
     const resolvedStorage = typeof window !== 'undefined' ? sessionStorage : memoryStorage;
-    const initialValue = makeDataListStoreAtomsInitialValue({ dataType });
+    const initialValue = makeDataListStateSnapshotAtomsInitialValue({ dataType });
     const childAtom = atomWithStorage(
       dataKey,
       initialValue,
@@ -123,24 +123,24 @@ export const dataListStoreParamsStorageAtomFamily = atomFamily(
 );
 
 type AtomValue<T> = T extends Atom<infer V> ? V : never;
-type DataListStoreParamsType = AtomValue<ReturnType<typeof dataListStoreParamsStorageAtomFamily>>;
+type TDataLisStateSnapshot = AtomValue<ReturnType<typeof DataListStateSnapshotStorageAtomFamily>>;
 
-const DataListStoreParamsSyncAction = {
+const DataListStateSnapshotSyncAction = {
   SYNC: 'sync',
   RESTORE: 'restore',
   RESET: 'reset',
 } as const;
 
-type TDataListStoreParamsSyncActionType =
-  (typeof DataListStoreParamsSyncAction)[keyof typeof DataListStoreParamsSyncAction];
+type TDataListStateSnapshotSyncActionType =
+  (typeof DataListStateSnapshotSyncAction)[keyof typeof DataListStateSnapshotSyncAction];
 type TDataListStoreParamsSyncAction =
   | {
-      type: Exclude<TDataListStoreParamsSyncActionType, 'sync'>;
+      type: Exclude<TDataListStateSnapshotSyncActionType, 'sync'>;
       attribute?: never;
     }
   | {
-      type: Extract<TDataListStoreParamsSyncActionType, 'sync'>;
-      attribute: Partial<DataListStoreParamsType>;
+      type: Extract<TDataListStateSnapshotSyncActionType, 'sync'>;
+      attribute: Partial<TDataLisStateSnapshot>;
     };
 
 /**
@@ -151,7 +151,7 @@ type TDataListStoreParamsSyncAction =
  * For a given `dataKey` and `dataType`, it acts as a mediator between in-memory atoms and stored values,
  * allowing bulk SYNC (write), RESTORE (read), and RESET (to factory defaults).
  */
-export const dataListStoreParamsSyncAtomFamily = atomFamily(
+export const DataListSnapshotSyncAtomFamily = atomFamily(
   ({ dataKey, dataType }: { dataKey: string; dataType: TExtendedEntitiesTypeDict }) => {
     const childAtom = atom(
       (get) => {
@@ -163,42 +163,39 @@ export const dataListStoreParamsSyncAtomFamily = atomFamily(
         return { filters, page, search, sort, view };
       },
       (get, set, action: TDataListStoreParamsSyncAction) => {
-        const storageAtom = dataListStoreParamsStorageAtomFamily({ dataKey, dataType });
+        const storageAtom = DataListStateSnapshotStorageAtomFamily({ dataKey, dataType });
 
-        return (
-          match({ type: action.type })
-            .with({ type: DataListStoreParamsSyncAction.SYNC }, ({ type: t }) => {
-              if (t === DataListStoreParamsSyncAction.SYNC) {
-                const attribute = action.attribute || {};
-                const oldValue = get(storageAtom);
-                set(storageAtom, {
-                  ...oldValue,
-                  ...attribute,
-                });
-              }
-            })
-            .with({ type: DataListStoreParamsSyncAction.RESTORE }, () => {
-              const stored = get(storageAtom);
-              set(coreFiltersAtom({ key: dataKey, dataType }), stored.Filters);
-              set(corePageNumberAtom(dataKey), stored.Page);
-              set(coreSearchStringAtom(dataKey), stored.Search);
-              set(coreSortStateAtom({ key: dataKey }), stored.Sort);
-              set(circuitRepresentationViewAtom, stored.View);
-            })
-            // RESET: Set all atoms to dataType-specific defaults and remove from storage.
-            .with({ type: DataListStoreParamsSyncAction.RESET }, () => {
-              const defaultListParams = makeDataListStoreAtomsInitialValue({ dataType });
-              set(coreFiltersAtom({ key: dataKey, dataType }), defaultListParams.Filters);
-              set(corePageNumberAtom(dataKey), defaultListParams.Page);
-              set(coreSearchStringAtom(dataKey), defaultListParams.Search);
-              set(coreSortStateAtom({ key: dataKey }), defaultListParams.Sort);
-              set(circuitRepresentationViewAtom, defaultListParams.View);
-              if (typeof window !== 'undefined') {
-                sessionStorage.removeItem(dataKey);
-              }
-              dataListStoreParamsStorageAtomFamily.remove({ dataKey, dataType });
-            })
-        );
+        return match({ type: action.type })
+          .with({ type: DataListStateSnapshotSyncAction.SYNC }, ({ type: t }) => {
+            if (t === DataListStateSnapshotSyncAction.SYNC) {
+              const attribute = action.attribute || {};
+              const oldValue = get(storageAtom);
+              set(storageAtom, {
+                ...oldValue,
+                ...attribute,
+              });
+            }
+          })
+          .with({ type: DataListStateSnapshotSyncAction.RESTORE }, () => {
+            const stored = get(storageAtom);
+            set(coreFiltersAtom({ key: dataKey, dataType }), stored.Filters);
+            set(corePageNumberAtom(dataKey), stored.Page);
+            set(coreSearchStringAtom(dataKey), stored.Search);
+            set(coreSortStateAtom({ key: dataKey }), stored.Sort);
+            set(circuitRepresentationViewAtom, stored.View);
+          })
+          .with({ type: DataListStateSnapshotSyncAction.RESET }, () => {
+            const defaultListParams = makeDataListStateSnapshotAtomsInitialValue({ dataType });
+            set(coreFiltersAtom({ key: dataKey, dataType }), defaultListParams.Filters);
+            set(corePageNumberAtom(dataKey), defaultListParams.Page);
+            set(coreSearchStringAtom(dataKey), defaultListParams.Search);
+            set(coreSortStateAtom({ key: dataKey }), defaultListParams.Sort);
+            set(circuitRepresentationViewAtom, defaultListParams.View);
+            if (typeof window !== 'undefined') {
+              sessionStorage.removeItem(dataKey);
+            }
+            DataListStateSnapshotStorageAtomFamily.remove({ dataKey, dataType });
+          });
       }
     );
     childAtom.debugLabel = `data-list-store-params-sync-${dataKey}`;
@@ -207,14 +204,25 @@ export const dataListStoreParamsSyncAtomFamily = atomFamily(
   (a, b) => a.dataKey === b.dataKey
 );
 
+export type ResetRegistryFn = (key: string, resetFn: () => void) => void;
+
+/**
+ * context for registering reset functions for data table atoms.
+ * this context is used to register a reset function that will be called when the user leaves the data section.
+ * this allows to clear the session storage and reset the atoms when the user navigates away from the data pages.
+ */
+export const DataListStateSnapshotContext = createContext<ResetRegistryFn | null>(null);
+
 /**
  * hook for synchronizing data list (table) parameters (filters, sort, search, page, etc.)
  * state is synchronized per dataKey (unique for each data-table context) and entity dataType.
  *
  * This hook is used to synchronize the state required to restore the params of data tables (such as filters, sorting, page number).
  * It returns a set of functions to restore, reset, and sync the state to the data-table.
+ *
+ * It also automatically registers the reset function with the DataResetContext, so that the state is cleared when the user leaves the data section.
  */
-export function useDataListStoreParamsActionSynchronizer({
+export function useDataListStateSnapshotActions({
   dataKey,
   dataType,
   section,
@@ -224,8 +232,22 @@ export function useDataListStoreParamsActionSynchronizer({
   section?: TWorkspaceSection;
 }) {
   const updateSync = useSetAtom(
-    useMemo(() => dataListStoreParamsSyncAtomFamily({ dataKey, dataType }), [dataKey, dataType])
+    useMemo(() => DataListSnapshotSyncAtomFamily({ dataKey, dataType }), [dataKey, dataType])
   );
+
+  const registerReset = use(DataListStateSnapshotContext);
+
+  const reset = useCallback(
+    () => updateSync({ type: DataListStateSnapshotSyncAction.RESET }),
+    [updateSync]
+  );
+
+  useEffect(() => {
+    if (registerReset) {
+      registerReset(dataKey, reset);
+    }
+  }, [registerReset, dataKey, reset]);
+
   if (section !== WorkspaceSection.Data || isNil(section)) {
     return {
       restore: noop,
@@ -234,9 +256,9 @@ export function useDataListStoreParamsActionSynchronizer({
     };
   }
   return {
-    restore: () => updateSync({ type: DataListStoreParamsSyncAction.RESTORE }),
-    reset: () => updateSync({ type: DataListStoreParamsSyncAction.RESET }),
-    sync: (attribute: Partial<DataListStoreParamsType>) =>
-      updateSync({ type: DataListStoreParamsSyncAction.SYNC, attribute }),
+    restore: () => updateSync({ type: DataListStateSnapshotSyncAction.RESTORE }),
+    reset,
+    sync: (attribute: Partial<TDataLisStateSnapshot>) =>
+      updateSync({ type: DataListStateSnapshotSyncAction.SYNC, attribute }),
   };
 }

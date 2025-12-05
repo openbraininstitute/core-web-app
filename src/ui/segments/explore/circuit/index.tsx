@@ -38,7 +38,7 @@ import {
   coreFiltersAtom,
   corePageNumberAtom,
   coreSortStateAtom,
-  useDataListStoreParamsActionSynchronizer,
+  useDataListStateSnapshotActions,
 } from '@/ui/segments/data-table/elements/context';
 import {
   makeSelectEntityClickEvent,
@@ -110,12 +110,11 @@ export function BrowseCircuit({
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
   const [sortState, setSortState] = useAtom(coreSortStateAtom({ key: dataKey }));
 
-  const { sync: runStorageSync, restore: runStorageRestore } =
-    useDataListStoreParamsActionSynchronizer({
-      dataKey,
-      dataType,
-      section,
-    });
+  const { sync: runStorageSync, restore: runStorageRestore } = useDataListStateSnapshotActions({
+    dataKey,
+    dataType,
+    section,
+  });
 
   const onSortChange = (newSortState: any) => {
     setPageNumber(DEFAULT_PAGE_NUMBER);
@@ -131,7 +130,7 @@ export function BrowseCircuit({
   const columns = allColumns.filter(({ key }) => (activeColumns || []).includes(key as string));
 
   useEffect(() => {
-    // Allow restoring the data table parameters when the section is Data.
+    // allow restoring the data table state snapshot when the section is "Data" only.
     if (section === WorkspaceSection.Data) {
       runStorageRestore();
     }

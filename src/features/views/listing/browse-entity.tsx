@@ -21,7 +21,7 @@ import { MiniDetailView } from '@/ui/segments/mini-detail-view';
 import { GenericError } from '@/ui/molecules/generic-error';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
-  useDataListStoreParamsActionSynchronizer,
+  useDataListStateSnapshotActions,
   coreActiveColumnsAtom,
   coreFiltersAtom,
   corePageNumberAtom,
@@ -38,8 +38,8 @@ import { log } from '@/utils/logger';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import type { Props as MainTableProps } from '@/ui/segments/data-table';
+import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 
 const MainTable = dynamic(() => import('@/ui/segments/data-table'), { ssr: false }) as (
   props: MainTableProps<EntityCoreIdentifiableNamed>
@@ -95,12 +95,11 @@ export function BrowseEntityScope({
   const [sortState, setSortState] = useAtom(coreSortStateAtom({ key: dataKey }));
   const activeColumns = useAtomValue(coreActiveColumnsAtom({ dataType, key: dataKey }));
 
-  const { sync: runStorageSync, restore: runStorageRestore } =
-    useDataListStoreParamsActionSynchronizer({
-      dataKey,
-      dataType,
-      section,
-    });
+  const { sync: runStorageSync, restore: runStorageRestore } = useDataListStateSnapshotActions({
+    dataKey,
+    dataType,
+    section,
+  });
 
   const onSortChange = (newSortState: any) => {
     setPageNumber(DEFAULT_PAGE_NUMBER);
@@ -116,7 +115,7 @@ export function BrowseEntityScope({
   const columns = allColumns.filter(({ key }) => (activeColumns || []).includes(key as string));
 
   useEffect(() => {
-    // Allow restoring the data table parameters when the section is Data.
+    // allow restoring the data table state snapshot when the section is "Data" only.
     if (section === WorkspaceSection.Data) {
       runStorageRestore();
     }

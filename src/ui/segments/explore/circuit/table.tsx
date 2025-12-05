@@ -128,7 +128,7 @@ export function MainTable({
                 dataScope === WorkspaceScope.BuildSynaptomeModel) && (
                 <BrainRegionDropdown dataKey={dataKey} />
               )}
-              <CircuitViewToggle />
+              <CircuitViewToggle {...{ dataKey }} />
               <FilterControls
                 filters={filters}
                 displayControlPanel={displayControlPanel}
