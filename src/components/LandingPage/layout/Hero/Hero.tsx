@@ -69,8 +69,12 @@ export default function Hero({ className, section }: HeroProps) {
             <h1 className={styles.largeTitle}>{title}</h1>
             {section === EnumSection.Home && (
               <Link href="/app/virtual-lab/sync" className={styles.virtualLabsButton}>
-                <div className="font-title relative top-0.5 text-xl text-white">Go to</div>
-                <div className="relative -top-0.5 font-serif text-5xl text-white">Virtual Labs</div>
+                <div className="font-title relative top-0.5 text-lg text-white md:text-xl">
+                  Go to
+                </div>
+                <div className="relative -top-0.5 text-center font-serif text-4xl whitespace-nowrap text-white md:text-5xl">
+                  Virtual Labs
+                </div>
               </Link>
             )}
             {content && <div className={styles.content}>{content}</div>}
