@@ -80,6 +80,72 @@ export function Section({
 
   const newKeyError = allEntries.has(newKey) || !newKey || newKey === selectedEntry;
 
+  const onNameChangeConfirm = (
+    e: React.MouseEvent<HTMLSpanElement, MouseEvent> | React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    e.stopPropagation();
+    if (newKeyError) return;
+    const selectedTabAtoms = atomsMap[configTab];
+    if (newKey === selectedEntry) return;
+    if (isAtom(selectedTabAtoms)) return;
+    if (!isPlainObject(config[configTab])) return;
+
+    allEntries.delete(selectedEntry);
+    allEntries.add(newKey);
+
+    selectedTabAtoms[newKey] = selectedTabAtoms[selectedEntry];
+    delete selectedTabAtoms[selectedEntry];
+
+    // Rename references
+
+    // Initialize case
+    const configInitialize = config.initialize;
+    if (
+      isPlainObject(configInitialize) &&
+      isPlainObject(configInitialize.node_set) &&
+      typeof configInitialize.node_set.block_name === 'string' &&
+      configInitialize.node_set.block_name === selectedEntry
+    ) {
+      atomsMap.initialize = atom<Record<string, ConfigValue>>({
+        ...configInitialize,
+        node_set: { ...configInitialize.node_set, block_name: newKey },
+      });
+    }
+
+    // Check all keys in the config
+    Object.entries(config)
+      .filter(([configK]) => configK !== 'initialize')
+      .forEach(([configK, configV]) => {
+        if (typeof configV !== 'object') return;
+
+        // Check all keys in a section (e.g stimuli, recordings)
+        Object.entries(configV).forEach(([_, entryV]) => {
+          if (!isPlainObject(entryV)) return;
+
+          // Check all values in a particular object (a single stimuli, a single timestamp, etc)
+          Object.entries(entryV).forEach(([fieldK, field]) => {
+            if (
+              !isPlainObject(entryV) ||
+              !isPlainObject(field) ||
+              typeof field.block_name !== 'string' ||
+              isAtom(atomsMap[configK]) || // skip top level atoms (e.g initialize)
+              field.block_name !== selectedEntry
+            )
+              return;
+
+            // Renaming the reference to current object
+            entryV[fieldK].block_name = newKey;
+          });
+        });
+      });
+
+    setAtomsMap({ ...atomsMap });
+
+    setIsEditingKey(false);
+    setSelectedEntry(newKey);
+    setNewKey('');
+  };
+
   return (
     <>
       <Tab
@@ -134,7 +200,7 @@ export function Section({
                 }}
               >
                 <div className="w-full">
-                  {isSelected && isEditingKey && (
+                  {isSelected && isEditingKey && !readOnly && (
                     <>
                       <Input
                         value={newKey}
@@ -143,7 +209,17 @@ export function Section({
                           input: 'border-none !bg-transparent text-white',
                         }}
                         ref={(element) => element?.focus()}
-                        onChange={(v) => setNewKey(v.currentTarget.value)}
+                        onKeyDown={(e) => {
+                          e.stopPropagation();
+                          if (e.key === 'Enter') {
+                            onNameChangeConfirm(e);
+                          }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(v) => {
+                          v.stopPropagation();
+                          setNewKey(v.currentTarget.value);
+                        }}
                         status={newKeyError ? 'error' : undefined}
                         size="small"
                       />
@@ -151,68 +227,7 @@ export function Section({
                         <CheckOutlined
                           className={cn('mr-2', newKeyError && 'opacity-30')}
                           disabled={newKeyError}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const selectedTabAtoms = atomsMap[configTab];
-                            if (newKey === selectedEntry) return;
-                            if (isAtom(selectedTabAtoms)) return;
-                            if (!isPlainObject(config[configTab])) return;
-
-                            allEntries.delete(selectedEntry);
-                            allEntries.add(newKey);
-
-                            selectedTabAtoms[newKey] = selectedTabAtoms[selectedEntry];
-                            delete selectedTabAtoms[selectedEntry];
-
-                            // Rename references
-
-                            // Initialize case
-                            const configInitialize = config.initialize;
-                            if (
-                              isPlainObject(configInitialize) &&
-                              isPlainObject(configInitialize.node_set) &&
-                              typeof configInitialize.node_set.block_name === 'string' &&
-                              configInitialize.node_set.block_name === selectedEntry
-                            ) {
-                              atomsMap.initialize = atom<Record<string, ConfigValue>>({
-                                ...configInitialize,
-                                node_set: { ...configInitialize.node_set, block_name: newKey },
-                              });
-                            }
-
-                            // Check all keys in the config
-                            Object.entries(config)
-                              .filter(([configK]) => configK !== 'initialize')
-                              .forEach(([configK, configV]) => {
-                                if (typeof configV !== 'object') return;
-
-                                // Check all keys in a section (e.g stimuli, recordings)
-                                Object.entries(configV).forEach(([_, entryV]) => {
-                                  if (!isPlainObject(entryV)) return;
-
-                                  // Check all values in a particular object (a single stimuli, a single timestamp, etc)
-                                  Object.entries(entryV).forEach(([fieldK, field]) => {
-                                    if (
-                                      !isPlainObject(entryV) ||
-                                      !isPlainObject(field) ||
-                                      typeof field.block_name !== 'string' ||
-                                      isAtom(atomsMap[configK]) || // skip top level atoms (e.g initialize)
-                                      field.block_name !== selectedEntry
-                                    )
-                                      return;
-
-                                    // Renaming the reference to current object
-                                    entryV[fieldK].block_name = newKey;
-                                  });
-                                });
-                              });
-
-                            setAtomsMap({ ...atomsMap });
-
-                            setIsEditingKey(false);
-                            setSelectedEntry(newKey);
-                            setNewKey('');
-                          }}
+                          onClick={onNameChangeConfirm}
                         />
 
                         <CloseOutlined
@@ -228,15 +243,17 @@ export function Section({
                   {(!isSelected || (isSelected && !isEditingKey)) && (
                     <>
                       {subkey}
-                      <EditOutlined
-                        className="ml-3"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedEntry(subkey);
-                          setIsEditingKey(true);
-                          setNewKey(subkey);
-                        }}
-                      />
+                      {!readOnly && !campaignId && (
+                        <EditOutlined
+                          className="ml-3"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedEntry(subkey);
+                            setIsEditingKey(true);
+                            setNewKey(subkey);
+                          }}
+                        />
+                      )}
                     </>
                   )}
                 </div>
