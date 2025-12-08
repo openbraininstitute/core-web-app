@@ -160,16 +160,12 @@
   flex-direction: column;
   min-width: 160px;
   opacity: 0;
-  transform: translateX(20px);
   pointer-events: none;
-  transition:
-    opacity 0.3s ease,
-    transform 0.3s ease;
+  transition: opacity 0.3s ease;
 }
 
 .submenuVisible {
   opacity: 1;
-  transform: translateX(0);
   pointer-events: auto;
 }
 
@@ -178,42 +174,8 @@
   color: inherit;
   text-decoration: none;
   white-space: nowrap;
-  opacity: 0;
   padding-bottom: 4px;
-  transform: translateX(20px);
-  transition:
-    opacity 0.3s ease,
-    transform 0.3s ease,
-    background-color 0.2s ease;
-}
-
-.submenuVisible .submenuItem {
-  opacity: 1;
-  transform: translateX(0);
-  animation: slideInFromRight 0.3s ease forwards;
-}
-
-.submenuItem:nth-child(1) {
-  animation-delay: 0s;
-}
-
-.submenuItem:nth-child(2) {
-  animation-delay: 0.05s;
-}
-
-.submenuItem:nth-child(3) {
-  animation-delay: 0.1s;
-}
-
-@keyframes slideInFromRight {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  transition: background-color 0.2s ease;
 }
 
 .menuContainer > div.hamburger {

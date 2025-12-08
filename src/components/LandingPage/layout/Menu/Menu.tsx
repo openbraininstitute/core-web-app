@@ -31,6 +31,7 @@ const MENU_ITEMS: MenuItem[] = [
     slug: '/about',
     index: EnumSection.About,
     submenu: [
+      { caption: 'About OBI', slug: '/about', index: EnumSection.About },
       { caption: 'Our story', slug: '/the-real-digital-brain-story', index: EnumSection.Story },
       { caption: 'Mission', slug: '/mission', index: EnumSection.Mission },
       { caption: 'Team', slug: '/team', index: EnumSection.Team },
