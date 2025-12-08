@@ -1,15 +1,14 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
-import React from 'react';
 import Link from 'next/link';
 
+import { classNames } from '@/util/utils';
 import { DEFAULT_SECTION, MENU_ITEMS } from '../../../constants';
 import { IconClose } from '../../../icons/IconClose';
-import { classNames } from '@/util/utils';
 
 import { EnumSection } from '@/components/LandingPage/sections/sections';
 import styles from './PopupMenu.module.css';
 
-const MENU_LINKS = [...MENU_ITEMS];
+const MENU_LINKS = [...MENU_ITEMS].filter((item) => item.index !== EnumSection.Sfn2025);
 
 interface PopupMenuProps {
   className?: string;

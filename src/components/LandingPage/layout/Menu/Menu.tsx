@@ -42,7 +42,7 @@ const MENU_ITEMS: MenuItem[] = [
     slug: '/resources',
     index: EnumSection.Resources,
     submenu: [
-      { caption: 'Notebooks', slug: '/resources' },
+      { caption: 'Notebooks', slug: '/notebooks' },
       { caption: 'Gallery', slug: '/gallery', index: EnumSection.Gallery },
     ],
   },
