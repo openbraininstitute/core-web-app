@@ -1,22 +1,30 @@
+'use client';
+
 import { useMemo } from 'react';
 import { Form } from 'antd';
 
+import type { ZodObject, ZodRawShape } from 'zod';
+
+import { DEFAULT_LICENSE_ID } from '@/ui/segments/contribute/shared/schemas';
 import { getLicenses } from '@/api/entitycore/queries/general/license';
 import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
-import {
-  ElectricalCellRecordingSchema,
-  label,
-  zodFieldValidator,
-} from '@/ui/segments/contribute/electrical-cell-recording/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/data';
+import {
+  renderLabel,
+  createZodFieldValidator,
+  RequiredFieldMarker,
+} from '@/ui/segments/contribute/shared/helpers';
 
 import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
 import type { ILicense } from '@/api/entitycore/types/shared/global';
 
-export const DEFAULT_LICENSE_ID = 'ad8686db-3cdd-4e3f-bcbd-812380a9eba7';
-export const DEFAULT_LICENSE_NAME = 'CC BY 4.0';
+interface ILicenseSelectorProps<TSchema extends ZodObject<ZodRawShape>> {
+  schema: TSchema;
+}
 
-export function License() {
+export function LicenseSelector<TSchema extends ZodObject<ZodRawShape>>({
+  schema,
+}: ILicenseSelectorProps<TSchema>) {
   const form = Form.useFormInstance();
 
   const LicenseDropdown = useMemo(
@@ -40,11 +48,11 @@ export function License() {
   return (
     <Form.Item
       name="license_id"
-      label={label('License', 'main', <sup className="text-destructive">*</sup>)}
+      label={renderLabel('License', 'main', RequiredFieldMarker)}
       rules={[
         {
           required: true,
-          validator: zodFieldValidator(ElectricalCellRecordingSchema, 'license_id', form),
+          validator: createZodFieldValidator(schema, 'license_id', form),
         },
       ]}
     >

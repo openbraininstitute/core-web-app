@@ -4,15 +4,17 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getRouteSegmentsAfterWorkspace } from '@/utils/path';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { WorkspaceSection } from '@/constants';
 import { ROOT_ROUTE } from '@/config';
 import Breadcrumb from '@/ui/molecules/breadcrumb';
 import Close from '@/ui/molecules/close';
-import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 
-import type { WorkspaceContext } from '@/types/common';
 import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
+import type { WorkspaceContext } from '@/types/common';
+import type { TWorkspaceScope } from '@/constants';
 
 function getGroupDisplayName(group: TEntityTypeGroup): string {
   const groupLabels: Record<TEntityTypeGroup, string> = {
@@ -71,9 +73,18 @@ export function BackToEntityType({
   projectId,
   type,
   title,
-}: WorkspaceContext & { type: TExtendedEntitiesTypeDict; title: string }) {
+  group,
+  scope,
+}: WorkspaceContext & {
+  type: TExtendedEntitiesTypeDict;
+  title: string;
+  group: TEntityTypeGroup;
+  scope: TWorkspaceScope;
+}) {
   const queryParams = useSearchParams();
   const query = new URLSearchParams(queryParams);
+  query.set('group', group);
+  query.set('scope', scope);
 
   return (
     <Breadcrumb showChevron={false}>
@@ -93,21 +104,23 @@ export function DataBreadcrumb({
   type,
   title,
   group,
+  scope,
 }: {
   type: TExtendedEntitiesTypeDict;
-  title: string;
   group: TEntityTypeGroup;
+  scope: TWorkspaceScope;
+  title: string;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
   const routeSegments = getRouteSegmentsAfterWorkspace(usePathname(), ROOT_ROUTE);
   const section = routeSegments.at(0);
-  if (section !== 'data') return null;
+  if (section !== WorkspaceSection.Data) return null;
 
   return (
     <div className="flex flex-wrap gap-3">
       <BackToListingOriginButton {...{ virtualLabId, projectId }} />
       <BackToCategory {...{ virtualLabId, projectId, group }} />
-      <BackToEntityType {...{ virtualLabId, projectId, type, title }} />
+      <BackToEntityType {...{ virtualLabId, projectId, type, title, group, scope }} />
     </div>
   );
 }
@@ -115,7 +128,7 @@ export function DataBreadcrumb({
 export function ClosePage({ url }: { url: string }) {
   const routeSegments = getRouteSegmentsAfterWorkspace(usePathname(), ROOT_ROUTE);
   const section = routeSegments.at(0);
-  if (section !== 'data') return null;
+  if (section !== WorkspaceSection.Data) return null;
 
   return <Close href={url} />;
 }

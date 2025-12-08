@@ -18,7 +18,7 @@ import type {
   EntityCoreOwnership,
 } from '@/api/entitycore/types/shared/global';
 
-const RecordingType = {
+export const RecordingType = {
   Intracellular: {
     key: 'intracellular',
     label: 'Intracellular',

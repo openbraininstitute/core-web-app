@@ -48,6 +48,5 @@ export default function Analysis() {
     );
   }
 
-  console.log('🐞 [container@51] validationResults =', data?.data); // @FIXME: Remove this line written on 2025-12-04 at 08:47
   return <ViewerContainer rin={rin} validationResults={data?.data ?? []} />;
 }
