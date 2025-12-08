@@ -288,38 +288,38 @@ function SimulationListItem({
         <button
           type="button"
           title={simulation.name}
-          className="mb-2 h-18 w-full cursor-pointer"
+          className="mb-2 flex h-18 w-full cursor-pointer items-center justify-between"
           onClick={() => onSelect(simulation.id)}
         >
-          <div className="flex items-center justify-between">
-            <div className="font-bold">
-              {!execStatus || execStatus === EntitycoreExecutionStatus.CREATED ? (
-                <ConfigProvider theme={{ token: { colorPrimary: '#1890ff' } }}>
+          <div className="min-w-0 flex-1 overflow-hidden font-bold">
+            {!execStatus || execStatus === EntitycoreExecutionStatus.CREATED ? (
+              <ConfigProvider theme={{ token: { colorPrimary: '#1890ff' } }}>
+                <div className="flex min-w-0 items-center" style={{ maxWidth: '100%' }}>
                   <Checkbox
-                    className="mr-2 transition-colors duration-300"
+                    className="mr-2 transition-colors duration-300 [&_.ant-checkbox+span]:block [&_.ant-checkbox+span]:truncate [&_.ant-checkbox+span]:overflow-hidden [&_.ant-checkbox+span]:text-ellipsis [&_.ant-checkbox+span]:whitespace-nowrap"
                     disabled={selectionForSimDisabled}
                     onChange={(e) => onSelectedForSimChange(simulation.id, e.target.checked)}
                     checked={selectedForSim}
-                    style={{ color }}
+                    style={{ color, maxWidth: '100%', display: 'flex' }}
                   >
-                    <span className="truncate overflow-hidden text-lg whitespace-nowrap transition-colors duration-300">
+                    <span className="text-lg transition-colors duration-300">
                       {simulation.name}
                     </span>
                   </Checkbox>
-                </ConfigProvider>
-              ) : (
-                <span
-                  style={{ color }}
-                  className="truncate overflow-hidden text-lg whitespace-nowrap transition-colors duration-300"
-                >
-                  {simulation.name}
-                </span>
-              )}
-            </div>
-            <div className="ml-4 flex flex-shrink-0">
-              <SimulationStatusBadge status={execStatus} />
-              <RightOutlined className="ml-2 text-sm" />
-            </div>
+                </div>
+              </ConfigProvider>
+            ) : (
+              <span
+                style={{ color }}
+                className="block truncate text-lg transition-colors duration-300"
+              >
+                {simulation.name}
+              </span>
+            )}
+          </div>
+          <div className="ml-4 flex flex-shrink-0">
+            <SimulationStatusBadge status={execStatus} />
+            <RightOutlined className="ml-2 text-sm" />
           </div>
         </button>
 
