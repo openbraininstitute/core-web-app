@@ -89,9 +89,8 @@ export function Wallet() {
           className="text-primary-8 max-w-2xs bg-white text-base shadow-lg"
           arrowClassName="bg-white"
         >
-          Can&apos;t find the credits you own? Check in in your virtual lab manager on the upper
-          left of your screen. If you are not the owner of the virtual lab please contact the
-          Virtual lab administrators.
+          Can&apos;t find your credits? Check your virtual lab manager in the upper-left of your
+          screen. If you&apos;re not the lab owner, please contact the virtual lab administrator.
         </TooltipContent>
       </Tooltip>
       <CreditsTransferModal open={showCreditsManagement} onClose={handleTransferCredits} />
