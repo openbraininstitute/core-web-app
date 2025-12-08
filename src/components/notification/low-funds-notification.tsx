@@ -3,6 +3,8 @@
 import { RiCloseFill, RiMoneyDollarCircleLine } from '@remixicon/react';
 import { useCallback, useEffect, useState } from 'react';
 
+import { useUserRole } from '@/hooks/use-user-role';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { CreditsTransferModal } from '@/ui/segments/project/credits/credits-transfer-modal';
 import { cn } from '@/utils/css-class';
 
@@ -16,6 +18,8 @@ type Props = {
 export function LowFundsNotification({ title, description, onClose, duration = 10000 }: Props) {
   const [isVisible, setIsVisible] = useState(true);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
+  const { virtualLabId } = useWorkspace();
+  const { isVirtualLabAdmin } = useUserRole({ virtualLabId });
 
   const handleClose = useCallback(() => {
     setIsVisible(false);
@@ -75,14 +79,17 @@ export function LowFundsNotification({ title, description, onClose, duration = 1
               </button>
             </div>
             <p className="text-neutral-4 mb-4 text-base leading-normal">{description}</p>
-            <button
-              type="button"
-              name="buy-credits-button"
-              onClick={handleBuyCredits}
-              className="text-primary-9 border-neutral-3 rounded-4xl border px-6 py-2 text-lg font-bold"
-            >
-              Buy credit
-            </button>
+            {isVirtualLabAdmin && (
+              <button
+                type="button"
+                name="transfer-credits-button"
+                id="transfer-credits-button"
+                onClick={handleBuyCredits}
+                className="text-primary-9 border-neutral-3 rounded-4xl border px-6 py-2 text-lg font-bold"
+              >
+                Transfer credits
+              </button>
+            )}
           </div>
         </div>
       </div>
