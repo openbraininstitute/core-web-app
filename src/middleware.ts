@@ -12,6 +12,7 @@ const FREE_ACCESS_PAGES = [
   '/pricing',
   '/team',
   '/resources',
+  '/notebooks',
   '/contact',
   '/terms',
   '/privacy',

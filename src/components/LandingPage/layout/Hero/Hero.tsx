@@ -66,9 +66,7 @@ export default function Hero({ className, section }: HeroProps) {
       ) : (
         <div className={styles.text}>
           <div className="flex flex-col items-center">
-            <h1 className={styles.largeTitle}>
-              {section === EnumSection.Resources ? 'Notebooks' : title}
-            </h1>
+            <h1 className={styles.largeTitle}>{title}</h1>
             {section === EnumSection.Home && (
               <Link href="/app/virtual-lab/sync" className={styles.virtualLabsButton}>
                 <div className="font-title relative top-0.5 text-lg text-white md:text-xl">
