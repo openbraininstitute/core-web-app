@@ -1,6 +1,6 @@
 'use client';
 
-import { CloseOutlined } from '@ant-design/icons';
+import { CheckCircleFilled, CloseOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -28,6 +28,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
   const [uploadedImages, setUploadedImages] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [errors, setErrors] = useState<{ type?: string; feedback?: string }>({});
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const { virtualLabId, projectId } = useWorkspace();
 
@@ -281,8 +282,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
         console.warn('Warning:', responseData.warning);
       }
 
-      setMessage(`Ticket created: ${responseData.issueUrl}`);
-
+      setIsSuccess(true);
       setType('');
       setSection('');
       setFeedback('');
@@ -290,8 +290,9 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
 
       setTimeout(() => {
         onClose();
+        setIsSuccess(false);
         setMessage('');
-      }, 2000);
+      }, 3000);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error creating ticket';
       setMessage(`Error: ${errorMessage}`);
@@ -315,6 +316,19 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
         </div>
         <div className="flex items-center justify-center py-8">
           <div className="text-neutral-4 text-sm">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isSuccess) {
+    return (
+      <div className="relative flex flex-col p-6">
+        <div className="flex min-h-[400px] flex-col items-center justify-center gap-6">
+          <CheckCircleFilled className="text-green-500" style={{ fontSize: '80px' }} />
+          <p className="text-primary-9 text-center text-xl font-normal">
+            Thanks for providing us with feedbacks.
+          </p>
         </div>
       </div>
     );
