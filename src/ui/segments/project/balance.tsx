@@ -1,21 +1,21 @@
 import { LoadingOutlined, WarningOutlined } from '@ant-design/icons';
 import { useQueries } from '@tanstack/react-query';
-import { match, P } from 'ts-pattern';
 import { useState } from 'react';
+import { match, P } from 'ts-pattern';
 
-import { CreditsTransferModal } from '@/ui/segments/project/credits/credits-transfer-modal';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { getProjectAccountBalance } from '@/services/virtual-lab/projects';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { VlmUserGroupsResponse } from '@/api/virtual-lab-svc/queries/types';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { CoinsIcon } from '@/components/icons/buttons';
 import { makeRoles } from '@/hooks/use-user-role';
-import { Badge } from '@/ui/molecules/badge';
-import { cn } from '@/utils/css-class';
+import { getProjectAccountBalance } from '@/services/virtual-lab/projects';
 import { ProjectBalance } from '@/types/accounting';
-import { VlmUserGroupsResponse } from '@/api/virtual-lab-svc/queries/types';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Badge } from '@/ui/molecules/badge';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { CreditsTransferModal } from '@/ui/segments/project/credits/credits-transfer-modal';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { cn } from '@/utils/css-class';
 
 export function Wallet() {
   const breakpoint = useDefaultBreakpoint();
@@ -62,34 +62,37 @@ export function Wallet() {
   return (
     <>
       <Tooltip>
-        <TooltipTrigger>
-          <Badge
-            rounded
-            id="workspace-project-credits"
-            className={cn('min-w-16 cursor-pointer font-bold select-none', {
-              'pointer-events-none cursor-not-allowed!': !isAdmin,
-            })}
-            variant="outline"
-            size={breakpoint === 'xl' ? 'lg' : 'md'}
-            aria-disabled={!isAdmin || loadingRoles || isLoading || isError}
-            onClick={isAdmin ? handleTransferCredits : undefined}
-          >
-            <CoinsIcon />
-            {content}
-          </Badge>
+        <TooltipTrigger asChild>
+          <span className="inline-block">
+            <Badge
+              rounded
+              id="workspace-project-credits"
+              className={cn('min-w-16 font-bold select-none', {
+                'cursor-not-allowed': !isAdmin,
+                'cursor-pointer': isAdmin,
+              })}
+              variant="outline"
+              size={breakpoint === 'xl' ? 'lg' : 'md'}
+              aria-disabled={!isAdmin || loadingRoles || isLoading || isError}
+              onClick={isAdmin ? handleTransferCredits : undefined}
+            >
+              <CoinsIcon />
+              {content}
+            </Badge>
+          </span>
         </TooltipTrigger>
-        {!isAdmin && (
-          <TooltipContent
-            avoidCollisions
-            side="bottom"
-            sideOffset={5}
-            collisionPadding={{ bottom: 20 }}
-            className="text-primary-8 max-w-2xs bg-white text-base shadow-lg"
-            arrowClassName="bg-white"
-          >
-            For more information, please contact the Virtual lab administrators.
-          </TooltipContent>
-        )}
+        <TooltipContent
+          avoidCollisions
+          side="bottom"
+          sideOffset={5}
+          collisionPadding={{ bottom: 20 }}
+          className="text-primary-8 max-w-2xs bg-white text-base shadow-lg"
+          arrowClassName="bg-white"
+        >
+          Can&apos;t find the credits you own? Check in in your virtual lab manager on the upper
+          left of your screen. If you are not the owner of the virtual lab please contact the
+          Virtual lab administrators.
+        </TooltipContent>
       </Tooltip>
       <CreditsTransferModal open={showCreditsManagement} onClose={handleTransferCredits} />
     </>
