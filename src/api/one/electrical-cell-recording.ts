@@ -10,7 +10,7 @@ export async function resolveNWBFile(file: File): Promise<NWBResolution> {
   const formData = new FormData();
   formData.append('file', file, file.name);
   const response = await api.post<Response>(
-    '/declared/validate-nwb-file',
+    '/declared/validate-electrophysiology-protocol-nwb-file',
     {
       headers: {
         accept: 'application/json',

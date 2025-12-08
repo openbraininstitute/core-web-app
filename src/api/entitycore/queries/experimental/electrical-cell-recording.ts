@@ -101,13 +101,19 @@ const electricalCellRecordingSchema = z.object({
         .string({ message: 'Cell recording location is required' })
         .nonempty({ message: 'Cell recording location is required' })
     )
-    .nonempty('Recording location cannot be empty'),
-  recording_type: z
-    .string({ message: 'Cell recording type is required' })
-    .nonempty({ message: 'Cell recording type is required' }),
-  recording_origin: z
-    .string({ message: 'Cell recording origin is required' })
-    .nonempty({ message: 'Cell recording origing is required' }),
+    .nullable(),
+  recording_type: z.string({ message: 'Cell recording type is required' }).nonempty({
+    message: 'Cell recording type is required',
+  }),
+  recording_origin: z.string({ message: 'Cell recording origin is required' }).nonempty({
+    message: 'Cell recording origin is required',
+  }),
+  temperature: z.number({ invalid_type_error: 'Temperature must be a number' }).nullable(),
+  ljp: z
+    .number({ invalid_type_error: 'Liquid junction potential (ljp) must be a number' })
+    .optional()
+    .default(0.0),
+  comment: z.string().optional().nullable(),
 });
 
 export type TElectricalCellRecordingCreate = z.infer<typeof electricalCellRecordingSchema>;

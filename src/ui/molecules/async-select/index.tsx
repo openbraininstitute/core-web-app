@@ -64,6 +64,7 @@ export type AsyncSelectProps<R extends Partial<PaginationFilter & SearchFilter>,
   clsx?: {
     trigger?: ComponentProps<'div'>['className'];
     content?: ComponentProps<'div'>['className'];
+    label?: ComponentProps<'div'>['className'];
   };
   tooltip?: ((data: T) => React.ReactNode) | null;
   customItemRender?:
@@ -207,7 +208,12 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
         )}
       >
         <Button variant="outline" role="combobox" disabled={isLoading} className="select-none">
-          <div id={`async-select-label-${id}`} className="line-clamp-1 w-full truncate text-left">
+          <div
+            id={`async-select-label-${id}`}
+            className={cn('line-clamp-1 w-full truncate text-left', clsx?.label, {
+              'text-neutral-2 placeholder:text-sm': !selectedOptionFromProps?.label,
+            })}
+          >
             {selectedOptionFromProps?.label || placeholder}
           </div>
           {/* eslint-disable-next-line no-nested-ternary */}

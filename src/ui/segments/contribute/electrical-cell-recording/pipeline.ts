@@ -1,47 +1,32 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import isNil from 'es-toolkit/compat/isNil';
+import { isNil } from 'es-toolkit/compat';
 
+import { ELECTRICAL_CELL_RECORDING_PROGRESS_STEPS } from '@/ui/segments/contribute/electrical-cell-recording/config';
 import { createEtypeClassification } from '@/api/entitycore/queries/annotations/etype-classification';
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 import { createElectricalCellRecording } from '@/api/entitycore/queries';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { createAsset } from '@/api/entitycore/queries/assets';
-import {
-  ContributionSchema,
-  type TElectricalCellRecordingForm,
-} from '@/ui/segments/contribute/electrical-cell-recording/helpers';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { EntityTypeDict } from '@/api/entitycore/types';
 
-export function buildElectricalCellRecordingMutationKeys(sessionId: string) {
-  return {
-    CreateElectricalCellRecording: {
-      key: ['create-electrical-cell-recording', sessionId],
-      label: 'Create cell recording',
-    },
-    CreateContribution: {
-      key: ['create-contribution', sessionId],
-      label: 'Create Contribution',
-    },
-    CreateEtypeClassification: {
-      key: ['create-mtype-classification', sessionId],
-      label: 'Create E-Type Classification',
-    },
-    createAssets: {
-      key: ['create-electrical-cell-recording-assets', sessionId],
-      label: 'Create cell recording assets',
-    },
-  };
-}
+import type { TElectricalCellRecordingForm } from '@/ui/segments/contribute/electrical-cell-recording/schema';
+import type {
+  IMutationKeyConfig,
+  IPipelineHookResult,
+} from '@/ui/segments/contribute/shared/types';
 
-export const usePipeline = ({ sessionId }: { sessionId: string }) => {
-  const keys = buildElectricalCellRecordingMutationKeys(sessionId);
+export function useElectricalCellRecordingPipeline({
+  sessionId,
+}: {
+  sessionId: string;
+}): IPipelineHookResult<TElectricalCellRecordingForm> {
   const { projectId, virtualLabId } = useWorkspace();
 
   const createElectricalCellRecordingAsync = useMutation({
-    mutationKey: keys.CreateElectricalCellRecording.key,
     mutationFn: (values: TElectricalCellRecordingForm) => {
       const location =
         values.setup.location &&
@@ -63,16 +48,18 @@ export const usePipeline = ({ sessionId }: { sessionId: string }) => {
           contact_email: values.setup.contact_email,
           published_in: values.setup.published_in,
           location,
-          recording_location: [values.setup.recording_location as string],
-          recording_type: values.setup.recording_type as string,
-          recording_origin: values.setup.recording_origin as string,
+          recording_location: [values.setup.recording_location],
+          recording_type: values.setup.recording_type,
+          recording_origin: values.setup.recording_origin,
+          temperature: values.setup.temperature,
+          comment: values.setup.comment,
+          ljp: values.setup.ljp,
         },
       });
     },
   });
 
   const createContributionAsync = useMutation({
-    mutationKey: keys.CreateContribution.key,
     mutationFn: ({
       entityId,
       contribution,
@@ -98,7 +85,6 @@ export const usePipeline = ({ sessionId }: { sessionId: string }) => {
   });
 
   const createEtypeClassificationAsync = useMutation({
-    mutationKey: keys.CreateEtypeClassification.key,
     mutationFn: ({
       entityId,
       etype_class_id,
@@ -118,7 +104,6 @@ export const usePipeline = ({ sessionId }: { sessionId: string }) => {
   });
 
   const createAssetsAsync = useMutation({
-    mutationKey: keys.createAssets.key,
     mutationFn: ({
       entityId,
       assets,
@@ -142,7 +127,11 @@ export const usePipeline = ({ sessionId }: { sessionId: string }) => {
     },
   });
 
-  async function createEntity({ values }: { values: TElectricalCellRecordingForm }) {
+  async function createEntity({
+    values,
+  }: {
+    values: TElectricalCellRecordingForm;
+  }): Promise<string> {
     const electricalCellRecording = await createElectricalCellRecordingAsync.mutateAsync(values);
     await Promise.allSettled([
       createContributionAsync.mutateAsync({
@@ -158,6 +147,7 @@ export const usePipeline = ({ sessionId }: { sessionId: string }) => {
         assets: values.assets,
       }),
     ]);
+    return electricalCellRecording.id;
   }
 
   const loading =
@@ -176,8 +166,23 @@ export const usePipeline = ({ sessionId }: { sessionId: string }) => {
     createElectricalCellRecording: createElectricalCellRecordingAsync.status,
     createContribution: createContributionAsync.status,
     createEtypeClassification: createEtypeClassificationAsync.status,
-    createAssets: createAssetsAsync.status,
+    createElectricalCellRecordingAssets: createAssetsAsync.status,
   };
 
-  return { createEntity, loading, error, status };
-};
+  return {
+    createEntity,
+    loading,
+    error,
+    status,
+    mutationKeys: ELECTRICAL_CELL_RECORDING_PROGRESS_STEPS.reduce(
+      (acc, step) => {
+        acc[step.mutationKey] = {
+          key: [step.mutationKey, sessionId],
+          label: step.label,
+        };
+        return acc;
+      },
+      {} as Record<string, IMutationKeyConfig>
+    ),
+  };
+}

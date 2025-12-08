@@ -3,48 +3,61 @@
 'use client';
 
 import { AlertOutlined, LoadingOutlined } from '@ant-design/icons';
+import { isNil } from 'es-toolkit/compat';
 import { Form, Spin } from 'antd';
 import { useState } from 'react';
-import reject from 'es-toolkit/compat/reject';
-import isNil from 'es-toolkit/compat/isNil';
-import JSZip from 'jszip';
 
+import { ELECTRICAL_CELL_RECORDING_FILE_TYPES } from '@/ui/segments/contribute/electrical-cell-recording/schema';
 import { Alert, AlertContent, AlertDescription, AlertIcon, AlertTitle } from '@/ui/molecules/alert';
 import { formatBytes, useFileUpload, type FileWithPreview } from '@/ui/hooks/use-file-upload';
+import { getFileExtension } from '@/ui/segments/contribute/shared/helpers';
+import { resolveNWBFile } from '@/api/one/electrical-cell-recording';
 import { DownloadAsBoxIcon } from '@/components/icons/buttons';
-import { resolveNeuronFile } from '@/api/one/cell-morphology';
 import { FileDownloadLine } from '@/components/icons/File';
-import {
-  type TCellMorphologyForm,
-  getOriginalFileName,
-  getFileExtensionByTypeOrMimeType,
-} from '@/ui/segments/contribute/cell-morphology/helpers';
 import { Button } from '@/ui/molecules/button';
 import { messages } from '@/i18n/en/upload';
 import { tryCatch } from '@/api/utils';
 import { cn } from '@/utils/css-class';
 
-interface Props {
+import type { TElectricalCellRecordingForm } from '@/ui/segments/contribute/electrical-cell-recording/schema';
+import type { IFileTypeConfig } from '@/ui/segments/contribute/shared/helpers';
+
+interface IAssetUploadProps {
   maxFiles?: number;
   maxSize?: number;
   accept?: string | Array<string>;
   multiple?: boolean;
   className?: string;
-  onFilesChange?: (files: FileWithPreview[]) => void;
+  onFilesChange?: (files: Array<FileWithPreview>) => void;
+}
+
+function getFileExtensionByTypeOrMimeType(file: File): string | undefined {
+  return getFileExtension(
+    file,
+    ELECTRICAL_CELL_RECORDING_FILE_TYPES as unknown as Array<IFileTypeConfig>
+  );
 }
 
 export function AssetUpload({
   maxFiles = 1,
-  maxSize = 5 * 1024 * 1024,
-  accept = ['application/swc', 'application/asc', 'application/x-hdf5', 'h5', 'asc', 'swc'],
+  maxSize = 75 * 1024 * 1024,
+  accept = ['application/nwb', '.nwb'],
   multiple = true,
   className,
   onFilesChange,
-}: Props) {
+}: IAssetUploadProps) {
   const form = Form.useFormInstance();
-  const { assets } = form.getFieldsValue(['assets']) as { assets: TCellMorphologyForm['assets'] };
-  const [resolveNeuronFileLoading, setResolveNeuronFileLoading] = useState(false);
-  const [originalFileType, setOriginalFileType] = useState<string | null>(null);
+  const { assets } = form.getFieldsValue(['assets']) as {
+    assets: TElectricalCellRecordingForm['assets'];
+  };
+  const [resolveNWBFileLoading, setResolveNWBFileLoading] = useState(false);
+  const [originalFileTypes, setOriginalFileTypes] = useState<Array<string>>([]);
+
+  const flattenedFiles = assets
+    ? Object.values(assets)
+        .flat()
+        .filter((file) => !isNil(file))
+    : [];
 
   const [
     { isDragging, errors },
@@ -65,92 +78,63 @@ export function AssetUpload({
     initialFiles: [],
     onFilesChange,
     async onFilesAdded(addedFiles, setState) {
-      const file = addedFiles[0].file as File;
-      setResolveNeuronFileLoading(true);
-      const { data: resolution, error } = await tryCatch(resolveNeuronFile(file as File));
-      if (error) {
-        setResolveNeuronFileLoading(false);
-        setState((prev) => ({
-          ...prev,
-          errors: [messages.ResolveNeuronFileFailed.replace('$$', file.name)],
-          // errors: [error.message],
-        }));
-        return;
-      }
-      if (resolution && resolution.isValid) {
-        const zip = new JSZip();
-        const unzippedData = await zip.loadAsync(resolution.buffer, {});
-        const fsAdded = await Promise.all(
-          Object.entries(unzippedData.files)
-            .filter(([, value]) => !value.dir)
-            .map(([_, value]) => value.async('blob'))
-        );
-        const { name: originalFileName } = getOriginalFileName(file.name);
+      setResolveNWBFileLoading(true);
 
-        const newFiles = fsAdded.map((f, index) => {
-          const extractedName = `${originalFileName}.${Object.keys(unzippedData.files)[index].split('.').pop()}`;
-          const builtFile = new File([f], extractedName, { type: f.type });
-          const finalType = getFileExtensionByTypeOrMimeType(builtFile)!;
-          return {
-            file: builtFile,
+      const localErrors: Array<string> = [];
+      const validFiles: Array<FileWithPreview> = [];
+
+      for (const addedFile of addedFiles) {
+        const file = addedFile.file as File;
+
+        const { data: resolution, error } = await tryCatch(resolveNWBFile(file));
+
+        if (error) {
+          localErrors.push(messages.ResolveNWBFileFailed.replace('$$', file.name));
+          continue;
+        }
+
+        if (resolution && resolution.isValid) {
+          const originalFile = {
+            file,
             id: crypto.randomUUID(),
-            type: finalType,
+            type: getFileExtensionByTypeOrMimeType(file) ?? '',
           };
-        });
-
-        const originalFile = {
-          file: new File([addedFiles[0].file as File], (addedFiles[0].file as File).name, {
-            type: (addedFiles[0].file as File).type,
-          }),
-          id: crypto.randomUUID(),
-          type: getFileExtensionByTypeOrMimeType(file)!,
-        };
-        const allFiles = [...newFiles, originalFile];
-
-        setOriginalFileType(originalFile.type);
-
-        form.setFieldValue(['assets', 'swc'], allFiles.find((f) => f.type === 'swc')?.file);
-        form.setFieldValue(['assets', 'asc'], allFiles.find((f) => f.type === 'asc')?.file);
-        form.setFieldValue(['assets', 'h5'], allFiles.find((f) => f.type === 'h5')?.file);
-
-        setState((prev) => ({
-          ...prev,
-          files: [...prev.files, ...reject(allFiles, (o) => isNil(o.file))],
-        }));
-      } else {
-        setState((prev) => ({
-          ...prev,
-          errors: [messages.ResolveNeuronFileFailed.replace('$$', file.name)],
-        }));
+          validFiles.push(originalFile);
+        } else {
+          localErrors.push(messages.ResolveNWBFileFailed.replace('$$', file.name));
+        }
       }
-      setResolveNeuronFileLoading(false);
+
+      setOriginalFileTypes(validFiles.map((f) => f.type));
+
+      if (validFiles.length > 0) {
+        form.setFieldValue(['assets', 'nwb'], validFiles[0].file);
+      }
+
+      setState((prev) => ({
+        ...prev,
+        files: [...prev.files, ...validFiles],
+        errors: localErrors,
+      }));
+
+      setResolveNWBFileLoading(false);
     },
   });
 
   const handleClearAllFiles = (): void => {
-    form.setFieldValue(['assets', 'swc'], undefined);
-    form.setFieldValue(['assets', 'asc'], undefined);
-    form.setFieldValue(['assets', 'h5'], undefined);
-    setOriginalFileType(null);
+    form.setFieldValue(['assets', 'nwb'], undefined);
+    setOriginalFileTypes([]);
     clearFiles();
   };
 
   return (
     <>
-      <Form.Item name={['assets', 'swc']} className="hidden">
-        <input type="hidden" defaultValue={undefined} />
+      <Form.Item name={['assets', 'nwb']} className="hidden">
+        <input type="hidden" />
       </Form.Item>
-      <Form.Item name={['assets', 'asc']} className="hidden">
-        <input type="hidden" defaultValue={undefined} />
-      </Form.Item>
-      <Form.Item name={['assets', 'h5']} className="hidden">
-        <input type="hidden" defaultValue={undefined} />
-      </Form.Item>
+
       <Form.Item>
         <div className={cn('w-full', className)}>
-          <div className="mb-3 flex flex-wrap items-center justify-between select-none">
-            <h2 className="text-primary-9 text-xl font-bold">Upload new morphology file</h2>
-          </div>
           <div
             className={cn(
               'border-neutral-1 shadow-bnb relative rounded-xl border p-8 text-center transition-colors',
@@ -172,7 +156,7 @@ export function AssetUpload({
                   isDragging ? 'bg-primary-9/10' : 'bg-transparent'
                 )}
               >
-                {resolveNeuronFileLoading ? (
+                {resolveNWBFileLoading ? (
                   <Spin
                     indicator={<LoadingOutlined className="text-primary-8" spin />}
                     size="large"
@@ -197,35 +181,18 @@ export function AssetUpload({
                   >
                     Browse files from your computer
                   </Button>
-                  <div className="text-label my-1.5 text-sm">
-                    Accepted file types: swc, neurolucida asc, or{' '}
-                    <a
-                      rel="noopener noreferrer"
-                      target="_blank"
-                      className="text-primary-7 underline"
-                      href="https://morphology-documentation.readthedocs.io/en/latest/h5v1.html"
-                    >
-                      h5
-                    </a>
-                  </div>
+                  <div className="text-label my-1.5 text-sm">Accepted file type: nwb</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {!isNil(assets) && Object.values(assets).filter((file) => !isNil(file)).length > 0 && (
+          {flattenedFiles.length > 0 && (
             <div className="mt-6 flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <h4 className="text-sm font-medium">
-                  Files ({Object.values(assets).filter((file) => !isNil(file)).length})
-                </h4>
+                <h4 className="text-sm font-medium">Files ({flattenedFiles.length})</h4>
                 <div className="text-muted-foreground text-xs">
-                  Total:{' '}
-                  {formatBytes(
-                    Object.values(assets)
-                      .filter((file) => !isNil(file))
-                      .reduce((acc, file) => acc + file.size, 0)
-                  )}
+                  Total: {formatBytes(flattenedFiles.reduce((acc, file) => acc + file.size, 0))}
                 </div>
               </div>
               <Button
@@ -240,26 +207,32 @@ export function AssetUpload({
             </div>
           )}
 
-          {!isNil(assets) && Object.values(assets).filter((file) => !isNil(file)).length > 0 && (
+          {flattenedFiles.length > 0 && (
             <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-8 select-none sm:grid-cols-3 md:grid-cols-4">
-              {Object.values(assets)
-                .filter((file) => !isNil(file))
+              {flattenedFiles
                 .sort((a, b) => {
-                  const aType = getFileExtensionByTypeOrMimeType(a);
-                  const bType = getFileExtensionByTypeOrMimeType(b);
-                  const aIsOriginal = aType === originalFileType;
-                  const bIsOriginal = bType === originalFileType;
-                  // original files come first (return -1 if a is original)
+                  const aType = getFileExtensionByTypeOrMimeType(a) ?? '';
+                  const bType = getFileExtensionByTypeOrMimeType(b) ?? '';
+                  const aIsOriginal = originalFileTypes.includes(aType);
+                  const bIsOriginal = originalFileTypes.includes(bType);
                   if (aIsOriginal && !bIsOriginal) return -1;
                   if (!aIsOriginal && bIsOriginal) return 1;
                   return 0;
                 })
                 .map((fileItem) => {
-                  const fileType = getFileExtensionByTypeOrMimeType(fileItem);
-                  const isGenerated = originalFileType !== null && fileType !== originalFileType;
+                  const fileType = getFileExtensionByTypeOrMimeType(fileItem) ?? '';
+                  const isGenerated =
+                    originalFileTypes.length > 0 && !originalFileTypes.includes(fileType);
 
                   return (
                     <div key={fileItem.name} className="group relative aspect-square">
+                      {isGenerated && (
+                        <div className="absolute -top-6 right-0 left-0 flex items-center justify-center">
+                          <span className="bg-primary-1 text-primary-8 rounded px-2 py-0.5 text-xs font-medium">
+                            Generated by our tool
+                          </span>
+                        </div>
+                      )}
                       <div
                         className={cn(
                           'bg-background flex h-full w-full flex-col items-center justify-center rounded-t-lg border border-b-0',
