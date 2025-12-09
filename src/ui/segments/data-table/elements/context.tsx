@@ -71,8 +71,8 @@ export const coreSearchStringAtom = atomFamily((key: string) => {
 export const coreSortStateAtom = atomFamily(
   (_ctx: { key: string }) => {
     const initialState: TSortState = {
-      field: EntityCoreFields.CreationDate,
-      backendField: EntityCoreFields.CreationDate,
+      field: EntityCoreFields.RegistrationDate,
+      backendField: EntityCoreFields.RegistrationDate,
       order: SortOrder.DESC,
     };
 

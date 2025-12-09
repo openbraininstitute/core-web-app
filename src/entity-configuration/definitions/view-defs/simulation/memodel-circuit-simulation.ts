@@ -16,24 +16,23 @@ export const viewDefForMEModelCircuitSimulation: ViewDefinitionConfig = {
     EntityCoreFields.MEModelName,
     EntityCoreFields.SimulationCampaignStatus,
     EntityCoreFields.CreatedBy,
-    EntityCoreFields.CreationDate,
     EntityCoreFields.RegistrationDate,
   ],
   filterableFields: [
     EntityCoreFields.Name,
     EntityCoreFields.Contributions,
     EntityCoreFields.CreatedBy,
-    EntityCoreFields.CreationDate,
+    EntityCoreFields.RegistrationDate,
   ],
   displayableFields: [
     EntityCoreFields.Name,
     EntityCoreFields.Contributions,
     EntityCoreFields.CreatedBy,
-    EntityCoreFields.CreationDate,
+    EntityCoreFields.RegistrationDate,
   ],
   miniDetailView: [
     { field: EntityCoreFields.MEModelName },
     { field: EntityCoreFields.SimulationCampaignStatus },
-    { field: EntityCoreFields.CreationDate },
+    { field: EntityCoreFields.RegistrationDate },
   ],
 };

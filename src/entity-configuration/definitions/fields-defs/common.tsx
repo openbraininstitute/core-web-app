@@ -115,26 +115,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isDisplayable: true,
     style: { width: 180 },
   },
-  [EntityCoreFields.CreationDate]: {
-    title: 'Creation date',
-    filter: CoreFieldFilterTypeEnum.DateRange,
-    render: (r) => renderDate(r.creation_date),
-    vocabulary: {
-      plural: 'Dates',
-      singular: 'Date',
-    },
-    defaultConstraint: {
-      gte: 'creation_date__gte',
-      lte: 'creation_date__lte',
-    },
-    isSortable: true,
-    order: {
-      property: 'order_by',
-      value: 'creation_date',
-    },
-    isFilterable: true,
-    isDisplayable: true,
-  },
   [EntityCoreFields.RegistrationDate]: {
     title: 'Registration date',
     filter: CoreFieldFilterTypeEnum.DateRange,
