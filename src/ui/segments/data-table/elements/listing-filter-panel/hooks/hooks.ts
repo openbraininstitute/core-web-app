@@ -11,7 +11,7 @@ import { fieldTitleSentenceCase } from '@/util/utils';
 
 export function useFilterItems(
   filters: CoreFilter[],
-  Entity: ViewDefinitionConfig | null,
+  entity: ViewDefinitionConfig | null,
   facets: Facets | undefined,
   filterValues: CoreFilterValues,
   setFilterValues: React.Dispatch<React.SetStateAction<CoreFilterValues>>,
@@ -29,7 +29,7 @@ export function useFilterItems(
             content:
               filter.type &&
               item?.isFilterable &&
-              (Entity?.filterableFields ? Entity?.filterableFields.includes(filter.field) : true)
+              (entity?.filterableFields ? entity?.filterableFields.includes(filter.field) : true)
                 ? createFilterItemComponent(
                     filter,
                     facets,
@@ -55,7 +55,7 @@ export function useFilterItems(
       activeColumns,
       showDisplayTrigger,
       onToggleActive,
-      Entity,
+      entity,
     ]
   );
 }

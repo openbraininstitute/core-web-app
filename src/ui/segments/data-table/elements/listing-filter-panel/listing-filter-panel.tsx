@@ -138,10 +138,10 @@ export function ListingFilterPanel({
     setFilters(appliedFilters);
   };
 
-  const Entity = getViewDefinitionByExtendedType(dataType);
+  const entity = getViewDefinitionByExtendedType(dataType);
   const filterItems = useFilterItems(
     filters,
-    Entity,
+    entity,
     facets,
     filterValues,
     setFilterValues,

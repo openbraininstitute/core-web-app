@@ -28,7 +28,6 @@ export const coreFiltersAtom = atomFamily(
   ({ dataType, key }: { key: string; dataType: EntityCoreExtendedType }) => {
     const childAtom = atomWithDefault<Array<CoreFilter>>(() => {
       const columns = getViewDefinitionByExtendedType(dataType)?.columns;
-      console.log('🐞 [context@31] dataType, columns =', dataType, columns); // @FIXME: Remove this line written on 2025-12-08 at 11:22
       const fields = columns ? getFieldsDefinition(columns) : [];
       const filteredColumns = [
         ...(columns

@@ -19,6 +19,7 @@ export const viewDefForSingleNeuronSynaptomeSimulation: ViewDefinitionConfig = {
     EntityCoreFields.BrainRegion,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.CreationDate,
+    EntityCoreFields.RegistrationDate,
   ],
   summaryViewFields: [
     { field: EntityCoreFields.CreatedBy },
