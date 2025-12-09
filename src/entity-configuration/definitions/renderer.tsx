@@ -1,11 +1,12 @@
 'use client';
 
-import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
 import { isEmpty, isNil, find, filter, reject, isString } from 'es-toolkit/compat';
+import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
 import { JSX, ReactNode, useEffect, useState, isValidElement } from 'react';
 import { Button, Empty, Modal } from 'antd';
 import { useParams } from 'next/navigation';
 
+import { AgentType, MeasurementStatistic } from '@/api/entitycore/types/shared/global';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { PreviewThumbnail } from '@/features/thumbnail/preview';
 import { tryCatch } from '@/api/utils';
@@ -15,7 +16,6 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { EntityCoreDensityObjectTypes, ICellMorphology } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 import {
-  AgentType,
   type AssetLabel,
   type EntityCoreIdentifiable,
   type EntityCoreResource,
@@ -229,10 +229,10 @@ export function renderPreview<T extends EntityCoreResource>(
 }
 
 export default function getMeasurements(r: EntityCoreDensityObjectTypes) {
-  const mean = find(r.measurements, { name: 'mean' });
-  const std = find(r.measurements, { name: 'standard_deviation' });
-  const ss = find(r.measurements, { name: 'sample_size' });
-  const se = find(r.measurements, { name: 'standard_error' });
+  const mean = find(r.measurements, { name: MeasurementStatistic.mean });
+  const std = find(r.measurements, { name: MeasurementStatistic.standard_deviation });
+  const ss = find(r.measurements, { name: MeasurementStatistic.sample_size });
+  const se = find(r.measurements, { name: MeasurementStatistic.standard_error });
   return { mean, std, ss, se };
 }
 

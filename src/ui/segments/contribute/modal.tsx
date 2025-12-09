@@ -3,6 +3,7 @@ import { isNil } from 'es-toolkit/compat';
 import { match, P } from 'ts-pattern';
 import { useState } from 'react';
 
+import { ExperimentalNeuronDensity } from '@/ui/segments/contribute/experimental-neuron-density';
 import { ElectricalCellRecording } from '@/ui/segments/contribute/electrical-cell-recording';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
@@ -73,6 +74,9 @@ function RenderEntityTypeContent({ type, sessionId: sId }: IRenderEntityTypeCont
     ))
     .with({ type: ExtendedEntitiesTypeDict.ElectricalCellRecording }, () => (
       <ElectricalCellRecording sessionId={sId} />
+    ))
+    .with({ type: ExtendedEntitiesTypeDict.ExperimentalNeuronDensity }, () => (
+      <ExperimentalNeuronDensity sessionId={sId} />
     ))
     .otherwise(() => null);
 }
