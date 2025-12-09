@@ -1,26 +1,25 @@
+import { useRouter } from 'next/navigation';
 import { ReactNode, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
-
-import useExploreColumns from '@/hooks/useExploreColumns';
-import { activeColumnsAtom } from '@/state/explore-section/list-view-atoms';
 
 import { createExpandableTableConfig } from '@/ui/segments/data-table/expandable-row/expandable-base-table';
 import { RecursiveExpandableTable } from '@/ui/segments/explore/circuit/elements/recursive-expandable-table';
 import { useExpandableTable } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { expandIcon } from '@/ui/segments/explore/circuit/elements/expand-icon';
+import { activeColumnsAtom } from '@/state/explore-section/list-view-atoms';
 import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+import { useExploreColumns } from '@/hooks/useExploreColumns';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { BaseTable } from '@/ui/segments/data-table/table';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { WorkspaceScope } from '@/constants';
 
 import type { HierarchyOutputNode, ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
   data: HierarchyOutputNode[] | undefined;
@@ -28,7 +27,7 @@ type Props = {
 
 export function Subcircuits({ data }: Props) {
   const { push: navigate } = useRouter();
-  const { virtualLabId, projectId } = useParams<WorkspaceContext>();
+  const { virtualLabId, projectId } = useWorkspace();
   const cols = useExploreColumns<ICircuit>(
     undefined,
     undefined,
@@ -104,7 +103,7 @@ export function Subcircuits({ data }: Props) {
         </div>
       );
     },
-    expandIconColumnIndex: 4,
+    expandIconColumnIndex: 3,
     expandIcon,
     isTopLevel: true, // this is the main table that should sync with filter resets
   });

@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 
 import Menu from '@/components/LandingPage/layout/Menu';
+import { EnumSection } from '@/components/LandingPage/sections/sections';
 import GalleryContent from '@/ui/segments/gallery/content';
 import HeroGallery from '@/ui/segments/gallery/hero';
 import { useScrollHasStarted } from '@/utils/scroll-has-started';
@@ -27,7 +28,7 @@ export default function GalleryPage({ galleryContent }: GalleryPageProps) {
 
   return (
     <div className={styles.landingPage}>
-      <Menu scrollHasStarted={scrollHasStarted} />
+      <Menu scrollHasStarted={scrollHasStarted} section={EnumSection.Gallery} />
       <HeroGallery
         videoURL="https://player.vimeo.com/progressive_redirect/playback/1129107045/rendition/1080p/file.mp4?loc=external&log_user=0&signature=24971da0f0dba7530737456770428772dfed7fd99b400c3f31e41638bf741059"
         posterURL="/video/thumb.jpg"

@@ -7,8 +7,6 @@ import { getEntitiesCount } from '@/api/entitycore/queries/general/entity';
 import { ElectricalRecordingOriginDictionary } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
-import { WorkspaceScope } from '@/constants';
-
 import { BoutonDensity } from '@/entity-configuration/domain/experimental/bouton-density';
 import { CellMorphology } from '@/entity-configuration/domain/experimental/cell-morphology';
 import { ElectricalCellRecording } from '@/entity-configuration/domain/experimental/electrical-cell-recording';
@@ -33,6 +31,7 @@ import { env } from '@/env';
 
 import type { TWorkspaceScope } from '@/constants';
 import type { WorkspaceContext } from '@/types/common';
+import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
 export const ExperimentalEntitiesTileTypes = {
   ReconstructionMorphology: CellMorphology,
@@ -117,16 +116,7 @@ export async function getAllEntitiesCountScoped({
             within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
             within_brain_region_brain_region_id: brainRegionId ?? null,
             within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
-            ...(scope === WorkspaceScope.Project
-              ? {
-                  authorized_project_id: projectId,
-                  authorized_public: false,
-                }
-              : scope === WorkspaceScope.Public
-                ? {
-                    authorized_public: true,
-                  }
-                : {}),
+            ...getWorkspaceScopeFilters(scope, { virtualLabId, projectId }),
           },
         }),
       ];
@@ -164,16 +154,7 @@ export async function getSimulationsCount({
             within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
             within_brain_region_brain_region_id: brainRegionId ?? null,
             within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
-            ...(scope === WorkspaceScope.Project
-              ? {
-                  authorized_project_id: projectId,
-                  authorized_public: false,
-                }
-              : scope === WorkspaceScope.Public
-                ? {
-                    authorized_public: true,
-                  }
-                : {}),
+            ...getWorkspaceScopeFilters(scope, { virtualLabId, projectId }),
           },
           circuitFilter: {
             within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
@@ -210,16 +191,7 @@ export function getElectricalCellRecordingsCount({
       within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
       within_brain_region_brain_region_id: brainRegionId ?? null,
       within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
-      ...(scope === WorkspaceScope.Project
-        ? {
-            authorized_project_id: projectId,
-            authorized_public: false,
-          }
-        : scope === WorkspaceScope.Public
-          ? {
-              authorized_public: true,
-            }
-          : {}),
+      ...getWorkspaceScopeFilters(scope, { virtualLabId, projectId }),
     },
   });
 }

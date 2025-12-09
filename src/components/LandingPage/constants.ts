@@ -20,6 +20,7 @@ export const SECTIONS: Readonly<Section[]> = [
   { index: EnumSection.Pricing, caption: 'Pricing', slug: '/pricing' },
   { index: EnumSection.Team, caption: 'Team', slug: '/team' },
   { index: EnumSection.Resources, caption: 'Resources', slug: '/resources' },
+  { index: EnumSection.Notebooks, caption: 'Notebooks', slug: '/notebooks' },
   { index: EnumSection.Contact, caption: 'Contact', slug: '/contact' },
   { index: EnumSection.PrivacyPolicy, caption: 'Privacy', slug: '/privacy' },
   { index: EnumSection.Sfn2025, caption: 'SfN 2025', slug: '/sfn-2025' },

@@ -28,11 +28,10 @@ const tabsConfigItems: Array<{
     key: HelpSections.Overview,
     title: 'Overview',
   },
-  // {
-  //   key: HelpSections.Tutorials,
-  //   title: 'Tutorials',
-  //   position: 'middle',
-  // },
+  {
+    key: HelpSections.Tutorials,
+    title: 'Tutorials',
+  },
   {
     key: HelpSections.Glossary,
     title: 'Glossary',
@@ -61,14 +60,21 @@ const tabsConfigItems: Array<{
 
 function HelpTabs() {
   const breakpoint = useDefaultBreakpoint();
+  const pathname = usePathname();
+
+  // Set default tab based on pathname
+  const defaultTab = pathname?.includes('/tutorials')
+    ? HelpSections.Tutorials
+    : HelpSections.Overview;
+
   const { activeTab } = useTabs<HelpSectionsKeys>({
     tabsConfig: tabsConfigItems,
     tabKey: 'section',
     shallow: true,
+    defaultKey: defaultTab,
   });
 
   const router = useRouter();
-  const pathname = usePathname();
 
   return (
     <PillTabs
@@ -82,7 +88,7 @@ function HelpTabs() {
       }}
     >
       <PillTabsList
-        className={cn('grid h-10 w-full grid-cols-7 bg-white p-0 shadow-2xl', {
+        className={cn('grid h-10 w-full grid-cols-8 bg-white p-0 shadow-2xl', {
           'h-12': breakpoint === 'xl',
         })}
       >

@@ -17,7 +17,7 @@ export const ViewDefForCircuit: ViewDefinitionConfig = {
     EntityCoreFields.CircuitNumberNeurons,
     EntityCoreFields.CircuitNumberSynapses,
     EntityCoreFields.CircuitNumberConnections,
-    EntityCoreFields.Species,
+    EntityCoreFields.SpeciesName,
     EntityCoreFields.CircuitBuildCategory,
     EntityCoreFields.CircuitPublishedIn,
     EntityCoreFields.CircuitExperimentDate,
@@ -25,7 +25,7 @@ export const ViewDefForCircuit: ViewDefinitionConfig = {
   miniDetailView: [
     { field: EntityCoreFields.BrainRegion },
     { field: EntityCoreFields.CircuitScale },
-    { field: EntityCoreFields.Species },
+    { field: EntityCoreFields.SpeciesName },
     { field: EntityCoreFields.CircuitSubCircuit },
     { field: EntityCoreFields.CircuitNumberNeurons },
     { field: EntityCoreFields.CircuitNumberSynapses },
@@ -39,23 +39,11 @@ export const ViewDefForCircuit: ViewDefinitionConfig = {
     { field: EntityCoreFields.CircuitRootCircuit },
     { field: EntityCoreFields.CircuitScale },
     { field: EntityCoreFields.License },
-    {
-      field: EntityCoreFields.CircuitNumberNeurons,
-    },
-    {
-      field: EntityCoreFields.CircuitNumberConnections,
-    },
-    {
-      field: EntityCoreFields.CircuitNumberSynapses,
-    },
-    {
-      field: EntityCoreFields.CircuitPublishedIn,
-    },
-    {
-      field: EntityCoreFields.CircuitExperimentDate,
-    },
-    {
-      field: EntityCoreFields.CircuitContactEmail,
-    },
+    { field: EntityCoreFields.CircuitNumberNeurons },
+    { field: EntityCoreFields.CircuitNumberConnections },
+    { field: EntityCoreFields.CircuitNumberSynapses },
+    { field: EntityCoreFields.CircuitPublishedIn },
+    { field: EntityCoreFields.CircuitExperimentDate },
+    { field: EntityCoreFields.CircuitContactEmail },
   ],
 };

@@ -3,9 +3,11 @@
 import React from 'react';
 
 import FeatureBloc from './FeatureBloc';
+import FeatureBlocSinglePlan from './FeatureBlocSinglePlan';
 import PlanHeader from './PlanHeader';
 
 import CenteredColumn from '@/components/LandingPage/components/CenteredColumn';
+import SwipeableCardsList from '@/components/LandingPage/components/swipeable-cards-list/swipeable-cards-list';
 import { useSanityContentForPricing } from '@/components/LandingPage/content/pricing';
 import { styleBlockFullWidth } from '@/components/LandingPage/styles';
 import { classNames } from '@/util/utils';
@@ -22,8 +24,9 @@ export default function LargeScreen() {
   return (
     <>
       <CenteredColumn className={styleBlockFullWidth}>
+        {/* Desktop Grid Layout */}
         <div
-          className={classNames(styles.priceList)}
+          className={classNames(styles.priceList, styles.desktopLayout)}
           style={{ '--custom-plans-count': plans.length }}
         >
           <div />
@@ -36,6 +39,35 @@ export default function LargeScreen() {
               <FeatureBloc bloc={bloc} plans={plans} />
             </React.Fragment>
           ))}
+        </div>
+
+        {/* Mobile/Tablet Swipable Cards */}
+        <div className={styles.mobileLayout}>
+          <SwipeableCardsList hideFooter={false} className={styles.priceListCards}>
+            {plans.map((plan, index) => (
+              <div
+                key={`${plan.title}/${index}`}
+                className={classNames(styles.planCard, 'rounded-2xl border border-neutral-300')}
+              >
+                <h2 className={styles.cardTitle}>{plan.title}</h2>
+                {plan.notes && plan.notes.length > 0 && (
+                  <div className={styles.cardSubtitle}>
+                    {plan.notes.map((note, noteIndex) => (
+                      <div key={noteIndex}>{note}</div>
+                    ))}
+                  </div>
+                )}
+                <div className={styles.cardFeatures}>
+                  {features.map((bloc, blocIndex) => (
+                    <React.Fragment key={bloc.title ?? blocIndex}>
+                      {blocIndex > 0 && <hr className={styles.cardDivider} />}
+                      <FeatureBlocSinglePlan bloc={bloc} plan={plan} />
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </SwipeableCardsList>
         </div>
 
         <ul className={styles.notesExplanation}>

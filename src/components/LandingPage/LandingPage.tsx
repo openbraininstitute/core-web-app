@@ -63,6 +63,7 @@ function renderSection(section: EnumSection): React.ReactNode {
     case EnumSection.Mission:
     case EnumSection.Team:
     case EnumSection.Resources:
+    case EnumSection.Notebooks:
     case EnumSection.TermsAndConditions:
     case EnumSection.Financing:
     case EnumSection.PrivacyPolicy:

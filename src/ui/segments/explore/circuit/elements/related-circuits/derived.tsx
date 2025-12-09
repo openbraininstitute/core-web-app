@@ -1,27 +1,29 @@
-import { ReactNode, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { snakeCase } from 'es-toolkit/compat';
+import { ReactNode, useMemo } from 'react';
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 
-import useExploreColumns from '@/hooks/useExploreColumns';
-import { activeColumnsAtom } from '@/state/explore-section/list-view-atoms';
-
 import { createExpandableTableConfig } from '@/ui/segments/data-table/expandable-row/expandable-base-table';
-import { useExpandableTable } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
 import { RecursiveExpandableTable } from '@/ui/segments/explore/circuit/elements/recursive-expandable-table';
+import { useExpandableTable } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { HierarchyOutputNode } from '@/ui/segments/explore/circuit/helpers';
 import { expandIcon } from '@/ui/segments/explore/circuit/elements/expand-icon';
+import { activeColumnsAtom } from '@/state/explore-section/list-view-atoms';
+import { HierarchyOutputNode } from '@/ui/segments/explore/circuit/helpers';
 import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+import { useExploreColumns } from '@/hooks/useExploreColumns';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { BaseTable } from '@/ui/segments/data-table/table';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { WorkspaceScope } from '@/constants';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { WorkspaceContext } from '@/types/common';
+import type { KebabCase } from '@/utils/type';
 
 type Props = {
   data: HierarchyOutputNode[] | undefined;
@@ -29,26 +31,24 @@ type Props = {
 
 export function Derived({ data }: Props) {
   const { push: navigate } = useRouter();
-  const { virtualLabId, projectId } = useParams<WorkspaceContext>();
-  const cols = useExploreColumns<ICircuit>(
-    undefined,
-    undefined,
-    [],
-    ExtendedEntitiesTypeDict.Circuit
-  );
+  const { virtualLabId, projectId } = useWorkspace();
+  const { type } = useParams<{ type: KebabCase<TExtendedEntitiesTypeDict> }>();
+  const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
+
+  const cols = useExploreColumns<ICircuit>(undefined, undefined, [], dataType);
 
   const activeColumns = useAtomValue(
     useMemo(
       () =>
         unwrap(
           activeColumnsAtom({
-            dataType: ExtendedEntitiesTypeDict.Circuit,
+            dataType,
             dataScope: ExploreDataScope.NoScope,
             brainRegionId: undefined,
             key: '',
           })
         ),
-      []
+      [dataType]
     )
   );
   const columns = cols.filter(({ key }) => (activeColumns || []).includes(key as string));
@@ -57,7 +57,7 @@ export function Derived({ data }: Props) {
     navigate(
       resolveExploreDetailsPageUrl({
         ctx: { virtualLabId, projectId },
-        dataType: ExtendedEntitiesTypeDict.Circuit,
+        dataType,
         entityId: record.id,
       })
     );
@@ -105,7 +105,7 @@ export function Derived({ data }: Props) {
         </div>
       );
     },
-    expandIconColumnIndex: 4,
+    expandIconColumnIndex: dataType === ExtendedEntitiesTypeDict.Circuit ? 3 : 2,
     expandIcon,
     isTopLevel: true, // this is the main table that should sync with filter resets
   });

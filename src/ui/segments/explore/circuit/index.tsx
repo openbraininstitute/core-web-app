@@ -46,6 +46,7 @@ import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/
 import type { Facets, Pagination } from '@/api/entitycore/types/shared/response';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
+import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
 const CircuitTable = dynamic(() => import('@/ui/segments/explore/circuit/table'), { ssr: false });
 
@@ -80,7 +81,6 @@ export function BrowseCircuit({
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const { mdv, setMdv } = useMiniDetailView();
-
   const [{ scope, view }] = useQueryStates({
     view: parseAsString
       .withDefault(CircuitView.Hierarchy)
@@ -143,7 +143,11 @@ export function BrowseCircuit({
       const [{ workspace, queryParameters }] = queryKey;
       return await Circuit.api.query.list?.({
         withFacets: true,
-        filters: { ...queryParameters, ...extraQueryParams },
+        filters: {
+          ...queryParameters,
+          ...extraQueryParams,
+          ...getWorkspaceScopeFilters(scope!, { virtualLabId, projectId }),
+        },
         context: workspace,
       });
     },
