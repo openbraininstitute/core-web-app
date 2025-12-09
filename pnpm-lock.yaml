@@ -104,9 +104,6 @@ importers:
       '@react-three/fiber':
         specifier: ^9.1.2
         version: 9.1.2(@types/react@19.1.0)(immer@10.1.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(three@0.159.0)
-      '@remixicon/react':
-        specifier: ^4.7.0
-        version: 4.7.0(react@19.1.0)
       '@rjsf/antd':
         specifier: 6.0.0-beta.23
         version: 6.0.0-beta.23(@ant-design/icons@6.0.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@rjsf/core@6.0.0-beta.23(@rjsf/utils@6.0.0-beta.23(react@19.1.0))(react@19.1.0))(@rjsf/utils@6.0.0-beta.23(react@19.1.0))(antd@5.24.6(date-fns@4.1.0)(moment@2.30.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(date-fns@4.1.0)(dayjs@1.11.18)(moment@2.30.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -3824,11 +3821,6 @@ packages:
     resolution: {integrity: sha512-X34S/rC8S/M1BIrkYD1mJ5f8vlH0BDqxXrs96cvxSBo4FhMdbhU+GUGsmNYov1xjSyLMHgo8NYrUG8bNX7525g==}
     peerDependencies:
       redux: ^3.1.0 || ^4.0.0 || ^5.0.0
-
-  '@remixicon/react@4.7.0':
-    resolution: {integrity: sha512-ODBQjdbOjnFguCqctYkpDjERXOInNaBnRPDKfZOBvbzExBAwr2BaH/6AHFTg/UAFzBDkwtylfMT8iKPAkLwPLQ==}
-    peerDependencies:
-      react: '>=18.2.0'
 
   '@rexxars/react-json-inspector@9.0.1':
     resolution: {integrity: sha512-4uZ4RnrVoOGOShIKKcPoF+qhwDCZJsPPqyoEoW/8HRdzNknN9Q2yhlbEgTX1lMZunF1fv7iHzAs+n1vgIgfg/g==}
@@ -16095,10 +16087,6 @@ snapshots:
       '@babel/runtime': 7.27.0
       immutable: 4.3.7
       redux: 5.0.1
-
-  '@remixicon/react@4.7.0(react@19.1.0)':
-    dependencies:
-      react: 19.1.0
 
   '@rexxars/react-json-inspector@9.0.1(react@19.1.0)':
     dependencies:
