@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import ApiError from '@/api/error';
 import {
+  modelAtomFamily,
   simExecRemoteStatusMapAtomFamily,
   simExecStatusMapAtomFamily,
   simulationsByCampaignIdAtomFamily,
@@ -31,6 +32,8 @@ import { ExecutionStatusColorMap } from '@/ui/segments/activity-execution/color-
 import { useAppNotification } from '@/components/notification';
 
 import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { requestOfflineTokenConsent } from '@/api/auth-manager';
 
 type SimulationTabProps = {
   campaignId: string;
@@ -47,6 +50,9 @@ export default function SimulationsTab({
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
   const simulationsAtom = simulationsByCampaignIdAtomFamily({ campaignId, context });
   const simulations = useAtomValue(simulationsAtom);
+
+  const modelAtom = modelAtomFamily({ id: simulations[0].entity_id, context });
+  const model = useAtomValue(modelAtom);
 
   const simulationIds = simulations.map((s) => s.id);
 
@@ -120,8 +126,17 @@ export default function SimulationsTab({
     return () => clearInterval(intervalId);
   }, [fetchRemoteSimExecStatuseMap, simRequestInProgress, statusMap]);
 
+  const runViaLaunchSystem = async (simIds: string[]) => {
+    const consent = await requestOfflineTokenConsent();
+    debugger;
+  };
+
   // TODO Refactor
   const run = async (simIds: string[]) => {
+    if ('scale' in model && model.scale === CircuitScaleDictionary.Microcircuit) {
+      return runViaLaunchSystem(simIds);
+    }
+
     setSimRequestInProgress(true);
     try {
       await runSimulationBatch({
