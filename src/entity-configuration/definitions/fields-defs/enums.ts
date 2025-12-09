@@ -18,8 +18,9 @@ export enum EntityCoreFields {
   Description = 'description',
   SpeciesName = 'species',
   StrainName = 'strain_name',
-  CreationDate = 'creation_date',
-  RegistrationDate = 'registration_date',
+  /** CreationDate is obsolete. Replaced with RegistrationDate */
+  // CreationDate = 'creation_date',
+  RegistrationDate = 'creation_date',
   UpdateDate = 'update_date',
   Contributions = 'contribution',
   InstitutionalContributions = 'institutional_contributions',

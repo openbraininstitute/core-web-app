@@ -15,7 +15,6 @@ export const ViewDefForIonChannelModel: ViewDefinitionConfig = {
     EntityCoreFields.TemperatureCelsius,
     EntityCoreFields.IsTemperatureDependent,
     EntityCoreFields.IsLjpCorrected,
-    EntityCoreFields.CreationDate,
     EntityCoreFields.RegistrationDate,
   ],
   curated: true,
@@ -41,7 +40,6 @@ export const ViewDefForIonChannelModel: ViewDefinitionConfig = {
     EntityCoreFields.TemperatureCelsius,
     EntityCoreFields.IsTemperatureDependent,
     EntityCoreFields.IsLjpCorrected,
-    EntityCoreFields.CreationDate,
     EntityCoreFields.RegistrationDate,
   ],
 };

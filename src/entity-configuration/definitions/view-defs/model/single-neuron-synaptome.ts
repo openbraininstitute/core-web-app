@@ -15,7 +15,6 @@ export const ViewDefForSingleNeuronSynaptome: ViewDefinitionConfig = {
     EntityCoreFields.EType,
     EntityCoreFields.BrainRegion,
     EntityCoreFields.CreatedBy,
-    EntityCoreFields.CreationDate,
     EntityCoreFields.RegistrationDate,
   ],
   curated: false,

@@ -16,7 +16,6 @@ export const ViewDefForMemodel: ViewDefinitionConfig = {
     EntityCoreFields.MType,
     EntityCoreFields.EType,
     EntityCoreFields.CreatedBy,
-    EntityCoreFields.CreationDate,
     EntityCoreFields.RegistrationDate,
   ],
   curated: false,
