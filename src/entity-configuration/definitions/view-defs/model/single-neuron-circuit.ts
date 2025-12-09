@@ -16,5 +16,6 @@ export const ViewDefForSingleNeuronCircuit: ViewDefinitionConfig = {
     EntityCoreFields.CircuitNumberConnections,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.CreationDate,
+    EntityCoreFields.RegistrationDate,
   ],
 };

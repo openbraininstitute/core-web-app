@@ -10,7 +10,6 @@ export function useInputResistance(entityId: string): number | undefined {
     queryKey: keyBuilder.meModel({ projectId, virtualLabId, entityId }),
     queryFn: async () => {
       const model = await getMEModel({ context: { projectId, virtualLabId }, id: entityId });
-      console.log('🐞 [use-input-resistance@13] model =', model); // @FIXME: Remove this line written on 2025-12-04 at 08:50
       return model.calibration_result.rin;
     },
   });
