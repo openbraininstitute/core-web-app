@@ -3,14 +3,14 @@ import { isNil } from 'es-toolkit/compat';
 
 import { createFilterItemComponent } from './create-filter-item-component';
 
-import { Facets } from '@/api/entitycore/types/shared/response';
-import { CoreFilter, CoreFilterValues } from '@/entity-configuration/definitions/types';
+import { type TCoreFilter, CoreFilterValues } from '@/entity-configuration/definitions/types';
 import { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
+import { Facets } from '@/api/entitycore/types/shared/response';
 import { fieldTitleSentenceCase } from '@/util/utils';
 
 export function useFilterItems(
-  filters: CoreFilter[],
+  filters: TCoreFilter[],
   entity: ViewDefinitionConfig | null,
   facets: Facets | undefined,
   filterValues: CoreFilterValues,

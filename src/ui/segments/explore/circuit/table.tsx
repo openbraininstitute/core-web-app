@@ -13,21 +13,21 @@ import type { ColumnProps, TableProps } from 'antd/es/table';
 import { ListingFilterPanel } from '@/ui/segments/data-table/elements/listing-filter-panel/listing-filter-panel';
 import { CircuitViewToggle } from '@/ui/segments/explore/circuit/elements/view-toggle';
 import { FilterControls } from '@/ui/segments/data-table/elements/filter-controls';
+import { CircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
 import { coreFiltersAtom } from '@/ui/segments/data-table/elements/context';
 import { OnCellClick, WrapperTable } from '@/ui/segments/data-table/table';
 import { Pagination } from '@/ui/segments/data-table/elements/pagination';
 import { BrainRegionDropdown } from '@/features/brain-region-dropdown';
-import { CircuitView } from '@/ui/segments/explore/circuit/helpers';
 import { Search } from '@/ui/segments/data-table/search';
 import { WorkspaceScope } from '@/constants';
 import { cn } from '@/utils/css-class';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
-import type { TCircuitView } from '@/ui/segments/explore/circuit/helpers';
+import type { TCircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import type { WorkspaceContext } from '@/types/common';
-import type { TWorkspaceScope } from '@/constants';
 import type {
   Facets,
   Pagination as EntitycorePagination,
@@ -40,6 +40,7 @@ export type Props<T> = {
     totalData: number;
   };
   dataScope?: TWorkspaceScope;
+  section: TWorkspaceSection;
   columns: ColumnProps<T>[];
   dataType: TExtendedEntitiesTypeDict;
   workspace?: WorkspaceContext;
@@ -58,7 +59,7 @@ export type Props<T> = {
   isLoading?: boolean;
   dataSource: Array<T>;
   tableStyle?: CSSProperties | undefined;
-  view: TCircuitView | null;
+  view: TCircuitRepresentationView | null;
   queryKeyHash?: string;
   expandableConfig?: ExpandableConfig<T>;
 };
@@ -71,6 +72,7 @@ export function MainTable({
   cls,
   facets,
   renderButton,
+  section,
   showLoadingState,
   isLoading,
   resultPagination,
@@ -126,7 +128,7 @@ export function MainTable({
                 dataScope === WorkspaceScope.BuildSynaptomeModel) && (
                 <BrainRegionDropdown dataKey={dataKey} />
               )}
-              <CircuitViewToggle />
+              <CircuitViewToggle {...{ dataKey }} />
               <FilterControls
                 filters={filters}
                 displayControlPanel={displayControlPanel}
@@ -137,7 +139,7 @@ export function MainTable({
           </div>
         </div>
         <WrapperTable<ICircuit>
-          key={view === CircuitView.Hierarchy ? queryKeyHash : 'circuit-table'}
+          key={view === CircuitRepresentationView.Hierarchy ? queryKeyHash : 'circuit-table'}
           dataType={dataType}
           columns={columns}
           dataSource={dataSource}
@@ -170,9 +172,9 @@ export function MainTable({
           sticky={sticky}
           className={cls?.table}
           controls={
-            view === CircuitView.Flat && (
+            view === CircuitRepresentationView.Flat && (
               <div className="w-full">
-                <Pagination {...{ dataKey, resultPagination }} />
+                <Pagination {...{ dataKey, dataType, section, resultPagination }} />
               </div>
             )
           }
@@ -190,6 +192,7 @@ export function MainTable({
           dataKey={dataKey}
           facets={facets}
           workspace={workspace}
+          section={section}
         />
       )}
     </>

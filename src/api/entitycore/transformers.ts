@@ -1,7 +1,7 @@
 import { isEmpty, sortBy, omit, map } from 'es-toolkit/compat';
 
 import { AgentType, type Agent, type IContributor } from '@/api/entitycore/types/shared/global';
-import type { CoreFilter } from '@/entity-configuration/definitions/types';
+import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
 type TransformFiltersToQueryReturnValue = Record<
   string,
@@ -61,11 +61,11 @@ export function transformQueryParamsListToServerString(
  * transforms an array of filters into a query object for API requests.
  * Uses the constraint field to determine the query parameter names.
  *
- * @param {Array<CoreFilter>} filters - The filters to transform
+ * @param {Array<TCoreFilter>} filters - The filters to transform
  * @returns {TransformFiltersToQueryReturnValue} The transformed query object
  */
 export function transformFiltersToQuery(
-  filters: Array<CoreFilter>
+  filters: Array<TCoreFilter>
 ): TransformFiltersToQueryReturnValue {
   return filters.reduce((acc, filter) => {
     // Skip filters with null values

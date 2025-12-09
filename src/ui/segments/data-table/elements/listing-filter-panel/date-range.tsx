@@ -6,7 +6,7 @@ import type { DateRangeFilter, GteLteValue } from '@/entity-configuration/defini
 
 const DateRangePicker = DatePicker.generatePicker<Date>(dateFnsGenerateConfig);
 
-export default function DateRange({
+export function DateRange({
   filter,
   onChange,
 }: {
@@ -47,3 +47,5 @@ export default function DateRange({
     </div>
   );
 }
+
+export default DateRange;

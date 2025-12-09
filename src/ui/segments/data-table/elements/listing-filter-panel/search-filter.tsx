@@ -8,7 +8,7 @@ import { getFieldDefinition } from '@/entity-configuration/definitions';
 import Search from '@/components/Search';
 
 import type { FacetLabelValuePair } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/use-options';
-import type { CoreFilter } from '@/entity-configuration/definitions/types';
+import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
 export function SearchFilter({
   data,
@@ -17,7 +17,7 @@ export function SearchFilter({
   onChange,
 }: {
   data: Array<FacetLabelValuePair>;
-  filter: CoreFilter;
+  filter: TCoreFilter;
   values: string[];
   onChange: (newValues: string[]) => void;
 }) {

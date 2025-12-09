@@ -3,14 +3,14 @@ import isEmpty from 'es-toolkit/compat/isEmpty';
 
 import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 
-import type { CoreFilter } from '@/entity-configuration/definitions/types';
+import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
 /**
  * Checks whether the filter has a value assigned
  *
  * @param filter the filter to check
  */
-export function filterHasValue(filter: CoreFilter) {
+export function filterHasValue(filter: TCoreFilter) {
   switch (filter.type) {
     case CoreFieldFilterTypeEnum.Text:
       return !isEmpty(filter.value);

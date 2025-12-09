@@ -9,12 +9,10 @@ import { RecursiveExpandableTable } from '@/ui/segments/explore/circuit/elements
 import { useExpandableTable } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { expandIcon } from '@/ui/segments/explore/circuit/elements/expand-icon';
-import { activeColumnsAtom } from '@/state/explore-section/list-view-atoms';
+import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
 import { HierarchyOutputNode } from '@/ui/segments/explore/circuit/helpers';
 import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
-import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { useExploreColumns } from '@/hooks/useExploreColumns';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { BaseTable } from '@/ui/segments/data-table/table';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -24,6 +22,7 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { KebabCase } from '@/utils/type';
+import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 
 type Props = {
   data: HierarchyOutputNode[] | undefined;
@@ -35,16 +34,19 @@ export function Derived({ data }: Props) {
   const { type } = useParams<{ type: KebabCase<TExtendedEntitiesTypeDict> }>();
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
 
-  const cols = useExploreColumns<ICircuit>(undefined, undefined, [], dataType);
-
+  const cols = useDataTableColumns<ICircuit>({
+    dataType,
+    setSortState: undefined,
+    sortState: undefined,
+    initialColumns: [],
+  });
   const activeColumns = useAtomValue(
     useMemo(
       () =>
         unwrap(
           activeColumnsAtom({
             dataType,
-            dataScope: ExploreDataScope.NoScope,
-            brainRegionId: undefined,
+            dataScope: WorkspaceScope.Custom,
             key: '',
           })
         ),

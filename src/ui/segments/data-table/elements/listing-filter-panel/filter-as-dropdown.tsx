@@ -4,11 +4,11 @@ import { Select } from 'antd';
 import map from 'es-toolkit/compat/map';
 import { cn } from '@/utils/css-class';
 
-import type { CoreFilter } from '@/entity-configuration/definitions/types';
+import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
 export type OptionType = DefaultOptionType;
 type Props = {
-  filter: CoreFilter;
+  filter: TCoreFilter;
   data?: Array<OptionType>;
   onChange: (values: string[]) => void;
   placeholder?: string;

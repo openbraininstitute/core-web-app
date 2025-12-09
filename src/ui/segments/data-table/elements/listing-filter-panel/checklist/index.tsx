@@ -11,17 +11,17 @@ import { DEFAULT_CHECKLIST_RENDER_LENGTH } from '@/constants';
 
 import type { CheckListProps } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/default-checklist';
 import type { FacetLabelValuePair } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/use-options';
-import type { CoreFilter } from '@/entity-configuration/definitions/types';
+import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
 type Props = {
   children: (props: CheckListProps) => ReactNode;
   data: Array<FacetLabelValuePair>;
-  filter: CoreFilter;
+  filter: TCoreFilter;
   values: string[];
   onChange: (value: string[]) => void;
 };
 
-export default function CheckList({ children, data, filter, values, onChange }: Props) {
+export function CheckList({ children, data, filter, values, onChange }: Props) {
   const [filtersRenderLength, setFiltersRenderLength] = useState(() => 5);
   const options = useOptions(values, data);
 
@@ -86,3 +86,5 @@ export default function CheckList({ children, data, filter, values, onChange }: 
     </div>
   );
 }
+
+export default CheckList;

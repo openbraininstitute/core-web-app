@@ -6,12 +6,12 @@ import {
 import { getFieldDefinition } from '@/entity-configuration/definitions';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { CoreFilter } from '@/entity-configuration/definitions/types';
+import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
 export default function columnKeyToFilter(
   key: EntityCoreFields,
   dataType: TExtendedEntitiesTypeDict
-): CoreFilter {
+): TCoreFilter {
   const fieldConfig = getFieldDefinition(key);
   if (!fieldConfig) {
     return {

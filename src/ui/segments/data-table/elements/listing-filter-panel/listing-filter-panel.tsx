@@ -8,24 +8,26 @@ import { unwrap, useResetAtom } from 'jotai/utils';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useAtom, useSetAtom } from 'jotai';
 
-import { useFilterItems } from './hooks';
-
-import ClearFilters from '@/ui/segments/data-table/elements/listing-filter-panel/clear-filters';
+import { ClearFilters } from '@/ui/segments/data-table/elements/listing-filter-panel/clear-filters';
 import { FilterGroup } from '@/ui/segments/data-table/elements/listing-filter-panel/filter-group';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
+import { useFilterItems } from '@/ui/segments/data-table/elements/listing-filter-panel/hooks';
+import { DEFAULT_PAGE_NUMBER, TWorkspaceSection, type TWorkspaceScope } from '@/constants';
+import { makeTypeDefaultFilters } from '@/ui/segments/data-table/elements/helpers';
 import {
   coreActiveColumnsAtom,
   coreFiltersAtom,
   corePageNumberAtom,
   coreSearchStringAtom,
+  useDataListStateSnapshotActions,
 } from '@/ui/segments/data-table/elements/context';
+import { Button } from '@/ui/molecules/button';
+import { cn } from '@/utils/css-class';
+
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { Facets } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
-import { DEFAULT_PAGE_NUMBER, type TWorkspaceScope } from '@/constants';
-import type { CoreFilterValues, CoreFilter } from '@/entity-configuration/definitions/types';
-import { cn } from '@/utils/css-class';
-import { Button } from '@/ui/molecules/button';
+import type { CoreFilterValues, TCoreFilter } from '@/entity-configuration/definitions/types';
 
 type Props = {
   children?: ReactNode;
@@ -34,7 +36,7 @@ type Props = {
   // eslint-disable-next-line react/no-unused-prop-types
   dataScope?: TWorkspaceScope;
   dataKey: string;
-  filters: CoreFilter[];
+  filters: TCoreFilter[];
   facets: Facets | undefined;
   setFilters: any;
   showDisplayTrigger?: boolean;
@@ -43,6 +45,7 @@ type Props = {
   classNames?: {
     container?: string;
   };
+  section?: TWorkspaceSection;
 };
 
 export function ListingFilterPanel({
@@ -55,6 +58,7 @@ export function ListingFilterPanel({
   facets,
   showDisplayTrigger = true,
   classNames,
+  section,
 }: Props) {
   useHotkeys('Escape', toggleDisplay);
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
@@ -66,7 +70,11 @@ export function ListingFilterPanel({
       key: dataKey,
     })
   );
-
+  const { sync: runStorageSync } = useDataListStateSnapshotActions({
+    dataKey,
+    dataType,
+    section,
+  });
   const setSearchString = useSetAtom(coreSearchStringAtom(dataKey));
   const isFetchingCount = useIsFetching({
     predicate: (query) => {
@@ -121,7 +129,7 @@ export function ListingFilterPanel({
   useEffect(() => {
     const values: CoreFilterValues = {};
 
-    filters?.forEach((filter: CoreFilter) => {
+    filters?.forEach((filter: TCoreFilter) => {
       values[filter.field] = filter.value;
     });
 
@@ -131,11 +139,12 @@ export function ListingFilterPanel({
   const submitValues = () => {
     setIsApplyingFilters(true);
     setPageNumber(DEFAULT_PAGE_NUMBER);
-    const appliedFilters = filters?.map((fil: CoreFilter) => ({
+    const appliedFilters = filters?.map((fil: TCoreFilter) => ({
       ...fil,
       value: filterValues[fil.field],
     }));
     setFilters(appliedFilters);
+    runStorageSync({ Filters: appliedFilters as Array<TCoreFilter>, Page: DEFAULT_PAGE_NUMBER });
   };
 
   const entity = getViewDefinitionByExtendedType(dataType);
@@ -155,6 +164,10 @@ export function ListingFilterPanel({
   const clearFilters = () => {
     resetFilters();
     setSearchString('');
+    runStorageSync({
+      Filters: makeTypeDefaultFilters({ dataType }),
+      Search: '',
+    });
   };
 
   if (!activeColumns) return null;
