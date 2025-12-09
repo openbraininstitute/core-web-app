@@ -1,13 +1,15 @@
 /* eslint-disable @next/next/no-img-element */
+import Link from 'next/link';
 import React from 'react';
 
-import { useSanityContentForHero } from '../../content';
-import { EnumSection } from '../../sections/sections';
 import ProgressiveImage from '../../components/ProgressiveImage';
 import NewsletterForm from '../../components/coming-soon/newsletter-form';
+import { useSanityContentForHero } from '../../content';
+import { EnumSection } from '../../sections/sections';
 import NextPanel from './NextPanel';
-import { classNames } from '@/util/utils';
+
 import useFullHeight from '@/hooks/useFullHeight';
+import { classNames } from '@/util/utils';
 
 import styles from './Hero.module.css';
 
@@ -63,8 +65,18 @@ export default function Hero({ className, section }: HeroProps) {
         </div>
       ) : (
         <div className={styles.text}>
-          <div>
+          <div className="flex flex-col items-center">
             <h1 className={styles.largeTitle}>{title}</h1>
+            {section === EnumSection.Home && (
+              <Link href="/app/virtual-lab/sync" className={styles.virtualLabsButton}>
+                <div className="font-title relative top-0.5 text-lg text-white md:text-xl">
+                  Go to
+                </div>
+                <div className="relative -top-0.5 text-center font-serif text-4xl whitespace-nowrap text-white md:text-5xl">
+                  Virtual Labs
+                </div>
+              </Link>
+            )}
             {content && <div className={styles.content}>{content}</div>}
           </div>
         </div>

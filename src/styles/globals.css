@@ -449,6 +449,18 @@
     appearance: textfield;
     margin: 0;
   }
+
+  /* Mobile: Set font-size to 12px for ant-table-cell in ant-table-thead */
+  @media (max-width: 767px) {
+    .ant-table-thead .ant-table-cell {
+      font-size: 12px !important;
+    }
+  }
+
+  /* Prevent text wrapping in ant-table-thead */
+  .ant-table-thead .ant-table-cell {
+    white-space: nowrap !important;
+  }
 }
 
 dialog {

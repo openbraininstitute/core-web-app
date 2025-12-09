@@ -4,7 +4,7 @@ import { RightOutlined, SettingFilled, WarningFilled } from '@ant-design/icons';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 import { useVisibleSynapsesSetter } from '../steps/webgl-neuron-selector/hooks';
 
@@ -106,6 +106,34 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
     stimulationConfiguration,
   } = useSingleNeuronSimulationAtoms(sessionId);
 
+  const overResourceThreshold = useMemo(() => {
+    const repetitionFactor = Math.max(
+      amperageConfiguration.computed.length,
+      ...synaptomeConfiguration.map((c) => (Array.isArray(c.frequency) ? c.frequency.length : 1))
+    );
+
+    const recordingFactor = recordLocationConfiguration.reduce(
+      (recFactor, c) => recFactor + (c.record_currents ? 6 : 1),
+      0
+    );
+
+    const recordingVectorLength =
+      experimentalSetupConfiguration.max_time / experimentalSetupConfiguration.time_step;
+
+    const sizeEstimate = repetitionFactor * recordingFactor * recordingVectorLength;
+    // Size estimate unit = ~35 bytes in the resulting JSON asset.
+    // The threshold is set to ~150 MB which is the current limit for entitycore asset uploads,
+    // see https://github.com/openbraininstitute/entitycore/blob/main/app/config.py#L51
+    const threshold = 5_500_000;
+
+    return sizeEstimate > threshold;
+  }, [
+    amperageConfiguration,
+    synaptomeConfiguration,
+    recordLocationConfiguration,
+    experimentalSetupConfiguration,
+  ]);
+
   const onRun = async () => {
     setIsLaunching(true);
 
@@ -192,6 +220,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
     !!Object.keys(warnRecordLocation ?? {}).length ||
     !!Object.keys(warnExperimentalSetup ?? {}).length ||
     !!Object.keys(warnStimulationProtocol ?? {}).length ||
+    overResourceThreshold ||
     (simulationType === SimulationType.SingleNeuronSynaptome &&
       !!Object.keys(warnSynaptome ?? {}).length) ||
     isLaunching ||
@@ -435,7 +464,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
           </div>
         </div>
       </Button>
-      <Tooltip>
+      <Tooltip open={overResourceThreshold ? true : undefined}>
         <TooltipTrigger asChild>
           <div className="mt-auto w-full">
             <Button
@@ -452,11 +481,27 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
             </Button>
           </div>
         </TooltipTrigger>
-        <TooltipContent sideOffset={0} arrowClassName="bg-primary-9">
-          <p className={cn('max-w-80 text-left text-base text-balance')}>
-            Please fill all the required information <br />
-            along with experiment configurations.
-          </p>
+        <TooltipContent
+          sideOffset={0}
+          arrowClassName={overResourceThreshold ? 'bg-warning' : 'bg-primary-9'}
+          className={overResourceThreshold ? 'bg-warning' : undefined}
+        >
+          {overResourceThreshold ? (
+            <div className="max-w-80 text-white">
+              <span className="text-sm">Simulation is too complex, please decrease either:</span>
+              <ul className="mt-2 list-disc pl-4">
+                <li>Number of steps for current/synaptic inputs</li>
+                <li>Number of recording locations and/or current recordings</li>
+                <li>Duration of the simulation</li>
+                <li>Precision by increasing time step</li>
+              </ul>
+            </div>
+          ) : (
+            <p className={cn('max-w-80 text-left text-base text-balance')}>
+              Please fill all the required information <br />
+              along with experiment configurations.
+            </p>
+          )}
         </TooltipContent>
       </Tooltip>
     </div>

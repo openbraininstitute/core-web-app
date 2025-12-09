@@ -1,7 +1,13 @@
 import find from 'es-toolkit/compat/find';
-import get from 'es-toolkit/compat/get';
 import isEmpty from 'es-toolkit/compat/isEmpty';
 
+import { isMemodel, isSingleNeuronSynaptome } from '@/api/entitycore/guards';
+import { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import {
+  CoreFieldFilterTypeEnum,
+  EntityCoreFields,
+} from '@/entity-configuration/definitions/fields-defs/enums';
 import getMeasurements, {
   EmptyValue,
   renderArray,
@@ -11,26 +17,19 @@ import getMeasurements, {
   renderMeanStd,
   renderMorphologyMeasurement,
 } from '@/entity-configuration/definitions/renderer';
-import {
-  CoreFieldFilterTypeEnum,
-  EntityCoreFields,
-} from '@/entity-configuration/definitions/fields-defs/enums';
-import { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { isMemodel, isSingleNeuronSynaptome } from '@/api/entitycore/guards';
 import { CoreFieldType } from '@/entity-configuration/definitions/types';
+import { ensureString, isNumber, isString } from '@/util/type-guards';
 import { ensureArray } from '@/utils/array';
 
-import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
 import type {
   EntityCoreDensityObjectTypes,
   EntityCoreObjectTypes,
-  IEModel,
   ICellMorphology,
+  IEModel,
 } from '@/api/entitycore/types';
-import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
+import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
 import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
-import { ensureString, isNumber, isString } from '@/util/type-guards';
+import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 
 const morphologyMtypes = (morphology?: ICellMorphology) => {
   if (!morphology) return [];
@@ -165,28 +164,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isFilterable: false,
     isDisplayable: true,
   },
-  [EntityCoreFields.SubjectAge]: {
-    title: 'Age',
-    filter: CoreFieldFilterTypeEnum.ValueRange,
-    render: (r) => renderEmptyOrValue((r as EntityCoreDensityObjectTypes).subject.age_value),
-    vocabulary: {
-      plural: 'Ages',
-      singular: 'Age',
-    },
-    isFilterable: false,
-    isDisplayable: true,
-    isSortable: true,
-    order: [
-      {
-        types: [
-          ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
-          ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
-        ],
-        property: 'order_by',
-        value: 'subject__age_value',
-      },
-    ],
-  },
   [EntityCoreFields.MeanSTD]: {
     title: 'Mean ± STD',
     unit: (
@@ -278,21 +255,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     defaultConstraint: 'post_mtype__pref_label__in',
     isFilterable: true,
     isDisplayable: true,
-  },
-  [EntityCoreFields.Weight]: {
-    title: 'Weight',
-    filter: CoreFieldFilterTypeEnum.CheckList,
-    unit: 'gramms',
-    render: (r) => {
-      return renderEmptyOrValue(get(r, 'subject.weight', null));
-    },
-    vocabulary: {
-      plural: 'Values',
-      singular: 'Value',
-    },
-    isSortable: false,
-    isFilterable: false,
-    isDisplayable: false,
   },
   [EntityCoreFields.NeuronDensity]: {
     title: 'Density',

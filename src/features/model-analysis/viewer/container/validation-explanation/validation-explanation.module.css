@@ -1,0 +1,35 @@
+.validationDescription {
+  margin: 0.5em 0;
+  max-width: 800px;
+
+  p {
+    margin: 0.5em 0;
+    margin-left: 1em;
+    text-wrap: balance;
+  }
+
+  ol {
+    margin-left: 2em;
+  }
+}
+
+.passed,
+.failed {
+  border-radius: 99vmax;
+  font-weight: bold;
+  font-variant: small-caps;
+  padding: 0 1em;
+  color: #000;
+  display: grid;
+  place-items: center;
+  margin-left: 2em;
+  font-size: 120%;
+}
+
+.passed {
+  background-color: #5f5;
+}
+
+.failed {
+  background-color: #f88;
+}

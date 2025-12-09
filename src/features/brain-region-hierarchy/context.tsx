@@ -2,7 +2,7 @@
 
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { find, omit, lowerCase } from 'es-toolkit/compat';
+import { find, omit, lowerCase, isNil } from 'es-toolkit/compat';
 import { useEffect, useRef } from 'react';
 
 import {
@@ -12,7 +12,7 @@ import {
 } from '@/components/tree/elements/helpers';
 import { getBrainRegionHierarchy } from '@/api/entitycore/queries/general/brain-region';
 import { getLeavesForEachRegion } from '@/features/brain-region-hierarchy/helpers';
-import { brainAtlasAtom } from '@/features/brain-atlas-viewer/context';
+import { brainAtlasAtom, brainRegionAtlasAtom } from '@/features/brain-atlas-viewer/context';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { getSectionFromDataKey } from '@/utils/key-builder';
 import { useUnwrappedValue } from '@/hooks/hooks';
@@ -24,6 +24,7 @@ import type {
   BrainRegionHierarchyBase,
   IBrainRegionHierarchy,
 } from '@/api/entitycore/types/entities/brain-region';
+import type { IBrainAtlasRegion } from '@/api/entitycore/types/entities/brain-atlas';
 
 type Props = {
   dataKey: string;
@@ -48,16 +49,36 @@ export const DEFAULT_BRAIN_REGION_ANNOTATION_FIELD = 'annotation_value';
 export const DEFAULT_BRAIN_REGION_QUERY_ID = 'br_id';
 export const DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE = 'br_av';
 
-export type BrainRegionHierarchyOption = {
+export type TBrainRegionHierarchyOption = {
   value: string;
   label: string;
   data: IBrainRegionHierarchy;
 };
-export type BrainRegionHierarchyAtomReturnType = {
+export type TBrainRegionHierarchyAtomReturnType = {
   root: IBrainRegionHierarchy;
   nodes: IBrainRegionHierarchy | null;
-  options: Array<BrainRegionHierarchyOption>;
+  options: Array<TBrainRegionHierarchyOption>;
   leaves: Map<string, IBrainRegionHierarchy[]>;
+} | null;
+
+export interface IBrainRegionHierarchyExtended extends IBrainRegionHierarchy {
+  is_leaf_region: boolean;
+  volume: number;
+  is_volumetric_region: boolean;
+  children: Array<IBrainRegionHierarchyExtended>;
+}
+
+export type TBrainRegionHierarchyExtendedOption = {
+  value: string;
+  label: string;
+  data: IBrainRegionHierarchyExtended;
+};
+
+export type TBrainRegionHierarchyExtendedAtomReturnType = {
+  root: IBrainRegionHierarchyExtended;
+  nodes: IBrainRegionHierarchyExtended | null;
+  options: Array<TBrainRegionHierarchyExtendedOption>;
+  leaves: Map<string, IBrainRegionHierarchyExtended[]>;
 } | null;
 
 export const brainRegionSidebarAtom = atom(false);
@@ -87,7 +108,7 @@ export const brainRegionRootHierarchyAtom = atom(async (get) => {
 });
 
 export const brainRegionBasicCellGroupsRegionsHierarchyAtom = atom(
-  async (get): Promise<BrainRegionHierarchyAtomReturnType> => {
+  async (get): Promise<TBrainRegionHierarchyAtomReturnType> => {
     const { root: master } = await get(brainRegionRootHierarchyAtom);
 
     const root = findNodeByKey<IBrainRegionHierarchy>(
@@ -103,23 +124,157 @@ export const brainRegionBasicCellGroupsRegionsHierarchyAtom = atom(
       );
       return null;
     }
-    let options: Array<BrainRegionHierarchyOption> = [];
+    let options: Array<TBrainRegionHierarchyOption> = [];
     let leaves: Map<string, IBrainRegionHierarchy[]> = new Map();
     const nodes = renameKeyDeep<IBrainRegionHierarchy>(root, 'color_hex_triplet', 'color', true);
 
     if (root) {
-      options = flattenTreeAsObject<IBrainRegionHierarchy>(root).map((region) => ({
-        av: region.annotation_value,
-        value: region.id,
-        label: `${region.name}`,
-        data: {
-          ...region,
-          color_hex_triplet: region.color_hex_triplet,
-          color: region.color_hex_triplet,
-        },
-      }));
+      options = flattenTreeAsObject<IBrainRegionHierarchy>(root)
+        .map((region) => {
+          return {
+            av: region.annotation_value,
+            value: region.id,
+            label: `${region.name}`,
+            data: {
+              ...region,
+              children: region.children.filter((o) => !isNil(o)),
+              color_hex_triplet: region.color_hex_triplet,
+              color: region.color_hex_triplet,
+            },
+          };
+        })
+        .filter((o) => !isNil(o));
       leaves = getLeavesForEachRegion(root);
     }
+
+    return { root, nodes, options, leaves };
+  }
+);
+
+/**
+ * merges brain region hierarchy with atlas region data.
+ * adds is_leaf_region, volume, and is_volumetric_region to each node.
+ *
+ * is_volumetric_region is true if:
+ * - the node has volume > 0, or
+ * - any of its descendants has volume > 0 (bubbles up from children)
+ */
+function mergeHierarchyWithAtlas(
+  node: IBrainRegionHierarchy,
+  atlasMap: Map<string, IBrainAtlasRegion>
+): IBrainRegionHierarchyExtended {
+  const atlasRegion = atlasMap.get(node.id);
+  const volume = atlasRegion?.volume ?? 0;
+  const isLeafRegion = atlasRegion?.is_leaf_region ?? false;
+
+  // process children first (recursive) so their is_volumetric_region is computed
+  const extendedChildren: Array<IBrainRegionHierarchyExtended> = node.children
+    .filter((child) => !isNil(child))
+    .map((child) => mergeHierarchyWithAtlas(child, atlasMap));
+
+  // is_volumetric_region is true if:
+  // - This node has volume > 0, OR
+  // - Any child is volumetric (has volume itself or has volumetric descendants)
+  const hasVolumetricChild = extendedChildren.some((child) => child.is_volumetric_region);
+  const isVolumetricRegion = volume > 0 || hasVolumetricChild;
+
+  return {
+    ...node,
+    is_leaf_region: isLeafRegion,
+    volume,
+    is_volumetric_region: isVolumetricRegion,
+    children: extendedChildren,
+  };
+}
+
+/**
+ * gets leaves for each region in the extended hierarchy.
+ */
+function getLeavesForEachRegionExtended(
+  root: IBrainRegionHierarchyExtended
+): Map<string, IBrainRegionHierarchyExtended[]> {
+  const leavesMap = new Map<string, IBrainRegionHierarchyExtended[]>();
+
+  function collectLeaves(
+    node: IBrainRegionHierarchyExtended
+  ): Array<IBrainRegionHierarchyExtended> {
+    if (!node.children || node.children.length === 0) {
+      return [node];
+    }
+
+    const leaves: Array<IBrainRegionHierarchyExtended> = [];
+    for (const child of node.children) {
+      leaves.push(...collectLeaves(child));
+    }
+    return leaves;
+  }
+
+  function traverse(node: IBrainRegionHierarchyExtended): void {
+    leavesMap.set(node.id, collectLeaves(node));
+    for (const child of node.children) {
+      traverse(child);
+    }
+  }
+
+  traverse(root);
+  return leavesMap;
+}
+
+export const brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom = atom(
+  async (get): Promise<TBrainRegionHierarchyExtendedAtomReturnType> => {
+    const { root: master } = await get(brainRegionRootHierarchyAtom);
+    const atlasResult = await get(brainRegionAtlasAtom);
+
+    if (atlasResult.error || !atlasResult.data) {
+      log('warn', 'Failed to fetch brain atlas regions:', atlasResult.error);
+      return null;
+    }
+
+    const atlasMap = new Map<string, IBrainAtlasRegion>();
+    for (const region of atlasResult.data.data) {
+      atlasMap.set(region.brain_region_id, region);
+    }
+
+    const baseRoot = findNodeByKey<IBrainRegionHierarchy>(
+      DEFAULT_BRAIN_REGION_ANNOTATION_FIELD,
+      BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE,
+      master
+    );
+
+    if (!baseRoot) {
+      log(
+        'warn',
+        `Brain region with annotation_value ${BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE} not found.`
+      );
+      return null;
+    }
+
+    // merge hierarchy with atlas data
+    const root = mergeHierarchyWithAtlas(baseRoot, atlasMap);
+
+    const nodes = renameKeyDeep<IBrainRegionHierarchyExtended>(
+      root,
+      'color_hex_triplet',
+      'color',
+      true
+    );
+
+    const options: Array<TBrainRegionHierarchyExtendedOption> =
+      flattenTreeAsObject<IBrainRegionHierarchyExtended>(root)
+        .map((region) => ({
+          av: region.annotation_value,
+          value: region.id,
+          label: `${region.name}`,
+          data: {
+            ...region,
+            children: region.children.filter((o) => !isNil(o)),
+            color_hex_triplet: region.color_hex_triplet,
+            color: region.color_hex_triplet,
+          } as IBrainRegionHierarchyExtended,
+        }))
+        .filter((o) => !isNil(o));
+
+    const leaves = getLeavesForEachRegionExtended(root);
 
     return { root, nodes, options, leaves };
   }
@@ -294,5 +449,7 @@ export const useGetSelectedBrainRegion = () => {
 
 brainRegionBasicCellGroupsRegionsHierarchyAtom.debugLabel =
   'brainRegionBasicCellGroupsRegionsHierarchyAtom';
+brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom.debugLabel =
+  'brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom';
 brainRegionSidebarAtom.debugLabel = 'brainRegionSidebarAtom';
 selectedBrainRegionAtom.debugLabel = 'selectedBrainRegionAtom';

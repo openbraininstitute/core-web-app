@@ -48,6 +48,7 @@ interface ContentForSeo {
 }
 
 function isContentForSeo(data: unknown): data is ContentForSeo {
+  if (data === null || data === undefined) return false;
   return tryType('ContentForSeo', data, {
     title: 'string',
     seoTitle: typeStringOrNull,

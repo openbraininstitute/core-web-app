@@ -1,17 +1,3 @@
-/* .toolPlotGenerator {
-  max-width: calc(100% - 2em);
-  margin: 0.5em;
-  box-shadow: 0 0.125em 0.25em #0007;
-  position: relative;
-  padding: 0;
-  aspect-ratio: 3/2;
-} */
-
-/* .toolPlotGenerator > div {
-  position: absolute;
-  left: 0;
-  top: 0;
+.toolPlotGenerator {
   width: 100%;
-  height: 100%;
-  margin: 0;
-} */
+}

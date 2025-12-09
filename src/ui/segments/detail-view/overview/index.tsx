@@ -22,6 +22,7 @@ import { IonChannelRecordingViewer } from '@/features/ion-channel-recording-view
 import SmallMicrocircuitSimulation from '@/features/small-microcircuit';
 import { Field } from '@/ui/segments/detail-view/overview/field';
 import IonChannelModelOverview from '@/ui/segments/detail-view/overview/ion-channel-model';
+import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
 import { Visualization as CircuitViz } from '@/ui/segments/explore/circuit/elements/visualization';
 
 import type {
@@ -119,6 +120,9 @@ export default async function Overview({
           return <Field key={field} className={className} field={field} data={entity} />;
         })}
       </div>
+
+      {'subject' in entity && <SubjectDetails className="mb-8" entity={entity} />}
+
       {extendedType === ExtendedEntitiesTypeDict.SingleNeuronSimulation &&
         singleNeuronSimulationPayload && (
           <MEModelDetails

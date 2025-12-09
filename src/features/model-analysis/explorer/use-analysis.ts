@@ -18,34 +18,7 @@ export function useAnalysis({ workspace, id }: { id: string; workspace: Workspac
       context: workspace,
       id,
     }),
-    queryFn: async ({ pageParam = 1 }) => {
-      const response = await getValidationResults({
-        context: workspace,
-        filters: { validated_entity_id: id, page: pageParam, page_size: DEFAULT_PAGE_XSMALL_SIZE },
-      });
-      const data = (
-        await Promise.allSettled(
-          response.data.map((entity: IValidationResult) => {
-            return getAssets({
-              ctx: workspace,
-              entityType: EntityTypeDict.ValidationResult,
-              entityId: entity.id,
-            });
-          })
-        )
-      ).map((result, i) => {
-        return {
-          ...response.data[i],
-          assets: result.status === 'fulfilled' ? result.value.data : null,
-          error: result.status === 'rejected' ? result.reason : null,
-        };
-      });
-      return {
-        data,
-        pagination: response.pagination,
-      };
-    },
-
+    queryFn: makeQueryFn(workspace, id),
     getNextPageParam: (lastPage) => {
       const { page, page_size: pageSize, total_items: totalItems } = lastPage.pagination;
       const totalPages = Math.ceil(totalItems / pageSize);
@@ -73,3 +46,33 @@ export function useAnalysis({ workspace, id }: { id: string; workspace: Workspac
 
 export type TValidationResultData = Awaited<ReturnType<typeof useAnalysis>>['data'];
 export type TValidationResultNonUndefined = Exclude<TValidationResultData, undefined>['data'];
+
+function makeQueryFn(workspace: { virtualLabId: string; projectId: string }, id: string) {
+  return async ({ pageParam = 1 }) => {
+    const response = await getValidationResults({
+      context: workspace,
+      filters: { validated_entity_id: id, page: pageParam, page_size: DEFAULT_PAGE_XSMALL_SIZE },
+    });
+    const data = (
+      await Promise.allSettled(
+        response.data.map((entity: IValidationResult) => {
+          return getAssets({
+            ctx: workspace,
+            entityType: EntityTypeDict.ValidationResult,
+            entityId: entity.id,
+          });
+        })
+      )
+    ).map((result, i) => {
+      return {
+        ...response.data[i],
+        assets: result.status === 'fulfilled' ? result.value.data : null,
+        error: result.status === 'rejected' ? result.reason : null,
+      };
+    });
+    return {
+      data,
+      pagination: response.pagination,
+    };
+  };
+}

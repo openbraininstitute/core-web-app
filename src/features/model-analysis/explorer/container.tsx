@@ -4,14 +4,17 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { useParams } from 'next/navigation';
 import { Spin } from 'antd';
 
+import { useInputResistance } from './use-input-resistance';
+
 import { useAnalysis } from '@/features/model-analysis/explorer/use-analysis';
-import { ViewerContainer } from '@/features/model-analysis/viewer/container';
+import { ViewerContainer } from '@/features/model-analysis/viewer/container/container';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 export default function Analysis() {
   const workspace = useWorkspace();
   const { id } = useParams<{ id: string }>();
   const { data, error, isLoading } = useAnalysis({ workspace, id });
+  const rin = useInputResistance(id);
 
   if (isLoading) {
     return (
@@ -45,5 +48,5 @@ export default function Analysis() {
     );
   }
 
-  return <ViewerContainer validationResults={data?.data ?? []} />;
+  return <ViewerContainer rin={rin} validationResults={data?.data ?? []} />;
 }

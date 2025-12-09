@@ -7,6 +7,8 @@ import { classNames } from '@/util/utils';
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 
+import styles from './card-container.module.css';
+
 const subtitleStyle = 'uppercase font-thin text-neutral-4';
 
 type Detail = {
@@ -72,7 +74,7 @@ export default function ModelCard({
   );
 
   return (
-    <div className="border-neutral-2 w-full rounded-[6px] border p-10">
+    <div className={styles.cardContainer}>
       <div className="flex justify-between">
         <div className={classNames('text-2xl', subtitleStyle)}>{title}</div>
         {cardLink}
@@ -87,7 +89,7 @@ export default function ModelCard({
         </div>
         <div className="grow">
           <div className={subtitleStyle}>NAME</div>
-          <div className="text-primary-8 my-1 text-3xl font-bold">{model.name}</div>
+          <div className={styles.name}>{model.name}</div>
           <ModelDetails details={modelDetails} />
         </div>
       </div>

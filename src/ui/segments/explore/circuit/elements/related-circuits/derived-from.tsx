@@ -5,12 +5,11 @@ import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { useMemo } from 'react';
 
-import useExploreColumns from '@/hooks/useExploreColumns';
-
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { activeColumnsAtom } from '@/state/explore-section/list-view-atoms';
 import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+import { useExploreColumns } from '@/hooks/useExploreColumns';
 import { BaseTable } from '@/ui/segments/data-table/table';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -54,6 +53,7 @@ export function DerivedFrom({ data }: Props) {
       })
     );
   };
+
   return (
     <BaseTable
       loading={false}

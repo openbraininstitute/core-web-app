@@ -106,13 +106,17 @@ function useMoveTo(div: HTMLDivElement | null, count: number, makeId: (index: nu
     (index: number) => {
       if (!div || count === 0) return;
 
-      const xDiv = div.getBoundingClientRect().x - div.scrollLeft;
       const card = document.getElementById(makeId(index));
       if (!card) return;
 
-      const xCard = card.getBoundingClientRect().x;
-      const scroll = xCard - xDiv;
-      div.scrollLeft = scroll;
+      // Calculate scroll position: card's left edge relative to container's left edge
+      // Since card is a direct child of the scroll container, offsetLeft gives us the position
+      const scrollPosition = card.offsetLeft;
+
+      div.scrollTo({
+        left: scrollPosition,
+        behavior: 'smooth',
+      });
     },
     [div, count, makeId]
   );
