@@ -50,8 +50,8 @@ export const makeDataListStateSnapshotAtomsInitialValue = ({
   dataType: TExtendedEntitiesTypeDict;
 }): DataListStateSnapshot => ({
   Sort: {
-    field: EntityCoreFields.CreationDate,
-    backendField: EntityCoreFields.CreationDate,
+    field: EntityCoreFields.RegistrationDate,
+    backendField: EntityCoreFields.RegistrationDate,
     order: SortOrder.DESC as TSortOrder,
   },
   Search: '',
