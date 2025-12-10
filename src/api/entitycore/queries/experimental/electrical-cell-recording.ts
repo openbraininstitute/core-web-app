@@ -108,7 +108,10 @@ const electricalCellRecordingSchema = z.object({
   recording_origin: z.string({ message: 'Cell recording origin is required' }).nonempty({
     message: 'Cell recording origin is required',
   }),
-  temperature: z.number({ invalid_type_error: 'Temperature must be a number' }).nullable(),
+  temperature: z
+    .number({ invalid_type_error: 'Temperature must be a number' })
+    .optional()
+    .nullable(),
   ljp: z
     .number({ invalid_type_error: 'Liquid junction potential (ljp) must be a number' })
     .optional()

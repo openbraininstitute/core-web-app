@@ -2,6 +2,7 @@
 
 import { DatePicker, Form, Input, InputNumber, Space } from 'antd';
 import { InfoCircleFilled } from '@ant-design/icons';
+import { upperFirst } from 'es-toolkit/compat';
 import dayjs from 'dayjs';
 
 import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
@@ -14,6 +15,7 @@ import {
 } from '@/ui/segments/contribute/electrical-cell-recording/schema';
 import {
   ElectricalRecordingOrigin,
+  ElectricalRecordingOriginDictionary,
   RecordingType,
 } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -42,16 +44,21 @@ export function Setup() {
   });
 
   const RecordingTypeFormInput = SelectPopoverFormItem<typeof RecordingType>({
-    options: Object.values(RecordingType).map(({ key, label }) => ({ value: key, label })),
+    options: Object.values(RecordingType).map(({ key, label }) => ({
+      value: key,
+      label: upperFirst(label),
+    })),
     clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
     placeholder: 'Select recording type',
   });
 
   const RecordingOriginFormInput = SelectPopoverFormItem<typeof ElectricalRecordingOrigin>({
-    options: Object.values(ElectricalRecordingOrigin).map(({ key, label }) => ({
-      value: key,
-      label,
-    })),
+    options: Object.values(ElectricalRecordingOrigin)
+      .filter((o) => o.key !== ElectricalRecordingOriginDictionary.InSilico)
+      .map(({ key, label }) => ({
+        value: key,
+        label: upperFirst(label),
+      })),
     clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
     placeholder: 'Select recording origin',
   });

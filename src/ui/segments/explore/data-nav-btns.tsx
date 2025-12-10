@@ -135,7 +135,6 @@ export function DataBreadcrumb({
     dataType: type,
     scope,
   });
-  if (section !== WorkspaceSection.Data) return null;
 
   const { reset: runStorageReset } = useDataListStateSnapshotActions({
     dataKey,

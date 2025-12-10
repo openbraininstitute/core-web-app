@@ -12,16 +12,6 @@ import { ISubjectFilter } from '@/api/entitycore/types/shared/subject';
 const prefix = 'data';
 
 export const keyBuilder = {
-  dataCount: ({
-    virtualLabId,
-    projectId,
-    brainRegionId,
-    personId,
-    scope,
-  }: WorkspaceContext & { brainRegionId?: string; personId?: string; scope: TWorkspaceScope }) => [
-    `${prefix}-count`,
-    { virtualLabId, projectId, brainRegionId: brainRegionId ?? '', personId, scope },
-  ],
   dataCountPerEntity: ({
     virtualLabId,
     projectId,

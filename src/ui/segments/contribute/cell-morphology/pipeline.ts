@@ -1,11 +1,12 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
-import { isNil } from 'es-toolkit/compat';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { get, isNil } from 'es-toolkit/compat';
 
 import { createMtypeClassification } from '@/api/entitycore/queries/annotations/mtype-classification';
 import { CELL_MORPHOLOGY_PROGRESS_STEPS } from '@/ui/segments/contribute/cell-morphology/config';
 import { getCellMorphologyMimeType } from '@/ui/segments/contribute/cell-morphology/schema';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
@@ -14,6 +15,7 @@ import { createAsset } from '@/api/entitycore/queries/assets';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { EntityTypeDict } from '@/api/entitycore/types';
 
+import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
 import type { TCellMorphologyForm } from '@/ui/segments/contribute/cell-morphology/schema';
 import type {
   IMutationKeyConfig,
@@ -25,6 +27,7 @@ export function useCellMorphologyPipeline({
 }: {
   sessionId: string;
 }): IPipelineHookResult<TCellMorphologyForm> {
+  const queryClient = useQueryClient();
   const { projectId, virtualLabId } = useWorkspace();
 
   const createCellMorphologyAsync = useMutation({
@@ -51,6 +54,28 @@ export function useCellMorphologyPipeline({
           location,
         },
       });
+    },
+    onSettled: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          predicate(query) {
+            return (
+              query.queryKey.at(0) ===
+              `data-entity-count-${ExtendedEntitiesTypeDict.CellMorphology}`
+            );
+          },
+        }),
+        queryClient.invalidateQueries({
+          predicate(query) {
+            return (
+              get(
+                (query.queryKey as ExtendedEntityTypeQueryKey)[0],
+                'context.extendedEntityType'
+              ) === ExtendedEntitiesTypeDict.CellMorphology
+            );
+          },
+        }),
+      ]);
     },
   });
 

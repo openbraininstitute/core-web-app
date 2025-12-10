@@ -25,6 +25,18 @@ interface IExtendedEntitiesSelectorProps {
 }
 
 function ExtendedEntitiesSelector({ onSelectEntityType }: IExtendedEntitiesSelectorProps) {
+  const options = Object.entries(EntityCoreConfiguration)
+    .map(([, value]) => ({
+      label: value.title,
+      value: value.extendedType,
+      data: {
+        isUploadable: value.isUploadable ?? false,
+      },
+    }))
+    .sort((a, b) => {
+      return Number(b.data.isUploadable) - Number(a.data.isUploadable);
+    });
+
   return (
     <div className="w-full px-5">
       <div className="border-neutral-2 rounded-2xl border p-4 py-9">
@@ -32,13 +44,7 @@ function ExtendedEntitiesSelector({ onSelectEntityType }: IExtendedEntitiesSelec
           Select an artifact you want to upload
         </div>
         <SelectPopover
-          options={Object.entries(EntityCoreConfiguration).map(([, value]) => ({
-            label: value.title,
-            value: value.extendedType,
-            data: {
-              isUploadable: value.isUploadable,
-            },
-          }))}
+          options={options}
           placeholder="select an artifact "
           searchPlaceholder="search an artifact"
           onSelect={(option) => {

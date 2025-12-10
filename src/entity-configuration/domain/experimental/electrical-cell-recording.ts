@@ -30,6 +30,7 @@ export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecord
   api: {
     config: {
       allowedFacets: true,
+      extraRequiredListFilters: recordingOriginFilter,
     },
     query: {
       list: (params: Parameters<typeof getElectricalCellRecordings>[0]) =>

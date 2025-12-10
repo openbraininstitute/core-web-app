@@ -118,7 +118,6 @@ export function getValidationStatus<T>(
  */
 export function getDirtyFields<TFormValues>(form: FormInstance<TFormValues>): Array<string> {
   const allFields = form.getFieldsValue(true) as Record<string, unknown>;
-  // Use type assertion since we're checking top-level field names
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return Object.keys(allFields).filter((field) => (form as any).isFieldTouched(field));
 }

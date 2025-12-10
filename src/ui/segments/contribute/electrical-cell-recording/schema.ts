@@ -1,3 +1,4 @@
+import { upperFirst } from 'es-toolkit/compat';
 import { z } from 'zod';
 
 import {
@@ -24,7 +25,10 @@ export const ElectricalCellRecordingSetupExtension = z.object({
     .number({ invalid_type_error: 'Liquid junction potential (ljp) must be a number' })
     .optional()
     .default(0.0),
-  temperature: z.number({ invalid_type_error: 'Temperature must be a number' }).nullable(),
+  temperature: z
+    .number({ invalid_type_error: 'Temperature must be a number' })
+    .optional()
+    .nullable(),
   recording_location: z.string({ message: 'Cell recording location is required' }),
   recording_type: z.string().nonempty({ message: 'Cell recording type is required' }),
   recording_origin: z
@@ -71,6 +75,6 @@ export const ElectricalCellRecordingSchema = z.object({
 export type TElectricalCellRecordingForm = z.infer<typeof ElectricalCellRecordingSchema>;
 
 export const RECORDING_LOCATION_OPTIONS = ['dend', 'axon', 'soma', 'apic'].map((value) => ({
-  label: value.replace('_', ' '),
+  label: upperFirst(value.replace('_', ' ')),
   value,
 }));

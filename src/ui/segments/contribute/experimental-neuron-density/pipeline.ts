@@ -1,9 +1,10 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
-import { compact } from 'es-toolkit/compat';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { compact, get } from 'es-toolkit/compat';
 
 import { EXPERIMENTAL_NEURON_DENSITY_PROGRESS_STEPS } from '@/ui/segments/contribute/experimental-neuron-density/config';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 import {
@@ -13,6 +14,7 @@ import {
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type { TExperimentalNeuronDensityForm } from '@/ui/segments/contribute/experimental-neuron-density/schema';
+import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
 import type {
   IMutationKeyConfig,
   IPipelineHookResult,
@@ -23,6 +25,7 @@ export function useExperimentalNeuronDensityPipeline({
 }: {
   sessionId: string;
 }): IPipelineHookResult<TExperimentalNeuronDensityForm> {
+  const queryClient = useQueryClient();
   const { projectId, virtualLabId } = useWorkspace();
 
   const createExperimentalNeuronDensityAsync = useMutation({
@@ -47,6 +50,28 @@ export function useExperimentalNeuronDensityPipeline({
           legacy_id: null,
         },
       });
+    },
+    onSettled: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          predicate(query) {
+            return (
+              query.queryKey.at(0) ===
+              `data-entity-count-${ExtendedEntitiesTypeDict.ExperimentalNeuronDensity}`
+            );
+          },
+        }),
+        queryClient.invalidateQueries({
+          predicate(query) {
+            return (
+              get(
+                (query.queryKey as ExtendedEntityTypeQueryKey)[0],
+                'context.extendedEntityType'
+              ) === ExtendedEntitiesTypeDict.ExperimentalNeuronDensity
+            );
+          },
+        }),
+      ]);
     },
   });
 

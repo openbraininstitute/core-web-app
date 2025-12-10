@@ -8,6 +8,10 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
+export const circuitScaleFilter = {
+  scale__in: [CircuitScaleDictionary.Single],
+};
+
 export const MEModelWithSynapsesCircuit: EntityCoreTypeConfig<ICircuit> = {
   group: EntityTypeGroup.Models,
   title: 'Synaptome (beta)',
@@ -15,16 +19,14 @@ export const MEModelWithSynapsesCircuit: EntityCoreTypeConfig<ICircuit> = {
   type: EntityTypeDict.Circuit,
   slug: EntitySlug.Circuit,
   api: {
-    config: {
-      allowedFacets: true,
-    },
+    config: { allowedFacets: true, extraRequiredListFilters: circuitScaleFilter },
     query: {
       list: (...params) => {
         return getCircuits({
           ...params,
           context: params[0].context,
           withFacets: params[0].withFacets,
-          filters: { ...params[0].filters, scale__in: [CircuitScaleDictionary.Single] },
+          filters: { ...params[0].filters, ...circuitScaleFilter },
         });
       },
       one: getCircuit,

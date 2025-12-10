@@ -177,6 +177,10 @@ export function BrowseCircuit({
     requireBrainRegion,
     defaultBrainRegion,
     useKeepPreviousData: true,
+    extraQueryParams: {
+      ...extraQueryParams,
+      ...Circuit?.api.config.extraRequiredListFilters,
+    },
     enabled: ({ queryKey }) => {
       const [{ queryParameters }] = queryKey;
       if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
