@@ -31,10 +31,10 @@ const MENU_ITEMS: MenuItem[] = [
     slug: '/about',
     index: EnumSection.About,
     submenu: [
+      { caption: 'About OBI', slug: '/about', index: EnumSection.About },
       { caption: 'Our story', slug: '/the-real-digital-brain-story', index: EnumSection.Story },
       { caption: 'Mission', slug: '/mission', index: EnumSection.Mission },
       { caption: 'Team', slug: '/team', index: EnumSection.Team },
-      { caption: 'SfN 2025', slug: '/sfn-2025', index: EnumSection.Sfn2025 },
     ],
   },
   {
@@ -42,7 +42,7 @@ const MENU_ITEMS: MenuItem[] = [
     slug: '/resources',
     index: EnumSection.Resources,
     submenu: [
-      { caption: 'Notebooks', slug: '/resources' },
+      { caption: 'Notebooks', slug: '/notebooks' },
       { caption: 'Gallery', slug: '/gallery', index: EnumSection.Gallery },
     ],
   },
@@ -148,7 +148,8 @@ export default function Menu({ className, scrollHasStarted, section }: MenuProps
                   <div
                     className={classNames(
                       styles.submenu,
-                      hoveredItem === item.slug && styles.submenuVisible
+                      hoveredItem === item.slug && styles.submenuVisible,
+                      'bg-primary-8'
                     )}
                   >
                     {item.submenu.map((subItem) => (

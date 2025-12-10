@@ -23,12 +23,12 @@ import { cn } from '@/utils/css-class';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
+import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
+import type { WorkspaceContext } from '@/types/common';
 import type {
   Facets,
   Pagination as EntitycorePagination,
 } from '@/api/entitycore/types/shared/response';
-import type { WorkspaceContext } from '@/types/common';
-import type { TWorkspaceScope } from '@/constants';
 
 export type Props<T> = {
   facets: Facets | undefined;
@@ -37,6 +37,7 @@ export type Props<T> = {
     totalData: number;
   };
   dataScope?: TWorkspaceScope;
+  section?: TWorkspaceSection;
   columns: ColumnProps<T>[];
   dataType: TExtendedEntitiesTypeDict;
   workspace?: WorkspaceContext;
@@ -66,6 +67,7 @@ export type Props<T> = {
 export function MainTable<T extends EntityCoreIdentifiableNamed>({
   dataKey,
   dataScope,
+  section,
   dataType,
   workspace,
   cls,
@@ -163,7 +165,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           allowDownload={allowDownload}
           controls={
             <div className="w-full">
-              <Pagination {...{ dataKey, resultPagination }} />
+              <Pagination {...{ dataKey, dataType, section, resultPagination }} />
             </div>
           }
         />
@@ -180,6 +182,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           facets={facets}
           workspace={workspace}
           classNames={filterClassNames}
+          section={section}
         />
       )}
     </>

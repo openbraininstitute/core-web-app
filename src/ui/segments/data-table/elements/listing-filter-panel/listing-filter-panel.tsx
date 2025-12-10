@@ -1,56 +1,33 @@
 /* eslint-disable no-case-declarations */
 
-import {
-  ChangeEvent,
-  Dispatch,
-  ReactNode,
-  SetStateAction,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CloseOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useIsFetching } from '@tanstack/react-query';
-import { get, isNil, map } from 'es-toolkit/compat';
+import { get } from 'es-toolkit/compat';
 import { unwrap, useResetAtom } from 'jotai/utils';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useAtom, useSetAtom } from 'jotai';
-import { Input, Select } from 'antd';
 
-import ValueOrRange from '@/ui/segments/data-table/elements/listing-filter-panel/value-or-range';
-import ClearFilters from '@/ui/segments/data-table/elements/listing-filter-panel/clear-filters';
-import DateRange from '@/ui/segments/data-table/elements/listing-filter-panel/date-range';
-import CheckList from '@/ui/segments/data-table/elements/listing-filter-panel/checklist';
-
-import { defaultList } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/default-checklist';
-import { DropdownList } from '@/ui/segments/data-table/elements/listing-filter-panel/filter-as-dropdown';
+import { ClearFilters } from '@/ui/segments/data-table/elements/listing-filter-panel/clear-filters';
 import { FilterGroup } from '@/ui/segments/data-table/elements/listing-filter-panel/filter-group';
-import { ValueRange } from '@/ui/segments/data-table/elements/listing-filter-panel/value-range';
-import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
-import { getFieldDefinition } from '@/entity-configuration/definitions';
-import { fieldTitleSentenceCase } from '@/util/utils';
+import { useFilterItems } from '@/ui/segments/data-table/elements/listing-filter-panel/hooks';
+import { DEFAULT_PAGE_NUMBER, TWorkspaceSection, type TWorkspaceScope } from '@/constants';
+import { makeTypeDefaultFilters } from '@/ui/segments/data-table/elements/helpers';
 import {
   coreActiveColumnsAtom,
   coreFiltersAtom,
   corePageNumberAtom,
   coreSearchStringAtom,
+  useDataListStateSnapshotActions,
 } from '@/ui/segments/data-table/elements/context';
+import { Button } from '@/ui/molecules/button';
+import { cn } from '@/utils/css-class';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { Facets } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
-import { DEFAULT_PAGE_NUMBER, type TWorkspaceScope } from '@/constants';
-import type {
-  ValueOrRangeFilter,
-  CoreFilterValues,
-  GteLteValue,
-  CoreFilter,
-} from '@/entity-configuration/definitions/types';
-import { cn } from '@/utils/css-class';
-import { Button } from '@/ui/molecules/button';
+import type { CoreFilterValues, TCoreFilter } from '@/entity-configuration/definitions/types';
 
 type Props = {
   children?: ReactNode;
@@ -59,7 +36,7 @@ type Props = {
   // eslint-disable-next-line react/no-unused-prop-types
   dataScope?: TWorkspaceScope;
   dataKey: string;
-  filters: CoreFilter[];
+  filters: TCoreFilter[];
   facets: Facets | undefined;
   setFilters: any;
   showDisplayTrigger?: boolean;
@@ -68,129 +45,8 @@ type Props = {
   classNames?: {
     container?: string;
   };
+  section?: TWorkspaceSection;
 };
-
-function createFilterItemComponent(
-  filter: CoreFilter,
-  facets: Facets | undefined,
-  filterValues: CoreFilterValues,
-  setFilterValues: Dispatch<SetStateAction<CoreFilterValues>>,
-  items?: Array<{ value: string; label: string }> | undefined
-) {
-  return function FilterItemComponent() {
-    const { type } = filter;
-
-    const updateFilterValues = (field: string, values: CoreFilter['value']) => {
-      setFilterValues((prevState) => ({
-        ...prevState,
-        [field]: values,
-      }));
-    };
-
-    const emptyFilter = (
-      <div className="pl-9 font-light text-white italic">
-        No filter available for this property yet
-      </div>
-    );
-
-    switch (type) {
-      case CoreFieldFilterTypeEnum.DateRange:
-        return (
-          <DateRange
-            filter={filter}
-            onChange={(values: GteLteValue) => updateFilterValues(filter.field, values)}
-          />
-        );
-
-      case CoreFieldFilterTypeEnum.ValueRange:
-        return (
-          <ValueRange
-            filter={filter}
-            onChange={(values: GteLteValue) => updateFilterValues(filter.field, values)}
-          />
-        );
-
-      case CoreFieldFilterTypeEnum.DropdownList:
-        if (!items?.length) return emptyFilter;
-        return (
-          <DropdownList
-            filter={filter}
-            data={items}
-            onChange={(values: string[]) => updateFilterValues(filter.field, values)}
-            allowMultiple
-          />
-        );
-      case CoreFieldFilterTypeEnum.CheckList:
-        if (!facets || !facets[filter.field]) return emptyFilter;
-        const facetItems = map(facets[filter.field], ({ id, label, count, type: facetType }) => ({
-          id,
-          label,
-          type: facetType,
-          count,
-          value: label,
-        }));
-
-        return (
-          <CheckList
-            data={facetItems}
-            filter={filter}
-            values={(filterValues[filter.field] as Array<string>) ?? []}
-            onChange={(values: string[]) => updateFilterValues(filter.field, values)}
-          >
-            {defaultList}
-          </CheckList>
-        );
-
-      case CoreFieldFilterTypeEnum.ValueOrRange:
-        return (
-          <ValueOrRange
-            filter={filter}
-            setFilter={(value: ValueOrRangeFilter['value']) =>
-              updateFilterValues(filter.field, value)
-            }
-          />
-        );
-
-      case CoreFieldFilterTypeEnum.Text:
-        return (
-          <div className="flex flex-col gap-2">
-            <Input
-              value={filterValues[filter.field] as string}
-              onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                updateFilterValues(filter.field, event.target.value)
-              }
-            />
-            <span className="text-white">
-              Use the asterix character (<code className="text-semibold font-mono">*</code>) to
-              specify a &quot;wildcard&quot; for your search. For example; to search for names{' '}
-              <i>beginning with</i> &quot;AA11&quot;, specify{' '}
-              <code className="text-semibold font-mono">AA11*</code>. To search for names{' '}
-              <i>containing</i> &quot;L5-2&quot;, specify{' '}
-              <code className="text-bold font-mono">*L5-2*</code>.
-            </span>
-          </div>
-        );
-
-      case CoreFieldFilterTypeEnum.Boolean:
-        return (
-          <Select
-            defaultValue="—"
-            value={filterValues[filter.field]}
-            style={{ width: 120 }}
-            onChange={(v) => updateFilterValues(filter.field, v)}
-            options={[
-              { value: null, label: '—' },
-              { value: true, label: 'True' },
-              { value: false, label: 'False' },
-            ]}
-          />
-        );
-
-      default:
-        return null;
-    }
-  };
-}
 
 export function ListingFilterPanel({
   children,
@@ -202,6 +58,7 @@ export function ListingFilterPanel({
   facets,
   showDisplayTrigger = true,
   classNames,
+  section,
 }: Props) {
   useHotkeys('Escape', toggleDisplay);
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
@@ -213,7 +70,11 @@ export function ListingFilterPanel({
       key: dataKey,
     })
   );
-
+  const { sync: runStorageSync } = useDataListStateSnapshotActions({
+    dataKey,
+    dataType,
+    section,
+  });
   const setSearchString = useSetAtom(coreSearchStringAtom(dataKey));
   const isFetchingCount = useIsFetching({
     predicate: (query) => {
@@ -268,7 +129,7 @@ export function ListingFilterPanel({
   useEffect(() => {
     const values: CoreFilterValues = {};
 
-    filters?.forEach((filter: CoreFilter) => {
+    filters?.forEach((filter: TCoreFilter) => {
       values[filter.field] = filter.value;
     });
 
@@ -278,52 +139,24 @@ export function ListingFilterPanel({
   const submitValues = () => {
     setIsApplyingFilters(true);
     setPageNumber(DEFAULT_PAGE_NUMBER);
-    const appliedFilters = filters?.map((fil: CoreFilter) => ({
+    const appliedFilters = filters?.map((fil: TCoreFilter) => ({
       ...fil,
       value: filterValues[fil.field],
     }));
     setFilters(appliedFilters);
+    runStorageSync({ Filters: appliedFilters as Array<TCoreFilter>, Page: DEFAULT_PAGE_NUMBER });
   };
 
-  const Entity = getViewDefinitionByExtendedType(dataType);
-  const filterItems = useMemo(
-    () =>
-      filters
-        .filter((o) => o.field !== 'id')
-        ?.map((filter) => {
-          const item = getFieldDefinition(filter.field);
-          return {
-            content:
-              filter.type &&
-              item?.isFilterable &&
-              (Entity?.filterableFields ? Entity?.filterableFields.includes(filter.field) : true)
-                ? createFilterItemComponent(
-                    filter,
-                    facets,
-                    filterValues,
-                    setFilterValues,
-                    item.filterData
-                  )
-                : undefined,
-            display: item?.isDisplayable && activeColumns?.includes(filter.field),
-            label: fieldTitleSentenceCase(item?.title ?? ''),
-            type: filter.type,
-            toggleFunc: showDisplayTrigger
-              ? () => onToggleActive && onToggleActive(filter.field)
-              : undefined, // There are cases where we don't want to show the display trigger. Undefined toggleFunc achieves this.
-          };
-        })
-        .filter((item) => showDisplayTrigger || !isNil(item.content)), // If showDisplayTrigger is false and content is undefined that filter is not needed.
-    [
-      filters,
-      facets,
-      filterValues,
-      setFilterValues,
-      activeColumns,
-      showDisplayTrigger,
-      onToggleActive,
-      Entity,
-    ]
+  const entity = getViewDefinitionByExtendedType(dataType);
+  const filterItems = useFilterItems(
+    filters,
+    entity,
+    facets,
+    filterValues,
+    setFilterValues,
+    activeColumns,
+    showDisplayTrigger,
+    onToggleActive
   );
 
   // The columnKeyToFilter method receives a string (key)
@@ -331,6 +164,10 @@ export function ListingFilterPanel({
   const clearFilters = () => {
     resetFilters();
     setSearchString('');
+    runStorageSync({
+      Filters: makeTypeDefaultFilters({ dataType }),
+      Search: '',
+    });
   };
 
   if (!activeColumns) return null;

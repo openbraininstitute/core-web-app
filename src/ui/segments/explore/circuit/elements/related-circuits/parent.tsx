@@ -5,12 +5,12 @@ import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { useMemo } from 'react';
 
+import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { activeColumnsAtom } from '@/state/explore-section/list-view-atoms';
-import { ExploreDataScope } from '@/types/explore-section/application';
+import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { useExploreColumns } from '@/hooks/useExploreColumns';
 import { BaseTable } from '@/ui/segments/data-table/table';
+import { WorkspaceScope } from '@/constants';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { WorkspaceContext } from '@/types/common';
@@ -23,12 +23,12 @@ export function Parent({ data }: Props) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
   const { push: navigate } = useRouter();
 
-  const cols = useExploreColumns<ICircuit>(
-    undefined,
-    undefined,
-    [],
-    ExtendedEntitiesTypeDict.Circuit
-  );
+  const cols = useDataTableColumns<ICircuit>({
+    dataType: ExtendedEntitiesTypeDict.Circuit,
+    setSortState: undefined,
+    sortState: undefined,
+    initialColumns: [],
+  });
 
   const activeColumns = useAtomValue(
     useMemo(
@@ -36,8 +36,7 @@ export function Parent({ data }: Props) {
         unwrap(
           activeColumnsAtom({
             dataType: ExtendedEntitiesTypeDict.Circuit,
-            dataScope: ExploreDataScope.NoScope,
-            brainRegionId: undefined,
+            dataScope: WorkspaceScope.Custom,
             key: data?.id ?? '',
           })
         ),

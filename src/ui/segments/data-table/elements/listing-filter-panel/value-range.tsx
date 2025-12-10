@@ -3,10 +3,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { ArrowsHorizontal } from '@/components/icons/Arrows-horizantal';
 import { cn } from '@/utils/css-class';
 
-import type { CoreFilter, GteLteValue } from '@/entity-configuration/definitions/types';
+import type { TCoreFilter, GteLteValue } from '@/entity-configuration/definitions/types';
 
 type Props = {
-  filter: CoreFilter;
+  filter: TCoreFilter;
   onChange: (values: GteLteValue) => void;
 };
 

@@ -103,7 +103,7 @@ export function SimulationFiles({
   }, [loading, inputFiles, outputFiles, onSelect, selectedFile]);
 
   return (
-    <>
+    <div className="h-full overflow-y-auto">
       <h4 className="uppercase">Input files</h4>
       <div className="mt-4 mb-8 flex flex-col gap-4">
         {inputFiles.map((file) => (
@@ -135,7 +135,7 @@ export function SimulationFiles({
           <Loader className="text-neutral-3" />
         </div>
       )}
-    </>
+    </div>
   );
 }
 

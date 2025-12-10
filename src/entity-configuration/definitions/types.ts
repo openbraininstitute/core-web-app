@@ -70,7 +70,7 @@ interface BooleanFilter extends Omit<BaseFilter, 'type' | 'value'> {
   value: boolean | null;
 }
 
-export type CoreFilter =
+export type TCoreFilter =
   | CheckListFilter
   | SearchFilter
   | DateRangeFilter
@@ -143,3 +143,14 @@ export const DetailViewSectionsDict = {
 
 export type TDetailViewSectionDict =
   (typeof DetailViewSectionsDict)[keyof typeof DetailViewSectionsDict];
+
+export const SortOrder = {
+  ASC: 'asc',
+  DESC: 'desc',
+} as const;
+export type TSortOrder = (typeof SortOrder)[keyof typeof SortOrder];
+export interface TSortState {
+  field: EntityCoreFields;
+  backendField: EntityCoreFields;
+  order: TSortOrder | null;
+}

@@ -29,6 +29,7 @@ import { env } from '@/env';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceScope } from '@/constants';
+import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
 function buildDataUrl({
   virtualLabId,
@@ -172,17 +173,7 @@ function buildQuery({
       within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
       within_brain_region_brain_region_id: brainRegionId ?? null,
       within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
-      // eslint-disable-next-line no-nested-ternary
-      ...(scope === WorkspaceScope.Project
-        ? {
-            authorized_project_id: projectId,
-            authorized_public: false,
-          }
-        : scope === WorkspaceScope.Public
-          ? {
-              authorized_public: true,
-            }
-          : {}),
+      ...getWorkspaceScopeFilters(scope, { virtualLabId, projectId }),
     },
   };
 

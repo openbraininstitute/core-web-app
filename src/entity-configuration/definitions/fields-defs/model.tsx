@@ -335,13 +335,10 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     className: 'text-left',
     title: 'Temperature (°C)',
     isFilterable: true,
-    filter: CoreFieldFilterTypeEnum.ValueRange,
+    filter: CoreFieldFilterTypeEnum.ValueOrRange,
     isDisplayable: true,
     isSortable: true,
-    defaultConstraint: {
-      lte: 'temperature_celsius__lte',
-      gte: 'temperature_celsius__gte',
-    },
+    defaultConstraint: 'temperature_celsius',
     render: (r) => {
       if (
         EntityCoreFields.TemperatureCelsius in r &&

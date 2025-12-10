@@ -1,0 +1,36 @@
+.selectAnalysis {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1em;
+  margin: 1em 0;
+}
+
+.item {
+  color: var(--color-primary-8);
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5em;
+
+  .pass,
+  .fail {
+    border-radius: 50%;
+    font-size: 60%;
+    width: 1em;
+    height: 1em;
+    content: '';
+  }
+
+  .pass {
+    background: #0f0;
+  }
+
+  .fail {
+    background: #f88;
+  }
+}

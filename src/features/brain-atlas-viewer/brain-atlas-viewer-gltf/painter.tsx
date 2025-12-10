@@ -147,10 +147,20 @@ export class Painter {
       this.pointCloudId = annotationValue;
       if (annotationValue !== -1) {
         const dataPoint = await getPointCouldData(annotationValue, accessToken);
+        const shadowThickness = 1;
+        const shadowIntensity = 0.5;
         const painter = new TgdPainterPointsCloud(context, {
           dataPoint,
-          minSizeInPixels: 2,
+          minSizeInPixels: 5,
           texture: new TgdTexture2D(context).loadBitmap(tgdCanvasCreateFill(1, 1, color)),
+          fragCode: [
+            'vec2 coords = 2.0 * (gl_PointCoord - vec2(.5));',
+            'float len = 1.0 - dot(coords, coords);',
+            'if (len < 0.0) discard;',
+            'gl_FragDepth = gl_FragCoord.z - len * 1e-5;',
+            `float light = smoothstep(0.0, ${shadowThickness.toFixed(6)}, len) * ${shadowIntensity} + ${(1 - shadowIntensity).toFixed(6)};`,
+            'return color * vec4(vec3(light), 1.0);',
+          ],
         });
         group.add(painter);
         this.pointCloudPainter = painter;

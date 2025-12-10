@@ -1,5 +1,5 @@
-import { SentryBuildOptions, withSentryConfig } from '@sentry/nextjs';
 import NextBundleAnalyzer from '@next/bundle-analyzer';
+import { SentryBuildOptions, withSentryConfig } from '@sentry/nextjs';
 import { PHASE_DEVELOPMENT_SERVER } from 'next/constants';
 
 import type { NextConfig } from 'next/dist/types';
@@ -97,6 +97,8 @@ const nextConfig = (phase: string): NextConfig => {
       },
     },
     images: {
+      loader: 'default',
+      path: `${cdnUri ?? ''}/_next/image`,
       remotePatterns: [
         {
           protocol: 'https',
@@ -121,6 +123,11 @@ const nextConfig = (phase: string): NextConfig => {
     async redirects() {
       return [
         {
+          source: '/resources',
+          destination: '/notebooks',
+          permanent: false,
+        },
+        {
           source: '/app/virtual-lab',
           destination: `/app/virtual-lab/sync`,
           permanent: false,
@@ -133,6 +140,11 @@ const nextConfig = (phase: string): NextConfig => {
         {
           source: '/app/virtual-lab/:vlabId/:projectId/notebooks',
           destination: '/app/virtual-lab/:vlabId/:projectId/notebooks/public',
+          permanent: false,
+        },
+        {
+          source: '/app/virtual-lab/:vlabId/:projectId/data/view/:type/:id',
+          destination: '/app/virtual-lab/:vlabId/:projectId/data/view/:type/:id/overview',
           permanent: false,
         },
       ];

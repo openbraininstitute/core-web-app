@@ -3,14 +3,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { unwrap } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
 
+import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { activeColumnsAtom } from '@/state/explore-section/list-view-atoms';
-import { ExploreDataScope } from '@/types/explore-section/application';
+import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { Error } from '@/ui/segments/explore/circuit/elements/error';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { useExploreColumns } from '@/hooks/useExploreColumns';
 import { BaseTable } from '@/ui/segments/data-table/table';
+import { WorkspaceScope } from '@/constants';
 import { tryCatch } from '@/api/utils';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -32,20 +32,21 @@ export function Root({ circuit }: Props) {
     error: null,
     record: null,
   });
-  const cols = useExploreColumns<ICircuit>(
-    undefined,
-    undefined,
-    [],
-    ExtendedEntitiesTypeDict.Circuit
-  );
+
+  const cols = useDataTableColumns<ICircuit>({
+    dataType: ExtendedEntitiesTypeDict.Circuit,
+    setSortState: undefined,
+    sortState: undefined,
+    initialColumns: [],
+  });
+
   const activeColumns = useAtomValue(
     useMemo(
       () =>
         unwrap(
           activeColumnsAtom({
             dataType: ExtendedEntitiesTypeDict.Circuit,
-            dataScope: ExploreDataScope.NoScope,
-            brainRegionId: undefined,
+            dataScope: WorkspaceScope.Custom,
             key: circuit.id,
           })
         ),

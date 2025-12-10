@@ -14,5 +14,6 @@ export function useInputResistance(entityId: string): number | undefined {
     },
   });
   if (isPending || error) return undefined;
+
   return data;
 }
