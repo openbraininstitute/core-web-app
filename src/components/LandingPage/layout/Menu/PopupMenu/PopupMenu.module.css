@@ -84,6 +84,27 @@ div.popupMenu.show section > .link {
   font-size: 1em;
 }
 
+div.popupMenu.show section > .menuGroup {
+  width: 100%;
+}
+
+div.popupMenu.show section > .menuGroup > .submenu {
+  font-size: 1.4em;
+  padding-left: 1em;
+}
+
+div.popupMenu.show section > .menuGroup > .title {
+  padding: 0.2em 0.5em;
+  font-family: var(--font-sans-serif);
+  font-size: 1em;
+  font-weight: bold;
+  color: var(--color-primary);
+}
+
+div.popupMenu.show section > .menuGroup > .submenuLink {
+  font-size: 0.9em;
+}
+
 @media (min-width: 951px) {
   div.popupMenu.show {
     opacity: 0;
