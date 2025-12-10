@@ -3,12 +3,12 @@
 import { usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-import { makeDataKey } from '../data-table/elements/helpers';
 import { useDataListStateSnapshotActions } from '@/ui/segments/data-table/elements/context';
+import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getRouteSegmentsAfterWorkspace } from '@/utils/path';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { WorkspaceSection } from '@/constants';
 import { isBrowser } from '@/utils/environment';
 import { ROOT_ROUTE } from '@/config';
 import Breadcrumb from '@/ui/molecules/breadcrumb';
@@ -17,6 +17,7 @@ import Close from '@/ui/molecules/close';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
 import type { WorkspaceContext } from '@/types/common';
+import type { TWorkspaceScope } from '@/constants';
 
 function getGroupDisplayName(group: TEntityTypeGroup): string {
   const groupLabels: Record<TEntityTypeGroup, string> = {
@@ -83,9 +84,19 @@ export function BackToEntityType({
   type,
   title,
   onClick,
-}: WorkspaceContext & { type: TExtendedEntitiesTypeDict; title: string; onClick: () => void }) {
+  group,
+  scope,
+}: WorkspaceContext & {
+  type: TExtendedEntitiesTypeDict;
+  title: string;
+  group: TEntityTypeGroup;
+  scope: TWorkspaceScope;
+  onClick: () => void;
+}) {
   const queryParams = useSearchParams();
   const query = new URLSearchParams(queryParams);
+  query.set('group', group);
+  query.set('scope', scope);
 
   return (
     <Breadcrumb showChevron={false}>
@@ -106,22 +117,23 @@ export function DataBreadcrumb({
   type,
   title,
   group,
-  isPublic,
+  scope,
 }: {
   type: TExtendedEntitiesTypeDict;
-  title: string;
   group: TEntityTypeGroup;
-  isPublic: boolean;
+  scope: TWorkspaceScope;
+  title: string;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
   const routeSegments = getRouteSegmentsAfterWorkspace(usePathname(), ROOT_ROUTE);
   const section = routeSegments.at(0);
+
   const { dataKey } = makeDataKey({
     virtualLabId,
     projectId,
     section: WorkspaceSection.Data,
     dataType: type,
-    scope: isPublic ? WorkspaceScope.Public : WorkspaceScope.Project,
+    scope,
   });
 
   const { reset: runStorageReset } = useDataListStateSnapshotActions({
@@ -141,7 +153,9 @@ export function DataBreadcrumb({
     <div className="flex flex-wrap gap-3">
       <BackToListingOriginButton {...{ virtualLabId, projectId, onClick: onLinkClick }} />
       <BackToCategory {...{ virtualLabId, projectId, group, onClick: onLinkClick }} />
-      <BackToEntityType {...{ virtualLabId, projectId, type, title, onClick: onLinkClick }} />
+      <BackToEntityType
+        {...{ virtualLabId, projectId, type, title, group, scope, onClick: onLinkClick }}
+      />
     </div>
   );
 }

@@ -46,15 +46,11 @@ export async function DataViewLayout({
   if (error || !entity) notFound();
 
   const isPublicEntity = entity.authorized_public;
-  const parentLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}&scope=${isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project}`;
+  const scope = isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project;
+  const parentLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}&scope=${scope}`;
 
   const breadcrumbs = (
-    <DataBreadcrumb
-      title={entityType.title}
-      type={type}
-      group={entityType.group}
-      isPublic={isPublicEntity}
-    />
+    <DataBreadcrumb title={entityType.title} type={type} group={entityType.group} scope={scope} />
   );
   const closePage = <ClosePage url={parentLink} />;
 

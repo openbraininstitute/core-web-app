@@ -38,4 +38,5 @@ export const NeuronDensity: EntityCoreTypeConfig<IExperimentalNeuronDensity> = {
   isBookmarkable: true,
   isCopyable: true,
   isSimulatable: false,
+  isUploadable: true,
 } as const;

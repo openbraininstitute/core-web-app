@@ -1,29 +1,42 @@
 import { CloseOutlined } from '@ant-design/icons';
-import { useState } from 'react';
+import { isNil } from 'es-toolkit/compat';
 import { match, P } from 'ts-pattern';
-import isNil from 'es-toolkit/compat/isNil';
+import { useState } from 'react';
 
-import {
-  makeSelectContributionEntityClickEvent,
-  useContributionEntityClickEvent,
-} from '@/ui/segments/contribute/event';
+import { ExperimentalNeuronDensity } from '@/ui/segments/contribute/experimental-neuron-density';
+import { ElectricalCellRecording } from '@/ui/segments/contribute/electrical-cell-recording';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { CellMorphology } from '@/ui/segments/contribute/cell-morphology';
 import { EntityCoreConfiguration } from '@/entity-configuration/domain';
 import { SelectPopover } from '@/ui/molecules/select-popover';
-import {
-  ExtendedEntitiesTypeDict,
-  type TExtendedEntitiesTypeDict,
-} from '@/api/entitycore/types/extended-entity-type';
 import { Button } from '@/ui/molecules/button';
 import { Modal } from '@/ui/molecules/modal';
+import {
+  makeSelectContributionEntityClickEvent,
+  useContributionEntityClickEvent,
+} from '@/ui/segments/contribute/event';
 import { cn } from '@/utils/css-class';
 
-function ExtendedEntitiesSelector({
-  onSelectEntityType,
-}: {
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
+interface IExtendedEntitiesSelectorProps {
   onSelectEntityType: (type: TExtendedEntitiesTypeDict) => void;
-}) {
+}
+
+function ExtendedEntitiesSelector({ onSelectEntityType }: IExtendedEntitiesSelectorProps) {
+  const options = Object.entries(EntityCoreConfiguration)
+    .map(([, value]) => ({
+      label: value.title,
+      value: value.extendedType,
+      data: {
+        isUploadable: value.isUploadable ?? false,
+      },
+    }))
+    .sort((a, b) => {
+      return Number(b.data.isUploadable) - Number(a.data.isUploadable);
+    });
+
   return (
     <div className="w-full px-5">
       <div className="border-neutral-2 rounded-2xl border p-4 py-9">
@@ -31,13 +44,7 @@ function ExtendedEntitiesSelector({
           Select an artifact you want to upload
         </div>
         <SelectPopover
-          options={Object.entries(EntityCoreConfiguration).map(([, value]) => ({
-            label: value.title,
-            value: value.extendedType,
-            data: {
-              isUploadable: value.isUploadable,
-            },
-          }))}
+          options={options}
           placeholder="select an artifact "
           searchPlaceholder="search an artifact"
           onSelect={(option) => {
@@ -61,10 +68,21 @@ function ExtendedEntitiesSelector({
   );
 }
 
-function RenderEntityTypeContent({ type, sId }: { type: TExtendedEntitiesTypeDict; sId: string }) {
+interface IRenderEntityTypeContentProps {
+  type: TExtendedEntitiesTypeDict;
+  sessionId: string;
+}
+
+function RenderEntityTypeContent({ type, sessionId: sId }: IRenderEntityTypeContentProps) {
   return match({ type })
     .with({ type: ExtendedEntitiesTypeDict.CellMorphology }, () => (
       <CellMorphology sessionId={sId} />
+    ))
+    .with({ type: ExtendedEntitiesTypeDict.ElectricalCellRecording }, () => (
+      <ElectricalCellRecording sessionId={sId} />
+    ))
+    .with({ type: ExtendedEntitiesTypeDict.ExperimentalNeuronDensity }, () => (
+      <ExperimentalNeuronDensity sessionId={sId} />
     ))
     .otherwise(() => null);
 }
@@ -80,11 +98,11 @@ export function ContributionModal() {
     sessionId: null,
   });
 
-  const onSelectEntityType = (type: TExtendedEntitiesTypeDict) => {
+  const onSelectEntityType = (type: TExtendedEntitiesTypeDict): void => {
     setEventPayload({ sessionId, display, entityType: type });
   };
 
-  const onClose = () => {
+  const onClose = (): void => {
     makeSelectContributionEntityClickEvent({ display: false, entityType: null, sessionId: null });
   };
 
@@ -108,7 +126,7 @@ export function ContributionModal() {
     .with(
       { sessionId: P.string.select('sId'), entityType: P.string.select('type') },
       ({ sId, type }) => {
-        return <RenderEntityTypeContent type={type} sId={sId} />;
+        return <RenderEntityTypeContent type={type} sessionId={sId} />;
       }
     )
     .otherwise(() => null);

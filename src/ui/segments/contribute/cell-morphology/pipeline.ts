@@ -1,48 +1,36 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
-import isNil from 'es-toolkit/compat/isNil';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { get, isNil } from 'es-toolkit/compat';
 
 import { createMtypeClassification } from '@/api/entitycore/queries/annotations/mtype-classification';
+import { CELL_MORPHOLOGY_PROGRESS_STEPS } from '@/ui/segments/contribute/cell-morphology/config';
+import { getCellMorphologyMimeType } from '@/ui/segments/contribute/cell-morphology/schema';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
+import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { createCellMorphology } from '@/api/entitycore/queries';
 import { createAsset } from '@/api/entitycore/queries/assets';
-import {
-  ContributionSchema,
-  getMimeTypeByExtension,
-  type TCellMorphologyForm,
-} from '@/ui/segments/contribute/cell-morphology/helpers';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { EntityTypeDict } from '@/api/entitycore/types';
 
-export function buildCellMorphologyMutationKeys(sessionId: string) {
-  return {
-    CreateCellMorphology: {
-      key: ['create-cell-morphology', sessionId],
-      label: 'Create cell morphology',
-    },
-    CreateContribution: {
-      key: ['create-contribution', sessionId],
-      label: 'Create Contribution',
-    },
-    CreateMtypeClassification: {
-      key: ['create-mtype-classification', sessionId],
-      label: 'Create M-Type Classification',
-    },
-    createAssets: {
-      key: ['create-cell-morphology-assets', sessionId],
-      label: 'Create cell morphology assets',
-    },
-  };
-}
+import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
+import type { TCellMorphologyForm } from '@/ui/segments/contribute/cell-morphology/schema';
+import type {
+  IMutationKeyConfig,
+  IPipelineHookResult,
+} from '@/ui/segments/contribute/shared/types';
 
-export const usePipeline = ({ sessionId }: { sessionId: string }) => {
-  const keys = buildCellMorphologyMutationKeys(sessionId);
+export function useCellMorphologyPipeline({
+  sessionId,
+}: {
+  sessionId: string;
+}): IPipelineHookResult<TCellMorphologyForm> {
+  const queryClient = useQueryClient();
   const { projectId, virtualLabId } = useWorkspace();
 
   const createCellMorphologyAsync = useMutation({
-    mutationKey: keys.CreateCellMorphology.key,
     mutationFn: (values: TCellMorphologyForm) => {
       const location =
         values.setup.location &&
@@ -67,10 +55,31 @@ export const usePipeline = ({ sessionId }: { sessionId: string }) => {
         },
       });
     },
+    onSettled: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          predicate(query) {
+            return (
+              query.queryKey.at(0) ===
+              `data-entity-count-${ExtendedEntitiesTypeDict.CellMorphology}`
+            );
+          },
+        }),
+        queryClient.invalidateQueries({
+          predicate(query) {
+            return (
+              get(
+                (query.queryKey as ExtendedEntityTypeQueryKey)[0],
+                'context.extendedEntityType'
+              ) === ExtendedEntitiesTypeDict.CellMorphology
+            );
+          },
+        }),
+      ]);
+    },
   });
 
   const createContributionAsync = useMutation({
-    mutationKey: keys.CreateContribution.key,
     mutationFn: ({
       entityId,
       contribution,
@@ -96,7 +105,6 @@ export const usePipeline = ({ sessionId }: { sessionId: string }) => {
   });
 
   const createMtypeClassificationAsync = useMutation({
-    mutationKey: keys.CreateMtypeClassification.key,
     mutationFn: ({
       entityId,
       mtype_class_id,
@@ -116,7 +124,6 @@ export const usePipeline = ({ sessionId }: { sessionId: string }) => {
   });
 
   const createAssetsAsync = useMutation({
-    mutationKey: keys.createAssets.key,
     mutationFn: ({
       entityId,
       assets,
@@ -130,7 +137,7 @@ export const usePipeline = ({ sessionId }: { sessionId: string }) => {
             entityId,
             entityType: EntityTypeDict.CellMorphology,
             fileName: asset.name || '',
-            mimeType: getMimeTypeByExtension(asset)!,
+            mimeType: getCellMorphologyMimeType(asset) ?? '',
             label: AssetLabel.morphology,
             payload: asset,
             ctx: { virtualLabId, projectId },
@@ -140,7 +147,7 @@ export const usePipeline = ({ sessionId }: { sessionId: string }) => {
     },
   });
 
-  async function createEntity({ values }: { values: TCellMorphologyForm }) {
+  async function createEntity({ values }: { values: TCellMorphologyForm }): Promise<string> {
     const cellMorphology = await createCellMorphologyAsync.mutateAsync(values);
     await Promise.allSettled([
       createContributionAsync.mutateAsync({
@@ -156,6 +163,7 @@ export const usePipeline = ({ sessionId }: { sessionId: string }) => {
         assets: values.assets,
       }),
     ]);
+    return cellMorphology.id;
   }
 
   const loading =
@@ -174,8 +182,23 @@ export const usePipeline = ({ sessionId }: { sessionId: string }) => {
     createCellMorphology: createCellMorphologyAsync.status,
     createContribution: createContributionAsync.status,
     createMtypeClassification: createMtypeClassificationAsync.status,
-    createAssets: createAssetsAsync.status,
+    createCellMorphologyAssets: createAssetsAsync.status,
   };
 
-  return { createEntity, loading, error, status };
-};
+  return {
+    createEntity,
+    loading,
+    error,
+    status,
+    mutationKeys: CELL_MORPHOLOGY_PROGRESS_STEPS.reduce(
+      (acc, step) => {
+        acc[step.mutationKey] = {
+          key: [step.mutationKey, sessionId],
+          label: step.label,
+        };
+        return acc;
+      },
+      {} as Record<string, IMutationKeyConfig>
+    ),
+  };
+}

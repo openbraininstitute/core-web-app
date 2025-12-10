@@ -1,3 +1,5 @@
+import z from 'zod';
+
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
@@ -64,5 +66,80 @@ export async function getElectricalCellRecording({
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
     },
+  });
+}
+
+const electricalCellRecordingSchema = z.object({
+  name: z
+    .string({ message: 'Cell recording name is required' })
+    .nonempty({ message: 'Cell recording name is required' }),
+  description: z
+    .string({ message: 'Cell recording description is required' })
+    .nonempty({ message: 'Cell recording description is required' }),
+  brain_region_id: z
+    .string({ message: 'Brain region is required' })
+    .uuid()
+    .nonempty({ message: 'Brain region is required' }),
+  subject_id: z
+    .string({ message: 'Subject is required' })
+    .uuid()
+    .nonempty({ message: 'Subject is required' }),
+  license_id: z
+    .string({ message: 'License is required' })
+    .uuid()
+    .nonempty({ message: 'License is required' }),
+  experiment_date: z.string({ message: 'Experiment date is required' }).nullish(),
+  contact_email: z
+    .string({ message: 'Contact email is required' })
+    .email({ message: 'Contact email is required' })
+    .nullish(),
+  published_in: z.string({ message: 'Published in is required' }).nullish(),
+  location: z.object({ x: z.number(), y: z.number(), z: z.number() }).nullable(),
+  recording_location: z
+    .array(
+      z
+        .string({ message: 'Cell recording location is required' })
+        .nonempty({ message: 'Cell recording location is required' })
+    )
+    .nullable(),
+  recording_type: z.string({ message: 'Cell recording type is required' }).nonempty({
+    message: 'Cell recording type is required',
+  }),
+  recording_origin: z.string({ message: 'Cell recording origin is required' }).nonempty({
+    message: 'Cell recording origin is required',
+  }),
+  temperature: z
+    .number({ invalid_type_error: 'Temperature must be a number' })
+    .optional()
+    .nullable(),
+  ljp: z
+    .number({ invalid_type_error: 'Liquid junction potential (ljp) must be a number' })
+    .optional()
+    .default(0.0),
+  comment: z.string().optional().nullable(),
+});
+
+export type TElectricalCellRecordingCreate = z.infer<typeof electricalCellRecordingSchema>;
+
+/**
+ * Creates a new cell recording
+ * @param param0
+ * @returns A promise that resolves to the created cell morphology
+ */
+export async function createElectricalCellRecording({
+  context,
+  payload,
+}: {
+  context?: WorkspaceContext | null;
+  payload: TElectricalCellRecordingCreate;
+}) {
+  const api = await entityCoreApi();
+  return await api.post<IElectricalCellRecording>(baseUri, {
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+    body: payload,
   });
 }

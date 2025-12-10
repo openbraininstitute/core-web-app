@@ -1,30 +1,32 @@
+'use client';
+
 import { CheckOutlined } from '@ant-design/icons';
 import { useMemo, useState } from 'react';
 import { Form } from 'antd';
 
-import { AsyncSelectFormItem, AsyncSelectOption } from '@/ui/molecules/async-select';
-import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
-import {
-  CellMorphologySchema,
-  label,
-  zodFieldValidator,
-} from '@/ui/segments/contribute/cell-morphology/helpers';
+import type { ZodObject, ZodRawShape } from 'zod';
+
+import { AsyncSelectFormItem, type AsyncSelectOption } from '@/ui/molecules/async-select';
+import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
+import {
+  createZodFieldValidator,
+  RequiredFieldMarker,
+  renderLabel,
+} from '@/ui/segments/contribute/shared/helpers';
 import { cn } from '@/utils/css-class';
 
 import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
-import type { IMType } from '@/api/entitycore/types/shared/global';
+import type { IEType } from '@/api/entitycore/types/shared/global';
 
-function CustomRenderer({
-  data,
-  selected,
-  onSelect,
-}: {
-  data: AsyncSelectOption<IMType>;
+interface ICustomRendererProps {
+  data: AsyncSelectOption<IEType>;
   selected: boolean;
-  onSelect: (option: AsyncSelectOption<IMType> | undefined) => void;
-}) {
+  onSelect: (option: AsyncSelectOption<IEType> | undefined) => void;
+}
+
+function CustomRenderer({ data, selected, onSelect }: ICustomRendererProps) {
   return (
     <div key={data?.value} className="group mb-1 flex items-center justify-start">
       <button
@@ -40,7 +42,6 @@ function CustomRenderer({
       >
         <div className="flex flex-col gap-0.5">
           <div className="line-clamp-2 w-full group-hover:font-black">{data.label}</div>
-          <div className="text-primary-8 text-base font-medium">{data.data.alt_label}</div>
           <p className="text-sm font-light text-gray-500">{data.data.definition}</p>
         </div>
         <div className="flex items-center justify-center gap-1">
@@ -56,30 +57,36 @@ function CustomRenderer({
   );
 }
 
-export function MTypeClassification() {
+type Props<TSchema extends ZodObject<ZodRawShape>> = {
+  schema: TSchema;
+};
+
+export function ETypeClassificationSelector<TSchema extends ZodObject<ZodRawShape>>({
+  schema,
+}: Props<TSchema>) {
   const form = Form.useFormInstance();
   const { virtualLabId, projectId } = useWorkspace();
-  const [mtype, setMtype] = useState<AsyncSelectOption<IMType> | undefined>(undefined);
+  const [etype, setEtype] = useState<AsyncSelectOption<IEType> | undefined>(undefined);
 
-  const onSelect = (option: AsyncSelectOption<IMType> | undefined) => {
-    setMtype(option);
+  const handleSelect = (option: AsyncSelectOption<IEType> | undefined): void => {
+    setEtype(option);
   };
 
-  const MTypeDropdown = useMemo(
+  const EtypeDropdown = useMemo(
     () =>
-      AsyncSelectFormItem<PaginationFilter & SearchFilter, IMType>({
-        id: 'mtype-selector',
-        dataKey: keyBuilder.mtype({ virtualLabId, projectId }),
-        queryFn: getMtypes,
+      AsyncSelectFormItem<PaginationFilter & SearchFilter, IEType>({
+        id: 'etype-selector',
+        dataKey: keyBuilder.etype({ virtualLabId, projectId }),
+        queryFn: getEtypes,
         getOptionLabel: (l) => l.pref_label ?? l.alt_label,
         getOptionValue: (l) => l.id,
-        placeholder: 'Select a mtype...',
-        searchPlaceholder: 'Search mtype...',
+        placeholder: 'Select an etype...',
+        searchPlaceholder: 'Search etype...',
         clsx: { trigger: 'rounded-full h-12', content: 'z-[99999]' },
         searchable: true,
         searchField: 'pref_label__ilike',
         customItemRender: CustomRenderer,
-        onSelect,
+        onSelect: handleSelect,
       }),
     [virtualLabId, projectId]
   );
@@ -87,21 +94,21 @@ export function MTypeClassification() {
   return (
     <>
       <Form.Item
-        name="mtype_class_id"
-        label={label('Mtype classification', 'main', <sup className="text-destructive">*</sup>)}
+        name="etype_class_id"
+        label={renderLabel('Etype classification', 'main', RequiredFieldMarker)}
         rules={[
           {
             required: true,
-            validator: zodFieldValidator(CellMorphologySchema, 'mtype_class_id', form),
+            validator: createZodFieldValidator(schema, 'etype_class_id', form),
           },
         ]}
       >
-        <MTypeDropdown />
+        <EtypeDropdown />
       </Form.Item>
-      {mtype && (
+      {etype?.data.definition && (
         <div className="border-neutral-1 mx-5 rounded-md border px-3 py-2 shadow-xs select-none">
-          <h4 className="text-primary-5">{mtype?.data.alt_label}</h4>
-          <p className="text-gray-600">{mtype?.data.definition}</p>
+          {etype?.data.alt_label && <h4 className="text-primary-5">{etype?.data.alt_label}</h4>}
+          {etype?.data.definition && <p className="text-gray-600">{etype?.data.definition}</p>}
         </div>
       )}
     </>

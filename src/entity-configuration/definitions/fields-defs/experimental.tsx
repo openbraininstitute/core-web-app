@@ -28,7 +28,7 @@ import type {
   IEModel,
 } from '@/api/entitycore/types';
 import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
-import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
+import { MeasurementUnit, type IEType, type IMType } from '@/api/entitycore/types/shared/global';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 
 const morphologyMtypes = (morphology?: ICellMorphology) => {
@@ -152,7 +152,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     render: (r) => {
       return renderEmptyOrValue(
         find(ensureArray({ input: (r as EntityCoreDensityObjectTypes).measurements }), {
-          unit: 'dimensionless',
+          unit: MeasurementUnit.dimensionless,
         })?.value
       );
     },

@@ -1,4 +1,6 @@
 export const messages = {
+  ResolveNWBFileFailed:
+    'The nwb file $$ could not be validated by our tool. Please ensure it is a valid .nwb file.',
   ResolveNeuronFileFailed:
     'The neuron file $$ could not be validated by our tool. Please ensure it is a valid .swc, .asc, or .h5 file.',
   FileSizeExceeded: 'File "$$" exceeds the maximum size of $$$.',
