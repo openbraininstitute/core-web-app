@@ -14,6 +14,7 @@ import { useAITools } from '@/services/ai-agent/tools/tools';
 import { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 
 import styles from './tools-progress.module.css';
+import useWorkspace from '@/ui/hooks/use-workspace';
 
 interface ToolsProgressProps {
   className?: string;
@@ -22,7 +23,7 @@ interface ToolsProgressProps {
 
 export default function ToolsProgress({ className, part }: ToolsProgressProps) {
   const tools = useAITools();
-  const currentPath = usePathname();
+  const { virtualLabId, projectId } = useWorkspace();
   const [expandedToolKeys, setExpandedToolKeys] = useState<Set<string>>(new Set());
 
   const toggleExpanded = (key: string) => {
@@ -98,7 +99,7 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
             </div>
 
             <Link
-              href={tool.docURL(currentPath)}
+              href={tool.docURL(virtualLabId, projectId)}
               target="documentation"
               aria-label="Tool information"
               className={cn(styles.helpButton)}

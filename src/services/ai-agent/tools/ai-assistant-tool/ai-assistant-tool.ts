@@ -28,8 +28,7 @@ export class AIAssistantTool {
     this.icon = getIcon(id);
   }
 
-  docURL(currentPath: string) {
-    const [vlab, project] = currentPath.split('/').slice(3, 5);
+  docURL(vlab: string, project: string) {
     return `/app/virtual-lab/${vlab}/${project}/help?section=ai-tools&tool=${this.id}`;
   }
 }
