@@ -4,7 +4,6 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 
 import { IconChecked } from './icon-checked';
 import { IconUnchecked } from './icon-unchecked';
@@ -12,8 +11,8 @@ import { classNames } from '@/util/utils';
 import { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 import { useAIToolsInvertedSelection } from '@/components/ai-assistant/state';
 
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import styles from './tool-card.module.css';
-import useWorkspace from '@/ui/hooks/use-workspace';
 
 interface ToolCardProps {
   className?: string;

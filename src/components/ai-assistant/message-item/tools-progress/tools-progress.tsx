@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { ToolInvocation, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { IconGear } from '../../icons/gear';
 import LoadingDots from './loading-dots/loading-dots';
 import { cn } from '@/utils/css-class';
@@ -13,8 +12,8 @@ import Chevron from '@/components/icons/Chevron';
 import { useAITools } from '@/services/ai-agent/tools/tools';
 import { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import styles from './tools-progress.module.css';
-import useWorkspace from '@/ui/hooks/use-workspace';
 
 interface ToolsProgressProps {
   className?: string;
