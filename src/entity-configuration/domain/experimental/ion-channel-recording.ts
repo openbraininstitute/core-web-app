@@ -12,6 +12,10 @@ import {
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
+export const recordingOriginFilter = {
+  recording_origin: ElectricalRecordingOriginDictionary.InVitro,
+};
+
 export const IonChannelRecording: EntityCoreTypeConfig<IElectricalCellRecording> = {
   group: EntityTypeGroup.Experimental,
   title: 'Ion channel electrophysiology',
@@ -19,28 +23,20 @@ export const IonChannelRecording: EntityCoreTypeConfig<IElectricalCellRecording>
   type: EntityTypeDict.IonChannelRecording,
   slug: EntitySlug.IonChannelRecording,
   api: {
-    config: {
-      allowedFacets: true,
-    },
+    config: { allowedFacets: true },
     query: {
       list: (params: Parameters<typeof getIonChannelRecordings>[0]) =>
         getIonChannelRecordings({
           ...params,
           filters: {
             ...params.filters,
-            recording_origin: ElectricalRecordingOriginDictionary.InVitro,
+            ...recordingOriginFilter,
           },
         }),
       one: getIonChannelRecording,
     },
   },
-  explore: {
-    basePrefix: 'experimental',
-    routePrefix: 'interactive/experimental',
-  },
-  asset: {
-    extension: 'application/nwb',
-  },
+  asset: { extension: 'application/nwb' },
   detailViewSections: [DetailViewSectionsDict.Overview],
   isDownloadable: true,
   isBookmarkable: true,

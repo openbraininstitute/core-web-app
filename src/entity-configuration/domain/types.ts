@@ -20,9 +20,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   alternateTitle?: string;
   requiredFeatures?: Array<FlagKey>;
   api: {
-    config: {
-      allowedFacets?: boolean;
-    };
+    config: { allowedFacets?: boolean };
     query: {
       count?: (query: any) => Promise<EntityCoreResponse<T>>;
       list?: (query: any) => Promise<EntityCoreResponse<T>>;

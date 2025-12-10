@@ -1,3 +1,5 @@
+import { without } from 'es-toolkit/compat';
+
 import { ElectricalRecordingOriginDictionary } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
@@ -11,6 +13,13 @@ import {
 
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+
+export const recordingOriginFilter = {
+  recording_origin__in: without(
+    Object.values(ElectricalRecordingOriginDictionary),
+    ElectricalRecordingOriginDictionary.InSilico
+  ),
+};
 
 export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecording> = {
   group: EntityTypeGroup.Experimental,
@@ -28,19 +37,13 @@ export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecord
           ...params,
           filters: {
             ...params.filters,
-            recording_origin: ElectricalRecordingOriginDictionary.InVitro,
+            ...recordingOriginFilter,
           },
         }),
       one: getElectricalCellRecording,
     },
   },
-  explore: {
-    basePrefix: 'experimental',
-    routePrefix: 'interactive/experimental',
-  },
-  asset: {
-    extension: 'application/nwb',
-  },
+  asset: { extension: 'application/nwb' },
   detailViewSections: [DetailViewSectionsDict.Overview],
   isDownloadable: true,
   isBookmarkable: true,
