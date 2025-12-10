@@ -175,7 +175,6 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
     data: activityResult,
     isFetching,
     queryKeyHash,
-    isDependenciesLoading,
   } = useQueryActivity({
     activity: activityType!,
     selectionType: entityType!,
@@ -237,8 +236,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
     }
   };
 
-  const shouldShowEmptyState =
-    !activityResult?.pagination.total_items && !isDependenciesLoading && !isFetching;
+  const shouldShowEmptyState = !activityResult?.pagination.total_items && !isFetching;
 
   return (
     <section
