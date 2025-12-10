@@ -23,6 +23,7 @@ export const serviceAiAgentSuggestionFromUserJourney = asyncCreateSquash(
       query: {
         thread_id: threadId,
         click_history: journey,
+        frontend_url: `${globalThis.location.pathname}${globalThis.location.search}`,
       },
       typeGuard: isSuggestionFromUserJourneyResponse,
     });

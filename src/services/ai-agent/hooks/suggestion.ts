@@ -10,8 +10,7 @@ import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 import { useSnapshot } from '@/components/ai-assistant/suggested-questions/hardcoded-suggestions/snapshot';
 
 export function useServiceAiAgentSuggestionFromUserJourney(
-  threadId: string,
-  count: number
+  threadId: string
 ): [suggestions: string[], clearSuggestions: () => void] {
   const snapshot = useSnapshot();
   const virtualLabId = useParamVirtualLabId();
@@ -30,13 +29,13 @@ export function useServiceAiAgentSuggestionFromUserJourney(
             projectId,
           }
         );
-        setSuggestions(data.slice(0, count));
+        setSuggestions(data);
       } catch {
         setSuggestions([]);
       }
     };
     action();
-  }, [threadId, count, accessToken, projectId, virtualLabId]);
+  }, [threadId, accessToken, projectId, virtualLabId]);
 
   React.useEffect(fetchSuggestions, [fetchSuggestions]);
   useGenericEventListener(userJourneyTracker.eventChange, fetchSuggestions);
