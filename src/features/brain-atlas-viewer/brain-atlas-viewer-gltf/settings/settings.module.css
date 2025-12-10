@@ -1,0 +1,41 @@
+.settings {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  transition: all 0.3s;
+  color: #fff;
+  background: #000c;
+  border-radius: 0 0.5em 0 0;
+  padding: 0.5em;
+  overflow: visible;
+
+  &.show {
+    transform: translateY(0);
+  }
+
+  &.hide {
+    transform: translateY(100%);
+  }
+
+  > button {
+    border: none;
+    margin: 0;
+    cursor: pointer;
+    position: absolute;
+    left: 0;
+    top: 0;
+    padding: 0.5em;
+    transform: translateY(-100%);
+    background: #000c;
+    border-radius: 0 0.5em 0 0;
+  }
+
+  > div {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1em;
+  }
+}

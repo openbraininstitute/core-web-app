@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import React from 'react';
 import compact from 'es-toolkit/compat/compact';
 import find from 'es-toolkit/compat/find';
@@ -7,6 +8,7 @@ import { TgdColor, TgdVec4 } from '@tolokoban/tgd';
 
 import { brainRegionAtlasAtom } from '../context';
 import { Painter } from './painter';
+import { SettingsDefinitions } from './settings';
 import { VisibleRegion } from './types';
 
 import {
@@ -69,4 +71,53 @@ export function useVisibleRegions(dataKey: string): {
 export function makeColor(textColor: string): TgdVec4 {
   const color = new TgdColor(textColor);
   return new TgdVec4(color.R, color.G, color.B, 1);
+}
+
+const SETTINGS: SettingsDefinitions = {
+  shadowIntensity: {
+    label: 'Shadow strength',
+    value: 0.1,
+  },
+  shadowThickness: {
+    label: 'Shadow spread',
+    min: 0,
+    max: 2,
+    value: 1,
+  },
+  specularExponent: {
+    label: 'specularExponent',
+    value: 10,
+    min: -20,
+    max: 20,
+  },
+  specularIntensity: {
+    label: 'specularIntensity',
+    value: 0,
+  },
+  light: {
+    label: 'light',
+    value: 1,
+  },
+  ghostExponent: {
+    label: 'X-ray exponent',
+    value: 2,
+    min: 0,
+    max: 50,
+  },
+  ghostIntensity: {
+    label: 'X-ray intensity',
+    value: 1,
+    min: 0,
+    max: 10,
+  },
+};
+
+export function useSettingsValues(
+  painter: Painter
+): [values: SettingsDefinitions, setValues: (values: SettingsDefinitions) => void] {
+  const [values, setValues] = React.useState(SETTINGS);
+  React.useEffect(() => {
+    painter.uniforms = values;
+  }, [values, painter]);
+  return [values, setValues];
 }
