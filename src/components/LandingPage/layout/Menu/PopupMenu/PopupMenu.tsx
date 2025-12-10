@@ -75,9 +75,7 @@ export default function PopupMenu({ className, visible, onChange }: PopupMenuPro
         if (evt.key === 'Escape') onChange(false);
       }}
     >
-
       <menu className="border-neutral-3 absolute top-4 right-4 bottom-4 left-4 grid h-[calc(100%-2rem)] max-h-[calc(100%-2rem)] w-[calc(100%-2rem)] grid-rows-[auto_1fr] gap-4 border bg-white">
-
         <header className="absolute top-0 left-0 flex h-auto w-full justify-end">
           <button
             className="text-[1em]"
@@ -93,7 +91,6 @@ export default function PopupMenu({ className, visible, onChange }: PopupMenuPro
           {/* Home */}
           <Link
             className="font-title flex cursor-pointer items-center justify-between gap-4 border-none text-3xl! font-semibold"
-
             key={DEFAULT_SECTION.caption}
             onClick={() => {
               onChange(false);
@@ -130,7 +127,6 @@ export default function PopupMenu({ className, visible, onChange }: PopupMenuPro
             return (
               <Link
                 className="font-title flex cursor-pointer items-center justify-between border-none text-3xl! font-semibold"
-
                 key={item.slug}
                 onClick={() => {
                   onChange(false);
@@ -145,7 +141,6 @@ export default function PopupMenu({ className, visible, onChange }: PopupMenuPro
           {/* Login */}
           <Link
             className="font-title mt-[-1px] flex cursor-pointer items-center justify-between border-none text-3xl! font-semibold"
-
             onClick={() => {
               onChange(false);
             }}
