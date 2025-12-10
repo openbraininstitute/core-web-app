@@ -75,7 +75,7 @@ export default function PopupMenu({ className, visible, onChange }: PopupMenuPro
         if (evt.key === 'Escape') onChange(false);
       }}
     >
-      <menu className="border-neutral-3 absolute top-4 right-4 bottom-4 left-4 grid h-[calc(100%-2rem)] max-h-[calc(100%-2rem)] w-[calc(100%-2rem)] grid-rows-[auto_1fr] gap-4 border bg-white text-[7vmin]">
+      <menu className="border-neutral-3 absolute top-4 right-4 bottom-4 left-4 grid h-[calc(100%-2rem)] max-h-[calc(100%-2rem)] w-[calc(100%-2rem)] grid-rows-[auto_1fr] gap-4 border bg-white">
         <header className="absolute top-0 left-0 flex h-auto w-full justify-end">
           <button
             className="text-[1em]"
@@ -86,10 +86,10 @@ export default function PopupMenu({ className, visible, onChange }: PopupMenuPro
             <IconClose />
           </button>
         </header>
-        <section className="absolute top-12 bottom-0 left-0 flex h-auto w-full flex-col gap-y-6 pl-8">
+        <section className="absolute top-12 bottom-0 left-0 flex h-auto w-full flex-col gap-y-4 overflow-y-auto pl-8">
           {/* Home */}
           <Link
-            className="font-title flex cursor-pointer items-center justify-between gap-4 border-none text-4xl! font-semibold"
+            className="font-title flex cursor-pointer items-center justify-between gap-4 border-none text-3xl! font-semibold"
             key={DEFAULT_SECTION.caption}
             onClick={() => {
               onChange(false);
@@ -103,14 +103,12 @@ export default function PopupMenu({ className, visible, onChange }: PopupMenuPro
           {MENU_ITEMS.map((item) => {
             if (item.submenu) {
               return (
-                <div key={item.caption} className="flex flex-col items-start">
-                  <div className="font-title mb-4 text-2xl font-normal text-neutral-500">
-                    {item.caption}
-                  </div>
-                  <div className="flex flex-col gap-y-6 pl-6 text-4xl">
+                <div key={item.caption}>
+                  <div className="mb-4 block h-px w-full bg-gray-200" />
+                  <div className="flex flex-col gap-y-4 text-3xl" key={item.caption}>
                     {item.submenu.map((subItem) => (
                       <Link
-                        className="font-title mt-[-1px] flex cursor-pointer items-center justify-between border-none text-4xl! font-semibold"
+                        className="font-title mt-[-1px] flex cursor-pointer items-center justify-between border-none text-3xl! font-semibold"
                         key={subItem.slug}
                         onClick={() => {
                           onChange(false);
@@ -127,7 +125,7 @@ export default function PopupMenu({ className, visible, onChange }: PopupMenuPro
             // Regular links (News, Contact)
             return (
               <Link
-                className="font-title flex cursor-pointer items-center justify-between border-none text-4xl! font-semibold"
+                className="font-title flex cursor-pointer items-center justify-between border-none text-3xl! font-semibold"
                 key={item.slug}
                 onClick={() => {
                   onChange(false);
@@ -141,13 +139,13 @@ export default function PopupMenu({ className, visible, onChange }: PopupMenuPro
 
           {/* Login */}
           <Link
-            className="font-title mt-[-1px] flex cursor-pointer items-center justify-between border-none text-4xl! font-semibold"
+            className="font-title mt-[-1px] flex cursor-pointer items-center justify-between border-none text-3xl! font-semibold"
             onClick={() => {
               onChange(false);
             }}
             href="/app/virtual-lab"
           >
-            <div>Login</div>
+            Login
           </Link>
         </section>
         {/* <LoginButton /> */}
