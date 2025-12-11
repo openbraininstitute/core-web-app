@@ -46,11 +46,7 @@ export function Settings({ className, values, onChange }: SettingsProps) {
   };
   const handleReset = () => {
     const defaultSettings = getAtlasViewerDefaultSettings();
-    for (const key of Object.keys(defaultSettings)) {
-      const value = values[key]?.value ?? 0;
-      const defValue = defaultSettings[key].value;
-      if (value !== defValue) update(key, defValue);
-    }
+    onChange(defaultSettings);
   };
 
   return (
