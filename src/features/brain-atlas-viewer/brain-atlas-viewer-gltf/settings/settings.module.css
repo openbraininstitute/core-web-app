@@ -2,6 +2,7 @@
   position: absolute;
   left: 0;
   bottom: 0;
+  width: 100%;
   transition: all 0.3s;
   color: #fff;
   background: #000c;
@@ -31,11 +32,27 @@
   }
 
   > div {
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1em;
+  }
+
+  > div.reset {
+    display: block;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: auto;
+    height: auto;
+    transform: translateY(calc(-100% - 4px));
+    transition: all 0.3s;
+
+    &.show {
+      opacity: 1;
+    }
+
+    &.hide {
+      opacity: 0;
+    }
   }
 }
