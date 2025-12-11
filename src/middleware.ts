@@ -24,7 +24,7 @@ const FREE_ACCESS_PAGES = [
   '/app/documentation/*',
   '/gallery',
   '/gallery/*',
-  '/version',
+  '/app/version',
 
   '/app/log-in',
 

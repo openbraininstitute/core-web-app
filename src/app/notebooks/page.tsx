@@ -4,6 +4,9 @@ import LandingPage from '@/components/LandingPage';
 import { generateMetadataFromSanity } from '@/components/LandingPage/metadata';
 import { EnumSection } from '@/components/LandingPage/sections/sections';
 
+export const revalidate = 3600;
+export const dynamicParams = true;
+
 export async function generateMetadata(): Promise<Metadata> {
   const metadata = await generateMetadataFromSanity('notebooks');
   return metadata;

@@ -33,7 +33,7 @@ export function GET(req: Request) {
             background: white;
             box-shadow: 0 4px 20px rgba(0,0,0,0.4);
             overflow: hidden;
-            max-width: 600px;
+            max-width: 640px;
             width: 100%;
           }
           h3 {
@@ -68,7 +68,7 @@ export function GET(req: Request) {
       </head>
       <body>
         <div class="container">
-          <h3>Version Info</h3>
+          <h3>Version info</h3>
           <table>
             <tbody>
               ${Object.entries(versionInfo)

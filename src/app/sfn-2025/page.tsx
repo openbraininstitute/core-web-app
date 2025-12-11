@@ -11,8 +11,6 @@ import { useScrollHasStarted } from '@/utils/scroll-has-started';
 
 import styles from '@/components/LandingPage/LandingPage.module.css';
 
-export const dynamic = 'force-dynamic';
-
 export default function Page() {
   const scrollHasStarted = useScrollHasStarted();
 
