@@ -10,6 +10,8 @@
 
   > input {
     grid-column: 1/-1;
+
+    accent-color: #55a4e3;
   }
 
   > div {
