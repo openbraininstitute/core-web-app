@@ -33,6 +33,7 @@ import type {
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityTypeValue } from '@/entity-configuration/domain';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
+import { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 
 export default async function Overview({
   entity,
@@ -45,10 +46,13 @@ export default async function Overview({
   ctx: WorkspaceContext;
   isWorkflow: boolean;
 }) {
-  const fields = getViewDefinitionByExtendedType(extendedType)?.summaryViewFields ?? [];
+  const commonFields = CommonSummaryViewFields;
+  const fields = removeDuplicates(
+    getViewDefinitionByExtendedType(extendedType)?.summaryViewFields ?? [],
+    commonFields
+  );
 
   if (!entity) notFound();
-  const commonFields = CommonSummaryViewFields;
 
   let singleNeuronSimulationPayload:
     | AwaitedType<ReturnType<typeof resolveSingleNeuronSimulation>>
@@ -155,4 +159,16 @@ export default async function Overview({
       )}
     </>
   );
+}
+
+/**
+ * Prevent `extraFields` from having fields already own by `commonFields`.
+ */
+function removeDuplicates(
+  extraFields: TypeSummaryProps[],
+  commonFields: TypeSummaryProps[]
+): TypeSummaryProps[] {
+  const fieldsToExclude = new Set<string>(commonFields.map((item) => item.field));
+  const fields = extraFields.filter((item) => !fieldsToExclude.has(item.field));
+  return fields;
 }

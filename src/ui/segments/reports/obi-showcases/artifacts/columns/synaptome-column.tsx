@@ -60,7 +60,7 @@ const columns = () => {
       ),
     },
     {
-      title: 'Creation Date',
+      title: 'Registration Date',
       key: 'creationDate',
       width: '150px',
       render: (_value: any, record: SynaptomeProps, _index: number) => (
