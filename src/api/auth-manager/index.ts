@@ -10,7 +10,7 @@ export async function authManagerApi(url?: string) {
 export async function requestOfflineTokenConsent() {
   const api = await authManagerApi();
 
-  return api.post<Response>('/v1/offline-token', {
+  return api.get<Response>('/v1/offline-token', {
     headers: {
       accept: 'application/json',
       'Content-Type': 'application/json',

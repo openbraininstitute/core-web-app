@@ -1,16 +1,21 @@
+'use client';
+
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
 
-import { SharedLayout } from '@/ui/layouts/shared-layout';
-import { Icon } from '@/ui/segments/offline-consent/icon';
-import { Button } from '@/ui/molecules/button';
 import { env } from '@/env';
+import { SharedLayout } from '@/ui/layouts/shared-layout';
+import { Button } from '@/ui/molecules/button';
+import { Icon } from '@/ui/segments/offline-consent/icon';
 
-import type { ServerSideComponentProp } from '@/types/common';
+import { emitConsentGranted } from '@/services/consent';
 
-export default async function Page({
-  searchParams,
-}: ServerSideComponentProp<null, { error: string; description: string }>) {
-  const { description, error } = await searchParams;
+export default async function Page() {
+  const searchParams = useSearchParams();
+
+  const error = searchParams.get('error');
+  const description = searchParams.get('description');
 
   const isSuccess = !error && !description;
   const title = isSuccess ? 'Consent Granted Successfully' : 'Consent Error';
@@ -21,6 +26,13 @@ export default async function Page({
   const hint = isSuccess
     ? 'You can now close this window and return to your application.'
     : 'Please try again or contact support if this error persists.';
+
+  useEffect(() => {
+    if (isSuccess) {
+      emitConsentGranted();
+      setTimeout(() => window.close(), 3000);
+    }
+  }, []);
 
   return (
     <SharedLayout>

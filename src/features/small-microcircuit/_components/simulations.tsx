@@ -34,6 +34,7 @@ import { useAppNotification } from '@/components/notification';
 import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { requestOfflineTokenConsent } from '@/api/auth-manager';
+import { useConsent } from '@/services/consent';
 
 type SimulationTabProps = {
   campaignId: string;
@@ -47,6 +48,7 @@ export default function SimulationsTab({
   projectId,
 }: SimulationTabProps) {
   const notification = useAppNotification();
+  const { waitForConsent } = useConsent();
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
   const simulationsAtom = simulationsByCampaignIdAtomFamily({ campaignId, context });
   const simulations = useAtomValue(simulationsAtom);
@@ -129,6 +131,7 @@ export default function SimulationsTab({
   const runViaLaunchSystem = async (simIds: string[]) => {
     const consent = await requestOfflineTokenConsent();
     debugger;
+    await waitForConsent();
   };
 
   // TODO Refactor
