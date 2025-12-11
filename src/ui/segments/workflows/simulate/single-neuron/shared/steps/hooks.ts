@@ -1,15 +1,19 @@
 import React from 'react';
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 
 import { tgdFullscreenToggle } from '@tolokoban/tgd';
 import { EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
   ExperimentalSetupConfigurationAtomFamily,
   genericSingleNeuronSimulationPlotDataAtomFamily,
+  neuronSectionNamesAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 
 import type { PlotData } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { useMorphology } from '@/hooks/use-morphology';
+import { Morphology } from '@/services/bluenaas-single-cell/types';
 
 const THROTTLE = 1000;
 
@@ -62,4 +66,35 @@ export function useFullscreenSwitcher() {
   const refContainer = React.useRef<HTMLDivElement | null>(null);
 
   return { refContainer, toggleFullscreen: () => tgdFullscreenToggle(refContainer.current) };
+}
+
+export function useCleanMorphology(
+  meModelId: string,
+  sessionId: string,
+  callback: (morphology: Morphology) => void
+) {
+  const { virtualLabId, projectId } = useWorkspace();
+  const setSecNames = useSetAtom(neuronSectionNamesAtomFamily(sessionId));
+
+  return useMorphology({
+    modelId: meModelId,
+    callback: (morphology) => {
+      const prunedMorpho = removeNoDiameterSection(morphology);
+      callback(prunedMorpho);
+      const sectionNames = Object.keys(morphology);
+      setSecNames(sectionNames);
+    },
+    projectId,
+    virtualLabId,
+  });
+}
+
+function removeNoDiameterSection(morphology: Morphology) {
+  const pruned = Object.entries(morphology).reduce((acc: Morphology, [secName, sec]) => {
+    if (!sec.diam) return acc;
+
+    acc[secName] = sec;
+    return acc;
+  }, {});
+  return pruned satisfies Morphology;
 }

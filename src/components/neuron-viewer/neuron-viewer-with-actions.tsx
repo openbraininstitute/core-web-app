@@ -14,8 +14,6 @@ type Props = {
   meModelId: string;
   disableElectrodes?: boolean;
   disableSynapses?: boolean;
-  virtualLabId: string;
-  projectId: string;
   sessionId: string;
 };
 
@@ -23,8 +21,6 @@ export function NeuronViewerContainer({
   meModelId,
   disableElectrodes,
   disableSynapses,
-  virtualLabId,
-  projectId,
   sessionId,
 }: Props) {
   return (
@@ -47,8 +43,6 @@ export function NeuronViewerContainer({
     >
       <DefaultLoadingSuspense>
         <WebglNeuronSelector
-          projectId={projectId}
-          virtualLabId={virtualLabId}
           disableElectrodes={disableElectrodes}
           disableSynapses={disableSynapses}
           meModelId={meModelId}

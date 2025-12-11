@@ -2,21 +2,17 @@
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 
 import {
-  neuronSectionNamesAtomFamily,
   RecordLocationConfigurationAtomFamily,
   StimulationConfigurationAtomFamily,
 } from '../../context';
 import { getSessionKey } from '../../helpers';
 import {
-  DEFAULT_CURRENT_INJECTION_CONFIG,
   RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
   STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
 } from '../../constant';
+import { useCleanMorphology } from '../hooks';
 import { getColorFromGeneratedPalette } from './colors';
 import { PainterManager } from './painter';
-
-import { useMorphology } from '@/hooks/use-morphology';
-import { Morphology } from '@/services/bluenaas-single-cell/types';
 
 const atomSynapsesToShowInViewer = atom<Array<{ color: string; data: Float32Array }>>([]);
 
@@ -56,38 +52,12 @@ export function useRecordingsAndInjection(sessionId: string) {
   };
 }
 
-export function useCleanMorphology(
+export function useCleanMorphologyFor3DViewer(
   painterManager: PainterManager,
   meModelId: string,
-  projectId: string,
-  virtualLabId: string,
   sessionId: string
 ) {
-  const setSecNames = useSetAtom(neuronSectionNamesAtomFamily(sessionId));
-
-  return useMorphology({
-    modelId: meModelId,
-    callback: (morphology) => {
-      const prunedMorpho = removeNoDiameterSection(morphology);
-      painterManager.morphology = prunedMorpho;
-      const sectionNames = Object.keys(morphology);
-      setSecNames(sectionNames);
-
-      if (!sectionNames.includes(DEFAULT_CURRENT_INJECTION_CONFIG.inject_to)) {
-        throw new Error('No soma section present');
-      }
-    },
-    projectId,
-    virtualLabId,
+  return useCleanMorphology(meModelId, sessionId, (morphology) => {
+    painterManager.morphology = morphology;
   });
-}
-
-function removeNoDiameterSection(morphology: Morphology) {
-  const pruned = Object.entries(morphology).reduce((acc: Morphology, [secName, sec]) => {
-    if (!sec.diam) return acc;
-
-    acc[secName] = sec;
-    return acc;
-  }, {});
-  return pruned satisfies Morphology;
 }
