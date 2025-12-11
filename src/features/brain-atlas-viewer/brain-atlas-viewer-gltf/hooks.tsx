@@ -31,6 +31,7 @@ export function usePainter(): Painter {
         key: '3d-mesh-error',
       });
     });
+    refPainter.current.uniforms = getAtlasViewerDefaultSettings();
   }
 
   return refPainter.current;
