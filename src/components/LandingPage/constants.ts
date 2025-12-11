@@ -50,7 +50,6 @@ export const MENU_ITEMS: Readonly<Array<{ caption: string; index: EnumSection; s
   EnumSection.Pricing,
   EnumSection.Team,
   EnumSection.Resources,
-  EnumSection.Sfn2025,
   EnumSection.Gallery,
   EnumSection.Contact,
 ].map((index) => SECTIONS.find((section) => section.index === index) ?? DEFAULT_SECTION);
