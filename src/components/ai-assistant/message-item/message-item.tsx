@@ -3,7 +3,6 @@
 import React from 'react';
 import { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
 
-import { isEqual } from 'es-toolkit/predicate';
 import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
 import ToolsProgress from './tools-progress';
 import ToolsComponents from './tools-components';
@@ -33,7 +32,6 @@ function RawMessageItem({ className, value }: MessageItemProps) {
 function MessageChild({ value, debug }: { value: UIMessage; debug: boolean }): React.ReactNode {
   const { setPanelWidth } = usePanelWidth();
   const deferredParts = React.useDeferredValue(value.parts);
-  const isContentPending = !isEqual(value.parts, deferredParts);
 
   switch (value.role) {
     case 'user':
@@ -49,15 +47,13 @@ function MessageChild({ value, debug }: { value: UIMessage; debug: boolean }): R
       );
     case 'assistant': {
       return (
-        <div
-          className={styles.assistant}
-          style={{ opacity: isContentPending ? 0.8 : 1, transition: 'opacity 0.2s' }}
-        >
-          {deferredParts.map((part) => {
+        <div className={styles.assistant}>
+          {deferredParts.map((part, index) => {
             if (part.type === 'text' && part.text !== '') {
               return (
                 <GithubFlavorMarkdown
-                  key={`text-${part.text}`}
+                  // eslint-disable-next-line react/no-array-index-key
+                  key={`text-${index}`}
                   className={styles.markdown}
                   onLinkClicked={(external) => {
                     if (!external) setPanelWidth(MINIMAL_PANEL_SIZE);
