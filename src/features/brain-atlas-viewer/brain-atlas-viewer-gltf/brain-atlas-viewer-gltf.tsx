@@ -1,7 +1,7 @@
 import React from 'react';
 import { CameraFilled } from '@ant-design/icons';
 
-import { usePainter, useSettingsValues, useVisibleRegions } from './hooks';
+import { usePainter, useAtlasViewerSettingsValues, useVisibleRegions } from './hooks';
 import { Settings } from './settings/settings';
 
 import { classNames } from '@/util/utils';
@@ -19,7 +19,7 @@ export function BrainAtlasViewerGltf({ className, dataKey, onLoading }: BrainAtl
   const [showResetCamera, setShowResetCamera] = React.useState(false);
   const accessToken = useAccessToken();
   const painter = usePainter();
-  const [values, setValues] = useSettingsValues(painter);
+  const [values, setValues] = useAtlasViewerSettingsValues(painter);
   const { region, regions } = useVisibleRegions(dataKey);
   React.useEffect(() => {
     if (accessToken) {
