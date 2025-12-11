@@ -1,5 +1,3 @@
-// TODO: Remove this module once auth-manager integration is done in the task launcher.
-
 import { authApiClient } from '@/api/apiClient';
 
 export async function authManagerApi(url?: string) {
@@ -7,13 +5,18 @@ export async function authManagerApi(url?: string) {
   return api;
 }
 
+type RequestConsentResponse = {
+  data: {
+    consent_url: string;
+    session_state_id: string;
+    message: string;
+  };
+};
+
 export async function requestOfflineTokenConsent() {
   const api = await authManagerApi();
 
-  return api.get<Response>('/v1/offline-token', {
-    headers: {
-      accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
+  return api.get<RequestConsentResponse>('/v1/offline-token', {
+    headers: { accept: 'application/json' },
   });
 }

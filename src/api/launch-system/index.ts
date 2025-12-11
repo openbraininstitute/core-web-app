@@ -28,7 +28,7 @@ export async function runSimulation({
 }: Params) {
   const api = await launchSystemApi();
 
-  return api.post<Response>('/simulation', {
+  return api.post<any>('/simulation', {
     headers: {
       ...getEntityCoreContext(ctx).headers,
       accept: 'application/json',

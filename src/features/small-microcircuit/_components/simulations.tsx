@@ -1,9 +1,3 @@
-import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
-import { match } from 'ts-pattern';
-import type { CheckboxProps } from 'antd';
-import { Checkbox, ConfigProvider } from 'antd';
-import { useAtomValue, useSetAtom } from 'jotai';
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import ApiError from '@/api/error';
 import {
@@ -13,6 +7,12 @@ import {
   simulationsByCampaignIdAtomFamily,
 } from '@/features/small-microcircuit/_components/atoms';
 import { FileViewer } from '@/features/small-microcircuit/_components/file-viewer';
+import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
+import type { CheckboxProps } from 'antd';
+import { Checkbox, ConfigProvider, Form, Input, InputNumber, Modal } from 'antd';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { match } from 'ts-pattern';
 
 import { File, SimulationFiles } from '@/features/small-microcircuit/_components/simulation-files';
 import { SimulationStatusBadge } from '@/features/small-microcircuit/_components/simulation-status';
@@ -26,15 +26,17 @@ import { MessageType } from '@/services/small-scale-simulator/types';
 
 import { classNames } from '@/util/utils';
 
-import { getErrorMessage } from '@/utils/error';
 import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
-import { ExecutionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
 import { useAppNotification } from '@/components/notification';
+import { ExecutionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
+import { getErrorMessage } from '@/utils/error';
 
-import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
-import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { requestOfflineTokenConsent } from '@/api/auth-manager';
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { runSimulation } from '@/api/launch-system';
+import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
 import { useConsent } from '@/services/consent';
+import { log } from '@/utils/logger';
 
 type SimulationTabProps = {
   campaignId: string;
@@ -72,6 +74,9 @@ export default function SimulationsTab({
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [filesLoading, setFilesLoading] = useState(false);
+  const [launchSystemParamsModalOpen, setLaunchSystemParamsModalOpen] = useState(false);
+  const [waitingForConsent, setWaitingForConsent] = useState(false);
+  const [form] = Form.useForm();
 
   const activeSimulationExecStatus = activeSimulation && statusMap?.get(activeSimulation.id);
 
@@ -128,10 +133,35 @@ export default function SimulationsTab({
     return () => clearInterval(intervalId);
   }, [fetchRemoteSimExecStatuseMap, simRequestInProgress, statusMap]);
 
+  // TODO: this is a POC, refactor once confirmed viable.
   const runViaLaunchSystem = async (simIds: string[]) => {
+    form.setFieldsValue({ simulationId: simIds[0] });
+    setLaunchSystemParamsModalOpen(true);
+  };
+
+  const handleModalOk = async () => {
+    const values = form.getFieldsValue();
+    setWaitingForConsent(true);
+
     const consent = await requestOfflineTokenConsent();
-    debugger;
+    window.open(consent.data.consent_url, '_blank');
+
     await waitForConsent();
+
+    const submissionRes = await runSimulation({
+      ctx: { virtualLabId, projectId },
+      simulationId: values.simulationId,
+      name: values.name,
+      instances: values.instances,
+      instanceType: values.instanceType,
+    });
+
+    log('info', submissionRes);
+
+    setWaitingForConsent(false);
+    setLaunchSystemParamsModalOpen(false);
+
+    notification.success({ message: `Simulation submitted successfuly`, duration: 10 });
   };
 
   // TODO Refactor
@@ -269,6 +299,33 @@ export default function SimulationsTab({
           loading={filesLoading}
         />
       </div>
+
+      <Modal
+        title="Launch Configuration"
+        open={launchSystemParamsModalOpen}
+        onOk={handleModalOk}
+        onCancel={() => setLaunchSystemParamsModalOpen(false)}
+        confirmLoading={waitingForConsent}
+        cancelButtonProps={{ disabled: waitingForConsent }}
+      >
+        {waitingForConsent && (
+          <div className="mb-4 text-center text-gray-600">Waiting for user consent...</div>
+        )}
+        <Form form={form} layout="vertical">
+          <Form.Item label="Simulation ID" name="simulationId">
+            <Input readOnly disabled={waitingForConsent} />
+          </Form.Item>
+          <Form.Item label="Name" name="name">
+            <Input disabled={waitingForConsent} />
+          </Form.Item>
+          <Form.Item label="Instances" name="instances">
+            <InputNumber style={{ width: '100%' }} disabled={waitingForConsent} />
+          </Form.Item>
+          <Form.Item label="Instance Type" name="instanceType">
+            <Input disabled={waitingForConsent} />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }
