@@ -308,7 +308,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
       <div className="flex flex-col p-6">
         <div className="border-neutral-2 mb-6 flex items-start justify-between border-b pb-4">
           <div className="flex flex-col gap-1">
-            <h2 className="text-primary-9 text-2xl font-bold">Submit Feedback</h2>
+            <h2 className="text-primary-9 text-2xl font-bold">Submit feedback</h2>
             <p className="text-neutral-5 text-base">
               Help us improve by sharing your thoughts, reporting bugs, or suggesting new features.
             </p>
@@ -327,7 +327,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
         <div className="flex min-h-[400px] flex-col items-center justify-center gap-6">
           <CheckCircleFilled className="text-green-500" style={{ fontSize: '80px' }} />
           <p className="text-primary-9 text-center text-xl font-normal">
-            Thanks for providing us with feedbacks.
+            Thank you for your feedback.
           </p>
         </div>
       </div>
@@ -349,7 +349,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
         )}
       >
         <div className="flex flex-col gap-1">
-          <h2 className="text-primary-9 text-2xl font-bold">Submit Feedback</h2>
+          <h2 className="text-primary-9 text-2xl font-bold">Submit feedback</h2>
           <p className="text-neutral-5 text-base">
             Help us improve by sharing your thoughts, reporting bugs, or suggesting new features.
           </p>
