@@ -76,7 +76,7 @@ const columns = () => {
       ),
     },
     {
-      title: 'Creation date',
+      title: 'Registration date',
       key: 'creationDate',
       width: '150px',
       render: (_value: any, record: EModelsProps, _index: number) => {
