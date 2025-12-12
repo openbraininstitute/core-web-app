@@ -400,3 +400,59 @@ function getSegmentsOfColor(segments: Record<string, Segment[]>, color: string):
   segments[color] = newItem;
   return newItem;
 }
+
+function resizeCanvas(canvas: HTMLCanvasElement) {
+  if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+  }
+}
+
+function feedSegments(segments: Record<string, Segment[]>, children: TreeItem[], levels: number[]) {
+  for (const item of children) {
+    feedSegments(segments, item.children, levels);
+    const color = resolveColor(item.section.name);
+    const segmentsOfSameColor: Segment[] = getSegmentsOfColor(segments, color);
+    for (const { rank, level } of item.children) {
+      const x = (rank + 0.5) / levels[level];
+      const y = level / levels.length;
+      const h = 1 / levels.length;
+      segmentsOfSameColor.push({
+        x0: x,
+        y0: y,
+        x1: x,
+        y1: y + h,
+      });
+    }
+  }
+}
+
+function resolveColor(name: string): string {
+  const prefix = name.slice(0, 4).toLocaleLowerCase();
+  switch (prefix) {
+    case 'axon':
+      return '#07f';
+    case 'dend':
+      return '#F55';
+    case 'basa':
+      return '#F33';
+    case 'apic':
+      return '#F8f';
+    case 'myel':
+      return `#778`;
+    case 'soma':
+      return '#dde';
+
+    default:
+      return '#fff';
+  }
+}
+
+function getSegmentsOfColor(segments: Record<string, Segment[]>, color: string): Segment[] {
+  const item = segments[color];
+  if (item) return item;
+
+  const newItem: Segment[] = [];
+  segments[color] = newItem;
+  return newItem;
+}
