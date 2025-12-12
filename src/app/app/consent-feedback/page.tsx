@@ -30,7 +30,10 @@ export default function Page() {
   useEffect(() => {
     if (isSuccess) {
       emitConsentGranted();
-      setTimeout(() => window.close(), 3000);
+
+      if (typeof window !== 'undefined') {
+        setTimeout(() => window.close(), 3000);
+      }
     }
   });
 

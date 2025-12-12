@@ -3,7 +3,9 @@ import { useEffect, useRef, useState } from 'react';
 const MESSAGE_TYPE = 'consent_granted';
 
 export function emitConsentGranted() {
-  window.opener.postMessage({ messageType: MESSAGE_TYPE }, window.location.origin);
+  if (typeof window === 'undefined') return;
+  // TODO: provide explicit origin, remove wildcard.
+  window.opener?.postMessage({ messageType: MESSAGE_TYPE }, '*');
 }
 
 export function useConsent() {
