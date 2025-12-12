@@ -5,6 +5,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { useAtomValue } from 'jotai';
 
 import ReloadIcon from '../icons/Reload';
+import { ViewerDendrogram } from '../viewers/viewer-dendrogram';
 import { NeuronLoader } from './plugins/neuron-loader';
 
 import { DefaultLoadingSuspense } from '@/components/DefaultLoadingSuspense';
@@ -74,6 +75,7 @@ export function NeuronViewerContainer({
           disableSynapses={disableSynapses}
           disableClick={simulationStatus?.status === SimulationStatus.LAUNCHED}
         />
+        <ViewerDendrogram morphology={morphology} />
       </DefaultLoadingSuspense>
     </ErrorBoundary>
   );
