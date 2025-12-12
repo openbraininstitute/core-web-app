@@ -35,7 +35,7 @@ class PainterDendrogram {
     const { context } = this;
     if (!context) return;
 
-    const tree = createTreeStructure(this.morphology);
+    createTreeStructure(this.morphology);
   }
 }
 

@@ -11,7 +11,7 @@ import { Icon } from '@/ui/segments/offline-consent/icon';
 
 import { emitConsentGranted } from '@/services/consent';
 
-export default async function Page() {
+export default function Page() {
   const searchParams = useSearchParams();
 
   const error = searchParams.get('error');
@@ -32,7 +32,7 @@ export default async function Page() {
       emitConsentGranted();
       setTimeout(() => window.close(), 3000);
     }
-  }, []);
+  });
 
   return (
     <SharedLayout>
