@@ -160,7 +160,7 @@ export async function resolveSimulationByCampaignId({
 
 export const MicrocircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
   group: EntityTypeGroup.Simulations,
-  title: 'Microcircuit (alpha)',
+  title: 'Microcircuit',
   extendedType: ExtendedEntitiesTypeDict.MicrocircuitSimulation,
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.MicrocircuitSimulation,

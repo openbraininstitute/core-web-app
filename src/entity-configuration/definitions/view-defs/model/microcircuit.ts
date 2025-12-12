@@ -4,7 +4,7 @@ import { EntityCoreFields } from '../../fields-defs/enums';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 export const ViewDefForMicrocircuit: ViewDefinitionConfig = {
-  title: 'Microcircuit (alpha)',
+  title: 'Microcircuit',
   name: EntitySlug.Microcircuit,
   curated: false,
   columns: [
@@ -15,6 +15,6 @@ export const ViewDefForMicrocircuit: ViewDefinitionConfig = {
     EntityCoreFields.CircuitNumberSynapses,
     EntityCoreFields.CircuitNumberConnections,
     EntityCoreFields.CreatedBy,
-    EntityCoreFields.CreationDate,
+    EntityCoreFields.RegistrationDate,
   ],
 };

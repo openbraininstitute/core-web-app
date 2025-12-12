@@ -16,8 +16,7 @@ export const microcircuitFlag = defineFlag<boolean>({
   defaultValue: false,
   values: [true, false],
   description: 'Enable microcircuit (simulations)',
-  // visible: ['local', 'development'].includes(env.NEXT_PUBLIC_DEPLOYMENT_ENV),
-  visible: true,
+  visible: ['local', 'development'].includes(env.NEXT_PUBLIC_DEPLOYMENT_ENV),
 });
 
 export const flags = [aiPanelStateFlag, microcircuitFlag] as const;
