@@ -1,7 +1,7 @@
+import Link from 'next/link';
+
 import SocialMediaLinks from '../../components/social-media-links';
-import { MENU_ITEMS } from '../../constants';
-import { EnumSection } from '../../sections/sections';
-import { gotoSection } from '../../utils';
+import { getSection } from '../../utils';
 import NewsLetterSubscription from './NewsLetterSubscription';
 
 import { classNames } from '@/util/utils';
@@ -12,6 +12,27 @@ interface FooterPanelProps {
   className?: string;
 }
 
+interface FooterLink {
+  label: string;
+  href: string;
+}
+
+const FOOTER_LINKS: FooterLink[] = [
+  { label: 'About OBI', href: '/about' },
+  { label: 'Our story', href: '/the-real-digital-brain-story' },
+  { label: 'Mission', href: '/mission' },
+  { label: 'Team', href: '/team' },
+  { label: 'Notebooks', href: '/notebooks' },
+  { label: 'Gallery', href: '/gallery' },
+  { label: 'Pricing', href: '/pricing' },
+  { label: 'News', href: '/news' },
+  { label: 'Contact', href: '/contact' },
+  { label: 'Login', href: '/app/virtual-lab' },
+  { label: 'Terms and conditions', href: '/terms' },
+  { label: 'Financing policy', href: '/financing' },
+  { label: 'Privacy policy', href: '/privacy' },
+];
+
 export default function FooterPanel({ className }: FooterPanelProps) {
   return (
     <div className={classNames(className, styles.footerPanel)}>
@@ -20,29 +41,22 @@ export default function FooterPanel({ className }: FooterPanelProps) {
         <div className={styles.copyright}>Copyright © 2025 - Open Brain Institute</div>
       </div>
       <div className={styles.links}>
-        {MENU_ITEMS.map(({ caption, index }) => (
-          <Section key={caption} section={index}>
-            {caption}
-          </Section>
+        {FOOTER_LINKS.map((link) => (
+          <div key={link.href} className={styles.section}>
+            <Link href={link.href}>{link.label}</Link>
+          </div>
         ))}
-        <Section section={EnumSection.TermsAndConditions}>Terms and conditions</Section>
-        <Section section={EnumSection.Financing}>Financing policy</Section>
-        <Section section={EnumSection.PrivacyPolicy}>Privacy policy</Section>
         <div className={styles.socialmedia}>
           <SocialMediaLinks />
         </div>
       </div>
-      <NewsLetterSubscription className={styles.subscribe} onSectionChange={gotoSection} />
-    </div>
-  );
-}
-
-function Section({ section, children }: { section: EnumSection; children: string }) {
-  return (
-    <div className={styles.section}>
-      <button type="button" onClick={() => gotoSection(section)}>
-        {children}
-      </button>
+      <NewsLetterSubscription
+        className={styles.subscribe}
+        onSectionChange={(section) => {
+          const sectionData = getSection(section);
+          window.location.href = sectionData.slug;
+        }}
+      />
     </div>
   );
 }

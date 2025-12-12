@@ -1,17 +1,20 @@
+'use client';
+
 import { DatePicker, Form, Input, InputNumber, Space } from 'antd';
 import { InfoCircleFilled } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
 import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
+import { CellMorphologySchema } from '@/ui/segments/contribute/cell-morphology/schema';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
-import {
-  label,
-  CellMorphologySchema,
-  zodFieldValidator,
-} from '@/ui/segments/contribute/cell-morphology/helpers';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { cn } from '@/utils/css-class';
+import {
+  renderLabel,
+  createZodFieldValidator,
+  RequiredFieldMarker,
+} from '@/ui/segments/contribute/shared/helpers';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
@@ -34,11 +37,11 @@ export function Setup() {
     <div className="h-full w-full">
       <Form.Item
         name={['setup', 'name']}
-        label={label('Name', 'main', <sup className="text-destructive">*</sup>)}
+        label={renderLabel('Name', 'main', RequiredFieldMarker)}
         rules={[
           {
             required: true,
-            validator: zodFieldValidator(CellMorphologySchema, 'setup.name', form),
+            validator: createZodFieldValidator(CellMorphologySchema, 'setup.name', form),
           },
         ]}
       >
@@ -48,13 +51,14 @@ export function Setup() {
           placeholder="Enter cell morphology name"
         />
       </Form.Item>
+
       <Form.Item
         name={['setup', 'description']}
-        label={label('Description', 'main', <sup className="text-destructive">*</sup>)}
+        label={renderLabel('Description', 'main', RequiredFieldMarker)}
         rules={[
           {
             required: true,
-            validator: zodFieldValidator(CellMorphologySchema, 'setup.description', form),
+            validator: createZodFieldValidator(CellMorphologySchema, 'setup.description', form),
           },
         ]}
       >
@@ -64,37 +68,40 @@ export function Setup() {
           placeholder="Enter cell morphology description"
         />
       </Form.Item>
+
       <Form.Item
         name={['setup', 'brain_region_id']}
-        label={label('Brain region', 'main', <sup className="text-destructive">*</sup>)}
+        label={renderLabel('Brain region', 'main', RequiredFieldMarker)}
         rules={[
           {
             required: true,
-            validator: zodFieldValidator(CellMorphologySchema, 'setup.brain_region_id', form),
+            validator: createZodFieldValidator(CellMorphologySchema, 'setup.brain_region_id', form),
           },
         ]}
       >
         <BrainRegionDropdown />
       </Form.Item>
+
       <Form.Item
         name={['setup', 'experiment_date']}
-        label={label('Experiment date', 'main')}
+        label={renderLabel('Experiment date', 'main')}
         rules={[
           {
             required: true,
-            validator: zodFieldValidator(CellMorphologySchema, 'setup.experiment_date', form),
+            validator: createZodFieldValidator(CellMorphologySchema, 'setup.experiment_date', form),
           },
         ]}
       >
         <DatePicker className="h-12 w-full rounded-full" format="DD/MM/YYYY" maxDate={dayjs()} />
       </Form.Item>
+
       <Form.Item
         name={['setup', 'contact_email']}
-        label={label('Contact email', 'main')}
+        label={renderLabel('Contact email', 'main')}
         rules={[
           {
             required: false,
-            validator: zodFieldValidator(CellMorphologySchema, 'setup.contact_email', form),
+            validator: createZodFieldValidator(CellMorphologySchema, 'setup.contact_email', form),
           },
         ]}
       >
@@ -103,20 +110,22 @@ export function Setup() {
           placeholder="Enter contact email"
         />
       </Form.Item>
+
       <Form.Item
         name={['setup', 'published_in']}
-        label={label('Published in', 'main')}
+        label={renderLabel('Published in', 'main')}
         rules={[
           {
             required: false,
-            validator: zodFieldValidator(CellMorphologySchema, 'setup.published_in', form),
+            validator: createZodFieldValidator(CellMorphologySchema, 'setup.published_in', form),
           },
         ]}
       >
         <Input className="h-12 rounded-full placeholder:text-sm" placeholder="Enter published in" />
       </Form.Item>
+
       <Form.Item
-        label={label('Location (x, y, z)', 'main')}
+        label={renderLabel('Location (x, y, z)', 'main')}
         tooltip={{
           icon: <InfoCircleFilled />,
           className: '[&_svg]:text-primary-8!',
@@ -146,7 +155,7 @@ export function Setup() {
             validateTrigger={['onChange', 'onBlur']}
             rules={[
               {
-                validator: zodFieldValidator(CellMorphologySchema, 'setup.location.x', form),
+                validator: createZodFieldValidator(CellMorphologySchema, 'setup.location.x', form),
               },
             ]}
             className="w-1/3"
@@ -163,7 +172,7 @@ export function Setup() {
             validateTrigger={['onChange', 'onBlur']}
             rules={[
               {
-                validator: zodFieldValidator(CellMorphologySchema, 'setup.location.y', form),
+                validator: createZodFieldValidator(CellMorphologySchema, 'setup.location.y', form),
               },
             ]}
             className="w-1/3"
@@ -180,7 +189,7 @@ export function Setup() {
             validateTrigger={['onChange', 'onBlur']}
             rules={[
               {
-                validator: zodFieldValidator(CellMorphologySchema, 'setup.location.z', form),
+                validator: createZodFieldValidator(CellMorphologySchema, 'setup.location.z', form),
               },
             ]}
             className="w-1/3"

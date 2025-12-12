@@ -28,8 +28,8 @@ export class AIAssistantTool {
     this.icon = getIcon(id);
   }
 
-  get docURL() {
-    return `/app/documentation/ai-chat-tools/${this.id}`;
+  docURL(vlab: string, project: string) {
+    return `/app/virtual-lab/${vlab}/${project}/help?section=ai-tools&tool=${this.id}`;
   }
 }
 

@@ -1,12 +1,14 @@
+/* eslint-disable no-param-reassign */
 import React from 'react';
 import compact from 'es-toolkit/compat/compact';
 import find from 'es-toolkit/compat/find';
-import { useAtomValue } from 'jotai';
-import { unwrap } from 'jotai/utils';
+import { useAtom, useAtomValue } from 'jotai';
+import { atomWithStorage, unwrap } from 'jotai/utils';
 import { TgdColor, TgdVec4 } from '@tolokoban/tgd';
 
 import { brainRegionAtlasAtom } from '../context';
 import { Painter } from './painter';
+import { SettingsDefinitions } from './settings';
 import { VisibleRegion } from './types';
 
 import {
@@ -29,6 +31,7 @@ export function usePainter(): Painter {
         key: '3d-mesh-error',
       });
     });
+    refPainter.current.uniforms = getAtlasViewerDefaultSettings();
   }
 
   return refPainter.current;
@@ -69,4 +72,60 @@ export function useVisibleRegions(dataKey: string): {
 export function makeColor(textColor: string): TgdVec4 {
   const color = new TgdColor(textColor);
   return new TgdVec4(color.R, color.G, color.B, 1);
+}
+
+export function getAtlasViewerDefaultSettings(): SettingsDefinitions {
+  return {
+    shadowIntensity: {
+      label: 'Shadow strength',
+      value: 0.1,
+    },
+    shadowThickness: {
+      label: 'Shadow spread',
+      min: 0,
+      max: 2,
+      value: 1,
+    },
+    specularExponent: {
+      label: 'Specular exponent',
+      value: 10,
+      min: 0,
+      max: 50,
+    },
+    specularIntensity: {
+      label: 'Specular intensity',
+      value: 0.05,
+    },
+    light: {
+      label: 'Points luminance',
+      value: 1,
+    },
+    ghostExponent: {
+      label: 'X-ray exponent',
+      value: 2.5,
+      min: 0,
+      max: 50,
+    },
+    ghostIntensity: {
+      label: 'X-ray intensity',
+      value: 0.7,
+      min: 0,
+      max: 50,
+    },
+  };
+}
+
+const atlasViewerSettingsAtom = atomWithStorage(
+  'AtlasViewerSettings',
+  getAtlasViewerDefaultSettings()
+);
+
+export function useAtlasViewerSettingsValues(
+  painter: Painter
+): [values: SettingsDefinitions, setValues: (values: SettingsDefinitions) => void] {
+  const [values, setValues] = useAtom(atlasViewerSettingsAtom);
+  React.useEffect(() => {
+    painter.uniforms = values;
+  }, [values, painter]);
+  return [values, setValues];
 }

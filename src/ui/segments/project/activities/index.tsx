@@ -40,7 +40,7 @@ export function ProjectActivities() {
     type: get(Scales, [entityType, activity], null),
   });
 
-  const { data, isLoading, isDependenciesLoading, isQueryEnabled } = useQueryActivity({
+  const { data, isLoading, isQueryEnabled } = useQueryActivity({
     activity,
     selectionType: entityType,
     entityType: entity?.extendedType!,
@@ -109,12 +109,7 @@ export function ProjectActivities() {
   ];
 
   const shouldShowEmptyState =
-    data &&
-    !data.pagination.total_items &&
-    !isDependenciesLoading &&
-    !isQueryEnabled &&
-    activity &&
-    entityType;
+    data && !data.pagination.total_items && !isQueryEnabled && activity && entityType;
 
   return (
     <Card className="w-full shadow-xs">

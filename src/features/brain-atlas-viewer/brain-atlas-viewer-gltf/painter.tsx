@@ -5,7 +5,6 @@ import {
   TgdContext,
   TgdDataGlb,
   TgdGeometryGltf,
-  TgdPainter,
   TgdPainterClear,
   TgdPainterGroup,
   TgdPainterPointsCloud,
@@ -17,8 +16,10 @@ import {
 
 import { setCamera } from './camera';
 import { VisibleRegion } from './types';
+import { SettingsValues } from './settings';
 import { getBrainRegionMeshArrayBuffer, getPointCouldData } from './services/services';
 import { makeColor } from './hooks';
+
 import { logError } from '@/util/logger';
 import GenericEvent from '@/util/generic-event';
 
@@ -38,9 +39,9 @@ export class Painter {
 
   private group: TgdPainterGroup | null = null;
 
-  private regionPainters = new Map<string, TgdPainter>();
+  private regionPainters = new Map<string, TgdPainterXRay>();
 
-  private pointCloudPainter: TgdPainter | null = null;
+  private pointCloudPainter: TgdPainterPointsCloud | null = null;
 
   private pointCloudId = -1;
 
@@ -52,8 +53,20 @@ export class Painter {
 
   private _loadingPointCloud = false;
 
+  private _uniforms: SettingsValues = {};
+
   constructor(private readonly backgroundColor = '#002766') {
     this.ID = globalId++;
+  }
+
+  get uniforms() {
+    return this._uniforms;
+  }
+
+  set uniforms(value: SettingsValues) {
+    this._uniforms = structuredClone(value);
+    this.applyRegionsUniforms();
+    this.context?.paint();
   }
 
   public readonly start = (canvas: HTMLCanvasElement | null) => {
@@ -83,6 +96,21 @@ export class Painter {
           children: [group],
         })
       );
+      context.logic.add(() => {
+        const { pointCloudPainter, uniforms } = this;
+        if (pointCloudPainter && uniforms) {
+          const shadowIntensity = uniforms.shadowIntensity?.value ?? 0.5;
+          const shadowThickness = uniforms.shadowThickness?.value ?? 1;
+          const specularIntensity = uniforms.specularIntensity?.value ?? 0;
+          const specularExponent = uniforms.specularExponent?.value ?? 10;
+          const light = uniforms.light?.value ?? 1;
+          pointCloudPainter.shadowIntensity = shadowIntensity;
+          pointCloudPainter.shadowThickness = shadowThickness;
+          pointCloudPainter.specularExponent = specularExponent;
+          pointCloudPainter.specularIntensity = specularIntensity;
+          pointCloudPainter.light = light;
+        }
+      });
       context.paint();
     }
   };
@@ -131,6 +159,8 @@ export class Painter {
     const nextRegionsToAdd = this.getNextRegionsToAdd();
     if (nextRegionsToAdd) {
       this.setRegions(nextRegionsToAdd.regions, nextRegionsToAdd.accessToken);
+    } else {
+      this.applyRegionsUniforms();
     }
   }
 
@@ -149,7 +179,7 @@ export class Painter {
         const dataPoint = await getPointCouldData(annotationValue, accessToken);
         const painter = new TgdPainterPointsCloud(context, {
           dataPoint,
-          minSizeInPixels: 2,
+          minSizeInPixels: 5,
           texture: new TgdTexture2D(context).loadBitmap(tgdCanvasCreateFill(1, 1, color)),
         });
         group.add(painter);
@@ -164,6 +194,23 @@ export class Painter {
 
   private getNextRegionsToAdd() {
     return this.nextRegionsToAdd;
+  }
+
+  /**
+   * Apply uniforms for region meshes materials
+   */
+  private applyRegionsUniforms() {
+    const { context } = this;
+    if (!context) return;
+
+    const { uniforms } = this;
+    const exponent = uniforms.ghostExponent?.value ?? 2;
+    const intensity = uniforms.ghostIntensity?.value ?? 1;
+    for (const painter of this.regionPainters.values()) {
+      painter.exponent = exponent;
+      painter.intensity = intensity;
+    }
+    context.paint();
   }
 
   private async addMesh(data: ArrayBuffer | null, region: VisibleRegion) {

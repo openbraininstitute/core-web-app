@@ -59,7 +59,7 @@
   display: inline-flex;
   cursor: pointer;
   padding: 0.5em 0.5em;
-  font-size: 1rem;
+  font-size: var(--font-size-S);
 }
 
 .links > div.section {
@@ -94,12 +94,14 @@
   flex-direction: row;
   margin: 0;
   padding: 0;
+  font-size: var(--font-size-S);
 }
 
 .links > div.section > button {
   cursor: pointer;
   border-radius: 999vmax;
   padding: 0 0.3em;
+  font-size: var(--font-size-S);
 }
 
 .links > * {

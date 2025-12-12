@@ -4,7 +4,7 @@ import React from 'react';
 import { PainterManager, usePainterController, usePainterManager } from './painter';
 import { HintPanel } from './hint';
 import ZoomSlider from './zoom-slider';
-import { useCleanMorphology } from './hooks';
+import { useCleanMorphologyFor3DViewer } from './hooks';
 import LegendOverlay from './legend-overlay';
 import { ButtonResetCamera } from './button-reset-camera';
 
@@ -14,8 +14,6 @@ import { NeuronLoader } from '@/components/neuron-viewer/plugins/neuron-loader';
 import styles from './webgl-neuron-selector.module.css';
 
 export interface WebglNeuronSelectorProps {
-  projectId: string;
-  virtualLabId: string;
   meModelId: string;
   sessionId: string;
   disableElectrodes?: boolean;
@@ -24,20 +22,11 @@ export interface WebglNeuronSelectorProps {
 
 // eslint-disable-next-line react/display-name
 export const WebglNeuronSelector = React.memo(
-  ({
-    projectId,
-    virtualLabId,
-    meModelId,
-    sessionId,
-    disableElectrodes,
-    disableSynapses,
-  }: WebglNeuronSelectorProps) => {
+  ({ meModelId, sessionId, disableElectrodes, disableSynapses }: WebglNeuronSelectorProps) => {
     const painterManager = usePainterManager();
     return (
       <WebglNeuronSelectorContent
         painterManager={painterManager}
-        projectId={projectId}
-        virtualLabId={virtualLabId}
         meModelId={meModelId}
         sessionId={sessionId}
         disableElectrodes={disableElectrodes}
@@ -52,8 +41,6 @@ type WebglNeuronSelectorContentProps = WebglNeuronSelectorProps & {
 };
 
 function WebglNeuronSelectorContent({
-  projectId,
-  virtualLabId,
   meModelId,
   sessionId,
   painterManager,
@@ -61,13 +48,7 @@ function WebglNeuronSelectorContent({
   disableSynapses = false,
 }: WebglNeuronSelectorContentProps) {
   usePainterController(painterManager, sessionId, disableElectrodes, disableSynapses);
-  const { loading, error } = useCleanMorphology(
-    painterManager,
-    meModelId,
-    projectId,
-    virtualLabId,
-    sessionId
-  );
+  const { loading, error } = useCleanMorphologyFor3DViewer(painterManager, meModelId, sessionId);
   if (error) return <pre>{JSON.stringify(error, null, 2)}</pre>;
 
   return (

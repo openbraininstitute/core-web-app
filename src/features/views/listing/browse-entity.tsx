@@ -144,7 +144,10 @@ export function BrowseEntityScope({
     requireBrainRegion,
     defaultBrainRegion,
     useKeepPreviousData: true,
-    extraQueryParams,
+    extraQueryParams: {
+      ...extraQueryParams,
+      ...entity?.api.config.extraRequiredListFilters,
+    },
     enabled: ({ queryKey }) => {
       const [{ queryParameters }] = queryKey;
       if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))

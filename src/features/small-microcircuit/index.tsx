@@ -26,6 +26,7 @@ export default function SimulationCampaignConfiguration({
   projectId,
   initialCampaignId,
   initialConfig,
+  defaultTab = 'simulations',
   readOnly,
   className,
 }: {
@@ -34,11 +35,12 @@ export default function SimulationCampaignConfiguration({
   projectId: string;
   initialCampaignId?: string;
   initialConfig?: Config;
+  defaultTab?: TabType;
   readOnly?: boolean;
   className?: string;
 }) {
   //  const router = useRouter();
-  const [tab, setTab] = useState<TabType>('configuration');
+  const [tab, setTab] = useState<TabType>(defaultTab);
   const [configTab, setConfigTab] = useState<string>('info');
   const [editing, setEditing] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('');

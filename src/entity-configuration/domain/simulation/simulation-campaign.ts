@@ -7,7 +7,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
-import { getCircuits } from '@/api/entitycore/queries/model/circuit';
+import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
@@ -25,6 +25,7 @@ import type {
   ICircuitSimulationCampaignFilter,
 } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { WorkspaceContext, AwaitedType } from '@/types/common';
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 
 // NOTE: this is due entitycore do not support yet
 async function resolveSimulationCampaigns({
@@ -105,7 +106,21 @@ export async function resolveSimulationByCampaignId({
     filter: (asset) => asset.label === AssetLabel.campaign_generation_config,
   });
 
-  if (!configAsset) throw Error('No campaign config asset found');
+  // if (!configAsset) throw Error('No campaign config asset found');
+  // TODO Revert this back when microcircuit simulations have obi-one generation config.
+  if (!configAsset) {
+    const circuit = await getCircuit({ id: campaign?.entity_id!, context });
+
+    if (circuit.scale === CircuitScaleDictionary.Microcircuit) {
+      return {
+        campaign,
+        simulation,
+        config: null,
+      };
+    }
+
+    throw Error('No campaign config asset found');
+  }
 
   const rawConfig = await downloadAsset({
     entityId: campaign?.id!,

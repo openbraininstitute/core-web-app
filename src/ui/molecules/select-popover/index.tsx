@@ -30,6 +30,7 @@ export type SelectPopoverProps<T = unknown> = {
     trigger?: ComponentProps<'div'>['className'];
     content?: ComponentProps<'div'>['className'];
     rowClassName?: (option: SelectPopoverOption<T>) => ComponentProps<'div'>['className'];
+    label?: ComponentProps<'div'>['className'];
   };
 };
 
@@ -100,7 +101,11 @@ export function SelectPopover<T = unknown>({
         )}
       >
         <Button variant="outline" role="combobox" className="select-none">
-          <div className="line-clamp-1 w-full truncate text-left">
+          <div
+            className={cn('line-clamp-1 w-full truncate text-left', clsx?.label, {
+              'text-neutral-2 placeholder:text-sm': !selectedOption?.label,
+            })}
+          >
             {selectedOption?.label || placeholder}
           </div>
           {selectedValue ? (

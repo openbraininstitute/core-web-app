@@ -1,34 +1,36 @@
 import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
-import { match } from 'ts-pattern';
 import type { CheckboxProps } from 'antd';
-import { Checkbox, ConfigProvider } from 'antd';
+import { Checkbox, ConfigProvider, Form, Input, InputNumber, Modal } from 'antd';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { match } from 'ts-pattern';
+
+import { requestOfflineTokenConsent } from '@/api/auth-manager';
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import ApiError from '@/api/error';
+import { runSimulation } from '@/api/launch-system';
+import { useAppNotification } from '@/components/notification';
 import {
+  modelAtomFamily,
   simExecRemoteStatusMapAtomFamily,
   simExecStatusMapAtomFamily,
   simulationsByCampaignIdAtomFamily,
 } from '@/features/small-microcircuit/_components/atoms';
 import { FileViewer } from '@/features/small-microcircuit/_components/file-viewer';
-
 import { File, SimulationFiles } from '@/features/small-microcircuit/_components/simulation-files';
 import { SimulationStatusBadge } from '@/features/small-microcircuit/_components/simulation-status';
-
 import errorRegistry from '@/features/small-microcircuit/error-registry';
-
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/simulation';
+import { useConsent } from '@/services/consent';
 import { runSimulationBatch } from '@/services/small-scale-simulator/circuit';
 import { MessageType } from '@/services/small-scale-simulator/types';
-
-import { classNames } from '@/util/utils';
-
-import { getErrorMessage } from '@/utils/error';
-import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import { ExecutionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
-import { useAppNotification } from '@/components/notification';
+import { classNames } from '@/util/utils';
+import { getErrorMessage } from '@/utils/error';
+import { log } from '@/utils/logger';
 
 import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
 
@@ -44,9 +46,13 @@ export default function SimulationsTab({
   projectId,
 }: SimulationTabProps) {
   const notification = useAppNotification();
+  const { waitForConsent } = useConsent();
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
   const simulationsAtom = simulationsByCampaignIdAtomFamily({ campaignId, context });
   const simulations = useAtomValue(simulationsAtom);
+
+  const modelAtom = modelAtomFamily({ id: simulations[0].entity_id, context });
+  const model = useAtomValue(modelAtom);
 
   const simulationIds = simulations.map((s) => s.id);
 
@@ -64,6 +70,9 @@ export default function SimulationsTab({
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [filesLoading, setFilesLoading] = useState(false);
+  const [launchSystemParamsModalOpen, setLaunchSystemParamsModalOpen] = useState(false);
+  const [waitingForConsent, setWaitingForConsent] = useState(false);
+  const [form] = Form.useForm();
 
   const activeSimulationExecStatus = activeSimulation && statusMap?.get(activeSimulation.id);
 
@@ -120,8 +129,43 @@ export default function SimulationsTab({
     return () => clearInterval(intervalId);
   }, [fetchRemoteSimExecStatuseMap, simRequestInProgress, statusMap]);
 
+  // TODO: this is a POC, refactor once confirmed viable.
+  const runViaLaunchSystem = async (simIds: string[]) => {
+    form.setFieldsValue({ simulationId: simIds[0] });
+    setLaunchSystemParamsModalOpen(true);
+  };
+
+  const handleModalOk = async () => {
+    const values = form.getFieldsValue();
+    setWaitingForConsent(true);
+
+    const consent = await requestOfflineTokenConsent();
+    window.open(consent.data.consent_url, '_blank');
+
+    await waitForConsent();
+
+    const submissionRes = await runSimulation({
+      ctx: { virtualLabId, projectId },
+      simulationId: values.simulationId,
+      name: values.name,
+      instances: values.instances,
+      instanceType: values.instanceType,
+    });
+
+    log('info', submissionRes);
+
+    setWaitingForConsent(false);
+    setLaunchSystemParamsModalOpen(false);
+
+    notification.success({ message: `Simulation submitted successfuly`, duration: 10 });
+  };
+
   // TODO Refactor
   const run = async (simIds: string[]) => {
+    if ('scale' in model && model.scale === CircuitScaleDictionary.Microcircuit) {
+      return runViaLaunchSystem(simIds);
+    }
+
     setSimRequestInProgress(true);
     try {
       await runSimulationBatch({
@@ -251,6 +295,33 @@ export default function SimulationsTab({
           loading={filesLoading}
         />
       </div>
+
+      <Modal
+        title="Launch Configuration"
+        open={launchSystemParamsModalOpen}
+        onOk={handleModalOk}
+        onCancel={() => setLaunchSystemParamsModalOpen(false)}
+        confirmLoading={waitingForConsent}
+        cancelButtonProps={{ disabled: waitingForConsent }}
+      >
+        {waitingForConsent && (
+          <div className="mb-4 text-center text-gray-600">Waiting for user consent...</div>
+        )}
+        <Form form={form} layout="vertical">
+          <Form.Item label="Simulation ID" name="simulationId">
+            <Input readOnly disabled={waitingForConsent} />
+          </Form.Item>
+          <Form.Item label="Name" name="name">
+            <Input disabled={waitingForConsent} />
+          </Form.Item>
+          <Form.Item label="Instances" name="instances">
+            <InputNumber style={{ width: '100%' }} disabled={waitingForConsent} />
+          </Form.Item>
+          <Form.Item label="Instance Type" name="instanceType">
+            <Input disabled={waitingForConsent} />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }
@@ -288,38 +359,38 @@ function SimulationListItem({
         <button
           type="button"
           title={simulation.name}
-          className="mb-2 h-18 w-full cursor-pointer"
+          className="mb-2 flex h-18 w-full cursor-pointer items-center justify-between"
           onClick={() => onSelect(simulation.id)}
         >
-          <div className="flex items-center justify-between">
-            <div className="font-bold">
-              {!execStatus || execStatus === EntitycoreExecutionStatus.CREATED ? (
-                <ConfigProvider theme={{ token: { colorPrimary: '#1890ff' } }}>
+          <div className="min-w-0 flex-1 overflow-hidden font-bold">
+            {!execStatus || execStatus === EntitycoreExecutionStatus.CREATED ? (
+              <ConfigProvider theme={{ token: { colorPrimary: '#1890ff' } }}>
+                <div className="flex min-w-0 items-center" style={{ maxWidth: '100%' }}>
                   <Checkbox
-                    className="mr-2 transition-colors duration-300"
+                    className="mr-2 transition-colors duration-300 [&_.ant-checkbox+span]:block [&_.ant-checkbox+span]:truncate [&_.ant-checkbox+span]:overflow-hidden [&_.ant-checkbox+span]:text-ellipsis [&_.ant-checkbox+span]:whitespace-nowrap"
                     disabled={selectionForSimDisabled}
                     onChange={(e) => onSelectedForSimChange(simulation.id, e.target.checked)}
                     checked={selectedForSim}
-                    style={{ color }}
+                    style={{ color, maxWidth: '100%', display: 'flex' }}
                   >
-                    <span className="truncate overflow-hidden text-lg whitespace-nowrap transition-colors duration-300">
+                    <span className="text-lg transition-colors duration-300">
                       {simulation.name}
                     </span>
                   </Checkbox>
-                </ConfigProvider>
-              ) : (
-                <span
-                  style={{ color }}
-                  className="truncate overflow-hidden text-lg whitespace-nowrap transition-colors duration-300"
-                >
-                  {simulation.name}
-                </span>
-              )}
-            </div>
-            <div className="ml-4 flex flex-shrink-0">
-              <SimulationStatusBadge status={execStatus} />
-              <RightOutlined className="ml-2 text-sm" />
-            </div>
+                </div>
+              </ConfigProvider>
+            ) : (
+              <span
+                style={{ color }}
+                className="block truncate text-lg transition-colors duration-300"
+              >
+                {simulation.name}
+              </span>
+            )}
+          </div>
+          <div className="ml-4 flex flex-shrink-0">
+            <SimulationStatusBadge status={execStatus} />
+            <RightOutlined className="ml-2 text-sm" />
           </div>
         </button>
 
