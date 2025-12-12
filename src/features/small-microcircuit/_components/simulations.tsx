@@ -1,12 +1,3 @@
-import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import ApiError from '@/api/error';
-import {
-  modelAtomFamily,
-  simExecRemoteStatusMapAtomFamily,
-  simExecStatusMapAtomFamily,
-  simulationsByCampaignIdAtomFamily,
-} from '@/features/small-microcircuit/_components/atoms';
-import { FileViewer } from '@/features/small-microcircuit/_components/file-viewer';
 import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
 import type { CheckboxProps } from 'antd';
 import { Checkbox, ConfigProvider, Form, Input, InputNumber, Modal } from 'antd';
@@ -14,29 +5,34 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
 
-import { File, SimulationFiles } from '@/features/small-microcircuit/_components/simulation-files';
-import { SimulationStatusBadge } from '@/features/small-microcircuit/_components/simulation-status';
-
-import errorRegistry from '@/features/small-microcircuit/error-registry';
-
-import { useLastTruthyValue } from '@/hooks/hooks';
-import { messages } from '@/i18n/en/simulation';
-import { runSimulationBatch } from '@/services/small-scale-simulator/circuit';
-import { MessageType } from '@/services/small-scale-simulator/types';
-
-import { classNames } from '@/util/utils';
-
-import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
-import { useAppNotification } from '@/components/notification';
-import { ExecutionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
-import { getErrorMessage } from '@/utils/error';
-
 import { requestOfflineTokenConsent } from '@/api/auth-manager';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import ApiError from '@/api/error';
 import { runSimulation } from '@/api/launch-system';
-import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
+import { useAppNotification } from '@/components/notification';
+import {
+  modelAtomFamily,
+  simExecRemoteStatusMapAtomFamily,
+  simExecStatusMapAtomFamily,
+  simulationsByCampaignIdAtomFamily,
+} from '@/features/small-microcircuit/_components/atoms';
+import { FileViewer } from '@/features/small-microcircuit/_components/file-viewer';
+import { File, SimulationFiles } from '@/features/small-microcircuit/_components/simulation-files';
+import { SimulationStatusBadge } from '@/features/small-microcircuit/_components/simulation-status';
+import errorRegistry from '@/features/small-microcircuit/error-registry';
+import { useLastTruthyValue } from '@/hooks/hooks';
+import { messages } from '@/i18n/en/simulation';
 import { useConsent } from '@/services/consent';
+import { runSimulationBatch } from '@/services/small-scale-simulator/circuit';
+import { MessageType } from '@/services/small-scale-simulator/types';
+import { ExecutionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
+import { classNames } from '@/util/utils';
+import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
+
+import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
 
 type SimulationTabProps = {
   campaignId: string;
