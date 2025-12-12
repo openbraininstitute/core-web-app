@@ -35,8 +35,7 @@ class PainterDendrogram {
     const { context } = this;
     if (!context) return;
 
-    const tree = createTreeStructure(this.morphology);
-    console.log('🐞 [painter@26] tree =', tree); // @FIXME: Remove this line written on 2025-12-11 at 10:17
+    createTreeStructure(this.morphology);
   }
 }
 

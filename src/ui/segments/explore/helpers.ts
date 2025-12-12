@@ -25,6 +25,7 @@ import { SingeNeuronCircuitSimulation } from '@/entity-configuration/domain/simu
 import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation/single-neuron-simulation';
 import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/simulation/single-neuron-synaptome-simulation';
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
+import { MicrocircuitSimulation } from '@/entity-configuration/domain/simulation/microcircuit-simulation';
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 
 import { env } from '@/env';
@@ -58,6 +59,7 @@ export const SimulationEntitiesTileTypes = {
   SingeNeuronCircuitSimulation,
   PairedNeuronCircuitSimulation,
   SmallMicrocircuitSimulation,
+  MicrocircuitSimulation,
 } as const;
 
 export function getEntityTypeFromUrlOnEntityScope(url: string) {
