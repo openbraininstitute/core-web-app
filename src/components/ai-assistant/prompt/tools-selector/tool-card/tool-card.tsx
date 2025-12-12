@@ -11,6 +11,7 @@ import { classNames } from '@/util/utils';
 import { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 import { useAIToolsInvertedSelection } from '@/components/ai-assistant/state';
 
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import styles from './tool-card.module.css';
 
 interface ToolCardProps {
@@ -19,6 +20,7 @@ interface ToolCardProps {
 }
 
 export default function ToolCard({ className, tool }: ToolCardProps) {
+  const { virtualLabId, projectId } = useWorkspace();
   const [invertedSelection, setInvertedSelection] = useAIToolsInvertedSelection();
   /**
    * A tool is checked if it's id is not in invertedSelection array.
@@ -38,7 +40,11 @@ export default function ToolCard({ className, tool }: ToolCardProps) {
         {checked ? <IconChecked /> : <IconUnchecked />}
       </header>
       <p>{tool.description}</p>
-      <Link href={tool.docURL} target="documentation" className={styles.readmore}>
+      <Link
+        href={tool.docURL(virtualLabId, projectId)}
+        target="documentation"
+        className={styles.readmore}
+      >
         Read more
       </Link>
     </div>
