@@ -93,13 +93,14 @@ export default async function Overview({
     extendedType === ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation ||
     extendedType === ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation ||
     extendedType === ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation ||
+    extendedType === ExtendedEntitiesTypeDict.MicrocircuitSimulation ||
     extendedType === ExtendedEntitiesTypeDict.MemodelCircuitSimulation
   ) {
     let config: AwaitedType<ReturnType<typeof resolveSimulationByCampaignId>>;
 
     try {
       config = await resolveSimulationByCampaignId({ id: entity.id, context: ctx });
-    } catch {
+    } catch (err) {
       notFound();
     }
 
@@ -111,8 +112,15 @@ export default async function Overview({
         virtualLabId={ctx.virtualLabId}
         projectId={ctx.projectId}
         initialCampaignId={config.campaign.id}
-        initialConfig={config.config.form}
+        initialConfig={config.config?.form}
         readOnly={!isWorkflow}
+        // This is a temporary solution to show sim campaigns not complient with obi-one gen config.
+        // TODO: remove this after microcircuit scale simulations are fully implemented.
+        defaultTab={
+          extendedType === ExtendedEntitiesTypeDict.MicrocircuitSimulation
+            ? 'simulations'
+            : undefined
+        }
       />
     );
   }

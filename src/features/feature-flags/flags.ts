@@ -1,6 +1,7 @@
 import { defineFlag } from './define-flag';
 
 import { PanelState } from '@/ui/segments/ai/types';
+import { env } from '@/env';
 
 export const aiPanelStateFlag = defineFlag<PanelState>({
   key: 'aiPanelState',
@@ -10,7 +11,15 @@ export const aiPanelStateFlag = defineFlag<PanelState>({
   visible: false,
 });
 
-export const flags = [aiPanelStateFlag] as const;
+export const microcircuitFlag = defineFlag<boolean>({
+  key: 'microcircuit',
+  defaultValue: false,
+  values: [true, false],
+  description: 'Enable microcircuit (simulations)',
+  visible: ['local', 'development'].includes(env.NEXT_PUBLIC_DEPLOYMENT_ENV),
+});
+
+export const flags = [aiPanelStateFlag, microcircuitFlag] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];
 
