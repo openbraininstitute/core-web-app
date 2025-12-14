@@ -27,6 +27,7 @@ import type {
   ICircuitSimulationCampaignFilter,
 } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { WorkspaceContext } from '@/types/common';
+import { migrateConfig } from './utils';
 
 const SCALE = CircuitScaleDictionary.PairNeuron;
 
@@ -120,6 +121,8 @@ export async function resolveSimulationByCampaignId({
     asRawResponse: true,
   });
   const config = await rawConfig.json();
+
+  migrateConfig(config);
 
   return {
     campaign,
