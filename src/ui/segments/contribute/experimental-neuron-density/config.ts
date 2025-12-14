@@ -22,6 +22,16 @@ export const EXPERIMENTAL_NEURON_DENSITY_PROGRESS_STEPS: Array<{
     mutationKey: 'createExperimentalNeuronDensity',
   },
   {
+    key: 'etype-classification',
+    label: 'Creating E-Type Classification',
+    mutationKey: 'createEtypeClassification',
+  },
+  {
+    key: 'mtype-classification',
+    label: 'Creating M-Type Classification',
+    mutationKey: 'createMtypeClassification',
+  },
+  {
     key: 'contribution',
     label: 'Creating Contribution',
     mutationKey: 'createContribution',

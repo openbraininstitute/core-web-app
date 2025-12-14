@@ -37,4 +37,5 @@ export const BoutonDensity: EntityCoreTypeConfig<IExperimentalBoutonDensity> = {
   detailViewSections: [DetailViewSectionsDict.Overview],
   isCopyable: true,
   isSimulatable: false,
+  isUploadable: true,
 } as const;

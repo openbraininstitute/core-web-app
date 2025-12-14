@@ -256,9 +256,8 @@ export function BrainRegionDropdownWithFormItem({
       }) {
         const handleSelectBrainRegion = useCallback(
           (br: IBrainRegionHierarchy) => {
-            startTransition(() => {
-              onChange?.(br.id);
-            });
+            // FIX: Remove startTransition wrapper - form onChange should not be wrapped
+            onChange?.(br.id);
             onSelectBrainRegion?.(br);
           },
           [onChange]

@@ -1,26 +1,22 @@
+// schema.ts
+
 import z from 'zod';
 
 import { BaseSetupSchema, ContributionArraySchema } from '@/ui/segments/contribute/shared';
+import { MeasurementUnit } from '@/api/entitycore/types/shared/global';
 
 const measurementSchema = z.object({
-  name: z
-    .union([z.string(), z.null(), z.undefined()])
-    .optional()
-    .transform((val) => (val === null ? undefined : val)),
-  // CHANGE 1: Hardcode unit to '1/mm3' as a required literal
-  unit: z.literal('1/mm³'),
-  value: z
-    .union([z.number(), z.null(), z.undefined()])
-    .optional()
-    .transform((val) => (val === null ? undefined : val)),
+  name: z.string().optional(),
+  // CHANGE 1: Hardcode the required unit to PER_MICROMETER
+  unit: z.literal(MeasurementUnit.PER_MICROMETER),
+  value: z.number().optional(),
 });
 
 export type TMeasurement = z.infer<typeof measurementSchema>;
 
 const MeasurementArraySchema = z.array(measurementSchema).superRefine((arr, ctx) => {
   let hasFullyFilledMeasurement = false;
-  
-  // FIX: This section is corrected to enforce at least one measurement.
+
   if (arr.length === 0) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -29,15 +25,15 @@ const MeasurementArraySchema = z.array(measurementSchema).superRefine((arr, ctx)
     });
     return;
   }
-  // END FIX
 
   arr.forEach((measurement, idx) => {
-    // CHANGE 2: Only check name and value (2 fields) since unit is hardcoded/fixed
+    // CHANGE 2: Only check name and value since unit is always PER_MICROMETER
     const filledFields = [measurement.name, measurement.value].filter(
       (field) => field !== undefined && field !== null && field !== ''
     );
 
-    // Partial fill is when length > 0 and length < 2
+    // If partially filled (has name OR value but not both)
+    // Partial fill is length > 0 and length < 2
     if (filledFields.length > 0 && filledFields.length < 2) {
       if (!measurement.name) {
         ctx.addIssue({
@@ -46,7 +42,7 @@ const MeasurementArraySchema = z.array(measurementSchema).superRefine((arr, ctx)
           path: [idx, 'name'],
         });
       }
-      // REMOVED: unit validation check
+      // Measurement unit check is removed as it is required and hardcoded by the schema
       if (measurement.value === undefined || measurement.value === null) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -56,8 +52,8 @@ const MeasurementArraySchema = z.array(measurementSchema).superRefine((arr, ctx)
       }
     }
 
-    // CHANGE 3: Fully filled check is now for 2 fields (name and value)
-    if (filledFields.length === 2) {
+    // CHANGE 3: Check if both name and value are filled (2 fields)
+    if (measurement.name && (measurement.value !== undefined && measurement.value !== null)) {
       hasFullyFilledMeasurement = true;
     }
   });
@@ -71,7 +67,7 @@ const MeasurementArraySchema = z.array(measurementSchema).superRefine((arr, ctx)
   }
 });
 
-export const ExperimentalNeuronDensitySchema = z.object({
+export const ExperimentalBoutonDensitySchema = z.object({
   setup: BaseSetupSchema.omit({
     experiment_date: true,
     contact_email: true,
@@ -86,11 +82,13 @@ export const ExperimentalNeuronDensitySchema = z.object({
     .string({ message: 'License is required' })
     .uuid()
     .nonempty({ message: 'License is required' }),
-  mtype_class_id: z.string({ message: 'M-type class is optional' }).uuid().optional(),
-  etype_class_id: z.string({ message: 'E-type class is optional' }).uuid().optional(),
+  mtype_class_id: z
+    .string({ message: 'M-type class is required' })
+    .uuid()
+    .nonempty({ message: 'M-type class is required' }),
 
   measurements: MeasurementArraySchema,
   contribution: ContributionArraySchema,
 });
 
-export type TExperimentalNeuronDensityForm = z.infer<typeof ExperimentalNeuronDensitySchema>;
+export type TExperimentalBoutonDensityForm = z.infer<typeof ExperimentalBoutonDensitySchema>;

@@ -11,7 +11,7 @@ import {
 import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
-export const SynapsePerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPerConnection> = {
+export const SynapsesPerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPerConnection> = {
   group: EntityTypeGroup.Experimental,
   title: 'Synapse per connection',
   extendedType: ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
@@ -38,4 +38,5 @@ export const SynapsePerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPer
   isCopyable: true,
   isSimulatable: false,
   isBookmarkable: true,
+  isUploadable: true,
 } as const;

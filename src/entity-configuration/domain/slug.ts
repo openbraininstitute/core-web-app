@@ -4,7 +4,7 @@ const ExperimentalEntitySlug = {
   ElectricalCellRecording: 'electrophysiology',
   IonChannelRecording: 'ion-channel-electrophysiology',
   ExperimentalBoutonDensity: 'bouton-density',
-  ExperimentalSynapsesPerConnection: 'synapse-per-connection',
+  ExperimentalSynapsesPerConnection: 'synapses-per-connection',
 } as const;
 
 export const ModelEntitySlug = {

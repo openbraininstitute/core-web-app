@@ -1,29 +1,27 @@
 'use client';
 
-import { useExperimentalNeuronDensityPipeline } from '@/ui/segments/contribute/experimental-neuron-density/pipeline';
+import { useExperimentalBoutonDensityPipeline } from '@/ui/segments/contribute/experimental-bouton-density/pipeline';
 import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 import {
-  EXPERIMENTAL_NEURON_DENSITY_PROGRESS_STEPS,
-  createExperimentalNeuronDensityConfig,
-} from '@/ui/segments/contribute/experimental-neuron-density/config';
+  EXPERIMENTAL_BOUTON_DENSITY_PROGRESS_STEPS,
+  createExperimentalBoutonDensityConfig,
+} from '@/ui/segments/contribute/experimental-bouton-density/config';
 import {
   Contribution,
   Measurements,
   Subject,
   License,
   Setup,
-  ETypeClassification,
   MTypeClassification
-} from '@/ui/segments/contribute/experimental-neuron-density/steps';
+} from '@/ui/segments/contribute/experimental-bouton-density/steps';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-
-import type { TExperimentalNeuronDensityForm } from '@/ui/segments/contribute/experimental-neuron-density/schema';
+import type { TExperimentalBoutonDensityForm } from '@/ui/segments/contribute/experimental-bouton-density/schema';
 import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
 
-const EXPERIMENTAL_NEURON_DENSITY_STEP_CONFIG: Array<
-  IContributionStep<TExperimentalNeuronDensityForm>
+const EXPERIMENTAL_BOUTON_DENSITY_STEP_CONFIG: Array<
+  IContributionStep<TExperimentalBoutonDensityForm>
 > = [
   {
     key: 'setup',
@@ -37,6 +35,12 @@ const EXPERIMENTAL_NEURON_DENSITY_STEP_CONFIG: Array<
     schemaFieldKey: 'measurements',
     component: Measurements,
   },
+  { 
+    key: 'mtype',
+    label: 'M-type',
+    schemaFieldKey: 'mtype_class_id',
+    component: MTypeClassification,
+  },
   {
     key: 'contribution',
     label: 'Contribution',
@@ -49,18 +53,6 @@ const EXPERIMENTAL_NEURON_DENSITY_STEP_CONFIG: Array<
     schemaFieldKey: 'subject_id',
     component: Subject,
   },
-  { 
-    key: 'mtype',
-    label: 'M-type',
-    schemaFieldKey: 'mtype_class_id',
-    component: MTypeClassification,
-  },
-  {
-    key: 'etype',
-    label: 'E-Type',
-    schemaFieldKey: 'etype_class_id',
-    component: ETypeClassification,
-  },
   {
     key: 'license',
     label: 'License',
@@ -70,15 +62,15 @@ const EXPERIMENTAL_NEURON_DENSITY_STEP_CONFIG: Array<
   },
 ];
 
-const experimentalNeuronDensityConfig = createExperimentalNeuronDensityConfig(
-  EXPERIMENTAL_NEURON_DENSITY_STEP_CONFIG
+const experimentalBoutonDensityConfig = createExperimentalBoutonDensityConfig(
+  EXPERIMENTAL_BOUTON_DENSITY_STEP_CONFIG
 );
 
-interface IExperimentalNeuronDensityProps {
+interface IExperimentalBoutonDensityProps {
   sessionId: string;
 }
 
-export function ExperimentalNeuronDensity({ sessionId }: IExperimentalNeuronDensityProps) {
+export function ExperimentalBoutonDensity({ sessionId }: IExperimentalBoutonDensityProps) {
   const { projectId, virtualLabId } = useWorkspace();
   const { node: defaultBrainRegion } = useBrainRegionHierarchy({
     dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
@@ -86,11 +78,11 @@ export function ExperimentalNeuronDensity({ sessionId }: IExperimentalNeuronDens
 
   return (
     <ContributionForm
-      config={experimentalNeuronDensityConfig}
+      config={experimentalBoutonDensityConfig}
       sessionId={sessionId}
       brainRegionId={defaultBrainRegion.id}
-      pipeline={useExperimentalNeuronDensityPipeline}
-      progressSteps={EXPERIMENTAL_NEURON_DENSITY_PROGRESS_STEPS}
+      pipeline={useExperimentalBoutonDensityPipeline}
+      progressSteps={EXPERIMENTAL_BOUTON_DENSITY_PROGRESS_STEPS}
       virtualLabId={virtualLabId}
       projectId={projectId}
     />

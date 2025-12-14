@@ -14,7 +14,7 @@ export enum ExperimentTypeNames {
   ELECTROPHYSIOLOGY = 'electrophysiology',
   NEURON_DENSITY = 'neuron-density',
   BOUTON_DENSITY = 'bouton-density',
-  SYNAPSE_PER_CONNECTION = 'synapse-per-connection',
+  SYNAPSES_PER_CONNECTION = 'synapses-per-connection',
 }
 
 export type TExperimentTypeNames = `${ExperimentTypeNames}`;

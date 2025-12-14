@@ -12,7 +12,7 @@ import { CellMorphology } from '@/entity-configuration/domain/experimental/cell-
 import { ElectricalCellRecording } from '@/entity-configuration/domain/experimental/electrical-cell-recording';
 import { IonChannelRecording } from '@/entity-configuration/domain/experimental/ion-channel-recording';
 import { NeuronDensity } from '@/entity-configuration/domain/experimental/neuron-density';
-import { SynapsePerConnection } from '@/entity-configuration/domain/experimental/synapse-per-connection';
+import { SynapsesPerConnection } from '@/entity-configuration/domain/experimental/synapses-per-connection';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
 import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
@@ -39,7 +39,7 @@ export const ExperimentalEntitiesTileTypes = {
   IonChannelRecording,
   NeuronDensity,
   BoutonDensity,
-  SynapsePerConnection,
+  SynapsesPerConnection,
 } as const;
 
 export const ModelEntitiesTileTypes = {

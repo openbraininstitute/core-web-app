@@ -1,9 +1,13 @@
+// pipeline.ts
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { compact, get } from 'es-toolkit/compat';
+import { useEffect } from 'react';
 
-import { EXPERIMENTAL_NEURON_DENSITY_PROGRESS_STEPS } from '@/ui/segments/contribute/experimental-neuron-density/config';
+import { createMtypeClassification } from '@/api/entitycore/queries/annotations/mtype-classification';
+import { createEtypeClassification } from '@/api/entitycore/queries/annotations/etype-classification';
+import { EXPERIMENTAL_NEURON_DENSITY_PROGRESS_STEPS } from '@/ui/segments/contribute/experimental-neuron-density/config'; 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
@@ -28,12 +32,21 @@ export function useExperimentalNeuronDensityPipeline({
   const queryClient = useQueryClient();
   const { projectId, virtualLabId } = useWorkspace();
 
+  // --- MUTATION DEFINITIONS ---
+
   const createExperimentalNeuronDensityAsync = useMutation({
     mutationFn: (values: TExperimentalNeuronDensityForm) => {
       const measurements =
         compact(
           values.measurements.map((m) => {
-            const d = measurementSchema.safeParse(m);
+            // FIX: Explicitly set the 'unit' to the required string literal '1/mm3'
+            const measurementWithUnit = {
+                name: m.name,
+                value: m.value,
+                unit: '1/mm³', // Hardcoded string value for the unit
+            };
+            
+            const d = measurementSchema.safeParse(measurementWithUnit);
             if (d.success) return d.data;
             return null;
           })
@@ -100,6 +113,48 @@ export function useExperimentalNeuronDensityPipeline({
     },
   });
 
+  const createEtypeClassificationAsync = useMutation({
+    mutationKey: ['createEtypeClassification', sessionId],
+    mutationFn: ({
+      entityId,
+      etype_class_id,
+    }: {
+      entityId: string;
+      etype_class_id: TExperimentalNeuronDensityForm['etype_class_id'];
+    }) => {
+      return createEtypeClassification({
+        context: { projectId, virtualLabId },
+        payload: {
+          authorized_public: true,
+          entity_id: entityId,
+          etype_class_id,
+        },
+      });
+    },
+  });
+
+  const createMtypeClassificationAsync = useMutation({
+    mutationKey: ['createMtypeClassification', sessionId],
+    mutationFn: ({
+      entityId,
+      mtype_class_id,
+    }: {
+      entityId: string;
+      mtype_class_id: TExperimentalNeuronDensityForm['mtype_class_id'];
+    }) => {
+      return createMtypeClassification({
+        context: { projectId, virtualLabId },
+        payload: {
+          authorized_public: true,
+          entity_id: entityId,
+          mtype_class_id,
+        },
+      });
+    },
+  });
+
+  // --- createEntity FUNCTION ---
+
   async function createEntity({
     values,
   }: {
@@ -107,21 +162,81 @@ export function useExperimentalNeuronDensityPipeline({
   }): Promise<string> {
     const experimentalNeuronDensity =
       await createExperimentalNeuronDensityAsync.mutateAsync(values);
-    await createContributionAsync.mutateAsync({
-      entityId: experimentalNeuronDensity.id,
-      contribution: values.contribution,
+
+    const classificationPromises: Array<Promise<any>> = [
+      // Contribution is always required
+      createContributionAsync.mutateAsync({
+        entityId: experimentalNeuronDensity.id,
+        contribution: values.contribution,
+      }),
+    ];
+
+    // Track which optional steps are being skipped
+    const willSkipEtype = !values.etype_class_id || values.etype_class_id === '';
+    const willSkipMtype = !values.mtype_class_id || values.mtype_class_id === '';
+
+    // Mark skipped steps as success immediately
+    if (willSkipEtype) {
+      // Manually reset the mutation to success state to mark it as complete
+      createEtypeClassificationAsync.reset();
+    } else {
+      classificationPromises.push(
+        createEtypeClassificationAsync.mutateAsync({
+          entityId: experimentalNeuronDensity.id,
+          etype_class_id: values.etype_class_id,
+        })
+      );
+    }
+
+    if (willSkipMtype) {
+      // Manually reset the mutation to success state to mark it as complete
+      createMtypeClassificationAsync.reset();
+    } else {
+      classificationPromises.push(
+        createMtypeClassificationAsync.mutateAsync({
+          entityId: experimentalNeuronDensity.id,
+          mtype_class_id: values.mtype_class_id,
+        })
+      );
+    }
+
+    // Use Promise.all to throw on failures
+    const results = await Promise.all(classificationPromises);
+    results.forEach((result, i) => {
+      if (result.status === 'rejected') {
+        console.error('Classification failed:', result.reason);
+        throw new Error('One or more classifications failed');
+      }
     });
+
     return experimentalNeuronDensity.id;
   }
 
+  // --- RETURN VALUES (Loading/Error/Status Tracking) ---
+
   const loading =
-    createExperimentalNeuronDensityAsync.isPending || createContributionAsync.isPending;
+    createExperimentalNeuronDensityAsync.isPending ||
+    createContributionAsync.isPending ||
+    createEtypeClassificationAsync.isPending ||
+    createMtypeClassificationAsync.isPending;
 
-  const error = createExperimentalNeuronDensityAsync.error || createContributionAsync.error;
+  const error =
+    createExperimentalNeuronDensityAsync.error ||
+    createContributionAsync.error ||
+    createEtypeClassificationAsync.error ||
+    createMtypeClassificationAsync.error;
 
+  // Compute status with skipped steps marked as 'success'
   const status = {
     createExperimentalNeuronDensity: createExperimentalNeuronDensityAsync.status,
     createContribution: createContributionAsync.status,
+    // For optional steps, if they were never called (status is 'idle'), treat as 'success'
+    createEtypeClassification: createEtypeClassificationAsync.status === 'idle' 
+      ? 'success' 
+      : createEtypeClassificationAsync.status,
+    createMtypeClassification: createMtypeClassificationAsync.status === 'idle'
+      ? 'success'
+      : createMtypeClassificationAsync.status,
   };
 
   return {
