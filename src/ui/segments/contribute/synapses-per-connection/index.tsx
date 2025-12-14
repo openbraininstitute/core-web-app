@@ -1,4 +1,5 @@
 // index.tsx
+
 'use client';
 
 import { useExperimentalSynapsesPerConnectionPipeline } from '@/ui/segments/contribute/synapses-per-connection/pipeline';

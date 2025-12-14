@@ -1,4 +1,5 @@
 // pipeline.ts
+
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -32,12 +33,10 @@ export function useExperimentalBoutonDensityPipeline({
 
   const createExperimentalBoutonDensityAsync = useMutation({
     mutationFn: (values: TExperimentalBoutonDensityForm) => {
-      console.log('Form Measurements:', values.measurements);
+      
       const measurements =
         compact(
-          values.measurements.map((m, index) => {
-            console.log(`Parsing measurement ${index}:`, m);
-
+          values.measurements.map((m) => {
             // FIX: Explicitly set the 'unit' using the hardcoded string literal 'per_micrometer'.
             // This ensures all fully filled measurements are correctly transformed for the API payload.
             const measurementWithUnit = {
@@ -47,16 +46,13 @@ export function useExperimentalBoutonDensityPipeline({
             };
 
             const d = measurementSchema.safeParse(measurementWithUnit);
-            console.log(`Parse result ${index}:`, d);
+            
             if (d.success) return d.data;
-            if (!d.success) {
-              // This console.error is helpful for debugging if name/value are missing
-              console.error(`Measurement ${index} failed validation:`, d.error);
-            }
+
             return null;
           })
         ) ?? [];
-      console.log('Final Payload Measurements:', measurements);
+      
 
       const payload = {
         name: values.setup.name,
@@ -69,15 +65,11 @@ export function useExperimentalBoutonDensityPipeline({
         legacy_id: null,
       };
 
-      console.log('Creating entity with payload:', payload);
 
       return createExperimentalBoutonDensity({
         context: { projectId, virtualLabId },
         payload,
       });
-    },
-    onSuccess: (data) => {
-      console.log('Entity created successfully:', data);
     },
     onSettled: async () => {
       await Promise.all([
@@ -111,7 +103,7 @@ export function useExperimentalBoutonDensityPipeline({
       entityId: string;
       contribution: TExperimentalBoutonDensityForm['contribution'];
     }) => {
-      console.log('Creating contributions for entity:', entityId);
+      
       return Promise.all(
         contribution
           .filter((c) => ContributionSchema.safeParse(c).success)
@@ -127,9 +119,6 @@ export function useExperimentalBoutonDensityPipeline({
           )
       );
     },
-    onSuccess: (data) => {
-      console.log('Contributions created successfully:', data);
-    },
   });
 
   const createMtypeClassificationAsync = useMutation({
@@ -140,25 +129,22 @@ export function useExperimentalBoutonDensityPipeline({
       entityId: string;
       mtype_class_id: string;
     }) => {
-      console.log('Creating M-type classification for entity:', entityId);
       return createMtypeClassification({
         context: { projectId, virtualLabId },
         payload: {
           entity_id: entityId,
-          mtype_class_id: mtype_class_id,
+          mtype_class_id,
           authorized_public:true
         },
       });
     },
-    onSuccess: (data) => {
-      console.log('M-type classification created successfully:', data);
-    },
+
   });
 
 
   async function createEntity({ values }: { values: TExperimentalBoutonDensityForm }): Promise<string> {
     const experimentalBoutonDensity = await createExperimentalBoutonDensityAsync.mutateAsync(values);
-    console.log('Entity created, ID:', experimentalBoutonDensity.id);
+
 
     await Promise.allSettled([
       createContributionAsync.mutateAsync({
@@ -171,7 +157,7 @@ export function useExperimentalBoutonDensityPipeline({
       }),
     ]);
 
-    console.log('Returning entity ID:', experimentalBoutonDensity.id);
+
     return experimentalBoutonDensity.id;
   }
 

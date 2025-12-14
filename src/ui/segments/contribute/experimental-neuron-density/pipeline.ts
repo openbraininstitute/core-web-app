@@ -1,9 +1,9 @@
 // pipeline.ts
+
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { compact, get } from 'es-toolkit/compat';
-import { useEffect } from 'react';
 
 import { createMtypeClassification } from '@/api/entitycore/queries/annotations/mtype-classification';
 import { createEtypeClassification } from '@/api/entitycore/queries/annotations/etype-classification';
@@ -202,9 +202,9 @@ export function useExperimentalNeuronDensityPipeline({
 
     // Use Promise.all to throw on failures
     const results = await Promise.all(classificationPromises);
-    results.forEach((result, i) => {
+    results.forEach((result) => {
       if (result.status === 'rejected') {
-        console.error('Classification failed:', result.reason);
+        
         throw new Error('One or more classifications failed');
       }
     });

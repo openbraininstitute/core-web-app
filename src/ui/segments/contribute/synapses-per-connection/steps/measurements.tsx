@@ -19,20 +19,9 @@ export function Measurements() {
     label: stat.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
     value: stat,
   }));
-  const UNIT_OPTIONS = [
-    {
-      label: 'Dimensionless',
-      value: MeasurementUnit.DIMENSIONLESS,
-    },
-  ];
 
   const NameOptionsFormInput = SelectPopoverFormItem({
     options: NAME_OPTIONS,
-    clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
-  });
-
-  const UnitOptionsFormInput = SelectPopoverFormItem({
-    options: UNIT_OPTIONS,
     clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
   });
 

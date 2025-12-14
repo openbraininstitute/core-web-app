@@ -40,7 +40,7 @@ export function createExperimentalSynapsesPerConnectionConfig(
     formId: 'contribute-synapses-per-connection-modal',
     schema: ExperimentalSynapsesPerConnectionSchema,
     progressSteps: steps,
-    getInitialValues: (brainRegionId: string) => ({
+    getInitialValues: () => ({
       contribution: [{}] as TExperimentalSynapsesPerConnectionForm['contribution'],
       measurements: [
         { name: undefined, unit: MeasurementUnit.DIMENSIONLESS, value: undefined }

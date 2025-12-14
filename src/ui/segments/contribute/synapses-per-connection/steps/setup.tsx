@@ -1,8 +1,8 @@
 // setup.tsx
+
 'use client';
 
 import { Form, Input } from 'antd';
-import { flushSync } from 'react-dom';
 
 import { PreMTypeClassificationSelector } from '@/ui/segments/contribute/synapses-per-connection/steps/pre-mtype-selector';
 import { PostMTypeClassificationSelector } from '@/ui/segments/contribute/synapses-per-connection/steps/post-mtype-selector';

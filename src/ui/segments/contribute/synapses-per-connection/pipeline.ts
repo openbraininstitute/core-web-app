@@ -1,4 +1,5 @@
 // pipeline.ts
+
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -32,11 +33,11 @@ export function useExperimentalSynapsesPerConnectionPipeline({
 
   const createExperimentalSynapsesPerConnectionAsync = useMutation({
     mutationFn: (values: TExperimentalSynapsesPerConnectionForm) => {
-      console.log('Form Measurements:', values.measurements);
+      
       const measurements =
         compact(
-          values.measurements.map((m, index) => {
-            console.log(`Parsing measurement ${index}:`, m);
+          values.measurements.map((m) => {
+            
 
             // FIX: Explicitly set the 'unit' using the hardcoded string literal 'DIMENSIONLESS'.
             // This bypasses the runtime failure of the MeasurementUnit enum import, ensuring the unit is a string.
@@ -47,15 +48,13 @@ export function useExperimentalSynapsesPerConnectionPipeline({
             };
 
             const d = measurementSchema.safeParse(measurementWithUnit);
-            console.log(`Parse result ${index}:`, d);
+            
             if (d.success) return d.data;
-            if (!d.success) {
-              console.error(`Measurement ${index} failed validation:`, d.error);
-            }
+
             return null;
           })
         ) ?? [];
-      console.log('Final Payload Measurements:', measurements);
+      
 
       const payload = {
         name: values.name,
@@ -71,17 +70,14 @@ export function useExperimentalSynapsesPerConnectionPipeline({
         legacy_id: null,
       };
 
-      console.log('Creating entity with payload:', payload);
+
 
       return createExperimentalSynapsesPerConnection({
         context: { projectId, virtualLabId },
         payload,
       });
     },
-    onSuccess: (data) => {
-      console.log('Entity created successfully:', data);
-      console.log('Entity ID:', data.id);
-    },
+
     onSettled: async () => {
       await Promise.all([
         queryClient.invalidateQueries({
@@ -114,7 +110,7 @@ export function useExperimentalSynapsesPerConnectionPipeline({
       entityId: string;
       contribution: TExperimentalSynapsesPerConnectionForm['contribution'];
     }) => {
-      console.log('Creating contributions for entity:', entityId);
+      
       return Promise.all(
         contribution
           .filter((c) => ContributionSchema.safeParse(c).success)
@@ -130,15 +126,13 @@ export function useExperimentalSynapsesPerConnectionPipeline({
           )
       );
     },
-    onSuccess: (data) => {
-      console.log('Contributions created successfully:', data);
-    },
+    
   });
 
 
   async function createEntity({ values }: { values: TExperimentalSynapsesPerConnectionForm }): Promise<string> {
     const experimentalSynapsesPerConnection = await createExperimentalSynapsesPerConnectionAsync.mutateAsync(values);
-    console.log('Entity created, ID:', experimentalSynapsesPerConnection.id);
+    
 
     await Promise.allSettled([
       createContributionAsync.mutateAsync({
@@ -147,7 +141,6 @@ export function useExperimentalSynapsesPerConnectionPipeline({
       }),
     ]);
 
-    console.log('Returning entity ID:', experimentalSynapsesPerConnection.id);
     return experimentalSynapsesPerConnection.id;
   }
 
