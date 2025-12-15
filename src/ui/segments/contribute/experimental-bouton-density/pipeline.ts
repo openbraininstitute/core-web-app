@@ -12,8 +12,10 @@ import { createContribution } from '@/api/entitycore/queries/general/contributio
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 import {
   createExperimentalBoutonDensity,
-  measurementSchema,
 } from '@/api/entitycore/queries/experimental/bouton-density';
+import {
+  measurementSchema,
+} from '@/api/entitycore/queries/experimental/neuron-density';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type { TExperimentalBoutonDensityForm } from '@/ui/segments/contribute/experimental-bouton-density/schema';

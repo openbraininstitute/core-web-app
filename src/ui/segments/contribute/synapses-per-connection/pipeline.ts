@@ -11,8 +11,10 @@ import { createContribution } from '@/api/entitycore/queries/general/contributio
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 import {
   createExperimentalSynapsesPerConnection,
-  measurementSchema,
 } from '@/api/entitycore/queries/experimental/synapses-per-connection';
+import {
+  measurementSchema,
+} from '@/api/entitycore/queries/experimental/neuron-density';
 // NOTE: The import for MeasurementUnit has been intentionally removed as it was failing to resolve at runtime.
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
