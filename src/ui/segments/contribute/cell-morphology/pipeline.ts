@@ -37,7 +37,11 @@ export function useCellMorphologyPipeline({
         !isNil(values.setup.location.x) &&
         !isNil(values.setup.location.y) &&
         !isNil(values.setup.location.z)
-          ? { x: values.setup.location.x, y: values.setup.location.y, z: values.setup.location.z }
+          ? {
+              x: values.setup.location.x,
+              y: values.setup.location.y,
+              z: values.setup.location.z,
+            }
           : null;
 
       return createCellMorphology({
@@ -46,7 +50,7 @@ export function useCellMorphologyPipeline({
           name: values.setup.name,
           description: values.setup.description,
           brain_region_id: values.setup.brain_region_id,
-	        cell_morphology_protocol_id: values.protocol_id,
+          cell_morphology_protocol_id: values.cell_morphology_protocol_id,
           subject_id: values.subject_id,
           license_id: values.license_id,
           experiment_date: values.setup.experiment_date as string,
@@ -71,7 +75,7 @@ export function useCellMorphologyPipeline({
             return (
               get(
                 (query.queryKey as ExtendedEntityTypeQueryKey)[0],
-                'context.extendedEntityType'
+                'context.extendedEntityType',
               ) === ExtendedEntitiesTypeDict.CellMorphology
             );
           },
@@ -99,8 +103,8 @@ export function useCellMorphologyPipeline({
                 role_id: c.role_id!,
                 entity_id: entityId,
               },
-            })
-          )
+            }),
+          ),
       );
     },
   });
@@ -143,12 +147,16 @@ export function useCellMorphologyPipeline({
             payload: asset,
             ctx: { virtualLabId, projectId },
           });
-        })
+        }),
       );
     },
   });
 
-  async function createEntity({ values }: { values: TCellMorphologyForm }): Promise<string> {
+  async function createEntity({
+    values,
+  }: {
+    values: TCellMorphologyForm;
+  }): Promise<string> {
     const cellMorphology = await createCellMorphologyAsync.mutateAsync(values);
     await Promise.allSettled([
       createContributionAsync.mutateAsync({
@@ -199,7 +207,7 @@ export function useCellMorphologyPipeline({
         };
         return acc;
       },
-      {} as Record<string, IMutationKeyConfig>
+      {} as Record<string, IMutationKeyConfig>,
     ),
   };
 }

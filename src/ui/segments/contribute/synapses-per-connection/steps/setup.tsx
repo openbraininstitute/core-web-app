@@ -20,7 +20,13 @@ import {
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
 // Wrapper component to handle state updates properly
-function BrainRegionFormField({ name, label }: { name: string; label: string }) {
+function BrainRegionFormField({
+  name,
+  label,
+}: {
+  name: string;
+  label: string;
+}) {
   const form = Form.useFormInstance();
   const { projectId } = useWorkspace();
 
@@ -46,7 +52,11 @@ function BrainRegionFormField({ name, label }: { name: string; label: string }) 
           message: `${label} is required.`,
         },
         {
-          validator: createZodFieldValidator(ExperimentalSynapsesPerConnectionSchema, name, form),
+          validator: createZodFieldValidator(
+            ExperimentalSynapsesPerConnectionSchema,
+            name,
+            form,
+          ),
         },
       ]}
     >
@@ -74,7 +84,7 @@ export function Setup() {
             validator: createZodFieldValidator(
               ExperimentalSynapsesPerConnectionSchema,
               'name',
-              form
+              form,
             ),
           },
         ]}
@@ -96,7 +106,7 @@ export function Setup() {
             validator: createZodFieldValidator(
               ExperimentalSynapsesPerConnectionSchema,
               'description',
-              form
+              form,
             ),
           },
         ]}
@@ -112,12 +122,16 @@ export function Setup() {
       {/* Pre brain region: Required field, top-level */}
       <BrainRegionFormField name="pre_region_id" label="Pre brain region" />
 
-      <PreMTypeClassificationSelector schema={ExperimentalSynapsesPerConnectionSchema} />
+      <PreMTypeClassificationSelector
+        schema={ExperimentalSynapsesPerConnectionSchema}
+      />
 
       {/* Post brain region: Required field, top-level */}
       <BrainRegionFormField name="post_region_id" label="Post brain region" />
 
-      <PostMTypeClassificationSelector schema={ExperimentalSynapsesPerConnectionSchema} />
+      <PostMTypeClassificationSelector
+        schema={ExperimentalSynapsesPerConnectionSchema}
+      />
     </div>
   );
 }

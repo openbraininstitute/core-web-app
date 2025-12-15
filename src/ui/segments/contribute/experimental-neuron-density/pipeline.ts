@@ -49,7 +49,7 @@ export function useExperimentalNeuronDensityPipeline({
             const d = measurementSchema.safeParse(measurementWithUnit);
             if (d.success) return d.data;
             return null;
-          })
+          }),
         ) ?? [];
       return createExperimentalNeuronDensity({
         context: { projectId, virtualLabId },
@@ -79,7 +79,7 @@ export function useExperimentalNeuronDensityPipeline({
             return (
               get(
                 (query.queryKey as ExtendedEntityTypeQueryKey)[0],
-                'context.extendedEntityType'
+                'context.extendedEntityType',
               ) === ExtendedEntitiesTypeDict.ExperimentalNeuronDensity
             );
           },
@@ -107,8 +107,8 @@ export function useExperimentalNeuronDensityPipeline({
                 role_id: c.role_id!,
                 entity_id: entityId,
               },
-            })
-          )
+            }),
+          ),
       );
     },
   });
@@ -120,7 +120,7 @@ export function useExperimentalNeuronDensityPipeline({
       etype_class_id,
     }: {
       entityId: string;
-      etype_class_id: TExperimentalNeuronDensityForm['etype_class_id'];
+      etype_class_id: string;
     }) => {
       return createEtypeClassification({
         context: { projectId, virtualLabId },
@@ -140,7 +140,7 @@ export function useExperimentalNeuronDensityPipeline({
       mtype_class_id,
     }: {
       entityId: string;
-      mtype_class_id: TExperimentalNeuronDensityForm['mtype_class_id'];
+      mtype_class_id: string;
     }) => {
       return createMtypeClassification({
         context: { projectId, virtualLabId },
@@ -172,8 +172,10 @@ export function useExperimentalNeuronDensityPipeline({
     ];
 
     // Track which optional steps are being skipped
-    const willSkipEtype = !values.etype_class_id || values.etype_class_id === '';
-    const willSkipMtype = !values.mtype_class_id || values.mtype_class_id === '';
+    const willSkipEtype =
+      !values.etype_class_id || values.etype_class_id === '';
+    const willSkipMtype =
+      !values.mtype_class_id || values.mtype_class_id === '';
 
     // Mark skipped steps as success immediately
     if (willSkipEtype) {
@@ -183,8 +185,8 @@ export function useExperimentalNeuronDensityPipeline({
       classificationPromises.push(
         createEtypeClassificationAsync.mutateAsync({
           entityId: experimentalNeuronDensity.id,
-          etype_class_id: values.etype_class_id,
-        })
+          etype_class_id: values.etype_class_id!, // Non-null assertion since we checked above
+        }),
       );
     }
 
@@ -195,8 +197,8 @@ export function useExperimentalNeuronDensityPipeline({
       classificationPromises.push(
         createMtypeClassificationAsync.mutateAsync({
           entityId: experimentalNeuronDensity.id,
-          mtype_class_id: values.mtype_class_id,
-        })
+          mtype_class_id: values.mtype_class_id!, // Non-null assertion since we checked above
+        }),
       );
     }
 
@@ -227,7 +229,8 @@ export function useExperimentalNeuronDensityPipeline({
 
   // Compute status with skipped steps marked as 'success'
   const status = {
-    createExperimentalNeuronDensity: createExperimentalNeuronDensityAsync.status,
+    createExperimentalNeuronDensity:
+      createExperimentalNeuronDensityAsync.status,
     createContribution: createContributionAsync.status,
     // For optional steps, if they were never called (status is 'idle'), treat as 'success'
     createEtypeClassification:
@@ -253,7 +256,7 @@ export function useExperimentalNeuronDensityPipeline({
         };
         return acc;
       },
-      {} as Record<string, IMutationKeyConfig>
+      {} as Record<string, IMutationKeyConfig>,
     ),
   };
 }

@@ -12,7 +12,10 @@ import {
   RequiredFieldMarker,
 } from '@/ui/segments/contribute/shared/helpers';
 
-import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
+import type {
+  PaginationFilter,
+  SearchFilter,
+} from '@/api/entitycore/types/shared/request';
 import type { IProtocol } from '@/api/entitycore/types/shared/global';
 
 export function Protocol() {
@@ -23,14 +26,19 @@ export function Protocol() {
     const fields: string[] = [];
 
     if (fields.length === 0) {
-      return <div className="text-sm text-gray-500">No additional information</div>;
+      return (
+        <div className="text-sm text-gray-500">No additional information</div>
+      );
     }
 
     return (
       <div className="max-w-xs">
         <div className="space-y-1">
           {fields.map((field, index) => (
-            <div key={`protocol-data-info-${index}`} className="text-sm text-white">
+            <div
+              key={`protocol-data-info-${index}`}
+              className="text-sm text-white"
+            >
               {field}
             </div>
           ))}
@@ -45,7 +53,7 @@ export function Protocol() {
         id: 'protocol-selector',
         dataKey: keyBuilder.protocols({ virtualLabId, projectId }),
         queryFn: getProtocols,
-        getOptionLabel: (l) => l.name+" ("+l.generation_type+")",
+        getOptionLabel: (l) => l.name + ' (' + l.generation_type + ')',
         getOptionValue: (l) => l.id,
         placeholder: 'Select a protocol...',
         searchPlaceholder: 'Search protocol...',
@@ -54,20 +62,20 @@ export function Protocol() {
         searchField: 'search',
         tooltip: DataTooltip,
       }),
-    [virtualLabId, projectId, DataTooltip]
+    [virtualLabId, projectId, DataTooltip],
   );
 
   return (
     <Form.Item
-      name="protocol_id"
+      name="cell_morphology_protocol_id"
       label={renderLabel('Protocol', 'main', RequiredFieldMarker)}
       rules={[
         {
           required: true,
           validator: createZodFieldValidator(
             CellMorphologySchema,
-            'protocol_id',
-            form
+            'cell_morphology_protocol_id',
+            form,
           ),
         },
       ]}

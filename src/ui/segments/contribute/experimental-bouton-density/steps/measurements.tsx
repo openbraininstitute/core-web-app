@@ -5,15 +5,21 @@ import { Form, InputNumber, Space } from 'antd';
 
 import type { TMeasurement } from '@/ui/segments/contribute/experimental-bouton-density/schema';
 import { ExperimentalBoutonDensitySchema } from '@/ui/segments/contribute/experimental-bouton-density/schema';
-import { MeasurementStatistic, MeasurementUnit } from '@/api/entitycore/types/shared/global';
-import { createZodFieldValidator, renderLabel } from '@/ui/segments/contribute/shared';
+import {
+  MeasurementStatistic,
+  MeasurementUnit,
+} from '@/api/entitycore/types/shared/global';
+import {
+  createZodFieldValidator,
+  renderLabel,
+} from '@/ui/segments/contribute/shared';
 import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
 import { cn } from '@/utils/css-class';
 
 // CHANGE 1: Define the fixed unit value
-const FIXED_UNIT = MeasurementUnit.PER_MICROMETER;
+const FIXED_UNIT = MeasurementUnit.linear_density__1_um;
 
 export function Measurements() {
   const form = Form.useFormInstance();
@@ -39,7 +45,11 @@ export function Measurements() {
           <>
             <div className="flex flex-col gap-4">
               {fields.map((field) => (
-                <Card key={field.key} className="relative gap-0 p-5 shadow-sm!" borderless>
+                <Card
+                  key={field.key}
+                  className="relative gap-0 p-5 shadow-sm!"
+                  borderless
+                >
                   <div className="flex w-full items-end justify-center gap-x-4">
                     <Space.Compact className="flex w-full gap-2">
                       <Form.Item
@@ -47,14 +57,14 @@ export function Measurements() {
                         label={renderLabel(
                           'Name',
                           'main',
-                          <sup className="text-destructive">*</sup>
+                          <sup className="text-destructive">*</sup>,
                         )}
                         rules={[
                           {
                             validator: createZodFieldValidator(
                               ExperimentalBoutonDensitySchema,
                               `measurements.${field.name}.name`,
-                              form
+                              form,
                             ),
                           },
                         ]}
@@ -70,18 +80,20 @@ export function Measurements() {
                         label={renderLabel(
                           'Value (synapses/μm)',
                           'main',
-                          <sup className="text-destructive">*</sup>
+                          <sup className="text-destructive">*</sup>,
                         )}
                         rules={[
                           {
                             validator: createZodFieldValidator(
                               ExperimentalBoutonDensitySchema,
                               `measurements.${field.name}.value`,
-                              form
+                              form,
                             ),
                           },
                         ]}
-                        getValueFromEvent={(value) => (value === null ? undefined : value)}
+                        getValueFromEvent={(value) =>
+                          value === null ? undefined : value
+                        }
                         className="flex-1"
                       >
                         <InputNumber
@@ -117,7 +129,9 @@ export function Measurements() {
                 variant="outline"
                 size="lg"
                 onClick={() => {
-                  const current = form.getFieldValue('measurements') as Array<TMeasurement>;
+                  const current = form.getFieldValue(
+                    'measurements',
+                  ) as Array<TMeasurement>;
                   form.setFieldValue('measurements', [
                     ...(current ?? []),
                     // CHANGE 2: Initialize new measurement with the fixed unit
@@ -125,11 +139,17 @@ export function Measurements() {
                   ]);
                 }}
                 disabled={(() => {
-                  const measurements = form.getFieldValue('measurements') as Array<TMeasurement>;
+                  const measurements = form.getFieldValue(
+                    'measurements',
+                  ) as Array<TMeasurement>;
                   return measurements?.some((measurement) => {
                     // CHANGE 3: Only check name and value (2 fields) for partial fill
-                    const filledFields = [measurement.name, measurement.value].filter(
-                      (field) => field !== undefined && field !== null && field !== ''
+                    const filledFields = [
+                      measurement.name,
+                      measurement.value,
+                    ].filter(
+                      (field) =>
+                        field !== undefined && field !== null && field !== '',
                     );
                     // If partially filled (some but not all fields), disable the button
                     return filledFields.length > 0 && filledFields.length < 2;
@@ -140,7 +160,7 @@ export function Measurements() {
                   'hover:border-primary-7 hover:text-primary-7 w-max',
                   'disabled:text-label shrink-0',
                   'not-disabled:bg-primary-9 not-disabled:text-white!',
-                  'not-disabled:hover:bg-primary-8'
+                  'not-disabled:hover:bg-primary-8',
                 )}
               >
                 <span>Add measurement</span>

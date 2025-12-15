@@ -63,14 +63,16 @@ const EXPERIMENTAL_BOUTON_DENSITY_STEP_CONFIG: Array<
 ];
 
 const experimentalBoutonDensityConfig = createExperimentalBoutonDensityConfig(
-  EXPERIMENTAL_BOUTON_DENSITY_STEP_CONFIG
+  EXPERIMENTAL_BOUTON_DENSITY_STEP_CONFIG,
 );
 
 interface IExperimentalBoutonDensityProps {
   sessionId: string;
 }
 
-export function ExperimentalBoutonDensity({ sessionId }: IExperimentalBoutonDensityProps) {
+export function ExperimentalBoutonDensity({
+  sessionId,
+}: IExperimentalBoutonDensityProps) {
   const { projectId, virtualLabId } = useWorkspace();
   const { node: defaultBrainRegion } = useBrainRegionHierarchy({
     dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),

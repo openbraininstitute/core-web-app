@@ -28,13 +28,15 @@ export async function getCellMorphologies({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<EntityCoreResponse<ICellMorphology | ICellMorphologyExpanded>>(baseUri, {
+  return await api.get<
+    EntityCoreResponse<ICellMorphology | ICellMorphologyExpanded>
+  >(baseUri, {
     queryParams: {
       ...filters,
       with_facets: withFacets,
     },
     headers: {
-      accept: 'application/json',
+      'accept': 'application/json',
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
     },
@@ -59,16 +61,19 @@ export async function getCellMorphology({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<ICellMorphology | ICellMorphologyExpanded>(`${baseUri}/${id}`, {
-    queryParams: {
-      expand,
+  return await api.get<ICellMorphology | ICellMorphologyExpanded>(
+    `${baseUri}/${id}`,
+    {
+      queryParams: {
+        expand,
+      },
+      headers: {
+        'accept': 'application/json',
+        'content-type': 'application/json',
+        ...getEntityCoreContext(context).headers,
+      },
     },
-    headers: {
-      accept: 'application/json',
-      'content-type': 'application/json',
-      ...getEntityCoreContext(context).headers,
-    },
-  });
+  );
 }
 
 const cellMorphologySchema = z.object({
@@ -86,17 +91,25 @@ const cellMorphologySchema = z.object({
     .string({ message: 'Subject is required' })
     .uuid()
     .nonempty({ message: 'Subject is required' }),
+  cell_morphology_protocol_id: z
+    .string({ message: 'Protocol is required' })
+    .uuid()
+    .nonempty({ message: 'Protocol is required' }),
   license_id: z
     .string({ message: 'License is required' })
     .uuid()
     .nonempty({ message: 'License is required' }),
-  experiment_date: z.string({ message: 'Experiment date is required' }).nullish(),
+  experiment_date: z
+    .string({ message: 'Experiment date is required' })
+    .nullish(),
   contact_email: z
     .string({ message: 'Contact email is required' })
     .email({ message: 'Contact email is required' })
     .nullish(),
   published_in: z.string({ message: 'Published in is required' }).nullish(),
-  location: z.object({ x: z.number(), y: z.number(), z: z.number() }).nullable(),
+  location: z
+    .object({ x: z.number(), y: z.number(), z: z.number() })
+    .nullable(),
 });
 
 export type TCellMorphologyCreate = z.infer<typeof cellMorphologySchema>;
@@ -116,7 +129,7 @@ export async function createCellMorphology({
   const api = await entityCoreApi();
   return await api.post<ICellMorphology>(baseUri, {
     headers: {
-      accept: 'application/json',
+      'accept': 'application/json',
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
     },

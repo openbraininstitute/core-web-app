@@ -27,17 +27,20 @@ export async function getExperimentalSynapsesPerConnections({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<EntityCoreResponse<IExperimentalSynapsesPerConnection>>(baseUri, {
-    queryParams: {
-      ...filters,
-      with_facets: withFacets,
+  return await api.get<EntityCoreResponse<IExperimentalSynapsesPerConnection>>(
+    baseUri,
+    {
+      queryParams: {
+        ...filters,
+        with_facets: withFacets,
+      },
+      headers: {
+        'accept': 'application/json',
+        'content-type': 'application/json',
+        ...getEntityCoreContext(context).headers,
+      },
     },
-    headers: {
-      accept: 'application/json',
-      'content-type': 'application/json',
-      ...getEntityCoreContext(context).headers,
-    },
-  });
+  );
 }
 
 /**
@@ -57,7 +60,7 @@ export async function getExperimentalSynapsesPerConnection({
   const api = await entityCoreApi();
   return await api.get<IExperimentalSynapsesPerConnection>(`${baseUri}/${id}`, {
     headers: {
-      accept: 'application/json',
+      'accept': 'application/json',
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
     },
@@ -70,7 +73,9 @@ const ExperimentalSynapsesPerConnectionSchema = z.object({
     .nonempty({ message: 'Experimental bouton density name is required' }),
   description: z
     .string({ message: 'Experimental bouton density description is required' })
-    .nonempty({ message: 'Experimental bouton density description is required' }),
+    .nonempty({
+      message: 'Experimental bouton density description is required',
+    }),
   brain_region_id: z
     .string({ message: 'Brain region is required' })
     .uuid()
@@ -122,7 +127,7 @@ export async function createExperimentalSynapsesPerConnection({
   const api = await entityCoreApi();
   return await api.post<IExperimentalSynapsesPerConnection>(baseUri, {
     headers: {
-      accept: 'application/json',
+      'accept': 'application/json',
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
     },

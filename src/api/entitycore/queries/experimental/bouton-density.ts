@@ -27,17 +27,20 @@ export async function getExperimentalBoutonDensities({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<EntityCoreResponse<IExperimentalBoutonDensity>>(baseUri, {
-    queryParams: {
-      ...filters,
-      with_facets: withFacets,
+  return await api.get<EntityCoreResponse<IExperimentalBoutonDensity>>(
+    baseUri,
+    {
+      queryParams: {
+        ...filters,
+        with_facets: withFacets,
+      },
+      headers: {
+        'accept': 'application/json',
+        'content-type': 'application/json',
+        ...getEntityCoreContext(context).headers,
+      },
     },
-    headers: {
-      accept: 'application/json',
-      'content-type': 'application/json',
-      ...getEntityCoreContext(context).headers,
-    },
-  });
+  );
 }
 
 /**
@@ -57,7 +60,7 @@ export async function getExperimentalBoutonDensity({
   const api = await entityCoreApi();
   return await api.get<IExperimentalBoutonDensity>(`${baseUri}/${id}`, {
     headers: {
-      accept: 'application/json',
+      'accept': 'application/json',
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
     },
@@ -70,7 +73,9 @@ const ExperimentalBoutonDensitySchema = z.object({
     .nonempty({ message: 'Experimental bouton density name is required' }),
   description: z
     .string({ message: 'Experimental bouton density description is required' })
-    .nonempty({ message: 'Experimental bouton density description is required' }),
+    .nonempty({
+      message: 'Experimental bouton density description is required',
+    }),
   brain_region_id: z
     .string({ message: 'Brain region is required' })
     .uuid()
@@ -87,7 +92,9 @@ const ExperimentalBoutonDensitySchema = z.object({
   legacy_id: z.string().uuid().nullable().optional(),
 });
 
-export type TExperimentalBoutonDensityCreate = z.infer<typeof ExperimentalBoutonDensitySchema>;
+export type TExperimentalBoutonDensityCreate = z.infer<
+  typeof ExperimentalBoutonDensitySchema
+>;
 
 /**
  * Creates a new Experimental cell density
@@ -104,7 +111,7 @@ export async function createExperimentalBoutonDensity({
   const api = await entityCoreApi();
   return await api.post<IExperimentalBoutonDensity>(baseUri, {
     headers: {
-      accept: 'application/json',
+      'accept': 'application/json',
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
     },

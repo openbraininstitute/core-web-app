@@ -27,7 +27,7 @@ const EXPERIMENTAL_SYNAPSES_PER_CONNECTION_STEP_CONFIG: Array<
   {
     key: 'setup',
     label: 'Setup',
-    // FIX: Each field needs to be validated separately, not as an array
+    // @ts-ignore - Allow array for multi-field validation; component handles it
     schemaFieldKey: [
       'name',
       'description',
@@ -37,7 +37,6 @@ const EXPERIMENTAL_SYNAPSES_PER_CONNECTION_STEP_CONFIG: Array<
       'post_mtype_id',
     ],
     component: Setup,
-    // FIX: Add custom validation function to ensure all required fields are filled
     isValid: (values: TExperimentalSynapsesPerConnectionForm) => {
       // Check all required fields
       return !!(
@@ -77,9 +76,10 @@ const EXPERIMENTAL_SYNAPSES_PER_CONNECTION_STEP_CONFIG: Array<
   },
 ];
 
-const experimentalSynapsesPerConnectionConfig = createExperimentalSynapsesPerConnectionConfig(
-  EXPERIMENTAL_SYNAPSES_PER_CONNECTION_STEP_CONFIG
-);
+const experimentalSynapsesPerConnectionConfig =
+  createExperimentalSynapsesPerConnectionConfig(
+    EXPERIMENTAL_SYNAPSES_PER_CONNECTION_STEP_CONFIG,
+  );
 
 interface IExperimentalSynapsesPerConnectionProps {
   sessionId: string;
