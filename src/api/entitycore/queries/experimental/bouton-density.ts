@@ -7,6 +7,7 @@ import type {
   IExperimentalBoutonDensity,
 } from '@/api/entitycore/types/entities/bouton-density';
 import type { WorkspaceContext } from '@/types/common';
+import {measurementSchema} from '@/api/entitycore/queries/experimental/neuron-density';
 
 const baseUri = '/experimental-bouton-density';
 /**
@@ -62,17 +63,6 @@ export async function getExperimentalBoutonDensity({
     },
   });
 }
-
-
-export const measurementSchema = z.object({
-  name: z
-    .string({ message: 'Measurement name is required' })
-    .nonempty({ message: 'Measurement name is required' }),
-  unit: z
-    .string({ message: 'Measurement unit is required' })
-    .nonempty({ message: 'Measurement unit is required' }),
-  value: z.number({ message: 'Measurement value must be a float number' }),
-});
 
 const ExperimentalBoutonDensitySchema = z.object({
   name: z

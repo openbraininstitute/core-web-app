@@ -7,6 +7,7 @@ import type {
   IExperimentalSynapsesPerConnection,
 } from '@/api/entitycore/types/entities/synapses-per-connection';
 import type { WorkspaceContext } from '@/types/common';
+import {measurementSchema} from '@/api/entitycore/queries/experimental/neuron-density';
 
 const baseUri = '/experimental-synapses-per-connection';
 /**
@@ -62,16 +63,6 @@ export async function getExperimentalSynapsesPerConnection({
     },
   });
 }
-
-export const measurementSchema = z.object({
-  name: z
-    .string({ message: 'Measurement name is required' })
-    .nonempty({ message: 'Measurement name is required' }),
-  unit: z
-    .string({ message: 'Measurement unit is required' })
-    .nonempty({ message: 'Measurement unit is required' }),
-  value: z.number({ message: 'Measurement value must be a float number' }),
-});
 
 const ExperimentalSynapsesPerConnectionSchema = z.object({
   name: z
