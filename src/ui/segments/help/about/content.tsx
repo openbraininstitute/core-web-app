@@ -9,7 +9,7 @@ import { getSearchParam } from '@/utils/getSearchParams';
 
 import styles from '@/ui/segments/help/about/about-content.module.css';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 export type AboutContentProps = {
   aboutContent: PortableTextBlock[];
