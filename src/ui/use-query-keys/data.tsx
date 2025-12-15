@@ -83,19 +83,11 @@ export const keyBuilder = {
       ...props,
     },
   ],
-  meModel: ({
-    virtualLabId,
-    projectId,
-    entityId,
-  }: WorkspaceContext & { entityId: string }) => [
+  meModel: ({ virtualLabId, projectId, entityId }: WorkspaceContext & { entityId: string }) => [
     `${prefix}-single-neuron-model`,
     { virtualLabId, projectId, entityId },
   ],
-  synaptome: ({
-    virtualLabId,
-    projectId,
-    entityId,
-  }: WorkspaceContext & { entityId: string }) => [
+  synaptome: ({ virtualLabId, projectId, entityId }: WorkspaceContext & { entityId: string }) => [
     `${prefix}-single-neuron-synaptome-model`,
     { virtualLabId, projectId, entityId },
   ],
@@ -148,10 +140,7 @@ export const keyBuilder = {
     page,
     page_size,
     ...props
-  }: WorkspaceContext & { page: number; page_size: number } & Record<
-      string,
-      any
-    >) => [
+  }: WorkspaceContext & { page: number; page_size: number } & Record<string, any>) => [
     `${prefix}-many-circuits`,
     { virtualLabId, projectId, page, page_size, ...props },
   ],
@@ -181,14 +170,8 @@ export const keyBuilder = {
     `${prefix}-entity-asset`,
     { entityId, assetId, assetPath, assetType, asRawResponse, ...context },
   ],
-  simCampaign: ({ entityId }: { entityId: string }) => [
-    `${prefix}-sim-campaign`,
-    { entityId },
-  ],
-  annotation: ({ entityId }: { entityId: string }) => [
-    `${prefix}-annotation`,
-    { entityId },
-  ],
+  simCampaign: ({ entityId }: { entityId: string }) => [`${prefix}-sim-campaign`, { entityId }],
+  annotation: ({ entityId }: { entityId: string }) => [`${prefix}-annotation`, { entityId }],
   neuronMorphology3DData: ({
     virtualLabId,
     projectId,
@@ -197,11 +180,10 @@ export const keyBuilder = {
     `${prefix}-neuron-morphology-3d-data`,
     { virtualLabId, projectId, modelId },
   ],
-  agents: ({
-    agentType,
-  }: {
-    agentType: 'person' | 'organization' | 'consortium';
-  }) => [`${prefix}-agents`, { agentType }],
+  agents: ({ agentType }: { agentType: 'person' | 'organization' | 'consortium' }) => [
+    `${prefix}-agents`,
+    { agentType },
+  ],
   roles: ({ roleType }: { roleType: 'contributor' | 'owner' | 'viewer' }) => [
     `${prefix}-roles`,
     { roleType },
@@ -242,10 +224,7 @@ export const keyBuilder = {
   }: {
     context: WorkspaceContext;
     props: Partial<IScientificArtifactPublicationLinkFilter>;
-  }) => [
-    `${prefix}-scientific-artifact-publication-links`,
-    { ...context, ...props },
-  ],
+  }) => [`${prefix}-scientific-artifact-publication-links`, { ...context, ...props }],
   singleNeuronSimulations: ({
     context,
     ...props
@@ -259,10 +238,7 @@ export const keyBuilder = {
   }: {
     context: WorkspaceContext;
     props: Partial<ISingleNeuronSynaptomeSimulationFilter>;
-  }) => [
-    `${prefix}-single-neuron-synaptome-simulations`,
-    { ...context, ...props },
-  ],
+  }) => [`${prefix}-single-neuron-synaptome-simulations`, { ...context, ...props }],
   circuitProperties: ({ circuitId }: { circuitId: string }) => {
     return [`${prefix}-circuit-properties`, circuitId];
   },
@@ -313,8 +289,5 @@ export const keyBuilder = {
   }: {
     context: WorkspaceContext;
     id: string;
-  } & Record<string, any>) => [
-    `${prefix}-validation-results`,
-    { context, id, ...props },
-  ],
+  } & Record<string, any>) => [`${prefix}-validation-results`, { context, id, ...props }],
 };

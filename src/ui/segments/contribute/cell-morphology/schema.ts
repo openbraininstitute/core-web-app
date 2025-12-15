@@ -24,11 +24,7 @@ export const CELL_MORPHOLOGY_FILE_TYPES = [
   { type: 'h5', extension: 'h5', mimeType: 'application/x-hdf5' },
 ] as const;
 
-export const CellMorphologyAssetsSchema = createFileSchema([
-  'swc',
-  'asc',
-  'h5',
-]);
+export const CellMorphologyAssetsSchema = createFileSchema(['swc', 'asc', 'h5']);
 
 export const CellMorphologySchema = z.object({
   setup: BaseSetupSchema,
@@ -45,7 +41,7 @@ export type TCellMorphologyForm = z.infer<typeof CellMorphologySchema>;
 export function getCellMorphologyMimeType(file: File): string | undefined {
   const ext = file.name.split('.').pop()?.toLowerCase();
   const fileType = CELL_MORPHOLOGY_FILE_TYPES.find(
-    (f) => f.extension === ext || file.type === f.mimeType,
+    (f) => f.extension === ext || file.type === f.mimeType
   );
   return fileType?.mimeType;
 }

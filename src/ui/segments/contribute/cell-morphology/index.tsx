@@ -23,9 +23,7 @@ import {
 import type { TCellMorphologyForm } from '@/ui/segments/contribute/cell-morphology/schema';
 import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
 
-const CELL_MORPHOLOGY_STEP_CONFIG: Array<
-  IContributionStep<TCellMorphologyForm>
-> = [
+const CELL_MORPHOLOGY_STEP_CONFIG: Array<IContributionStep<TCellMorphologyForm>> = [
   {
     key: 'assets',
     label: 'Asset Upload',
@@ -71,9 +69,7 @@ const CELL_MORPHOLOGY_STEP_CONFIG: Array<
   },
 ];
 
-const cellMorphologyConfig = createCellMorphologyConfig(
-  CELL_MORPHOLOGY_STEP_CONFIG,
-);
+const cellMorphologyConfig = createCellMorphologyConfig(CELL_MORPHOLOGY_STEP_CONFIG);
 
 interface ICellMorphologyProps {
   sessionId: string;
