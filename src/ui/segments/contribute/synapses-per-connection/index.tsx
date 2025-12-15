@@ -28,7 +28,14 @@ const EXPERIMENTAL_SYNAPSES_PER_CONNECTION_STEP_CONFIG: Array<
     key: 'setup',
     label: 'Setup',
     // FIX: Each field needs to be validated separately, not as an array
-    schemaFieldKey: ['name', 'description', 'pre_region_id', 'post_region_id', 'pre_mtype_id', 'post_mtype_id'],
+    schemaFieldKey: [
+      'name',
+      'description',
+      'pre_region_id',
+      'post_region_id',
+      'pre_mtype_id',
+      'post_mtype_id',
+    ],
     component: Setup,
     // FIX: Add custom validation function to ensure all required fields are filled
     isValid: (values: TExperimentalSynapsesPerConnectionForm) => {
@@ -78,7 +85,9 @@ interface IExperimentalSynapsesPerConnectionProps {
   sessionId: string;
 }
 
-export function ExperimentalSynapsesPerConnection({ sessionId }: IExperimentalSynapsesPerConnectionProps) {
+export function ExperimentalSynapsesPerConnection({
+  sessionId,
+}: IExperimentalSynapsesPerConnectionProps) {
   const { projectId, virtualLabId } = useWorkspace();
   const { node: defaultBrainRegion } = useBrainRegionHierarchy({
     dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),

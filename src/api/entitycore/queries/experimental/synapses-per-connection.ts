@@ -7,7 +7,7 @@ import type {
   IExperimentalSynapsesPerConnection,
 } from '@/api/entitycore/types/entities/synapses-per-connection';
 import type { WorkspaceContext } from '@/types/common';
-import {measurementSchema} from '@/api/entitycore/queries/experimental/neuron-density';
+import { measurementSchema } from '@/api/entitycore/queries/experimental/neuron-density';
 
 const baseUri = '/experimental-synapses-per-connection';
 /**
@@ -74,7 +74,7 @@ const ExperimentalSynapsesPerConnectionSchema = z.object({
   brain_region_id: z
     .string({ message: 'Brain region is required' })
     .uuid()
-    .nonempty({ message: 'Post brain region is required' }),    
+    .nonempty({ message: 'Post brain region is required' }),
   pre_mtype_id: z
     .string({ message: 'Pre m-type is required' })
     .uuid()
@@ -103,7 +103,9 @@ const ExperimentalSynapsesPerConnectionSchema = z.object({
   legacy_id: z.string().uuid().nullable().optional(),
 });
 
-export type TExperimentalSynapsesPerConnectionCreate = z.infer<typeof ExperimentalSynapsesPerConnectionSchema>;
+export type TExperimentalSynapsesPerConnectionCreate = z.infer<
+  typeof ExperimentalSynapsesPerConnectionSchema
+>;
 
 /**
  * Creates a new Experimental cell density

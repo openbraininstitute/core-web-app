@@ -33,7 +33,10 @@ export const EXPERIMENTAL_SYNAPSES_PER_CONNECTION_PROGRESS_STEPS: Array<{
 
 export function createExperimentalSynapsesPerConnectionConfig(
   steps: Array<IContributionStep<TExperimentalSynapsesPerConnectionForm>>
-): IContributionFormConfig<TExperimentalSynapsesPerConnectionForm, typeof ExperimentalSynapsesPerConnectionSchema> {
+): IContributionFormConfig<
+  TExperimentalSynapsesPerConnectionForm,
+  typeof ExperimentalSynapsesPerConnectionSchema
+> {
   return {
     entityType: ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
     title: 'Experimental Synapse Density',
@@ -43,7 +46,7 @@ export function createExperimentalSynapsesPerConnectionConfig(
     getInitialValues: () => ({
       contribution: [{}] as TExperimentalSynapsesPerConnectionForm['contribution'],
       measurements: [
-        { name: undefined, unit: MeasurementUnit.DIMENSIONLESS, value: undefined }
+        { name: undefined, unit: MeasurementUnit.DIMENSIONLESS, value: undefined },
       ] as TExperimentalSynapsesPerConnectionForm['measurements'],
       license_id: DEFAULT_LICENSE_ID,
       // pre_region and post_region will be set by the BrainRegionDropdown component

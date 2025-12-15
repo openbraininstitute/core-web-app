@@ -46,11 +46,7 @@ function BrainRegionFormField({ name, label }: { name: string; label: string }) 
           message: `${label} is required.`,
         },
         {
-          validator: createZodFieldValidator(
-            ExperimentalSynapsesPerConnectionSchema,
-            name,
-            form
-          ),
+          validator: createZodFieldValidator(ExperimentalSynapsesPerConnectionSchema, name, form),
         },
       ]}
     >
@@ -83,7 +79,11 @@ export function Setup() {
           },
         ]}
       >
-        <Input size="large" className="h-12 rounded-full! placeholder:text-sm" placeholder="Enter name" />
+        <Input
+          size="large"
+          className="h-12 rounded-full! placeholder:text-sm"
+          placeholder="Enter name"
+        />
       </Form.Item>
 
       {/* Description field, now top-level (optional) */}
@@ -108,17 +108,16 @@ export function Setup() {
         />
       </Form.Item>
       <BrainRegionFormField name="brain_region_id" label="Brain region" />
-      
+
       {/* Pre brain region: Required field, top-level */}
       <BrainRegionFormField name="pre_region_id" label="Pre brain region" />
-      
+
       <PreMTypeClassificationSelector schema={ExperimentalSynapsesPerConnectionSchema} />
-      
+
       {/* Post brain region: Required field, top-level */}
       <BrainRegionFormField name="post_region_id" label="Post brain region" />
 
       <PostMTypeClassificationSelector schema={ExperimentalSynapsesPerConnectionSchema} />
-      
     </div>
   );
 }

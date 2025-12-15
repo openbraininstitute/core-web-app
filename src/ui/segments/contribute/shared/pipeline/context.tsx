@@ -69,22 +69,25 @@ export function ContributionPipelineProvider<
 
     progressSteps.forEach((step) => {
       const fieldKey = step.schemaFieldKey;
-      
+
       // FIX: Handle array of field keys (for multi-field steps like Setup)
       if (Array.isArray(fieldKey)) {
         // Create a pick object with all fields set to true
-        const pickObject = fieldKey.reduce((acc, key) => {
-          acc[key] = true;
-          return acc;
-        }, {} as Record<string, true>);
-        
+        const pickObject = fieldKey.reduce(
+          (acc, key) => {
+            acc[key] = true;
+            return acc;
+          },
+          {} as Record<string, true>
+        );
+
         const partialSchema = schema.pick(pickObject);
         const parseResult = partialSchema.safeParse(allValues);
-        
+
         // For array fields, check if ANY field is dirty
-        const isDirty = fieldKey.some(key => dirtyFields.includes(key));
+        const isDirty = fieldKey.some((key) => dirtyFields.includes(key));
         const hasErrors = !parseResult.success;
-        
+
         if (!isDirty) {
           statusMap[step.key] = 'non-touched';
         } else if (hasErrors) {

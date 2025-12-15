@@ -50,7 +50,7 @@ const MeasurementArraySchema = z.array(measurementSchema).superRefine((arr, ctx)
     }
 
     // Check if both name and value are filled
-    if (measurement.name && (measurement.value !== undefined && measurement.value !== null)) {
+    if (measurement.name && measurement.value !== undefined && measurement.value !== null) {
       hasFullyFilledMeasurement = true;
     }
   });
@@ -66,14 +66,14 @@ const MeasurementArraySchema = z.array(measurementSchema).superRefine((arr, ctx)
 
 // Define the fields to be extracted from BaseSetupSchema, excluding brain_region_id
 const SetupFields = BaseSetupSchema.pick({
-    name: true,
-    description: true,
+  name: true,
+  description: true,
 });
 
 export const ExperimentalSynapsesPerConnectionSchema = z.object({
   // Spread the setup fields to the top level (name and description)
-  ...SetupFields.shape, 
-  
+  ...SetupFields.shape,
+
   subject_id: z
     .string({ message: 'Subject is required' })
     .uuid()
@@ -102,7 +102,7 @@ export const ExperimentalSynapsesPerConnectionSchema = z.object({
     .string({ message: 'M-type region is required' })
     .uuid()
     .nonempty({ message: 'M-type region is required' }),
-    
+
   contribution: ContributionArraySchema,
   measurements: MeasurementArraySchema,
 });

@@ -53,7 +53,7 @@ const MeasurementArraySchema = z.array(measurementSchema).superRefine((arr, ctx)
     }
 
     // CHANGE 3: Check if both name and value are filled (2 fields)
-    if (measurement.name && (measurement.value !== undefined && measurement.value !== null)) {
+    if (measurement.name && measurement.value !== undefined && measurement.value !== null) {
       hasFullyFilledMeasurement = true;
     }
   });

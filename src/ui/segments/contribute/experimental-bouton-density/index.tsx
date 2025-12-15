@@ -14,7 +14,7 @@ import {
   Subject,
   License,
   Setup,
-  MTypeClassification
+  MTypeClassification,
 } from '@/ui/segments/contribute/experimental-bouton-density/steps';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import type { TExperimentalBoutonDensityForm } from '@/ui/segments/contribute/experimental-bouton-density/schema';
@@ -35,7 +35,7 @@ const EXPERIMENTAL_BOUTON_DENSITY_STEP_CONFIG: Array<
     schemaFieldKey: 'measurements',
     component: Measurements,
   },
-  { 
+  {
     key: 'mtype',
     label: 'M-type',
     schemaFieldKey: 'mtype_class_id',

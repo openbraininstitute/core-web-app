@@ -118,10 +118,9 @@ export function Measurements() {
                   const measurements = form.getFieldValue('measurements') as Array<TMeasurement>;
                   return measurements?.some((measurement) => {
                     // Only check name and value since unit is always pre-filled with DIMENSIONLESS
-                    const filledFields = [
-                      measurement.name,
-                      measurement.value,
-                    ].filter((field) => field !== undefined && field !== null && field !== '');
+                    const filledFields = [measurement.name, measurement.value].filter(
+                      (field) => field !== undefined && field !== null && field !== ''
+                    );
                     // If partially filled (some but not all fields), disable the button
                     return filledFields.length > 0 && filledFields.length < 2;
                   });

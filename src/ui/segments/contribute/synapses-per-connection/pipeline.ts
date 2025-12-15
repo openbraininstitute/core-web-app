@@ -9,12 +9,8 @@ import { EXPERIMENTAL_SYNAPSES_PER_CONNECTION_PROGRESS_STEPS } from '@/ui/segmen
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
-import {
-  createExperimentalSynapsesPerConnection,
-} from '@/api/entitycore/queries/experimental/synapses-per-connection';
-import {
-  measurementSchema,
-} from '@/api/entitycore/queries/experimental/neuron-density';
+import { createExperimentalSynapsesPerConnection } from '@/api/entitycore/queries/experimental/synapses-per-connection';
+import { measurementSchema } from '@/api/entitycore/queries/experimental/neuron-density';
 // NOTE: The import for MeasurementUnit has been intentionally removed as it was failing to resolve at runtime.
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
@@ -35,27 +31,27 @@ export function useExperimentalSynapsesPerConnectionPipeline({
 
   const createExperimentalSynapsesPerConnectionAsync = useMutation({
     mutationFn: (values: TExperimentalSynapsesPerConnectionForm) => {
-      
       const measurements =
         compact(
           // values.measurements.map((m) => {
-            values.measurements.map((m: TExperimentalSynapsesPerConnectionForm['measurements'][number]) => {
-            // FIX: Explicitly set the 'unit' using the hardcoded string literal 'DIMENSIONLESS'.
-            // This bypasses the runtime failure of the MeasurementUnit enum import, ensuring the unit is a string.
-            const measurementWithUnit = {
-              name: m.name,
-              value: m.value,
-              unit: 'dimensionless', // Hardcoded to satisfy Zod's z.literal() check
-            };
+          values.measurements.map(
+            (m: TExperimentalSynapsesPerConnectionForm['measurements'][number]) => {
+              // FIX: Explicitly set the 'unit' using the hardcoded string literal 'DIMENSIONLESS'.
+              // This bypasses the runtime failure of the MeasurementUnit enum import, ensuring the unit is a string.
+              const measurementWithUnit = {
+                name: m.name,
+                value: m.value,
+                unit: 'dimensionless', // Hardcoded to satisfy Zod's z.literal() check
+              };
 
-            const d = measurementSchema.safeParse(measurementWithUnit);
-            
-            if (d.success) return d.data;
+              const d = measurementSchema.safeParse(measurementWithUnit);
 
-            return null;
-          })
+              if (d.success) return d.data;
+
+              return null;
+            }
+          )
         ) ?? [];
-      
 
       const payload = {
         name: values.name,
@@ -70,8 +66,6 @@ export function useExperimentalSynapsesPerConnectionPipeline({
         measurements,
         legacy_id: null,
       };
-
-
 
       return createExperimentalSynapsesPerConnection({
         context: { projectId, virtualLabId },
@@ -111,11 +105,13 @@ export function useExperimentalSynapsesPerConnectionPipeline({
       entityId: string;
       contribution: TExperimentalSynapsesPerConnectionForm['contribution'];
     }) => {
-      
       return Promise.all(
         contribution
-            .filter((c: TExperimentalSynapsesPerConnectionForm['contribution'][number]) => ContributionSchema.safeParse(c).success)
-            .map((c) =>
+          .filter(
+            (c: TExperimentalSynapsesPerConnectionForm['contribution'][number]) =>
+              ContributionSchema.safeParse(c).success
+          )
+          .map((c) =>
             createContribution({
               context: { virtualLabId, projectId },
               contributor: {
@@ -127,13 +123,15 @@ export function useExperimentalSynapsesPerConnectionPipeline({
           )
       );
     },
-    
   });
 
-
-  async function createEntity({ values }: { values: TExperimentalSynapsesPerConnectionForm }): Promise<string> {
-    const experimentalSynapsesPerConnection = await createExperimentalSynapsesPerConnectionAsync.mutateAsync(values);
-    
+  async function createEntity({
+    values,
+  }: {
+    values: TExperimentalSynapsesPerConnectionForm;
+  }): Promise<string> {
+    const experimentalSynapsesPerConnection =
+      await createExperimentalSynapsesPerConnectionAsync.mutateAsync(values);
 
     await Promise.allSettled([
       createContributionAsync.mutateAsync({

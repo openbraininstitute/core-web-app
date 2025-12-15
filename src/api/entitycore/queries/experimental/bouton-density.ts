@@ -7,7 +7,7 @@ import type {
   IExperimentalBoutonDensity,
 } from '@/api/entitycore/types/entities/bouton-density';
 import type { WorkspaceContext } from '@/types/common';
-import {measurementSchema} from '@/api/entitycore/queries/experimental/neuron-density';
+import { measurementSchema } from '@/api/entitycore/queries/experimental/neuron-density';
 
 const baseUri = '/experimental-bouton-density';
 /**

@@ -7,7 +7,7 @@ import { compact, get } from 'es-toolkit/compat';
 
 import { createMtypeClassification } from '@/api/entitycore/queries/annotations/mtype-classification';
 import { createEtypeClassification } from '@/api/entitycore/queries/annotations/etype-classification';
-import { EXPERIMENTAL_NEURON_DENSITY_PROGRESS_STEPS } from '@/ui/segments/contribute/experimental-neuron-density/config'; 
+import { EXPERIMENTAL_NEURON_DENSITY_PROGRESS_STEPS } from '@/ui/segments/contribute/experimental-neuron-density/config';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
@@ -41,11 +41,11 @@ export function useExperimentalNeuronDensityPipeline({
           values.measurements.map((m) => {
             // FIX: Explicitly set the 'unit' to the required string literal '1/mm3'
             const measurementWithUnit = {
-                name: m.name,
-                value: m.value,
-                unit: '1/mm³', // Hardcoded string value for the unit
+              name: m.name,
+              value: m.value,
+              unit: '1/mm³', // Hardcoded string value for the unit
             };
-            
+
             const d = measurementSchema.safeParse(measurementWithUnit);
             if (d.success) return d.data;
             return null;
@@ -204,7 +204,6 @@ export function useExperimentalNeuronDensityPipeline({
     const results = await Promise.all(classificationPromises);
     results.forEach((result) => {
       if (result.status === 'rejected') {
-        
         throw new Error('One or more classifications failed');
       }
     });
@@ -231,12 +230,14 @@ export function useExperimentalNeuronDensityPipeline({
     createExperimentalNeuronDensity: createExperimentalNeuronDensityAsync.status,
     createContribution: createContributionAsync.status,
     // For optional steps, if they were never called (status is 'idle'), treat as 'success'
-    createEtypeClassification: createEtypeClassificationAsync.status === 'idle' 
-      ? 'success' 
-      : createEtypeClassificationAsync.status,
-    createMtypeClassification: createMtypeClassificationAsync.status === 'idle'
-      ? 'success'
-      : createMtypeClassificationAsync.status,
+    createEtypeClassification:
+      createEtypeClassificationAsync.status === 'idle'
+        ? 'success'
+        : createEtypeClassificationAsync.status,
+    createMtypeClassification:
+      createMtypeClassificationAsync.status === 'idle'
+        ? 'success'
+        : createMtypeClassificationAsync.status,
   };
 
   return {

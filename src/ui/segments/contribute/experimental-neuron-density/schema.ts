@@ -19,7 +19,7 @@ export type TMeasurement = z.infer<typeof measurementSchema>;
 
 const MeasurementArraySchema = z.array(measurementSchema).superRefine((arr, ctx) => {
   let hasFullyFilledMeasurement = false;
-  
+
   // FIX: This section is corrected to enforce at least one measurement.
   if (arr.length === 0) {
     ctx.addIssue({

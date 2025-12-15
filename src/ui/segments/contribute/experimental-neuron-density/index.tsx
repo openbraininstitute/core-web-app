@@ -15,7 +15,7 @@ import {
   License,
   Setup,
   ETypeClassification,
-  MTypeClassification
+  MTypeClassification,
 } from '@/ui/segments/contribute/experimental-neuron-density/steps';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
@@ -49,7 +49,7 @@ const EXPERIMENTAL_NEURON_DENSITY_STEP_CONFIG: Array<
     schemaFieldKey: 'subject_id',
     component: Subject,
   },
-  { 
+  {
     key: 'mtype',
     label: 'M-type',
     schemaFieldKey: 'mtype_class_id',

@@ -10,12 +10,8 @@ import { EXPERIMENTAL_BOUTON_DENSITY_PROGRESS_STEPS } from '@/ui/segments/contri
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
-import {
-  createExperimentalBoutonDensity,
-} from '@/api/entitycore/queries/experimental/bouton-density';
-import {
-  measurementSchema,
-} from '@/api/entitycore/queries/experimental/neuron-density';
+import { createExperimentalBoutonDensity } from '@/api/entitycore/queries/experimental/bouton-density';
+import { measurementSchema } from '@/api/entitycore/queries/experimental/neuron-density';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type { TExperimentalBoutonDensityForm } from '@/ui/segments/contribute/experimental-bouton-density/schema';
@@ -35,7 +31,6 @@ export function useExperimentalBoutonDensityPipeline({
 
   const createExperimentalBoutonDensityAsync = useMutation({
     mutationFn: (values: TExperimentalBoutonDensityForm) => {
-      
       const measurements =
         compact(
           values.measurements.map((m) => {
@@ -48,13 +43,12 @@ export function useExperimentalBoutonDensityPipeline({
             };
 
             const d = measurementSchema.safeParse(measurementWithUnit);
-            
+
             if (d.success) return d.data;
 
             return null;
           })
         ) ?? [];
-      
 
       const payload = {
         name: values.setup.name,
@@ -66,7 +60,6 @@ export function useExperimentalBoutonDensityPipeline({
         measurements,
         legacy_id: null,
       };
-
 
       return createExperimentalBoutonDensity({
         context: { projectId, virtualLabId },
@@ -105,7 +98,6 @@ export function useExperimentalBoutonDensityPipeline({
       entityId: string;
       contribution: TExperimentalBoutonDensityForm['contribution'];
     }) => {
-      
       return Promise.all(
         contribution
           .filter((c) => ContributionSchema.safeParse(c).success)
@@ -124,29 +116,25 @@ export function useExperimentalBoutonDensityPipeline({
   });
 
   const createMtypeClassificationAsync = useMutation({
-    mutationFn: ({
-      entityId,
-      mtype_class_id,
-    }: {
-      entityId: string;
-      mtype_class_id: string;
-    }) => {
+    mutationFn: ({ entityId, mtype_class_id }: { entityId: string; mtype_class_id: string }) => {
       return createMtypeClassification({
         context: { projectId, virtualLabId },
         payload: {
           entity_id: entityId,
           mtype_class_id,
-          authorized_public:true
+          authorized_public: true,
         },
       });
     },
-
   });
 
-
-  async function createEntity({ values }: { values: TExperimentalBoutonDensityForm }): Promise<string> {
-    const experimentalBoutonDensity = await createExperimentalBoutonDensityAsync.mutateAsync(values);
-
+  async function createEntity({
+    values,
+  }: {
+    values: TExperimentalBoutonDensityForm;
+  }): Promise<string> {
+    const experimentalBoutonDensity =
+      await createExperimentalBoutonDensityAsync.mutateAsync(values);
 
     await Promise.allSettled([
       createContributionAsync.mutateAsync({
@@ -158,7 +146,6 @@ export function useExperimentalBoutonDensityPipeline({
         mtype_class_id: values.mtype_class_id,
       }),
     ]);
-
 
     return experimentalBoutonDensity.id;
   }
