@@ -226,6 +226,14 @@ export const keyBuilder = {
     `${prefix}-mtype-class`,
     { context: { virtualLabId, projectId } },
   ],
+  protocols: (context: WorkspaceContext, props?: IProjectFilter) => [
+    `${prefix}-protocols`,
+    { ...context, ...props },
+  ],
+  protocol: ({ id, context }: { id: string; context: WorkspaceContext }) => [
+    `${prefix}-protocol`,
+    { id, context },
+  ],
   subjects: (context: WorkspaceContext, props?: ISubjectFilter) => [
     `${prefix}-subjects`,
     { ...context, ...props },
