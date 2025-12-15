@@ -34,9 +34,10 @@ export function Protocol() {
     return (
       <div className="max-w-xs">
         <div className="space-y-1">
+          {/* eslint-disable-next-line react/no-array-index-key */}
           {fields.map((field, index) => (
             <div
-              key={`protocol-data-info-${index}`}
+              key={index}
               className="text-sm text-white"
             >
               {field}
