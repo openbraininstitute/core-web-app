@@ -39,7 +39,9 @@ export function useExperimentalSynapsesPerConnectionPipeline({
       const measurements: { value: number; name: string; unit: string }[] =
         compact(
           values.measurements.map(
-            (m: TExperimentalSynapsesPerConnectionForm['measurements'][number]) => {
+            (
+              m: TExperimentalSynapsesPerConnectionForm['measurements'][number],
+            ) => {
               // FIX: Explicitly set the 'unit' using the hardcoded string literal 'DIMENSIONLESS'.
               // This bypasses the runtime failure of the MeasurementUnit enum import, ensuring the unit is a string.
               const measurementWithUnit = {
@@ -53,8 +55,8 @@ export function useExperimentalSynapsesPerConnectionPipeline({
               if (d.success) return d.data;
 
               return null;
-            }
-          )
+            },
+          ),
         ) ?? [];
 
       const payload = {
@@ -92,7 +94,7 @@ export function useExperimentalSynapsesPerConnectionPipeline({
             return (
               get(
                 (query.queryKey as ExtendedEntityTypeQueryKey)[0],
-                'context.extendedEntityType'
+                'context.extendedEntityType',
               ) === ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection
             );
           },
@@ -112,19 +114,23 @@ export function useExperimentalSynapsesPerConnectionPipeline({
       return Promise.all(
         contribution
           .filter(
-            (c: TExperimentalSynapsesPerConnectionForm['contribution'][number]) =>
-              ContributionSchema.safeParse(c).success
+            (
+              c: TExperimentalSynapsesPerConnectionForm['contribution'][number],
+            ) => ContributionSchema.safeParse(c).success,
           )
-          .map((c: TExperimentalSynapsesPerConnectionForm['contribution'][number]) =>
-            createContribution({
-              context: { virtualLabId, projectId },
-              contributor: {
-                agent_id: c.agent_id!,
-                role_id: c.role_id!,
-                entity_id: entityId,
-              },
-            })
-          )
+          .map(
+            (
+              c: TExperimentalSynapsesPerConnectionForm['contribution'][number],
+            ) =>
+              createContribution({
+                context: { virtualLabId, projectId },
+                contributor: {
+                  agent_id: c.agent_id!,
+                  role_id: c.role_id!,
+                  entity_id: entityId,
+                },
+              }),
+          ),
       );
     },
   });
@@ -148,12 +154,16 @@ export function useExperimentalSynapsesPerConnectionPipeline({
   }
 
   const loading =
-    createExperimentalSynapsesPerConnectionAsync.isPending || createContributionAsync.isPending;
+    createExperimentalSynapsesPerConnectionAsync.isPending ||
+    createContributionAsync.isPending;
 
-  const error = createExperimentalSynapsesPerConnectionAsync.error || createContributionAsync.error;
+  const error =
+    createExperimentalSynapsesPerConnectionAsync.error ||
+    createContributionAsync.error;
 
   const status = {
-    createExperimentalSynapsesPerConnection: createExperimentalSynapsesPerConnectionAsync.status,
+    createExperimentalSynapsesPerConnection:
+      createExperimentalSynapsesPerConnectionAsync.status,
     createContribution: createContributionAsync.status,
   };
 
@@ -170,7 +180,7 @@ export function useExperimentalSynapsesPerConnectionPipeline({
         };
         return acc;
       },
-      {} as Record<string, IMutationKeyConfig>
+      {} as Record<string, IMutationKeyConfig>,
     ),
   };
 }
