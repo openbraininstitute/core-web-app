@@ -42,7 +42,9 @@ export interface EntityCoreBaseAsset {
 }
 
 export interface EntityCoreResource
-  extends EntityCoreIdentifiable, EntityCoreBaseType, EntityCoreBaseAsset {}
+  extends EntityCoreIdentifiable,
+    EntityCoreBaseType,
+    EntityCoreBaseAsset {}
 
 export interface Timestamps {
   creation_date: string; // ISO format
@@ -62,8 +64,7 @@ interface Protocol {
   name: string;
   cell_morphology_protocol_id: string;
 }
-export interface IProtocol
-  extends Protocol, Timestamps, EntityCoreIdentifiable {}
+export interface IProtocol extends Protocol, Timestamps, EntityCoreIdentifiable {}
 
 export const EntityTypeSchema = z.string() as z.ZodSchema<EntityCoreDataType>;
 
@@ -81,19 +82,9 @@ export const CellMorphologyGenerationTypeSchema = z.enum([
   'placeholder',
 ]);
 
-export const SlicingDirectionTypeSchema = z.enum([
-  'coronal',
-  'sagittal',
-  'horizontal',
-  'custom',
-]);
+export const SlicingDirectionTypeSchema = z.enum(['coronal', 'sagittal', 'horizontal', 'custom']);
 
-export const RepairPipelineTypeSchema = z.enum([
-  'raw',
-  'curated',
-  'unraveled',
-  'repaired',
-]);
+export const RepairPipelineTypeSchema = z.enum(['raw', 'curated', 'unraveled', 'repaired']);
 
 export type ModifiedMorphologyMethodType = {
   type: 'cloned' | 'mix_and_match' | 'mousified' | 'ratified';
@@ -141,8 +132,7 @@ export const MeasurementUnit = {
   angle__radian: 'radian',
 } as const;
 
-export type TMeasurementUnit =
-  (typeof MeasurementUnit)[keyof typeof MeasurementUnit];
+export type TMeasurementUnit = (typeof MeasurementUnit)[keyof typeof MeasurementUnit];
 
 export type MeasurementBase = {
   id: number;
@@ -290,12 +280,16 @@ export interface IAnnotation extends EntityCoreIdentifiable, Annotation {}
 export interface IMType extends IAnnotation {}
 export interface IEType extends IAnnotation {}
 export interface IMTypeClassification
-  extends EntityCoreIdentifiable, Timestamps, EntityAuthorization {
+  extends EntityCoreIdentifiable,
+    Timestamps,
+    EntityAuthorization {
   mtype_class_id: string;
   entity_id: string;
 }
 export interface IETypeClassification
-  extends EntityCoreIdentifiable, Timestamps, EntityAuthorization {
+  extends EntityCoreIdentifiable,
+    Timestamps,
+    EntityAuthorization {
   etype_class_id: string;
   entity_id: string;
 }
@@ -335,7 +329,7 @@ export const Sex = {
 } as const;
 
 export const SexDictionary = Object.fromEntries(
-  Object.entries(Sex).map(([name, value]) => [name, value.key]),
+  Object.entries(Sex).map(([name, value]) => [name, value.key])
 ) as {
   [K in keyof typeof Sex]: (typeof Sex)[K]['key'];
 };
@@ -356,7 +350,7 @@ export const AgePeriod = {
 } as const;
 
 export const AgePeriodDictionary = Object.fromEntries(
-  Object.entries(AgePeriod).map(([name, value]) => [name, value.key]),
+  Object.entries(AgePeriod).map(([name, value]) => [name, value.key])
 ) as {
   [K in keyof typeof AgePeriod]: (typeof AgePeriod)[K]['key'];
 };
@@ -375,8 +369,7 @@ type SpeciesBase = {
   taxonomy_id: string;
 };
 
-export interface ISpecies
-  extends SpeciesBase, Timestamps, EntityCoreIdentifiable {}
+export interface ISpecies extends SpeciesBase, Timestamps, EntityCoreIdentifiable {}
 
 export interface NestedSpecies extends SpeciesBase, EntityCoreIdentifiable {}
 
@@ -411,8 +404,7 @@ export type Subject = {
 };
 
 export interface ISubject
-  extends
-    NestedSubject,
+  extends NestedSubject,
     Timestamps,
     EntityCoreOwnership,
     EntityAuthorization,
