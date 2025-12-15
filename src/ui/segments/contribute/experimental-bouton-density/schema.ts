@@ -2,10 +2,7 @@
 
 import z from 'zod';
 
-import {
-  BaseSetupSchema,
-  ContributionArraySchema,
-} from '@/ui/segments/contribute/shared';
+import { BaseSetupSchema, ContributionArraySchema } from '@/ui/segments/contribute/shared';
 import { MeasurementUnit } from '@/api/entitycore/types/shared/global';
 
 const measurementSchema = z.object({
@@ -17,64 +14,58 @@ const measurementSchema = z.object({
 
 export type TMeasurement = z.infer<typeof measurementSchema>;
 
-const MeasurementArraySchema = z
-  .array(measurementSchema)
-  .superRefine((arr, ctx) => {
-    let hasFullyFilledMeasurement = false;
+const MeasurementArraySchema = z.array(measurementSchema).superRefine((arr, ctx) => {
+  let hasFullyFilledMeasurement = false;
 
-    if (arr.length === 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'At least one measurement is required',
-        path: [],
-      });
-      return;
+  if (arr.length === 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'At least one measurement is required',
+      path: [],
+    });
+    return;
+  }
+
+  arr.forEach((measurement, idx) => {
+    // CHANGE 2: Only check name and value since unit is always PER_MICROMETER
+    const filledFields = [measurement.name, measurement.value].filter(
+      (field) => field !== undefined && field !== null && field !== ''
+    );
+
+    // If partially filled (has name OR value but not both)
+    // Partial fill is length > 0 and length < 2
+    if (filledFields.length > 0 && filledFields.length < 2) {
+      if (!measurement.name) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Measurement name is required',
+          path: [idx, 'name'],
+        });
+      }
+      // Measurement unit check is removed as it is required and hardcoded by the schema
+      if (measurement.value === undefined || measurement.value === null) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Measurement value is required',
+          path: [idx, 'value'],
+        });
+      }
     }
 
-    arr.forEach((measurement, idx) => {
-      // CHANGE 2: Only check name and value since unit is always PER_MICROMETER
-      const filledFields = [measurement.name, measurement.value].filter(
-        (field) => field !== undefined && field !== null && field !== '',
-      );
-
-      // If partially filled (has name OR value but not both)
-      // Partial fill is length > 0 and length < 2
-      if (filledFields.length > 0 && filledFields.length < 2) {
-        if (!measurement.name) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: 'Measurement name is required',
-            path: [idx, 'name'],
-          });
-        }
-        // Measurement unit check is removed as it is required and hardcoded by the schema
-        if (measurement.value === undefined || measurement.value === null) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: 'Measurement value is required',
-            path: [idx, 'value'],
-          });
-        }
-      }
-
-      // CHANGE 3: Check if both name and value are filled (2 fields)
-      if (
-        measurement.name &&
-        measurement.value !== undefined &&
-        measurement.value !== null
-      ) {
-        hasFullyFilledMeasurement = true;
-      }
-    });
-
-    if (!hasFullyFilledMeasurement) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'At least one measurement must be fully filled',
-        path: [],
-      });
+    // CHANGE 3: Check if both name and value are filled (2 fields)
+    if (measurement.name && measurement.value !== undefined && measurement.value !== null) {
+      hasFullyFilledMeasurement = true;
     }
   });
+
+  if (!hasFullyFilledMeasurement) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'At least one measurement must be fully filled',
+      path: [],
+    });
+  }
+});
 
 export const ExperimentalBoutonDensitySchema = z.object({
   setup: BaseSetupSchema.omit({
@@ -100,6 +91,4 @@ export const ExperimentalBoutonDensitySchema = z.object({
   contribution: ContributionArraySchema,
 });
 
-export type TExperimentalBoutonDensityForm = z.infer<
-  typeof ExperimentalBoutonDensitySchema
->;
+export type TExperimentalBoutonDensityForm = z.infer<typeof ExperimentalBoutonDensitySchema>;

@@ -71,16 +71,14 @@ const EXPERIMENTAL_NEURON_DENSITY_STEP_CONFIG: Array<
 ];
 
 const experimentalNeuronDensityConfig = createExperimentalNeuronDensityConfig(
-  EXPERIMENTAL_NEURON_DENSITY_STEP_CONFIG,
+  EXPERIMENTAL_NEURON_DENSITY_STEP_CONFIG
 );
 
 interface IExperimentalNeuronDensityProps {
   sessionId: string;
 }
 
-export function ExperimentalNeuronDensity({
-  sessionId,
-}: IExperimentalNeuronDensityProps) {
+export function ExperimentalNeuronDensity({ sessionId }: IExperimentalNeuronDensityProps) {
   const { projectId, virtualLabId } = useWorkspace();
   const { node: defaultBrainRegion } = useBrainRegionHierarchy({
     dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),

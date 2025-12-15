@@ -2,10 +2,7 @@
 
 import z from 'zod';
 
-import {
-  BaseSetupSchema,
-  ContributionArraySchema,
-} from '@/ui/segments/contribute/shared';
+import { BaseSetupSchema, ContributionArraySchema } from '@/ui/segments/contribute/shared';
 import { MeasurementUnit } from '@/api/entitycore/types/shared/global';
 
 const measurementSchema = z.object({
@@ -16,62 +13,56 @@ const measurementSchema = z.object({
 
 export type TMeasurement = z.infer<typeof measurementSchema>;
 
-const MeasurementArraySchema = z
-  .array(measurementSchema)
-  .superRefine((arr, ctx) => {
-    let hasFullyFilledMeasurement = false;
+const MeasurementArraySchema = z.array(measurementSchema).superRefine((arr, ctx) => {
+  let hasFullyFilledMeasurement = false;
 
-    if (arr.length === 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'At least one measurement is required',
-        path: [],
-      });
-      return;
+  if (arr.length === 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'At least one measurement is required',
+      path: [],
+    });
+    return;
+  }
+
+  arr.forEach((measurement, idx) => {
+    // Only check name and value since unit is always DIMENSIONLESS
+    const filledFields = [measurement.name, measurement.value].filter(
+      (field) => field !== undefined && field !== null && field !== ''
+    );
+
+    // If partially filled (has name OR value but not both)
+    if (filledFields.length > 0 && filledFields.length < 2) {
+      if (!measurement.name) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Measurement name is required',
+          path: [idx, 'name'],
+        });
+      }
+      if (measurement.value === undefined || measurement.value === null) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Measurement value is required',
+          path: [idx, 'value'],
+        });
+      }
     }
 
-    arr.forEach((measurement, idx) => {
-      // Only check name and value since unit is always DIMENSIONLESS
-      const filledFields = [measurement.name, measurement.value].filter(
-        (field) => field !== undefined && field !== null && field !== '',
-      );
-
-      // If partially filled (has name OR value but not both)
-      if (filledFields.length > 0 && filledFields.length < 2) {
-        if (!measurement.name) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: 'Measurement name is required',
-            path: [idx, 'name'],
-          });
-        }
-        if (measurement.value === undefined || measurement.value === null) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: 'Measurement value is required',
-            path: [idx, 'value'],
-          });
-        }
-      }
-
-      // Check if both name and value are filled
-      if (
-        measurement.name &&
-        measurement.value !== undefined &&
-        measurement.value !== null
-      ) {
-        hasFullyFilledMeasurement = true;
-      }
-    });
-
-    if (!hasFullyFilledMeasurement) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'At least one measurement must be fully filled',
-        path: [],
-      });
+    // Check if both name and value are filled
+    if (measurement.name && measurement.value !== undefined && measurement.value !== null) {
+      hasFullyFilledMeasurement = true;
     }
   });
+
+  if (!hasFullyFilledMeasurement) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'At least one measurement must be fully filled',
+      path: [],
+    });
+  }
+});
 
 // Define the fields to be extracted from BaseSetupSchema, excluding brain_region_id
 const SetupFields = BaseSetupSchema.pick({

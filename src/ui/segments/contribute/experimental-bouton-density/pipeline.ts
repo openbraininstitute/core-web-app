@@ -47,7 +47,7 @@ export function useExperimentalBoutonDensityPipeline({
             if (d.success) return d.data;
 
             return null;
-          }),
+          })
         ) ?? [];
 
       const payload = {
@@ -81,7 +81,7 @@ export function useExperimentalBoutonDensityPipeline({
             return (
               get(
                 (query.queryKey as ExtendedEntityTypeQueryKey)[0],
-                'context.extendedEntityType',
+                'context.extendedEntityType'
               ) === ExtendedEntitiesTypeDict.ExperimentalBoutonDensity
             );
           },
@@ -109,20 +109,14 @@ export function useExperimentalBoutonDensityPipeline({
                 role_id: c.role_id!,
                 entity_id: entityId,
               },
-            }),
-          ),
+            })
+          )
       );
     },
   });
 
   const createMtypeClassificationAsync = useMutation({
-    mutationFn: ({
-      entityId,
-      mtype_class_id,
-    }: {
-      entityId: string;
-      mtype_class_id: string;
-    }) => {
+    mutationFn: ({ entityId, mtype_class_id }: { entityId: string; mtype_class_id: string }) => {
       return createMtypeClassification({
         context: { projectId, virtualLabId },
         payload: {
@@ -157,15 +151,12 @@ export function useExperimentalBoutonDensityPipeline({
   }
 
   const loading =
-    createExperimentalBoutonDensityAsync.isPending ||
-    createContributionAsync.isPending;
+    createExperimentalBoutonDensityAsync.isPending || createContributionAsync.isPending;
 
-  const error =
-    createExperimentalBoutonDensityAsync.error || createContributionAsync.error;
+  const error = createExperimentalBoutonDensityAsync.error || createContributionAsync.error;
 
   const status = {
-    createExperimentalBoutonDensity:
-      createExperimentalBoutonDensityAsync.status,
+    createExperimentalBoutonDensity: createExperimentalBoutonDensityAsync.status,
     createContribution: createContributionAsync.status,
   };
 
@@ -182,7 +173,7 @@ export function useExperimentalBoutonDensityPipeline({
         };
         return acc;
       },
-      {} as Record<string, IMutationKeyConfig>,
+      {} as Record<string, IMutationKeyConfig>
     ),
   };
 }

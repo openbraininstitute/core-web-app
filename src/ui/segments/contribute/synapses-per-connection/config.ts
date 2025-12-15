@@ -32,7 +32,7 @@ export const EXPERIMENTAL_SYNAPSES_PER_CONNECTION_PROGRESS_STEPS: Array<{
 ];
 
 export function createExperimentalSynapsesPerConnectionConfig(
-  steps: Array<IContributionStep<TExperimentalSynapsesPerConnectionForm>>,
+  steps: Array<IContributionStep<TExperimentalSynapsesPerConnectionForm>>
 ): IContributionFormConfig<
   TExperimentalSynapsesPerConnectionForm,
   typeof ExperimentalSynapsesPerConnectionSchema
@@ -44,9 +44,7 @@ export function createExperimentalSynapsesPerConnectionConfig(
     schema: ExperimentalSynapsesPerConnectionSchema,
     progressSteps: steps,
     getInitialValues: () => ({
-      contribution: [
-        {},
-      ] as TExperimentalSynapsesPerConnectionForm['contribution'],
+      contribution: [{}] as TExperimentalSynapsesPerConnectionForm['contribution'],
       measurements: [
         {
           name: undefined,

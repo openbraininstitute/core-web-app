@@ -76,10 +76,9 @@ const EXPERIMENTAL_SYNAPSES_PER_CONNECTION_STEP_CONFIG: Array<
   },
 ];
 
-const experimentalSynapsesPerConnectionConfig =
-  createExperimentalSynapsesPerConnectionConfig(
-    EXPERIMENTAL_SYNAPSES_PER_CONNECTION_STEP_CONFIG,
-  );
+const experimentalSynapsesPerConnectionConfig = createExperimentalSynapsesPerConnectionConfig(
+  EXPERIMENTAL_SYNAPSES_PER_CONNECTION_STEP_CONFIG
+);
 
 interface IExperimentalSynapsesPerConnectionProps {
   sessionId: string;

@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  createContext,
-  useContext,
-  useCallback,
-  useMemo,
-  useState,
-} from 'react';
+import { createContext, useContext, useCallback, useMemo, useState } from 'react';
 import { Form } from 'antd';
 
 import type { ZodObject, ZodRawShape } from 'zod';
@@ -26,9 +20,7 @@ import type {
   TStepValidationStatus,
 } from '@/ui/segments/contribute/shared/types';
 
-interface IContributionPipelineContextValue<
-  TFormValues extends Record<string, unknown>,
-> {
+interface IContributionPipelineContextValue<TFormValues extends Record<string, unknown>> {
   form: FormInstance<TFormValues>;
   activeStep: string;
   setActiveStep: (stepKey: string) => void;
@@ -42,10 +34,9 @@ interface IContributionPipelineContextValue<
   config: IContributionFormConfig<TFormValues, ZodObject<ZodRawShape>>;
 }
 
-const ContributionPipelineContext =
-  createContext<IContributionPipelineContextValue<
-    Record<string, unknown>
-  > | null>(null);
+const ContributionPipelineContext = createContext<IContributionPipelineContextValue<
+  Record<string, unknown>
+> | null>(null);
 
 interface IContributionPipelineProviderProps<
   TFormValues extends Record<string, unknown>,
@@ -68,9 +59,7 @@ export function ContributionPipelineProvider<
 }: IContributionPipelineProviderProps<TFormValues, TSchema>): ReactNode {
   const [form] = Form.useForm<TFormValues>();
   const allValues = Form.useWatch([], form);
-  const [activeStep, setActiveStepState] = useState<string>(
-    config.progressSteps[0].key,
-  );
+  const [activeStep, setActiveStepState] = useState<string>(config.progressSteps[0].key);
 
   const { progressSteps, schema } = config;
 
@@ -89,7 +78,7 @@ export function ContributionPipelineProvider<
             acc[key] = true;
             return acc;
           },
-          {} as Record<string, true>,
+          {} as Record<string, true>
         );
 
         const partialSchema = schema.pick(pickObject);
@@ -108,15 +97,12 @@ export function ContributionPipelineProvider<
         }
       } else {
         // Original single-field logic
-        const partialSchema = schema.pick({ [fieldKey]: true } as Record<
-          string,
-          true
-        >);
+        const partialSchema = schema.pick({ [fieldKey]: true } as Record<string, true>);
         const parseResult = partialSchema.safeParse(allValues);
         statusMap[step.key] = getValidationStatus(
           parseResult,
           fieldKey as string, // Type assertion since fieldKey is a key of the schema
-          dirtyFields,
+          dirtyFields
         );
       }
     });
@@ -126,7 +112,7 @@ export function ContributionPipelineProvider<
 
   const currentStepIndex = useMemo(
     () => getCurrentStepIndex(progressSteps, activeStep),
-    [progressSteps, activeStep],
+    [progressSteps, activeStep]
   );
 
   const isFirstStep = currentStepIndex === 0;
@@ -138,7 +124,7 @@ export function ContributionPipelineProvider<
         setActiveStepState(stepKey);
       }
     },
-    [activeStep],
+    [activeStep]
   );
 
   const goToPreviousStep = useCallback(() => {
@@ -165,10 +151,7 @@ export function ContributionPipelineProvider<
       sessionId,
       stepValidationStatus,
       progressSteps,
-      config: config as IContributionFormConfig<
-        TFormValues,
-        ZodObject<ZodRawShape>
-      >,
+      config: config as IContributionFormConfig<TFormValues, ZodObject<ZodRawShape>>,
     }),
     [
       form,
@@ -182,27 +165,23 @@ export function ContributionPipelineProvider<
       stepValidationStatus,
       progressSteps,
       config,
-    ],
+    ]
   );
   const initialValues = useMemo(
     () => config.getInitialValues(brainRegionId) as TFormValues,
-    [config, brainRegionId],
+    [config, brainRegionId]
   );
 
   return (
     <ContributionPipelineContext.Provider
-      value={
-        contextValue as IContributionPipelineContextValue<
-          Record<string, unknown>
-        >
-      }
+      value={contextValue as IContributionPipelineContextValue<Record<string, unknown>>}
     >
       <Form
         form={form}
         id={config.formId}
         rootClassName={cn(
           'relative flex flex-col w-full h-full [&_.ant-form-item-explain-error]:text-sm! ',
-          '[&_.ant-form-item-explain-error]:pl-1.5! [&_.ant-form-item-explain-error]:select-none!',
+          '[&_.ant-form-item-explain-error]:pl-1.5! [&_.ant-form-item-explain-error]:select-none!'
         )}
         layout="vertical"
         requiredMark={false}
@@ -223,9 +202,7 @@ export function useContributionPipeline<
   const context = useContext(ContributionPipelineContext);
 
   if (!context) {
-    throw new Error(
-      'useContributionPipeline must be used within a ContributionPipelineProvider',
-    );
+    throw new Error('useContributionPipeline must be used within a ContributionPipelineProvider');
   }
 
   return context as IContributionPipelineContextValue<TFormValues>;

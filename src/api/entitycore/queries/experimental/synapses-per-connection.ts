@@ -27,20 +27,17 @@ export async function getExperimentalSynapsesPerConnections({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<EntityCoreResponse<IExperimentalSynapsesPerConnection>>(
-    baseUri,
-    {
-      queryParams: {
-        ...filters,
-        with_facets: withFacets,
-      },
-      headers: {
-        'accept': 'application/json',
-        'content-type': 'application/json',
-        ...getEntityCoreContext(context).headers,
-      },
+  return await api.get<EntityCoreResponse<IExperimentalSynapsesPerConnection>>(baseUri, {
+    queryParams: {
+      ...filters,
+      with_facets: withFacets,
     },
-  );
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+  });
 }
 
 /**
@@ -60,7 +57,7 @@ export async function getExperimentalSynapsesPerConnection({
   const api = await entityCoreApi();
   return await api.get<IExperimentalSynapsesPerConnection>(`${baseUri}/${id}`, {
     headers: {
-      'accept': 'application/json',
+      accept: 'application/json',
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
     },
@@ -127,7 +124,7 @@ export async function createExperimentalSynapsesPerConnection({
   const api = await entityCoreApi();
   return await api.post<IExperimentalSynapsesPerConnection>(baseUri, {
     headers: {
-      'accept': 'application/json',
+      accept: 'application/json',
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
     },

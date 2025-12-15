@@ -1,26 +1,11 @@
-import {
-  CheckOutlined,
-  DownOutlined,
-  LoadingOutlined,
-  SearchOutlined,
-} from '@ant-design/icons';
-import {
-  ComponentProps,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { CheckOutlined, DownOutlined, LoadingOutlined, SearchOutlined } from '@ant-design/icons';
+import { ComponentProps, useCallback, useEffect, useMemo, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { loadable, unwrap } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
 
 import { brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom } from '@/features/brain-region-hierarchy/context';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/ui/molecules/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
 import { BrainIcon } from '@/components/icons';
@@ -53,15 +38,11 @@ export function BrainRegionDropdown({
   const [parent, setParent] = useState<HTMLDivElement | null>(null);
 
   const brainRegionHierarchy = useAtomValue(
-    useMemo(
-      () => unwrap(brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom),
-      [],
-    ),
+    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom), [])
   );
   const isLoading =
-    useAtomValue(
-      loadable(brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom),
-    ).state === 'loading';
+    useAtomValue(loadable(brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom)).state ===
+    'loading';
 
   const [selectedNode, updateSelectedNode] = useState(defaultBrainRegion);
 
@@ -69,19 +50,15 @@ export function BrainRegionDropdown({
     (el: HTMLDivElement) => {
       setParent(el);
     },
-    [setParent],
+    [setParent]
   );
 
-  const filteredOptions = useMemo<
-    Array<TBrainRegionHierarchyExtendedOption>
-  >(() => {
+  const filteredOptions = useMemo<Array<TBrainRegionHierarchyExtendedOption>>(() => {
     const options = (brainRegionHierarchy?.options ??
       []) as Array<TBrainRegionHierarchyExtendedOption>;
     if (!searchTerm.trim()) return options;
 
-    return options.filter(({ label }) =>
-      label.toLowerCase().includes(searchTerm.toLowerCase()),
-    );
+    return options.filter(({ label }) => label.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [brainRegionHierarchy, searchTerm]);
 
   const rowVirtualizer = useVirtualizer({
@@ -108,7 +85,7 @@ export function BrainRegionDropdown({
       });
       setOpen(false);
     },
-    [onSelectBrainRegion],
+    [onSelectBrainRegion]
   );
 
   useEffect(() => {
@@ -128,11 +105,10 @@ export function BrainRegionDropdown({
   const currentValue = useMemo(
     () =>
       selectedNode?.id
-        ? brainRegionHierarchy?.options.find(
-            ({ value: _value }) => selectedNode.id === _value,
-          )?.data
+        ? brainRegionHierarchy?.options.find(({ value: _value }) => selectedNode.id === _value)
+            ?.data
         : null,
-    [selectedNode?.id, brainRegionHierarchy?.options],
+    [selectedNode?.id, brainRegionHierarchy?.options]
   );
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -150,7 +126,7 @@ export function BrainRegionDropdown({
           'text-primary-9 border-neutral-2 hover:bg-primary-9 active:bg-primary-9 border bg-white shadow-xs hover:text-white',
           'text-md h-full flex-1 gap-1.5 rounded-md px-5',
           'flex w-full grow justify-between self-stretch',
-          clsx?.trigger,
+          clsx?.trigger
         )}
       >
         <Button variant="outline" role="combobox" disabled={isLoading}>
@@ -173,10 +149,7 @@ export function BrainRegionDropdown({
         }}
       >
         <div className="border-neutral-2 border-b p-2">
-          <div
-            data-slot="command-input-wrapper"
-            className={cn('flex h-9 items-center gap-2 px-3')}
-          >
+          <div data-slot="command-input-wrapper" className={cn('flex h-9 items-center gap-2 px-3')}>
             <SearchOutlined className="size-4 shrink-0 opacity-50" />
             <input
               placeholder="Search brain region..."
@@ -186,7 +159,7 @@ export function BrainRegionDropdown({
                 'border-none',
                 'placeholder:text-muted-foreground flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50',
                 { 'h-9 text-base': breakpoint === 'l' },
-                { 'h-10 text-lg': breakpoint === 'xl' },
+                { 'h-10 text-lg': breakpoint === 'xl' }
               )}
             />
           </div>
@@ -199,9 +172,7 @@ export function BrainRegionDropdown({
         >
           {filteredOptions.length === 0 ? (
             <div className="flex h-full w-full items-center justify-center py-5">
-              <span className="text-neutral-4 text-sm">
-                No brain regions found
-              </span>
+              <span className="text-neutral-4 text-sm">No brain regions found</span>
             </div>
           ) : (
             <div
@@ -218,21 +189,15 @@ export function BrainRegionDropdown({
 
                 return (
                   <div
-                    key={
-                      filteredOptions[virtualItem.index]?.value ??
-                      virtualItem.index
-                    }
-                    id={
-                      filteredOptions[virtualItem.index]?.value ??
-                      virtualItem.index
-                    }
+                    key={filteredOptions[virtualItem.index]?.value ?? virtualItem.index}
+                    id={filteredOptions[virtualItem.index]?.value ?? virtualItem.index}
                     style={{
                       height: `${virtualItem.size}px`,
                       transform: `translateY(${virtualItem.start}px)`,
                     }}
                     className={cn(
                       'mb-1 flex items-center justify-start',
-                      'absolute top-0 left-0 w-full',
+                      'absolute top-0 left-0 w-full'
                     )}
                   >
                     <button
@@ -246,7 +211,7 @@ export function BrainRegionDropdown({
                         {
                           'text-gray-500! hover:bg-zinc-200! hover:text-gray-500!':
                             !data.is_volumetric_region,
-                        },
+                        }
                       )}
                       title={label}
                     >
@@ -254,7 +219,7 @@ export function BrainRegionDropdown({
                       <CheckOutlined
                         className={cn(
                           'ml-auto text-sm',
-                          v === selectedNode?.id ? 'opacity-100' : 'opacity-0',
+                          v === selectedNode?.id ? 'opacity-100' : 'opacity-0'
                         )}
                       />
                     </button>
@@ -277,10 +242,7 @@ export function BrainRegionDropdownWithFormItem({
   charsPerLine = 200,
 }: Props) {
   const brainRegionHierarchy = useAtomValue(
-    useMemo(
-      () => unwrap(brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom),
-      [],
-    ),
+    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom), [])
   );
 
   const wrapper = useMemo(
@@ -298,18 +260,16 @@ export function BrainRegionDropdownWithFormItem({
             onChange?.(br.id);
             onSelectBrainRegion?.(br);
           },
-          [onChange],
+          [onChange]
         );
 
         return (
           <BrainRegionDropdown
             defaultBrainRegion={
               value
-                ? brainRegionHierarchy?.options.find(
-                    ({ value: _value }) => value === _value,
-                  )?.data
+                ? brainRegionHierarchy?.options.find(({ value: _value }) => value === _value)?.data
                 : brainRegionHierarchy?.options.find(
-                    ({ value: _value }) => defaultBrainRegion?.id === _value,
+                    ({ value: _value }) => defaultBrainRegion?.id === _value
                   )?.data
             }
             onSelectBrainRegion={handleSelectBrainRegion}
@@ -319,14 +279,7 @@ export function BrainRegionDropdownWithFormItem({
           />
         );
       },
-    [
-      brainRegionHierarchy,
-      defaultBrainRegion,
-      charsPerLine,
-      clsx,
-      showIcon,
-      onSelectBrainRegion,
-    ],
+    [brainRegionHierarchy, defaultBrainRegion, charsPerLine, clsx, showIcon, onSelectBrainRegion]
   );
 
   return wrapper;
