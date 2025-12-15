@@ -1,5 +1,5 @@
-import { z } from "zod";
-import isNil from "es-toolkit/compat/isNil";
+import { z } from 'zod';
+import isNil from 'es-toolkit/compat/isNil';
 
 import {
   EntityTypeSchema,
@@ -8,13 +8,13 @@ import {
   SlicingDirectionTypeSchema,
   RepairPipelineTypeSchema,
   ModifiedMorphologyMethodTypeSchema,
-} from "@/api/entitycore/types/shared/global";
+} from '@/api/entitycore/types/shared/global';
 import type {
   ContributionFilter,
   IDFilter,
   OwnershipFilter,
   PaginationFilter,
-} from "@/api/entitycore/types/shared/request";
+} from '@/api/entitycore/types/shared/request';
 
 export interface IProtocolFilter
   extends PaginationFilter, OwnershipFilter, IDFilter, ContributionFilter {}
@@ -45,21 +45,15 @@ export const ProtocolBaseSchema = z.object({
 });
 
 export const ProtocolCreateSchema = ProtocolBaseSchema.extend({
-  name: z
-    .string()
-    .nonempty({ message: "Protocol name is required" })
-    .nullable(),
+  name: z.string().nonempty({ message: 'Protocol name is required' }).nullable(),
   protocol_design: CellMorphologyProtocolDesignSchema,
   generation_type: CellMorphologyGenerationTypeSchema,
 }).superRefine((data, ctx) => {
-  if (
-    data.generation_type === "digital_reconstruction" &&
-    isNil(data.slicing_thickness)
-  ) {
+  if (data.generation_type === 'digital_reconstruction' && isNil(data.slicing_thickness)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "Slicing thickness is required for digital reconstruction",
-      path: ["slicing_thickness"],
+      message: 'Slicing thickness is required for digital reconstruction',
+      path: ['slicing_thickness'],
     });
   }
 });
