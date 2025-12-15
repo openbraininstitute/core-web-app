@@ -62,7 +62,8 @@ interface Protocol {
   name: string;
   cell_morphology_protocol_id: string;
 }
-export interface IProtocol extends Protocol, Timestamps, EntityCoreIdentifiable {}
+export interface IProtocol
+  extends Protocol, Timestamps, EntityCoreIdentifiable {}
 
 export const EntityTypeSchema = z.string() as z.ZodSchema<EntityCoreDataType>;
 
@@ -80,9 +81,19 @@ export const CellMorphologyGenerationTypeSchema = z.enum([
   'placeholder',
 ]);
 
-export const SlicingDirectionTypeSchema = z.enum(['coronal', 'sagittal', 'horizontal', 'custom']);
+export const SlicingDirectionTypeSchema = z.enum([
+  'coronal',
+  'sagittal',
+  'horizontal',
+  'custom',
+]);
 
-export const RepairPipelineTypeSchema = z.enum(['raw', 'curated', 'unraveled', 'repaired']);
+export const RepairPipelineTypeSchema = z.enum([
+  'raw',
+  'curated',
+  'unraveled',
+  'repaired',
+]);
 
 export type ModifiedMorphologyMethodType = {
   type: 'cloned' | 'mix_and_match' | 'mousified' | 'ratified';
@@ -130,7 +141,8 @@ export const MeasurementUnit = {
   angle__radian: 'radian',
 } as const;
 
-export type TMeasurementUnit = (typeof MeasurementUnit)[keyof typeof MeasurementUnit];
+export type TMeasurementUnit =
+  (typeof MeasurementUnit)[keyof typeof MeasurementUnit];
 
 export type MeasurementBase = {
   id: number;
@@ -323,7 +335,7 @@ export const Sex = {
 } as const;
 
 export const SexDictionary = Object.fromEntries(
-  Object.entries(Sex).map(([name, value]) => [name, value.key])
+  Object.entries(Sex).map(([name, value]) => [name, value.key]),
 ) as {
   [K in keyof typeof Sex]: (typeof Sex)[K]['key'];
 };
@@ -344,7 +356,7 @@ export const AgePeriod = {
 } as const;
 
 export const AgePeriodDictionary = Object.fromEntries(
-  Object.entries(AgePeriod).map(([name, value]) => [name, value.key])
+  Object.entries(AgePeriod).map(([name, value]) => [name, value.key]),
 ) as {
   [K in keyof typeof AgePeriod]: (typeof AgePeriod)[K]['key'];
 };
@@ -363,7 +375,8 @@ type SpeciesBase = {
   taxonomy_id: string;
 };
 
-export interface ISpecies extends SpeciesBase, Timestamps, EntityCoreIdentifiable {}
+export interface ISpecies
+  extends SpeciesBase, Timestamps, EntityCoreIdentifiable {}
 
 export interface NestedSpecies extends SpeciesBase, EntityCoreIdentifiable {}
 
