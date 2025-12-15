@@ -22,7 +22,7 @@ export function Measurements() {
     label: stat.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
     value: stat,
   }));
-  
+
   // REMOVED: UNIT_OPTIONS is no longer needed
 
   const NameOptionsFormInput = SelectPopoverFormItem({
@@ -34,7 +34,10 @@ export function Measurements() {
 
   return (
     <div className="h-full w-full">
-      <Form.List name="measurements" initialValue={[{ name: undefined, unit: FIXED_UNIT, value: undefined }]}>
+      <Form.List
+        name="measurements"
+        initialValue={[{ name: undefined, unit: FIXED_UNIT, value: undefined }]}
+      >
         {(fields, { remove }) => (
           <>
             <div className="flex flex-col gap-4">
@@ -44,7 +47,7 @@ export function Measurements() {
                 if (!currentUnit) {
                   form.setFieldValue(['measurements', field.name, 'unit'], FIXED_UNIT);
                 }
-                
+
                 return (
                   <Card key={field.key} className="relative gap-0 p-5 shadow-sm!" borderless>
                     <div className="flex w-full items-end justify-center gap-x-4">
@@ -75,7 +78,7 @@ export function Measurements() {
                         <Form.Item
                           name={[field.name, 'value']}
                           label={renderLabel(
-                            'Value (1/mm³)',
+                            'Value (cells/mm³)',
                             'main',
                             <sup className="text-destructive">*</sup>
                           )}
@@ -136,10 +139,9 @@ export function Measurements() {
                   const measurements = form.getFieldValue('measurements') as Array<TMeasurement>;
                   return measurements?.some((measurement) => {
                     // CHANGE 4: Only check name and value (2 fields) for partial fill
-                    const filledFields = [
-                      measurement.name,
-                      measurement.value,
-                    ].filter((field) => field !== undefined && field !== null && field !== '');
+                    const filledFields = [measurement.name, measurement.value].filter(
+                      (field) => field !== undefined && field !== null && field !== ''
+                    );
                     // If partially filled (some but not all fields), disable the button
                     return filledFields.length > 0 && filledFields.length < 2;
                   });

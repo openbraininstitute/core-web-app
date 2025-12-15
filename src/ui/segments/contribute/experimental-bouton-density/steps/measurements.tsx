@@ -22,7 +22,7 @@ export function Measurements() {
     label: stat.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
     value: stat,
   }));
-  
+
   // REMOVE: UNIT_OPTIONS is no longer needed
 
   const NameOptionsFormInput = SelectPopoverFormItem({
@@ -68,7 +68,7 @@ export function Measurements() {
                       <Form.Item
                         name={[field.name, 'value']}
                         label={renderLabel(
-                          'Value (1/μm)',
+                          'Value (synapses/μm)',
                           'main',
                           <sup className="text-destructive">*</sup>
                         )}
@@ -128,10 +128,9 @@ export function Measurements() {
                   const measurements = form.getFieldValue('measurements') as Array<TMeasurement>;
                   return measurements?.some((measurement) => {
                     // CHANGE 3: Only check name and value (2 fields) for partial fill
-                    const filledFields = [
-                      measurement.name,
-                      measurement.value,
-                    ].filter((field) => field !== undefined && field !== null && field !== '');
+                    const filledFields = [measurement.name, measurement.value].filter(
+                      (field) => field !== undefined && field !== null && field !== ''
+                    );
                     // If partially filled (some but not all fields), disable the button
                     return filledFields.length > 0 && filledFields.length < 2;
                   });

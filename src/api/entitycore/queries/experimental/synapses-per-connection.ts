@@ -71,19 +71,23 @@ const ExperimentalSynapsesPerConnectionSchema = z.object({
   description: z
     .string({ message: 'Experimental bouton density description is required' })
     .nonempty({ message: 'Experimental bouton density description is required' }),
-  pre_mtype: z
+  brain_region_id: z
+    .string({ message: 'Brain region is required' })
+    .uuid()
+    .nonempty({ message: 'Post brain region is required' }),    
+  pre_mtype_id: z
     .string({ message: 'Pre m-type is required' })
     .uuid()
     .nonempty({ message: 'Pre m-type  is required' }),
-  post_mtype: z
+  post_mtype_id: z
     .string({ message: 'Pre m-type is required' })
     .uuid()
     .nonempty({ message: 'Pre m-type  is required' }),
-  pre_region: z
+  pre_region_id: z
     .string({ message: 'Pre brain region is required' })
     .uuid()
     .nonempty({ message: 'Pre brain region is required' }),
-  post_region: z
+  post_region_id: z
     .string({ message: 'Post brain region is required' })
     .uuid()
     .nonempty({ message: 'Post brain region is required' }),

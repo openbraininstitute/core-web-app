@@ -7,7 +7,7 @@ import { MeasurementUnit } from '@/api/entitycore/types/shared/global';
 
 const measurementSchema = z.object({
   name: z.string().optional(),
-  unit: z.literal(MeasurementUnit.DIMENSIONLESS),
+  unit: z.literal(MeasurementUnit.dimensionless),
   value: z.number().optional(),
 });
 

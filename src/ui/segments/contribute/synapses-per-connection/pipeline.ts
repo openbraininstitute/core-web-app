@@ -38,9 +38,8 @@ export function useExperimentalSynapsesPerConnectionPipeline({
       
       const measurements =
         compact(
-          values.measurements.map((m) => {
-            
-
+          // values.measurements.map((m) => {
+            values.measurements.map((m: TExperimentalSynapsesPerConnectionForm['measurements'][number]) => {
             // FIX: Explicitly set the 'unit' using the hardcoded string literal 'DIMENSIONLESS'.
             // This bypasses the runtime failure of the MeasurementUnit enum import, ensuring the unit is a string.
             const measurementWithUnit = {
@@ -115,8 +114,8 @@ export function useExperimentalSynapsesPerConnectionPipeline({
       
       return Promise.all(
         contribution
-          .filter((c) => ContributionSchema.safeParse(c).success)
-          .map((c) =>
+            .filter((c: TExperimentalSynapsesPerConnectionForm['contribution'][number]) => ContributionSchema.safeParse(c).success)
+            .map((c) =>
             createContribution({
               context: { virtualLabId, projectId },
               contributor: {
