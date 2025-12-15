@@ -12,10 +12,7 @@ import {
   RequiredFieldMarker,
 } from '@/ui/segments/contribute/shared/helpers';
 
-import type {
-  PaginationFilter,
-  SearchFilter,
-} from '@/api/entitycore/types/shared/request';
+import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
 import type { IProtocol } from '@/api/entitycore/types/shared/global';
 
 export function Protocol() {
@@ -26,17 +23,15 @@ export function Protocol() {
     const fields: string[] = [];
 
     if (fields.length === 0) {
-      return (
-        <div className="text-sm text-gray-500">No additional information</div>
-      );
+      return <div className="text-sm text-gray-500">No additional information</div>;
     }
 
     return (
       <div className="max-w-xs">
         <div className="space-y-1">
-          {/* eslint-disable-next-line react/no-array-index-key */}
           {fields.map((field, index) => (
             <div
+              // eslint-disable-next-line react/no-array-index-key
               key={index}
               className="text-sm text-white"
             >
@@ -63,7 +58,7 @@ export function Protocol() {
         searchField: 'search',
         tooltip: DataTooltip,
       }),
-    [virtualLabId, projectId, DataTooltip],
+    [virtualLabId, projectId, DataTooltip]
   );
 
   return (
@@ -76,7 +71,7 @@ export function Protocol() {
           validator: createZodFieldValidator(
             CellMorphologySchema,
             'cell_morphology_protocol_id',
-            form,
+            form
           ),
         },
       ]}
