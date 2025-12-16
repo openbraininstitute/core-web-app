@@ -408,22 +408,44 @@ function resizeCanvas(canvas: HTMLCanvasElement) {
   }
 }
 
-function feedSegments(segments: Record<string, Segment[]>, children: TreeItem[], levels: number[]) {
+function feedSegments(
+  segments: Record<string, Segment[]>,
+  children: TreeItem[],
+  levelsCount: number
+) {
   for (const item of children) {
-    feedSegments(segments, item.children, levels);
+    feedSegments(segments, item.children, levelsCount);
     const color = resolveColor(item.section.name);
     const segmentsOfSameColor: Segment[] = getSegmentsOfColor(segments, color);
-    for (const { rank, level } of item.children) {
-      const x = (rank + 0.5) / levels[level];
-      const y = level / levels.length;
-      const h = 1 / levels.length;
-      segmentsOfSameColor.push({
-        x0: x,
-        y0: y,
-        x1: x,
-        y1: y + h,
-      });
-    }
+    const h = (item.children.length > 0 ? 1 : 0.8) / levelsCount;
+    const { x, y } = item;
+    segmentsOfSameColor.push({
+      x0: x,
+      y0: y,
+      x1: x,
+      y1: y + h,
+      leave: item.children.length === 0,
+      item,
+      color,
+    });
+  }
+  if (children.length > 1) {
+    // Horizontal segments
+    const [first] = children;
+    const last = children[children.length - 1];
+    const color = resolveColor(first.section.name);
+    const segmentsHorizontal = getSegmentsOfColor(segments, color);
+    const x0 = first.x;
+    const x1 = last.x;
+    const { y } = first;
+    segmentsHorizontal.push({
+      x0,
+      y0: y,
+      x1,
+      y1: y,
+      leave: false,
+      color,
+    });
   }
 }
 
@@ -442,7 +464,8 @@ function resolveColor(name: string): string {
       return `#778`;
     case 'soma':
       return '#dde';
-
+    case 'hori':
+      return '#7f75';
     default:
       return '#fff';
   }
