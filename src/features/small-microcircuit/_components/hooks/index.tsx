@@ -8,7 +8,7 @@ import { isRootCategory } from './schema';
 
 import { EntityTypeDict, IMEModel } from '@/api/entitycore/types';
 import { CircuitScaleDictionary, ICircuit } from '@/api/entitycore/types/entities/circuit';
-import { config } from '@/config';
+import { config as appConfig } from '@/config';
 import { Config } from '@/features/small-microcircuit/_components/components';
 import { JSONSchema } from '@/features/small-microcircuit/types';
 import { WorkspaceContext } from '@/types/common';
@@ -31,7 +31,7 @@ export function useApiUrl({ model }: { model: ICircuit | IMEModel }) {
     .otherwise(() => {
       throw new Error(`Unsupported model type ${model.type}`);
     });
-  return `${config.OBI_ONE_URL}/generated/${apiPath}`;
+  return `${appConfig.OBI_ONE_URL}/generated/${apiPath}`;
 }
 
 export function useValidateSchema({
