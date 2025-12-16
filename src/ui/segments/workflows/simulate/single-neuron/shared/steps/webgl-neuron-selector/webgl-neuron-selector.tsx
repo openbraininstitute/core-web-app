@@ -58,8 +58,6 @@ function WebglNeuronSelectorContent({
   disableClick,
 }: WebglNeuronSelectorContentProps) {
   usePainterController(painterManager, disableElectrodes, disableSynapses, disableClick);
-  // const { loading, error } = useCleanMorphologyFor3DViewer(painterManager, meModelId, sessionId);
-  // if (error) return <pre>{JSON.stringify(error, null, 2)}</pre>;
 
   return (
     <div className={styles.main}>
