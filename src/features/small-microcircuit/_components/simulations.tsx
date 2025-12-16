@@ -90,7 +90,9 @@ export default function SimulationsTab({
 
   const selectableSimulationIds = useMemo(() => {
     return simulations
-      .filter((simulation) => ['created', undefined].includes(statusMap?.get(simulation.id)))
+      .filter((simulation) =>
+        [undefined, 'created', 'error'].includes(statusMap?.get(simulation.id))
+      )
       .map((s) => s.id);
   }, [simulations, statusMap]);
 
