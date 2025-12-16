@@ -26,7 +26,7 @@ export default function SimulationCampaignConfiguration({
   projectId,
   initialCampaignId,
   initialConfig,
-  defaultTab = 'simulations',
+  defaultTab = 'configuration',
   readOnly,
   className,
 }: {
