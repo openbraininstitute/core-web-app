@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 import { OBIShowcaseProjectType } from './types';
 
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 function formatAuthors(authorsList: OBIShowcaseProjectType['authorsList']): string {
@@ -33,7 +33,7 @@ export default function ShowcaseCard({ project }: { project: OBIShowcaseProjectT
 
   return (
     <Link
-      href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/reports/obi-showcase/${project.slug}`}
+      href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/reports/obi-showcase/${project.slug}`}
       className="group relative w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-300 ease-in-out hover:scale-[0.98] hover:shadow-lg"
     >
       {/* Hero Image */}

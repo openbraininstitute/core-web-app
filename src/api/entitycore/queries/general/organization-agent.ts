@@ -1,9 +1,9 @@
 import { authApiClient } from '@/api/apiClient';
-import { entityCoreUrl } from '@/config';
+import { config } from '@/config';
 
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { IOrganizationFilter } from '@/api/entitycore/types/entities/agent';
 import type { IOrganization } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 
 const baseUri = '/organization';
 /**
@@ -12,7 +12,7 @@ const baseUri = '/organization';
  * @returns {Promise<EntityCoreResponse<IOrganization>>} A promise that resolves to the list of organizations
  */
 export async function getOrganizations({ filters }: { filters: Partial<IOrganizationFilter> }) {
-  const api = await authApiClient(entityCoreUrl);
+  const api = await authApiClient(config.ENTITY_CORE_URL);
   return await api.get<EntityCoreResponse<IOrganization>>(baseUri, {
     queryParams: {
       ...filters,
@@ -26,6 +26,6 @@ export async function getOrganizations({ filters }: { filters: Partial<IOrganiza
  * @returns {Promise<IOrganization>} A promise that resolves to the single organization
  */
 export async function getOrganization({ id }: { id: string }) {
-  const api = await authApiClient(entityCoreUrl);
+  const api = await authApiClient(config.ENTITY_CORE_URL);
   return await api.get<IOrganization>(`${baseUri}/${id}`);
 }

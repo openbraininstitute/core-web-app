@@ -2,7 +2,7 @@ import isNil from 'es-toolkit/compat/isNil';
 import omitBy from 'es-toolkit/compat/omitBy';
 
 import { parseApiError } from '@/api/utils';
-import { getSession } from '@/authFetch';
+import { getSession } from '@/auth-fetch';
 import { compactRecord } from '@/utils/dictionary';
 import { log } from '@/utils/logger';
 

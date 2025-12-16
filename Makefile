@@ -1,48 +1,40 @@
-.PHONY: build run stop clean
+SHELL := /bin/bash
+.PHONY: help version install lint format build run publish stop clean
 
-COMMIT_SHA := $(shell git rev-parse --short=8 HEAD)
+export APP_NAME := core-web-app
+export APP_VERSION := $(shell git describe --abbrev --dirty --always --tags)
 
+export IMAGE_NAME ?= $(APP_NAME)
+export IMAGE_TAG ?= $(APP_VERSION)
 
-COMPOSE_FILE := docker-compose.dev.yml
+help:  ## Show this help
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-23s\033[0m %s\n", $$1, $$2}'
 
+version:  ## Show current version
+	@echo "$(APP_VERSION)"
 
-all: build
+install:  ## Install dependencies
+	pnpm install
 
-build:
-	@echo "Building image with commit SHA: $(COMMIT_SHA)"
-	COMMIT_SHA=$(COMMIT_SHA) docker compose -f $(COMPOSE_FILE) build
+lint:  ## Run linter
+	pnpm lint
 
+format:  ## Apply formatter (Prettier)
+	pnpm run prettier:write
 
-run:
-	@echo "Starting container with commit SHA: $(COMMIT_SHA)"
-	COMMIT_SHA=$(COMMIT_SHA) docker compose -f $(COMPOSE_FILE) up
+build:  ## Build the Docker image
+	@echo "Building image $(IMAGE_NAME):$(APP_VERSION)"
+	docker compose build
 
-run-detached:
-	@echo "Starting container in detached mode with commit SHA: $(COMMIT_SHA)"
-	COMMIT_SHA=$(COMMIT_SHA) docker compose -f $(COMPOSE_FILE) up -d
+run:  ## Run the Docker image
+	@echo "Starting container $(IMAGE_NAME):$(APP_VERSION)"
+	docker compose up --watch
 
-stop:
-	docker compose -f $(COMPOSE_FILE) down
+publish: build  ## Publish the Docker image
+	docker compose push app
 
-clean:
-	docker compose -f $(COMPOSE_FILE) down --rmi local --volumes --remove-orphans
+stop:  ## Stop the container
+	docker compose down
 
-version:
-	@echo "Current commit SHA: $(COMMIT_SHA)"
-	@echo "Image tag will be: cwa:$(COMMIT_SHA)"
-
-rebuild: build run
-
-logs:
-	docker compose -f $(COMPOSE_FILE) logs -f
-
-help:
-	@echo "Available commands:"
-	@echo "  make build         - Build the Docker image with current commit SHA"
-	@echo "  make run          - Run the container"
-	@echo "  make run-detached - Run the container in detached mode"
-	@echo "  make stop         - Stop the container"
-	@echo "  make clean        - Clean up Docker resources"
-	@echo "  make version      - Show current version info"
-	@echo "  make rebuild      - Rebuild and restart the container"
-	@echo "  make logs         - Show container logs"
+clean:  ## Clean up Docker resources
+	docker compose down --rmi local --volumes --remove-orphans

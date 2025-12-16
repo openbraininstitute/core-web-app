@@ -24,6 +24,7 @@ const FREE_ACCESS_PAGES = [
   '/app/documentation/*',
   '/gallery',
   '/gallery/*',
+  '/app/version',
 
   '/app/log-in',
 
@@ -32,6 +33,7 @@ const FREE_ACCESS_PAGES = [
   '/api/marketing',
   '/api/help*',
   '/api/sanity*',
+  '/api/version',
 ];
 const ASSETS = [
   '/static*',

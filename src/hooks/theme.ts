@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
 import { useSetAtom } from 'jotai';
+import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
 
-import usePathname from '@/hooks/pathname';
 import { themeAtom } from '@/state/theme';
 import { checkMatchPatterns } from '@/util/pattern-matching';
 

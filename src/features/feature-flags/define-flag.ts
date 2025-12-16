@@ -4,7 +4,7 @@ export type FlagDefinition<T = unknown> = {
   values: T[];
   labels?: string[];
   description?: string;
-  visible?: boolean;
+  visible?: boolean | (() => boolean);
 };
 
 export const defineFlag = <T>(definition: FlagDefinition<T>) => {

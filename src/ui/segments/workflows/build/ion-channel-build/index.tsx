@@ -17,7 +17,7 @@ import {
   useGenerativeFormSchemaApi,
 } from '@/ui/segments/workflows/build/ion-channel-build/helpers';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 
 import 'katex/dist/katex.min.css';
 
@@ -62,7 +62,7 @@ export function IonChannelModelBuilding({ sessionId }: { sessionId: string }) {
         <AutomatedFormBreadcrumb
           category={{
             label: 'Build',
-            link: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`,
+            link: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`,
             isUrl: true,
           }}
           type={{ label: 'Ion Channel Model', link: '', isUrl: false }}

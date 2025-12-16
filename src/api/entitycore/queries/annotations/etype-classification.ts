@@ -2,7 +2,7 @@ import z from 'zod';
 
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { authApiClient } from '@/api/apiClient';
-import { entityCoreUrl } from '@/config';
+import { config } from '@/config';
 
 import type { IETypeClassification } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
@@ -21,7 +21,7 @@ export async function getEtypeClassifications({
   filters?: any;
   ctx?: WorkspaceContext;
 }) {
-  const api = await authApiClient(entityCoreUrl);
+  const api = await authApiClient(config.ENTITY_CORE_URL);
   return await api.get<EntityCoreResponse<IETypeClassification>>(baseUri, {
     ...getEntityCoreContext(ctx),
     queryParams: {
@@ -36,7 +36,7 @@ export async function getEtypeClassifications({
  * @returns {Promise<IEType>} A promise that resolves to the single etype
  */
 export async function getEtypeClassification({ id }: { id: string }) {
-  const api = await authApiClient(entityCoreUrl);
+  const api = await authApiClient(config.ENTITY_CORE_URL);
   return await api.get<IETypeClassification>(`${baseUri}/${id}`, undefined, {
     cache: { cacheName: 'etype', enabled: true, ttlInSeconds: 86_400 },
   });
@@ -62,7 +62,7 @@ export async function createEtypeClassification({
   context: WorkspaceContext;
   payload: TEtypeClassificationCreate;
 }) {
-  const api = await authApiClient(entityCoreUrl);
+  const api = await authApiClient(config.ENTITY_CORE_URL);
   return await api.post<IETypeClassification>(baseUri, {
     ...getEntityCoreContext(context),
     headers: {

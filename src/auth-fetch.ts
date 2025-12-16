@@ -1,15 +1,16 @@
-import { isServer } from './config';
-import { getClientSession } from './hooks/session';
-import { retry } from './util/retry';
+import { isServer } from '@/config';
+import { getClientSession } from '@/hooks/session';
+import { retry } from '@/util/retry';
 
 /**
-  Gets the current session. 
-  Works server and client side. 
+  Gets the current session.
+  Works server and client side.
 */
 export async function getSession() {
   if (!isServer) return await getClientSession();
 
-  const { auth } = await import('src/auth'); // Only import if running on server
+  // Only import if running on server
+  const { auth } = await import('@/auth');
 
   return await auth();
 }
