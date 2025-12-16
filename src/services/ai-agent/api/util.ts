@@ -1,6 +1,19 @@
+import { ToolUIPart, UIDataTypes, UIMessage, UIMessagePart, UITools } from 'ai';
 import { serviceAiAgentUrl } from './url';
 import { logError } from '@/util/logger';
 import { createHeaders } from '@/util/utils';
+
+// Utils to get the last text part of the Message parts:
+export function getLastMessageText(messages: UIMessage[]): string {
+  return messages.at(-1)?.parts.findLast((e) => e.type === 'text')?.text || '';
+}
+
+// check if the part od the message is a tool.
+export function isToolPart<DataType extends UIDataTypes, TOOLS extends UITools>(
+  part: UIMessagePart<DataType, TOOLS>
+): part is ToolUIPart<TOOLS> {
+  return part.type.startsWith('tool-');
+}
 
 interface QueryOptions<T> {
   accessToken?: string | null;

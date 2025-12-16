@@ -1,11 +1,10 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import React from 'react';
 import debounce from 'es-toolkit/compat/debounce';
-import { Message } from '@ai-sdk/react';
 
 import { serviceAiAgentThreadDelete, serviceAiAgentThreadRename } from '../api';
 import { Signal } from './signal';
-import { AiAssistantHistory, AssistantContext, AssistantError } from './types';
+import { AiAssistantHistory, AssistantContext, AssistantError, AiMessage } from './types';
 import { ThreadManager } from './manager/thread';
 import { HistoryManager } from './manager/history';
 import { MessageManager } from './manager/message';
@@ -18,7 +17,7 @@ import { logError } from '@/util/logger';
 class AiAssistantClass {
   public readonly threadId = new Signal<string | undefined>(undefined);
 
-  public readonly initialMessages = new Signal<Message[]>([]);
+  public readonly initialMessages = new Signal<AiMessage[]>([]);
 
   public readonly error = new Signal<AssistantError>(null);
 

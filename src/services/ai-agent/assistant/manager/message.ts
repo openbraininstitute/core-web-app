@@ -1,14 +1,12 @@
-import { Message } from '@ai-sdk/react';
-
 import { serviceAiAgentThreadMessages } from '../../api';
 import { Signal } from '../signal';
-import { AssistantContext } from '../types';
+import { AiMessage, AssistantContext } from '../types';
 import { logError } from '@/util/logger';
 
 export class MessageManager {
   constructor(
     private readonly target: {
-      initialMessages: Signal<Message[]>;
+      initialMessages: Signal<AiMessage[]>;
     }
   ) {}
 

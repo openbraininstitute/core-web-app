@@ -1,3 +1,4 @@
+import { AiMessage } from '../assistant/types';
 import { fetchJSON, isVoidType } from './util';
 import { logError } from '@/util/logger';
 import { assertType, isType } from '@/util/type-guards';
@@ -85,11 +86,7 @@ export async function serviceAiAgentThreadMessages({
 }
 
 export interface ThreadMessagesResponse {
-  results: Array<{
-    id: string;
-    role: 'system' | 'user' | 'assistant' | 'data';
-    content: string;
-  }>;
+  results: AiMessage[];
 }
 
 function isThreadMessagesResponse(data: unknown): data is ThreadMessagesResponse {
@@ -99,8 +96,10 @@ function isThreadMessagesResponse(data: unknown): data is ThreadMessagesResponse
         'array',
         {
           id: 'string',
-          role: ['literal', 'system', 'user', 'assistant', 'data'],
-          content: 'string',
+          role: ['literal', 'user', 'assistant', 'data'],
+          isComplete: 'boolean',
+          parts: ['?', ['array', 'unknown']],
+          metadata: ['?', ['|', { toolCalls: ['array', 'unknown'] }, 'null']],
         },
       ],
     });

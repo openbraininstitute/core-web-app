@@ -2,11 +2,13 @@
 
 import React from 'react';
 import { ChatRequestOptions } from '@ai-sdk/ui-utils';
-import { CreateMessage, Message, useChat } from '@ai-sdk/react';
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { useAiAssistant } from '../assistant';
 
+import { getLastMessageText } from '../api/util';
 import { useAIActiveTools } from '@/components/ai-assistant/state';
 import { logError } from '@/util/logger';
 
@@ -23,38 +25,45 @@ export function useServiceAiAgentChat(threadId: string) {
   const { accessToken } = assistant.useContext();
   const activeTools = useAIActiveTools();
   const [rateLimitRemaining, setRateLimitRemaining] = React.useState(0);
+  const activeToolsRef = React.useRef(activeTools);
+  activeToolsRef.current = activeTools;
+
   const chat = useChat({
-    api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
-    id: threadId,
-    initialMessages,
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    experimental_prepareRequestBody: ({ messages }) => {
-      const lastMessage = messages.at(-1);
-      return {
-        content: (lastMessage?.content ?? '').trim(),
-        tool_selection: activeTools,
-        frontend_url: `${globalThis.location.pathname}${globalThis.location.search}`,
-      };
-    },
-    fetch: async (url, options) => {
-      const resp = await fetch(url, options);
-      const newRateLimit: AiAgentRateLimit = {
-        limit: parseInt(resp.headers.get('x-ratelimit-limit') ?? '-1', 10),
-        remaining: parseInt(resp.headers.get('x-ratelimit-remaining') ?? '-1', 10),
-        reset: parseInt(resp.headers.get('x-ratelimit-reset') ?? '-1', 10),
-      };
-      setRateLimitRemaining(newRateLimit.remaining);
-      return resp;
-    },
+    experimental_throttle: 50,
+    id: `${threadId}-${initialMessages.length}`,
+    messages: initialMessages,
+    transport: new DefaultChatTransport({
+      api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      prepareSendMessagesRequest: ({ messages }) => {
+        return {
+          body: {
+            content: getLastMessageText(messages),
+            tool_selection: activeToolsRef.current,
+            frontend_url: `${globalThis.location.pathname}${globalThis.location.search}`,
+          },
+        };
+      },
+      fetch: async (url, options) => {
+        const resp = await fetch(url, options);
+        const newRateLimit: AiAgentRateLimit = {
+          limit: parseInt(resp.headers.get('x-ratelimit-limit') ?? '-1', 10),
+          remaining: parseInt(resp.headers.get('x-ratelimit-remaining') ?? '-1', 10),
+          reset: parseInt(resp.headers.get('x-ratelimit-reset') ?? '-1', 10),
+        };
+        setRateLimitRemaining(newRateLimit.remaining);
+        return resp;
+      },
+    }),
   });
 
   return {
     rateLimitRemaining,
     messages: chat.messages,
-    append: (message: Message | CreateMessage, chatRequestOptions?: ChatRequestOptions) => {
-      chat.append(message, chatRequestOptions);
+    sendMessage: (message: any, chatRequestOptions?: ChatRequestOptions) => {
+      chat.sendMessage(message, chatRequestOptions);
       if (chat.messages.length === 0) {
         // We suggest a title for the thread based
         // on the first message.
@@ -62,7 +71,7 @@ export function useServiceAiAgentChat(threadId: string) {
           serviceAiAgentThreadSuggestTitle({
             accessToken,
             threadId,
-            title: message.content,
+            title: message.text,
           });
         } catch (ex) {
           // Renaming the thread is not important.

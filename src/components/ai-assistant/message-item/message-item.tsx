@@ -1,21 +1,22 @@
 'use client';
 
 import React from 'react';
-import { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
+import { UIMessage } from 'ai';
 
 import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
 import ToolsProgress from './tools-progress';
-import ToolsComponents from './tools-components';
 
 import { classNames } from '@/util/utils';
 import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
 import { isString } from '@/util/type-guards';
 
+import { isToolPart } from '@/services/ai-agent/api/util';
+import { AiMessage } from '@/services/ai-agent/assistant/types';
 import styles from './message-item.module.css';
 
 interface MessageItemProps {
   className?: string;
-  value: UIMessage;
+  value: AiMessage;
 }
 
 export const MessageItem = React.memo(RawMessageItem);
@@ -29,7 +30,7 @@ function RawMessageItem({ className, value }: MessageItemProps) {
   );
 }
 
-function MessageChild({ value, debug }: { value: UIMessage; debug: boolean }): React.ReactNode {
+function MessageChild({ value, debug }: { value: AiMessage; debug: boolean }): React.ReactNode {
   const { setPanelWidth } = usePanelWidth();
   const deferredParts = React.useDeferredValue(value.parts);
 
@@ -63,13 +64,13 @@ function MessageChild({ value, debug }: { value: UIMessage; debug: boolean }): R
                 </GithubFlavorMarkdown>
               );
             }
-            if (part.type === 'tool-invocation') {
-              const { toolCallId } = part.toolInvocation;
+            if (isToolPart(part)) {
+              const { toolCallId } = part;
               return (
                 <div key={`tool-${toolCallId}`}>
                   <ToolsProgress part={part} />
                   <>
-                    <ToolsComponents part={part} />
+                    {/* <ToolsComponents part={part} /> */}
                     {/* This tool component has been disabled yet */}
                     {/* <ToolArticles message={value} /> */}
                   </>
@@ -101,18 +102,13 @@ function debugToConsole(value: UIMessage) {
   // eslint-disable-next-line no-console
   console.log(value);
   for (const part of value.parts) {
-    if (part.type !== 'tool-invocation') continue;
+    if (!isToolPart(part)) continue;
 
-    const toolInvocation = part.toolInvocation as ToolInvocation & { result: string };
     // eslint-disable-next-line no-console
-    console.debug(`%c${toolInvocation.toolName}`, 'font-weight: bolder; font-size: 110%');
-    const { result } = toolInvocation;
-    try {
+    console.debug(`%c${part.type.slice(5)}`, 'font-weight: bolder; font-size: 110%');
+    if (part.state === 'output-available' && part.output) {
       // eslint-disable-next-line no-console
-      console.debug(JSON.parse(result));
-    } catch (ex) {
-      // eslint-disable-next-line no-console
-      console.error('Not a valid JSON:', result);
+      console.debug(part.output);
     }
   }
 }

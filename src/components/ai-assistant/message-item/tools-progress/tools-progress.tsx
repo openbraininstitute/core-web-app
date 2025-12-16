@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ToolInvocation, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import Link from 'next/link';
+import { ToolUIPart } from 'ai';
 import { IconGear } from '../../icons/gear';
 import LoadingDots from './loading-dots/loading-dots';
 import { cn } from '@/utils/css-class';
@@ -17,7 +17,7 @@ import styles from './tools-progress.module.css';
 
 interface ToolsProgressProps {
   className?: string;
-  part: ToolInvocationUIPart;
+  part: ToolUIPart;
 }
 
 export default function ToolsProgress({ className, part }: ToolsProgressProps) {
@@ -45,7 +45,7 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
   const { tool, state, invocation, key } = toolsState;
   const Icon = tool.icon;
   const isExpanded = expandedToolKeys.has(key);
-  const isRunning = state !== 'result';
+  const isRunning = state !== 'output-available';
 
   return (
     <div className={cn(styles.container, className)}>
@@ -118,17 +118,17 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
             aria-label={`${tool.name} details`}
           >
             <div className={styles.detailsInner}>
-              {invocation.args && Object.keys(invocation.args).length > 0 && (
+              {Object.keys(invocation.input || {}).length > 0 && (
                 <div className={styles.section}>
                   <div className={styles.sectionTitle}>Arguments</div>
-                  <pre className={styles.codeBlock}>{formatInputOutputs(invocation.args)}</pre>
+                  <pre className={styles.codeBlock}>{formatInputOutputs(invocation.input)}</pre>
                 </div>
               )}
 
-              {invocation.state === 'result' && invocation.result && (
+              {invocation.state === 'output-available' && (
                 <div className={styles.section}>
                   <div className={styles.sectionTitle}>Result</div>
-                  <pre className={styles.codeBlock}>{formatInputOutputs(invocation.result)}</pre>
+                  <pre className={styles.codeBlock}>{formatInputOutputs(invocation.output)}</pre>
                 </div>
               )}
             </div>
@@ -141,23 +141,21 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
 
 type ToolsStates = {
   tool: AIAssistantTool;
-  state: 'partial-call' | 'call' | 'result';
-  invocation: ToolInvocation;
+  state: 'input-streaming' | 'input-available' | 'output-available' | 'output-error';
+  invocation: ToolUIPart;
   key: string;
 };
 
-function getToolsState(part: ToolInvocationUIPart, tools: AIAssistantTool[]): ToolsStates | null {
-  const invocation = part.toolInvocation;
-  if (!invocation || !invocation.toolName) return null;
-  const tool = tools.find((t) => t.id === invocation.toolName);
+function getToolsState(part: ToolUIPart, tools: AIAssistantTool[]): ToolsStates | null {
+  if (!part) return null;
+  const tool = tools.find((t) => t.id === part.type.slice(5));
   if (!tool) return null;
-  const keyBase = (invocation.toolName ?? 'tool') as string;
-  const key = `${keyBase}-${tool.id}`;
+  const key = part.type.slice(5);
 
   return {
     tool,
-    state: invocation.state,
-    invocation,
+    state: part.state,
+    invocation: part,
     key,
   };
 }

@@ -25,7 +25,7 @@ export interface ChatProps {
 
 export default function Chat({ className, threadId, onClearChat }: ChatProps) {
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = React.useState(true);
-  const { messages, clear, status, append, error, stop, rateLimitRemaining } =
+  const { messages, clear, status, sendMessage, error, stop, rateLimitRemaining } =
     useServiceAiAgentChat(threadId ?? '');
   const [suggestions] = useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', 3);
   const isStorageQueryFetching = useIsFetching({
@@ -52,10 +52,7 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
   };
   const handlePrompt = (content: string) => {
     setIsAutoScrollEnabled(true);
-    append({
-      role: 'user',
-      content,
-    });
+    sendMessage({ text: content });
   };
   const handleWheel = (event: React.WheelEvent) => {
     if (event.deltaY < 0) {

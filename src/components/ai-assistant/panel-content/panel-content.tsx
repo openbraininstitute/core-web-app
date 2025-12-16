@@ -22,7 +22,12 @@ export default function PanelContent({
       {threadId ? (
         <>
           {tab === 'chat' && (
-            <Chat className={className} threadId={threadId} onClearChat={onClearChat} />
+            <Chat
+              key={threadId}
+              className={className}
+              threadId={threadId}
+              onClearChat={onClearChat}
+            />
           )}
           {tab === 'history' && (
             <History className={className} onBack={() => onTabChange('chat')} />
