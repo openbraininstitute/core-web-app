@@ -34,6 +34,7 @@ const FREE_ACCESS_PAGES = [
   '/api/help*',
   '/api/sanity*',
   '/api/version',
+  '/api/sanity*',
 ];
 const ASSETS = [
   '/static*',

@@ -1,5 +1,5 @@
 export default function SubscriptionToggle({
-    billingInterval,
+  billingInterval,
   setBillingInterval,
 }: {
   billingInterval: 'month' | 'year';

@@ -3,10 +3,9 @@ import Link from 'next/link';
 import { RiInformation2Line } from '@remixicon/react';
 import { Tooltip } from 'antd';
 
+import { PlanV2, AdvantagesProps } from '@/types/virtual-lab/pricing';
 import SubscriptionToggle from '@/ui/segments/plans/subscription-toggle';
 import SubscriptionsCosts from '@/ui/segments/plans/subscriptions-costs';
-import { PlanV2, AdvantagesProps } from '@/types/virtual-lab/pricing';
-
 
 export default function PlanHeader({
   plan,
@@ -15,7 +14,7 @@ export default function PlanHeader({
 }: {
   plan: PlanV2;
   billingInterval: 'month' | 'year';
-  setBillingInterval: (subscription: 'month' | 'year') => void;
+  setBillingInterval: (billingInterval: 'month' | 'year') => void;
 }) {
   return (
     <header className="relative flex h-[260px] w-full flex-col justify-between">

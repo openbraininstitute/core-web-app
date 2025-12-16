@@ -1,6 +1,6 @@
 import { PlanV2 } from '@/types/virtual-lab/pricing';
 
-export default function BillingIntervalCosts({
+export default function SubscriptionsCosts({
   billingInterval,
   plan,
 }: {
