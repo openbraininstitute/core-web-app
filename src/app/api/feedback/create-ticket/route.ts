@@ -2,6 +2,8 @@
 import { Octokit } from '@octokit/core';
 import { NextRequest, NextResponse } from 'next/server';
 
+import { config } from '@/config/server';
+
 export async function POST(req: NextRequest) {
   try {
     const { title, body, label, labels, screenshot, screenshots } = await req.json();
@@ -10,7 +12,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Title and body required' }, { status: 400 });
     }
 
-    if (!process.env.GITHUB_FEEDBACK_TOKEN) {
+    if (!config.GITHUB_FEEDBACK_TOKEN) {
       // eslint-disable-next-line no-console
       console.error('GITHUB_FEEDBACK_TOKEN is not configured');
       return NextResponse.json({ error: 'GitHub token not configured' }, { status: 500 });
@@ -19,10 +21,10 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line no-console
     console.log(
       'GITHUB_FEEDBACK_TOKEN is configured:',
-      process.env.GITHUB_FEEDBACK_TOKEN ? 'Yes' : 'No'
+      config.GITHUB_FEEDBACK_TOKEN ? 'Yes' : 'No'
     );
 
-    const octokit = new Octokit({ auth: process.env.GITHUB_FEEDBACK_TOKEN });
+    const octokit = new Octokit({ auth: config.GITHUB_FEEDBACK_TOKEN });
 
     // Check token validity early - fail fast if token is invalid
     try {
@@ -311,7 +313,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ADD TO PROJECT (optional, continue even if it fails)
-    const projectId = process.env.GITHUB_FEEDBACK_PROJECT_ID;
+    const projectId = config.GITHUB_FEEDBACK_PROJECT_ID;
     if (!projectId || projectId.startsWith('{{') || projectId.trim() === '') {
       // eslint-disable-next-line no-console
       console.warn(
@@ -321,7 +323,7 @@ export async function POST(req: NextRequest) {
       try {
         // eslint-disable-next-line no-console
         console.log('Adding issue to project:', {
-          projectId: process.env.GITHUB_FEEDBACK_PROJECT_ID,
+          projectId: config.GITHUB_FEEDBACK_PROJECT_ID,
           issueNodeId,
         });
 
@@ -451,7 +453,7 @@ export async function POST(req: NextRequest) {
         console.error('Failed to add to project:', {
           error: errorMessage,
           projectError,
-          projectId: process.env.GITHUB_FEEDBACK_PROJECT_ID,
+          projectId: config.GITHUB_FEEDBACK_PROJECT_ID,
           issueNodeId,
           help: 'The token may need the "project" scope. Check token permissions at: https://github.com/settings/tokens',
         });
