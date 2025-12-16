@@ -1,6 +1,6 @@
 import React from 'react';
-import { ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 
+import { ToolUIPart } from 'ai';
 import ToolPlotGenerator from './tools/tool-plot-generator';
 import ToolThumbnailGeneration from './tools/tool-thumbnail-generation-morphology-getone';
 import { isToolResult } from './tools/types';
@@ -11,7 +11,7 @@ import styles from './tools-components.module.css';
 
 export interface ToolsComponentsProps {
   className?: string;
-  part: ToolInvocationUIPart;
+  part: ToolUIPart;
 }
 
 export default function ToolsComponents({ className, part }: ToolsComponentsProps) {
@@ -35,18 +35,18 @@ export default function ToolsComponents({ className, part }: ToolsComponentsProp
 }
 
 function extractToolResults<T>(
-  part: ToolInvocationUIPart,
+  part: ToolUIPart,
   toolsIds: string[],
   typeGuard: (data: unknown) => data is T
 ): T | null {
-  const invocation = part.toolInvocation;
+  const invocation = part;
 
-  if (invocation.state !== 'result' || !toolsIds.includes(invocation.toolName)) {
+  if (invocation.state !== 'output-available' || !toolsIds.includes(invocation.type.slice(5))) {
     return null;
   }
 
   try {
-    const result = JSON.parse(invocation.result);
+    const result = JSON.parse(invocation.output as string);
     return typeGuard(result) ? result : null;
   } catch {
     return null;

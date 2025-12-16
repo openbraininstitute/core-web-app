@@ -1,9 +1,8 @@
 'use client';
 
 import React from 'react';
-import { ChatRequestOptions } from '@ai-sdk/ui-utils';
+import { ChatRequestOptions, DefaultChatTransport } from 'ai';
 import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport } from 'ai';
 
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { useAiAssistant } from '../assistant';

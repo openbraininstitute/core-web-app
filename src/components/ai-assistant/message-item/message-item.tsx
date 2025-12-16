@@ -6,6 +6,7 @@ import { UIMessage } from 'ai';
 import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
 import ToolsProgress from './tools-progress';
 
+import ToolsComponents from './tools-components';
 import { classNames } from '@/util/utils';
 import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
 import { isString } from '@/util/type-guards';
@@ -70,7 +71,7 @@ function MessageChild({ value, debug }: { value: AiMessage; debug: boolean }): R
                 <div key={`tool-${toolCallId}`}>
                   <ToolsProgress part={part} />
                   <>
-                    {/* <ToolsComponents part={part} /> */}
+                    <ToolsComponents part={part} />
                     {/* This tool component has been disabled yet */}
                     {/* <ToolArticles message={value} /> */}
                   </>
