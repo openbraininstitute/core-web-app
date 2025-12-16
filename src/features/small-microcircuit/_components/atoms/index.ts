@@ -42,10 +42,19 @@ const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
 export const simExecRemoteStatusMapAtomFamily = atomFamilyWithExpiration(
   ({ simulationIds, context }: { simulationIds: string[]; context: WorkspaceContext }) =>
     atomWithRefresh<Promise<SimExecStatusMap>>(async () => {
-      const executions = await resolveExecutions({ context, allSimIds: simulationIds });
+      const simExecutions = await resolveExecutions({ context, allSimIds: simulationIds });
 
-      return executions.reduce(
-        (map, simExec) => map.set(simExec.used[0].id, simExec.status),
+      const executionsGrouped = simExecutions.reduce<Map<string, ICircuitSimulationExecution[]>>(
+        (map, exec) => map.set(exec.used[0].id, [...(map.get(exec.used[0].id) ?? []), exec]),
+        new Map()
+      );
+
+      Array.from(executionsGrouped.values()).forEach((executions) =>
+        executions.sort((a, b) => b.creation_date.localeCompare(a.creation_date))
+      );
+
+      return Array.from(executionsGrouped.keys()).reduce(
+        (map, simId) => map.set(simId, executionsGrouped.get(simId)![0].status),
         new Map()
       );
     }),
