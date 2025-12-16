@@ -72,7 +72,7 @@ export default function Page({
             data-testid="simulation-panel-wrapper"
             className={cn(
               'grid h-full min-h-0 gap-4 overflow-hidden overflow-y-auto',
-              { 'grid-cols-[2.5fr_2fr]': visualizerState === threeDVisualizerState.Expanded },
+              { 'grid-cols-[2fr_3fr]': visualizerState === threeDVisualizerState.Expanded },
               { 'grid-cols-[2.5fr_5rem]': visualizerState === threeDVisualizerState.Collapsed }
             )}
           >

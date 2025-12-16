@@ -10,9 +10,7 @@ import {
   RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
   STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
 } from '../../constant';
-import { useCleanMorphology } from '../hooks';
 import { getColorFromGeneratedPalette } from './colors';
-import { PainterManager } from './painter';
 
 const atomSynapsesToShowInViewer = atom<Array<{ color: string; data: Float32Array }>>([]);
 
@@ -50,14 +48,4 @@ export function useRecordingsAndInjection(sessionId: string) {
     moveInjection: (sectionName: string) =>
       updateInjection({ ...injection, inject_to: sectionName }),
   };
-}
-
-export function useCleanMorphologyFor3DViewer(
-  painterManager: PainterManager,
-  meModelId: string,
-  sessionId: string
-) {
-  return useCleanMorphology(meModelId, sessionId, (morphology) => {
-    painterManager.morphology = morphology;
-  });
 }
