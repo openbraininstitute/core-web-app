@@ -14,10 +14,8 @@ import {
   TgdPainterSegmentsData,
   TgdVec3,
 } from '@tolokoban/tgd';
-import { useAtomValue } from 'jotai';
 
 import { useVisibleSynapses } from '../hooks';
-import { SimulationStatus, simulationStatusAtomFamily } from '../../../context';
 import { computeSectionOffset } from './math';
 import { makeCamera } from './camera';
 import { Structure, StructureItem, StructureItemType } from './structure';
@@ -461,10 +459,11 @@ export class PainterManager {
   }
 }
 
-export function usePainterManager() {
+export function usePainterManager(morphology: Morphology) {
   const refPainter = React.useRef<PainterManager | null>(null);
   if (!refPainter.current) {
     refPainter.current = new PainterManager();
+    refPainter.current.morphology = morphology;
   }
   React.useEffect(() => {
     return () => {
@@ -479,9 +478,9 @@ export function usePainterManager() {
 
 export function usePainterController(
   painter: PainterManager,
-  sessionId: string,
   disableElectrodes: boolean,
-  disableSynapses: boolean
+  disableSynapses: boolean,
+  disableClick: boolean
 ) {
   const notif = useAppNotification();
   React.useEffect(() => {
@@ -495,13 +494,11 @@ export function usePainterController(
     return () => painter.eventForbiddenClick.removeListener(action);
   }, [notif, painter]);
 
-  const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
   React.useEffect(() => {
-    const s = simulationStatus?.status;
     if (painter) {
-      painter.clickable = s !== SimulationStatus.LAUNCHED;
+      painter.clickable = disableClick !== true;
     }
-  }, [simulationStatus, painter]);
+  }, [disableClick, painter]);
 
   const synapses = useVisibleSynapses();
   React.useEffect(() => {

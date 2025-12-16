@@ -1,7 +1,8 @@
 import React from 'react';
 import { useAtom, useSetAtom } from 'jotai';
-
+import { useQuery } from '@tanstack/react-query';
 import { tgdFullscreenToggle } from '@tolokoban/tgd';
+
 import { EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
   ExperimentalSetupConfigurationAtomFamily,
@@ -12,8 +13,9 @@ import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/sh
 
 import type { PlotData } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { useMorphology } from '@/hooks/use-morphology';
 import { Morphology } from '@/services/bluenaas-single-cell/types';
+import { keyBuilder } from '@/ui/use-query-keys/data';
+import { getSingleNeuronMorphology } from '@/api/small-scale-simulator';
 
 const THROTTLE = 1000;
 
@@ -68,25 +70,27 @@ export function useFullscreenSwitcher() {
   return { refContainer, toggleFullscreen: () => tgdFullscreenToggle(refContainer.current) };
 }
 
-export function useCleanMorphology(
-  meModelId: string,
-  sessionId: string,
-  callback: (morphology: Morphology) => void
-) {
+export function useCleanMorphology(meModelId: string, sessionId: string) {
   const { virtualLabId, projectId } = useWorkspace();
   const setSecNames = useSetAtom(neuronSectionNamesAtomFamily(sessionId));
 
-  return useMorphology({
-    modelId: meModelId,
-    callback: (morphology) => {
-      const prunedMorpho = removeNoDiameterSection(morphology);
-      callback(prunedMorpho);
-      const sectionNames = Object.keys(morphology);
-      setSecNames(sectionNames);
+  const {
+    isLoading: loading,
+    isSuccess,
+    error,
+    data,
+  } = useQuery({
+    queryKey: keyBuilder.neuronMorphology3DData({ virtualLabId, projectId, modelId: meModelId }),
+    queryFn: () => {
+      return getSingleNeuronMorphology({ ctx: { virtualLabId, projectId }, meModelId });
     },
-    projectId,
-    virtualLabId,
   });
+
+  const morphology: Morphology = isSuccess && data ? removeNoDiameterSection(data) : {};
+  const sectionNames = Object.keys(morphology);
+  setSecNames(sectionNames);
+
+  return { loading, error, morphology };
 }
 
 function removeNoDiameterSection(morphology: Morphology) {
