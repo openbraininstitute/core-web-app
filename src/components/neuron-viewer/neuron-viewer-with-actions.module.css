@@ -31,3 +31,27 @@
   background-color: #000;
   color: #fffe;
 }
+
+button.toggleView {
+  font: inherit;
+  border: none;
+  position: absolute;
+  left: 1em;
+  top: 1em;
+  color: #fff;
+  background: #3a3a3a;
+  border-radius: 2px;
+  flex: none;
+  place-items: center;
+  width: 2.5em;
+  height: 2.5em;
+  transition: all 0.3s;
+  display: grid;
+  z-index: 999;
+
+  &:hover,
+  &:active {
+    color: #000;
+    background-color: #adf;
+  }
+}

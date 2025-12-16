@@ -1,9 +1,59 @@
 .viewerDendrogram {
+  color: #fff;
+  background-color: #000;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+
   canvas {
     position: absolute;
     left: 0;
-    top: 0;
+    top: 2em;
     width: 100%;
     height: 100%;
+  }
+
+  .hover {
+    position: absolute;
+    background: #333d;
+    border-radius: 1em;
+    padding: 0.5em 1em;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1em;
+
+    &.top {
+      right: 1em;
+      top: 4em;
+    }
+
+    > div:last-child {
+      font-weight: bold;
+    }
+  }
+
+  > button {
+    border: none;
+    font: inherit;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    left: 1em;
+    top: 4em;
+    width: 3em;
+    height: 3em;
+    color: #fff;
+    background-color: #333;
+    padding: 0.5em;
+    border-radius: 99vmax;
+    cursor: pointer;
+    transition: all 0.3s;
+
+    &:hover {
+      background-color: #75aaff;
+      color: #000;
+    }
   }
 }

@@ -6,6 +6,7 @@ import { useAtomValue } from 'jotai';
 
 import ReloadIcon from '../icons/Reload';
 import { ViewerDendrogram } from '../viewers/viewer-dendrogram';
+import { IconGear } from '../ai-assistant/icons/gear';
 import { NeuronLoader } from './plugins/neuron-loader';
 
 import { DefaultLoadingSuspense } from '@/components/DefaultLoadingSuspense';
@@ -33,6 +34,8 @@ export function NeuronViewerContainer({
   disableElectrodes,
   disableSynapses,
 }: Props) {
+  const [viewer, setViewer] = React.useState<'3D' | 'dendrogram'>('3D');
+  const toggleViewer = () => setViewer(viewer === '3D' ? 'dendrogram' : '3D');
   const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
   const { loading, error, morphology } = useCleanMorphology(meModelId, sessionId);
 
@@ -68,14 +71,19 @@ export function NeuronViewerContainer({
       })}
     >
       <DefaultLoadingSuspense>
-        <WebglNeuronSelector
-          morphology={morphology}
-          sessionId={sessionId}
-          disableElectrodes={disableElectrodes}
-          disableSynapses={disableSynapses}
-          disableClick={simulationStatus?.status === SimulationStatus.LAUNCHED}
-        />
-        <ViewerDendrogram morphology={morphology} />
+        <button className={styles.toggleView} type="button" onClick={toggleViewer}>
+          <IconGear />
+        </button>
+        {viewer === '3D' && (
+          <WebglNeuronSelector
+            morphology={morphology}
+            sessionId={sessionId}
+            disableElectrodes={disableElectrodes}
+            disableSynapses={disableSynapses}
+            disableClick={simulationStatus?.status === SimulationStatus.LAUNCHED}
+          />
+        )}
+        {viewer === 'dendrogram' && <ViewerDendrogram morphology={morphology} />}
       </DefaultLoadingSuspense>
     </ErrorBoundary>
   );

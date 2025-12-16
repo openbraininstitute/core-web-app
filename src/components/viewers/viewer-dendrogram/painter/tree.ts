@@ -3,18 +3,18 @@ import { Morphology, NeuronSectionInfo } from '@/services/bluenaas-single-cell/t
 
 export interface Tree {
   children: TreeItem[];
-  // Number of items per level.
-  levels: number[];
+  levelsCount: number;
+  // Store items by level, then rank.
+  // This is usefull for fast item finding
+  // when hovering.
+  grid: TreeItem[][];
 }
 
 export interface TreeItem {
   section: NeuronSectionInfo;
-  // Depth level. Root is 0.
-  level: number;
-  // Index in the current level.
-  rank: number;
   x: number;
   y: number;
+  weight: number;
   children: TreeItem[];
 }
 
@@ -28,8 +28,7 @@ export function createTreeStructure(morphology: Morphology): Tree {
     const keyParent = `${section.xstart[0]}/${section.ystart[0]}/${section.zstart[0]}`;
     const item: TreeItem = {
       section,
-      level: 0,
-      rank: 0,
+      weight: 0,
       x: 0,
       y: 0,
       children: [],
@@ -38,19 +37,57 @@ export function createTreeStructure(morphology: Morphology): Tree {
     const parent = items.get(keyParent) ?? children;
     parent.push(item);
   }
-  const levels: number[] = [];
-  computeRanksAndLevels(children, levels, 0);
-  return { children, levels };
+  if (children.length === 0) return { children, levelsCount: 0, grid: [] };
+
+  computeWeights(children);
+  const levelsCount = countLevels(children);
+  const levelHeight = 1 / levelsCount;
+  computeCoords(children, levelHeight);
+  return { children, levelsCount, grid: createGrid(children) };
 }
 
-function computeRanksAndLevels(children: TreeItem[], levels: number[], level: number) {
-  while (levels.length <= level) levels.push(0);
-  const minRank = levels[level];
-  for (let i = 0; i < children.length; i++) {
-    const item = children[i];
-    item.rank = minRank + i;
-    item.level = level;
-    computeRanksAndLevels(item.children, levels, level + 1);
+function computeWeights(children: TreeItem[]): number {
+  let totalWeight = 1;
+  for (const child of children) {
+    const weight = computeWeights(child.children);
+    child.weight = weight;
+    totalWeight += weight;
   }
-  levels[level] = minRank + children.length;
+  return totalWeight;
+}
+
+function countLevels(children: TreeItem[], level = 0): number {
+  let maxLevel = level;
+  for (const item of children) {
+    maxLevel = Math.max(maxLevel, countLevels(item.children, level + 1));
+  }
+  return maxLevel;
+}
+
+function computeCoords(children: TreeItem[], levelHeight: number, level = 0, xMin = 0, xMax = 1) {
+  const fx = (x: number) => xMin + (xMax - xMin) * x;
+  const totalWeight = children.reduce((weight, item) => weight + item.weight, 0);
+  let x = 0;
+  for (const item of children) {
+    const w = item.weight / totalWeight;
+    item.x = fx(x + w / 2);
+    item.y = levelHeight * level;
+    computeCoords(item.children, levelHeight, level + 1, fx(x), fx(x + w));
+    x += w;
+  }
+}
+
+function createGrid(children: TreeItem[]): TreeItem[][] {
+  const grid: TreeItem[][] = [];
+  recursivelyCreateGrid(grid, children, 0);
+  while (grid[grid.length - 1]?.length === 0) grid.pop();
+  return grid;
+}
+
+function recursivelyCreateGrid(grid: TreeItem[][], children: TreeItem[], level: number) {
+  while (grid.length <= level) grid.push([]);
+  for (const item of children) {
+    grid[level].push(item);
+    recursivelyCreateGrid(grid, item.children, level + 1);
+  }
 }
