@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { PortableTextBlock } from '@sanity/types';
 
-import { client } from '@/api/sanity/client';
+import { getClient } from '@/api/sanity/client';
 import { logError } from '@/util/logger';
 
 export type GuideCardProps = {
@@ -57,7 +57,7 @@ function isContentForGuides(data: unknown): data is GuidesContentsProps {
 
 export async function getGuidesContent(): Promise<GuidesContentsProps> {
   try {
-    const data = await client.fetch<GuidesContentsProps>({
+    const data = await getClient().fetch<GuidesContentsProps>({
       query: queryForGuidesContent,
     });
     if (isContentForGuides(data)) return data;

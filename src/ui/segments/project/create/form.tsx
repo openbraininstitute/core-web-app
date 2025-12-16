@@ -18,7 +18,7 @@ import { checkProjectExists, createProject } from '@/api/virtual-lab-svc/queries
 import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
 import { useAppNotification } from '@/components/notification';
 import { ProjectPayload } from '@/api/virtual-lab-svc/types';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
@@ -62,7 +62,7 @@ export function CreationForm() {
       if (result && result.data?.project) {
         const virLabId = result.data.project.virtual_lab_id;
         const projectId = result.data.project.id;
-        navigate(`${ROOT_ROUTE}/${virLabId}/${projectId}`);
+        navigate(`${config.ROOT_ROUTE}/${virLabId}/${projectId}`);
         makeTriggerWorkspaceConfigurationClickEvent({ on: false, data: null, type: null });
       }
     },

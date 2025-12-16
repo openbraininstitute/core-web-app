@@ -6,7 +6,7 @@ import snakeCase from 'es-toolkit/compat/snakeCase';
 import Link from 'next/link';
 
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   getBuildTypeFromSimulateType,
@@ -37,7 +37,7 @@ export function SimulateWorkflowsBreadcrumb() {
   const buildType = getBuildTypeFromSimulateType(dataType);
   const selectTitle = getEntityByExtendedType({ type: buildType })?.title;
   const buildTitle = getEntityTypeWorkflowConfigurationItem(buildType)?.label;
-  const homeLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`;
+  const homeLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`;
 
   return (
     <div className="px-3 pt-4 pb-2">

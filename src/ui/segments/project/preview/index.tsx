@@ -14,7 +14,7 @@ import { ExpandableText } from '@/ui/molecules/more-less-text';
 import { PeopleCommunity } from '@/components/icons/buttons';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { Button } from '@/ui/molecules/button';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 
 import type { Member, Project } from '@/api/virtual-lab-svc/queries/types';
 import type { WorkspaceContext } from '@/types/common';
@@ -133,25 +133,25 @@ const shortcuts = [
     key: 'browse-data',
     title: 'Data',
     url: ({ virtualLabId, projectId }: WorkspaceContext) =>
-      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data`,
+      `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data`,
   },
   {
     key: 'workflow',
     title: 'Workflows',
     url: ({ virtualLabId, projectId }: WorkspaceContext) =>
-      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`,
+      `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`,
   },
   {
     key: 'notebooks',
     title: 'Notebooks',
     url: ({ virtualLabId, projectId }: WorkspaceContext) =>
-      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
+      `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
   },
   {
     key: 'reports',
     title: 'Reports',
     url: ({ virtualLabId, projectId }: WorkspaceContext) =>
-      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/reports`,
+      `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/reports`,
   },
 ];
 
@@ -225,7 +225,7 @@ function Content({
         >
           <Link
             prefetch
-            href={`${ROOT_ROUTE}/${virtualLabId}/${data?.id}`}
+            href={`${config.ROOT_ROUTE}/${virtualLabId}/${data?.id}`}
             onClick={onProjectClick}
           >
             <div className="flex w-full items-center justify-between gap-10">

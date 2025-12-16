@@ -35,7 +35,7 @@ import { useAppNotification } from '@/components/notification';
 import { synapsesPlacementAtom } from '@/state/synaptome';
 import { sendDisplaySynapses3DEvent } from '@/components/neuron-viewer/hooks/events';
 import { Button } from '@/ui/molecules/button';
-import { getSession } from '@/authFetch';
+import { getSession } from '@/auth-fetch';
 import { tryCatch } from '@/api/utils';
 import { cn } from '@/utils/css-class';
 

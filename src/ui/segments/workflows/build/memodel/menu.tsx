@@ -23,7 +23,7 @@ import { createModel } from '@/api/small-scale-simulator/single-neuron/single-ne
 import { CreateSingleNeuronSchema } from '@/api/small-scale-simulator/types';
 import { useAppNotification } from '@/components/notification';
 import { LowFundsNotification } from '@/components/notification/low-funds-notification';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 import { LOW_FUNDS_ERROR_CODE, messages } from '@/i18n/en/me-model';
 import { WorkspaceContextSchema } from '@/types/common';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
@@ -102,7 +102,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
       });
       delay(() => {
         navigate(
-          `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.Memodel)}/${data.data.id}`
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.Memodel)}/${data.data.id}`
         );
       }, 500);
     },

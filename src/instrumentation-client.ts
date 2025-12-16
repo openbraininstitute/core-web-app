@@ -3,18 +3,18 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from '@sentry/nextjs';
-import { env } from './env';
+import { config } from './config';
 
 Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  dsn: config.SENTRY_DSN,
   integrations: [Sentry.replayIntegration()],
   tracesSampleRate: 1,
   enableLogs: true,
-  replaysSessionSampleRate: env.NEXT_PUBLIC_DEPLOYMENT_ENV === 'production' ? 0.1 : 1,
+  replaysSessionSampleRate: config.DEPLOYMENT_ENV === 'production' ? 0.1 : 1,
   replaysOnErrorSampleRate: 1.0,
-  debug: !['staging', 'production', 'local'].includes(env.NEXT_PUBLIC_DEPLOYMENT_ENV),
+  debug: !['staging', 'production', 'local'].includes(config.DEPLOYMENT_ENV),
   beforeSend(event) {
-    if (['test', 'preview', 'local'].includes(process.env.NEXT_PUBLIC_DEPLOYMENT_ENV || '')) {
+    if (['test', 'preview', 'local'].includes(config.DEPLOYMENT_ENV || '')) {
       return null;
     }
     return event;

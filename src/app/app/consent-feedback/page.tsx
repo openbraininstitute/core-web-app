@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 
-import { env } from '@/env';
+import { config } from '@/config';
 import { SharedLayout } from '@/ui/layouts/shared-layout';
 import { Button } from '@/ui/molecules/button';
 import { Icon } from '@/ui/segments/offline-consent/icon';
@@ -46,7 +46,7 @@ export default function Page() {
           <p className="mb-2 text-lg text-gray-600 dark:text-gray-300">{subtitle}</p>
           <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">{hint}</p>
 
-          {env.NEXT_PUBLIC_DEPLOYMENT_ENV !== 'production' && (error || description) && (
+          {config.DEPLOYMENT_ENV !== 'production' && (error || description) && (
             <div className="mt-6 rounded-lg bg-gray-100 p-4 text-left dark:bg-gray-800">
               <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Debug Information:</p>
               {error && <p className="text-xs">Error Code: {error}</p>}

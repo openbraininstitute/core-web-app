@@ -1,4 +1,4 @@
-import { client } from '@/api/sanity/client';
+import { getClient } from '@/api/sanity/client';
 import { ContentForTutorialItem } from '@/types/help/type';
 import { logError } from '@/util/logger';
 import { assertType, TypeDef } from '@/util/type-guards';
@@ -47,7 +47,7 @@ function isContentForTutorials(data: unknown): data is ContentForTutorialItem {
 
 export async function getTutorialContent(): Promise<ContentForTutorialItem> {
   try {
-    const data = await client.fetch<ContentForTutorialItem>({
+    const data = await getClient().fetch<ContentForTutorialItem>({
       query: queryForAboutContent,
     });
     if (isContentForTutorials(data)) return data;

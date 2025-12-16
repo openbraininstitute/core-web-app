@@ -1,14 +1,13 @@
-import snakeCase from 'es-toolkit/compat/snakeCase';
 import kebabCase from 'es-toolkit/compat/kebabCase';
+import snakeCase from 'es-toolkit/compat/snakeCase';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { createDownloadStream } from '@/features/entity-download/download-stream';
-import { getDownloadStreamHeaders } from '@/features/entity-download/utils';
-
 import { TEntityTypeDict } from '@/api/entitycore/types';
 import { auth } from '@/auth';
+import { createDownloadStream } from '@/features/entity-download/download-stream';
 import { ticketStore } from '@/features/entity-download/ticket-store';
+import { getDownloadStreamHeaders } from '@/features/entity-download/utils';
 
 /**
  * Handles GET requests for downloading an entity archive via a download ticket

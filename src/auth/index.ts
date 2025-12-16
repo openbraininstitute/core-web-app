@@ -1,12 +1,12 @@
 import { getServerSession, type NextAuthOptions, type TokenSet, type Session } from 'next-auth';
 import { GetServerSidePropsContext, NextApiRequest, NextApiResponse } from 'next';
 
-import { log } from './utils/logger';
-import { env } from '@/env';
+import { log } from '../utils/logger';
+import { serverConfig as config } from '@/config/server';
 
-const issuer = env.KEYCLOAK_ISSUER;
-const clientId = env.KEYCLOAK_CLIENT_ID;
-const clientSecret = env.KEYCLOAK_CLIENT_SECRET;
+const issuer = config.KEYCLOAK_ISSUER;
+const clientId = config.KEYCLOAK_CLIENT_ID;
+const clientSecret = config.KEYCLOAK_CLIENT_SECRET;
 
 /**
  * Updates or inserts a refresh token in the authentication manager service.
@@ -27,7 +27,7 @@ async function upsertRefreshTokenInAuthManager({
   refreshToken: string;
 }) {
   try {
-    const response = await fetch(`${env.AUTH_MANAGER_URI}/refresh-token`, {
+    const response = await fetch(`${config.AUTH_MANAGER_URL}/refresh-token`, {
       method: 'post',
       headers: {
         'content-type': 'application/json',

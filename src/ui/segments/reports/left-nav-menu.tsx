@@ -11,7 +11,7 @@ import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { useUserRole } from '@/hooks/use-user-role';
 import { Button } from '@/ui/molecules/button';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 import { cn } from '@/utils/css-class';
 
 type Props = {
@@ -54,7 +54,7 @@ export function LeftMenu({ className }: Props) {
     links.map((link) => ({
       ...link,
       baseUrl: link.url,
-      url: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks/${link.url}`,
+      url: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks/${link.url}`,
     })),
     (link) => !link.requireRole || (link.requireRole && isProjectAdmin)
   );
