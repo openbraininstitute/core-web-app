@@ -6,7 +6,6 @@ import { IconPlus } from '@/components/LandingPage/icons/IconPlus';
 import { styleButtonHoverable } from '@/components/LandingPage/styles';
 import { classNames } from '@/util/utils';
 
-import { sanitizeURL } from '@/components/LandingPage/utils';
 import styles from './Card.module.css';
 
 interface CardsProps {
@@ -60,7 +59,7 @@ function formatDate(d: string) {
 }
 
 function gotoNews(news: ContentForNewsItem): void {
-  const url = news.isExternalLink ? news.link : sanitizeURL(`/news/${news.slug}`);
+  const url = news.isExternalLink ? news.link : `/news/${news.slug}`;
 
   if (url) {
     window.open(url, news.isExternalLink ? '_blank' : '_self');

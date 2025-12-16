@@ -1,6 +1,6 @@
 import { assertApiResponse } from '@/util/utils';
-import authFetch, { getSession } from '@/authFetch';
-import { notebookSvcBaseUrl } from '@/config';
+import authFetch, { getSession } from '@/auth-fetch';
+import { config } from '@/config';
 
 export type NotebookStartResponse = {
   message: string;
@@ -72,7 +72,7 @@ export async function startNotebook(
       },
     },
   };
-  const res = await authFetch(`${notebookSvcBaseUrl}/analysis_notebook_template/start`, {
+  const res = await authFetch(`${config.NOTEBOOK_API_URL}/analysis_notebook_template/start`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
@@ -137,7 +137,7 @@ export async function startEmptyNotebook(
       },
     },
   };
-  const res = await authFetch(`${notebookSvcBaseUrl}/empty/start`, {
+  const res = await authFetch(`${config.NOTEBOOK_API_URL}/empty/start`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),

@@ -1,14 +1,15 @@
-import { getSession } from '@/authFetch';
-import { virtualLabApi } from '@/config';
 import {
   MemberResponse,
   MembersResponse,
   Role,
   VlmDeleteProjectMemberResponse,
 } from '@/api/virtual-lab-svc/queries/types';
-import { VlmResponse } from '@/types/virtual-lab/common';
+import { getSession } from '@/auth-fetch';
+import { config } from '@/config';
 
-const baseUri = `${virtualLabApi.url}/virtual-labs`;
+import type { VlmResponse } from '@/types/virtual-lab/common';
+
+const baseUri = `${config.VIRTUAL_LAB_API_URL}/virtual-labs`;
 
 /**
  * List all users (members + admin + pending invites)  for a specific virtual lab.

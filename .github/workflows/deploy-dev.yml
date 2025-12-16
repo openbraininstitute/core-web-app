@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IMAGE_NAME: ${{ vars.PUBLICECR_URI }}
+      IMAGE_TAG: dev
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,13 +36,8 @@ jobs:
         with:
           registry-type: public
 
-      - name: Build a Docker image for AWS
-        run: |
-          docker build --build-arg DEPLOYMENT_ENV=development -t ${{ vars.PUBLICECR_URI }}:dev .
-
-      - name: Publish the image for AWS To AWS ECR
-        run: |
-          docker push ${{ vars.PUBLICECR_URI }}:dev
+      - name: Build and publish Docker image for AWS
+        run: make publish
 
       - name: Authenticate with AWS ECS
         uses: aws-actions/configure-aws-credentials@v4

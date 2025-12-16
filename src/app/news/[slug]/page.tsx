@@ -3,6 +3,8 @@ import { ErrorBoundary } from 'react-error-boundary';
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import NewsPage from '@/components/LandingPage/components/NewsPage';
 
+export const dynamic = 'force-dynamic';
+
 export default async function MainPage({
   params: promisedParams,
 }: {

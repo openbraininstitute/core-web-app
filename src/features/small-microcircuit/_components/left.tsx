@@ -2,7 +2,7 @@ import { Fragment } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
 import { Config } from './components';
 import { useApiUrl, useValidateSchema } from './hooks';
-import authFetch from '@/authFetch';
+import authFetch from '@/auth-fetch';
 import { isNonEmptyCategory } from '@/features/small-microcircuit/_components/hooks/schema';
 import { Section } from '@/features/small-microcircuit/_components/section';
 import { CATEGORIES, ORDERING } from '@/features/small-microcircuit/_components/utils';

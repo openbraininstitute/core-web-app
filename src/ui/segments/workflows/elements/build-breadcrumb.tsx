@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 import {
   getEntityTypeWorkflowConfigurationItem,
   getCategoryDictItem,
@@ -36,7 +36,7 @@ export function BuildWorkflowsBreadcrumb() {
 
   const selectTitle = getEntityByExtendedType({ type: dataType })?.title;
   const buildTitle = getEntityTypeWorkflowConfigurationItem(dataType)?.label;
-  const homeLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`;
+  const homeLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`;
 
   return (
     <div className="px-3 pt-4 pb-2">

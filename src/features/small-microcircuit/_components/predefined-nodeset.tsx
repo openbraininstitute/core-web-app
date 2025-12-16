@@ -1,10 +1,11 @@
-import { atom, useAtom } from 'jotai';
-import { useQuery } from '@tanstack/react-query';
-
-import { Select } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
-import { ConfigValue } from './components';
-import authFetch from '@/authFetch';
+import { useQuery } from '@tanstack/react-query';
+import { Select } from 'antd';
+import { atom, useAtom } from 'jotai';
+
+import authFetch from '@/auth-fetch';
+import { config } from '@/config';
+import { ConfigValue } from '@/features/small-microcircuit/_components/components';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 export default function PredefinedNodeset({
@@ -64,7 +65,7 @@ async function fetchNodesets({
   projectId: string;
 }) {
   const res = await authFetch(
-    `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/declared/mapped-circuit-properties/${circuitId}`,
+    `${config.OBI_ONE_URL}/declared/mapped-circuit-properties/${circuitId}`,
     {
       headers: {
         Accept: 'application/json',

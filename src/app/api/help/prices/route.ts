@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { client } from '@/api/sanity/client';
+import { getClient } from '@/api/sanity/client';
 import { logError } from '@/util/logger';
 
 export type SinglePrice = {
@@ -23,7 +23,7 @@ const queryForSinglePrice = `*[_type == "singlePrice"][] {
 
 export async function GET() {
   try {
-    const data = await client.fetch<SinglePrice[]>({
+    const data = await getClient().fetch<SinglePrice[]>({
       query: queryForSinglePrice,
     });
 

@@ -1,15 +1,14 @@
-import { virtualLabApi } from '@/config';
+import { VirtualLab } from '@/api/virtual-lab-svc/queries/types';
+import authFetch, { authFetchRetryOnError } from '@/auth-fetch';
+import { config } from '@/config';
 import { VirtualLabBalanceResponse } from '@/types/accounting';
 import { VirtualLabAPIListData, VlmResponse } from '@/types/virtual-lab/common';
-
 import { assertApiResponse } from '@/util/utils';
-import authFetch, { authFetchRetryOnError } from '@/authFetch';
-import { VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 
 export async function getVirtualLabsOfUser(): Promise<
   VlmResponse<VirtualLabAPIListData<VirtualLab>>
 > {
-  const response = await authFetchRetryOnError(`${virtualLabApi.url}/virtual-labs`);
+  const response = await authFetchRetryOnError(`${config.VIRTUAL_LAB_API_URL}/virtual-labs`);
 
   if (!response.ok) {
     throw new Error(`Status: ${response.status}`);
@@ -25,7 +24,7 @@ export async function patchVirtualLab(
     virtual_lab: VirtualLab;
   }>
 > {
-  const res = await authFetch(`${virtualLabApi.url}/virtual-labs/${id}`, {
+  const res = await authFetch(`${config.VIRTUAL_LAB_API_URL}/virtual-labs/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(partialVlab),
@@ -44,7 +43,9 @@ export async function getVirtualLabAccountBalance({
   const searchParams = new URLSearchParams();
   searchParams.set('include_projects', includeProjects.toString());
 
-  const url = new URL(`${virtualLabApi.url}/virtual-labs/${virtualLabId}/accounting/balance`);
+  const url = new URL(
+    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/accounting/balance`
+  );
   url.search = searchParams.toString();
 
   const response = await authFetch(url.toString());
