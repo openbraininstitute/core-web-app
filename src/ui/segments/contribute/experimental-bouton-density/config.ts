@@ -38,7 +38,9 @@ export function createExperimentalBoutonDensityConfig(
     schema: ExperimentalBoutonDensitySchema,
     progressSteps: steps,
     getInitialValues: (brainRegionId: string) => ({
-      setup: { brain_region_id: brainRegionId } as TExperimentalBoutonDensityForm['setup'],
+      setup: {
+        brain_region_id: brainRegionId,
+      } as TExperimentalBoutonDensityForm['setup'],
       contribution: [{}] as TExperimentalBoutonDensityForm['contribution'],
       measurements: [] as TExperimentalBoutonDensityForm['measurements'],
       license_id: DEFAULT_LICENSE_ID,

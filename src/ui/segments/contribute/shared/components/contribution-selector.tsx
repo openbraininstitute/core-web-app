@@ -233,7 +233,11 @@ export function ContributionSelector<TSchema extends ZodObject<ZodRawShape>>({
             const current = form.getFieldValue('contribution') as Array<TContribution>;
             form.setFieldValue('contribution', [
               ...current,
-              { agent_type: undefined, agent_id: undefined, role_id: undefined },
+              {
+                agent_type: undefined,
+                agent_id: undefined,
+                role_id: undefined,
+              },
             ]);
           }}
           disabled={(() => {

@@ -7,7 +7,6 @@ import { MeasurementUnit } from '@/api/entitycore/types/shared/global';
 
 const measurementSchema = z.object({
   name: z.string().optional(),
-  // CHANGE 1: Hardcode the required unit to PER_MICROMETER
   unit: z.literal(MeasurementUnit.linear_density__1_um),
   value: z.number().optional(),
 });
@@ -27,7 +26,6 @@ const MeasurementArraySchema = z.array(measurementSchema).superRefine((arr, ctx)
   }
 
   arr.forEach((measurement, idx) => {
-    // CHANGE 2: Only check name and value since unit is always PER_MICROMETER
     const filledFields = [measurement.name, measurement.value].filter(
       (field) => field !== undefined && field !== null && field !== ''
     );
@@ -42,7 +40,6 @@ const MeasurementArraySchema = z.array(measurementSchema).superRefine((arr, ctx)
           path: [idx, 'name'],
         });
       }
-      // Measurement unit check is removed as it is required and hardcoded by the schema
       if (measurement.value === undefined || measurement.value === null) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -52,7 +49,6 @@ const MeasurementArraySchema = z.array(measurementSchema).superRefine((arr, ctx)
       }
     }
 
-    // CHANGE 3: Check if both name and value are filled (2 fields)
     if (measurement.name && measurement.value !== undefined && measurement.value !== null) {
       hasFullyFilledMeasurement = true;
     }

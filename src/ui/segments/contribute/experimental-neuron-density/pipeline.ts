@@ -32,7 +32,6 @@ export function useExperimentalNeuronDensityPipeline({
   const queryClient = useQueryClient();
   const { projectId, virtualLabId } = useWorkspace();
 
-  // --- MUTATION DEFINITIONS ---
 
   const createExperimentalNeuronDensityAsync = useMutation({
     mutationFn: (values: TExperimentalNeuronDensityForm) => {
@@ -141,7 +140,6 @@ export function useExperimentalNeuronDensityPipeline({
     },
   });
 
-  // --- createEntity FUNCTION ---
 
   async function createEntity({
     values,
@@ -163,21 +161,18 @@ export function useExperimentalNeuronDensityPipeline({
     const willSkipEtype = !values.etype_class_id || values.etype_class_id === '';
     const willSkipMtype = !values.mtype_class_id || values.mtype_class_id === '';
 
-    // Mark skipped steps as success immediately
     if (willSkipEtype) {
-      // Manually reset the mutation to success state to mark it as complete
       createEtypeClassificationAsync.reset();
     } else {
       classificationPromises.push(
         createEtypeClassificationAsync.mutateAsync({
           entityId: experimentalNeuronDensity.id,
-          etype_class_id: values.etype_class_id!, // Non-null assertion since we checked above
+          etype_class_id: values.etype_class_id!,
         })
       );
     }
 
     if (willSkipMtype) {
-      // Manually reset the mutation to success state to mark it as complete
       createMtypeClassificationAsync.reset();
     } else {
       classificationPromises.push(
@@ -188,7 +183,6 @@ export function useExperimentalNeuronDensityPipeline({
       );
     }
 
-    // Use Promise.all to throw on failures
     const results = await Promise.all(classificationPromises);
     results.forEach((result) => {
       if (result.status === 'rejected') {
@@ -199,7 +193,6 @@ export function useExperimentalNeuronDensityPipeline({
     return experimentalNeuronDensity.id;
   }
 
-  // --- RETURN VALUES (Loading/Error/Status Tracking) ---
 
   const loading =
     createExperimentalNeuronDensityAsync.isPending ||
@@ -213,11 +206,9 @@ export function useExperimentalNeuronDensityPipeline({
     createEtypeClassificationAsync.error ||
     createMtypeClassificationAsync.error;
 
-  // Compute status with skipped steps marked as 'success'
   const status = {
     createExperimentalNeuronDensity: createExperimentalNeuronDensityAsync.status,
     createContribution: createContributionAsync.status,
-    // For optional steps, if they were never called (status is 'idle'), treat as 'success'
     createEtypeClassification:
       createEtypeClassificationAsync.status === 'idle'
         ? 'success'

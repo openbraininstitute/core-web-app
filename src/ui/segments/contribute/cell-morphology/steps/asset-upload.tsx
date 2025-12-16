@@ -45,7 +45,9 @@ export function AssetUpload({
   onFilesChange,
 }: IAssetUploadProps) {
   const form = Form.useFormInstance();
-  const { assets } = form.getFieldsValue(['assets']) as { assets: TCellMorphologyForm['assets'] };
+  const { assets } = form.getFieldsValue(['assets']) as {
+    assets: TCellMorphologyForm['assets'];
+  };
   const [resolveNeuronFileLoading, setResolveNeuronFileLoading] = useState(false);
   const [originalFileType, setOriginalFileType] = useState<string | null>(null);
 

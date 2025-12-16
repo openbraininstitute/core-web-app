@@ -7,7 +7,6 @@ const measurementSchema = z.object({
     .union([z.string(), z.null(), z.undefined()])
     .optional()
     .transform((val) => (val === null ? undefined : val)),
-  // CHANGE 1: Hardcode unit to '1/mm3' as a required literal
   unit: z.literal('1/mm³'),
   value: z
     .union([z.number(), z.null(), z.undefined()])
@@ -20,7 +19,6 @@ export type TMeasurement = z.infer<typeof measurementSchema>;
 const MeasurementArraySchema = z.array(measurementSchema).superRefine((arr, ctx) => {
   let hasFullyFilledMeasurement = false;
 
-  // FIX: This section is corrected to enforce at least one measurement.
   if (arr.length === 0) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -29,15 +27,12 @@ const MeasurementArraySchema = z.array(measurementSchema).superRefine((arr, ctx)
     });
     return;
   }
-  // END FIX
 
   arr.forEach((measurement, idx) => {
-    // CHANGE 2: Only check name and value (2 fields) since unit is hardcoded/fixed
     const filledFields = [measurement.name, measurement.value].filter(
       (field) => field !== undefined && field !== null && field !== ''
     );
 
-    // Partial fill is when length > 0 and length < 2
     if (filledFields.length > 0 && filledFields.length < 2) {
       if (!measurement.name) {
         ctx.addIssue({
@@ -46,7 +41,6 @@ const MeasurementArraySchema = z.array(measurementSchema).superRefine((arr, ctx)
           path: [idx, 'name'],
         });
       }
-      // REMOVED: unit validation check
       if (measurement.value === undefined || measurement.value === null) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -56,7 +50,6 @@ const MeasurementArraySchema = z.array(measurementSchema).superRefine((arr, ctx)
       }
     }
 
-    // CHANGE 3: Fully filled check is now for 2 fields (name and value)
     if (filledFields.length === 2) {
       hasFullyFilledMeasurement = true;
     }

@@ -117,7 +117,9 @@ export const LocationSchema = z
   );
 
 export const ExperimentDateSchema = z
-  .custom((data) => dayjs.isDayjs(data), { message: 'Experiment date should be a valid date' })
+  .custom((data) => dayjs.isDayjs(data), {
+    message: 'Experiment date should be a valid date',
+  })
   .refine(
     (data) => {
       const today = dayjs();

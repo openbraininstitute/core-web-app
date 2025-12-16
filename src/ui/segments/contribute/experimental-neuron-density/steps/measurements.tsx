@@ -12,7 +12,6 @@ import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
 import { cn } from '@/utils/css-class';
 
-// CHANGE 1: Define the fixed unit string
 const FIXED_UNIT = '1/mm³';
 
 export function Measurements() {
@@ -23,14 +22,12 @@ export function Measurements() {
     value: stat,
   }));
 
-  // REMOVED: UNIT_OPTIONS is no longer needed
 
   const NameOptionsFormInput = SelectPopoverFormItem({
     options: NAME_OPTIONS,
     clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
   });
 
-  // REMOVED: UnitOptionsFormInput is no longer needed
 
   return (
     <div className="h-full w-full">
@@ -42,7 +39,6 @@ export function Measurements() {
           <>
             <div className="flex flex-col gap-4">
               {fields.map((field) => {
-                // CHANGE 2: Ensure unit is set to FIXED_UNIT when field is rendered
                 const currentUnit = form.getFieldValue(['measurements', field.name, 'unit']);
                 if (!currentUnit) {
                   form.setFieldValue(['measurements', field.name, 'unit'], FIXED_UNIT);
@@ -73,7 +69,6 @@ export function Measurements() {
                           <NameOptionsFormInput />
                         </Form.Item>
 
-                        {/* REMOVED: The Form.Item for 'unit' is deleted here */}
 
                         <Form.Item
                           name={[field.name, 'value']}

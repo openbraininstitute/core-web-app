@@ -12,7 +12,6 @@ import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
 import { cn } from '@/utils/css-class';
 
-// CHANGE 1: Define the fixed unit value
 const FIXED_UNIT = MeasurementUnit.linear_density__1_um;
 
 export function Measurements() {
@@ -23,14 +22,12 @@ export function Measurements() {
     value: stat,
   }));
 
-  // REMOVE: UNIT_OPTIONS is no longer needed
 
   const NameOptionsFormInput = SelectPopoverFormItem({
     options: NAME_OPTIONS,
     clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
   });
 
-  // REMOVE: UnitOptionsFormInput is no longer needed
 
   return (
     <div className="h-full w-full">
@@ -63,7 +60,6 @@ export function Measurements() {
                         <NameOptionsFormInput />
                       </Form.Item>
 
-                      {/* REMOVED: The Form.Item for 'unit' is deleted here */}
 
                       <Form.Item
                         name={[field.name, 'value']}

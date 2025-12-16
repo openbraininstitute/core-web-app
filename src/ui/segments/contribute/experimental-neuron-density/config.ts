@@ -48,7 +48,9 @@ export function createExperimentalNeuronDensityConfig(
     schema: ExperimentalNeuronDensitySchema,
     progressSteps: steps,
     getInitialValues: (brainRegionId: string) => ({
-      setup: { brain_region_id: brainRegionId } as TExperimentalNeuronDensityForm['setup'],
+      setup: {
+        brain_region_id: brainRegionId,
+      } as TExperimentalNeuronDensityForm['setup'],
       contribution: [{}] as TExperimentalNeuronDensityForm['contribution'],
       measurements: [] as TExperimentalNeuronDensityForm['measurements'],
       license_id: DEFAULT_LICENSE_ID,

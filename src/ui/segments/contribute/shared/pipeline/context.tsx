@@ -70,7 +70,6 @@ export function ContributionPipelineProvider<
     progressSteps.forEach((step) => {
       const fieldKey = step.schemaFieldKey;
 
-      // FIX: Handle array of field keys (for multi-field steps like Setup)
       if (Array.isArray(fieldKey)) {
         // Create a pick object with all fields set to true
         const pickObject = fieldKey.reduce(
@@ -96,12 +95,11 @@ export function ContributionPipelineProvider<
           statusMap[step.key] = 'valid';
         }
       } else {
-        // Original single-field logic
         const partialSchema = schema.pick({ [fieldKey]: true } as Record<string, true>);
         const parseResult = partialSchema.safeParse(allValues);
         statusMap[step.key] = getValidationStatus(
           parseResult,
-          fieldKey as string, // Type assertion since fieldKey is a key of the schema
+          fieldKey as string,
           dirtyFields
         );
       }
