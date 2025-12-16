@@ -92,9 +92,14 @@ export default function Middle({
                         if (subkey === 'type') initial[subkey] = subValue.const ?? null;
                         else initial[subkey] = subValue.default ?? null;
                       });
-                    const items = Object.keys(atomsMap[configTab] ?? {});
 
-                    const newEntry = `${schema.properties?.[configTab].singular_name ?? 'element'}_${items.length}`;
+                    const baseName = schema.properties?.[configTab]?.singular_name ?? 'element';
+                    let counter = 0;
+                    let newEntry: string;
+
+                    do {
+                      newEntry = `${baseName} ${counter++}`;
+                    } while (allEntries.has(newEntry));
 
                     setSelectedEntry(newEntry);
                     allEntries.add(newEntry);

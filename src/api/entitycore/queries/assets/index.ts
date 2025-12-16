@@ -4,7 +4,7 @@ import { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 import { authApiClient } from '@/api/apiClient';
-import { entityCoreUrl } from '@/config';
+import { config } from '@/config';
 
 import type {
   AssetLabel,
@@ -32,7 +32,7 @@ export async function getAssets({
   entityId: string;
   ctx?: WorkspaceContext;
 }): Promise<EntityCoreResponse<IAsset>> {
-  const api = await authApiClient(entityCoreUrl);
+  const api = await authApiClient(config.ENTITY_CORE_URL);
   return await api.get<EntityCoreResponse<IAsset>>(`/${kebabCase(entityType)}/${entityId}/assets`, {
     ...getEntityCoreContext(ctx),
   });
@@ -58,7 +58,7 @@ export async function getAsset({
   entityId: string;
   id: string;
 }) {
-  const api = await authApiClient(entityCoreUrl);
+  const api = await authApiClient(config.ENTITY_CORE_URL);
   return await api.get<IAsset>(`/${entityType}/${entityId}/assets/${id}`, {
     ...getEntityCoreContext(ctx),
   });
@@ -114,7 +114,7 @@ export async function downloadAsset<T>({
   retryOnError?: boolean;
   signal?: AbortSignal;
 }): Promise<T | Response> {
-  const api = await authApiClient(entityCoreUrl);
+  const api = await authApiClient(config.ENTITY_CORE_URL);
   return await api.get<T>(
     `/${kebabCase(entityType)}/${entityId}/assets/${id}/download`,
     {
@@ -168,7 +168,7 @@ export async function createJsonAsset({
   if (meta) formData.append('meta', JSON.stringify(meta));
   if (label) formData.append('label', label);
 
-  const api = await authApiClient(entityCoreUrl);
+  const api = await authApiClient(config.ENTITY_CORE_URL);
   return await api.post<IAsset>(`/${kebabCase(entityType)}/${entityId}/assets`, {
     headers: {
       ...getEntityCoreContext(ctx).headers,
@@ -202,7 +202,7 @@ export async function listDirectoryOfAssets({
   id: string;
   retryOnError?: boolean;
 }): Promise<DirectoryListContent> {
-  const api = await authApiClient(entityCoreUrl);
+  const api = await authApiClient(config.ENTITY_CORE_URL);
   return await api.get<DirectoryListContent>(
     `/${kebabCase(entityType)}/${entityId}/assets/${id}/list`,
     {
@@ -243,7 +243,7 @@ export async function createAsset({
   if (label) formData.append('label', label);
   if (meta) formData.append('meta', JSON.stringify(meta));
 
-  const api = await authApiClient(entityCoreUrl);
+  const api = await authApiClient(config.ENTITY_CORE_URL);
   return await api.post<IAsset>(`/${kebabCase(entityType)}/${entityId}/assets`, {
     headers: {
       ...getEntityCoreContext(ctx).headers,

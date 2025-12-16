@@ -1,6 +1,7 @@
 import { ArrowRightOutlined } from '@ant-design/icons';
-import { useAtomValue } from 'jotai';
+import { atom, useAtomValue } from 'jotai';
 import { useSession } from 'next-auth/react';
+import { usePathname } from 'next/navigation';
 
 import ApplicationSidebar, {
   NavigationItem,
@@ -8,8 +9,6 @@ import ApplicationSidebar, {
 } from '@/components/ApplicationSidebar';
 import Link from '@/components/Link';
 import { MainNavigation } from '@/components/main';
-import usePathname from '@/hooks/pathname';
-import { backToListPathAtom } from '@/state/explore-section/detail-view-atoms';
 import { classNames } from '@/util/utils';
 
 const EXPLORE_NAVIGATION_LIST: Array<NavigationItemProps> = [
@@ -27,6 +26,8 @@ const EXPLORE_NAVIGATION_LIST: Array<NavigationItemProps> = [
     bgcolor: 'bg-primary-6',
   },
 ];
+export const backToListPathAtom = atom<string | null | undefined>(null);
+export const brainRegionSidebarIsCollapsedAtom = atom(true);
 
 export function DetailsPageSideBackLink() {
   const pathName = usePathname();

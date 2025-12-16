@@ -18,6 +18,7 @@ export const ViewDefForMEModelWithSynapsesCircuit: ViewDefinitionConfig = {
     EntityCoreFields.CircuitBuildCategory,
     EntityCoreFields.CircuitPublishedIn,
     EntityCoreFields.CircuitExperimentDate,
+    EntityCoreFields.RegistrationDate,
   ],
   miniDetailView: [
     { field: EntityCoreFields.BrainRegion },

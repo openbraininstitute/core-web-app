@@ -1,6 +1,6 @@
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { authApiClient } from '@/api/apiClient';
-import { entityCoreUrl } from '@/config';
+import { config } from '@/config';
 
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { IEType, IETypeFilter } from '@/api/entitycore/types/shared/global';
@@ -19,7 +19,7 @@ export async function getEtypes({
   filters?: IETypeFilter;
   ctx?: WorkspaceContext;
 }) {
-  const api = await authApiClient(entityCoreUrl);
+  const api = await authApiClient(config.ENTITY_CORE_URL);
   return await api.get<EntityCoreResponse<IEType>>(baseUri, {
     ...getEntityCoreContext(ctx),
     queryParams: {
@@ -34,6 +34,6 @@ export async function getEtypes({
  * @returns {Promise<IEType>} A promise that resolves to the single etype
  */
 export async function getEtype({ id }: { id: string }) {
-  const api = await authApiClient(entityCoreUrl);
+  const api = await authApiClient(config.ENTITY_CORE_URL);
   return await api.get<IEType>(`${baseUri}/${id}`);
 }

@@ -7,6 +7,8 @@ import { match } from 'ts-pattern';
 import { EntityTypeDict, IMEModel } from '@/api/entitycore/types';
 import { CircuitScaleDictionary, ICircuit } from '@/api/entitycore/types/entities/circuit';
 
+import { config } from '@/config';
+
 import { Config, ConfigValue } from '@/features/small-microcircuit/_components/components';
 import { isAtom, isPlainObject, ORDERING } from '@/features/small-microcircuit/_components/utils';
 import { AtomsMap, JSONSchema } from '@/features/small-microcircuit/types';
@@ -24,7 +26,7 @@ export function useObioneJsonSchema(
   React.useEffect(() => {
     async function fetchSpec() {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_OBI_ONE_URL}/openapi.json`);
+        const res = await fetch(`${config.OBI_ONE_URL}/openapi.json`);
         const json = await res.json();
         const dereferenced = await $RefParser.dereference(json);
 

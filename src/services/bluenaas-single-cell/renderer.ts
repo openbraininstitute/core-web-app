@@ -29,7 +29,6 @@ import type { Morphology, SecMarkerConfig } from './types';
 import { createSegMarkerMesh, createSegmentMesh, NeuronSegmentInfo } from './renderer-utils';
 import { Labels } from './labels';
 
-import { basePath } from '@/config';
 import { SynapsesMesh } from '@/components/neuron-viewer/hooks/events';
 
 const FOG_COLOR = 0xffffff;
@@ -43,7 +42,7 @@ const HOVER_BOX_COLOR = 0xffdf00;
 const CLICK_DELAY_TOLERANCE = 500; // ms
 const CLICK_POS_TOLERANCE = 5; // px
 
-const TEXTURE_BASE_URL = `${basePath}/images/e-model-interactive`;
+const TEXTURE_BASE_URL = '/images/e-model-interactive';
 
 export type TNeuronViewerClickData = {
   type: string;

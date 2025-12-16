@@ -1,7 +1,7 @@
-import { getSession } from '@/authFetch';
+import { getSession } from '@/auth-fetch';
 
 import { VerificationCodeEmailResponse } from '@/api/virtual-lab-svc/queries/types';
-import { virtualLabApi } from '@/config';
+import { config } from '@/config';
 
 type VerificationCodeResponse<T extends 'init' | 'verify'> = T extends 'init'
   ? {
@@ -35,17 +35,20 @@ export async function getEmailVerificationCode({
 }: VerificationCodeInitPayload): Promise<VerificationCodeResponse<'init'>> {
   try {
     const session = await getSession();
-    const response = await fetch(`${virtualLabApi.url}/virtual-labs/email/initiate-verification`, {
-      method: 'post',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session?.accessToken}`,
-      },
-      body: JSON.stringify({
-        email,
-        virtual_lab_name: name,
-      }),
-    });
+    const response = await fetch(
+      `${config.VIRTUAL_LAB_API_URL}/virtual-labs/email/initiate-verification`,
+      {
+        method: 'post',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.accessToken}`,
+        },
+        body: JSON.stringify({
+          email,
+          virtual_lab_name: name,
+        }),
+      }
+    );
     const result = (await response.json()) as VerificationCodeEmailResponse;
     return result.data as VerificationCodeResponse<'init'>;
   } catch (error) {
@@ -65,7 +68,7 @@ export async function verifyOtpCode({
 }: VerificationCodeVerifyPayload): Promise<VerificationCodeResponse<'verify'>> {
   try {
     const session = await getSession();
-    const response = await fetch(`${virtualLabApi.url}/virtual-labs/email/verify-code`, {
+    const response = await fetch(`${config.VIRTUAL_LAB_API_URL}/virtual-labs/email/verify-code`, {
       method: 'post',
       headers: {
         'Content-Type': 'application/json',

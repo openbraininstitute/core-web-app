@@ -8,6 +8,10 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
+export const circuitScaleFilter = {
+  scale__in: [CircuitScaleDictionary.PairNeuron],
+};
+
 export const PairedNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
   group: EntityTypeGroup.Models,
   title: 'Paired neuron',
@@ -15,14 +19,12 @@ export const PairedNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
   type: EntityTypeDict.Circuit,
   slug: EntitySlug.PairedNeuronsCircuit,
   api: {
-    config: {
-      allowedFacets: true,
-    },
+    config: { allowedFacets: true, extraRequiredListFilters: circuitScaleFilter },
     query: {
       list: (...params) =>
         getCircuits({
           ...params,
-          filters: { ...params[0].filters, scale__in: [CircuitScaleDictionary.PairNeuron] },
+          filters: { ...params[0].filters, ...circuitScaleFilter },
         }),
       one: getCircuit,
     },

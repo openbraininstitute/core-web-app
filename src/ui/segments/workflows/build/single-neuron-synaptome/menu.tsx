@@ -43,7 +43,7 @@ import { messages } from '@/i18n/en/synaptome';
 import { Button } from '@/ui/molecules/button';
 import { tryCatch } from '@/api/utils';
 import { cn } from '@/utils/css-class';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 
@@ -170,7 +170,7 @@ export function Menu({ sessionId }: Props) {
       });
       delay(() => {
         navigate(
-          `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSynaptome)}/${data?.entity.id}`
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSynaptome)}/${data?.entity.id}`
         );
       }, 500);
     },

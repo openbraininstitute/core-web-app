@@ -1,16 +1,21 @@
+'use client';
+
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
 
+import { config } from '@/config';
 import { SharedLayout } from '@/ui/layouts/shared-layout';
-import { Icon } from '@/ui/segments/offline-consent/icon';
 import { Button } from '@/ui/molecules/button';
-import { env } from '@/env';
+import { Icon } from '@/ui/segments/offline-consent/icon';
 
-import type { ServerSideComponentProp } from '@/types/common';
+import { emitConsentGranted } from '@/services/consent';
 
-export default async function Page({
-  searchParams,
-}: ServerSideComponentProp<null, { error: string; description: string }>) {
-  const { description, error } = await searchParams;
+export default function Page() {
+  const searchParams = useSearchParams();
+
+  const error = searchParams.get('error');
+  const description = searchParams.get('description');
 
   const isSuccess = !error && !description;
   const title = isSuccess ? 'Consent Granted Successfully' : 'Consent Error';
@@ -22,6 +27,16 @@ export default async function Page({
     ? 'You can now close this window and return to your application.'
     : 'Please try again or contact support if this error persists.';
 
+  useEffect(() => {
+    if (isSuccess) {
+      emitConsentGranted();
+
+      if (typeof window !== 'undefined') {
+        setTimeout(() => window.close(), 3000);
+      }
+    }
+  });
+
   return (
     <SharedLayout>
       <div className="flex flex-col items-center justify-center space-y-8 p-8">
@@ -31,7 +46,7 @@ export default async function Page({
           <p className="mb-2 text-lg text-gray-600 dark:text-gray-300">{subtitle}</p>
           <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">{hint}</p>
 
-          {env.NEXT_PUBLIC_DEPLOYMENT_ENV !== 'production' && (error || description) && (
+          {config.DEPLOYMENT_ENV !== 'production' && (error || description) && (
             <div className="mt-6 rounded-lg bg-gray-100 p-4 text-left dark:bg-gray-800">
               <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Debug Information:</p>
               {error && <p className="text-xs">Error Code: {error}</p>}

@@ -1,20 +1,21 @@
-import { virtualLabApi } from '@/config';
-import { Project, ProjectResponse } from '@/types/virtual-lab/projects';
+import { MembersResponse } from '@/api/virtual-lab-svc/queries/types';
+import authFetch, { authFetchRetryOnError, authFetchWithoutRetry } from '@/auth-fetch';
+import { config } from '@/config';
 import {
   ProjectBalance,
   ProjectBalanceResponse,
   ProjectJobReportsResponse,
 } from '@/types/accounting';
-import { VirtualLabAPIListData, VlmResponse } from '@/types/virtual-lab/common';
-import authFetch, { authFetchWithoutRetry, authFetchRetryOnError } from '@/authFetch';
-import { MembersResponse } from '@/api/virtual-lab-svc/queries/types';
+
+import type { VirtualLabAPIListData, VlmResponse } from '@/types/virtual-lab/common';
+import type { Project, ProjectResponse } from '@/types/virtual-lab/projects';
 
 export async function getVirtualLabProjectDetails(
   virtualLabId: string,
   projectId: string
 ): Promise<ProjectResponse> {
   const response = await authFetchRetryOnError(
-    `${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects/${projectId}`
+    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/projects/${projectId}`
   );
 
   if (!response.ok) {
@@ -29,7 +30,7 @@ export async function getVirtualLabProjectUsers(
   projectId: string
 ): Promise<MembersResponse> {
   const response = await authFetchRetryOnError(
-    `${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects/${projectId}/users`
+    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/projects/${projectId}/users`
   );
   if (!response.ok) {
     throw new Error(`Status: ${response.status}`);
@@ -38,7 +39,9 @@ export async function getVirtualLabProjectUsers(
 }
 
 export async function getUsersProjects(): Promise<VlmResponse<VirtualLabAPIListData<Project>>> {
-  const response = await authFetchRetryOnError(`${virtualLabApi.url}/virtual-labs/projects`);
+  const response = await authFetchRetryOnError(
+    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/projects`
+  );
   if (!response.ok) {
     throw new Error(`Status: ${response.status}`);
   }
@@ -55,11 +58,14 @@ export async function patchProject(
     project: Project;
   }>
 > {
-  return authFetch(`${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects/${projectId}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(formData),
-  }).then(async (response) => {
+  return authFetch(
+    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/projects/${projectId}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
+    }
+  ).then(async (response) => {
     if (!response.ok) {
       const { details, message } = await response.json();
 
@@ -81,7 +87,7 @@ export async function deleteProject(
   }>
 > {
   const response = await authFetch(
-    `${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects/${projectId}`,
+    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/projects/${projectId}`,
     {
       method: 'DELETE',
     }
@@ -102,7 +108,7 @@ export async function getProjectAccountBalance({
   projectId: string;
 }): Promise<ProjectBalance> {
   const response = await authFetch(
-    `${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects/${projectId}/accounting/balance`
+    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/projects/${projectId}/accounting/balance`
   );
 
   if (!response.ok) {
@@ -133,7 +139,7 @@ export async function getProjectJobReports({
   searchParams.set('page_size', pageSize.toString());
 
   const url = new URL(
-    `${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects/${projectId}/accounting/reports`
+    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/projects/${projectId}/accounting/reports`
   );
   url.search = searchParams.toString();
 
@@ -156,7 +162,7 @@ export async function assignProjectBudget({
   amount: number;
 }): Promise<any> {
   const response = await authFetchWithoutRetry(
-    `${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects/${projectId}/accounting/budget/assign`,
+    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/projects/${projectId}/accounting/budget/assign`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -181,7 +187,7 @@ export async function reverseProjectBudget({
   amount: number;
 }): Promise<any> {
   const response = await authFetchWithoutRetry(
-    `${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects/${projectId}/accounting/budget/reverse`,
+    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/projects/${projectId}/accounting/budget/reverse`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -1,0 +1,58 @@
+.settings {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  transition: all 0.3s;
+  color: #fff;
+  background: #000c;
+  border-radius: 0 0.5em 0 0;
+  padding: 0.5em;
+  overflow: visible;
+
+  &.show {
+    transform: translateY(0);
+  }
+
+  &.hide {
+    transform: translateY(100%);
+  }
+
+  > button {
+    border: none;
+    margin: 0;
+    cursor: pointer;
+    position: absolute;
+    left: 0;
+    top: 0;
+    padding: 0.5em;
+    transform: translateY(-100%);
+    background: #000c;
+    border-radius: 0 0.5em 0 0;
+  }
+
+  > div {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1em;
+  }
+
+  > div.reset {
+    display: block;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: auto;
+    height: auto;
+    transform: translateY(calc(-100% - 4px));
+    transition: all 0.3s;
+
+    &.show {
+      opacity: 1;
+    }
+
+    &.hide {
+      opacity: 0;
+    }
+  }
+}

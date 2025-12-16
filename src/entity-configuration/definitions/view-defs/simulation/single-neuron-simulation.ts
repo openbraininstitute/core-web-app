@@ -20,11 +20,11 @@ export const viewDefForSingleNeuronSimulation: ViewDefinitionConfig = {
     EntityCoreFields.RecordingLocation,
     EntityCoreFields.BrainRegion,
     EntityCoreFields.CreatedBy,
-    EntityCoreFields.CreationDate,
+    EntityCoreFields.RegistrationDate,
   ],
   summaryViewFields: [
     { field: EntityCoreFields.CreatedBy },
-    { field: EntityCoreFields.CreationDate },
+    { field: EntityCoreFields.RegistrationDate },
   ],
   miniDetailView: [
     { field: EntityCoreFields.SimulationModel },
@@ -32,6 +32,6 @@ export const viewDefForSingleNeuronSimulation: ViewDefinitionConfig = {
     { field: EntityCoreFields.InjectionLocation },
     { field: EntityCoreFields.RecordingLocation },
     { field: EntityCoreFields.BrainRegion },
-    { field: EntityCoreFields.CreationDate },
+    { field: EntityCoreFields.RegistrationDate },
   ],
 };

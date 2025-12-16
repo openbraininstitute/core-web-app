@@ -4,7 +4,6 @@ import type { PropsWithChildren } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { tryCatch } from '@/api/utils';
-import { ROOT_ROUTE } from '@/config';
 import { WorkspaceScope } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
@@ -16,6 +15,7 @@ import {
   EntityNameDisplay,
   EntityNameDisplayWrapper,
 } from '@/ui/segments/explore/entity-name-display';
+import { config } from '@/config';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkspaceContext } from '@/types/common';
@@ -46,18 +46,25 @@ export async function DataViewLayout({
   if (error || !entity) notFound();
 
   const isPublicEntity = entity.authorized_public;
-  const parentLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}&scope=${isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project}`;
+  const scope = isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project;
+  const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}&scope=${scope}`;
 
   const breadcrumbs = (
-    <DataBreadcrumb title={entityType.title} type={type} group={entityType.group} />
+    <DataBreadcrumb title={entityType.title} type={type} group={entityType.group} scope={scope} />
   );
   const closePage = <ClosePage url={parentLink} />;
 
   if (
-    type === ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation ||
-    type === ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation ||
-    type === ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation ||
-    type === ExtendedEntitiesTypeDict.MemodelCircuitSimulation
+    includes(
+      [
+        ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+        ExtendedEntitiesTypeDict.MicrocircuitSimulation,
+        ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
+        ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
+        ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+      ],
+      type
+    )
   ) {
     return (
       <div className="ml-5 flex h-full flex-col rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
@@ -86,14 +93,13 @@ export async function DataViewLayout({
         <div className="w-4/5 pr-1">
           <div className="secondary-scrollbar h-full w-full overflow-x-auto overflow-y-auto p-10">
             <EntityNameDisplay name={entity.name} />
-
             <EntityNameDisplayWrapper>{children}</EntityNameDisplayWrapper>
           </div>
         </div>
       </div>
       {includes(
         [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.MEModelWithSynapses],
-        entityType.extendedType
+        type
       ) && <CircuitDownloadPanel />}
     </>
   );
