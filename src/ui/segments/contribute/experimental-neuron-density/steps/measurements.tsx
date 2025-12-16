@@ -22,12 +22,10 @@ export function Measurements() {
     value: stat,
   }));
 
-
   const NameOptionsFormInput = SelectPopoverFormItem({
     options: NAME_OPTIONS,
     clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
   });
-
 
   return (
     <div className="h-full w-full">
@@ -68,7 +66,6 @@ export function Measurements() {
                         >
                           <NameOptionsFormInput />
                         </Form.Item>
-
 
                         <Form.Item
                           name={[field.name, 'value']}

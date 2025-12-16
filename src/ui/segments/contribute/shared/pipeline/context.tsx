@@ -97,11 +97,7 @@ export function ContributionPipelineProvider<
       } else {
         const partialSchema = schema.pick({ [fieldKey]: true } as Record<string, true>);
         const parseResult = partialSchema.safeParse(allValues);
-        statusMap[step.key] = getValidationStatus(
-          parseResult,
-          fieldKey as string,
-          dirtyFields
-        );
+        statusMap[step.key] = getValidationStatus(parseResult, fieldKey as string, dirtyFields);
       }
     });
 

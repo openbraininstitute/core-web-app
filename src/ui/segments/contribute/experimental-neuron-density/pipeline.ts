@@ -32,7 +32,6 @@ export function useExperimentalNeuronDensityPipeline({
   const queryClient = useQueryClient();
   const { projectId, virtualLabId } = useWorkspace();
 
-
   const createExperimentalNeuronDensityAsync = useMutation({
     mutationFn: (values: TExperimentalNeuronDensityForm) => {
       const measurements =
@@ -140,7 +139,6 @@ export function useExperimentalNeuronDensityPipeline({
     },
   });
 
-
   async function createEntity({
     values,
   }: {
@@ -192,7 +190,6 @@ export function useExperimentalNeuronDensityPipeline({
 
     return experimentalNeuronDensity.id;
   }
-
 
   const loading =
     createExperimentalNeuronDensityAsync.isPending ||
