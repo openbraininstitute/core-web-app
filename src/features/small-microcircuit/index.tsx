@@ -4,8 +4,10 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { Suspense, useState } from 'react';
 // import { useRouter } from 'next/navigation';
+
 import { useEntries, useModel } from './_components/hooks';
 import Left from './_components/left';
+import Middle from './_components/middle';
 import SimulationsTab from './_components/simulations';
 
 import { useAppNotification } from '@/components/notification';
@@ -14,11 +16,11 @@ import { useConfigAtom } from '@/features/small-microcircuit/_components/hooks/c
 import { useObioneJsonSchema } from '@/features/small-microcircuit/_components/hooks/schema';
 import ModelPreview from '@/features/small-microcircuit/_components/model-preview';
 import TabsSelector from '@/features/small-microcircuit/_components/tabs-selector';
-import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
 import { AtomsMap, TabType } from '@/features/small-microcircuit/types';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
-import Middle from './_components/middle';
+
+import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
 
 export default function SimulationCampaignConfiguration({
   modelId,
