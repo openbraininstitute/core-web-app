@@ -1,31 +1,33 @@
 import flatMap from 'es-toolkit/compat/flatMap';
 import keyBy from 'es-toolkit/compat/keyBy';
 
-import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
-import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
-import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
-import { EntityTypeGroup } from '@/entity-configuration/domain/group';
-import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
-import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { migrateConfig } from './utils';
+
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { EntitySlug } from '@/entity-configuration/domain/slug';
-import { getAssetElement } from '@/api/entitycore/utils';
+import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
+import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import {
   createSimulationCampaign,
   getCircuitSimulationCampaign,
   getCircuitSimulationCampaigns,
 } from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
+import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
+import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { getAssetElement } from '@/api/entitycore/utils';
+import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
+import { EntityTypeGroup } from '@/entity-configuration/domain/group';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
 
-import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type {
   ICircuitSimulationCampaign,
   ICircuitSimulationCampaignFilter,
 } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
-import type { WorkspaceContext, AwaitedType } from '@/types/common';
-import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+import type { AwaitedType, WorkspaceContext } from '@/types/common';
 
 // NOTE: this is due entitycore do not support yet
 async function resolveSimulationCampaigns({
@@ -130,6 +132,8 @@ export async function resolveSimulationByCampaignId({
     asRawResponse: true,
   });
   const config = await rawConfig.json();
+
+  migrateConfig(config);
 
   return {
     campaign,
