@@ -1,16 +1,17 @@
+import Ajv, { AnySchema } from 'ajv';
+import { useAtomValue } from 'jotai';
 import { useEffect, useMemo, useRef } from 'react';
 import { match } from 'ts-pattern';
-import { useAtomValue } from 'jotai';
-import Ajv, { AnySchema } from 'ajv';
+
 import { modelAtomFamily } from '../atoms';
 import { isRootCategory } from './schema';
-import { WorkspaceContext } from '@/types/common';
 
-import { CircuitScaleDictionary, ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { EntityTypeDict, IMEModel } from '@/api/entitycore/types';
-
-import { JSONSchema } from '@/features/small-microcircuit/types';
+import { CircuitScaleDictionary, ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { config as appConfig } from '@/config';
 import { Config } from '@/features/small-microcircuit/_components/components';
+import { JSONSchema } from '@/features/small-microcircuit/types';
+import { WorkspaceContext } from '@/types/common';
 
 export function useModel({ id, context }: { id: string; context: WorkspaceContext }) {
   const modelAtom = modelAtomFamily({ id, context });
@@ -30,7 +31,7 @@ export function useApiUrl({ model }: { model: ICircuit | IMEModel }) {
     .otherwise(() => {
       throw new Error(`Unsupported model type ${model.type}`);
     });
-  return `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/generated/${apiPath}`;
+  return `${appConfig.OBI_ONE_URL}/generated/${apiPath}`;
 }
 
 export function useValidateSchema({
