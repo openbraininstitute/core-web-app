@@ -22,7 +22,7 @@ export async function resolveNeuronFile(file: File): Promise<NeuronResolution> {
       },
       body: formData,
     },
-    { asRawResponse: true },
+    { asRawResponse: true }
   );
   return {
     isValid: response.ok,
@@ -33,7 +33,7 @@ export async function resolveNeuronFile(file: File): Promise<NeuronResolution> {
 export async function createAndRegisterMorphometrics(
   file: File,
   payload: Record<string, any>,
-  context: { projectId: string; virtualLabId: string },
+  context: { projectId: string; virtualLabId: string }
 ): Promise<{ isValid: boolean; id: string }> {
   const api = await obioneApi();
   const formData = new FormData();
@@ -44,13 +44,13 @@ export async function createAndRegisterMorphometrics(
     '/declared/register-morphology-with-calculated-metrics',
     {
       headers: {
-        'accept': 'application/json',
+        accept: 'application/json',
         'project-id': context.projectId,
         'virtual-lab-id': context.virtualLabId,
       },
       body: formData,
     },
-    { asRawResponse: true },
+    { asRawResponse: true }
   );
 
   const data = await response.json();
