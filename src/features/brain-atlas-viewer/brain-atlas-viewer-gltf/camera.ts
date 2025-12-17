@@ -25,10 +25,10 @@ export function setCamera(context: TgdContext, eventChange: GenericEvent<TgdCame
     transfo: { ...restTransfo },
   });
   const controller = new TgdControllerCameraOrbit(context, {
-    inertiaOrbit: 1000,
-    speedZoom: 1,
-    minZoom: 0.5,
-    maxZoom: 20,
+    inertiaOrbit: 500,
+    speedZoom: 0.9,
+    minZoom: 0.7,
+    maxZoom: 3,
   });
   controller.eventChange.addListener((camera) => eventChange.dispatch(camera));
   return () => {

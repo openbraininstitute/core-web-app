@@ -27,7 +27,7 @@ import { renderDateAndHour } from '@/util/date';
 import { Button } from '@/ui/molecules/button';
 import { usePrevious } from '@/hooks/hooks';
 import { cn } from '@/utils/css-class';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ExtendedCampaignsType } from '@/entity-configuration/domain/simulation';
@@ -175,7 +175,6 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
     data: activityResult,
     isFetching,
     queryKeyHash,
-    isDependenciesLoading,
   } = useQueryActivity({
     activity: activityType!,
     selectionType: entityType!,
@@ -199,8 +198,8 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
   // eslint-disable-next-line  no-nested-ternary
   const configurationLink = entityType
     ? entity?.detailViewSections?.includes('configuration')
-      ? `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}/configuration`
-      : `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}`
+      ? `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}/configuration`
+      : `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}`
     : null;
 
   // eslint-disable-next-line no-nested-ternary
@@ -213,14 +212,14 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
   // eslint-disable-next-line  no-nested-ternary
   const resultsLink = entityType
     ? resultsPath
-      ? `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}/${resultsPath}`
-      : `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}`
+      ? `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}/${resultsPath}`
+      : `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}`
     : null;
 
   const onDuplicate = () => {
     if (entityType === ExtendedEntitiesTypeDict.MemodelCircuitSimulation) {
       navigate(
-        `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/memodel/${
+        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/memodel/${
           (selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
         }?dataType=${ExtendedEntitiesTypeDict.MemodelCircuit}&initialCampaignId=${selectedRow?.id}`
       );
@@ -230,15 +229,14 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
 
     if (selectedRow?.type === ExtendedEntitiesTypeDict.SimulationCampaign) {
       navigate(
-        `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${
+        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${
           (selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
         }?initialCampaignId=${selectedRow.id}`
       );
     }
   };
 
-  const shouldShowEmptyState =
-    !activityResult?.pagination.total_items && !isDependenciesLoading && !isFetching;
+  const shouldShowEmptyState = !activityResult?.pagination.total_items && !isFetching;
 
   return (
     <section

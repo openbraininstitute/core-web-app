@@ -33,6 +33,7 @@ import type {
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityTypeValue } from '@/entity-configuration/domain';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
+import { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 
 export default async function Overview({
   entity,
@@ -45,10 +46,13 @@ export default async function Overview({
   ctx: WorkspaceContext;
   isWorkflow: boolean;
 }) {
-  const fields = getViewDefinitionByExtendedType(extendedType)?.summaryViewFields ?? [];
+  const commonFields = CommonSummaryViewFields;
+  const fields = removeDuplicates(
+    getViewDefinitionByExtendedType(extendedType)?.summaryViewFields ?? [],
+    commonFields
+  );
 
   if (!entity) notFound();
-  const commonFields = CommonSummaryViewFields;
 
   let singleNeuronSimulationPayload:
     | AwaitedType<ReturnType<typeof resolveSingleNeuronSimulation>>
@@ -89,13 +93,14 @@ export default async function Overview({
     extendedType === ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation ||
     extendedType === ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation ||
     extendedType === ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation ||
+    extendedType === ExtendedEntitiesTypeDict.MicrocircuitSimulation ||
     extendedType === ExtendedEntitiesTypeDict.MemodelCircuitSimulation
   ) {
     let config: AwaitedType<ReturnType<typeof resolveSimulationByCampaignId>>;
 
     try {
       config = await resolveSimulationByCampaignId({ id: entity.id, context: ctx });
-    } catch {
+    } catch (err) {
       notFound();
     }
 
@@ -107,8 +112,15 @@ export default async function Overview({
         virtualLabId={ctx.virtualLabId}
         projectId={ctx.projectId}
         initialCampaignId={config.campaign.id}
-        initialConfig={config.config.form}
+        initialConfig={config.config?.form}
         readOnly={!isWorkflow}
+        // This is a temporary solution to show sim campaigns not complient with obi-one gen config.
+        // TODO: remove this after microcircuit scale simulations are fully implemented.
+        defaultTab={
+          extendedType === ExtendedEntitiesTypeDict.MicrocircuitSimulation
+            ? 'simulations'
+            : undefined
+        }
       />
     );
   }
@@ -137,7 +149,7 @@ export default async function Overview({
             meModel={singleNeuronSynaptomeSimulationPayload.memodel}
             synaptome={singleNeuronSynaptomeSimulationPayload.synaptome}
             virtualLabId={ctx.virtualLabId}
-            projectId={ctx.virtualLabId}
+            projectId={ctx.projectId}
           />
         )}
       {circuitTypes.includes(extendedType) && <CircuitViz circuit={entity as ICircuit} />}
@@ -155,4 +167,16 @@ export default async function Overview({
       )}
     </>
   );
+}
+
+/**
+ * Prevent `extraFields` from having fields already own by `commonFields`.
+ */
+function removeDuplicates(
+  extraFields: TypeSummaryProps[],
+  commonFields: TypeSummaryProps[]
+): TypeSummaryProps[] {
+  const fieldsToExclude = new Set<string>(commonFields.map((item) => item.field));
+  const fields = extraFields.filter((item) => !fieldsToExclude.has(item.field));
+  return fields;
 }

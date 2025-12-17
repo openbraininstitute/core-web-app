@@ -1,6 +1,6 @@
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { authApiClient } from '@/api/apiClient';
-import { entityCoreUrl } from '@/config';
+import { config } from '@/config';
 
 import type { IMType, IMTypeFilter } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
@@ -19,7 +19,7 @@ export async function getMtypes({
   filters?: IMTypeFilter;
   ctx?: WorkspaceContext;
 }) {
-  const api = await authApiClient(entityCoreUrl);
+  const api = await authApiClient(config.ENTITY_CORE_URL);
   return await api.get<EntityCoreResponse<IMType>>(baseUri, {
     ...getEntityCoreContext(ctx),
     queryParams: {
@@ -34,7 +34,7 @@ export async function getMtypes({
  * @returns {Promise<IMType>} A promise that resolves to the single mtype
  */
 export async function getMtype({ id }: { id: string }) {
-  const api = await authApiClient(entityCoreUrl);
+  const api = await authApiClient(config.ENTITY_CORE_URL);
   return await api.get<IMType>(`${baseUri}/${id}`, undefined, {
     cache: { cacheName: 'mtype', enabled: true, ttlInSeconds: 86_400 },
   });

@@ -6,13 +6,12 @@ import { unwrap } from 'jotai/utils';
 import { createExpandableTableConfig } from '@/ui/segments/data-table/expandable-row/expandable-base-table';
 import { RecursiveExpandableTable } from '@/ui/segments/explore/circuit/elements/recursive-expandable-table';
 import { useExpandableTable } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
+import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { expandIcon } from '@/ui/segments/explore/circuit/elements/expand-icon';
-import { activeColumnsAtom } from '@/state/explore-section/list-view-atoms';
+import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
 import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
-import { ExploreDataScope } from '@/types/explore-section/application';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { useExploreColumns } from '@/hooks/useExploreColumns';
 import { VirtualLabInfo } from '@/types/virtual-lab/common';
 import { BaseTable } from '@/ui/segments/data-table/table';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -28,12 +27,12 @@ type Props = {
 export function Subcircuits({ data }: Props) {
   const { push: navigate } = useRouter();
   const { virtualLabId, projectId } = useWorkspace();
-  const cols = useExploreColumns<ICircuit>(
-    undefined,
-    undefined,
-    [],
-    ExtendedEntitiesTypeDict.Circuit
-  );
+  const cols = useDataTableColumns<ICircuit>({
+    dataType: ExtendedEntitiesTypeDict.Circuit,
+    setSortState: undefined,
+    sortState: undefined,
+    initialColumns: [],
+  });
 
   const activeColumns = useAtomValue(
     useMemo(
@@ -41,8 +40,7 @@ export function Subcircuits({ data }: Props) {
         unwrap(
           activeColumnsAtom({
             dataType: ExtendedEntitiesTypeDict.Circuit,
-            dataScope: ExploreDataScope.NoScope,
-            brainRegionId: undefined,
+            dataScope: WorkspaceScope.Custom,
             key: '',
           })
         ),

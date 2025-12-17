@@ -3,7 +3,7 @@ import { captureException } from '@sentry/nextjs';
 import { InviteData, InviteErrorCodes } from '@/types/virtual-lab/invites';
 import { generateLabUrl } from '@/util/virtual-lab/urls';
 import { ApiErrorCause } from '@/api/error';
-import { env } from '@/env';
+import { config } from '@/config';
 
 const errorPath = '/';
 
@@ -33,7 +33,7 @@ export const getErrorUrl = ({
   }
   if (error && 'code' in error) {
     let extraQueryParams = null;
-    if (env.NEXT_PUBLIC_DEPLOYMENT_ENV !== 'production') {
+    if (config.DEPLOYMENT_ENV !== 'production') {
       extraQueryParams = `&original_code=${error.code}&description=${error.message}`;
     }
     captureException(new Error(`User invite could not be accepted because of VLM Error`), {

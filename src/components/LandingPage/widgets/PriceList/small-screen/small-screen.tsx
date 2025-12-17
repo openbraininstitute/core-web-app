@@ -5,7 +5,7 @@ import FeatureBloc from './FeatureBloc';
 import { classNames } from '@/util/utils';
 import { styleBlockFullWidth } from '@/components/LandingPage/styles';
 import { useSanityContentForPricing } from '@/components/LandingPage/content/pricing';
-import { useMenuHeight } from '@/components/LandingPage/utils';
+import { useMenuHeight } from '@/components/LandingPage/utils.client';
 
 import styles from './small-screen.module.css';
 

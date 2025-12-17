@@ -4,7 +4,7 @@ import { classNames } from '@/util/utils';
 import ProgressiveImage from '@/components/LandingPage/components/ProgressiveImage';
 import { ContentForNewsItem } from '@/components/LandingPage/content';
 import { EnumSection } from '@/components/LandingPage/sections/sections';
-import { getSection, sanitizeURL } from '@/components/LandingPage/utils';
+import { getSection } from '@/components/LandingPage/utils';
 
 import styles from './NewsCard.module.css';
 
@@ -48,7 +48,7 @@ function gotoNews(news: ContentForNewsItem): void {
     window.open(news.link, '_BLANK');
   } else {
     const section = getSection(EnumSection.News);
-    const url = sanitizeURL(`${section.slug}/${news.id}`);
+    const url = `${section.slug}/${news.id}`;
     window.location.href = url;
   }
 }

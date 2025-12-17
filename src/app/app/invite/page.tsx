@@ -7,7 +7,7 @@ import { InvitationProcessing } from '@/ui/segments/invites';
 import { getErrorUrl } from '@/ui/segments/invites/helpers';
 import { ServerSideComponentProp } from '@/types/common';
 import { ApiErrorCause } from '@/api/error';
-import { getSession } from '@/authFetch';
+import { getSession } from '@/auth-fetch';
 import { tryCatch } from '@/api/utils';
 
 export default async function InvitePage({

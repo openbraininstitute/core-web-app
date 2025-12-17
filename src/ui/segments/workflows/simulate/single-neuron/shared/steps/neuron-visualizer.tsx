@@ -13,7 +13,6 @@ import {
   threeDVisualizerState,
   threeDVisualizerQueryParam,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { cn } from '@/utils/css-class';
 
 import styles from './neuron-visualizer.module.css';
@@ -32,7 +31,6 @@ export function NeuronVisualizer({
   disableSynapses,
 }: Props) {
   const { refContainer, toggleFullscreen } = useFullscreenSwitcher();
-  const { virtualLabId, projectId } = useWorkspace();
   const queryParams = useSearchParams();
   const [, startTransition] = useTransition();
   const { replace } = useRouter();
@@ -123,10 +121,8 @@ export function NeuronVisualizer({
 
             <div className="absolute h-full w-full flex-1 border-none">
               <NeuronViewerContainer
-                virtualLabId={virtualLabId}
                 disableElectrodes={disableElectrodes}
                 disableSynapses={disableSynapses}
-                projectId={projectId}
                 meModelId={memodelId}
                 sessionId={sessionId}
               />

@@ -29,6 +29,7 @@ const SimulationEntitySlug = {
   SingleNeuronCircuitSimulation: 'single-neuron-circuit-simulation',
   PairedNeuronCircuitSimulation: 'paired-neurons-simulation',
   SmallMicrocircuitSimulation: 'small-microcircuit-simulation',
+  MicrocircuitSimulation: 'microcircuit-simulation',
 } as const;
 
 export const EntitySlug = {

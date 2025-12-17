@@ -1,4 +1,4 @@
-import { client } from '@/api/sanity/client';
+import { getClient } from '@/api/sanity/client';
 import { logError } from '@/util/logger';
 
 export type GalleryContentProps = {
@@ -46,9 +46,9 @@ function isContentForGallery(data: unknown): data is GalleryContentProps {
 
 export async function getGalleryContent(): Promise<GalleryContentProps[]> {
   try {
-    const data = await client.fetch<GalleryContentProps[]>({
+    const data = await getClient().fetch<GalleryContentProps[]>({
       query: queryForGalleryContent,
-      config: { cache: 'no-cache' },
+      // config: { cache: 'no-cache' },
     });
 
     if (Array.isArray(data)) {

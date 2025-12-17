@@ -63,15 +63,26 @@ export const keyBuilder = {
     selectionType,
     page,
     pageSize,
+    authorizedPublic,
   }: WorkspaceContext & {
     page?: number;
     pageSize?: number;
     entityType: TExtendedEntitiesTypeDict;
     selectionType?: TExtendedEntitiesTypeDict;
     activity: TActivityValue;
+    authorizedPublic?: boolean;
   }) => [
     `${prefix}/activities`,
-    { virtualLabId, projectId, page, pageSize, selectionType, entityType, activity },
+    {
+      virtualLabId,
+      projectId,
+      page,
+      pageSize,
+      selectionType,
+      entityType,
+      activity,
+      authorizedPublic,
+    },
   ],
   bookmarkCategories: ({ virtualLabId, projectId }: WorkspaceContext) => [
     `${prefix}/bookmark-categories`,

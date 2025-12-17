@@ -3,6 +3,7 @@ import type {
   Timestamps,
   ISpecies,
   IAsset,
+  EntityAuthorization,
 } from '@/api/entitycore/types/shared/global';
 import {
   PaginationFilter,
@@ -36,6 +37,7 @@ export interface IBrainAtlasFilter
   extends SharedFilter,
     TimestampsFilter,
     SpeciesFilter,
-    StainFilter {}
+    StainFilter,
+    EntityAuthorization {}
 
 export interface IBrainAtlasRegionFilter extends SharedFilter, PaginationFilter {}

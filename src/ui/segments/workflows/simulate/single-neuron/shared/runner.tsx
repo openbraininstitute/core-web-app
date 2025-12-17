@@ -61,7 +61,7 @@ import type {
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
 
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
 
@@ -392,7 +392,7 @@ export const launchSimulationAtom = atom<
                   <div className="flex flex-col gap-2">
                     <p>{messages.CreationSimulationSucceed}</p>
                     <Link
-                      href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(data.simulation.type)}/${data.simulation.id}`}
+                      href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(data.simulation.type)}/${data.simulation.id}`}
                       className="text-primary-8 no-underline! hover:underline"
                       onClick={() => notify.destroy(`simulation-success-${sessionId}`)}
                     >

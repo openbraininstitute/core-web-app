@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 
 import { compactRecord } from '@/utils/dictionary';
-import { getSession } from '@/authFetch';
+import { getSession } from '@/auth-fetch';
 import { log } from '@/utils/logger';
 
 import type { WorkspaceContext } from '@/types/common';

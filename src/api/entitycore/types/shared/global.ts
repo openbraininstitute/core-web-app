@@ -66,13 +66,49 @@ export interface PointLocationBase {
 }
 
 export interface IBrainLocation extends PointLocationBase {}
+export const MeasurementStatistic = {
+  mean: 'mean',
+  median: 'median',
+  mode: 'mode',
+  variance: 'variance',
+  data_point: 'data_point',
+  sample_size: 'sample_size',
+  standard_error: 'standard_error',
+  standard_deviation: 'standard_deviation',
+  raw: 'raw',
+  minimum: 'minimum',
+  maximum: 'maximum',
+  sum: 'sum',
+} as const;
+
+export type TMeasurementStatistic =
+  (typeof MeasurementStatistic)[keyof typeof MeasurementStatistic];
+
+export const MeasurementUnit = {
+  dimensionless: 'dimensionless',
+  linear_density__1_um: '1/μm',
+  volume_density__1_mm3: '1/mm³',
+  linear__um: 'μm',
+  area__um2: 'μm²',
+  volume__mm3: 'μm³',
+  angle__radian: 'radian',
+} as const;
+
+export type TMeasurementUnit = (typeof MeasurementUnit)[keyof typeof MeasurementUnit];
 
 export type MeasurementBase = {
   id: number;
-  name: string;
-  unit: string;
+  name: TMeasurementStatistic;
+  unit: TMeasurementUnit;
   value: number;
 };
+
+export interface IEtypeFilter extends PaginationFilter {
+  id: string | null;
+  pref_label: string | null;
+  pref_label__in: string | null;
+  order_by: string | null;
+}
 
 export interface IMtypeFilter extends PaginationFilter {
   id: string | null;
@@ -212,7 +248,13 @@ export interface IMTypeClassification
   mtype_class_id: string;
   entity_id: string;
 }
-
+export interface IETypeClassification
+  extends EntityCoreIdentifiable,
+    Timestamps,
+    EntityAuthorization {
+  etype_class_id: string;
+  entity_id: string;
+}
 export type DirectoryItem = {
   name: string;
   size: number;

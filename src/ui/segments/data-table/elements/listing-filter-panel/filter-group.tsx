@@ -5,13 +5,13 @@ import { ReactElement } from 'react';
 import { ChevronIcon } from '@/components/icons';
 import { classNames } from '@/util/utils';
 
-import type { CoreFilter } from '@/entity-configuration/definitions/types';
+import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
 import styles from '@/ui/segments/data-table/elements/listing-filter-panel/filters.module.css';
 
 type ContentProps = {
-  filters: Array<CoreFilter>;
-  setFilters: (filters: Array<CoreFilter>) => void;
+  filters: Array<TCoreFilter>;
+  setFilters: (filters: Array<TCoreFilter>) => void;
 };
 
 type FilterGroupProps = {
@@ -21,8 +21,8 @@ type FilterGroupProps = {
     label: string;
     toggleFunc?: () => void;
   }[];
-  filters: Array<CoreFilter>;
-  setFilters: (filters: Array<CoreFilter>) => void;
+  filters: Array<TCoreFilter>;
+  setFilters: (filters: Array<TCoreFilter>) => void;
 };
 
 export function FilterGroup({ items, filters, setFilters }: FilterGroupProps) {

@@ -2,8 +2,7 @@ import { tableFromIPC } from '@apache-arrow/es2015-esm';
 import { fetchPointCloud } from '../../api';
 import { getBrainAtlasRegions } from '@/api/entitycore/queries/general/brain-atlas';
 import { entityCoreApi } from '@/api/entitycore/utils';
-import { cellSvcBaseUrl, entityCoreUrl } from '@/config';
-import { env } from '@/env';
+import { config } from '@/config';
 import { assertType } from '@/util/type-guards';
 import { createHeaders } from '@/util/utils';
 import { logError } from '@/util/logger';
@@ -14,23 +13,23 @@ let cacheAtlasId: string | null = null;
 export async function getAtlasId(accessToken: string | undefined): Promise<string> {
   if (!cacheAtlasId) {
     try {
-      const resp = await fetch(`${entityCoreUrl}/brain-atlas`, {
+      const resp = await fetch(`${config.ENTITY_CORE_URL}/brain-atlas`, {
         method: 'GET',
         redirect: 'follow',
         headers: createHeaders(accessToken ?? 'token-is-missing', {
           'Content-Type': 'application/json',
         }),
       });
-      if (!accessToken) return env.NEXT_PUBLIC_DEFAULT_BRAIN_ATLAS_ID;
+      if (!accessToken) return config.DEFAULT_BRAIN_ATLAS_ID;
 
       const data = await resp.json();
       assertType<{ data: Array<{ id: string }> }>(data, {
         data: ['array', { id: 'string' }],
       });
-      cacheAtlasId = data.data[0]?.id ?? env.NEXT_PUBLIC_DEFAULT_BRAIN_ATLAS_ID;
+      cacheAtlasId = data.data[0]?.id ?? config.DEFAULT_BRAIN_ATLAS_ID;
     } catch (ex) {
       logError('Unable to retrieve current Atlas ID!', ex);
-      return env.NEXT_PUBLIC_DEFAULT_BRAIN_ATLAS_ID;
+      return config.DEFAULT_BRAIN_ATLAS_ID;
     }
   }
   return cacheAtlasId;
@@ -109,7 +108,7 @@ async function getAtlas(atlasId: string) {
 async function actualGetAtlas(atlasId: string) {
   const time = performance.now();
   const atlas = await getBrainAtlasRegions({
-    atlasId: atlasId ?? env.NEXT_PUBLIC_DEFAULT_BRAIN_ATLAS_ID,
+    atlasId: atlasId ?? config.DEFAULT_BRAIN_ATLAS_ID,
     filters: {
       page: 1,
       page_size: 2000,
@@ -150,8 +149,8 @@ export async function getPointCouldData(annotationValue: number, accessToken: st
 
 async function actualGetPointCouldData(annotationValue: number, accessToken: string) {
   const time = performance.now();
-  const url = `${cellSvcBaseUrl}/circuit?circuit_id=${encodeURIComponent(
-    env.NEXT_PUBLIC_LEGACY_DEFAULT_CIRCUIT_ID || ''
+  const url = `${config.CELL_API_URL}/circuit?circuit_id=${encodeURIComponent(
+    config.LEGACY_DEFAULT_CIRCUIT_ID || ''
   )}&region=${annotationValue}&how=arrow`;
   const rawData = await fetchPointCloud(url, accessToken);
   // eslint-disable-next-line no-console

@@ -11,14 +11,14 @@ import {
   UseExpandableTableOptions,
 } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
 import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import { ExploreDataScope } from '@/types/explore-section/application';
 
 import type { WorkspaceContext } from '@/types/common';
+import { TWorkspaceScope } from '@/constants';
 
 type AdditionalTableProps<T> = {
-  dataContext: {
-    virtualLabInfo?: WorkspaceContext;
-    dataScope: ExploreDataScope;
+  context: {
+    workspace?: WorkspaceContext;
+    scope: TWorkspaceScope;
     dataType: TExtendedEntitiesTypeDict;
   };
   hasError?: boolean;

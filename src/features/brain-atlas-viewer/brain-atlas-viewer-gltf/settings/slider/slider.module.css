@@ -1,0 +1,25 @@
+.slider {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 0;
+  padding: 0 0.5em;
+  width: 300px;
+
+  > input {
+    grid-column: 1/-1;
+
+    accent-color: #55a4e3;
+  }
+
+  > div {
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5em;
+  }
+}

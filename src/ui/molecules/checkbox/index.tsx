@@ -6,7 +6,7 @@ import * as React from 'react';
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
 import { CheckOutlined as CheckIcon } from '@ant-design/icons';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/utils/css-class';
 
 function Checkbox({ className, ...props }: React.ComponentProps<typeof CheckboxPrimitive.Root>) {
   return (

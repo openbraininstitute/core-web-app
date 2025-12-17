@@ -11,7 +11,7 @@ import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { TEntityTypeDict } from '@/api/entitycore/types';
 import { IEntity } from '@/api/entitycore/types/entities/entity';
 import { IAsset } from '@/api/entitycore/types/shared/global';
-import { getSession } from '@/authFetch';
+import { getSession } from '@/auth-fetch';
 import { CsvEntryBase, FileEntry } from '@/features/entity-download/types';
 import { WorkspaceContext } from '@/types/common';
 

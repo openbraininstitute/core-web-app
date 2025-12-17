@@ -1,3 +1,5 @@
+import { isEmpty } from 'es-toolkit/compat';
+import { useAtomValue } from 'jotai';
 import {
   useQuery,
   keepPreviousData,
@@ -5,11 +7,10 @@ import {
   type QueryFunction,
   hashKey,
 } from '@tanstack/react-query';
-import { useAtomValue } from 'jotai';
-import isEmpty from 'es-toolkit/compat/isEmpty';
 
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
+import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 import {
   DEFAULT_BRAIN_REGION_HIERARCHY_ID,
   selectedBrainRegionAtom,
@@ -26,7 +27,6 @@ import {
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkspaceContext } from '@/types/common';
 import type { TWorkspaceScope } from '@/constants';
-import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
 export type QueryContext = {
   key: string;
@@ -54,6 +54,8 @@ export function buildQueryKey({
 ] {
   return [{ workspace, context, queryParameters, requireBrainRegion }];
 }
+
+export type ExtendedEntityTypeQueryKey = ReturnType<typeof buildQueryKey>;
 
 function useQueryParameters(
   { context, workspace }: { context: QueryContext; workspace?: WorkspaceContext },

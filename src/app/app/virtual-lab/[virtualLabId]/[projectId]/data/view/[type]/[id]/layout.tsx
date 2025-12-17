@@ -21,6 +21,7 @@ export default async function Layout({
 
   const { virtualLabId, projectId, id } = awaitedParams;
   const type = snakeCase(awaitedParams.type) as EntityCoreExtendedType;
+
   return (
     <DataViewLayout context={{ virtualLabId, projectId }} id={id} type={type}>
       {children}

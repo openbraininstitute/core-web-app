@@ -1,4 +1,8 @@
-import type { EntityCoreType, IMType } from '@/api/entitycore/types/shared/global';
+import type {
+  EntityAuthorization,
+  EntityCoreType,
+  IMType,
+} from '@/api/entitycore/types/shared/global';
 import type {
   TimestampsFilter,
   PaginationFilter,
@@ -21,5 +25,6 @@ export type ExperimentalBoutonDensityFilter = Partial<
     ContributionFilter &
     BrainRegionFilter &
     StainFilter &
-    MtypeFilter
+    MtypeFilter &
+    EntityAuthorization
 >;

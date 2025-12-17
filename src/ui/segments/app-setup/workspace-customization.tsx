@@ -20,7 +20,7 @@ import { updateProject, checkProjectExists } from '@/api/virtual-lab-svc/queries
 import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useAppNotification } from '@/components/notification';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import { Card, CardContent } from '@/ui/molecules/card';
 import { Button } from '@/ui/molecules/button';
@@ -234,7 +234,7 @@ export function WorkspaceCustomization({
     await mutateRecentWorkspace.mutateAsync();
 
     startTransition(() => {
-      replace(`${ROOT_ROUTE}/${virtualLabId}/${projectId}`, {
+      replace(`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}`, {
         showProgress: true,
       });
     });

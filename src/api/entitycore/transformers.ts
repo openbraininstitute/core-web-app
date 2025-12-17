@@ -1,10 +1,7 @@
-import isEmpty from 'es-toolkit/compat/isEmpty';
-import sortBy from 'es-toolkit/compat/sortBy';
-import omit from 'es-toolkit/compat/omit';
-import map from 'es-toolkit/compat/map';
+import { isEmpty, sortBy, omit, map } from 'es-toolkit/compat';
 
 import { AgentType, type Agent, type IContributor } from '@/api/entitycore/types/shared/global';
-import type { CoreFilter } from '@/entity-configuration/definitions/types';
+import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
 type TransformFiltersToQueryReturnValue = Record<
   string,
@@ -64,11 +61,11 @@ export function transformQueryParamsListToServerString(
  * transforms an array of filters into a query object for API requests.
  * Uses the constraint field to determine the query parameter names.
  *
- * @param {Array<CoreFilter>} filters - The filters to transform
+ * @param {Array<TCoreFilter>} filters - The filters to transform
  * @returns {TransformFiltersToQueryReturnValue} The transformed query object
  */
 export function transformFiltersToQuery(
-  filters: Array<CoreFilter>
+  filters: Array<TCoreFilter>
 ): TransformFiltersToQueryReturnValue {
   return filters.reduce((acc, filter) => {
     // Skip filters with null values
@@ -141,12 +138,13 @@ export function transformAgentToNames(
   const processedAgents = map(agents, (agent) => ({
     // eslint-disable-next-line no-nested-ternary
     name: resolveAgentName(agent),
-    type: agent.type === 'organization' ? 0 : 1, // 0 for Org, 1 for Person
+    type: agent.type === AgentType.Organization ? 0 : 1, // 0 for Org, 1 for Person
+    sortByValue: agent.type === AgentType.Person ? agent.family_name : agent.pref_label,
   }));
 
   return asArray
-    ? map(sortBy(processedAgents, ['type', 'name']), 'name')
-    : map(sortBy(processedAgents, ['type', 'name']), 'name').join(';\n');
+    ? map(sortBy(processedAgents, ['type', 'sortByValue']), 'name')
+    : map(sortBy(processedAgents, ['type', 'sortByValue']), 'name').join(';\n');
 }
 
 function resolveAgentName(agent: Agent) {

@@ -1,14 +1,12 @@
 import { SynapseSet } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-set-item';
 import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import { NeuronViewerContainer } from '@/components/neuron-viewer/neuron-viewer-with-actions';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 type Props = {
   sessionId: string;
 };
 
 export function SynapseSetConfiguration({ sessionId }: Props) {
-  const { virtualLabId, projectId } = useWorkspace();
   const { sessionValue } = useBuildSingleNeuronSynaptomeSessionState({
     sessionId,
   });
@@ -21,8 +19,6 @@ export function SynapseSetConfiguration({ sessionId }: Props) {
           <NeuronViewerContainer
             disableElectrodes
             disableSynapses={false}
-            virtualLabId={virtualLabId}
-            projectId={projectId}
             meModelId={sessionValue?.memodel?.id}
             sessionId={sessionId}
           />

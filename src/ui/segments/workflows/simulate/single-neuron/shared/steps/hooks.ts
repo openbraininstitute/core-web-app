@@ -1,15 +1,21 @@
 import React from 'react';
-import { useAtom } from 'jotai';
-
+import { useAtom, useSetAtom } from 'jotai';
+import { useQuery } from '@tanstack/react-query';
 import { tgdFullscreenToggle } from '@tolokoban/tgd';
+
 import { EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
   ExperimentalSetupConfigurationAtomFamily,
   genericSingleNeuronSimulationPlotDataAtomFamily,
+  neuronSectionNamesAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 
 import type { PlotData } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Morphology } from '@/services/bluenaas-single-cell/types';
+import { keyBuilder } from '@/ui/use-query-keys/data';
+import { getSingleNeuronMorphology } from '@/api/small-scale-simulator';
 
 const THROTTLE = 1000;
 
@@ -62,4 +68,37 @@ export function useFullscreenSwitcher() {
   const refContainer = React.useRef<HTMLDivElement | null>(null);
 
   return { refContainer, toggleFullscreen: () => tgdFullscreenToggle(refContainer.current) };
+}
+
+export function useCleanMorphology(meModelId: string, sessionId: string) {
+  const { virtualLabId, projectId } = useWorkspace();
+  const setSecNames = useSetAtom(neuronSectionNamesAtomFamily(sessionId));
+
+  const {
+    isLoading: loading,
+    isSuccess,
+    error,
+    data,
+  } = useQuery({
+    queryKey: keyBuilder.neuronMorphology3DData({ virtualLabId, projectId, modelId: meModelId }),
+    queryFn: () => {
+      return getSingleNeuronMorphology({ ctx: { virtualLabId, projectId }, meModelId });
+    },
+  });
+
+  const morphology: Morphology = isSuccess && data ? removeNoDiameterSection(data) : {};
+  const sectionNames = Object.keys(morphology);
+  setSecNames(sectionNames);
+
+  return { loading, error, morphology };
+}
+
+function removeNoDiameterSection(morphology: Morphology) {
+  const pruned = Object.entries(morphology).reduce((acc: Morphology, [secName, sec]) => {
+    if (!sec.diam) return acc;
+
+    acc[secName] = sec;
+    return acc;
+  }, {});
+  return pruned satisfies Morphology;
 }

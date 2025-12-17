@@ -1,13 +1,10 @@
 'use client';
 
 import { hashKey, keepPreviousData, useQuery } from '@tanstack/react-query';
-import { useSession } from 'next-auth/react';
 
 import { ACTIVITY_DEFAULT_PAGE_SIZE } from '@/ui/segments/project/activities/elements/helpers';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import { getPersons } from '@/api/entitycore/queries/general/person-agent';
-import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
@@ -37,14 +34,7 @@ export function useQueryActivity({
   pageSize?: number;
   useKeepPreviousData?: boolean;
 }) {
-  const session = useSession();
   const { virtualLabId, projectId } = useWorkspace();
-
-  const { data: person, isLoading: isPersonLoading } = useQuery({
-    queryKey: userKeyBuilder.person({ userId: session.data?.user.id }),
-    queryFn: () => getPersons({ filters: { sub_id: session.data?.user.id } }),
-    enabled: Boolean(session.data?.user.id),
-  });
 
   const queryKey = keyBuilder.activities({
     virtualLabId,
@@ -54,6 +44,7 @@ export function useQueryActivity({
     page,
     pageSize,
     entityType,
+    authorizedPublic: false,
   });
 
   const entity = getEntityByExtendedType({ type: entityType });
@@ -68,14 +59,15 @@ export function useQueryActivity({
           filters: {
             page: queryKeyObject.page,
             page_size: queryKeyObject.pageSize,
-            created_by__id: person?.data.at(0)?.id,
+            authorized_project_id: projectId,
+            authorized_public: false,
           },
         });
       }
       return Promise.resolve(null);
     },
     placeholderData: useKeepPreviousData ? keepPreviousData : undefined,
-    enabled: Boolean(entityType && activity) && Boolean(person?.data.at(0)?.id),
+    enabled: Boolean(entityType && activity),
   });
 
   const queryKeyHash = hashKey(queryKey);
@@ -83,7 +75,6 @@ export function useQueryActivity({
   return {
     ...result,
     queryKeyHash,
-    isDependenciesLoading: isPersonLoading,
-    isQueryEnabled: Boolean(entityType && activity) && Boolean(person?.data.at(0)?.id),
+    isQueryEnabled: Boolean(entityType && activity),
   };
 }

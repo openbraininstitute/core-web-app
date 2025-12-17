@@ -3,22 +3,19 @@ import { SentryBuildOptions, withSentryConfig } from '@sentry/nextjs';
 import { PHASE_DEVELOPMENT_SERVER } from 'next/constants';
 
 import type { NextConfig } from 'next/dist/types';
-import { env } from './src/env';
-
 const withBundleAnalyzer = NextBundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 });
 
-const basePath = env.NEXT_PUBLIC_BASE_PATH;
-const cdnUri = env.NEXT_PUBLIC_CDN_URI || process.env.NEXT_PUBLIC_CDN_URI;
-const coreWebAppVersion = env.NEXT_PUBLIC_CORE_WEB_APP_VERSION;
+const cdnUrl = process.env.CDN_URL;
+const appVersion = process.env.APP_VERSION;
 
 const SentryOptions: SentryBuildOptions = {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
-  org: env.NEXT_PUBLIC_SENTRY_ORG,
-  project: env.NEXT_PUBLIC_SENTRY_PRJ,
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PRJ,
 
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
@@ -33,13 +30,16 @@ const SentryOptions: SentryBuildOptions = {
   disableLogger: true,
   automaticVercelMonitors: false,
   release: {
-    name: coreWebAppVersion,
+    name: appVersion,
   },
 };
 
 const nextConfig = (phase: string): NextConfig => {
   const isDev = phase === PHASE_DEVELOPMENT_SERVER;
   return {
+    env: {
+      APP_BUILD_TIME: new Date().toISOString(),
+    },
     turbopack: {
       rules: {
         '*.groq': {
@@ -69,7 +69,6 @@ const nextConfig = (phase: string): NextConfig => {
         canvas: './empty-module.ts',
       },
     },
-    basePath,
     devIndicators: process.env.NEXT_PUBLIC_NEXT_DEVTOOLS_POSITION
       ? {
           position:
@@ -79,7 +78,7 @@ const nextConfig = (phase: string): NextConfig => {
             >['position']) ?? 'top-right',
         }
       : false,
-    assetPrefix: isDev || !cdnUri ? undefined : `${cdnUri}/${coreWebAppVersion}`,
+    assetPrefix: isDev || !cdnUrl ? undefined : `${cdnUrl}/${appVersion}`,
     reactStrictMode: true,
     compress: false,
     output: 'standalone',
@@ -89,7 +88,7 @@ const nextConfig = (phase: string): NextConfig => {
     typescript: {
       ignoreBuildErrors: true,
     },
-    transpilePackages: ['jotai-devtools', '@t3-oss/env-nextjs', '@t3-oss/env-core'],
+    transpilePackages: ['jotai-devtools'],
     logging: {
       fetches: {
         fullUrl: true,
@@ -98,7 +97,7 @@ const nextConfig = (phase: string): NextConfig => {
     },
     images: {
       loader: 'default',
-      path: `${cdnUri ?? ''}/_next/image`,
+      path: `${cdnUrl ?? ''}/_next/image`,
       remotePatterns: [
         {
           protocol: 'https',
@@ -140,6 +139,11 @@ const nextConfig = (phase: string): NextConfig => {
         {
           source: '/app/virtual-lab/:vlabId/:projectId/notebooks',
           destination: '/app/virtual-lab/:vlabId/:projectId/notebooks/public',
+          permanent: false,
+        },
+        {
+          source: '/app/virtual-lab/:vlabId/:projectId/data/view/:type/:id',
+          destination: '/app/virtual-lab/:vlabId/:projectId/data/view/:type/:id/overview',
           permanent: false,
         },
       ];

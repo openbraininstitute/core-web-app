@@ -4,106 +4,81 @@ import React from 'react';
 import { PainterManager, usePainterController, usePainterManager } from './painter';
 import { HintPanel } from './hint';
 import ZoomSlider from './zoom-slider';
-import { useCleanMorphology } from './hooks';
 import LegendOverlay from './legend-overlay';
 import { ButtonResetCamera } from './button-reset-camera';
-
 import AddRecordingDialog from './add-recording-dialog';
-import { NeuronLoader } from '@/components/neuron-viewer/plugins/neuron-loader';
+
+import { Morphology } from '@/services/bluenaas-single-cell/types';
 
 import styles from './webgl-neuron-selector.module.css';
 
 export interface WebglNeuronSelectorProps {
-  projectId: string;
-  virtualLabId: string;
-  meModelId: string;
+  morphology: Morphology;
   sessionId: string;
   disableElectrodes?: boolean;
   disableSynapses?: boolean;
+  disableClick?: boolean;
 }
 
 // eslint-disable-next-line react/display-name
 export const WebglNeuronSelector = React.memo(
   ({
-    projectId,
-    virtualLabId,
-    meModelId,
+    morphology,
     sessionId,
     disableElectrodes,
     disableSynapses,
+    disableClick,
   }: WebglNeuronSelectorProps) => {
-    const painterManager = usePainterManager();
+    const painterManager = usePainterManager(morphology);
     return (
       <WebglNeuronSelectorContent
         painterManager={painterManager}
-        projectId={projectId}
-        virtualLabId={virtualLabId}
-        meModelId={meModelId}
         sessionId={sessionId}
-        disableElectrodes={disableElectrodes}
-        disableSynapses={disableSynapses}
+        disableElectrodes={disableElectrodes ?? false}
+        disableSynapses={disableSynapses ?? false}
+        disableClick={disableClick ?? false}
       />
     );
   }
 );
 
-type WebglNeuronSelectorContentProps = WebglNeuronSelectorProps & {
+type WebglNeuronSelectorContentProps = {
   painterManager: PainterManager;
+  sessionId: string;
+  disableElectrodes: boolean;
+  disableSynapses: boolean;
+  disableClick: boolean;
 };
 
 function WebglNeuronSelectorContent({
-  projectId,
-  virtualLabId,
-  meModelId,
-  sessionId,
   painterManager,
-  disableElectrodes = false,
-  disableSynapses = false,
+  sessionId,
+  disableElectrodes,
+  disableSynapses,
+  disableClick,
 }: WebglNeuronSelectorContentProps) {
-  usePainterController(painterManager, sessionId, disableElectrodes, disableSynapses);
-  const { loading, error } = useCleanMorphology(
-    painterManager,
-    meModelId,
-    projectId,
-    virtualLabId,
-    sessionId
-  );
-  if (error) return <pre>{JSON.stringify(error, null, 2)}</pre>;
+  usePainterController(painterManager, disableElectrodes, disableSynapses, disableClick);
 
   return (
     <div className={styles.main}>
-      {loading ? (
-        <Loading />
-      ) : (
-        <>
-          <canvas
-            key="canvas"
-            ref={(canvas: HTMLCanvasElement | null) => {
-              painterManager.canvas = canvas;
-              return () => {
-                painterManager.canvas = null;
-              };
-            }}
-          />
-          <HintPanel painterManager={painterManager} />
-          <header>
-            <ZoomSlider className={styles.zoomSlider} painterManager={painterManager} />
-            <ButtonResetCamera painterManager={painterManager} />
-          </header>
-          {!disableElectrodes && (
-            <LegendOverlay painterManager={painterManager} sessionId={sessionId} />
-          )}
-          <AddRecordingDialog painterManager={painterManager} sessionId={sessionId} />
-        </>
+      <canvas
+        key="canvas"
+        ref={(canvas: HTMLCanvasElement | null) => {
+          painterManager.canvas = canvas;
+          return () => {
+            painterManager.canvas = null;
+          };
+        }}
+      />
+      <HintPanel painterManager={painterManager} />
+      <header>
+        <ZoomSlider className={styles.zoomSlider} painterManager={painterManager} />
+        <ButtonResetCamera painterManager={painterManager} />
+      </header>
+      {!disableElectrodes && (
+        <LegendOverlay painterManager={painterManager} sessionId={sessionId} />
       )}
-    </div>
-  );
-}
-
-function Loading() {
-  return (
-    <div className={styles.loading}>
-      <NeuronLoader text="Loading Neuron" />
+      <AddRecordingDialog painterManager={painterManager} sessionId={sessionId} />
     </div>
   );
 }

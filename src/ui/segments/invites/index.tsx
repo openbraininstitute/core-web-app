@@ -14,7 +14,7 @@ import { Button } from '@/ui/molecules/button';
 import { ApiErrorCause } from '@/api/error';
 import { tryCatch } from '@/api/utils';
 import { cn } from '@/utils/css-class';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 import {
   InvitationContentResponse,
   InviteErrorCodes,
@@ -53,16 +53,18 @@ export function InvitationProcessing({ data }: { data: InvitationContentResponse
               listProjects({ virtualLabId: result.data.virtual_lab_id, page: 1, size: 1 })
             );
             if (error) {
-              navigate(`${ROOT_ROUTE}/sync`);
+              navigate(`${config.ROOT_ROUTE}/sync`);
             }
             const projectId = results?.data?.results.at(0)?.id;
             if (projectId) {
-              navigate(`${ROOT_ROUTE}/${result.data.virtual_lab_id}/${projectId}`);
+              navigate(`${config.ROOT_ROUTE}/${result.data.virtual_lab_id}/${projectId}`);
             } else {
-              navigate(`${ROOT_ROUTE}/sync`);
+              navigate(`${config.ROOT_ROUTE}/sync`);
             }
           } else if (origin === InviteOriginDict.Project) {
-            navigate(`${ROOT_ROUTE}/${result.data.virtual_lab_id}/${result.data.project_id}`);
+            navigate(
+              `${config.ROOT_ROUTE}/${result.data.virtual_lab_id}/${result.data.project_id}`
+            );
           }
         }
       }

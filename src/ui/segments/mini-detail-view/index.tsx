@@ -38,7 +38,7 @@ import {
   useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
@@ -466,7 +466,7 @@ function ExploreActions<T extends EntityCoreObjectTypes>({
       >
         <Link
           href={{
-            pathname: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(dataType)}/${record.id}`,
+            pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(dataType)}/${record.id}`,
             query: queryParams.toString(),
           }}
         >
@@ -486,13 +486,13 @@ function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({
 }) {
   const { virtualLabId, projectId } = useWorkspace();
 
-  let detailUrl = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`;
+  let detailUrl = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`;
 
   if (
     record.type === EntityTypeDict.Circuit &&
     (record as ICircuit).scale === CircuitScaleDictionary.Single
   ) {
-    detailUrl = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.MEModelWithSynapses)}/${record.id}`;
+    detailUrl = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.MEModelWithSynapses)}/${record.id}`;
   }
   return (
     <div className="sticky bottom-0 mt-auto flex items-center justify-center gap-2 self-end p-4">
@@ -514,7 +514,7 @@ function WorkflowSimulateActions<T extends EntityCoreObjectTypes>({
       >
         <Link
           href={{
-            pathname: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/${kebabCase(record.type)}/${record.id}`,
+            pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/${kebabCase(record.type)}/${record.id}`,
             query: {
               sessionId: crypto.randomUUID(),
               [PanelQueryParam]: WorkflowSimulatePanels.Configuration,
@@ -543,7 +543,7 @@ function WorkflowBuildActions<T extends EntityCoreObjectTypes>({ record }: { rec
         className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
       >
         <Link
-          href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`}
+          href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`}
         >
           View details
         </Link>
@@ -557,7 +557,7 @@ function WorkflowBuildActions<T extends EntityCoreObjectTypes>({ record }: { rec
       >
         <Link
           href={{
-            pathname: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/${kebabCase(record.type)}/${record.id}`,
+            pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/${kebabCase(record.type)}/${record.id}`,
             query: { sessionId: crypto.randomUUID() },
           }}
           onClick={onWorkflowClick}

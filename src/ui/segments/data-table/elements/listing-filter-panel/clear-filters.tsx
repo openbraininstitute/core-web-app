@@ -1,6 +1,6 @@
 import ReloadIcon from '@/components/icons/Reload';
 
-export default function ClearFilters({ onClick }: { onClick: () => void }) {
+export function ClearFilters({ onClick }: { onClick: () => void }) {
   return (
     <button
       type="button"
@@ -12,3 +12,5 @@ export default function ClearFilters({ onClick }: { onClick: () => void }) {
     </button>
   );
 }
+
+export default ClearFilters;
