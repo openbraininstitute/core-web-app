@@ -10,7 +10,7 @@ import { createContribution } from '@/api/entitycore/queries/general/contributio
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
-import { createAndRegisterMorphometrics } from '@/api/one/cell-morphology'; 
+import { createAndRegisterMorphometrics } from '@/api/one/cell-morphology';
 
 import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
 import type { TCellMorphologyForm } from '@/ui/segments/contribute/cell-morphology/schema';
@@ -31,10 +31,11 @@ export function useCellMorphologyPipeline({
     mutationFn: async (values: TCellMorphologyForm) => {
       // 1. Identify the file to upload from the assets object
       const assetKeys = Object.keys(values.assets);
-      const fileAsset = assetKeys.length > 0 ? values.assets[assetKeys[0]] : null;
+      const fileAsset =
+        assetKeys.length > 0 ? values.assets[assetKeys[0]] : null;
 
       if (!fileAsset) {
-        throw new Error("No morphology file provided in assets.");
+        throw new Error('No morphology file provided in assets.');
       }
 
       // 2. Build the payload currently used in the existing logic
@@ -66,11 +67,13 @@ export function useCellMorphologyPipeline({
       };
 
       // 3. Execute the new registration function
-      const result = await createAndRegisterMorphometrics(fileAsset, payload, 
-      { projectId, virtualLabId });
+      const result = await createAndRegisterMorphometrics(fileAsset, payload, {
+        projectId,
+        virtualLabId,
+      });
 
       if (!result.isValid) {
-        throw new Error("Failed to register morphology with metrics.");
+        throw new Error('Failed to register morphology with metrics.');
       }
 
       // Return the ID to maintain compatibility with downstream mutations
@@ -91,7 +94,7 @@ export function useCellMorphologyPipeline({
             return (
               get(
                 (query.queryKey as ExtendedEntityTypeQueryKey)[0],
-                'context.extendedEntityType'
+                'context.extendedEntityType',
               ) === ExtendedEntitiesTypeDict.CellMorphology
             );
           },
@@ -119,8 +122,8 @@ export function useCellMorphologyPipeline({
                 role_id: c.role_id!,
                 entity_id: entityId,
               },
-            })
-          )
+            }),
+          ),
       );
     },
   });
@@ -144,7 +147,11 @@ export function useCellMorphologyPipeline({
     },
   });
 
-  async function createEntity({ values }: { values: TCellMorphologyForm }): Promise<string> {
+  async function createEntity({
+    values,
+  }: {
+    values: TCellMorphologyForm;
+  }): Promise<string> {
     const cellMorphology = await createCellMorphologyAsync.mutateAsync(values);
     await Promise.allSettled([
       createContributionAsync.mutateAsync({
@@ -162,12 +169,12 @@ export function useCellMorphologyPipeline({
   const loading =
     createCellMorphologyAsync.isPending ||
     createContributionAsync.isPending ||
-    createMtypeClassificationAsync.isPending
+    createMtypeClassificationAsync.isPending;
 
   const error =
     createCellMorphologyAsync.error ||
     createContributionAsync.error ||
-    createMtypeClassificationAsync.error
+    createMtypeClassificationAsync.error;
 
   const status = {
     createCellMorphology: createCellMorphologyAsync.status,
@@ -188,7 +195,7 @@ export function useCellMorphologyPipeline({
         };
         return acc;
       },
-      {} as Record<string, IMutationKeyConfig>
+      {} as Record<string, IMutationKeyConfig>,
     ),
   };
 }
