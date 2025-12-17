@@ -9,6 +9,7 @@ This is the Blue Brain Open Platform's core web application - a Next.js-based pl
 ## Common Commands
 
 ### Development
+
 ```bash
 # Start development server (uses turbopack)
 npm run dev
@@ -19,6 +20,7 @@ yarn dev
 ```
 
 ### Building
+
 ```bash
 # Production build
 npm run build
@@ -31,6 +33,7 @@ npm run analyze
 ```
 
 ### Testing
+
 ```bash
 # Run unit tests (Vitest)
 npm run test
@@ -52,6 +55,7 @@ npm run e2e:mock
 ```
 
 ### Linting & Code Quality
+
 ```bash
 # Run full lint (ESLint + TypeScript)
 npm run lint
@@ -79,6 +83,7 @@ npm run knip
 ```
 
 ### Docker
+
 ```bash
 # Show available Make commands
 make help
@@ -97,6 +102,7 @@ make clean
 ```
 
 ### Version Management
+
 ```bash
 # Show current version (git-based)
 make version
@@ -105,6 +111,7 @@ make version
 ## Architecture
 
 ### Tech Stack
+
 - **Framework**: Next.js 15 with App Router and Turbopack
 - **Language**: TypeScript 5.5
 - **UI**: React 19, Ant Design 5, Radix UI, Tailwind CSS 4
@@ -118,14 +125,18 @@ make version
 ### Directory Structure
 
 #### `/src/app/`
+
 Next.js App Router structure with:
+
 - `/api/` - API route handlers
 - `/app/` - Main authenticated application routes
 - `/[sanitySectionSlug]/` - Dynamic CMS content pages
 - Error boundaries (`error.tsx`, `global-error.tsx`, `not-found.tsx`)
 
 #### `/src/features/`
+
 Feature-specific modules with co-located logic:
+
 - `brain-atlas-viewer/` - 3D brain visualization
 - `cell-composition/` - Cell type composition analysis
 - `entities/` - Entity-specific detail views (e-models, morphologies, etc.)
@@ -135,7 +146,9 @@ Feature-specific modules with co-located logic:
 - `views/` - Reusable view components for listings and browsing
 
 #### `/src/components/`
+
 Shared React components organized by domain:
+
 - `ai-assistant/` - AI chat interface and tools
 - `VirtualLab/` - Virtual lab management and creation flows
 - `LandingPage/` - Public-facing marketing components
@@ -143,7 +156,9 @@ Shared React components organized by domain:
 - `icons/` - Icon components
 
 #### `/src/api/`
+
 API client modules organized by service:
+
 - `apiClient.ts` - Base API client with auth
 - `entitycore/` - Entity management API
 - `virtual-lab-svc/` - Virtual lab management API
@@ -152,20 +167,26 @@ API client modules organized by service:
 - `thumbnail-svc/`, `one/`, etc. - Platform services
 
 #### `/src/state/`
+
 Jotai atoms for global state:
+
 - `session.ts` - User session state
 - `theme.ts` - Theme preferences
 - `explore-section/` - Data exploration state
 - `virtual-lab/` - Virtual lab context state
 
 #### `/src/query-provider/`
+
 TanStack Query configuration:
+
 - Query client setup with caching strategies
 - Server/client providers for React Server Components
 - See `examples.md` for usage patterns
 
 #### `/src/config/`
+
 Runtime configuration system (see `/src/config/README.md`):
+
 - **Server config**: `import { serverConfig } from '@/config/server'`
 - **Client config**: `import { useConfig } from '@/config'` (React) or `import { config } from '@/config'` (non-React)
 - Configuration values must be accessed inside functions, not during script evaluation
@@ -173,28 +194,35 @@ Runtime configuration system (see `/src/config/README.md`):
 - API URL fallback to `API_ORIGIN` for platform services
 
 #### `/src/ui/`
+
 Reusable UI components and segments:
+
 - `molecules/` - Composite UI components
 - `segments/` - Page sections and complex UI patterns
 
 #### `/src/hooks/`
+
 Custom React hooks for shared logic
 
 #### `/src/utils/` and `/src/util/`
+
 Utility functions (note: both directories exist)
 
 #### `/src/types/`
+
 Shared TypeScript types and interfaces
 
 ### State Management Patterns
 
 **Jotai (Client State)**
+
 - Atomic state management with fine-grained reactivity
 - Use `atom()` for state, `useAtom()` for read/write, `useAtomValue()` for read-only
 - Atoms are stored in `/src/state/` organized by feature
 - Example: Session state, theme, UI preferences
 
 **TanStack Query (Server State)**
+
 - Server state caching with automatic refetching
 - Use `useQuery()` for reads, `useMutation()` for writes
 - Query keys follow convention: `['entityType', id, ...params]`
@@ -214,6 +242,7 @@ The app uses a runtime configuration system for "build once, deploy everywhere":
 ### Path Aliases
 
 TypeScript path alias `@/*` maps to `src/*`:
+
 ```typescript
 import { useConfig } from '@/config';
 import { MyComponent } from '@/components/MyComponent';
@@ -250,12 +279,14 @@ import { MyComponent } from '@/components/MyComponent';
 ### Testing Conventions
 
 **Unit Tests (Vitest)**
+
 - Located in `/tests/` directory
 - Use Testing Library for component tests
 - Mock MSW for API mocking
 - File pattern: `*.test.ts` or `*.test.tsx`
 
 **E2E Tests (Playwright)**
+
 - Located in `/e2e/` directory
 - Auth state stored in `playwright/.auth/user.json`
 - Setup tests in `auth.setup.ts`
@@ -264,12 +295,14 @@ import { MyComponent } from '@/components/MyComponent';
 ### Code Quality
 
 **ESLint Configuration**
+
 - Extends: Airbnb, Airbnb TypeScript, Next.js, Prettier
 - Uses `@typescript-eslint` for TypeScript rules
 - Import order enforced with CSS imports after code
 - Unused vars with `_` prefix are ignored
 
 **Prettier Configuration**
+
 - Print width: 100
 - Single quotes, trailing commas (ES5)
 - Uses Tailwind CSS plugin for class sorting
@@ -277,6 +310,7 @@ import { MyComponent } from '@/components/MyComponent';
 ### Model Building Configuration
 
 The application supports complex model building workflows with KG-based configuration. See `/docs/model-config.md` for the entity structure including:
+
 - Cell composition, position, and morphology assignment
 - E-Model assignment and validation
 - Macro/micro connectome configuration
@@ -287,19 +321,23 @@ The application supports complex model building workflows with KG-based configur
 The application requires numerous environment variables. Key categories:
 
 **Authentication** (server-only):
+
 - `KEYCLOAK_ISSUER`, `KEYCLOAK_CLIENT_ID`, `KEYCLOAK_CLIENT_SECRET`
 - `NEXTAUTH_SECRET`
 
 **APIs** (public):
+
 - `API_ORIGIN` - Base URL for platform services
 - `VIRTUAL_LAB_API_URL`, `ENTITY_CORE_URL`, `NOTEBOOK_API_URL`, etc.
 - Individual service URLs fall back to `API_ORIGIN` if not set
 
 **Configuration** (public):
+
 - `APP_VERSION`, `DEPLOYMENT_ENV`
 - `ROOT_ROUTE`, `CDN_URL`
 
 **External Services**:
+
 - Sentry, Stripe, Matomo, Sanity, GitHub, Mailchimp
 - See `/src/config/README.md` for complete list
 

@@ -86,13 +86,16 @@ export default function Plans({ plans }: { plans: PlanV2[] }) {
 
       {/* Mobile and Tablet Portrait */}
       <div ref={ref} className="relative w-screen px-4 xl:hidden">
-        <nav id="plans-navigation" className="mb-3 flex w-full justify-center gap-3 overflow-x-auto pb-1">
+        <nav
+          id="plans-navigation"
+          className="mb-3 flex w-full justify-center gap-3 overflow-x-auto pb-1 xl:hidden"
+        >
           {sortedPlans.map((plan, index) => {
             const isVisible = visibleSlides.includes(index);
             return (
               <span
                 key={`plan-label-${plan.name}`}
-                className="whitespace-nowrap text-lg"
+                className="text-lg whitespace-nowrap"
                 style={{
                   fontWeight: isVisible ? 'bold' : 'normal',
                   color: isVisible ? '#003a8c' : '#8c8c8c',
@@ -113,15 +116,19 @@ export default function Plans({ plans }: { plans: PlanV2[] }) {
         >
           <CarouselContent className="-ml-4">
             {sortedPlans.map((plan, index) => (
-              <CarouselItem key={plan.name} className="pl-4 basis-full md:basis-1/3" data-index={index}>
+              <CarouselItem
+                key={plan.name}
+                className="basis-full pl-4 md:basis-1/3"
+                data-index={index}
+              >
                 <PlanCard plan={plan} />
               </CarouselItem>
             ))}
           </CarouselContent>
           {inView && (
             <>
-              <CarouselPrevious className="!fixed !left-2 top-1/2 -translate-y-1/2 md:!absolute md:!left-4" />
-              <CarouselNext className="!fixed !right-2 top-1/2 -translate-y-1/2 md:!absolute md:!right-4 [&>svg]:rotate-180" />
+              <CarouselPrevious className="!fixed top-1/2 !left-2 -translate-y-1/2 md:!absolute md:!left-4" />
+              <CarouselNext className="!fixed top-1/2 !right-2 -translate-y-1/2 md:!absolute md:!right-4 [&>svg]:rotate-180" />
             </>
           )}
         </Carousel>
