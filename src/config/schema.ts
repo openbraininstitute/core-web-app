@@ -25,6 +25,9 @@ const configFields = {
 
   GITHUB_TOKEN: { schema: z.string().optional(), public: false },
 
+  GITHUB_FEEDBACK_TOKEN: { schema: z.string().optional(), public: false },
+  GITHUB_FEEDBACK_PROJECT_ID: { schema: z.string().optional(), public: false },
+
   API_ORIGIN: { schema: z.string().url().optional(), public: true },
 
   AI_AGENT_URL: { schema: z.string().url().optional(), public: true },
