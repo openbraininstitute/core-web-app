@@ -3,9 +3,11 @@
 import { ReactNode, useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
 
+import { withErrorConfig } from '@/components/GenericErrorFallback';
+import { Loader } from '@/components/loader';
 import { BrainAtlasViewerGltf } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf';
 import { FullScreen } from '@/features/brain-atlas-viewer/full-screen';
-import { Loader } from '@/components/loader';
+import { ErrorBoundary } from 'react-error-boundary';
 
 export function AtlasViewer({ dataKey, children }: { dataKey: string; children?: ReactNode }) {
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -15,7 +17,17 @@ export function AtlasViewer({ dataKey, children }: { dataKey: string; children?:
   };
 
   const renderViewer = useMemo(
-    () => <BrainAtlasViewerGltf dataKey={dataKey} onLoading={setIsLoading} />,
+    () => (
+      <ErrorBoundary
+        FallbackComponent={withErrorConfig({
+          cls: { container: 'bg-primary-9/40' },
+          customError: 'Failed to show visualization',
+          showButtons: false,
+        })}
+      >
+        <BrainAtlasViewerGltf dataKey={dataKey} onLoading={setIsLoading} />
+      </ErrorBoundary>
+    ),
     [dataKey]
   );
 
