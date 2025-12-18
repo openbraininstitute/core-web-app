@@ -21,7 +21,7 @@ export function AtlasViewer({ dataKey, children }: { dataKey: string; children?:
       <ErrorBoundary
         FallbackComponent={withErrorConfig({
           cls: { container: 'bg-primary-9/40' },
-          customError: 'Failed to show visualization',
+          customError: 'Failed to show 3D brain atlas visualization',
           showButtons: false,
         })}
       >
