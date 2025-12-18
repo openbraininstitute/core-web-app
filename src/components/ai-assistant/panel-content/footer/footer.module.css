@@ -23,3 +23,8 @@
   background-color: var(--color-primary-4);
   color: #fffe;
 }
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
