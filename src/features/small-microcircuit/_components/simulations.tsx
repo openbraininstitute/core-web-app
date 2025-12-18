@@ -364,7 +364,7 @@ function SimulationListItem({
           className="mb-2 flex h-18 w-full cursor-pointer items-center justify-between"
           onClick={() => onSelect(simulation.id)}
         >
-          <div className="min-w-0 flex-1 overflow-hidden font-bold">
+          <div className="min-w-0 flex-1 overflow-hidden text-left font-bold">
             {!execStatus || execStatus === EntitycoreExecutionStatus.CREATED ? (
               <ConfigProvider theme={{ token: { colorPrimary: '#1890ff' } }}>
                 <div className="flex min-w-0 items-center" style={{ maxWidth: '100%' }}>
