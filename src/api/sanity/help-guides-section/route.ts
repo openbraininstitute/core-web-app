@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PortableTextBlock } from '@sanity/types';
+import { PortableTextBlock } from 'next-sanity';
 
 import { getClient } from '@/api/sanity/client';
 import { logError } from '@/util/logger';
@@ -15,7 +15,7 @@ export type GuideCardProps = {
 };
 
 const queryForGuidesContent = `*[_type=="guides"]{
-  title, 
+  title,
   slug,
   topic,
   scale,
