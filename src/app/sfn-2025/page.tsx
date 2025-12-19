@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+
 import styles from '@/components/LandingPage/LandingPage.module.css';
 import FooterPanel from '@/components/LandingPage/layout/FooterPanel';
 import Menu from '@/components/LandingPage/layout/Menu';
