@@ -1,4 +1,4 @@
-import { useSanity } from '@/services/sanity';
+import { useSanity } from '@/services/sanity/hooks';
 import { type RichText, tryType } from '../../content/_common';
 
 export function useContentForHero() {

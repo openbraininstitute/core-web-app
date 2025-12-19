@@ -1,6 +1,6 @@
 'use client';
 
-import { useSanity } from '@/services/sanity';
+import { useSanity } from '@/services/sanity/hooks';
 import ShowcaseCard from '@/ui/segments/reports/obi-showcases/obi-showcase-card';
 import query from './query';
 import { isOBIShowcaseProjectProps, type OBIShowcaseProjectType } from './types';

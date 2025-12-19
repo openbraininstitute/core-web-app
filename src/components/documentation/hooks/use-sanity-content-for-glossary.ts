@@ -1,5 +1,5 @@
 import type { ContentForGlossaryItem } from '@/components/documentation/type';
-import { useSanity } from '@/services/sanity';
+import { useSanity } from '@/services/sanity/hooks';
 import { logError } from '@/util/logger';
 import { assertType, type TypeDef } from '@/util/type-guards';
 import query from '../query/glossary-hooks.groq';

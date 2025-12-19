@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
 import type { PortableTextBlock } from 'next-sanity';
-import { useSanity } from '@/services/sanity';
+import { useSanity } from '@/services/sanity/hooks';
 import { isNumber } from '@/util/type-guards';
 import { tryType, typeImage } from './_common';
 import { type ContentForRichText, typeBooleanOrNull, typeStringOrNull } from './types';

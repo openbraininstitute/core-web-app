@@ -1,5 +1,5 @@
 import type { PortableTextBlock } from 'next-sanity';
-import { useSanity } from '@/services/sanity';
+import { useSanity } from '@/services/sanity/hooks';
 import { logError } from '@/util/logger';
 import { assertType, type TypeDef } from '@/util/type-guards';
 import type { StepProps } from '../type';

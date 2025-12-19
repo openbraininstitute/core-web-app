@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 
-import type { GalleryContentProps } from '@/api/sanity/gallery/route';
+import type { GalleryContentProps } from '@/services/sanity/content/gallery';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { cn } from '@/utils/css-class';
 

@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
 
-import { useSanity } from '@/services/sanity';
+import { useSanity } from '@/services/sanity/hooks';
 import { tryType, typeImage } from './_common';
 import query from './milestones.groq';
 import { typeStringOrNull } from './types';

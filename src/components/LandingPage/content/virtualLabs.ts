@@ -1,4 +1,4 @@
-import { useSanity } from '@/services/sanity';
+import { useSanity } from '@/services/sanity/hooks';
 import { tryType } from './_common';
 
 interface ContentForVirtualLabsBlock {

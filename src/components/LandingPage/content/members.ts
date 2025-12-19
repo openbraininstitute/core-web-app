@@ -1,4 +1,4 @@
-import { useSanity } from '@/services/sanity';
+import { useSanity } from '@/services/sanity/hooks';
 import { tryType, typeImage } from './_common';
 
 export interface ContentForMember {

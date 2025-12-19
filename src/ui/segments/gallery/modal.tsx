@@ -1,7 +1,7 @@
 import { CloseOutlined } from '@ant-design/icons';
 import Image from 'next/image';
 
-import type { GalleryContentProps } from '@/api/sanity/gallery/route';
+import type { GalleryContentProps } from '@/services/sanity/content/gallery';
 import { Modal } from '@/ui/molecules/modal';
 
 type MediaModalProps = {

@@ -72,6 +72,7 @@ const configFields = {
   MATOMO_SITE_ID: { schema: z.string().nonempty().optional(), public: true },
   MATOMO_URL: { schema: z.string().nonempty().optional(), public: true },
 
+  SANITY_PROJECT_ID: { schema: z.string().nonempty(), public: true },
   SANITY_DATASET: { schema: z.enum(['staging', 'production']), public: true },
 
   ENTITY_CORE_PUBLIC_PROJECT_ID: {

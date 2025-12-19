@@ -1,4 +1,4 @@
-import { useSanity } from '@/services/sanity';
+import { useSanity } from '@/services/sanity/hooks';
 import { tryType, typeNumberOrNull, typeStringOrNull } from '../../content';
 import query from './hooks.groq';
 

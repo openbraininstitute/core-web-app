@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+
 import { InvitationErrorDialog } from '@/ui/segments/invites/error-dialog';
 import { logError } from '@/util/logger';
 import { classNames } from '@/util/utils';
@@ -16,6 +17,7 @@ import SectionNews from './sections/SectionNews';
 import SectionPricing from './sections/SectionPricing';
 import { EnumSection } from './sections/sections';
 import { getSection } from './utils';
+
 import './global.css';
 
 interface LandingPageProps {

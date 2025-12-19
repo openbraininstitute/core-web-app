@@ -1,4 +1,7 @@
-import { type GuideCardProps, getGuidesContent } from '@/api/sanity/help-guides-section/route';
+import {
+  type GuideCardProps,
+  getGuidesContent,
+} from '@/services/sanity/content/help-guides-section';
 import GuideCard from '@/ui/segments/help/guides/card';
 import { getSearchParam } from '@/utils/getSearchParams';
 

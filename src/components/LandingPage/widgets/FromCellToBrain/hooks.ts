@@ -1,4 +1,4 @@
-import { useSanity } from '@/services/sanity';
+import { useSanity } from '@/services/sanity/hooks';
 import {
   type FromCellToBrainCard,
   type FromCellToBrainColumn,

@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
 
-import { useSanity } from '@/services/sanity';
+import { useSanity } from '@/services/sanity/hooks';
 import { isBoolean, type TypeDef } from '@/util/type-guards';
 import { tryType } from './_common';
 import query from './pricing.groq';

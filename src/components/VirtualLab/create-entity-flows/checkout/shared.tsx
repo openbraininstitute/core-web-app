@@ -8,8 +8,8 @@ import omit from 'es-toolkit/compat/omit';
 import { atom } from 'jotai';
 import { forwardRef } from 'react';
 
-import { getSanityTiers } from '@/api/sanity/client';
 import { listSubscriptionTiers } from '@/api/virtual-lab-svc/queries/subscription';
+import { getSanityTiers } from '@/services/sanity/content/tiers';
 import { classNames } from '@/util/utils';
 
 type JsonValue = string | number | boolean | null | JsonObject | JsonArray;
@@ -179,7 +179,7 @@ const renameAndRemove = (arr: any[], oldKey: string, newKey: string) =>
 export async function getAllTiers(): Promise<ExtendedTier[]> {
   const [appTiers, sanityTiers] = await Promise.all([
     listSubscriptionTiers(),
-    getSanityTiers()({ next: { revalidate: 3600 } }),
+    getSanityTiers({ next: { revalidate: 3600 } }),
   ]);
   if (!appTiers || !sanityTiers) {
     throw new Error('Tiers can not be fetched');

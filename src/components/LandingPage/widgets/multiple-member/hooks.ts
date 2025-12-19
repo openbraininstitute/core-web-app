@@ -1,4 +1,4 @@
-import { useSanity } from '@/services/sanity';
+import { useSanity } from '@/services/sanity/hooks';
 import { typeImage } from '../../content';
 import { type RichText, tryType } from '../../content/_common';
 

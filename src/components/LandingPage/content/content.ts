@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 
-import { useSanity } from '@/services/sanity';
+import { useSanity } from '@/services/sanity/hooks';
 import type { EnumSection } from '../sections/sections';
 import { getSection } from '../utils';
 import queryContentRTF from './content.groq';

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import type { GalleryContentProps } from '@/api/sanity/gallery/route';
+import type { GalleryContentProps } from '@/services/sanity/content/gallery';
 import GalleryFilters from '@/ui/segments/gallery/filters';
 import Media from '@/ui/segments/gallery/media';
 import { MediaModal } from '@/ui/segments/gallery/modal';

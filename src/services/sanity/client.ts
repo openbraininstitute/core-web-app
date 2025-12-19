@@ -1,19 +1,15 @@
-/* eslint-disable no-console */
-
 import { createClient, type SanityClient } from 'next-sanity';
-import React from 'react';
+
 import { config } from '@/config';
 import { logError } from '@/util/logger';
 import { isUndefined } from '@/util/type-guards';
 import { log } from '@/utils/logger';
 
-let cachedClient: SanityClient | null = null;
+let cachedClient: SanityClient | undefined;
 
-function getClient(): SanityClient {
-  if (cachedClient) return cachedClient;
-
-  cachedClient = createClient({
-    projectId: 'fgi7eh1v',
+export function getClient(): SanityClient {
+  cachedClient ??= createClient({
+    projectId: config.SANITY_PROJECT_ID,
     dataset: config.SANITY_DATASET,
     perspective: 'published',
     apiVersion: '2023-03-25',
@@ -21,23 +17,6 @@ function getClient(): SanityClient {
   });
 
   return cachedClient;
-}
-
-export function useSanity<T>(
-  query: string,
-  typeGuard: (data: unknown) => data is T,
-): T | undefined | null {
-  const [data, setData] = React.useState<T | undefined | null>(undefined);
-  React.useEffect(() => {
-    fetchSanity(query, typeGuard)
-      .then(setData)
-      .catch((ex) => {
-        logError('There was an exception in this Sanity query:', query);
-        logError(ex);
-        setData(null);
-      });
-  }, [query, typeGuard]);
-  return data;
 }
 
 export async function fetchSanity<T>(
@@ -49,7 +28,7 @@ export async function fetchSanity<T>(
 
   try {
     if (typeGuard(data)) return data;
-    throw Error('Type guard rejeted this type, but without any explanation!');
+    throw Error('Type guard rejected this type, but without any explanation!');
   } catch (ex) {
     log('warn', 'The following Sanity GROQ query returned a data of unexpected type:');
     log('log', `%c${query}`, 'font-family: monospace; color: #0f0; background: #000');
@@ -60,12 +39,7 @@ export async function fetchSanity<T>(
   }
 }
 
-const cache = new Map<string, unknown>();
-
 async function fetchSanityContent(query: string): Promise<unknown> {
-  const fromCache = cache.get(query);
-  if (fromCache) return fromCache;
-
   const client = getClient();
 
   try {
@@ -73,10 +47,10 @@ async function fetchSanityContent(query: string): Promise<unknown> {
       query,
       {},
       {
-        cache: 'no-cache',
+        cache: 'force-cache',
+        next: { revalidate: 3600 },
       },
     );
-    cache.set(query, data);
     return data;
   } catch (ex) {
     logError('Unable to connect to Sanity!', ex);

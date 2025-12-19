@@ -1,4 +1,4 @@
-import { useSanity } from '@/services/sanity';
+import { useSanity } from '@/services/sanity/hooks';
 import { isString } from '@/util/type-guards';
 import { tryType } from './_common';
 

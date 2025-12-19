@@ -1,7 +1,7 @@
 import type { PortableTextBlock } from 'next-sanity';
 import { z } from 'zod';
 
-import { getClient } from '@/api/sanity/client';
+import { getClient } from '@/services/sanity/client';
 import { logError } from '@/util/logger';
 
 export type GuideCardProps = {
@@ -57,9 +57,7 @@ function isContentForGuides(data: unknown): data is GuidesContentsProps {
 
 export async function getGuidesContent(): Promise<GuidesContentsProps> {
   try {
-    const data = await getClient().fetch<GuidesContentsProps>({
-      query: queryForGuidesContent,
-    });
+    const data = await getClient().fetch<GuidesContentsProps>(queryForGuidesContent);
     if (isContentForGuides(data)) return data;
   } catch (err) {
     logError(err);
