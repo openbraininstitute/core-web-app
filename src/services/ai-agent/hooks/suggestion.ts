@@ -4,8 +4,6 @@ import React from 'react';
 
 import { serviceAiAgentSuggestionFromUserJourney } from '../api/suggestion';
 import { useAccessToken } from '@/hooks/useAccessToken';
-import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
-import { useGenericEventListener } from '@/util/generic-event';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 import { useSnapshot } from '@/components/ai-assistant/suggested-questions/snapshot';
 
@@ -19,46 +17,33 @@ export function useServiceAiAgentSuggestionFromUserJourney(
   const [suggestions, setSuggestions] = React.useState<string[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const snapshotRef = React.useRef(snapshot);
-  snapshotRef.current = snapshot;
+  const requestIdRef = React.useRef(0);
 
-  const fetchSuggestions = React.useCallback(
-    (url?: string) => {
-      const action = async () => {
-        setIsLoading(true);
-        try {
-          const data = await serviceAiAgentSuggestionFromUserJourney(
-            accessToken ?? 'no-access-token',
-            {
-              threadId,
-              virtualLabId,
-              projectId,
-              frontendUrl: url ?? snapshotRef.current.frontendUrl,
-            }
-          );
+  React.useEffect(() => {
+    const currentRequestId = ++requestIdRef.current;
+    
+    setIsLoading(true);
+    serviceAiAgentSuggestionFromUserJourney(accessToken ?? 'no-access-token', {
+      threadId,
+      virtualLabId,
+      projectId,
+      frontendUrl: snapshot.frontendUrl,
+    })
+      .then((data) => {
+        if (currentRequestId === requestIdRef.current) {
           setSuggestions(data);
-        } catch {
+        }
+      })
+      .catch(() => {
+        if (currentRequestId === requestIdRef.current) {
           setSuggestions([]);
-        } finally {
+        }
+      })
+      .finally(() => {
+        if (currentRequestId === requestIdRef.current) {
           setIsLoading(false);
         }
-      };
-      action();
-    },
-    [threadId, accessToken, projectId, virtualLabId]
-  );
-
-  const prevUrlRef = React.useRef(snapshot.frontendUrl);
-
-  React.useEffect(() => {
-    if (prevUrlRef.current !== snapshot.frontendUrl) {
-      fetchSuggestions(snapshot.frontendUrl);
-      prevUrlRef.current = snapshot.frontendUrl;
-    }
-  }, [snapshot.frontendUrl, fetchSuggestions]);
-
-  React.useEffect(() => {
-    fetchSuggestions();
-  }, [fetchSuggestions]);
+      });
+  }, [snapshot.frontendUrl, threadId, accessToken, projectId, virtualLabId]);
   return [suggestions, () => setSuggestions([]), isLoading];
 }
