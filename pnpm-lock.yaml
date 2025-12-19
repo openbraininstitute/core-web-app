@@ -35,9 +35,6 @@ importers:
       '@bprogress/next':
         specifier: ^3.2.12
         version: 3.2.12(next@15.4.8(@babel/core@7.27.4)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.1)(babel-plugin-macros@3.1.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(sass@1.90.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      '@math.gl/core':
-        specifier: ^4.0.1
-        version: 4.1.0
       '@next/bundle-analyzer':
         specifier: ^15.4.1
         version: 15.4.1
