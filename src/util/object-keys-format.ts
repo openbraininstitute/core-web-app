@@ -1,6 +1,15 @@
 import snakeCase from 'es-toolkit/compat/snakeCase';
 import camelCase from 'es-toolkit/compat/camelCase';
-import { mapKeysDeep } from 'deepdash-es/standalone';
+
+function mapKeysDeep(obj: any, fn: (value: any, key: string) => string): any {
+  if (Array.isArray(obj)) return obj.map((item) => mapKeysDeep(item, fn));
+  if (obj !== null && typeof obj === 'object') {
+    return Object.fromEntries(
+      Object.entries(obj).map(([key, value]) => [fn(value, key), mapKeysDeep(value, fn)])
+    );
+  }
+  return obj;
+}
 
 type SnakeCase<S extends string> = S extends `${infer T}_${infer Rest}`
   ? `${Lowercase<T>}_${SnakeCase<Rest>}` // Key is already in snake_case
