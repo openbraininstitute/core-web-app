@@ -3,9 +3,9 @@ name: Lint, Format, Test, Build
 on:
   push:
     branches:
-      - '*'
-      - '!main'
-      - '!develop'
+      - "*"
+      - "!main"
+      - "!develop"
   pull_request:
     branches:
       - main
@@ -28,7 +28,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install
@@ -44,39 +44,6 @@ jobs:
           key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-
-
-  prettier:
-    needs: install_packages
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Set-up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: 'pnpm'
-
-      # Restore cached dependencies
-      - name: Restore pnpm cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.pnpm-store
-            node_modules
-            */*/node_modules
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
-
-      - name: Run Prettier
-        run: pnpm run prettier:check
 
   linter:
     needs: install_packages
@@ -94,7 +61,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: 'pnpm'
+          cache: "pnpm"
 
       # Restore cached dependencies
       - name: Restore pnpm cache
@@ -109,13 +76,11 @@ jobs:
             ${{ runner.os }}-pnpm-
 
       - name: Run linter
-        run: pnpm run lint:only
+        run: pnpm run ci
 
   build:
     needs: install_packages
     runs-on: ubuntu-latest
-    env:
-      NODE_OPTIONS: --max-old-space-size=7168
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -129,7 +94,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: 'pnpm'
+          cache: "pnpm"
 
       # Restore cached dependencies
       - name: Restore pnpm cache

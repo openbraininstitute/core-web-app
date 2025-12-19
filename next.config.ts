@@ -38,9 +38,14 @@ const SentryOptions: SentryBuildOptions = {
 const nextConfig = (phase: string): NextConfig => {
   const isDev = phase === PHASE_DEVELOPMENT_SERVER;
   return {
+    cacheComponents: true,
     env: {
       APP_BUILD_TIME: new Date().toISOString(),
     },
+    experimental: {
+      turbopackFileSystemCacheForDev: true,
+    },
+    reactCompiler: true,
     turbopack: {
       rules: {
         '*.groq': {
