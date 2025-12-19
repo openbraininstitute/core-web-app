@@ -9,9 +9,15 @@ export const serviceAiAgentSuggestionFromUserJourney = asyncCreateSquash(
       threadId: string;
       virtualLabId?: string | null;
       projectId?: string | null;
+      frontendUrl: string;
     }
   ): Promise<string[]> => {
-    const { threadId = null, virtualLabId = null, projectId = null } = options ?? {};
+    const {
+      threadId = null,
+      virtualLabId = null,
+      projectId = null,
+      frontendUrl = null,
+    } = options ?? {};
     const journey = userJourneyTracker.value;
     const data = await fetchJSON({
       accessToken,
@@ -23,7 +29,7 @@ export const serviceAiAgentSuggestionFromUserJourney = asyncCreateSquash(
       query: {
         thread_id: threadId,
         click_history: journey,
-        frontend_url: `${globalThis.location.pathname}${globalThis.location.search}`,
+        frontend_url: frontendUrl,
       },
       typeGuard: isSuggestionFromUserJourneyResponse,
     });

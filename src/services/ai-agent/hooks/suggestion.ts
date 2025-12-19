@@ -19,34 +19,46 @@ export function useServiceAiAgentSuggestionFromUserJourney(
   const [suggestions, setSuggestions] = React.useState<string[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const fetchSuggestions = React.useCallback(() => {
-    const action = async () => {
-      setIsLoading(true);
-      try {
-        const data = await serviceAiAgentSuggestionFromUserJourney(
-          accessToken ?? 'no-access-token',
-          {
-            threadId,
-            virtualLabId,
-            projectId,
-          }
-        );
-        setSuggestions(data);
-      } catch {
-        setSuggestions([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    action();
-  }, [threadId, accessToken, projectId, virtualLabId]);
+  const snapshotRef = React.useRef(snapshot);
+  snapshotRef.current = snapshot;
+
+  const fetchSuggestions = React.useCallback(
+    (url?: string) => {
+      const action = async () => {
+        setIsLoading(true);
+        try {
+          const data = await serviceAiAgentSuggestionFromUserJourney(
+            accessToken ?? 'no-access-token',
+            {
+              threadId,
+              virtualLabId,
+              projectId,
+              frontendUrl: url ?? snapshotRef.current.frontendUrl,
+            }
+          );
+          setSuggestions(data);
+        } catch {
+          setSuggestions([]);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      action();
+    },
+    [threadId, accessToken, projectId, virtualLabId]
+  );
+
+  const prevUrlRef = React.useRef(snapshot.frontendUrl);
 
   React.useEffect(() => {
-    userJourneyTracker.registerArtifactClick(snapshot.artifact);
-    userJourneyTracker.registerBrainRegionClick(snapshot.regionTitle);
-  }, [snapshot]);
+    if (prevUrlRef.current !== snapshot.frontendUrl) {
+      fetchSuggestions(snapshot.frontendUrl);
+      prevUrlRef.current = snapshot.frontendUrl;
+    }
+  }, [snapshot.frontendUrl, fetchSuggestions]);
 
-  React.useEffect(fetchSuggestions, [fetchSuggestions]);
-  useGenericEventListener(userJourneyTracker.eventChange, fetchSuggestions);
+  React.useEffect(() => {
+    fetchSuggestions();
+  }, [fetchSuggestions]);
   return [suggestions, () => setSuggestions([]), isLoading];
 }
