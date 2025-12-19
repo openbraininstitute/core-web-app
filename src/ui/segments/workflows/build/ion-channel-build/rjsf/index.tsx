@@ -1,14 +1,12 @@
-import { getDefaultFormState, ErrorSchema, toErrorSchema } from '@rjsf/utils';
-import { RefObject, useEffect, useImperativeHandle, useRef } from 'react';
-import { withTheme } from '@rjsf/core';
-import validator from '@rjsf/validator-ajv8';
-
-import type { FormProps, IChangeEvent } from '@rjsf/core';
-import type { UiSchema, RJSFSchema } from '@rjsf/utils';
 import type Form from '@rjsf/core';
-
-import { theme } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/theme/default';
+import type { FormProps, IChangeEvent } from '@rjsf/core';
+import { withTheme } from '@rjsf/core';
+import type { RJSFSchema, UiSchema } from '@rjsf/utils';
+import { type ErrorSchema, getDefaultFormState, toErrorSchema } from '@rjsf/utils';
+import validator from '@rjsf/validator-ajv8';
+import { type RefObject, useEffect, useImperativeHandle, useRef } from 'react';
 import { useLatest } from '@/ui/hooks/use-latest';
+import { theme } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/theme/default';
 import { log } from '@/utils/logger';
 
 const ThemedForm = withTheme(theme);
@@ -44,7 +42,7 @@ export function SchemaGeneratedForm({
         schema,
         formDataRef.current,
         schema,
-        true
+        true,
       );
 
       // Validate the initial form data
@@ -52,7 +50,7 @@ export function SchemaGeneratedForm({
       try {
         const validationResult = validator.validateFormData(
           formDataWithDefaults,
-          schema as RJSFSchema
+          schema as RJSFSchema,
         );
 
         if (validationResult.errors && validationResult.errors.length > 0) {

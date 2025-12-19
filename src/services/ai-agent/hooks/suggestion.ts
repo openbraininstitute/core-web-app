@@ -1,17 +1,16 @@
 'use client';
 
 import React from 'react';
-
-import { serviceAiAgentSuggestionFromUserJourney } from '../api/suggestion';
-import { useAccessToken } from '@/hooks/useAccessToken';
+import { useSnapshot } from '@/components/ai-assistant/suggested-questions/hardcoded-suggestions/snapshot';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
+import { useAccessToken } from '@/hooks/useAccessToken';
 import { useGenericEventListener } from '@/util/generic-event';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
-import { useSnapshot } from '@/components/ai-assistant/suggested-questions/hardcoded-suggestions/snapshot';
+import { serviceAiAgentSuggestionFromUserJourney } from '../api/suggestion';
 
 export function useServiceAiAgentSuggestionFromUserJourney(
   threadId: string,
-  count: number
+  count: number,
 ): [suggestions: string[], clearSuggestions: () => void] {
   const snapshot = useSnapshot();
   const virtualLabId = useParamVirtualLabId();
@@ -28,7 +27,7 @@ export function useServiceAiAgentSuggestionFromUserJourney(
             threadId,
             virtualLabId,
             projectId,
-          }
+          },
         );
         setSuggestions(data.slice(0, count));
       } catch {
@@ -38,7 +37,7 @@ export function useServiceAiAgentSuggestionFromUserJourney(
     action();
   }, [threadId, count, accessToken, projectId, virtualLabId]);
 
-  React.useEffect(fetchSuggestions, [fetchSuggestions]);
+  React.useEffect(fetchSuggestions, []);
   useGenericEventListener(userJourneyTracker.eventChange, fetchSuggestions);
   React.useEffect(() => {
     userJourneyTracker.registerArtifactClick(snapshot.artifact);

@@ -8,13 +8,11 @@ export type BrainRegionHierarchyBase = {
   hierarchy_id: string;
 };
 export interface IBrainRegionHierarchy extends BrainRegionHierarchyBase {
-  children: Array<IBrainRegionHierarchy>;
+  children: IBrainRegionHierarchy[];
 }
 
 // order of values: id: number, name: string, acronym: string, children: Array, level: number
-export type TemporaryFlatBrainRegionHierarchy = Array<
-  [number, string, string, Array<number>, number]
->;
+export type TemporaryFlatBrainRegionHierarchy = [number, string, string, number[], number][];
 
 // TODO: temporary placing this here, remove it after get the correct implementation  from entity-core
 type DefaultBrainViewId = 'https://neuroshapes.org/BrainRegion';

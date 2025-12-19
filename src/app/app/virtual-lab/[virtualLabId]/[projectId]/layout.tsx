@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react';
-
-import { SpaceManagerContainer } from '@/ui/segments/workspaces/space-manager';
-import { Container as AiContainer } from '@/ui/segments/ai/container';
 import { ProjectRootLayout } from '@/ui/layouts/project-root-layout';
+import { Container as AiContainer } from '@/ui/segments/ai/container';
+import { SpaceManagerContainer } from '@/ui/segments/workspaces/space-manager';
 import { WorkspaceTopMenu } from '@/ui/segments/workspaces/top-menu';
 
 type Props = {

@@ -1,28 +1,26 @@
 'use client';
 
-import { isEmpty, isNil, find, filter, reject, isString } from 'es-toolkit/compat';
-import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
-import { JSX, ReactNode, useEffect, useState, isValidElement } from 'react';
 import { Button, Empty, Modal } from 'antd';
+import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
+import { filter, find, isEmpty, isNil, isString, reject } from 'es-toolkit/compat';
 import { useParams } from 'next/navigation';
-
-import { AgentType, MeasurementStatistic } from '@/api/entitycore/types/shared/global';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { PreviewThumbnail } from '@/features/thumbnail/preview';
-import { tryCatch } from '@/api/utils';
-
+import { isValidElement, type JSX, type ReactNode, useEffect, useState } from 'react';
+import type { EntityCoreDensityObjectTypes, ICellMorphology } from '@/api/entitycore/types';
 import type { ICellMorphologyExpanded } from '@/api/entitycore/types/entities/cell-morphology';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreDensityObjectTypes, ICellMorphology } from '@/api/entitycore/types';
-import type { WorkspaceContext } from '@/types/common';
-import {
-  type AssetLabel,
-  type EntityCoreIdentifiable,
-  type EntityCoreResource,
-  type IContributor,
-  type ILicense,
-  type MeasurementBase,
+import type {
+  AssetLabel,
+  EntityCoreIdentifiable,
+  EntityCoreResource,
+  IContributor,
+  ILicense,
+  MeasurementBase,
 } from '@/api/entitycore/types/shared/global';
+import { AgentType, MeasurementStatistic } from '@/api/entitycore/types/shared/global';
+import { tryCatch } from '@/api/utils';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { PreviewThumbnail } from '@/features/thumbnail/preview';
+import type { WorkspaceContext } from '@/types/common';
 
 export const EmptyValue = '—';
 
@@ -71,14 +69,14 @@ export const renderArray = (array: Array<string | JSX.Element | null>) => {
       if (isValidElement(item)) return item;
       return null;
     }),
-    (o) => !isNil(o)
+    (o) => !isNil(o),
   );
 };
 
 export const renderDictionaryKeys = (
   dictionary: Record<string, string>,
   Component: React.ComponentType<{ field: string; value: string }>,
-  containerClassName?: string
+  containerClassName?: string,
 ) => {
   return (
     <div className={containerClassName}>
@@ -131,17 +129,25 @@ export function RenderCustomField<R extends EntityCoreIdentifiable>({
   useEffect(() => {
     async function getEntity() {
       setPayload({ entity: null, error: null, loading: true });
-      if (entityConfig && entityConfig.api.query.one && entityId) {
+      if (entityConfig?.api.query.one && entityId) {
         const { data, error } = await tryCatch<R, any>(
-          // @ts-ignore
-          entityConfig.api.query.one({ id: entityId, context: { virtualLabId, projectId } })
+          // @ts-expect-error
+          entityConfig.api.query.one({
+            id: entityId,
+            context: { virtualLabId, projectId },
+          }),
         );
         if (data) setPayload({ entity: data, error: null, loading: false });
-        if (error) setPayload({ entity: null, error: 'error loading entity', loading: false });
+        if (error)
+          setPayload({
+            entity: null,
+            error: 'error loading entity',
+            loading: false,
+          });
       }
     }
     getEntity();
-  }, [entityId, entityType, virtualLabId, projectId, entityConfig]);
+  }, [entityId, virtualLabId, projectId, entityConfig]);
 
   return (
     <CustomComponent loading={payload?.loading} error={payload?.error} data={payload?.entity} />
@@ -171,7 +177,7 @@ export function renderPreview<T extends EntityCoreResource>(
   loadingClassName?: string,
   fill?: boolean,
   customRender?: (src: string) => ReactNode,
-  target?: TThumbnailServiceTarget
+  target?: TThumbnailServiceTarget,
 ): JSX.Element;
 
 export function renderPreview<T extends EntityCoreResource>(
@@ -183,7 +189,7 @@ export function renderPreview<T extends EntityCoreResource>(
   fill?: boolean,
   customRender?: (src: string) => ReactNode,
   target?: TEntityAssetTarget,
-  label?: AssetLabel
+  label?: AssetLabel,
 ): JSX.Element;
 
 export function renderPreview<T extends EntityCoreResource>(
@@ -195,7 +201,7 @@ export function renderPreview<T extends EntityCoreResource>(
   fill?: boolean,
   customRender?: (src: string) => ReactNode,
   target?: TThumbnailServiceTarget | TEntityAssetTarget,
-  label?: AssetLabel
+  label?: AssetLabel,
 ) {
   if (target === PreviewTarget.AssetLabel) {
     return (
@@ -230,9 +236,13 @@ export function renderPreview<T extends EntityCoreResource>(
 
 export default function getMeasurements(r: EntityCoreDensityObjectTypes) {
   const mean = find(r.measurements, { name: MeasurementStatistic.mean });
-  const std = find(r.measurements, { name: MeasurementStatistic.standard_deviation });
+  const std = find(r.measurements, {
+    name: MeasurementStatistic.standard_deviation,
+  });
   const ss = find(r.measurements, { name: MeasurementStatistic.sample_size });
-  const se = find(r.measurements, { name: MeasurementStatistic.standard_error });
+  const se = find(r.measurements, {
+    name: MeasurementStatistic.standard_error,
+  });
   return { mean, std, ss, se };
 }
 
@@ -256,7 +266,7 @@ export function renderMeanStd({
 
 export function renderLocalizedNumber(
   value: number | null,
-  options?: Intl.NumberFormatOptions
+  options?: Intl.NumberFormatOptions,
 ): string {
   if (typeof value !== 'number' || Number.isNaN(value)) return EmptyValue;
 
@@ -283,14 +293,14 @@ export const renderMorphologyMeasurement = (
   structuralDomain: string,
   label: string,
   measurementType: string,
-  showUnits?: boolean
+  showUnits?: boolean,
 ): ReactNode => {
   if (!morphology || !('measurement_annotation' in morphology)) return EmptyValue;
 
   const measurementKinds = morphology.measurement_annotation.measurement_kinds;
 
   const measurementKind = measurementKinds?.find(
-    (mk) => mk.structural_domain === structuralDomain && mk.pref_label === label
+    (mk) => mk.structural_domain === structuralDomain && mk.pref_label === label,
   );
 
   const measurement = measurementKind?.measurement_items.find((mi) => mi.name === measurementType);
@@ -311,13 +321,14 @@ export const renderMorphologyMeasurement = (
 function ContributorsModalTrigger({
   contributors,
 }: {
-  contributors: Array<IContributor>;
+  contributors: IContributor[];
 }): React.ReactElement {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <>
       <Button type="link" onClick={() => setIsOpen(true)} className="mt-2 h-auto p-0 text-gray-600">
-        View {contributors.length} Contributor{contributors.length > 1 ? 's' : ''}
+        View {contributors.length} Contributor
+        {contributors.length > 1 ? 's' : ''}
       </Button>
       {renderContributorsModal(contributors, isOpen, () => setIsOpen(false), 'modal')}
     </>
@@ -325,16 +336,18 @@ function ContributorsModalTrigger({
 }
 
 export const renderContributorsModal = (
-  contributors: Array<IContributor>,
+  contributors: IContributor[],
   open: boolean,
   onClose: () => void,
-  mode: 'modal' | 'inline' = 'modal'
+  mode: 'modal' | 'inline' = 'modal',
 ): ReactNode => {
   const getName = (c: IContributor) =>
-    `${('given_name' in c.agent ? c.agent.given_name : '') + ' ' + ('family_name' in c.agent ? c.agent.family_name : '')}`.trim() ||
+    `${`${'given_name' in c.agent ? c.agent.given_name : ''} ${'family_name' in c.agent ? c.agent.family_name : ''}`}`.trim() ||
     c.agent.pref_label;
 
-  const consortia = filter(contributors, { agent: { type: AgentType.Consortium } });
+  const consortia = filter(contributors, {
+    agent: { type: AgentType.Consortium },
+  });
   const other = reject(contributors, { agent: { type: AgentType.Consortium } });
 
   const sortedContributors = [...consortia, ...other];

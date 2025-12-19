@@ -1,19 +1,17 @@
+import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { memo } from 'react';
-import Link from 'next/link';
-
-import CardContainer from '@/features/entities/me-model/detail-view/card-viewers/card-container';
+import type { IEModel } from '@/api/entitycore/types/entities/e-model';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
   EmptyValue,
   renderArray,
   renderEmptyOrValue,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
-import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import CardContainer from '@/features/entities/me-model/detail-view/card-viewers/card-container';
 import { classNames } from '@/util/utils';
-
-import type { IEModel } from '@/api/entitycore/types/entities/e-model';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 type Props = {
   mode: 'select' | 'summary';
@@ -46,9 +44,15 @@ function EModelOverviewCard({ mode = 'summary', data, reselectLink = false }: Pr
     });
 
     const details = [
-      { label: 'Exemplar morphology', value: renderEmptyOrValue(data.exemplar_morphology.name) },
+      {
+        label: 'Exemplar morphology',
+        value: renderEmptyOrValue(data.exemplar_morphology.name),
+      },
       { label: 'Optimization target', value: EmptyValue },
-      { label: 'Brain Region', value: renderEmptyOrValue(data.brain_region.name) },
+      {
+        label: 'Brain Region',
+        value: renderEmptyOrValue(data.brain_region.name),
+      },
       {
         label: 'E-Type',
         value: renderEmptyOrValue(renderArray(data.etypes?.map((m) => m.pref_label) || [])),
@@ -68,7 +72,7 @@ function EModelOverviewCard({ mode = 'summary', data, reselectLink = false }: Pr
           renderPreview(
             // TODO: use renderImage (emodel has a thumbnail image in `image`)
             data,
-            { height: 200, width: 200 }
+            { height: 200, width: 200 },
           )
           // selectedEModel && <EModelThumbnail emodel={selectedEModel} />
         }
@@ -85,7 +89,7 @@ function EModelOverviewCard({ mode = 'summary', data, reselectLink = false }: Pr
       }}
       className={classNames(
         'border-neutral-2 text-neutral-4 hover:bg-primary-7 flex h-48 w-full',
-        'items-center rounded-lg border pl-32 text-4xl hover:text-white'
+        'items-center rounded-lg border pl-32 text-4xl hover:text-white',
       )}
     >
       Select {title.toLowerCase()}
@@ -97,7 +101,7 @@ export default memo(EModelOverviewCard);
 
 // TODO: keep this one until migrate simulations
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function EModelThumbnail({ emodel }: { emodel: IEModel }) {
+function _EModelThumbnail({ emodel }: { emodel: IEModel }) {
   // if (!emodel.image)
   //   return <Empty description="No thumbnail available" image={Empty.PRESENTED_IMAGE_SIMPLE} />;
 

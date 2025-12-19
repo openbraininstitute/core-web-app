@@ -1,6 +1,6 @@
 import { serviceAiAgentThreadList } from '../../api';
-import { Signal } from '../signal';
-import {
+import type { Signal } from '../signal';
+import type {
   AiAssistantHistory,
   AiAssistantHistoryItem,
   AssistantContext,
@@ -21,7 +21,10 @@ export class HistoryManager {
   private hasMorePages = false;
 
   constructor(
-    private readonly target: { history: Signal<AiAssistantHistory>; error: Signal<AssistantError> }
+    private readonly target: {
+      history: Signal<AiAssistantHistory>;
+      error: Signal<AssistantError>;
+    },
   ) {}
 
   get hasMore() {
@@ -99,7 +102,10 @@ export class HistoryManager {
         return item;
       });
     } catch (ex) {
-      this.target.error.set({ message: 'Unable to load chat history!', reason: ex });
+      this.target.error.set({
+        message: 'Unable to load chat history!',
+        reason: ex,
+      });
       return [];
     } finally {
       this.isProcessing = false;
@@ -107,7 +113,7 @@ export class HistoryManager {
   }
 
   private async getLastThread(
-    context: AssistantContext
+    context: AssistantContext,
   ): Promise<AiAssistantHistoryItem | undefined> {
     try {
       const { accessToken, projectId, virtualLabId } = context;
@@ -129,7 +135,10 @@ export class HistoryManager {
       };
       return thread;
     } catch (ex) {
-      this.target.error.set({ message: 'Unable to load chat history last item!', reason: ex });
+      this.target.error.set({
+        message: 'Unable to load chat history last item!',
+        reason: ex,
+      });
       return undefined;
     }
   }

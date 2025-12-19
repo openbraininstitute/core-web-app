@@ -1,9 +1,8 @@
 import { InputNumber } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 import { ArrowsHorizontal } from '@/components/icons/Arrows-horizantal';
+import type { GteLteValue, TCoreFilter } from '@/entity-configuration/definitions/types';
 import { cn } from '@/utils/css-class';
-
-import type { TCoreFilter, GteLteValue } from '@/entity-configuration/definitions/types';
 
 type Props = {
   filter: TCoreFilter;
@@ -30,7 +29,7 @@ export function ValueRange({ filter, onChange }: Props) {
         lte: maxValue,
       });
     },
-    [maxValue, onChange]
+    [maxValue, onChange],
   );
 
   const handleMaxChange = useCallback(
@@ -41,7 +40,7 @@ export function ValueRange({ filter, onChange }: Props) {
         lte: value,
       });
     },
-    [minValue, onChange]
+    [minValue, onChange],
   );
 
   return (
@@ -52,7 +51,7 @@ export function ValueRange({ filter, onChange }: Props) {
             id="value-range-min"
             className={cn(
               'border-neutral-3 w-full border bg-transparent text-white focus-within:bg-transparent! hover:bg-transparent!',
-              '[&_.ant-input-number-input]:placeholder:text-primary-4 [&_.ant-input-number-input]:font-bold! [&_.ant-input-number-input]:text-white!'
+              '[&_.ant-input-number-input]:placeholder:text-primary-4 [&_.ant-input-number-input]:font-bold! [&_.ant-input-number-input]:text-white!',
             )}
             value={minValue}
             onChange={handleMinChange}
@@ -71,7 +70,7 @@ export function ValueRange({ filter, onChange }: Props) {
             placeholder="–"
             className={cn(
               'border-neutral-3 w-full border bg-transparent text-white focus-within:bg-transparent! hover:bg-transparent!',
-              '[&_.ant-input-number-input]:placeholder:text-primary-4 [&_.ant-input-number-input]:font-bold! [&_.ant-input-number-input]:text-white!'
+              '[&_.ant-input-number-input]:placeholder:text-primary-4 [&_.ant-input-number-input]:font-bold! [&_.ant-input-number-input]:text-white!',
             )}
             size="large"
           />

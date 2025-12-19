@@ -3,16 +3,14 @@
 import isNil from 'es-toolkit/compat/isNil';
 
 import type { ReactNode } from 'react';
-
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import EmptyCircleIcon from '@/components/icons/EmptyCircle';
-import PartialCircleIcon from '@/components/icons/PartialCircle';
 import FullCircleIcon from '@/components/icons/FullCircle';
+import PartialCircleIcon from '@/components/icons/PartialCircle';
 import TriangleIcon from '@/components/icons/Triangle';
-import { ActivityDict } from '@/ui/segments/workflows/elements/helpers';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
+import { ActivityDict } from '@/ui/segments/workflows/elements/helpers';
 
 export const ACTIVITY_DEFAULT_PAGE_SIZE = 5;
 
@@ -107,7 +105,10 @@ export const Scales: Partial<
 };
 
 // here the function should return the available activities for the scale as build , simulate
-export const getScaleArray = (): Array<{ label: string; value: TExtendedEntitiesTypeDict }> => {
+export const getScaleArray = (): Array<{
+  label: string;
+  value: TExtendedEntitiesTypeDict;
+}> => {
   return Object.entries(Scales).map(([key, value]) => {
     return {
       label: value.title,
@@ -117,7 +118,7 @@ export const getScaleArray = (): Array<{ label: string; value: TExtendedEntities
 };
 
 export const getScaleAvailableActivities = (
-  scaleType: TExtendedEntitiesTypeDict
+  scaleType: TExtendedEntitiesTypeDict,
 ): Array<{ label: string; value: TActivityValue }> => {
   const scale = Scales[scaleType];
   if (!scale) {

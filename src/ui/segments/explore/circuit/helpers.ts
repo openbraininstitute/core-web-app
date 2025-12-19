@@ -1,10 +1,9 @@
-import { atomWithReset } from 'jotai/utils';
 import { keyBy } from 'es-toolkit/compat';
 import { atom } from 'jotai';
-
+import { atomWithReset } from 'jotai/utils';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { HierarchyNode, HierarchyTreeResponse } from '@/api/entitycore/types/shared/hierarchy';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export const CircuitRepresentationView = {
   Flat: 'flat',
@@ -44,7 +43,7 @@ export function getAllCircuitIds(tree: HierarchyTreeResponse): string[] {
  * @param node The node whose descendants you want to count.
  * @returns Total number of descendant sub_circuits.
  */
-export type ICircuitEnriched = ICircuit & { sub_circuits: Array<ICircuitEnriched> };
+export type ICircuitEnriched = ICircuit & { sub_circuits: ICircuitEnriched[] };
 
 export function countDeepSubCircuits(node: ICircuitEnriched): number {
   if (!node.sub_circuits || node.sub_circuits.length === 0) {
@@ -80,17 +79,17 @@ export function findNodeInTree(roots: HierarchyNode[], targetId: string): Hierar
 export function filterAndEnrichTree(
   nodes: HierarchyNode[],
   filteredIds: Set<string>,
-  fullById: Record<string, ICircuit & { sub_circuits: ICircuit; children: ICircuit }>
+  fullById: Record<string, ICircuit & { sub_circuits: ICircuit; children: ICircuit }>,
 ): HierarchyOutputNode[];
 export function filterAndEnrichTree(
   nodes: HierarchyNode[],
   filteredIds: Set<string>,
-  fullById: Record<string, ICircuit>
+  fullById: Record<string, ICircuit>,
 ): HierarchyOutputNode[];
 export function filterAndEnrichTree<T extends ICircuit>(
   nodes: HierarchyNode[],
   filteredIds: Set<string>,
-  fullById: Record<string, T>
+  fullById: Record<string, T>,
 ): HierarchyOutputNode[] {
   return nodes
     .map((node) => {
@@ -127,7 +126,7 @@ export function collectIdsFromNode(root: HierarchyNode): string[] {
 export function buildFilteredHierarchyTree(
   hierarchy: HierarchyTreeResponse,
   result: EntityCoreResponse<ICircuit>,
-  filteredResult: EntityCoreResponse<ICircuit>
+  filteredResult: EntityCoreResponse<ICircuit>,
 ): HierarchyOutputNode[] {
   const fullById = keyBy(result.data, 'id') as Record<
     string,

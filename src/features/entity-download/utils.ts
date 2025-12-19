@@ -1,19 +1,18 @@
-import fs from 'fs/promises';
-import fsPath from 'path';
-import { Readable } from 'stream';
-
+import fs from 'node:fs/promises';
+import fsPath from 'node:path';
+import { Readable } from 'node:stream';
 import { format } from 'date-fns';
 import get from 'es-toolkit/compat/get';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 import template from 'es-toolkit/compat/template';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { TEntityTypeDict } from '@/api/entitycore/types';
-import { IEntity } from '@/api/entitycore/types/entities/entity';
-import { IAsset } from '@/api/entitycore/types/shared/global';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
+import type { IEntity } from '@/api/entitycore/types/entities/entity';
+import type { IAsset } from '@/api/entitycore/types/shared/global';
 import { getSession } from '@/auth-fetch';
-import { CsvEntryBase, FileEntry } from '@/features/entity-download/types';
-import { WorkspaceContext } from '@/types/common';
+import type { CsvEntryBase, FileEntry } from '@/features/entity-download/types';
+import type { WorkspaceContext } from '@/types/common';
 
 const README_TEMPLATE_DIR = './src/features/entity-download/readme-templates';
 
@@ -155,7 +154,7 @@ export async function createTemplateFileEntry(entityType: TEntityTypeDict): Prom
   const templatePath = fsPath.join(
     process.cwd(),
     README_TEMPLATE_DIR,
-    `${kebabCase(entityType)}.md`
+    `${kebabCase(entityType)}.md`,
   );
   const templateContent = await fs.readFile(templatePath, 'utf-8');
 

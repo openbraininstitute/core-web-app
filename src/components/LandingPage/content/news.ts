@@ -1,10 +1,9 @@
 /* eslint-disable no-param-reassign */
-import { PortableTextBlock } from 'next-sanity';
-import { tryType, typeImage } from './_common';
-import { ContentForRichText, typeBooleanOrNull, typeStringOrNull } from './types';
-
+import type { PortableTextBlock } from 'next-sanity';
 import { useSanity } from '@/services/sanity';
 import { isNumber } from '@/util/type-guards';
+import { tryType, typeImage } from './_common';
+import { type ContentForRichText, typeBooleanOrNull, typeStringOrNull } from './types';
 
 export interface ContentForNewsItem {
   id: string;
@@ -84,7 +83,7 @@ export function useSanityContentForNewsItem(slug: string): ContentForNewsItem | 
         thumbnailIntroduction,
         isExternalLink
       }`,
-      isContentForNewsItem
+      isContentForNewsItem,
     ) ?? null
   );
 }
@@ -112,8 +111,8 @@ export function useSanityContentForNewsList(length = 0, start = 0): ContentForNe
         "isExternalLink": isExternalLink
 
 }`,
-      isContentForNewsList
-    ) ?? []
+      isContentForNewsList,
+    ) ?? [],
   );
 }
 

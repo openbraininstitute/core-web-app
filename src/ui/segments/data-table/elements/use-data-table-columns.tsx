@@ -1,24 +1,21 @@
 'use client';
 
-import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
-import { throttle, isString } from 'es-toolkit/compat';
-import { ColumnProps } from 'antd/lib/table';
-
-import { fieldsDefinitionRegistry, getFieldDefinition } from '@/entity-configuration/definitions';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { classNames, fieldTitleSentenceCase } from '@/util/utils';
-
+import type { ColumnProps } from 'antd/lib/table';
+import { isString, throttle } from 'es-toolkit/compat';
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { fieldsDefinitionRegistry, getFieldDefinition } from '@/entity-configuration/definitions';
+import type { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import {
-  SortOrder,
   type OrderShape,
+  SortOrder,
   type TSortOrder,
   type TSortState,
 } from '@/entity-configuration/definitions/types';
-
+import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
 import styles from '@/ui/segments/data-table/elements/table.module.css';
+import { classNames, fieldTitleSentenceCase } from '@/util/utils';
 
 type ResizeInit = {
   key: string | null;
@@ -63,7 +60,7 @@ function isOrderObject(order: OrderShape): order is { property: string; value: s
  */
 export function getOrderValue(
   order: OrderShape | undefined,
-  dataType?: TExtendedEntitiesTypeDict
+  dataType?: TExtendedEntitiesTypeDict,
 ): string | undefined {
   if (!order) return undefined;
 
@@ -100,7 +97,7 @@ export function useDataTableColumns<T>({
     [...keys].map((key) => ({
       key,
       width: COL_SIZING.default,
-    }))
+    })),
   );
 
   useEffect(() => {
@@ -112,7 +109,7 @@ export function useDataTableColumns<T>({
           key,
           width: field?.style?.width ?? getProvisionedWidth(field?.title, field?.unit),
         };
-      })
+      }),
     );
   }, [keys]);
 
@@ -130,7 +127,7 @@ export function useDataTableColumns<T>({
         order,
       });
     },
-    [setSortState, sortState]
+    [setSortState, sortState],
   );
 
   const updateColumnWidths = useCallback(
@@ -151,7 +148,7 @@ export function useDataTableColumns<T>({
         ...columnWidths.slice(colWidthIndex + 1),
       ]);
     },
-    [columnWidths]
+    [columnWidths],
   );
 
   const onMouseDown = useCallback(
@@ -164,17 +161,17 @@ export function useDataTableColumns<T>({
 
       const handleMouseMove = throttle(
         (moveEvent: MouseEvent) => updateColumnWidths(resizeInit, moveEvent.clientX),
-        200
+        200,
       );
 
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener(
         'mouseup',
         () => window.removeEventListener('mousemove', handleMouseMove),
-        { once: true } // Auto-removeEventListener
+        { once: true }, // Auto-removeEventListener
       );
     },
-    [updateColumnWidths]
+    [updateColumnWidths],
   );
 
   const getOrderDirection = useCallback(
@@ -188,7 +185,7 @@ export function useDataTableColumns<T>({
           return undefined;
       }
     },
-    [sortState?.field, sortState?.order]
+    [sortState?.field, sortState?.order],
   );
 
   const columns: ColumnProps<T>[] = useMemo(
@@ -210,7 +207,7 @@ export function useDataTableColumns<T>({
           ),
           className: classNames(
             'text-primary-7 cursor-pointer before:!content-none',
-            term?.className
+            term?.className,
           ),
           sorter: isSortable,
           ellipsis: true,
@@ -236,7 +233,7 @@ export function useDataTableColumns<T>({
         });
         return acc;
       }, initialColumns),
-    [columnWidths, initialColumns, keys, onMouseDown, columnOrderBy, getOrderDirection, dataType]
+    [columnWidths, initialColumns, keys, onMouseDown, columnOrderBy, getOrderDirection, dataType],
   );
 
   if (dataType) {

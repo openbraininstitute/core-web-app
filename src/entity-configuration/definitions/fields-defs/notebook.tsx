@@ -1,9 +1,8 @@
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-
-import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { INotebook } from '@/api/entitycore/types/entities/notebook';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import ActionPopover from '@/ui/segments/notebooks/table/ActionPopover';
-import { INotebook } from '@/api/entitycore/types/entities/notebook';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.NotebookScale]: {

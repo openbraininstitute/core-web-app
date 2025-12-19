@@ -1,13 +1,11 @@
-import React from 'react';
 import { isNil } from 'es-toolkit/compat';
-
-import { createFilterItemComponent } from './create-filter-item-component';
-
-import { type TCoreFilter, CoreFilterValues } from '@/entity-configuration/definitions/types';
-import { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
+import React from 'react';
+import type { Facets } from '@/api/entitycore/types/shared/response';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
-import { Facets } from '@/api/entitycore/types/shared/response';
+import type { CoreFilterValues, TCoreFilter } from '@/entity-configuration/definitions/types';
+import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 import { fieldTitleSentenceCase } from '@/util/utils';
+import { createFilterItemComponent } from './create-filter-item-component';
 
 export function useFilterItems(
   filters: TCoreFilter[],
@@ -17,7 +15,7 @@ export function useFilterItems(
   setFilterValues: React.Dispatch<React.SetStateAction<CoreFilterValues>>,
   activeColumns: string[] | undefined,
   showDisplayTrigger: boolean,
-  onToggleActive: (key: string) => void
+  onToggleActive: (key: string) => void,
 ) {
   return React.useMemo(
     () =>
@@ -35,15 +33,13 @@ export function useFilterItems(
                     facets,
                     filterValues,
                     setFilterValues,
-                    item.filterData
+                    item.filterData,
                   )
                 : undefined,
             display: item?.isDisplayable && activeColumns?.includes(filter.field),
             label: fieldTitleSentenceCase(item?.title ?? ''),
             type: filter.type,
-            toggleFunc: showDisplayTrigger
-              ? () => onToggleActive && onToggleActive(filter.field)
-              : undefined, // There are cases where we don't want to show the display trigger. Undefined toggleFunc achieves this.
+            toggleFunc: showDisplayTrigger ? () => onToggleActive?.(filter.field) : undefined, // There are cases where we don't want to show the display trigger. Undefined toggleFunc achieves this.
           };
         })
         .filter((item) => showDisplayTrigger || !isNil(item.content)), // If showDisplayTrigger is false and content is undefined that filter is not needed.
@@ -56,6 +52,6 @@ export function useFilterItems(
       showDisplayTrigger,
       onToggleActive,
       entity,
-    ]
+    ],
   );
 }

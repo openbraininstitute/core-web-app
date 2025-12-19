@@ -1,20 +1,19 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
-import { useState } from 'react';
 import { Form } from 'antd';
-
-import countries from '../../../../../public/static/country';
-import { ProfileFormData } from './types';
-import { Label, XInput } from './elements';
-import { validate, validateEMail } from './validator';
-import { useFieldsChangeHandler, useSubmitCallback } from './hooks';
-import { Select } from '@/components/VirtualLab/create-entity-flows/common/inputs';
-import { UserProfileResponse } from '@/api/virtual-lab-svc/queries/types';
+import { useState } from 'react';
+import type { UserProfileResponse } from '@/api/virtual-lab-svc/queries/types';
 import { useAppNotification } from '@/components/notification';
+import { Select } from '@/components/VirtualLab/create-entity-flows/common/inputs';
 import { Button } from '@/ui/molecules/button';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
+import countries from '../../../../../public/static/country';
+import { Label, XInput } from './elements';
+import { useFieldsChangeHandler, useSubmitCallback } from './hooks';
+import type { ProfileFormData } from './types';
+import { validate, validateEMail } from './validator';
 
 type ProfileProps = {
   data: UserProfileResponse | undefined;
@@ -85,14 +84,17 @@ export function Profile({ data }: ProfileProps) {
                   '[&_.ant-select-selector]:border-0! [&_.ant-select-selector]:bg-transparent! focus:[&_.ant-select-selector]:ring-0!',
                   'hover:border-primary-4 bg-transparent! hover:bg-transparent! [&_.ant-select-selection-item]:text-white!',
                   '[&_.ant-select-selection-item]:font-bold! [&_.ant-select-selection-search-input]:text-white!',
-                  '[&_.ant-select-selection-placeholder]:text-white!'
+                  '[&_.ant-select-selection-placeholder]:text-white!',
                 )}
                 popupClassName="rounded-none shadow-md"
                 onSearch={(va) => {
                   const countriesObject = countries
                     .sort((a, b) => a.name.localeCompare(b.name))
                     .filter((o) => o.name.toLowerCase().includes(va.toLowerCase()));
-                  return countriesObject.map((o) => ({ label: o.name, value: o.name }));
+                  return countriesObject.map((o) => ({
+                    label: o.name,
+                    value: o.name,
+                  }));
                 }}
                 options={countries
                   .sort((a, b) => a.name.localeCompare(b.name))
@@ -140,7 +142,7 @@ export function Profile({ data }: ProfileProps) {
                 'hover:bg-primary-8/40',
                 'hover:shadow-[1px_2px_4px_0px_#00000099]',
                 'shadow-[8px_12px_24px_0px_#00000099]',
-                'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
+                'shadow-[-8px_-8px_42px_0px_#FFFFFF29]',
               )}
               disabled={isPending}
             >

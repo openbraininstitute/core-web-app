@@ -2,14 +2,14 @@ import { log } from '@/utils/logger';
 
 export async function trackDownloadProgress(
   fn: (...params: any) => Promise<Response>,
-  onProgress?: (progress: number) => void
-): Promise<Array<Uint8Array>> {
+  onProgress?: (progress: number) => void,
+): Promise<Uint8Array[]> {
   const response = await fn();
   const reader = response.body?.getReader();
   const contentLength = +(response.headers?.get('Content-Length') ?? 0);
 
   let receivedLength = 0;
-  const chunks: Array<Uint8Array> = [];
+  const chunks: Uint8Array[] = [];
 
   // eslint-disable-next-line no-constant-condition
   while (true) {

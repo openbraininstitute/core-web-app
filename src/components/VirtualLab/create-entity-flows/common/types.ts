@@ -1,4 +1,4 @@
-import { Role } from '@/api/virtual-lab-svc/queries/types';
+import type { Role } from '@/api/virtual-lab-svc/queries/types';
 
 export const MemberRoleMap = {
   member: 'member',
@@ -24,7 +24,10 @@ export const SIZE_MAP = {
 type VirtualLabFlowSteps = 'information' | 'plans' | 'members' | 'payment' | 'contact-us';
 export type ProjectFlowSteps = 'virtual-lab' | 'information' | 'members';
 
-export type Step = { id: VirtualLabFlowSteps | ProjectFlowSteps; label: string };
+export type Step = {
+  id: VirtualLabFlowSteps | ProjectFlowSteps;
+  label: string;
+};
 
 export const projectFlowSteps: Array<{ id: ProjectFlowSteps; label: string }> = [
   { id: 'virtual-lab', label: 'Virtual lab' },

@@ -1,16 +1,14 @@
 'use client';
 
 import { Button, ConfigProvider } from 'antd';
-import { ColumnGroupType, ColumnType } from 'antd/es/table';
+import type { ColumnGroupType, ColumnType } from 'antd/es/table';
 import { usePathname } from 'next/navigation';
-import { MouseEvent, ReactNode, useEffect, useState } from 'react';
-
+import { type MouseEvent, type ReactNode, useEffect, useState } from 'react';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import ChevronLast from '@/components/icons/ChevronLast';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { classNames } from '@/util/utils';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 type OnCellClick<T> = (basePath: string, record: T, type: TExtendedEntitiesTypeDict) => void;
 
@@ -121,34 +119,34 @@ export function useScrollNav(element?: HTMLDivElement): Record<'left' | 'right',
         container.removeEventListener('scroll', handleOnScroll);
       }
     };
-  }, [element]);
+  }, [element, updateDisplayControls]);
 
   const right = useTheme(
     <Button
       className={classNames(
         'flex items-center justify-center',
-        !displayFloatButtons.right && 'collapse'
+        !displayFloatButtons.right && 'collapse',
       )}
       onClick={handleScrollToRight}
       icon={<ChevronLast className="" />}
       disabled={!displayFloatButtons.right}
       shape="circle"
       size="large"
-    />
+    />,
   );
 
   const left = useTheme(
     <Button
       className={classNames(
         'flex items-center justify-center',
-        !displayFloatButtons.left && 'collapse'
+        !displayFloatButtons.left && 'collapse',
       )}
       onClick={handleScrollToLeft}
       icon={<ChevronLast className="rotate-180 transform" />}
       disabled={!displayFloatButtons.left}
       shape="circle"
       size="large"
-    />
+    />,
   );
 
   return {

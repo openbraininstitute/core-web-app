@@ -1,6 +1,5 @@
-import fs from 'fs/promises';
-import path from 'path';
-
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { NextResponse } from 'next/server';
 
 export async function GET(_: Request, { params }: { params: Promise<{ name: string }> }) {
@@ -20,7 +19,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ name: stri
     }
     return NextResponse.json(
       { error: 'Failed to read file', code: 'FailedToReadFile' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

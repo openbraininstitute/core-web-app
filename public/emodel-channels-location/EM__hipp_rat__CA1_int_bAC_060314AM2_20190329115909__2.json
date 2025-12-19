@@ -1,33 +1,6 @@
 {
-    "all": [
-        "pas",
-        "kdrb",
-        "na3"
-    ],
-    "somatic": [
-        "kdb",
-        "kmb",
-        "kap",
-        "hd",
-        "can",
-        "cal",
-        "cat",
-        "cagk",
-        "kca",
-        "cacum"
-    ],
-    "axonal": [
-        "kmb",
-        "kap"
-    ],
-    "alldend": [
-        "hd",
-        "can",
-        "cal",
-        "cat",
-        "cagk",
-        "kca",
-        "cacum",
-        "kad"
-    ]
+  "all": ["pas", "kdrb", "na3"],
+  "somatic": ["kdb", "kmb", "kap", "hd", "can", "cal", "cat", "cagk", "kca", "cacum"],
+  "axonal": ["kmb", "kap"],
+  "alldend": ["hd", "can", "cal", "cat", "cagk", "kca", "cacum", "kad"]
 }

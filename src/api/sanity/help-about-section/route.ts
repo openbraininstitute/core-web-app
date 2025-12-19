@@ -23,7 +23,7 @@ function isContentForAbout(data: unknown): data is AboutContentProps {
         aboutTheAppContent: 'unknown',
         termsAndConditionContent: 'unknown',
       },
-      'ContentForAbout'
+      'ContentForAbout',
     );
     return true;
   } catch (ex) {

@@ -1,30 +1,28 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
+import get from 'es-toolkit/compat/get';
 import { useAtomValue } from 'jotai';
+import dynamic from 'next/dynamic';
+import { useSearchParams } from 'next/navigation';
 import { match } from 'ts-pattern';
 
-import get from 'es-toolkit/compat/get';
-import dynamic from 'next/dynamic';
-
 import { SimulationColors } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import {
-  useCurrentSimulationConfig,
-  useRecordingPlotData,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/hooks';
 import {
   SimulationStatus,
   simulationStatusAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import { cn } from '@/utils/css-class';
-
+import {
+  useCurrentSimulationConfig,
+  useRecordingPlotData,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/hooks';
 import type { PlotData } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { cn } from '@/utils/css-class';
 
 const PlotRenderer = dynamic(
   () => import('@/features/entities/neuron-simulation/experiment/visualization/plot-renderer'),
   {
     ssr: false,
-  }
+  },
 );
 
 export function Results({ sessionId }: { sessionId: string }) {
@@ -87,7 +85,10 @@ export function Results({ sessionId }: { sessionId: string }) {
                   !!value.length && simulationStatus?.status === SimulationStatus.EXECUTED
                 }
                 onlyAmplitudeLegend={false}
-                data={value.map((v, i) => ({ ...v, line: { color: SimulationColors[i] } }))}
+                data={value.map((v, i) => ({
+                  ...v,
+                  line: { color: SimulationColors[i] },
+                }))}
                 isLoading={isLoading}
                 className="h-full w-full"
                 plotConfig={{
@@ -119,7 +120,10 @@ export function Results({ sessionId }: { sessionId: string }) {
                   !!recordData.length && simulationStatus?.status === SimulationStatus.EXECUTED
                 }
                 onlyAmplitudeLegend={false}
-                data={recordData.map((v, i) => ({ ...v, line: { color: SimulationColors[i] } }))}
+                data={recordData.map((v, i) => ({
+                  ...v,
+                  line: { color: SimulationColors[i] },
+                }))}
                 isLoading={isLoading}
                 className="h-full w-full"
                 plotConfig={{
@@ -143,7 +147,7 @@ export function Results({ sessionId }: { sessionId: string }) {
     <div
       className={cn(
         'secondary-scrollbar mb-4 flex h-full w-full flex-col',
-        'gap-4 overflow-x-hidden overflow-y-auto px-5 select-none'
+        'gap-4 overflow-x-hidden overflow-y-auto px-5 select-none',
       )}
     >
       {content}

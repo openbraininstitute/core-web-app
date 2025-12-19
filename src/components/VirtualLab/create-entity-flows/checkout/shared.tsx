@@ -1,11 +1,11 @@
 'use client';
 
 import * as SwitchPrimitives from '@radix-ui/react-switch';
-import { atom } from 'jotai';
 import keyBy from 'es-toolkit/compat/keyBy';
 import map from 'es-toolkit/compat/map';
 import merge from 'es-toolkit/compat/merge';
 import omit from 'es-toolkit/compat/omit';
+import { atom } from 'jotai';
 import { forwardRef } from 'react';
 
 import { getSanityTiers } from '@/api/sanity/client';
@@ -18,7 +18,7 @@ type JsonObject = {
   [key: string]: JsonValue;
 };
 
-type JsonArray = Array<JsonValue>;
+type JsonArray = JsonValue[];
 
 type PriceValue = {
   value: number;
@@ -26,29 +26,29 @@ type PriceValue = {
 };
 
 type TierPrice = {
-  month: Array<PriceValue>;
-  discount: Array<PriceValue>;
-  yearNormal: Array<PriceValue>;
-  yearDiscount: Array<PriceValue>;
+  month: PriceValue[];
+  discount: PriceValue[];
+  yearNormal: PriceValue[];
+  yearDiscount: PriceValue[];
 };
 
 export type TierFeature = {
   title: string;
-  specialLabel?: Array<string>;
-  tooltip?: Array<string>;
+  specialLabel?: string[];
+  tooltip?: string[];
 };
 
 type FeatureCategory = {
   title: string;
   available: boolean;
-  featuresList: Array<TierFeature>;
+  featuresList: TierFeature[];
 };
 export type Tier = {
   id: string;
   title: string;
-  notes?: Array<string>;
+  notes?: string[];
   price?: TierPrice;
-  features: Array<FeatureCategory>;
+  features: FeatureCategory[];
 };
 export type Interval = 'month' | 'year';
 
@@ -94,7 +94,7 @@ export const Switch = forwardRef<
       'data-[state=unchecked]:bg-input border-primary-8 rounded-full border-2 transition-colors',
       'focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden',
       'focus-visible:ring-offset-background data-[state=checked]:bg-primary disabled:cursor-not-allowed disabled:opacity-50',
-      className
+      className,
     )}
     // eslint-disable-next-line react/jsx-props-no-spreading
     {...props}
@@ -104,7 +104,7 @@ export const Switch = forwardRef<
       className={classNames(
         'bg-background pointer-events-none block h-3 w-3 rounded-full shadow-lg ring-0 transition-transform',
         'data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0',
-        thumbCls
+        thumbCls,
       )}
     />
   </SwitchPrimitives.Root>
@@ -171,12 +171,12 @@ function transformData(data: any): TiersData {
   };
 }
 
-const renameAndRemove = (arr: Array<any>, oldKey: string, newKey: string) =>
+const renameAndRemove = (arr: any[], oldKey: string, newKey: string) =>
   map(arr, (obj) =>
-    obj[oldKey] !== undefined ? { ...omit(obj, oldKey), [newKey]: obj[oldKey] } : obj
+    obj[oldKey] !== undefined ? { ...omit(obj, oldKey), [newKey]: obj[oldKey] } : obj,
   );
 
-export async function getAllTiers(): Promise<Array<ExtendedTier>> {
+export async function getAllTiers(): Promise<ExtendedTier[]> {
   const [appTiers, sanityTiers] = await Promise.all([
     listSubscriptionTiers(),
     getSanityTiers()({ next: { revalidate: 3600 } }),

@@ -25,7 +25,7 @@ export default function Hero() {
           className={classNames(
             'absolute inset-0 h-screen w-screen object-cover',
             'transition-opacity duration-1000',
-            videoReady ? 'opacity-100' : 'opacity-0'
+            videoReady ? 'opacity-100' : 'opacity-0',
           )}
           loop
           muted

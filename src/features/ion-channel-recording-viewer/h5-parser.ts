@@ -1,4 +1,4 @@
-import { File, Group, Dataset, Entity } from 'h5wasm';
+import { Dataset, type Entity, type File, Group } from 'h5wasm';
 
 import { logWarn } from '@/utils/logger';
 
@@ -7,8 +7,6 @@ export class H5Parser {
 
   public debug(item?: File | Group | Dataset) {
     if (item instanceof Dataset) {
-      // eslint-disable-next-line no-console
-      console.log(`Dataset(${item.shape})`, this.stringifyAttributes(item));
       return;
     }
 
@@ -19,27 +17,19 @@ export class H5Parser {
     }
   }
 
-  private debugGroup(name: string, entity: Entity | null, indentation: number = 0) {
+  private debugGroup(_name: string, entity: Entity | null, indentation: number = 0) {
     if (!entity) return;
 
-    const indent = `${'|  '.repeat(indentation)}`;
+    const _indent = `${'|  '.repeat(indentation)}`;
     if (this.isGroup(entity)) {
       const group = entity;
-      // eslint-disable-next-line no-console
-      console.log(`${indent}${name}`, this.stringifyAttributes(group));
       for (const key of group.keys()) {
         this.debugGroup(key, group.get(key), indentation + 1);
       }
       return;
     }
     if (this.isDataset(entity)) {
-      const dataset = entity;
-      // eslint-disable-next-line no-console
-      console.log(
-        `${indent}${name}`,
-        this.stringifyAttributes(dataset),
-        ` -  dataset(${dataset.shape})`
-      );
+      const _dataset = entity;
     }
   }
 
@@ -51,7 +41,7 @@ export class H5Parser {
 
   protected getArray<T>(
     path: string[],
-    typeguard: (value: unknown) => value is T = isArray<T>
+    typeguard: (value: unknown) => value is T = isArray<T>,
   ): T | null {
     const dataset = this.get(...path);
     if (!this.isDataset(dataset)) return null;
@@ -113,7 +103,7 @@ export class H5Parser {
     } catch (ex) {
       const msg = ex instanceof Error ? ex.message : `${ex}`;
       throw new Error(
-        `Unable to get path "${path.join('/')}" because of an error at "${journey.join('/')}": ${msg}`
+        `Unable to get path "${path.join('/')}" because of an error at "${journey.join('/')}": ${msg}`,
       );
     }
     return root;
@@ -143,7 +133,7 @@ export class H5Parser {
           attributesNames.length === 0
             ? `This ${entity instanceof Group ? 'Group' : 'Dataset'} has no attribute.`
             : `Available attributes are: ${attributesNames.join(', ')}.`
-        }`
+        }`,
       );
     }
   }

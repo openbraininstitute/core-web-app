@@ -1,21 +1,20 @@
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { PlusOutlined } from '@ant-design/icons';
-
-import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute/event';
-import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useTabs } from '@/components/detail-view-tabs';
+import { config } from '@/config';
+import { type TWorkspaceScope, WorkspaceScope } from '@/constants';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { useTabs } from '@/components/detail-view-tabs';
 import { Button } from '@/ui/molecules/button';
+import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
+import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute/event';
 import {
   makeSelectEntityClickEvent,
   useMiniDetailView,
 } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
-import { config } from '@/config';
-import { TWorkspaceScope, WorkspaceScope } from '@/constants';
 
 const ExploreSections = {
   Public: 'public',
@@ -133,7 +132,7 @@ function DataTabs() {
               className={cn(
                 'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3',
                 'text-base select-none data-[state=active]:font-bold data-[state=active]:text-white',
-                { 'h-12': breakpoint === 'xl' }
+                { 'h-12': breakpoint === 'xl' },
               )}
             >
               {tab.title}

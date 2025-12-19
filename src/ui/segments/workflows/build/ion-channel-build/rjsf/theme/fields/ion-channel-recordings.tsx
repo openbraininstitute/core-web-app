@@ -1,32 +1,30 @@
 'use client';
 
-import { compact, get, isEmpty, snakeCase } from 'es-toolkit/compat';
 import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
-import { isObject, type FieldProps } from '@rjsf/utils';
-import { useState, useCallback, useMemo } from 'react';
+import { type FieldProps, isObject } from '@rjsf/utils';
+import { compact, get, isEmpty, snakeCase } from 'es-toolkit/compat';
 import { useAtom, useSetAtom } from 'jotai';
-
-import { renderMathInText } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers';
+import { useCallback, useMemo, useState } from 'react';
+import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { coreSelectedRowsAtom } from '@/ui/segments/data-table/elements/context';
-import {
-  descriptionClasses,
-  labelClasses,
-} from '@/ui/segments/workflows/build/ion-channel-build/rjsf/theme/classes';
+import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
+import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Badge, BadgeButton } from '@/ui/molecules/badge';
+import { Button } from '@/ui/molecules/button';
+import { Modal } from '@/ui/molecules/modal';
+import { coreSelectedRowsAtom } from '@/ui/segments/data-table/elements/context';
 import {
   CONFIGURATION_RECORDING_STATE_KEY,
   IonChannelRecordingAtomFamily,
 } from '@/ui/segments/workflows/build/ion-channel-build/helpers';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
-import { Badge, BadgeButton } from '@/ui/molecules/badge';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Button } from '@/ui/molecules/button';
-import { Modal } from '@/ui/molecules/modal';
+import { renderMathInText } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers';
+import {
+  descriptionClasses,
+  labelClasses,
+} from '@/ui/segments/workflows/build/ion-channel-build/rjsf/theme/classes';
 import { cn } from '@/utils/css-class';
-
-import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
-import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 
 type RecordingFormData = {
   id_str: string;
@@ -45,11 +43,11 @@ export function RecordingsArrayField(props: FieldProps) {
     (newRecording?: RecordingFormData, suffix?: string) => {
       onChange(
         isObject(newRecording) && !isEmpty(newRecording) ? newRecording : undefined,
-        fieldPathId.path
+        fieldPathId.path,
       );
       onChange(suffix ? snakeCase(suffix) : undefined, ['initialize', 'ion_channel_name']);
     },
-    [onChange, fieldPathId.path]
+    [onChange, fieldPathId.path],
   );
 
   return (
@@ -93,8 +91,8 @@ function RecordingsArrayFieldContent({
   const [recording, updateRecordingStorage] = useAtom(
     useMemo(
       () => IonChannelRecordingAtomFamily(`${CONFIGURATION_RECORDING_STATE_KEY}/${sessionId}`),
-      [sessionId]
-    )
+      [sessionId],
+    ),
   );
 
   const dataKey = compact([
@@ -125,12 +123,12 @@ function RecordingsArrayFieldContent({
       updateRecordingStorage(recording);
       onChange(
         { id_str: recording.id, type: 'IonChannelRecordingFromID' },
-        recording.ion_channel.name
+        recording.ion_channel.name,
       );
       setIsModalOpen(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onChange, isSelectionValid]);
+  }, [onChange, isSelectionValid, recording, updateRecordingStorage]);
 
   const handleModalClose = () => setIsModalOpen(false);
 
@@ -139,14 +137,14 @@ function RecordingsArrayFieldContent({
     onChange(undefined, undefined);
     updateRecordingStorage(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readonly, disabled]);
+  }, [readonly, disabled, onChange, updateRecordingStorage]);
 
   const handleRowsSelected = useCallback(
-    (selectedRows: Array<IIonChannelRecording>) => {
+    (selectedRows: IIonChannelRecording[]) => {
       updateRecordingStorage(selectedRows.at(0) ?? null);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [updateRecordingStorage],
   );
 
   return (
@@ -168,7 +166,7 @@ function RecordingsArrayFieldContent({
           className={cn(
             'border-label relative h-auto min-h-10 w-full justify-start p-1 focus-within:bg-white lg:min-h-12',
             'active:border-primary-8 active:border-2! active:bg-white',
-            'focus-within:bg-white focus-within:shadow-none! focus-within:ring-0!'
+            'focus-within:bg-white focus-within:shadow-none! focus-within:ring-0!',
           )}
           disabled={disabled || readonly}
         >
@@ -179,7 +177,7 @@ function RecordingsArrayFieldContent({
                 variant="outline"
                 className={cn(
                   'flex h-8 items-center gap-1 py-1! lg:h-9',
-                  'hover:bg-neutral-1 hover:text-primary-8'
+                  'hover:bg-neutral-1 hover:text-primary-8',
                 )}
               >
                 <span className="text-primary-9 max-w-[200px] truncate text-base font-semibold lg:text-lg">

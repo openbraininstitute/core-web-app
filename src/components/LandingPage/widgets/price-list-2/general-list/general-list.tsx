@@ -1,7 +1,9 @@
-import React from 'react';
-
-import { ContentForPriceList2GeneralItem, ContentForPriceList2GeneralPriceItem } from '../hooks';
+import type React from 'react';
 import { useCurrency } from '@/components/LandingPage/atoms';
+import type {
+  ContentForPriceList2GeneralItem,
+  ContentForPriceList2GeneralPriceItem,
+} from '../hooks';
 
 import styles from './general-list.module.css';
 
@@ -40,7 +42,7 @@ export default function GeneralList({ value, plans }: GeneralListProps) {
 function getPrice(
   prices: ContentForPriceList2GeneralPriceItem[],
   currency: string,
-  planId: string
+  planId: string,
 ): React.ReactNode {
   const forCurrency = prices.find((p) => p.currency === currency);
   if (!forCurrency) return null;

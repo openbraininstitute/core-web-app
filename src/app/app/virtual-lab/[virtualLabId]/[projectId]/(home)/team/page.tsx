@@ -1,12 +1,10 @@
 import { Suspense } from 'react';
-
-import { ProjectTeamSkeleton } from '@/ui/segments/project/team/team-skeleton';
 import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
 import { getQueryClient, HydrateClient } from '@/query-provider/server';
-import { TeamManager } from '@/ui/segments/project/team/team';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
-
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import { TeamManager } from '@/ui/segments/project/team/team';
+import { ProjectTeamSkeleton } from '@/ui/segments/project/team/team-skeleton';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 export default async function Home({
   params: promisedParams,

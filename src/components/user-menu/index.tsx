@@ -1,7 +1,7 @@
-import { ReactNode } from 'react';
 import Link from 'next/link';
-
 import { useSession } from 'next-auth/react';
+import type { ReactNode } from 'react';
+import { SignOutFill } from '@/components/icons/EditorIcons';
 import {
   Menubar,
   MenubarContent,
@@ -9,7 +9,6 @@ import {
   MenubarMenu,
   MenubarTrigger,
 } from '@/components/Menu';
-import { SignOutFill } from '@/components/icons/EditorIcons';
 import { classNames } from '@/util/utils';
 
 type Props = {
@@ -27,7 +26,7 @@ export default function UserMenu({ children, cls }: Props) {
         <MenubarTrigger
           className={classNames(
             'group text-primary-2 cursor-pointer border-none outline-0 outline-offset-0',
-            cls?.trigger
+            cls?.trigger,
           )}
           style={{ outline: 'none' }}
         >

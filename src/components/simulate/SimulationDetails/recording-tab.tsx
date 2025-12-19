@@ -1,18 +1,18 @@
 'use client';
 
-import { Fragment } from 'react';
 import dynamic from 'next/dynamic';
+import { Fragment } from 'react';
 
 // import PlotRenderer from '@/features/entities/neuron-simulation/experiment/visualization/plot-renderer';
 
-import { PlotData } from '@/services/bluenaas-single-cell/types';
 import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
+import type { PlotData } from '@/services/bluenaas-single-cell/types';
 
 const PlotRenderer = dynamic(
   () => import('@/features/entities/neuron-simulation/experiment/visualization/plot-renderer'),
   {
     ssr: false,
-  }
+  },
 );
 
 type Props = {
@@ -35,7 +35,10 @@ export default function ResultsTab({ recordings }: Props) {
                     name={key}
                     isDownloadable={!!value.length}
                     onlyAmplitudeLegend={false}
-                    data={value.map((v, i) => ({ ...v, line: { color: SIMULATION_COLORS[i] } }))}
+                    data={value.map((v, i) => ({
+                      ...v,
+                      line: { color: SIMULATION_COLORS[i] },
+                    }))}
                     className="min-h-[320px] w-full"
                     plotConfig={{
                       yAxisTitle: 'Voltage [mV]',

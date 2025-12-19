@@ -1,12 +1,10 @@
 import { PortableText } from 'next-sanity';
-import { RefObject } from 'react';
-import { StepProps } from '../type';
-
-import playVideoAtTime from '@/util/play-video-at-time';
-
+import type { RefObject } from 'react';
 import useMouseHover from '@/hooks/useMouveHover';
 import secondsToMMSS from '@/util/convert-seconds-to-minutes';
+import playVideoAtTime from '@/util/play-video-at-time';
 import { classNames } from '@/util/utils';
+import type { StepProps } from '../type';
 import styles from './text-content-bloc.module.css';
 
 export default function SingleStep({
@@ -56,7 +54,7 @@ export default function SingleStep({
       className={classNames(
         'rounded-xl border border-solid text-white transition-all duration-500 ease-in-out',
         backgroundClass,
-        mouseHover ? 'border-primary-6' : 'border-primary-9'
+        mouseHover ? 'border-primary-6' : 'border-primary-9',
       )}
       // eslint-disable-next-line react/jsx-props-no-spreading
       {...mouseHoverProps}
@@ -64,7 +62,7 @@ export default function SingleStep({
       <div
         className={classNames(
           'flex origin-center flex-col items-start transition-all duration-500 ease-in-out',
-          mouseHover || isActive ? 'scale-90' : 'scale-100'
+          mouseHover || isActive ? 'scale-90' : 'scale-100',
         )}
       >
         <div className="text-base font-normal">

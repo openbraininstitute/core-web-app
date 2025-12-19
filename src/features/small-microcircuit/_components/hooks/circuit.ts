@@ -24,10 +24,12 @@ export function useCircuitImageURL(circuitId: string) {
       if (!circuit || !('assets' in circuit)) return;
 
       const asset = circuit.assets.find(
-        (item) => item.label === AssetLabel.simulation_designer_image
+        (item) => item.label === AssetLabel.simulation_designer_image,
       );
       if (!asset) {
-        error({ message: `No image found for circuit "${circuit.name}" (${circuitId})!` });
+        error({
+          message: `No image found for circuit "${circuit.name}" (${circuitId})!`,
+        });
         return;
       }
       try {

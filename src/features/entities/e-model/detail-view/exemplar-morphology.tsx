@@ -1,23 +1,21 @@
-import { useMemo } from 'react';
+import type { ColumnsType } from 'antd/es/table';
 import isString from 'es-toolkit/compat/isString';
 import Link from 'next/link';
-import type { ColumnsType } from 'antd/es/table';
-
-import ErrorMessageLine, {
-  StandardFallback,
-} from '@/features/entities/e-model/detail-view/error-message-line';
-import { Header } from '@/features/entities/e-model/detail-view/header';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { getFieldsDefinition } from '@/entity-configuration/definitions';
-import { BaseTable } from '@/ui/segments/data-table/table';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-
+import { useMemo } from 'react';
 import type {
   EntityCoreObjectTypes,
   ICellMorphology,
   ICellMorphologyExpanded,
 } from '@/api/entitycore/types';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { getFieldsDefinition } from '@/entity-configuration/definitions';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import ErrorMessageLine, {
+  StandardFallback,
+} from '@/features/entities/e-model/detail-view/error-message-line';
+import { Header } from '@/features/entities/e-model/detail-view/header';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { BaseTable } from '@/ui/segments/data-table/table';
 
 const defaultColumnsFields = getFieldsDefinition([
   EntityCoreFields.Preview,

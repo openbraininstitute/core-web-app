@@ -30,7 +30,7 @@ export const ProjectPayloadSchema = z.object({
         id: z.string().uuid().optional().describe('ID of the member to be included'),
         email: z.string().email().describe('Email of the member to be included'),
         role: RoleSchema.describe('Role assigned to the member'),
-      })
+      }),
     )
     .nullable()
     .describe('List of members to be included in the project'),

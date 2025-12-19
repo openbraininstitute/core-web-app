@@ -1,30 +1,28 @@
-import { useState, useCallback, ReactNode, useEffect } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
-import { useAtomValue } from 'jotai';
 import { Spin } from 'antd';
 import type { ExpandableConfig } from 'antd/es/table/interface';
-
+import { useAtomValue } from 'jotai';
+import { type ReactNode, useCallback, useEffect, useState } from 'react';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { resetFilterSignalAtom } from '@/ui/segments/explore/circuit/helpers';
 import { log } from '@/utils/logger';
 
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-
 export interface ExpandableTableState<T extends EntityCoreIdentifiable> {
-  expandedData: Record<string, Array<T> | null>;
+  expandedData: Record<string, T[] | null>;
   loadingRows: Record<string, boolean>;
-  expandedRowKeys: Array<string>;
+  expandedRowKeys: string[];
 }
 
 export interface UseExpandableTableOptions<T extends EntityCoreIdentifiable, P = unknown> {
   // fetch data for expanded row
-  fetcher?: (record: T, params?: P) => Promise<T | Array<T>>;
+  fetcher?: (record: T, params?: P) => Promise<T | T[]>;
   // optional parameters to pass to fetcher
   fetcherParams?: P;
   getRowKey: (record: T) => string;
   // get the id to fetch (e.g., id of circuit)
   getFetchId: (record: T) => string | null;
   // render expanded content
-  renderExpanded: (records: Array<T>, originalRecord: T, isLoading: boolean) => ReactNode;
+  renderExpanded: (records: T[], originalRecord: T, isLoading: boolean) => ReactNode;
   // determine if row is expandable
   isRowExpandable?: (record: T) => boolean;
   // index of the column to render the expand icon
@@ -39,12 +37,12 @@ export interface UseExpandableTableOptions<T extends EntityCoreIdentifiable, P =
  * Reusable hook for managing expandable tables with hierarchy support
  */
 export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown>(
-  options: UseExpandableTableOptions<T, P>
+  options: UseExpandableTableOptions<T, P>,
 ): {
   expandableConfig: ExpandableConfig<T>;
   isRowExpanded: (record: T) => boolean;
   isRowLoading: (record: T) => boolean;
-  getExpandedData: (record: T) => Array<T> | null;
+  getExpandedData: (record: T) => T[] | null;
 } {
   const {
     fetcher,
@@ -81,7 +79,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
       const key = getRowKey(record);
       return key in state.expandedData;
     },
-    [state.expandedData, getRowKey]
+    [state.expandedData, getRowKey],
   );
 
   const isRowLoading = useCallback(
@@ -89,15 +87,15 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
       const key = getRowKey(record);
       return Boolean(state.loadingRows[key]);
     },
-    [state.loadingRows, getRowKey]
+    [state.loadingRows, getRowKey],
   );
 
   const getExpandedData = useCallback(
-    (record: T): Array<T> | null => {
+    (record: T): T[] | null => {
       const key = getRowKey(record);
       return state.expandedData[key] || null;
     },
-    [state.expandedData, getRowKey]
+    [state.expandedData, getRowKey],
   );
 
   const onExpand = useCallback(
@@ -150,7 +148,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
             },
             expandedRowKeys: prev.expandedRowKeys,
           }));
-        } catch (error) {
+        } catch (_error) {
           setState((prev) => ({
             expandedData: {
               ...prev.expandedData,
@@ -167,7 +165,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
         log('warn', 'Row is expandable but no fetcher provided and no fetchId available');
       }
     },
-    [fetcher, fetcherParams, getRowKey, getFetchId, isTopLevel]
+    [fetcher, fetcherParams, getRowKey, getFetchId, isTopLevel],
   );
 
   const expandedRowRender = useCallback(
@@ -190,7 +188,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
 
       return renderExpanded(records, record, isLoading);
     },
-    [state.expandedData, state.loadingRows, getRowKey, renderExpanded]
+    [state.expandedData, state.loadingRows, getRowKey, renderExpanded],
   );
 
   // create expandable config - only use controlled mode for top-level tables

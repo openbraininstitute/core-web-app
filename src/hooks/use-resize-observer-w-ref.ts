@@ -1,4 +1,4 @@
-import { RefObject, useRef, useEffect } from 'react';
+import { type RefObject, useEffect, useRef } from 'react';
 
 /**
  * Hook to observe resize events on a DOM element
@@ -9,7 +9,7 @@ import { RefObject, useRef, useEffect } from 'react';
 
 export default function useResizeObserver<T extends Element>(
   elementRef: RefObject<T | null>,
-  callback: ResizeObserverCallback
+  callback: ResizeObserverCallback,
 ): void {
   const observerRef = useRef<ResizeObserver | null>(null);
 

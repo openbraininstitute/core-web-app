@@ -1,8 +1,8 @@
 'use client';
 
 import { WarningOutlined } from '@ant-design/icons';
-import { ReactNode } from 'react';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 
 import { cn } from '@/utils/css-class';
 
@@ -35,7 +35,7 @@ export function ErrorComponent({
     <div
       className={cn(
         'flex h-full w-full flex-col items-center justify-center bg-white p-6 text-white',
-        cls?.container
+        cls?.container,
       )}
     >
       <div className="mx-auto w-full max-w-md">

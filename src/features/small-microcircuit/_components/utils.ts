@@ -1,5 +1,5 @@
-import { Atom } from 'jotai';
 import uniq from 'es-toolkit/compat/uniq';
+import type { Atom } from 'jotai';
 import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 
 export type Primitive = null | boolean | number | string;
@@ -58,7 +58,7 @@ const simExecStatusListordered = [
 
 export function getLatestSimExecStatus(
   remoteStatus: EntitycoreExecutionStatus,
-  localStatus: EntitycoreExecutionStatus
+  localStatus: EntitycoreExecutionStatus,
 ) {
   const remoteStatusIdx = simExecStatusListordered.indexOf(remoteStatus);
   const localStatusIdx = simExecStatusListordered.indexOf(localStatus);

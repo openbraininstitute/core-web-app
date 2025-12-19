@@ -1,10 +1,10 @@
 import { CheckCircleOutlined, CloseCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { Input, InputNumber, Select } from 'antd';
-import { atom, useAtom } from 'jotai';
+import { type atom, useAtom } from 'jotai';
 import { useEffect, useState } from 'react';
 
-import { EntityTypeDict, IMEModel } from '@/api/entitycore/types';
-import { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 import ModelDetails from '@/features/small-microcircuit/_components/model-details';
 import ParameterSwep from '@/features/small-microcircuit/_components/parameter-sweep';
@@ -12,7 +12,7 @@ import PredefinedNodeset from '@/features/small-microcircuit/_components/predefi
 import Reference from '@/features/small-microcircuit/_components/reference';
 import Tooltip from '@/features/small-microcircuit/_components/tooltip';
 import { isPlainObject } from '@/features/small-microcircuit/_components/utils';
-import { JSONSchema } from '@/features/small-microcircuit/types';
+import type { JSONSchema } from '@/features/small-microcircuit/types';
 
 import { classNames } from '@/util/utils';
 
@@ -89,7 +89,7 @@ export function JSONSchemaForm({
     setState((prev) => {
       return { ...initial, ...prev };
     });
-  }, [stateAtom, setState, schema.properties]);
+  }, [setState, schema.properties]);
 
   function renderInput(k: string, v: JSONSchema) {
     if (
@@ -362,7 +362,7 @@ export function Tab({
         rounded,
         tab === selectedTab
           ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
-          : 'text-primary-8 bg-white'
+          : 'text-primary-8 bg-white',
       )}
     >
       {children}

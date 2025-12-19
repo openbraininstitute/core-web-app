@@ -30,7 +30,7 @@ function isUserJourney(data: unknown): data is UserJourney {
   try {
     assertUserJourney(data);
     return true;
-  } catch (ex) {
+  } catch (_ex) {
     logError('Invalid format for UserJourney:', data);
     return false;
   }
@@ -58,7 +58,7 @@ class UserJourneyTracker {
             artifact: null,
           },
         ],
-        isUserJourney
+        isUserJourney,
       );
       if (this.trim()) this.save();
     } catch (ex) {

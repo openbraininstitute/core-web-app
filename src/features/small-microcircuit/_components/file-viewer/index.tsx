@@ -1,16 +1,14 @@
-import { Suspense, useState, useEffect } from 'react';
-import { match } from 'ts-pattern';
 import { useAtomValue } from 'jotai';
-
-import { File } from '../simulation-files';
-import { jsonFileAtomFamily } from '../atoms';
+import { Suspense, useEffect, useState } from 'react';
+import { match } from 'ts-pattern';
+import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
+import { Loader } from '@/components/loader';
 
 import { EphysViewer } from '@/features/ephys-viewer';
-import { Loader } from '@/components/loader';
-import { classNames } from '@/util/utils';
-
-import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import type { WorkspaceContext } from '@/types/common';
+import { classNames } from '@/util/utils';
+import { jsonFileAtomFamily } from '../atoms';
+import type { File } from '../simulation-files';
 
 type FileViewerProps = {
   file?: File;
@@ -109,7 +107,7 @@ function DataPreloader({ file, context, onLoaded }: FilePreloaderProps) {
       entityType: file.entity.type,
       assetPath: file.assetPath,
       context,
-    })
+    }),
   );
 
   useEffect(() => {
@@ -132,7 +130,7 @@ function JsonFileViewer({ file, context }: JsonFileViewerProps) {
       entityType: file.entity.type,
       assetPath: file.assetPath,
       context,
-    })
+    }),
   );
 
   return <pre>{JSON.stringify(parsedJson, null, 2)}</pre>;

@@ -1,4 +1,3 @@
-import React from 'react';
 import * as SliderUI from '@radix-ui/react-slider';
 import { classNames } from '@/util/utils';
 

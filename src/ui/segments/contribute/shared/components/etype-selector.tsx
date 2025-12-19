@@ -1,24 +1,22 @@
 'use client';
 
 import { CheckOutlined } from '@ant-design/icons';
-import { useMemo, useState } from 'react';
 import { Form } from 'antd';
+import { useMemo, useState } from 'react';
 
 import type { ZodObject, ZodRawShape } from 'zod';
-
-import { AsyncSelectFormItem, type AsyncSelectOption } from '@/ui/molecules/async-select';
 import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
+import type { IEType } from '@/api/entitycore/types/shared/global';
+import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { keyBuilder } from '@/ui/use-query-keys/data';
+import { AsyncSelectFormItem, type AsyncSelectOption } from '@/ui/molecules/async-select';
 import {
   createZodFieldValidator,
   RequiredFieldMarker,
   renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
-
-import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
-import type { IEType } from '@/api/entitycore/types/shared/global';
 
 interface ICustomRendererProps {
   data: AsyncSelectOption<IEType>;
@@ -36,7 +34,7 @@ function CustomRenderer({ data, selected, onSelect }: ICustomRendererProps) {
         className={cn(
           'text-primary-9 hover:bg-background flex h-full w-full cursor-pointer',
           'items-center justify-start px-3 text-left transition-colors duration-150',
-          'p-2 text-base group-first:hover:rounded-t-md xl:p-3 xl:text-lg'
+          'p-2 text-base group-first:hover:rounded-t-md xl:p-3 xl:text-lg',
         )}
         title={data.label}
       >
@@ -48,7 +46,7 @@ function CustomRenderer({ data, selected, onSelect }: ICustomRendererProps) {
           <CheckOutlined
             className={cn(
               'ml-auto text-sm transition-opacity duration-200',
-              selected ? 'opacity-100' : 'opacity-0'
+              selected ? 'opacity-100' : 'opacity-0',
             )}
           />
         </div>
@@ -88,7 +86,7 @@ export function ETypeClassificationSelector<TSchema extends ZodObject<ZodRawShap
         customItemRender: CustomRenderer,
         onSelect: handleSelect,
       }),
-    [virtualLabId, projectId]
+    [virtualLabId, projectId, handleSelect],
   );
 
   return (

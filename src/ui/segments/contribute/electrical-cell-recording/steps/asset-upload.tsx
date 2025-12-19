@@ -3,38 +3,36 @@
 'use client';
 
 import { AlertOutlined, LoadingOutlined } from '@ant-design/icons';
-import { isNil } from 'es-toolkit/compat';
 import { Form, Spin } from 'antd';
+import { isNil } from 'es-toolkit/compat';
 import { useState } from 'react';
-
-import { ELECTRICAL_CELL_RECORDING_FILE_TYPES } from '@/ui/segments/contribute/electrical-cell-recording/schema';
-import { Alert, AlertContent, AlertDescription, AlertIcon, AlertTitle } from '@/ui/molecules/alert';
-import { formatBytes, useFileUpload, type FileWithPreview } from '@/ui/hooks/use-file-upload';
-import { getFileExtension } from '@/ui/segments/contribute/shared/helpers';
 import { resolveNWBFile } from '@/api/one/electrical-cell-recording';
+import { tryCatch } from '@/api/utils';
 import { DownloadAsBoxIcon } from '@/components/icons/buttons';
 import { FileDownloadLine } from '@/components/icons/File';
-import { Button } from '@/ui/molecules/button';
 import { messages } from '@/i18n/en/upload';
-import { tryCatch } from '@/api/utils';
-import { cn } from '@/utils/css-class';
-
+import { type FileWithPreview, formatBytes, useFileUpload } from '@/ui/hooks/use-file-upload';
+import { Alert, AlertContent, AlertDescription, AlertIcon, AlertTitle } from '@/ui/molecules/alert';
+import { Button } from '@/ui/molecules/button';
 import type { TElectricalCellRecordingForm } from '@/ui/segments/contribute/electrical-cell-recording/schema';
+import { ELECTRICAL_CELL_RECORDING_FILE_TYPES } from '@/ui/segments/contribute/electrical-cell-recording/schema';
 import type { IFileTypeConfig } from '@/ui/segments/contribute/shared/helpers';
+import { getFileExtension } from '@/ui/segments/contribute/shared/helpers';
+import { cn } from '@/utils/css-class';
 
 interface IAssetUploadProps {
   maxFiles?: number;
   maxSize?: number;
-  accept?: string | Array<string>;
+  accept?: string | string[];
   multiple?: boolean;
   className?: string;
-  onFilesChange?: (files: Array<FileWithPreview>) => void;
+  onFilesChange?: (files: FileWithPreview[]) => void;
 }
 
 function getFileExtensionByTypeOrMimeType(file: File): string | undefined {
   return getFileExtension(
     file,
-    ELECTRICAL_CELL_RECORDING_FILE_TYPES as unknown as Array<IFileTypeConfig>
+    ELECTRICAL_CELL_RECORDING_FILE_TYPES as unknown as IFileTypeConfig[],
   );
 }
 
@@ -51,7 +49,7 @@ export function AssetUpload({
     assets: TElectricalCellRecordingForm['assets'];
   };
   const [resolveNWBFileLoading, setResolveNWBFileLoading] = useState(false);
-  const [originalFileTypes, setOriginalFileTypes] = useState<Array<string>>([]);
+  const [originalFileTypes, setOriginalFileTypes] = useState<string[]>([]);
 
   const flattenedFiles = assets
     ? Object.values(assets)
@@ -80,8 +78,8 @@ export function AssetUpload({
     async onFilesAdded(addedFiles, setState) {
       setResolveNWBFileLoading(true);
 
-      const localErrors: Array<string> = [];
-      const validFiles: Array<FileWithPreview> = [];
+      const localErrors: string[] = [];
+      const validFiles: FileWithPreview[] = [];
 
       for (const addedFile of addedFiles) {
         const file = addedFile.file as File;
@@ -93,7 +91,7 @@ export function AssetUpload({
           continue;
         }
 
-        if (resolution && resolution.isValid) {
+        if (resolution?.isValid) {
           const originalFile = {
             file,
             id: crypto.randomUUID(),
@@ -140,7 +138,7 @@ export function AssetUpload({
               'border-neutral-1 shadow-bnb relative rounded-xl border p-8 text-center transition-colors',
               isDragging
                 ? 'border-primary-8 bg-primary/5'
-                : 'border-neutral-1 hover:border-neutral-1'
+                : 'border-neutral-1 hover:border-neutral-1',
             )}
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
@@ -153,7 +151,7 @@ export function AssetUpload({
               <div
                 className={cn(
                   'flex h-16 w-16 items-center justify-center rounded-full',
-                  isDragging ? 'bg-primary-9/10' : 'bg-transparent'
+                  isDragging ? 'bg-primary-9/10' : 'bg-transparent',
                 )}
               >
                 {resolveNWBFileLoading ? (
@@ -236,7 +234,7 @@ export function AssetUpload({
                       <div
                         className={cn(
                           'bg-background flex h-full w-full flex-col items-center justify-center rounded-t-lg border border-b-0',
-                          isGenerated ? 'border-primary-6 border-2' : 'border-neutral-1'
+                          isGenerated ? 'border-primary-6 border-2' : 'border-neutral-1',
                         )}
                       >
                         <FileDownloadLine className="text-primary-6 h-8 w-8" />
@@ -245,7 +243,7 @@ export function AssetUpload({
                       <div
                         className={cn(
                           'bg-neutral-1 text-primary-9 flex items-center justify-between gap-1.5 rounded-b-lg border border-t-0 py-2 pl-2 opacity-100 transition-opacity',
-                          isGenerated ? 'border-primary-6 border-2 border-t-0' : 'border-neutral-1'
+                          isGenerated ? 'border-primary-6 border-2 border-t-0' : 'border-neutral-1',
                         )}
                       >
                         <div className="flex max-w-full min-w-0 flex-col gap-1">

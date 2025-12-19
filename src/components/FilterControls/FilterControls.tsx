@@ -1,7 +1,7 @@
-import { HTMLProps, PropsWithChildren, useState } from 'react';
-import ControlPanel from './ControlPanel';
+import { type HTMLProps, type PropsWithChildren, useState } from 'react';
 import { SettingsIcon } from '@/components/icons/Settings';
 import { classNames } from '@/util/utils';
+import ControlPanel from './ControlPanel';
 
 export default function FilterControls({
   filtersCount,
@@ -24,7 +24,7 @@ export default function FilterControls({
           <button
             className={classNames(
               'border-neutral-2 flex items-center justify-between gap-10 rounded-md border px-2 py-2',
-              disabled ? 'cursor-not-allowed bg-neutral-100' : 'bg-white'
+              disabled ? 'cursor-not-allowed bg-neutral-100' : 'bg-white',
             )}
             disabled={disabled}
             type="button"
@@ -39,16 +39,14 @@ export default function FilterControls({
                 <span
                   className={classNames(
                     'text-sm leading-5 font-bold',
-                    disabled ? 'text-primary-8' : 'text-primary-8'
+                    disabled ? 'text-primary-8' : 'text-primary-8',
                   )}
                 >
                   Filters
                 </span>
                 <span className="text-neutral-4 text-xs leading-5 font-semibold">
-                  <>
-                    {numberOfColumns} active
-                    {numberOfColumns === 1 ? ' column' : ' columns'}
-                  </>
+                  {numberOfColumns} active
+                  {numberOfColumns === 1 ? ' column' : ' columns'}
                 </span>
               </div>
             </div>

@@ -1,7 +1,5 @@
 /* eslint-disable no-param-reassign */
-import React from 'react';
-import { Input } from 'antd';
-import { atom } from 'jotai';
+
 import {
   CheckCircleFilled,
   CheckOutlined,
@@ -11,15 +9,16 @@ import {
   PlusCircleOutlined,
   WarningFilled,
 } from '@ant-design/icons';
-import { ErrorObject } from 'ajv';
-
-import { AtomsMap, JSONSchema } from '../types';
-import { Chevron, Config, ConfigValue, Tab } from './components';
-import { isAtom, isPlainObject } from './utils';
-import { isRootCategory } from './hooks/schema';
-
+import type { ErrorObject } from 'ajv';
+import { Input } from 'antd';
+import { atom } from 'jotai';
+import type React from 'react';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
+import type { AtomsMap, JSONSchema } from '../types';
+import { Chevron, type Config, type ConfigValue, Tab } from './components';
+import { isRootCategory } from './hooks/schema';
+import { isAtom, isPlainObject } from './utils';
 
 export function Section({
   schema,
@@ -81,7 +80,7 @@ export function Section({
   const newKeyError = allEntries.has(newKey) || !newKey || newKey === selectedEntry;
 
   const onNameChangeConfirm = (
-    e: React.MouseEvent<HTMLSpanElement, MouseEvent> | React.KeyboardEvent<HTMLInputElement>
+    e: React.MouseEvent<HTMLSpanElement, MouseEvent> | React.KeyboardEvent<HTMLInputElement>,
   ) => {
     e.stopPropagation();
     if (newKeyError) return;
@@ -170,7 +169,7 @@ export function Section({
       >
         {schema.properties?.[k]?.title}
         <div className="flex gap-1">
-          {errors?.find((error) => error.instancePath.startsWith('/' + k)) ? (
+          {errors?.find((error) => error.instancePath.startsWith(`/${k}`)) ? (
             <WarningFilled className="text-yellow-400" />
           ) : (
             <CheckCircleFilled className="text-green-600" />
@@ -188,7 +187,7 @@ export function Section({
                 key={subkey}
                 className={classNames(
                   'text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
-                  isSelected ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white' : ''
+                  isSelected ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white' : '',
                 )}
                 tabIndex={0}
                 role="button"

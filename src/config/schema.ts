@@ -19,9 +19,18 @@ const configFields = {
 
   NEXTAUTH_SECRET: { schema: z.string().nonempty(), public: false },
 
-  MAILCHIMP_API_KEY: { schema: z.string().nonempty().optional(), public: false },
-  MAILCHIMP_API_SERVER: { schema: z.string().nonempty().optional(), public: false },
-  MAILCHIMP_AUDIENCE_ID: { schema: z.string().nonempty().optional(), public: false },
+  MAILCHIMP_API_KEY: {
+    schema: z.string().nonempty().optional(),
+    public: false,
+  },
+  MAILCHIMP_API_SERVER: {
+    schema: z.string().nonempty().optional(),
+    public: false,
+  },
+  MAILCHIMP_AUDIENCE_ID: {
+    schema: z.string().nonempty().optional(),
+    public: false,
+  },
 
   GITHUB_TOKEN: { schema: z.string().optional(), public: false },
 
@@ -36,7 +45,10 @@ const configFields = {
   ENTITY_CORE_URL: { schema: z.string().url().optional(), public: true },
   NOTEBOOK_API_URL: { schema: z.string().optional(), public: true },
   OBI_ONE_URL: { schema: z.string().url().optional(), public: true },
-  SMALL_SCALE_SIMULATOR_URL: { schema: z.string().url().optional(), public: true },
+  SMALL_SCALE_SIMULATOR_URL: {
+    schema: z.string().url().optional(),
+    public: true,
+  },
   THUMBNAIL_API_URL: { schema: z.string().url().optional(), public: true },
   VIRTUAL_LAB_API_URL: { schema: z.string().url().optional(), public: true },
 
@@ -51,7 +63,10 @@ const configFields = {
   SENTRY_ORG: { schema: z.string().optional(), public: true },
   SENTRY_PRJ: { schema: z.string().optional(), public: true },
 
-  STRIPE_PUBLISHABLE_KEY: { schema: z.string().startsWith('pk_'), public: true },
+  STRIPE_PUBLISHABLE_KEY: {
+    schema: z.string().startsWith('pk_'),
+    public: true,
+  },
 
   MATOMO_CDN_URL: { schema: z.string().nonempty().optional(), public: true },
   MATOMO_SITE_ID: { schema: z.string().nonempty().optional(), public: true },
@@ -59,18 +74,36 @@ const configFields = {
 
   SANITY_DATASET: { schema: z.enum(['staging', 'production']), public: true },
 
-  ENTITY_CORE_PUBLIC_PROJECT_ID: { schema: z.string().nonempty(), public: true },
-  ENTITY_CORE_PUBLIC_VIRTUAL_LAB_ID: { schema: z.string().nonempty(), public: true },
+  ENTITY_CORE_PUBLIC_PROJECT_ID: {
+    schema: z.string().nonempty(),
+    public: true,
+  },
+  ENTITY_CORE_PUBLIC_VIRTUAL_LAB_ID: {
+    schema: z.string().nonempty(),
+    public: true,
+  },
 
   BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE: {
     schema: z.string().nonempty(),
     public: true,
   },
   DEFAULT_BRAIN_ATLAS_ID: { schema: z.string().nonempty(), public: true },
-  DEFAULT_BRAIN_REGION_HIERARCHY_ID: { schema: z.string().nonempty(), public: true },
-  DEFAULT_SELECTED_BRAIN_REGION_ID: { schema: z.string().nonempty(), public: true },
-  LEGACY_DEFAULT_CIRCUIT_ID: { schema: z.string().url().nonempty(), public: true },
-  ROOT_BRAIN_REGION_ANNOTATION_VALUE: { schema: z.string().nonempty(), public: true },
+  DEFAULT_BRAIN_REGION_HIERARCHY_ID: {
+    schema: z.string().nonempty(),
+    public: true,
+  },
+  DEFAULT_SELECTED_BRAIN_REGION_ID: {
+    schema: z.string().nonempty(),
+    public: true,
+  },
+  LEGACY_DEFAULT_CIRCUIT_ID: {
+    schema: z.string().url().nonempty(),
+    public: true,
+  },
+  ROOT_BRAIN_REGION_ANNOTATION_VALUE: {
+    schema: z.string().nonempty(),
+    public: true,
+  },
   ROOT_BRAIN_REGION_ID: { schema: z.string().nonempty(), public: true },
 
   NOTEBOOK_REPO_URL: { schema: z.string().url(), public: true },
@@ -89,7 +122,7 @@ const platformApiUrlFields = {
 } as const satisfies Partial<Record<keyof typeof configFields, string>>;
 
 const baseServerSchema = z.object(
-  Object.fromEntries(Object.entries(configFields).map(([key, { schema }]) => [key, schema]))
+  Object.fromEntries(Object.entries(configFields).map(([key, { schema }]) => [key, schema])),
 ) as z.ZodObject<{
   [K in keyof typeof configFields]: (typeof configFields)[K]['schema'];
 }>;
@@ -113,7 +146,7 @@ const applyApiUrlTransforms = <T extends z.ZodObject<any>>(schema: T) =>
         Object.entries(platformApiUrlFields).map(([field, path]) => [
           field,
           data[field] ?? `${data.API_ORIGIN}${DEFAULT_API_BASE_PATH}${path}`,
-        ])
+        ]),
       ),
     })) as any as z.ZodEffects<
     T,
@@ -126,8 +159,8 @@ export const baseClientSchema = z.object(
   Object.fromEntries(
     Object.entries(configFields)
       .filter(([, { public: isPublic }]) => isPublic)
-      .map(([key, { schema }]) => [key, schema])
-  )
+      .map(([key, { schema }]) => [key, schema]),
+  ),
 ) as z.ZodObject<{
   [K in keyof typeof configFields as (typeof configFields)[K]['public'] extends true
     ? K

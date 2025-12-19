@@ -1,10 +1,19 @@
 import { LoadingOutlined, WarningFilled } from '@ant-design/icons';
-import { isNil, find, map, omit } from 'es-toolkit/compat';
-
+import { find, isNil, map, omit } from 'es-toolkit/compat';
+import { hasAssets } from '@/api/entitycore/guards';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { CircuitBuildCategory, CircuitScale } from '@/api/entitycore/types/entities/circuit';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { countDeepSubCircuits } from '@/ui/segments/explore/circuit/helpers';
+import type { IEModel } from '@/api/entitycore/types/entities/e-model';
+import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import {
+  CoreFieldFilterTypeEnum,
+  EntityCoreFields,
+} from '@/entity-configuration/definitions/fields-defs/enums';
 import {
   EmptyPreview,
   EmptyValue,
@@ -16,21 +25,10 @@ import {
   renderLocalizedNumber,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
-import {
-  CoreFieldFilterTypeEnum,
-  EntityCoreFields,
-} from '@/entity-configuration/definitions/fields-defs/enums';
-import { hasAssets } from '@/api/entitycore/guards';
-import { isNumber } from '@/util/type-guards';
-
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
-import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
-import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
-import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { IEModel } from '@/api/entitycore/types/entities/e-model';
-import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import { countDeepSubCircuits } from '@/ui/segments/explore/circuit/helpers';
+import { isNumber } from '@/util/type-guards';
 
 function iCMBooleanField(title: string, field: keyof IonChannelModel) {
   return {
@@ -91,7 +89,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       renderPreview(
         r as EntityCoreResource,
         { width: 184, height: 116 },
-        'border border-neutral-3 h-full'
+        'border border-neutral-3 h-full',
       ),
     vocabulary: {
       plural: 'responses',
@@ -127,7 +125,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       renderPreview(
         r as EntityCoreResource,
         { width: 184, height: 116 },
-        'border border-neutral-3 h-full'
+        'border border-neutral-3 h-full',
       ),
     vocabulary: {
       plural: 'Trace',
@@ -143,7 +141,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     filter: null,
     render: (r) => {
       return renderEmptyOrValue(
-        (r as IMEModel).validation_status === ValidationStatus.Done ? 'True' : 'False'
+        (r as IMEModel).validation_status === ValidationStatus.Done ? 'True' : 'False',
       );
     },
     vocabulary: {
@@ -221,7 +219,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isDisplayable: true,
     render: (r) =>
       renderEmptyOrValue(
-        find(CircuitBuildCategory, { key: (r as ICircuit).build_category })?.label
+        find(CircuitBuildCategory, { key: (r as ICircuit).build_category })?.label,
       ),
     defaultConstraint: 'build_category__in',
     vocabulary: {
@@ -329,7 +327,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.IsStochastic]: iCMBooleanField('Stochastic', 'is_stochastic'),
   [EntityCoreFields.IsTemperatureDependent]: iCMBooleanField(
     'Temperature dependent',
-    'is_temperature_dependent'
+    'is_temperature_dependent',
   ),
   [EntityCoreFields.TemperatureCelsius]: {
     className: 'text-left',

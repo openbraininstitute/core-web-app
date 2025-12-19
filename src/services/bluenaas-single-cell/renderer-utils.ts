@@ -1,19 +1,19 @@
 import {
+  Color,
+  type ColorRepresentation,
   CylinderGeometry,
   DoubleSide,
-  Material,
+  InstancedBufferAttribute,
+  InstancedBufferGeometry,
+  type Material,
   Mesh,
   MeshLambertMaterial,
   Quaternion,
-  Vector3,
-  SphereGeometry,
-  ColorRepresentation,
-  InstancedBufferAttribute,
-  InstancedBufferGeometry,
-  Color,
   ShaderMaterial,
+  SphereGeometry,
+  Vector3,
 } from 'three';
-import { NeuronSectionInfo } from './types';
+import type { NeuronSectionInfo } from './types';
 
 export type NeuronSegmentInfo = {
   segIdx: number;
@@ -29,7 +29,7 @@ export function createSegmentMesh(
   sec: NeuronSectionInfo,
   segIdx: number,
   openEnded: boolean,
-  color: number
+  color: number,
 ) {
   const v = new Vector3(sec.xcenter[segIdx], sec.ycenter[segIdx], sec.zcenter[segIdx]);
 
@@ -48,7 +48,7 @@ export function createSegmentMesh(
     length,
     12,
     1,
-    openEnded
+    openEnded,
   );
   const material = new MeshLambertMaterial({ color, side: DoubleSide });
 
@@ -101,7 +101,7 @@ export function createSegMarkerMesh(sec: any, segIdx: number, material: Material
 
 export function createBubblesInstanced(
   positions: [number, number, number][],
-  color: ColorRepresentation | undefined = 0xfffff
+  color: ColorRepresentation | undefined = 0xfffff,
 ) {
   const colors = positions.flatMap(() => new Color(color).toArray());
 
@@ -115,11 +115,11 @@ export function createBubblesInstanced(
   instancedGeometry.attributes.position = sphereGeometry.attributes.position;
   instancedGeometry.setAttribute(
     'sphereInstancePosition',
-    new InstancedBufferAttribute(new Float32Array(positions.flat()), 3)
+    new InstancedBufferAttribute(new Float32Array(positions.flat()), 3),
   );
   instancedGeometry.setAttribute(
     'sphereInstanceColor',
-    new InstancedBufferAttribute(new Float32Array(colors), 3)
+    new InstancedBufferAttribute(new Float32Array(colors), 3),
   );
 
   // Create a material that supports instancing

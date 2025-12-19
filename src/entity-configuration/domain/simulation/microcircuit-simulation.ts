@@ -4,8 +4,19 @@ import keyBy from 'es-toolkit/compat/keyBy';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
+import {
+  createSimulationCampaign,
+  getCircuitSimulationCampaign,
+  getCircuitSimulationCampaigns,
+} from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
+import type { ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import type {
+  ICircuitSimulationCampaign,
+  ICircuitSimulationCampaignFilter,
+} from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
@@ -13,21 +24,8 @@ import { getAssetElement } from '@/api/entitycore/utils';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-
-import {
-  createSimulationCampaign,
-  getCircuitSimulationCampaign,
-  getCircuitSimulationCampaigns,
-} from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
-import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
-import { microcircuitFlag } from '@/features/feature-flags';
-
-import type { ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
-import type {
-  ICircuitSimulationCampaign,
-  ICircuitSimulationCampaignFilter,
-} from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+import { microcircuitFlag } from '@/features/feature-flags';
 import type { WorkspaceContext } from '@/types/common';
 
 export async function resolveExecutions({
@@ -49,13 +47,13 @@ export async function resolveExecutions({
         context,
         withFacets: false,
         filters: { used__id__in: [...chunk] },
-      })
+      }),
     );
   }
 
   const executionsResponses = await Promise.all(promises);
 
-  return executionsResponses.map((r) => r.data).flat();
+  return executionsResponses.flatMap((r) => r.data);
 }
 
 const SCALE = CircuitScaleDictionary.Microcircuit;
@@ -83,7 +81,7 @@ async function resolveSimulationCampaigns({
   // extract all simulation IDs
   const allSimIds = flatMap(
     source.data,
-    (campaign) => campaign.simulations?.map((sim) => sim.id) ?? []
+    (campaign) => campaign.simulations?.map((sim) => sim.id) ?? [],
   );
 
   const executions = await resolveExecutions({ context, allSimIds });
@@ -108,7 +106,10 @@ async function resolveSimulationCampaigns({
 
   const circuits = await getCircuits({
     context,
-    filters: { id__in: source.data.map((l) => l.entity_id), ...circuitScaleFilter },
+    filters: {
+      id__in: source.data.map((l) => l.entity_id),
+      ...circuitScaleFilter,
+    },
   });
   const circuitMap = keyBy(circuits.data, 'id');
   const result = enrichedData.map((entity) => ({
@@ -131,7 +132,10 @@ export async function resolveSimulationByCampaignId({
   context: WorkspaceContext | undefined;
 }) {
   const campaign = await getCircuitSimulationCampaign({ id, context });
-  const source = await getCircuitSimulations({ context, filters: { simulation_campaign_id: id } });
+  const source = await getCircuitSimulations({
+    context,
+    filters: { simulation_campaign_id: id },
+  });
 
   const simulation = source.data.at(0);
   const assets = campaign?.assets ?? [];

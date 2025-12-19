@@ -1,28 +1,26 @@
 'use client';
 
-import { CloseOutlined, EditOutlined, CheckOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, CheckOutlined, CloseOutlined, EditOutlined } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 import { z } from 'zod';
-
-import { updateVirtualLab, checkVirtualLabExists } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
-import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
-import { TeamTable } from '@/ui/segments/virtual-lab-settings/sections/team';
-import { Credits } from '@/ui/segments/virtual-lab-settings/sections/credits';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { useAppNotification } from '@/components/notification';
-import { ExpandableText } from '@/ui/molecules/more-less-text';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import type { VirtualLab, VirtualLabListResponse } from '@/api/virtual-lab-svc/queries/types';
+import { checkVirtualLabExists, updateVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import { useTabs } from '@/components/detail-view-tabs';
+import { useAppNotification } from '@/components/notification';
+import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
 import { useUserRole } from '@/hooks/use-user-role';
 import { messages } from '@/i18n/en/virtual-lab';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
+import { ExpandableText } from '@/ui/molecules/more-less-text';
+import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
+import { Credits } from '@/ui/segments/virtual-lab-settings/sections/credits';
+import { TeamTable } from '@/ui/segments/virtual-lab-settings/sections/team';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
-
-import type { VirtualLab, VirtualLabListResponse } from '@/api/virtual-lab-svc/queries/types';
 
 const baseNameSchema = z
   .string()
@@ -63,7 +61,7 @@ function EditableName({
   const [validation, setValidation] = useState<{
     isValid: boolean;
     message: string | null;
-    errors: Array<string>;
+    errors: string[];
     checking: boolean;
   }>(() => ({ isValid: true, message: null, errors: [], checking: false }));
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -86,10 +84,14 @@ function EditableName({
       });
 
       const previousData = queryClient.getQueryData(
-        keyBuilder.listAllLabs({ includes: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS] })
+        keyBuilder.listAllLabs({
+          includes: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS],
+        }),
       ) as VirtualLabListResponse;
       queryClient.setQueryData(
-        keyBuilder.listAllLabs({ includes: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS] }),
+        keyBuilder.listAllLabs({
+          includes: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS],
+        }),
         (old: VirtualLabListResponse) => {
           if (!old?.data) return old;
           const updatedVirtualLab = {
@@ -101,7 +103,7 @@ function EditableName({
             ...old.data.membership_labs,
             results:
               old.data.membership_labs?.results?.map((lab) =>
-                lab.id === virtualLabId ? { ...lab, name } : lab
+                lab.id === virtualLabId ? { ...lab, name } : lab,
               ) || [],
           };
 
@@ -113,7 +115,7 @@ function EditableName({
               membership_labs: updatedMembershipLabs,
             },
           };
-        }
+        },
       );
 
       return { previousData };
@@ -121,8 +123,10 @@ function EditableName({
     onError: (__, _, context: { previousData?: VirtualLabListResponse } | undefined) => {
       if (context?.previousData) {
         queryClient.setQueryData(
-          keyBuilder.listAllLabs({ includes: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS] }),
-          context.previousData
+          keyBuilder.listAllLabs({
+            includes: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS],
+          }),
+          context.previousData,
         );
         const prevData = context.previousData;
         if (prevData?.data) {
@@ -164,13 +168,23 @@ function EditableName({
   const handleStartEdit = () => {
     setIsEditing(true);
     setEditingValue(currentName);
-    setValidation({ isValid: true, message: null, errors: [], checking: false });
+    setValidation({
+      isValid: true,
+      message: null,
+      errors: [],
+      checking: false,
+    });
   };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
     setEditingValue(currentName);
-    setValidation({ isValid: true, message: null, errors: [], checking: false });
+    setValidation({
+      isValid: true,
+      message: null,
+      errors: [],
+      checking: false,
+    });
   };
 
   const handleInputChange = (value: string) => setEditingValue(value);
@@ -203,7 +217,12 @@ function EditableName({
         });
         return;
       }
-      setValidation({ isValid: true, message: null, errors: [], checking: false });
+      setValidation({
+        isValid: true,
+        message: null,
+        errors: [],
+        checking: false,
+      });
     };
     debounceRef.current = setTimeout(run, 350);
     return () => {
@@ -263,7 +282,7 @@ function EditableName({
                 {
                   'border-primary-4 focus:border-white': validation.isValid,
                   'border-red-400 focus:border-red-400': !validation.isValid,
-                }
+                },
               )}
               placeholder="Enter virtual lab name..."
               disabled={updateMutation.isPending}
@@ -294,7 +313,7 @@ function EditableName({
             className={cn(
               'h-8 w-8 rounded-full p-0 transition-all duration-200',
               'hover:text-secondary-3 bg-green-500/20',
-              'disabled:cursor-not-allowed disabled:opacity-50'
+              'disabled:cursor-not-allowed disabled:opacity-50',
             )}
           >
             <CheckOutlined className="text-sm" />
@@ -306,7 +325,7 @@ function EditableName({
             className={cn(
               'h-8 w-8 rounded-full p-0 transition-all duration-200',
               'hover:text-destructive bg-red-500/20',
-              'disabled:cursor-not-allowed disabled:opacity-50'
+              'disabled:cursor-not-allowed disabled:opacity-50',
             )}
           >
             <CloseOutlined className="text-sm" />
@@ -331,7 +350,7 @@ function EditableName({
             aria-controls="virtual-lab-less-more"
             className={cn(
               'text-white/90 underline decoration-white/40 underline-offset-4 transition-colors hover:text-white',
-              'text-sm'
+              'text-sm',
             )}
           >
             {isExpanded ? 'Show less' : 'Show more'}
@@ -344,7 +363,7 @@ function EditableName({
           onClick={handleStartEdit}
           className={cn(
             'h-8 w-8 rounded-full p-0 transition-all duration-200',
-            'hover:text-primary-4 hover:bg-white/10'
+            'hover:text-primary-4 hover:bg-white/10',
           )}
         >
           <EditOutlined className="text-sm" />
@@ -437,7 +456,7 @@ function Tabs({ id }: { id?: string | null }) {
           value="team"
           className={cn(
             'hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:text-primary-9 h-10 px-14! py-3 text-base text-white select-none data-[state=active]:bg-white data-[state=active]:font-bold',
-            { 'h-12': breakpoint === 'xl' }
+            { 'h-12': breakpoint === 'xl' },
           )}
         >
           Administrators
@@ -454,7 +473,10 @@ function Tabs({ id }: { id?: string | null }) {
             value="credits"
             className={cn(
               'hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:text-primary-9 h-10 px-14! py-3 text-base text-white select-none data-[state=active]:bg-white data-[state=active]:font-bold',
-              { 'h-12': breakpoint === 'xl', 'cursor-not-allowed opacity-50': !isAdmin }
+              {
+                'h-12': breakpoint === 'xl',
+                'cursor-not-allowed opacity-50': !isAdmin,
+              },
             )}
             onMouseLeave={() => setIsPopoverOpen(false)}
           >

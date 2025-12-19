@@ -1,7 +1,6 @@
 import noop from 'es-toolkit/compat/noop';
-import { isBrowser } from '@/utils/environment';
-
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import { isBrowser } from '@/utils/environment';
 
 export type TBrainRegionClickEvent = {
   dataKey: string;
@@ -22,7 +21,7 @@ const isBrainRegionClickEvent = (event: Event): event is CustomEvent<TBrainRegio
 };
 
 export const brainRegionClickEventListener = (
-  cb: (event: CustomEvent<TBrainRegionClickEvent>) => void
+  cb: (event: CustomEvent<TBrainRegionClickEvent>) => void,
 ) => {
   const abortController = new AbortController();
   const { signal } = abortController;

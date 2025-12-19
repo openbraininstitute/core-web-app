@@ -4,9 +4,9 @@ import { z } from 'zod';
 import {
   BaseSetupSchema,
   ContributionArraySchema,
-  SubjectIdSchema,
-  LicenseIdSchema,
   createFileSchema,
+  LicenseIdSchema,
+  SubjectIdSchema,
 } from '@/ui/segments/contribute/shared/schemas';
 
 /**
@@ -22,14 +22,18 @@ export const ETypeClassIdSchema = z
  */
 export const ElectricalCellRecordingSetupExtension = z.object({
   ljp: z
-    .number({ invalid_type_error: 'Liquid junction potential (ljp) must be a number' })
+    .number({
+      invalid_type_error: 'Liquid junction potential (ljp) must be a number',
+    })
     .optional()
     .default(0.0),
   temperature: z
     .number({ invalid_type_error: 'Temperature must be a number' })
     .optional()
     .nullable(),
-  recording_location: z.string({ message: 'Cell recording location is required' }),
+  recording_location: z.string({
+    message: 'Cell recording location is required',
+  }),
   recording_type: z.string().nonempty({ message: 'Cell recording type is required' }),
   recording_origin: z
     .string()
@@ -42,7 +46,7 @@ export const ElectricalCellRecordingSetupExtension = z.object({
  * extended setup schema for electrical cell recording
  */
 export const ElectricalCellRecordingSetupSchema = BaseSetupSchema.merge(
-  ElectricalCellRecordingSetupExtension
+  ElectricalCellRecordingSetupExtension,
 );
 
 /**

@@ -49,7 +49,7 @@ function getLeafIds(region: IBrainRegionHierarchy): IBrainRegionHierarchy[] {
  * @returns An array of IRegionLeaves objects.
  */
 export function getLeavesForEachRegion(
-  brainHierarchy: IBrainRegionHierarchy | IBrainRegionHierarchy[]
+  brainHierarchy: IBrainRegionHierarchy | IBrainRegionHierarchy[],
 ): Map<string, IBrainRegionHierarchy[]> {
   const results: IBrainRegionLeaves[] = [];
   const regionsToProcess: IBrainRegionHierarchy[] = Array.isArray(brainHierarchy)
@@ -82,7 +82,7 @@ type IBrainRegionHierarchyMap = Map<string, IBrainRegionHierarchy & { parent?: s
 export function buildHierarchyMap(
   root: IBrainRegionHierarchy,
   map: IBrainRegionHierarchyMap = new Map(),
-  parentId: string | null = null
+  parentId: string | null = null,
 ): IBrainRegionHierarchyMap {
   map.set(root.id, { ...root, parent: parentId || undefined });
   root.children.forEach((child) => buildHierarchyMap(child, map, root.id));
@@ -94,7 +94,7 @@ export function buildHierarchyMap(
  */
 function getBrainRegionDescendantsAndAncestors(
   brainRegionIds: string[],
-  root: IBrainRegionHierarchy
+  root: IBrainRegionHierarchy,
 ): IBrainRegionHierarchy[] {
   const nodeMap = buildHierarchyMap(root);
   const resultMap = new Map<string, IBrainRegionHierarchy>();
@@ -128,5 +128,5 @@ function getBrainRegionDescendantsAndAncestors(
 }
 
 export const getBrainRegionDescendantsAndAncestorsNodes = memoize(
-  getBrainRegionDescendantsAndAncestors
+  getBrainRegionDescendantsAndAncestors,
 );

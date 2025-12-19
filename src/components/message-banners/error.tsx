@@ -1,5 +1,5 @@
 import { CloseCircleFilled } from '@ant-design/icons';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { classNames } from '@/util/utils';
 
 type Props = {
@@ -19,7 +19,7 @@ export function ErrorData({ title, description, cls, borderless = false }: Props
       className={classNames(
         'bg-primary-9 mx-auto mb-6 w-full max-w-7xl rounded-sm border-white p-6 text-white hover:shadow-sm',
         cls?.container,
-        borderless ? 'border-none' : 'border'
+        borderless ? 'border-none' : 'border',
       )}
     >
       <div className="flex flex-col items-start justify-between gap-1">

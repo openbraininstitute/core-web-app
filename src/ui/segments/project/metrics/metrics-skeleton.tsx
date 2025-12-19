@@ -14,7 +14,7 @@ export function Bar({ className, ...props }: BarProps) {
       className={cn(
         'relative overflow-hidden rounded-md bg-neutral-200 dark:bg-neutral-800',
         'h-5',
-        className
+        className,
       )}
     >
       <span className="sr-only">Loading</span>

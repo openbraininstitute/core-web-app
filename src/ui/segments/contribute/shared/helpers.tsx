@@ -1,16 +1,13 @@
-import { initial, last, join, split } from 'es-toolkit/compat';
-import { z } from 'zod';
-
-import type { SafeParseReturnType, ZodTypeAny } from 'zod';
-import type { ComponentProps, ReactNode } from 'react';
 import type { FormInstance } from 'antd';
-
-import { cn } from '@/utils/css-class';
-
+import { initial, join, last, split } from 'es-toolkit/compat';
+import type { ComponentProps, ReactNode } from 'react';
+import type { SafeParseReturnType, ZodTypeAny } from 'zod';
+import { z } from 'zod';
 import type {
   ICustomFormErrorOptions,
   TStepValidationStatus,
 } from '@/ui/segments/contribute/shared/types';
+import { cn } from '@/utils/css-class';
 
 export class CustomFormError extends Error {
   public readonly cause?: unknown;
@@ -48,7 +45,7 @@ export function renderLabel(
   text: string,
   type: 'main' | 'secondary' = 'main',
   extra?: ReactNode,
-  cls?: ComponentProps<'span'>['className']
+  cls?: ComponentProps<'span'>['className'],
 ): ReactNode {
   return (
     <span
@@ -56,7 +53,7 @@ export function renderLabel(
         'text-base font-light',
         type === 'main' && 'text-primary-8 !font-bold',
         type === 'secondary' && 'text-label',
-        cls
+        cls,
       )}
     >
       {text} {extra}
@@ -76,7 +73,7 @@ export function createZodFieldValidator<TSchema extends ZodTypeAny, TFormValues>
   schema: TSchema,
   fieldPath: string,
   form: FormInstance<TFormValues>,
-  extraCustomValidator?: (values: TFormValues) => void | Promise<void>
+  extraCustomValidator?: (values: TFormValues) => void | Promise<void>,
 ) {
   return async (_rule: unknown, _value: unknown): Promise<void> => {
     try {
@@ -106,7 +103,7 @@ export function createZodFieldValidator<TSchema extends ZodTypeAny, TFormValues>
 export function getValidationStatus<T>(
   validator: SafeParseReturnType<T, T>,
   fieldKey: string,
-  dirtyFields: Array<string>
+  dirtyFields: string[],
 ): TStepValidationStatus {
   if (validator.success) return 'valid';
   if (dirtyFields.includes(fieldKey)) return 'invalid';
@@ -116,7 +113,7 @@ export function getValidationStatus<T>(
 /**
  * gets dirty fields from an Ant Design form
  */
-export function getDirtyFields<TFormValues>(form: FormInstance<TFormValues>): Array<string> {
+export function getDirtyFields<TFormValues>(form: FormInstance<TFormValues>): string[] {
   const allFields = form.getFieldsValue(true) as Record<string, unknown>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return Object.keys(allFields).filter((field) => (form as any).isFieldTouched(field));
@@ -139,10 +136,7 @@ export function parseFileName(fileName: string): { name: string; ext: string } {
 /**
  * gets the file extension based on file type config
  */
-export function getFileExtension(
-  file: File,
-  fileTypes: Array<IFileTypeConfig>
-): string | undefined {
+export function getFileExtension(file: File, fileTypes: IFileTypeConfig[]): string | undefined {
   const { ext } = parseFileName(file.name);
   const fileType = fileTypes.find((f) => ext === f.type || file.type === f.mimeType);
   return fileType?.extension;
@@ -151,7 +145,7 @@ export function getFileExtension(
 /**
  * gets the MIME type based on file extension
  */
-export function getMimeType(file: File, fileTypes: Array<IFileTypeConfig>): string | undefined {
+export function getMimeType(file: File, fileTypes: IFileTypeConfig[]): string | undefined {
   const ext = getFileExtension(file, fileTypes);
   const fileType = fileTypes.find((f) => ext === f.extension);
   return fileType?.mimeType;
@@ -169,7 +163,7 @@ export function getCurrentStepIndex(steps: Array<{ key: string }>, activeStepKey
  */
 export function getPreviousStepKey(
   steps: Array<{ key: string }>,
-  activeStepKey: string
+  activeStepKey: string,
 ): string | null {
   const currentIndex = getCurrentStepIndex(steps, activeStepKey);
   if (currentIndex > 0) {
@@ -183,7 +177,7 @@ export function getPreviousStepKey(
  */
 export function getNextStepKey(
   steps: Array<{ key: string }>,
-  activeStepKey: string
+  activeStepKey: string,
 ): string | null {
   const currentIndex = getCurrentStepIndex(steps, activeStepKey);
   if (currentIndex < steps.length - 1) {

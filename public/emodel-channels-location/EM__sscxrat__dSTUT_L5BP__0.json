@@ -1,25 +1,7 @@
 {
-    "all": [
-        "pas"
-    ],
-    "allact": [
-        "CaDynamics_DC0",
-        "Ca_HVA2",
-        "Ca_LVAst",
-        "SK_E2",
-        "StochKv3"
-    ],
-    "somaxon": [
-        "NaTg",
-        "SKv3_1",
-        "K_Pst",
-        "K_Tst"
-    ],
-    "axonal": [
-        "KdShu2007"
-    ],
-    "somadend": [
-        "Ih",
-        "KdShu2007"
-    ]
+  "all": ["pas"],
+  "allact": ["CaDynamics_DC0", "Ca_HVA2", "Ca_LVAst", "SK_E2", "StochKv3"],
+  "somaxon": ["NaTg", "SKv3_1", "K_Pst", "K_Tst"],
+  "axonal": ["KdShu2007"],
+  "somadend": ["Ih", "KdShu2007"]
 }

@@ -1,5 +1,5 @@
-import { log } from '@/utils/logger';
 import type { TWorkspaceBootstrapStepStatus } from '@/ui/segments/app-setup/helpers';
+import { log } from '@/utils/logger';
 
 export interface StreamItem {
   step: string;
@@ -11,7 +11,7 @@ export interface StreamItem {
 
 export async function* streamingFetch(
   url: string,
-  options: RequestInit
+  options: RequestInit,
 ): AsyncGenerator<StreamItem, void, unknown> {
   const response = await fetch(url, options);
 

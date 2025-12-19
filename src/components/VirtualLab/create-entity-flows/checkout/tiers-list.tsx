@@ -1,29 +1,29 @@
 'use client';
 
 import { CheckCircleFilled, InfoCircleOutlined } from '@ant-design/icons';
+import { Tooltip } from 'antd';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import noop from 'es-toolkit/compat/noop';
+import toUpper from 'es-toolkit/compat/toUpper';
+import { useAtom } from 'jotai';
 import { useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
-import { Tooltip } from 'antd';
-import { useAtom } from 'jotai';
-import kebabCase from 'es-toolkit/compat/kebabCase';
-import toUpper from 'es-toolkit/compat/toUpper';
-import noop from 'es-toolkit/compat/noop';
 
 import { tryCatch } from '@/api/utils';
-import { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';
+import type { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';
 import ContactUs from '@/components/VirtualLab/create-entity-flows/checkout/contact-us';
 import DowngradeFree from '@/components/VirtualLab/create-entity-flows/checkout/downgrade';
 import {
-  ExtendedTier,
+  type ExtendedTier,
   flowAtom,
   getAllTiers,
   Switch,
-  Tier,
-  TierFeature,
+  type Tier,
+  type TierFeature,
 } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
 import { TiersListSkeleton } from '@/components/VirtualLab/create-entity-flows/checkout/skeleton';
-import { classNames } from '@/util/utils';
 import { Button } from '@/ui/molecules/button';
+import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
 type Props = {
@@ -41,7 +41,7 @@ type TTiersStep = (typeof TiersStep)[keyof typeof TiersStep];
 
 type TiersComparisonPros = {
   currentTier?: 'FREE' | 'PRO' | 'PREMIUM';
-  tiers: Array<ExtendedTier>;
+  tiers: ExtendedTier[];
   onSelectPremiumTier: () => void;
   onSelectFree: () => void;
   subscriptionData: UserActiveSubscriptionResponse;
@@ -141,7 +141,7 @@ function TiersComparison({
   const getFeatureDetails = (
     t: Tier,
     categoryTitle: string,
-    featureTitle: string
+    featureTitle: string,
   ): TierFeature | undefined => {
     const category = t.features.find((cat) => cat.title === categoryTitle);
     if (!category) return undefined;
@@ -149,14 +149,22 @@ function TiersComparison({
     return category.featuresList.find((f) => f.title === featureTitle);
   };
 
-  const allCategories: { title: string; available?: boolean; features: string[] }[] = [];
+  const allCategories: {
+    title: string;
+    available?: boolean;
+    features: string[];
+  }[] = [];
 
   tiers?.forEach((t) => {
     t.features.forEach((category) => {
       let existingCategory = allCategories.find((c) => c.title === category.title);
 
       if (!existingCategory) {
-        existingCategory = { title: category.title, available: category.available, features: [] };
+        existingCategory = {
+          title: category.title,
+          available: category.available,
+          features: [],
+        };
         allCategories.push(existingCategory);
       }
 
@@ -192,7 +200,7 @@ function TiersComparison({
               className={classNames(
                 'rounded-lg',
                 (isSelected || isFree) && 'border-primary-3 bg-primary-8/90 border-2',
-                isHovered && !isSelected && 'bg-primary-5/20'
+                isHovered && !isSelected && 'bg-primary-5/20',
               )}
             />
           );
@@ -220,7 +228,7 @@ function TiersComparison({
                     <span
                       className={classNames(
                         'text-sm font-light text-white',
-                        interval === 'month' && 'font-bold'
+                        interval === 'month' && 'font-bold',
                       )}
                     >
                       Monthly
@@ -235,7 +243,7 @@ function TiersComparison({
                     <span
                       className={classNames(
                         'text-sm font-light text-white',
-                        interval === 'month' && 'font-bold'
+                        interval === 'month' && 'font-bold',
                       )}
                     >
                       Yearly
@@ -311,7 +319,7 @@ function TiersComparison({
                   >
                     {renderFeatureAvailability(
                       isFeatureAvailable(t, category.title, feature),
-                      getFeatureDetails(t, category.title, feature)
+                      getFeatureDetails(t, category.title, feature),
                     )}
                   </div>
                 ))}
@@ -365,7 +373,7 @@ function TiersComparison({
                   'hover:bg-primary-8/40',
                   'hover:shadow-[1px_2px_4px_0px_#00000099]',
                   'shadow-[8px_12px_24px_0px_#00000099]',
-                  'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
+                  'shadow-[-8px_-8px_42px_0px_#FFFFFF29]',
                 )}
                 data-testid={`select-${t.title.toLowerCase()}-btn`}
                 onClick={controller}
@@ -384,7 +392,7 @@ function TiersComparison({
 
 export default function TiersList({ currentTier, subscriptionData }: Props) {
   const [loading, setLoading] = useState(true);
-  const [tiers, setTiers] = useState<{ data: Array<ExtendedTier> } | { error: any }>({ data: [] });
+  const [tiers, setTiers] = useState<{ data: ExtendedTier[] } | { error: any }>({ data: [] });
   const [currentStep, setCurrentStep] = useState<TTiersStep>(TiersStep.Listing);
 
   const onSelectPremiumTier = () => setCurrentStep(TiersStep.ContactUs);

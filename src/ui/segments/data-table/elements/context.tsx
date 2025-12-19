@@ -1,30 +1,28 @@
 'use client';
 
-import { atomFamily, atomWithDefault, atomWithReset, atomWithStorage } from 'jotai/utils';
-import { use, useCallback, useEffect, useMemo, createContext } from 'react';
 import { isNil, noop } from 'es-toolkit/compat';
-import { Atom, atom, useSetAtom } from 'jotai';
+import { type Atom, atom, useSetAtom } from 'jotai';
+import { atomFamily, atomWithDefault, atomWithReset, atomWithStorage } from 'jotai/utils';
+import { createContext, use, useCallback, useEffect, useMemo } from 'react';
 import { match } from 'ts-pattern';
-
-import { createSuperJsonStorage, memoryStorage } from '@/ui/hooks/use-storage-atom-with-validation';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
-import { circuitRepresentationViewAtom } from '@/ui/segments/explore/circuit/helpers';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
   DEFAULT_PAGE_NUMBER,
-  TWorkspaceScope,
-  TWorkspaceSection,
+  type TWorkspaceScope,
+  type TWorkspaceSection,
   WorkspaceSection,
 } from '@/constants';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import type { TCoreFilter, TSortState } from '@/entity-configuration/definitions/types';
 import { SortOrder } from '@/entity-configuration/definitions/types';
+import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
+import type { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
+import { createSuperJsonStorage, memoryStorage } from '@/ui/hooks/use-storage-atom-with-validation';
 import {
   makeDataListStateSnapshotAtomsInitialValue,
   makeTypeDefaultFilters,
 } from '@/ui/segments/data-table/elements/helpers';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TCoreFilter, TSortState } from '@/entity-configuration/definitions/types';
-import type { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
+import { circuitRepresentationViewAtom } from '@/ui/segments/explore/circuit/helpers';
 
 type DataAtomBinding = {
   key: string;
@@ -39,7 +37,7 @@ export const activeColumnsAtom = atomFamily(
       const { columns } = { ...ViewsDefinitionRegistry[scope.dataType] };
       return ['index', ...(columns || [])];
     }),
-  (a: DataAtomBinding, b: DataAtomBinding): boolean => a.key === b.key
+  (a: DataAtomBinding, b: DataAtomBinding): boolean => a.key === b.key,
 );
 
 export const coreActiveColumnsAtom = atomFamily(
@@ -48,18 +46,18 @@ export const coreActiveColumnsAtom = atomFamily(
       const { columns } = { ...ViewsDefinitionRegistry[dataType] };
       return ['index', ...(columns || [])];
     }),
-  (a, b) => a.key === b.key
+  (a, b) => a.key === b.key,
 );
 
 export const coreFiltersAtom = atomFamily(
   ({ dataType, key }: { key: string; dataType: TExtendedEntitiesTypeDict }) => {
-    const childAtom = atomWithDefault<Array<TCoreFilter>>(() => {
+    const childAtom = atomWithDefault<TCoreFilter[]>(() => {
       return makeTypeDefaultFilters({ dataType });
     });
     childAtom.debugLabel = `filter-atom/${key}`;
     return childAtom;
   },
-  (a, b) => a.key === b.key
+  (a, b) => a.key === b.key,
 );
 
 export const coreSearchStringAtom = atomFamily((key: string) => {
@@ -82,7 +80,7 @@ export const coreSortStateAtom = atomFamily(
 
     return writableAtom;
   },
-  (a, b) => a.key === b.key
+  (a, b) => a.key === b.key,
 );
 
 export const corePageNumberAtom = atomFamily((key: string) => {
@@ -93,11 +91,11 @@ export const corePageNumberAtom = atomFamily((key: string) => {
 
 export const coreSelectedRowsAtom = atomFamily(
   (_key: string) => {
-    const childAtom = atom<Array<any>>([]);
+    const childAtom = atom<any[]>([]);
     childAtom.debugLabel = `selected-rows/${_key}`;
     return childAtom;
   },
-  (a, b) => a === b
+  (a, b) => a === b,
 );
 
 /**
@@ -109,17 +107,19 @@ export const coreSelectedRowsAtom = atomFamily(
 export const DataListStateSnapshotStorageAtomFamily = atomFamily(
   ({ dataKey, dataType }: { dataKey: string; dataType: TExtendedEntitiesTypeDict }) => {
     const resolvedStorage = typeof window !== 'undefined' ? sessionStorage : memoryStorage;
-    const initialValue = makeDataListStateSnapshotAtomsInitialValue({ dataType });
+    const initialValue = makeDataListStateSnapshotAtomsInitialValue({
+      dataType,
+    });
     const childAtom = atomWithStorage(
       dataKey,
       initialValue,
       createSuperJsonStorage<typeof initialValue>(resolvedStorage),
-      { getOnInit: true }
+      { getOnInit: true },
     );
     childAtom.debugLabel = `list-params-storage-${dataKey}`;
     return childAtom;
   },
-  (a, b) => a.dataKey === b.dataKey
+  (a, b) => a.dataKey === b.dataKey,
 );
 
 type AtomValue<T> = T extends Atom<infer V> ? V : never;
@@ -163,7 +163,10 @@ export const DataListSnapshotSyncAtomFamily = atomFamily(
         return { filters, page, search, sort, view };
       },
       (get, set, action: TDataListStoreParamsSyncAction) => {
-        const storageAtom = DataListStateSnapshotStorageAtomFamily({ dataKey, dataType });
+        const storageAtom = DataListStateSnapshotStorageAtomFamily({
+          dataKey,
+          dataType,
+        });
 
         return match({ type: action.type })
           .with({ type: DataListStateSnapshotSyncAction.SYNC }, ({ type: t }) => {
@@ -194,14 +197,17 @@ export const DataListSnapshotSyncAtomFamily = atomFamily(
             if (typeof window !== 'undefined') {
               sessionStorage.removeItem(dataKey);
             }
-            DataListStateSnapshotStorageAtomFamily.remove({ dataKey, dataType });
+            DataListStateSnapshotStorageAtomFamily.remove({
+              dataKey,
+              dataType,
+            });
           });
-      }
+      },
     );
     childAtom.debugLabel = `data-list-store-params-sync-${dataKey}`;
     return childAtom;
   },
-  (a, b) => a.dataKey === b.dataKey
+  (a, b) => a.dataKey === b.dataKey,
 );
 
 export type ResetRegistryFn = (key: string, resetFn: () => void) => void;
@@ -232,14 +238,14 @@ export function useDataListStateSnapshotActions({
   section?: TWorkspaceSection;
 }) {
   const updateSync = useSetAtom(
-    useMemo(() => DataListSnapshotSyncAtomFamily({ dataKey, dataType }), [dataKey, dataType])
+    useMemo(() => DataListSnapshotSyncAtomFamily({ dataKey, dataType }), [dataKey, dataType]),
   );
 
   const registerReset = use(DataListStateSnapshotContext);
 
   const reset = useCallback(
     () => updateSync({ type: DataListStateSnapshotSyncAction.RESET }),
-    [updateSync]
+    [updateSync],
   );
 
   useEffect(() => {

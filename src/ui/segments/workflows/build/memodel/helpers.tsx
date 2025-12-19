@@ -1,12 +1,10 @@
 'use client';
 
 import type { ReactNode } from 'react';
-
+import type { ICellMorphology, IEModel } from '@/api/entitycore/types';
+import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import { useSessionStorage } from '@/hooks/use-session-storage';
 import { cn } from '@/utils/css-class';
-
-import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
-import type { IEModel, ICellMorphology } from '@/api/entitycore/types';
 
 export const BuildStep = {
   Info: 'info',
@@ -49,7 +47,7 @@ export const label = (text: string, type: 'main' | 'secondary' = 'main', extra?:
     className={cn(
       'text-base font-light uppercase',
       type === 'main' && 'text-primary-8 !font-bold',
-      type === 'secondary' && 'text-label'
+      type === 'secondary' && 'text-label',
     )}
   >
     {text} {extra}

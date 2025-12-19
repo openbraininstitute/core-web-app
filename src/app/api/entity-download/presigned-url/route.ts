@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { TEntityTypeDict } from '@/api/entitycore/types';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 import { auth } from '@/auth';
 import { formatBytes } from '@/utils/format';
 import { log } from '@/utils/logger';
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     }
     return NextResponse.json(
       { error: 'Failed to process download request' },
-      { status: response.status }
+      { status: response.status },
     );
   } catch (error) {
     log('error', error);

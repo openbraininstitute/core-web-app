@@ -1,17 +1,16 @@
-import React, { useState, useCallback, useEffect, ReactNode } from 'react';
 import flatMap from 'es-toolkit/compat/flatMap';
 import map from 'es-toolkit/compat/map';
+import React, { type ReactNode, useCallback, useEffect, useState } from 'react';
 
 import { getParentsToRoot, scrollToNode } from '@/components/tree/elements/helpers';
 import { MemoizedNode as Node } from '@/components/tree/elements/node';
-import { classNames } from '@/util/utils';
-
 import type {
-  RenderNodeProps,
   NodeIndentation,
   NodeSubtitle,
+  RenderNodeProps,
   TTreeNode,
 } from '@/components/tree/types';
+import { classNames } from '@/util/utils';
 
 interface Props<TNode extends TTreeNode> {
   dataKey: string;
@@ -78,9 +77,9 @@ export default function Tree<TNode extends TTreeNode>({
   const [expandedIds, setExpandedIds] = useState<Set<string>>(
     new Set(
       flatMap(defaultExpandedNodes, (id) =>
-        flatMap(nodes, (node) => map(getParentsToRoot(id.toString(), node as any), 'id'))
-      )
-    )
+        flatMap(nodes, (node) => map(getParentsToRoot(id.toString(), node as any), 'id')),
+      ),
+    ),
   );
 
   useEffect(() => {
@@ -88,15 +87,15 @@ export default function Tree<TNode extends TTreeNode>({
       setExpandedIds((prev) => {
         // get parents path to the selected node across all trees
         const currentParents = flatMap(nodes, (node) =>
-          flatMap(getParentsToRoot(selectedNode.id, node as any), 'id')
+          flatMap(getParentsToRoot(selectedNode.id, node as any), 'id'),
         );
 
         // get parents for default expanded nodes
         const initialParents = flatMap(defaultExpandedNodes, (id) =>
-          flatMap(nodes, (node) => map(getParentsToRoot(id.toString(), node as any), 'id'))
+          flatMap(nodes, (node) => map(getParentsToRoot(id.toString(), node as any), 'id')),
         );
 
-        let finalExpandedNodes: Array<string>;
+        let finalExpandedNodes: string[];
 
         if (keepPreviousExpanded) {
           // keep all previous expanded nodes and add path to selected node
@@ -122,7 +121,7 @@ export default function Tree<TNode extends TTreeNode>({
         scrollToNode(selectedNode as any, 'start');
       });
     }
-  }, [selectedNode, data, defaultExpandedNodes, keepPreviousExpanded, nodes]);
+  }, [selectedNode, defaultExpandedNodes, keepPreviousExpanded, nodes]);
 
   const handleToggle = useCallback(
     (node: TNode) => {
@@ -135,14 +134,14 @@ export default function Tree<TNode extends TTreeNode>({
         return newSet;
       });
     },
-    [onToggle]
+    [onToggle],
   );
 
   const handleClick = useCallback(
     (node: TNode) => {
       onClick?.(node);
     },
-    [onClick]
+    [onClick],
   );
 
   return (

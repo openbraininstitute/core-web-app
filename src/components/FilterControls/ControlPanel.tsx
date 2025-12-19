@@ -1,5 +1,5 @@
 import { CloseOutlined } from '@ant-design/icons';
-import { ColumnType } from 'antd/lib/table';
+import type { ColumnType } from 'antd/lib/table';
 import { classNames } from '@/util/utils';
 
 export type Column<T> = ColumnType<T> & {
@@ -27,7 +27,7 @@ export default function ControlPanel({
     <div
       className={classNames(
         'bg-primary-8 fixed top-0 right-0 z-10 z-[9999] flex h-screen w-[480px] shrink-0 flex-col space-y-4 p-8',
-        !visible && 'invisible'
+        !visible && 'invisible',
       )}
     >
       <div>

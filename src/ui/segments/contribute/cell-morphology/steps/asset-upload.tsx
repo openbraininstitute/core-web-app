@@ -3,37 +3,35 @@
 'use client';
 
 import { AlertOutlined, LoadingOutlined } from '@ant-design/icons';
-import { reject, isNil } from 'es-toolkit/compat';
 import { Form, Spin } from 'antd';
-import { useState } from 'react';
+import { isNil, reject } from 'es-toolkit/compat';
 import JSZip from 'jszip';
-
-import { Alert, AlertContent, AlertDescription, AlertIcon, AlertTitle } from '@/ui/molecules/alert';
-import { formatBytes, useFileUpload, type FileWithPreview } from '@/ui/hooks/use-file-upload';
-import { CELL_MORPHOLOGY_FILE_TYPES } from '@/ui/segments/contribute/cell-morphology/schema';
-import { parseFileName, getFileExtension } from '@/ui/segments/contribute/shared/helpers';
-import { DownloadAsBoxIcon } from '@/components/icons/buttons';
+import { useState } from 'react';
 import { resolveNeuronFile } from '@/api/one/cell-morphology';
-import { FileDownloadLine } from '@/components/icons/File';
-import { Button } from '@/ui/molecules/button';
-import { messages } from '@/i18n/en/upload';
 import { tryCatch } from '@/api/utils';
-import { cn } from '@/utils/css-class';
-
+import { DownloadAsBoxIcon } from '@/components/icons/buttons';
+import { FileDownloadLine } from '@/components/icons/File';
+import { messages } from '@/i18n/en/upload';
+import { type FileWithPreview, formatBytes, useFileUpload } from '@/ui/hooks/use-file-upload';
+import { Alert, AlertContent, AlertDescription, AlertIcon, AlertTitle } from '@/ui/molecules/alert';
+import { Button } from '@/ui/molecules/button';
 import type { TCellMorphologyForm } from '@/ui/segments/contribute/cell-morphology/schema';
+import { CELL_MORPHOLOGY_FILE_TYPES } from '@/ui/segments/contribute/cell-morphology/schema';
 import type { IFileTypeConfig } from '@/ui/segments/contribute/shared/helpers';
+import { getFileExtension, parseFileName } from '@/ui/segments/contribute/shared/helpers';
+import { cn } from '@/utils/css-class';
 
 interface IAssetUploadProps {
   maxFiles?: number;
   maxSize?: number;
-  accept?: string | Array<string>;
+  accept?: string | string[];
   multiple?: boolean;
   className?: string;
-  onFilesChange?: (files: Array<FileWithPreview>) => void;
+  onFilesChange?: (files: FileWithPreview[]) => void;
 }
 
 function getFileExtensionByTypeOrMimeType(file: File): string | undefined {
-  return getFileExtension(file, CELL_MORPHOLOGY_FILE_TYPES as unknown as Array<IFileTypeConfig>);
+  return getFileExtension(file, CELL_MORPHOLOGY_FILE_TYPES as unknown as IFileTypeConfig[]);
 }
 
 export function AssetUpload({
@@ -45,7 +43,9 @@ export function AssetUpload({
   onFilesChange,
 }: IAssetUploadProps) {
   const form = Form.useFormInstance();
-  const { assets } = form.getFieldsValue(['assets']) as { assets: TCellMorphologyForm['assets'] };
+  const { assets } = form.getFieldsValue(['assets']) as {
+    assets: TCellMorphologyForm['assets'];
+  };
   const [resolveNeuronFileLoading, setResolveNeuronFileLoading] = useState(false);
   const [originalFileType, setOriginalFileType] = useState<string | null>(null);
 
@@ -79,13 +79,13 @@ export function AssetUpload({
         }));
         return;
       }
-      if (resolution && resolution.isValid) {
+      if (resolution?.isValid) {
         const zip = new JSZip();
         const unzippedData = await zip.loadAsync(resolution.buffer, {});
         const fsAdded = await Promise.all(
           Object.entries(unzippedData.files)
             .filter(([, value]) => !value.dir)
-            .map(([_, value]) => value.async('blob'))
+            .map(([_, value]) => value.async('blob')),
         );
         const { name: originalFileName } = parseFileName(file.name);
 
@@ -158,7 +158,7 @@ export function AssetUpload({
               'border-neutral-1 shadow-bnb relative rounded-xl border p-8 text-center transition-colors',
               isDragging
                 ? 'border-primary-8 bg-primary/5'
-                : 'border-neutral-1 hover:border-neutral-1'
+                : 'border-neutral-1 hover:border-neutral-1',
             )}
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
@@ -171,7 +171,7 @@ export function AssetUpload({
               <div
                 className={cn(
                   'flex h-16 w-16 items-center justify-center rounded-full',
-                  isDragging ? 'bg-primary-9/10' : 'bg-transparent'
+                  isDragging ? 'bg-primary-9/10' : 'bg-transparent',
                 )}
               >
                 {resolveNeuronFileLoading ? (
@@ -226,7 +226,7 @@ export function AssetUpload({
                   {formatBytes(
                     Object.values(assets)
                       .filter((file) => !isNil(file))
-                      .reduce((acc, file) => acc + file.size, 0)
+                      .reduce((acc, file) => acc + file.size, 0),
                   )}
                 </div>
               </div>
@@ -264,7 +264,7 @@ export function AssetUpload({
                       <div
                         className={cn(
                           'bg-background flex h-full w-full flex-col items-center justify-center rounded-t-lg border border-b-0',
-                          isGenerated ? 'border-primary-6 border-2' : 'border-neutral-1'
+                          isGenerated ? 'border-primary-6 border-2' : 'border-neutral-1',
                         )}
                       >
                         <FileDownloadLine className="text-primary-6 h-8 w-8" />
@@ -273,7 +273,7 @@ export function AssetUpload({
                       <div
                         className={cn(
                           'bg-neutral-1 text-primary-9 flex items-center justify-between gap-1.5 rounded-b-lg border border-t-0 py-2 pl-2 opacity-100 transition-opacity',
-                          isGenerated ? 'border-primary-6 border-2 border-t-0' : 'border-neutral-1'
+                          isGenerated ? 'border-primary-6 border-2 border-t-0' : 'border-neutral-1',
                         )}
                       >
                         <div className="flex max-w-full min-w-0 flex-col gap-1">

@@ -1,6 +1,6 @@
 'use client';
 
-import { OTPInput, SlotProps } from 'input-otp';
+import { OTPInput, type SlotProps } from 'input-otp';
 import { classNames } from '@/util/utils';
 
 type Props = {
@@ -38,7 +38,7 @@ function Slot({ isActive, char, placeholderChar, hasFakeCaret }: SlotProps) {
         'rounded-md border',
         'group-hover:border-accent-foreground/20 group-focus-within:border-accent-foreground/20',
         'outline-accent-foreground/20 outline-0',
-        isActive && 'outline-accent-foreground outline-1'
+        isActive && 'outline-accent-foreground outline-1',
       )}
     >
       <div className="group-has-[input[data-input-otp-placeholder-shown]]:opacity-20">

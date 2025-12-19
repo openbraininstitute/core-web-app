@@ -3,13 +3,13 @@
 import { getExperimentalBoutonDensity } from '@/api/entitycore/queries';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { Metadata } from '@/features/entity-download/metadata';
-import { ExperimentalBoutonDensityJsonMetadata } from '@/features/entity-download/types';
+import type { ExperimentalBoutonDensityJsonMetadata } from '@/features/entity-download/types';
 import { createTemplateFileEntry, getMetadataCsvEntryBase } from '@/features/entity-download/utils';
-import { WorkspaceContext } from '@/types/common';
+import type { WorkspaceContext } from '@/types/common';
 
 export async function* getExperimentalBoutonDensityFiles(
   entityIds: string[],
-  ctx?: WorkspaceContext
+  ctx?: WorkspaceContext,
 ) {
   const metadata = new Metadata<ExperimentalBoutonDensityJsonMetadata>();
 
@@ -18,7 +18,10 @@ export async function* getExperimentalBoutonDensityFiles(
   } catch {}
 
   for (const entityId of entityIds) {
-    const boutonDensity = await getExperimentalBoutonDensity({ id: entityId, context: ctx });
+    const boutonDensity = await getExperimentalBoutonDensity({
+      id: entityId,
+      context: ctx,
+    });
 
     const idx = metadata.entriesCount;
 

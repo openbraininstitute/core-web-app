@@ -1,7 +1,7 @@
 import { Form, InputNumber } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
 import z from 'zod';
-
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
   ExperimentalSetupConfigurationAtomFamily,
@@ -12,7 +12,6 @@ import {
   getSessionKey,
   label,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import {
   ExperimentalSetupConfigurationSchema,
   type SimulationExperimentalSetupKeys,
@@ -31,7 +30,7 @@ type SetupInputProps = {
   onChange: (key: SimulationExperimentalSetupKeys, newValue: number | null) => void;
 };
 
-const CONDITIONS_FIELDS: Array<Omit<SetupInputProps, 'onChange'>> = [
+const CONDITIONS_FIELDS: Omit<SetupInputProps, 'onChange'>[] = [
   {
     id: 'celsius',
     text: 'Temperature',
@@ -85,7 +84,7 @@ function Input({
                   await validator.parseAsync(value);
                 } catch (error) {
                   return Promise.reject(
-                    error instanceof z.ZodError ? error.errors.at(0)?.message : ''
+                    error instanceof z.ZodError ? error.errors.at(0)?.message : '',
                   );
                 }
                 return Promise.resolve();
@@ -98,7 +97,7 @@ function Input({
             size={breakpoint === 'l' ? 'middle' : 'large'}
             className={cn(
               'border-neutral-2! [&_.ant-input-number-input]:text-primary-8! flex w-full items-center justify-between gap-2 rounded-sm! bg-white font-bold! [&_input]:placeholder:!font-light',
-              '[&_.ant-input-number-suffix]:text-neutral-3'
+              '[&_.ant-input-number-suffix]:text-neutral-3',
             )}
             onChange={(newValue: number | null) => onChange(id, newValue)}
             suffix={unit}

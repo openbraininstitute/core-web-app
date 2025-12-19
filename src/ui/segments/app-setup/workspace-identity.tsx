@@ -3,9 +3,6 @@
 
 'use client';
 
-import { ComponentProps, ReactNode, useEffect, useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { Alert, Form, Popover } from 'antd';
 import {
   CheckCircleFilled,
   EditOutlined,
@@ -13,22 +10,23 @@ import {
   LoadingOutlined,
   RightOutlined,
 } from '@ant-design/icons';
+import { useMutation } from '@tanstack/react-query';
+import { Alert, Form, Popover } from 'antd';
+import { type ComponentProps, type ReactNode, useEffect, useState } from 'react';
 import z from 'zod';
-
-import { VerificationCode } from '@/components/VirtualLab/create-entity-flows/common/otp-code';
-import { EmailStatusSchema } from '@/api/virtual-lab-svc/validation';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import {
   getEmailVerificationCode,
   verifyOtpCode,
 } from '@/api/virtual-lab-svc/queries/email-verification';
-import { Card, CardContent } from '@/ui/molecules/card';
+import { EmailStatusSchema } from '@/api/virtual-lab-svc/validation';
+import { VerificationCode } from '@/components/VirtualLab/create-entity-flows/common/otp-code';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
+import { Card, CardContent } from '@/ui/molecules/card';
 import { Input } from '@/ui/molecules/input';
-import { cn } from '@/utils/css-class';
-
 import type { TResolvedWorkspace } from '@/ui/segments/app-setup/helpers';
+import { cn } from '@/utils/css-class';
+import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 export const WorkspaceIdentitySchema = z.object({
   name: z.string({ message: 'Virtual lab name is required' }).min(1),
@@ -77,7 +75,7 @@ function CustomInput({
           'border-neutral-1 text-primary-9! h-auto rounded-full bg-white py-2.5! pr-10 pl-4 shadow-sm md:text-base lg:py-3 lg:text-lg',
           'placeholder:text-sm placeholder:font-light disabled:font-black disabled:opacity-70',
           'focus-visible:text-primary-9! font-black! focus-visible:font-bold!',
-          rest.className
+          rest.className,
         )}
         {...rest}
       />
@@ -130,14 +128,14 @@ export function WorkspaceIdentity({
     }));
   };
 
-  const values = Form.useWatch([], form);
+  const _values = Form.useWatch([], form);
 
   useEffect(() => {
     form
       .validateFields({ validateOnly: true })
       .then(() => setSubmittable(true))
       .catch(() => setSubmittable(false));
-  }, [form, values, editableField]);
+  }, [form]);
 
   const fullName =
     [data?.profile?.first_name, data?.profile?.last_name].filter(Boolean).join(' ') ||
@@ -192,7 +190,7 @@ export function WorkspaceIdentity({
     },
     onError() {
       setVerificationMsg(
-        'Something went wrong while sending the verification code. Please try again in a moment.'
+        'Something went wrong while sending the verification code. Please try again in a moment.',
       );
     },
   });
@@ -233,7 +231,7 @@ export function WorkspaceIdentity({
               className={cn(
                 'relative flex h-full grow flex-col px-4 py-2 [&_.ant-form-item-explain-error]:pl-2',
                 '[&_.ant-form-item-explain-error]:text-sm! [&_.ant-form-item-explain-error]:select-none',
-                '[&_.ant-form-item-label]:pb-0!'
+                '[&_.ant-form-item-label]:pb-0!',
               )}
               requiredMark={false}
               initialValues={{
@@ -259,7 +257,7 @@ export function WorkspaceIdentity({
                     rules={[
                       {
                         required: true,
-                        validator(rule, value) {
+                        validator(_rule, value) {
                           if (
                             !EmailStatusSchema.options.includes(value) ||
                             value !== EmailStatusSchema.Enum.verified
@@ -302,7 +300,7 @@ export function WorkspaceIdentity({
                             return Promise.reject(
                               error instanceof z.ZodError
                                 ? error.errors.at(0)?.message
-                                : 'First name is required'
+                                : 'First name is required',
                             );
                           }
                           return Promise.resolve();
@@ -331,7 +329,7 @@ export function WorkspaceIdentity({
                             return Promise.reject(
                               error instanceof z.ZodError
                                 ? error.errors.at(0)?.message
-                                : 'Last name is required'
+                                : 'Last name is required',
                             );
                           }
                           return Promise.resolve();
@@ -355,7 +353,7 @@ export function WorkspaceIdentity({
                           classNames={{
                             root: cn(
                               '[&_.ant-popover-inner]:p-0! [&_.ant-popover-inner]:bg-primary-8! max-w-[260px]',
-                              '[&_.ant-popover-arrow:before]:bg-primary-8!'
+                              '[&_.ant-popover-arrow:before]:bg-primary-8!',
                             ),
                           }}
                           content={
@@ -381,7 +379,7 @@ export function WorkspaceIdentity({
                             return Promise.reject(
                               error instanceof z.ZodError
                                 ? error.errors.at(0)?.message
-                                : 'Affiliation is required'
+                                : 'Affiliation is required',
                             );
                           }
                           return Promise.resolve();
@@ -410,7 +408,7 @@ export function WorkspaceIdentity({
                             return Promise.reject(
                               error instanceof z.ZodError
                                 ? error.errors.at(0)?.message
-                                : 'Email must be in a valid format'
+                                : 'Email must be in a valid format',
                             );
                           }
                           return Promise.resolve();
@@ -448,10 +446,10 @@ export function WorkspaceIdentity({
                         '[&_.anticon-close-circle]:mt-1.5',
                         '[&_.ant-alert-close-icon]:mt-1.5',
                         ['error', 'locked', 'expired', 'registered', 'not_match'].includes(
-                          fields?.email_status
+                          fields?.email_status,
                         )
                           ? 'flex!'
-                          : 'hidden'
+                          : 'hidden',
                       )}
                       message={verificationMsg}
                     />

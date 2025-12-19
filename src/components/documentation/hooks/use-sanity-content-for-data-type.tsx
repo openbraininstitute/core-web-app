@@ -1,9 +1,8 @@
-import queryForDataTypes from '../query/data-types-query';
-import { ContentForGlossaryItem } from '../type';
-
 import { useSanity } from '@/services/sanity';
 import { logError } from '@/util/logger';
-import { assertType, TypeDef } from '@/util/type-guards';
+import { assertType, type TypeDef } from '@/util/type-guards';
+import queryForDataTypes from '../query/data-types-query';
+import type { ContentForGlossaryItem } from '../type';
 
 export function useSanityContentForExperimentsModels() {
   return useSanity(queryForDataTypes, isContentForGlossary) ?? [];
@@ -26,7 +25,7 @@ function isContentForGlossary(data: unknown): data is ContentForGlossaryItem[] {
           Status: typeStringOrNull,
         },
       ],
-      'ContentForGlossary'
+      'ContentForGlossary',
     );
     return true;
   } catch (ex) {

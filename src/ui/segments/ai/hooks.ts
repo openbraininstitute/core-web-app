@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import { setFlag, useFlags, aiPanelStateFlag } from '@/features/feature-flags';
+import { aiPanelStateFlag, setFlag, useFlags } from '@/features/feature-flags';
 import { PanelState } from '@/ui/segments/ai/types';
 
 export function usePanelState() {
@@ -8,7 +8,7 @@ export function usePanelState() {
 
   const setState = useCallback(
     (newState: PanelState) => setFlag(aiPanelStateFlag.key, newState),
-    []
+    [],
   );
 
   return {

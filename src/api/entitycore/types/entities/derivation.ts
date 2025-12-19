@@ -30,7 +30,7 @@ export const DerivationType = {
 } as const;
 
 export const DerivationTypeDictionary = Object.fromEntries(
-  Object.entries(DerivationType).map(([name, value]) => [name, value.key])
+  Object.entries(DerivationType).map(([name, value]) => [name, value.key]),
 ) as {
   [K in keyof typeof DerivationType]: (typeof DerivationType)[K]['key'];
 };

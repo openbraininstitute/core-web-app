@@ -1,11 +1,11 @@
 import { Empty } from 'antd';
-import Plotly, { Config, Layout } from 'plotly.js-dist-min';
+import Plotly, { type Config, type Layout } from 'plotly.js-dist-min';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
-import { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
+import type { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
 import { LTTB } from '@/util/explore-section/LTTB';
 
 const Plot = createPlotlyComponent(Plotly);
@@ -27,7 +27,7 @@ const makePlotLayout = ({
       xref: 'paper',
       yref: 'paper',
       pad: { l: 0, r: 0, t: 20, b: 40 },
-      // @ts-ignore
+      // @ts-expect-error
       automargin: true,
     },
     plot_bgcolor: '#fff',
@@ -97,7 +97,7 @@ export default function SimulationPlot({
 
   useEffect(() => {
     if (containerRef.current) setInViewRef(containerRef.current);
-  }, [containerRef, setInViewRef]);
+  }, [setInViewRef]);
 
   const onResize = useCallback(() => setPlotRevision((prev) => prev + 1), []);
   useResizeObserver(containerRef, onResize);
@@ -105,10 +105,10 @@ export default function SimulationPlot({
   useEffect(() => {
     try {
       setError(false);
-    } catch (err) {
+    } catch (_err) {
       setError(true);
     }
-  }, [plotData, title, yTitle]);
+  }, []);
 
   if (error) {
     return <Empty description="Error while rendering plot" image={Empty.PRESENTED_IMAGE_DEFAULT} />;

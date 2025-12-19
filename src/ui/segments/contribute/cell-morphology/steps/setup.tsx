@@ -1,22 +1,20 @@
 'use client';
 
-import { DatePicker, Form, Input, InputNumber, Space } from 'antd';
 import { InfoCircleFilled } from '@ant-design/icons';
+import { DatePicker, Form, Input, InputNumber, Space } from 'antd';
 import dayjs from 'dayjs';
-
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
-import { CellMorphologySchema } from '@/ui/segments/contribute/cell-morphology/schema';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { cn } from '@/utils/css-class';
+import { CellMorphologySchema } from '@/ui/segments/contribute/cell-morphology/schema';
 import {
-  renderLabel,
   createZodFieldValidator,
   RequiredFieldMarker,
+  renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
-
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import { cn } from '@/utils/css-class';
+import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 export function Setup() {
   const form = Form.useFormInstance();
@@ -131,7 +129,7 @@ export function Setup() {
           className: '[&_svg]:text-primary-8!',
           rootClassName: cn(
             '[&_.ant-tooltip-inner]:bg-white [&_.ant-tooltip-inner]:text-primary-8 ',
-            '[&_.ant-tooltip-arrow]:before:bg-white'
+            '[&_.ant-tooltip-arrow]:before:bg-white',
           ),
           title: (
             <div className="flex items-center gap-1">

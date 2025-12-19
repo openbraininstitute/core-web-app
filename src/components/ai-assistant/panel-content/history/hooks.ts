@@ -1,11 +1,14 @@
 import React from 'react';
 
-import { AiAssistantHistory, AiAssistantHistoryItem } from '@/services/ai-agent/assistant/types';
+import type {
+  AiAssistantHistory,
+  AiAssistantHistoryItem,
+} from '@/services/ai-agent/assistant/types';
 import { logError } from '@/util/logger';
 
 export function useSections(history: AiAssistantHistory) {
   return React.useMemo(() => {
-    const cases: Array<[title: string, days: number]> = [
+    const cases: [title: string, days: number][] = [
       ['Today', 1],
       ['Yesterday', 2],
       ['Last 7 days', 7],
@@ -44,7 +47,7 @@ function deltaDays(thread: AiAssistantHistoryItem, days: number) {
       Math.floor(now.valueOf() / SECONDS_PER_DAY) -
       Math.floor(thread.date.valueOf() / SECONDS_PER_DAY);
     return delta < days;
-  } catch (ex) {
+  } catch (_ex) {
     logError('Unable to read the date from this thread:', thread);
     return false;
   }

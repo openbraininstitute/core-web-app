@@ -1,15 +1,14 @@
-import { useAtom } from 'jotai';
 import { Tooltip } from 'antd';
-
+import { useAtom } from 'jotai';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { FlatListViewIcon, HierarchicalViewIcon } from '@/components/icons';
+import { WorkspaceSection } from '@/constants';
+import { useDataListStateSnapshotActions } from '@/ui/segments/data-table/elements/context';
 import {
   CircuitRepresentationView,
   circuitRepresentationViewAtom,
 } from '@/ui/segments/explore/circuit/helpers';
-import { FlatListViewIcon, HierarchicalViewIcon } from '@/components/icons';
 import { classNames } from '@/util/utils';
-import { useDataListStateSnapshotActions } from '@/ui/segments/data-table/elements/context';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { WorkspaceSection } from '@/constants';
 
 type Props = {
   dataKey: string;
@@ -53,7 +52,7 @@ export function CircuitViewToggle({ dataKey }: Props) {
           <div
             className={classNames(
               'bg-primary-9 absolute top-px h-5 w-5 rounded-full transition-transform duration-300 ease-in-out',
-              view === 'hierarchy' ? 'translate-x-[2px]' : 'translate-x-[21px]'
+              view === 'hierarchy' ? 'translate-x-[2px]' : 'translate-x-[21px]',
             )}
           />
         </button>

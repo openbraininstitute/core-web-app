@@ -2,7 +2,7 @@
 
 import SingleFeatureCard from '@/components/documentation/features/single-feature-card';
 import {
-  ContentForFeatureItem,
+  type ContentForFeatureItem,
   useSanityContentForFeatureItems,
 } from '@/components/documentation/hooks/use-sanity-content-for-features';
 
@@ -10,7 +10,7 @@ export default function AllFeaturesContent() {
   const content = useSanityContentForFeatureItems();
 
   const availableFeatures = content.filter(
-    (item: ContentForFeatureItem) => item.Status === 'Available'
+    (item: ContentForFeatureItem) => item.Status === 'Available',
   );
 
   return (

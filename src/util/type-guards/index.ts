@@ -48,7 +48,7 @@ export function assertString(data: unknown, name = 'data'): asserts data is stri
 
 export function assertObject(
   data: unknown,
-  name = 'data'
+  name = 'data',
 ): asserts data is Record<string, unknown> {
   if (!isObject(data)) {
     throw Error(`${name} was expected to be an object but we got ${typeof data}!`);
@@ -63,7 +63,7 @@ function assertArray(data: unknown, name = 'data'): asserts data is unknown[] {
 
 export function assertOptionalArrayBuffer(
   data: unknown,
-  name = 'data'
+  name = 'data',
 ): asserts data is ArrayBuffer | undefined {
   if (data && !isArrayBuffer(data)) {
     throw Error(`${name} was expected to be an ArrayBuffer but we got ${typeof data}!`);
@@ -101,19 +101,13 @@ export type TypeDef =
 export function isType<T>(
   data: unknown,
   type: TypeDef,
-  logErrors: string | null = null
+  logErrors: string | null = null,
 ): data is T {
   try {
     assertType<T>(data, type);
     return true;
-  } catch (ex) {
+  } catch (_ex) {
     if (logErrors) {
-      // eslint-disable-next-line no-console
-      console.error('[Invalid type]', logErrors);
-      // eslint-disable-next-line no-console
-      console.error(data);
-      // eslint-disable-next-line no-console
-      console.debug(ex);
     }
     return false;
   }
@@ -168,7 +162,7 @@ export function assertType<T>(data: unknown, type: TypeDef, prefix = 'data'): as
         return;
       default:
         throw Error(
-          `Don't know how to create a type guard for this kind of type: ${JSON.stringify(type)}`
+          `Don't know how to create a type guard for this kind of type: ${JSON.stringify(type)}`,
         );
     }
   }
@@ -187,12 +181,12 @@ export function assertType<T>(data: unknown, type: TypeDef, prefix = 'data'): as
 function assertTypeTuple(
   data: unknown,
   prefix: string,
-  [, ...types]: ['tuple', ...TypeDef[]]
+  [, ...types]: ['tuple', ...TypeDef[]],
 ): asserts data is unknown[] {
   assertArray(data);
   if (types.length > data.length) {
     throw Error(
-      `Expected ${prefix}'s length to be at least ${types.length} and not ${data.length}!`
+      `Expected ${prefix}'s length to be at least ${types.length} and not ${data.length}!`,
     );
   }
   for (let i = 0; i < types.length; i++) {
@@ -204,7 +198,7 @@ function assertTypeTuple(
 function assertTypeTupleWithRest(
   data: unknown,
   prefix: string,
-  [, ...types]: ['tuple...', ...TypeDef[], TypeDef]
+  [, ...types]: ['tuple...', ...TypeDef[], TypeDef],
 ) {
   const last = types.length - 1;
   const fixTypes = types.slice(0, last);
@@ -218,7 +212,7 @@ function assertTypeTupleWithRest(
 function assertTypePartial(
   data: unknown,
   prefix: string,
-  [, type]: ['partial', { [name: string]: TypeDef }]
+  [, type]: ['partial', { [name: string]: TypeDef }],
 ) {
   assertObject(data, prefix);
   for (const name of Object.keys(type)) {
@@ -302,14 +296,14 @@ function assertTypeLiteral(data: unknown, prefix: string, type: ['literal', ...s
       .map((item) => `"${item}"`)
       .join(' | ')}) and not a ${prettytypeof(data)}${
       isString(data) ? ` (${JSON.stringify(data)})` : ''
-    }!`
+    }!`,
   );
 }
 
 function assertTypeCustom(
   data: unknown,
   prefix: string,
-  [, typeGuard]: ['custom', TypeDefFunction]
+  [, typeGuard]: ['custom', TypeDefFunction],
 ) {
   // Custom type guard.
   if (!typeGuard(data)) {
@@ -376,7 +370,7 @@ function assertTypeCustom(
 export function ensureType<T>(
   data: unknown,
   type: TypeDef,
-  defaultValue: T | ((v: unknown) => T)
+  defaultValue: T | ((v: unknown) => T),
 ): T {
   if (isType<T>(data, type)) return data;
 

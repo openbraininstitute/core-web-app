@@ -1,4 +1,4 @@
-import {
+import type {
   EntityAuthorization,
   EntityCoreIdentifiable,
   EntityCoreOwnership,
@@ -6,7 +6,7 @@ import {
   IContributor,
   Timestamps,
 } from '../shared/global';
-import {
+import type {
   ContributionFilter,
   IdFilter,
   NameFilter,
@@ -28,12 +28,12 @@ export interface PublicationBase
     EntityCoreOwnership {}
 
 export interface IPublication extends PublicationBase {
-  contributions?: Array<IContributor> | null;
+  contributions?: IContributor[] | null;
   name: string;
   description: string;
   DOI: string | null;
   title: string | null;
-  authors: Array<Author> | null;
+  authors: Author[] | null;
   publication_year: number | null;
   abstract: string | null;
 }

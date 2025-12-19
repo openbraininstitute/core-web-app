@@ -1,13 +1,11 @@
 'use client';
 
-import { ReactNode } from 'react';
-
+import type { ReactNode } from 'react';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { ExploreDownloadButton } from '@/ui/segments/data-table/elements/download-button';
 import { useScrollNav } from '@/ui/segments/data-table/elements/hooks';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 function DefaultRenderButton<T extends EntityCoreIdentifiable>({
   children,
@@ -53,7 +51,7 @@ export default function TableControls<T extends EntityCoreIdentifiable>({
   const { left, right } = useScrollNav(
     typeof document !== 'undefined'
       ? (document.querySelector('.ant-table-body') as HTMLDivElement)
-      : undefined
+      : undefined,
   );
 
   if (!visible) return null;

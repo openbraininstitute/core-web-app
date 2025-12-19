@@ -2,15 +2,13 @@
 
 import Link from 'next/link';
 import React, { useState } from 'react';
-
+import { classNames } from '@/util/utils';
 import { ID_MENU } from '../../constants';
 import { IconChevronRight } from '../../icons/IconChevronRight';
 import { IconMenu } from '../../icons/IconMenu';
 import { EnumSection } from '../../sections/sections';
-import PopupMenu from './PopupMenu/PopupMenu';
-
-import { classNames } from '@/util/utils';
 import styles from './Menu.module.css';
+import PopupMenu from './PopupMenu/PopupMenu';
 
 interface MenuProps {
   className?: string;
@@ -32,7 +30,11 @@ const MENU_ITEMS: MenuItem[] = [
     index: EnumSection.About,
     submenu: [
       { caption: 'About OBI', slug: '/about', index: EnumSection.About },
-      { caption: 'Our story', slug: '/the-real-digital-brain-story', index: EnumSection.Story },
+      {
+        caption: 'Our story',
+        slug: '/the-real-digital-brain-story',
+        index: EnumSection.Story,
+      },
       { caption: 'Mission', slug: '/mission', index: EnumSection.Mission },
       { caption: 'Team', slug: '/team', index: EnumSection.Team },
     ],
@@ -110,7 +112,7 @@ export default function Menu({ className, scrollHasStarted, section }: MenuProps
           className,
           styles.menuContainer,
           scrollHasStarted && styles.stuck,
-          !showMenuComponent && styles.hidden
+          !showMenuComponent && styles.hidden,
         )}
         style={{
           transform: showMenuComponent ? 'translateY(0)' : 'translateY(-100%)',
@@ -135,7 +137,7 @@ export default function Menu({ className, scrollHasStarted, section }: MenuProps
                     type="button"
                     className={classNames(
                       styles.menuButton,
-                      (item.index === section || parentItem?.slug === item.slug) && styles.selected
+                      (item.index === section || parentItem?.slug === item.slug) && styles.selected,
                     )}
                   >
                     <span className={styles.menuButtonContent}>
@@ -149,7 +151,7 @@ export default function Menu({ className, scrollHasStarted, section }: MenuProps
                     className={classNames(
                       styles.submenu,
                       hoveredItem === item.slug && styles.submenuVisible,
-                      'bg-primary-8'
+                      'bg-primary-8',
                     )}
                   >
                     {item.submenu.map((subItem) => (

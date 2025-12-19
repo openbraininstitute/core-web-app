@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
 import { Select } from 'antd';
-
+import { useEffect, useState, useTransition } from 'react';
+import { useAppNotification } from '@/components/notification';
 import { resetFlags, setFlag } from '@/features/feature-flags';
 import { flags } from '@/features/feature-flags/flags';
 import { useFlags } from '@/features/feature-flags/provider';
-import { useAppNotification } from '@/components/notification';
 
 export function ExperimentalFeatures() {
   const { error: errorNotify } = useAppNotification();
@@ -19,11 +18,11 @@ export function ExperimentalFeatures() {
   const [, startTransition] = useTransition();
 
   const visibleFlags = flags.filter((flag) =>
-    typeof flag.visible === 'boolean' ? flag.visible : flag.visible?.()
+    typeof flag.visible === 'boolean' ? flag.visible : flag.visible?.(),
   );
 
   // Clean up optimistic values after server update
-  useEffect(() => setOptimisticFlags({}), [flagValues]);
+  useEffect(() => setOptimisticFlags({}), []);
 
   const handleFlagChange = (key: string, value: unknown) => {
     setOptimisticFlags((prev) => ({ ...prev, [key]: value }));
@@ -32,14 +31,17 @@ export function ExperimentalFeatures() {
     startTransition(async () => {
       try {
         await setFlag(key as any, value as any);
-      } catch (error) {
+      } catch (_error) {
         // Rollback on error
         setOptimisticFlags((prev) => {
           const next = { ...prev };
           delete next[key];
           return next;
         });
-        errorNotify({ message: 'Failed to update feature flag', placement: 'topRight' });
+        errorNotify({
+          message: 'Failed to update feature flag',
+          placement: 'topRight',
+        });
       } finally {
         setUpdatingFlags((prev) => {
           const next = new Set(prev);

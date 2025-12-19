@@ -6,10 +6,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useSanityForSingleTutorial } from '@/components/documentation/tutorials/fetch-single-tutorial';
 import SliderTimestamps from '@/components/documentation/tutorials/slider-timestamps';
 import TextContentBloc from '@/components/documentation/tutorials/TextContentBloc';
+import type { TutorialProps } from '@/components/documentation/type';
 import { useSanityContentForTutorialsList } from '@/components/tutorials-carrousel/hooks';
 import TutorialCard from '@/ui/segments/help/tutorials/tutorial-card';
-
-import type { TutorialProps } from '@/components/documentation/type';
 
 export default function TutorialContent() {
   const searchParams = useSearchParams();
@@ -34,9 +33,11 @@ export default function TutorialContent() {
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tutorialSlug, content.length]);
+  }, [tutorialSlug, content.length, pathname, router.replace, content[0], searchParams.toString]);
 
-  const singleTutorial = useSanityForSingleTutorial({ slug: effectiveTutorialSlug });
+  const singleTutorial = useSanityForSingleTutorial({
+    slug: effectiveTutorialSlug,
+  });
 
   const videoRef = useRef<HTMLVideoElement>(null!);
   const [videoTime, setVideoTime] = useState<number>(0);

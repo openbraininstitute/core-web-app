@@ -1,17 +1,16 @@
 import { atom } from 'jotai';
-
+import type { IMEModel } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import {
-  Config,
-  ConfigValue,
+  type Config,
+  type ConfigValue,
   JSONSchemaForm,
 } from '@/features/small-microcircuit/_components/components';
-import { AtomsMap, JSONSchema } from '@/features/small-microcircuit/types';
 import { isRootCategory } from '@/features/small-microcircuit/_components/hooks/schema';
 import { isAtom } from '@/features/small-microcircuit/_components/utils';
-import { classNames } from '@/util/utils';
-import { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import { IMEModel } from '@/api/entitycore/types';
 import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
+import type { AtomsMap, JSONSchema } from '@/features/small-microcircuit/types';
+import { classNames } from '@/util/utils';
 
 type MiddleProps = {
   schema: JSONSchema;
@@ -66,11 +65,10 @@ export default function Middle({
     <div
       className={classNames(
         styles.scrollable,
-        'h-full overflow-y-auto border-r border-l border-gray-200 px-5'
+        'h-full overflow-y-auto border-r border-l border-gray-200 px-5',
       )}
     >
-      {schema.properties &&
-        schema.properties?.[configTab]?.additionalProperties?.oneOf &&
+      {schema.properties?.[configTab]?.additionalProperties?.oneOf &&
         !selectedCategory &&
         editing && (
           <div className="flex flex-col items-center gap-5">
@@ -121,8 +119,7 @@ export default function Middle({
           </div>
         )}
 
-      {schema.properties &&
-        schema.properties?.[configTab] &&
+      {schema.properties?.[configTab] &&
         editing &&
         (isRootCategory(schema, configTab) || selectedCatSchema) && (
           <JSONSchemaForm

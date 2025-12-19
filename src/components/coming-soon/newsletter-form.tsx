@@ -2,16 +2,15 @@
 
 'use client';
 
-import { HTMLProps, useState } from 'react';
-import Link from 'next/link';
-import { Form, Button, ConfigProvider, Checkbox, Result, Alert } from 'antd';
-import { z } from 'zod';
+import { Alert, Button, Checkbox, ConfigProvider, Form, Result } from 'antd';
 import delay from 'es-toolkit/compat/delay';
-
-import { classNames } from '@/util/utils';
-import { Input } from '@/components/inputs/input-outline';
+import Link from 'next/link';
+import { type HTMLProps, useState } from 'react';
+import { z } from 'zod';
 import subscribeNewsletterHandler from '@/api/mailchimp/subscribe-newsletter';
+import { Input } from '@/components/inputs/input-outline';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { classNames } from '@/util/utils';
 
 type TNewsletterForm = {
   email: string;
@@ -81,7 +80,7 @@ export default function NewsletterForm({ cls }: Props) {
       className={classNames(
         'flex w-full max-w-full flex-col bg-white',
         'p-4 sm:max-w-3xl md:p-8',
-        cls?.container
+        cls?.container,
       )}
     >
       <ConfigProvider theme={{ hashed: false }}>
@@ -111,7 +110,7 @@ export default function NewsletterForm({ cls }: Props) {
                 <span
                   className={classNames(
                     'text-primary-8 text-base font-bold md:text-lg',
-                    cls?.formItem?.label
+                    cls?.formItem?.label,
                   )}
                 >
                   Name
@@ -131,14 +130,20 @@ export default function NewsletterForm({ cls }: Props) {
                 <span
                   className={classNames(
                     'text-primary-8 text-base font-bold md:text-lg',
-                    cls?.formItem?.label
+                    cls?.formItem?.label,
                   )}
                 >
                   Email
                   <span className="ml-1 font-bold text-red-600">*</span>
                 </span>
               }
-              rules={[{ required: true, message: 'Please enter your email', type: 'email' }]}
+              rules={[
+                {
+                  required: true,
+                  message: 'Please enter your email',
+                  type: 'email',
+                },
+              ]}
             >
               <Input
                 placeholder="Enter your email"
@@ -155,7 +160,7 @@ export default function NewsletterForm({ cls }: Props) {
               <Checkbox
                 className={classNames(
                   'mr-3 [&_.ant-checkbox-inner]:rounded-none',
-                  '[&_.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-8 [&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-8'
+                  '[&_.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-8 [&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-8',
                 )}
               >
                 <span className="text-primary-8 text-base font-semibold md:text-lg">
@@ -179,7 +184,7 @@ export default function NewsletterForm({ cls }: Props) {
                   'text-primary-8 w-auto rounded-full bg-white px-8 py-3 text-lg font-semibold',
                   'hover:bg-primary-8 mx-auto flex h-auto items-center justify-center transition-colors duration-200 hover:text-white!',
                   'disabled:text-primary-8 disabled:hover:text-primary-4! disabled:hover:bg-gray-100',
-                  cls?.btn
+                  cls?.btn,
                 )}
                 disabled={disableForm}
               >
@@ -194,7 +199,7 @@ export default function NewsletterForm({ cls }: Props) {
             className={classNames(
               '[&_.ant-result-title]:text-primary-8 font-serif [&_.ant-result-title]:font-bold',
               'mx-auto max-w-full sm:max-w-[80%] lg:max-w-[60%]',
-              '[&_.ant-result-title]:text-2xl sm:[&_.ant-result-title]:text-4xl'
+              '[&_.ant-result-title]:text-2xl sm:[&_.ant-result-title]:text-4xl',
             )}
           />
         )}

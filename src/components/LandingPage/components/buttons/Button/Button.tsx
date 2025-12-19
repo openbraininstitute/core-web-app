@@ -1,9 +1,7 @@
-import React from 'react';
-
 import Link from 'next/link';
+import { classNames } from '@/util/utils';
 import { IconArrowRight } from '../../../icons/IconArrowRight';
 import { styleButtonHoverable } from '../../../styles';
-import { classNames } from '@/util/utils';
 
 import styles from './Button.module.css';
 

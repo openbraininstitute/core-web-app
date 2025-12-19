@@ -1,12 +1,9 @@
 import Link from 'next/link';
-
+import { classNames } from '@/util/utils';
 import SocialMediaLinks from '../../components/social-media-links';
 import { getSection } from '../../utils';
-import NewsLetterSubscription from './NewsLetterSubscription';
-
-import { classNames } from '@/util/utils';
-
 import styles from './FooterPanel.module.css';
+import NewsLetterSubscription from './NewsLetterSubscription';
 
 interface FooterPanelProps {
   className?: string;

@@ -1,22 +1,19 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { motion } from 'motion/react';
-
-import kebabCase from 'es-toolkit/compat/kebabCase';
 import isNil from 'es-toolkit/compat/isNil';
-
-import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
-import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { config } from '@/config';
-import { cn } from '@/utils/css-class';
-
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import { motion } from 'motion/react';
+import { useRouter } from 'next/navigation';
 import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { config } from '@/config';
+import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
+import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
+import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import { cn } from '@/utils/css-class';
 
 type Props = {
   sessionId: string;
@@ -42,7 +39,7 @@ export function MEModel({ sessionId }: Props) {
         'grid gap-4 [grid-area:body]',
         'h-full max-h-full px-3 py-2',
         { "grid-cols-1 [grid-template-areas:'body']": !mdv },
-        { "grid-cols-[3fr_2fr] [grid-template-areas:'body_mini-view']": mdv }
+        { "grid-cols-[3fr_2fr] [grid-template-areas:'body_mini-view']": mdv },
       )}
       initial={false}
       animate={{
@@ -71,7 +68,7 @@ export function MEModel({ sessionId }: Props) {
           selectionType: 'radio',
           onCellClick: (_, record) => {
             navigate(
-              `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(EntityTypeDict.Memodel)}/${record.id}/overview`
+              `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(EntityTypeDict.Memodel)}/${record.id}/overview`,
             );
           },
           onRowsSelected: (rows) => {

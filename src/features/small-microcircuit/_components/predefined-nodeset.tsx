@@ -1,11 +1,11 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { Select } from 'antd';
-import { atom, useAtom } from 'jotai';
+import { type atom, useAtom } from 'jotai';
 
 import authFetch from '@/auth-fetch';
 import { config } from '@/config';
-import { ConfigValue } from '@/features/small-microcircuit/_components/components';
+import type { ConfigValue } from '@/features/small-microcircuit/_components/components';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 export default function PredefinedNodeset({
@@ -73,7 +73,7 @@ async function fetchNodesets({
         'virtual-lab-id': virtualLabId,
         'project-id': projectId,
       },
-    }
+    },
   );
 
   if (!res.ok) {

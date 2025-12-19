@@ -1,7 +1,6 @@
-import { ViewDefinitionConfig } from '../types';
-import { EntityCoreFields } from '../../fields-defs/enums';
-
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+import { EntityCoreFields } from '../../fields-defs/enums';
+import type { ViewDefinitionConfig } from '../types';
 
 export const ViewDefForPairedNeuronCircuit: ViewDefinitionConfig = {
   title: 'Paired neurons (beta)',

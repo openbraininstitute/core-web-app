@@ -1,5 +1,5 @@
 const singleShowcaseQuery = (
-  slug: string
+  slug: string,
 ) => `*[_type == "publicProjects" && slug.current == "${slug}"][0] {
     name,
     'slug': slug.current,

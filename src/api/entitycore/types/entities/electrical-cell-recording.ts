@@ -1,22 +1,22 @@
-import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
+import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
+import type {
+  EntityAuthorization,
+  EntityCoreBaseAsset,
+  EntityCoreIdentifiable,
+  EntityCoreOwnership,
+  EntityCoreType,
+  IBrainLocation,
+  ILicense,
+  Timestamps,
+} from '@/api/entitycore/types/shared/global';
 import type {
   BrainRegionFilter,
   ContributionFilter,
-  TimestampsFilter,
+  IDFilter,
   PaginationFilter,
   SharedFilter,
-  IDFilter,
+  TimestampsFilter,
 } from '@/api/entitycore/types/shared/request';
-import type {
-  EntityCoreIdentifiable,
-  EntityCoreBaseAsset,
-  EntityAuthorization,
-  IBrainLocation,
-  Timestamps,
-  ILicense,
-  EntityCoreType,
-  EntityCoreOwnership,
-} from '@/api/entitycore/types/shared/global';
 
 export const RecordingType = {
   Intracellular: {
@@ -38,7 +38,7 @@ export const RecordingType = {
 } as const;
 
 export const RecordingTypeDictionary = Object.fromEntries(
-  Object.entries(RecordingType).map(([name, value]) => [name, value.key])
+  Object.entries(RecordingType).map(([name, value]) => [name, value.key]),
 ) as {
   [K in keyof typeof RecordingType]: (typeof RecordingType)[K]['key'];
 };
@@ -66,7 +66,7 @@ export const ElectricalRecordingOrigin = {
 } as const;
 
 export const ElectricalRecordingOriginDictionary = Object.fromEntries(
-  Object.entries(ElectricalRecordingOrigin).map(([name, value]) => [name, value.key])
+  Object.entries(ElectricalRecordingOrigin).map(([name, value]) => [name, value.key]),
 ) as {
   [K in keyof typeof ElectricalRecordingOrigin]: (typeof ElectricalRecordingOrigin)[K]['key'];
 };
@@ -76,9 +76,9 @@ export type TElectricalRecordingOriginDictionary =
 
 export interface IRecordingFilter {
   recording_type: TRecordingTypeDictionary | null;
-  recording_type__in: Array<TRecordingTypeDictionary> | null;
+  recording_type__in: TRecordingTypeDictionary[] | null;
   recording_origin: TElectricalRecordingOriginDictionary | null;
-  recording_origin__in: Array<TElectricalRecordingOriginDictionary> | null;
+  recording_origin__in: TElectricalRecordingOriginDictionary[] | null;
 }
 
 export type ElectricalCellRecordingFilter = Partial<

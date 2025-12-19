@@ -1,13 +1,21 @@
 import { notFound } from 'next/navigation';
 
 import { getMEModel } from '@/api/entitycore/queries';
-import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
-import { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
+import type {
+  ICellMorphology,
+  IElectricalCellRecording,
+  ISingleNeuronSynaptome,
+} from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
   CommonSummaryViewFields,
   getViewDefinitionByExtendedType,
 } from '@/entity-configuration/definitions/view-defs';
+import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
+import type { EntityTypeValue } from '@/entity-configuration/domain';
 import { circuitTypes, type EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
 import {
   resolveSimulationByCampaignId,
@@ -20,20 +28,11 @@ import SynaptomeDetails from '@/features/entities/neuron-simulation/elements/syn
 import { EphysViewer } from '@/features/ephys-viewer';
 import { IonChannelRecordingViewer } from '@/features/ion-channel-recording-viewer';
 import SmallMicrocircuitSimulation from '@/features/small-microcircuit';
+import type { AwaitedType, WorkspaceContext } from '@/types/common';
 import { Field } from '@/ui/segments/detail-view/overview/field';
 import IonChannelModelOverview from '@/ui/segments/detail-view/overview/ion-channel-model';
 import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
 import { Visualization as CircuitViz } from '@/ui/segments/explore/circuit/elements/visualization';
-
-import type {
-  ICellMorphology,
-  IElectricalCellRecording,
-  ISingleNeuronSynaptome,
-} from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { EntityTypeValue } from '@/entity-configuration/domain';
-import type { AwaitedType, WorkspaceContext } from '@/types/common';
-import { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 
 export default async function Overview({
   entity,
@@ -49,7 +48,7 @@ export default async function Overview({
   const commonFields = CommonSummaryViewFields;
   const fields = removeDuplicates(
     getViewDefinitionByExtendedType(extendedType)?.summaryViewFields ?? [],
-    commonFields
+    commonFields,
   );
 
   if (!entity) notFound();
@@ -73,7 +72,7 @@ export default async function Overview({
     try {
       singleNeuronSynaptomeSimulationPayload = await resolveSingleNeuronSynaptomeSimulation(
         entity.id,
-        ctx
+        ctx,
       );
     } catch {
       notFound();
@@ -99,8 +98,11 @@ export default async function Overview({
     let config: AwaitedType<ReturnType<typeof resolveSimulationByCampaignId>>;
 
     try {
-      config = await resolveSimulationByCampaignId({ id: entity.id, context: ctx });
-    } catch (err) {
+      config = await resolveSimulationByCampaignId({
+        id: entity.id,
+        context: ctx,
+      });
+    } catch (_err) {
       notFound();
     }
 
@@ -174,7 +176,7 @@ export default async function Overview({
  */
 function removeDuplicates(
   extraFields: TypeSummaryProps[],
-  commonFields: TypeSummaryProps[]
+  commonFields: TypeSummaryProps[],
 ): TypeSummaryProps[] {
   const fieldsToExclude = new Set<string>(commonFields.map((item) => item.field));
   const fields = extraFields.filter((item) => !fieldsToExclude.has(item.field));

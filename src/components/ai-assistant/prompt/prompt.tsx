@@ -1,14 +1,12 @@
 'use client';
 
 import React from 'react';
-
+import SendIcon from '@/components/icons/Send';
+import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
+import { classNames } from '@/util/utils';
+import styles from './prompt.module.css';
 // import { IconGear } from '../icons/gear';
 import ToolsSelector from './tools-selector';
-import { classNames } from '@/util/utils';
-import SendIcon from '@/components/icons/Send';
-import { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
-
-import styles from './prompt.module.css';
 
 interface PromptProps {
   className?: string;
@@ -39,11 +37,9 @@ export default function Prompt({ className, value, tools, onChange, onClick }: P
     <>
       <div className={classNames(className, styles.prompt)}>
         <div className={styles.input}>
-          <div className={styles.content}>{value + '!'}</div>
+          <div className={styles.content}>{`${value}!`}</div>
           <textarea
             placeholder="What would you like to do?"
-            // eslint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus
             value={value}
             onChange={(evt) => onChange(evt.target.value)}
             onKeyDown={handleKeyDown}

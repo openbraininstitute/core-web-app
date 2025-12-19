@@ -1,8 +1,7 @@
 import { Button, Divider } from 'antd';
 import { useAtom } from 'jotai';
 import { useRef } from 'react';
-
-import { NeuronLocationOriginDict } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import useOnClickOutside from '@/hooks/useOnClickOutside';
 import {
   getSimulationColor,
   RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
@@ -12,7 +11,7 @@ import {
   RecordLocationConfigurationAtomFamily,
   StimulationConfigurationAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import useOnClickOutside from '@/hooks/useOnClickOutside';
+import { NeuronLocationOriginDict } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { classNames } from '@/util/utils';
 
 export default function NeuronMeshInjectionRecordingPopover({
@@ -35,10 +34,10 @@ export default function NeuronMeshInjectionRecordingPopover({
   const rlcKey = `${RECORDING_LOCATION_CONFIGURATION_SESSION_KEY}-${sessionId}`;
   const spcKey = `${STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY}-${sessionId}`;
   const [recordingLocations, setRecodingLocation] = useAtom(
-    RecordLocationConfigurationAtomFamily(rlcKey)
+    RecordLocationConfigurationAtomFamily(rlcKey),
   );
   const [injectConfigInSession, setInjectionConfigInSession] = useAtom(
-    StimulationConfigurationAtomFamily(spcKey)
+    StimulationConfigurationAtomFamily(spcKey),
   );
 
   const onInject = () => {
@@ -75,7 +74,7 @@ export default function NeuronMeshInjectionRecordingPopover({
       ref={ref}
       className={classNames(
         'fixed rounded-sm bg-white shadow-md',
-        "z-0 after:absolute after:-top-1 after:left-1/2 after:h-0 after:w-0 after:-translate-x-1/2 after:rotate-45 after:border-4 after:border-white after:content-['']"
+        "z-0 after:absolute after:-top-1 after:left-1/2 after:h-0 after:w-0 after:-translate-x-1/2 after:rotate-45 after:border-4 after:border-white after:content-['']",
       )}
       style={{
         left: x - 113, // 113 is half of the container

@@ -1,20 +1,18 @@
-import { useRouter, useParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
-import { unwrap } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
-
-import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
+import { unwrap } from 'jotai/utils';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { tryCatch } from '@/api/utils';
+import { WorkspaceScope } from '@/constants';
+import type { WorkspaceContext } from '@/types/common';
+import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
+import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
+import { BaseTable } from '@/ui/segments/data-table/table';
 import { Error } from '@/ui/segments/explore/circuit/elements/error';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { BaseTable } from '@/ui/segments/data-table/table';
-import { WorkspaceScope } from '@/constants';
-import { tryCatch } from '@/api/utils';
-
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
   circuit: ICircuit;
@@ -48,20 +46,20 @@ export function Root({ circuit }: Props) {
             dataType: ExtendedEntitiesTypeDict.Circuit,
             dataScope: WorkspaceScope.Custom,
             key: circuit.id,
-          })
+          }),
         ),
-      [circuit.id]
-    )
+      [circuit.id],
+    ),
   );
   const columns = cols.filter(({ key }) => (activeColumns || []).includes(key as string));
 
-  const onCellClick = (basePath: string, record: ICircuit) => {
+  const onCellClick = (_basePath: string, record: ICircuit) => {
     navigate(
       resolveExploreDetailsPageUrl({
         ctx: { virtualLabId, projectId },
         dataType: ExtendedEntitiesTypeDict.Circuit,
         entityId: record.id,
-      })
+      }),
     );
   };
 
@@ -73,7 +71,7 @@ export function Root({ circuit }: Props) {
           getCircuit({
             id: circuit.root_circuit_id,
             context: { virtualLabId, projectId },
-          })
+          }),
         );
         if (result) {
           setRootCircuit({

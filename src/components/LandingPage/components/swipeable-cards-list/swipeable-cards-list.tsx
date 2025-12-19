@@ -1,12 +1,10 @@
 /* eslint-disable react/no-array-index-key */
 /* eslint-disable no-param-reassign */
-import React, { CSSProperties, type JSX } from 'react';
-
+import React, { type CSSProperties, type JSX } from 'react';
+import { classNames } from '@/util/utils';
 import { IconChevronLeft } from '../../icons/IconChevronLeft';
 import { IconChevronRight } from '../../icons/IconChevronRight';
 import { styleButtonSquare } from '../../styles';
-
-import { classNames } from '@/util/utils';
 import styles from './swipeable-cards-list.module.css';
 
 interface SwipeableCardsListProps {
@@ -118,7 +116,7 @@ function useMoveTo(div: HTMLDivElement | null, count: number, makeId: (index: nu
         behavior: 'smooth',
       });
     },
-    [div, count, makeId]
+    [div, count, makeId],
   );
 }
 
@@ -126,7 +124,7 @@ function useScrollWatcher(
   div: HTMLDivElement | null,
   count: number,
   setCardIndex: React.Dispatch<React.SetStateAction<number>>,
-  makeId: (index: number) => string
+  makeId: (index: number) => string,
 ) {
   React.useEffect(() => {
     if (!div || count === 0) return;

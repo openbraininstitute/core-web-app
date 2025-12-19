@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import { Input as AInput, InputProps } from 'antd';
+import { Input as AInput, type InputProps } from 'antd';
 
 import { classNames } from '@/util/utils';
 
@@ -13,7 +13,7 @@ function Input({ className, ...props }: InputProps) {
         'placeholder:text-gray-400',
         'hover:border-gray-400',
         '[&.ant-input-status-error]:border-b-2! [&.ant-input-status-error]:border-rose-700!',
-        '[&.ant-input-status-error]:border-t-0! [&.ant-input-status-error]:border-r-0! [&.ant-input-status-error]:border-l-0!'
+        '[&.ant-input-status-error]:border-t-0! [&.ant-input-status-error]:border-r-0! [&.ant-input-status-error]:border-l-0!',
       )}
       {...props}
     />

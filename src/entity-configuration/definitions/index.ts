@@ -1,19 +1,17 @@
-import pick from 'es-toolkit/compat/pick';
 import get from 'es-toolkit/compat/get';
-
-import { FieldsDefinition as ExperimentalFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/experimental';
-import { FieldsDefinition as ExperimentFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/experiment';
+import pick from 'es-toolkit/compat/pick';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { FieldsDefinition as CommonFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/common';
+import type { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import { FieldsDefinition as ExperimentFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/experiment';
+import { FieldsDefinition as ExperimentalFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/experimental';
 import { FieldsDefinition as ModelFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/model';
 import { FieldsDefinition as NotebookFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/notebook';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-
 import type {
-  FieldsDefinitionRegistry,
   FieldDefinition,
+  FieldsDefinitionRegistry,
 } from '@/entity-configuration/definitions/types';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
 export const fieldsDefinitionRegistry: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   ...CommonFieldsDefinition,
@@ -34,7 +32,7 @@ export default fieldsDefinitionRegistry;
  * @returns The field definition of type `FieldDefinition<T>` if found, otherwise `null`.
  */
 export function getFieldDefinition<F extends EntityCoreFields, T extends EntityCoreIdentifiable>(
-  field: F
+  field: F,
 ): FieldDefinition<T> | null {
   return get(fieldsDefinitionRegistry, field, null) as FieldDefinition<T> | null;
 }
@@ -47,7 +45,7 @@ export function getFieldDefinition<F extends EntityCoreFields, T extends EntityC
  * @returns An object containing the selected field definitions from the `FieldsDefinitionRegistry`.
  */
 export function getFieldsDefinition<T extends EntityCoreFields[]>(
-  fields: [...T]
+  fields: [...T],
 ): Pick<typeof fieldsDefinitionRegistry, T[number]> {
   return pick(fieldsDefinitionRegistry, fields);
 }

@@ -1,9 +1,9 @@
+import { useSanity } from '@/services/sanity';
 import {
-  FromCellToBrainCard,
-  FromCellToBrainColumn,
+  type FromCellToBrainCard,
+  type FromCellToBrainColumn,
   isContentForFromCellToBrainColumns,
 } from './types';
-import { useSanity } from '@/services/sanity';
 
 export function useSanityContentForFromCelltoBrainContent(): FromCellToBrainColumn[] {
   const data =
@@ -17,7 +17,7 @@ export function useSanityContentForFromCelltoBrainContent(): FromCellToBrainColu
   "cardImageWidth": cards[].image.asset->metadata.dimensions.width,
   "cardImageHeight": cards[].image.asset->metadata.dimensions.height,
 }`,
-      isContentForFromCellToBrainColumns
+      isContentForFromCellToBrainColumns,
     ) ?? [];
 
   return data.map((item) => {

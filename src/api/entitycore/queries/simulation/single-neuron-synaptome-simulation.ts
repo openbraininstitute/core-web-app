@@ -1,20 +1,18 @@
-import startsWith from 'es-toolkit/compat/startsWith';
 import some from 'es-toolkit/compat/some';
-
-import { entityCoreApi, getAssetElement, getEntityCoreContext } from '@/api/entitycore/utils';
-import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/simulation';
+import startsWith from 'es-toolkit/compat/startsWith';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { tryCatch } from '@/api/utils';
-
 import type {
   ISingleNeuronSynaptomeSimulation,
   ISingleNeuronSynaptomeSimulationFilter,
   TCreateSingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types/entities/single-neuron-synaptome-simulation';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
+import { entityCoreApi, getAssetElement, getEntityCoreContext } from '@/api/entitycore/utils';
+import { tryCatch } from '@/api/utils';
+import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/simulation';
 import type { WorkspaceContext } from '@/types/common';
+import type { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
 
 const baseUri = '/single-neuron-synaptome-simulation';
 
@@ -107,7 +105,7 @@ export async function createSingleNeuronSynaptomeSimulation({
 
 export async function getSingleNeuronSynaptomeSimulationIOResult(
   source: ISingleNeuronSynaptomeSimulation,
-  context?: WorkspaceContext
+  context?: WorkspaceContext,
 ): Promise<SimulationPayload | null> {
   const configAsset = getAssetElement({
     assets: source.assets,
@@ -124,7 +122,7 @@ export async function getSingleNeuronSynaptomeSimulationIOResult(
         entityType: EntityTypeDict.SingleNeuronSynaptomeSimulation,
         id: configAsset.id,
         asRawResponse: true,
-      })
+      }),
     );
     const asset = await data?.json();
 

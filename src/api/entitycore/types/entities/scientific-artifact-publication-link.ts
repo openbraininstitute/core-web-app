@@ -1,5 +1,5 @@
-import type { ScientificArtifactBase } from '@/api/entitycore/types/entities/scientific-artifact';
 import type { IPublication } from '@/api/entitycore/types/entities/publication';
+import type { ScientificArtifactBase } from '@/api/entitycore/types/entities/scientific-artifact';
 import type {
   EntityCoreIdentifiable,
   EntityCoreOwnership,
@@ -29,7 +29,7 @@ export const PublicationType = {
 } as const;
 
 export const PublicationTypeDictionary = Object.fromEntries(
-  Object.entries(PublicationType).map(([name, value]) => [name, value.key])
+  Object.entries(PublicationType).map(([name, value]) => [name, value.key]),
 ) as {
   [K in keyof typeof PublicationType]: (typeof PublicationType)[K]['key'];
 };

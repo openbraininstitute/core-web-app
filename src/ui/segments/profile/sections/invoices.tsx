@@ -1,17 +1,16 @@
 import { ExclamationCircleOutlined } from '@ant-design/icons';
-import { Button, ConfigProvider, theme } from 'antd';
-import Table, { ColumnsType } from 'antd/es/table';
 import { useQuery } from '@tanstack/react-query';
-import flatMap from 'es-toolkit/compat/flatMap';
+import { Button, ConfigProvider, theme } from 'antd';
+import Table, { type ColumnsType } from 'antd/es/table';
 import { format } from 'date-fns';
-
-import { getStatusColor } from '@/components/VirtualLab/create-entity-flows/subscription/elements';
+import flatMap from 'es-toolkit/compat/flatMap';
 import { listUserSubscriptionsHistory } from '@/api/virtual-lab-svc/queries/subscription';
-import { SubscriptionPaymentDetails } from '@/api/virtual-lab-svc/queries/types';
+import type { SubscriptionPaymentDetails } from '@/api/virtual-lab-svc/queries/types';
 import { FileDownloadFill } from '@/components/icons/EditorIcons';
+import { getStatusColor } from '@/components/VirtualLab/create-entity-flows/subscription/elements';
 import { keyBuilder } from '@/ui/use-query-keys/user';
-import { formatCurrency } from '@/utils/format';
 import { cn } from '@/utils/css-class';
+import { formatCurrency } from '@/utils/format';
 
 export function Invoices() {
   const { data, isError, isLoading } = useQuery({
@@ -26,7 +25,7 @@ export function Invoices() {
         ...payment,
         subscription_id: subscription.id,
         subscription_type: subscription.subscription_type,
-      }))
+      })),
   );
 
   if (isError) {
@@ -144,7 +143,7 @@ export function Invoices() {
             '[&_.ant-spin-blur]:opacity-0! [&_.ant-table-thead>tr>th]:font-light!',
             '[&_.ant-table-thead>tr>th]:font-light! [&_.ant-table-thead]:text-sm',
             '[&_.ant-empty-description]:text-white!',
-            'me'
+            'me',
           )}
           rowClassName="border-b border-primary-4 last:[&_td]:border-b-0!"
           columns={columns}

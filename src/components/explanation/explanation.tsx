@@ -1,5 +1,5 @@
-import React from 'react';
 import { RiBook2Fill } from '@remixicon/react';
+import React from 'react';
 
 import { classNames } from '@/util/utils';
 

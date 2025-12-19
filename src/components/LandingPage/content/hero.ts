@@ -1,8 +1,7 @@
-import { EnumSection } from '../sections/sections';
+import { useSanity } from '@/services/sanity';
+import type { EnumSection } from '../sections/sections';
 import { getSection } from '../utils';
 import { tryType } from './_common';
-
-import { useSanity } from '@/services/sanity';
 
 interface ContentForHero {
   title: string;
@@ -61,7 +60,7 @@ export function useSanityContentForHero(sectionIndex: EnumSection): ContentForHe
   "posterWidth": posterImage.asset->metadata.dimensions.width,
   "posterHeight": posterImage.asset->metadata.dimensions.height,
 }`,
-      isContentForHero
+      isContentForHero,
     ) ?? DEFAULT_CONTENT_FOR_HERO
   );
 }

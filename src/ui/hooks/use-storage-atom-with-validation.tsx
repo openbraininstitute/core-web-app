@@ -1,10 +1,9 @@
 'use client';
 
-import { atomWithStorage, atomFamily } from 'jotai/utils';
+import { atomFamily, atomWithStorage } from 'jotai/utils';
 import superjson from 'superjson';
-import z from 'zod';
-
 import type { ZodType } from 'zod';
+import z from 'zod';
 
 export const memoryStorage: Storage = {
   getItem: () => null,
@@ -69,7 +68,7 @@ export function createZodSuperJsonStorage<T>(schema: z.ZodType<T>, storage: Stor
 export function makeStorageAtomWithValidationFamily<T>(
   schema: ZodType<T>,
   initialValue: T,
-  storage: Storage
+  storage: Storage,
 ) {
   const resolvedStorage = typeof window !== 'undefined' ? storage : memoryStorage;
 
@@ -81,12 +80,12 @@ export function makeStorageAtomWithValidationFamily<T>(
         createZodSuperJsonStorage(schema, resolvedStorage),
         {
           getOnInit: true,
-        }
+        },
       );
       atom.debugLabel = key;
       return atom;
     },
-    (a, b) => a === b
+    (a, b) => a === b,
   );
   return family;
 }
@@ -119,7 +118,7 @@ export function createSuperJsonStorage<T>(storage: Storage): {
       try {
         const parsed = superjson.parse(storedValue);
         return parsed as T;
-      } catch (error) {
+      } catch (_error) {
         throw new Error('storage error', {
           cause: 'setting storage error',
         });
@@ -135,7 +134,7 @@ export function createSuperJsonStorage<T>(storage: Storage): {
     setItem(key: string, value: T): void {
       try {
         storage.setItem(key, superjson.stringify(value));
-      } catch (error) {
+      } catch (_error) {
         throw new Error('storage error', {
           cause: 'setting storage error',
         });
@@ -171,7 +170,7 @@ export function makeStorageAtomFamily<T>(initialValue: T, storage: Storage) {
       atom.debugLabel = key;
       return atom;
     },
-    (a, b) => a === b
+    (a, b) => a === b,
   );
   return family;
 }

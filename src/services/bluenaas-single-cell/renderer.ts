@@ -1,14 +1,14 @@
-import { throttle, isEqual, differenceWith } from 'es-toolkit/compat';
+import { differenceWith, isEqual, throttle } from 'es-toolkit/compat';
 import {
   AmbientLight,
   Color,
-  CylinderGeometry,
+  type CylinderGeometry,
   DoubleSide,
   EdgesGeometry,
   Fog,
   LineBasicMaterial,
   LineSegments,
-  Mesh,
+  type Mesh,
   MeshLambertMaterial,
   Object3D,
   PerspectiveCamera,
@@ -23,13 +23,11 @@ import {
 // TODO: to check if three js version is compatible with this
 // @ts-expect-error
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-
-import RendererCtrl from './renderer-ctrl';
-import type { Morphology, SecMarkerConfig } from './types';
-import { createSegMarkerMesh, createSegmentMesh, NeuronSegmentInfo } from './renderer-utils';
+import type { SynapsesMesh } from '@/components/neuron-viewer/hooks/events';
 import { Labels } from './labels';
-
-import { SynapsesMesh } from '@/components/neuron-viewer/hooks/events';
+import RendererCtrl from './renderer-ctrl';
+import { createSegMarkerMesh, createSegmentMesh, type NeuronSegmentInfo } from './renderer-utils';
+import type { Morphology, SecMarkerConfig } from './types';
 
 const FOG_COLOR = 0xffffff;
 const FOG_NEAR = 1;
@@ -164,7 +162,7 @@ export class NeuronViewerRenderer {
 
   private animationFrameHandle: number | null = null;
 
-  private synapses: Array<SynapsesMesh> = [];
+  private synapses: SynapsesMesh[] = [];
 
   constructor(container: HTMLDivElement, config: TNeuronViewerConfig) {
     this.labels = new Labels(() => ({
@@ -324,7 +322,10 @@ export class NeuronViewerRenderer {
     hoverData.mesh.getWorldQuaternion(this.hoverBox.quaternion);
     this.hoverBox.name = hoverData.mesh.name;
 
-    this.hoverBox.userData = { ...hoverData.mesh.userData, skipHoverDetection: true };
+    this.hoverBox.userData = {
+      ...hoverData.mesh.userData,
+      skipHoverDetection: true,
+    };
     this.scene.add(this.hoverBox);
 
     this.config.onHover?.({
@@ -398,7 +399,7 @@ export class NeuronViewerRenderer {
     this.config.onHover = onHover;
   }
 
-  public set configOnHoverEnd(onHoverEnd: (data: TNeuronViewerHoverData) => void) {
+  public set configOnHoverEnd(onHoverEnd: (data: TNeuronViewerHoverData) => void,) {
     this.config.onHoverEnd = onHoverEnd;
   }
 
@@ -519,7 +520,7 @@ export class NeuronViewerRenderer {
 
   private removeSecMarker(config: SecMarkerConfig) {
     const secMarkerObj = this.secMarkerObj.children.find((obj) =>
-      isEqual(obj.userData.config, config)
+      isEqual(obj.userData.config, config),
     );
 
     if (!secMarkerObj) {
@@ -541,7 +542,7 @@ export class NeuronViewerRenderer {
 
   ensureSecMarkers = (configs: SecMarkerConfig[]) => {
     const existingMarkerConfigs = this.secMarkerObj.children.map<SecMarkerConfig>(
-      (obj) => obj.userData.config
+      (obj) => obj.userData.config,
     );
 
     const toCreate = differenceWith(configs, existingMarkerConfigs, isEqual);

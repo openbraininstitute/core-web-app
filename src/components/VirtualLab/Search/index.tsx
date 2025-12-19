@@ -1,10 +1,10 @@
 import { SearchOutlined } from '@ant-design/icons';
 import { ConfigProvider } from 'antd';
-import { useState, type JSX } from 'react';
+import { type JSX, useState } from 'react';
 import { classNames } from '@/util/utils';
 
 export default function useSearch(
-  props: JSX.IntrinsicElements['input'] & { containerClassName?: string }
+  props: JSX.IntrinsicElements['input'] & { containerClassName?: string },
 ) {
   const [search, setSearch] = useState('');
 
@@ -35,14 +35,14 @@ function Search(props: JSX.IntrinsicElements['input'] & { containerClassName?: s
       <div
         className={classNames(
           'flex w-max justify-between border-b bg-transparent',
-          containerClassName
+          containerClassName,
         )}
       >
         <input
           {...rest} // eslint-disable-line react/jsx-props-no-spreading
           className={classNames(
             'text-primary-3 placeholder:text-primary-3 mr-2 bg-transparent outline-hidden',
-            className
+            className,
           )}
         />
         <SearchOutlined />

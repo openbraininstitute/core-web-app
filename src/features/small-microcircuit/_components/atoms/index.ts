@@ -10,17 +10,17 @@ import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulationResult } from '@/api/entitycore/queries/simulation/circuit-simulation-result';
-import { EntityTypeDict, IMEModel, TEntityTypeDict } from '@/api/entitycore/types';
-import { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/circuit-simulation-execution';
-import { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
+import { EntityTypeDict, type IMEModel, type TEntityTypeDict } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import type { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/circuit-simulation-execution';
+import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
+import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import { resolveExecutions } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { getLatestSimExecStatus } from '@/features/small-microcircuit/_components/utils';
-import { SimExecStatusMap } from '@/features/small-microcircuit/types';
-import { WorkspaceContext } from '@/types/common';
+import type { SimExecStatusMap } from '@/features/small-microcircuit/types';
+import type { WorkspaceContext } from '@/types/common';
 import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';
-import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 
 const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
   ({ simulationId, context }: { simulationId: string; context: WorkspaceContext }) =>
@@ -36,35 +36,41 @@ const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
   {
     ttl: 120000, // 2 minutes
     areEqual: isEqual,
-  }
+  },
 );
 
 export const simExecRemoteStatusMapAtomFamily = atomFamilyWithExpiration(
   ({ simulationIds, context }: { simulationIds: string[]; context: WorkspaceContext }) =>
     atomWithRefresh<Promise<SimExecStatusMap>>(async () => {
-      const simExecutions = await resolveExecutions({ context, allSimIds: simulationIds });
+      const simExecutions = await resolveExecutions({
+        context,
+        allSimIds: simulationIds,
+      });
 
       const executionsGrouped = simExecutions.reduce<Map<string, ICircuitSimulationExecution[]>>(
         (map, exec) => map.set(exec.used[0].id, [...(map.get(exec.used[0].id) ?? []), exec]),
-        new Map()
+        new Map(),
       );
 
       Array.from(executionsGrouped.values()).forEach((executions) =>
-        executions.sort((a, b) => b.creation_date.localeCompare(a.creation_date))
+        executions.sort((a, b) => b.creation_date.localeCompare(a.creation_date)),
       );
 
       return Array.from(executionsGrouped.keys()).reduce(
-        (map, simId) => map.set(simId, executionsGrouped.get(simId)![0].status),
-        new Map()
+        (map, simId) => map.set(simId, executionsGrouped.get(simId)?.[0].status),
+        new Map(),
       );
     }),
   {
     ttl: 120000, // 2 minutes
     areEqual: isEqual,
-  }
+  },
 );
 
-type SimExecStatusMapAtomFamilyArg = { simulationIds: string[]; context: WorkspaceContext };
+type SimExecStatusMapAtomFamilyArg = {
+  simulationIds: string[];
+  context: WorkspaceContext;
+};
 
 export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
   ({ simulationIds, context }: SimExecStatusMapAtomFamilyArg) => {
@@ -99,16 +105,16 @@ export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
       (get, set, simId, status) => {
         const newStatusMap = new Map(get(localStatusMapAtom)).set(
           simId,
-          status as EntitycoreExecutionStatus
+          status as EntitycoreExecutionStatus,
         );
         set(localStatusMapAtom, newStatusMap);
-      }
+      },
     );
   },
   {
     ttl: 2 * 60 * 1000, // 2 minutes
     areEqual: isEqual,
-  }
+  },
 );
 
 export const simResultBySimIdAtomFamily = readAtomFamilyWithExpiration(
@@ -132,12 +138,15 @@ export const simResultBySimIdAtomFamily = readAtomFamilyWithExpiration(
         throw new Error('Simulation Result not found');
       }
 
-      return getCircuitSimulationResult({ id: execution.generated[0].id, context });
+      return getCircuitSimulationResult({
+        id: execution.generated[0].id,
+        context,
+      });
     }),
   {
     ttl: 120000, // 2 minutes
     areEqual: isEqual,
-  }
+  },
 );
 
 export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
@@ -149,7 +158,10 @@ export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
       const simulations = res.data;
 
       // To correctly sort simulations by name which might contain a simulation index.
-      const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+      const collator = new Intl.Collator(undefined, {
+        numeric: true,
+        sensitivity: 'base',
+      });
       const sortedSimulations = simulations.sort((a, b) => collator.compare(a.name, b.name));
 
       return sortedSimulations;
@@ -157,7 +169,7 @@ export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
   {
     ttl: 120000, // 2 minutes
     areEqual: isEqual,
-  }
+  },
 );
 
 // TODO Refactor to use tanstack query
@@ -182,7 +194,7 @@ export const modelAtomFamily = readAtomFamilyWithExpiration(
   {
     ttl: 120000, // 2 minutes
     areEqual: isEqual,
-  }
+  },
 );
 
 export const jsonFileAtomFamily = readAtomFamilyWithExpiration(
@@ -214,5 +226,5 @@ export const jsonFileAtomFamily = readAtomFamilyWithExpiration(
   {
     ttl: 120000, // 2 minutes
     areEqual: isEqual,
-  }
+  },
 );

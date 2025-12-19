@@ -9,7 +9,7 @@ import {
   COOKIE_MAX_AGE,
   defaultFlags,
   FEATURE_FLAGS_COOKIE,
-  FeatureFlags,
+  type FeatureFlags,
 } from '@/features/feature-flags/config';
 
 export async function getAllFlags(): Promise<FeatureFlags> {

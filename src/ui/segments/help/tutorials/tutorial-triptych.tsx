@@ -1,7 +1,6 @@
-import TutorialCard from '@/ui/segments/help/tutorials/tutorial-card';
-
 import { getTutorialContent } from '@/api/sanity/help-tutorial-section/route';
 import type { TutorialProps } from '@/components/documentation/type';
+import TutorialCard from '@/ui/segments/help/tutorials/tutorial-card';
 
 export default async function TutorialTriptych() {
   const tutorials = await getTutorialContent();

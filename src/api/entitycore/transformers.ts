@@ -1,11 +1,11 @@
-import { isEmpty, sortBy, omit, map } from 'es-toolkit/compat';
+import { isEmpty, map, omit, sortBy } from 'es-toolkit/compat';
 
-import { AgentType, type Agent, type IContributor } from '@/api/entitycore/types/shared/global';
+import { type Agent, AgentType, type IContributor } from '@/api/entitycore/types/shared/global';
 import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
 type TransformFiltersToQueryReturnValue = Record<
   string,
-  string | Array<string> | number | Array<number> | Date | null | boolean
+  string | string[] | number | number[] | Date | null | boolean
 >;
 
 /**
@@ -42,7 +42,7 @@ function transformToIlikePattern(str: string) {
  * // output: { "contribution_perf_label__in": "A,B,C", }
  */
 export function transformQueryParamsListToServerString(
-  queryParams: Record<string, any>
+  queryParams: Record<string, any>,
 ): Record<string, any> {
   const transformedParams: Record<string, any> = {};
 
@@ -65,7 +65,7 @@ export function transformQueryParamsListToServerString(
  * @returns {TransformFiltersToQueryReturnValue} The transformed query object
  */
 export function transformFiltersToQuery(
-  filters: Array<TCoreFilter>
+  filters: TCoreFilter[],
 ): TransformFiltersToQueryReturnValue {
   return filters.reduce((acc, filter) => {
     // Skip filters with null values
@@ -128,9 +128,9 @@ export function transformFiltersToQuery(
 }
 
 export function transformAgentToNames(
-  agentsWithRoles: Array<IContributor> | undefined | null,
-  asArray: boolean = false
-): string | Array<string> {
+  agentsWithRoles: IContributor[] | undefined | null,
+  asArray: boolean = false,
+): string | string[] {
   if (!agentsWithRoles) {
     return '';
   }

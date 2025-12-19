@@ -1,21 +1,19 @@
 import range from 'es-toolkit/compat/range';
 import round from 'es-toolkit/compat/round';
-
-import {
-  CurrentInjectionSimulationConfig,
-  SimulationExperimentalSetup,
-  StimulusDropdownInfo,
-  StimulusTypeOption,
-  ProtocolDetails,
-  StimulusConfig,
-  StimulusModule,
-  SynapseConfig,
-} from '@/types/small-scale-simulator/single-neuron';
-
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { SynapseType } from '@/components/neuron-viewer/hooks/events';
+import type {
+  CurrentInjectionSimulationConfig,
+  ProtocolDetails,
+  SimulationExperimentalSetup,
+  StimulusConfig,
+  StimulusDropdownInfo,
+  StimulusModule,
+  StimulusTypeOption,
+  SynapseConfig,
+} from '@/types/small-scale-simulator/single-neuron';
 import {
-  NeuronLocation,
+  type NeuronLocation,
   NeuronLocationOriginDict,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
@@ -163,7 +161,7 @@ export const SYNAPSE_CODE_TO_TYPE: Record<number, SynapseType> = {
 };
 
 export const getDefaultSynapseConfig = (
-  synapsePlacementConfig?: Array<TSingleNeuronSynaptomeConfiguration>
+  synapsePlacementConfig?: TSingleNeuronSynaptomeConfiguration[],
 ): SynapseConfig | null => {
   if (synapsePlacementConfig) {
     return {

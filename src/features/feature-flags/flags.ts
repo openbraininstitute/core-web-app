@@ -1,7 +1,7 @@
-import { defineFlag } from './define-flag';
+import { config } from '@/config';
 
 import { PanelState } from '@/ui/segments/ai/types';
-import { config } from '@/config';
+import { defineFlag } from './define-flag';
 
 export const aiPanelStateFlag = defineFlag<PanelState>({
   key: 'aiPanelState',
@@ -24,7 +24,7 @@ export const flags = [aiPanelStateFlag, microcircuitFlag] as const;
 export type FlagKey = (typeof flags)[number]['key'];
 
 export const hasVisibleFlags = flags.some((flag) =>
-  typeof flag.visible === 'boolean' ? flag.visible : flag.visible?.()
+  typeof flag.visible === 'boolean' ? flag.visible : flag.visible?.(),
 );
 
 export type FeatureFlags = {

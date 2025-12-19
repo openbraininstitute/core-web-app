@@ -5,12 +5,11 @@ import { Image } from 'antd';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 
 import { useRouter } from 'next/navigation';
-import { label, useBuildMeModelSessionState } from '@/ui/segments/workflows/build/memodel/helpers';
+import { EntityTypeDict, type ICellMorphology } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import { config } from '@/config';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   renderArray,
   renderDate,
@@ -18,11 +17,11 @@ import {
   renderLicense,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
+import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
+import { label, useBuildMeModelSessionState } from '@/ui/segments/workflows/build/memodel/helpers';
 import { cn } from '@/utils/css-class';
-import { config } from '@/config';
-
-import { EntityTypeDict, type ICellMorphology } from '@/api/entitycore/types';
 
 type Props = {
   sessionId: string;
@@ -52,7 +51,7 @@ export function MModel({ sessionId }: Props) {
         selectionType: 'radio',
         onCellClick: (_, record) => {
           navigate(
-            `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(EntityTypeDict.CellMorphology)}/${record.id}/overview`
+            `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(EntityTypeDict.CellMorphology)}/${record.id}/overview`,
           );
         },
         onRowsSelected: (rows) => {
@@ -78,9 +77,16 @@ export function MModelMiniDetail({ sessionId }: { sessionId: string }) {
   const data = sessionValue.mmodel;
 
   const details = [
-    { label: 'Name', value: renderEmptyOrValue(data?.name), className: 'font-bold' },
+    {
+      label: 'Name',
+      value: renderEmptyOrValue(data?.name),
+      className: 'font-bold',
+    },
     { label: 'Description', value: renderEmptyOrValue(data?.description) },
-    { label: 'Brain Region', value: renderEmptyOrValue(data?.brain_region.name) },
+    {
+      label: 'Brain Region',
+      value: renderEmptyOrValue(data?.brain_region.name),
+    },
     { label: 'Species', value: renderEmptyOrValue(data?.subject.species.name) },
     {
       label: 'M-Type',
@@ -147,7 +153,7 @@ export function MModelMiniDetail({ sessionId }: { sessionId: string }) {
               rootClassName=" w-full h-full flex items-center! justify-center! [&_.ant-image-mask]:rounded-2xl"
               className="max-h-full w-full rounded-2xl object-contain"
             />
-          )
+          ),
         )}
       </div>
     </div>

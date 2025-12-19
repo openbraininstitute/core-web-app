@@ -3,32 +3,30 @@
 'use client';
 
 import { PlusOutlined, WarningOutlined } from '@ant-design/icons';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { snakeCase, kebabCase } from 'es-toolkit/compat';
 import { useQueries } from '@tanstack/react-query';
-import { match, P } from 'ts-pattern';
+import { kebabCase, snakeCase } from 'es-toolkit/compat';
 import Link from 'next/link';
+import { usePathname, useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
-
+import { match, P } from 'ts-pattern';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
+import { config } from '@/config';
+import type { TWorkspaceScope } from '@/constants';
+import { WorkspaceScope } from '@/constants';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import type { WorkspaceContext } from '@/types/common';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Button } from '@/ui/molecules/button';
+import { Skeleton } from '@/ui/molecules/skeleton';
 import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute/event';
 import { getEntityTypeFromUrlOnEntityScope } from '@/ui/segments/explore/helpers';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
-import { Skeleton } from '@/ui/molecules/skeleton';
-import { WorkspaceContext } from '@/types/common';
-import { Button } from '@/ui/molecules/button';
-import { WorkspaceScope } from '@/constants';
 import { cn } from '@/utils/css-class';
-import { config } from '@/config';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TWorkspaceScope } from '@/constants';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
+import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 function buildDataUrl({
   virtualLabId,
@@ -94,7 +92,7 @@ export function BrowseLinkContent({
             <div
               className={cn(
                 'text-neutral-4 group-hover:text-label text-sm font-light group-hover:font-bold',
-                { 'font-bold text-white': entityType === extendedType }
+                { 'font-bold text-white': entityType === extendedType },
               )}
             >
               {isLoading ? (
@@ -115,7 +113,7 @@ export function BrowseLinkContent({
               'transition-all duration-500 ease-out',
               'w-0 scale-0 opacity-0',
               'group-hover:w-auto group-hover:scale-100 group-hover:opacity-100',
-              'flex origin-left items-center'
+              'flex origin-left items-center',
             )}
           >
             <Button
@@ -128,7 +126,7 @@ export function BrowseLinkContent({
                 'shadow-md group-hover:ml-2 group-hover:shadow-xl',
                 'group-hover:scale-100',
                 { 'h-10! w-10!': breakpoint === 'l' },
-                { 'h-12! w-12!': breakpoint === 'xl' }
+                { 'h-12! w-12!': breakpoint === 'xl' },
               )}
               onClick={onContribute}
             >
@@ -243,7 +241,14 @@ export function BrowseLink({
   const rootCount = root?.pagination.total_items;
   const isLoading = loadingCurrent || loadingRoot;
 
-  const countRenderer = match({ isCurrentError, count, rootCount, isRootError, enabled, isLoading })
+  const countRenderer = match({
+    isCurrentError,
+    count,
+    rootCount,
+    isRootError,
+    enabled,
+    isLoading,
+  })
     .with({ isLoading: false, enabled: true, rootCount: P.number, count: P.number }, () => (
       <span className="flex items-center justify-center gap-1">
         <span className="font-bold">{count}</span>

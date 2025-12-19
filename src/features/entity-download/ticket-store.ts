@@ -1,7 +1,7 @@
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 
-import { TEntityTypeDict } from '@/api/entitycore/types';
-import { PartialBy } from '@/types/common';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
+import type { PartialBy } from '@/types/common';
 import { logError, logInfo } from '@/utils/logger';
 
 type DownloadTicket = {
@@ -72,7 +72,7 @@ class TicketStore {
       logInfo(
         'Available ones are:',
         Array.from(this.tickets.keys()).join(', '),
-        `(${this.tickets.size})`
+        `(${this.tickets.size})`,
       );
       return null;
     }

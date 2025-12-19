@@ -1,31 +1,29 @@
 'use client';
 
-import { PlusOutlined, ArrowLeftOutlined, DeleteFilled, LoadingOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, DeleteFilled, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Button, ConfigProvider, Table, Input, Empty, List } from 'antd';
-import { compact, sortBy, get, uniqBy, map, filter } from 'es-toolkit/compat';
-import { useMemo, useState, useEffect } from 'react';
+import { Button, ConfigProvider, Empty, Input, List, Table } from 'antd';
+import type { ColumnType } from 'antd/es/table';
+import { compact, filter, get, map, sortBy, uniqBy } from 'es-toolkit/compat';
 import { useSession } from 'next-auth/react';
-import { ColumnType } from 'antd/es/table';
+import { useEffect, useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
 import { z } from 'zod';
-
-import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
 import { inviteToVirtualLab } from '@/api/virtual-lab-svc/queries/invite';
-import { useAppNotification } from '@/components/notification';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { Button as UiButton } from '@/ui/molecules/button';
-import { extractInitials } from '@/util/slugify';
-import { Badge } from '@/ui/molecules/badge';
 import {
   cancelVirtualLabInvite,
   listVirtualLabMembers,
 } from '@/api/virtual-lab-svc/queries/member';
+import type { Member, Role } from '@/api/virtual-lab-svc/queries/types';
+import { useAppNotification } from '@/components/notification';
+import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
+import { useUserRole } from '@/hooks/use-user-role';
+import { Badge } from '@/ui/molecules/badge';
+import { Button as UiButton } from '@/ui/molecules/button';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { extractInitials } from '@/util/slugify';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
-import { useUserRole } from '@/hooks/use-user-role';
-
-import type { Member, Role } from '@/api/virtual-lab-svc/queries/types';
 import { log } from '@/utils/logger';
 
 const emailSchema = z.string().min(3, 'Email is required').email('Email is not valid');
@@ -58,7 +56,7 @@ function EmailInput({
   value: string;
   onChange: (v: string) => void;
   disabled: boolean;
-  inviteList: Array<InvitePayload>;
+  inviteList: InvitePayload[];
 }) {
   const [error, setError] = useState<string | null>(null);
 
@@ -78,9 +76,9 @@ function EmailInput({
     const duplicates = map(
       filter(
         inviteList,
-        (o) => o.email.toLowerCase() === value.toLowerCase() && value.trim() !== ''
+        (o) => o.email.toLowerCase() === value.toLowerCase() && value.trim() !== '',
       ),
-      (item) => inviteList.indexOf(item)
+      (item) => inviteList.indexOf(item),
     );
 
     if (duplicates.filter((p) => p !== index).length > 0) {
@@ -102,7 +100,7 @@ function EmailInput({
         className={cn(
           'focus:white hover:bg-primary-9! border-white bg-transparent hover:text-white!',
           'focus-within:bg-primary-9! bg-primary-9! text-white! focus-within:text-white!',
-          'placeholder:text-sm! placeholder:text-white'
+          'placeholder:text-sm! placeholder:text-white',
         )}
         disabled={disabled}
       />
@@ -114,9 +112,7 @@ function EmailInput({
 function InviteMembers({ onBack, virtualLabId }: InviteMemberStepProps) {
   const queryClient = useQueryClient();
   const { error: notifyError, success: notifySuccess } = useAppNotification();
-  const [inviteList, setInviteList] = useState<Array<InvitePayload>>([
-    { email: '', role: 'admin' },
-  ]);
+  const [inviteList, setInviteList] = useState<InvitePayload[]>([{ email: '', role: 'admin' }]);
 
   const addEmailField = () => {
     setInviteList((prev) => [...prev, { email: '', role: 'admin' }]);
@@ -128,16 +124,16 @@ function InviteMembers({ onBack, virtualLabId }: InviteMemberStepProps) {
 
   const updateInvite = (index: number, field: keyof InvitePayload, value: string) => {
     setInviteList((prev) =>
-      prev.map((invite, i) => (i === index ? { ...invite, [field]: value } : invite))
+      prev.map((invite, i) => (i === index ? { ...invite, [field]: value } : invite)),
     );
   };
 
   const inviteUsers = async () => {
     const validInvites = inviteList.filter(
-      (invite) => invite.email && emailSchema.safeParse(invite.email).success
+      (invite) => invite.email && emailSchema.safeParse(invite.email).success,
     );
     const invites = await Promise.allSettled(
-      validInvites.map(({ email }) => inviteToVirtualLab({ virtualLabId, email, role: 'admin' }))
+      validInvites.map(({ email }) => inviteToVirtualLab({ virtualLabId, email, role: 'admin' })),
     );
     return invites;
   };
@@ -146,7 +142,7 @@ function InviteMembers({ onBack, virtualLabId }: InviteMemberStepProps) {
     mutationFn: inviteUsers,
     onSuccess: (data) => {
       const requestedInvites = inviteList.filter(
-        (invite) => invite.email && emailSchema.safeParse(invite.email).success
+        (invite) => invite.email && emailSchema.safeParse(invite.email).success,
       );
       const failedInvites = data
         .map((result, idx) => {
@@ -229,9 +225,9 @@ function InviteMembers({ onBack, virtualLabId }: InviteMemberStepProps) {
                 {
                   uniqBy(
                     inviteList.filter(
-                      (invite) => invite.email && emailSchema.safeParse(invite.email).success
+                      (invite) => invite.email && emailSchema.safeParse(invite.email).success,
                     ),
-                    'email'
+                    'email',
                   ).length
                 }
               </span>
@@ -295,7 +291,7 @@ function InviteMembers({ onBack, virtualLabId }: InviteMemberStepProps) {
                 onClick={addEmailField}
                 className={cn(
                   'border-primary-4 group bg-primary-9 hover:text-primary-4',
-                  'px-4 text-white select-none hover:border-white'
+                  'px-4 text-white select-none hover:border-white',
                 )}
                 disabled={mutate.isPending}
               >
@@ -330,7 +326,7 @@ function InviteMembers({ onBack, virtualLabId }: InviteMemberStepProps) {
             Send{' '}
             {
               inviteList.filter(
-                (invite) => invite.email && emailSchema.safeParse(invite.email).success
+                (invite) => invite.email && emailSchema.safeParse(invite.email).success,
               ).length
             }{' '}
             invitation(s)
@@ -432,7 +428,7 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
   const total = team?.data?.total;
   const users = team?.data?.users;
 
-  const columns: Array<ColumnType<Member>> = useMemo(
+  const columns: ColumnType<Member>[] = useMemo(
     () => [
       {
         title: 'name',
@@ -464,12 +460,12 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
                   ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(' ') ||
                       get(record, 'username') ||
                       record.email
-                  : record.email
+                  : record.email,
               )}
               cls={{
                 text: classNames(
                   'text-white!  wrap-text',
-                  record.invite_accepted ? 'font-bold' : 'font-light'
+                  record.invite_accepted ? 'font-bold' : 'font-light',
                 ),
                 email: 'text-primary-4!',
               }}
@@ -492,7 +488,7 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
         render: (_: Role, record) => <CancelInvitation virtualLabId={virtualLabId} user={record} />,
       },
     ],
-    [ownerId, virtualLabId]
+    [ownerId, virtualLabId],
   );
 
   const orderedUsers = useMemo(
@@ -505,7 +501,7 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
         (member) => (member.invite_accepted ? 0 : 1),
         'created_at',
       ]),
-    [users, ownerId, data?.user.id]
+    [users, ownerId, data?.user.id],
   );
 
   return (
@@ -569,7 +565,7 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
               '[&_.ant-table-tbody>tr]:transition-all [&_.ant-table-tbody>tr]:duration-1000',
               '[&_.ant-table-tbody>tr.ant-table-row-remove]:h-0 [&_.ant-table-tbody>tr.ant-table-row-remove]:opacity-40',
               '[&_.ant-table-body]:primary-scrollbar [&_.ant-table-body]:max-h-full [&_.ant-table-body]:overflow-auto [&_.ant-table-container]:h-full',
-              '[&_.ant-empty-description]:text-white!'
+              '[&_.ant-empty-description]:text-white!',
             )}
             scroll={{ y: 'calc(100vh - 180px)' }}
           />

@@ -1,7 +1,7 @@
-import { MembersResponse } from '@/api/virtual-lab-svc/queries/types';
+import type { MembersResponse } from '@/api/virtual-lab-svc/queries/types';
 import authFetch, { authFetchRetryOnError, authFetchWithoutRetry } from '@/auth-fetch';
 import { config } from '@/config';
-import {
+import type {
   ProjectBalance,
   ProjectBalanceResponse,
   ProjectJobReportsResponse,
@@ -12,10 +12,10 @@ import type { Project, ProjectResponse } from '@/types/virtual-lab/projects';
 
 export async function getVirtualLabProjectDetails(
   virtualLabId: string,
-  projectId: string
+  projectId: string,
 ): Promise<ProjectResponse> {
   const response = await authFetchRetryOnError(
-    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/projects/${projectId}`
+    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/projects/${projectId}`,
   );
 
   if (!response.ok) {
@@ -27,10 +27,10 @@ export async function getVirtualLabProjectDetails(
 
 export async function getVirtualLabProjectUsers(
   virtualLabId: string,
-  projectId: string
+  projectId: string,
 ): Promise<MembersResponse> {
   const response = await authFetchRetryOnError(
-    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/projects/${projectId}/users`
+    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/projects/${projectId}/users`,
   );
   if (!response.ok) {
     throw new Error(`Status: ${response.status}`);
@@ -40,7 +40,7 @@ export async function getVirtualLabProjectUsers(
 
 export async function getUsersProjects(): Promise<VlmResponse<VirtualLabAPIListData<Project>>> {
   const response = await authFetchRetryOnError(
-    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/projects`
+    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/projects`,
   );
   if (!response.ok) {
     throw new Error(`Status: ${response.status}`);
@@ -52,7 +52,7 @@ export async function getUsersProjects(): Promise<VlmResponse<VirtualLabAPIListD
 export async function patchProject(
   formData: Partial<Project>,
   virtualLabId: string,
-  projectId: string
+  projectId: string,
 ): Promise<
   VlmResponse<{
     project: Project;
@@ -64,7 +64,7 @@ export async function patchProject(
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(formData),
-    }
+    },
   ).then(async (response) => {
     if (!response.ok) {
       const { details, message } = await response.json();
@@ -78,7 +78,7 @@ export async function patchProject(
 
 export async function deleteProject(
   virtualLabId: string,
-  projectId: string
+  projectId: string,
 ): Promise<
   VlmResponse<{
     project_id: string;
@@ -90,7 +90,7 @@ export async function deleteProject(
     `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/projects/${projectId}`,
     {
       method: 'DELETE',
-    }
+    },
   );
 
   if (!response.ok) {
@@ -108,7 +108,7 @@ export async function getProjectAccountBalance({
   projectId: string;
 }): Promise<ProjectBalance> {
   const response = await authFetch(
-    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/projects/${projectId}/accounting/balance`
+    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/projects/${projectId}/accounting/balance`,
   );
 
   if (!response.ok) {
@@ -139,7 +139,7 @@ export async function getProjectJobReports({
   searchParams.set('page_size', pageSize.toString());
 
   const url = new URL(
-    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/projects/${projectId}/accounting/reports`
+    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/projects/${projectId}/accounting/reports`,
   );
   url.search = searchParams.toString();
 
@@ -167,7 +167,7 @@ export async function assignProjectBudget({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ amount }),
-    }
+    },
   );
 
   if (!response.ok) {
@@ -192,7 +192,7 @@ export async function reverseProjectBudget({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ amount }),
-    }
+    },
   );
 
   if (!response.ok) {

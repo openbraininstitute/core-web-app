@@ -1,12 +1,10 @@
 import { CheckCircleFilled, RightOutlined } from '@ant-design/icons';
-import { ReactNode, useCallback } from 'react';
-
 import renderMathInElement from 'katex/contrib/auto-render';
-
+import { type ReactNode, useCallback } from 'react';
+import { Button } from '@/ui/molecules/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { RenderErrorTooltip } from '@/ui/segments/workflows/build/ion-channel-build/elements/error-tooltip';
 import { MenuButton } from '@/ui/segments/workflows/build/ion-channel-build/elements/menu-button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
 export function EquationMenuItem({

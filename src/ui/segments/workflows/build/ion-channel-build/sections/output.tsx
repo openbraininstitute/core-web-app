@@ -1,36 +1,47 @@
 /* eslint-disable no-nested-ternary */
 
-import { useMemo, useState, useEffect } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
-import { useAtom } from 'jotai';
 import {
   queryOptions,
   experimental_streamedQuery as streamedQuery,
   useQuery,
 } from '@tanstack/react-query';
-
+import { useAtom } from 'jotai';
+import { useEffect, useMemo, useState } from 'react';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 import {
-  CONFIGURATION_FORM_STATE_KEY,
-  GenerativeFromAtomFamily,
-  IonChannelModelingSharedStateFamily,
-} from '@/ui/segments/workflows/build/ion-channel-build/helpers';
-
-import { isFormValid } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers/validate-form';
-import { FileViewer } from '@/ui/segments/workflows/build/ion-channel-build/sections/file-viewer';
-import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
-import { getStatusColor } from '@/ui/segments/activity-execution/color-map';
+  EntitycoreExecutionStatus,
+  type IEntitycoreExecution,
+  type TEntitycoreExecutionStatus,
+} from '@/api/entitycore/types/entities/execution';
+import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import type {
+  IonChannelModelingCampaign,
+  IonChannelModelingConfig,
+} from '@/api/entitycore/types/entities/ion-channel-modeling-campaign';
+import type { EntityCoreResource, IAsset } from '@/api/entitycore/types/shared/global';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { keyBuilder } from '@/ui/use-query-keys/third-parties';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
+import type { TStreamMessage } from '@/api/small-scale-simulator/ion-channel/build';
 import {
   build as buildIonChannel,
   DataType,
   MessageType,
 } from '@/api/small-scale-simulator/ion-channel/build';
+import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Badge } from '@/ui/molecules/badge';
+import { Button } from '@/ui/molecules/button';
 import { Card, CardTitle } from '@/ui/molecules/card';
 import { Skeleton } from '@/ui/molecules/skeleton';
-import { Button } from '@/ui/molecules/button';
-import { Badge } from '@/ui/molecules/badge';
+import { getStatusColor } from '@/ui/segments/activity-execution/color-map';
+import {
+  CONFIGURATION_FORM_STATE_KEY,
+  GenerativeFromAtomFamily,
+  IonChannelModelingSharedStateFamily,
+} from '@/ui/segments/workflows/build/ion-channel-build/helpers';
+import { isFormValid } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers/validate-form';
+import { FileViewer } from '@/ui/segments/workflows/build/ion-channel-build/sections/file-viewer';
+import { keyBuilder } from '@/ui/use-query-keys/third-parties';
 import { cn } from '@/utils/css-class';
 import {
   createAsyncIterableStream,
@@ -38,20 +49,6 @@ import {
   emptyStream,
   messageGenerator,
 } from '@/utils/streamutils';
-
-import type { EntityCoreResource, IAsset } from '@/api/entitycore/types/shared/global';
-import type { TStreamMessage } from '@/api/small-scale-simulator/ion-channel/build';
-import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
-import type {
-  IonChannelModelingCampaign,
-  IonChannelModelingConfig,
-} from '@/api/entitycore/types/entities/ion-channel-modeling-campaign';
-import type { TEntityTypeDict } from '@/api/entitycore/types';
-import {
-  EntitycoreExecutionStatus,
-  type IEntitycoreExecution,
-  type TEntitycoreExecutionStatus,
-} from '@/api/entitycore/types/entities/execution';
 
 type IonChannelModelFigureSummaryJson = {
   [key: string]: {
@@ -86,13 +83,13 @@ type Build = {
 export function Output({ sessionId }: { sessionId: string | null }) {
   const context = useWorkspace();
   const [ionState] = useAtom(
-    useMemo(() => IonChannelModelingSharedStateFamily(sessionId!), [sessionId])
+    useMemo(() => IonChannelModelingSharedStateFamily(sessionId!), [sessionId]),
   );
   const [payload] = useAtom(
     useMemo(
       () => GenerativeFromAtomFamily(`${CONFIGURATION_FORM_STATE_KEY}/${sessionId}`),
-      [sessionId]
-    )
+      [sessionId],
+    ),
   );
 
   const [selectedBuildIndex, setSelectedBuildIndex] = useState<number | null>(null);
@@ -103,7 +100,7 @@ export function Output({ sessionId }: { sessionId: string | null }) {
   } | null>(null);
 
   const [selectedProtocol, setSelectedProtocol] = useState<IonChannelModelProtocolGroup | null>(
-    null
+    null,
   );
   const [selectedModFile, setSelectedModFile] = useState<{
     asset: IAsset;
@@ -115,7 +112,11 @@ export function Output({ sessionId }: { sessionId: string | null }) {
       queryKey: ['build-output-stream', { context, sessionId, payload }],
       queryFn: streamedQuery({
         queryFn: async () => {
-          const response = await buildIonChannel({ ctx: context, payload, stream: true });
+          const response = await buildIonChannel({
+            ctx: context,
+            payload,
+            stream: true,
+          });
           const stream = await createTextStream(response);
           if (!stream) return emptyStream();
           return messageGenerator(createAsyncIterableStream<string>(stream));
@@ -126,13 +127,13 @@ export function Output({ sessionId }: { sessionId: string | null }) {
       refetchOnWindowFocus: false,
       enabled:
         ionState.schema && payload && isFormValid({ data: payload, schema: ionState.schema }),
-    })
+    }),
   );
 
   const builds = useMemo(() => {
     if (!data || !Array.isArray(data)) return [];
 
-    const messages = data as Array<IonChannelBuildingStreamDataMessage>;
+    const messages = data as IonChannelBuildingStreamDataMessage[];
     const buildsMap = new Map<string, Build>();
 
     messages.forEach((message) => {
@@ -197,7 +198,7 @@ export function Output({ sessionId }: { sessionId: string | null }) {
   const currentStatus = useMemo(() => {
     if (!data || !Array.isArray(data)) return null;
 
-    const messages = data as Array<IonChannelBuildingStreamDataMessage>;
+    const messages = data as IonChannelBuildingStreamDataMessage[];
     const statusMessages = messages.filter((m) => m.message_type === MessageType.STATUS);
     const lastStatus = statusMessages[statusMessages.length - 1];
 
@@ -211,7 +212,7 @@ export function Output({ sessionId }: { sessionId: string | null }) {
   const hasOutputForSelectedBuild = selectedBuild?.modelEntity !== undefined;
 
   const summaryAsset = selectedBuild?.modelEntity?.assets?.find(
-    (a) => a.label === AssetLabel.ion_channel_model_figure_summary_json
+    (a) => a.label === AssetLabel.ion_channel_model_figure_summary_json,
   );
 
   const { data: summaryData, isLoading: loadingSummary } = useQuery({
@@ -246,14 +247,14 @@ export function Output({ sessionId }: { sessionId: string | null }) {
   const protocolGroups = useMemo(() => {
     if (!summaryData || !selectedBuild?.modelEntity) return [];
 
-    const groups: Array<IonChannelModelProtocolGroup> = [];
+    const groups: IonChannelModelProtocolGroup[] = [];
 
     Object.entries(summaryData).forEach(([key, value]) => {
-      const tracesAsset = selectedBuild.modelEntity!.assets?.find(
-        (a) => a.path === value.traces || a.path.endsWith(`/${value.traces}`)
+      const tracesAsset = selectedBuild.modelEntity?.assets?.find(
+        (a) => a.path === value.traces || a.path.endsWith(`/${value.traces}`),
       );
-      const stimuliAsset = selectedBuild.modelEntity!.assets?.find(
-        (a) => a.path === value.stimuli || a.path.endsWith(`/${value.stimuli}`)
+      const stimuliAsset = selectedBuild.modelEntity?.assets?.find(
+        (a) => a.path === value.stimuli || a.path.endsWith(`/${value.stimuli}`),
       );
 
       if (tracesAsset && stimuliAsset) {
@@ -270,7 +271,7 @@ export function Output({ sessionId }: { sessionId: string | null }) {
   }, [summaryData, selectedBuild?.modelEntity]);
 
   const modFile = selectedBuild?.modelEntity?.assets?.find(
-    (a) => a.label === AssetLabel.neuron_mechanisms
+    (a) => a.label === AssetLabel.neuron_mechanisms,
   );
 
   useEffect(() => {
@@ -486,14 +487,14 @@ export function Output({ sessionId }: { sessionId: string | null }) {
             <div className="flex flex-1 flex-col overflow-hidden">
               <FileViewer
                 asset={selectedProtocol.stimuli}
-                entity={selectedBuild!.modelEntity!}
+                entity={selectedBuild?.modelEntity!}
                 context={context}
               />
             </div>
             <div className="flex flex-1 flex-col overflow-hidden">
               <FileViewer
                 asset={selectedProtocol.traces}
-                entity={selectedBuild!.modelEntity!}
+                entity={selectedBuild?.modelEntity!}
                 context={context}
               />
             </div>

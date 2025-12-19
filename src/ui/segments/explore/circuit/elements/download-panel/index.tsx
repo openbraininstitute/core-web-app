@@ -1,11 +1,10 @@
 'use client';
 
 import { CloseOutlined } from '@ant-design/icons';
+import sum from 'es-toolkit/compat/sum';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useHotkeys } from 'react-hotkeys-hook';
-import sum from 'es-toolkit/compat/sum';
-
-import NetworkAndMorphologyConfig from '@/ui/segments/explore/circuit/elements/download-panel/network-morphology-config';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import ConnectivityMatrices from '@/ui/segments/explore/circuit/elements/download-panel/connectivity-matrices';
 import EntireCircuitExport from '@/ui/segments/explore/circuit/elements/download-panel/entire-circuit-export';
 
@@ -13,9 +12,8 @@ import {
   fileCounterAtom,
   updateFileCounterAtom,
 } from '@/ui/segments/explore/circuit/elements/download-panel/helpers';
+import NetworkAndMorphologyConfig from '@/ui/segments/explore/circuit/elements/download-panel/network-morphology-config';
 import { cn } from '@/utils/css-class';
-
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export const downloadPanelCircuitAtom = atom<ICircuit | null>(null);
 
@@ -42,14 +40,14 @@ export function DownloadPanel() {
         onClick={onClose}
         className={cn(
           'fixed top-0 left-0 z-80 h-screen w-screen bg-black transition-opacity duration-500',
-          circuit ? 'opacity-50' : 'pointer-events-none opacity-0'
+          circuit ? 'opacity-50' : 'pointer-events-none opacity-0',
         )}
       />
       <div
         data-testid="circuit-download-panel"
         className={cn(
           'bg-primary-9 primary-scrollbar fixed top-0 right-0 z-100 flex h-full min-h-screen w-[50svw] shrink-0 flex-col space-y-4 overflow-x-hidden overflow-y-auto',
-          circuit ? 'block' : 'hidden'
+          circuit ? 'block' : 'hidden',
         )}
       >
         <div className="bg-primary-9 sticky top-0 z-20 mb-2 flex items-center justify-between gap-4 px-8 py-6">
@@ -59,8 +57,7 @@ export function DownloadPanel() {
               Total files: {allFilesCount}
             </small>
           </span>
-          <button
-            autoFocus // eslint-disable-line jsx-a11y/no-autofocus
+          <button // eslint-disable-line jsx-a11y/no-autofocus
             type="button"
             onClick={onClose}
             className="hover:bg-neutral-1/10 rounded-md px-2 py-1 text-white"

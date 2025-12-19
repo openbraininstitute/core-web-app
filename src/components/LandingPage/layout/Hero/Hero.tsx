@@ -1,17 +1,14 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link';
 import React from 'react';
-
-import ProgressiveImage from '../../components/ProgressiveImage';
-import NewsletterForm from '../../components/coming-soon/newsletter-form';
-import { useSanityContentForHero } from '../../content';
-import { EnumSection } from '../../sections/sections';
-import NextPanel from './NextPanel';
-
 import useFullHeight from '@/hooks/useFullHeight';
 import { classNames } from '@/util/utils';
-
+import NewsletterForm from '../../components/coming-soon/newsletter-form';
+import ProgressiveImage from '../../components/ProgressiveImage';
+import { useSanityContentForHero } from '../../content';
+import { EnumSection } from '../../sections/sections';
 import styles from './Hero.module.css';
+import NextPanel from './NextPanel';
 
 interface HeroProps {
   className?: string;
@@ -94,7 +91,7 @@ function ComingSoon() {
       className={classNames(
         'relative mx-auto min-h-[calc(100svh-120px)] max-w-3xl',
         'flex flex-col items-center justify-center',
-        'px-6 sm:px-12'
+        'px-6 sm:px-12',
       )}
     >
       <div className="flex flex-col items-start justify-start">

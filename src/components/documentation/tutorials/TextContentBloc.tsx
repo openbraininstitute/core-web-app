@@ -2,9 +2,8 @@
 
 import { PortableText } from 'next-sanity';
 import { useState } from 'react';
-import { ContentForSingleTutorial } from './fetch-single-tutorial';
-
 import { classNames } from '@/util/utils';
+import type { ContentForSingleTutorial } from './fetch-single-tutorial';
 import styles from './text-content-bloc.module.css';
 
 export default function TextContentBloc({
@@ -39,7 +38,7 @@ export default function TextContentBloc({
         className={classNames(
           styles.transcript,
           'text-primary-9 transition-height overflow-hidden duration-300 ease-in-out',
-          transcriptVisible ? 'h-auto' : 'h-0'
+          transcriptVisible ? 'h-auto' : 'h-0',
         )}
       >
         <PortableText value={content.transcript ?? []} />

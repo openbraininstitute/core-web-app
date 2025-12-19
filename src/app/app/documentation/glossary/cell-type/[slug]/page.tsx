@@ -1,4 +1,4 @@
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 
 import CellTypeDefinitionsFullList from '@/components/documentation/glossary/cell-types';
 

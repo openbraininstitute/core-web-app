@@ -1,15 +1,13 @@
-import { Key } from 'react';
+import type { RowSelectionType, TableRowSelection } from 'antd/es/table/interface';
 import { useAtom } from 'jotai';
-import { RowSelectionType, TableRowSelection } from 'antd/es/table/interface';
-
-import { coreSelectedRowsAtom } from '@/ui/segments/data-table/elements/context';
-
+import type { Key } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { coreSelectedRowsAtom } from '@/ui/segments/data-table/elements/context';
 
 type RowSelection<T> = Pick<TableRowSelection<T>, 'selectedRowKeys' | 'onChange' | 'type'>;
 
 export type RenderButtonProps<T> = {
-  selectedRows: Array<T>;
+  selectedRows: T[];
   clearSelectedRows: () => void;
   dataType: TExtendedEntitiesTypeDict;
 };
@@ -21,17 +19,17 @@ export function useRowSelection<T extends { id: string }>({
 }: {
   dataKey: string;
   selectionType?: RowSelectionType;
-  onRowsSelected?: (rows: Array<T>) => void;
+  onRowsSelected?: (rows: T[]) => void;
 }): {
   rowSelection: RowSelection<T>;
-  selectedRows: Array<T>;
+  selectedRows: T[];
   clearSelectedRows: () => void;
-  onRowSelect: (_keys: Key[], rows: Array<T>) => void;
+  onRowSelect: (_keys: Key[], rows: T[]) => void;
 } {
   const [selectedRows, setSelectedRows] = useAtom(coreSelectedRowsAtom(dataKey));
   const clearSelectedRows = () => setSelectedRows([]);
 
-  const onRowSelect = (_keys: Key[], rows: Array<T>) => {
+  const onRowSelect = (_keys: Key[], rows: T[]) => {
     setSelectedRows(() => rows);
     onRowsSelected?.(rows);
   };

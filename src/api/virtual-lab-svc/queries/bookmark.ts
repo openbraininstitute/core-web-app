@@ -1,16 +1,15 @@
-import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
-
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
-import type { WorkspaceContext } from '@/types/common';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type {
-  BookmarkRequest,
   AddBookmarkResponse,
+  BookmarkRequest,
   DeleteBookmarksResponse,
   VlmGetProjectBookmarksResponse,
   VlmGetProjectLibraryCategories,
   VlmGetProjectLibraryPerCategory,
 } from '@/api/virtual-lab-svc/queries/types';
-import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
+import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/virtual-labs';
 
@@ -26,7 +25,7 @@ const baseUri = '/virtual-labs';
  */
 export async function bookmarkToProjectLibrary(
   { virtualLabId, projectId }: WorkspaceContext,
-  { entity_id, category }: BookmarkRequest
+  { entity_id, category }: BookmarkRequest,
 ): Promise<AddBookmarkResponse> {
   const api = await virtualLabRootApi();
   const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks`;
@@ -52,7 +51,7 @@ export async function bookmarkToProjectLibrary(
  */
 export async function getAllBookmarksByCategory(
   { virtualLabId, projectId }: WorkspaceContext,
-  { category }: { category?: TExtendedEntitiesTypeDict }
+  { category }: { category?: TExtendedEntitiesTypeDict },
 ): Promise<VlmGetProjectBookmarksResponse> {
   const api = await virtualLabRootApi();
   const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks`;
@@ -75,7 +74,7 @@ export async function getAllBookmarksByCategory(
  */
 export async function deleteBookmarksFromProjectLibrary(
   { virtualLabId, projectId }: WorkspaceContext,
-  { bookmarks }: { bookmarks: BookmarkRequest[] }
+  { bookmarks }: { bookmarks: BookmarkRequest[] },
 ): Promise<DeleteBookmarksResponse> {
   const api = await virtualLabRootApi();
   const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks/delete`;

@@ -6,6 +6,11 @@ import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 import { useEffect, useRef } from 'react';
 
 import { getBrainRegionHierarchy } from '@/api/entitycore/queries/general/brain-region';
+import type { IBrainAtlasRegion } from '@/api/entitycore/types/entities/brain-atlas';
+import type {
+  BrainRegionHierarchyBase,
+  IBrainRegionHierarchy,
+} from '@/api/entitycore/types/entities/brain-region';
 import { tryCatch } from '@/api/utils';
 import {
   findNodeByKey,
@@ -19,12 +24,6 @@ import { useUnwrappedValue } from '@/hooks/hooks';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { getSectionFromDataKey } from '@/utils/key-builder';
 import { log } from '@/utils/logger';
-
-import type { IBrainAtlasRegion } from '@/api/entitycore/types/entities/brain-atlas';
-import type {
-  BrainRegionHierarchyBase,
-  IBrainRegionHierarchy,
-} from '@/api/entitycore/types/entities/brain-region';
 
 type Props = {
   dataKey: string;
@@ -64,7 +63,7 @@ export type TBrainRegionHierarchyOption = {
 export type TBrainRegionHierarchyAtomReturnType = {
   root: IBrainRegionHierarchy;
   nodes: IBrainRegionHierarchy | null;
-  options: Array<TBrainRegionHierarchyOption>;
+  options: TBrainRegionHierarchyOption[];
   leaves: Map<string, IBrainRegionHierarchy[]>;
 } | null;
 
@@ -72,7 +71,7 @@ export interface IBrainRegionHierarchyExtended extends IBrainRegionHierarchy {
   is_leaf_region: boolean;
   volume: number;
   is_volumetric_region: boolean;
-  children: Array<IBrainRegionHierarchyExtended>;
+  children: IBrainRegionHierarchyExtended[];
 }
 
 export type TBrainRegionHierarchyExtendedOption = {
@@ -84,7 +83,7 @@ export type TBrainRegionHierarchyExtendedOption = {
 export type TBrainRegionHierarchyExtendedAtomReturnType = {
   root: IBrainRegionHierarchyExtended;
   nodes: IBrainRegionHierarchyExtended | null;
-  options: Array<TBrainRegionHierarchyExtendedOption>;
+  options: TBrainRegionHierarchyExtendedOption[];
   leaves: Map<string, IBrainRegionHierarchyExtended[]>;
 } | null;
 
@@ -96,7 +95,7 @@ export const brainRegionRootHierarchyAtom = atom(async (get) => {
   const { data: root, error } = await tryCatch(
     getBrainRegionHierarchy({
       id: atlas?.hierarchy_id ?? config.DEFAULT_BRAIN_REGION_HIERARCHY_ID,
-    })
+    }),
   );
   if (error) {
     log('error', 'Failed to fetch brain regions:', error);
@@ -121,17 +120,17 @@ export const brainRegionBasicCellGroupsRegionsHierarchyAtom = atom(
     const root = findNodeByKey<IBrainRegionHierarchy>(
       DEFAULT_BRAIN_REGION_ANNOTATION_FIELD,
       BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE,
-      master
+      master,
     );
 
     if (!root) {
       log(
         'warn',
-        `Brain region with annotation_value ${BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE} not found.`
+        `Brain region with annotation_value ${BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE} not found.`,
       );
       return null;
     }
-    let options: Array<TBrainRegionHierarchyOption> = [];
+    let options: TBrainRegionHierarchyOption[] = [];
     let leaves: Map<string, IBrainRegionHierarchy[]> = new Map();
     const nodes = renameKeyDeep<IBrainRegionHierarchy>(root, 'color_hex_triplet', 'color', true);
 
@@ -155,7 +154,7 @@ export const brainRegionBasicCellGroupsRegionsHierarchyAtom = atom(
     }
 
     return { root, nodes, options, leaves };
-  }
+  },
 );
 
 /**
@@ -168,14 +167,14 @@ export const brainRegionBasicCellGroupsRegionsHierarchyAtom = atom(
  */
 function mergeHierarchyWithAtlas(
   node: IBrainRegionHierarchy,
-  atlasMap: Map<string, IBrainAtlasRegion>
+  atlasMap: Map<string, IBrainAtlasRegion>,
 ): IBrainRegionHierarchyExtended {
   const atlasRegion = atlasMap.get(node.id);
   const volume = atlasRegion?.volume ?? 0;
   const isLeafRegion = atlasRegion?.is_leaf_region ?? false;
 
   // process children first (recursive) so their is_volumetric_region is computed
-  const extendedChildren: Array<IBrainRegionHierarchyExtended> = node.children
+  const extendedChildren: IBrainRegionHierarchyExtended[] = node.children
     .filter((child) => !isNil(child))
     .map((child) => mergeHierarchyWithAtlas(child, atlasMap));
 
@@ -198,18 +197,16 @@ function mergeHierarchyWithAtlas(
  * gets leaves for each region in the extended hierarchy.
  */
 function getLeavesForEachRegionExtended(
-  root: IBrainRegionHierarchyExtended
+  root: IBrainRegionHierarchyExtended,
 ): Map<string, IBrainRegionHierarchyExtended[]> {
   const leavesMap = new Map<string, IBrainRegionHierarchyExtended[]>();
 
-  function collectLeaves(
-    node: IBrainRegionHierarchyExtended
-  ): Array<IBrainRegionHierarchyExtended> {
+  function collectLeaves(node: IBrainRegionHierarchyExtended): IBrainRegionHierarchyExtended[] {
     if (!node.children || node.children.length === 0) {
       return [node];
     }
 
-    const leaves: Array<IBrainRegionHierarchyExtended> = [];
+    const leaves: IBrainRegionHierarchyExtended[] = [];
     for (const child of node.children) {
       leaves.push(...collectLeaves(child));
     }
@@ -245,13 +242,13 @@ export const brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom = atom(
     const baseRoot = findNodeByKey<IBrainRegionHierarchy>(
       DEFAULT_BRAIN_REGION_ANNOTATION_FIELD,
       BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE,
-      master
+      master,
     );
 
     if (!baseRoot) {
       log(
         'warn',
-        `Brain region with annotation_value ${BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE} not found.`
+        `Brain region with annotation_value ${BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE} not found.`,
       );
       return null;
     }
@@ -263,10 +260,10 @@ export const brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom = atom(
       root,
       'color_hex_triplet',
       'color',
-      true
+      true,
     );
 
-    const options: Array<TBrainRegionHierarchyExtendedOption> =
+    const options: TBrainRegionHierarchyExtendedOption[] =
       flattenTreeAsObject<IBrainRegionHierarchyExtended>(root)
         .map((region) => ({
           av: region.annotation_value,
@@ -284,7 +281,7 @@ export const brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom = atom(
     const leaves = getLeavesForEachRegionExtended(root);
 
     return { root, nodes, options, leaves };
-  }
+  },
 );
 
 /**
@@ -308,7 +305,7 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
   const brainRegions = useUnwrappedValue(brainRegionBasicCellGroupsRegionsHierarchyAtom);
 
   const defaultSelectedBrainRegion = brainRegions?.options.find(
-    (o) => lowerCase(o.label).trim() === lowerCase(DEFAULT_SELECTED_BRAIN_REGION_NAME).trim()
+    (o) => lowerCase(o.label).trim() === lowerCase(DEFAULT_SELECTED_BRAIN_REGION_NAME).trim(),
   );
 
   const [stored, updateLocalStorage] = useLocalStorage<{
@@ -328,7 +325,7 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
       },
       shallow: false,
       clearOnDefault: false,
-    }
+    },
   );
   // track if config was already initialized to avoid infinite loop
   const isInitializedRef = useRef(false);
@@ -388,7 +385,16 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
     isInitializedRef.current = true;
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [brainRegions, id, annotationValue, stored, defaultSelectedBrainRegion]);
+  }, [
+    brainRegions,
+    id,
+    annotationValue,
+    stored,
+    defaultSelectedBrainRegion,
+    selectedBrainRegion?.id,
+    setSearchParamHierarchyConfig,
+    updateSelectedBrainRegion,
+  ]);
 
   // Sync localStorage when URL params change
   useEffect(() => {
@@ -407,7 +413,11 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
    */
   const updateHierarchyConfig = (node: IBrainRegionHierarchy | null) => {
     const regionConfig = node
-      ? { id: node.id, name: node.name, annotation_value: node?.annotation_value }
+      ? {
+          id: node.id,
+          name: node.name,
+          annotation_value: node?.annotation_value,
+        }
       : null;
 
     // Only update if the values are actually different

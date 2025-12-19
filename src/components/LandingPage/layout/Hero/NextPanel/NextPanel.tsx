@@ -1,7 +1,5 @@
-import React from 'react';
-
-import { classNames } from '@/util/utils';
 import { ID_MENU } from '@/components/LandingPage/constants';
+import { classNames } from '@/util/utils';
 
 import styles from './NextPanel.module.css';
 

@@ -1,18 +1,17 @@
 'use client';
 
 import { RightOutlined } from '@ant-design/icons';
-import { usePathname } from 'next/navigation';
-import { ComponentProps } from 'react';
 import filter from 'es-toolkit/compat/filter';
 import Link from 'next/link';
-
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { usePathname } from 'next/navigation';
+import type { ComponentProps } from 'react';
 import { config } from '@/config';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { getActiveSection } from '@/utils/get-section';
 import { useUserRole } from '@/hooks/use-user-role';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
+import { getActiveSection } from '@/utils/get-section';
 
 type Props = {
   className?: ComponentProps<'div'>['className'];
@@ -42,7 +41,10 @@ const links = [
 export function LeftMenu({ className }: Props) {
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
-  const { isVirtualLabAdmin: isAdmin } = useUserRole({ virtualLabId, projectId });
+  const { isVirtualLabAdmin: isAdmin } = useUserRole({
+    virtualLabId,
+    projectId,
+  });
   const pathname = usePathname();
   const activeSection = getActiveSection(pathname);
 
@@ -52,7 +54,7 @@ export function LeftMenu({ className }: Props) {
       baseUrl: link.url,
       url: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${link.url}`,
     })),
-    (link) => !link.requireRole || (link.requireRole && isAdmin)
+    (link) => !link.requireRole || (link.requireRole && isAdmin),
   );
 
   return (

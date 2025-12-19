@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 
 import {
   Menubar,
@@ -23,7 +23,7 @@ export default function HelpMenu({ children, cls }: Props) {
         <MenubarTrigger
           className={classNames(
             'group text-primary-2 cursor-pointer border-none outline-0 outline-offset-0',
-            cls?.trigger
+            cls?.trigger,
           )}
           style={{ outline: 'none' }}
         >

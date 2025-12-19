@@ -1,18 +1,16 @@
 'use client';
 
-import { Modal } from 'antd';
-import { useState } from 'react';
 import { LoadingOutlined, PlayCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import { Modal } from 'antd';
 import { Popover } from 'antd/lib';
-
+import { useState } from 'react';
+import type { INotebook } from '@/api/entitycore/types/entities/notebook';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
 import { EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
-import { INotebook } from '@/api/entitycore/types/entities/notebook';
-
-import { downloadArchive } from '@/services/entity-download';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { useAppNotification } from '@/components/notification';
-import { NotebookStartResponse, startNotebook } from '@/services/notebooks';
+import { downloadArchive } from '@/services/entity-download';
+import { type NotebookStartResponse, startNotebook } from '@/services/notebooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 interface ActionPopoverProps {
@@ -37,7 +35,7 @@ export default function ActionPopover({ notebook }: ActionPopoverProps) {
         notebook.id,
         asset.path,
         virtualLabId,
-        projectId
+        projectId,
       );
       notification.success({
         message: `Notebook starting`,

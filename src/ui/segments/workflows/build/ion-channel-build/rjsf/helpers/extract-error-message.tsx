@@ -1,13 +1,13 @@
-import { ErrorSchema } from '@rjsf/utils';
-import { isNil, compact } from 'es-toolkit/compat';
+import type { ErrorSchema } from '@rjsf/utils';
+import { compact, isNil } from 'es-toolkit/compat';
 
-export const extractErrorMessages = (errorSchema: ErrorSchema | undefined): Array<string> => {
+export const extractErrorMessages = (errorSchema: ErrorSchema | undefined): string[] => {
   if (!errorSchema || typeof errorSchema !== 'object') return [];
 
   // check if errorSchema is empty object
   if (Object.keys(errorSchema).length === 0) return [];
 
-  const errors: Array<string> = [];
+  const errors: string[] = [];
 
   const traverse = (obj: any, path: string = ''): void => {
     if (!obj || typeof obj !== 'object') return;
@@ -26,7 +26,7 @@ export const extractErrorMessages = (errorSchema: ErrorSchema | undefined): Arra
 
     // eslint-disable-next-line no-restricted-syntax
     for (const key in obj) {
-      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      if (Object.hasOwn(obj, key)) {
         if (key !== '__errors' && !isNil(obj[key]) && typeof obj[key] === 'object') {
           // handle array indices differently - show them as [index] instead of .index
           const isArrayIndex = !Number.isNaN(Number(key));

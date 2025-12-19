@@ -1,12 +1,10 @@
 import { Empty, Skeleton } from 'antd';
-import { match, P } from 'ts-pattern';
-import Image from 'next/image';
-
 import kebabCase from 'es-toolkit/compat/kebabCase';
-import { useClientCachedUrl } from '@/features/model-analysis/viewer/asset-viewers/storage';
+import Image from 'next/image';
+import { match, P } from 'ts-pattern';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 import { config } from '@/config';
-
-import { TEntityTypeDict } from '@/api/entitycore/types';
+import { useClientCachedUrl } from '@/features/model-analysis/viewer/asset-viewers/storage';
 
 type Props = {
   entityId: string;

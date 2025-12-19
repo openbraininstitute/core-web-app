@@ -1,4 +1,4 @@
-import { ContentForNewsItem } from '@/components/LandingPage/content/news';
+import type { ContentForNewsItem } from '@/components/LandingPage/content/news';
 
 export default function HeaderNews({ content }: { content: ContentForNewsItem }) {
   return (

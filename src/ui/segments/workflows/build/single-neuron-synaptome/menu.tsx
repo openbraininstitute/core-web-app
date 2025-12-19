@@ -1,9 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { useRouter } from '@bprogress/next';
 import {
   CheckCircleFilled,
   LoadingOutlined,
@@ -11,41 +7,41 @@ import {
   SettingFilled,
   WarningFilled,
 } from '@ant-design/icons';
-import { z } from 'zod';
-
-import kebabCase from 'es-toolkit/compat/kebabCase';
-import isNil from 'es-toolkit/compat/isNil';
+import { useRouter } from '@bprogress/next';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import delay from 'es-toolkit/compat/delay';
-
-import { useVisibleSynapsesSetter } from '../../simulate/single-neuron/shared/steps/webgl-neuron-selector/hooks';
-
-import { SynapseSetMenuItems } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-set-menu-item';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { createSingleNeuronSynaptome } from '@/api/small-scale-simulator';
-import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
-import {
-  BuildStep,
-  BuildStepKeys,
-  DefaultSynapseValue,
-  useBuildSingleNeuronSynaptomeSessionState,
-} from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import isNil from 'es-toolkit/compat/isNil';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
+import { z } from 'zod';
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import {
   SingleNeuronSynaptomeBaseSchema,
   SingleNeuronSynaptomeConfigurationSchema,
 } from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import { useAppNotification } from '@/components/notification';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { browserHistoryReplace } from '@/utils/browser';
-import { messages } from '@/i18n/en/synaptome';
-import { Button } from '@/ui/molecules/button';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { createSingleNeuronSynaptome } from '@/api/small-scale-simulator';
 import { tryCatch } from '@/api/utils';
-import { cn } from '@/utils/css-class';
+import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
-
-import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import { messages } from '@/i18n/en/synaptome';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Button } from '@/ui/molecules/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import {
+  BuildStep,
+  type BuildStepKeys,
+  DefaultSynapseValue,
+  useBuildSingleNeuronSynaptomeSessionState,
+} from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import { SynapseSetMenuItems } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-set-menu-item';
+import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { browserHistoryReplace } from '@/utils/browser';
+import { cn } from '@/utils/css-class';
+import { useVisibleSynapsesSetter } from '../../simulate/single-neuron/shared/steps/webgl-neuron-selector/hooks';
 
 type Props = { sessionId: string };
 
@@ -109,7 +105,7 @@ export function Menu({ sessionId }: Props) {
   };
 
   const validSetsCount = Array.from(sessionValue?.synapseSets?.values() ?? [])?.filter(
-    (o) => SingleNeuronSynaptomeBaseSchema.safeParse(o).success
+    (o) => SingleNeuronSynaptomeBaseSchema.safeParse(o).success,
   ).length;
 
   const validateMainForm = mainFormSchema.safeParse({
@@ -128,7 +124,7 @@ export function Menu({ sessionId }: Props) {
     }).data;
 
     const validationPromises = Array.from(sessionValue?.synapseSets?.entries() ?? []).map(
-      ([, value]) => SingleNeuronSynaptomeConfigurationSchema.safeParseAsync(value)
+      ([, value]) => SingleNeuronSynaptomeConfigurationSchema.safeParseAsync(value),
     );
     const sets = (await Promise.all(validationPromises)).filter((o) => o.success);
 
@@ -146,7 +142,7 @@ export function Menu({ sessionId }: Props) {
               synapses: sets.map((o) => o.data),
             },
           },
-        })
+        }),
       );
       if (error) throw new Error(messages.CreateSynaptomeEntityFailed);
 
@@ -170,7 +166,7 @@ export function Menu({ sessionId }: Props) {
       });
       delay(() => {
         navigate(
-          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSynaptome)}/${data?.entity.id}`
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSynaptome)}/${data?.entity.id}`,
         );
       }, 500);
     },
@@ -352,7 +348,7 @@ export function Menu({ sessionId }: Props) {
               variant="success"
               size={breakpoint === 'l' ? 'md' : 'lg'}
               className={cn(
-                'disabled:bg-neutral-2/40 disabled:text-label! w-full justify-center px-10 font-medium!'
+                'disabled:bg-neutral-2/40 disabled:text-label! w-full justify-center px-10 font-medium!',
               )}
               onClick={() => mutate.mutateAsync()}
               disabled={disabled}

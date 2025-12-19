@@ -187,10 +187,8 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
       if (modalOverlay) modalOverlay.style.display = originalOverlayDisplay || '';
 
       return dataUrl;
-    } catch (error) {
+    } catch (_error) {
       if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
-        console.warn('Screenshot capture unavailable.', error);
       }
 
       const modal = document.querySelector('[role="dialog"]') as HTMLElement;
@@ -230,10 +228,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
         try {
           const base64 = await convertFileToBase64(file);
           uploadedScreenshots.push(base64);
-        } catch (error) {
-          // eslint-disable-next-line no-console
-          console.warn('Failed to convert image to base64:', error);
-        }
+        } catch (_error) {}
       }
 
       const screenshot = await captureScreenshot().catch(() => {
@@ -248,13 +243,6 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
     const labels = [type, section].filter(Boolean);
 
     try {
-      // eslint-disable-next-line no-console
-      console.log('Submitting feedback:', {
-        title,
-        body: body.substring(0, 100) + '...',
-        label: getMonthYearLabel(),
-      });
-
       const res = await fetch('/api/feedback/create-ticket', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -270,16 +258,11 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
 
       const responseData = await res.json().catch(() => ({ error: 'Failed to parse response' }));
 
-      // eslint-disable-next-line no-console
-      console.log('API response:', { status: res.status, data: responseData });
-
       if (!res.ok) {
         throw new Error(responseData.error || 'Failed to create ticket');
       }
 
       if (responseData.warning) {
-        // eslint-disable-next-line no-console
-        console.warn('Warning:', responseData.warning);
       }
 
       setIsSuccess(true);
@@ -296,8 +279,6 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error creating ticket';
       setMessage(`Error: ${errorMessage}`);
-      // eslint-disable-next-line no-console
-      console.error('Error creating ticket:', error);
     } finally {
       setLoading(false);
     }
@@ -345,7 +326,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
       <div
         className={cn(
           'border-neutral-2 mb-6 flex items-start justify-between border-b pb-4',
-          loading && 'pointer-events-none opacity-40 blur-sm'
+          loading && 'pointer-events-none opacity-40 blur-sm',
         )}
       >
         <div className="flex flex-col gap-1">
@@ -374,7 +355,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
             <span
               className={cn(
                 'text-base font-normal',
-                errors.type ? 'text-red-500' : 'text-primary-9'
+                errors.type ? 'text-red-500' : 'text-primary-9',
               )}
             >
               Feedback type
@@ -397,7 +378,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
                   'focus:border-primary-4 focus:ring-primary-4/20 rounded-full bg-white focus:ring-2 focus:outline-none',
                   'appearance-none py-3 pr-12 pl-6',
                   !type && 'text-neutral-5 text-base font-normal',
-                  errors.type && 'border-red-500'
+                  errors.type && 'border-red-500',
                 )}
               >
                 <option value="" disabled className="text-neutral-5 text-base font-normal">
@@ -426,7 +407,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
                   'border-neutral-2 text-primary-9 w-full rounded-lg border text-lg font-semibold',
                   'focus:border-primary-4 focus:ring-primary-4/20 rounded-full bg-white focus:ring-2 focus:outline-none',
                   'appearance-none py-3 pr-12 pl-6',
-                  !section && 'text-neutral-5 text-base font-normal'
+                  !section && 'text-neutral-5 text-base font-normal',
                 )}
               >
                 <option value="" disabled className="text-neutral-5 text-base font-normal">
@@ -449,7 +430,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
           <span
             className={cn(
               'text-base font-normal',
-              errors.feedback ? 'text-red-500' : 'text-primary-9'
+              errors.feedback ? 'text-red-500' : 'text-primary-9',
             )}
           >
             Your feedback
@@ -473,7 +454,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
               'focus:border-primary-4 focus:ring-primary-4/20 focus:ring-2 focus:outline-none',
               'resize-none',
               'placeholder:text-neutral-5 placeholder:text-base placeholder:font-normal',
-              errors.feedback && 'border-red-500'
+              errors.feedback && 'border-red-500',
             )}
           />
           {errors.feedback && (
@@ -498,7 +479,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
                 'border-neutral-2 rounded-lg border-2 border-dashed p-6 transition-colors',
                 isDragging
                   ? 'border-primary-4 bg-primary-1'
-                  : 'border-neutral-2 bg-neutral-0 hover:border-primary-3'
+                  : 'border-neutral-2 bg-neutral-0 hover:border-primary-3',
               )}
             >
               <label
@@ -556,7 +537,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
           <div
             className={cn(
               'rounded-lg px-4 py-2 text-sm',
-              message.includes('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'
+              message.includes('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700',
             )}
           >
             {message}

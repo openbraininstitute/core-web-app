@@ -1,12 +1,13 @@
-import React from 'react';
 import { CameraFilled } from '@ant-design/icons';
+import React from 'react';
 
 import { usePainter, useVisibleRegions } from './hooks';
+
 // Temporary disabled
 // import { Settings } from './settings/settings';
 
-import { classNames } from '@/util/utils';
 import { useAccessToken } from '@/hooks/useAccessToken';
+import { classNames } from '@/util/utils';
 
 import styles from './brain-atlas-viewer-gltf.module.css';
 
@@ -29,7 +30,7 @@ export function BrainAtlasViewerGltf({ className, dataKey, onLoading }: BrainAtl
       painter.setPointCloud(
         region?.annotation_value ?? -1,
         `#${region?.color_hex_triplet ?? 'FFFFFF'}`,
-        accessToken
+        accessToken,
       );
     }
     const handleCameraChange = () => {

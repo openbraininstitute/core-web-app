@@ -57,7 +57,7 @@ export type StainFilter = {
 
 export type IdFilter = Partial<{
   id: string;
-  id__in: string | Array<string>;
+  id__in: string | string[];
 }>;
 
 export type SearchFilter = {
@@ -76,20 +76,20 @@ export interface SharedFilter extends SearchFilter, NameFilter {}
 export type EtypeFilter = {
   etype__id: string | null;
   etype__pref_label: string | null;
-  etype__pref_label__in: Array<string> | null;
-  etype__order_by: Array<string> | null; //  ["pref_label"]
+  etype__pref_label__in: string[] | null;
+  etype__order_by: string[] | null; //  ["pref_label"]
 };
 
 export type MtypeFilter = {
   mtype__id: string | null;
   mtype_pref_label: string | null;
-  mtype_pref_label__in: Array<string> | null;
-  mtype_order_by: Array<string> | null; //  ["pref_label"]
+  mtype_pref_label__in: string[] | null;
+  mtype_order_by: string[] | null; //  ["pref_label"]
 };
 
 export type IDFilter = {
   id: string | null;
-  id__in: string | Array<string> | null;
+  id__in: string | string[] | null;
 };
 
 export interface IEModelFilter {
@@ -116,17 +116,17 @@ export interface IMorphologyFilter {
   exemplar_morphology__order_by?: string | null;
 }
 
-export interface CreatorFilter {}
+export type CreatorFilter = {};
 
 export interface OwnershipFilter {
   created_by__id?: string | null;
   created_by__pref_label?: string | null;
-  created_by__pref_label__in?: Array<string> | null;
+  created_by__pref_label__in?: string[] | null;
   created_by__order_by?: string | null;
 
   updated_by__id?: string | null;
   updated_by__pref_label?: string | null;
-  updated_by__pref_label__in?: Array<string> | null;
+  updated_by__pref_label__in?: string[] | null;
   updated_by__order_by?: string | null;
 }
 
@@ -143,7 +143,7 @@ export type EntityCoreTypeFilter = {
 export type SubjectFilter = {
   // Subject identifiers and naming
   subject__id: string | null;
-  subject__id__in: string | Array<string> | null;
+  subject__id__in: string | string[] | null;
   subject__name: string | null;
   subject__name__ilike: string | null;
   subject__name__in: string | null;
@@ -167,7 +167,7 @@ export type SubjectFilter = {
 
 export type PrefLabelFilter = {
   pref_label: string | null;
-  pref_label__in: Array<string> | null;
+  pref_label__in: string[] | null;
 };
 
 export type AlternativeNameFilter = {
@@ -176,9 +176,9 @@ export type AlternativeNameFilter = {
 
 export type PersonNameFilter = {
   given_name: string | null;
-  given_name__in: Array<string> | null;
+  given_name__in: string[] | null;
   given_name__ilike: string | null;
   family_name: string | null;
-  family_name__in: Array<string> | null;
+  family_name__in: string[] | null;
   family_name__ilike: string | null;
 };

@@ -1,9 +1,8 @@
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { EntitySlug } from '@/entity-configuration/domain/slug';
-
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
+import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/types';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [ExtendedEntitiesTypeDict.SingleNeuronSimulation]: {

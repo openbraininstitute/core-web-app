@@ -1,17 +1,15 @@
 import { Pagination as AntPagination, type PaginationProps } from 'antd';
-import { useRef, useEffect } from 'react';
 import { useAtom } from 'jotai';
 import type { ComponentProps } from 'react';
-
+import { useEffect, useRef } from 'react';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { Pagination as EntitycorePagination } from '@/api/entitycore/types/shared/response';
+import { DEFAULT_PAGE_SIZE, type TWorkspaceSection } from '@/constants';
 import {
   corePageNumberAtom,
   useDataListStateSnapshotActions,
 } from '@/ui/segments/data-table/elements/context';
-import { DEFAULT_PAGE_SIZE, TWorkspaceSection } from '@/constants';
 import { cn } from '@/utils/css-class';
-
-import type { Pagination as EntitycorePagination } from '@/api/entitycore/types/shared/response';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 type Props = {
   dataKey: string;
@@ -84,7 +82,7 @@ export function Pagination({
       className={cn(
         '[&_.ant-pagination-item-active]:bg-primary-9 [&_.ant-pagination-item-active_a]:text-white!',
         '[&_.ant-pagination-disabled_button]:text-neutral-2 [&_button.ant-pagination-item-link]:text-primary-9',
-        className
+        className,
       )}
     />
   );

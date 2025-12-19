@@ -1,17 +1,15 @@
-import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
 import * as Accordion from '@radix-ui/react-accordion';
-import { ReactElement } from 'react';
+import type { ReactElement } from 'react';
 
 import { ChevronIcon } from '@/components/icons';
+import type { TCoreFilter } from '@/entity-configuration/definitions/types';
+import styles from '@/ui/segments/data-table/elements/listing-filter-panel/filters.module.css';
 import { classNames } from '@/util/utils';
 
-import type { TCoreFilter } from '@/entity-configuration/definitions/types';
-
-import styles from '@/ui/segments/data-table/elements/listing-filter-panel/filters.module.css';
-
 type ContentProps = {
-  filters: Array<TCoreFilter>;
-  setFilters: (filters: Array<TCoreFilter>) => void;
+  filters: TCoreFilter[];
+  setFilters: (filters: TCoreFilter[]) => void;
 };
 
 type FilterGroupProps = {
@@ -21,8 +19,8 @@ type FilterGroupProps = {
     label: string;
     toggleFunc?: () => void;
   }[];
-  filters: Array<TCoreFilter>;
-  setFilters: (filters: Array<TCoreFilter>) => void;
+  filters: TCoreFilter[];
+  setFilters: (filters: TCoreFilter[]) => void;
 };
 
 export function FilterGroup({ items, filters, setFilters }: FilterGroupProps) {
@@ -53,7 +51,7 @@ export function FilterGroup({ items, filters, setFilters }: FilterGroupProps) {
               <Accordion.Trigger
                 className={classNames(
                   styles.accordionTrigger,
-                  'flex w-full items-center justify-between'
+                  'flex w-full items-center justify-between',
                 )}
               >
                 <span className="text-lg font-bold text-white">{label}</span>

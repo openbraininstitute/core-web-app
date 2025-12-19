@@ -1,8 +1,11 @@
-import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
+import { useAtom } from 'jotai';
 
-import { ReactNode } from 'react';
-import { flowAtom, Interval } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
+import type { ReactNode } from 'react';
+import {
+  flowAtom,
+  type Interval,
+} from '@/components/VirtualLab/create-entity-flows/checkout/shared';
 import { classNames } from '@/util/utils';
 
 type Props = {
@@ -40,7 +43,7 @@ function PricingCard({
       type="button"
       className={classNames(
         'border-0.5 relative flex grow flex-col items-start rounded-lg border-gray-100 p-6',
-        selectedInterval === interval ? 'bg-primary-8 text-white!' : 'text-primary-8 bg-white'
+        selectedInterval === interval ? 'bg-primary-8 text-white!' : 'text-primary-8 bg-white',
       )}
     >
       <div className="flex w-full items-center justify-between">
@@ -68,7 +71,7 @@ function PricingCard({
         <div
           className={classNames(
             'text-primary-7 flex h-max items-center justify-center rounded-full bg-green-400 px-1 text-sm',
-            'absolute top-2 right-4 p-1 px-3'
+            'absolute top-2 right-4 p-1 px-3',
           )}
         >
           Save {discount}-
@@ -89,20 +92,19 @@ export default function PricingToggleCards() {
       data-testid="price-cards"
       className="flex w-full flex-row items-center justify-center gap-3 pb-4"
     >
-      {tier?.prices &&
-        tier.prices.map((o) => (
-          <PricingCard
-            key={`${o.id}`}
-            id={o.id}
-            title={tier.title}
-            price={o.discount / 100 || o.amount / 100}
-            currency={o.currency}
-            interval={o.interval}
-            discount={o.discount / 100}
-            selectedInterval={interval}
-            onSelect={handleSelect}
-          />
-        ))}
+      {tier?.prices?.map((o) => (
+        <PricingCard
+          key={`${o.id}`}
+          id={o.id}
+          title={tier.title}
+          price={o.discount / 100 || o.amount / 100}
+          currency={o.currency}
+          interval={o.interval}
+          discount={o.discount / 100}
+          selectedInterval={interval}
+          onSelect={handleSelect}
+        />
+      ))}
     </div>
   );
 }

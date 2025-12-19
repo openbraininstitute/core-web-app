@@ -1,9 +1,9 @@
 'use client';
 
-import { NavigationItem, NavigationItemProps } from '../ApplicationSidebar';
 import { classNames } from '@/util/utils';
+import { NavigationItem, type NavigationItemProps } from '../ApplicationSidebar';
 
-const MAIN_NAVIGATION_LIST: Array<NavigationItemProps> = [
+const MAIN_NAVIGATION_LIST: NavigationItemProps[] = [
   {
     name: 'About',
     description: 'Explore the literature and query publications using a chatbot.',
@@ -17,7 +17,7 @@ export function MainNavigation({ expanded }: { expanded: boolean }) {
     <ul
       className={classNames(
         'primary-scrollbar flex h-full w-full flex-col items-start justify-start gap-y-1 overflow-y-auto',
-        !expanded && 'hidden'
+        !expanded && 'hidden',
       )}
     >
       {MAIN_NAVIGATION_LIST.map(({ name, url, description, bgcolor }) => (

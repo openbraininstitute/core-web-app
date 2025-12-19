@@ -3,11 +3,9 @@ import get from 'es-toolkit/compat/get';
 import groupBy from 'es-toolkit/compat/groupBy';
 import sortBy from 'es-toolkit/compat/sortBy';
 import values from 'es-toolkit/compat/values';
-
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { FeatureFlags, FlagKey, microcircuitFlag } from '@/features/feature-flags/flags';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { type FeatureFlags, type FlagKey, microcircuitFlag } from '@/features/feature-flags/flags';
 
 export const WorkflowSessionIdSearchParam = 'sessionId';
 export const EntityScopeDict = {
@@ -25,7 +23,12 @@ export const ActivityDict = [
   { label: 'Extract', value: 'extract', disabled: true, name: 'Extract' },
   { label: 'Optimize', value: 'optimize', disabled: true, name: 'Optimize' },
   { label: 'Validate', value: 'validate', disabled: true, name: 'Validate' },
-  { label: 'Process Data', value: 'process_data', disabled: true, name: 'Process Data' },
+  {
+    label: 'Process Data',
+    value: 'process_data',
+    disabled: true,
+    name: 'Process Data',
+  },
 ] as const;
 
 export type TActivityValue = (typeof ActivityDict)[number]['value'];
@@ -36,7 +39,7 @@ export const ActivityValues = Object.fromEntries(ActivityDict.map((c) => [c.labe
 type EntityTypeProperties = {
   disabled: boolean;
   type: TExtendedEntitiesTypeDict;
-  requiredFeatures?: Array<FlagKey>;
+  requiredFeatures?: FlagKey[];
 };
 
 type EntityTypeOption = {
@@ -48,7 +51,7 @@ type EntityTypeOption = {
 
 type EntityTypeGroupedOptions = {
   group: string;
-  options: Array<EntityTypeOption>;
+  options: EntityTypeOption[];
 };
 
 export const EntityWorkflowConfiguration: Partial<
@@ -58,7 +61,7 @@ export const EntityWorkflowConfiguration: Partial<
       group: TEntityScopeValue;
       label: string;
       properties: Partial<Record<TActivityValue, EntityTypeProperties>>;
-      requiredFeatures?: Array<FlagKey>;
+      requiredFeatures?: FlagKey[];
     }
   >
 > = {
@@ -268,21 +271,21 @@ export type EntityDropdownOption = {
 
 export type TEntityDropdownOptionsGrouped = Array<{
   group: TEntityScopeValue;
-  options: Array<EntityDropdownOption>;
+  options: EntityDropdownOption[];
 }>;
 
 export function getDropdownOptionsByCategory(
   category: TActivityValue,
-  featureFlags?: FeatureFlags
+  featureFlags?: FeatureFlags,
 ): {
-  allOptions: Array<EntityTypeGroupedOptions>;
-  enabledOptions: Array<EntityTypeGroupedOptions>;
+  allOptions: EntityTypeGroupedOptions[];
+  enabledOptions: EntityTypeGroupedOptions[];
 } {
   const options = Object.values(EntityWorkflowConfiguration)
     .filter((config): config is NonNullable<typeof config> => config !== undefined)
     .filter(
       (config) =>
-        !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
+        !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag]),
     )
     .map((config) => {
       const disabled = get(config, `properties.${category}`, undefined)?.disabled ?? true;
@@ -334,13 +337,13 @@ export function getDropdownOptionsByCategory(
 
 export function getAllOptionsOrdered(
   category: TActivityValue,
-  featureFlags: FeatureFlags
-): Array<EntityTypeOption> {
+  featureFlags: FeatureFlags,
+): EntityTypeOption[] {
   const options = Object.values(EntityWorkflowConfiguration)
     .filter((config): config is NonNullable<typeof config> => config !== undefined)
     .filter(
       (config) =>
-        !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
+        !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag]),
     )
     .map((config) => {
       const disabled = get(config, `properties.${category}`, undefined)?.disabled ?? true;
@@ -360,11 +363,11 @@ export function getAllOptionsOrdered(
 }
 
 export function getBuildTypeFromSimulateType(
-  type: TExtendedEntitiesTypeDict
+  type: TExtendedEntitiesTypeDict,
 ): TExtendedEntitiesTypeDict | undefined {
   const config = find(
     values(EntityWorkflowConfiguration),
-    (c) => c.properties.simulate?.type === type
+    (c) => c.properties.simulate?.type === type,
   );
 
   return config?.properties.build?.type;
@@ -381,7 +384,7 @@ export function getCategoryDictItem(value: TActivityValue | null | undefined) {
 }
 
 export function getEntityTypeWorkflowConfigurationItem(
-  value: TExtendedEntitiesTypeDict | null | undefined
+  value: TExtendedEntitiesTypeDict | null | undefined,
 ) {
   if (!value) return null;
   return get(EntityWorkflowConfiguration, `${value}`, null);

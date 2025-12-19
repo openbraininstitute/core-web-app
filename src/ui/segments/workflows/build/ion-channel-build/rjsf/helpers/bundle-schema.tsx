@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
-import { RJSFSchema } from '@rjsf/utils';
+import type { RJSFSchema } from '@rjsf/utils';
+import type { ReactNode } from 'react';
 
 import { renderMathInText } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers/render-mathematic-symbol';
 
@@ -17,7 +17,7 @@ export type BlockPropertyMetadata = {
 /**
  * represents block group properties organized by their group/section
  */
-export type BlockGroupProperties = Record<string, Array<BlockPropertyMetadata>>;
+export type BlockGroupProperties = Record<string, BlockPropertyMetadata[]>;
 
 /**
  * bundles schema properties into groups based on their metadata.

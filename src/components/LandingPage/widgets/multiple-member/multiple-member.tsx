@@ -1,9 +1,7 @@
-import React from 'react';
-
+import { classNames } from '@/util/utils';
 import { styleBlockSmall } from '../../styles';
 import { useSanityContentForMultipleMember } from './hooks';
 import Member from './member';
-import { classNames } from '@/util/utils';
 
 import styles from './multiple-member.module.css';
 

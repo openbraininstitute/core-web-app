@@ -1,11 +1,10 @@
-import { UserOutlined, HomeOutlined } from '@ant-design/icons';
+import { HomeOutlined, UserOutlined } from '@ant-design/icons';
+import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { Suspense, useRef } from 'react';
-import Link from 'next/link';
-
-import { classNames, signOut } from '@/util/utils';
-import useOnClickOutside from '@/hooks/useOnClickOutside';
 import UserMenu from '@/components/user-menu';
+import useOnClickOutside from '@/hooks/useOnClickOutside';
+import { classNames, signOut } from '@/util/utils';
 
 type ApplicationSidebarHeaderProps = {
   title: ({ expanded }: { expanded: boolean }) => React.ReactNode;
@@ -34,7 +33,7 @@ export function NavigationItem({ url, name, description, bgcolor }: NavigationIt
       key={url}
       className={classNames(
         'hover:bg-primary-7 relative mx-auto flex w-full cursor-pointer p-4',
-        bgcolor
+        bgcolor,
       )}
     >
       <Link href={url} className="mx-auto w-full">
@@ -62,7 +61,7 @@ export function DefaultAccountPanel({ expanded }: { expanded: boolean }) {
       className={classNames(
         'border-primary-7 bg-primary-9 my-0 w-full border',
         !expanded && 'hidden',
-        'hover:shadow-xl'
+        'hover:shadow-xl',
       )}
     >
       <div className="flex flex-col gap-y-2 p-5">
@@ -92,7 +91,7 @@ function ApplicationSidebarHeader({ title, expanded }: ApplicationSidebarHeaderP
     <div
       className={classNames(
         'relative my-1 flex w-full items-center',
-        !expanded ? 'flex-col gap-2' : 'justify-between'
+        !expanded ? 'flex-col gap-2' : 'justify-between',
       )}
     >
       <div className="flex h-[90px] w-[45px] items-center justify-center">
@@ -116,7 +115,7 @@ export default function ApplicationSidebar({ title, children }: ApplicationSideb
     ['mousedown', 'touchstart'],
     (event) => {
       return event && (event.target as HTMLElement)?.closest('.ant-modal-root');
-    }
+    },
   );
 
   return (
@@ -126,7 +125,7 @@ export default function ApplicationSidebar({ title, children }: ApplicationSideb
         'bg-primary-9 text-light relative h-screen w-[45px] transition-transform ease-in-out',
         expanded
           ? 'flex w-80 flex-col items-start justify-start px-5 shadow-[0px_5px_15px_rgba(0,0,0,.35)]'
-          : 'flex w-10 flex-col items-center justify-between transition-transform ease-in-out will-change-auto'
+          : 'flex w-10 flex-col items-center justify-between transition-transform ease-in-out will-change-auto',
       )}
     >
       <ApplicationSidebarHeader {...{ title, expanded, toggleExpand }} />
@@ -140,7 +139,7 @@ export default function ApplicationSidebar({ title, children }: ApplicationSideb
         <Link
           href="/app/virtual-lab"
           className={classNames(
-            'group inline-flex w-full flex-row items-center justify-between px-3 py-3'
+            'group inline-flex w-full flex-row items-center justify-between px-3 py-3',
           )}
         >
           <HomeOutlined className="text-primary-2 cursor-pointer group-hover:text-white" />

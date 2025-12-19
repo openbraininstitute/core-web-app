@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect } from 'react';
 
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
+import type { Project, VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 import { LabCompany } from '@/components/icons/buttons';
 import { Button } from '@/ui/molecules/button';
 import {
@@ -15,8 +16,6 @@ import {
 } from '@/ui/segments/workspaces/space-manager/event';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
-
-import type { Project, VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 
 type Props = {
   lab: VirtualLab & { isMine: boolean };
@@ -89,7 +88,7 @@ export function Item({
   };
 
   const onVlabClick = (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent> | React.KeyboardEvent<HTMLDivElement>
+    e: React.MouseEvent<HTMLDivElement, MouseEvent> | React.KeyboardEvent<HTMLDivElement>,
   ) => {
     e.stopPropagation();
     makeTriggerWorkspaceConfigurationClickEvent({
@@ -113,7 +112,7 @@ export function Item({
           'group flex cursor-pointer items-center justify-between px-2 py-3 transition-colors duration-150 hover:bg-gray-50',
           'hover:bg-neutral-1 rounded-2xl',
           { 'rounded-b-none': expandedLabs.has(lab.id) },
-          { 'bg-primary-9 text-white': lab.isMine }
+          { 'bg-primary-9 text-white': lab.isMine },
         )}
         onKeyDown={onVlabClick}
         onClick={onVlabClick}
@@ -129,7 +128,9 @@ export function Item({
             />
           )}
           <LabCompany
-            className={cn('text-label size-4! min-h-4 min-w-4', { 'text-primary-3': lab.isMine })}
+            className={cn('text-label size-4! min-h-4 min-w-4', {
+              'text-primary-3': lab.isMine,
+            })}
           />
           <h4
             className={cn('text-primary-9 text-md line-clamp-1 truncate font-bold', {
@@ -158,7 +159,7 @@ export function Item({
                 <DownOutlined
                   className={cn(
                     'text-primary-7 group-hover:text-primary-8 h-4 w-4 hover:text-white',
-                    { 'hover:text-primary-4 text-primary-3': lab.isMine }
+                    { 'hover:text-primary-4 text-primary-3': lab.isMine },
                   )}
                 />
               </Button>
@@ -178,7 +179,7 @@ export function Item({
               'flex flex-col gap-1 overflow-hidden bg-white px-2 py-2 will-change-auto',
               {
                 'rounded-b-2xl': expandedLabs.has(lab.id),
-              }
+              },
             )}
           >
             {data?.map((project, projectIndex) => {
@@ -190,7 +191,7 @@ export function Item({
                   animate={{ opacity: 1 }}
                   transition={{ delay: projectIndex * 0.01, duration: 0.1 }}
                   className={cn(
-                    'flex w-full cursor-pointer items-center justify-between transition-colors duration-150'
+                    'flex w-full cursor-pointer items-center justify-between transition-colors duration-150',
                   )}
                 >
                   <Button

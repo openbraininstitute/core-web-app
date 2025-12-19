@@ -2,19 +2,18 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { compact, get } from 'es-toolkit/compat';
-
-import { EXPERIMENTAL_NEURON_DENSITY_PROGRESS_STEPS } from '@/ui/segments/contribute/experimental-neuron-density/config';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { createContribution } from '@/api/entitycore/queries/general/contribution';
-import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 import {
   createExperimentalNeuronDensity,
   measurementSchema,
 } from '@/api/entitycore/queries/experimental/neuron-density';
+import { createContribution } from '@/api/entitycore/queries/general/contribution';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { EXPERIMENTAL_NEURON_DENSITY_PROGRESS_STEPS } from '@/ui/segments/contribute/experimental-neuron-density/config';
 
 import type { TExperimentalNeuronDensityForm } from '@/ui/segments/contribute/experimental-neuron-density/schema';
-import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
+import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 import type {
   IMutationKeyConfig,
   IPipelineHookResult,
@@ -36,7 +35,7 @@ export function useExperimentalNeuronDensityPipeline({
             const d = measurementSchema.safeParse(m);
             if (d.success) return d.data;
             return null;
-          })
+          }),
         ) ?? [];
       return createExperimentalNeuronDensity({
         context: { projectId, virtualLabId },
@@ -66,7 +65,7 @@ export function useExperimentalNeuronDensityPipeline({
             return (
               get(
                 (query.queryKey as ExtendedEntityTypeQueryKey)[0],
-                'context.extendedEntityType'
+                'context.extendedEntityType',
               ) === ExtendedEntitiesTypeDict.ExperimentalNeuronDensity
             );
           },
@@ -94,8 +93,8 @@ export function useExperimentalNeuronDensityPipeline({
                 role_id: c.role_id!,
                 entity_id: entityId,
               },
-            })
-          )
+            }),
+          ),
       );
     },
   });
@@ -137,7 +136,7 @@ export function useExperimentalNeuronDensityPipeline({
         };
         return acc;
       },
-      {} as Record<string, IMutationKeyConfig>
+      {} as Record<string, IMutationKeyConfig>,
     ),
   };
 }

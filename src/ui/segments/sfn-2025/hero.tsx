@@ -1,11 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link';
 import React from 'react';
-
+import ProgressiveImage from '@/components/LandingPage/components/ProgressiveImage';
 import useFullHeight from '@/hooks/useFullHeight';
 import { classNames } from '@/util/utils';
-
-import ProgressiveImage from '@/components/LandingPage/components/ProgressiveImage';
 import { cn } from '@/utils/css-class';
 
 import styles from './hero.module.css';
@@ -64,7 +62,7 @@ export default function HeroSFN({
             aria-label="Create virtual lab"
             className={cn(
               'font-gabarito relative rounded-full px-16 py-6 text-2xl! font-medium! whitespace-nowrap text-white shadow-2xl md:py-6 md:text-3xl!',
-              styles.rainbowButton
+              styles.rainbowButton,
             )}
             id="create-virtual-lab"
           >

@@ -1,16 +1,14 @@
 'use client';
 
-import { parseAsString, SingleParserBuilder, useQueryState } from 'nuqs';
-
+import { parseAsString, type SingleParserBuilder, useQueryState } from 'nuqs';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
+import type { WorkflowSimulatePanelKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
   PanelQueryParam,
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { cn } from '@/utils/css-class';
-
-import type { WorkflowSimulatePanelKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 
 export const tabsConfigItems: Array<{
   key: WorkflowSimulatePanelKeys;
@@ -36,8 +34,8 @@ export function Header() {
         shallow: true,
       })
       .withDefault(
-        WorkflowSimulatePanels.Configuration
-      ) as SingleParserBuilder<WorkflowSimulatePanelKeys>
+        WorkflowSimulatePanels.Configuration,
+      ) as SingleParserBuilder<WorkflowSimulatePanelKeys>,
   );
 
   const onTabClick = (value: string) => updatePanel(value as WorkflowSimulatePanelKeys);
@@ -61,7 +59,7 @@ export function Header() {
             value={tab.key}
             className={cn(
               'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3 text-base select-none data-[state=active]:font-bold data-[state=active]:text-white',
-              { 'h-12': breakpoint === 'xl' }
+              { 'h-12': breakpoint === 'xl' },
             )}
           >
             {tab.title}

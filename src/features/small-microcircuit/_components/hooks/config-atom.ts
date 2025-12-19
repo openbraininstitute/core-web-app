@@ -1,8 +1,8 @@
-import React from 'react';
 import { atom, useAtom } from 'jotai';
+import React from 'react';
 
-import { JSONSchema, AtomsMap } from '../../types';
-import { Config } from '../components';
+import type { AtomsMap, JSONSchema } from '../../types';
+import type { Config } from '../components';
 import { isAtom } from '../utils';
 
 export function useConfigAtom(schema: JSONSchema | null, atomsMap: AtomsMap) {

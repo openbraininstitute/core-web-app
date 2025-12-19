@@ -1,6 +1,6 @@
-import React from 'react';
 import { atom, useAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
+import React from 'react';
 
 import { AppUInterfaceSection, type TAppUInterfaceSection } from '@/utils/key-builder';
 
@@ -71,7 +71,12 @@ export function usePanelWidth(): {
 
 export function useContainerDimension(container: HTMLDivElement | null) {
   const refTimeoutId = React.useRef(0);
-  const [dimension, setDimension] = React.useState({ left: 0, top: 0, width: 0, height: 0 });
+  const [dimension, setDimension] = React.useState({
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0,
+  });
   React.useEffect(() => {
     if (!container) return;
 

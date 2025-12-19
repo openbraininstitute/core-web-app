@@ -1,18 +1,19 @@
-import { useAtom } from 'jotai';
 import { Button } from 'antd';
 import get from 'es-toolkit/compat/get';
-
-import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { AgentType, AssetLabel } from '@/api/entitycore/types/shared/global';
-import { transformAgentToNames } from '@/api/entitycore/transformers';
-import { EntityTypeValue } from '@/entity-configuration/domain';
+import { useAtom } from 'jotai';
 import { hasAssets } from '@/api/entitycore/guards';
+import { transformAgentToNames } from '@/api/entitycore/transformers';
+import type { EntityCoreDensityObjectTypes, EntityCoreObjectTypes } from '@/api/entitycore/types';
+import { EntityTypeDict } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { IContributor, TAgentType } from '@/api/entitycore/types/shared/global';
+import { AgentType, AssetLabel } from '@/api/entitycore/types/shared/global';
+import { DownloadIcon } from '@/components/icons';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
 } from '@/entity-configuration/definitions/fields-defs/enums';
-import { EntityTypeDict } from '@/api/entitycore/types';
 import {
   EmptyPreview,
   EmptyValue,
@@ -22,13 +23,11 @@ import {
   renderEmptyOrValue,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
-import { DownloadIcon } from '@/components/icons';
-import { ensureArray } from '@/utils/array';
 
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
-import type { TAgentType, IContributor } from '@/api/entitycore/types/shared/global';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { EntityCoreDensityObjectTypes, EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { EntityTypeValue } from '@/entity-configuration/domain';
+import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
+import { ensureArray } from '@/utils/array';
 
 const collator = new Intl.Collator('en', { sensitivity: 'base' });
 
@@ -68,7 +67,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
             undefined,
             undefined,
             'assetLabel',
-            AssetLabel.ion_channel_model_thumbnail
+            AssetLabel.ion_channel_model_thumbnail,
           );
         }
         return renderPreview(r, { width: 184, height: 116 }, 'border border-neutral-3 h-full');
@@ -178,8 +177,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     filter: CoreFieldFilterTypeEnum.CheckList,
     render: (r) =>
       transformAgentToNames(
-        (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null }).contributions,
-        false
+        (r as EntityCoreObjectTypes & { contributions?: IContributor[] | null }).contributions,
+        false,
       ),
     renderForDetailView: (r) => renderContributors(r, AgentType.Person),
     vocabulary: {
@@ -200,8 +199,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     filter: CoreFieldFilterTypeEnum.CheckList,
     render: (r) =>
       transformAgentToNames(
-        (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null }).contributions,
-        false
+        (r as EntityCoreObjectTypes & { contributions?: IContributor[] | null }).contributions,
+        false,
       ),
     renderForDetailView: (r) => renderContributors(r, AgentType.Organization),
     vocabulary: {
@@ -254,7 +253,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     render: (r) => {
       if ('species' in r)
         return renderEmptyOrValue(
-          renderArray(ensureArray({ input: r.species }).map((s) => s.name))
+          renderArray(ensureArray({ input: r.species }).map((s) => s.name)),
         );
       if ('subject' in r && 'species' in r.subject)
         return renderEmptyOrValue(r.subject.species.name);
@@ -299,7 +298,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       if ('strain' in r)
         return renderEmptyOrValue(renderArray(ensureArray({ input: r.strain }).map((s) => s.name)));
       if ('subject' in r && 'strain' in r.subject)
-        return renderEmptyOrValue(r.subject.strain!.name);
+        return renderEmptyOrValue(r.subject.strain?.name);
       return EmptyValue;
     },
     vocabulary: {

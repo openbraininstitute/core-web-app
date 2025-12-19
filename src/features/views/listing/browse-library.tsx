@@ -1,51 +1,51 @@
 'use client';
 
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { WarningOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
-import { RESET } from 'jotai/utils';
-import { useEffect } from 'react';
-import snakeCase from 'es-toolkit/compat/snakeCase';
 import compact from 'es-toolkit/compat/compact';
-import dynamic from 'next/dynamic';
 import map from 'es-toolkit/compat/map';
-
-import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
+import snakeCase from 'es-toolkit/compat/snakeCase';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { RESET } from 'jotai/utils';
+import dynamic from 'next/dynamic';
+import { useParams } from 'next/navigation';
+import { useEffect } from 'react';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import {
+  getProjectBookmarkCategories,
+  getProjectBookmarksPerCategory,
+} from '@/api/virtual-lab-svc/queries/bookmark';
 import { DEFAULT_PAGE_MEDIUM_SIZE, DEFAULT_PAGE_NUMBER, WorkspaceScope } from '@/constants';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import type { WorkspaceContext } from '@/types/common';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Card, CardDescription, CardTitle } from '@/ui/molecules/card';
+import { GenericError } from '@/ui/molecules/generic-error';
 import {
   coreActiveColumnsAtom,
   coreFiltersAtom,
   corePageNumberAtom,
   coreSortStateAtom,
 } from '@/ui/segments/data-table/elements/context';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { Card, CardDescription, CardTitle } from '@/ui/molecules/card';
+import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { MiniDetailView } from '@/ui/segments/mini-detail-view';
-import { GenericError } from '@/ui/molecules/generic-error';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import {
-  getProjectBookmarkCategories,
-  getProjectBookmarksPerCategory,
-} from '@/api/virtual-lab-svc/queries/bookmark';
 import {
   makeSelectEntityClickEvent,
   useMiniDetailView,
   useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { TEntityTypeDict } from '@/api/entitycore/types';
-import type { WorkspaceContext } from '@/types/common';
 import type { KebabCase } from '@/utils/type';
 
-const MainTable = dynamic(() => import('@/ui/segments/data-table'), { ssr: false });
+const MainTable = dynamic(() => import('@/ui/segments/data-table'), {
+  ssr: false,
+});
 
 export function BrowseLibraryScope() {
   const { virtualLabId, projectId } = useWorkspace();
@@ -202,7 +202,7 @@ export function BrowseLibraryScope() {
             cls={{
               table: cn(
                 '[&_.ant-table]:bg-background! [&_.ant-table-header_th]:bg-background!',
-                '[&_.ant-table-placeholder]:bg-background! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-background!'
+                '[&_.ant-table-placeholder]:bg-background! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-background!',
               ),
             }}
             selectionType="checkbox"
@@ -216,7 +216,7 @@ export function BrowseLibraryScope() {
           '[grid-area:mini-view]',
           {
             hidden: !mdv,
-          }
+          },
         )}
       >
         <MiniDetailView dataType={dataType} />

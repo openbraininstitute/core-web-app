@@ -8,7 +8,7 @@ export function OptionRender({ data }: Parameters<NonNullable<SelectProps['optio
       <div
         className={cn(
           'label',
-          'border-neutral-2 flex w-max items-center gap-px rounded-full border px-3 py-0.5'
+          'border-neutral-2 flex w-max items-center gap-px rounded-full border px-3 py-0.5',
         )}
       >
         <div className="text-primary-8 line-clamp-1 flex items-center justify-center gap-1 text-lg font-bold">

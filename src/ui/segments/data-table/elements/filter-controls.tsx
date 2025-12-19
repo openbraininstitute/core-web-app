@@ -1,13 +1,11 @@
 'use client';
 
-import { HTMLProps, ReactNode } from 'react';
-
-import { filterHasValue } from '@/ui/segments/data-table/elements/listing-filter-panel/util';
+import type { HTMLProps, ReactNode } from 'react';
 import { SettingsIcon } from '@/components/icons/Settings';
+import type { TCoreFilter } from '@/entity-configuration/definitions/types';
+import { filterHasValue } from '@/ui/segments/data-table/elements/listing-filter-panel/util';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
-
-import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
 function FilterBtn({ disabled, className, children, onClick }: HTMLProps<HTMLButtonElement>) {
   return (
@@ -16,7 +14,7 @@ function FilterBtn({ disabled, className, children, onClick }: HTMLProps<HTMLBut
         'border-neutral-2 flex items-center justify-between gap-10 rounded-md border px-2 py-2',
         { 'cursor-not-allowed bg-neutral-100': disabled },
         { 'bg-white': !disabled },
-        className
+        className,
       )}
       onClick={onClick}
       type="button"
@@ -55,7 +53,7 @@ export function FilterControls({
       data-testid="data-filter-header"
       className={classNames(
         'z-10 flex w-full items-center justify-between gap-5 self-end',
-        className
+        className,
       )}
     >
       {children}
@@ -73,7 +71,7 @@ export function FilterControls({
               <span
                 className={classNames(
                   'text-sm leading-5 font-bold',
-                  disabled ? 'text-primary-8' : 'text-primary-8'
+                  disabled ? 'text-primary-8' : 'text-primary-8',
                 )}
               >
                 Filters

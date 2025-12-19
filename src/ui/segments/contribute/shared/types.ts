@@ -1,7 +1,7 @@
 import type { MutationStatus } from '@tanstack/react-query';
-import type { ReactNode, ComponentType } from 'react';
-import type { ZodObject, ZodRawShape, z } from 'zod';
 import type { FormInstance } from 'antd';
+import type { ComponentType, ReactNode } from 'react';
+import type { ZodObject, ZodRawShape, z } from 'zod';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
@@ -27,7 +27,7 @@ export interface IContributionFormConfig<
   title: string;
   formId: string;
   schema: TSchema;
-  progressSteps: Array<IContributionStep<TFormValues>>;
+  progressSteps: IContributionStep<TFormValues>[];
   getInitialValues: (brainRegionId: string) => Partial<TFormValues>;
   buildDetailsUrl: (params: {
     entityId: string;
@@ -37,7 +37,7 @@ export interface IContributionFormConfig<
 }
 
 export interface IMutationKeyConfig {
-  key: Array<string>;
+  key: string[];
   label: string;
 }
 
@@ -108,7 +108,7 @@ export interface IBaseFormValues {
   setup: IBaseSetup;
   subject_id: string;
   license_id: string;
-  contribution: Array<IBaseContribution>;
+  contribution: IBaseContribution[];
   assets: Record<string, File>;
 }
 

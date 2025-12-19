@@ -1,28 +1,26 @@
 'use client';
 
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { Form } from 'antd';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { Form } from 'antd';
 
 import type { ZodObject, ZodRawShape } from 'zod';
-
-import { SubmitEntityProgress } from '@/ui/segments/contribute/shared/components/submit-progress';
+import type { WorkspaceContext } from '@/types/common';
+import { Button } from '@/ui/molecules/button';
 import { StepNavigation } from '@/ui/segments/contribute/shared/components/step-navigation';
 import { SubmitButton } from '@/ui/segments/contribute/shared/components/submit-button';
+import { SubmitEntityProgress } from '@/ui/segments/contribute/shared/components/submit-progress';
 import {
   ContributionPipelineProvider,
   useContributionPipeline,
 } from '@/ui/segments/contribute/shared/pipeline/context';
-import { Button } from '@/ui/molecules/button';
-import { cn } from '@/utils/css-class';
-
-import type { WorkspaceContext } from '@/types/common';
 import type {
   IContributionFormConfig,
   IProgressStep,
   TPipelineHookFactory,
 } from '@/ui/segments/contribute/shared/types';
+import { cn } from '@/utils/css-class';
 
 interface IContributionFormProps<
   TFormValues extends Record<string, unknown>,
@@ -74,7 +72,7 @@ function FormContent<
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdEntityId, setCreatedEntityId] = useState<string | undefined>(undefined);
 
-  const progressStepsWithStatus: Array<IProgressStep> = progressSteps.map((step) => ({
+  const progressStepsWithStatus: IProgressStep[] = progressSteps.map((step) => ({
     key: step.key,
     label: step.label,
     status: status[step.mutationKey],
@@ -123,7 +121,7 @@ function FormContent<
                   }}
                   className={cn(
                     'secondary-scrollbar h-full flex-1 overflow-auto rounded-xl pr-4 pl-4',
-                    isActive ? 'relative' : 'absolute inset-0'
+                    isActive ? 'relative' : 'absolute inset-0',
                   )}
                 >
                   <StepComponent />
@@ -140,7 +138,7 @@ function FormContent<
           variant="outline"
           className={cn(
             'text-primary-9 border-primary-9 disabled:border-neutral-1',
-            'shadow-bnb size-12 active:text-white'
+            'shadow-bnb size-12 active:text-white',
           )}
           size="lg"
           type="button"
@@ -164,7 +162,7 @@ function FormContent<
           size="lg"
           className={cn(
             'text-primary-9 border-primary-9 disabled:border-neutral-1',
-            'shadow-bnb size-12 active:text-white'
+            'shadow-bnb size-12 active:text-white',
           )}
           onClick={goToNextStep}
           disabled={isLastStep}

@@ -11,9 +11,9 @@ type Facet = {
   type?: string | null;
 };
 
-export type Facets = Record<string, Array<Facet>>;
+export type Facets = Record<string, Facet[]>;
 export interface EntityCoreResponse<T> {
-  data: Array<T>;
+  data: T[];
   pagination: Pagination;
   facets?: Facets;
 }

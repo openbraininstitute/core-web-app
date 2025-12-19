@@ -1,13 +1,11 @@
 'use client';
 
 import toPairs from 'es-toolkit/compat/toPairs';
-
-import { ProgressiveEntityImage } from '@/ui/segments/explore/circuit/elements/use-progressive-img';
-import { Header } from '@/ui/segments/explore/circuit/elements/section-header';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
-
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { Header } from '@/ui/segments/explore/circuit/elements/section-header';
+import { ProgressiveEntityImage } from '@/ui/segments/explore/circuit/elements/use-progressive-img';
 
 type Props = {
   circuit: ICircuit;
@@ -37,7 +35,10 @@ export default function Overview({ circuit }: Props) {
 
   const list = {
     cell: { title: 'Cell statistics', items: [cellProperties] },
-    network: { title: 'Network statistics', items: [networkPropertiesA, networkPropertiesB] },
+    network: {
+      title: 'Network statistics',
+      items: [networkPropertiesA, networkPropertiesB],
+    },
   };
 
   return (

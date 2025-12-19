@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { match } from 'ts-pattern';
 
@@ -28,7 +28,7 @@ export function AtlasViewer({ dataKey, children }: { dataKey: string; children?:
         <BrainAtlasViewerGltf dataKey={dataKey} onLoading={setIsLoading} />
       </ErrorBoundary>
     ),
-    [dataKey]
+    [dataKey],
   );
 
   return match(isFullScreen)

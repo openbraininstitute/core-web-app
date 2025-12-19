@@ -14,10 +14,6 @@ function getInitialState(query: string, defaultState?: boolean) {
   }
 
   if (process.env.NODE_ENV !== 'production') {
-    // eslint-disable-next-line no-console
-    console.warn(
-      '`useMediaQuery` When server side rendering, defaultState should be defined to prevent a hydration mismatches.'
-    );
   }
 
   return false;

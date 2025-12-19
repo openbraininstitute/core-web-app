@@ -5,11 +5,10 @@ import { useAtom } from 'jotai';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { SingleSectionProps } from '../type';
-
 import { ChevronRight } from '@/components/icons';
 import { activeNavItemAtom } from '@/state/documentation/currentSection';
 import { classNames } from '@/util/utils';
+import type { SingleSectionProps } from '../type';
 
 function ItemDisabled({ name }: { name: string }) {
   return (
@@ -70,7 +69,7 @@ function ItemEnabled({
         'flex flex-row font-sans text-lg',
         isActive
           ? 'items-center justify-between gap-x-6 font-bold text-white'
-          : 'text-primary-3 justify-start font-normal'
+          : 'text-primary-3 justify-start font-normal',
       )}
       aria-label={name}
     >
@@ -84,7 +83,7 @@ function ItemEnabled({
           href={link}
           className={classNames(
             'font-sans text-lg',
-            isActive ? 'font-bold' : 'font-normal text-white'
+            isActive ? 'font-bold' : 'font-normal text-white',
           )}
         >
           {name}
@@ -98,7 +97,7 @@ function ItemEnabled({
             fill="#69c0ff"
             className={classNames(
               'text-primary-3 h-3 w-auto transition-transform duration-200',
-              sectionOpen ? 'rotate-90' : 'rotate-0'
+              sectionOpen ? 'rotate-90' : 'rotate-0',
             )}
           />
         </button>
@@ -107,7 +106,7 @@ function ItemEnabled({
       <div
         className={classNames(
           'transition-height overflow-hidden duration-500 ease-in-out',
-          sectionOpen ? 'block' : 'hidden'
+          sectionOpen ? 'block' : 'hidden',
         )}
       >
         {content.children && (

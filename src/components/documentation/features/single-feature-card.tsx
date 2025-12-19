@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { ContentForFeatureItem } from '../type';
+import type { ContentForFeatureItem } from '../type';
 
 export default function SingleFeatureCard({
   content,

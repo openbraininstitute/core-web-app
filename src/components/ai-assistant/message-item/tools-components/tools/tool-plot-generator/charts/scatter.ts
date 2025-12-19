@@ -1,4 +1,4 @@
-import { Data, Layout } from 'plotly.js-dist-min';
+import type { Data, Layout } from 'plotly.js-dist-min';
 
 import { assertType } from '@/util/type-guards';
 
@@ -11,7 +11,7 @@ export interface ScatterChartInput {
 }
 
 export function convertScatterChart(
-  obj: ScatterChartInput
+  obj: ScatterChartInput,
 ): { data: Data[]; layout: Partial<Layout> } | null {
   const props: { data: Data[]; layout: Partial<Layout> } = {
     data: [

@@ -1,9 +1,7 @@
-import React from 'react';
-
-import { EMailTypes, useSanityContentForEMail } from '../../content/email';
-import EmailButton from '../../components/buttons/EmailButton';
-import { styleBlockSmall } from '../../styles';
 import { classNames } from '@/util/utils';
+import EmailButton from '../../components/buttons/EmailButton';
+import { type EMailTypes, useSanityContentForEMail } from '../../content/email';
+import { styleBlockSmall } from '../../styles';
 
 import styles from './Email.module.css';
 

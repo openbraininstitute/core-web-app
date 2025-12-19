@@ -1,5 +1,5 @@
 import { RightOutlined } from '@ant-design/icons';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 export default function Breadcrumb({
   children,

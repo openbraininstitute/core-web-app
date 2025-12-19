@@ -1,15 +1,15 @@
-import { ReactNode } from 'react';
 import { format } from 'date-fns';
 import capitalize from 'es-toolkit/compat/capitalize';
 import isString from 'es-toolkit/compat/isString';
 import _memoize from 'es-toolkit/compat/memoize';
+import type { ReactNode } from 'react';
 
 export function createHeaders(
   token: string,
   extraOptions: Record<string, string> | null = {
     'Content-Type': 'application/json',
     Accept: '*/*',
-  }
+  },
 ) {
   return new Headers({
     Authorization: `Bearer ${token}`,
@@ -164,7 +164,7 @@ https://jotai.org/docs/utilities/family#caveat-memory-leaks
 export function memoize<Param, T>(
   initialize: (param: Param) => T,
   resolver?: (a: Param) => string,
-  maxSize?: number
+  maxSize?: number,
 ) {
   if (maxSize === undefined) maxSize = 100; // eslint-disable-line
   const newFamily = _memoize(initialize, resolver);
@@ -237,7 +237,7 @@ export function isJSON(str: any) {
   try {
     JSON.parse(str);
     return true;
-  } catch (e) {
+  } catch (_e) {
     return false;
   }
 }

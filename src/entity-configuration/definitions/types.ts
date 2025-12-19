@@ -1,15 +1,13 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
-import { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
-import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
-import {
+import type { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
   EntityCoreFieldsValue,
 } from '@/entity-configuration/definitions/fields-defs/enums';
-
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 export type CoreFilterValues = {
   [field: string]: string | number | string[] | GteLteValue | null | boolean;
@@ -57,12 +55,12 @@ export interface ValueOrRangeFilter extends Omit<BaseFilter, 'type' | 'value'> {
 }
 interface WithinListFilter extends Omit<BaseFilter, 'type' | 'value'> {
   type: CoreFieldFilterTypeEnum.WithinList;
-  value: Array<string>;
+  value: string[];
 }
 
 interface DropdownListFilter extends Omit<BaseFilter, 'type' | 'value'> {
   type: CoreFieldFilterTypeEnum.DropdownList;
-  value: string | Array<string> | null;
+  value: string | string[] | null;
 }
 
 interface BooleanFilter extends Omit<BaseFilter, 'type' | 'value'> {
@@ -98,7 +96,7 @@ type Style = {
 export type OrderShape =
   | { property: string; value: string }
   | Array<{
-      types: Array<Partial<TExtendedEntitiesTypeDict>>;
+      types: Partial<TExtendedEntitiesTypeDict>[];
       property: string;
       value: string;
     }>;

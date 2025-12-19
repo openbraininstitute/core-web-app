@@ -1,19 +1,19 @@
 /* eslint-disable no-case-declarations */
 
-import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CloseOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useIsFetching } from '@tanstack/react-query';
 import { get } from 'es-toolkit/compat';
-import { unwrap, useResetAtom } from 'jotai/utils';
-import { useHotkeys } from 'react-hotkeys-hook';
 import { useAtom, useSetAtom } from 'jotai';
-
-import { ClearFilters } from '@/ui/segments/data-table/elements/listing-filter-panel/clear-filters';
-import { FilterGroup } from '@/ui/segments/data-table/elements/listing-filter-panel/filter-group';
+import { unwrap, useResetAtom } from 'jotai/utils';
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { Facets } from '@/api/entitycore/types/shared/response';
+import { DEFAULT_PAGE_NUMBER, type TWorkspaceScope, type TWorkspaceSection } from '@/constants';
+import type { CoreFilterValues, TCoreFilter } from '@/entity-configuration/definitions/types';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
-import { useFilterItems } from '@/ui/segments/data-table/elements/listing-filter-panel/hooks';
-import { DEFAULT_PAGE_NUMBER, TWorkspaceSection, type TWorkspaceScope } from '@/constants';
-import { makeTypeDefaultFilters } from '@/ui/segments/data-table/elements/helpers';
+import type { WorkspaceContext } from '@/types/common';
+import { Button } from '@/ui/molecules/button';
 import {
   coreActiveColumnsAtom,
   coreFiltersAtom,
@@ -21,13 +21,11 @@ import {
   coreSearchStringAtom,
   useDataListStateSnapshotActions,
 } from '@/ui/segments/data-table/elements/context';
-import { Button } from '@/ui/molecules/button';
+import { makeTypeDefaultFilters } from '@/ui/segments/data-table/elements/helpers';
+import { ClearFilters } from '@/ui/segments/data-table/elements/listing-filter-panel/clear-filters';
+import { FilterGroup } from '@/ui/segments/data-table/elements/listing-filter-panel/filter-group';
+import { useFilterItems } from '@/ui/segments/data-table/elements/listing-filter-panel/hooks';
 import { cn } from '@/utils/css-class';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { Facets } from '@/api/entitycore/types/shared/response';
-import type { WorkspaceContext } from '@/types/common';
-import type { CoreFilterValues, TCoreFilter } from '@/entity-configuration/definitions/types';
 
 type Props = {
   children?: ReactNode;
@@ -68,7 +66,7 @@ export function ListingFilterPanel({
     coreFiltersAtom({
       dataType,
       key: dataKey,
-    })
+    }),
   );
   const { sync: runStorageSync } = useDataListStateSnapshotActions({
     dataKey,
@@ -93,7 +91,7 @@ export function ListingFilterPanel({
       setIsApplyingFilters(false);
     }
     prevIsFetchingRef.current = isFetching;
-  }, [isFetching, isApplyingFilters, isFetchingCount]);
+  }, [isFetching, isApplyingFilters]);
 
   const [activeColumns, setActiveColumns] = useAtom(
     useMemo(
@@ -102,16 +100,16 @@ export function ListingFilterPanel({
           coreActiveColumnsAtom({
             dataType,
             key: dataKey,
-          })
+          }),
         ),
-      [dataType, dataKey]
-    )
+      [dataType, dataKey],
+    ),
   );
 
   const onToggleActive = useCallback(
     (key: string) => {
       if (!activeColumns) return;
-      const existingIndex = activeColumns.findIndex((existingKey) => existingKey === key);
+      const existingIndex = activeColumns.indexOf(key);
 
       if (existingIndex === -1) {
         setActiveColumns([...activeColumns, key]);
@@ -123,7 +121,7 @@ export function ListingFilterPanel({
       }
     },
 
-    [activeColumns, setActiveColumns]
+    [activeColumns, setActiveColumns],
   );
 
   useEffect(() => {
@@ -144,7 +142,10 @@ export function ListingFilterPanel({
       value: filterValues[fil.field],
     }));
     setFilters(appliedFilters);
-    runStorageSync({ Filters: appliedFilters as Array<TCoreFilter>, Page: DEFAULT_PAGE_NUMBER });
+    runStorageSync({
+      Filters: appliedFilters as TCoreFilter[],
+      Page: DEFAULT_PAGE_NUMBER,
+    });
   };
 
   const entity = getViewDefinitionByExtendedType(dataType);
@@ -156,7 +157,7 @@ export function ListingFilterPanel({
     setFilterValues,
     activeColumns,
     showDisplayTrigger,
-    onToggleActive
+    onToggleActive,
   );
 
   // The columnKeyToFilter method receives a string (key)
@@ -185,7 +186,7 @@ export function ListingFilterPanel({
         aria-label="Close download panel mask"
         onClick={toggleDisplay}
         className={cn(
-          'fixed top-0 left-0 z-50 h-screen w-screen bg-black opacity-50 transition-opacity duration-500'
+          'fixed top-0 left-0 z-50 h-screen w-screen bg-black opacity-50 transition-opacity duration-500',
         )}
       />
       <div
@@ -194,7 +195,7 @@ export function ListingFilterPanel({
         className={cn(
           'bg-primary-8 fixed top-0 right-0 z-100 flex',
           'h-full min-h-screen w-1/3 shrink-0 flex-col space-y-4 overflow-y-auto px-8 pt-6',
-          classNames?.container
+          classNames?.container,
         )}
       >
         <div className="mb-auto">
@@ -203,8 +204,7 @@ export function ListingFilterPanel({
               Filters
               <small className="text-primary-3 text-base font-light">{activeColumnsText}</small>
             </span>
-            <button
-              autoFocus // eslint-disable-line jsx-a11y/no-autofocus
+            <button // eslint-disable-line jsx-a11y/no-autofocus
               type="button"
               onClick={toggleDisplay}
               className="hover:bg-neutral-1/10 rounded-md px-2 py-1 text-white"

@@ -65,7 +65,7 @@ export default function AlphabeticalFilter<T extends Record<K, string>, K extend
           'flex-shrink-0 rounded-md px-2 py-1 text-sm font-medium',
           slideOffset === 0
             ? 'cursor-not-allowed opacity-50'
-            : 'bg-primary-7 text-primary-1 hover:bg-primary-5'
+            : 'bg-primary-7 text-primary-1 hover:bg-primary-5',
         )}
         aria-label="Slide alphabetical filter left"
       >
@@ -84,7 +84,7 @@ export default function AlphabeticalFilter<T extends Record<K, string>, K extend
               'flex-shrink-0 rounded-md px-3 py-1 text-sm font-medium',
               selectedLetter === null
                 ? 'bg-primary-3 text-white'
-                : 'bg-primary-7 text-primary-1 hover:bg-primary-5'
+                : 'bg-primary-7 text-primary-1 hover:bg-primary-5',
             )}
           >
             All
@@ -104,7 +104,7 @@ export default function AlphabeticalFilter<T extends Record<K, string>, K extend
                 selectedLetter === letter
                   ? 'bg-primary-3 text-white'
                   : 'bg-primary-7 text-primary-1 hover:bg-primary-5',
-                !validLetters.has(letter) ? 'cursor-not-allowed opacity-50' : 'hover:bg-primary-5'
+                !validLetters.has(letter) ? 'cursor-not-allowed opacity-50' : 'hover:bg-primary-5',
               )}
             >
               {letter}
@@ -120,7 +120,7 @@ export default function AlphabeticalFilter<T extends Record<K, string>, K extend
           'flex-shrink-0 rounded-md px-2 py-1 text-sm font-medium',
           slideOffset >= getMaxOffset()
             ? 'cursor-not-allowed opacity-50'
-            : 'bg-primary-7 text-primary-1 hover:bg-primary-5'
+            : 'bg-primary-7 text-primary-1 hover:bg-primary-5',
         )}
         aria-label="Slide alphabetical filter right"
       >

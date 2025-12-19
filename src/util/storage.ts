@@ -9,14 +9,14 @@ export function getLocalStorageHelper() {
 export function useLocalStorage<T>(
   key: string,
   defaultValue: T,
-  typeGuard: (data: unknown) => data is T
+  typeGuard: (data: unknown) => data is T,
 ): [value: T, setValue: (value: T) => void] {
   const [value, setValue] = React.useState(
-    getLocalStorageHelper().get(key, defaultValue, typeGuard)
+    getLocalStorageHelper().get(key, defaultValue, typeGuard),
   );
   React.useEffect(() => {
     getLocalStorageHelper().set(key, value);
-  }, [value, key, typeGuard]);
+  }, [value, key]);
   return [value, setValue];
 }
 

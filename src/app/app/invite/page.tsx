@@ -1,14 +1,13 @@
-import { ErrorBoundary } from 'react-error-boundary';
 import { redirect } from 'next/navigation';
-
-import { ErrorComponent as SimpleErrorComponent } from '@/components/GenericErrorFallback';
+import { ErrorBoundary } from 'react-error-boundary';
+import type { ApiErrorCause } from '@/api/error';
+import { tryCatch } from '@/api/utils';
 import { getInviteContent } from '@/api/virtual-lab-svc/queries/invite';
+import { getSession } from '@/auth-fetch';
+import { ErrorComponent as SimpleErrorComponent } from '@/components/GenericErrorFallback';
+import type { ServerSideComponentProp } from '@/types/common';
 import { InvitationProcessing } from '@/ui/segments/invites';
 import { getErrorUrl } from '@/ui/segments/invites/helpers';
-import { ServerSideComponentProp } from '@/types/common';
-import { ApiErrorCause } from '@/api/error';
-import { getSession } from '@/auth-fetch';
-import { tryCatch } from '@/api/utils';
 
 export default async function InvitePage({
   searchParams,
@@ -22,7 +21,7 @@ export default async function InvitePage({
         error: null,
         accessToken: session?.accessToken,
         inviteToken: token,
-      })
+      }),
     );
   }
 
@@ -34,7 +33,7 @@ export default async function InvitePage({
         error: error.cause as ApiErrorCause,
         accessToken: session?.accessToken,
         inviteToken: token,
-      })
+      }),
     );
   }
 

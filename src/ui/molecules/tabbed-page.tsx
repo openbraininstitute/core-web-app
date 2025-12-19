@@ -1,6 +1,6 @@
-import React, { useState, ReactNode, ReactElement } from 'react';
-import { Button } from './button';
+import React, { type ReactElement, type ReactNode, useState } from 'react';
 import { cn } from '@/utils/css-class';
+import { Button } from './button';
 
 type TabProps = {
   visible?: boolean; //eslint-disable-line
@@ -30,7 +30,7 @@ export default function Tabs({ children, defaultIndex = 0, defaultMessage }: Tab
       <div
         className={cn(
           'text-primary-8 border-neutral-2 flex w-full',
-          'items-center justify-center rounded-2xl border p-5 select-none'
+          'items-center justify-center rounded-2xl border p-5 select-none',
         )}
       >
         {defaultMessage}

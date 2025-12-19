@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
-import { cva, type VariantProps } from 'class-variance-authority';
 import { Slot } from '@radix-ui/react-slot';
+import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/utils/css-class';
 
 const badgeVariants = cva(
@@ -25,7 +25,7 @@ const badgeVariants = cva(
     defaultVariants: {
       variant: 'default',
     },
-  }
+  },
 );
 
 function Badge({
@@ -36,7 +36,10 @@ function Badge({
   rounded,
   ...props
 }: React.ComponentProps<'div'> &
-  VariantProps<typeof badgeVariants> & { asChild?: boolean; rounded?: boolean }) {
+  VariantProps<typeof badgeVariants> & {
+    asChild?: boolean;
+    rounded?: boolean;
+  }) {
   const Comp = asChild ? Slot : 'div';
 
   return (
@@ -61,7 +64,7 @@ const badgeButtonVariants = cva(
     defaultVariants: {
       variant: 'default',
     },
-  }
+  },
 );
 
 function BadgeButton({

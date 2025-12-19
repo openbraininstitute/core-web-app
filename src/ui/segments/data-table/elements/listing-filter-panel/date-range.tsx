@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
 import { ConfigProvider, DatePicker } from 'antd';
 import dateFnsGenerateConfig from 'rc-picker/lib/generate/dateFns'; // eslint-disable-line import/no-extraneous-dependencies
+import { useMemo } from 'react';
 
 import type { DateRangeFilter, GteLteValue } from '@/entity-configuration/definitions/types';
 
@@ -26,7 +26,7 @@ export function DateRange({
         }
       />
     ),
-    [filter.value.gte, filter.value.lte, onChange]
+    [filter.value.gte, filter.value.lte, onChange],
   );
 
   return (

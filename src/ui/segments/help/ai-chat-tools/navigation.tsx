@@ -1,14 +1,10 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
-
 import { RightOutlined } from '@ant-design/icons';
-
 import Link from 'next/link';
-
-import type { AIChatToolsSectionProps } from '@/ui/segments/help/ai-chat-tools';
-
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/ui/molecules/button';
+import type { AIChatToolsSectionProps } from '@/ui/segments/help/ai-chat-tools';
 import { cn } from '@/utils/css-class';
 import { buildLink } from '@/utils/searchparams-to-link';
 
@@ -33,7 +29,7 @@ export default function AIChatToolsNavigation({ content }: { content: AIChatTool
             variant="outline"
             className={cn(
               'shadow-base h-15 w-full justify-start px-6 text-lg font-semibold',
-              isActive ? 'bg-primary-9 text-white' : ''
+              isActive ? 'bg-primary-9 text-white' : '',
             )}
             aria-label={`View ${tool.name} features`}
           >

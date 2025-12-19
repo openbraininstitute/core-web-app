@@ -3,10 +3,9 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-import PlaceholderImage from '../img/thumbnail_placeholder.jpg';
-import { TutorialProps } from '../type';
-
 import { classNames } from '@/util/utils';
+import PlaceholderImage from '../img/thumbnail_placeholder.jpg';
+import type { TutorialProps } from '../type';
 
 export default function SingleTutorialCard({ content }: { content: TutorialProps }) {
   const [isMouseHover, setIsMouseHover] = useState<boolean>(false);
@@ -23,7 +22,7 @@ export default function SingleTutorialCard({ content }: { content: TutorialProps
       <div
         className={classNames(
           'relative h-full w-1/2 overflow-hidden shadow-lg transition-all duration-500 ease-in-out',
-          isMouseHover ? 'shadow-strongImage rounded-full' : 'rounded-none'
+          isMouseHover ? 'shadow-strongImage rounded-full' : 'rounded-none',
         )}
         style={{
           borderRadius: isMouseHover ? '22px' : '0',

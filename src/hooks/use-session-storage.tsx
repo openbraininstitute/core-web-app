@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 declare global {
   interface WindowEventMap {
@@ -18,7 +18,7 @@ const IS_SERVER = typeof window === 'undefined';
 export function useSessionStorage<T>(
   key: string,
   initialValue: T | (() => T),
-  options: UseSessionStorageOptions<T> = {}
+  options: UseSessionStorageOptions<T> = {},
 ): {
   sessionValue: T;
   setSessionValue: Dispatch<SetStateAction<T>>;
@@ -34,7 +34,7 @@ export function useSessionStorage<T>(
 
       return JSON.stringify(value);
     },
-    [options]
+    [options],
   );
 
   const deserializer = useCallback<(value: string) => T>(
@@ -52,13 +52,13 @@ export function useSessionStorage<T>(
       let parsed: unknown;
       try {
         parsed = JSON.parse(value);
-      } catch (error) {
+      } catch (_error) {
         return defaultValue; // Return initialValue if parsing fails
       }
 
       return parsed as T;
     },
-    [options, initialValue]
+    [options, initialValue],
   );
 
   // Get from session storage then
@@ -73,7 +73,7 @@ export function useSessionStorage<T>(
     try {
       const raw = window.sessionStorage.getItem(key);
       return raw ? deserializer(raw) : initialValueToUse;
-    } catch (error) {
+    } catch (_error) {
       return initialValueToUse;
     }
   }, [initialValue, key, deserializer]);
@@ -106,11 +106,11 @@ export function useSessionStorage<T>(
 
         // We dispatch a custom event so very similar useSessionStorage hook is notified
         window.dispatchEvent(new StorageEvent('session-storage', { key }));
-      } catch (error) {
+      } catch (_error) {
         throw new Error(`Error setting sessionStorage key “${key}”:`);
       }
     },
-    [key, readValue, serializer]
+    [key, readValue, serializer],
   );
 
   const removeValue = useCallback(() => {
@@ -134,7 +134,7 @@ export function useSessionStorage<T>(
   useEffect(() => {
     setStoredValue(readValue());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
+  }, [readValue]);
 
   const handleStorageChange = useCallback(
     (event: StorageEvent | CustomEvent) => {
@@ -143,12 +143,14 @@ export function useSessionStorage<T>(
       }
       setStoredValue(readValue());
     },
-    [key, readValue]
+    [key, readValue],
   );
 
   useEffect(() => {
     const abortController = new AbortController();
-    window.addEventListener('storage', handleStorageChange, { signal: abortController.signal });
+    window.addEventListener('storage', handleStorageChange, {
+      signal: abortController.signal,
+    });
     window.addEventListener('session-storage', handleStorageChange, {
       signal: abortController.signal,
     });

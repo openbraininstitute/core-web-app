@@ -42,7 +42,7 @@ export default function ArtifactsTabNav({
               'text-primary-9 rounded-full text-sm tracking-wider uppercase',
               activeArtifactType === item
                 ? 'border border-gray-300 px-5 py-2 font-bold'
-                : 'border-white font-normal'
+                : 'border-white font-normal',
             )}
           >
             {title}

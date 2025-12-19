@@ -1,32 +1,30 @@
+import {
+  hashKey,
+  keepPreviousData,
+  type QueryFunction,
+  type UseQueryOptions,
+  useQuery,
+} from '@tanstack/react-query';
 import { isEmpty } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
-import {
-  useQuery,
-  keepPreviousData,
-  UseQueryOptions,
-  type QueryFunction,
-  hashKey,
-} from '@tanstack/react-query';
-
-import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
-import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
+import type { TWorkspaceScope } from '@/constants';
+import { DEFAULT_PAGE_SIZE } from '@/constants';
 import {
   DEFAULT_BRAIN_REGION_HIERARCHY_ID,
   selectedBrainRegionAtom,
 } from '@/features/brain-region-hierarchy/context';
-import { compactRecord } from '@/utils/dictionary';
-import { DEFAULT_PAGE_SIZE } from '@/constants';
+import type { WorkspaceContext } from '@/types/common';
 import {
   coreFiltersAtom,
-  coreSortStateAtom,
   corePageNumberAtom,
   coreSearchStringAtom,
+  coreSortStateAtom,
 } from '@/ui/segments/data-table/elements/context';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { WorkspaceContext } from '@/types/common';
-import type { TWorkspaceScope } from '@/constants';
+import { compactRecord } from '@/utils/dictionary';
+import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
 export type QueryContext = {
   key: string;
@@ -62,14 +60,14 @@ function useQueryParameters(
   {
     requireBrainRegion = true,
     defaultBrainRegion,
-  }: { requireBrainRegion?: boolean; defaultBrainRegion?: string }
+  }: { requireBrainRegion?: boolean; defaultBrainRegion?: string },
 ) {
   const selectedBrainRegin = useAtomValue(selectedBrainRegionAtom);
   const sortState = useAtomValue(coreSortStateAtom({ key: context.key }));
   const searchString = useAtomValue(coreSearchStringAtom(context.key));
   const pageNumber = useAtomValue(corePageNumberAtom(context.key));
   const filters = useAtomValue(
-    coreFiltersAtom({ dataType: context.extendedEntityType, key: context.key })
+    coreFiltersAtom({ dataType: context.extendedEntityType, key: context.key }),
   );
 
   const queryParameters = compactRecord({
@@ -142,7 +140,7 @@ export function useQueryExtendedEntityType<TData = unknown, TError = unknown>({
 >) {
   const queryParameters = useQueryParameters(
     { context, workspace },
-    { requireBrainRegion, defaultBrainRegion }
+    { requireBrainRegion, defaultBrainRegion },
   );
   const queryKey = buildQueryKey({
     workspace,

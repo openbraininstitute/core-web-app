@@ -1,10 +1,7 @@
-import React from 'react';
-
-import { ContentForRichTextTitle } from '../../../content/types';
+import type { ContentForRichTextTitle } from '../../../content/types';
 import Title from '../../Title';
-import { makeSpecialWidget } from './special-widget';
-
 import styles from './SanityContentTitle.module.css';
+import { makeSpecialWidget } from './special-widget';
 
 interface SanityContentTitleProps {
   value: ContentForRichTextTitle;

@@ -2,19 +2,16 @@
 
 import { LoadingOutlined } from '@ant-design/icons';
 import { ErrorBoundary } from '@sentry/nextjs';
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
 import { Spin } from 'antd';
-
-import SimulationDetail from '@/features/entities/neuron-simulation/simulation-results/simulation-details';
-import ConfigItem from '@/features/entities/single-neuron-synaptome/build/elements/config-item';
-
+import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { getSingleNeuronSynaptomeSimulations } from '@/api/entitycore/queries';
-import { withErrorConfig } from '@/components/GenericErrorFallback';
+import type { ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { tryCatch } from '@/api/utils';
-
-import type { ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types';
+import { withErrorConfig } from '@/components/GenericErrorFallback';
+import SimulationDetail from '@/features/entities/neuron-simulation/simulation-results/simulation-details';
+import ConfigItem from '@/features/entities/single-neuron-synaptome/build/elements/config-item';
 import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
@@ -23,7 +20,7 @@ type Props = {
 
 export default function Results({ modelId }: Props) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
-  const [simulations, setSimulations] = useState<Array<ISingleNeuronSynaptomeSimulation>>([]);
+  const [simulations, setSimulations] = useState<ISingleNeuronSynaptomeSimulation[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
@@ -36,7 +33,7 @@ export default function Results({ modelId }: Props) {
           filters: { synaptome__id: modelId },
           withFacets: false,
         }),
-        () => setLoading(false)
+        () => setLoading(false),
       );
       if (result) setSimulations(result.data);
       if (simulationError) setError(!!simulationError);
@@ -88,7 +85,9 @@ export default function Results({ modelId }: Props) {
             cls: { container: 'bg-white' },
             showButtons: false,
             customError: 'Error while loading experiment ',
-          })({ error: error ? new Error('Failed to load experiment') : undefined })}
+          })({
+            error: error ? new Error('Failed to load experiment') : undefined,
+          })}
           key={sim.id}
         >
           <SimulationDetail<ISingleNeuronSynaptomeSimulation>
@@ -117,12 +116,33 @@ export default function Results({ modelId }: Props) {
                         </div>
                         <div className="flex w-full flex-col gap-5 border border-gray-300 p-6">
                           <div className="grid grid-cols-3 gap-2">
-                            <ConfigItem {...{ label: 'delay', value: c.delay, unit: 'ms' }} />
-                            <ConfigItem {...{ label: 'duration', value: c.duration, unit: 'ms' }} />
                             <ConfigItem
-                              {...{ label: 'frequency', value: c.frequency, unit: 'hz' }}
+                              {...{
+                                label: 'delay',
+                                value: c.delay,
+                                unit: 'ms',
+                              }}
                             />
-                            <ConfigItem {...{ label: 'weight scalar', value: c.weight_scalar }} />
+                            <ConfigItem
+                              {...{
+                                label: 'duration',
+                                value: c.duration,
+                                unit: 'ms',
+                              }}
+                            />
+                            <ConfigItem
+                              {...{
+                                label: 'frequency',
+                                value: c.frequency,
+                                unit: 'hz',
+                              }}
+                            />
+                            <ConfigItem
+                              {...{
+                                label: 'weight scalar',
+                                value: c.weight_scalar,
+                              }}
+                            />
                           </div>
                         </div>
                       </div>

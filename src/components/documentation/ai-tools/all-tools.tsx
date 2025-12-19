@@ -1,9 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-
-import { useAITools } from '@/services/ai-agent/tools/tools';
 import { Spinner } from '@/components/ai-assistant/spinner';
+import { useAITools } from '@/services/ai-agent/tools/tools';
 
 export default function AllAIToolsContent() {
   const allTools = useAITools();

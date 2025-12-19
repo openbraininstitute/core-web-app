@@ -23,7 +23,7 @@ type DebugArgs = {
 export async function tryCatch<T, E = Error>(
   promise: Promise<T> | (() => Promise<T>),
   onComplete?: Function,
-  debugArgs?: DebugArgs
+  debugArgs?: DebugArgs,
 ): Promise<Result<T, E>> {
   try {
     const data = await (typeof promise === 'function' ? promise() : promise);
@@ -64,7 +64,7 @@ const API_ERROR_DETAILS_PATHS = ['error.details', 'error_details', 'details'];
 export async function parseApiError(
   url: string,
   status: number,
-  apiClientResponseData: any
+  apiClientResponseData: any,
 ): Promise<ApiError> {
   const errMessage = `Error while fetching ${url}`;
 
@@ -76,14 +76,14 @@ export async function parseApiError(
 
     const code = findMappedEntry<string>(API_ERROR_CODE_PATHS, (path) => get(responseData, path));
     const message = findMappedEntry<string>(API_ERROR_MESSAGE_PATHS, (path) =>
-      get(responseData, path)
+      get(responseData, path),
     );
     const details = findMappedEntry<string>(API_ERROR_DETAILS_PATHS, (path) =>
-      get(responseData, path)
+      get(responseData, path),
     );
 
     return new ApiError(errMessage, { code, message, details, status });
-  } catch (error) {
+  } catch (_error) {
     return new ApiError(errMessage, { status });
   }
 }

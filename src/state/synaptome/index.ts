@@ -15,16 +15,16 @@ type SynapsePosition = {
 
 export type SectionSynapses = {
   section_id: string;
-  synapses: Array<SynapsePosition>;
+  synapses: SynapsePosition[];
 };
 
 export type SectionSynapsesWith3D = {
-  sectionSynapses: Array<SectionSynapses>;
+  sectionSynapses: SectionSynapses[];
   synapsePlacementConfigId: string;
   count?: number;
   meshId?: string;
 };
 
 export const synapsesPlacementAtom = atom<Record<string, SectionSynapsesWith3D | null> | null>(
-  null
+  null,
 );

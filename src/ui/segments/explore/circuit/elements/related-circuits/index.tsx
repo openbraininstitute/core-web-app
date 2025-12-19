@@ -2,17 +2,15 @@
 
 import { LoadingOutlined } from '@ant-design/icons';
 import { useParams } from 'next/navigation';
-
-import { Subcircuits } from '@/ui/segments/explore/circuit/elements/related-circuits/subcircuits';
-import { DerivedFrom } from '@/ui/segments/explore/circuit/elements/related-circuits/derived-from';
-import { Derived } from '@/ui/segments/explore/circuit/elements/related-circuits/derived';
-import { Parent } from '@/ui/segments/explore/circuit/elements/related-circuits/parent';
-import { useHierarchyAllLevels } from '@/ui/segments/explore/circuit/use-hierarchy';
-import { Root } from '@/ui/segments/explore/circuit/elements/related-circuits/root';
-import Tabs, { Tab } from '@/ui/molecules/tabbed-page';
-
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { WorkspaceContext } from '@/types/common';
+import Tabs, { Tab } from '@/ui/molecules/tabbed-page';
+import { Derived } from '@/ui/segments/explore/circuit/elements/related-circuits/derived';
+import { DerivedFrom } from '@/ui/segments/explore/circuit/elements/related-circuits/derived-from';
+import { Parent } from '@/ui/segments/explore/circuit/elements/related-circuits/parent';
+import { Root } from '@/ui/segments/explore/circuit/elements/related-circuits/root';
+import { Subcircuits } from '@/ui/segments/explore/circuit/elements/related-circuits/subcircuits';
+import { useHierarchyAllLevels } from '@/ui/segments/explore/circuit/use-hierarchy';
 
 type Props = {
   circuit: ICircuit;

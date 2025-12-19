@@ -1,21 +1,19 @@
 'use client';
 
 import { AntdRegistry } from '@ant-design/nextjs-registry';
-import { NuqsAdapter } from 'nuqs/adapters/next/app';
-import { SessionProvider } from 'next-auth/react';
+import { App, ConfigProvider } from 'antd';
 import { Provider as JotaiProvider } from 'jotai';
-import { ConfigProvider, App } from 'antd';
-import { ReactNode } from 'react';
-
+import { SessionProvider } from 'next-auth/react';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
+import type { ReactNode } from 'react';
+import { ProgressBarProvider } from '@/app/app/progress-provider';
 import SessionStateProvider from '@/components/SessionStateProvider';
 import ThemeProvider from '@/components/ThemeProvider';
-import commonAntdTheme from '@/theme/antd';
-
-import { ProgressBarProvider } from '@/app/app/progress-provider';
+import { type FeatureFlags, FlagsProvider } from '@/features/feature-flags';
+import type { SessionOrNull } from '@/hooks/session';
 import { QueryProvider } from '@/query-provider/client';
-import { SessionOrNull } from '@/hooks/session';
 import { AtomProvider } from '@/state/state';
-import { FeatureFlags, FlagsProvider } from '@/features/feature-flags';
+import commonAntdTheme from '@/theme/antd';
 
 type ProvidersProps = {
   children: ReactNode;

@@ -7,7 +7,7 @@ import { match } from 'ts-pattern';
 
 import { requestOfflineTokenConsent } from '@/api/auth-manager';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
-import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import ApiError from '@/api/error';
 import { runSimulation } from '@/api/launch-system';
@@ -19,9 +19,13 @@ import {
   simulationsByCampaignIdAtomFamily,
 } from '@/features/small-microcircuit/_components/atoms';
 import { FileViewer } from '@/features/small-microcircuit/_components/file-viewer';
-import { File, SimulationFiles } from '@/features/small-microcircuit/_components/simulation-files';
+import {
+  type File,
+  SimulationFiles,
+} from '@/features/small-microcircuit/_components/simulation-files';
 import { SimulationStatusBadge } from '@/features/small-microcircuit/_components/simulation-status';
 import errorRegistry from '@/features/small-microcircuit/error-registry';
+import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/simulation';
 import { useConsent } from '@/services/consent';
@@ -31,8 +35,6 @@ import { ExecutionStatusColorMap } from '@/ui/segments/activity-execution/color-
 import { classNames } from '@/util/utils';
 import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
-
-import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
 
 type SimulationTabProps = {
   campaignId: string;
@@ -48,7 +50,10 @@ export default function SimulationsTab({
   const notification = useAppNotification();
   const { waitForConsent } = useConsent();
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
-  const simulationsAtom = simulationsByCampaignIdAtomFamily({ campaignId, context });
+  const simulationsAtom = simulationsByCampaignIdAtomFamily({
+    campaignId,
+    context,
+  });
   const simulations = useAtomValue(simulationsAtom);
 
   const modelAtom = modelAtomFamily({ id: simulations[0].entity_id, context });
@@ -56,9 +61,12 @@ export default function SimulationsTab({
 
   const simulationIds = simulations.map((s) => s.id);
 
-  const simExecStatusMapAtom = simExecStatusMapAtomFamily({ context, simulationIds });
+  const simExecStatusMapAtom = simExecStatusMapAtomFamily({
+    context,
+    simulationIds,
+  });
   const fetchRemoteSimExecStatuseMap = useSetAtom(
-    simExecRemoteStatusMapAtomFamily({ simulationIds, context })
+    simExecRemoteStatusMapAtomFamily({ simulationIds, context }),
   );
 
   const statusMap = useLastTruthyValue(simExecStatusMapAtom);
@@ -91,7 +99,7 @@ export default function SimulationsTab({
   const selectableSimulationIds = useMemo(() => {
     return simulations
       .filter((simulation) =>
-        [undefined, 'created', 'error'].includes(statusMap?.get(simulation.id))
+        [undefined, 'created', 'error'].includes(statusMap?.get(simulation.id)),
       )
       .map((s) => s.id);
   }, [simulations, statusMap]);
@@ -120,7 +128,7 @@ export default function SimulationsTab({
 
     const hasActiveSimulations = statusMap
       ? Array.from(statusMap.values()).some((status) =>
-          [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING].includes(status)
+          [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING].includes(status),
         )
       : false;
 
@@ -159,7 +167,10 @@ export default function SimulationsTab({
     setWaitingForConsent(false);
     setLaunchSystemParamsModalOpen(false);
 
-    notification.success({ message: `Simulation submitted successfuly`, duration: 10 });
+    notification.success({
+      message: `Simulation submitted successfuly`,
+      duration: 10,
+    });
   };
 
   // TODO Refactor
@@ -188,7 +199,9 @@ export default function SimulationsTab({
               if (msg.status !== 'done') return;
               const simulation = simulations.find((s) => s.id === simId);
               if (!simulation) return;
-              notification.success({ message: `Simulation ${simulation?.name} done` });
+              notification.success({
+                message: `Simulation ${simulation?.name} done`,
+              });
             })
             .otherwise(() => null);
         },
@@ -215,7 +228,7 @@ export default function SimulationsTab({
     () =>
       selectableSimulationIds.length > 0 &&
       selectableSimulationIds.length === selectedSimulationIds.length,
-    [selectableSimulationIds, selectedSimulationIds]
+    [selectableSimulationIds, selectedSimulationIds],
   );
 
   const launchSimBtnLabelPrefix = selectedSimulationIds.length
@@ -260,7 +273,7 @@ export default function SimulationsTab({
             className={classNames(
               'min-h-[50] w-full cursor-pointer rounded-3xl p-2 text-white',
               'bg-[linear-gradient(94.93deg,_#389E0D_18.84%,_#143805_116.7%)]',
-              'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none'
+              'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none',
             )}
             type="button"
             onClick={() => run(selectedSimulationIds)}

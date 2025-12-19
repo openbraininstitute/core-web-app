@@ -60,7 +60,7 @@ export default function Media({ item, isLoaded, onLoad, onOpenModal }: MediaProp
             fill
             className={cn(
               'object-cover transition-opacity duration-300',
-              isLoaded ? 'opacity-100' : 'opacity-0'
+              isLoaded ? 'opacity-100' : 'opacity-0',
             )}
             onLoad={onLoad}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"

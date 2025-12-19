@@ -1,6 +1,6 @@
 export default function filterAndSortBasedOnPosition<T extends { label: string }>(
   query: string,
-  data: Array<T>
+  data: T[],
 ) {
   const filteredData = data.filter((item) => (item.label as string).toLowerCase().includes(query));
 

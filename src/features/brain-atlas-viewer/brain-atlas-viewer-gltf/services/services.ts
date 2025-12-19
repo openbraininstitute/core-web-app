@@ -1,12 +1,12 @@
 import { tableFromIPC } from '@apache-arrow/es2015-esm';
-import { fetchPointCloud } from '../../api';
 import { getBrainAtlasRegions } from '@/api/entitycore/queries/general/brain-atlas';
 import { entityCoreApi } from '@/api/entitycore/utils';
 import { config } from '@/config';
+import { logError } from '@/util/logger';
 import { assertType } from '@/util/type-guards';
 import { createHeaders } from '@/util/utils';
-import { logError } from '@/util/logger';
 import { log } from '@/utils/logger';
+import { fetchPointCloud } from '../../api';
 
 let cacheAtlasId: string | null = null;
 
@@ -39,7 +39,7 @@ const cacheMeshes = new Map<string, Promise<ArrayBuffer>>();
 
 export async function getBrainRegionMeshArrayBuffer(
   accessToken: string,
-  regionId: string
+  regionId: string,
 ): Promise<ArrayBuffer> {
   const fromCache = cacheMeshes.get(regionId);
   if (fromCache) return fromCache;
@@ -51,7 +51,7 @@ export async function getBrainRegionMeshArrayBuffer(
 
 async function actualGetBrainRegionMeshArrayBuffer(
   accessToken: string,
-  regionId: string
+  regionId: string,
 ): Promise<ArrayBuffer> {
   const atlasId = await getAtlasId(accessToken);
   const atlas = await getAtlas(atlasId);
@@ -63,11 +63,11 @@ async function actualGetBrainRegionMeshArrayBuffer(
   const contentType = 'model/gltf-binary';
   // const contentType = 'application/obj';
   const asset = entity.assets.find(
-    (elem) => elem.label === 'brain_atlas_region_mesh' && elem.content_type === contentType
+    (elem) => elem.label === 'brain_atlas_region_mesh' && elem.content_type === contentType,
   );
   if (!asset) {
     throw new Error(
-      `Unable to find entity "brain_atlas_region_mesh" of type "${contentType}" for entity "${entity.id}" (region "${regionId}")!`
+      `Unable to find entity "brain_atlas_region_mesh" of type "${contentType}" for entity "${entity.id}" (region "${regionId}")!`,
     );
   }
 
@@ -148,9 +148,9 @@ export async function getPointCouldData(annotationValue: number, accessToken: st
 }
 
 async function actualGetPointCouldData(annotationValue: number, accessToken: string) {
-  const time = performance.now();
+  const _time = performance.now();
   const url = `${config.CELL_API_URL}/circuit?circuit_id=${encodeURIComponent(
-    config.LEGACY_DEFAULT_CIRCUIT_ID || ''
+    config.LEGACY_DEFAULT_CIRCUIT_ID || '',
   )}&region=${annotationValue}&how=arrow`;
   const rawData = await fetchPointCloud(url, accessToken);
   // eslint-disable-next-line no-console
@@ -165,14 +165,5 @@ async function actualGetPointCouldData(annotationValue: number, accessToken: str
     dataPoint[index++] = data.z;
     dataPoint[index++] = 100;
   }
-  // eslint-disable-next-line no-console
-  console.log(
-    'PointCould:',
-    'length=',
-    dataPoint.byteLength,
-    (3 * dataPoint.byteLength) / 4,
-    'time=',
-    `${performance.now() - time} msec`
-  );
   return dataPoint;
 }

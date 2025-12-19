@@ -35,11 +35,11 @@ export function useCredits(): UseCreditsReturn {
           // If response is HTML (error page), provide a more helpful error
           if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
             throw new Error(
-              `API returned HTML instead of JSON. Status: ${response.status}. The API route may not be accessible.`
+              `API returned HTML instead of JSON. Status: ${response.status}. The API route may not be accessible.`,
             );
           }
           throw new Error(
-            `Failed to fetch credits packs: ${response.status} ${response.statusText}`
+            `Failed to fetch credits packs: ${response.status} ${response.statusText}`,
           );
         }
 
@@ -47,7 +47,7 @@ export function useCredits(): UseCreditsReturn {
         if (!contentType.includes('application/json')) {
           const text = await response.text();
           throw new Error(
-            `Expected JSON but got ${contentType}. Response: ${text.substring(0, 100)}`
+            `Expected JSON but got ${contentType}. Response: ${text.substring(0, 100)}`,
           );
         }
 
@@ -58,8 +58,6 @@ export function useCredits(): UseCreditsReturn {
         const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
         setError(errorMessage);
         setCreditsPacks([]);
-        // eslint-disable-next-line no-console
-        console.error('Error fetching credits:', errorMessage, err);
       } finally {
         setLoading(false);
       }

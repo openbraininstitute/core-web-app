@@ -1,29 +1,28 @@
 'use client';
 
-import { PaymentElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js';
-import { useQueries, useQueryClient } from '@tanstack/react-query';
-import { StripeElementsOptions } from '@stripe/stripe-js';
 import { LoadingOutlined } from '@ant-design/icons';
-import { useState, useTransition } from 'react';
-import { isObject } from 'es-toolkit/compat';
-import { match, P } from 'ts-pattern';
+import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import type { StripeElementsOptions } from '@stripe/stripe-js';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { Spin } from 'antd';
-
+import { isObject } from 'es-toolkit/compat';
+import { useState, useTransition } from 'react';
+import { match, P } from 'ts-pattern';
+import { tryCatch } from '@/api/utils';
 import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
+import { CoinsIcon } from '@/components/icons/buttons';
+import { useAppNotification } from '@/components/notification';
+import { getStripe } from '@/components/VirtualLab/Billing/utils';
+import { Button, Button as UiButton } from '@/ui/molecules/button';
+import { Input } from '@/ui/molecules/input';
 import { CONVERSION_RATE } from '@/ui/segments/virtual-lab-settings/elements/helpers';
-import { keyBuilder as externalKeyBuilder } from '@/ui/use-query-keys/third-parties';
 import {
   PurchaseModeDictionary,
   type TPurchaseModeDictionary,
 } from '@/ui/segments/virtual-lab-settings/elements/payment-mode-selection';
-import { Button, Button as UiButton } from '@/ui/molecules/button';
-import { getStripe } from '@/components/VirtualLab/Billing/utils';
-import { useAppNotification } from '@/components/notification';
+import { keyBuilder as externalKeyBuilder } from '@/ui/use-query-keys/third-parties';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { CoinsIcon } from '@/components/icons/buttons';
-import { Input } from '@/ui/molecules/input';
 import { cn } from '@/utils/css-class';
-import { tryCatch } from '@/api/utils';
 
 export const PaymentMode = {
   SetCredits: {
@@ -37,7 +36,7 @@ export const PaymentMode = {
 } as const;
 
 export const PaymentModeDictionary = Object.fromEntries(
-  Object.entries(PaymentMode).map(([name, value]) => [name, value.key])
+  Object.entries(PaymentMode).map(([name, value]) => [name, value.key]),
 ) as {
   [K in keyof typeof PaymentMode]: (typeof PaymentMode)[K]['key'];
 };
@@ -118,7 +117,7 @@ function AmountForm({
             placeholder="0"
             className={cn(
               'h-16 w-full rounded-xl border-white/20 bg-[#052f66] pr-28 text-xl! font-bold text-white placeholder:text-white/50',
-              '[appearance:textfield] border px-4 py-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
+              '[appearance:textfield] border px-4 py-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
             )}
             disabled={formLoading}
           />
@@ -148,7 +147,7 @@ function AmountForm({
               disabled={!credits || credits <= 0}
               className={cn(
                 'h-12 flex-1 bg-white text-base font-semibold',
-                'text-blue-900 hover:bg-white/90 disabled:opacity-50'
+                'text-blue-900 hover:bg-white/90 disabled:opacity-50',
               )}
             >
               Continue to Payment
@@ -239,7 +238,9 @@ function PaymentForm({
           placement: 'topRight',
           key: 'credits-purchase-success',
         });
-        await queryClient.invalidateQueries({ queryKey: keyBuilder.accounting({ virtualLabId }) });
+        await queryClient.invalidateQueries({
+          queryKey: keyBuilder.accounting({ virtualLabId }),
+        });
         onCancel();
       }
 
@@ -300,7 +301,7 @@ function PaymentForm({
               'hover:bg-primary-8/40',
               'hover:shadow-[1px_2px_4px_0px_#00000099]',
               'shadow-[8px_12px_24px_0px_#00000099]',
-              'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
+              'shadow-[-8px_-8px_42px_0px_#FFFFFF29]',
             )}
             disabled={disableForm}
             onClick={onSubmit}

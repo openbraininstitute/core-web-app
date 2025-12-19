@@ -1,19 +1,16 @@
 'use client';
 
 import React from 'react';
-
-import { IconEdit } from '../../icons/edit';
-import { IconDelete } from '../../icons/delete';
-import DialogEdit from './dialog-edit';
-import DialogDelete from './dialog-delete';
-import { useSections } from './hooks';
-
-import Tooltip from '@/components/tooltip';
-import { classNames } from '@/util/utils';
-import { useAiAssistant } from '@/services/ai-agent/assistant';
 import IconPlus from '@/components/icons/Plus';
-
+import Tooltip from '@/components/tooltip';
+import { useAiAssistant } from '@/services/ai-agent/assistant';
+import { classNames } from '@/util/utils';
+import { IconDelete } from '../../icons/delete';
+import { IconEdit } from '../../icons/edit';
+import DialogDelete from './dialog-delete';
+import DialogEdit from './dialog-edit';
 import styles from './history.module.css';
+import { useSections } from './hooks';
 
 export interface HistoryProps {
   className?: string;
@@ -52,7 +49,7 @@ export default function History({ className, onBack }: HistoryProps) {
                         <div
                           className={classNames(
                             styles.card,
-                            threadId === thread.id && styles.currentThread
+                            threadId === thread.id && styles.currentThread,
                           )}
                           key={thread.id}
                         >
@@ -98,7 +95,7 @@ export default function History({ className, onBack }: HistoryProps) {
                         </div>
                       ))}
                     </div>
-                  )
+                  ),
               )}
             </div>
           )}

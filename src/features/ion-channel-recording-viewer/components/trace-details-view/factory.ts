@@ -1,8 +1,7 @@
-import { Data, Layout } from 'plotly.js-dist-min';
-
 import { TgdColor } from '@bbp/morphoviewer';
-import { IonChannelRecordingPlotLine } from '../../ion-channel-recording-parser';
-import { usePlotParams } from './hooks';
+import type { Data, Layout } from 'plotly.js-dist-min';
+import type { IonChannelRecordingPlotLine } from '../../ion-channel-recording-parser';
+import type { usePlotParams } from './hooks';
 
 export function factory(params: ReturnType<typeof usePlotParams>['paramsRepetition']): {
   data: Data[];
@@ -13,7 +12,7 @@ export function factory(params: ReturnType<typeof usePlotParams>['paramsRepetiti
     plot?.lines,
     selectedLines,
     preview,
-    colorMap.size
+    colorMap.size,
   );
   const data: Data[] = [
     ...invisibles.map((line) => {
@@ -65,7 +64,7 @@ function splitLinesByVisibility(
   lines: IonChannelRecordingPlotLine[] | undefined,
   selectedLines: string[],
   preview: string | undefined,
-  colorsCount: number
+  colorsCount: number,
 ): [IonChannelRecordingPlotLine[], IonChannelRecordingPlotLine[]] {
   if (!lines) return [[], []];
 

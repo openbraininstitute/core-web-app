@@ -2,20 +2,20 @@
 
 import { CheckOutlined, CloseOutlined, EditOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useMutation, useSuspenseQuery } from '@tanstack/react-query';
-import { useRef, useState, useEffect, type ReactElement } from 'react';
-import { motion, transform, useAnimate } from 'motion/react';
-import { Form, Input, type FormProps } from 'antd';
-import { z } from 'zod';
+import { Form, type FormProps, Input } from 'antd';
 import delay from 'es-toolkit/compat/delay';
-import Image from 'next/image';
 import get from 'es-toolkit/compat/get';
+import { motion, transform, useAnimate } from 'motion/react';
+import Image from 'next/image';
+import { type ReactElement, useEffect, useRef, useState } from 'react';
+import { z } from 'zod';
 
 import { getProject, updateProject } from '@/api/virtual-lab-svc/queries/project';
 import { useUserPermissions } from '@/hooks/use-user-permissions';
-import { ExpandableText } from '@/ui/molecules/more-less-text';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button/index';
+import { ExpandableText } from '@/ui/molecules/more-less-text';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
 type TCardContent = {
@@ -76,9 +76,9 @@ export function ProjectCard(): ReactElement {
         velocity: mapRemainingToSpringVelocity(nameCharactersRemaining),
         stiffness: 700,
         damping: 80,
-      }
+      },
     );
-  }, [animateName, nameCharactersRemaining, isEditing]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [animateName, nameCharactersRemaining, isEditing, nameCounterRef.current]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const maxDescriptionLength = 600;
   const descriptionValue = Form.useWatch('description', form) || '';
@@ -99,9 +99,14 @@ export function ProjectCard(): ReactElement {
         velocity: mapRemainingToSpringVelocity(descriptionCharactersRemaining),
         stiffness: 700,
         damping: 80,
-      }
+      },
     );
-  }, [animateDescription, descriptionCharactersRemaining, isEditing]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [
+    animateDescription,
+    descriptionCharactersRemaining,
+    isEditing,
+    descriptionCounterRef.current,
+  ]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { mutateAsync, isPending, variables } = useMutation({
     mutationFn: (payload: TCardContent) =>
@@ -154,7 +159,7 @@ export function ProjectCard(): ReactElement {
       onValuesChange={handleFormChange}
       className={cn(
         'relative min-h-[18rem] w-full overflow-hidden rounded-2xl',
-        '[&_.ant-form-item-explain-error]:text-sm!'
+        '[&_.ant-form-item-explain-error]:text-sm!',
       )}
       style={{
         background: 'linear-gradient(95.23deg, #0050B3 18.61%, #69C0FF 103.56%)',
@@ -225,7 +230,10 @@ export function ProjectCard(): ReactElement {
                   name="name"
                   rules={[
                     { required: true, message: 'Name is required' },
-                    { max: maxNameLength, message: 'Name must be less than 60 characters' },
+                    {
+                      max: maxNameLength,
+                      message: 'Name must be less than 60 characters',
+                    },
                   ]}
                   initialValue={result.data.project.name}
                 >
@@ -235,7 +243,7 @@ export function ProjectCard(): ReactElement {
                     className={cn(
                       'w-full resize-none rounded-lg border border-white/20 p-3 text-lg font-bold text-white placeholder-white/60 backdrop-blur-sm transition-all duration-300',
                       'min-h-auto placeholder:text-sm hover:bg-transparent! focus:bg-white/15 focus:ring-1 focus:ring-white/30 focus:outline-none lg:text-xl',
-                      '[&.ant-input-outlined]:bg-transparent! [&.ant-input-outlined]:hover:bg-transparent!'
+                      '[&.ant-input-outlined]:bg-transparent! [&.ant-input-outlined]:hover:bg-transparent!',
                     )}
                     placeholder="Enter title..."
                     rows={1}
@@ -246,7 +254,7 @@ export function ProjectCard(): ReactElement {
                 <div
                   className={cn(
                     'pointer-events-none absolute top-1 right-1 flex size-9',
-                    'items-center justify-center rounded-full bg-white/30 backdrop-blur-md'
+                    'items-center justify-center rounded-full bg-white/30 backdrop-blur-md',
                   )}
                 >
                   <motion.span
@@ -289,7 +297,7 @@ export function ProjectCard(): ReactElement {
                     className={cn(
                       'w-full resize-y rounded-lg border border-white/20 p-2 text-base text-white/90 placeholder-white/60 backdrop-blur-sm',
                       'transition-all duration-300 placeholder:text-sm focus:bg-white/15 focus:ring-1 focus:ring-white/30 focus:outline-none lg:text-lg',
-                      '[&.ant-input-outlined]:bg-transparent! [&.ant-input-outlined]:hover:bg-transparent!'
+                      '[&.ant-input-outlined]:bg-transparent! [&.ant-input-outlined]:hover:bg-transparent!',
                     )}
                     placeholder="Enter description..."
                     rows={4}
@@ -300,7 +308,7 @@ export function ProjectCard(): ReactElement {
                 <div
                   className={cn(
                     'pointer-events-none absolute top-1 right-1 flex size-9',
-                    'items-center justify-center rounded-full bg-white/30 backdrop-blur-md'
+                    'items-center justify-center rounded-full bg-white/30 backdrop-blur-md',
                   )}
                 >
                   <motion.span
@@ -332,7 +340,7 @@ export function ProjectCard(): ReactElement {
                     aria-controls="project-description-less-more"
                     className={cn(
                       'text-white/90 underline decoration-white/40 underline-offset-4 transition-colors hover:text-white',
-                      'text-sm'
+                      'text-sm',
                     )}
                   >
                     {isExpanded ? 'Show less' : 'Show more'}

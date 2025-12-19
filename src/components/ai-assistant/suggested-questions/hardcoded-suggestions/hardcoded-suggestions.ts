@@ -1,7 +1,7 @@
 import React from 'react';
-import { useSnapshot } from './snapshot';
-import { SuggestionsListPerRegion, SuggestionsListFullBrain } from './suggestions-list';
 import { isString } from '@/util/type-guards';
+import { useSnapshot } from './snapshot';
+import { SuggestionsListFullBrain, SuggestionsListPerRegion } from './suggestions-list';
 
 export function useHardcodedSuggestions(maxNumberOfQuestions: number = 2): string[] {
   const snapshot = useSnapshot();
@@ -20,7 +20,7 @@ export function useHardcodedSuggestions(maxNumberOfQuestions: number = 2): strin
           .replace('{rodent}', 'rodent')
           .replace('{rodents}', 'rodents')
           .replace('{rodent/human}', 'rodent')
-          .replace('{rodents/humans}', 'rodents')
+          .replace('{rodents/humans}', 'rodents'),
       );
     setSuggestions(questions);
   }, [maxNumberOfQuestions, snapshot]);

@@ -1,46 +1,42 @@
 'use client';
 
 import { RightOutlined, SettingFilled, WarningFilled } from '@ant-design/icons';
-import { usePathname, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { useEffect, useState, useMemo } from 'react';
-
-import { useVisibleSynapsesSetter } from '../steps/webgl-neuron-selector/hooks';
-
-import { useSingleNeuronSimulationAtoms } from '@/ui/segments/workflows/simulate/single-neuron/shared/use-simulation-atoms';
-import { launchSimulationAtom } from '@/ui/segments/workflows/simulate/single-neuron/shared/runner';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import { getSingleNeuronStimuliPlot } from '@/api/small-scale-simulator';
-import {
-  SimulationStatus,
-  simulationStatusAtomFamily,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import { useAppNotification } from '@/components/notification';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import {
-  SynapseConfigurationArraySchema,
-  NeuronLocationArraySchema,
-  OverviewConfigurationSchema,
-  StimulationConfigurationSchema,
-  ExperimentalSetupConfigurationSchema,
-  AmperageStateSchema,
-  FrequencyInputConfigSchema,
-  PlotData,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Button } from '@/ui/molecules/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import {
   PROTOCOL_DETAILS,
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import { useAppNotification } from '@/components/notification';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { browserHistoryReplace } from '@/utils/browser';
-import { keyBuilder } from '@/ui/use-query-keys/data';
-import { Button } from '@/ui/molecules/button';
-import { cn } from '@/utils/css-class';
 import {
+  SimulationStatus,
+  simulationStatusAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import { launchSimulationAtom } from '@/ui/segments/workflows/simulate/single-neuron/shared/runner';
+import {
+  AmperageStateSchema,
+  ExperimentalSetupConfigurationSchema,
+  FrequencyInputConfigSchema,
+  NeuronLocationArraySchema,
+  OverviewConfigurationSchema,
+  type PlotData,
   SimulationType,
+  StimulationConfigurationSchema,
+  SynapseConfigurationArraySchema,
   type TSimulationType,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { useSingleNeuronSimulationAtoms } from '@/ui/segments/workflows/simulate/single-neuron/shared/use-simulation-atoms';
+import { keyBuilder } from '@/ui/use-query-keys/data';
+import { browserHistoryReplace } from '@/utils/browser';
+import { cn } from '@/utils/css-class';
+import { useVisibleSynapsesSetter } from '../steps/webgl-neuron-selector/hooks';
 
 export const ExperimentStep = {
   Info: 'info',
@@ -109,12 +105,12 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
   const overResourceThreshold = useMemo(() => {
     const repetitionFactor = Math.max(
       amperageConfiguration.computed.length,
-      ...synaptomeConfiguration.map((c) => (Array.isArray(c.frequency) ? c.frequency.length : 1))
+      ...synaptomeConfiguration.map((c) => (Array.isArray(c.frequency) ? c.frequency.length : 1)),
     );
 
     const recordingFactor = recordLocationConfiguration.reduce(
       (recFactor, c) => recFactor + (c.record_currents ? 6 : 1),
-      0
+      0,
     );
 
     const recordingVectorLength =
@@ -183,7 +179,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
       simulationType,
       experimentalSetupConfiguration.max_time ?? currentInjectionDuration,
       () => updatePanelSelection(),
-      notify
+      notify,
     );
 
     setIsLaunching(false);
@@ -196,7 +192,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
     ?.formErrors.fieldErrors;
 
   const warnExperimentalSetup = ExperimentalSetupConfigurationSchema.safeParse(
-    experimentalSetupConfiguration
+    experimentalSetupConfiguration,
   ).error?.formErrors.fieldErrors;
 
   const warnStimulationProtocol = {
@@ -472,7 +468,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
               variant="success"
               size={breakpoint === 'l' ? 'md' : 'lg'}
               className={cn(
-                'disabled:bg-neutral-2 disabled:text-neutral-4! w-full justify-center px-10 font-medium!'
+                'disabled:bg-neutral-2 disabled:text-neutral-4! w-full justify-center px-10 font-medium!',
               )}
               disabled={disableRunSimulation}
               onClick={onRun}

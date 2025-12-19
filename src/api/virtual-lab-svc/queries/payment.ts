@@ -1,11 +1,10 @@
-import { getSession } from '@/auth-fetch';
-
-import {
+import type {
   SetupIntentResponse,
   StandalonePaymentRequest,
   StandalonePaymentResponse,
   SubscriptionPaymentsResponse,
 } from '@/api/virtual-lab-svc/queries/types';
+import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
 
 function getPaymentsPrl() {
@@ -37,7 +36,9 @@ export async function getSetupIntent(): Promise<SetupIntentResponse> {
   });
 
   if (!response.ok) {
-    throw new Error(`Listing subscriptions failed`, { cause: await response.json() });
+    throw new Error(`Listing subscriptions failed`, {
+      cause: await response.json(),
+    });
   }
 
   const result: SetupIntentResponse = await response.json();
@@ -52,7 +53,7 @@ export async function getSetupIntent(): Promise<SetupIntentResponse> {
  * @returns payment details including receipt URL and card information
  */
 export async function createStandalonePayment(
-  payload: StandalonePaymentRequest
+  payload: StandalonePaymentRequest,
 ): Promise<StandalonePaymentResponse> {
   const session = await getSession();
   const response = await fetch(`${getPaymentsPrl()}/standalone`, {
@@ -65,7 +66,9 @@ export async function createStandalonePayment(
   });
 
   if (!response.ok) {
-    throw new Error('Failed to create standalone payment', { cause: await response.json() });
+    throw new Error('Failed to create standalone payment', {
+      cause: await response.json(),
+    });
   }
 
   const data = await response.json();
@@ -107,7 +110,9 @@ export async function listStandalonePayments({
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch subscription payments`, { cause: await response.json() });
+    throw new Error(`Failed to fetch subscription payments`, {
+      cause: await response.json(),
+    });
   }
 
   return await response.json();

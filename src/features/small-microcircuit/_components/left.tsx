@@ -1,21 +1,18 @@
-import { Fragment } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
-
-import { Config } from './components';
-import { useApiUrl, useValidateSchema } from './hooks';
-
-import { config as appConfig } from '@/config';
+import { Fragment } from 'react';
+import type { IMEModel } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import authFetch from '@/auth-fetch';
+import { useAppNotification } from '@/components/notification';
+import { config as appConfig } from '@/config';
 import { isNonEmptyCategory } from '@/features/small-microcircuit/_components/hooks/schema';
 import { Section } from '@/features/small-microcircuit/_components/section';
 import { CATEGORIES, ORDERING } from '@/features/small-microcircuit/_components/utils';
-import { assertErrorMessage, classNames } from '@/util/utils';
-import { AtomsMap, JSONSchema, TabType } from '@/features/small-microcircuit/types';
-import { useAppNotification } from '@/components/notification';
-import { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import { IMEModel } from '@/api/entitycore/types';
-
 import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
+import type { AtomsMap, JSONSchema, TabType } from '@/features/small-microcircuit/types';
+import { assertErrorMessage, classNames } from '@/util/utils';
+import type { Config } from './components';
+import { useApiUrl, useValidateSchema } from './hooks';
 
 export default function Left({
   virtualLabId,
@@ -130,7 +127,7 @@ export default function Left({
             'flex min-h-[50px] w-[95%] items-center justify-center rounded-full text-lg drop-shadow',
             (errors && errors.length > 0) || loading
               ? 'bg-gray-300 text-gray-500'
-              : 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
+              : 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white',
           )}
           onClick={async () => {
             if (loading) return;
@@ -155,7 +152,7 @@ export default function Left({
                     'virtual-lab-id': virtualLabId,
                     'project-id': projectId,
                   },
-                }
+                },
               );
 
               if (coordinateCountRes.status !== 200) {

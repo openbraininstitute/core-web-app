@@ -1,38 +1,37 @@
 'use client';
 
-import { ErrorSchema, RJSFSchema, RJSFValidationError, UiSchema } from '@rjsf/utils';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { LoadingOutlined, CloseOutlined } from '@ant-design/icons';
-import { flatMap, toArray, map, isNil } from 'es-toolkit/compat';
-import { useSession } from 'next-auth/react';
+import { CloseOutlined, LoadingOutlined } from '@ant-design/icons';
+import type { ErrorSchema, RJSFSchema, RJSFValidationError, UiSchema } from '@rjsf/utils';
 import validator from '@rjsf/validator-ajv8';
-import dynamic from 'next/dynamic';
+import { flatMap, isNil, map, toArray } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
-
-import { GenerationWorkflowFormPanelKeys } from '@/ui/segments/workflows/build/ion-channel-build/elements/panel-tabs';
-import { resetFormSection } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers/reset-form-block';
-import { rjsfValidateForm } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers/validate-form';
-import { ConfigurationSidebar } from '@/ui/segments/workflows/build/ion-channel-build/elements/menu-sidebar';
+import dynamic from 'next/dynamic';
+import { useSession } from 'next-auth/react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Button } from '@/ui/molecules/button';
 import { EquationMenuItem } from '@/ui/segments/workflows/build/ion-channel-build/elements/equation-tooltip';
-import { labelClasses } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/theme/classes';
+import { ConfigurationSidebar } from '@/ui/segments/workflows/build/ion-channel-build/elements/menu-sidebar';
+import { GenerationWorkflowFormPanelKeys } from '@/ui/segments/workflows/build/ion-channel-build/elements/panel-tabs';
 import {
-  BlockGroupProperties,
+  CONFIGURATION_FORM_STATE_KEY,
+  CONFIGURATION_RECORDING_STATE_KEY,
+  GenerativeFromAtomFamily,
+  IonChannelModelingSharedStateFamily,
+  IonChannelRecordingAtomFamily,
+  useGenerativeFormSchemaApi,
+} from '@/ui/segments/workflows/build/ion-channel-build/helpers';
+import {
+  type AutomatedFormHandle,
+  SchemaGeneratedForm,
+} from '@/ui/segments/workflows/build/ion-channel-build/rjsf';
+import {
+  type BlockGroupProperties,
   bundleSchemaFields,
   makeHiddenTypeUiSchema,
 } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers';
-import {
-  useGenerativeFormSchemaApi,
-  IonChannelModelingSharedStateFamily,
-  IonChannelRecordingAtomFamily,
-  CONFIGURATION_RECORDING_STATE_KEY,
-  CONFIGURATION_FORM_STATE_KEY,
-  GenerativeFromAtomFamily,
-} from '@/ui/segments/workflows/build/ion-channel-build/helpers';
-import {
-  SchemaGeneratedForm,
-  AutomatedFormHandle,
-} from '@/ui/segments/workflows/build/ion-channel-build/rjsf';
-import { Button } from '@/ui/molecules/button';
+import { resetFormSection } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers/reset-form-block';
+import { rjsfValidateForm } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers/validate-form';
+import { labelClasses } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/theme/classes';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
 
@@ -45,7 +44,7 @@ const Recording = dynamic(
         <LoadingOutlined />
       </div>
     ),
-  }
+  },
 );
 
 type Props = {
@@ -61,22 +60,22 @@ export function Configuration({ sessionId }: Props) {
   const [formDataStorage, updateFormDataStorage] = useAtom(
     useMemo(
       () => GenerativeFromAtomFamily(`${CONFIGURATION_FORM_STATE_KEY}/${sessionId}`),
-      [sessionId]
-    )
+      [sessionId],
+    ),
   );
 
   const [recording, updateRecording] = useAtom(
     useMemo(
       () => IonChannelRecordingAtomFamily(`${CONFIGURATION_RECORDING_STATE_KEY}/${sessionId}`),
-      [sessionId]
-    )
+      [sessionId],
+    ),
   );
 
   const [, updateIoChannelState] = useAtom(
-    useMemo(() => IonChannelModelingSharedStateFamily(sessionId), [sessionId])
+    useMemo(() => IonChannelModelingSharedStateFamily(sessionId), [sessionId]),
   );
   const [validationErrorsMap, setValidationErrorsMap] = useState<ErrorSchema | undefined>(
-    undefined
+    undefined,
   );
 
   const [activeBlock, updateActiveBlock] = useState<string>('');
@@ -226,7 +225,7 @@ export function Configuration({ sessionId }: Props) {
         },
       },
     }),
-    []
+    [],
   );
 
   // generate dynamic ui schema that hides all fields except the active block
@@ -277,10 +276,13 @@ export function Configuration({ sessionId }: Props) {
     log('error', '[IonChannelModelBuilding][errors]', errors);
   }, []);
 
-  const onFormChange = useCallback((data: any, errorSchema?: ErrorSchema) => {
-    updateFormDataStorage(data || {});
-    setValidationErrorsMap(errorSchema);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const onFormChange = useCallback(
+    (data: any, errorSchema?: ErrorSchema) => {
+      updateFormDataStorage(data || {});
+      setValidationErrorsMap(errorSchema);
+    },
+    [updateFormDataStorage],
+  ); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onResetForm = useCallback(
     (propName: string) => {
@@ -300,7 +302,7 @@ export function Configuration({ sessionId }: Props) {
         callback: onFormChange,
       });
     },
-    [formDataStorage, RootSchema, onFormChange, updateRecording]
+    [formDataStorage, RootSchema, onFormChange, updateRecording],
   );
 
   const onFormSubmit = useCallback(async () => {
@@ -313,11 +315,11 @@ export function Configuration({ sessionId }: Props) {
     } catch (error) {
       log('error', '[Configuration]', error);
     }
-  }, [canSubmitForm, formDataStorage]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [canSubmitForm, RootSchema, updateIoChannelState]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     formRef.current?.validate();
-  }, [formRef]);
+  }, []);
 
   useEffect(() => {
     if (Blocks.length > 0 && !activeBlock) {
@@ -346,7 +348,9 @@ export function Configuration({ sessionId }: Props) {
             type="submit"
             onClick={onFormSubmit}
             // disabled={disableSubmit}
-            className={cn('h-10 w-full select-none lg:h-12', { 'shadow-bnb': !disableSubmit })}
+            className={cn('h-10 w-full select-none lg:h-12', {
+              'shadow-bnb': !disableSubmit,
+            })}
           >
             Build model
           </Button>
@@ -366,7 +370,7 @@ export function Configuration({ sessionId }: Props) {
                   onClick={() => onResetForm(activeBlock)}
                   className={cn(
                     'size-10! min-h-10! min-w-10! rounded-full md:size-10!',
-                    'md:min-h-10! md:min-w-10! lg:size-12! lg:min-h-12! lg:min-w-12!'
+                    'md:min-h-10! md:min-w-10! lg:size-12! lg:min-h-12! lg:min-w-12!',
                   )}
                 >
                   <CloseOutlined />
@@ -421,7 +425,7 @@ export function Configuration({ sessionId }: Props) {
         <div
           className={cn(
             'secondary-scrollbar h-full max-h-[calc(100%-.5rem)] overflow-x-hidden overflow-y-auto rounded-2xl',
-            'rounded-2xl border-white bg-white p-4 shadow-xs'
+            'rounded-2xl border-white bg-white p-4 shadow-xs',
           )}
         >
           {!isNil(recording) && <Recording sessionId={sessionId} />}

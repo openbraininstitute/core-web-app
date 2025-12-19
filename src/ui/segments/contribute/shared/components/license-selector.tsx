@@ -1,22 +1,20 @@
 'use client';
 
-import { useMemo } from 'react';
 import { Form } from 'antd';
+import { useMemo } from 'react';
 
 import type { ZodObject, ZodRawShape } from 'zod';
-
-import { DEFAULT_LICENSE_ID } from '@/ui/segments/contribute/shared/schemas';
 import { getLicenses } from '@/api/entitycore/queries/general/license';
+import type { ILicense } from '@/api/entitycore/types/shared/global';
+import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
 import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
-import { keyBuilder } from '@/ui/use-query-keys/data';
 import {
-  renderLabel,
   createZodFieldValidator,
   RequiredFieldMarker,
+  renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
-
-import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
-import type { ILicense } from '@/api/entitycore/types/shared/global';
+import { DEFAULT_LICENSE_ID } from '@/ui/segments/contribute/shared/schemas';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 
 interface ILicenseSelectorProps<TSchema extends ZodObject<ZodRawShape>> {
   schema: TSchema;
@@ -42,7 +40,7 @@ export function LicenseSelector<TSchema extends ZodObject<ZodRawShape>>({
         searchField: 'label__ilike',
         selectedValue: DEFAULT_LICENSE_ID,
       }),
-    []
+    [],
   );
 
   return (

@@ -16,7 +16,7 @@ export function buildLink(
     remove?: string[];
     activeKey?: string;
     activeValue?: string;
-  }
+  },
 ): { href: string; isActive: boolean } {
   const { preserve = true, remove = [], activeKey, activeValue } = options ?? {};
 
@@ -26,9 +26,9 @@ export function buildLink(
     for (const [key, value] of Object.entries(searchParams ?? {})) {
       if (remove.includes(key)) continue;
       if (Array.isArray(value)) {
-        value.forEach((v) => params.append(key, v));
+        value.forEach((v) => void params.append(key, v));
       } else if (value !== undefined) {
-        params.set(key, value);
+        void params.set(key, value);
       }
     }
   }

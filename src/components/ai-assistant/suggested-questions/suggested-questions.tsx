@@ -1,11 +1,9 @@
 'use client';
 
-import React from 'react';
-
-import { useHardcodedSuggestions } from './hardcoded-suggestions';
-import { classNames } from '@/util/utils';
 import IconIdea from '@/components/icons/Idea';
 import { useServiceAiAgentSuggestionFromUserJourney } from '@/services/ai-agent';
+import { classNames } from '@/util/utils';
+import { useHardcodedSuggestions } from './hardcoded-suggestions';
 
 import styles from './suggested-questions.module.css';
 
@@ -31,7 +29,7 @@ export default function SuggestedQuestions({
 }: SuggestedQuestionsProps) {
   const [suggestions, clearSuggestions] = useServiceAiAgentSuggestionFromUserJourney(
     threadId ?? '',
-    messagesLength === 0 ? 1 : 3
+    messagesLength === 0 ? 1 : 3,
   );
   const hardcodedSuggestions = useHardcodedSuggestions(messagesLength === 0 ? 2 : 0);
   const allSuggestions = [...hardcodedSuggestions, ...suggestions]

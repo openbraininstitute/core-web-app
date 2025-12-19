@@ -1,28 +1,25 @@
-import { useParams, useRouter } from 'next/navigation';
 import { snakeCase } from 'es-toolkit/compat';
-import { ReactNode, useMemo } from 'react';
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
-
-import { createExpandableTableConfig } from '@/ui/segments/data-table/expandable-row/expandable-base-table';
-import { RecursiveExpandableTable } from '@/ui/segments/explore/circuit/elements/recursive-expandable-table';
-import { useExpandableTable } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { expandIcon } from '@/ui/segments/explore/circuit/elements/expand-icon';
-import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
-import { HierarchyOutputNode } from '@/ui/segments/explore/circuit/helpers';
-import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
-import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { VirtualLabInfo } from '@/types/virtual-lab/common';
-import { BaseTable } from '@/ui/segments/data-table/table';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { WorkspaceScope } from '@/constants';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
+import { useParams, useRouter } from 'next/navigation';
+import { type ReactNode, useMemo } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { KebabCase } from '@/utils/type';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
+import { WorkspaceScope } from '@/constants';
+import type { VirtualLabInfo } from '@/types/virtual-lab/common';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
+import { createExpandableTableConfig } from '@/ui/segments/data-table/expandable-row/expandable-base-table';
+import { useExpandableTable } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
+import { BaseTable } from '@/ui/segments/data-table/table';
+import { expandIcon } from '@/ui/segments/explore/circuit/elements/expand-icon';
+import { RecursiveExpandableTable } from '@/ui/segments/explore/circuit/elements/recursive-expandable-table';
+import type { HierarchyOutputNode, ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
+import type { KebabCase } from '@/utils/type';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 type Props = {
   data: HierarchyOutputNode[] | undefined;
@@ -48,20 +45,20 @@ export function Derived({ data }: Props) {
             dataType,
             dataScope: WorkspaceScope.Custom,
             key: '',
-          })
+          }),
         ),
-      [dataType]
-    )
+      [dataType],
+    ),
   );
   const columns = cols.filter(({ key }) => (activeColumns || []).includes(key as string));
 
-  const onCellClick = (basePath: string, record: ICircuit) => {
+  const onCellClick = (_basePath: string, record: ICircuit) => {
     navigate(
       resolveExploreDetailsPageUrl({
         ctx: { virtualLabId, projectId },
         dataType,
         entityId: record.id,
-      })
+      }),
     );
   };
 
@@ -84,7 +81,7 @@ export function Derived({ data }: Props) {
       dataType: ExtendedEntitiesTypeDict.Circuit,
     },
     expandedColumns: columns,
-    renderWrapper: (baseTable: ReactNode, records: Array<ICircuit>) => {
+    renderWrapper: (_baseTable: ReactNode, records: ICircuit[]) => {
       return (
         <div className="my-5 flex flex-col items-start gap-5">
           <div className="ml-2 flex flex-row items-center gap-2">
@@ -95,7 +92,7 @@ export function Derived({ data }: Props) {
             <div className="ml-4">
               <RecursiveExpandableTable
                 view={null}
-                circuits={records as Array<ICircuitEnriched>}
+                circuits={records as ICircuitEnriched[]}
                 columns={columns}
                 dataType={ExtendedEntitiesTypeDict.Circuit}
                 dataScope={WorkspaceScope.Custom}

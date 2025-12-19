@@ -35,7 +35,7 @@ export function usePrices(): UsePricesReturn {
           // If response is HTML (error page), provide a more helpful error
           if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
             throw new Error(
-              `API returned HTML instead of JSON. Status: ${response.status}. The API route may not be accessible.`
+              `API returned HTML instead of JSON. Status: ${response.status}. The API route may not be accessible.`,
             );
           }
           throw new Error(`Failed to fetch prices: ${response.status} ${response.statusText}`);
@@ -45,7 +45,7 @@ export function usePrices(): UsePricesReturn {
         if (!contentType.includes('application/json')) {
           const text = await response.text();
           throw new Error(
-            `Expected JSON but got ${contentType}. Response: ${text.substring(0, 100)}`
+            `Expected JSON but got ${contentType}. Response: ${text.substring(0, 100)}`,
           );
         }
 
@@ -56,8 +56,6 @@ export function usePrices(): UsePricesReturn {
         const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
         setError(errorMessage);
         setPrices([]);
-        // eslint-disable-next-line no-console
-        console.error('Error fetching prices:', errorMessage, err);
       } finally {
         setLoading(false);
       }

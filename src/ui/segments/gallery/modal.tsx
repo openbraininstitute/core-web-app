@@ -1,7 +1,7 @@
 import { CloseOutlined } from '@ant-design/icons';
 import Image from 'next/image';
 
-import { GalleryContentProps } from '@/api/sanity/gallery/route';
+import type { GalleryContentProps } from '@/api/sanity/gallery/route';
 import { Modal } from '@/ui/molecules/modal';
 
 type MediaModalProps = {
@@ -32,7 +32,13 @@ export function MediaModal({ open, onClose, item }: MediaModalProps) {
       headerClassName="!hidden"
       closeIconClassName="!text-white !text-2xl hover:!text-gray-300"
       animation="fade"
-      style={{ top: 0, left: 0, transform: 'none', height: '100vh', width: '100vw' }}
+      style={{
+        top: 0,
+        left: 0,
+        transform: 'none',
+        height: '100vh',
+        width: '100vw',
+      }}
     >
       <button
         type="button"

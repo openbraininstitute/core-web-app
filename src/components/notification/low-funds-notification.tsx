@@ -55,7 +55,7 @@ export function LowFundsNotification({ title, description, onClose, duration = 1
       <div
         className={cn(
           'border-neutral-2 fixed top-4 right-4 z-[99999] max-w-[448px] min-w-[384px] rounded-2xl border bg-white shadow-lg transition-all duration-300',
-          isVisible ? 'translate-y-0 opacity-100' : 'pointer-events-none -translate-y-2 opacity-0'
+          isVisible ? 'translate-y-0 opacity-100' : 'pointer-events-none -translate-y-2 opacity-0',
         )}
         role="alert"
       >

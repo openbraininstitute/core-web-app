@@ -2,14 +2,12 @@
 
 import type { ReactNode } from 'react';
 import superjson from 'superjson';
-
+import type { IMEModel } from '@/api/entitycore/types';
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import { useSessionStorage } from '@/hooks/use-session-storage';
+import type { WorkspaceContext } from '@/types/common';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { cn } from '@/utils/css-class';
-
-import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import type { IMEModel } from '@/api/entitycore/types';
-import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
   sessionId: string;
@@ -49,7 +47,7 @@ export function useBuildSingleNeuronSynaptomeSessionState(props: Props) {
       initializeWithValue: true,
       serializer: (value) => superjson.stringify(value),
       deserializer: (value) => superjson.parse(value),
-    }
+    },
   );
 
   return {
@@ -64,7 +62,7 @@ export const label = (text: string, type: 'main' | 'secondary' = 'main', extra?:
     className={cn(
       'text-base font-light uppercase',
       type === 'main' && 'text-primary-8 !font-bold',
-      type === 'secondary' && 'text-label'
+      type === 'secondary' && 'text-label',
     )}
   >
     {text} {extra}

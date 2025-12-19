@@ -1,6 +1,9 @@
-import React from 'react';
+import type React from 'react';
 
-import { ContentForPriceList2LabBlocSectionPlanItem, ContentForPriceList2LabItem } from '../hooks';
+import type {
+  ContentForPriceList2LabBlocSectionPlanItem,
+  ContentForPriceList2LabItem,
+} from '../hooks';
 import SectionTitle from '../section-title';
 
 import styles from './lab-list.module.css';
@@ -57,7 +60,7 @@ const CREDIT_TYPE: Record<string, React.ReactNode> = {
 
 function getPrice(
   plans: ContentForPriceList2LabBlocSectionPlanItem[],
-  planId: string
+  planId: string,
 ): React.ReactNode {
   const plan = plans.find((p) => p.id === planId);
   if (!plan) return null;

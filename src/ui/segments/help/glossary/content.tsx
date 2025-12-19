@@ -2,10 +2,8 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
-
-import TermCard from '@/ui/segments/help/glossary/term-card';
-
 import type { ContentForGlossaryItem } from '@/components/documentation/type';
+import TermCard from '@/ui/segments/help/glossary/term-card';
 import Slugify from '@/util/slugify';
 
 export type CellGroup = {
@@ -31,7 +29,7 @@ const toSlug = (v: unknown) => Slugify((v ?? '').toString());
 const asArray = (value: any): any[] => {
   if (Array.isArray(value)) return value;
   if (value && Array.isArray(value.data)) return value.data;
-  if (value && value.data && Array.isArray(value.data.data)) return value.data.data;
+  if (value?.data && Array.isArray(value.data.data)) return value.data.data;
   return [];
 };
 
@@ -150,18 +148,18 @@ export default function GlossaryContent({ glossarySections }: GlossaryContentPro
     const counts: Record<string, number> = alphabet.reduce(
       (acc, letter) => {
         acc[letter] = sorted.filter((it) =>
-          (it.Name ?? '').toString().toUpperCase().startsWith(letter)
+          (it.Name ?? '').toString().toUpperCase().startsWith(letter),
         ).length;
         return acc;
       },
-      {} as Record<string, number>
+      {} as Record<string, number>,
     );
 
     const filtered =
       selectedLetter === 'All'
         ? sorted
         : sorted.filter((it) =>
-            (it.Name ?? '').toString().toUpperCase().startsWith(selectedLetter)
+            (it.Name ?? '').toString().toUpperCase().startsWith(selectedLetter),
           );
 
     return (

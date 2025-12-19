@@ -1,23 +1,20 @@
 'use client';
 
-import { compact, sortBy, get } from 'es-toolkit/compat';
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
-import { useSession } from 'next-auth/react';
 import { ConfigProvider, Table } from 'antd';
-import { ColumnType } from 'antd/es/table';
+import type { ColumnType } from 'antd/es/table';
+import { compact, get, sortBy } from 'es-toolkit/compat';
+import { useSession } from 'next-auth/react';
 import { useMemo } from 'react';
-
-import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
-import { RoleModifier } from '@/ui/segments/project/team/role-modifier';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { useUserRole } from '@/hooks/use-user-role';
-import { extractInitials } from '@/util/slugify';
-import { Button } from '@/ui/molecules/button';
-import { Badge } from '@/ui/molecules/badge';
-
-import { cn } from '@/utils/css-class';
-
 import type { Member, MembersResponse, Role } from '@/api/virtual-lab-svc/queries/types';
+import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
+import { useUserRole } from '@/hooks/use-user-role';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Badge } from '@/ui/molecules/badge';
+import { Button } from '@/ui/molecules/button';
+import { RoleModifier } from '@/ui/segments/project/team/role-modifier';
+import { extractInitials } from '@/util/slugify';
+import { cn } from '@/utils/css-class';
 
 export function ListingMembers({
   onAddMemberClick,
@@ -43,7 +40,7 @@ export function ListingMembers({
   const total = list?.data?.total;
   const users = list?.data?.users;
 
-  const columns: Array<ColumnType<Member>> = [
+  const columns: ColumnType<Member>[] = [
     {
       title: 'name',
       dataIndex: 'name',
@@ -75,17 +72,17 @@ export function ListingMembers({
                 ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(' ') ||
                     get(record, 'username') ||
                     record.email
-                : record.email
+                : record.email,
             )}
             cls={{
               text: cn(
                 'text-white  wrap-text',
-                record.invite_accepted ? 'font-bold' : 'font-light'
+                record.invite_accepted ? 'font-bold' : 'font-light',
               ),
               pending: cn(
                 '[&_.avatar-email]:text-primary-9!',
                 '[&_.avatar-role]:text-primary-8!',
-                '[&_.avatar-icon]:text-primary-9!'
+                '[&_.avatar-icon]:text-primary-9!',
               ),
             }}
             pendingIcon={{
@@ -128,7 +125,7 @@ export function ListingMembers({
         (member) => (member.invite_accepted ? 0 : 1),
         'created_at',
       ]),
-    [users, ownerId, data?.user.id]
+    [users, ownerId, data?.user.id],
   );
 
   return (
@@ -191,7 +188,7 @@ export function ListingMembers({
               '[&_.ant-table-cell-row-hover]:bg-gray-200!',
               '[&_.ant-table-tbody>tr.ant-table-row-remove]:h-0 [&_.ant-table-tbody>tr.ant-table-row-remove]:opacity-40',
               '[&_.ant-table-body]:max-h-full [&_.ant-table-body]:overflow-auto [&_.ant-table-container]:h-full',
-              '[&_.ant-table-body]:secondary-scrollbar! [&_.ant-table-body]:pr-3'
+              '[&_.ant-table-body]:secondary-scrollbar! [&_.ant-table-body]:pr-3',
             )}
             rowClassName={() => {
               return 'hover:bg-primary-9/10 hover:text-white';

@@ -1,5 +1,5 @@
 import { WarningFilled } from '@ant-design/icons';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import { cn } from '@/utils/css-class';
 
@@ -7,7 +7,9 @@ export function RenderErrorTooltip({ isActive }: { isActive: boolean }): ReactNo
   return (
     <span className="flex items-center">
       <WarningFilled
-        className={cn('text-lg text-yellow-400', { 'text-lg text-yellow-400': isActive })}
+        className={cn('text-lg text-yellow-400', {
+          'text-lg text-yellow-400': isActive,
+        })}
       />
     </span>
   );

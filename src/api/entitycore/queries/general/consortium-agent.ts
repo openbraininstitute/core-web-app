@@ -1,9 +1,8 @@
 import { authApiClient } from '@/api/apiClient';
-import { config } from '@/config';
-
 import type { IConsortiumFilter } from '@/api/entitycore/types/entities/agent';
 import type { IConsortium } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import { config } from '@/config';
 
 const baseUri = '/consortium';
 /**

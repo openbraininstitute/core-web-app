@@ -1,6 +1,6 @@
 import React from 'react';
-import { useCacheLastRecentlyInserted } from './cache';
 import { logError } from '@/util/logger';
+import { useCacheLastRecentlyInserted } from './cache';
 
 const DEFAULT_MAKE_KEY = (param: unknown) => JSON.stringify(param);
 
@@ -9,7 +9,7 @@ export function useAsyncMemo<Param, Result>(
   generate: (param: Param) => Promise<Result>,
   options?: Partial<{
     makeKey?: (param: Param) => string;
-  }>
+  }>,
 ): Result | null | undefined {
   const [value, setValue] = React.useState<Result | null | undefined>(undefined);
   const cache = useCacheLastRecentlyInserted<Result | null | undefined>();

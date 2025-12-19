@@ -8,11 +8,11 @@ import EModelTable from '@/components/PublicProjects/tables/e-model-table';
 import LinkAndDownloadList from '@/ui/segments/reports/obi-showcases/artifacts/link-and-download-list';
 import MEModelTable from '@/ui/segments/reports/obi-showcases/artifacts/tables/me-model-table';
 import SynaptomeTable from '@/ui/segments/reports/obi-showcases/artifacts/tables/synpatome-table';
-import { SanityShowcaseType } from '@/ui/segments/reports/obi-showcases/types';
+import type { SanityShowcaseType } from '@/ui/segments/reports/obi-showcases/types';
 
 const getActiveArtifactsCount = (
   activeArtifactType: string | null,
-  content: SanityShowcaseType
+  content: SanityShowcaseType,
 ): number => {
   if (!activeArtifactType || !content) {
     return 0;
@@ -34,7 +34,7 @@ const getActiveArtifactsCount = (
 
 export default function ArtifactsSection({ content }: { content: SanityShowcaseType }) {
   const [activeArtifactType, setActiveArtifactType] = useState<string | null>(
-    content?.artifactType?.[0] ?? null
+    content?.artifactType?.[0] ?? null,
   );
 
   let activeTable;

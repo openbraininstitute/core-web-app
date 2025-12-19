@@ -1,11 +1,10 @@
-import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
-import { compactRecord } from '@/utils/dictionary';
-
 import type { ICircuit, ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
-import type { HierarchyTreeResponse } from '@/api/entitycore/types/shared/hierarchy';
 import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
+import type { HierarchyTreeResponse } from '@/api/entitycore/types/shared/hierarchy';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import type { WorkspaceContext } from '@/types/common';
+import { compactRecord } from '@/utils/dictionary';
 
 const baseUri = '/circuit';
 

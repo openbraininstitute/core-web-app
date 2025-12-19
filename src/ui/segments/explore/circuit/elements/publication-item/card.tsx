@@ -1,11 +1,10 @@
-import { Metadata } from '@/ui/segments/explore/circuit/elements/publication-item/metadata';
-import { Abstract } from '@/ui/segments/explore/circuit/elements/publication-item/abstract';
-import { Header } from '@/ui/segments/explore/circuit/elements/publication-item/header';
-import { Authors } from '@/ui/segments/explore/circuit/elements/publication-item/authors';
-import { Actions } from '@/ui/segments/explore/circuit/elements/publication-item/actions';
-
 import type { IPublication } from '@/api/entitycore/types/entities/publication';
 import type { ScientificArtifactBase } from '@/api/entitycore/types/entities/scientific-artifact';
+import { Abstract } from '@/ui/segments/explore/circuit/elements/publication-item/abstract';
+import { Actions } from '@/ui/segments/explore/circuit/elements/publication-item/actions';
+import { Authors } from '@/ui/segments/explore/circuit/elements/publication-item/authors';
+import { Header } from '@/ui/segments/explore/circuit/elements/publication-item/header';
+import { Metadata } from '@/ui/segments/explore/circuit/elements/publication-item/metadata';
 
 interface Props {
   publication: IPublication;

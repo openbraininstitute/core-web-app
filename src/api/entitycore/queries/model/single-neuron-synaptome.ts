@@ -1,20 +1,19 @@
 /* eslint-disable no-param-reassign */
-import startsWith from 'es-toolkit/compat/startsWith';
+
 import some from 'es-toolkit/compat/some';
-
-import { entityCoreApi, getEntityCoreContext, getAssetElement } from '@/api/entitycore/utils';
-import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import startsWith from 'es-toolkit/compat/startsWith';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { tryCatch } from '@/api/utils';
-
 import type {
   ISingleNeuronSynaptome,
   ISingleNeuronSynaptomeFilter,
   TCreateSingleNeuronSynaptome,
   TSingleNeuronSynaptomeConfiguration,
 } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import { entityCoreApi, getAssetElement, getEntityCoreContext } from '@/api/entitycore/utils';
+import { tryCatch } from '@/api/utils';
 import type { WorkspaceContext } from '@/types/common';
 import { getColorFromGeneratedPalette } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector/colors';
 
@@ -103,9 +102,9 @@ export async function createSingleNeuronSynaptome({
 
 export async function getSingleNeuronSynaptomeConfiguration(
   source: ISingleNeuronSynaptome,
-  context?: WorkspaceContext
+  context?: WorkspaceContext,
 ): Promise<{
-  synapses: Array<TSingleNeuronSynaptomeConfiguration>;
+  synapses: TSingleNeuronSynaptomeConfiguration[];
 } | null> {
   const configAsset = getAssetElement({
     assets: source.assets,
@@ -113,7 +112,7 @@ export async function getSingleNeuronSynaptomeConfiguration(
       return (
         i.label === AssetLabel.single_neuron_synaptome_config ||
         some(['single_neuron_synaptome_config', 'synaptome_config'], (prefix) =>
-          startsWith(i.path, prefix)
+          startsWith(i.path, prefix),
         )
       );
     },
@@ -127,7 +126,7 @@ export async function getSingleNeuronSynaptomeConfiguration(
         entityType: EntityTypeDict.SingleNeuronSynaptome,
         id: configAsset.id,
         asRawResponse: true,
-      })
+      }),
     );
     const data = await asset?.json();
 
@@ -135,14 +134,14 @@ export async function getSingleNeuronSynaptomeConfiguration(
       return null;
     }
     const result = data as {
-      synapses: Array<TSingleNeuronSynaptomeConfiguration>;
+      synapses: TSingleNeuronSynaptomeConfiguration[];
     };
     return assignColors(result);
   }
   return null;
 }
 
-function assignColors(result: { synapses: Array<TSingleNeuronSynaptomeConfiguration> }) {
+function assignColors(result: { synapses: TSingleNeuronSynaptomeConfiguration[] }) {
   for (let i = 0; i < result.synapses.length; i++) {
     result.synapses[i].color = getColorFromGeneratedPalette(i);
   }

@@ -1,15 +1,13 @@
-import { serviceAiAgentThreadCreate, serviceAiAgentThreadExists } from '../../api';
-import { Signal } from '../signal';
-import { AssistantContext } from '../types';
 import { sharedSessionStorage } from '@/util/shared-session-storage';
+import { serviceAiAgentThreadCreate, serviceAiAgentThreadExists } from '../../api';
+import type { Signal } from '../signal';
+import type { AssistantContext } from '../types';
 
 export class ThreadManager {
-  private context: AssistantContext | null = null;
-
   constructor(
-    private readonly target: {
+    readonly _target: {
       threadId: Signal<string | undefined>;
-    }
+    },
   ) {}
 
   /**
@@ -49,7 +47,10 @@ export class ThreadManager {
     if (!sessionThreadId) return null;
 
     // Check thread existence.
-    const exists = await serviceAiAgentThreadExists({ accessToken, threadId: sessionThreadId });
+    const exists = await serviceAiAgentThreadExists({
+      accessToken,
+      threadId: sessionThreadId,
+    });
     return exists ? sessionThreadId : null;
   }
 }

@@ -1,11 +1,10 @@
 'use client';
 
-import { useMemo, useCallback, useEffect, useRef } from 'react';
+import type { FieldProps, RJSFSchema } from '@rjsf/utils';
 import { get } from 'es-toolkit/compat';
 import katex from 'katex';
 import renderMathInElement from 'katex/contrib/auto-render';
-
-import type { FieldProps, RJSFSchema } from '@rjsf/utils';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { renderMathInText } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers/render-mathematic-symbol';
 import { cn } from '@/utils/css-class';
@@ -33,7 +32,7 @@ function renderLatex(latex: string): string {
       throwOnError: false,
       displayMode: false,
     });
-  } catch (error) {
+  } catch (_error) {
     return latex;
   }
 }
@@ -77,7 +76,7 @@ function EquationCard({ option, onSelect, disabled, readonly, selected }: Equati
           'hover:border-primary-8 hover:shadow-md',
           'focus:ring-0 focus:outline-none',
           'disabled:cursor-not-allowed disabled:opacity-50',
-          { 'border-primary-9 shadow-bnb bg-white': selected }
+          { 'border-primary-9 shadow-bnb bg-white': selected },
         )}
       >
         <div className="group-hover:text-primary-600 text-primary-9 text-base font-semibold">
@@ -109,7 +108,7 @@ export function EquationSelectorField(props: FieldProps) {
   const entry = schema.anyOf ?? schema.oneOf;
 
   const options = useMemo(() => {
-    let opts: Array<EquationOption> = [];
+    let opts: EquationOption[] = [];
     if (schema.anyOf) {
       opts = (entry
         ?.filter((p) => get(p, 'type') !== 'null')
@@ -132,21 +131,21 @@ export function EquationSelectorField(props: FieldProps) {
               schema,
             },
           ];
-        }) ?? []) as Array<EquationOption>;
+        }) ?? []) as EquationOption[];
     } else {
       opts = (schema.oneOf?.map((i) => ({
         value: get(i, 'properties.type.const', ''),
         label: get(i, 'title'),
         latexEquation: get(i, 'latex_equation'),
         schema,
-      })) ?? []) as Array<EquationOption>;
+      })) ?? []) as EquationOption[];
     }
     return opts;
   }, [entry, schema]);
 
   const selectedOption = useMemo(
     () => options.find((option: EquationOption) => option.value === formData?.type),
-    [options, formData]
+    [options, formData],
   );
 
   const handleOptionSelect = (option: EquationOption) => {

@@ -1,20 +1,20 @@
 'use client';
 
-import { useMemo, useEffect, type JSX, useState } from 'react';
-import { motion } from 'motion/react';
 import {
-  MinusOutlined,
-  FullscreenOutlined,
   FullscreenExitOutlined,
+  FullscreenOutlined,
+  MinusOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
+import { motion } from 'motion/react';
+import { type JSX, useEffect, useMemo, useState } from 'react';
 
 import AiAssistant from '@/components/ai-assistant';
+import styles from '@/ui/segments/ai/container.module.css';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
-import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import { cn } from '@/utils/css-class';
-import styles from '@/ui/segments/ai/container.module.css';
+import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 export function Container(): JSX.Element {
   const { state, setState, isCollapsed, isExpanded, isFullscreen } = usePanelState();
@@ -57,8 +57,10 @@ export function Container(): JSX.Element {
         'text-white [grid-area:ai]',
         { 'text-primary-9 mr-3 rounded-lg! bg-white': isExpanded },
         { 'text-primary-9 my-2 bg-white shadow-lg': isFullscreen },
-        { 'bg-primary-9 border-primary-9 mr-3 text-white shadow-md': isCollapsed },
-        { 'rounded-full!': isCollapsed && animationComplete }
+        {
+          'bg-primary-9 border-primary-9 mr-3 text-white shadow-md': isCollapsed,
+        },
+        { 'rounded-full!': isCollapsed && animationComplete },
       )}
       animate={{
         width: targetWidth,
@@ -106,7 +108,7 @@ export function Container(): JSX.Element {
                 type="button"
                 onClick={() =>
                   beginTransition(
-                    state === PanelState.Fullscreen ? PanelState.Expanded : PanelState.Fullscreen
+                    state === PanelState.Fullscreen ? PanelState.Expanded : PanelState.Fullscreen,
                   )
                 }
                 className="inline-flex h-7 w-7 items-center justify-center rounded hover:bg-white/10"

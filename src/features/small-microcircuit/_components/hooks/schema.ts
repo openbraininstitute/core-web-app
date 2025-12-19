@@ -1,17 +1,17 @@
 import $RefParser from '@apidevtools/json-schema-ref-parser';
-import { NotificationInstance } from 'antd/es/notification/interface';
+import type { NotificationInstance } from 'antd/es/notification/interface';
 import { atom } from 'jotai';
 import React, { useState } from 'react';
 import { match } from 'ts-pattern';
 
-import { EntityTypeDict, IMEModel } from '@/api/entitycore/types';
-import { CircuitScaleDictionary, ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
+import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 import { config } from '@/config';
 
-import { Config, ConfigValue } from '@/features/small-microcircuit/_components/components';
+import type { Config, ConfigValue } from '@/features/small-microcircuit/_components/components';
 import { isAtom, isPlainObject, ORDERING } from '@/features/small-microcircuit/_components/utils';
-import { AtomsMap, JSONSchema } from '@/features/small-microcircuit/types';
+import type { AtomsMap, JSONSchema } from '@/features/small-microcircuit/types';
 
 import { assertErrorMessage } from '@/util/utils';
 
@@ -19,7 +19,7 @@ export function useObioneJsonSchema(
   model: ICircuit | IMEModel,
   notification: NotificationInstance,
   setAtomsMap: (atomsMap: AtomsMap) => void,
-  initialConfig?: Config
+  initialConfig?: Config,
 ) {
   const [schema, setSchema] = useState<JSONSchema | null>(null);
 
@@ -33,15 +33,18 @@ export function useObioneJsonSchema(
         const schemaName = match(model)
           .with({ type: EntityTypeDict.Memodel }, () => 'MEModelSimulationScanConfig')
           .with(
-            { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single },
-            () => 'MEModelWithSynapsesCircuitSimulationScanConfig'
+            {
+              type: EntityTypeDict.Circuit,
+              scale: CircuitScaleDictionary.Single,
+            },
+            () => 'MEModelWithSynapsesCircuitSimulationScanConfig',
           )
           .with({ type: EntityTypeDict.Circuit }, () => 'CircuitSimulationScanConfig')
           .otherwise(() => {
             throw new Error(`Unsupported entity type: ${model.type}`);
           });
 
-        // @ts-ignore
+        // @ts-expect-error
         const theSchema = dereferenced.components.schemas[schemaName] as JSONSchema;
         if (!theSchema.properties) return;
 
@@ -89,8 +92,11 @@ export function useObioneJsonSchema(
               const formModelType = match(model)
                 .with({ type: EntityTypeDict.Memodel }, () => 'MEModelFromID')
                 .with(
-                  { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single },
-                  () => 'MEModelWithSynapsesCircuitFromID'
+                  {
+                    type: EntityTypeDict.Circuit,
+                    scale: CircuitScaleDictionary.Single,
+                  },
+                  () => 'MEModelWithSynapsesCircuitFromID',
                 )
                 .with({ type: EntityTypeDict.Circuit }, () => 'CircuitFromID')
 
@@ -112,14 +118,12 @@ export function useObioneJsonSchema(
 
         setAtomsMap(map);
       } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error(assertErrorMessage(e));
         notification.error({ message: assertErrorMessage(e) });
       }
     }
 
     fetchSpec();
-  }, [model, notification, setAtomsMap, setSchema, initialConfig]);
+  }, [model, notification, setAtomsMap, initialConfig]);
 
   const referenceTypesToConfigKeys: Record<string, string> = {};
   const referenceTypesToTitles: Record<string, string> = {};
@@ -149,7 +153,7 @@ export function isNonEmptyCategory(category: string, schema: JSONSchema) {
   return (
     schema?.properties &&
     Object.entries(schema.properties).filter(
-      ([k]) => k !== 'type' && ORDERING[k]?.category === category
+      ([k]) => k !== 'type' && ORDERING[k]?.category === category,
     ).length > 0
   );
 }

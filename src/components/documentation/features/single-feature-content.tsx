@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 
 import SingleFeatureCard from '@/components/documentation/features/single-feature-card';
 import {
-  ContentForFeatureItem,
+  type ContentForFeatureItem,
   useSanityContentForFeatureItems,
 } from '@/components/documentation/hooks/use-sanity-content-for-features';
 import Slugify from '@/util/slugify';
@@ -43,11 +43,11 @@ export default function SingleFeatureContent() {
 
   const featureContent: ContentForFeatureItem[] = (() => {
     const filteredBySlug = content.filter(
-      (item: ContentForFeatureItem) => Slugify(item.Scale) === slug
+      (item: ContentForFeatureItem) => Slugify(item.Scale) === slug,
     );
 
     const filteredByStatus = filteredBySlug.filter(
-      (item: ContentForFeatureItem) => item.Status === 'Available'
+      (item: ContentForFeatureItem) => item.Status === 'Available',
     );
 
     return filteredByStatus.length > 0 ? filteredByStatus : [];

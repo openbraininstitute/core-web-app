@@ -17,14 +17,13 @@ import { CoinsIcon } from '@/components/icons/buttons';
 import { useAppNotification } from '@/components/notification';
 import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
 import { assignProjectBudget, reverseProjectBudget } from '@/services/virtual-lab/projects';
+import type { ProjectBalance } from '@/types/accounting';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge } from '@/ui/molecules/badge';
 import { Button, Button as UiButton } from '@/ui/molecules/button';
 import { Input } from '@/ui/molecules/input';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
-
-import type { ProjectBalance } from '@/types/accounting';
 
 type Props = {
   virtualLabId: string;
@@ -133,9 +132,14 @@ export function ManageCreditsStep({
         direction: isLabToProject ? 'vlab->proj' : 'proj->vlab',
       }),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: keyBuilder.accounting({ virtualLabId }) });
       await queryClient.invalidateQueries({
-        queryKey: keyBuilder.wallet({ virtualLabId, projectId: selectedProjectId! }),
+        queryKey: keyBuilder.accounting({ virtualLabId }),
+      });
+      await queryClient.invalidateQueries({
+        queryKey: keyBuilder.wallet({
+          virtualLabId,
+          projectId: selectedProjectId!,
+        }),
       });
       notify.success({
         message: <span className="text-primary-9 text-lg font-bold">Credits transfer</span>,
@@ -192,7 +196,7 @@ export function ManageCreditsStep({
 
   const balanceMap: Map<string, number> = useMemo(() => {
     const map = new Map<string, number>();
-    const balances = (accountingRes?.data?.data?.projects ?? []) as Array<ProjectBalance>;
+    const balances = (accountingRes?.data?.data?.projects ?? []) as ProjectBalance[];
     for (const item of balances) {
       const numericBalance = typeof item.balance === 'string' ? Number(item.balance) : item.balance;
       map.set(item.proj_id, Number.isFinite(numericBalance) ? numericBalance : 0);
@@ -229,7 +233,7 @@ export function ManageCreditsStep({
   useEffect(() => {
     if (!selectedProjectId && projects.length > 0) {
       setSelectedProjectId(
-        projects.find((p) => p.value === projectId)?.value ?? projects[0]?.value
+        projects.find((p) => p.value === projectId)?.value ?? projects[0]?.value,
       );
     }
   }, [projects, projectId, selectedProjectId]);
@@ -267,7 +271,7 @@ export function ManageCreditsStep({
                 aria-label="Swap transfer direction"
                 className={cn(
                   'bg-primary-8 hover:bg-primary-7 flex h-8 w-8 items-center justify-center rounded-md border border-white/20 text-white transition-all hover:scale-105 disabled:opacity-50',
-                  swapClassname
+                  swapClassname,
                 )}
                 onClick={onSwap}
                 disabled={isPending}
@@ -318,14 +322,14 @@ export function ManageCreditsStep({
                       'w-full bg-transparent [&_.ant-select-arrow]:!text-white [&_.ant-select-selection-item]:!text-xl',
                       '[&_.ant-select-selection-item]:!font-semibold [&_.ant-select-selection-item]:text-white!',
                       '[&_.ant-select-selector]:!border-0 [&_.ant-select-selector]:!bg-transparent [&_.ant-select-selector]:!shadow-none',
-                      '[&_.ant-select-selection-search]:text-white'
+                      '[&_.ant-select-selection-search]:text-white',
                     )}
                     options={projects}
                     popupClassName={cn(
                       '!bg-primary-8 !text-white',
                       '[&_.ant-select-item-option-content]:text-white!',
                       '[&_.ant-select-item-option-selected:not(.ant-select-item-option-disabled)]:bg-primary-7/50! [&_.ant-select-item-option-selected]:!text-white!',
-                      '[&_.ant-empty-description]:text-white!'
+                      '[&_.ant-empty-description]:text-white!',
                     )}
                     optionFilterProp="label"
                     disabled={isPending}
@@ -369,14 +373,14 @@ export function ManageCreditsStep({
                       'w-full bg-transparent [&_.ant-select-arrow]:!text-white [&_.ant-select-selection-item]:!text-xl',
                       '[&_.ant-select-selection-item]:!font-semibold [&_.ant-select-selection-item]:text-white!',
                       '[&_.ant-select-selector]:!border-0 [&_.ant-select-selector]:!bg-transparent [&_.ant-select-selector]:!shadow-none',
-                      '[&_.ant-select-selection-search]:text-white'
+                      '[&_.ant-select-selection-search]:text-white',
                     )}
                     options={projects}
                     popupClassName={cn(
                       '!bg-[#0a3a76] !text-white',
                       '[&_.ant-select-item-option-content]:text-white!',
                       '[&_.ant-select-item-option-selected:not(.ant-select-item-option-disabled)]:bg-primary-7/50! [&_.ant-select-item-option-selected]:!text-white!',
-                      '[&_.ant-empty-description]:text-white!'
+                      '[&_.ant-empty-description]:text-white!',
                     )}
                     optionFilterProp="label"
                     disabled={isPending}
@@ -406,7 +410,7 @@ export function ManageCreditsStep({
               placeholder="0"
               className={cn(
                 'text-primary-9 placeholder:text-neutral-3 h-16 rounded-xl border-white/20 bg-white pr-28 text-xl! font-bold',
-                '[appearance:textfield] border px-4 py-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
+                '[appearance:textfield] border px-4 py-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
               )}
               disabled={isPending}
             />
@@ -420,7 +424,7 @@ export function ManageCreditsStep({
       <div
         className={cn(
           'mx-auto mt-auto flex w-full max-w-3xl justify-end gap-4 self-end px-3',
-          buttonClassname
+          buttonClassname,
         )}
       >
         <Button
@@ -444,7 +448,7 @@ export function ManageCreditsStep({
             'hover:shadow-[1px_2px_4px_0px_#00000099]',
             'shadow-[8px_12px_24px_0px_#00000099]',
             'shadow-[-8px_-8px_42px_0px_#FFFFFF29]',
-            'disabled:opacity-50'
+            'disabled:opacity-50',
           )}
           disabled={isPending || !amount}
           onClick={() => transferCreditsAsync()}

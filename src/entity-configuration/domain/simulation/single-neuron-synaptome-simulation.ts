@@ -1,23 +1,22 @@
+import { getMEModel } from '@/api/entitycore/queries/model/me-model';
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import {
-  getSingleNeuronSynaptomeSimulationIOResult,
   createSingleNeuronSynaptomeSimulation,
   getSingleNeuronSynaptomeSimulation,
+  getSingleNeuronSynaptomeSimulationIOResult,
   getSingleNeuronSynaptomeSimulations,
 } from '@/api/entitycore/queries/simulation/single-neuron-synaptome-simulation';
-import { EntityTypeGroup } from '@/entity-configuration/domain/group';
-import { getMEModel } from '@/api/entitycore/queries/model/me-model';
-import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { EntitySlug } from '@/entity-configuration/domain/slug';
-
-import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type {
   ISingleNeuronSynaptome,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
+import { EntityTypeGroup } from '@/entity-configuration/domain/group';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
+import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { WorkspaceContext } from '@/types/common';
 
 export const singleNeuronSynaptomeSimulationApiQueryExpand = {
@@ -26,7 +25,7 @@ export const singleNeuronSynaptomeSimulationApiQueryExpand = {
   memodel: (
     _: ISingleNeuronSynaptomeSimulation,
     context: WorkspaceContext | undefined,
-    synaptome: ISingleNeuronSynaptome
+    synaptome: ISingleNeuronSynaptome,
   ) => getMEModel({ id: synaptome.me_model.id, context }),
   config: (source: ISingleNeuronSynaptomeSimulation, context: WorkspaceContext | undefined) =>
     getSingleNeuronSynaptomeSimulationIOResult(source, context),
@@ -34,14 +33,14 @@ export const singleNeuronSynaptomeSimulationApiQueryExpand = {
 
 export async function resolveSingleNeuronSynaptomeSimulation(
   id: string,
-  context: WorkspaceContext | undefined
+  context: WorkspaceContext | undefined,
 ) {
   const source = await getSingleNeuronSynaptomeSimulation({ id, context });
   const synaptome = await singleNeuronSynaptomeSimulationApiQueryExpand.synaptome(source, context);
   const memodel = await singleNeuronSynaptomeSimulationApiQueryExpand.memodel(
     source,
     context,
-    synaptome
+    synaptome,
   );
 
   return { source, synaptome, memodel };

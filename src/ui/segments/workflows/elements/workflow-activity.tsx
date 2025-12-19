@@ -1,38 +1,39 @@
 'use client';
 
-import { Card, ConfigProvider, Empty, Pagination as AntPagination } from 'antd';
-import { parseAsString, SingleParserBuilder, useQueryStates } from 'nuqs';
-import { kebabCase, find, get } from 'es-toolkit/compat';
 import { useRouter } from '@bprogress/next';
-import { useState } from 'react';
-import Link from 'next/link';
-
+import { Pagination as AntPagination, Card, ConfigProvider, Empty } from 'antd';
 import type { ColumnsType } from 'antd/es/table/interface';
-
+import { find, get, kebabCase } from 'es-toolkit/compat';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { EntityCoreObjectTypes, EntityTypeDict, TEntityTypeDict } from '@/api/entitycore/types';
+import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
+import { useState } from 'react';
+import {
+  type EntityCoreObjectTypes,
+  EntityTypeDict,
+  type TEntityTypeDict,
+} from '@/api/entitycore/types';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { config } from '@/config';
+import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
+import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import type { ExtendedCampaignsType } from '@/entity-configuration/domain/simulation';
+import { usePrevious } from '@/hooks/hooks';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Button } from '@/ui/molecules/button';
+import { CardContent } from '@/ui/molecules/card';
+import { useRowSelection } from '@/ui/segments/data-table/elements/use-row-selection';
+import { BaseTable } from '@/ui/segments/data-table/table';
+import { StatusMap } from '@/ui/segments/project/activities/elements/helpers';
 import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
 import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/browse-header';
-import { ActivityDict, ActivityValues } from '@/ui/segments/workflows/elements/helpers';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { useRowSelection } from '@/ui/segments/data-table/elements/use-row-selection';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { StatusMap } from '@/ui/segments/project/activities/elements/helpers';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { BaseTable } from '@/ui/segments/data-table/table';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
-import { CardContent } from '@/ui/molecules/card';
-import { renderDateAndHour } from '@/util/date';
-import { Button } from '@/ui/molecules/button';
-import { usePrevious } from '@/hooks/hooks';
-import { cn } from '@/utils/css-class';
-import { config } from '@/config';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { ExtendedCampaignsType } from '@/entity-configuration/domain/simulation';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
-import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
+import { ActivityDict, ActivityValues } from '@/ui/segments/workflows/elements/helpers';
+import { renderDateAndHour } from '@/util/date';
+import { cn } from '@/utils/css-class';
 
 const AllowedDuplicateEntityTypes: TEntityTypeDict[] = [EntityTypeDict.SimulationCampaign];
 export interface WorkflowActivityRef {
@@ -69,7 +70,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
           shallow: true,
         })
         .withDefault(
-          ExtendedEntitiesTypeDict.Memodel
+          ExtendedEntitiesTypeDict.Memodel,
         ) as SingleParserBuilder<TExtendedEntitiesTypeDict>,
     },
     {
@@ -77,7 +78,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
         activityType: 'tactivity',
         entityType: 'ttype',
       },
-    }
+    },
   );
   const [{ page, pageSize }, updatePagination] = useState<{
     page: number;
@@ -110,7 +111,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
       onHeaderCell: () => ({
         id: 'activity-table-name-cell-selector',
       }),
-      render: (text, record) => <span className="text-primary-9">{record.name}</span>,
+      render: (_text, record) => <span className="text-primary-9">{record.name}</span>,
     },
     {
       title: 'Category',
@@ -221,7 +222,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
       navigate(
         `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/memodel/${
           (selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
-        }?dataType=${ExtendedEntitiesTypeDict.MemodelCircuit}&initialCampaignId=${selectedRow?.id}`
+        }?dataType=${ExtendedEntitiesTypeDict.MemodelCircuit}&initialCampaignId=${selectedRow?.id}`,
       );
 
       return;
@@ -231,7 +232,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
       navigate(
         `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${
           (selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
-        }?initialCampaignId=${selectedRow.id}`
+        }?initialCampaignId=${selectedRow.id}`,
       );
     }
   };
@@ -248,7 +249,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
         id="workflow-activity-type-selectors"
         className={cn(
           'mb-5 grid w-full grid-cols-[2fr_2fr] items-center justify-center gap-5 pt-2',
-          '[grid-template-areas:"selectors_filters"]'
+          '[grid-template-areas:"selectors_filters"]',
         )}
       >
         <div
@@ -293,7 +294,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                   '[&_.ant-table-thead_th]:text-neutral-4!',
                   '[&_.ant-table-placeholder]:bg-background!',
                   '[&_.ant-table-sticky-holder]:shadow-none',
-                  '[&_.ant-table-body]:secondary-scrollbar!'
+                  '[&_.ant-table-body]:secondary-scrollbar!',
                 )}
                 loading={isFetching}
                 dataSource={activityResult?.data}
@@ -301,7 +302,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                 rowKey={(o) => o.id}
                 rowClassName={cn(
                   '[&.ant-table-row-selected]:translate-x-2 [&.ant-table-row-selected]:ease-out ',
-                  '[&.ant-table-row-selected]:transition-transform [&.ant-table-row-selected]:duration-200'
+                  '[&.ant-table-row-selected]:transition-transform [&.ant-table-row-selected]:duration-200',
                 )}
                 rowSelection={{
                   ...rowSelection,
@@ -309,7 +310,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                     _checked: boolean,
                     record: any,
                     _index: number,
-                    _: React.ReactNode
+                    _: React.ReactNode,
                   ) => {
                     return (
                       <div className="flex items-center justify-center">
@@ -319,7 +320,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                             'h-5 w-5 cursor-pointer appearance-none rounded-full border border-gray-400',
                             'shadow-[4px_4px_14px_0px_#0000001F,-4px_-4px_10px_0px_#FFFFFFD1]',
                             'checked:border-primary-9 checked:bg-primary-9',
-                            'transition-colors duration-200'
+                            'transition-colors duration-200',
                           )}
                           checked={_checked}
                           onChange={() => onRowSelect([], [record])}
@@ -336,7 +337,11 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                         <span className="text-primary-9">
                           You don’t have any activities yet
                           <strong>
-                            {getEntityByExtendedType({ type: entityType ?? undefined })?.title}
+                            {
+                              getEntityByExtendedType({
+                                type: entityType ?? undefined,
+                              })?.title
+                            }
                           </strong>
                           .
                         </span>
@@ -365,7 +370,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                     aria-label="pagination for listing results"
                     className={cn(
                       '[&_.ant-pagination-item-active]:bg-primary-9 [&_.ant-pagination-item-active_a]:text-white!',
-                      '[&_.ant-pagination-disabled_button]:text-neutral-2 [&_button.ant-pagination-item-link]:text-primary-9'
+                      '[&_.ant-pagination-disabled_button]:text-neutral-2 [&_button.ant-pagination-item-link]:text-primary-9',
                     )}
                   />
                 </div>
@@ -378,7 +383,12 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                       size={breakpoint === 'l' ? 'md' : 'lg'}
                       className="select-none"
                     >
-                      <Link href={{ pathname: configurationLink, query: query.toString() }}>
+                      <Link
+                        href={{
+                          pathname: configurationLink,
+                          query: query.toString(),
+                        }}
+                      >
                         View configuration
                       </Link>
                     </Button>

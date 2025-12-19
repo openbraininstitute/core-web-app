@@ -2,15 +2,14 @@
 
 'use client';
 
-import { HTMLProps, useState } from 'react';
-import { Form, Button, ConfigProvider, Checkbox, Result, Alert } from 'antd';
-import { z } from 'zod';
-import Link from 'next/link';
+import { Alert, Button, Checkbox, ConfigProvider, Form, Result } from 'antd';
 import delay from 'es-toolkit/compat/delay';
-
-import { classNames } from '@/util/utils';
-import { Input } from '@/components/inputs/input-outline';
+import Link from 'next/link';
+import { type HTMLProps, useState } from 'react';
+import { z } from 'zod';
 import subscribeNewsletterHandler from '@/api/mailchimp/subscribe-newsletter';
+import { Input } from '@/components/inputs/input-outline';
+import { classNames } from '@/util/utils';
 
 type TNewsletterForm = {
   email: string;
@@ -57,7 +56,7 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
         });
         setStatus('success');
       }
-    } catch (error) {
+    } catch (_error) {
       setStatus('error');
       delay(() => setStatus(null), 6000);
     } finally {
@@ -70,7 +69,7 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
     <div
       className={classNames(
         'animate-fade-in flex w-full max-w-3xl flex-col bg-white p-8',
-        cls?.container
+        cls?.container,
       )}
     >
       <ConfigProvider theme={{ hashed: false }}>
@@ -118,7 +117,13 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
                   Email
                 </span>
               }
-              rules={[{ required: true, message: 'Please enter your email', type: 'email' }]}
+              rules={[
+                {
+                  required: true,
+                  message: 'Please enter your email',
+                  type: 'email',
+                },
+              ]}
             >
               <Input
                 placeholder="Enter your email address"
@@ -133,7 +138,7 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
               <Checkbox
                 className={classNames(
                   'mr-3 [&_.ant-checkbox-inner]:rounded-none',
-                  '[&_.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-8 [&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-8'
+                  '[&_.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-8 [&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-8',
                 )}
               >
                 <span className="text-primary-8 text-lg font-semibold">
@@ -152,7 +157,7 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
                   'text-primary-8 w-full rounded-full bg-white px-8 py-3 text-lg font-semibold md:w-auto',
                   'hover:bg-primary-8 mx-auto flex h-auto items-center justify-center transition-colors duration-200 hover:text-white!',
                   'disabled:text-primary-8 disabled:hover:text-primary-4! disabled:hover:bg-gray-100',
-                  cls?.btn
+                  cls?.btn,
                 )}
                 disabled={disableForm}
               >
@@ -167,7 +172,7 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
             className={classNames(
               '[&_.ant-result-title]:text-primary-8 font-serif [&_.ant-result-title]:font-bold',
               position === 'page' && '[&_.ant-result-title]:text-4xl',
-              position === 'footer' && '[&_.ant-result-title]:text-2xl'
+              position === 'footer' && '[&_.ant-result-title]:text-2xl',
             )}
           />
         )}

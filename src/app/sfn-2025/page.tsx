@@ -1,15 +1,12 @@
 'use client';
 
 import { useEffect } from 'react';
-
+import styles from '@/components/LandingPage/LandingPage.module.css';
 import FooterPanel from '@/components/LandingPage/layout/FooterPanel';
 import Menu from '@/components/LandingPage/layout/Menu';
 import ContentSFN from '@/ui/segments/sfn-2025/content';
 import HeroSFN from '@/ui/segments/sfn-2025/hero';
-
 import { useScrollHasStarted } from '@/utils/scroll-has-started';
-
-import styles from '@/components/LandingPage/LandingPage.module.css';
 
 export default function Page() {
   const scrollHasStarted = useScrollHasStarted();

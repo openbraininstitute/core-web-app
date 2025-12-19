@@ -1,6 +1,13 @@
 import { useAtom } from 'jotai';
-
-import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
+import {
+  AMPERAGE_CONFIGURATION_SESSION_KEY,
+  EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY,
+  FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY,
+  OVERVIEW_CONFIGURATION_SESSION_KEY,
+  RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
+  STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
+  SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
   AmperageStateAtomFamily,
   ExperimentalSetupConfigurationAtomFamily,
@@ -8,19 +15,11 @@ import {
   genericSingleNeuronSimulationPlotDataAtomFamily,
   OverviewConfigurationAtomFamily,
   RecordLocationConfigurationAtomFamily,
-  simulationStatusAtomFamily,
   StimulationConfigurationAtomFamily,
   SynaptomeConfigurationAtomFamily,
+  simulationStatusAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import {
-  STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
-  RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
-  EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY,
-  SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
-  FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY,
-  OVERVIEW_CONFIGURATION_SESSION_KEY,
-  AMPERAGE_CONFIGURATION_SESSION_KEY,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 
 export function makeSimulationAtoms(sessionId: string) {
   const spcKey = getSessionKey(STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
@@ -59,19 +58,19 @@ export function useSingleNeuronSimulationAtoms(sessionId: string) {
 
   const [overviewConfiguration, updateOverviewConfiguration] = useAtom(overviewConfigurationAtom);
   const [stimulationConfiguration, updateStimulationConfiguration] = useAtom(
-    stimulationConfigurationAtom
+    stimulationConfigurationAtom,
   );
   const [experimentalSetupConfiguration, updateExperimentalSetupConfiguration] = useAtom(
-    experimentalSetupConfigurationAtom
+    experimentalSetupConfigurationAtom,
   );
   const [recordLocationConfiguration, updateRecordLocationConfiguration] = useAtom(
-    recordLocationConfigurationAtom
+    recordLocationConfigurationAtom,
   );
   const [synaptomeConfiguration, updateSynaptomeConfiguration] = useAtom(
-    synaptomeConfigurationAtom
+    synaptomeConfigurationAtom,
   );
   const [frequencyConfiguration, updateFrequencyConfiguration] = useAtom(
-    frequencyConfigurationAtom
+    frequencyConfigurationAtom,
   );
   const [amperageConfiguration, updateAmperageConfiguration] = useAtom(amperageConfigurationAtom);
 

@@ -1,15 +1,14 @@
 // measurements.tsx
 
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { Form, InputNumber, Space } from 'antd';
-
-import type { TMeasurement } from '@/ui/segments/contribute/experimental-neuron-density/schema';
-import { ExperimentalNeuronDensitySchema } from '@/ui/segments/contribute/experimental-neuron-density/schema';
 import { MeasurementStatistic, MeasurementUnit } from '@/api/entitycore/types/shared/global';
-import { createZodFieldValidator, renderLabel } from '@/ui/segments/contribute/shared';
-import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
+import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
+import type { TMeasurement } from '@/ui/segments/contribute/experimental-neuron-density/schema';
+import { ExperimentalNeuronDensitySchema } from '@/ui/segments/contribute/experimental-neuron-density/schema';
+import { createZodFieldValidator, renderLabel } from '@/ui/segments/contribute/shared';
 import { cn } from '@/utils/css-class';
 
 export function Measurements() {
@@ -49,14 +48,14 @@ export function Measurements() {
                         label={renderLabel(
                           'Name',
                           'main',
-                          <sup className="text-destructive">*</sup>
+                          <sup className="text-destructive">*</sup>,
                         )}
                         rules={[
                           {
                             validator: createZodFieldValidator(
                               ExperimentalNeuronDensitySchema,
                               `measurements.${field.name}.name`,
-                              form
+                              form,
                             ),
                           },
                         ]}
@@ -70,14 +69,14 @@ export function Measurements() {
                         label={renderLabel(
                           'Unit',
                           'main',
-                          <sup className="text-destructive">*</sup>
+                          <sup className="text-destructive">*</sup>,
                         )}
                         rules={[
                           {
                             validator: createZodFieldValidator(
                               ExperimentalNeuronDensitySchema,
                               `measurements.${field.name}.unit`,
-                              form
+                              form,
                             ),
                           },
                         ]}
@@ -91,14 +90,14 @@ export function Measurements() {
                         label={renderLabel(
                           'Value',
                           'main',
-                          <sup className="text-destructive">*</sup>
+                          <sup className="text-destructive">*</sup>,
                         )}
                         rules={[
                           {
                             validator: createZodFieldValidator(
                               ExperimentalNeuronDensitySchema,
                               `measurements.${field.name}.value`,
-                              form
+                              form,
                             ),
                           },
                         ]}
@@ -138,14 +137,14 @@ export function Measurements() {
                 variant="outline"
                 size="lg"
                 onClick={() => {
-                  const current = form.getFieldValue('measurements') as Array<TMeasurement>;
+                  const current = form.getFieldValue('measurements') as TMeasurement[];
                   form.setFieldValue('measurements', [
                     ...(current ?? []),
                     { name: undefined, unit: undefined, value: undefined },
                   ]);
                 }}
                 disabled={(() => {
-                  const measurements = form.getFieldValue('measurements') as Array<TMeasurement>;
+                  const measurements = form.getFieldValue('measurements') as TMeasurement[];
                   return measurements?.some((measurement) => {
                     const filledFields = [
                       measurement.name,
@@ -161,7 +160,7 @@ export function Measurements() {
                   'hover:border-primary-7 hover:text-primary-7 w-max',
                   'disabled:text-label shrink-0',
                   'not-disabled:bg-primary-9 not-disabled:text-white!',
-                  'not-disabled:hover:bg-primary-8'
+                  'not-disabled:hover:bg-primary-8',
                 )}
               >
                 <span>Add measurement</span>

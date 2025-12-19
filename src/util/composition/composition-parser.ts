@@ -1,10 +1,5 @@
 import uniq from 'es-toolkit/compat/uniq';
-import {
-  OriginalComposition,
-  OriginalCompositionNode,
-  OriginalCompositionPair,
-} from '@/types/composition/original';
-import {
+import type {
   AnalysedComposition,
   CalculatedCompositionNode,
   CalculationLink,
@@ -12,6 +7,11 @@ import {
   CompositionLink,
   CountPair,
 } from '@/types/composition/calculation';
+import type {
+  OriginalComposition,
+  OriginalCompositionNode,
+  OriginalCompositionPair,
+} from '@/types/composition/original';
 import { calculateNewExtendedNodeId } from '@/util/composition/utils';
 
 /* eslint-disable no-param-reassign */
@@ -23,7 +23,7 @@ import { calculateNewExtendedNodeId } from '@/util/composition/utils';
  */
 export function convertCompositionToCountPair(
   composition: OriginalCompositionPair,
-  regionVolume: number
+  regionVolume: number,
 ): CountPair {
   const countPair = { neuron: 0, glia: 0 };
   if (composition.neuron) {
@@ -42,7 +42,7 @@ export function convertCompositionToCountPair(
  */
 export function convertCountPairToComposition(
   countPair: CountPair,
-  regionVolume: number
+  regionVolume: number,
 ): OriginalCompositionPair {
   return {
     neuron: { density: countPair.neuron / regionVolume },
@@ -97,7 +97,7 @@ export function iterateNode(
   links: { [key: string]: CalculationLink },
   leafId: string,
   extendedNodeId: string,
-  regionVolume: number
+  regionVolume: number,
 ): CountPair {
   if ('hasPart' in subTree) {
     let totalCountPair = initializeCountPair();
@@ -107,7 +107,7 @@ export function iterateNode(
       const childExtendedNodeId = calculateNewExtendedNodeId(
         extendedNodeId,
         childId,
-        childSubtree.about
+        childSubtree.about,
       );
       childSubtree.extendedNodeId = childExtendedNodeId;
       // calculate its composition and add it in the total
@@ -118,7 +118,7 @@ export function iterateNode(
         links,
         leafId,
         childExtendedNodeId,
-        regionVolume
+        regionVolume,
       );
       totalCountPair = addCountPairs(totalCountPair, childCountPair);
       const parentId = subTree.about !== 'BrainRegion' ? subTreeId : null;
@@ -144,7 +144,7 @@ export function iterateNode(
     subTree.composition = convertCountPairToComposition(totalCountPair, regionVolume);
     return totalCountPair;
   }
-  // @ts-ignore
+  // @ts-expect-error
   return convertCompositionToCountPair(subTree.composition, regionVolume);
 }
 
@@ -161,7 +161,7 @@ export default async function calculateCompositions(
   compositionFile: OriginalComposition,
   selectedRegionId: string,
   leafIDs: string[] | undefined,
-  volumes: { [key: string]: number }
+  volumes: { [key: string]: number },
 ): Promise<AnalysedComposition> {
   const nodes: { [key: string]: CalculationNode } = {};
   const links: { [key: string]: CalculationLink } = {};

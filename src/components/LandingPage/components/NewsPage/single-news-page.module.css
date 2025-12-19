@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Text:ital@0;1&family=Gabarito:wght@400..900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=DM+Serif+Text:ital@0;1&family=Gabarito:wght@400..900&display=swap");
 
 .pageContent {
   --color-background: #fff;
@@ -9,8 +9,8 @@
   --color-primary: var(--Colors-Blue-8, #003a8c);
   --color-primary-light: var(--Colors-Blue-8, #1897e6);
   --color-on-primary: var(--color-background);
-  --font-serif: 'DM Serif Text', serif;
-  --font-sans-serif: 'Gabarito', sans-serif;
+  --font-serif: "DM Serif Text", serif;
+  --font-sans-serif: "Gabarito", sans-serif;
   --font-size-M: 19px;
   --font-size-S: calc(0.8 * var(--font-size-M));
   --font-size-M-plus: calc(1.2 * var(--font-size-M));
@@ -32,7 +32,7 @@
   padding: 0;
   color: var(--color-primary);
   background-color: var(--color-background);
-  font-family: 'Gabarito', serif;
+  font-family: "Gabarito", serif;
   font-optical-sizing: auto;
   font-weight: normal;
   font-style: normal;
@@ -75,7 +75,7 @@
 }
 
 .content > h4::after {
-  content: '';
+  content: "";
   display: block;
   width: 40px;
   height: 2px;

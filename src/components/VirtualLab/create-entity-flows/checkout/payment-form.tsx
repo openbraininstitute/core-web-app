@@ -1,27 +1,24 @@
-import { PaymentElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js';
-import { FormEvent, useState, useEffect, useRef, useTransition } from 'react';
-import { Stripe, StripeElementsOptions } from '@stripe/stripe-js';
-import { useQueryClient } from '@tanstack/react-query';
 import { LoadingOutlined } from '@ant-design/icons';
-import { useAtomValue } from 'jotai';
+import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import type { Stripe, StripeElementsOptions } from '@stripe/stripe-js';
+import { useQueryClient } from '@tanstack/react-query';
 import { Spin } from 'antd';
-
 import isObject from 'es-toolkit/compat/isObject';
-
-import sessionAtom from '@/state/session';
-
-import PricingToggleCards from '@/components/VirtualLab/create-entity-flows/checkout/price-card';
-import { SetupIntentResponse, SubscriptionStatus } from '@/api/virtual-lab-svc/queries/types';
-import { flowAtom } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
-import { createSubscription } from '@/api/virtual-lab-svc/queries/subscription';
+import { useAtomValue } from 'jotai';
+import { type FormEvent, useEffect, useRef, useState, useTransition } from 'react';
+import { tryCatch } from '@/api/utils';
 import { getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
+import { createSubscription } from '@/api/virtual-lab-svc/queries/subscription';
+import { type SetupIntentResponse, SubscriptionStatus } from '@/api/virtual-lab-svc/queries/types';
 import { useAppNotification } from '@/components/notification';
 import { getStripe } from '@/components/VirtualLab/Billing/utils';
-import { keyBuilder } from '@/ui/use-query-keys/user';
+import PricingToggleCards from '@/components/VirtualLab/create-entity-flows/checkout/price-card';
+import { flowAtom } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
+import sessionAtom from '@/state/session';
 import { Button } from '@/ui/molecules/button';
-import { tryCatch } from '@/api/utils';
-import { cn } from '@/utils/css-class';
 import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager/event';
+import { keyBuilder } from '@/ui/use-query-keys/user';
+import { cn } from '@/utils/css-class';
 
 type Props = {
   onPrevious: () => void;
@@ -124,7 +121,9 @@ function Form({ onPrevious }: Props) {
     startTransition(async () => {
       const { data, error } = await tryCatch(paySubscription(), async () => {
         elements.getElement('payment')?.clear();
-        await queryClient.invalidateQueries({ queryKey: keyBuilder.subscription() });
+        await queryClient.invalidateQueries({
+          queryKey: keyBuilder.subscription(),
+        });
       });
 
       if (error) {
@@ -143,7 +142,11 @@ function Form({ onPrevious }: Props) {
               "We couldn't find your subscription details. Please try again or contact support if the issue persists.";
           }
         }
-        errorNotify({ message, placement: 'topRight', key: 'subscription-payment-error' });
+        errorNotify({
+          message,
+          placement: 'topRight',
+          key: 'subscription-payment-error',
+        });
       }
       if (data && data.subscription.status === SubscriptionStatus.ACTIVE) {
         successNotify({
@@ -152,7 +155,11 @@ function Form({ onPrevious }: Props) {
           placement: 'topRight',
           key: 'subscription-payment-success',
         });
-        makeTriggerWorkspaceConfigurationClickEvent<null>({ on: false, data: null, type: null });
+        makeTriggerWorkspaceConfigurationClickEvent<null>({
+          on: false,
+          data: null,
+          type: null,
+        });
       }
     });
   };
@@ -196,7 +203,7 @@ function Form({ onPrevious }: Props) {
               'hover:bg-primary-8/40',
               'hover:shadow-[1px_2px_4px_0px_#00000099]',
               'shadow-[8px_12px_24px_0px_#00000099]',
-              'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
+              'shadow-[-8px_-8px_42px_0px_#FFFFFF29]',
             )}
             disabled={disableForm}
           >
@@ -235,7 +242,7 @@ export default function PaymentForm({ onPrevious }: Props) {
           setStripeSetupObject(stripeSetup.data);
           setLoadingStripe(false);
         }
-      } catch (error) {
+      } catch (_error) {
         errorNotify({
           message:
             "We're having some trouble setting up your payment options at the moment. Please try again in a little while.",

@@ -1,7 +1,6 @@
-import React from 'react';
-
-import { classNames } from '@/util/utils';
+import type React from 'react';
 import { isString, isType } from '@/util/type-guards';
+import { classNames } from '@/util/utils';
 
 import styles from './error.module.css';
 

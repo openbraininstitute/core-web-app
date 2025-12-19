@@ -1,19 +1,17 @@
 import find from 'es-toolkit/compat/find';
 import kebabCase from 'es-toolkit/compat/kebabCase';
-
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
 import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
 import buildQueryString from '@/util/query-params-builder';
-
-import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 
 function buildAssetUrl(
   resource: EntityCoreResource,
   options?: {
     dpi?: number;
     target?: 'simulation' | 'stimulus';
-  }
+  },
 ) {
   let queryParams = '';
   const extension = getEntityByCoreType({ type: resource.type })?.asset.extension;
@@ -46,7 +44,7 @@ export async function getPreviewBlob(
   virtualLabId?: string,
   projectId?: string,
   target?: 'simulation' | 'stimulus',
-  accept: string = 'image/png'
+  accept: string = 'image/png',
 ) {
   const url = buildAssetUrl(resource, { dpi: 400, target });
   const session = await getSession();
@@ -65,7 +63,9 @@ export async function getPreviewBlob(
     headers,
   });
   if (!response.ok) {
-    throw new Error('Error generating thumbnail', { cause: await response.json() });
+    throw new Error('Error generating thumbnail', {
+      cause: await response.json(),
+    });
   }
   const blob = await response.blob();
   return blob;

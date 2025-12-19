@@ -1,6 +1,6 @@
+import dayjs from 'dayjs';
 import { isEmpty, isNil, pickBy, size } from 'es-toolkit/compat';
 import { z } from 'zod';
-import dayjs from 'dayjs';
 
 import { AgentType, type TAgentType } from '@/ui/segments/contribute/shared/types';
 
@@ -9,7 +9,7 @@ export const DEFAULT_LICENSE_NAME = 'CC BY 4.0';
 
 export const ContributionSchema = z.object({
   agent_type: z
-    .enum(Object.values(AgentType).map((type) => type.key) as [TAgentType, ...Array<TAgentType>], {
+    .enum(Object.values(AgentType).map((type) => type.key) as [TAgentType, ...TAgentType[]], {
       message: 'Contributor type is required',
     })
     .optional(),
@@ -33,7 +33,7 @@ export const ContributionArraySchema = z
 
     arr.forEach((contrib, idx) => {
       const filledFields = [contrib.agent_type, contrib.agent_id, contrib.role_id].filter(
-        (field) => !isNil(field) && (typeof field !== 'string' || field !== '')
+        (field) => !isNil(field) && (typeof field !== 'string' || field !== ''),
       );
 
       // if partially filled, mark required fields as invalid
@@ -113,11 +113,13 @@ export const LocationSchema = z
         message: 'All coordinates (x, y, z) are required if one is provided',
         path: difference,
       };
-    }
+    },
   );
 
 export const ExperimentDateSchema = z
-  .custom((data) => dayjs.isDayjs(data), { message: 'Experiment date should be a valid date' })
+  .custom((data) => dayjs.isDayjs(data), {
+    message: 'Experiment date should be a valid date',
+  })
   .refine(
     (data) => {
       const today = dayjs();
@@ -126,7 +128,7 @@ export const ExperimentDateSchema = z
       }
       return false;
     },
-    { message: 'Experiment date should be today or in the past' }
+    { message: 'Experiment date should be today or in the past' },
   )
   .nullish();
 
@@ -158,7 +160,7 @@ export const LicenseIdSchema = z
   .nonempty({ message: 'License is required' });
 
 export function createFileSchema(
-  fileTypes: Array<string>
+  fileTypes: string[],
 ): z.ZodObject<Record<string, z.ZodType<File>>> {
   const shape: Record<string, z.ZodType<File>> = {};
   fileTypes.forEach((type) => {

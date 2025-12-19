@@ -1,6 +1,6 @@
-import { fetchJSON, asyncCreateSquash } from './util';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { isType } from '@/util/type-guards';
+import { asyncCreateSquash, fetchJSON } from './util';
 
 export const serviceAiAgentSuggestionFromUserJourney = asyncCreateSquash(
   async (
@@ -9,7 +9,7 @@ export const serviceAiAgentSuggestionFromUserJourney = asyncCreateSquash(
       threadId: string;
       virtualLabId?: string | null;
       projectId?: string | null;
-    }
+    },
   ): Promise<string[]> => {
     const { threadId = null, virtualLabId = null, projectId = null } = options ?? {};
     const journey = userJourneyTracker.value;
@@ -27,7 +27,7 @@ export const serviceAiAgentSuggestionFromUserJourney = asyncCreateSquash(
       typeGuard: isSuggestionFromUserJourneyResponse,
     });
     return data.suggestions.map((suggestion) => suggestion.question);
-  }
+  },
 );
 
 interface SuggestionFromUserJourneyResponse {
@@ -37,7 +37,7 @@ interface SuggestionFromUserJourneyResponse {
 }
 
 function isSuggestionFromUserJourneyResponse(
-  data: unknown
+  data: unknown,
 ): data is SuggestionFromUserJourneyResponse {
   return isType(data, {
     suggestions: ['array', { question: 'string' }],

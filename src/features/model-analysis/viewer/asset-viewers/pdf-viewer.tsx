@@ -4,12 +4,10 @@ import { Empty, Skeleton } from 'antd';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 import { Fragment, useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
-
-import { useClientCachedUrl } from '@/features/model-analysis/viewer/asset-viewers/storage';
-
-import { TEntityTypeDict } from '@/api/entitycore/types';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 import { IconDownloadFile } from '@/components/LandingPage/icons/IconDownloadFile';
 import { config } from '@/config';
+import { useClientCachedUrl } from '@/features/model-analysis/viewer/asset-viewers/storage';
 import { classNames } from '@/util/utils';
 
 import styles from './pdf-viewer.module.css';
@@ -60,7 +58,7 @@ export default function PDFViewer({
       <div
         className={classNames(
           'flex h-64! w-96! items-center justify-center rounded-lg',
-          'bg-white px-4 py-3 lg:w-2/3'
+          'bg-white px-4 py-3 lg:w-2/3',
         )}
         role="alert"
       >

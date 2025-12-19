@@ -1,22 +1,20 @@
-import { useState, useCallback, ReactNode, useEffect } from 'react';
-import { useAtomValue } from 'jotai';
 import type { ExpandableConfig } from 'antd/es/table/interface';
-
+import { useAtomValue } from 'jotai';
+import { type ReactNode, useCallback, useEffect, useState } from 'react';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { resetFilterSignalAtom } from '@/ui/segments/explore/circuit/helpers';
 
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-
 export interface ExpandableTableState<T extends EntityCoreIdentifiable> {
-  expandedData: Record<string, Array<T> | null>;
+  expandedData: Record<string, T[] | null>;
   expandedRowKeys: Set<string>;
 }
 
 export interface UseExpandableTableOptions<T extends EntityCoreIdentifiable> {
   // fetch data for expanded row
-  data: (record: T) => Array<T>;
+  data: (record: T) => T[];
   getRowKey: (record: T) => string;
   // render expanded content
-  renderExpanded: (records: Array<T>, originalRecord: T) => ReactNode;
+  renderExpanded: (records: T[], originalRecord: T) => ReactNode;
   // determine if row is expandable
   isRowExpandable?: (record: T) => boolean;
   // index of the column to render the expand icon
@@ -31,11 +29,11 @@ export interface UseExpandableTableOptions<T extends EntityCoreIdentifiable> {
  * Reusable hook for managing expandable tables with hierarchy support
  */
 export function useExpandableTable<T extends EntityCoreIdentifiable>(
-  options: UseExpandableTableOptions<T>
+  options: UseExpandableTableOptions<T>,
 ): {
   expandableConfig: ExpandableConfig<T>;
   isRowExpanded: (record: T) => boolean;
-  getExpandedData: (record: T) => Array<T> | null;
+  getExpandedData: (record: T) => T[] | null;
   resetState: () => void;
 } {
   const {
@@ -65,22 +63,22 @@ export function useExpandableTable<T extends EntityCoreIdentifiable>(
     if (resetFilterSignal > 0) {
       resetState();
     }
-  }, [resetFilterSignal]);
+  }, [resetFilterSignal, resetState]);
 
   const isRowExpanded = useCallback(
     (record: T): boolean => {
       const key = getRowKey(record);
       return key in state.expandedData;
     },
-    [state.expandedData, getRowKey]
+    [state.expandedData, getRowKey],
   );
 
   const getExpandedData = useCallback(
-    (record: T): Array<T> | null => {
+    (record: T): T[] | null => {
       const key = getRowKey(record);
       return state.expandedData[key] || null;
     },
-    [state.expandedData, getRowKey]
+    [state.expandedData, getRowKey],
   );
 
   const onExpand = useCallback(
@@ -95,7 +93,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable>(
           const newState: ExpandableTableState<T> = {
             expandedData: newExpandedData,
             expandedRowKeys: new Set(
-              Array.from(prev.expandedRowKeys).filter((rowKey) => rowKey !== key)
+              Array.from(prev.expandedRowKeys).filter((rowKey) => rowKey !== key),
             ),
           };
 
@@ -112,7 +110,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable>(
         expandedRowKeys: new Set(prev.expandedRowKeys.add(key)),
       }));
     },
-    [data, getRowKey]
+    [data, getRowKey],
   );
 
   const expandedRowRender = useCallback(
@@ -126,7 +124,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable>(
 
       return renderExpanded(records, record);
     },
-    [state.expandedData, getRowKey, renderExpanded]
+    [state.expandedData, getRowKey, renderExpanded],
   );
 
   // create expandable config - use controlled mode only for top-level tables

@@ -1,13 +1,13 @@
-import React, { CSSProperties, memo } from 'react';
+import type React from 'react';
+import { type CSSProperties, memo } from 'react';
 
 import DefaultNode from '@/components/tree/elements/default-node';
 import {
-  VerticalIndentationLine,
   HorizontalIndentationLine,
+  VerticalIndentationLine,
 } from '@/components/tree/elements/indentation';
+import type { NodeIndentation, RenderNodeProps, TTreeNode } from '@/components/tree/types';
 import { classNames } from '@/util/utils';
-
-import type { TTreeNode, RenderNodeProps, NodeIndentation } from '@/components/tree/types';
 
 interface NodeProps<TNode extends TTreeNode> {
   dataKey: string;
@@ -109,7 +109,7 @@ function Node<TNode extends TTreeNode>({
             <div
               className={classNames(
                 `border-b-neutral-2 absolute border-b`,
-                'right-1.5 bottom-0 left-[var(--left)] h-px w-[var(--width)]'
+                'right-1.5 bottom-0 left-[var(--left)] h-px w-[var(--width)]',
               )}
               style={
                 {
@@ -125,7 +125,7 @@ function Node<TNode extends TTreeNode>({
         <div
           className={classNames(
             'relative block overflow-hidden transition-all duration-300 ease-in-out',
-            'animate-[fade-in_0.3s_ease-in-out]'
+            'animate-[fade-in_0.3s_ease-in-out]',
           )}
         >
           {indentation?.v && (

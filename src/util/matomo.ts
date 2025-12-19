@@ -41,8 +41,6 @@ export function init({
 }: InitSettings): void {
   window._paq = window._paq !== null ? window._paq : [];
   if (!url) {
-    // eslint-disable-next-line no-console
-    console.warn('Matomo disabled, please provide matomo url');
     return;
   }
 

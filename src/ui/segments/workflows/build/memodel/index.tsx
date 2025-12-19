@@ -1,17 +1,16 @@
 'use client';
 
+import isNil from 'es-toolkit/compat/isNil';
 import { useSearchParams } from 'next/navigation';
 import { match, P } from 'ts-pattern';
-import isNil from 'es-toolkit/compat/isNil';
-
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { EModel, EModelMiniDetail } from '@/ui/segments/workflows/build/memodel/e-model';
 import {
   BuildStep,
   useBuildMeModelSessionState,
 } from '@/ui/segments/workflows/build/memodel/helpers';
-import { EModel, EModelMiniDetail } from '@/ui/segments/workflows/build/memodel/e-model';
 import { MModel, MModelMiniDetail } from '@/ui/segments/workflows/build/memodel/m-model';
 import { Info } from '@/ui/segments/workflows/build/memodel/overview';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 type Props = {
   sessionId: string;
@@ -32,22 +31,22 @@ export function Content({ sessionId }: Props) {
     .with(
       { step: BuildStep.MModel },
       () => isNil(sessionValue) || isNil(sessionValue.mmodel),
-      () => <MModel sessionId={sessionId} />
+      () => <MModel sessionId={sessionId} />,
     )
     .with(
       { step: BuildStep.MModel, sessionValue: P.when((v) => !isNil(v.mmodel)) },
       () => !isNil(sessionValue.mmodel),
-      () => <MModelMiniDetail sessionId={sessionId} />
+      () => <MModelMiniDetail sessionId={sessionId} />,
     )
     .with(
       { step: BuildStep.EModel },
       () => isNil(sessionValue) || isNil(sessionValue.emodel),
-      () => <EModel sessionId={sessionId} />
+      () => <EModel sessionId={sessionId} />,
     )
     .with(
       { step: BuildStep.EModel },
       () => !isNil(sessionValue.emodel),
-      () => <EModelMiniDetail sessionId={sessionId} />
+      () => <EModelMiniDetail sessionId={sessionId} />,
     )
     .otherwise(() => null);
 

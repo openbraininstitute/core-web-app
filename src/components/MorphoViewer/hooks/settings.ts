@@ -1,10 +1,10 @@
 'use client';
 
 /* eslint-disable no-param-reassign */
-import { ColoringType, MorphologyCanvas } from '@bbp/morphoviewer';
+import type { ColoringType, MorphologyCanvas } from '@bbp/morphoviewer';
 import { atom, useAtom } from 'jotai';
 import { useEffect, useMemo } from 'react';
-
+import { atomFamilyWithExpiration } from '@/util/atoms';
 import {
   DARK_APICAL_DENDRITE,
   DARK_AXON,
@@ -17,7 +17,6 @@ import {
   LIGHT_BASAL_DENDRITE,
   LIGHT_SOMA,
 } from '../constants';
-import { atomFamilyWithExpiration } from '@/util/atoms';
 
 const DEFAULT_SETTINGS: ExtendedMorphoViewerSettings = {
   darkMode: false,
@@ -72,7 +71,7 @@ export interface MorphoViewerSettings {
  * @param painter The painter to update when the settings change.
  */
 export function useMorphoViewerSettings(
-  painter: MorphologyCanvas
+  painter: MorphologyCanvas,
 ): [
   settings: MorphoViewerSettings,
   update: (settings: Partial<MorphoViewerSettings>) => void,
@@ -84,7 +83,7 @@ export function useMorphoViewerSettings(
 
   useEffect(
     () => applySettingsToMorphologyCanvas(painter, extendedSettings),
-    [extendedSettings, painter]
+    [extendedSettings, painter],
   );
   const update = (value: Partial<MorphoViewerSettings>) => {
     const darkMode = value.isDarkMode ?? extendedSettings.darkMode;
@@ -172,12 +171,12 @@ function writeSettings({
 
 const extendedSettingsAtomFamily = atomFamilyWithExpiration(
   (_painter: MorphologyCanvas) => atom(getDefaultSettings()),
-  { ttl: 10_000 } // cache TTL 10 seconds
+  { ttl: 10_000 }, // cache TTL 10 seconds
 );
 
 function applySettingsToMorphologyCanvas(
   painter: MorphologyCanvas,
-  { darkMode, darkColors, lightColors, radiusType, colorBy }: ExtendedMorphoViewerSettings
+  { darkMode, darkColors, lightColors, radiusType, colorBy }: ExtendedMorphoViewerSettings,
 ) {
   const { soma, basalDendrite, apicalDendrite, axon }: Palette = darkMode
     ? darkColors

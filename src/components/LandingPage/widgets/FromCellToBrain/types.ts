@@ -23,7 +23,7 @@ type ContentForFromCellToBrainColumn = {
 };
 
 export function isContentForFromCellToBrainColumns(
-  data: unknown
+  data: unknown,
 ): data is ContentForFromCellToBrainColumn[] {
   return tryType('ContentForFromCellToBrainColumn', data, [
     'array',

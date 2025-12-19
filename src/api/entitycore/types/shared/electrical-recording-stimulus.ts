@@ -68,5 +68,5 @@ export interface IElectricalRecordingStimulusFilter
   shape: ElectricalRecordingStimulusShapeType | null;
   injection_type: ElectricalRecordingStimulusTypeType | null;
   recording_id: string | null;
-  recording_id__in: string | Array<string> | null;
+  recording_id__in: string | string[] | null;
 }

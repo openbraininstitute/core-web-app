@@ -1,19 +1,18 @@
 'use client';
 
-import Table, { ColumnsType } from 'antd/es/table';
 import { useQuery } from '@tanstack/react-query';
 import { ConfigProvider, theme } from 'antd';
+import Table, { type ColumnsType } from 'antd/es/table';
 import { format } from 'date-fns';
 import { useState } from 'react';
-
-import { HistoryError } from '@/components/VirtualLab/create-entity-flows/subscription/elements';
-import { CONVERSION_RATE } from '@/ui/segments/virtual-lab-settings/elements/helpers';
-import { SubscriptionPaymentDetails } from '@/api/virtual-lab-svc/queries/types';
 import { listStandalonePayments } from '@/api/virtual-lab-svc/queries/payment';
-import { Card, CardContent, CardTitle } from '@/ui/molecules/card';
+import type { SubscriptionPaymentDetails } from '@/api/virtual-lab-svc/queries/types';
 import { FileDownloadFill } from '@/components/icons/EditorIcons';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { HistoryError } from '@/components/VirtualLab/create-entity-flows/subscription/elements';
 import { Button } from '@/ui/molecules/button';
+import { Card, CardContent, CardTitle } from '@/ui/molecules/card';
+import { CONVERSION_RATE } from '@/ui/segments/virtual-lab-settings/elements/helpers';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
 export function PurchasesHistory({ virtualLabId }: { virtualLabId: string }) {
@@ -133,7 +132,7 @@ export function PurchasesHistory({ virtualLabId }: { virtualLabId: string }) {
                 '[&_.ant-spin-blur]:opacity-0!',
                 '[&_.ant-empty-description]:text-white!',
                 'me [&:has(.ant-table-empty)_td:last]:border-b-none!',
-                '[&_td]:last:border-b-0!'
+                '[&_td]:last:border-b-0!',
               )}
               rowClassName="border-b border-primary-4 last:[&_td]:border-b-0!"
               pagination={{
@@ -147,7 +146,7 @@ export function PurchasesHistory({ virtualLabId }: { virtualLabId: string }) {
                 className: cn(
                   '[&_td]:last:border',
                   '[&_.ant-pagination-item_a]:text-white! [&_.ant-pagination-item_a]:bg-primary-9! [&_.ant-pagination-item-active]:bg-primary-7 [&_.ant-pagination-item-active]:text-white! [&_.ant-pagination-item-link]:text-white!',
-                  'flex items-center gap-2 [&_.ant-pagination-item]:rounded-sm [&_.ant-pagination-item_a]:rounded-sm'
+                  'flex items-center gap-2 [&_.ant-pagination-item]:rounded-sm [&_.ant-pagination-item_a]:rounded-sm',
                 ),
               }}
             />

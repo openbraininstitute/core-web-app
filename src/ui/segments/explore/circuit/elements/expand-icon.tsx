@@ -1,10 +1,9 @@
 import { Button } from 'antd';
-
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import ChevronRight from '@/components/icons/ChevronRight';
-import { classNames } from '@/util/utils';
 
 import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { classNames } from '@/util/utils';
 
 export const expandIcon = ({
   expanded,
@@ -23,7 +22,7 @@ export const expandIcon = ({
         fill="#003a8c"
         className={classNames(
           'transform transition-transform duration-200 ease-in-out',
-          expanded ? 'rotate-90' : 'rotate-0'
+          expanded ? 'rotate-90' : 'rotate-0',
         )}
       />
     </Button>

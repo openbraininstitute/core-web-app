@@ -1,5 +1,5 @@
-import { tryType } from './_common';
 import { useSanity } from '@/services/sanity';
+import { tryType } from './_common';
 
 interface ContentForEMail {
   label: string;
@@ -15,7 +15,7 @@ export function useSanityContentForEMail(type: EMailTypes): ContentForEMail | nu
   label,
   email
 }`,
-      isContentForEMail
+      isContentForEMail,
     ) ?? null
   );
 }

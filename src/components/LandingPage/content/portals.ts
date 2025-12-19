@@ -1,12 +1,12 @@
-import { tryType } from './_common';
 import { useSanity } from '@/services/sanity';
 import { isString } from '@/util/type-guards';
+import { tryType } from './_common';
 
 export function useSanityContentForPortalsTitle(): string {
   return (
     useSanity(
       `*[_type=="pages" && slug.current=="home"][0].content[_type=="portalsList"][0].title`,
-      isStringOrNull
+      isStringOrNull,
     ) ?? ''
   );
 }
@@ -52,7 +52,7 @@ export function useSanityContentForPortalsList(): ContentForPortalsListItem[] {
   "imageHeight": image.asset->metadata.dimensions.height,
 }
 `,
-      isContentForPortalList
+      isContentForPortalList,
     ) ?? []
   );
 }

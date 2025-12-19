@@ -1,25 +1,23 @@
-import { arrayToTree } from 'performant-array-to-tree';
-import { atomFamily } from 'jotai/utils';
-import { Atom, atom } from 'jotai';
 import isEqual from 'es-toolkit/compat/isEqual';
-
-import { resolveBrainRegionCellComposition } from '@/features/cell-composition/composition-constructor';
-import { getCellCompositions } from '@/api/entitycore/queries/general/cell-composition';
-import { brainRegionBasicCellGroupsRegionsHierarchyAtom } from '@/features/brain-region-hierarchy/context';
-import { brainRegionAtlasAtom } from '@/features/brain-atlas-viewer/context';
+import { type Atom, atom } from 'jotai';
+import { atomFamily } from 'jotai/utils';
+import { arrayToTree } from 'performant-array-to-tree';
 import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
 import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
-import { renameKeyDeep } from '@/components/tree/elements/helpers';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { getAssetElement } from '@/api/entitycore/utils';
+import { getCellCompositions } from '@/api/entitycore/queries/general/cell-composition';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { tryCatch } from '@/api/utils';
-import { log } from '@/utils/logger';
-
 import type { ICellCompositionRoot } from '@/api/entitycore/types/entities/cell-composition';
-import type { WorkspaceContext } from '@/types/common';
 import type { IAnnotation } from '@/api/entitycore/types/shared/global';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { getAssetElement } from '@/api/entitycore/utils';
+import { tryCatch } from '@/api/utils';
+import { renameKeyDeep } from '@/components/tree/elements/helpers';
+import { brainRegionAtlasAtom } from '@/features/brain-atlas-viewer/context';
+import { brainRegionBasicCellGroupsRegionsHierarchyAtom } from '@/features/brain-region-hierarchy/context';
+import { resolveBrainRegionCellComposition } from '@/features/cell-composition/composition-constructor';
+import type { WorkspaceContext } from '@/types/common';
+import { log } from '@/utils/logger';
 
 const defaultCellCompositionName = 'Cell Composition from Blue Brain Atlas';
 
@@ -27,7 +25,7 @@ const cellCompositionSummaryAtom = atom(async (): Promise<ICellCompositionRoot> 
   const { data: cellComposition, error } = await tryCatch(
     getCellCompositions({
       filters: { name: defaultCellCompositionName },
-    })
+    }),
   );
   if (error) throw error;
   if (!cellComposition.data.length)
@@ -47,13 +45,13 @@ const cellCompositionSummaryAtom = atom(async (): Promise<ICellCompositionRoot> 
       entityType: EntityTypeDict.CellComposition,
       entityId: cellComposition.data.at(0)?.id!,
       id: summaryAsset.id,
-    })
+    }),
   );
   if (assetError) throw assetError;
   return cellCompositionSummary;
 });
 
-export const annotationTypesAtom = atomFamily<WorkspaceContext, Atom<Promise<Array<IAnnotation>>>>(
+export const annotationTypesAtom = atomFamily<WorkspaceContext, Atom<Promise<IAnnotation[]>>>(
   (ctx: WorkspaceContext) => {
     const childAtom = atom(async () => {
       const [etypes, mtypes] = await Promise.all([
@@ -66,7 +64,7 @@ export const annotationTypesAtom = atomFamily<WorkspaceContext, Atom<Promise<Arr
     childAtom.debugLabel = 'annotation-types';
     return childAtom;
   },
-  isEqual
+  isEqual,
 );
 
 export const cellCompositionAtom = atomFamily(({ brainRegionId }: { brainRegionId: string }) => {
@@ -86,7 +84,10 @@ export const cellCompositionAtom = atomFamily(({ brainRegionId }: { brainRegionI
         });
 
         return {
-          totalComposition: { neuron: { density: 0, count: 0 }, glia: { density: 0, count: 0 } },
+          totalComposition: {
+            neuron: { density: 0, count: 0 },
+            glia: { density: 0, count: 0 },
+          },
           neurons: [],
         };
       }
@@ -110,17 +111,20 @@ export const cellCompositionAtom = atomFamily(({ brainRegionId }: { brainRegionI
             dataField: null,
             parentId: 'parentId',
             childrenField: 'children',
-          }
+          },
         ),
         'title',
-        'name'
+        'name',
       );
 
       return { totalComposition, neurons };
     } catch (error) {
       log('error', 'Error in cellCompositionAtom:', error);
       return {
-        totalComposition: { neuron: { density: 0, count: 0 }, glia: { density: 0, count: 0 } },
+        totalComposition: {
+          neuron: { density: 0, count: 0 },
+          glia: { density: 0, count: 0 },
+        },
         neurons: [],
       };
     }

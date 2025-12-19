@@ -1,11 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
-import NewsletterForm from '@/components/coming-soon/newsletter-form';
 import Header from '@/components/coming-soon/header';
-import Main from '@/components/coming-soon/main';
 import Hero from '@/components/coming-soon/hero';
+import Main from '@/components/coming-soon/main';
+import NewsletterForm from '@/components/coming-soon/newsletter-form';
 import useFullHeight from '@/hooks/useFullHeight';
 import { classNames } from '@/util/utils';
 
@@ -25,7 +24,7 @@ export default function Page() {
           className={classNames(
             'absolute inset-0 z-50 mx-auto h-svh max-w-3xl',
             'flex flex-col items-center justify-center',
-            'px-4 sm:px-12'
+            'px-4 sm:px-12',
           )}
         >
           <div className="flex w-full min-w-full flex-col items-start justify-start">

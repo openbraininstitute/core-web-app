@@ -10,11 +10,11 @@ import {
   createTemplateFileEntry,
   getMetadataCsvEntryBase,
 } from '@/features/entity-download/utils';
-import { WorkspaceContext } from '@/types/common';
+import type { WorkspaceContext } from '@/types/common';
 
 export async function* getSingleNeuronSynaptomeSimulationFiles(
   entityIds: string[],
-  ctx?: WorkspaceContext
+  ctx?: WorkspaceContext,
 ) {
   const metadata = new Metadata<Record<string, any>>();
 
@@ -39,7 +39,7 @@ export async function* getSingleNeuronSynaptomeSimulationFiles(
     });
 
     const configAsset = singleNeuronSimulation.assets.find(
-      (asset) => asset.label === 'single_neuron_synaptome_simulation_data'
+      (asset) => asset.label === 'single_neuron_synaptome_simulation_data',
     )!;
     try {
       const path = `${dataPath}/${configAsset.path}`;
@@ -49,7 +49,7 @@ export async function* getSingleNeuronSynaptomeSimulationFiles(
         path,
         ctx,
       });
-    } catch (error) {}
+    } catch (_error) {}
 
     for await (const metadataFileEntry of metadata.getFileEntries()) {
       yield metadataFileEntry;

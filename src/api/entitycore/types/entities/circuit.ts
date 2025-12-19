@@ -1,16 +1,16 @@
 import type {
   EntityAuthorization,
-  Timestamps,
-  EntityCoreOwnership,
-  EntityCoreType,
   EntityCoreBaseAsset,
   EntityCoreIdentifiableNamed,
+  EntityCoreOwnership,
+  EntityCoreType,
+  Timestamps,
 } from '@/api/entitycore/types/shared/global';
 import type {
   BrainRegionFilter,
-  SharedFilter,
-  PaginationFilter,
   IdFilter,
+  PaginationFilter,
+  SharedFilter,
 } from '@/api/entitycore/types/shared/request';
 
 export const CircuitBuildCategory = {
@@ -56,12 +56,12 @@ export const CircuitScale = {
 } as const;
 
 export const CircuitScaleDictionary = Object.fromEntries(
-  Object.entries(CircuitScale).map(([name, value]) => [name, value.key])
+  Object.entries(CircuitScale).map(([name, value]) => [name, value.key]),
 ) as {
   [K in keyof typeof CircuitScale]: (typeof CircuitScale)[K]['key'];
 };
 export const CircuitBuildCategoryDictionary = Object.fromEntries(
-  Object.entries(CircuitBuildCategory).map(([name, value]) => [name, value.key])
+  Object.entries(CircuitBuildCategory).map(([name, value]) => [name, value.key]),
 ) as {
   [K in keyof typeof CircuitBuildCategory]: (typeof CircuitBuildCategory)[K]['key'];
 };
@@ -96,7 +96,7 @@ export interface ICircuit
 
 type CircuitScaleFilter = {
   scale: string | null;
-  scale__in: Array<string>;
+  scale__in: string[];
 };
 export interface ICircuitFilter
   extends IdFilter,
@@ -129,8 +129,8 @@ export type SonataCircuitNetworkNodeConfigItem = {
 };
 
 export type SonataCircuitConfigNetworks = {
-  edges: Array<SonataCircuitNetworkEdgeConfigItem>;
-  nodes: Array<SonataCircuitNetworkNodeConfigItem>;
+  edges: SonataCircuitNetworkEdgeConfigItem[];
+  nodes: SonataCircuitNetworkNodeConfigItem[];
 };
 
 export type SonataCircuitComponentConfig = {

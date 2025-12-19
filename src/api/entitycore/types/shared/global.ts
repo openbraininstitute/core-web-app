@@ -1,9 +1,8 @@
 import z from 'zod';
-import { EntityCoreConfiguration } from '@/entity-configuration/domain';
-
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { AssetLegacyMeta } from '@/api/entitycore/types/shared/legacy';
 import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
+import type { EntityCoreConfiguration } from '@/entity-configuration/domain';
 import type { Prettify } from '@/utils/type';
 
 export type EntityCoreDataType =
@@ -11,7 +10,7 @@ export type EntityCoreDataType =
 
 export type EntityCoreIdentifiable = {
   id: string;
-  legacy_id: Array<string> | null;
+  legacy_id: string[] | null;
 };
 
 export type EntityCoreType = {
@@ -38,7 +37,7 @@ type EntityCoreBaseType = {
 };
 
 export interface EntityCoreBaseAsset {
-  assets: Array<IAsset>;
+  assets: IAsset[];
 }
 
 export interface EntityCoreResource
@@ -291,7 +290,7 @@ export const Sex = {
 } as const;
 
 export const SexDictionary = Object.fromEntries(
-  Object.entries(Sex).map(([name, value]) => [name, value.key])
+  Object.entries(Sex).map(([name, value]) => [name, value.key]),
 ) as {
   [K in keyof typeof Sex]: (typeof Sex)[K]['key'];
 };
@@ -312,7 +311,7 @@ export const AgePeriod = {
 } as const;
 
 export const AgePeriodDictionary = Object.fromEntries(
-  Object.entries(AgePeriod).map(([name, value]) => [name, value.key])
+  Object.entries(AgePeriod).map(([name, value]) => [name, value.key]),
 ) as {
   [K in keyof typeof AgePeriod]: (typeof AgePeriod)[K]['key'];
 };

@@ -2,10 +2,9 @@
 
 import { motion } from 'motion/react';
 import type { ReactNode } from 'react';
-
+import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { SimulateWorkflowsBreadcrumb } from '@/ui/segments/workflows/elements/simulate-breadcrumb';
-import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { cn } from '@/utils/css-class';
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -24,7 +23,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           'grid gap-2 [grid-area:main]',
           'h-full max-h-[calc(100%-4rem)] px-3 py-2',
           { "grid-cols-1 [grid-template-areas:'body']": !mdv },
-          { "grid-cols-[3fr_2fr] [grid-template-areas:'body_mini-view']": mdv }
+          { "grid-cols-[3fr_2fr] [grid-template-areas:'body_mini-view']": mdv },
         )}
         initial={false}
         animate={{

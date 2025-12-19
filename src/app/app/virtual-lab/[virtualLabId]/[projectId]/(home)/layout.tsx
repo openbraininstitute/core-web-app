@@ -1,10 +1,9 @@
-import { type ReactNode } from 'react';
-
-import { ProjectInnerLayout } from '@/ui/layouts/project-inner-layout';
+import type { ReactNode } from 'react';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
+import { getQueryClient } from '@/query-provider/server';
+import { ProjectInnerLayout } from '@/ui/layouts/project-inner-layout';
 import { LeftMenu } from '@/ui/segments/project/left-nav-menu';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { getQueryClient } from '@/query-provider/server';
 
 type Props = {
   children: ReactNode;

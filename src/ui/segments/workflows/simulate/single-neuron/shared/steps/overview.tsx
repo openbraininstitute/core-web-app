@@ -1,41 +1,39 @@
 'use client';
 
-import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Form, Input } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
 import { useSession } from 'next-auth/react';
-import { Form, Input } from 'antd';
+import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import z from 'zod';
-
-import { OVERVIEW_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import {
-  OverviewConfigurationAtomFamily,
-  simulationStatusAtomFamily,
-  SimulationStatus,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import {
-  OverviewConfigurationSchema,
-  SimulationType,
-  type TSimulationType,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import {
-  getSessionKey,
-  label,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { keyBuilder } from '@/ui/use-query-keys/data';
-import { makeDateToAppFormat } from '@/util/date';
-import { log } from '@/utils/logger';
 import {
   getSingleNeuronSimulations,
   getSingleNeuronSynaptomeSimulations,
 } from '@/api/entitycore/queries';
-
 import type {
   ISingleNeuronSimulation,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { OVERVIEW_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import {
+  OverviewConfigurationAtomFamily,
+  SimulationStatus,
+  simulationStatusAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import {
+  getSessionKey,
+  label,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
+import {
+  OverviewConfigurationSchema,
+  SimulationType,
+  type TSimulationType,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { keyBuilder } from '@/ui/use-query-keys/data';
+import { makeDateToAppFormat } from '@/util/date';
+import { log } from '@/utils/logger';
 
 type Props = {
   sessionId: string;
@@ -102,7 +100,7 @@ export function Info({ sessionId, simulationType }: Props) {
           }),
       },
     }),
-    [deferredSearch, virtualLabId, projectId]
+    [deferredSearch, virtualLabId, projectId],
   );
 
   const { data: searchResults } = useQuery<
@@ -115,7 +113,7 @@ export function Info({ sessionId, simulationType }: Props) {
   });
 
   const nameExists = searchResults?.data.some(
-    (item) => item.name.trim().toLowerCase() === formValues.name.trim().toLowerCase()
+    (item) => item.name.trim().toLowerCase() === formValues.name.trim().toLowerCase(),
   );
 
   return (
@@ -153,7 +151,7 @@ export function Info({ sessionId, simulationType }: Props) {
                 return Promise.resolve();
               } catch (error) {
                 return Promise.reject(
-                  error instanceof z.ZodError ? error.errors.at(0)?.message : 'Name is required'
+                  error instanceof z.ZodError ? error.errors.at(0)?.message : 'Name is required',
                 );
               }
             },
@@ -189,7 +187,7 @@ export function Info({ sessionId, simulationType }: Props) {
                 }).shape.description.parseAsync(value);
               } catch (error) {
                 return Promise.reject(
-                  error instanceof z.ZodError ? error.errors.at(0)?.message : 'Invalid description'
+                  error instanceof z.ZodError ? error.errors.at(0)?.message : 'Invalid description',
                 );
               }
               return Promise.resolve();

@@ -1,4 +1,4 @@
-import { LTTB, DataPoint } from './LTTB';
+import { type DataPoint, LTTB } from './LTTB';
 
 interface RawData {
   y: number[];
@@ -19,7 +19,7 @@ const optimizePlotData = (
     xstart?: number;
     xend?: number;
   },
-  desiredLength = 1000
+  desiredLength = 1000,
 ) => {
   if (!rawData) return [];
 

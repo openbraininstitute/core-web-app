@@ -44,7 +44,7 @@ export function RegionBanner({ view, onSwitchView }: Props) {
           'border-neutral-1 flex h-12! w-full items-center justify-between gap-6 rounded-full py-2 pr-2 pl-4',
           'cursor-pointer',
           { 'shadow-bnb': Boolean(selectedBrainRegion?.id) },
-          { 'hover:bg-background': view === ExploreLeftMenuContext.DataGroup }
+          { 'hover:bg-background': view === ExploreLeftMenuContext.DataGroup },
         )}
         aria-label="brain-region-banner"
         role="button"
@@ -60,7 +60,9 @@ export function RegionBanner({ view, onSwitchView }: Props) {
                 <div
                   key={`color-${selectedBrainRegion.id}-${selectedBrainRegion.color_hex_triplet}`}
                   className="block h-3! w-3! min-w-3! rounded-full"
-                  style={{ backgroundColor: `#${selectedBrainRegion.color_hex_triplet}` }}
+                  style={{
+                    backgroundColor: `#${selectedBrainRegion.color_hex_triplet}`,
+                  }}
                 />
                 <span className="line-clamp-2 text-lg leading-6 font-bold">
                   {selectedBrainRegion.name}

@@ -1,5 +1,5 @@
-import { z } from 'zod';
 import isNil from 'es-toolkit/compat/isNil';
+import { z } from 'zod';
 
 import { DefaultColor } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 
@@ -22,7 +22,7 @@ export const StimulationMode = {
 } as const;
 export type TStimulationModeValue = (typeof StimulationMode)[keyof typeof StimulationMode]['value'];
 export const StimulationModeDict = Object.fromEntries(
-  Object.entries(StimulationMode).map(([name, value]) => [name, value.value])
+  Object.entries(StimulationMode).map(([name, value]) => [name, value.value]),
 ) as {
   [K in keyof typeof StimulationMode]: (typeof StimulationMode)[K]['value'];
 };
@@ -51,19 +51,19 @@ export const StimulusModule = {
 } as const;
 export type TStimulusModuleValue = (typeof StimulusModule)[keyof typeof StimulusModule]['value'];
 export const StimulusModuleDict = Object.fromEntries(
-  Object.entries(StimulusModule).map(([name, value]) => [name, value.value])
+  Object.entries(StimulusModule).map(([name, value]) => [name, value.value]),
 ) as {
   [K in keyof typeof StimulusModule]: (typeof StimulusModule)[K]['value'];
 };
 
 export type CurrentInjectionGraphRequest = {
   stimulusProtocol: TStimulusModuleValue;
-  amplitudes: Array<number>;
+  amplitudes: number[];
 };
 
 export type CurrentInjectionGraphResponse = {
-  x: Array<number>;
-  y: Array<number>;
+  x: number[];
+  y: number[];
   name: string;
   amplitude: number;
 };
@@ -72,7 +72,7 @@ export type TProtocolDetails = {
   description: string;
   name: TStimulusModuleValue;
   label: string;
-  usedBy: Array<TStimulationModeValue>;
+  usedBy: TStimulationModeValue[];
 
   defaults: {
     time: {
@@ -108,30 +108,40 @@ export type TSynapseTypeValue =
 export type TSynapseTypeKey =
   (typeof SynapseTypeDictionary)[keyof typeof SynapseTypeDictionary]['id'];
 export const SynapseTypeDict = Object.fromEntries(
-  Object.entries(SynapseTypeDictionary).map(([name, value]) => [name, value.value])
+  Object.entries(SynapseTypeDictionary).map(([name, value]) => [name, value.value]),
 ) as {
   [K in keyof typeof SynapseTypeDictionary]: (typeof SynapseTypeDictionary)[K]['value'];
 };
 
 export const ExperimentalSetupConfigurationSchema = z.object({
   celsius: z
-    .number({ message: 'Please enter a valid numeric value for Temperature (°C).' })
+    .number({
+      message: 'Please enter a valid numeric value for Temperature (°C).',
+    })
     .min(0, 'Temperature must be between 0 and 50°C')
     .max(50, 'Temperature must be between 0 and 50°C'),
   vinit: z
-    .number({ message: 'Please enter a valid numeric value for initial membrane voltage (mV).' })
+    .number({
+      message: 'Please enter a valid numeric value for initial membrane voltage (mV).',
+    })
     .min(-200, 'Initial voltage must be between -200 and 100 mV')
     .max(100, 'Initial voltage must be between -200 and 100 mV'),
   hypamp: z
-    .number({ message: 'Please enter a valid numeric value for holding current (nA).' })
+    .number({
+      message: 'Please enter a valid numeric value for holding current (nA).',
+    })
     .min(-20, 'Holding current must be between -20 and 20 nA')
     .max(20, 'Holding current must be between -20 and 20 nA'),
   max_time: z
-    .number({ message: 'Please enter a valid numeric value for simulation duration (ms).' })
+    .number({
+      message: 'Please enter a valid numeric value for simulation duration (ms).',
+    })
     .min(0, 'Simulation duration must be between 0 and 3000 ms')
     .max(3000, 'Simulation duration must be between 0 and 3000 ms'),
   time_step: z
-    .number({ message: 'Please enter a valid numeric value for time step (ms).' })
+    .number({
+      message: 'Please enter a valid numeric value for time step (ms).',
+    })
     .min(0.001, 'Time step must be between 0.001 and 10 ms')
     .max(10, 'Time step must be between 0.001 and 10 ms'),
   seed: z
@@ -154,7 +164,7 @@ export const StimulusConfigSchema = z.object({
     {
       message:
         'Stimulation mode must be one of the following: Current Clamp, Voltage Clamp, Conductance.',
-    }
+    },
   ),
   stimulus_protocol: z
     .enum(
@@ -167,7 +177,7 @@ export const StimulusConfigSchema = z.object({
       {
         message:
           'Stimulus protocol must be one of the following: AP Waveform, Idrest, IV, Fire Pattern',
-      }
+      },
     )
     .nullable(),
   amplitudes: z.union([z.array(z.number()), z.number()], {
@@ -190,7 +200,7 @@ export const NeuronLocationOriginSchema = z.enum(['injection', 'recording']);
 export type TNeuronLocationOrigin = z.infer<typeof NeuronLocationOriginSchema>;
 
 export const NeuronLocationOriginDict = Object.fromEntries(
-  NeuronLocationOriginSchema.options.map((value) => [value, value])
+  NeuronLocationOriginSchema.options.map((value) => [value, value]),
 ) as Record<TNeuronLocationOrigin, TNeuronLocationOrigin>;
 
 export const NeuronLocationSchema = z.object({
@@ -201,11 +211,11 @@ export const NeuronLocationSchema = z.object({
     })
     .min(
       0,
-      'Recording position offset must be between 0 and 1 (0 = start of section, 1 = end of section)'
+      'Recording position offset must be between 0 and 1 (0 = start of section, 1 = end of section)',
     )
     .max(
       1,
-      'Recording position offset must be between 0 and 1 (0 = start of section, 1 = end of section)'
+      'Recording position offset must be between 0 and 1 (0 = start of section, 1 = end of section)',
     ),
   record_currents: z.boolean(),
   color: z.string().optional(),
@@ -221,18 +231,24 @@ export type NeuronLocationArray = z.infer<typeof NeuronLocationArraySchema>;
 export const SynapseConfigSchema = z.object({
   id: z.string(),
   config_id: z.string({ message: 'Synapse configuration ID is required' }),
-  delay: z.number({ message: 'Synapse delay (ms) is required and must be a number' }),
-  duration: z.number({ message: 'Synapse duration (ms) is required and must be a number' }),
+  delay: z.number({
+    message: 'Synapse delay (ms) is required and must be a number',
+  }),
+  duration: z.number({
+    message: 'Synapse duration (ms) is required and must be a number',
+  }),
   frequency: z
     .union(
       [
         z
-          .number({ message: 'Synapse frequency (Hz) must be a positive number' })
+          .number({
+            message: 'Synapse frequency (Hz) must be a positive number',
+          })
           .min(0, 'Synapse frequency must be a positive number'),
         z.array(
           z
             .number({ message: 'Synapse frequencies must be positive numbers' })
-            .min(0, 'Synapse frequencies must be positive numbers')
+            .min(0, 'Synapse frequencies must be positive numbers'),
         ),
       ],
       {
@@ -247,12 +263,14 @@ export const SynapseConfigSchema = z.object({
           }
           return { message: ctx.defaultError };
         },
-      }
+      },
     )
     .refine((val) => !isNil(val), {
       message: 'Synapse frequency is required',
     }),
-  weight_scalar: z.number({ message: 'Synapse weight scalar is required and must be a number' }),
+  weight_scalar: z.number({
+    message: 'Synapse weight scalar is required and must be a number',
+  }),
   color: z.string({ message: 'Synapse color is required' }).default(DefaultColor).optional(),
 });
 
@@ -278,7 +296,7 @@ export type AmperageStateType = {
   start: number;
   end: number;
   stepValue: number;
-  computed: Array<number>;
+  computed: number[];
   error: null | string;
 };
 
@@ -301,8 +319,8 @@ export const SimulationType = {
 export type TSimulationType = (typeof SimulationType)[keyof typeof SimulationType];
 
 export type PlotDataEntry = {
-  x: Array<number>;
-  y: Array<number>;
+  x: number[];
+  y: number[];
   type: 'scatter';
   name: string;
   recording?: string;
@@ -321,9 +339,15 @@ export const FrequencyInputConfigSchema = z.object({
   constantOrSteps: z.enum(['constant', 'step']),
   stepFrequencyState: z
     .object({
-      start: z.number({ message: 'Start frequency (Hz) is required and must be a number' }),
-      stop: z.number({ message: 'Stop frequency (Hz) is required and must be a number' }),
-      step: z.number({ message: 'Number of frequency steps is required and must be a number' }),
+      start: z.number({
+        message: 'Start frequency (Hz) is required and must be a number',
+      }),
+      stop: z.number({
+        message: 'Stop frequency (Hz) is required and must be a number',
+      }),
+      step: z.number({
+        message: 'Number of frequency steps is required and must be a number',
+      }),
     })
     .nullable()
     .refine((value) => value === null || value.start < value.stop, {
@@ -342,8 +366,12 @@ export const AmperageBaseSchema = z.object({
     StimulusModule.IV.value,
     StimulusModule.FirePattern.value,
   ]),
-  start: z.number({ message: 'Start current amplitude (nA) is required and must be a number' }),
-  end: z.number({ message: 'End current amplitude (nA) is required and must be a number' }),
+  start: z.number({
+    message: 'Start current amplitude (nA) is required and must be a number',
+  }),
+  end: z.number({
+    message: 'End current amplitude (nA) is required and must be a number',
+  }),
   stepValue: z.number({
     message: 'Number of current amplitude steps is required and must be a number',
   }),
@@ -364,7 +392,7 @@ export const AmperageStateSchema = AmperageBaseSchema.refine(
   {
     message: 'Start current amplitude must be less than end current amplitude',
     path: ['start'],
-  }
+  },
 );
 
 export type AmperageState = z.infer<typeof AmperageStateSchema>;

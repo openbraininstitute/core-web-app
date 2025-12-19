@@ -1,14 +1,13 @@
-import findKey from 'es-toolkit/compat/findKey';
 import find from 'es-toolkit/compat/find';
-import pick from 'es-toolkit/compat/pick';
+import findKey from 'es-toolkit/compat/findKey';
 import get from 'es-toolkit/compat/get';
-
-import { ViewsDefinition as ExperimentalViewDefinition } from '@/entity-configuration/definitions/view-defs/experimental';
+import pick from 'es-toolkit/compat/pick';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { ViewsDefinition as ExperimentViewDefinition } from '@/entity-configuration/definitions/view-defs/experiment';
+import { ViewsDefinition as ExperimentalViewDefinition } from '@/entity-configuration/definitions/view-defs/experimental';
 import { ViewsDefinition as ModelViewDefinition } from '@/entity-configuration/definitions/view-defs/model';
 import { ViewsDefinition as NotebookViewDefinition } from '@/entity-configuration/definitions/view-defs/notebook';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 import type { TExperimentTypeNames } from '@/entity-configuration/domain/experimental';
@@ -32,7 +31,7 @@ export function getViewDefinitionByExtendedType(type: TExtendedEntitiesTypeDict)
   return get(ViewsDefinitionRegistry, type, null);
 }
 
-export function getViewDefinitionsByLegacyType(types: Array<TExtendedEntitiesTypeDict>) {
+export function getViewDefinitionsByLegacyType(types: TExtendedEntitiesTypeDict[]) {
   return pick(ViewsDefinitionRegistry, types);
 }
 
@@ -41,7 +40,9 @@ export function getViewDefinitionByName(name: TExperimentTypeNames) {
 }
 
 export function getViewDefinitionDataTypeByName(
-  name: TExperimentTypeNames
+  name: TExperimentTypeNames,
 ): TExtendedEntitiesTypeDict | undefined {
-  return findKey(ViewsDefinitionRegistry, { name }) as TExtendedEntitiesTypeDict;
+  return findKey(ViewsDefinitionRegistry, {
+    name,
+  }) as TExtendedEntitiesTypeDict;
 }

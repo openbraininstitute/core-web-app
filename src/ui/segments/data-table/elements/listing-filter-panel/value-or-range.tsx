@@ -1,12 +1,11 @@
 'use client';
 
-import { ChangeEvent, HTMLProps, useState } from 'react';
+import { type ChangeEvent, type HTMLProps, useState } from 'react';
 
 import { RangeIcon } from '@/components/icons';
-
-import type { GteLteValue, ValueOrRangeFilter } from '@/entity-configuration/definitions/types';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import type { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import type { GteLteValue, ValueOrRangeFilter } from '@/entity-configuration/definitions/types';
 
 export function getFieldUnit(field: EntityCoreFields) {
   const fieldDef = getFieldDefinition(field);
@@ -49,16 +48,16 @@ export function ValueOrRange({
   setFilter: (value: ValueOrRangeFilter['value']) => void;
 }) {
   const [range, setRange] = useState<GteLteValue>(
-    filter.value && Object.prototype.hasOwnProperty.call(filter.value, 'gte')
+    filter.value && Object.hasOwn(filter.value, 'gte')
       ? (filter.value as GteLteValue)
       : {
           gte: null,
           lte: null,
-        }
+        },
   );
 
   const [value, setValue] = useState<number | undefined>(
-    typeof filter.value === 'number' ? filter.value : undefined
+    typeof filter.value === 'number' ? filter.value : undefined,
   );
 
   function getInitialRadio() {
@@ -68,8 +67,7 @@ export function ValueOrRange({
 
     if (
       !!filter.value &&
-      (Object.prototype.hasOwnProperty.call(filter.value, 'gte') ||
-        Object.prototype.hasOwnProperty.call(filter.value, 'lte'))
+      (Object.hasOwn(filter.value, 'gte') || Object.hasOwn(filter.value, 'lte'))
     ) {
       return 'range';
     }
@@ -88,7 +86,11 @@ export function ValueOrRange({
     setFilter(newValue);
   }
 
-  function updateRange(newValue: { [x in keyof Partial<GteLteValue>]: number }) {
+  function updateRange(
+    newValue: {
+      [x in keyof Partial<GteLteValue>]: number;
+    },
+  ) {
     setRange({ ...range, ...newValue });
     setFilter({ ...range, ...newValue });
   }

@@ -2,13 +2,11 @@
 
 import { LoadingOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-
+import type { IEModel } from '@/api/entitycore/types/entities/e-model';
+import { DocumentationIcon } from '@/components/icons/Documentation';
 import { StandardFallback } from '@/features/entities/e-model/detail-view/error-message-line';
 import { Header } from '@/features/entities/e-model/detail-view/header';
-import { DocumentationIcon } from '@/components/icons/Documentation';
 import { keyBuilder } from '@/ui/use-query-keys/data';
-
-import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 
 type Props = {
   source: IEModel;
@@ -26,7 +24,7 @@ export default function IonChannels({ source }: Props) {
             'Content-Type': 'application/json',
             Accept: 'application/json',
           },
-        }
+        },
       );
       if (!response.ok) {
         const err = await response.json();
@@ -71,7 +69,7 @@ export default function IonChannels({ source }: Props) {
   );
 }
 
-function ListingGrid({ ionChannels }: { ionChannels: Record<string, Array<string>> }) {
+function ListingGrid({ ionChannels }: { ionChannels: Record<string, string[]> }) {
   return (
     <div className="grid grid-flow-col gap-2">
       {Object.entries(ionChannels).map(([location, channelList]) => (

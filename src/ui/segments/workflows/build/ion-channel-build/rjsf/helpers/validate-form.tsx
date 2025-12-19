@@ -1,4 +1,4 @@
-import { ErrorSchema, RJSFSchema, toErrorSchema } from '@rjsf/utils';
+import { type ErrorSchema, type RJSFSchema, toErrorSchema } from '@rjsf/utils';
 import validator from '@rjsf/validator-ajv8';
 
 import { log } from '@/utils/logger';

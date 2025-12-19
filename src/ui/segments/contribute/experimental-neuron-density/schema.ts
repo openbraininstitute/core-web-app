@@ -27,7 +27,7 @@ const MeasurementArraySchema = z.array(measurementSchema).superRefine((arr, ctx)
 
   arr.forEach((measurement, idx) => {
     const filledFields = [measurement.name, measurement.unit, measurement.value].filter(
-      (field) => field !== undefined && field !== null && field !== ''
+      (field) => field !== undefined && field !== null && field !== '',
     );
 
     if (filledFields.length > 0 && filledFields.length < 3) {

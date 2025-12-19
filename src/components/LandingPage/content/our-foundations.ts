@@ -1,5 +1,5 @@
-import { RichText, tryType } from './_common';
 import { useSanity } from '@/services/sanity';
+import { type RichText, tryType } from './_common';
 
 interface ContentForOurFoundationsText {
   title: string | null;
@@ -27,7 +27,7 @@ export function useSanityContentForOurFoundationsText() {
   description,
   "videoURL": video
 }`,
-      isContentForOurFoundationsText
+      isContentForOurFoundationsText,
     ) ?? {
       title: '',
       subtitle: '',
@@ -64,7 +64,7 @@ export function useSanityContentForOurFoundationsLinks() {
   url
 }
 `,
-      isContentForOurFoundationsLinks
+      isContentForOurFoundationsLinks,
     ) ?? []
   );
 }

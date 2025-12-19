@@ -7,6 +7,6 @@ export const HELP_QUERY_KEYS = {
     cellType: 'e-type' | 'm-type',
     activePage: number,
     pageSize: number,
-    filter?: any
+    filter?: any,
   ) => [prefix, 'entityTypes', cellType, activePage, pageSize, filter] as const,
 };

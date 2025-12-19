@@ -5,7 +5,7 @@ import isNil from 'es-toolkit/compat/isNil';
  * empty strings or strings full of spaces.
  */
 export function compactRecord<T>(
-  values: Record<string, any> | undefined
+  values: Record<string, any> | undefined,
 ): NonNullable<T> | NonNullable<Record<string, any>> {
   if (!values) {
     return {};

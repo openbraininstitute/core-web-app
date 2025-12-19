@@ -1,34 +1,32 @@
 'use client';
 
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
-import { capitalize, isNil, get } from 'es-toolkit/compat';
-import { useMemo } from 'react';
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { Form } from 'antd';
+import { capitalize, get, isNil } from 'es-toolkit/compat';
+import { useMemo } from 'react';
 import type { ZodObject, ZodRawShape } from 'zod';
-
-import { getOrganizations } from '@/api/entitycore/queries/general/organization-agent';
 import { getConsortia } from '@/api/entitycore/queries/general/consortium-agent';
-import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
+import { getOrganizations } from '@/api/entitycore/queries/general/organization-agent';
 import { getPersons } from '@/api/entitycore/queries/general/person-agent';
-import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
-import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
-import { AgentType } from '@/ui/segments/contribute/shared/types';
 import { getRoles } from '@/api/entitycore/queries/general/role';
-import { keyBuilder } from '@/ui/use-query-keys/data';
+import type { Agent } from '@/api/entitycore/types/shared/global';
+import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
+import type { IRole } from '@/api/entitycore/types/shared/role';
+import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
-import { cn } from '@/utils/css-class';
+import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
 import {
-  renderLabel,
   createZodFieldValidator,
   RequiredFieldMarker,
+  renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
-
-import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
 import type { TContribution } from '@/ui/segments/contribute/shared/schemas';
+import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 import type { TAgentType } from '@/ui/segments/contribute/shared/types';
-import type { Agent } from '@/api/entitycore/types/shared/global';
-import type { IRole } from '@/api/entitycore/types/shared/role';
+import { AgentType } from '@/ui/segments/contribute/shared/types';
+import { keyBuilder } from '@/ui/use-query-keys/data';
+import { cn } from '@/utils/css-class';
 
 interface IContributionSelectorProps<TSchema extends ZodObject<ZodRawShape>> {
   schema: TSchema;
@@ -81,7 +79,7 @@ export function ContributionSelector<TSchema extends ZodObject<ZodRawShape>>({
         searchable: true,
         searchField: 'pref_label__ilike',
       }),
-    []
+    [],
   );
 
   const RenderOrganizationDropdown = useMemo(
@@ -98,7 +96,7 @@ export function ContributionSelector<TSchema extends ZodObject<ZodRawShape>>({
         searchable: true,
         searchField: 'pref_label__ilike',
       }),
-    []
+    [],
   );
 
   const RenderConsortiumDropdown = useMemo(
@@ -115,7 +113,7 @@ export function ContributionSelector<TSchema extends ZodObject<ZodRawShape>>({
         searchable: true,
         searchField: 'pref_label__ilike',
       }),
-    []
+    [],
   );
 
   const agentDropdownMap = useMemo(
@@ -124,7 +122,7 @@ export function ContributionSelector<TSchema extends ZodObject<ZodRawShape>>({
       [AgentType.Organization.key]: RenderOrganizationDropdown,
       [AgentType.Consortium.key]: RenderConsortiumDropdown,
     }),
-    [RenderPersonDropdown, RenderOrganizationDropdown, RenderConsortiumDropdown]
+    [RenderPersonDropdown, RenderOrganizationDropdown, RenderConsortiumDropdown],
   );
 
   return (
@@ -144,7 +142,7 @@ export function ContributionSelector<TSchema extends ZodObject<ZodRawShape>>({
                         validator: createZodFieldValidator(
                           schema,
                           `contribution.${field.name}.agent_type`,
-                          form
+                          form,
                         ),
                       },
                     ]}
@@ -161,7 +159,7 @@ export function ContributionSelector<TSchema extends ZodObject<ZodRawShape>>({
                         validator: createZodFieldValidator(
                           schema,
                           `contribution.${field.name}.role_id`,
-                          form
+                          form,
                         ),
                       },
                     ]}
@@ -193,7 +191,7 @@ export function ContributionSelector<TSchema extends ZodObject<ZodRawShape>>({
                               validator: createZodFieldValidator(
                                 schema,
                                 `contribution.${field.name}.agent_id`,
-                                form
+                                form,
                               ),
                             },
                           ]}
@@ -230,16 +228,20 @@ export function ContributionSelector<TSchema extends ZodObject<ZodRawShape>>({
           variant="outline"
           size="lg"
           onClick={() => {
-            const current = form.getFieldValue('contribution') as Array<TContribution>;
+            const current = form.getFieldValue('contribution') as TContribution[];
             form.setFieldValue('contribution', [
               ...current,
-              { agent_type: undefined, agent_id: undefined, role_id: undefined },
+              {
+                agent_type: undefined,
+                agent_id: undefined,
+                role_id: undefined,
+              },
             ]);
           }}
           disabled={(() => {
-            const contributions = form.getFieldValue('contribution') as Array<TContribution>;
+            const contributions = form.getFieldValue('contribution') as TContribution[];
             return contributions.some(
-              (contrib) => ContributionSchema.required().safeParse(contrib).success === false
+              (contrib) => ContributionSchema.required().safeParse(contrib).success === false,
             );
           })()}
           className={cn(
@@ -247,7 +249,7 @@ export function ContributionSelector<TSchema extends ZodObject<ZodRawShape>>({
             'hover:border-primary-7 hover:text-primary-7 w-max',
             'disabled:text-label shrink-0',
             'not-disabled:bg-primary-9 not-disabled:text-white!',
-            'not-disabled:hover:bg-primary-8'
+            'not-disabled:hover:bg-primary-8',
           )}
         >
           <span>Add contribution</span>

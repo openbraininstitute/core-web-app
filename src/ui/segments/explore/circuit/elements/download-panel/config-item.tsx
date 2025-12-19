@@ -1,19 +1,17 @@
-import { kebabCase, get } from 'es-toolkit/compat';
-import { ReactNode } from 'react';
 import { Button } from 'antd';
-
-import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
-import { renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
-import { useAppNotification } from '@/components/notification';
+import { get, kebabCase } from 'es-toolkit/compat';
+import type { ReactNode } from 'react';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { DownloadIcon } from '@/components/icons';
-import { formatBytes } from '@/utils/format';
-import { classNames } from '@/util/utils';
-import { tryCatch } from '@/api/utils';
-import { log } from '@/utils/logger';
-
-import type { TCircuitContentConfigurationKeys } from '@/ui/segments/explore/circuit/elements/download-panel/content-configuration';
 import type { DirectoryItem } from '@/api/entitycore/types/shared/global';
+import { tryCatch } from '@/api/utils';
+import { DownloadIcon } from '@/components/icons';
+import { useAppNotification } from '@/components/notification';
+import { renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
+import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
+import type { TCircuitContentConfigurationKeys } from '@/ui/segments/explore/circuit/elements/download-panel/content-configuration';
+import { classNames } from '@/util/utils';
+import { formatBytes } from '@/utils/format';
+import { log } from '@/utils/logger';
 import type { Nullable } from '@/utils/type';
 
 export type TConfigChild = {
@@ -58,7 +56,7 @@ function ConfigChild({
         'hover:text-primary-6!',
         shouldBeDisabled
           ? 'pointer-events-none cursor-not-allowed border-gray-300 bg-transparent text-gray-400!'
-          : 'border-primary-6 text-white'
+          : 'border-primary-6 text-white',
       )}
       aria-label={`Download ${title}`}
       title={`Download ${title}`}
@@ -75,7 +73,7 @@ function ConfigChild({
         <div
           className={classNames(
             'flex flex-row items-center gap-x-3 font-light',
-            shouldBeDisabled ? 'text-gray-400' : 'text-primary-2'
+            shouldBeDisabled ? 'text-gray-400' : 'text-primary-2',
           )}
         >
           <div>{renderEmptyOrValue(asset.size ? formatBytes(asset.size) : null)}</div>
@@ -106,7 +104,7 @@ export type ConfigItemProps = {
   showType: string | null;
   showPrefix: string | null;
   emptyMessage?: string | null;
-  items: Array<TConfigChild>;
+  items: TConfigChild[];
   className?: string;
   downloadConfig: {
     entityId: string | undefined;
@@ -141,7 +139,7 @@ export function NetworkConfigItem({
         virtualLabId: context.virtualLabId,
         projectId: context.projectId,
         assetPath: path,
-      })
+      }),
     );
     if (data) {
       window.open(data.url, '_blank', 'noopener,noreferrer');

@@ -1,19 +1,17 @@
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { FullscreenOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
-import { useMemo, useTransition } from 'react';
 import { motion } from 'motion/react';
-
-import { useFullscreenSwitcher } from './hooks';
-
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useMemo, useTransition } from 'react';
 import { NeuronViewerContainer } from '@/components/neuron-viewer/neuron-viewer-with-actions';
 import {
   type ThreeDVisualizerQueryParamKeys,
-  threeDVisualizerState,
   threeDVisualizerQueryParam,
+  threeDVisualizerState,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { cn } from '@/utils/css-class';
+import { useFullscreenSwitcher } from './hooks';
 
 import styles from './neuron-visualizer.module.css';
 
@@ -61,7 +59,9 @@ export function NeuronVisualizer({
         className={cn(
           'flex h-full max-h-full min-w-0 flex-1 items-end justify-end justify-self-end',
           { 'text-primary-9 w-full': isExpanded },
-          { 'rounded-full border-black bg-black text-white shadow-md': isCollapsed }
+          {
+            'rounded-full border-black bg-black text-white shadow-md': isCollapsed,
+          },
         )}
         animate={{
           width: targetWidth,
@@ -109,7 +109,7 @@ export function NeuronVisualizer({
                   type="button"
                   className={cn(
                     'inline-flex size-10 items-center justify-center rounded bg-[#3A3A3A] px-3 py-3',
-                    styles.hideInFullscreen
+                    styles.hideInFullscreen,
                   )}
                   aria-label="Collapse 3D visualizer"
                   onClick={() => updateVisualizerState(threeDVisualizerState.Collapsed)}

@@ -1,20 +1,19 @@
-import { getSession } from '@/auth-fetch';
-
-import { config } from '@/config';
-import {
+import type {
   CancelSubscriptionRequest,
-  CreateSubscriptionRequest,
-  VlmUserSubscriptionsResponse,
-  VlmCancelSubscriptionResponse,
-  VlmCreateSubscriptionResponse,
-  VlmActiveSubscriptionResponse,
-  VlmListSubscriptionTiersResponse,
-  UserSubscriptionsResponse,
-  CreateSubscriptionResponse,
   CancelSubscriptionResponse,
+  CreateSubscriptionRequest,
+  CreateSubscriptionResponse,
   SubscriptionTiersResponse,
   UserActiveSubscriptionResponse,
+  UserSubscriptionsResponse,
+  VlmActiveSubscriptionResponse,
+  VlmCancelSubscriptionResponse,
+  VlmCreateSubscriptionResponse,
+  VlmListSubscriptionTiersResponse,
+  VlmUserSubscriptionsResponse,
 } from '@/api/virtual-lab-svc/queries/types';
+import { getSession } from '@/auth-fetch';
+import { config } from '@/config';
 
 function getBaseUrl() {
   return `${config.VIRTUAL_LAB_API_URL}/subscriptions`;
@@ -28,7 +27,7 @@ function getBaseUrl() {
  * @throws {Error} - Throws an error if the request fails
  */
 export async function createSubscription(
-  payload: CreateSubscriptionRequest
+  payload: CreateSubscriptionRequest,
 ): Promise<CreateSubscriptionResponse | null> {
   const session = await getSession();
   const response = await fetch(getBaseUrl(), {
@@ -58,7 +57,7 @@ export async function createSubscription(
  * @throws {Error} - Throws an error if the request fails
  */
 export async function cancelSubscription(
-  request: CancelSubscriptionRequest
+  request: CancelSubscriptionRequest,
 ): Promise<CancelSubscriptionResponse | null> {
   const session = await getSession();
   const response = await fetch(getBaseUrl(), {

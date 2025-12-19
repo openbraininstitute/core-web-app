@@ -1,5 +1,5 @@
-import { isString } from '@/util/type-guards';
 import { config } from '@/config';
+import { isString } from '@/util/type-guards';
 
 /**
  * This function can be used to set the `api` property
@@ -7,7 +7,7 @@ import { config } from '@/config';
  */
 export function serviceAiAgentUrl(
   entrypoint: string | string[],
-  params?: Record<string, string | null>
+  params?: Record<string, string | null>,
 ) {
   const AGENT_URL = config.AI_AGENT_URL ?? '(Missing AI_AGENT_URL)';
   const items = Array.isArray(entrypoint) ? entrypoint : [entrypoint];

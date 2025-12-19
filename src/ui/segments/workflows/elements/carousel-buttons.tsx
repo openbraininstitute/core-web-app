@@ -1,9 +1,8 @@
 'use client';
 
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
-
-import { useCarousel } from '@/ui/molecules/carousel';
 import { Button } from '@/ui/molecules/button';
+import { useCarousel } from '@/ui/molecules/carousel';
 import { cn } from '@/utils/css-class';
 
 export function CarouselButtons() {
@@ -17,7 +16,7 @@ export function CarouselButtons() {
         disabled={!canScrollPrev}
         onClick={scrollPrev}
         className={cn(
-          'bg-neutral-2/40 hover:bg-primary-9 text-primary-9 disabled:bg-neutral-1 h-8 w-8 hover:text-white disabled:text-gray-400'
+          'bg-neutral-2/40 hover:bg-primary-9 text-primary-9 disabled:bg-neutral-1 h-8 w-8 hover:text-white disabled:text-gray-400',
         )}
       >
         <LeftOutlined />
@@ -28,7 +27,7 @@ export function CarouselButtons() {
         variant="icon"
         disabled={!canScrollNext}
         className={cn(
-          'bg-neutral-2/40 hover:bg-primary-9 text-primary-9 disabled:bg-neutral-1 h-8 w-8 hover:text-white disabled:text-gray-400'
+          'bg-neutral-2/40 hover:bg-primary-9 text-primary-9 disabled:bg-neutral-1 h-8 w-8 hover:text-white disabled:text-gray-400',
         )}
         onClick={scrollNext}
       >

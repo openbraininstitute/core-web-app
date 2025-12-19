@@ -1,9 +1,7 @@
-import { useEffect } from 'react';
 import noop from 'es-toolkit/compat/noop';
-
-import { isBrowser } from '@/utils/environment';
-
+import { useEffect } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { isBrowser } from '@/utils/environment';
 
 export type TSelectedContributionType = {
   display: boolean;
@@ -21,13 +19,13 @@ export const makeSelectContributionEntityClickEvent = (detail: TSelectedContribu
 };
 
 const isContributionClickEvent = (
-  event: Event
+  event: Event,
 ): event is CustomEvent<TSelectedContributionType> => {
   return event instanceof CustomEvent && event.type === SelectContributionEntityClickEvent;
 };
 
 export const ContributionClickEventListener = (
-  cb: (event: CustomEvent<TSelectedContributionType>) => void
+  cb: (event: CustomEvent<TSelectedContributionType>) => void,
 ) => {
   const abortController = new AbortController();
   const { signal } = abortController;
@@ -38,7 +36,9 @@ export const ContributionClickEventListener = (
         cb(event);
       }
     };
-    window.addEventListener(SelectContributionEntityClickEvent, handler, { signal });
+    window.addEventListener(SelectContributionEntityClickEvent, handler, {
+      signal,
+    });
 
     return () => abortController.abort();
   }
@@ -47,7 +47,7 @@ export const ContributionClickEventListener = (
 };
 
 export const useContributionEntityClickEvent = (
-  cb: (event: CustomEvent<TSelectedContributionType>) => void
+  cb: (event: CustomEvent<TSelectedContributionType>) => void,
 ) => {
   useEffect(() => {
     const unsubscribe = ContributionClickEventListener(cb);

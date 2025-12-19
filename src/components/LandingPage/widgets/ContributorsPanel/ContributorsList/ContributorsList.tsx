@@ -1,10 +1,8 @@
 import React, { useEffect, useRef } from 'react';
-
-import { Contributor } from '../data';
-import { classNames } from '@/util/utils';
-
 import CenteredColumn from '@/components/LandingPage/components/CenteredColumn';
 import { styleBlockFullWidthPadded, styleButtonHoverable } from '@/components/LandingPage/styles';
+import { classNames } from '@/util/utils';
+import type { Contributor } from '../data';
 import styles from './ContributorsList.module.css';
 
 interface ContributorsListProps {
@@ -15,7 +13,7 @@ interface ContributorsListProps {
 export default function ContributorsList({ className, list }: ContributorsListProps) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [pagesToDisplay, setPagesToDisplay] = React.useState(1);
-  useEffect(() => setPagesToDisplay(1), [list]);
+  useEffect(() => setPagesToDisplay(1), []);
   const [contributorsPerPage, setContributorsPerPage] = React.useState(6);
   useResizeObserver(ref.current, setContributorsPerPage);
 
@@ -68,7 +66,7 @@ export default function ContributorsList({ className, list }: ContributorsListPr
 
 function useResizeObserver(
   div: HTMLDivElement | null,
-  setContributorsPerPage: React.Dispatch<React.SetStateAction<number>>
+  setContributorsPerPage: React.Dispatch<React.SetStateAction<number>>,
 ) {
   useEffect(() => {
     if (!div) return;
@@ -77,7 +75,7 @@ function useResizeObserver(
       const contributorEstimatedWidth = 440;
       const contributorsPerRow = Math.max(
         1,
-        Math.floor(div.clientWidth / contributorEstimatedWidth)
+        Math.floor(div.clientWidth / contributorEstimatedWidth),
       );
       const rowsPerPage = 6;
       setContributorsPerPage(contributorsPerRow * rowsPerPage);

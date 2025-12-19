@@ -1,12 +1,10 @@
-import React from 'react';
-
-import { styleBlockFullWidthPadded } from '../../styles';
-import PortalCard from './card/PortalCard';
-import { classNames } from '@/util/utils';
 import {
   useSanityContentForPortalsList,
   useSanityContentForPortalsTitle,
 } from '@/components/LandingPage/content/portals';
+import { classNames } from '@/util/utils';
+import { styleBlockFullWidthPadded } from '../../styles';
+import PortalCard from './card/PortalCard';
 
 import styles from './PortalsPanel.module.css';
 

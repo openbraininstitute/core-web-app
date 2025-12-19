@@ -1,19 +1,17 @@
 'use client';
 
-import { parseAsString, SingleParserBuilder, useQueryState } from 'nuqs';
+import { parseAsString, type SingleParserBuilder, useQueryState } from 'nuqs';
 import { match } from 'ts-pattern';
-
-import { Content as SynaptomeContent } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome';
+import type { IMEModel, ISingleNeuronSynaptome } from '@/api/entitycore/types';
 import { Content as MEModelContent } from '@/ui/segments/workflows/simulate/single-neuron/memodel';
-import { Results } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/result';
-import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import {
   PanelQueryParam,
-  WorkflowSimulatePanelKeys,
+  type WorkflowSimulatePanelKeys,
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-
-import type { IMEModel, ISingleNeuronSynaptome } from '@/api/entitycore/types';
+import { Results } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/result';
+import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { Content as SynaptomeContent } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome';
 
 type Props =
   | {
@@ -38,22 +36,28 @@ export function PanelSelector({ sessionId, synaptome, memodel, type }: Props) {
         shallow: true,
       })
       .withDefault(
-        WorkflowSimulatePanels.Configuration
-      ) as SingleParserBuilder<WorkflowSimulatePanelKeys>
+        WorkflowSimulatePanels.Configuration,
+      ) as SingleParserBuilder<WorkflowSimulatePanelKeys>,
   );
 
   const Panel = match({ panelId, type })
     .with(
-      { panelId: WorkflowSimulatePanels.Configuration, type: SimulationType.SingleNeuron },
+      {
+        panelId: WorkflowSimulatePanels.Configuration,
+        type: SimulationType.SingleNeuron,
+      },
       () => {
         return <MEModelContent sessionId={sessionId} memodel={memodel} />;
-      }
+      },
     )
     .with(
-      { panelId: WorkflowSimulatePanels.Configuration, type: SimulationType.SingleNeuronSynaptome },
+      {
+        panelId: WorkflowSimulatePanels.Configuration,
+        type: SimulationType.SingleNeuronSynaptome,
+      },
       () => {
         return <SynaptomeContent sessionId={sessionId} synaptome={synaptome!} memodel={memodel} />;
-      }
+      },
     )
     .with({ panelId: WorkflowSimulatePanels.Results }, () => {
       return <Results sessionId={sessionId} />;

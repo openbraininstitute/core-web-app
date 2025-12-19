@@ -1,9 +1,8 @@
 'use client';
 
+import { RightOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-
-import { RightOutlined } from '@ant-design/icons';
 
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
@@ -46,7 +45,7 @@ export default function AboutNavigation() {
             variant="outline"
             className={cn(
               'shadow-base h-15 w-full justify-start px-6 text-lg font-semibold',
-              isActive ? 'bg-primary-9 text-white' : ''
+              isActive ? 'bg-primary-9 text-white' : '',
             )}
             aria-label={`View ${section.name} features`}
           >

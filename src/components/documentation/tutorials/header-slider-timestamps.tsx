@@ -1,6 +1,6 @@
-import { StepProps } from '../type';
 import { ChevronLeft, ChevronRight } from '@/components/icons';
 import { classNames } from '@/util/utils';
+import type { StepProps } from '../type';
 
 export default function HeaderSliderTimestamps({
   content,
@@ -23,7 +23,7 @@ export default function HeaderSliderTimestamps({
                 'h-1.5 w-6 rounded-full transition-colors duration-300',
                 index >= activeSteps.first && index <= activeSteps.last
                   ? 'bg-white'
-                  : 'bg-primary-6'
+                  : 'bg-primary-6',
               )}
               key={index}
             />

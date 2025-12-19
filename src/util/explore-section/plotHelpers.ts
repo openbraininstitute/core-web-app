@@ -18,7 +18,7 @@ export function ensureCurrentUnit(unit: string, defaultUnit: CurrentUnit): Curre
 export const convertVoltageSeries = (
   values: number[],
   targetUnit: VoltageUnit,
-  baselineConversionFactor: number = 1
+  baselineConversionFactor: number = 1,
 ) => {
   if (targetUnit === 'V') {
     return values;
@@ -48,7 +48,7 @@ export const convertVoltageSeries = (
 export const convertCurrentSeries = (
   values: number[],
   targetUnit: CurrentUnit,
-  baselineConversionFactor: number = 1
+  baselineConversionFactor: number = 1,
 ) => {
   if (targetUnit === 'A') {
     return values;

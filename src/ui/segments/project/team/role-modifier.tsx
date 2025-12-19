@@ -2,23 +2,21 @@
 
 import { DeleteOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Popconfirm, Select, Button as AntdButton } from 'antd';
+import { Button as AntdButton, Popconfirm, Select } from 'antd';
 import { find, get } from 'es-toolkit/compat';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
-
-import { useAppNotification } from '@/components/notification';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Button } from '@/ui/molecules/button';
 import {
   cancelProjectInvite,
   removeUserFromProject,
   updateProjectUserRole,
 } from '@/api/virtual-lab-svc/queries/member';
-import { cn } from '@/utils/css-class';
-
 import type { Member, Role } from '@/api/virtual-lab-svc/queries/types';
+import { useAppNotification } from '@/components/notification';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Button } from '@/ui/molecules/button';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { cn } from '@/utils/css-class';
 
 export const roleOptions: { value: Role; label: string }[] = [
   { value: 'admin', label: 'Administrator' },
@@ -28,8 +26,8 @@ export const roleOptions: { value: Role; label: string }[] = [
 type RoleModifierProps = {
   user: Member;
   projectOwnerId?: string;
-  virtualLabAdmins?: Array<string> | null;
-  projectAdmins?: Array<string> | null;
+  virtualLabAdmins?: string[] | null;
+  projectAdmins?: string[] | null;
   isVirtualLabAdmin: boolean;
   isProjectAdmin: boolean;
 };
@@ -229,7 +227,7 @@ export function RoleModifier({
                 '[&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-transparent',
                 '[&_.ant-select-selector]:!border-primary-7 [&_.ant-select-selector]:!border',
                 '[&_.ant-select-selection-item]:!text-primary-8 [&_.ant-select-selection-item]:!font-bold',
-                '[&_.ant-select-arrow]:!text-primary-8 min-w-[140px] [&_.ant-select-selection-item]:!text-left'
+                '[&_.ant-select-arrow]:!text-primary-8 min-w-[140px] [&_.ant-select-selection-item]:!text-left',
               )}
               onChange={(value) => {
                 updateRole(value);
@@ -256,7 +254,7 @@ export function RoleModifier({
                   '[&_.ant-popover-inner]:rounded-none! [&_.ant-popconfirm-description]:text-white!',
                   '[&_.ant-popconfirm-title]:text-white!',
                   '[&_.ant-popconfirm-buttons>button]:rounded-none! [&_.ant-popconfirm-buttons>button]:px-5!',
-                  '[&_.ant-popover-arrow]:after:bg-primary-9!'
+                  '[&_.ant-popover-arrow]:after:bg-primary-9!',
                 ),
               }}
             >

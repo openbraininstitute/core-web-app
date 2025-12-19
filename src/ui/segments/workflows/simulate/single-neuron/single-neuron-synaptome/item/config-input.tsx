@@ -1,15 +1,13 @@
 import { Form, InputNumber } from 'antd';
-
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { label } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
-import { cn } from '@/utils/css-class';
-
 import type {
   SynapseConfig,
   UpdateSynapseSimulationProperty,
 } from '@/types/small-scale-simulator/single-neuron';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { label } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
+import { cn } from '@/utils/css-class';
 
-const SYNAPTIC_INPUT_FIELDS: Array<Omit<ConfigInputProps, 'onChange' | 'index' | 'formName'>> = [
+const SYNAPTIC_INPUT_FIELDS: Omit<ConfigInputProps, 'onChange' | 'index' | 'formName'>[] = [
   {
     name: 'delay',
     text: 'Delay',
@@ -56,7 +54,7 @@ function ConfigInput({ formName, name, text, min, max, index, unit, onChange }: 
           size={breakpoint === 'l' ? 'middle' : 'large'}
           className={cn(
             'border-neutral-2! [&_.ant-input-number-input]:text-primary-8! flex w-full items-center justify-between gap-2 rounded-sm! bg-white font-bold! [&_input]:placeholder:!font-light',
-            '[&_.ant-input-number-suffix]:text-neutral-3 [&_.ant-input-number-suffix]:pointer-events-auto'
+            '[&_.ant-input-number-suffix]:text-neutral-3 [&_.ant-input-number-suffix]:pointer-events-auto',
           )}
           min={min}
           max={max}

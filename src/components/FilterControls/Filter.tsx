@@ -1,6 +1,6 @@
-import { useCallback, useState, useMemo, ReactNode } from 'react';
 import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
-import { Column } from './ControlPanel';
+import { type ReactNode, useCallback, useMemo, useState } from 'react';
+import type { Column } from './ControlPanel';
 
 export function useToggleColumns<T>(columns: Column<T>[]) {
   const [columnHidden, setColumnHidden] = useState(() => {
@@ -11,14 +11,14 @@ export function useToggleColumns<T>(columns: Column<T>[]) {
     (key: keyof T) => {
       setColumnHidden({ ...columnHidden, [key]: !columnHidden[key] });
     },
-    [columnHidden]
+    [columnHidden],
   );
 
   const isColumnHidden = useCallback(
     (key: keyof T) => {
       return columnHidden[key];
     },
-    [columnHidden]
+    [columnHidden],
   );
 
   return {
@@ -50,14 +50,14 @@ export function useFilters<T>(data: T[]) {
       }
       return true;
     },
-    [filters]
+    [filters],
   );
 
   // eslint-disable-next-line
   const onFilterChange = useCallback(function onFilterChange<K extends keyof T>(
     dataIndex: K,
     value: T[K] | null,
-    filterFun: (value: T[K]) => boolean
+    filterFun: (value: T[K]) => boolean,
   ) {
     setFilters((f) => {
       return {
@@ -72,19 +72,19 @@ export function useFilters<T>(data: T[]) {
 
   const onChange = useCallback(
     // eslint-disable-next-line
-    function <K extends keyof T>(dataIndex: K, value: T[K]) {
+    <K extends keyof T>(dataIndex: K, value: T[K]) => {
       onFilterChange(dataIndex, value ?? null, (colValue) => {
         if (!value || typeof value !== 'string' || typeof colValue !== 'string') return true;
 
         return colValue.toLocaleLowerCase().includes(value.toLocaleLowerCase());
       });
     },
-    [onFilterChange]
+    [onFilterChange],
   );
 
   const onDateChange = useCallback(
     // eslint-disable-next-line
-    function <K extends keyof T>(dataIndex: K, values: [Date | null, Date | null] | null) {
+    <K extends keyof T>(dataIndex: K, values: [Date | null, Date | null] | null) => {
       onFilterChange(dataIndex, values as T[K] | null, (value) => {
         if (!value && values) return false;
         if (!values) return true;
@@ -103,7 +103,7 @@ export function useFilters<T>(data: T[]) {
         return true;
       });
     },
-    [onFilterChange]
+    [onFilterChange],
   );
 
   const onFilterReset = useCallback(() => {
@@ -112,10 +112,8 @@ export function useFilters<T>(data: T[]) {
 
   const filterValue = useCallback(
     // eslint-disable-next-line
-    function <K extends keyof T>(dataIndex: K) {
-      return filters[dataIndex]?.value ?? null;
-    },
-    [filters]
+    <K extends keyof T>(dataIndex: K) => filters[dataIndex]?.value ?? null,
+    [filters],
   );
 
   return {

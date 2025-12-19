@@ -1,5 +1,5 @@
+import type { PortableTextBlock } from 'next-sanity';
 import { z } from 'zod';
-import { PortableTextBlock } from 'next-sanity';
 
 import { getClient } from '@/api/sanity/client';
 import { logError } from '@/util/logger';

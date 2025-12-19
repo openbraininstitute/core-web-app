@@ -1,6 +1,6 @@
+import type { RJSFSchema, ValidatorType } from '@rjsf/utils';
 import { getDefaultFormState } from '@rjsf/utils';
 import { cloneDeep, get, set } from 'es-toolkit/compat';
-import type { RJSFSchema, ValidatorType } from '@rjsf/utils';
 
 /**
  * Resets a specific section of the form to its schema default.

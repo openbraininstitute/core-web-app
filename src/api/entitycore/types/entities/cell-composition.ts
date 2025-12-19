@@ -1,4 +1,11 @@
-import {
+import type {
+  ContributionFilter,
+  IDFilter,
+  NameFilter,
+  OwnershipFilter,
+  TimestampsFilter,
+} from '@/api/entitycore/types/shared/request';
+import type {
   EntityCoreBaseAsset,
   EntityCoreIdentifiable,
   EntityCoreOwnership,
@@ -6,13 +13,6 @@ import {
   IContributor,
   Timestamps,
 } from '../shared/global';
-import {
-  ContributionFilter,
-  TimestampsFilter,
-  OwnershipFilter,
-  IDFilter,
-  NameFilter,
-} from '@/api/entitycore/types/shared/request';
 
 type Density = {
   density: number;
@@ -60,7 +60,7 @@ export interface ICellComposition
     EntityCoreBaseAsset {
   name: string;
   description: string;
-  contributions?: Array<IContributor> | null;
+  contributions?: IContributor[] | null;
 }
 export interface ICellCompositionFilter
   extends IDFilter,

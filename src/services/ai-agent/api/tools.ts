@@ -1,5 +1,5 @@
-import { fetchJSON, asyncCreateSquash } from './util';
 import { isType } from '@/util/type-guards';
+import { asyncCreateSquash, fetchJSON } from './util';
 
 export const serviceAiAgentListTools = asyncCreateSquash(
   async (accessToken: string): Promise<AiAgentListToolsResponse> => {
@@ -10,7 +10,7 @@ export const serviceAiAgentListTools = asyncCreateSquash(
       typeGuard: isAiAgentListToolsResponse,
     });
     return data;
-  }
+  },
 );
 
 type AiAgentListToolsResponse = Array<{ name: string; name_frontend: string }>;
@@ -28,7 +28,7 @@ export const serviceAiAgentGetTool = asyncCreateSquash(
       typeGuard: isAiAgentGetToolResponse,
     });
     return data;
-  }
+  },
 );
 
 export type AiAgentGetToolResponse = {

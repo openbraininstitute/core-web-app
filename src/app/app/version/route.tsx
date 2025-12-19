@@ -77,7 +77,7 @@ export function GET(req: Request) {
                     `<tr>
                   <th>${key}</th>
                   <td>${value}</td>
-                </tr>`
+                </tr>`,
                 )
                 .join('')}
             </tbody>
@@ -85,6 +85,6 @@ export function GET(req: Request) {
         </div>
       </body>
     </html>`,
-    { headers: { 'Content-Type': 'text/html' } }
+    { headers: { 'Content-Type': 'text/html' } },
   );
 }

@@ -1,5 +1,5 @@
 /* eslint-disable no-param-reassign */
-import { Camera, Object3D, Scene, Vector3 } from 'three';
+import { type Camera, type Object3D, type Scene, Vector3 } from 'three';
 
 import { getSimulationColor } from '@/constants/simulate/single-neuron';
 
@@ -54,8 +54,11 @@ export class Labels {
   private injectionIcon: HTMLImageElement | null = null;
 
   constructor(
-    private readonly getRendererEnvironment: () => { scene: Scene; camera: Camera },
-    options: Partial<LabelsOptions> = {}
+    private readonly getRendererEnvironment: () => {
+      scene: Scene;
+      camera: Camera;
+    },
+    options: Partial<LabelsOptions> = {},
   ) {
     this.observer = new ResizeObserver(this.paint);
     this.options = {
@@ -162,7 +165,7 @@ export class Labels {
       ctx,
       toX,
       toY,
-      w
+      w,
     );
     const halfH = h * 0.5;
     computeBoxY(halfH, topLeft, topRight, bottomLeft, bottomRight);
@@ -196,7 +199,7 @@ export class Labels {
     ctx: CanvasRenderingContext2D,
     toX: (x: number) => number,
     toY: (y: number) => number,
-    w: number
+    w: number,
   ) {
     const { padding, margin, fontSize } = this.options;
     const iconSize = fontSize * 1.3;
@@ -240,7 +243,7 @@ function computeBoxY(
   topLeft: LabelToDraw[],
   topRight: LabelToDraw[],
   bottomLeft: LabelToDraw[],
-  bottomRight: LabelToDraw[]
+  bottomRight: LabelToDraw[],
 ) {
   topLeft.forEach((label, index) => {
     label.boxY = 0.5 + Math.round((halfH * (index + 1)) / (topLeft.length + 1));
@@ -260,7 +263,7 @@ function paintLabelsArrows(
   ctx: CanvasRenderingContext2D,
   allLabels: LabelToDraw[],
   center: number,
-  { backColor, bulletRadius, margin, fontSize }: LabelsOptions
+  { backColor, bulletRadius, margin, fontSize }: LabelsOptions,
 ) {
   ctx.strokeStyle = backColor;
   ctx.fillStyle = backColor;

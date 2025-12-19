@@ -1,5 +1,5 @@
-import { RichText, tryType, typeImage } from '../../content/_common';
 import { useSanity } from '@/services/sanity';
+import { type RichText, tryType, typeImage } from '../../content/_common';
 
 interface ContentForOurMissionDownload {
   title: string;
@@ -40,7 +40,7 @@ export function useSanityContentForOurMissionDownload() {
   "imageHeight": image.asset->metadata.dimensions.height,
 }
 `,
-      isContentForOurMissionDownload
+      isContentForOurMissionDownload,
     ) ?? DEFAULT
   );
 }

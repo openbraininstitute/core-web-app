@@ -1,14 +1,14 @@
 import type {
-  EntityCoreIdentifiable,
-  EntityAuthorization,
-  Timestamps,
   ActivityType,
+  EntityAuthorization,
+  EntityCoreIdentifiable,
+  Timestamps,
 } from '@/api/entitycore/types/shared/global';
 import type {
   ContributionFilter,
-  SharedFilter,
-  PaginationFilter,
   OwnershipFilter,
+  PaginationFilter,
+  SharedFilter,
 } from '@/api/entitycore/types/shared/request';
 
 interface IActivityBase<
@@ -32,7 +32,7 @@ export interface IActivity<
 
 interface IActivityFilterBase {
   used__id?: string | null;
-  used__id__in?: string | Array<string> | null;
+  used__id__in?: string | string[] | null;
   used__type?: string | null;
   generated__id?: string | null;
   generated__id__in?: string[] | null;

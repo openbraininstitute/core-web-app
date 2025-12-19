@@ -1,14 +1,12 @@
 import z from 'zod';
-
-import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
-import { compactRecord } from '@/utils/dictionary';
-
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type {
   ElectricalCellRecordingFilter,
   IElectricalCellRecording,
 } from '@/api/entitycore/types/entities/electrical-cell-recording';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import type { WorkspaceContext } from '@/types/common';
+import { compactRecord } from '@/utils/dictionary';
 
 const baseUri = '/electrical-cell-recording';
 /**
@@ -99,7 +97,7 @@ const electricalCellRecordingSchema = z.object({
     .array(
       z
         .string({ message: 'Cell recording location is required' })
-        .nonempty({ message: 'Cell recording location is required' })
+        .nonempty({ message: 'Cell recording location is required' }),
     )
     .nullable(),
   recording_type: z.string({ message: 'Cell recording type is required' }).nonempty({
@@ -113,7 +111,9 @@ const electricalCellRecordingSchema = z.object({
     .optional()
     .nullable(),
   ljp: z
-    .number({ invalid_type_error: 'Liquid junction potential (ljp) must be a number' })
+    .number({
+      invalid_type_error: 'Liquid junction potential (ljp) must be a number',
+    })
     .optional()
     .default(0.0),
   comment: z.string().optional().nullable(),

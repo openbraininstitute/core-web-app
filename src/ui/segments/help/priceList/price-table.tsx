@@ -26,7 +26,7 @@ const costUnitDictionary: Record<string, string> = {
 const getCostUnitDisplay = (
   costUnit: string | null,
   customCostUnit: string | null = null,
-  priceValue: number | null = null
+  priceValue: number | null = null,
 ): string => {
   if (!costUnit) return '';
 
@@ -300,7 +300,7 @@ const priceColumns: ColumnsType<SinglePrice> = [
       const unitDisplay = getCostUnitDisplay(
         record.costUnit,
         record.customCostUnit,
-        Number.isNaN(numValue) ? null : numValue
+        Number.isNaN(numValue) ? null : numValue,
       );
       return (
         <span style={{ color: '#002766' }}>
@@ -348,7 +348,7 @@ const priceColumns: ColumnsType<SinglePrice> = [
       const unitDisplay = getCostUnitDisplay(
         record.costUnit,
         record.customCostUnit,
-        Number.isNaN(numValue) ? null : numValue
+        Number.isNaN(numValue) ? null : numValue,
       );
       return (
         <span style={{ color: '#002766' }}>
@@ -463,7 +463,7 @@ export default function PriceTable({
           <h3
             className={cn(
               'text-primary-8 mb-4 rounded-full px-12 py-6 text-3xl! font-bold',
-              backgroundTitle
+              backgroundTitle,
             )}
           >
             Credits
@@ -497,7 +497,7 @@ export default function PriceTable({
               <h3
                 className={cn(
                   'text-primary-8 mt-12 mb-4 rounded-full px-12 py-6 text-3xl! font-bold',
-                  backgroundTitle
+                  backgroundTitle,
                 )}
               >
                 {formatSectionName(section)}

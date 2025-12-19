@@ -2,31 +2,30 @@
 
 'use client';
 
-import { useCallback, useMemo } from 'react';
-import { isNil } from 'es-toolkit/compat';
 import { Form } from 'antd';
+import { isNil } from 'es-toolkit/compat';
+import { useCallback, useMemo } from 'react';
 import type { ZodObject, ZodRawShape } from 'zod';
 
 import { getSubjects } from '@/api/entitycore/queries/general/subject';
+import type { ISubject } from '@/api/entitycore/types/shared/global';
 import { AgePeriod, Sex } from '@/api/entitycore/types/shared/global';
-import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
+import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { keyBuilder } from '@/ui/use-query-keys/data';
+import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
 import {
-  renderLabel,
   createZodFieldValidator,
   RequiredFieldMarker,
+  renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
-
-import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
-import type { ISubject } from '@/api/entitycore/types/shared/global';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 
 interface ISubjectSelectorProps<TSchema extends ZodObject<ZodRawShape>> {
   schema: TSchema;
 }
 
 function SubjectDataTooltip(data: ISubject) {
-  const fields: Array<string> = [];
+  const fields: string[] = [];
 
   if (data.strain?.name) {
     fields.push(`Strain: ${data.strain.name}`);
@@ -56,7 +55,7 @@ function SubjectDataTooltip(data: ISubject) {
   }
   if (data.age_period && data.age_period !== 'unknown') {
     const periodLabel = Object.values(AgePeriod).find(
-      (period) => period.key === data.age_period
+      (period) => period.key === data.age_period,
     )?.label;
     if (periodLabel) fields.push(`Age Period: ${periodLabel}`);
   }
@@ -102,7 +101,7 @@ export function SubjectSelector<TSchema extends ZodObject<ZodRawShape>>({
         searchField: 'search',
         tooltip: tooltipRenderer,
       }),
-    [virtualLabId, projectId, tooltipRenderer]
+    [virtualLabId, projectId, tooltipRenderer],
   );
 
   return (

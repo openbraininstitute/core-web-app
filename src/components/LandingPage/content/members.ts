@@ -1,5 +1,5 @@
-import { tryType, typeImage } from './_common';
 import { useSanity } from '@/services/sanity';
+import { tryType, typeImage } from './_common';
 
 export interface ContentForMember {
   firstName: string;
@@ -40,7 +40,7 @@ export function useSanityContentForMembers() {
   "imageHeight": image.asset->metadata.dimensions.height,
 }
   `,
-      isContentForMembers
+      isContentForMembers,
     ) ?? []
   );
 }

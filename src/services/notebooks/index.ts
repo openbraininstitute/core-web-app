@@ -1,6 +1,6 @@
-import { assertApiResponse } from '@/util/utils';
 import authFetch, { getSession } from '@/auth-fetch';
 import { config } from '@/config';
+import { assertApiResponse } from '@/util/utils';
 
 export type NotebookStartResponse = {
   message: string;
@@ -43,7 +43,7 @@ export async function startNotebook(
   id: string,
   filename: string,
   vlabId: string,
-  projectId: string
+  projectId: string,
 ): Promise<NotebookStartResponse> {
   const session = await getSession();
 
@@ -110,7 +110,7 @@ export async function startNotebook(
 
 export async function startEmptyNotebook(
   vlabId: string,
-  projectId: string
+  projectId: string,
 ): Promise<NotebookStartResponse> {
   const session = await getSession();
 

@@ -1,16 +1,16 @@
 'use client';
 
+import findLast from 'es-toolkit/compat/findLast';
+import head from 'es-toolkit/compat/head';
+import sortBy from 'es-toolkit/compat/sortBy';
+import toPairs from 'es-toolkit/compat/toPairs';
 import { useEffect, useMemo, useState } from 'react';
 import useBreakpoint from 'use-breakpoint';
-import toPairs from 'es-toolkit/compat/toPairs';
-import findLast from 'es-toolkit/compat/findLast';
-import sortBy from 'es-toolkit/compat/sortBy';
-import head from 'es-toolkit/compat/head';
 
 import { isBrowser } from '@/utils/environment';
 
 export const createBreakpoint = <T extends Record<string, number>>(
-  breakpoints?: T
+  breakpoints?: T,
 ): (() => keyof T) => {
   return () => {
     const [screen, setScreen] = useState(isBrowser() ? window.innerWidth : 0);

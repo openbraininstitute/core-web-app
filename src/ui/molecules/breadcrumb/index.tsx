@@ -1,8 +1,8 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
-import { RightOutlined, MoreOutlined } from '@ant-design/icons';
+import { MoreOutlined, RightOutlined } from '@ant-design/icons';
 import { Slot } from '@radix-ui/react-slot';
-import * as React from 'react';
+import type * as React from 'react';
 
 import { cn } from '@/utils/css-class';
 
@@ -16,7 +16,7 @@ function BreadcrumbList({ className, ...props }: React.ComponentProps<'ol'>) {
       data-slot="breadcrumb-list"
       className={cn(
         'text-muted-foreground flex flex-wrap items-center gap-1.5 text-sm break-words sm:gap-2.5',
-        className
+        className,
       )}
       {...props}
     />

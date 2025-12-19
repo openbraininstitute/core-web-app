@@ -1,10 +1,7 @@
-import React from 'react';
 import { CaretRightFilled } from '@ant-design/icons';
-
+import type { RenderNodeProps, TTreeNode } from '@/components/tree/types';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
-
-import type { TTreeNode, RenderNodeProps } from '@/components/tree/types';
 
 type Props<TNode extends TTreeNode = TTreeNode> = RenderNodeProps<TNode>;
 
@@ -33,7 +30,7 @@ export default function DefaultNode<TNode extends TTreeNode>({
       className={cn(
         'flex min-w-0 flex-1 cursor-default items-center transition-colors duration-200 ease-in-out',
         'hover:text-primary-1 px-2 py-1 text-white hover:font-bold',
-        figureOutMargin(hasChildren, isExpanded)
+        figureOutMargin(hasChildren, isExpanded),
       )}
       onClick={onClick}
       onKeyDown={(evt) => {
@@ -49,7 +46,7 @@ export default function DefaultNode<TNode extends TTreeNode>({
               <button
                 className={classNames(
                   'ml-auto flex flex-shrink-0 items-center justify-center',
-                  isSelected ? 'text-primary-8' : 'text-[var(--color)]'
+                  isSelected ? 'text-primary-8' : 'text-[var(--color)]',
                 )}
                 onClick={onToggle}
                 type="button"
@@ -58,7 +55,7 @@ export default function DefaultNode<TNode extends TTreeNode>({
                   size={14}
                   className={classNames(
                     'text-base text-gray-300 transition-transform duration-300 ease-in-out',
-                    isExpanded ? 'rotate-90' : ''
+                    isExpanded ? 'rotate-90' : '',
                   )}
                 />
               </button>
@@ -80,7 +77,7 @@ export default function DefaultNode<TNode extends TTreeNode>({
 
 function figureOutMargin(
   hasChildren: boolean,
-  isExpanded: boolean
+  isExpanded: boolean,
 ): string | boolean | null | undefined {
   if (!hasChildren) return 'mb-2';
   return isExpanded ? 'my-0' : 'my-1.5';

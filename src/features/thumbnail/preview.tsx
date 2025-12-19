@@ -2,24 +2,23 @@
 
 'use client';
 
-import { useInView } from 'react-intersection-observer';
 import { useQuery } from '@tanstack/react-query';
 import { Empty, Skeleton } from 'antd';
-import { match, P } from 'ts-pattern';
 import Image from 'next/image';
+import { useInView } from 'react-intersection-observer';
+import { match, P } from 'ts-pattern';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { getAssetElement } from '@/api/entitycore/utils';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { keyBuilder } from '@/ui/use-query-keys/data';
-import { getPreviewBlob } from '@/api/thumbnail-svc';
-import { cn } from '@/utils/css-class';
-
 import type { AssetLabel, EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import { getAssetElement } from '@/api/entitycore/utils';
+import { getPreviewBlob } from '@/api/thumbnail-svc';
 import type {
   TEntityAssetTarget,
   TThumbnailServiceTarget,
 } from '@/entity-configuration/definitions/renderer';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { keyBuilder } from '@/ui/use-query-keys/data';
+import { cn } from '@/utils/css-class';
 
 interface T extends EntityCoreResource {}
 
@@ -72,7 +71,7 @@ export function PreviewThumbnail({
   } = useQuery({
     queryKey: keyBuilder.preview(
       { virtualLabId, projectId },
-      { entityId: entity?.id, dpi, target }
+      { entityId: entity?.id, dpi, target },
     ),
     queryFn: async () => {
       if (target === 'assetLabel') {
@@ -102,7 +101,7 @@ export function PreviewThumbnail({
         entity,
         virtualLabId as string | undefined,
         projectId as string | undefined,
-        target as TThumbnailServiceTarget
+        target as TThumbnailServiceTarget,
       );
     },
     select: (data) => URL.createObjectURL(data),
@@ -117,7 +116,7 @@ export function PreviewThumbnail({
         className={cn('h-full! w-full! rounded-none!', loadingClassName)}
         rootClassName={cn(
           `skeleton-empty-${entity.id}`,
-          'flex h-full! w-full! flex-col items-center justify-center  m-0 rounded-none!'
+          'flex h-full! w-full! flex-col items-center justify-center  m-0 rounded-none!',
         )}
         style={{
           height: fill
@@ -158,7 +157,7 @@ export function PreviewThumbnail({
                   : 196,
             }}
           />
-        )
+        ),
     )
     .with({ error: P.nonNullable }, () => {
       return (
@@ -171,7 +170,7 @@ export function PreviewThumbnail({
             'm-0 flex h-full! w-full! flex-col items-center justify-center rounded-none!',
             '[&_.ant-empty-description]:text-center [&_.ant-empty-description]:break-words [&_.ant-empty-description]:whitespace-normal',
             '[&_.ant-empty-description]:text-red-300! [&_.ant-empty-image>svg>g_g]:stroke-red-300!',
-            loadingClassName
+            loadingClassName,
           )}
           style={{
             height: fill
@@ -196,7 +195,7 @@ export function PreviewThumbnail({
         className={cn(
           `thumbnail-empty-${entity.id}`,
           'm-0 flex h-full! w-full! flex-col items-center justify-center rounded-none!',
-          loadingClassName
+          loadingClassName,
         )}
         style={{
           height: fill

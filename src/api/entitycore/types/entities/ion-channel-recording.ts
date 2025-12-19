@@ -1,24 +1,23 @@
-import { IRecordingFilter } from './electrical-cell-recording';
-
-import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
+import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
+import type {
+  EntityAuthorization,
+  EntityCoreBaseAsset,
+  EntityCoreIdentifiable,
+  EntityCoreOwnership,
+  EntityCoreType,
+  IBrainLocation,
+  ILicense,
+  Timestamps,
+} from '@/api/entitycore/types/shared/global';
 import type {
   BrainRegionFilter,
   ContributionFilter,
-  TimestampsFilter,
+  IDFilter,
   PaginationFilter,
   SharedFilter,
-  IDFilter,
+  TimestampsFilter,
 } from '@/api/entitycore/types/shared/request';
-import type {
-  EntityCoreIdentifiable,
-  EntityCoreBaseAsset,
-  EntityAuthorization,
-  IBrainLocation,
-  Timestamps,
-  ILicense,
-  EntityCoreType,
-  EntityCoreOwnership,
-} from '@/api/entitycore/types/shared/global';
+import type { IRecordingFilter } from './electrical-cell-recording';
 
 const RecordingType = {
   Intracellular: {
@@ -40,7 +39,7 @@ const RecordingType = {
 } as const;
 
 export const RecordingTypeDictionary = Object.fromEntries(
-  Object.entries(RecordingType).map(([name, value]) => [name, value.key])
+  Object.entries(RecordingType).map(([name, value]) => [name, value.key]),
 ) as {
   [K in keyof typeof RecordingType]: (typeof RecordingType)[K]['key'];
 };
@@ -67,7 +66,7 @@ export interface IonChannel {
   description: string;
   label: string;
   gene: string;
-  synonyms: Array<string>;
+  synonyms: string[];
 }
 
 export interface IIonChannelRecording

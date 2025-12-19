@@ -10,7 +10,7 @@ export type FlagDefinition<T = unknown> = {
 export const defineFlag = <T>(definition: FlagDefinition<T>) => {
   if (definition.labels && definition.labels.length !== definition.values.length) {
     throw new Error(
-      `Flag ${definition.key} has ${definition.labels.length} labels but ${definition.values.length} values`
+      `Flag ${definition.key} has ${definition.labels.length} labels but ${definition.values.length} values`,
     );
   }
 

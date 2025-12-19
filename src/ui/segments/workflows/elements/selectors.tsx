@@ -1,22 +1,21 @@
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { useFlags } from '@/features/feature-flags';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/ui/molecules/select';
+import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 import {
   ActivityDict,
   getDropdownOptionsByCategory,
 } from '@/ui/segments/workflows/elements/helpers';
 import { cn } from '@/utils/css-class';
-import {
-  SelectContent,
-  SelectTrigger,
-  SelectGroup,
-  SelectValue,
-  SelectLabel,
-  SelectItem,
-  Select,
-} from '@/ui/molecules/select';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
-import { useFlags } from '@/features/feature-flags';
 
 export function EntityTypeSelectScrollable({
   value,
@@ -41,7 +40,7 @@ export function EntityTypeSelectScrollable({
         className={cn(
           'focus-visible:ring-neutral-2 bg-transparent shadow-none focus-visible:shadow-none focus-visible:ring-1',
           'w-[280px] max-w-max min-w-36 rounded-full border-none text-lg',
-          "[&>span[data-slot='select-value']]:text-primary-9 [&>span[data-slot='select-value']]:font-bold"
+          "[&>span[data-slot='select-value']]:text-primary-9 [&>span[data-slot='select-value']]:font-bold",
         )}
       >
         <SelectValue placeholder={<span className="text-base font-light!">Select a type</span>} />
@@ -61,14 +60,14 @@ export function EntityTypeSelectScrollable({
                   value={_value!}
                   className={cn(
                     'text-primary-9 text-lg font-bold',
-                    'data-[highlighted]:text-primary-7!'
+                    'data-[highlighted]:text-primary-7!',
                   )}
                 >
                   {label}
                 </SelectItem>
               ))}
             </SelectGroup>
-          )
+          ),
         )}
       </SelectContent>
     </Select>
@@ -90,7 +89,7 @@ export function CategorySelectScrollable({
         className={cn(
           'focus-visible:ring-neutral-2 bg-transparent shadow-none focus-visible:shadow-none focus-visible:ring-1',
           'w-[280px] max-w-max min-w-36 rounded-full border-none text-lg',
-          "[&>span[data-slot='select-value']]:text-primary-9 [&>span[data-slot='select-value']]:font-bold"
+          "[&>span[data-slot='select-value']]:text-primary-9 [&>span[data-slot='select-value']]:font-bold",
         )}
       >
         <SelectValue

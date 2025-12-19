@@ -1,4 +1,4 @@
-import {
+import type {
   MemberResponse,
   MembersResponse,
   Role,
@@ -32,7 +32,9 @@ export async function listVirtualLabMembers({
   });
 
   if (!response.ok) {
-    throw new Error(`listing virtual labs members failed`, { cause: await response.json() });
+    throw new Error(`listing virtual labs members failed`, {
+      cause: await response.json(),
+    });
   }
 
   const result: MembersResponse = await response.json();
@@ -62,7 +64,9 @@ export async function listProjectMembers({
   });
 
   if (!response.ok) {
-    throw new Error(`listing project members failed`, { cause: await response.json() });
+    throw new Error(`listing project members failed`, {
+      cause: await response.json(),
+    });
   }
 
   const result: MembersResponse = await response.json();
@@ -102,7 +106,9 @@ export async function updateVirtualLabUserRole({
   });
 
   if (!response.ok) {
-    throw new Error('Failed to change user role', { cause: await response.json() });
+    throw new Error('Failed to change user role', {
+      cause: await response.json(),
+    });
   }
 
   const result: MemberResponse = await response.json();
@@ -146,7 +152,9 @@ export async function cancelVirtualLabInvite({
   });
 
   if (!response.ok) {
-    throw new Error('Failed to delete lab invite', { cause: await response.json() });
+    throw new Error('Failed to delete lab invite', {
+      cause: await response.json(),
+    });
   }
 
   const result: VlmResponse<null> = await response.json();
@@ -183,7 +191,9 @@ export async function removeUserFromVirtualLab({
   });
 
   if (!response.ok) {
-    throw new Error('Failed to remove user from virtual lab', { cause: await response.json() });
+    throw new Error('Failed to remove user from virtual lab', {
+      cause: await response.json(),
+    });
   }
 
   const result: VlmResponse<null> = await response.json();
@@ -226,7 +236,9 @@ export async function updateProjectUserRole({
   });
 
   if (!response.ok) {
-    throw new Error('Failed to change user role within project', { cause: await response.json() });
+    throw new Error('Failed to change user role within project', {
+      cause: await response.json(),
+    });
   }
 
   const result: MemberResponse = await response.json();
@@ -272,7 +284,9 @@ export async function cancelProjectInvite({
   });
 
   if (!response.ok) {
-    throw new Error('Failed to delete virtual lab lab invite', { cause: await response.json() });
+    throw new Error('Failed to delete virtual lab lab invite', {
+      cause: await response.json(),
+    });
   }
 
   const result: VlmResponse<null> = await response.json();
@@ -312,7 +326,9 @@ export async function removeUserFromProject({
   });
 
   if (!response.ok) {
-    throw new Error('Failed to remove user from virtual lab', { cause: await response.json() });
+    throw new Error('Failed to remove user from virtual lab', {
+      cause: await response.json(),
+    });
   }
 
   const result: VlmDeleteProjectMemberResponse = await response.json();

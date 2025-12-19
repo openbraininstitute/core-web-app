@@ -1,37 +1,34 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
-import { useMemo, useState } from 'react';
-import { unwrap } from 'jotai/utils';
-import { useAtom } from 'jotai';
 import { Spin } from 'antd';
-
-import type { ComponentProps, CSSProperties, ReactNode } from 'react';
-import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
 import type { ColumnProps, TableProps } from 'antd/es/table';
-
-import { ListingFilterPanel } from '@/ui/segments/data-table/elements/listing-filter-panel/listing-filter-panel';
-import { CircuitViewToggle } from '@/ui/segments/explore/circuit/elements/view-toggle';
-import { FilterControls } from '@/ui/segments/data-table/elements/filter-controls';
-import { CircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
-import { coreFiltersAtom } from '@/ui/segments/data-table/elements/context';
-import { OnCellClick, WrapperTable } from '@/ui/segments/data-table/table';
-import { Pagination } from '@/ui/segments/data-table/elements/pagination';
-import { BrainRegionDropdown } from '@/features/brain-region-dropdown';
-import { Search } from '@/ui/segments/data-table/search';
-import { WorkspaceScope } from '@/constants';
-import { cn } from '@/utils/css-class';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
-import type { TCircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
+import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
+import { useAtom } from 'jotai';
+import { unwrap } from 'jotai/utils';
+import type { ComponentProps, CSSProperties, ReactNode } from 'react';
+import { useMemo, useState } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
-import type { WorkspaceContext } from '@/types/common';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type {
-  Facets,
   Pagination as EntitycorePagination,
+  Facets,
 } from '@/api/entitycore/types/shared/response';
+import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
+import { WorkspaceScope } from '@/constants';
+import { BrainRegionDropdown } from '@/features/brain-region-dropdown';
+import type { WorkspaceContext } from '@/types/common';
+import { coreFiltersAtom } from '@/ui/segments/data-table/elements/context';
+import { FilterControls } from '@/ui/segments/data-table/elements/filter-controls';
+import { ListingFilterPanel } from '@/ui/segments/data-table/elements/listing-filter-panel/listing-filter-panel';
+import { Pagination } from '@/ui/segments/data-table/elements/pagination';
+import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
+import { Search } from '@/ui/segments/data-table/search';
+import { type OnCellClick, WrapperTable } from '@/ui/segments/data-table/table';
+import { CircuitViewToggle } from '@/ui/segments/explore/circuit/elements/view-toggle';
+import type { TCircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
+import { CircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
+import { cn } from '@/utils/css-class';
 
 export type Props<T> = {
   facets: Facets | undefined;
@@ -57,7 +54,7 @@ export type Props<T> = {
   onCellClick?: OnCellClick<T> | undefined;
   showLoadingState?: boolean;
   isLoading?: boolean;
-  dataSource: Array<T>;
+  dataSource: T[];
   tableStyle?: CSSProperties | undefined;
   view: TCircuitRepresentationView | null;
   queryKeyHash?: string;
@@ -97,10 +94,10 @@ export function MainTable({
           coreFiltersAtom({
             dataType,
             key: dataKey,
-          })
+          }),
         ),
-      [dataType, dataKey]
-    )
+      [dataType, dataKey],
+    ),
   );
 
   return (
@@ -110,13 +107,13 @@ export function MainTable({
         data-testid="data-table-with-filters"
         className={cn(
           'flex h-full w-full min-w-0 flex-col before:shadow-lg after:shadow-md',
-          cls?.container
+          cls?.container,
         )}
       >
         <div
           className={cn(
             'mb-5 grid w-full grid-cols-[2fr_2fr] items-center justify-center gap-5 pt-2',
-            '[grid-template-areas:"search_pagination_filter"]'
+            '[grid-template-areas:"search_pagination_filter"]',
           )}
         >
           <div className="w-full [grid-area:search]">

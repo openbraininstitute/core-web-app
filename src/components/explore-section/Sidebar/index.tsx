@@ -1,17 +1,17 @@
 import { ArrowRightOutlined } from '@ant-design/icons';
 import { atom, useAtomValue } from 'jotai';
-import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 import ApplicationSidebar, {
   NavigationItem,
-  NavigationItemProps,
+  type NavigationItemProps,
 } from '@/components/ApplicationSidebar';
 import Link from '@/components/Link';
 import { MainNavigation } from '@/components/main';
 import { classNames } from '@/util/utils';
 
-const EXPLORE_NAVIGATION_LIST: Array<NavigationItemProps> = [
+const EXPLORE_NAVIGATION_LIST: NavigationItemProps[] = [
   {
     name: 'Interactive exploration',
     description:
@@ -55,7 +55,7 @@ function ExploreNavigation({ expanded }: { expanded: boolean }) {
     <ul
       className={classNames(
         'primary-scrollbar flex h-full w-full flex-col items-start justify-start gap-y-1 overflow-y-auto',
-        !expanded && 'hidden'
+        !expanded && 'hidden',
       )}
     >
       {EXPLORE_NAVIGATION_LIST.map(({ name, url, description, bgcolor }) => (

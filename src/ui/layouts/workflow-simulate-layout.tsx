@@ -18,7 +18,7 @@ export function WorkflowSimulateLayout({ children }: Props) {
       data-testid="workflow-simulate-layout"
       className={cn(
         'bg-background border-neutral-2 ml-2 gap-4 overflow-hidden rounded-2xl border px-2 py-4',
-        'h-full max-h-[calc(100vh-4rem)]'
+        'h-full max-h-[calc(100vh-4rem)]',
       )}
     >
       {children}

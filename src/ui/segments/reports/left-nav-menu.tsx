@@ -1,17 +1,16 @@
 'use client';
 
-import { usePathname, useSearchParams } from 'next/navigation';
 import { RightOutlined } from '@ant-design/icons';
 import filter from 'es-toolkit/compat/filter';
 import Link from 'next/link';
+import { usePathname, useSearchParams } from 'next/navigation';
 
 import type { ComponentProps } from 'react';
-
+import { config } from '@/config';
+import { useUserRole } from '@/hooks/use-user-role';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { useUserRole } from '@/hooks/use-user-role';
 import { Button } from '@/ui/molecules/button';
-import { config } from '@/config';
 import { cn } from '@/utils/css-class';
 
 type Props = {
@@ -56,7 +55,7 @@ export function LeftMenu({ className }: Props) {
       baseUrl: link.url,
       url: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks/${link.url}`,
     })),
-    (link) => !link.requireRole || (link.requireRole && isProjectAdmin)
+    (link) => !link.requireRole || (link.requireRole && isProjectAdmin),
   );
 
   return (
@@ -71,7 +70,7 @@ export function LeftMenu({ className }: Props) {
             variant="outline"
             className={cn(
               'h-auto w-full justify-start font-bold shadow-sm',
-              activeSection === baseUrl && 'bg-primary-9 text-white'
+              activeSection === baseUrl && 'bg-primary-9 text-white',
             )}
             size={breakpoint === 'xl' ? 'lg' : 'md'}
             aria-label={activeSection === baseUrl ? 'active' : ''}

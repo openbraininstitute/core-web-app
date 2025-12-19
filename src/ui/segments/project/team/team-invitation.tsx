@@ -1,21 +1,20 @@
 'use client';
 
-import { PlusOutlined, ArrowLeftOutlined, LoadingOutlined, DeleteFilled } from '@ant-design/icons';
+import { ArrowLeftOutlined, DeleteFilled, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ConfigProvider, Select, Empty, List, Input } from 'antd';
-import { filter, uniqBy, find, map } from 'es-toolkit/compat';
-import { useState, useRef, useEffect } from 'react';
+import { ConfigProvider, Empty, Input, List, Select } from 'antd';
+import { filter, find, map, uniqBy } from 'es-toolkit/compat';
+import { useEffect, useRef, useState } from 'react';
 import z from 'zod';
 
 import { inviteToProject } from '@/api/virtual-lab-svc/queries/invite';
-import { roleOptions } from '@/ui/segments/project/team/role-modifier';
+import type { Role } from '@/api/virtual-lab-svc/queries/types';
 import { useAppNotification } from '@/components/notification';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
+import { roleOptions } from '@/ui/segments/project/team/role-modifier';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
-
-import type { Role } from '@/api/virtual-lab-svc/queries/types';
 
 const emailSchema = z.string().min(3, 'Email is required').email('Email is not valid');
 
@@ -35,7 +34,7 @@ function EmailInput({
   value: string;
   onChange: (v: string) => void;
   disabled: boolean;
-  inviteList: Array<InvitePayload>;
+  inviteList: InvitePayload[];
 }) {
   const [error, setError] = useState<string | null>(null);
 
@@ -55,9 +54,9 @@ function EmailInput({
     const duplicates = map(
       filter(
         inviteList,
-        (o) => o.email.toLowerCase() === value.toLowerCase() && value.trim() !== ''
+        (o) => o.email.toLowerCase() === value.toLowerCase() && value.trim() !== '',
       ),
-      (item) => inviteList.indexOf(item)
+      (item) => inviteList.indexOf(item),
     );
 
     if (duplicates.filter((p) => p !== index).length > 0) {
@@ -79,7 +78,7 @@ function EmailInput({
         className={cn(
           'focus:white hover:bg-background! border-primary-9 hover:text-primary-8! bg-transparent',
           'focus-within:bg-background! bg-background! text-primary-9! focus-within:text-primary-9!',
-          'placeholder:text-primary-8 placeholder:text-sm!'
+          'placeholder:text-primary-8 placeholder:text-sm!',
         )}
         disabled={disabled}
       />
@@ -93,9 +92,7 @@ export function InviteMembers({ onBack }: { onBack: () => void }) {
   const queryClient = useQueryClient();
   const { virtualLabId, projectId } = useWorkspace();
   const { error: notifyError, success: notifySuccess } = useAppNotification();
-  const [inviteList, setInviteList] = useState<Array<InvitePayload>>([
-    { email: '', role: 'member' },
-  ]);
+  const [inviteList, setInviteList] = useState<InvitePayload[]>([{ email: '', role: 'member' }]);
 
   const addEmailField = () => {
     setInviteList((prev) => [...prev, { email: '', role: 'member' }]);
@@ -113,18 +110,18 @@ export function InviteMembers({ onBack }: { onBack: () => void }) {
 
   const updateInvite = (index: number, field: keyof InvitePayload, value: string) => {
     setInviteList((prev) =>
-      prev.map((invite, i) => (i === index ? { ...invite, [field]: value } : invite))
+      prev.map((invite, i) => (i === index ? { ...invite, [field]: value } : invite)),
     );
   };
 
   const inviteUsers = async () => {
     const validInvites = inviteList.filter(
-      (invite) => invite.email && emailSchema.safeParse(invite.email).success
+      (invite) => invite.email && emailSchema.safeParse(invite.email).success,
     );
     const invites = await Promise.allSettled(
       validInvites.map(({ email, role }) =>
-        inviteToProject({ virtualLabId, projectId, email, role })
-      )
+        inviteToProject({ virtualLabId, projectId, email, role }),
+      ),
     );
     return invites;
   };
@@ -134,7 +131,7 @@ export function InviteMembers({ onBack }: { onBack: () => void }) {
       const existingMember = find(prev, (o) => o.email === record.email);
       if (existingMember) {
         return prev.map((member) =>
-          member.email === existingMember.email ? { ...member, role } : member
+          member.email === existingMember.email ? { ...member, role } : member,
         );
       }
       return [...prev, { ...record, role }];
@@ -145,7 +142,7 @@ export function InviteMembers({ onBack }: { onBack: () => void }) {
     mutationFn: inviteUsers,
     onSuccess: (data) => {
       const sentInvites = inviteList.filter(
-        (invite) => invite.email && emailSchema.safeParse(invite.email).success
+        (invite) => invite.email && emailSchema.safeParse(invite.email).success,
       );
       const failedInvites = data
         .map((result, idx) => {
@@ -226,9 +223,9 @@ export function InviteMembers({ onBack }: { onBack: () => void }) {
                 {
                   uniqBy(
                     inviteList.filter(
-                      (invite) => invite.email && emailSchema.safeParse(invite.email).success
+                      (invite) => invite.email && emailSchema.safeParse(invite.email).success,
                     ),
-                    'email'
+                    'email',
                   ).length
                 }
               </span>
@@ -284,7 +281,7 @@ export function InviteMembers({ onBack }: { onBack: () => void }) {
                         '[&_.ant-select-selection-item]:!text-primary-8 [&_.ant-select-arrow]:!text-primary-8',
                         '[&.ant-select-disabled_.ant-select-selector]:border-neutral-2!',
                         '[&.ant-select-disabled_.ant-select-selection-item]:text-neutral-3!',
-                        '[&.ant-select-disabled_.ant-select-arrow]:text-neutral-3!'
+                        '[&.ant-select-disabled_.ant-select-arrow]:text-neutral-3!',
                       )}
                       // disabled={mutation.isPending}
                     />
@@ -296,7 +293,7 @@ export function InviteMembers({ onBack }: { onBack: () => void }) {
                       onClick={() => removeEmailField(index)}
                       className={cn(
                         'hover:bg-neutral-1 border-neutral-2 hover:text-destructive disabled:text-destructive/30',
-                        'text-destructive hover:not-disabled:shadow-bnb h-12! w-12 border !p-2'
+                        'text-destructive hover:not-disabled:shadow-bnb h-12! w-12 border !p-2',
                       )}
                       disabled={mutate.isPending || inviteList.length === 1}
                     >
@@ -319,7 +316,7 @@ export function InviteMembers({ onBack }: { onBack: () => void }) {
           className={cn(
             'border-primary-4 group bg-primary-9 hover:text-primary-4',
             'px-4 text-white select-none hover:border-white',
-            'disabled:text-neutral-4 disabled:border-neutral-2 disabled:bg-transparent'
+            'disabled:text-neutral-4 disabled:border-neutral-2 disabled:bg-transparent',
           )}
           disabled={mutate.isPending || disableAddMember}
         >
@@ -351,7 +348,7 @@ export function InviteMembers({ onBack }: { onBack: () => void }) {
             Send{' '}
             {
               inviteList.filter(
-                (invite) => invite.email && emailSchema.safeParse(invite.email).success
+                (invite) => invite.email && emailSchema.safeParse(invite.email).success,
               ).length
             }{' '}
             invitation(s)

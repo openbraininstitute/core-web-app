@@ -1,12 +1,10 @@
-import { ComponentProps, JSX } from 'react';
 import { Image } from 'antd';
-
-import { renderPreview } from '@/entity-configuration/definitions/renderer';
+import type { ComponentProps, JSX } from 'react';
 import { hasAssets } from '@/api/entitycore/guards';
-import { cn } from '@/utils/css-class';
-
-import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import type { IMEModel } from '@/api/entitycore/types';
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import { renderPreview } from '@/entity-configuration/definitions/renderer';
+import { cn } from '@/utils/css-class';
 
 type Props = {
   record: IMEModel;
@@ -35,7 +33,7 @@ export function MEModelPreview({ record, cls }: Props) {
           rootClassName="w-full h-full"
           className="h-full! w-full! rounded-md object-contain"
         />
-      )
+      ),
     );
 
   const tracePreview: JSX.Element | null = renderPreview(
@@ -52,13 +50,13 @@ export function MEModelPreview({ record, cls }: Props) {
         rootClassName="w-full h-full flex items-center justify-center"
         className="h-full! w-full! rounded-md object-contain"
       />
-    )
+    ),
   );
   return (
     <div
       className={cn(
         'flex h-full w-full items-stretch justify-center gap-2 rounded-md',
-        cls?.container
+        cls?.container,
       )}
       key={record.id}
     >

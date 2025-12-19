@@ -2,26 +2,25 @@
 
 'use client';
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Form, ConfigProvider, Input } from 'antd';
-import { useRouter } from 'next/navigation';
-import { useRef, useState } from 'react';
 import {
   CheckCircleFilled,
   CloseCircleFilled,
   InfoCircleOutlined,
   LoadingOutlined,
 } from '@ant-design/icons';
-
-import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager/event';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { ConfigProvider, Form, Input } from 'antd';
+import { useRouter } from 'next/navigation';
+import { useRef, useState } from 'react';
 import { checkProjectExists, createProject } from '@/api/virtual-lab-svc/queries/project';
 import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
+import type { ProjectPayload } from '@/api/virtual-lab-svc/types';
 import { useAppNotification } from '@/components/notification';
-import { ProjectPayload } from '@/api/virtual-lab-svc/types';
 import { config } from '@/config';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
+import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager/event';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
 export function CreationForm() {
@@ -34,7 +33,9 @@ export function CreationForm() {
 
   const mutateRecentWorkspace = useMutation({
     mutationFn: ({ vlabId, prjId }: { vlabId: string; prjId: string }) =>
-      setUserRecentWorkspace({ workspace: { virtualLabId: vlabId, projectId: prjId } }),
+      setUserRecentWorkspace({
+        workspace: { virtualLabId: vlabId, projectId: prjId },
+      }),
   });
 
   const { isPending, mutateAsync } = useMutation({
@@ -49,7 +50,10 @@ export function CreationForm() {
       }
     },
     onSuccess(data, variables) {
-      mutateRecentWorkspace.mutate({ vlabId: virtualLabId, prjId: data.data?.project.id! });
+      mutateRecentWorkspace.mutate({
+        vlabId: virtualLabId,
+        prjId: data.data?.project.id!,
+      });
       notifySuccess({
         message: `Your Project ${variables.name} has been created successfully and is now ready to use.`,
         placement: 'topRight',
@@ -59,11 +63,15 @@ export function CreationForm() {
       await queryClient.invalidateQueries({
         queryKey: keyBuilder.listWorkspaceProjects({ virtualLabId }),
       });
-      if (result && result.data?.project) {
+      if (result?.data?.project) {
         const virLabId = result.data.project.virtual_lab_id;
         const projectId = result.data.project.id;
         navigate(`${config.ROOT_ROUTE}/${virLabId}/${projectId}`);
-        makeTriggerWorkspaceConfigurationClickEvent({ on: false, data: null, type: null });
+        makeTriggerWorkspaceConfigurationClickEvent({
+          on: false,
+          data: null,
+          type: null,
+        });
       }
     },
   });
@@ -124,14 +132,17 @@ export function CreationForm() {
                   nameRef.current = name;
                   try {
                     setValidName({ loading: true, status: null });
-                    const exists = await checkProjectExists({ vlabId: virtualLabId, name });
+                    const exists = await checkProjectExists({
+                      vlabId: virtualLabId,
+                      name,
+                    });
                     if (exists) {
                       setValidName({ loading: false, status: 'non-valid' });
                       return Promise.reject(new Error(`This project name is already taken.`));
                     }
                     setValidName({ loading: false, status: 'valid' });
                     return Promise.resolve();
-                  } catch (error) {
+                  } catch (_error) {
                     setValidName({ loading: false, status: 'non-valid' });
                   }
                 },
@@ -148,7 +159,7 @@ export function CreationForm() {
                 'focus-within:border-primary-4! focus-within:border-b-2! focus-within:ring-0!',
                 '[&.ant-input-status-error]:border-0! [&.ant-input-status-error]:border-b-2! [&.ant-input-status-error]:border-red-300!',
                 'bg-primary-9! focus-within:[&_input]:text-white! [&.ant-input-status-error]:focus:ring-0!',
-                '[&_.ant-input-disabled]:opacity-40!'
+                '[&_.ant-input-disabled]:opacity-40!',
               )}
               suffix={
                 validName.loading ? (
@@ -183,7 +194,7 @@ export function CreationForm() {
                 'focus-within:border-primary-4! focus-within:border-b-2! focus-within:ring-0!',
                 '[&.ant-input-status-error]:border-0! [&.ant-input-status-error]:border-b-2! [&.ant-input-status-error]:border-red-300!',
                 'bg-primary-9! focus-within:text-white! [&.ant-input-status-error]:focus:ring-0!',
-                'disabled:opacity-40'
+                'disabled:opacity-40',
               )}
               placeholder="Write your description here"
             />
@@ -208,7 +219,7 @@ export function CreationForm() {
               'hover:bg-primary-8/40',
               'hover:shadow-[1px_2px_4px_0px_#00000099]',
               'shadow-[8px_12px_24px_0px_#00000099]',
-              'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
+              'shadow-[-8px_-8px_42px_0px_#FFFFFF29]',
             )}
             disabled={isPending}
           >

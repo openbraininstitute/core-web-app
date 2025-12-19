@@ -1,63 +1,61 @@
 'use client';
 
 import { atomFamily, atomWithReset } from 'jotai/utils';
-
+import { getSimulationColor } from '@/constants/simulate/single-neuron';
+import type { PlotData } from '@/services/bluenaas-single-cell/types';
 import {
   makeStorageAtomWithValidationFamily,
   safeStorage,
 } from '@/ui/hooks/use-storage-atom-with-validation';
 import {
-  StimulationConfigurationSchema,
-  ExperimentalSetupConfigurationSchema,
-  NeuronLocationArraySchema,
-  SynapseConfigurationArraySchema,
-  OverviewConfigurationSchema,
-  FrequencyInputConfigSchema,
-  AmperageStateSchema,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import {
   buildDefaultRecordingLocation,
-  DEFAULT_SIMULATION_EXPERIMENTAL_SETUP,
   DEFAULT_CURRENT_INJECTION_CONFIG,
+  DEFAULT_SIMULATION_EXPERIMENTAL_SETUP,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import { getSimulationColor } from '@/constants/simulate/single-neuron';
-
-import type { PlotData } from '@/services/bluenaas-single-cell/types';
+import {
+  AmperageStateSchema,
+  ExperimentalSetupConfigurationSchema,
+  FrequencyInputConfigSchema,
+  NeuronLocationArraySchema,
+  OverviewConfigurationSchema,
+  StimulationConfigurationSchema,
+  SynapseConfigurationArraySchema,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 export const StimulationConfigurationAtomFamily = makeStorageAtomWithValidationFamily(
   StimulationConfigurationSchema,
   DEFAULT_CURRENT_INJECTION_CONFIG,
-  safeStorage
+  safeStorage,
 );
 
 export const ExperimentalSetupConfigurationAtomFamily = makeStorageAtomWithValidationFamily(
   ExperimentalSetupConfigurationSchema,
   DEFAULT_SIMULATION_EXPERIMENTAL_SETUP,
-  safeStorage
+  safeStorage,
 );
 
 export const RecordLocationConfigurationAtomFamily = makeStorageAtomWithValidationFamily(
   NeuronLocationArraySchema,
   [buildDefaultRecordingLocation(getSimulationColor(0))],
-  safeStorage
+  safeStorage,
 );
 
 export const SynaptomeConfigurationAtomFamily = makeStorageAtomWithValidationFamily(
   SynapseConfigurationArraySchema,
   [],
-  safeStorage
+  safeStorage,
 );
 
 export const OverviewConfigurationAtomFamily = makeStorageAtomWithValidationFamily(
   OverviewConfigurationSchema,
   { name: '', description: undefined },
-  safeStorage
+  safeStorage,
 );
 
 export const FrequencyInputConfigurationAtomFamily = makeStorageAtomWithValidationFamily(
   FrequencyInputConfigSchema,
   { constantOrSteps: 'constant', stepFrequencyState: null },
-  safeStorage
+  safeStorage,
 );
 
 export const AmperageStateAtomFamily = makeStorageAtomWithValidationFamily(
@@ -70,7 +68,7 @@ export const AmperageStateAtomFamily = makeStorageAtomWithValidationFamily(
     computed: [0.05, 0.1625, 0.275, 0.3875, 0.5],
     error: null,
   },
-  safeStorage
+  safeStorage,
 );
 
 export const neuronSectionNamesAtomFamily = atomFamily((key: string) => {

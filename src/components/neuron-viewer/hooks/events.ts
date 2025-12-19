@@ -1,6 +1,6 @@
 /* eslint-disable max-classes-per-file */
 
-import { InstancedBufferGeometry, Mesh, ShaderMaterial } from 'three';
+import type { InstancedBufferGeometry, Mesh, ShaderMaterial } from 'three';
 
 export const DISPLAY_SYNAPSES_3D_EVENT = 'DISPLAY_SYNAPSES_3D';
 export const REMOVE_SYNAPSES_3D_EVENT = 'REMOVE_SYNAPSES_3D';
@@ -14,7 +14,7 @@ export class DisplaySynapses3DEvent extends Event {
     detail: {
       id: string;
       mesh: SynapsesMesh;
-    }
+    },
   ) {
     super(type);
     this.detail = detail;
@@ -32,7 +32,7 @@ export class RemoveSynapses3DEvent extends Event {
     detail: {
       id: string;
       meshId: string;
-    }
+    },
   ) {
     super(type);
     this.detail = detail;

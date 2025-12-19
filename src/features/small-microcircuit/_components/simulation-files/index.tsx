@@ -3,18 +3,18 @@ import { useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
 import { useEffect, useMemo } from 'react';
 
-import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import { IEntity } from '@/api/entitycore/types/entities/entity';
-import { AssetLabel, IAsset } from '@/api/entitycore/types/shared/global';
+import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import type { IEntity } from '@/api/entitycore/types/entities/entity';
+import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import { AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
 import { Loader } from '@/components/loader';
 import {
   modelAtomFamily,
   simResultBySimIdAtomFamily,
 } from '@/features/small-microcircuit/_components/atoms';
 import { useLastTruthyValue } from '@/hooks/hooks';
-import { WorkspaceContext } from '@/types/common';
+import type { WorkspaceContext } from '@/types/common';
 import { classNames } from '@/util/utils';
-import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 
 export type File = {
   asset: IAsset;
@@ -66,11 +66,11 @@ export function SimulationFiles({
     }
 
     const circuitConfigFile = inputFiles.find(
-      (file) => file.asset.label === AssetLabel.sonata_circuit
+      (file) => file.asset.label === AssetLabel.sonata_circuit,
     );
 
     const voltageReportFile = outputFiles.find(
-      (file) => file.asset.label === AssetLabel.voltage_report
+      (file) => file.asset.label === AssetLabel.voltage_report,
     );
 
     if (!selectedFile) {
@@ -141,7 +141,7 @@ export function SimulationFiles({
 
 function useInputFiles(
   simulation: ICircuitSimulation,
-  context: WorkspaceContext
+  context: WorkspaceContext,
 ): [boolean, File[]] {
   const modelAtom = modelAtomFamily({ id: simulation.entity_id, context });
   const modelLoadableAtom = useMemo(() => loadable(modelAtom), [modelAtom]);
@@ -171,7 +171,7 @@ function useInputFiles(
 
     sortBy(
       simulation.assets.map((asset) => ({ asset, entity: simulation })),
-      (file) => file.asset.path
+      (file) => file.asset.path,
     ).forEach((file) => files.push(file));
 
     return files;
@@ -183,7 +183,7 @@ function useInputFiles(
 function useOutputFiles(
   simulation: ICircuitSimulation,
   context: WorkspaceContext,
-  enabled: boolean
+  enabled: boolean,
 ): [boolean, File[]] {
   const simResultAtom = simResultBySimIdAtomFamily({
     simulationId: simulation.id,
@@ -206,7 +206,7 @@ function useOutputFiles(
 
     const files = sortBy(
       assets.map((asset) => ({ asset, entity: simResultEntity })),
-      (file) => file.asset.path
+      (file) => file.asset.path,
     );
 
     return [loading, files];
@@ -229,14 +229,14 @@ function SimulationFile({ file, selected, onSelect }: SimulationFileProps) {
       title={fileName}
       className={classNames(
         'flex w-full cursor-pointer items-center justify-between rounded-4xl p-4',
-        selected ? 'bg-[linear-gradient(95.07deg,_#003A8C_42.23%,_#001026_109.71%)]' : 'bg-white'
+        selected ? 'bg-[linear-gradient(95.07deg,_#003A8C_42.23%,_#001026_109.71%)]' : 'bg-white',
       )}
       onClick={() => onSelect(file)}
     >
       <span
         className={classNames(
           'truncate overflow-hidden font-semibold whitespace-nowrap',
-          selected ? 'text-white' : 'text-primary-9'
+          selected ? 'text-white' : 'text-primary-9',
         )}
       >
         {fileName}
@@ -244,7 +244,7 @@ function SimulationFile({ file, selected, onSelect }: SimulationFileProps) {
       <span
         className={classNames(
           'ml-4 flex-shrink-0 rounded-2xl border-1 px-4 uppercase',
-          selected ? 'border-white text-white' : 'text-neutral-5 border-neutral-5'
+          selected ? 'border-white text-white' : 'text-neutral-5 border-neutral-5',
         )}
       >
         {fileExt}

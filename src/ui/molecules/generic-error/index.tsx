@@ -27,7 +27,7 @@ export function GenericError({ text, icon, shouldContactSupport, cls }: Props) {
         className={cn(
           'text-warning max-w-xl text-center',
           breakpoint === 'l' ? 'text-lg' : 'text-2xl',
-          cls?.text
+          cls?.text,
         )}
       >
         {text}
@@ -39,7 +39,7 @@ export function GenericError({ text, icon, shouldContactSupport, cls }: Props) {
           size={breakpoint === 'l' ? 'md' : 'lg'}
           className={cn(
             'text-warning! bg-neutral-1 border-neutral-2 hover:bg-warning/20 hover:text-bold border px-10 py-4! hover:font-black',
-            cls?.contact
+            cls?.contact,
           )}
         >
           <a href="mailto:support@openbraininstitute.org" rel="noopener noreferrer">

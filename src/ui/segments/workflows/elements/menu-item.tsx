@@ -36,7 +36,7 @@ export function MenuItem<T>({
           'pointer-events-none cursor-not-allowed border! border-gray-200 bg-gray-100/50': disabled,
         },
         { 'bg-primary-9 text-white!': active },
-        className
+        className,
       )}
       role="button"
       aria-disabled={disabled}
@@ -48,7 +48,7 @@ export function MenuItem<T>({
           {
             'text-primary-9/50': disabled,
           },
-          { 'text-white!': active }
+          { 'text-white!': active },
         )}
       >
         {group && (
@@ -63,7 +63,9 @@ export function MenuItem<T>({
           className={cn(
             'text-neutral-3 group-hover:text-primary-9 flex items-center justify-center gap-1 self-end text-sm',
             'rounded-full px-4 py-1 group-hover:bg-white group-hover:shadow-sm',
-            { 'bg-primary-9! group-hover:border-primary-9/40 border text-white!': active }
+            {
+              'bg-primary-9! group-hover:border-primary-9/40 border text-white!': active,
+            },
           )}
         >
           <span>Start</span>

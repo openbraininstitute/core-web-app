@@ -1,10 +1,5 @@
 'use client';
 
-import { useReducer, useRef, useState, useEffect } from 'react';
-import { Form, Input, Select, InputNumber } from 'antd';
-import { useSearchParams } from 'next/navigation';
-import { useAtom, useAtomValue } from 'jotai';
-import { Color } from 'three';
 import {
   CloseOutlined,
   DeleteOutlined,
@@ -12,39 +7,41 @@ import {
   LoadingOutlined,
   PlusCircleOutlined,
 } from '@ant-design/icons';
-
+import { Form, Input, InputNumber, Select } from 'antd';
 import findIndex from 'es-toolkit/compat/findIndex';
 import groupBy from 'es-toolkit/compat/groupBy';
 import map from 'es-toolkit/compat/map';
-
-import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import { SECTION_TARGET_MAPPING } from '@/features/entities/single-neuron-synaptome/build/elements/constants';
-import { neuronSectionNamesAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
-import { synapsesPlacementAtom } from '@/state/synaptome';
-import {
-  validateSingleNeuronSynapseGenerationFormula,
-  getSingleNeuronSynaptomePlacement,
-} from '@/api/small-scale-simulator';
-import { SettingAdjustment } from '@/components/icons/SettingAdjustment';
-import { useAppNotification } from '@/components/notification';
-import { ArrowSyncFilled } from '@/components/icons/buttons';
-import { Button } from '@/ui/molecules/button';
-import { messages } from '@/i18n/en/synaptome';
-import {
-  sendDisplaySynapses3DEvent,
-  sendRemoveSynapses3DEvent,
-} from '@/components/neuron-viewer/hooks/events';
-import { classNames, getRandomIntInclusive } from '@/util/utils';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { tryCatch } from '@/api/utils';
-import { cn } from '@/utils/css-class';
-import { log } from '@/utils/logger';
-
+import { useAtom, useAtomValue } from 'jotai';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useReducer, useRef, useState } from 'react';
+import { Color } from 'three';
 import {
   SingleNeuronSynaptomeConfigurationSchema,
   type TSingleNeuronSynaptomeConfiguration,
 } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import {
+  getSingleNeuronSynaptomePlacement,
+  validateSingleNeuronSynapseGenerationFormula,
+} from '@/api/small-scale-simulator';
+import { tryCatch } from '@/api/utils';
+import { ArrowSyncFilled } from '@/components/icons/buttons';
+import { SettingAdjustment } from '@/components/icons/SettingAdjustment';
+import {
+  sendDisplaySynapses3DEvent,
+  sendRemoveSynapses3DEvent,
+} from '@/components/neuron-viewer/hooks/events';
+import { useAppNotification } from '@/components/notification';
+import { SECTION_TARGET_MAPPING } from '@/features/entities/single-neuron-synaptome/build/elements/constants';
+import { messages } from '@/i18n/en/synaptome';
+import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
+import { synapsesPlacementAtom } from '@/state/synaptome';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Button } from '@/ui/molecules/button';
+import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import { neuronSectionNamesAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import { classNames, getRandomIntInclusive } from '@/util/utils';
+import { cn } from '@/utils/css-class';
+import { log } from '@/utils/logger';
 
 type Props = {
   sessionId: string;
@@ -58,7 +55,7 @@ const label = (text: string, required: boolean = false, cls?: string) => (
 
 function updateSeeds(
   synaptomeMap: Map<string, TSingleNeuronSynaptomeConfiguration>,
-  getNewSeed: (oldSeed: number, key: string) => number
+  getNewSeed: (oldSeed: number, key: string) => number,
 ): Map<string, TSingleNeuronSynaptomeConfiguration> {
   return new Map(
     map(Array.from(synaptomeMap.entries()), ([key, config]) => [
@@ -67,7 +64,7 @@ function updateSeeds(
         ...config,
         seed: getNewSeed(config.seed, key),
       },
-    ])
+    ]),
   );
 }
 
@@ -97,7 +94,7 @@ export function SynapseSet({ sessionId }: Props) {
     groupBy(secNames, (str) => {
       const bracketIndex = findIndex(str, (char) => char === '[');
       return bracketIndex !== -1 ? str.slice(0, bracketIndex) : str;
-    })
+    }),
   );
 
   const hasApic = groupedSections.includes('apic');
@@ -142,7 +139,7 @@ export function SynapseSet({ sessionId }: Props) {
   const onHideSynapse = () => {
     if (config?.id) {
       const currentSynapsesPlacementConfig = synapsesPlacement?.[config.id];
-      if (currentSynapsesPlacementConfig && currentSynapsesPlacementConfig.meshId) {
+      if (currentSynapsesPlacementConfig?.meshId) {
         sendRemoveSynapses3DEvent(config?.id, currentSynapsesPlacementConfig.meshId);
         setSynapsesPlacementAtom({
           ...synapsesPlacement,
@@ -170,7 +167,7 @@ export function SynapseSet({ sessionId }: Props) {
           distance_soma_gte: null,
           distance_soma_lte: null,
         },
-      ]
+      ],
     );
 
     setTimeout(() => {
@@ -198,7 +195,11 @@ export function SynapseSet({ sessionId }: Props) {
           seed: tempSessionValue?.seed ?? 100,
           synapseSets: tempSessionValue?.synapseSets,
         });
-        form.setFieldsValue({ target: 'soma', formula: undefined, soma_synapse_count: 50 });
+        form.setFieldsValue({
+          target: 'soma',
+          formula: undefined,
+          soma_synapse_count: 50,
+        });
         await validateFormValues(currentValues);
       }
       if (config?.target === 'soma' && newTarget !== 'soma') {
@@ -210,7 +211,10 @@ export function SynapseSet({ sessionId }: Props) {
           seed: tempSessionValue?.seed ?? 100,
           synapseSets: tempSessionValue?.synapseSets,
         });
-        form.setFieldsValue({ target: newTarget, soma_synapse_count: undefined });
+        form.setFieldsValue({
+          target: newTarget,
+          soma_synapse_count: undefined,
+        });
         await validateFormValues(currentValues);
       }
     }
@@ -231,7 +235,7 @@ export function SynapseSet({ sessionId }: Props) {
     const index =
       findIndex(
         Array.from(sessionValue?.synapseSets?.entries() ?? []),
-        ([key]) => key === config?.id
+        ([key]) => key === config?.id,
       ) + 1;
     if (!response) {
       notification.error({
@@ -279,7 +283,7 @@ export function SynapseSet({ sessionId }: Props) {
               seed,
               config: configSet,
             },
-          })
+          }),
         );
 
         if (error) return onVisualizationError(error);
@@ -315,7 +319,7 @@ export function SynapseSet({ sessionId }: Props) {
         });
 
         configRef.current = configSet;
-      } catch (error) {
+      } catch (_error) {
         return onVisualizationError();
       } finally {
         setLoadingVisualize(false);
@@ -329,7 +333,7 @@ export function SynapseSet({ sessionId }: Props) {
       seed: value ?? 100,
       synapseSets: updateSeeds(
         sessionValue?.synapseSets ?? new Map(),
-        () => Number(value) + getRandomIntInclusive(0, Number(value))
+        () => Number(value) + getRandomIntInclusive(0, Number(value)),
       ),
     });
     Array.from(sessionValue?.synapseSets?.entries() ?? []).forEach(([, v]) => {
@@ -363,7 +367,7 @@ export function SynapseSet({ sessionId }: Props) {
         id="synapse-set-config"
         className={cn(
           'flex w-full flex-col items-center justify-between gap-2 text-lg font-bold',
-          '[&_.ant-form-item-explain-error]:text-sm [&_.ant-form-item-explain-error]:font-light!'
+          '[&_.ant-form-item-explain-error]:text-sm [&_.ant-form-item-explain-error]:font-light!',
         )}
         layout="vertical"
         requiredMark={false}
@@ -466,7 +470,7 @@ export function SynapseSet({ sessionId }: Props) {
                   <div
                     className={classNames(
                       'flex w-full items-center gap-2 pb-[8px]',
-                      displayFormulaHelp && 'justify-between'
+                      displayFormulaHelp && 'justify-between',
                     )}
                   >
                     {label('Synapse distribution formula', true, 'normal-case')}
@@ -479,7 +483,7 @@ export function SynapseSet({ sessionId }: Props) {
                   <p
                     className={classNames(
                       'transition-height text-sm font-light text-gray-400',
-                      displayFormulaHelp ? 'mb-4 h-full opacity-100' : 'mb-0 h-0 opacity-0'
+                      displayFormulaHelp ? 'mb-4 h-full opacity-100' : 'mb-0 h-0 opacity-0',
                     )}
                   >
                     Supports advanced math functions (e.g., sin(x), log(x), ...). <br />
@@ -524,7 +528,7 @@ export function SynapseSet({ sessionId }: Props) {
                       '[&_.ant-input]:text-primary-8 text-base font-bold italic [&_input]:placeholder:text-base! [&_input]:placeholder:font-light!',
                       '[&_.ant-input]:border-neutral-2 [&_.ant-input]:border [&_.ant-input]:border-r-0 [&_.ant-input]:py-2',
                       '[&_.ant-input-group-addon]:border-neutral-2 [&_.ant-input-group-addon]:border [&_.ant-input-group-addon]:py-2',
-                      '[&_.ant-input-group-addon]: [&_.ant-input-group-addon]:border-l-0 [&_.ant-input-group-addon]:bg-white'
+                      '[&_.ant-input-group-addon]: [&_.ant-input-group-addon]:border-l-0 [&_.ant-input-group-addon]:bg-white',
                     )}
                     addonAfter={
                       <span className="whitespace-nowrap text-gray-400 not-italic">
@@ -542,7 +546,7 @@ export function SynapseSet({ sessionId }: Props) {
               'border-neutral-3 w-full border',
               displayExclusionRules
                 ? 'rounded-2xl p-4 text-gray-400'
-                : 'text-primary-8 rounded-full py-1 pr-1 pl-4'
+                : 'text-primary-8 rounded-full py-1 pr-1 pl-4',
             )}
           >
             <button
@@ -578,7 +582,7 @@ export function SynapseSet({ sessionId }: Props) {
                 'w-full rounded-2xl',
                 displayExclusionRules
                   ? 'mt-4 flex h-full flex-col opacity-100'
-                  : 'invisible h-0 opacity-0'
+                  : 'invisible h-0 opacity-0',
               )}
             >
               <Form.List name={['exclusion_rules']}>
@@ -630,7 +634,7 @@ export function SynapseSet({ sessionId }: Props) {
                                         lteValue !== 0
                                       ) {
                                         return Promise.reject(
-                                          new Error('At least one distance value must be provided')
+                                          new Error('At least one distance value must be provided'),
                                         );
                                       }
 
@@ -677,7 +681,7 @@ export function SynapseSet({ sessionId }: Props) {
                                         lteValue !== 0
                                       ) {
                                         return Promise.reject(
-                                          new Error('At least one distance value must be provided')
+                                          new Error('At least one distance value must be provided'),
                                         );
                                       }
 

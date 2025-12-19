@@ -1,14 +1,13 @@
+import { CheckCircleFilled, ClockCircleOutlined } from '@ant-design/icons';
 import { Avatar } from 'antd';
 import get from 'es-toolkit/compat/get';
 import nth from 'es-toolkit/compat/nth';
-
-import { CheckCircleFilled, ClockCircleOutlined } from '@ant-design/icons';
+import { PendingInvite, StashUsersCrown } from '@/components/icons/EditorIcons';
 import {
   MemberRoleMap,
-  TMember,
   SIZE_MAP,
+  type TMember,
 } from '@/components/VirtualLab/create-entity-flows/common/types';
-import { PendingInvite, StashUsersCrown } from '@/components/icons/EditorIcons';
 import { COLOR_DICTIONARY } from '@/util/color';
 import { cn } from '@/utils/css-class';
 
@@ -42,7 +41,7 @@ export default function MemberAvatar({
         className={cn(
           'flex w-full items-center',
           layout === 'horizontal' ? 'flex-row gap-4' : 'flex-col gap-2',
-          cls?.container
+          cls?.container,
         )}
       >
         <Avatar
@@ -51,7 +50,7 @@ export default function MemberAvatar({
             '[&_.ant-avatar-string]:text-xl [&_.ant-avatar-string]:font-bold',
             role === 'admin' && 'rounded-none!',
             scale,
-            cls?.avatar
+            cls?.avatar,
           )}
           size="large"
           shape={role === 'admin' ? 'square' : 'circle'}
@@ -65,7 +64,7 @@ export default function MemberAvatar({
               className={cn(
                 'text-primary-8 text-xl font-bold',
                 status !== 'pending' && 'first-letter:uppercase',
-                cls?.text
+                cls?.text,
               )}
             >
               {name}
@@ -79,7 +78,7 @@ export default function MemberAvatar({
             <small
               className={cn(
                 'text-base font-light text-gray-400',
-                layout === 'vertical' && 'hidden'
+                layout === 'vertical' && 'hidden',
               )}
             >
               {email}
@@ -141,7 +140,7 @@ export function MemberAvatarCasual({
         className={cn(
           'flex w-full items-center',
           layout === 'horizontal' ? 'flex-row gap-4' : 'flex-col gap-2',
-          cls?.container
+          cls?.container,
         )}
       >
         {pending ? (
@@ -157,7 +156,7 @@ export function MemberAvatarCasual({
               className={cn(
                 'text-primary-8 text-xl font-bold',
                 !pending && 'first-letter:uppercase',
-                cls?.text
+                cls?.text,
               )}
             >
               <div className="avatar-email"> {email} </div>
@@ -172,7 +171,7 @@ export function MemberAvatarCasual({
                 '[&_.ant-avatar-string]:text-xl [&_.ant-avatar-string]:font-bold',
                 shape === 'square' && 'rounded-none!',
                 scale,
-                cls?.avatar
+                cls?.avatar,
               )}
               size="large"
               shape={shape}
@@ -189,7 +188,7 @@ export function MemberAvatarCasual({
                   className={cn(
                     'text-primary-8! text-xl font-bold',
                     status !== 'pending' && 'first-letter:uppercase',
-                    cls?.text
+                    cls?.text,
                   )}
                 >
                   {name}

@@ -1,16 +1,13 @@
 'use client';
 
 import { useEffect } from 'react';
-
+import type { GalleryContentProps } from '@/api/sanity/gallery/route';
+import styles from '@/components/LandingPage/LandingPage.module.css';
 import Menu from '@/components/LandingPage/layout/Menu';
 import { EnumSection } from '@/components/LandingPage/sections/sections';
 import GalleryContent from '@/ui/segments/gallery/content';
 import HeroGallery from '@/ui/segments/gallery/hero';
 import { useScrollHasStarted } from '@/utils/scroll-has-started';
-
-import type { GalleryContentProps } from '@/api/sanity/gallery/route';
-
-import styles from '@/components/LandingPage/LandingPage.module.css';
 
 type GalleryPageProps = {
   galleryContent: GalleryContentProps[];

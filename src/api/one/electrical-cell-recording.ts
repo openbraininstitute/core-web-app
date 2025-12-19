@@ -17,7 +17,7 @@ export async function resolveNWBFile(file: File): Promise<NWBResolution> {
       },
       body: formData,
     },
-    { asRawResponse: true }
+    { asRawResponse: true },
   );
   return {
     isValid: response.ok,

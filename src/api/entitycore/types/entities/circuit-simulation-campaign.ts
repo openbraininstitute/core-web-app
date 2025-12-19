@@ -1,11 +1,9 @@
 import z from 'zod';
-
-import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
-
 import type {
   TCircuitBuildCategoryDictionary,
   TCircuitScaleDictionary,
 } from '@/api/entitycore/types/entities/circuit';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type {
   EntityAuthorization,
   EntityCoreBaseAsset,
@@ -41,7 +39,7 @@ interface ICircuitSimulationCampaignBase {
   description: string;
   scan_parameters: { [key: string]: any };
   entity_id: string;
-  simulations?: Array<ISimulationBase>;
+  simulations?: ISimulationBase[];
 }
 
 export interface ICircuitSimulationCampaign
@@ -54,19 +52,19 @@ export interface ICircuitSimulationCampaign
 
 export interface ISimulationCampaignCircuitFilter {
   circuit__name?: string | null;
-  circuit__name__in?: Array<string> | null;
+  circuit__name__in?: string[] | null;
   circuit__name__ilike?: string | null;
 
   circuit__id?: string | null;
-  circuit__id__in?: Array<string> | null;
+  circuit__id__in?: string[] | null;
 
   entity__type?: TSimulationCampaignEntityTypeDict | null;
 
   circuit__scale?: TCircuitScaleDictionary | null;
-  circuit__scale__in?: Array<TCircuitScaleDictionary> | null;
+  circuit__scale__in?: TCircuitScaleDictionary[] | null;
 
   circuit__build_category?: TCircuitBuildCategoryDictionary | null;
-  circuit__build_category__in?: Array<TCircuitBuildCategoryDictionary> | null;
+  circuit__build_category__in?: TCircuitBuildCategoryDictionary[] | null;
 }
 
 export interface ICircuitSimulationCampaignFilter

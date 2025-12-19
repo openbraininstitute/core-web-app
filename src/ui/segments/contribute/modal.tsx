@@ -1,24 +1,22 @@
 import { CloseOutlined } from '@ant-design/icons';
 import { isNil } from 'es-toolkit/compat';
-import { match, P } from 'ts-pattern';
 import { useState } from 'react';
-
-import { ExperimentalNeuronDensity } from '@/ui/segments/contribute/experimental-neuron-density';
-import { ElectricalCellRecording } from '@/ui/segments/contribute/electrical-cell-recording';
+import { match, P } from 'ts-pattern';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { CellMorphology } from '@/ui/segments/contribute/cell-morphology';
 import { EntityCoreConfiguration } from '@/entity-configuration/domain';
-import { SelectPopover } from '@/ui/molecules/select-popover';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { Button } from '@/ui/molecules/button';
 import { Modal } from '@/ui/molecules/modal';
+import { SelectPopover } from '@/ui/molecules/select-popover';
+import { CellMorphology } from '@/ui/segments/contribute/cell-morphology';
+import { ElectricalCellRecording } from '@/ui/segments/contribute/electrical-cell-recording';
 import {
   makeSelectContributionEntityClickEvent,
   useContributionEntityClickEvent,
 } from '@/ui/segments/contribute/event';
+import { ExperimentalNeuronDensity } from '@/ui/segments/contribute/experimental-neuron-density';
 import { cn } from '@/utils/css-class';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 interface IExtendedEntitiesSelectorProps {
   onSelectEntityType: (type: TExtendedEntitiesTypeDict) => void;
@@ -103,7 +101,11 @@ export function ContributionModal() {
   };
 
   const onClose = (): void => {
-    makeSelectContributionEntityClickEvent({ display: false, entityType: null, sessionId: null });
+    makeSelectContributionEntityClickEvent({
+      display: false,
+      entityType: null,
+      sessionId: null,
+    });
   };
 
   useContributionEntityClickEvent(({ detail }) => {
@@ -114,8 +116,11 @@ export function ContributionModal() {
   const title = match({ entityType, entity })
     .with({ entityType: P.union(P.nullish, P._), entity: P.nullish }, () => 'Add new artifact')
     .with(
-      { entityType: P.string.select('type'), entity: P.not(P.nullish).select('entity') },
-      ({ entity: et }) => `Add new ${et.title ?? 'artifact'}`
+      {
+        entityType: P.string.select('type'),
+        entity: P.not(P.nullish).select('entity'),
+      },
+      ({ entity: et }) => `Add new ${et.title ?? 'artifact'}`,
     )
     .otherwise(() => null);
 
@@ -124,10 +129,13 @@ export function ContributionModal() {
       <ExtendedEntitiesSelector onSelectEntityType={onSelectEntityType} />
     ))
     .with(
-      { sessionId: P.string.select('sId'), entityType: P.string.select('type') },
+      {
+        sessionId: P.string.select('sId'),
+        entityType: P.string.select('type'),
+      },
       ({ sId, type }) => {
         return <RenderEntityTypeContent type={type} sessionId={sId} />;
-      }
+      },
     )
     .otherwise(() => null);
 

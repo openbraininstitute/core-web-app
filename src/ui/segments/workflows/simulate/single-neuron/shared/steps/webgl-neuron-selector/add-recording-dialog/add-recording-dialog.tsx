@@ -1,16 +1,13 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React from 'react';
-
-import { useRecordingsAndInjection } from '../hooks';
-import { PainterManager } from '../painter';
-import { HintContent } from '../hint';
-import { useEscapeHandler } from './hooks';
-
-import { classNames } from '@/util/utils';
 import { IconClose } from '@/components/LandingPage/icons/IconClose';
-
+import { classNames } from '@/util/utils';
+import { HintContent } from '../hint';
+import { useRecordingsAndInjection } from '../hooks';
+import type { PainterManager } from '../painter';
 import styles from './add-recording-dialog.module.css';
+import { useEscapeHandler } from './hooks';
 
 export interface AddRecordingDialogProps {
   className?: string;
@@ -33,10 +30,10 @@ export default function AddRecordingDialog({
   });
   React.useEffect(() => {
     if (item) setOpen(true);
-  }, [item, offset]);
+  }, [item]);
   const handleClose = React.useCallback(() => {
     setOpen(false);
-  }, [setOpen]);
+  }, []);
   const handleMoveInjection = () => {
     handleClose();
     if (item) data.moveInjection(item.sectionName);

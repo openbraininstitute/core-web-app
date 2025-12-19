@@ -1,16 +1,14 @@
-import { ChangeEvent, ComponentProps, useDeferredValue, useRef, useState } from 'react';
-import { SearchOutlined, CloseOutlined } from '@ant-design/icons';
+import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
 import { useAtom, useSetAtom } from 'jotai';
-
+import { type ChangeEvent, type ComponentProps, useDeferredValue, useRef, useState } from 'react';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { DEFAULT_PAGE_NUMBER } from '@/constants';
 import {
   corePageNumberAtom,
   coreSearchStringAtom,
   useDataListStateSnapshotActions,
 } from '@/ui/segments/data-table/elements/context';
-import { DEFAULT_PAGE_NUMBER } from '@/constants';
 import { cn } from '@/utils/css-class';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 type SearchProps = {
   dataKey: string;
@@ -78,7 +76,7 @@ export function Search({ dataKey, dataType, className }: SearchProps) {
               'rounded-full shadow-md hover:scale-105 hover:shadow-lg active:scale-95':
                 !isSearchOpen,
               'rounded-l-full shadow-none': isSearchOpen,
-            }
+            },
           )}
           aria-label={isSearchOpen ? 'Close search' : 'Open search'}
         >
@@ -89,7 +87,7 @@ export function Search({ dataKey, dataType, className }: SearchProps) {
           className={cn(
             'overflow-hidden transition-all duration-300 ease-in-out',
             { 'w-full min-w-60 opacity-100': isSearchOpen },
-            { 'w-0 opacity-0': !isSearchOpen }
+            { 'w-0 opacity-0': !isSearchOpen },
           )}
         >
           <div className="border-neutral-2 flex h-10 w-full items-center rounded-r-full border-l-0 bg-white">
@@ -102,7 +100,7 @@ export function Search({ dataKey, dataType, className }: SearchProps) {
               placeholder="Search for entities..."
               className={cn(
                 'text-primary-9 w-full bg-transparent px-4 py-2 font-bold focus:outline-none',
-                'placeholder:text-neutral-3 placeholder:font-light'
+                'placeholder:text-neutral-3 placeholder:font-light',
               )}
               aria-label="Search input"
             />

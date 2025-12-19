@@ -22,7 +22,7 @@ export function Abstract({ abstract, className }: Props) {
       const hiddenHeight = hidden.getBoundingClientRect().height;
       setIsClamped(hiddenHeight > visibleHeight + 1);
     }
-  }, [abstract]);
+  }, []);
 
   return (
     <div className={classNames('relative space-y-2 bg-gray-50 p-3', className)}>
@@ -30,7 +30,7 @@ export function Abstract({ abstract, className }: Props) {
         ref={visibleRef}
         className={classNames(
           'text-justify leading-relaxed transition-all duration-300',
-          !isExpanded && 'line-clamp-2'
+          !isExpanded && 'line-clamp-2',
         )}
       >
         {abstract}

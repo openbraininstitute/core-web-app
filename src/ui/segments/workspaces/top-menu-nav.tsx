@@ -2,9 +2,9 @@ import { MenuOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import React, { useState } from 'react';
-
+import type React from 'react';
 import type { ReactNode } from 'react';
+import { useState } from 'react';
 
 import {
   ExploreIcon,
@@ -51,7 +51,7 @@ type LinkItem = {
   action?: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) => string;
 };
 
-const links: Array<LinkItem> = [
+const links: LinkItem[] = [
   {
     id: 'workspace-home',
     key: 'home',
@@ -271,11 +271,15 @@ export function TopMenuNavigation() {
                     variant="outline"
                     size={breakpoint === 'xl' ? 'lg' : 'md'}
                     className={cn(
-                      { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
-                      { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
+                      {
+                        'w-12 justify-center!': !allowText && breakpoint === 'xl',
+                      },
+                      {
+                        'w-10! justify-center!': breakpoint === 'l' && !allowText,
+                      },
                       'group relative flex items-center justify-between',
                       'transition-all duration-400 ease-out',
-                      clx
+                      clx,
                     )}
                     active={activeSection === baseUrl || isActive?.(pathname)}
                     onClick={() => setIsFeedbackModalOpen(true)}
@@ -302,12 +306,18 @@ export function TopMenuNavigation() {
                     variant="outline"
                     size={breakpoint === 'xl' ? 'lg' : 'md'}
                     className={cn(
-                      { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
-                      { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
+                      {
+                        'w-12 justify-center!': !allowText && breakpoint === 'xl',
+                      },
+                      {
+                        'w-10! justify-center!': breakpoint === 'l' && !allowText,
+                      },
                       'group relative flex items-center justify-between',
-                      { 'group-hover:rounded-r-none group-hover:border-r-0': hasAction },
+                      {
+                        'group-hover:rounded-r-none group-hover:border-r-0': hasAction,
+                      },
                       'transition-all duration-400 ease-out',
-                      clx
+                      clx,
                     )}
                     active={activeSection === baseUrl || isActive?.(pathname)}
                   >
@@ -340,12 +350,18 @@ export function TopMenuNavigation() {
                   variant="outline"
                   size={breakpoint === 'xl' ? 'lg' : 'md'}
                   className={cn(
-                    { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
-                    { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
+                    {
+                      'w-12 justify-center!': !allowText && breakpoint === 'xl',
+                    },
+                    {
+                      'w-10! justify-center!': breakpoint === 'l' && !allowText,
+                    },
                     'group relative flex items-center justify-between',
-                    { 'group-hover:rounded-r-none group-hover:border-r-0': hasAction },
+                    {
+                      'group-hover:rounded-r-none group-hover:border-r-0': hasAction,
+                    },
                     'transition-all duration-400 ease-out',
-                    clx
+                    clx,
                   )}
                   active={activeSection === baseUrl || isActive?.(pathname)}
                 >
@@ -363,7 +379,7 @@ export function TopMenuNavigation() {
               </div>
             </div>
           );
-        }
+        },
       )}
       {isFeedbackModalOpen && (
         <FeedbackModal open={isFeedbackModalOpen} onClose={() => setIsFeedbackModalOpen(false)} />

@@ -1,5 +1,5 @@
 export function createAsyncIterableStream<T>(
-  stream: ReadableStream<T>
+  stream: ReadableStream<T>,
 ): ReadableStream<T> & AsyncIterable<T> {
   const asyncIterable = {
     async *[Symbol.asyncIterator]() {
@@ -20,7 +20,7 @@ export function createAsyncIterableStream<T>(
 }
 
 export async function createTextStream(
-  response: Response
+  response: Response,
 ): Promise<ReadableStream<string> | undefined> {
   if (!response.body) return undefined;
 
@@ -31,12 +31,12 @@ export async function createTextStream(
         transform(chunk, controller) {
           controller.enqueue(chunk);
         },
-      })
+      }),
     );
 }
 
 export async function* messageGenerator<T>(
-  textStream: ReadableStream<string> | undefined
+  textStream: ReadableStream<string> | undefined,
 ): AsyncIterable<T> {
   if (!textStream) {
     return;
@@ -62,9 +62,7 @@ export async function* messageGenerator<T>(
         try {
           const msg = JSON.parse(line) as T;
           yield msg;
-        } catch (err) {
-          continue;
-        }
+        } catch (_err) {}
       }
     }
   } finally {

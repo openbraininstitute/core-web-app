@@ -1,4 +1,4 @@
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 
 import SingleGlossaryContent from '@/components/documentation/glossary/single-glossary-content';
 

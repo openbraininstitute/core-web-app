@@ -1,20 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
+import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
+import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
 import {
+  renderArray,
   renderEmptyOrValue,
   renderPreview,
-  renderArray,
 } from '@/entity-configuration/definitions/renderer';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-
-import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
-import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
-import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
-import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
 export default function Configuration({
   memodel,
@@ -87,10 +84,10 @@ function MeModelDetails({ memodel }: ModelDetails) {
         <div className="break-words">
           {renderEmptyOrValue(
             renderArray(
-              (memodel as EntityCoreObjectTypes & { etypes: Array<IEType> | null }).etypes?.map(
-                (m) => m.pref_label
-              ) || []
-            )
+              (memodel as EntityCoreObjectTypes & { etypes: IEType[] | null }).etypes?.map(
+                (m) => m.pref_label,
+              ) || [],
+            ),
           )}
         </div>
       </div>
@@ -99,10 +96,10 @@ function MeModelDetails({ memodel }: ModelDetails) {
         <div className="break-words">
           {renderEmptyOrValue(
             renderArray(
-              (memodel as EntityCoreObjectTypes & { mtypes: Array<IMType> | null }).mtypes?.map(
-                (m) => m.pref_label
-              ) || []
-            )
+              (memodel as EntityCoreObjectTypes & { mtypes: IMType[] | null }).mtypes?.map(
+                (m) => m.pref_label,
+              ) || [],
+            ),
           )}
         </div>
       </div>

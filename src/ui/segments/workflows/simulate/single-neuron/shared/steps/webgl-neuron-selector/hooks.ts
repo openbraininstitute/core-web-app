@@ -1,15 +1,14 @@
 /* eslint-disable no-param-reassign */
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-
+import {
+  RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
+  STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
+} from '../../constant';
 import {
   RecordLocationConfigurationAtomFamily,
   StimulationConfigurationAtomFamily,
 } from '../../context';
 import { getSessionKey } from '../../helpers';
-import {
-  RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
-  STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
-} from '../../constant';
 import { getColorFromGeneratedPalette } from './colors';
 
 const atomSynapsesToShowInViewer = atom<Array<{ color: string; data: Float32Array }>>([]);
@@ -25,7 +24,7 @@ export function useVisibleSynapses() {
 export function useRecordingsAndInjection(sessionId: string) {
   const recordingsKey = getSessionKey(RECORDING_LOCATION_CONFIGURATION_SESSION_KEY, sessionId);
   const [recordings, updateRecordings] = useAtom(
-    RecordLocationConfigurationAtomFamily(recordingsKey)
+    RecordLocationConfigurationAtomFamily(recordingsKey),
   );
   const injectionKey = getSessionKey(STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
   const [injection, updateInjection] = useAtom(StimulationConfigurationAtomFamily(injectionKey));

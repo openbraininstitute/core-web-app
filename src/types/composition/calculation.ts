@@ -1,4 +1,4 @@
-import { OriginalComposition, OriginalCompositionUnit } from '@/types/composition/original';
+import type { OriginalComposition, OriginalCompositionUnit } from '@/types/composition/original';
 
 type CompositionNodeBase = {
   about: string;
@@ -27,7 +27,9 @@ export type CalculationLink = {
 };
 export type CompositionLink = CalculationLink & { value?: number };
 
-export type CalculatedCompositionPair = OriginalCompositionUnit & { count: number };
+export type CalculatedCompositionPair = OriginalCompositionUnit & {
+  count: number;
+};
 
 export type CalculatedCompositionNode = CompositionNodeBase & {
   neuronComposition: CalculatedCompositionPair;

@@ -1,5 +1,3 @@
-import { ComponentProps, useCallback, useMemo, useState } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   CheckOutlined,
   CloseOutlined,
@@ -7,10 +5,11 @@ import {
   LoadingOutlined,
   SearchOutlined,
 } from '@ant-design/icons';
-
-import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { type ComponentProps, useCallback, useMemo, useState } from 'react';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
 
 export type SelectPopoverOption<T = unknown> = {
@@ -20,7 +19,7 @@ export type SelectPopoverOption<T = unknown> = {
 };
 
 export type SelectPopoverProps<T = unknown> = {
-  options: Array<SelectPopoverOption<T>>;
+  options: SelectPopoverOption<T>[];
   placeholder?: string;
   searchPlaceholder?: string;
   onSelect?: (option: SelectPopoverOption<T> | undefined) => void;
@@ -51,16 +50,13 @@ export function SelectPopover<T = unknown>({
   const filteredOptions = useMemo(() => {
     if (!searchTerm) return options;
     return options.filter((option) =>
-      option.label.toLowerCase().includes(searchTerm.toLowerCase())
+      option.label.toLowerCase().includes(searchTerm.toLowerCase()),
     );
   }, [options, searchTerm]);
 
-  const parentSetter = useCallback(
-    (el: HTMLDivElement) => {
-      setParent(el);
-    },
-    [setParent]
-  );
+  const parentSetter = useCallback((el: HTMLDivElement) => {
+    setParent(el);
+  }, []);
 
   const rowVirtualizer = useVirtualizer({
     count: filteredOptions.length,
@@ -77,7 +73,7 @@ export function SelectPopover<T = unknown>({
       onSelect?.(option);
       setOpen(false);
     },
-    [onSelect]
+    [onSelect],
   );
 
   const handleOpenChange = useCallback((newOpen: boolean) => {
@@ -97,7 +93,7 @@ export function SelectPopover<T = unknown>({
           'text-primary-9 border-neutral-2 hover:border-primary-9 active:bg-primary-9 hover:text-primary-8 border bg-white shadow-xs hover:border-2',
           'text-md active:text-primary-9 active:border-primary-9 h-full flex-1 gap-1.5 rounded-md pr-3 pl-5 active:bg-white',
           'group flex w-full grow justify-between self-stretch',
-          clsx?.trigger
+          clsx?.trigger,
         )}
       >
         <Button variant="outline" role="combobox" className="select-none">
@@ -153,7 +149,7 @@ export function SelectPopover<T = unknown>({
                   'border-none',
                   'placeholder:text-muted-foreground flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50',
                   { 'h-9 text-base': breakpoint === 'l' },
-                  { 'h-10 text-lg': breakpoint === 'xl' }
+                  { 'h-10 text-lg': breakpoint === 'xl' },
                 )}
               />
             </div>
@@ -213,7 +209,7 @@ export function SelectPopover<T = unknown>({
                         'group-first:hover:rounded-t-md',
                         { 'text-base': breakpoint === 'l' },
                         { 'text-lg': breakpoint === 'xl' },
-                        clsx?.rowClassName?.(option)
+                        clsx?.rowClassName?.(option),
                       )}
                       title={label}
                     >

@@ -1,4 +1,4 @@
-import { Atom, WritableAtom } from 'jotai';
+import type { Atom, WritableAtom } from 'jotai';
 import { atomFamily, atomWithRefresh } from 'jotai/utils';
 
 /**
@@ -15,7 +15,7 @@ import { atomFamily, atomWithRefresh } from 'jotai/utils';
 */
 export function readAtomFamilyWithExpiration<T, P>(
   initializeReadAtom: (param: T) => Atom<P>,
-  options: { ttl: number; areEqual?: (a: T, b: T) => boolean }
+  options: { ttl: number; areEqual?: (a: T, b: T) => boolean },
 ) {
   const family = atomFamily((param) => {
     const readAtom = initializeReadAtom(param);
@@ -67,12 +67,15 @@ export function atomFamilyWithExpiration<
   FamilyParam,
   AtomValue,
   SetAtomArgs extends unknown[],
-  SetAtomResult extends unknown,
+  SetAtomResult,
 >(
   initializeWritableAtom: (
-    param: FamilyParam
+    param: FamilyParam,
   ) => WritableAtom<AtomValue, SetAtomArgs, SetAtomResult>,
-  options: { ttl: number; areEqual?: (a: FamilyParam, b: FamilyParam) => boolean }
+  options: {
+    ttl: number;
+    areEqual?: (a: FamilyParam, b: FamilyParam) => boolean;
+  },
 ) {
   const family = atomFamily((param) => {
     const atom = initializeWritableAtom(param);

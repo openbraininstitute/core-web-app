@@ -1,5 +1,5 @@
 import { InfoCircleFilled } from '@ant-design/icons';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import { classNames } from '@/util/utils';
 
@@ -31,7 +31,7 @@ export function Error({
             <p
               className={classNames(
                 'max-w- text-base font-light text-blue-200/80',
-                cls?.description
+                cls?.description,
               )}
             >
               {description}

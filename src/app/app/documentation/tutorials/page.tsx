@@ -1,4 +1,4 @@
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 
 import { HelpLayout } from '@/ui/layouts/help-layout';
 import { HelpHeader } from '@/ui/segments/help/header';

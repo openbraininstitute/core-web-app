@@ -1,11 +1,9 @@
 import { useState } from 'react';
-
+import type { TValidationResultNonUndefined } from '@/features/model-analysis/explorer/use-analysis';
 import { useFlatValidationResults, useSelectedValidationResults } from './hooks';
-import { ValidationResultCard } from './validation-result-card';
 import { SelectAnalysis } from './select-analysis';
 import { ValidationExplanation } from './validation-explanation';
-
-import type { TValidationResultNonUndefined } from '@/features/model-analysis/explorer/use-analysis';
+import { ValidationResultCard } from './validation-result-card';
 
 type Props = {
   rin: number | undefined;
@@ -20,7 +18,7 @@ export function ViewerContainer({ rin, validationResults }: Props) {
 
   const passed = flatValidationResults.reduce(
     (accumulator, item) => accumulator && item.passed,
-    true
+    true,
   );
 
   return (

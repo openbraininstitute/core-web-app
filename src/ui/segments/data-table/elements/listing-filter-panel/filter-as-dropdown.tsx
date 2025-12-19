@@ -1,15 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
-import { DefaultOptionType } from 'antd/es/select';
 import { Select } from 'antd';
+import type { DefaultOptionType } from 'antd/es/select';
 import map from 'es-toolkit/compat/map';
-import { cn } from '@/utils/css-class';
-
+import { useCallback, useEffect, useState } from 'react';
 import type { TCoreFilter } from '@/entity-configuration/definitions/types';
+import { cn } from '@/utils/css-class';
 
 export type OptionType = DefaultOptionType;
 type Props = {
   filter: TCoreFilter;
-  data?: Array<OptionType>;
+  data?: OptionType[];
   onChange: (values: string[]) => void;
   placeholder?: string;
   allowMultiple?: boolean;
@@ -22,7 +21,7 @@ export function DropdownList({
   placeholder = 'Select options...',
   allowMultiple = false,
 }: Props) {
-  const [selectedValues, setSelectedValues] = useState<Array<string>>([]);
+  const [selectedValues, setSelectedValues] = useState<string[]>([]);
 
   useEffect(() => {
     if (filter.value) {
@@ -42,7 +41,7 @@ export function DropdownList({
       setSelectedValues(newValues);
       onChange(newValues);
     },
-    [onChange]
+    [onChange],
   );
 
   const handleClear = useCallback(() => {
@@ -84,13 +83,13 @@ export function DropdownList({
           '[&_.ant-select-arrow]:text-white! [&_.ant-select-clear]:text-white!',
           '[&_.ant-select-selection-item]:bg-primary-7!',
           'has-[.ant-select-clear]:[&_.ant-select-arrow]:hidden!',
-          '[&_.ant-select-clear]:bg-transparent!'
+          '[&_.ant-select-clear]:bg-transparent!',
         )}
         popupClassName={cn(
           'bg-primary-8 border-neutral-3 text-white',
           '[&_.ant-select-item]:text-white! [&_.ant-select-item-option-selected]:bg-primary-7! [&_.ant-select-item-option-state]:text-white!',
           '[&_.ant-select-item-option-active]:bg-white! [&_.ant-select-item-option-active]:text-primary-8! select-none!',
-          '[&_.ant-select-item-option-active.ant-select-item-option-selected]:text-white!'
+          '[&_.ant-select-item-option-active.ant-select-item-option-selected]:text-white!',
         )}
         size="large"
         options={options}

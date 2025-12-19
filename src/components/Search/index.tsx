@@ -1,6 +1,6 @@
-import { ReactElement, JSXElementConstructor } from 'react';
 import { ConfigProvider, Select } from 'antd';
-import { SelectProps, DefaultOptionType } from 'antd/es/select';
+import type { DefaultOptionType, SelectProps } from 'antd/es/select';
+import type { JSXElementConstructor, ReactElement } from 'react';
 
 type SearchProps<T> = {
   className?: string;
@@ -96,7 +96,7 @@ export default function Search<T extends DefaultOptionType>({
                   ((option?.label as string)?.toLowerCase() ?? '').includes(input.toLowerCase()),
                 filterSort: (optionA: T, optionB: T) =>
                   ((optionA?.label as string).toLowerCase() ?? '').localeCompare(
-                    (optionB?.label as string).toLowerCase() ?? ''
+                    (optionB?.label as string).toLowerCase() ?? '',
                   ),
               })}
         />

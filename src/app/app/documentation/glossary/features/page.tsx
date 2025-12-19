@@ -1,4 +1,4 @@
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 
 import AllFeaturesContent from '@/components/documentation/features/all-features-content';
 

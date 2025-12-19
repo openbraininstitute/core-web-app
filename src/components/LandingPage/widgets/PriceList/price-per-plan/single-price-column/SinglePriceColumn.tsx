@@ -1,4 +1,4 @@
-import { PricePerPlanProps } from '../content/PRICES_PER_PLAN';
+import type { PricePerPlanProps } from '../content/PRICES_PER_PLAN';
 
 export default function SinglePriceColumn({ content }: { content: PricePerPlanProps }) {
   const getCreditLabel = (price: number): string => {

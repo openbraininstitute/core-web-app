@@ -1,12 +1,11 @@
+import type { ContentForRichTextPreview } from '@/components/LandingPage/content';
+import { styleBlockFullWidth, styleBlockSmall, styleLayout } from '@/components/LandingPage/styles';
+import { gotoSection } from '@/components/LandingPage/utils';
+import { classNames } from '@/util/utils';
 import ProgressiveImage from '../../ProgressiveImage';
 import { Text } from '../../Text';
 import Title from '../../Title';
 import VerticalSpace from '../../VerticalSpace';
-
-import { ContentForRichTextPreview } from '@/components/LandingPage/content';
-import { styleBlockFullWidth, styleBlockSmall, styleLayout } from '@/components/LandingPage/styles';
-import { gotoSection } from '@/components/LandingPage/utils';
-import { classNames } from '@/util/utils';
 
 import styles from './SanityContentPreview.module.css';
 
@@ -20,7 +19,7 @@ export default function SanityContentPreview({ value }: SanityContentPreviewProp
       className={classNames(
         styles.sanityContentPreview,
         styleLayout,
-        value.background ? styles.dark : styles.light
+        value.background ? styles.dark : styles.light,
       )}
     >
       {value.background && (

@@ -1,16 +1,15 @@
 /* eslint-disable no-empty */
 
-import { ASSET_BASE_PATH } from '@/features/entity-download/constants';
-import { Metadata } from '@/features/entity-download/metadata';
 import { getCellMorphology } from '@/api/entitycore/queries';
 import { EntityTypeDict } from '@/api/entitycore/types';
+import { ASSET_BASE_PATH } from '@/features/entity-download/constants';
+import { Metadata } from '@/features/entity-download/metadata';
+import type { ReconstructionMorphologyJsonMetadata } from '@/features/entity-download/types';
 import {
   createAssetFileEntry,
   createTemplateFileEntry,
   getMetadataCsvEntryBase,
 } from '@/features/entity-download/utils';
-
-import type { ReconstructionMorphologyJsonMetadata } from '@/features/entity-download/types';
 import type { WorkspaceContext } from '@/types/common';
 
 export async function* getCellMorphologyFiles(entityIds: string[], ctx?: WorkspaceContext) {
@@ -39,8 +38,13 @@ export async function* getCellMorphologyFiles(entityIds: string[], ctx?: Workspa
     for await (const asset of morphology.assets) {
       const path = `${dataPath}/${asset.path}`;
       try {
-        yield await createAssetFileEntry({ entity: morphology, asset, path, ctx });
-      } catch (error) {}
+        yield await createAssetFileEntry({
+          entity: morphology,
+          asset,
+          path,
+          ctx,
+        });
+      } catch (_error) {}
     }
   }
 

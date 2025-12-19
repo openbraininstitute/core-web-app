@@ -1,20 +1,20 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Form } from 'antd';
 import { get } from 'es-toolkit/compat';
 import { useState } from 'react';
-import { Form } from 'antd';
 import z from 'zod';
 
 import { redeemPromotionCode } from '@/api/virtual-lab-svc/queries/promotion';
+import { SparklesFill } from '@/components/icons/sparkles';
+import { Button } from '@/ui/molecules/button';
+import { Input } from '@/ui/molecules/input';
 import {
   PurchaseModeDictionary,
   type TPurchaseModeDictionary,
 } from '@/ui/segments/virtual-lab-settings/elements/payment-mode-selection';
-import { SparklesFill } from '@/components/icons/sparkles';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { Button } from '@/ui/molecules/button';
-import { Input } from '@/ui/molecules/input';
 import { cn } from '@/utils/css-class';
 
 const PromoCodeSchema = z.object({
@@ -51,7 +51,9 @@ export function PromotionCode({
       setError(error);
     },
     onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: keyBuilder.accounting({ virtualLabId }) });
+      await queryClient.invalidateQueries({
+        queryKey: keyBuilder.accounting({ virtualLabId }),
+      });
     },
   });
 
@@ -64,7 +66,7 @@ export function PromotionCode({
     <div
       className={cn(
         'rounded-2xl bg-gradient-to-br from-emerald-500/15',
-        'to-emerald-500/5 p-6 backdrop-blur-lg select-none md:p-8'
+        'to-emerald-500/5 p-6 backdrop-blur-lg select-none md:p-8',
       )}
     >
       <div className="mb-6 flex items-center gap-3">
@@ -112,7 +114,7 @@ export function PromotionCode({
               className={cn(
                 'h-16 w-full rounded-xl border-white/20 bg-[#052f66] text-white placeholder:text-white/50',
                 '[appearance:textfield] border px-4 py-1 pr-28 text-xl! font-bold placeholder:text-sm',
-                '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
+                '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
               )}
             />
           </Form.Item>

@@ -1,19 +1,17 @@
-import { useParams } from 'next/navigation';
-import { get } from 'es-toolkit/compat';
 import { Button } from 'antd';
-
-import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { useAppNotification } from '@/components/notification';
-import { getAssetElement } from '@/api/entitycore/utils';
+import { get } from 'es-toolkit/compat';
+import { useParams } from 'next/navigation';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { DownloadIcon } from '@/components/icons';
-import { formatBytes } from '@/utils/format';
-import { tryCatch } from '@/api/utils';
-import { log } from '@/utils/logger';
-
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { getAssetElement } from '@/api/entitycore/utils';
+import { tryCatch } from '@/api/utils';
+import { DownloadIcon } from '@/components/icons';
+import { useAppNotification } from '@/components/notification';
+import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
 import type { WorkspaceContext } from '@/types/common';
+import { formatBytes } from '@/utils/format';
+import { log } from '@/utils/logger';
 
 type Props = {
   circuit: ICircuit;
@@ -37,7 +35,7 @@ export default function EntireCircuitExport({ circuit }: Props) {
         entityType: EntityTypeDict.Circuit,
         virtualLabId,
         projectId,
-      })
+      }),
     );
     if (data) {
       window.open(data.url, '_blank', 'noopener,noreferrer');

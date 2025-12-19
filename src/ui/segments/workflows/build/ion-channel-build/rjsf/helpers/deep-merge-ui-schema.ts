@@ -1,4 +1,4 @@
-import { UiSchema } from '@rjsf/utils';
+import type { UiSchema } from '@rjsf/utils';
 
 /**
  * recursively merges two UI schema objects, combining their properties.
@@ -38,7 +38,7 @@ export const mergeUiSchemas = (target: UiSchema, source: UiSchema): UiSchema => 
     if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
       result[key] = mergeUiSchemas(
         (target[key] as UiSchema) || {},
-        source[key] as UiSchema
+        source[key] as UiSchema,
       ) as (typeof source)[typeof key];
     } else {
       result[key] = source[key];

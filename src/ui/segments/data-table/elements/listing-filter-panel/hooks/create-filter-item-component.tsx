@@ -1,27 +1,26 @@
 import { Input, Select } from 'antd';
 import { map } from 'es-toolkit/compat';
-
+import type { Facets } from '@/api/entitycore/types/shared/response';
+import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
+import type {
+  CoreFilterValues,
+  GteLteValue,
+  TCoreFilter,
+  ValueOrRangeFilter,
+} from '@/entity-configuration/definitions/types';
+import { CheckList } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist';
 import { defaultList } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/default-checklist';
+import { DateRange } from '@/ui/segments/data-table/elements/listing-filter-panel/date-range';
 import { DropdownList } from '@/ui/segments/data-table/elements/listing-filter-panel/filter-as-dropdown';
 import { ValueOrRange } from '@/ui/segments/data-table/elements/listing-filter-panel/value-or-range';
 import { ValueRange } from '@/ui/segments/data-table/elements/listing-filter-panel/value-range';
-import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
-import { DateRange } from '@/ui/segments/data-table/elements/listing-filter-panel/date-range';
-import { CheckList } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist';
-import { Facets } from '@/api/entitycore/types/shared/response';
-import {
-  TCoreFilter,
-  CoreFilterValues,
-  GteLteValue,
-  ValueOrRangeFilter,
-} from '@/entity-configuration/definitions/types';
 
 export function createFilterItemComponent(
   filter: TCoreFilter,
   facets: Facets | undefined,
   filterValues: CoreFilterValues,
   setFilterValues: React.Dispatch<React.SetStateAction<CoreFilterValues>>,
-  items?: Array<{ value: string; label: string }> | undefined
+  items?: Array<{ value: string; label: string }> | undefined,
 ) {
   return function FilterItemComponent() {
     const { type } = filter;
@@ -66,7 +65,7 @@ export function createFilterItemComponent(
             allowMultiple
           />
         );
-      case CoreFieldFilterTypeEnum.CheckList:
+      case CoreFieldFilterTypeEnum.CheckList: {
         if (!facets || !facets[filter.field]) return emptyFilter;
         // eslint-disable-next-line no-case-declarations
         const facetItems = map(facets[filter.field], ({ id, label, count, type: facetType }) => ({
@@ -81,12 +80,13 @@ export function createFilterItemComponent(
           <CheckList
             data={facetItems}
             filter={filter}
-            values={(filterValues[filter.field] as Array<string>) ?? []}
+            values={(filterValues[filter.field] as string[]) ?? []}
             onChange={(values: string[]) => updateFilterValues(filter.field, values)}
           >
             {defaultList}
           </CheckList>
         );
+      }
 
       case CoreFieldFilterTypeEnum.ValueOrRange:
         return (

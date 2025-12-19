@@ -1,19 +1,17 @@
 'use client';
 
-import React, { type CSSProperties } from 'react';
-import dynamic from 'next/dynamic';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
+import dynamic from 'next/dynamic';
+import React, { type CSSProperties } from 'react';
+import { useAiAssistant } from '@/services/ai-agent/assistant';
+import { classNames } from '@/util/utils';
+import type { TAppUInterfaceSection } from '@/utils/key-builder';
+import styles from './ai-assistant.module.css';
 import { AiContextProvider, MINIMAL_PANEL_SIZE, usePanelWidth } from './hooks';
-import PanelSplitter from './panel-splitter';
 import { IconChat } from './icons/chat';
 import { IconHistory } from './icons/history';
 import PanelContent from './panel-content';
-import { classNames } from '@/util/utils';
-import { useAiAssistant } from '@/services/ai-agent/assistant';
-import type { TAppUInterfaceSection } from '@/utils/key-builder';
-
-import styles from './ai-assistant.module.css';
+import PanelSplitter from './panel-splitter';
 
 interface AiAssistantProps {
   className?: string;
@@ -47,7 +45,7 @@ export default function AiAssistant({ className, fullscreen, section }: AiAssist
             <div
               className={classNames(
                 styles.overlay,
-                panelWidth > MINIMAL_PANEL_SIZE && styles.shadow
+                panelWidth > MINIMAL_PANEL_SIZE && styles.shadow,
               )}
             >
               <nav>

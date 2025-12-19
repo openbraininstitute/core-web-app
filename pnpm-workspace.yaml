@@ -4,5 +4,6 @@ onlyBuiltDependencies:
   - canvas
   - es5-ext
   - esbuild
+  - lefthook
   - msw
   - sharp

@@ -1,4 +1,4 @@
-import { ContentForFeatureItem } from '@/components/documentation/type';
+import type { ContentForFeatureItem } from '@/components/documentation/type';
 import Slugify from '@/util/slugify';
 
 export default function FeaturesCard({ item }: { item: ContentForFeatureItem }) {

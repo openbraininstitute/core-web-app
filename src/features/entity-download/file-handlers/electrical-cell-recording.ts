@@ -1,10 +1,10 @@
 /* eslint-disable no-empty */
 
 import { getElectricalCellRecording } from '@/api/entitycore/queries';
-import { ElectricalCellRecordingJsonMetadata } from '@/features/entity-download/types';
+import { EntityTypeDict } from '@/api/entitycore/types';
 import { ASSET_BASE_PATH } from '@/features/entity-download/constants';
 import { Metadata } from '@/features/entity-download/metadata';
-import { EntityTypeDict } from '@/api/entitycore/types';
+import type { ElectricalCellRecordingJsonMetadata } from '@/features/entity-download/types';
 import {
   createAssetFileEntry,
   createTemplateFileEntry,
@@ -14,7 +14,7 @@ import type { WorkspaceContext } from '@/types/common';
 
 export async function* getElectricalCellRecordingFiles(
   entityIds: string[],
-  ctx?: WorkspaceContext
+  ctx?: WorkspaceContext,
 ) {
   const metadata = new Metadata<ElectricalCellRecordingJsonMetadata>();
 

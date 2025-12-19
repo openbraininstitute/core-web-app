@@ -2,21 +2,19 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { get, isNil } from 'es-toolkit/compat';
-
-import { createMtypeClassification } from '@/api/entitycore/queries/annotations/mtype-classification';
-import { CELL_MORPHOLOGY_PROGRESS_STEPS } from '@/ui/segments/contribute/cell-morphology/config';
-import { getCellMorphologyMimeType } from '@/ui/segments/contribute/cell-morphology/schema';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { createContribution } from '@/api/entitycore/queries/general/contribution';
-import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { createCellMorphology } from '@/api/entitycore/queries';
+import { createMtypeClassification } from '@/api/entitycore/queries/annotations/mtype-classification';
 import { createAsset } from '@/api/entitycore/queries/assets';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { createContribution } from '@/api/entitycore/queries/general/contribution';
 import { EntityTypeDict } from '@/api/entitycore/types';
-
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { CELL_MORPHOLOGY_PROGRESS_STEPS } from '@/ui/segments/contribute/cell-morphology/config';
 import type { TCellMorphologyForm } from '@/ui/segments/contribute/cell-morphology/schema';
+import { getCellMorphologyMimeType } from '@/ui/segments/contribute/cell-morphology/schema';
+import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 import type {
   IMutationKeyConfig,
   IPipelineHookResult,
@@ -37,7 +35,11 @@ export function useCellMorphologyPipeline({
         !isNil(values.setup.location.x) &&
         !isNil(values.setup.location.y) &&
         !isNil(values.setup.location.z)
-          ? { x: values.setup.location.x, y: values.setup.location.y, z: values.setup.location.z }
+          ? {
+              x: values.setup.location.x,
+              y: values.setup.location.y,
+              z: values.setup.location.z,
+            }
           : null;
 
       return createCellMorphology({
@@ -70,7 +72,7 @@ export function useCellMorphologyPipeline({
             return (
               get(
                 (query.queryKey as ExtendedEntityTypeQueryKey)[0],
-                'context.extendedEntityType'
+                'context.extendedEntityType',
               ) === ExtendedEntitiesTypeDict.CellMorphology
             );
           },
@@ -98,8 +100,8 @@ export function useCellMorphologyPipeline({
                 role_id: c.role_id!,
                 entity_id: entityId,
               },
-            })
-          )
+            }),
+          ),
       );
     },
   });
@@ -142,7 +144,7 @@ export function useCellMorphologyPipeline({
             payload: asset,
             ctx: { virtualLabId, projectId },
           });
-        })
+        }),
       );
     },
   });
@@ -198,7 +200,7 @@ export function useCellMorphologyPipeline({
         };
         return acc;
       },
-      {} as Record<string, IMutationKeyConfig>
+      {} as Record<string, IMutationKeyConfig>,
     ),
   };
 }

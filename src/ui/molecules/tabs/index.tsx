@@ -16,7 +16,7 @@ const PillTabsList = React.forwardRef<
     ref={ref}
     className={cn(
       'bg-muted text-muted-foreground inline-flex h-14 items-center justify-center rounded-full p-1',
-      className
+      className,
     )}
     {...props}
   />
@@ -31,7 +31,7 @@ const PillTabsTrigger = React.forwardRef<
     ref={ref}
     className={cn(
       'ring-offset-background focus-visible:ring-ring inline-flex h-full items-center justify-center px-6 py-3 text-sm font-medium whitespace-nowrap transition-all first:rounded-l-full last:rounded-r-full focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-slate-800 data-[state=active]:text-white data-[state=active]:shadow-sm',
-      className
+      className,
     )}
     {...props}
   />
@@ -46,7 +46,7 @@ const PillTabsContent = React.forwardRef<
     ref={ref}
     className={cn(
       'ring-offset-background focus-visible:ring-ring mt-6 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
-      className
+      className,
     )}
     {...props}
   />

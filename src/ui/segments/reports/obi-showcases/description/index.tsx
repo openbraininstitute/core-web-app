@@ -1,6 +1,6 @@
 import { PortableText } from 'next-sanity';
 
-import { SanityShowcaseType } from '@/ui/segments/reports/obi-showcases/types';
+import type { SanityShowcaseType } from '@/ui/segments/reports/obi-showcases/types';
 
 import styles from './portable-text.module.css';
 

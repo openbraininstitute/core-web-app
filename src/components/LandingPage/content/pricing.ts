@@ -1,10 +1,10 @@
 /* eslint-disable no-param-reassign */
+
+import { useSanity } from '@/services/sanity';
+import { isBoolean, type TypeDef } from '@/util/type-guards';
 import { tryType } from './_common';
 import query from './pricing.groq';
 import { typeBooleanOrNull, typeNumberOrNull, typeStringOrNull } from './types';
-
-import { useSanity } from '@/services/sanity';
-import { isBoolean, TypeDef } from '@/util/type-guards';
 
 export function useSanityContentForPricing(): ContentForPricing | undefined | null {
   return sanityze(useSanity(query, isContentForPricing));
@@ -103,7 +103,7 @@ export interface ContentForPricingPlan {
 }
 
 function sanityze(
-  data: ContentForPricing | null | undefined
+  data: ContentForPricing | null | undefined,
 ): ContentForPricing | null | undefined {
   if (!data) return data;
 

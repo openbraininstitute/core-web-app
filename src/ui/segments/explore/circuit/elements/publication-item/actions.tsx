@@ -1,6 +1,6 @@
 import { CheckCircleFilled } from '@ant-design/icons';
 
-import { LinkFill, CopyDocumentFill } from '@/components/icons/EditorIcons';
+import { CopyDocumentFill, LinkFill } from '@/components/icons/EditorIcons';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 
 interface Props {

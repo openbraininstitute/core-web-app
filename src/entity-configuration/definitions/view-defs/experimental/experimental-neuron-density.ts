@@ -1,8 +1,7 @@
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/types';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-
-import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
 export const viewDefForExperimentalNeuronDensity: ViewDefinitionConfig = {
   title: 'Neuron density',
@@ -27,14 +26,35 @@ export const viewDefForExperimentalNeuronDensity: ViewDefinitionConfig = {
     { field: EntityCoreFields.NeuronMorphologyDepth, className: 'col-span-2' },
     { field: EntityCoreFields.AxonTotalLength, className: 'col-span-2' },
     { field: EntityCoreFields.AxonStrahlerNumber, className: 'col-span-2' },
-    { field: EntityCoreFields.AxonArborAsymmetryIndex, className: 'col-span-2' },
-    { field: EntityCoreFields.BasalDendriticTotalLength, className: 'col-span-2' },
-    { field: EntityCoreFields.BasalDendriteStrahlerNumber, className: 'col-span-2' },
-    { field: EntityCoreFields.BasalArborAsymmetryIndex, className: 'col-span-2' },
-    { field: EntityCoreFields.ApicalDendriticTotalLength, className: 'col-span-2' },
-    { field: EntityCoreFields.ApicalDendtriteStrahlerNumber, className: 'col-span-2' },
+    {
+      field: EntityCoreFields.AxonArborAsymmetryIndex,
+      className: 'col-span-2',
+    },
+    {
+      field: EntityCoreFields.BasalDendriticTotalLength,
+      className: 'col-span-2',
+    },
+    {
+      field: EntityCoreFields.BasalDendriteStrahlerNumber,
+      className: 'col-span-2',
+    },
+    {
+      field: EntityCoreFields.BasalArborAsymmetryIndex,
+      className: 'col-span-2',
+    },
+    {
+      field: EntityCoreFields.ApicalDendriticTotalLength,
+      className: 'col-span-2',
+    },
+    {
+      field: EntityCoreFields.ApicalDendtriteStrahlerNumber,
+      className: 'col-span-2',
+    },
     { field: EntityCoreFields.SomaDiameter, className: 'col-span-2' },
-    { field: EntityCoreFields.ApicalArborAsymmetryIndex, className: 'col-span-2' },
+    {
+      field: EntityCoreFields.ApicalArborAsymmetryIndex,
+      className: 'col-span-2',
+    },
     { field: EntityCoreFields.BrainRegion, className: 'col-span-2' },
     { field: EntityCoreFields.MType, className: 'col-span-2' },
     { field: EntityCoreFields.SpeciesName, className: 'col-span-2' },

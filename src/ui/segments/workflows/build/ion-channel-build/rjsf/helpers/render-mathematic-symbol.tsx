@@ -77,7 +77,7 @@ export const renderMathInText = (text: string) => {
                 className="inline-block"
               />
             );
-          } catch (e) {
+          } catch (_e) {
             return (
               // eslint-disable-next-line react/no-array-index-key
               <span key={partIndex} className="text-red-600">

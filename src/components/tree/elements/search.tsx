@@ -1,12 +1,10 @@
-import { useCallback, useState } from 'react';
 import { ConfigProvider, Select } from 'antd';
 import delay from 'es-toolkit/compat/delay';
-
-import filterAndSortBasedOnPosition from '@/util/filterAndSortBasedOnPosition';
+import { useCallback, useState } from 'react';
 import { scrollToNode } from '@/components/tree/elements/helpers';
-import { classNames } from '@/util/utils';
-
 import type { TTreeNode } from '@/components/tree/types';
+import filterAndSortBasedOnPosition from '@/util/filterAndSortBasedOnPosition';
+import { classNames } from '@/util/utils';
 
 interface Props {
   options: Array<{ value: string; label: string; data: TTreeNode }>;
@@ -26,7 +24,7 @@ export default function TreeSearch({ options, onSelect }: Props) {
         }, 500);
       }
     },
-    [options, onSelect]
+    [options, onSelect],
   );
 
   return (
@@ -78,7 +76,7 @@ export default function TreeSearch({ options, onSelect }: Props) {
             '[&_.ant-select-selector]:border-neutral-1!',
             '[&_.ant-select-selector]:shadow-lg!',
             '[&_.ant-select-selection-search-input]:text-sm!',
-            '[&_.ant-select-selection-placeholder]:text-neutral-3'
+            '[&_.ant-select-selection-placeholder]:text-neutral-3',
           )}
         />
       </ConfigProvider>

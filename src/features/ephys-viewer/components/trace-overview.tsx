@@ -7,8 +7,9 @@ import { useInView } from 'react-intersection-observer';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
 import { useOverviewPlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
+import type NWBTrace from '@/features/ephys-viewer/nwb-trace';
+import type { RecordingType } from '@/features/ephys-viewer/nwb-trace';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
-import NWBTrace, { RecordingType } from '@/features/ephys-viewer/nwb-trace';
 import optimizePlotData from '@/util/explore-section/optimizeTrace';
 import { convertCurrentSeries, convertVoltageSeries } from '@/util/explore-section/plotHelpers';
 
@@ -72,7 +73,7 @@ function TraceThumbnail({
     recordingType,
     repetition,
     sweeps,
-    trace
+    trace,
   );
   const yTitle = `${startCase(recordingType)} (${dataUnit === 'amperes' ? 'pA' : 'mV'})`;
   const { layout, config } = useOverviewPlotConfig({
@@ -112,7 +113,7 @@ function TraceThumbnailContainer({
 
   useEffect(() => {
     if (ref.current) setInViewRef(ref.current);
-  }, [ref, setInViewRef]);
+  }, [setInViewRef]);
 
   return (
     <div ref={ref} className="relative aspect-4/3 overflow-hidden bg-gray-100 last:mt-7">
@@ -196,9 +197,9 @@ function CellComponent({
     () =>
       protocols.reduce(
         (map, protocolItem) => map.set(protocolItem, trace.getRepetitions(cellId, protocolItem)),
-        new Map<string, string[]>()
+        new Map<string, string[]>(),
       ),
-    [protocols, trace, cellId]
+    [protocols, trace, cellId],
   );
 
   const content = protocols.map((protocolItem) => (
@@ -243,12 +244,12 @@ export default function TraceOverview({
 
   const filteredProtocols = useMemo(
     () => allProtocols.filter((p) => p === protocol || protocol === 'All'),
-    [allProtocols, protocol]
+    [allProtocols, protocol],
   );
 
   const selectedCellIds = useMemo(
     () => cellIds.filter((cId) => cId === cellId || cellId === 'All'),
-    [cellIds, cellId]
+    [cellIds, cellId],
   );
 
   // When there are multiple cells each having only one repetition and one sweep
@@ -327,9 +328,15 @@ function useDataWithUnit(
   recordingType: RecordingType,
   repetition: string,
   sweeps: string[],
-  trace: NWBTrace
+  trace: NWBTrace,
 ): [
-  data: { x: any[]; y: any[]; sweepName: string; name: string; line: { color: string } }[],
+  data: {
+    x: any[];
+    y: any[];
+    sweepName: string;
+    name: string;
+    line: { color: string };
+  }[],
   unit: string | null,
 ] {
   return useMemo(() => {
@@ -343,7 +350,7 @@ function useDataWithUnit(
         protocol,
         repetition,
         sweep,
-        recordingType
+        recordingType,
       );
 
       if (idx === 0) {

@@ -1,9 +1,9 @@
-import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type {
   ExperimentalBoutonDensityFilter,
   IExperimentalBoutonDensity,
 } from '@/api/entitycore/types/entities/bouton-density';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/experimental-bouton-density';

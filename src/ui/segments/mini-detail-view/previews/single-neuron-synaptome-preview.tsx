@@ -1,14 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from 'antd';
-
-import { MEModelPreview } from '@/ui/segments/mini-detail-view/previews/me-model-preview';
 import { isSingleNeuronSynaptome } from '@/api/entitycore/guards';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { getMEModel } from '@/api/entitycore/queries';
+import type { ISingleNeuronSynaptome } from '@/api/entitycore/types';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { MEModelPreview } from '@/ui/segments/mini-detail-view/previews/me-model-preview';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
-
-import type { ISingleNeuronSynaptome } from '@/api/entitycore/types';
 
 export function SingleNeuronSynaptomePreview({ record }: { record: ISingleNeuronSynaptome }) {
   const { virtualLabId, projectId } = useWorkspace();
@@ -33,14 +31,14 @@ export function SingleNeuronSynaptomePreview({ record }: { record: ISingleNeuron
           active
           className={cn('h-[200px]! w-full! rounded-none!')}
           rootClassName={cn(
-            'flex h-full! w-full! flex-col items-center justify-center  m-0 rounded-none!'
+            'flex h-full! w-full! flex-col items-center justify-center  m-0 rounded-none!',
           )}
         />
         <Skeleton.Image
           active
           className={cn('h-[200px]! w-full! rounded-none!')}
           rootClassName={cn(
-            'flex h-full! w-full! flex-col items-center justify-center  m-0 rounded-none!'
+            'flex h-full! w-full! flex-col items-center justify-center  m-0 rounded-none!',
           )}
         />
       </div>

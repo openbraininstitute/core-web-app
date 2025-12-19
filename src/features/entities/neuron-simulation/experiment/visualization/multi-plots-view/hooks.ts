@@ -1,13 +1,12 @@
-import React from 'react';
 import Plotly from 'plotly.js-dist-min';
-
-import { PlotInstance } from '../plots-parser';
+import React from 'react';
 import { PLOT_CONFIG, PLOT_LAYOUT } from '../layout-config';
+import type { PlotInstance } from '../plots-parser';
 
 export function usePlotly(
   refPlot: React.RefObject<HTMLDivElement | null>,
   instance: PlotInstance,
-  disabledLines: string[]
+  disabledLines: string[],
 ) {
   React.useEffect(() => {
     const container = refPlot.current;

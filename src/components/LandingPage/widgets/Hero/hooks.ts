@@ -1,5 +1,5 @@
-import { RichText, tryType } from '../../content/_common';
 import { useSanity } from '@/services/sanity';
+import { type RichText, tryType } from '../../content/_common';
 
 export function useContentForHero() {
   const query = `*[_type=="heroContent"][0]

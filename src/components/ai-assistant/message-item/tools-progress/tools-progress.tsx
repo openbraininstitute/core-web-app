@@ -1,18 +1,15 @@
-import React, { useState } from 'react';
-import { ToolInvocation, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
+import type { ToolInvocation, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import Link from 'next/link';
-import { IconGear } from '../../icons/gear';
-import LoadingDots from './loading-dots/loading-dots';
-import { cn } from '@/utils/css-class';
-
-import HelpIconI from '@/components/icons/HelpIcon';
+import { useState } from 'react';
 import { CheckIcon } from '@/components/icons';
 import Chevron from '@/components/icons/Chevron';
-
+import HelpIconI from '@/components/icons/HelpIcon';
+import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 import { useAITools } from '@/services/ai-agent/tools/tools';
-import { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
-
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { cn } from '@/utils/css-class';
+import { IconGear } from '../../icons/gear';
+import LoadingDots from './loading-dots/loading-dots';
 import styles from './tools-progress.module.css';
 
 interface ToolsProgressProps {
@@ -53,7 +50,7 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
         className={cn(
           styles.card,
           isRunning && styles.cardRunning,
-          isExpanded && styles.cardExpanded
+          isExpanded && styles.cardExpanded,
         )}
         key={key}
       >
@@ -75,7 +72,7 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
             <div
               className={cn(
                 styles.status,
-                isRunning ? styles.statusRunning : styles.statusComplete
+                isRunning ? styles.statusRunning : styles.statusComplete,
               )}
             >
               {isRunning ? (

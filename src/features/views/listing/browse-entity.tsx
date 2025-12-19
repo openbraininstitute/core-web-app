@@ -2,48 +2,45 @@
 
 'use client';
 
-import { parseAsString, SingleParserBuilder, useQueryState } from 'nuqs';
-import { ReactElement, useEffect, type ComponentProps } from 'react';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { WarningOutlined } from '@ant-design/icons';
 import { compact, get } from 'es-toolkit/compat';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { RESET } from 'jotai/utils';
 import dynamic from 'next/dynamic';
-
-import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
-import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
-import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
-
+import { parseAsString, type SingleParserBuilder, useQueryState } from 'nuqs';
+import { type ComponentProps, type ReactElement, useEffect } from 'react';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import { DEFAULT_PAGE_NUMBER, WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
-import { MiniDetailView } from '@/ui/segments/mini-detail-view';
-import { GenericError } from '@/ui/molecules/generic-error';
+import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { GenericError } from '@/ui/molecules/generic-error';
+import type { Props as MainTableProps } from '@/ui/segments/data-table';
 import {
-  useDataListStateSnapshotActions,
   coreActiveColumnsAtom,
   coreFiltersAtom,
   corePageNumberAtom,
   coreSortStateAtom,
+  useDataListStateSnapshotActions,
 } from '@/ui/segments/data-table/elements/context';
+import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
+import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
+import { MiniDetailView } from '@/ui/segments/mini-detail-view';
 import {
   makeSelectEntityClickEvent,
-  useSelectEntityClickEvent,
   useMiniDetailView,
+  useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
+import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { Props as MainTableProps } from '@/ui/segments/data-table';
-import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
-
-const MainTable = dynamic(() => import('@/ui/segments/data-table'), { ssr: false }) as (
-  props: MainTableProps<EntityCoreIdentifiableNamed>
-) => ReactElement | null;
+const MainTable = dynamic(() => import('@/ui/segments/data-table'), {
+  ssr: false,
+}) as (props: MainTableProps<EntityCoreIdentifiableNamed>) => ReactElement | null;
 
 type Props = {
   id?: string;
@@ -86,7 +83,7 @@ export function BrowseEntityScope({
     'scope',
     parseAsString
       .withDefault(defaultScope ?? WorkspaceScope.Public)
-      .withOptions({ shallow: true }) as NonNullable<SingleParserBuilder<TWorkspaceScope>>
+      .withOptions({ shallow: true }) as NonNullable<SingleParserBuilder<TWorkspaceScope>>,
   );
 
   const dataKey = compact([virtualLabId, projectId, section, dataType, scope, id]).join('/');
@@ -119,7 +116,7 @@ export function BrowseEntityScope({
     if (section === WorkspaceSection.Data) {
       runStorageRestore();
     }
-  }, [section]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [section, runStorageRestore]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { data, error, isFetching } = useQueryExtendedEntityType({
     context: {
@@ -203,7 +200,7 @@ export function BrowseEntityScope({
         data-testid="data-table-container"
         className={cn(
           'h-full max-h-[calc(100vh-11.8rem)] min-h-0 w-full min-w-0 overflow-hidden rounded-2xl [grid-area:body]',
-          classNames?.container
+          classNames?.container,
         )}
       >
         <div id="main-listing-table-container" className={cn('h-full w-full')}>
@@ -228,7 +225,7 @@ export function BrowseEntityScope({
             cls={{
               table: cn(
                 '[&_.ant-table]:bg-background! [&_.ant-table-header_th]:bg-background!',
-                '[&_.ant-table-placeholder]:bg-background! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-background!'
+                '[&_.ant-table-placeholder]:bg-background! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-background!',
               ),
             }}
             {...mainTableProps}
@@ -243,7 +240,7 @@ export function BrowseEntityScope({
             'h-full max-h-[calc(100vh-11.8rem)] w-full min-w-0',
             '[grid-area:mini-view]',
             { hidden: !mdv },
-            classNames?.miniView
+            classNames?.miniView,
           )}
         >
           <MiniDetailView {...miniViewProps} dataType={dataType} />

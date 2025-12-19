@@ -1,36 +1,34 @@
 'use client';
 
-import React from 'react';
 import { DeleteOutlined, EyeInvisibleOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import sample from 'es-toolkit/compat/sample';
 import { useAtom } from 'jotai';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import React from 'react';
 import { Color } from 'three';
-
-import { getColorFromGeneratedPalette } from '../../simulate/single-neuron/shared/steps/webgl-neuron-selector/colors';
-import { useVisibleSynapsesSetter } from '../../simulate/single-neuron/shared/steps/webgl-neuron-selector/hooks';
-
 import {
   SingleNeuronSynaptomeBaseSchema,
-  TSingleNeuronSynaptomeConfiguration,
+  type TSingleNeuronSynaptomeConfiguration,
 } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import {
+  sendDisplaySynapses3DEvent,
+  sendRemoveSynapses3DEvent,
+} from '@/components/neuron-viewer/hooks/events';
 import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
+import { type SectionSynapsesWith3D, synapsesPlacementAtom } from '@/state/synaptome';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import {
   DefaultSynapseValue,
   SimulationColors,
   useBuildSingleNeuronSynaptomeSessionState,
 } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { SectionSynapsesWith3D, synapsesPlacementAtom } from '@/state/synaptome';
-import { formatCompactNumber } from '@/utils/format';
 import { getRandomIntInclusive } from '@/util/utils';
-import { Button } from '@/ui/molecules/button';
-import {
-  sendRemoveSynapses3DEvent,
-  sendDisplaySynapses3DEvent,
-} from '@/components/neuron-viewer/hooks/events';
 import { cn } from '@/utils/css-class';
+import { formatCompactNumber } from '@/utils/format';
+import { getColorFromGeneratedPalette } from '../../simulate/single-neuron/shared/steps/webgl-neuron-selector/colors';
+import { useVisibleSynapsesSetter } from '../../simulate/single-neuron/shared/steps/webgl-neuron-selector/hooks';
 
 type Props = { sessionId: string };
 
@@ -182,8 +180,10 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
                   variant="ghost"
                   className={cn(
                     'bg-neutral-1 border-neutral-2/60 hover:bg-neutral-2/20 hover:text-primary-9 active:bg-primary-7 w-full cursor-pointer border transition-all duration-300 ease-out',
-                    { 'bg-neutral-2/40 text-primary-9 border-neutral-3': currentSet === o.id },
-                    'group-hover:w-[calc(100%-80px)]'
+                    {
+                      'bg-neutral-2/40 text-primary-9 border-neutral-3': currentSet === o.id,
+                    },
+                    'group-hover:w-[calc(100%-80px)]',
                   )}
                   size={breakpoint === 'l' ? 'md' : 'lg'}
                   active={currentSet === o.id}
@@ -213,7 +213,7 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
                     'absolute right-0 flex items-center gap-1.5',
                     'translate-x-full opacity-0',
                     'group-hover:translate-x-0 group-hover:opacity-100',
-                    'transition-all duration-300 ease-out'
+                    'transition-all duration-300 ease-out',
                   )}
                 >
                   <Tooltip>
@@ -249,7 +249,7 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
                       'transition-all duration-200 ease-out',
                       'shadow-md',
                       { 'h-8 w-8': breakpoint === 'l' },
-                      { 'h-10 w-10': breakpoint === 'xl' }
+                      { 'h-10 w-10': breakpoint === 'xl' },
                     )}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -311,7 +311,7 @@ function VisibilityButton({
           ? 'hover:border-orange-500 hover:bg-orange-500'
           : canShow
             ? 'hover:border-secondary-4 hover:bg-secondary-3'
-            : 'opacity-50 hover:border-gray-400 hover:bg-gray-400'
+            : 'opacity-50 hover:border-gray-400 hover:bg-gray-400',
       )}
       onClick={(e) => {
         e.stopPropagation();
@@ -334,7 +334,7 @@ function VisibilityButton({
 
 function useViewer3D(
   synapticInputs: { id: string; color?: string }[],
-  selection: Record<string, SectionSynapsesWith3D | null>
+  selection: Record<string, SectionSynapsesWith3D | null>,
 ) {
   const update = useVisibleSynapsesSetter();
   React.useEffect(() => {
@@ -345,7 +345,7 @@ function useViewer3D(
     for (let index = 0; index < synapticInputs.length; index++) {
       const synapticInput = synapticInputs[index];
       const match = Object.values(selection).find(
-        (item) => item?.synapsePlacementConfigId === synapticInput.id
+        (item) => item?.synapsePlacementConfigId === synapticInput.id,
       );
       if (match) {
         synapses.push({
@@ -363,7 +363,7 @@ function makeData(
     synapses: Array<{
       coordinates: number[];
     }>;
-  }[]
+  }[],
 ) {
   const data: number[] = [];
   for (const section of sections) {

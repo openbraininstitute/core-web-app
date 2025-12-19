@@ -1,8 +1,7 @@
 'use client';
 
-import { ReactNode, useEffect, useId, useRef, useState } from 'react';
-
 import { RightOutlined } from '@ant-design/icons';
+import { type ReactNode, useEffect, useId, useRef, useState } from 'react';
 
 import { cn } from '@/utils/css-class';
 
@@ -93,7 +92,7 @@ export default function AccordionButton({
           'group shadow-skm-l h-[60px] w-full rounded-full',
           isActive ? 'bg-primary-9 text-white' : 'bg-white',
           'flex items-center justify-between px-8 text-left',
-          'focus:outline-none focus-visible:ring-2 focus-visible:ring-black/40'
+          'focus:outline-none focus-visible:ring-2 focus-visible:ring-black/40',
         )}
       >
         {label}
@@ -102,7 +101,7 @@ export default function AccordionButton({
           className={cn(
             'ml-auto inline-flex h-6 w-6 items-center justify-center rounded-md',
             'transition-transform duration-200',
-            open ? 'rotate-90' : 'rotate-0'
+            open ? 'rotate-90' : 'rotate-0',
           )}
         >
           <RightOutlined className="text-current" />

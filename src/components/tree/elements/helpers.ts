@@ -1,7 +1,8 @@
 /* eslint-disable no-param-reassign */
-import transform from 'es-toolkit/compat/transform';
-import isObject from 'es-toolkit/compat/isObject';
+
 import isArray from 'es-toolkit/compat/isArray';
+import isObject from 'es-toolkit/compat/isObject';
+import transform from 'es-toolkit/compat/transform';
 
 import type { TTreeNode } from '@/components/tree/types';
 
@@ -18,7 +19,7 @@ import type { TTreeNode } from '@/components/tree/types';
  */
 export const flattenTreeAsObject = <TNode extends TTreeNode>(
   node: TNode,
-  result: TNode[] = []
+  result: TNode[] = [],
 ): TNode[] => {
   result.push(node);
 
@@ -46,7 +47,7 @@ export const flattenTreeAsObject = <TNode extends TTreeNode>(
 export function findNodeByKey<TNode extends TTreeNode>(
   key: string,
   id: string | number,
-  rootNode: TNode
+  rootNode: TNode,
 ): TNode | null {
   if (rootNode[key as keyof TNode]?.toString() === id.toString()) {
     return rootNode;
@@ -77,7 +78,7 @@ export function findNodeByKey<TNode extends TTreeNode>(
  */
 export function getParentsToRoot<TNode extends TTreeNode>(
   targetId: string,
-  rootNode: TNode
+  rootNode: TNode,
 ): TNode[] {
   function findPath(currentNode: TNode, currentPath: TNode[]): TNode[] | null {
     if (currentNode.id === targetId) {
@@ -112,7 +113,7 @@ export function getParentsToRoot<TNode extends TTreeNode>(
  */
 export function scrollToNode<TNode extends TTreeNode>(
   node: TNode | null,
-  block: ScrollLogicalPosition = 'nearest'
+  block: ScrollLogicalPosition = 'nearest',
 ): void {
   if (!node || typeof document === 'undefined') return;
 
@@ -121,7 +122,7 @@ export function scrollToNode<TNode extends TTreeNode>(
 
   const findScrollableAncestor = (el: Element | null): HTMLElement | null => {
     let current: HTMLElement | null = el as HTMLElement | null;
-    while (current && current.parentElement) {
+    while (current?.parentElement) {
       const parent = current.parentElement as HTMLElement;
       const style = window.getComputedStyle(parent);
       const overflowY = style.overflowY || style.overflow;
@@ -168,7 +169,10 @@ export function scrollToNode<TNode extends TTreeNode>(
       }
     }
 
-    container.scrollTo({ top: Math.max(0, targetScrollTop), behavior: 'smooth' });
+    container.scrollTo({
+      top: Math.max(0, targetScrollTop),
+      behavior: 'smooth',
+    });
   }, 50);
 }
 
@@ -196,7 +200,7 @@ export function renameKeyDeep<T extends Record<string, any>>(
   obj: T | null,
   field: string,
   newKey: string,
-  keepOriginal: boolean = false
+  keepOriginal: boolean = false,
 ): T | null {
   if (!obj) return null;
 

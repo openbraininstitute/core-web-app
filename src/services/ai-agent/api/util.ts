@@ -1,6 +1,6 @@
-import { serviceAiAgentUrl } from './url';
 import { logError } from '@/util/logger';
 import { createHeaders } from '@/util/utils';
+import { serviceAiAgentUrl } from './url';
 
 interface QueryOptions<T> {
   accessToken?: string | null;
@@ -49,7 +49,7 @@ export async function fetchJSON<T>({
 /**
  * Use this type guard only when you want to ignore a return type.
  */
-export function isVoidType(data: unknown): data is void {
+export function isVoidType(data: unknown): data is undefined {
   return true;
 }
 
@@ -62,7 +62,7 @@ type AsyncAction<T extends unknown[], R> = (...args: T) => Promise<R>;
  * Useful for network calls you don't want to have in parallel.
  */
 export function asyncCreateSquash<T extends unknown[], R>(
-  action: AsyncAction<T, R>
+  action: AsyncAction<T, R>,
 ): AsyncAction<T, R> {
   let currentAction: Promise<R> | null = null;
 
