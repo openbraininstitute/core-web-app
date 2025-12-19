@@ -82,13 +82,9 @@ const nextConfig = (phase: string): NextConfig => {
     reactStrictMode: true,
     compress: false,
     output: 'standalone',
-    eslint: {
-      ignoreDuringBuilds: true,
-    },
     typescript: {
       ignoreBuildErrors: true,
     },
-    transpilePackages: ['jotai-devtools'],
     logging: {
       fetches: {
         fullUrl: true,
