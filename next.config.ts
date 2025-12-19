@@ -28,8 +28,6 @@ const SentryOptions: SentryBuildOptions = {
   widenClientFileUpload: true,
 
   // Automatically tree-shake Sentry logger statements to reduce bundle size
-  disableLogger: true,
-  automaticVercelMonitors: false,
   release: {
     name: appVersion,
   },
@@ -38,7 +36,6 @@ const SentryOptions: SentryBuildOptions = {
 const nextConfig = (phase: string): NextConfig => {
   const isDev = phase === PHASE_DEVELOPMENT_SERVER;
   return {
-    cacheComponents: true,
     env: {
       APP_BUILD_TIME: new Date().toISOString(),
     },

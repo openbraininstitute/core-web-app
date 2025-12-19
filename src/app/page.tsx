@@ -4,12 +4,12 @@ import LandingPage from '@/components/LandingPage';
 import { generateMetadataFromSanity } from '@/components/LandingPage/metadata';
 import { EnumSection } from '@/components/LandingPage/sections/sections';
 
-export const dynamic = 'force-dynamic';
-
 export async function generateMetadata(): Promise<Metadata> {
   const metadata = await generateMetadataFromSanity('/');
   return metadata;
 }
+
+export const dynamic = 'force-dynamic';
 
 export default async function RootPage({
   searchParams: promisedParams,
