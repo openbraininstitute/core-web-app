@@ -14,20 +14,20 @@ export const serviceAiAgentSuggestionFromUserJourney = async (
   }
 ): Promise<string[]> => {
   const key = `${options?.threadId}-${options?.frontendUrl}`;
-  
+
   if (pendingRequests.has(key)) {
     return pendingRequests.get(key)!;
   }
-  
+
   const {
     threadId = null,
     virtualLabId = null,
     projectId = null,
     frontendUrl = null,
   } = options ?? {};
-  
+
   const journey = userJourneyTracker.value;
-  
+
   const promise = fetchJSON({
     accessToken,
     path: 'qa/question_suggestions',
@@ -46,7 +46,7 @@ export const serviceAiAgentSuggestionFromUserJourney = async (
     .finally(() => {
       pendingRequests.delete(key);
     });
-  
+
   pendingRequests.set(key, promise);
   return promise;
 };

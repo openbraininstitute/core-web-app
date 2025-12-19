@@ -9,7 +9,10 @@ import ErrorPanel from '../../error';
 import Footer from '../footer';
 
 import { IconPrice } from '../../icons/price';
-import { useServiceAiAgentChat, useServiceAiAgentSuggestionFromUserJourney } from '@/services/ai-agent';
+import {
+  useServiceAiAgentChat,
+  useServiceAiAgentSuggestionFromUserJourney,
+} from '@/services/ai-agent';
 import { classNames } from '@/util/utils';
 
 import styles from './chat.module.css';
@@ -24,7 +27,9 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = React.useState(true);
   const { messages, clear, status, append, error, stop, rateLimitRemaining } =
     useServiceAiAgentChat(threadId ?? '');
-  const [suggestions, , isLoadingSuggestions] = useServiceAiAgentSuggestionFromUserJourney(threadId ?? '');
+  const [suggestions, , isLoadingSuggestions] = useServiceAiAgentSuggestionFromUserJourney(
+    threadId ?? ''
+  );
   const isStorageQueryFetching = useIsFetching({
     predicate: (query) => {
       const fullQueryKey = query.queryKey.at(0);
@@ -41,7 +46,15 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
         refChatBottom.current?.scrollIntoView({ behavior: 'smooth' });
       });
     }
-  }, [messages, error, status, isAutoScrollEnabled, isStorageQueryFetching, suggestions, isLoadingSuggestions]);
+  }, [
+    messages,
+    error,
+    status,
+    isAutoScrollEnabled,
+    isStorageQueryFetching,
+    suggestions,
+    isLoadingSuggestions,
+  ]);
 
   const handleClearChat = () => {
     onClearChat();

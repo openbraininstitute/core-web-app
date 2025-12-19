@@ -29,11 +29,10 @@ export default function SuggestedQuestions({
   onClick,
   isLoading,
 }: SuggestedQuestionsProps) {
-  const [allSuggestions, clearSuggestions, isLoadingFromHook] = useServiceAiAgentSuggestionFromUserJourney(
-    threadId ?? ''
-  );
+  const [allSuggestions, clearSuggestions, isLoadingFromHook] =
+    useServiceAiAgentSuggestionFromUserJourney(threadId ?? '');
   const actualLoading = isLoading ?? isLoadingFromHook;
-  
+
   if (!threadId) return null;
   if (allSuggestions.length === 0 && !actualLoading) return null;
 

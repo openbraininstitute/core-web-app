@@ -37,7 +37,12 @@ export default function Footer({
   return (
     <footer className={className}>
       {status === 'ready' && messagesCount === 0 && (
-        <SuggestedQuestions threadId={threadId} messagesLength={0} onClick={handlePrompt} isLoading={isLoadingSuggestions} />
+        <SuggestedQuestions
+          threadId={threadId}
+          messagesLength={0}
+          onClick={handlePrompt}
+          isLoading={isLoadingSuggestions}
+        />
       )}
       {(status === 'ready' || status === 'error') && (
         <Prompt value={prompt} tools={tools ?? []} onChange={setPrompt} onClick={handlePrompt} />

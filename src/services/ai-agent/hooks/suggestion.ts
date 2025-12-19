@@ -21,7 +21,7 @@ export function useServiceAiAgentSuggestionFromUserJourney(
 
   React.useEffect(() => {
     const currentRequestId = ++requestIdRef.current;
-    
+
     setIsLoading(true);
     serviceAiAgentSuggestionFromUserJourney(accessToken ?? 'no-access-token', {
       threadId,
