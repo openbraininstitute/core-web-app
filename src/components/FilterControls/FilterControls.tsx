@@ -24,7 +24,7 @@ export default function FilterControls({
           <button
             className={classNames(
               'border-neutral-2 flex items-center justify-between gap-10 rounded-md border px-2 py-2',
-              disabled ? 'cursor-not-allowed bg-neutral-100' : 'bg-white',
+              disabled ? 'cursor-not-allowed bg-neutral-100' : 'bg-white'
             )}
             disabled={disabled}
             type="button"
@@ -39,7 +39,7 @@ export default function FilterControls({
                 <span
                   className={classNames(
                     'text-sm leading-5 font-bold',
-                    disabled ? 'text-primary-8' : 'text-primary-8',
+                    disabled ? 'text-primary-8' : 'text-primary-8'
                   )}
                 >
                   Filters

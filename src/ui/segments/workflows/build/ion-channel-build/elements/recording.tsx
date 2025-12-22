@@ -18,8 +18,8 @@ export default function Recording({ sessionId }: { sessionId: string }) {
   const [recording] = useAtom(
     useMemo(
       () => IonChannelRecordingAtomFamily(`${CONFIGURATION_RECORDING_STATE_KEY}/${sessionId}`),
-      [sessionId],
-    ),
+      [sessionId]
+    )
   );
 
   const [trace, error, loading] = useTrace({

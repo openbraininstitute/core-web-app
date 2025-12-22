@@ -206,7 +206,7 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
         log('error', 'Critical error in amperage dispatch', error);
       }
     },
-    [setAmperageState],
+    [setAmperageState]
   );
 
   const protocol =
@@ -217,7 +217,7 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
       Array.isArray(spcState.stimulus.amplitudes)
         ? spcState.stimulus.amplitudes
         : [spcState.stimulus.amplitudes],
-    [spcState.stimulus.amplitudes],
+    [spcState.stimulus.amplitudes]
   );
 
   // sync form values with atom state
@@ -348,7 +348,7 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
                       {
                         validator: createZodValidator(
                           AmperageBaseSchema.shape.start,
-                          'Amperage value is required',
+                          'Amperage value is required'
                         ),
                       },
                     ]
@@ -393,7 +393,7 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
                           {
                             validator: createZodValidator(
                               AmperageBaseSchema.shape.start,
-                              'Start value is required',
+                              'Start value is required'
                             ),
                           },
                         ]
@@ -453,7 +453,7 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
                           {
                             validator: createZodValidator(
                               AmperageBaseSchema.shape.end,
-                              'End value is required',
+                              'End value is required'
                             ),
                           },
                         ]
@@ -507,7 +507,7 @@ export function AmperageConfiguration({ sessionId, memodelId }: Props) {
                         {
                           validator: createZodValidator(
                             AmperageBaseSchema.shape.stepValue,
-                            'Step value is required',
+                            'Step value is required'
                           ),
                         },
                       ]

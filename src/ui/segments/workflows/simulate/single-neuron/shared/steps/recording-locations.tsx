@@ -90,7 +90,7 @@ function RecordItem({
                   return Promise.reject(
                     error instanceof z.ZodError
                       ? error.errors.at(0)?.message
-                      : 'Section is required',
+                      : 'Section is required'
                   );
                 }
                 return Promise.resolve();
@@ -105,7 +105,7 @@ function RecordItem({
             className={cn(
               '[&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!',
               '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!',
-              'border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! rounded-md border-[1px]!',
+              'border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! rounded-md border-[1px]!'
             )}
             popupClassName="[&_.ant-select-item-option-content]:text-primary-9!"
             placement="bottomLeft"
@@ -134,9 +134,7 @@ function RecordItem({
                   }).shape.offset.parseAsync(value);
                 } catch (error) {
                   return Promise.reject(
-                    error instanceof z.ZodError
-                      ? error.errors.at(0)?.message
-                      : 'Offset is required',
+                    error instanceof z.ZodError ? error.errors.at(0)?.message : 'Offset is required'
                   );
                 }
                 return Promise.resolve();
@@ -149,7 +147,7 @@ function RecordItem({
             className={cn(
               'border-neutral-2! [&_.ant-input-number-input]:text-primary-8! flex w-full items-center',
               '[&_.ant-input-number-suffix]:text-neutral-3 [&_.ant-input-number-suffix]:pointer-events-auto',
-              'justify-between gap-2 rounded-sm! bg-white font-bold! [&_input]:placeholder:!font-light',
+              'justify-between gap-2 rounded-sm! bg-white font-bold! [&_input]:placeholder:!font-light'
             )}
             step={0.01}
             disabled={disable}
@@ -193,7 +191,7 @@ function RecordItem({
                   return Promise.reject(
                     error instanceof z.ZodError
                       ? error.errors.at(0)?.message
-                      : 'This field is required',
+                      : 'This field is required'
                   );
                 }
                 return Promise.resolve();
@@ -292,7 +290,7 @@ export function Recording({ sessionId }: Props) {
         initialValues={{ record_from: state }}
         className={cn(
           'secondary-scrollbar relative flex h-auto w-full flex-col items-start overflow-x-hidden overflow-y-auto',
-          'select-none [&_.ant-form-item-explain-error]:text-sm! [&_.ant-form-item-label]:pb-0.5!',
+          'select-none [&_.ant-form-item-explain-error]:text-sm! [&_.ant-form-item-label]:pb-0.5!'
         )}
         onValuesChange={onValuesChange}
         validateTrigger={['onChange']}

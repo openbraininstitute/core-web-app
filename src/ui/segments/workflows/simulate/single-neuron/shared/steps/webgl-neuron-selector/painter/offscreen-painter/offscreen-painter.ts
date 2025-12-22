@@ -57,7 +57,7 @@ export class OffscreenPainter {
               material: new MaterialIndex(),
             }),
           ],
-        }),
+        })
       );
     }
   }
@@ -73,7 +73,7 @@ export class OffscreenPainter {
       context.height,
       context.gl.RGBA,
       context.gl.UNSIGNED_BYTE,
-      data,
+      data
     );
     const [R, G, B] = context.readPixel(xScreen, yScreen);
     const value = (R + (G << 8) + (B << 16)) / 0xffffff;

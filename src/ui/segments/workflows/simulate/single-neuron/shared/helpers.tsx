@@ -49,7 +49,7 @@ export function getSessionKey(prefix: string, sessionId: string) {
 }
 
 export const getDefaultSynapseConfig = (
-  synapsePlacementConfig?: TSingleNeuronSynaptomeConfiguration[],
+  synapsePlacementConfig?: TSingleNeuronSynaptomeConfiguration[]
 ): SynapseConfiguration | null => {
   if (synapsePlacementConfig) {
     return {

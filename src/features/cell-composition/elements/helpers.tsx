@@ -3,7 +3,7 @@ import { formatNumber } from '@/util/common';
 
 export function getMetric(
   composition: CalculatedCompositionPair,
-  densityOrCount: 'density' | 'count',
+  densityOrCount: 'density' | 'count'
 ) {
   if (composition && densityOrCount === 'count') {
     return formatNumber(composition.count);

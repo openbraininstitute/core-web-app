@@ -37,7 +37,7 @@ export type FileUploadOptions = {
   onFilesChange?: (files: FileWithPreview[]) => void;
   onFilesAdded?: (
     addedFiles: FileWithPreview[],
-    setState: React.Dispatch<React.SetStateAction<FileUploadState>>,
+    setState: React.Dispatch<React.SetStateAction<FileUploadState>>
   ) => void;
   onError?: (errors: string[]) => void;
 };
@@ -60,14 +60,14 @@ export type FileUploadActions = {
   handleFileChange: (e: ChangeEvent<HTMLInputElement>) => void;
   openFileDialog: () => void;
   getInputProps: (
-    props?: InputHTMLAttributes<HTMLInputElement>,
+    props?: InputHTMLAttributes<HTMLInputElement>
   ) => InputHTMLAttributes<HTMLInputElement> & {
     ref: React.Ref<HTMLInputElement>;
   };
 };
 
 export const useFileUpload = (
-  options: FileUploadOptions = {},
+  options: FileUploadOptions = {}
 ): [FileUploadState, FileUploadActions] => {
   const {
     maxFiles = Number.POSITIVE_INFINITY,
@@ -99,13 +99,13 @@ export const useFileUpload = (
         if (file.size > maxSize) {
           return messages.FileSizeExceeded.replace('$$', file.name).replace(
             '$$$',
-            formatBytes(maxSize),
+            formatBytes(maxSize)
           );
         }
       } else if (file.size > maxSize) {
         return messages.FileSizeExceeded.replace('$$', file.name).replace(
           '$$$',
-          formatBytes(maxSize),
+          formatBytes(maxSize)
         );
       }
 
@@ -132,14 +132,14 @@ export const useFileUpload = (
         if (!isAccepted) {
           return messages.FileNotAccepted.replace(
             '$$',
-            file instanceof File ? file.name : file.name,
+            file instanceof File ? file.name : file.name
           );
         }
       }
 
       return null;
     },
-    [accept, maxSize],
+    [accept, maxSize]
   );
 
   const createPreview = useCallback((file: File | FileMetadata): string | undefined => {
@@ -214,7 +214,7 @@ export const useFileUpload = (
         if (multiple) {
           const isDuplicate = state.files.some(
             (existingFile) =>
-              existingFile.file.name === file.name && existingFile.file.size === file.size,
+              existingFile.file.name === file.name && existingFile.file.size === file.size
           );
 
           // Skip duplicate files silently
@@ -230,8 +230,8 @@ export const useFileUpload = (
               ? messages.SomeFilesExceedMaxSize.replace('$$', formatBytes(maxSize))
               : messages.FileSizeExceeded.replace('$$', file.name).replace(
                   '$$$',
-                  formatBytes(maxSize),
-                ),
+                  formatBytes(maxSize)
+                )
           );
           continue;
         }
@@ -276,7 +276,7 @@ export const useFileUpload = (
       clearFiles,
       onFilesAdded,
       onError,
-    ],
+    ]
   );
 
   const removeFile = useCallback(
@@ -301,7 +301,7 @@ export const useFileUpload = (
         };
       });
     },
-    [onFilesChange],
+    [onFilesChange]
   );
 
   const clearErrors = useCallback(() => {
@@ -354,7 +354,7 @@ export const useFileUpload = (
         }
       }
     },
-    [addFiles, multiple],
+    [addFiles, multiple]
   );
 
   const handleFileChange = useCallback(
@@ -363,7 +363,7 @@ export const useFileUpload = (
         addFiles(e.target.files);
       }
     },
-    [addFiles],
+    [addFiles]
   );
 
   const openFileDialog = useCallback(() => {
@@ -384,7 +384,7 @@ export const useFileUpload = (
         ref: inputRef,
       };
     },
-    [accept, multiple, handleFileChange],
+    [accept, multiple, handleFileChange]
   );
 
   return [

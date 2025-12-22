@@ -103,7 +103,7 @@ export interface ContentForPricingPlan {
 }
 
 function sanityze(
-  data: ContentForPricing | null | undefined,
+  data: ContentForPricing | null | undefined
 ): ContentForPricing | null | undefined {
   if (!data) return data;
 

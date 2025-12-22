@@ -65,7 +65,7 @@ export function CreditConverter({
               key="back-to-btn"
               className={classNames(
                 'text-primary-8 rounded-md bg-white px-6',
-                'hover:border-primary-8 hover:text-primary-8! hover:border! hover:bg-white! hover:font-bold',
+                'hover:border-primary-8 hover:text-primary-8! hover:border! hover:bg-white! hover:font-bold'
               )}
               type="text"
               size="large"
@@ -78,7 +78,7 @@ export function CreditConverter({
               key="back-to-btn"
               className={classNames(
                 'text-primary-8 rounded-md border-gray-300 bg-white px-6',
-                'hover:border-primary-8 hover:text-primary-8! hover:border! hover:bg-white! hover:font-bold',
+                'hover:border-primary-8 hover:text-primary-8! hover:border! hover:bg-white! hover:font-bold'
               )}
               type="text"
               size="large"

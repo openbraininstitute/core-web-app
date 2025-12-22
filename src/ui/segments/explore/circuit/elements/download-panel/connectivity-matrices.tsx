@@ -91,7 +91,7 @@ export default function ConnectivityMatrices({ circuit }: { circuit: ICircuit })
             cls={{ container: 'text-white' }}
           />
         );
-      },
+      }
     )
     .with({ data: { directory: P.nullish, config: P.nonNullable } }, () => (
       <Error
@@ -137,7 +137,7 @@ export default function ConnectivityMatrices({ circuit }: { circuit: ICircuit })
               description,
               subItems: null,
             };
-          }),
+          })
         );
         const fullConfig = Object.assign(connectivityMetricsContentConfiguration, {
           type: 'connectivity_metrics',
@@ -164,7 +164,7 @@ export default function ConnectivityMatrices({ circuit }: { circuit: ICircuit })
             }}
           />
         );
-      },
+      }
     )
     .otherwise(() => null);
 }

@@ -36,8 +36,8 @@ export function PanelSelector({ sessionId, synaptome, memodel, type }: Props) {
         shallow: true,
       })
       .withDefault(
-        WorkflowSimulatePanels.Configuration,
-      ) as SingleParserBuilder<WorkflowSimulatePanelKeys>,
+        WorkflowSimulatePanels.Configuration
+      ) as SingleParserBuilder<WorkflowSimulatePanelKeys>
   );
 
   const Panel = match({ panelId, type })
@@ -48,7 +48,7 @@ export function PanelSelector({ sessionId, synaptome, memodel, type }: Props) {
       },
       () => {
         return <MEModelContent sessionId={sessionId} memodel={memodel} />;
-      },
+      }
     )
     .with(
       {
@@ -57,7 +57,7 @@ export function PanelSelector({ sessionId, synaptome, memodel, type }: Props) {
       },
       () => {
         return <SynaptomeContent sessionId={sessionId} synaptome={synaptome!} memodel={memodel} />;
-      },
+      }
     )
     .with({ panelId: WorkflowSimulatePanels.Results }, () => {
       return <Results sessionId={sessionId} />;

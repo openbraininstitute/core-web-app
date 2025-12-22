@@ -72,7 +72,7 @@ function EModelOverviewCard({ mode = 'summary', data, reselectLink = false }: Pr
           renderPreview(
             // TODO: use renderImage (emodel has a thumbnail image in `image`)
             data,
-            { height: 200, width: 200 },
+            { height: 200, width: 200 }
           )
           // selectedEModel && <EModelThumbnail emodel={selectedEModel} />
         }
@@ -89,7 +89,7 @@ function EModelOverviewCard({ mode = 'summary', data, reselectLink = false }: Pr
       }}
       className={classNames(
         'border-neutral-2 text-neutral-4 hover:bg-primary-7 flex h-48 w-full',
-        'items-center rounded-lg border pl-32 text-4xl hover:text-white',
+        'items-center rounded-lg border pl-32 text-4xl hover:text-white'
       )}
     >
       Select {title.toLowerCase()}

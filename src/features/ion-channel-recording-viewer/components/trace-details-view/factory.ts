@@ -12,7 +12,7 @@ export function factory(params: ReturnType<typeof usePlotParams>['paramsRepetiti
     plot?.lines,
     selectedLines,
     preview,
-    colorMap.size,
+    colorMap.size
   );
   const data: Data[] = [
     ...invisibles.map((line) => {
@@ -64,7 +64,7 @@ function splitLinesByVisibility(
   lines: IonChannelRecordingPlotLine[] | undefined,
   selectedLines: string[],
   preview: string | undefined,
-  colorsCount: number,
+  colorsCount: number
 ): [IonChannelRecordingPlotLine[], IonChannelRecordingPlotLine[]] {
   if (!lines) return [[], []];
 

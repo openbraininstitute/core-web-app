@@ -39,7 +39,7 @@ export async function checkProjectExists({
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session?.accessToken}`,
       },
-    },
+    }
   );
 
   if (!response.ok) {
@@ -54,7 +54,7 @@ export async function checkProjectExists({
 
 export async function createProject(
   virtualLabId: string,
-  { name, description, include_members }: ProjectPayload,
+  { name, description, include_members }: ProjectPayload
 ): Promise<ProjectCreationResponse> {
   const session = await getSession();
   const response = await fetch(`${getBaseUrl()}/${virtualLabId}/projects`, {
@@ -109,7 +109,7 @@ export async function listProjects({
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session?.accessToken}`,
       },
-    },
+    }
   );
 
   if (!response.ok) {
@@ -153,7 +153,7 @@ export async function attachUsersToProject({
       body: JSON.stringify({
         users,
       }),
-    },
+    }
   );
 
   if (!response.ok) {
@@ -212,6 +212,6 @@ export async function inviteToProject({
         'Content-Type': 'application/json',
       },
       body: payload,
-    },
+    }
   );
 }

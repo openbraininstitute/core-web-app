@@ -77,9 +77,9 @@ export default function Tree<TNode extends TTreeNode>({
   const [expandedIds, setExpandedIds] = useState<Set<string>>(
     new Set(
       flatMap(defaultExpandedNodes, (id) =>
-        flatMap(nodes, (node) => map(getParentsToRoot(id.toString(), node as any), 'id')),
-      ),
-    ),
+        flatMap(nodes, (node) => map(getParentsToRoot(id.toString(), node as any), 'id'))
+      )
+    )
   );
 
   useEffect(() => {
@@ -87,12 +87,12 @@ export default function Tree<TNode extends TTreeNode>({
       setExpandedIds((prev) => {
         // get parents path to the selected node across all trees
         const currentParents = flatMap(nodes, (node) =>
-          flatMap(getParentsToRoot(selectedNode.id, node as any), 'id'),
+          flatMap(getParentsToRoot(selectedNode.id, node as any), 'id')
         );
 
         // get parents for default expanded nodes
         const initialParents = flatMap(defaultExpandedNodes, (id) =>
-          flatMap(nodes, (node) => map(getParentsToRoot(id.toString(), node as any), 'id')),
+          flatMap(nodes, (node) => map(getParentsToRoot(id.toString(), node as any), 'id'))
         );
 
         let finalExpandedNodes: string[];
@@ -134,14 +134,14 @@ export default function Tree<TNode extends TTreeNode>({
         return newSet;
       });
     },
-    [onToggle],
+    [onToggle]
   );
 
   const handleClick = useCallback(
     (node: TNode) => {
       onClick?.(node);
     },
-    [onClick],
+    [onClick]
   );
 
   return (

@@ -31,7 +31,7 @@ export function Content({ sessionId }: Props) {
         step: BuildStep.SynapseSet,
         sessionValue: { memodel: P.nonNullable.select('memodel') },
       },
-      () => <SynapseSetConfiguration sessionId={sessionId} />,
+      () => <SynapseSetConfiguration sessionId={sessionId} />
     )
     .otherwise(() => null);
 

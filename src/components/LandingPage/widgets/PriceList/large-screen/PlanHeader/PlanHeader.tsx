@@ -38,7 +38,7 @@ export default function PlanHeader({ className, plan }: PlanHeaderProps) {
                   <span
                     className={classNames(
                       'text-primary-9 text-lg font-light',
-                      interval === 'month' && 'font-bold',
+                      interval === 'month' && 'font-bold'
                     )}
                   >
                     Monthly
@@ -53,7 +53,7 @@ export default function PlanHeader({ className, plan }: PlanHeaderProps) {
                   <span
                     className={classNames(
                       'text-primary-9 text-lg font-light',
-                      interval === 'month' && 'font-bold',
+                      interval === 'month' && 'font-bold'
                     )}
                   >
                     Yearly

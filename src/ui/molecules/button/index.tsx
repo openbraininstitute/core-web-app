@@ -68,7 +68,7 @@ const buttonVariants = cva(
         className: 'h-12 w-12',
       },
     ],
-  },
+  }
 );
 
 function Button({

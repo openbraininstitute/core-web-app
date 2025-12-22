@@ -18,7 +18,7 @@ const IS_SERVER = typeof window === 'undefined';
 export function useSessionStorage<T>(
   key: string,
   initialValue: T | (() => T),
-  options: UseSessionStorageOptions<T> = {},
+  options: UseSessionStorageOptions<T> = {}
 ): {
   sessionValue: T;
   setSessionValue: Dispatch<SetStateAction<T>>;
@@ -34,7 +34,7 @@ export function useSessionStorage<T>(
 
       return JSON.stringify(value);
     },
-    [options],
+    [options]
   );
 
   const deserializer = useCallback<(value: string) => T>(
@@ -58,7 +58,7 @@ export function useSessionStorage<T>(
 
       return parsed as T;
     },
-    [options, initialValue],
+    [options, initialValue]
   );
 
   // Get from session storage then
@@ -110,7 +110,7 @@ export function useSessionStorage<T>(
         throw new Error(`Error setting sessionStorage key “${key}”:`);
       }
     },
-    [key, readValue, serializer],
+    [key, readValue, serializer]
   );
 
   const removeValue = useCallback(() => {
@@ -143,7 +143,7 @@ export function useSessionStorage<T>(
       }
       setStoredValue(readValue());
     },
-    [key, readValue],
+    [key, readValue]
   );
 
   useEffect(() => {

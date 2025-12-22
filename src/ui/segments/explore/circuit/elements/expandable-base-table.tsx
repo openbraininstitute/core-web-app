@@ -56,7 +56,7 @@ export function createExpandableTableConfig<T extends EntityCoreIdentifiable>(
       [key: string]: any;
     };
     renderWrapper?: (baseTable: ReactNode, records: T[], originalRecord: T) => ReactNode;
-  },
+  }
 ): UseExpandableTableOptions<T> {
   const { expandedColumns, expandedTableProps, wrapperProps, renderWrapper, ...restOptions } =
     options;

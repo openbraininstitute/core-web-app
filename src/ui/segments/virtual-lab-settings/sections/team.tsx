@@ -76,9 +76,9 @@ function EmailInput({
     const duplicates = map(
       filter(
         inviteList,
-        (o) => o.email.toLowerCase() === value.toLowerCase() && value.trim() !== '',
+        (o) => o.email.toLowerCase() === value.toLowerCase() && value.trim() !== ''
       ),
-      (item) => inviteList.indexOf(item),
+      (item) => inviteList.indexOf(item)
     );
 
     if (duplicates.filter((p) => p !== index).length > 0) {
@@ -100,7 +100,7 @@ function EmailInput({
         className={cn(
           'focus:white hover:bg-primary-9! border-white bg-transparent hover:text-white!',
           'focus-within:bg-primary-9! bg-primary-9! text-white! focus-within:text-white!',
-          'placeholder:text-sm! placeholder:text-white',
+          'placeholder:text-sm! placeholder:text-white'
         )}
         disabled={disabled}
       />
@@ -124,16 +124,16 @@ function InviteMembers({ onBack, virtualLabId }: InviteMemberStepProps) {
 
   const updateInvite = (index: number, field: keyof InvitePayload, value: string) => {
     setInviteList((prev) =>
-      prev.map((invite, i) => (i === index ? { ...invite, [field]: value } : invite)),
+      prev.map((invite, i) => (i === index ? { ...invite, [field]: value } : invite))
     );
   };
 
   const inviteUsers = async () => {
     const validInvites = inviteList.filter(
-      (invite) => invite.email && emailSchema.safeParse(invite.email).success,
+      (invite) => invite.email && emailSchema.safeParse(invite.email).success
     );
     const invites = await Promise.allSettled(
-      validInvites.map(({ email }) => inviteToVirtualLab({ virtualLabId, email, role: 'admin' })),
+      validInvites.map(({ email }) => inviteToVirtualLab({ virtualLabId, email, role: 'admin' }))
     );
     return invites;
   };
@@ -142,7 +142,7 @@ function InviteMembers({ onBack, virtualLabId }: InviteMemberStepProps) {
     mutationFn: inviteUsers,
     onSuccess: (data) => {
       const requestedInvites = inviteList.filter(
-        (invite) => invite.email && emailSchema.safeParse(invite.email).success,
+        (invite) => invite.email && emailSchema.safeParse(invite.email).success
       );
       const failedInvites = data
         .map((result, idx) => {
@@ -225,9 +225,9 @@ function InviteMembers({ onBack, virtualLabId }: InviteMemberStepProps) {
                 {
                   uniqBy(
                     inviteList.filter(
-                      (invite) => invite.email && emailSchema.safeParse(invite.email).success,
+                      (invite) => invite.email && emailSchema.safeParse(invite.email).success
                     ),
-                    'email',
+                    'email'
                   ).length
                 }
               </span>
@@ -291,7 +291,7 @@ function InviteMembers({ onBack, virtualLabId }: InviteMemberStepProps) {
                 onClick={addEmailField}
                 className={cn(
                   'border-primary-4 group bg-primary-9 hover:text-primary-4',
-                  'px-4 text-white select-none hover:border-white',
+                  'px-4 text-white select-none hover:border-white'
                 )}
                 disabled={mutate.isPending}
               >
@@ -326,7 +326,7 @@ function InviteMembers({ onBack, virtualLabId }: InviteMemberStepProps) {
             Send{' '}
             {
               inviteList.filter(
-                (invite) => invite.email && emailSchema.safeParse(invite.email).success,
+                (invite) => invite.email && emailSchema.safeParse(invite.email).success
               ).length
             }{' '}
             invitation(s)
@@ -460,12 +460,12 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
                   ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(' ') ||
                       get(record, 'username') ||
                       record.email
-                  : record.email,
+                  : record.email
               )}
               cls={{
                 text: classNames(
                   'text-white!  wrap-text',
-                  record.invite_accepted ? 'font-bold' : 'font-light',
+                  record.invite_accepted ? 'font-bold' : 'font-light'
                 ),
                 email: 'text-primary-4!',
               }}
@@ -488,7 +488,7 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
         render: (_: Role, record) => <CancelInvitation virtualLabId={virtualLabId} user={record} />,
       },
     ],
-    [ownerId, virtualLabId],
+    [ownerId, virtualLabId]
   );
 
   const orderedUsers = useMemo(
@@ -501,7 +501,7 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
         (member) => (member.invite_accepted ? 0 : 1),
         'created_at',
       ]),
-    [users, ownerId, data?.user.id],
+    [users, ownerId, data?.user.id]
   );
 
   return (
@@ -565,7 +565,7 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
               '[&_.ant-table-tbody>tr]:transition-all [&_.ant-table-tbody>tr]:duration-1000',
               '[&_.ant-table-tbody>tr.ant-table-row-remove]:h-0 [&_.ant-table-tbody>tr.ant-table-row-remove]:opacity-40',
               '[&_.ant-table-body]:primary-scrollbar [&_.ant-table-body]:max-h-full [&_.ant-table-body]:overflow-auto [&_.ant-table-container]:h-full',
-              '[&_.ant-empty-description]:text-white!',
+              '[&_.ant-empty-description]:text-white!'
             )}
             scroll={{ y: 'calc(100vh - 180px)' }}
           />

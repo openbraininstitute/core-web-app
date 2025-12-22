@@ -23,7 +23,7 @@ function isContentForAbout(data: unknown): data is AboutContentProps {
         aboutTheAppContent: 'unknown',
         termsAndConditionContent: 'unknown',
       },
-      'ContentForAbout',
+      'ContentForAbout'
     );
     return true;
   } catch (ex) {
@@ -40,7 +40,7 @@ export async function getAboutContent(): Promise<AboutContentProps> {
       {
         cache: 'force-cache',
         next: { revalidate: 3600 },
-      },
+      }
     );
     if (isContentForAbout(data)) return data;
   } catch (err) {

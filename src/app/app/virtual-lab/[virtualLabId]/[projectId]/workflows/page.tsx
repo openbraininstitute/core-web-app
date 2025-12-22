@@ -44,7 +44,7 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
         activity: 'activity',
         entityType: 'type',
       },
-    },
+    }
   );
 
   const onSelectCategory = (value: TActivityValue | null) => {
@@ -59,11 +59,11 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
       query.set(PanelQueryParam, WorkflowSimulatePanels.Configuration);
       if (value)
         navigate(
-          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/configure/${kebabCase(value)}?${query.toString()}`,
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/configure/${kebabCase(value)}?${query.toString()}`
         );
     } else if (activity === ActivityValues.Simulate && value) {
       navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}`,
+        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}`
       );
     }
   };

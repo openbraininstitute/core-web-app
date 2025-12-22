@@ -69,7 +69,7 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
     <div
       className={classNames(
         'animate-fade-in flex w-full max-w-3xl flex-col bg-white p-8',
-        cls?.container,
+        cls?.container
       )}
     >
       <ConfigProvider theme={{ hashed: false }}>
@@ -138,7 +138,7 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
               <Checkbox
                 className={classNames(
                   'mr-3 [&_.ant-checkbox-inner]:rounded-none',
-                  '[&_.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-8 [&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-8',
+                  '[&_.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-8 [&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-8'
                 )}
               >
                 <span className="text-primary-8 text-lg font-semibold">
@@ -157,7 +157,7 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
                   'text-primary-8 w-full rounded-full bg-white px-8 py-3 text-lg font-semibold md:w-auto',
                   'hover:bg-primary-8 mx-auto flex h-auto items-center justify-center transition-colors duration-200 hover:text-white!',
                   'disabled:text-primary-8 disabled:hover:text-primary-4! disabled:hover:bg-gray-100',
-                  cls?.btn,
+                  cls?.btn
                 )}
                 disabled={disableForm}
               >
@@ -172,7 +172,7 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
             className={classNames(
               '[&_.ant-result-title]:text-primary-8 font-serif [&_.ant-result-title]:font-bold',
               position === 'page' && '[&_.ant-result-title]:text-4xl',
-              position === 'footer' && '[&_.ant-result-title]:text-2xl',
+              position === 'footer' && '[&_.ant-result-title]:text-2xl'
             )}
           />
         )}

@@ -68,7 +68,7 @@ export function SpaceManagerContainer() {
         type: incomingType,
         payload: data.detail.data,
       });
-    }, []),
+    }, [])
   );
 
   const content = match({ type: contextConfig.type })

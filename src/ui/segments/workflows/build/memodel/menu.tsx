@@ -101,7 +101,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
       });
       delay(() => {
         navigate(
-          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.Memodel)}/${data.data.id}`,
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.Memodel)}/${data.data.id}`
         );
       }, 500);
     },
@@ -297,7 +297,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
                 variant="success"
                 size={breakpoint === 'l' ? 'md' : 'lg'}
                 className={cn(
-                  'disabled:bg-neutral-2/40 disabled:text-label! w-full justify-center px-10 font-medium!',
+                  'disabled:bg-neutral-2/40 disabled:text-label! w-full justify-center px-10 font-medium!'
                 )}
                 onClick={() => mutate.mutateAsync()}
                 disabled={disabled}

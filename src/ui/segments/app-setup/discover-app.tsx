@@ -170,7 +170,7 @@ export function OnboardingDiscoverCard({
           },
           {
             '-top-[19px]': step.side?.startsWith('top'),
-          },
+          }
         )}
       >
         {arrow}

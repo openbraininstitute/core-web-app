@@ -132,7 +132,7 @@ export function PurchasesHistory({ virtualLabId }: { virtualLabId: string }) {
                 '[&_.ant-spin-blur]:opacity-0!',
                 '[&_.ant-empty-description]:text-white!',
                 'me [&:has(.ant-table-empty)_td:last]:border-b-none!',
-                '[&_td]:last:border-b-0!',
+                '[&_td]:last:border-b-0!'
               )}
               rowClassName="border-b border-primary-4 last:[&_td]:border-b-0!"
               pagination={{
@@ -146,7 +146,7 @@ export function PurchasesHistory({ virtualLabId }: { virtualLabId: string }) {
                 className: cn(
                   '[&_td]:last:border',
                   '[&_.ant-pagination-item_a]:text-white! [&_.ant-pagination-item_a]:bg-primary-9! [&_.ant-pagination-item-active]:bg-primary-7 [&_.ant-pagination-item-active]:text-white! [&_.ant-pagination-item-link]:text-white!',
-                  'flex items-center gap-2 [&_.ant-pagination-item]:rounded-sm [&_.ant-pagination-item_a]:rounded-sm',
+                  'flex items-center gap-2 [&_.ant-pagination-item]:rounded-sm [&_.ant-pagination-item_a]:rounded-sm'
                 ),
               }}
             />

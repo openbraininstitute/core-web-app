@@ -54,7 +54,7 @@ export function LeftMenu({ className }: Props) {
       baseUrl: link.url,
       url: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${link.url}`,
     })),
-    (link) => !link.requireRole || (link.requireRole && isAdmin),
+    (link) => !link.requireRole || (link.requireRole && isAdmin)
   );
 
   return (

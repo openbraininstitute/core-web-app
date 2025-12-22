@@ -55,7 +55,7 @@ function SubjectDataTooltip(data: ISubject) {
   }
   if (data.age_period && data.age_period !== 'unknown') {
     const periodLabel = Object.values(AgePeriod).find(
-      (period) => period.key === data.age_period,
+      (period) => period.key === data.age_period
     )?.label;
     if (periodLabel) fields.push(`Age Period: ${periodLabel}`);
   }
@@ -101,7 +101,7 @@ export function SubjectSelector<TSchema extends ZodObject<ZodRawShape>>({
         searchField: 'search',
         tooltip: tooltipRenderer,
       }),
-    [virtualLabId, projectId, tooltipRenderer],
+    [virtualLabId, projectId, tooltipRenderer]
   );
 
   return (

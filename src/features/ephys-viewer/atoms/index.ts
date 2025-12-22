@@ -32,5 +32,5 @@ export const nwbArrayBufferAtomFamily = readAtomFamilyWithExpiration(
   {
     ttl: 120000, // 2 minutes
     areEqual: isEqual,
-  },
+  }
 );

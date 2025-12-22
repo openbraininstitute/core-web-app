@@ -23,7 +23,7 @@ const DEFAULT_VOLTAGE_UNIT: VoltageUnit = 'mV';
 
 const currentUnitAtom = atomWithStorage<CurrentUnit>(
   'ephysViewer.currentUnit',
-  DEFAULT_CURRENT_UNIT,
+  DEFAULT_CURRENT_UNIT
 );
 
 export default function InteractivePlot({
@@ -47,13 +47,13 @@ export default function InteractivePlot({
     sweepDataMap,
     recordingType,
     colorMap,
-    currentUnit,
+    currentUnit
   );
 
   const selectedResponse: Partial<PlotData>[] = useMemo(
     () => rawData?.filter((data) => selectedSweeps.includes(data.sweepName)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [selectedSweeps, rawData?.filter],
+    [selectedSweeps, rawData?.filter]
   );
 
   const previewDataResponse: Partial<PlotData>[] = useMemo(
@@ -66,7 +66,7 @@ export default function InteractivePlot({
         return { ...data, opacity };
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [previewSweep, rawData?.map, selectedSweeps.includes],
+    [previewSweep, rawData?.map, selectedSweeps.includes]
   );
 
   const onChangeStimulusUnits = (event: any) => {
@@ -147,7 +147,7 @@ function useData(
   sweepDataMap: Map<string, SweepData>,
   recordingType: RecordingType,
   colorMap: Map<string, string>,
-  currentUnit: string,
+  currentUnit: string
 ): [
   data: {
     x: any[];
@@ -210,7 +210,7 @@ function useData(
           ? convertCurrentSeries(
               d.y,
               ensureCurrentUnit(currentUnit, DEFAULT_CURRENT_UNIT),
-              conversionFactor,
+              conversionFactor
             )
           : convertVoltageSeries(d.y, DEFAULT_VOLTAGE_UNIT, conversionFactor);
     });

@@ -52,7 +52,7 @@ export function CircuitViewToggle({ dataKey }: Props) {
           <div
             className={classNames(
               'bg-primary-9 absolute top-px h-5 w-5 rounded-full transition-transform duration-300 ease-in-out',
-              view === 'hierarchy' ? 'translate-x-[2px]' : 'translate-x-[21px]',
+              view === 'hierarchy' ? 'translate-x-[2px]' : 'translate-x-[21px]'
             )}
           />
         </button>

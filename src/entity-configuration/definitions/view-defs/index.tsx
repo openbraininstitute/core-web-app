@@ -40,7 +40,7 @@ export function getViewDefinitionByName(name: TExperimentTypeNames) {
 }
 
 export function getViewDefinitionDataTypeByName(
-  name: TExperimentTypeNames,
+  name: TExperimentTypeNames
 ): TExtendedEntitiesTypeDict | undefined {
   return findKey(ViewsDefinitionRegistry, {
     name,

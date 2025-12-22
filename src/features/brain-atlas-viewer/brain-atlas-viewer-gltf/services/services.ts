@@ -39,7 +39,7 @@ const cacheMeshes = new Map<string, Promise<ArrayBuffer>>();
 
 export async function getBrainRegionMeshArrayBuffer(
   accessToken: string,
-  regionId: string,
+  regionId: string
 ): Promise<ArrayBuffer> {
   const fromCache = cacheMeshes.get(regionId);
   if (fromCache) return fromCache;
@@ -51,7 +51,7 @@ export async function getBrainRegionMeshArrayBuffer(
 
 async function actualGetBrainRegionMeshArrayBuffer(
   accessToken: string,
-  regionId: string,
+  regionId: string
 ): Promise<ArrayBuffer> {
   const atlasId = await getAtlasId(accessToken);
   const atlas = await getAtlas(atlasId);
@@ -63,11 +63,11 @@ async function actualGetBrainRegionMeshArrayBuffer(
   const contentType = 'model/gltf-binary';
   // const contentType = 'application/obj';
   const asset = entity.assets.find(
-    (elem) => elem.label === 'brain_atlas_region_mesh' && elem.content_type === contentType,
+    (elem) => elem.label === 'brain_atlas_region_mesh' && elem.content_type === contentType
   );
   if (!asset) {
     throw new Error(
-      `Unable to find entity "brain_atlas_region_mesh" of type "${contentType}" for entity "${entity.id}" (region "${regionId}")!`,
+      `Unable to find entity "brain_atlas_region_mesh" of type "${contentType}" for entity "${entity.id}" (region "${regionId}")!`
     );
   }
 
@@ -150,7 +150,7 @@ export async function getPointCouldData(annotationValue: number, accessToken: st
 async function actualGetPointCouldData(annotationValue: number, accessToken: string) {
   const _time = performance.now();
   const url = `${config.CELL_API_URL}/circuit?circuit_id=${encodeURIComponent(
-    config.LEGACY_DEFAULT_CIRCUIT_ID || '',
+    config.LEGACY_DEFAULT_CIRCUIT_ID || ''
   )}&region=${annotationValue}&how=arrow`;
   const rawData = await fetchPointCloud(url, accessToken);
   // eslint-disable-next-line no-console

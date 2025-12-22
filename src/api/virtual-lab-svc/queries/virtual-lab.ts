@@ -194,6 +194,6 @@ export async function updateVirtualLab({
         accept: 'application/json',
       },
       body: { ...updatePayload },
-    },
+    }
   );
 }

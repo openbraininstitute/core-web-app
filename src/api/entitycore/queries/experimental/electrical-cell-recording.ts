@@ -97,7 +97,7 @@ const electricalCellRecordingSchema = z.object({
     .array(
       z
         .string({ message: 'Cell recording location is required' })
-        .nonempty({ message: 'Cell recording location is required' }),
+        .nonempty({ message: 'Cell recording location is required' })
     )
     .nullable(),
   recording_type: z.string({ message: 'Cell recording type is required' }).nonempty({

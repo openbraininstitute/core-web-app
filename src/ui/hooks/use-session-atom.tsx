@@ -8,5 +8,5 @@ export const makeSessionAtomWithDefault = <T = any>(defaults: T) =>
       childAtom.debugLabel = `session/${_key}`;
       return childAtom;
     },
-    (a, b) => a === b,
+    (a, b) => a === b
   );

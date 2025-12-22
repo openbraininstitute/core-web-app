@@ -25,7 +25,7 @@ export const singleNeuronSynaptomeSimulationApiQueryExpand = {
   memodel: (
     _: ISingleNeuronSynaptomeSimulation,
     context: WorkspaceContext | undefined,
-    synaptome: ISingleNeuronSynaptome,
+    synaptome: ISingleNeuronSynaptome
   ) => getMEModel({ id: synaptome.me_model.id, context }),
   config: (source: ISingleNeuronSynaptomeSimulation, context: WorkspaceContext | undefined) =>
     getSingleNeuronSynaptomeSimulationIOResult(source, context),
@@ -33,14 +33,14 @@ export const singleNeuronSynaptomeSimulationApiQueryExpand = {
 
 export async function resolveSingleNeuronSynaptomeSimulation(
   id: string,
-  context: WorkspaceContext | undefined,
+  context: WorkspaceContext | undefined
 ) {
   const source = await getSingleNeuronSynaptomeSimulation({ id, context });
   const synaptome = await singleNeuronSynaptomeSimulationApiQueryExpand.synaptome(source, context);
   const memodel = await singleNeuronSynaptomeSimulationApiQueryExpand.memodel(
     source,
     context,
-    synaptome,
+    synaptome
   );
 
   return { source, synaptome, memodel };

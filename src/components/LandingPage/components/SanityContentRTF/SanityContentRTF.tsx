@@ -42,7 +42,7 @@ function renderItem(
     | ContentForRichTextImage
     | ContentForRichTextVideo
     | ContentForRichTextMultipleButton,
-  index: number,
+  index: number
 ) {
   const key = `${item._type}/${index}`;
   switch (item._type) {

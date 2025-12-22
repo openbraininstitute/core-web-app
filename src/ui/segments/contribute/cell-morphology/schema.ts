@@ -35,7 +35,7 @@ export type TCellMorphologyForm = z.infer<typeof CellMorphologySchema>;
 export function getCellMorphologyMimeType(file: File): string | undefined {
   const ext = file.name.split('.').pop()?.toLowerCase();
   const fileType = CELL_MORPHOLOGY_FILE_TYPES.find(
-    (f) => f.extension === ext || file.type === f.mimeType,
+    (f) => f.extension === ext || file.type === f.mimeType
   );
   return fileType?.mimeType;
 }

@@ -9,7 +9,7 @@ import { type RefObject, useEffect, useRef } from 'react';
 
 export default function useResizeObserver<T extends Element>(
   elementRef: RefObject<T | null>,
-  callback: ResizeObserverCallback,
+  callback: ResizeObserverCallback
 ): void {
   const observerRef = useRef<ResizeObserver | null>(null);
 

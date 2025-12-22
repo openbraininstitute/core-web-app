@@ -58,7 +58,7 @@ const lineNumberTransformer: ShikiTransformer = {
 export async function highlightCode(
   code: string,
   language: BundledLanguage,
-  showLineNumbers = false,
+  showLineNumbers = false
 ) {
   const transformers: ShikiTransformer[] = showLineNumbers ? [lineNumberTransformer] : [];
 
@@ -108,7 +108,7 @@ export function CodeBlock({
       <div
         className={cn(
           'group bg-background text-foreground border-neutral-light relative w-full overflow-hidden rounded-md border',
-          className,
+          className
         )}
         {...props}
       >
@@ -145,7 +145,7 @@ export function CodeBlockLanguageLabel({ className }: { className?: string }): R
       className={cn(
         'rounded-full border border-gray-300 px-4 py-1 text-xs',
         'font-medium tracking-wide text-gray-500 uppercase',
-        className,
+        className
       )}
     >
       {language}

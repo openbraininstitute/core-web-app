@@ -40,7 +40,7 @@ export function EntityTypeSelectScrollable({
         className={cn(
           'focus-visible:ring-neutral-2 bg-transparent shadow-none focus-visible:shadow-none focus-visible:ring-1',
           'w-[280px] max-w-max min-w-36 rounded-full border-none text-lg',
-          "[&>span[data-slot='select-value']]:text-primary-9 [&>span[data-slot='select-value']]:font-bold",
+          "[&>span[data-slot='select-value']]:text-primary-9 [&>span[data-slot='select-value']]:font-bold"
         )}
       >
         <SelectValue placeholder={<span className="text-base font-light!">Select a type</span>} />
@@ -60,14 +60,14 @@ export function EntityTypeSelectScrollable({
                   value={_value!}
                   className={cn(
                     'text-primary-9 text-lg font-bold',
-                    'data-[highlighted]:text-primary-7!',
+                    'data-[highlighted]:text-primary-7!'
                   )}
                 >
                   {label}
                 </SelectItem>
               ))}
             </SelectGroup>
-          ),
+          )
         )}
       </SelectContent>
     </Select>
@@ -89,7 +89,7 @@ export function CategorySelectScrollable({
         className={cn(
           'focus-visible:ring-neutral-2 bg-transparent shadow-none focus-visible:shadow-none focus-visible:ring-1',
           'w-[280px] max-w-max min-w-36 rounded-full border-none text-lg',
-          "[&>span[data-slot='select-value']]:text-primary-9 [&>span[data-slot='select-value']]:font-bold",
+          "[&>span[data-slot='select-value']]:text-primary-9 [&>span[data-slot='select-value']]:font-bold"
         )}
       >
         <SelectValue

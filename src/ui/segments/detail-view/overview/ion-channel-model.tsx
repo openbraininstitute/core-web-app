@@ -40,7 +40,7 @@ export default async function IonChannelModelOverview({
   const imagesByPath = Object.fromEntries(imageAssets.map((f) => [f.path, f]));
 
   const summaryAsset = icm.assets.find(
-    (a) => a.label === AssetLabel.ion_channel_model_figure_summary_json,
+    (a) => a.label === AssetLabel.ion_channel_model_figure_summary_json
   );
 
   const summary =

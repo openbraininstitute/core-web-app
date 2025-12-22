@@ -74,7 +74,7 @@ export default useUserRole;
 export function makeRoles(
   data: VlmUserGroupsResponse | undefined,
   virtualLabId: string | undefined,
-  projectId: string | undefined,
+  projectId: string | undefined
 ) {
   const userGroups = data?.data?.groups;
   const groupedUserGroups = groupBy(userGroups, 'group_type');

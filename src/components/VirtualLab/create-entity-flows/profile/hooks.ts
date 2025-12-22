@@ -18,13 +18,13 @@ export function useFieldsChangeHandler(setValid: (value: boolean) => void) {
       const error = allFields.find((item) => (item.errors ?? []).length > 0);
       setValid(!error);
     },
-    [setValid],
+    [setValid]
   );
 }
 
 export function useSubmitCallback(
   errorNotify: NotificationInstance['error'],
-  successNotify: NotificationInstance['success'],
+  successNotify: NotificationInstance['success']
 ) {
   const queryClient = useQueryClient();
   return useMutation({

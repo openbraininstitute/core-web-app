@@ -202,7 +202,7 @@ export function BrowseLibraryScope() {
             cls={{
               table: cn(
                 '[&_.ant-table]:bg-background! [&_.ant-table-header_th]:bg-background!',
-                '[&_.ant-table-placeholder]:bg-background! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-background!',
+                '[&_.ant-table-placeholder]:bg-background! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-background!'
               ),
             }}
             selectionType="checkbox"
@@ -216,7 +216,7 @@ export function BrowseLibraryScope() {
           '[grid-area:mini-view]',
           {
             hidden: !mdv,
-          },
+          }
         )}
       >
         <MiniDetailView dataType={dataType} />

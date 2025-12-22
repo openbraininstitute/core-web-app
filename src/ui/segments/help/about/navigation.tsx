@@ -45,7 +45,7 @@ export default function AboutNavigation() {
             variant="outline"
             className={cn(
               'shadow-base h-15 w-full justify-start px-6 text-lg font-semibold',
-              isActive ? 'bg-primary-9 text-white' : '',
+              isActive ? 'bg-primary-9 text-white' : ''
             )}
             aria-label={`View ${section.name} features`}
           >

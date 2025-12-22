@@ -98,7 +98,7 @@ export class Painter {
         new TgdPainterState(context, {
           depth: webglPresetDepth.lessOrEqual,
           children: [group],
-        }),
+        })
       );
       context.logic.add(() => {
         const { pointCloudPainter, uniforms } = this;
@@ -153,7 +153,7 @@ export class Painter {
           <>
             <strong>{region.name}</strong>
             <p>An error occurred while attempting to visualize the brain region mesh.</p>
-          </>,
+          </>
         );
       }
     }

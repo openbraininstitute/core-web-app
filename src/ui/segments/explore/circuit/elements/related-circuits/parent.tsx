@@ -36,10 +36,10 @@ export function Parent({ data }: Props) {
             dataType: ExtendedEntitiesTypeDict.Circuit,
             dataScope: WorkspaceScope.Custom,
             key: data?.id ?? '',
-          }),
+          })
         ),
-      [data?.id],
-    ),
+      [data?.id]
+    )
   );
   const columns = cols.filter(({ key }) => (activeColumns || []).includes(key as string));
   const onCellClick = (_basePath: string, record: ICircuit) => {
@@ -48,7 +48,7 @@ export function Parent({ data }: Props) {
         ctx: { virtualLabId, projectId },
         dataType: ExtendedEntitiesTypeDict.Circuit,
         entityId: record.id,
-      }),
+      })
     );
   };
 

@@ -38,7 +38,7 @@ export interface FlatValidationResult {
 
 export function useFlatValidationResults(
   validationResults: TValidationResultNonUndefined,
-  rin: number | undefined,
+  rin: number | undefined
 ) {
   return React.useMemo(() => {
     const output: FlatValidationResult[] = [];
@@ -88,11 +88,11 @@ export function useFlatValidationResults(
 
 export function useSelectedValidationResults(
   flatValidationResults: FlatValidationResult[],
-  selectedName: string,
+  selectedName: string
 ) {
   return React.useMemo(
     () => flatValidationResults.filter(filterBySelectedName(selectedName)),
-    [flatValidationResults, selectedName],
+    [flatValidationResults, selectedName]
   );
 }
 

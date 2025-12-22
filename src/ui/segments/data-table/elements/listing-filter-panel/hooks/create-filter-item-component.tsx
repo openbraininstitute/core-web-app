@@ -20,7 +20,7 @@ export function createFilterItemComponent(
   facets: Facets | undefined,
   filterValues: CoreFilterValues,
   setFilterValues: React.Dispatch<React.SetStateAction<CoreFilterValues>>,
-  items?: Array<{ value: string; label: string }> | undefined,
+  items?: Array<{ value: string; label: string }> | undefined
 ) {
   return function FilterItemComponent() {
     const { type } = filter;

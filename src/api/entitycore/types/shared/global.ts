@@ -290,7 +290,7 @@ export const Sex = {
 } as const;
 
 export const SexDictionary = Object.fromEntries(
-  Object.entries(Sex).map(([name, value]) => [name, value.key]),
+  Object.entries(Sex).map(([name, value]) => [name, value.key])
 ) as {
   [K in keyof typeof Sex]: (typeof Sex)[K]['key'];
 };
@@ -311,7 +311,7 @@ export const AgePeriod = {
 } as const;
 
 export const AgePeriodDictionary = Object.fromEntries(
-  Object.entries(AgePeriod).map(([name, value]) => [name, value.key]),
+  Object.entries(AgePeriod).map(([name, value]) => [name, value.key])
 ) as {
   [K in keyof typeof AgePeriod]: (typeof AgePeriod)[K]['key'];
 };

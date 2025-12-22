@@ -27,7 +27,7 @@ export const makeTypeDefaultFilters = ({ dataType }: { dataType: TExtendedEntiti
       ?.filter(
         (o) =>
           _get(fields, o, { isFilterable: false })?.isFilterable === true ||
-          _get(fields, o, { isDisplayable: false })?.isDisplayable === true,
+          _get(fields, o, { isDisplayable: false })?.isDisplayable === true
       )
       ?.map((colKey) => columnKeyToFilter(colKey, dataType)) ?? []),
   ];

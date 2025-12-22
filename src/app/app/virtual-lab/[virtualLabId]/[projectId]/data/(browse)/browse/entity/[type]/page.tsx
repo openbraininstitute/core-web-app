@@ -52,7 +52,7 @@ export default async function Page({
       {
         scope: P.union(P.nullish, WorkspaceScope.Public, WorkspaceScope.Project),
         entity: P.when((e) =>
-          AllowedEntities.includes(e?.extendedType as unknown as (typeof AllowedEntities)[number]),
+          AllowedEntities.includes(e?.extendedType as unknown as (typeof AllowedEntities)[number])
         ),
       },
       () => {
@@ -66,7 +66,7 @@ export default async function Page({
             }}
           />
         );
-      },
+      }
     )
     .with({ scope: WorkspaceScope.Bookmarks }, () => {
       return <BrowseLibraryScope />;

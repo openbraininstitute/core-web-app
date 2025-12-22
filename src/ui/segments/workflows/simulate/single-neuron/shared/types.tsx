@@ -22,7 +22,7 @@ export const StimulationMode = {
 } as const;
 export type TStimulationModeValue = (typeof StimulationMode)[keyof typeof StimulationMode]['value'];
 export const StimulationModeDict = Object.fromEntries(
-  Object.entries(StimulationMode).map(([name, value]) => [name, value.value]),
+  Object.entries(StimulationMode).map(([name, value]) => [name, value.value])
 ) as {
   [K in keyof typeof StimulationMode]: (typeof StimulationMode)[K]['value'];
 };
@@ -51,7 +51,7 @@ export const StimulusModule = {
 } as const;
 export type TStimulusModuleValue = (typeof StimulusModule)[keyof typeof StimulusModule]['value'];
 export const StimulusModuleDict = Object.fromEntries(
-  Object.entries(StimulusModule).map(([name, value]) => [name, value.value]),
+  Object.entries(StimulusModule).map(([name, value]) => [name, value.value])
 ) as {
   [K in keyof typeof StimulusModule]: (typeof StimulusModule)[K]['value'];
 };
@@ -108,7 +108,7 @@ export type TSynapseTypeValue =
 export type TSynapseTypeKey =
   (typeof SynapseTypeDictionary)[keyof typeof SynapseTypeDictionary]['id'];
 export const SynapseTypeDict = Object.fromEntries(
-  Object.entries(SynapseTypeDictionary).map(([name, value]) => [name, value.value]),
+  Object.entries(SynapseTypeDictionary).map(([name, value]) => [name, value.value])
 ) as {
   [K in keyof typeof SynapseTypeDictionary]: (typeof SynapseTypeDictionary)[K]['value'];
 };
@@ -164,7 +164,7 @@ export const StimulusConfigSchema = z.object({
     {
       message:
         'Stimulation mode must be one of the following: Current Clamp, Voltage Clamp, Conductance.',
-    },
+    }
   ),
   stimulus_protocol: z
     .enum(
@@ -177,7 +177,7 @@ export const StimulusConfigSchema = z.object({
       {
         message:
           'Stimulus protocol must be one of the following: AP Waveform, Idrest, IV, Fire Pattern',
-      },
+      }
     )
     .nullable(),
   amplitudes: z.union([z.array(z.number()), z.number()], {
@@ -200,7 +200,7 @@ export const NeuronLocationOriginSchema = z.enum(['injection', 'recording']);
 export type TNeuronLocationOrigin = z.infer<typeof NeuronLocationOriginSchema>;
 
 export const NeuronLocationOriginDict = Object.fromEntries(
-  NeuronLocationOriginSchema.options.map((value) => [value, value]),
+  NeuronLocationOriginSchema.options.map((value) => [value, value])
 ) as Record<TNeuronLocationOrigin, TNeuronLocationOrigin>;
 
 export const NeuronLocationSchema = z.object({
@@ -211,11 +211,11 @@ export const NeuronLocationSchema = z.object({
     })
     .min(
       0,
-      'Recording position offset must be between 0 and 1 (0 = start of section, 1 = end of section)',
+      'Recording position offset must be between 0 and 1 (0 = start of section, 1 = end of section)'
     )
     .max(
       1,
-      'Recording position offset must be between 0 and 1 (0 = start of section, 1 = end of section)',
+      'Recording position offset must be between 0 and 1 (0 = start of section, 1 = end of section)'
     ),
   record_currents: z.boolean(),
   color: z.string().optional(),
@@ -248,7 +248,7 @@ export const SynapseConfigSchema = z.object({
         z.array(
           z
             .number({ message: 'Synapse frequencies must be positive numbers' })
-            .min(0, 'Synapse frequencies must be positive numbers'),
+            .min(0, 'Synapse frequencies must be positive numbers')
         ),
       ],
       {
@@ -263,7 +263,7 @@ export const SynapseConfigSchema = z.object({
           }
           return { message: ctx.defaultError };
         },
-      },
+      }
     )
     .refine((val) => !isNil(val), {
       message: 'Synapse frequency is required',
@@ -392,7 +392,7 @@ export const AmperageStateSchema = AmperageBaseSchema.refine(
   {
     message: 'Start current amplitude must be less than end current amplitude',
     path: ['start'],
-  },
+  }
 );
 
 export type AmperageState = z.infer<typeof AmperageStateSchema>;

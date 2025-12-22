@@ -10,7 +10,7 @@ export default function AllFeaturesContent() {
   const content = useSanityContentForFeatureItems();
 
   const availableFeatures = content.filter(
-    (item: ContentForFeatureItem) => item.Status === 'Available',
+    (item: ContentForFeatureItem) => item.Status === 'Available'
   );
 
   return (

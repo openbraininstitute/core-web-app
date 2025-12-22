@@ -79,7 +79,7 @@ export default function SingleNotebook({
                 fill="#002766"
                 className={classNames(
                   'relative top-2 transition-transform duration-300 ease-in-out',
-                  readMeOpen ? 'rotate-90' : 'rotate-0',
+                  readMeOpen ? 'rotate-90' : 'rotate-0'
                 )}
               />
             </div>

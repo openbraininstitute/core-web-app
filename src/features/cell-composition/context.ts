@@ -25,7 +25,7 @@ const cellCompositionSummaryAtom = atom(async (): Promise<ICellCompositionRoot> 
   const { data: cellComposition, error } = await tryCatch(
     getCellCompositions({
       filters: { name: defaultCellCompositionName },
-    }),
+    })
   );
   if (error) throw error;
   if (!cellComposition.data.length)
@@ -45,7 +45,7 @@ const cellCompositionSummaryAtom = atom(async (): Promise<ICellCompositionRoot> 
       entityType: EntityTypeDict.CellComposition,
       entityId: cellComposition.data.at(0)?.id!,
       id: summaryAsset.id,
-    }),
+    })
   );
   if (assetError) throw assetError;
   return cellCompositionSummary;
@@ -64,7 +64,7 @@ export const annotationTypesAtom = atomFamily<WorkspaceContext, Atom<Promise<IAn
     childAtom.debugLabel = 'annotation-types';
     return childAtom;
   },
-  isEqual,
+  isEqual
 );
 
 export const cellCompositionAtom = atomFamily(({ brainRegionId }: { brainRegionId: string }) => {
@@ -111,10 +111,10 @@ export const cellCompositionAtom = atomFamily(({ brainRegionId }: { brainRegionI
             dataField: null,
             parentId: 'parentId',
             childrenField: 'children',
-          },
+          }
         ),
         'title',
-        'name',
+        'name'
       );
 
       return { totalComposition, neurons };

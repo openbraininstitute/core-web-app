@@ -13,7 +13,7 @@ export default function DataTypesPage() {
 
   const filteredContent = selectedLetter
     ? artifactTypesContent.filter(
-        (item: ContentForGlossaryItem) => item.Name.charAt(0).toUpperCase() === selectedLetter,
+        (item: ContentForGlossaryItem) => item.Name.charAt(0).toUpperCase() === selectedLetter
       )
     : artifactTypesContent;
 

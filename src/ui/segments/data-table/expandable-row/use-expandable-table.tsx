@@ -37,7 +37,7 @@ export interface UseExpandableTableOptions<T extends EntityCoreIdentifiable, P =
  * Reusable hook for managing expandable tables with hierarchy support
  */
 export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown>(
-  options: UseExpandableTableOptions<T, P>,
+  options: UseExpandableTableOptions<T, P>
 ): {
   expandableConfig: ExpandableConfig<T>;
   isRowExpanded: (record: T) => boolean;
@@ -79,7 +79,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
       const key = getRowKey(record);
       return key in state.expandedData;
     },
-    [state.expandedData, getRowKey],
+    [state.expandedData, getRowKey]
   );
 
   const isRowLoading = useCallback(
@@ -87,7 +87,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
       const key = getRowKey(record);
       return Boolean(state.loadingRows[key]);
     },
-    [state.loadingRows, getRowKey],
+    [state.loadingRows, getRowKey]
   );
 
   const getExpandedData = useCallback(
@@ -95,7 +95,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
       const key = getRowKey(record);
       return state.expandedData[key] || null;
     },
-    [state.expandedData, getRowKey],
+    [state.expandedData, getRowKey]
   );
 
   const onExpand = useCallback(
@@ -165,7 +165,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
         log('warn', 'Row is expandable but no fetcher provided and no fetchId available');
       }
     },
-    [fetcher, fetcherParams, getRowKey, getFetchId, isTopLevel],
+    [fetcher, fetcherParams, getRowKey, getFetchId, isTopLevel]
   );
 
   const expandedRowRender = useCallback(
@@ -188,7 +188,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
 
       return renderExpanded(records, record, isLoading);
     },
-    [state.expandedData, state.loadingRows, getRowKey, renderExpanded],
+    [state.expandedData, state.loadingRows, getRowKey, renderExpanded]
   );
 
   // create expandable config - only use controlled mode for top-level tables

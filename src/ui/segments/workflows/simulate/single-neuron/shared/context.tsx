@@ -25,37 +25,37 @@ import {
 export const StimulationConfigurationAtomFamily = makeStorageAtomWithValidationFamily(
   StimulationConfigurationSchema,
   DEFAULT_CURRENT_INJECTION_CONFIG,
-  safeStorage,
+  safeStorage
 );
 
 export const ExperimentalSetupConfigurationAtomFamily = makeStorageAtomWithValidationFamily(
   ExperimentalSetupConfigurationSchema,
   DEFAULT_SIMULATION_EXPERIMENTAL_SETUP,
-  safeStorage,
+  safeStorage
 );
 
 export const RecordLocationConfigurationAtomFamily = makeStorageAtomWithValidationFamily(
   NeuronLocationArraySchema,
   [buildDefaultRecordingLocation(getSimulationColor(0))],
-  safeStorage,
+  safeStorage
 );
 
 export const SynaptomeConfigurationAtomFamily = makeStorageAtomWithValidationFamily(
   SynapseConfigurationArraySchema,
   [],
-  safeStorage,
+  safeStorage
 );
 
 export const OverviewConfigurationAtomFamily = makeStorageAtomWithValidationFamily(
   OverviewConfigurationSchema,
   { name: '', description: undefined },
-  safeStorage,
+  safeStorage
 );
 
 export const FrequencyInputConfigurationAtomFamily = makeStorageAtomWithValidationFamily(
   FrequencyInputConfigSchema,
   { constantOrSteps: 'constant', stepFrequencyState: null },
-  safeStorage,
+  safeStorage
 );
 
 export const AmperageStateAtomFamily = makeStorageAtomWithValidationFamily(
@@ -68,7 +68,7 @@ export const AmperageStateAtomFamily = makeStorageAtomWithValidationFamily(
     computed: [0.05, 0.1625, 0.275, 0.3875, 0.5],
     error: null,
   },
-  safeStorage,
+  safeStorage
 );
 
 export const neuronSectionNamesAtomFamily = atomFamily((key: string) => {

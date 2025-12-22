@@ -66,7 +66,7 @@ export default function SynapseGroupList({ config }: Props) {
                 )}
               </div>
             </div>
-          ),
+          )
         )}
       </div>
     </div>

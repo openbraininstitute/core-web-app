@@ -30,7 +30,7 @@ export function BrainAtlasViewerGltf({ className, dataKey, onLoading }: BrainAtl
       painter.setPointCloud(
         region?.annotation_value ?? -1,
         `#${region?.color_hex_triplet ?? 'FFFFFF'}`,
-        accessToken,
+        accessToken
       );
     }
     const handleCameraChange = () => {

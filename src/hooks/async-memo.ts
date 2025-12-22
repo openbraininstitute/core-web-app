@@ -9,7 +9,7 @@ export function useAsyncMemo<Param, Result>(
   generate: (param: Param) => Promise<Result>,
   options?: Partial<{
     makeKey?: (param: Param) => string;
-  }>,
+  }>
 ): Result | null | undefined {
   const [value, setValue] = React.useState<Result | null | undefined>(undefined);
   const cache = useCacheLastRecentlyInserted<Result | null | undefined>();

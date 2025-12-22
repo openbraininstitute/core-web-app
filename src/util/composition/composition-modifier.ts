@@ -12,7 +12,7 @@ import type { OriginalComposition, OriginalCompositionNode } from '@/types/compo
  */
 export const calculateDensityRatioChange = (
   previousDensityValue: number,
-  newDensityValue: number,
+  newDensityValue: number
 ) => {
   if (previousDensityValue !== 0) {
     return newDensityValue / previousDensityValue;
@@ -30,7 +30,7 @@ export const applyNewDensity = (nodeToModify: OriginalCompositionNode, ratioChan
   if (nodeToModify.composition.neuron.density !== 0) {
     nodeToModify.composition.neuron.density = Math.max(
       nodeToModify.composition.neuron.density * ratioChange,
-      0,
+      0
     );
   } else {
     // when the previous density value is 0, we set directly the new density value
@@ -49,7 +49,7 @@ export const applyNewDensity = (nodeToModify: OriginalCompositionNode, ratioChan
 export const iterateAndApplyDensityChange = (
   node: OriginalCompositionNode,
   ratioChange: number,
-  volume: number,
+  volume: number
 ) => {
   if (node.hasPart) {
     Object.values(node.hasPart).forEach((child) => {
@@ -100,7 +100,7 @@ const computeModifiedComposition = (
   compositionFile: OriginalComposition,
   densityOrCount: string,
   volumes: { [key: string]: number },
-  selectedBrainRegionId: string,
+  selectedBrainRegionId: string
 ) => {
   if (modifiedNode.composition !== undefined && selectedBrainRegionId in volumes) {
     let previousDensity = modifiedNode.composition;

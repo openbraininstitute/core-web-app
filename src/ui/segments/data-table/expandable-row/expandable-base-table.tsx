@@ -94,7 +94,7 @@ export function createExpandableTableConfig<T extends EntityCoreIdentifiable, P 
      * @returns JSX element with custom wrapper/styling
      */
     renderWrapper?: (baseTable: ReactNode, records: T[], originalRecord: T) => ReactNode;
-  },
+  }
 ): UseExpandableTableOptions<T, P> {
   const { expandedColumns, expandedTableProps, wrapperProps, renderWrapper, ...restOptions } =
     options;

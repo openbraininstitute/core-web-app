@@ -9,11 +9,11 @@ import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-d
 
 export const useMorphometrics = (
   morphology: ICellMorphologyExpanded,
-  showLabel: boolean = false,
+  showLabel: boolean = false
 ) => {
   const groupedCardFields = groupBy(
     getViewDefinitionByExtendedType(ExtendedEntitiesTypeDict.CellMorphology)?.cardViewFields,
-    (item) => fieldsDefinitionRegistry[item.field]?.group ?? 'Metadata',
+    (item) => fieldsDefinitionRegistry[item.field]?.group ?? 'Metadata'
   );
 
   const filteredGroupedCardFields = omit(groupedCardFields, 'Metadata');

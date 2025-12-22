@@ -13,7 +13,7 @@ export function useSanityContentForMultipleMember() {
   "imageWidth": image.asset->metadata.dimensions.width,
   "imageHeight": image.asset->metadata.dimensions.height
 }`,
-      isContentForMultipleMember,
+      isContentForMultipleMember
     ) ?? []
   );
 }

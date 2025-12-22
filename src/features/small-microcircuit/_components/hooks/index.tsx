@@ -23,7 +23,7 @@ export function useApiUrl({ model }: { model: ICircuit | IMEModel }) {
     .with({ type: EntityTypeDict.Memodel }, () => 'me-model-simulation-scan-config-generate-grid')
     .with(
       { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single },
-      () => 'me-model-with-synapses-circuit-simulation-scan-config-generate-grid',
+      () => 'me-model-with-synapses-circuit-simulation-scan-config-generate-grid'
     )
     .with({ type: EntityTypeDict.Circuit }, () => 'circuit-simulation-scan-config-generate-grid')
     .otherwise(() => {

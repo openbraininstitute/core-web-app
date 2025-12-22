@@ -92,7 +92,7 @@ export function BrowseCircuit({
       .withDefault(defaultScope ?? WorkspaceScope.Public)
       .withOptions({ shallow: true, clearOnDefault: false }) as NonNullable<
       SingleParserBuilder<TWorkspaceScope>
-    >,
+    >
   );
 
   const { dataKey } = makeDataKey({
@@ -214,7 +214,7 @@ export function BrowseCircuit({
   });
 
   const nestedTableColumns = allColumns.filter(({ key }) =>
-    (activeColumns || []).includes(key as string),
+    (activeColumns || []).includes(key as string)
   );
 
   const expandableOptions = createExpandableTableConfig<ICircuit | ICircuitEnriched>({
@@ -302,7 +302,7 @@ export function BrowseCircuit({
         data-testid="circuit-table-container"
         className={cn(
           'h-full max-h-[calc(100vh-11.8rem)] min-h-0 w-full min-w-0 overflow-hidden rounded-2xl [grid-area:body]',
-          classNames?.container,
+          classNames?.container
         )}
       >
         <div id="circuit-listing-table-container" className={cn('h-full w-full')}>
@@ -333,7 +333,7 @@ export function BrowseCircuit({
             cls={{
               table: cn(
                 '[&_.ant-table]:bg-background! [&_.ant-table-header_th]:bg-background!',
-                '[&_.ant-table-placeholder]:bg-background! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-background!',
+                '[&_.ant-table-placeholder]:bg-background! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-background!'
               ),
             }}
             {...mainTableProps}
@@ -353,7 +353,7 @@ export function BrowseCircuit({
           {
             hidden: !mdv,
           },
-          classNames?.miniView,
+          classNames?.miniView
         )}
       >
         <MiniDetailView {...miniViewProps} dataType={dataType} />

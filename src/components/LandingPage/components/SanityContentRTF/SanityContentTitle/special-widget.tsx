@@ -33,7 +33,7 @@ export function makeSpecialWidget(rawCode: string) {
                 args,
               },
               null,
-              '  ',
+              '  '
             )}
           </pre>
         </div>

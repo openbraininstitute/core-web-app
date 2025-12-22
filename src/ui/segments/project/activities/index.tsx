@@ -30,7 +30,7 @@ export function ProjectActivities() {
   const { virtualLabId, projectId } = useWorkspace();
   const [page, setPage] = useState(1);
   const [entityType, setEntityType] = useState<TExtendedEntitiesTypeDict>(
-    ExtendedEntitiesTypeDict.Memodel,
+    ExtendedEntitiesTypeDict.Memodel
   );
 
   const [activity, setActivity] = useState<TActivityValue>(ActivityValues.Build);
@@ -127,7 +127,7 @@ export function ProjectActivities() {
                   className={cn(
                     '[&_.ant-table]:bg-background! [&_.ant-table-thead_th]:bg-background!',
                     '[&_.ant-table-thead_th]:text-neutral-4!',
-                    '[&_.ant-table-placeholder]:bg-background!',
+                    '[&_.ant-table-placeholder]:bg-background!'
                   )}
                   loading={isLoading}
                   dataSource={data?.data}
@@ -149,7 +149,7 @@ export function ProjectActivities() {
                     },
                     className: cn(
                       '[&_.ant-pagination-item-active]:bg-primary-9 [&_.ant-pagination-item-active_a]:text-white!',
-                      '[&_.ant-pagination-disabled_button]:text-neutral-2 [&_button.ant-pagination-item-link]:text-primary-9',
+                      '[&_.ant-pagination-disabled_button]:text-neutral-2 [&_button.ant-pagination-item-link]:text-primary-9'
                     ),
                   }}
                   locale={{

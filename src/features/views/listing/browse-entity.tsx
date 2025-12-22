@@ -83,7 +83,7 @@ export function BrowseEntityScope({
     'scope',
     parseAsString
       .withDefault(defaultScope ?? WorkspaceScope.Public)
-      .withOptions({ shallow: true }) as NonNullable<SingleParserBuilder<TWorkspaceScope>>,
+      .withOptions({ shallow: true }) as NonNullable<SingleParserBuilder<TWorkspaceScope>>
   );
 
   const dataKey = compact([virtualLabId, projectId, section, dataType, scope, id]).join('/');
@@ -200,7 +200,7 @@ export function BrowseEntityScope({
         data-testid="data-table-container"
         className={cn(
           'h-full max-h-[calc(100vh-11.8rem)] min-h-0 w-full min-w-0 overflow-hidden rounded-2xl [grid-area:body]',
-          classNames?.container,
+          classNames?.container
         )}
       >
         <div id="main-listing-table-container" className={cn('h-full w-full')}>
@@ -225,7 +225,7 @@ export function BrowseEntityScope({
             cls={{
               table: cn(
                 '[&_.ant-table]:bg-background! [&_.ant-table-header_th]:bg-background!',
-                '[&_.ant-table-placeholder]:bg-background! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-background!',
+                '[&_.ant-table-placeholder]:bg-background! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-background!'
               ),
             }}
             {...mainTableProps}
@@ -240,7 +240,7 @@ export function BrowseEntityScope({
             'h-full max-h-[calc(100vh-11.8rem)] w-full min-w-0',
             '[grid-area:mini-view]',
             { hidden: !mdv },
-            classNames?.miniView,
+            classNames?.miniView
           )}
         >
           <MiniDetailView {...miniViewProps} dataType={dataType} />

@@ -15,13 +15,13 @@ export function makeCustomRowSelectionEvent<T>(detail: TCustomRowSelectionEvent<
 }
 
 function isCustomRowSelectionEvent<T>(
-  event: Event,
+  event: Event
 ): event is CustomEvent<TCustomRowSelectionEvent<T>> {
   return event instanceof CustomEvent && event.type === CustomRowSelectionEvent;
 }
 
 export function customRowSelectionEventListener<T>(
-  cb: (event: CustomEvent<TCustomRowSelectionEvent<T>>) => void,
+  cb: (event: CustomEvent<TCustomRowSelectionEvent<T>>) => void
 ) {
   const abortController = new AbortController();
   const { signal } = abortController;

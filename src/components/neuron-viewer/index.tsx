@@ -80,7 +80,7 @@ export function NeuronViewer({
         throw new Error('No soma section present');
       }
     },
-    [setSecNames],
+    [setSecNames]
   );
 
   const runRenderer = useCallback(
@@ -91,7 +91,7 @@ export function NeuronViewer({
         setSectionsAndSegments(prunedMorph);
       }
     },
-    [setSectionsAndSegments],
+    [setSectionsAndSegments]
   );
 
   useEffect(() => {

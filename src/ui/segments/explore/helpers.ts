@@ -119,12 +119,12 @@ export async function getAllEntitiesCountScoped({
           },
         }),
       ];
-    }),
+    })
   );
   const result = await pProps(promises);
 
   return Object.fromEntries(
-    Object.entries(result).map(([key, value]) => [key, value?.pagination.total_items ?? 0]),
+    Object.entries(result).map(([key, value]) => [key, value?.pagination.total_items ?? 0])
   );
 }
 
@@ -162,12 +162,12 @@ export async function getSimulationsCount({
           },
         }),
       ];
-    }),
+    })
   );
   const result = await pProps(promises);
 
   return Object.fromEntries(
-    Object.entries(result).map(([key, value]) => [key, value?.pagination.total_items ?? 0]),
+    Object.entries(result).map(([key, value]) => [key, value?.pagination.total_items ?? 0])
   );
 }
 

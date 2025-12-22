@@ -40,7 +40,7 @@ export function useSanityContentForOurMissionDownload() {
   "imageHeight": image.asset->metadata.dimensions.height,
 }
 `,
-      isContentForOurMissionDownload,
+      isContentForOurMissionDownload
     ) ?? DEFAULT
   );
 }

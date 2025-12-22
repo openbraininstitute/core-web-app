@@ -96,7 +96,7 @@ export function buildNetworkConfigItem({
 export function buildNetworksConfig(
   networks: SonataCircuitConfigNetworks,
   directory: DirectoryListContent['files'],
-  manifest?: Record<string, string>,
+  manifest?: Record<string, string>
 ) {
   const edges = networks.edges.map((o) =>
     buildNetworkConfigItem({
@@ -104,7 +104,7 @@ export function buildNetworksConfig(
       selector: 'edges_file',
       directory,
       manifest,
-    }),
+    })
   );
   const nodes = networks.nodes.map((o) =>
     buildNetworkConfigItem({
@@ -112,7 +112,7 @@ export function buildNetworksConfig(
       selector: 'nodes_file',
       directory,
       manifest,
-    }),
+    })
   );
 
   return {
@@ -151,7 +151,7 @@ export function getAssetPath(path: string, manifest?: Record<string, string>): s
         // Use global regex replace for all occurrences
         return currentPath.replace(new RegExp(escapeRegExp(key), 'g'), value);
       },
-      resolvedPath,
+      resolvedPath
     );
 
     // Break if no changes were made (no more replacements possible)
@@ -172,7 +172,7 @@ function sanitizePath(path: string): string {
 }
 
 export function countConnectivityPaths(
-  config: CircuitConnectivityMatricesConfiguration | null,
+  config: CircuitConnectivityMatricesConfiguration | null
 ): number {
   if (!config) return 0;
   return sumBy(values(config), (inner) => values(inner).filter((item) => !!item.path).length);
@@ -185,14 +185,14 @@ type PopulationWithMorphology = {
 
 export const extractWithAlternateMorphologies = (
   sections: SonataCircuitNetworkNodeConfigItem[],
-  components?: SonataCircuitComponentConfig | undefined,
+  components?: SonataCircuitComponentConfig | undefined
 ): Record<string, PopulationWithMorphology> => {
   let alternateMorpho = sections
     .flatMap((section) =>
       map(section.populations, (popValue, popName) => ({
         name: popName,
         ...popValue,
-      })),
+      }))
     )
     .filter((pop) => has(pop, 'alternate_morphologies'))
     .reduce((acc: Record<string, PopulationWithMorphology>, pop) => {
@@ -212,7 +212,7 @@ export const extractWithAlternateMorphologies = (
         };
         return acc;
       },
-      {} as Record<string, PopulationWithMorphology>,
+      {} as Record<string, PopulationWithMorphology>
     );
   }
   return alternateMorpho;

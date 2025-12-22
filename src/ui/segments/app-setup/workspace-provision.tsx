@@ -88,7 +88,7 @@ export function WorkspaceProvision({
                     },
                   ],
                   prev ?? [],
-                  'step',
+                  'step'
                 );
               }
               return prev;
@@ -107,7 +107,7 @@ export function WorkspaceProvision({
                     projectId: chunk.data.project.id,
                     projectName: chunk.data.project.name,
                   }),
-                2000,
+                2000
               );
             }
           } catch (e: any) {
@@ -165,7 +165,7 @@ export function WorkspaceProvision({
                       {
                         'bg-secondary-2': done,
                         'bg-error': failed,
-                      },
+                      }
                     )}
                   >
                     {done && <CheckOutlined className="h-3 w-3 text-white" />}
@@ -177,7 +177,7 @@ export function WorkspaceProvision({
                       {
                         'text-secondary-2 font-bold': done,
                         'text-error font-bold': failed,
-                      },
+                      }
                     )}
                   >
                     {text}

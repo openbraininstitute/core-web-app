@@ -105,12 +105,12 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
   const overResourceThreshold = useMemo(() => {
     const repetitionFactor = Math.max(
       amperageConfiguration.computed.length,
-      ...synaptomeConfiguration.map((c) => (Array.isArray(c.frequency) ? c.frequency.length : 1)),
+      ...synaptomeConfiguration.map((c) => (Array.isArray(c.frequency) ? c.frequency.length : 1))
     );
 
     const recordingFactor = recordLocationConfiguration.reduce(
       (recFactor, c) => recFactor + (c.record_currents ? 6 : 1),
-      0,
+      0
     );
 
     const recordingVectorLength =
@@ -179,7 +179,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
       simulationType,
       experimentalSetupConfiguration.max_time ?? currentInjectionDuration,
       () => updatePanelSelection(),
-      notify,
+      notify
     );
 
     setIsLaunching(false);
@@ -192,7 +192,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
     ?.formErrors.fieldErrors;
 
   const warnExperimentalSetup = ExperimentalSetupConfigurationSchema.safeParse(
-    experimentalSetupConfiguration,
+    experimentalSetupConfiguration
   ).error?.formErrors.fieldErrors;
 
   const warnStimulationProtocol = {
@@ -468,7 +468,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
               variant="success"
               size={breakpoint === 'l' ? 'md' : 'lg'}
               className={cn(
-                'disabled:bg-neutral-2 disabled:text-neutral-4! w-full justify-center px-10 font-medium!',
+                'disabled:bg-neutral-2 disabled:text-neutral-4! w-full justify-center px-10 font-medium!'
               )}
               disabled={disableRunSimulation}
               onClick={onRun}

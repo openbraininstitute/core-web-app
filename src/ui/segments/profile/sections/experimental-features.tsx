@@ -18,7 +18,7 @@ export function ExperimentalFeatures() {
   const [, startTransition] = useTransition();
 
   const visibleFlags = flags.filter((flag) =>
-    typeof flag.visible === 'boolean' ? flag.visible : flag.visible?.(),
+    typeof flag.visible === 'boolean' ? flag.visible : flag.visible?.()
   );
 
   // Clean up optimistic values after server update

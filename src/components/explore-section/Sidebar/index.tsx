@@ -55,7 +55,7 @@ function ExploreNavigation({ expanded }: { expanded: boolean }) {
     <ul
       className={classNames(
         'primary-scrollbar flex h-full w-full flex-col items-start justify-start gap-y-1 overflow-y-auto',
-        !expanded && 'hidden',
+        !expanded && 'hidden'
       )}
     >
       {EXPLORE_NAVIGATION_LIST.map(({ name, url, description, bgcolor }) => (

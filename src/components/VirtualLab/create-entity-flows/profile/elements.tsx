@@ -41,7 +41,7 @@ export function XInput({
         'focus-within:!border-primary-4 focus-within:!border-b-2 focus-within:!ring-0',
         '[&.ant-XInput-status-error]:!border-0 [&.ant-XInput-status-error]:!border-b-2 [&.ant-XInput-status-error]:!border-red-300',
         '[&.ant-XInput-status-error]:focus:!ring-0',
-        className,
+        className
       )}
       // eslint-disable-next-line react/jsx-props-no-spreading
       {...props}

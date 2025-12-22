@@ -18,7 +18,7 @@ export const brainAtlasAtom = atom(async () => {
   const { data, error } = await tryCatch(
     getBrainAtlases({
       filters: { name: defaultAtlasName },
-    }),
+    })
   );
   if (error) throw Error(`Unable to retrieve brain atlas data for ${defaultAtlasName}`);
   return data.data.at(0);
@@ -32,11 +32,11 @@ async function resolveBrainRegionAtlasMesh({
   atlasId?: string;
 }) {
   const { data: atlasRegions, error: atlasError } = await tryCatch(
-    getBrainAtlasRegion({ atlasId, atlasRegionId }),
+    getBrainAtlasRegion({ atlasId, atlasRegionId })
   );
   if (atlasError)
     throw Error(
-      `Unable to retrieve data for brain region id "${atlasRegionId}" in atlas "${atlasId}`,
+      `Unable to retrieve data for brain region id "${atlasRegionId}" in atlas "${atlasId}`
     );
   const atlasAssetId = atlasRegions.assets.at(0)?.id;
   if (isNil(atlasAssetId))
@@ -48,12 +48,12 @@ async function resolveBrainRegionAtlasMesh({
       entityType: EntityTypeDict.BrainAtlasRegion,
       entityId: atlasRegions.id,
       id: atlasAssetId,
-    } as const),
+    } as const)
   );
 
   if (assetError)
     throw Error(
-      `Failed to download mesh asset (ID: "${atlasAssetId}") for brain region ID "${atlasRegionId}`,
+      `Failed to download mesh asset (ID: "${atlasAssetId}") for brain region ID "${atlasRegionId}`
     );
 
   return arrayBufferToString(asset);
@@ -65,7 +65,7 @@ export const brainRegionAtlasAtom = atom(async (get) => {
     getBrainAtlasRegions({
       atlasId: brainAtlas?.id ?? config.DEFAULT_BRAIN_ATLAS_ID,
       filters: { page: 1, page_size: 1500 },
-    }),
+    })
   );
 });
 
@@ -79,7 +79,7 @@ export const getAtlasMeshAsset = atomFamily((brainRegionId: string) => {
       resolveBrainRegionAtlasMesh({
         atlasId: brainAtlas?.id,
         atlasRegionId: atlasItem.id,
-      }),
+      })
     );
     if (error || !data) throw error ?? new Error('Mesh is empty');
     return { data, error };

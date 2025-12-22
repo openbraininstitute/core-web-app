@@ -29,7 +29,7 @@ export const EXPERIMENTAL_NEURON_DENSITY_PROGRESS_STEPS: Array<{
 ];
 
 export function createExperimentalNeuronDensityConfig(
-  steps: IContributionStep<TExperimentalNeuronDensityForm>[],
+  steps: IContributionStep<TExperimentalNeuronDensityForm>[]
 ): IContributionFormConfig<TExperimentalNeuronDensityForm, typeof ExperimentalNeuronDensitySchema> {
   return {
     entityType: ExtendedEntitiesTypeDict.CellMorphology,

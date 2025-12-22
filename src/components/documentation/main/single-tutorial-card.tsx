@@ -22,7 +22,7 @@ export default function SingleTutorialCard({ content }: { content: TutorialProps
       <div
         className={classNames(
           'relative h-full w-1/2 overflow-hidden shadow-lg transition-all duration-500 ease-in-out',
-          isMouseHover ? 'shadow-strongImage rounded-full' : 'rounded-none',
+          isMouseHover ? 'shadow-strongImage rounded-full' : 'rounded-none'
         )}
         style={{
           borderRadius: isMouseHover ? '22px' : '0',

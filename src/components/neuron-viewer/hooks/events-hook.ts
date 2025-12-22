@@ -47,7 +47,7 @@ export function useNeuronViewerEvents({
       displaySynapses3DEventHandler as EventListener,
       {
         signal: eventAborter.signal,
-      },
+      }
     );
 
     window.addEventListener(
@@ -55,7 +55,7 @@ export function useNeuronViewerEvents({
       removeSynapses3DEventHandler as EventListener,
       {
         signal: eventAborter.signal,
-      },
+      }
     );
 
     window.addEventListener(RESET_SYNAPSES_3D_EVENT, resetSynapses3DEventHandler as EventListener, {

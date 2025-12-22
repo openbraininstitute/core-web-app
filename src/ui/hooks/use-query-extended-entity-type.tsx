@@ -60,14 +60,14 @@ function useQueryParameters(
   {
     requireBrainRegion = true,
     defaultBrainRegion,
-  }: { requireBrainRegion?: boolean; defaultBrainRegion?: string },
+  }: { requireBrainRegion?: boolean; defaultBrainRegion?: string }
 ) {
   const selectedBrainRegin = useAtomValue(selectedBrainRegionAtom);
   const sortState = useAtomValue(coreSortStateAtom({ key: context.key }));
   const searchString = useAtomValue(coreSearchStringAtom(context.key));
   const pageNumber = useAtomValue(corePageNumberAtom(context.key));
   const filters = useAtomValue(
-    coreFiltersAtom({ dataType: context.extendedEntityType, key: context.key }),
+    coreFiltersAtom({ dataType: context.extendedEntityType, key: context.key })
   );
 
   const queryParameters = compactRecord({
@@ -140,7 +140,7 @@ export function useQueryExtendedEntityType<TData = unknown, TError = unknown>({
 >) {
   const queryParameters = useQueryParameters(
     { context, workspace },
-    { requireBrainRegion, defaultBrainRegion },
+    { requireBrainRegion, defaultBrainRegion }
   );
   const queryKey = buildQueryKey({
     workspace,

@@ -43,11 +43,11 @@ export function RecordingsArrayField(props: FieldProps) {
     (newRecording?: RecordingFormData, suffix?: string) => {
       onChange(
         isObject(newRecording) && !isEmpty(newRecording) ? newRecording : undefined,
-        fieldPathId.path,
+        fieldPathId.path
       );
       onChange(suffix ? snakeCase(suffix) : undefined, ['initialize', 'ion_channel_name']);
     },
-    [onChange, fieldPathId.path],
+    [onChange, fieldPathId.path]
   );
 
   return (
@@ -91,8 +91,8 @@ function RecordingsArrayFieldContent({
   const [recording, updateRecordingStorage] = useAtom(
     useMemo(
       () => IonChannelRecordingAtomFamily(`${CONFIGURATION_RECORDING_STATE_KEY}/${sessionId}`),
-      [sessionId],
-    ),
+      [sessionId]
+    )
   );
 
   const dataKey = compact([
@@ -123,7 +123,7 @@ function RecordingsArrayFieldContent({
       updateRecordingStorage(recording);
       onChange(
         { id_str: recording.id, type: 'IonChannelRecordingFromID' },
-        recording.ion_channel.name,
+        recording.ion_channel.name
       );
       setIsModalOpen(false);
     }
@@ -144,7 +144,7 @@ function RecordingsArrayFieldContent({
       updateRecordingStorage(selectedRows.at(0) ?? null);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [updateRecordingStorage],
+    [updateRecordingStorage]
   );
 
   return (
@@ -166,7 +166,7 @@ function RecordingsArrayFieldContent({
           className={cn(
             'border-label relative h-auto min-h-10 w-full justify-start p-1 focus-within:bg-white lg:min-h-12',
             'active:border-primary-8 active:border-2! active:bg-white',
-            'focus-within:bg-white focus-within:shadow-none! focus-within:ring-0!',
+            'focus-within:bg-white focus-within:shadow-none! focus-within:ring-0!'
           )}
           disabled={disabled || readonly}
         >
@@ -177,7 +177,7 @@ function RecordingsArrayFieldContent({
                 variant="outline"
                 className={cn(
                   'flex h-8 items-center gap-1 py-1! lg:h-9',
-                  'hover:bg-neutral-1 hover:text-primary-8',
+                  'hover:bg-neutral-1 hover:text-primary-8'
                 )}
               >
                 <span className="text-primary-9 max-w-[200px] truncate text-base font-semibold lg:text-lg">

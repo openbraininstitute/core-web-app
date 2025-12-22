@@ -36,7 +36,7 @@ export const resolveWorkspace = async () => {
   if (virtualLab) {
     virtualLabId = virtualLab.id;
     const { data: projectResult } = await tryCatch(
-      listProjects({ virtualLabId, page: 1, size: 1 }),
+      listProjects({ virtualLabId, page: 1, size: 1 })
     );
     const oneProject = head(projectResult?.data?.results);
     if (oneProject) {

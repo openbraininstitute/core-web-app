@@ -39,7 +39,7 @@ export function MEModel({ sessionId }: Props) {
         'grid gap-4 [grid-area:body]',
         'h-full max-h-full px-3 py-2',
         { "grid-cols-1 [grid-template-areas:'body']": !mdv },
-        { "grid-cols-[3fr_2fr] [grid-template-areas:'body_mini-view']": mdv },
+        { "grid-cols-[3fr_2fr] [grid-template-areas:'body_mini-view']": mdv }
       )}
       initial={false}
       animate={{
@@ -68,7 +68,7 @@ export function MEModel({ sessionId }: Props) {
           selectionType: 'radio',
           onCellClick: (_, record) => {
             navigate(
-              `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(EntityTypeDict.Memodel)}/${record.id}/overview`,
+              `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(EntityTypeDict.Memodel)}/${record.id}/overview`
             );
           },
           onRowsSelected: (rows) => {

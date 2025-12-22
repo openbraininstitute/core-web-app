@@ -10,7 +10,7 @@ export interface PieChartInput {
 }
 
 export function convertPieChart(
-  obj: PieChartInput,
+  obj: PieChartInput
 ): { data: Data[]; layout: Partial<Layout> } | null {
   const props: { data: Data[]; layout: Partial<Layout> } = {
     data: [

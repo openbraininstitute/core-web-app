@@ -56,7 +56,7 @@ function CustomTH({
         <button
           className={classNames(
             'inline-flex w-full flex-col items-start',
-            '[&>.ant-table-column-sorters]:inline-flex [&>.ant-table-column-sorters]:flex-none [&>.ant-table-column-sorters]:items-start! [&>.ant-table-column-sorters]:gap-2',
+            '[&>.ant-table-column-sorters]:inline-flex [&>.ant-table-column-sorters]:flex-none [&>.ant-table-column-sorters]:items-start! [&>.ant-table-column-sorters]:gap-2'
           )}
           onClick={onClick}
           type="button"
@@ -207,7 +207,7 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
           rowClassName={(row: T, index: number, indent: number) =>
             classNames(
               styles.tableRow,
-              isString(rowClassName) ? rowClassName : rowClassName?.(row, index, indent),
+              isString(rowClassName) ? rowClassName : rowClassName?.(row, index, indent)
             )
           }
           onRow={onRow}

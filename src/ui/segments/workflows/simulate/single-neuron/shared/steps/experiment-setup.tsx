@@ -84,7 +84,7 @@ function Input({
                   await validator.parseAsync(value);
                 } catch (error) {
                   return Promise.reject(
-                    error instanceof z.ZodError ? error.errors.at(0)?.message : '',
+                    error instanceof z.ZodError ? error.errors.at(0)?.message : ''
                   );
                 }
                 return Promise.resolve();
@@ -97,7 +97,7 @@ function Input({
             size={breakpoint === 'l' ? 'middle' : 'large'}
             className={cn(
               'border-neutral-2! [&_.ant-input-number-input]:text-primary-8! flex w-full items-center justify-between gap-2 rounded-sm! bg-white font-bold! [&_input]:placeholder:!font-light',
-              '[&_.ant-input-number-suffix]:text-neutral-3',
+              '[&_.ant-input-number-suffix]:text-neutral-3'
             )}
             onChange={(newValue: number | null) => onChange(id, newValue)}
             suffix={unit}

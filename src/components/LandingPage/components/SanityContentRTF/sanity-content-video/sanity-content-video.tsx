@@ -56,7 +56,7 @@ export default function SanityContentVideo({ className, value }: SanityContentVi
                 >
                   {index === 0 ? label : `${`${index}`.padStart(2, '0')}. ${label}`}
                 </button>
-              ),
+              )
             )}
           </nav>
           {/* Removed for the time being, until they found a better way. */}

@@ -13,7 +13,7 @@ export interface HistogramChartInput {
 }
 
 export function convertHistogramChart(
-  obj: HistogramChartInput,
+  obj: HistogramChartInput
 ): { data: Data[]; layout: Partial<Layout> } | null {
   const props: { data: Data[]; layout: Partial<Layout> } = {
     data: [

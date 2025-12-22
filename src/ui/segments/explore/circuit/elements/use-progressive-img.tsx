@@ -90,7 +90,7 @@ export function ProgressiveEntityImage({
 
       return { width: Math.round(finalWidth), height: Math.round(finalHeight) };
     },
-    [maxWidth, maxHeight],
+    [maxWidth, maxHeight]
   );
 
   const downloadImage = useCallback(
@@ -120,7 +120,7 @@ export function ProgressiveEntityImage({
             }),
           (progress) => {
             setDownloadProgress(progress);
-          },
+          }
         );
 
         const blob = new Blob(response, { type: 'image/webp' });
@@ -153,7 +153,7 @@ export function ProgressiveEntityImage({
       computeResponsiveSize,
       asset,
       context,
-    ],
+    ]
   );
 
   const retryDownload = () => {
@@ -238,7 +238,7 @@ export function ProgressiveEntityImage({
               onClick={retryDownload}
               className={cn(
                 'rounded bg-red-500 px-4 py-2 text-sm text-white transition-colors hover:bg-red-600',
-                clsx?.error?.text,
+                clsx?.error?.text
               )}
             >
               Retry Download

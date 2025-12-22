@@ -76,7 +76,7 @@ function EquationCard({ option, onSelect, disabled, readonly, selected }: Equati
           'hover:border-primary-8 hover:shadow-md',
           'focus:ring-0 focus:outline-none',
           'disabled:cursor-not-allowed disabled:opacity-50',
-          { 'border-primary-9 shadow-bnb bg-white': selected },
+          { 'border-primary-9 shadow-bnb bg-white': selected }
         )}
       >
         <div className="group-hover:text-primary-600 text-primary-9 text-base font-semibold">
@@ -145,7 +145,7 @@ export function EquationSelectorField(props: FieldProps) {
 
   const selectedOption = useMemo(
     () => options.find((option: EquationOption) => option.value === formData?.type),
-    [options, formData],
+    [options, formData]
   );
 
   const handleOptionSelect = (option: EquationOption) => {

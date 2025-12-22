@@ -25,7 +25,7 @@ export async function GET() {
       {
         cache: 'force-cache',
         next: { revalidate: 3600 },
-      },
+      }
     );
 
     return NextResponse.json({ creditsPacks: data ?? [] });
@@ -33,7 +33,7 @@ export async function GET() {
     logError('Failed to fetch credits packs from Sanity:', error);
     return NextResponse.json(
       { error: 'Failed to fetch credits packs', creditsPacks: [] },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

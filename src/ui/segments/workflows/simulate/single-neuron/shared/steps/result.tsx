@@ -22,7 +22,7 @@ const PlotRenderer = dynamic(
   () => import('@/features/entities/neuron-simulation/experiment/visualization/plot-renderer'),
   {
     ssr: false,
-  },
+  }
 );
 
 export function Results({ sessionId }: { sessionId: string }) {
@@ -147,7 +147,7 @@ export function Results({ sessionId }: { sessionId: string }) {
     <div
       className={cn(
         'secondary-scrollbar mb-4 flex h-full w-full flex-col',
-        'gap-4 overflow-x-hidden overflow-y-auto px-5 select-none',
+        'gap-4 overflow-x-hidden overflow-y-auto px-5 select-none'
       )}
     >
       {content}

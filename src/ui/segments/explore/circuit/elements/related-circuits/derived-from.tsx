@@ -34,10 +34,10 @@ export function DerivedFrom({ data }: Props) {
             dataType: ExtendedEntitiesTypeDict.Circuit,
             dataScope: WorkspaceScope.Custom,
             key: data?.id ?? '',
-          }),
+          })
         ),
-      [data?.id],
-    ),
+      [data?.id]
+    )
   );
   const columns = cols.filter(({ key }) => (activeColumns || []).includes(key as string));
 
@@ -47,7 +47,7 @@ export function DerivedFrom({ data }: Props) {
         ctx: { virtualLabId, projectId },
         dataType: ExtendedEntitiesTypeDict.Circuit,
         entityId: record.id,
-      }),
+      })
     );
   };
 

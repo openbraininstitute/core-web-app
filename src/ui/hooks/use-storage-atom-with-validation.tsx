@@ -68,7 +68,7 @@ export function createZodSuperJsonStorage<T>(schema: z.ZodType<T>, storage: Stor
 export function makeStorageAtomWithValidationFamily<T>(
   schema: ZodType<T>,
   initialValue: T,
-  storage: Storage,
+  storage: Storage
 ) {
   const resolvedStorage = typeof window !== 'undefined' ? storage : memoryStorage;
 
@@ -80,12 +80,12 @@ export function makeStorageAtomWithValidationFamily<T>(
         createZodSuperJsonStorage(schema, resolvedStorage),
         {
           getOnInit: true,
-        },
+        }
       );
       atom.debugLabel = key;
       return atom;
     },
-    (a, b) => a === b,
+    (a, b) => a === b
   );
   return family;
 }
@@ -170,7 +170,7 @@ export function makeStorageAtomFamily<T>(initialValue: T, storage: Storage) {
       atom.debugLabel = key;
       return atom;
     },
-    (a, b) => a === b,
+    (a, b) => a === b
   );
   return family;
 }

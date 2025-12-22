@@ -25,7 +25,7 @@ export function Highlighter({ children }: PropsWithChildren) {
       className={cn(
         'secondary-scrollbar h-full overflow-auto [&_pre]:overflow-x-auto',
         '[&_pre]:whitespace-pre [&>div]:overflow-auto [&>div>div]:overflow-x-auto',
-        'border-gray-300 border-t-gray-300 bg-white! [&_.shiki]:bg-white! [&_.shiki]:shadow-xl!',
+        'border-gray-300 border-t-gray-300 bg-white! [&_.shiki]:bg-white! [&_.shiki]:shadow-xl!'
       )}
     >
       <div className="bg-neutral-light flex items-center justify-between px-2 py-2">

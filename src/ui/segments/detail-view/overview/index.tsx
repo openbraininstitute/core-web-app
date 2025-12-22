@@ -48,7 +48,7 @@ export default async function Overview({
   const commonFields = CommonSummaryViewFields;
   const fields = removeDuplicates(
     getViewDefinitionByExtendedType(extendedType)?.summaryViewFields ?? [],
-    commonFields,
+    commonFields
   );
 
   if (!entity) notFound();
@@ -72,7 +72,7 @@ export default async function Overview({
     try {
       singleNeuronSynaptomeSimulationPayload = await resolveSingleNeuronSynaptomeSimulation(
         entity.id,
-        ctx,
+        ctx
       );
     } catch {
       notFound();
@@ -176,7 +176,7 @@ export default async function Overview({
  */
 function removeDuplicates(
   extraFields: TypeSummaryProps[],
-  commonFields: TypeSummaryProps[],
+  commonFields: TypeSummaryProps[]
 ): TypeSummaryProps[] {
   const fieldsToExclude = new Set<string>(commonFields.map((item) => item.field));
   const fields = extraFields.filter((item) => !fieldsToExclude.has(item.field));

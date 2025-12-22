@@ -66,7 +66,7 @@ export function ListingFilterPanel({
     coreFiltersAtom({
       dataType,
       key: dataKey,
-    }),
+    })
   );
   const { sync: runStorageSync } = useDataListStateSnapshotActions({
     dataKey,
@@ -100,10 +100,10 @@ export function ListingFilterPanel({
           coreActiveColumnsAtom({
             dataType,
             key: dataKey,
-          }),
+          })
         ),
-      [dataType, dataKey],
-    ),
+      [dataType, dataKey]
+    )
   );
 
   const onToggleActive = useCallback(
@@ -121,7 +121,7 @@ export function ListingFilterPanel({
       }
     },
 
-    [activeColumns, setActiveColumns],
+    [activeColumns, setActiveColumns]
   );
 
   useEffect(() => {
@@ -157,7 +157,7 @@ export function ListingFilterPanel({
     setFilterValues,
     activeColumns,
     showDisplayTrigger,
-    onToggleActive,
+    onToggleActive
   );
 
   // The columnKeyToFilter method receives a string (key)
@@ -186,7 +186,7 @@ export function ListingFilterPanel({
         aria-label="Close download panel mask"
         onClick={toggleDisplay}
         className={cn(
-          'fixed top-0 left-0 z-50 h-screen w-screen bg-black opacity-50 transition-opacity duration-500',
+          'fixed top-0 left-0 z-50 h-screen w-screen bg-black opacity-50 transition-opacity duration-500'
         )}
       />
       <div
@@ -195,7 +195,7 @@ export function ListingFilterPanel({
         className={cn(
           'bg-primary-8 fixed top-0 right-0 z-100 flex',
           'h-full min-h-screen w-1/3 shrink-0 flex-col space-y-4 overflow-y-auto px-8 pt-6',
-          classNames?.container,
+          classNames?.container
         )}
       >
         <div className="mb-auto">

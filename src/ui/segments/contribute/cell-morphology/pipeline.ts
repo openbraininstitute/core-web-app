@@ -72,7 +72,7 @@ export function useCellMorphologyPipeline({
             return (
               get(
                 (query.queryKey as ExtendedEntityTypeQueryKey)[0],
-                'context.extendedEntityType',
+                'context.extendedEntityType'
               ) === ExtendedEntitiesTypeDict.CellMorphology
             );
           },
@@ -100,8 +100,8 @@ export function useCellMorphologyPipeline({
                 role_id: c.role_id!,
                 entity_id: entityId,
               },
-            }),
-          ),
+            })
+          )
       );
     },
   });
@@ -144,7 +144,7 @@ export function useCellMorphologyPipeline({
             payload: asset,
             ctx: { virtualLabId, projectId },
           });
-        }),
+        })
       );
     },
   });
@@ -200,7 +200,7 @@ export function useCellMorphologyPipeline({
         };
         return acc;
       },
-      {} as Record<string, IMutationKeyConfig>,
+      {} as Record<string, IMutationKeyConfig>
     ),
   };
 }

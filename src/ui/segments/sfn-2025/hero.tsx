@@ -62,7 +62,7 @@ export default function HeroSFN({
             aria-label="Create virtual lab"
             className={cn(
               'font-gabarito relative rounded-full px-16 py-6 text-2xl! font-medium! whitespace-nowrap text-white shadow-2xl md:py-6 md:text-3xl!',
-              styles.rainbowButton,
+              styles.rainbowButton
             )}
             id="create-virtual-lab"
           >

@@ -65,7 +65,7 @@ export default function Middle({
     <div
       className={classNames(
         styles.scrollable,
-        'h-full overflow-y-auto border-r border-l border-gray-200 px-5',
+        'h-full overflow-y-auto border-r border-l border-gray-200 px-5'
       )}
     >
       {schema.properties?.[configTab]?.additionalProperties?.oneOf &&

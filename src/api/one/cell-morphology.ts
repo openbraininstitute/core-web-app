@@ -17,7 +17,7 @@ export async function resolveNeuronFile(file: File): Promise<NeuronResolution> {
       },
       body: formData,
     },
-    { asRawResponse: true },
+    { asRawResponse: true }
   );
   return {
     isValid: response.ok,

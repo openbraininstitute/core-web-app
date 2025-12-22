@@ -105,7 +105,7 @@ export function Menu({ sessionId }: Props) {
   };
 
   const validSetsCount = Array.from(sessionValue?.synapseSets?.values() ?? [])?.filter(
-    (o) => SingleNeuronSynaptomeBaseSchema.safeParse(o).success,
+    (o) => SingleNeuronSynaptomeBaseSchema.safeParse(o).success
   ).length;
 
   const validateMainForm = mainFormSchema.safeParse({
@@ -124,7 +124,7 @@ export function Menu({ sessionId }: Props) {
     }).data;
 
     const validationPromises = Array.from(sessionValue?.synapseSets?.entries() ?? []).map(
-      ([, value]) => SingleNeuronSynaptomeConfigurationSchema.safeParseAsync(value),
+      ([, value]) => SingleNeuronSynaptomeConfigurationSchema.safeParseAsync(value)
     );
     const sets = (await Promise.all(validationPromises)).filter((o) => o.success);
 
@@ -142,7 +142,7 @@ export function Menu({ sessionId }: Props) {
               synapses: sets.map((o) => o.data),
             },
           },
-        }),
+        })
       );
       if (error) throw new Error(messages.CreateSynaptomeEntityFailed);
 
@@ -166,7 +166,7 @@ export function Menu({ sessionId }: Props) {
       });
       delay(() => {
         navigate(
-          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSynaptome)}/${data?.entity.id}`,
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.SingleNeuronSynaptome)}/${data?.entity.id}`
         );
       }, 500);
     },
@@ -348,7 +348,7 @@ export function Menu({ sessionId }: Props) {
               variant="success"
               size={breakpoint === 'l' ? 'md' : 'lg'}
               className={cn(
-                'disabled:bg-neutral-2/40 disabled:text-label! w-full justify-center px-10 font-medium!',
+                'disabled:bg-neutral-2/40 disabled:text-label! w-full justify-center px-10 font-medium!'
               )}
               onClick={() => mutate.mutateAsync()}
               disabled={disabled}

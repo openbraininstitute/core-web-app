@@ -25,7 +25,7 @@ export const singleNeuronSimulationApiQueryExpand = {
 
 export async function resolveSingleNeuronSimulation(
   id: string,
-  context: WorkspaceContext | undefined,
+  context: WorkspaceContext | undefined
 ) {
   const source = await getSingleNeuronSimulation({ id, context });
   const memodel = await singleNeuronSimulationApiQueryExpand.memodel(source, context);

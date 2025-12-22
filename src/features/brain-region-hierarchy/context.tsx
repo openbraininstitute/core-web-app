@@ -95,7 +95,7 @@ export const brainRegionRootHierarchyAtom = atom(async (get) => {
   const { data: root, error } = await tryCatch(
     getBrainRegionHierarchy({
       id: atlas?.hierarchy_id ?? config.DEFAULT_BRAIN_REGION_HIERARCHY_ID,
-    }),
+    })
   );
   if (error) {
     log('error', 'Failed to fetch brain regions:', error);
@@ -120,13 +120,13 @@ export const brainRegionBasicCellGroupsRegionsHierarchyAtom = atom(
     const root = findNodeByKey<IBrainRegionHierarchy>(
       DEFAULT_BRAIN_REGION_ANNOTATION_FIELD,
       BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE,
-      master,
+      master
     );
 
     if (!root) {
       log(
         'warn',
-        `Brain region with annotation_value ${BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE} not found.`,
+        `Brain region with annotation_value ${BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE} not found.`
       );
       return null;
     }
@@ -154,7 +154,7 @@ export const brainRegionBasicCellGroupsRegionsHierarchyAtom = atom(
     }
 
     return { root, nodes, options, leaves };
-  },
+  }
 );
 
 /**
@@ -167,7 +167,7 @@ export const brainRegionBasicCellGroupsRegionsHierarchyAtom = atom(
  */
 function mergeHierarchyWithAtlas(
   node: IBrainRegionHierarchy,
-  atlasMap: Map<string, IBrainAtlasRegion>,
+  atlasMap: Map<string, IBrainAtlasRegion>
 ): IBrainRegionHierarchyExtended {
   const atlasRegion = atlasMap.get(node.id);
   const volume = atlasRegion?.volume ?? 0;
@@ -197,7 +197,7 @@ function mergeHierarchyWithAtlas(
  * gets leaves for each region in the extended hierarchy.
  */
 function getLeavesForEachRegionExtended(
-  root: IBrainRegionHierarchyExtended,
+  root: IBrainRegionHierarchyExtended
 ): Map<string, IBrainRegionHierarchyExtended[]> {
   const leavesMap = new Map<string, IBrainRegionHierarchyExtended[]>();
 
@@ -242,13 +242,13 @@ export const brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom = atom(
     const baseRoot = findNodeByKey<IBrainRegionHierarchy>(
       DEFAULT_BRAIN_REGION_ANNOTATION_FIELD,
       BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE,
-      master,
+      master
     );
 
     if (!baseRoot) {
       log(
         'warn',
-        `Brain region with annotation_value ${BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE} not found.`,
+        `Brain region with annotation_value ${BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE} not found.`
       );
       return null;
     }
@@ -260,7 +260,7 @@ export const brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom = atom(
       root,
       'color_hex_triplet',
       'color',
-      true,
+      true
     );
 
     const options: TBrainRegionHierarchyExtendedOption[] =
@@ -281,7 +281,7 @@ export const brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom = atom(
     const leaves = getLeavesForEachRegionExtended(root);
 
     return { root, nodes, options, leaves };
-  },
+  }
 );
 
 /**
@@ -305,7 +305,7 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
   const brainRegions = useUnwrappedValue(brainRegionBasicCellGroupsRegionsHierarchyAtom);
 
   const defaultSelectedBrainRegion = brainRegions?.options.find(
-    (o) => lowerCase(o.label).trim() === lowerCase(DEFAULT_SELECTED_BRAIN_REGION_NAME).trim(),
+    (o) => lowerCase(o.label).trim() === lowerCase(DEFAULT_SELECTED_BRAIN_REGION_NAME).trim()
   );
 
   const [stored, updateLocalStorage] = useLocalStorage<{
@@ -325,7 +325,7 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
       },
       shallow: false,
       clearOnDefault: false,
-    },
+    }
   );
   // track if config was already initialized to avoid infinite loop
   const isInitializedRef = useRef(false);

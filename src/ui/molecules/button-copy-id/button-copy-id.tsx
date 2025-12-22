@@ -34,7 +34,7 @@ export function ButtonCopyId({
         className={classNames(
           className,
           styles.actualButton,
-          'text-primary-7 flex items-center gap-2 hover:bg-transparent!',
+          'text-primary-7 flex items-center gap-2 hover:bg-transparent!'
         )}
         onClick={handleClick}
       >

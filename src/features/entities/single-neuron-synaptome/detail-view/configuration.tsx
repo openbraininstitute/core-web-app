@@ -85,9 +85,9 @@ function MeModelDetails({ memodel }: ModelDetails) {
           {renderEmptyOrValue(
             renderArray(
               (memodel as EntityCoreObjectTypes & { etypes: IEType[] | null }).etypes?.map(
-                (m) => m.pref_label,
-              ) || [],
-            ),
+                (m) => m.pref_label
+              ) || []
+            )
           )}
         </div>
       </div>
@@ -97,9 +97,9 @@ function MeModelDetails({ memodel }: ModelDetails) {
           {renderEmptyOrValue(
             renderArray(
               (memodel as EntityCoreObjectTypes & { mtypes: IMType[] | null }).mtypes?.map(
-                (m) => m.pref_label,
-              ) || [],
-            ),
+                (m) => m.pref_label
+              ) || []
+            )
           )}
         </div>
       </div>

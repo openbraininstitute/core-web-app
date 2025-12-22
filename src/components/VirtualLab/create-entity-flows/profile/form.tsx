@@ -84,7 +84,7 @@ export function Profile({ data }: ProfileProps) {
                   '[&_.ant-select-selector]:border-0! [&_.ant-select-selector]:bg-transparent! focus:[&_.ant-select-selector]:ring-0!',
                   'hover:border-primary-4 bg-transparent! hover:bg-transparent! [&_.ant-select-selection-item]:text-white!',
                   '[&_.ant-select-selection-item]:font-bold! [&_.ant-select-selection-search-input]:text-white!',
-                  '[&_.ant-select-selection-placeholder]:text-white!',
+                  '[&_.ant-select-selection-placeholder]:text-white!'
                 )}
                 popupClassName="rounded-none shadow-md"
                 onSearch={(va) => {
@@ -142,7 +142,7 @@ export function Profile({ data }: ProfileProps) {
                 'hover:bg-primary-8/40',
                 'hover:shadow-[1px_2px_4px_0px_#00000099]',
                 'shadow-[8px_12px_24px_0px_#00000099]',
-                'shadow-[-8px_-8px_42px_0px_#FFFFFF29]',
+                'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
               )}
               disabled={isPending}
             >

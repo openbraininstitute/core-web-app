@@ -119,7 +119,7 @@ class ApiClient {
    */
   private async checkCache(
     url: string,
-    cacheConfig: CacheConfiguration,
+    cacheConfig: CacheConfiguration
   ): Promise<{
     valid: boolean;
     response: Response | null;
@@ -168,7 +168,7 @@ class ApiClient {
   private async storeInCache(
     url: string,
     response: Response,
-    cacheConfig: CacheConfiguration,
+    cacheConfig: CacheConfiguration
   ): Promise<void> {
     if (typeof caches === 'undefined') return;
 
@@ -213,7 +213,7 @@ class ApiClient {
       cache?: CacheConfiguration;
       asRawResponse?: boolean;
     } = {},
-    onAbort?: () => void,
+    onAbort?: () => void
   ): Promise<T> {
     let attempt = 0;
     const maxAttempts = config.attempts ?? this._attempts ?? 1;
@@ -241,7 +241,7 @@ class ApiClient {
     if (useCache && requestCacheConfig) {
       const { valid, response: cachedResponse } = await this.checkCache(
         urlString,
-        requestCacheConfig,
+        requestCacheConfig
       );
 
       if (valid && cachedResponse) {
@@ -422,7 +422,7 @@ class ApiClient {
     config?: RequestConfiguration & {
       cache?: CacheConfiguration;
       asRawResponse?: boolean;
-    },
+    }
   ) {
     return this._request<T>('get', endpoint, options, config);
   }
@@ -430,7 +430,7 @@ class ApiClient {
   post<T>(
     endpoint: string,
     options?: RequestOptions,
-    config?: RequestConfiguration & { asRawResponse?: boolean },
+    config?: RequestConfiguration & { asRawResponse?: boolean }
   ) {
     return this._request<T>('post', endpoint, options, config);
   }

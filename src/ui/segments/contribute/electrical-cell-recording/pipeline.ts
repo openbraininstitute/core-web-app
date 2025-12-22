@@ -78,7 +78,7 @@ export function useElectricalCellRecordingPipeline({
             return (
               get(
                 (query.queryKey as ExtendedEntityTypeQueryKey)[0],
-                'context.extendedEntityType',
+                'context.extendedEntityType'
               ) === ExtendedEntitiesTypeDict.ElectricalCellRecording
             );
           },
@@ -106,8 +106,8 @@ export function useElectricalCellRecordingPipeline({
                 role_id: c.role_id!,
                 entity_id: entityId,
               },
-            }),
-          ),
+            })
+          )
       );
     },
   });
@@ -150,7 +150,7 @@ export function useElectricalCellRecordingPipeline({
             payload: asset,
             ctx: { virtualLabId, projectId },
           });
-        }),
+        })
       );
     },
   });
@@ -210,7 +210,7 @@ export function useElectricalCellRecordingPipeline({
         };
         return acc;
       },
-      {} as Record<string, IMutationKeyConfig>,
+      {} as Record<string, IMutationKeyConfig>
     ),
   };
 }

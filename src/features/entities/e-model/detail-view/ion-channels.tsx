@@ -24,7 +24,7 @@ export default function IonChannels({ source }: Props) {
             'Content-Type': 'application/json',
             Accept: 'application/json',
           },
-        },
+        }
       );
       if (!response.ok) {
         const err = await response.json();

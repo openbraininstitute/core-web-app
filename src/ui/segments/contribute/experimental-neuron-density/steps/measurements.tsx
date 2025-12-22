@@ -48,14 +48,14 @@ export function Measurements() {
                         label={renderLabel(
                           'Name',
                           'main',
-                          <sup className="text-destructive">*</sup>,
+                          <sup className="text-destructive">*</sup>
                         )}
                         rules={[
                           {
                             validator: createZodFieldValidator(
                               ExperimentalNeuronDensitySchema,
                               `measurements.${field.name}.name`,
-                              form,
+                              form
                             ),
                           },
                         ]}
@@ -69,14 +69,14 @@ export function Measurements() {
                         label={renderLabel(
                           'Unit',
                           'main',
-                          <sup className="text-destructive">*</sup>,
+                          <sup className="text-destructive">*</sup>
                         )}
                         rules={[
                           {
                             validator: createZodFieldValidator(
                               ExperimentalNeuronDensitySchema,
                               `measurements.${field.name}.unit`,
-                              form,
+                              form
                             ),
                           },
                         ]}
@@ -90,14 +90,14 @@ export function Measurements() {
                         label={renderLabel(
                           'Value',
                           'main',
-                          <sup className="text-destructive">*</sup>,
+                          <sup className="text-destructive">*</sup>
                         )}
                         rules={[
                           {
                             validator: createZodFieldValidator(
                               ExperimentalNeuronDensitySchema,
                               `measurements.${field.name}.value`,
-                              form,
+                              form
                             ),
                           },
                         ]}
@@ -160,7 +160,7 @@ export function Measurements() {
                   'hover:border-primary-7 hover:text-primary-7 w-max',
                   'disabled:text-label shrink-0',
                   'not-disabled:bg-primary-9 not-disabled:text-white!',
-                  'not-disabled:hover:bg-primary-8',
+                  'not-disabled:hover:bg-primary-8'
                 )}
               >
                 <span>Add measurement</span>

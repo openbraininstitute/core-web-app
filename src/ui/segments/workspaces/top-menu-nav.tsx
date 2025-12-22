@@ -279,7 +279,7 @@ export function TopMenuNavigation() {
                       },
                       'group relative flex items-center justify-between',
                       'transition-all duration-400 ease-out',
-                      clx,
+                      clx
                     )}
                     active={activeSection === baseUrl || isActive?.(pathname)}
                     onClick={() => setIsFeedbackModalOpen(true)}
@@ -317,7 +317,7 @@ export function TopMenuNavigation() {
                         'group-hover:rounded-r-none group-hover:border-r-0': hasAction,
                       },
                       'transition-all duration-400 ease-out',
-                      clx,
+                      clx
                     )}
                     active={activeSection === baseUrl || isActive?.(pathname)}
                   >
@@ -361,7 +361,7 @@ export function TopMenuNavigation() {
                       'group-hover:rounded-r-none group-hover:border-r-0': hasAction,
                     },
                     'transition-all duration-400 ease-out',
-                    clx,
+                    clx
                   )}
                   active={activeSection === baseUrl || isActive?.(pathname)}
                 >
@@ -379,7 +379,7 @@ export function TopMenuNavigation() {
               </div>
             </div>
           );
-        },
+        }
       )}
       {isFeedbackModalOpen && (
         <FeedbackModal open={isFeedbackModalOpen} onClose={() => setIsFeedbackModalOpen(false)} />

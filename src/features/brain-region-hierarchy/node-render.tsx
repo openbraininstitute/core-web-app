@@ -41,7 +41,7 @@ export function BrainRegionHierarchyNodeRender<TNode extends IBrainRegionHierarc
         },
         {
           'bg-zinc-200! text-gray-500': !node.is_volumetric_region && isSelected,
-        },
+        }
       )}
       onClick={onClick}
       onKeyDown={(evt) => {
@@ -64,7 +64,7 @@ export function BrainRegionHierarchyNodeRender<TNode extends IBrainRegionHierarc
             'ml-auto flex flex-shrink-0 items-center justify-center',
             'rounded-full p-0.5 hover:bg-black/10 hover:shadow-md',
             { 'text-primary-9': isSelected },
-            { 'text-primary-9/60': !isSelected },
+            { 'text-primary-9/60': !isSelected }
           )}
           type="button"
           onClick={onToggle}

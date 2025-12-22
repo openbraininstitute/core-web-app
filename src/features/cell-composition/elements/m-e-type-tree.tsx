@@ -29,15 +29,15 @@ export function CellCompositionMETypeTree() {
 
   const cellCompositionForRegion = useMemo(
     () => loadable(cellCompositionAtom({ brainRegionId: node.id })),
-    [node.id],
+    [node.id]
   );
 
   const composition = useAtomValue(cellCompositionForRegion);
   const annotations = useAtomValue(
     useMemo(
       () => loadable(annotationTypesAtom({ virtualLabId, projectId })),
-      [virtualLabId, projectId],
-    ),
+      [virtualLabId, projectId]
+    )
   );
 
   const defaultNode = useCallback(
@@ -55,11 +55,11 @@ export function CellCompositionMETypeTree() {
               <div
                 className={classNames(
                   'mr-2',
-                  childProps.hasChildren ? 'font-light! hover:font-medium' : '',
+                  childProps.hasChildren ? 'font-light! hover:font-medium' : ''
                 )}
               >
                 {renderFloatNumber(
-                  densityOrCount === 'count' ? childNode.count : childNode.density,
+                  densityOrCount === 'count' ? childNode.count : childNode.density
                 )}
               </div>
             );
@@ -67,7 +67,7 @@ export function CellCompositionMETypeTree() {
         />
       );
     },
-    [densityOrCount, annotations],
+    [densityOrCount, annotations]
   );
 
   return match({ composition, annotations })
@@ -76,7 +76,7 @@ export function CellCompositionMETypeTree() {
         if (testAnnotations.state === 'loading' || testComposition.state === 'loading') return true;
         return false;
       },
-      () => <CellCompositionSkeleton />,
+      () => <CellCompositionSkeleton />
     )
     .when(
       ({ annotations: testAnnotations, composition: testComposition }) => {
@@ -94,7 +94,7 @@ export function CellCompositionMETypeTree() {
             {testComposition.state === 'hasError' && 'loading data for cell composition failed'}
           </div>
         );
-      },
+      }
     )
     .with({ composition: { data: P.select() } }, (testComposition) => (
       <div className="relative flex h-[80%] w-full flex-col gap-2">

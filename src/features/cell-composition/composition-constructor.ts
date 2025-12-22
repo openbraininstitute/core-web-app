@@ -50,7 +50,7 @@ function buildTreeNode(
   parentBrainRegionId: string, // the leaf brain region id this mType/eType instance belong to
   cellCompositionRoot: ICellCompositionRoot,
   leafVolumeMap: Map<string, number>,
-  originalETypeId?: string,
+  originalETypeId?: string
 ): { node: RawTreeNode | null; mTypeChildrenAsEType: RawTreeNode[] } {
   let cellCounts: { neuron: number; glia: number };
   let relatedNodes: string[] = [];
@@ -78,7 +78,7 @@ function buildTreeNode(
         parentBrainRegionId,
         cellCompositionRoot,
         leafVolumeMap,
-        originalEtypeId, // pass eType id
+        originalEtypeId // pass eType id
       );
     });
 
@@ -89,7 +89,7 @@ function buildTreeNode(
     // `allDescendants` for an mType includes its direct eType children
     // and any descendants they might have (though eTypes are typically leaves in this hierarchy).
     const eTypesOfMType = eTypeResults.flatMap((res) =>
-      res.node ? [res.node, ...res.mTypeChildrenAsEType] : res.mTypeChildrenAsEType,
+      res.node ? [res.node, ...res.mTypeChildrenAsEType] : res.mTypeChildrenAsEType
     );
 
     // `relatedNodes` for an mType are the ids of its direct eType children.
@@ -253,7 +253,7 @@ function resolveBrainRegionCellCompositionFn({
         null, // mTypes are top-level in this local build relative to the leaf
         leafId, // the brain region leaf for this mType
         cellCompositionRoot,
-        leafVolumeMap,
+        leafVolumeMap
       );
 
       const nodesToProcess = [];
@@ -279,7 +279,7 @@ function resolveBrainRegionCellCompositionFn({
           // recalculate composition based on aggregated counts and total volume of associated leaves
           const totalVolumeForNode = existingNode.leaves.reduce(
             (sum, lId) => sum + (leafVolumeMap.get(lId) || 0),
-            0,
+            0
           );
 
           existingNode.composition.neuron = {
@@ -296,7 +296,7 @@ function resolveBrainRegionCellCompositionFn({
           // ensure composition is calculated if it's the first time seeing this node
           const initialVolumeForNode = currentNode.leaves.reduce(
             (sum, lId) => sum + (leafVolumeMap.get(lId) || 0),
-            0,
+            0
           );
           // if currentNode.composition was based on a single leaf, and it's correct, this might be redundant.
           // however, if it's the first time and it's an aggregation of one, this ensures consistency.
@@ -369,7 +369,7 @@ function resolveBrainRegionCellCompositionFn({
 
 export const resolveBrainRegionCellComposition = memoize(
   resolveBrainRegionCellCompositionFn,
-  ({ brainRegionId }) => brainRegionId,
+  ({ brainRegionId }) => brainRegionId
 );
 
 function resolveNeuronDensity(initialVolumeForNode: number, currentNode: RawTreeNode) {

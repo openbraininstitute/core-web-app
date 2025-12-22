@@ -40,7 +40,7 @@ export function LicenseSelector<TSchema extends ZodObject<ZodRawShape>>({
         searchField: 'label__ilike',
         selectedValue: DEFAULT_LICENSE_ID,
       }),
-    [],
+    []
   );
 
   return (

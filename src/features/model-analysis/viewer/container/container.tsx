@@ -18,7 +18,7 @@ export function ViewerContainer({ rin, validationResults }: Props) {
 
   const passed = flatValidationResults.reduce(
     (accumulator, item) => accumulator && item.passed,
-    true,
+    true
   );
 
   return (

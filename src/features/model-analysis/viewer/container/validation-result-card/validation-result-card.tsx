@@ -64,6 +64,6 @@ function useRenderAsset(value: FlatValidationResult) {
           return null;
       }
     },
-    [value],
+    [value]
   );
 }

@@ -6,7 +6,7 @@ import { useAITools } from '@/services/ai-agent/tools/tools';
 
 const atomToolsInvertedSelection = atomWithStorage<string[]>(
   'AIAssistant/tools-inverted-selection',
-  [],
+  []
 );
 
 /**

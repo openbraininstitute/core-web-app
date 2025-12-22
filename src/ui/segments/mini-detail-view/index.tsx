@@ -97,10 +97,10 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
         type: P.union(
           ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
           ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
-          ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
+          ExtendedEntitiesTypeDict.ExperimentalNeuronDensity
         ),
       },
-      () => null,
+      () => null
     )
     .with(
       {
@@ -108,7 +108,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
           ExtendedEntitiesTypeDict.CellMorphology,
           ExtendedEntitiesTypeDict.ElectricalCellRecording,
           ExtendedEntitiesTypeDict.IonChannelRecording,
-          ExtendedEntitiesTypeDict.Emodel,
+          ExtendedEntitiesTypeDict.Emodel
         ),
       },
       () => {
@@ -131,11 +131,11 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
                   rootClassName=" w-full  h-80"
                   className="max-h-full w-full rounded-md object-contain"
                 />
-              ),
+              )
             )}
           </div>
         );
-      },
+      }
     )
     .with(
       {
@@ -163,11 +163,11 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
                 />
               ),
               'assetLabel',
-              AssetLabel.ion_channel_model_thumbnail,
+              AssetLabel.ion_channel_model_thumbnail
             )}
           </div>
         );
-      },
+      }
     )
     .with(
       {
@@ -179,7 +179,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
             <MEModelPreview record={record as IMEModel} />
           </div>
         );
-      },
+      }
     )
     .with(
       {
@@ -189,13 +189,13 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
         <div className="mt-5 w-full" key={record.id}>
           <SingleNeuronSynaptomePreview record={record as ISingleNeuronSynaptome} />
         </div>
-      ),
+      )
     )
     .with(
       {
         type: P.union(
           ExtendedEntitiesTypeDict.SingleNeuronSimulation,
-          ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
+          ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation
         ),
       },
       () => (
@@ -204,7 +204,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
             record={record as ISingleNeuronSimulation | ISingleNeuronSynaptomeSimulation}
           />
         </div>
-      ),
+      )
     )
     .with(
       {
@@ -216,7 +216,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
             <CircuitPreview record={record as ICircuit} />
           </div>
         );
-      },
+      }
     )
     .otherwise(() => null);
 
@@ -282,7 +282,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
                       onClick={toggle}
                       className={cn(
                         'text-white/90 underline decoration-white/40 underline-offset-4 transition-colors hover:text-white',
-                        'text-xs',
+                        'text-xs'
                       )}
                     >
                       {isExpanded ? 'Show less' : 'Show more'}
@@ -299,7 +299,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
                       key={o.field}
                       className={cn(
                         'flex flex-col items-baseline justify-start gap-1',
-                        o.className,
+                        o.className
                       )}
                     >
                       <div className="text-primary-3 text-base font-light">{field?.title}</div>
@@ -355,7 +355,7 @@ function ExploreActions<T extends EntityCoreObjectTypes>({
     if (
       includes(
         [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.MEModelWithSynapses],
-        dataType,
+        dataType
       )
     ) {
       setDownloadPanelCircuit(record as ICircuit);

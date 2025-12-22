@@ -35,7 +35,7 @@ export default function EntireCircuitExport({ circuit }: Props) {
         entityType: EntityTypeDict.Circuit,
         virtualLabId,
         projectId,
-      }),
+      })
     );
     if (data) {
       window.open(data.url, '_blank', 'noopener,noreferrer');

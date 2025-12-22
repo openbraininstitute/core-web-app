@@ -46,7 +46,7 @@ export async function getEmailVerificationCode({
           email,
           virtual_lab_name: name,
         }),
-      },
+      }
     );
     const result = (await response.json()) as VerificationCodeEmailResponse;
     return result.data as VerificationCodeResponse<'init'>;

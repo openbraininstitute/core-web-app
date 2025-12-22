@@ -11,7 +11,7 @@ export async function getSanityTiers(): Promise<ContentForPricing | undefined | 
       {
         cache: 'force-cache',
         next: { revalidate: 3600 },
-      },
+      }
     );
     return data;
   } catch (ex) {

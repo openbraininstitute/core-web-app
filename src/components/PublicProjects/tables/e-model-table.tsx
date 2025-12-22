@@ -38,7 +38,7 @@ export default function EModelTable({ content }: { content: EModelsProps[] }) {
       <button
         className={classNames(
           'fixed right-4 bg-green-600 px-10 py-3 text-lg text-white transition-all duration-500 ease-in-out',
-          selectedRow ? 'bottom-4' : 'bottom-[-100px]',
+          selectedRow ? 'bottom-4' : 'bottom-[-100px]'
         )}
         type="button"
         onClick={handleDownload}

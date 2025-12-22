@@ -60,7 +60,7 @@ export function Container(): JSX.Element {
         {
           'bg-primary-9 border-primary-9 mr-3 text-white shadow-md': isCollapsed,
         },
-        { 'rounded-full!': isCollapsed && animationComplete },
+        { 'rounded-full!': isCollapsed && animationComplete }
       )}
       animate={{
         width: targetWidth,
@@ -108,7 +108,7 @@ export function Container(): JSX.Element {
                 type="button"
                 onClick={() =>
                   beginTransition(
-                    state === PanelState.Fullscreen ? PanelState.Expanded : PanelState.Fullscreen,
+                    state === PanelState.Fullscreen ? PanelState.Expanded : PanelState.Fullscreen
                   )
                 }
                 className="inline-flex h-7 w-7 items-center justify-center rounded hover:bg-white/10"

@@ -90,7 +90,7 @@ export function useFullRawHierarchy({
                 },
               }),
           }),
-        { concurrency: 5 },
+        { concurrency: 5 }
       );
       const allCircuits = flatMap(result, (r) => r.data);
       const allFacets = mergeWith(
@@ -101,7 +101,7 @@ export function useFullRawHierarchy({
             return uniqBy([...objValue, ...srcValue], 'id');
           }
           return undefined; // default merge for non-arrays
-        },
+        }
       );
       const totalPageSize = result.reduce((sum, r) => sum + r.pagination.page_size, 0);
 
@@ -235,7 +235,7 @@ export function useHierarchy({
                 },
               }),
           }),
-        { concurrency: 5 },
+        { concurrency: 5 }
       );
       const allData = flatMap(responses, (r) => r.data);
       return {
@@ -265,7 +265,7 @@ export function useHierarchy({
     const dataSource = buildFilteredHierarchyTree(
       hierarchyByDerivation,
       circuitHierarchy,
-      circuitHierarchyFiltered,
+      circuitHierarchyFiltered
     ) as unknown as HierarchyOutputNode[];
     const { pagination, facets } = circuitHierarchy;
     return {

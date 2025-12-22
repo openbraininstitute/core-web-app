@@ -41,7 +41,7 @@ export class H5Parser {
 
   protected getArray<T>(
     path: string[],
-    typeguard: (value: unknown) => value is T = isArray<T>,
+    typeguard: (value: unknown) => value is T = isArray<T>
   ): T | null {
     const dataset = this.get(...path);
     if (!this.isDataset(dataset)) return null;
@@ -103,7 +103,7 @@ export class H5Parser {
     } catch (ex) {
       const msg = ex instanceof Error ? ex.message : `${ex}`;
       throw new Error(
-        `Unable to get path "${path.join('/')}" because of an error at "${journey.join('/')}": ${msg}`,
+        `Unable to get path "${path.join('/')}" because of an error at "${journey.join('/')}": ${msg}`
       );
     }
     return root;
@@ -133,7 +133,7 @@ export class H5Parser {
           attributesNames.length === 0
             ? `This ${entity instanceof Group ? 'Group' : 'Dataset'} has no attribute.`
             : `Available attributes are: ${attributesNames.join(', ')}.`
-        }`,
+        }`
       );
     }
   }

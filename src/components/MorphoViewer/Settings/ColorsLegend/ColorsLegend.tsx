@@ -82,7 +82,7 @@ export function ColorsLegend({ className, painter }: ColorsLegendProps) {
 function renderLabels(
   labels: Partial<Labels>,
   settings: MorphoViewerSettings,
-  update: (patch: Partial<MorphoViewerSettings>) => void,
+  update: (patch: Partial<MorphoViewerSettings>) => void
 ) {
   return Object.keys(labels).map((key) => {
     const att = key as keyof Labels;

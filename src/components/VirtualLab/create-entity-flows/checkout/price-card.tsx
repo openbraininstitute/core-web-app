@@ -43,7 +43,7 @@ function PricingCard({
       type="button"
       className={classNames(
         'border-0.5 relative flex grow flex-col items-start rounded-lg border-gray-100 p-6',
-        selectedInterval === interval ? 'bg-primary-8 text-white!' : 'text-primary-8 bg-white',
+        selectedInterval === interval ? 'bg-primary-8 text-white!' : 'text-primary-8 bg-white'
       )}
     >
       <div className="flex w-full items-center justify-between">
@@ -71,7 +71,7 @@ function PricingCard({
         <div
           className={classNames(
             'text-primary-7 flex h-max items-center justify-center rounded-full bg-green-400 px-1 text-sm',
-            'absolute top-2 right-4 p-1 px-3',
+            'absolute top-2 right-4 p-1 px-3'
           )}
         >
           Save {discount}-

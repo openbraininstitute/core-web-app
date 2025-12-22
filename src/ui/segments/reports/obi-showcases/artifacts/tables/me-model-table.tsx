@@ -39,7 +39,7 @@ export default function MEModelTable({ content }: { content: MEModelsProps[] }) 
       <button
         className={classNames(
           'fixed right-8 bg-green-600 px-10 py-4 text-lg font-normal text-white transition-all duration-500 ease-in-out',
-          selectedRow ? 'bottom-8' : 'bottom-[-100px]',
+          selectedRow ? 'bottom-8' : 'bottom-[-100px]'
         )}
         type="button"
         name="download-model"

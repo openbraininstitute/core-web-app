@@ -96,7 +96,7 @@ function Stepper({
       }
       onValueChange?.(step);
     },
-    [value, onValueChange],
+    [value, onValueChange]
   );
 
   const currentStep = value ?? activeStep;
@@ -119,7 +119,7 @@ function Stepper({
       stepsCount: React.Children.toArray(children).filter(
         (child): child is React.ReactElement =>
           React.isValidElement(child) &&
-          (child.type as { displayName?: string }).displayName === 'StepperItem',
+          (child.type as { displayName?: string }).displayName === 'StepperItem'
       ).length,
       orientation,
       registerTrigger,
@@ -142,7 +142,7 @@ function Stepper({
       focusFirst,
       focusLast,
       indicators,
-    ],
+    ]
   );
 
   return (
@@ -192,7 +192,7 @@ function StepperItem({
       isDisabled: disabled,
       isLoading,
     }),
-    [step, state, disabled, isLoading],
+    [step, state, disabled, isLoading]
   );
 
   return (
@@ -201,7 +201,7 @@ function StepperItem({
         data-slot="stepper-item"
         className={cn(
           'group/step flex items-center justify-center not-last:flex-1 group-data-[orientation=horizontal]/stepper-nav:flex-row group-data-[orientation=vertical]/stepper-nav:flex-col',
-          className,
+          className
         )}
         data-state={state}
         {...(isLoading ? { 'data-loading': true } : {})}
@@ -252,7 +252,7 @@ function StepperTrigger({
   // Find our index among triggers for navigation
   const myIdx = React.useMemo(
     () => triggerNodes.findIndex((n: HTMLButtonElement) => n === btnRef.current),
-    [triggerNodes],
+    [triggerNodes]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
@@ -307,7 +307,7 @@ function StepperTrigger({
       data-loading={isLoading}
       className={cn(
         'focus-visible:border-ring focus-visible:ring-primary-9/50 inline-flex cursor-pointer items-center gap-3 rounded-full outline-none focus-visible:z-10 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-60',
-        className,
+        className
       )}
       onClick={() => setActiveStep(step)}
       onKeyDown={handleKeyDown}
@@ -329,7 +329,7 @@ function StepperIndicator({ children, className }: React.ComponentProps<'div'>) 
       data-state={state}
       className={cn(
         'border-background bg-accent text-accent-foreground data-[state=completed]:bg-primary data-[state=completed]:text-primary-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground relative flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs',
-        className,
+        className
       )}
     >
       <div className="absolute">
@@ -357,7 +357,7 @@ function StepperSeparator({ className }: React.ComponentProps<'div'>) {
       data-state={state}
       className={cn(
         'bg-muted m-0.5 rounded-full group-data-[orientation=horizontal]/stepper-nav:h-0.5 group-data-[orientation=horizontal]/stepper-nav:flex-1 group-data-[orientation=vertical]/stepper-nav:h-12 group-data-[orientation=vertical]/stepper-nav:w-0.5',
-        className,
+        className
       )}
     />
   );
@@ -401,7 +401,7 @@ function StepperNav({ children, className }: React.ComponentProps<'nav'>) {
       data-orientation={orientation}
       className={cn(
         'group/stepper-nav inline-flex data-[orientation=horizontal]:w-full data-[orientation=horizontal]:flex-row data-[orientation=vertical]:flex-col',
-        className,
+        className
       )}
     >
       {children}

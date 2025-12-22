@@ -445,7 +445,7 @@ export function usePainterController(
   painter: PainterManager,
   disableElectrodes: boolean,
   disableSynapses: boolean,
-  disableClick: boolean,
+  disableClick: boolean
 ) {
   const notif = useAppNotification();
   React.useEffect(() => {

@@ -39,7 +39,7 @@ export default async function AboutContent({
     <div
       className={cn(
         'text-primary-9 col-span-3 flex max-h-[82vh] w-2/3 flex-col items-start gap-y-4 overflow-y-scroll',
-        styles.content,
+        styles.content
       )}
     >
       <PortableText value={contentFiltered()} />

@@ -31,7 +31,7 @@ export function ExploreDownloadButton<T extends EntityCoreIdentifiable>({
     try {
       await downloadArchive(
         entityType,
-        selectedRows.map((row) => row.id),
+        selectedRows.map((row) => row.id)
       );
     } catch (_error) {
       // TODO: add error notification

@@ -34,7 +34,7 @@ export default async function Page({
       if (workspace.recentWorkspace) {
         redirect(
           `${config.ROOT_ROUTE}/${workspace.recentWorkspace.virtual_lab_id}/${workspace.recentWorkspace.project_id}`,
-          RedirectType.replace,
+          RedirectType.replace
         );
       }
       // if there is no stored recent workspace, redirect to first fetched workspace

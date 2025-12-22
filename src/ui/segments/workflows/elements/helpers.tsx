@@ -276,7 +276,7 @@ export type TEntityDropdownOptionsGrouped = Array<{
 
 export function getDropdownOptionsByCategory(
   category: TActivityValue,
-  featureFlags?: FeatureFlags,
+  featureFlags?: FeatureFlags
 ): {
   allOptions: EntityTypeGroupedOptions[];
   enabledOptions: EntityTypeGroupedOptions[];
@@ -285,7 +285,7 @@ export function getDropdownOptionsByCategory(
     .filter((config): config is NonNullable<typeof config> => config !== undefined)
     .filter(
       (config) =>
-        !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag]),
+        !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
     )
     .map((config) => {
       const disabled = get(config, `properties.${category}`, undefined)?.disabled ?? true;
@@ -337,13 +337,13 @@ export function getDropdownOptionsByCategory(
 
 export function getAllOptionsOrdered(
   category: TActivityValue,
-  featureFlags: FeatureFlags,
+  featureFlags: FeatureFlags
 ): EntityTypeOption[] {
   const options = Object.values(EntityWorkflowConfiguration)
     .filter((config): config is NonNullable<typeof config> => config !== undefined)
     .filter(
       (config) =>
-        !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag]),
+        !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
     )
     .map((config) => {
       const disabled = get(config, `properties.${category}`, undefined)?.disabled ?? true;
@@ -363,11 +363,11 @@ export function getAllOptionsOrdered(
 }
 
 export function getBuildTypeFromSimulateType(
-  type: TExtendedEntitiesTypeDict,
+  type: TExtendedEntitiesTypeDict
 ): TExtendedEntitiesTypeDict | undefined {
   const config = find(
     values(EntityWorkflowConfiguration),
-    (c) => c.properties.simulate?.type === type,
+    (c) => c.properties.simulate?.type === type
   );
 
   return config?.properties.build?.type;
@@ -384,7 +384,7 @@ export function getCategoryDictItem(value: TActivityValue | null | undefined) {
 }
 
 export function getEntityTypeWorkflowConfigurationItem(
-  value: TExtendedEntitiesTypeDict | null | undefined,
+  value: TExtendedEntitiesTypeDict | null | undefined
 ) {
   if (!value) return null;
   return get(EntityWorkflowConfiguration, `${value}`, null);

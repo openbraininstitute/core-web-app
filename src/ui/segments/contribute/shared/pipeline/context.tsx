@@ -77,7 +77,7 @@ export function ContributionPipelineProvider<
 
   const currentStepIndex = useMemo(
     () => getCurrentStepIndex(progressSteps, activeStep),
-    [progressSteps, activeStep],
+    [progressSteps, activeStep]
   );
 
   const isFirstStep = currentStepIndex === 0;
@@ -89,7 +89,7 @@ export function ContributionPipelineProvider<
         setActiveStepState(stepKey);
       }
     },
-    [activeStep],
+    [activeStep]
   );
 
   const goToPreviousStep = useCallback(() => {
@@ -130,11 +130,11 @@ export function ContributionPipelineProvider<
       stepValidationStatus,
       progressSteps,
       config,
-    ],
+    ]
   );
   const initialValues = useMemo(
     () => config.getInitialValues(brainRegionId) as TFormValues,
-    [config, brainRegionId],
+    [config, brainRegionId]
   );
 
   return (
@@ -146,7 +146,7 @@ export function ContributionPipelineProvider<
         id={config.formId}
         rootClassName={cn(
           'relative flex flex-col w-full h-full [&_.ant-form-item-explain-error]:text-sm! ',
-          '[&_.ant-form-item-explain-error]:pl-1.5! [&_.ant-form-item-explain-error]:select-none!',
+          '[&_.ant-form-item-explain-error]:pl-1.5! [&_.ant-form-item-explain-error]:select-none!'
         )}
         layout="vertical"
         requiredMark={false}

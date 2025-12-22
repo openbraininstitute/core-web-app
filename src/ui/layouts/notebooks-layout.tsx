@@ -56,7 +56,7 @@ export function NotebooksLayout({ children, active }: Props) {
             href="public"
             className={cn(
               'flex h-[40px] min-w-[150px] items-center justify-center rounded-l-full px-4 py-2 text-white',
-              active === 'public' ? 'bg-primary-9 font-bold text-white' : 'text-primary-9 bg-white',
+              active === 'public' ? 'bg-primary-9 font-bold text-white' : 'text-primary-9 bg-white'
             )}
           >
             Public
@@ -66,9 +66,7 @@ export function NotebooksLayout({ children, active }: Props) {
             href="private"
             className={cn(
               'flex h-[40px] min-w-[150px] items-center justify-center rounded-r-full px-4 py-2 text-white',
-              active === 'private'
-                ? 'bg-primary-9 font-bold text-white'
-                : 'text-primary-9 bg-white',
+              active === 'private' ? 'bg-primary-9 font-bold text-white' : 'text-primary-9 bg-white'
             )}
           >
             Project

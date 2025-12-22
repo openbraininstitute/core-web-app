@@ -50,7 +50,7 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
         className={cn(
           styles.card,
           isRunning && styles.cardRunning,
-          isExpanded && styles.cardExpanded,
+          isExpanded && styles.cardExpanded
         )}
         key={key}
       >
@@ -72,7 +72,7 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
             <div
               className={cn(
                 styles.status,
-                isRunning ? styles.statusRunning : styles.statusComplete,
+                isRunning ? styles.statusRunning : styles.statusComplete
               )}
             >
               {isRunning ? (

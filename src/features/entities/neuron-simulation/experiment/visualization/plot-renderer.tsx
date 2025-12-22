@@ -84,7 +84,7 @@ export default function PlotRenderer({
             <div
               className={cn(
                 'text-primary-9 flex h-10 items-center justify-center px-4 py-2 text-2xl font-bold',
-                titleClassName,
+                titleClassName
               )}
             >
               {title}
@@ -100,7 +100,7 @@ export default function PlotRenderer({
                 className={cn(
                   'border-neutral-2 text-primary-8 rounded-none border bg-white',
                   { 'border-b-0': bordered },
-                  downloadClassName,
+                  downloadClassName
                 )}
               >
                 <div className="flex items-center justify-center gap-2">
@@ -116,7 +116,7 @@ export default function PlotRenderer({
           className={cn(
             'relative flex h-full w-full flex-col items-center justify-center',
             { 'border-primary-8 border px-2 pt-8': bordered },
-            graphContainerClassName,
+            graphContainerClassName
           )}
         >
           <div id={`graph-wrapper-${name}`} className={cn('h-full w-full', graphWrapperClassName)}>

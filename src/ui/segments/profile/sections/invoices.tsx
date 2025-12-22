@@ -25,7 +25,7 @@ export function Invoices() {
         ...payment,
         subscription_id: subscription.id,
         subscription_type: subscription.subscription_type,
-      })),
+      }))
   );
 
   if (isError) {
@@ -143,7 +143,7 @@ export function Invoices() {
             '[&_.ant-spin-blur]:opacity-0! [&_.ant-table-thead>tr>th]:font-light!',
             '[&_.ant-table-thead>tr>th]:font-light! [&_.ant-table-thead]:text-sm',
             '[&_.ant-empty-description]:text-white!',
-            'me',
+            'me'
           )}
           rowClassName="border-b border-primary-4 last:[&_td]:border-b-0!"
           columns={columns}

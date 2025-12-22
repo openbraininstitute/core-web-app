@@ -20,7 +20,7 @@ export function ReportsInnerLayout({ children }: Props) {
     <motion.div
       id="reports-inner-layout"
       className={cn(
-        'bg-background border-neutral-2 mx-2 mb-2 grid h-full max-h-[calc(100vh-8rem)] w-[calc(100%-10px)] content-start gap-4 overflow-hidden rounded-2xl border p-5 [grid-area:main]',
+        'bg-background border-neutral-2 mx-2 mb-2 grid h-full max-h-[calc(100vh-8rem)] w-[calc(100%-10px)] content-start gap-4 overflow-hidden rounded-2xl border p-5 [grid-area:main]'
       )}
       initial={{
         gridTemplateColumns: '1fr 3fr',

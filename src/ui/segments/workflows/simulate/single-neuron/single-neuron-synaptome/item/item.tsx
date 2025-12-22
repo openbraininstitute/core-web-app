@@ -99,7 +99,7 @@ export function SynapticInputItem({
     synapsesPlacement,
     setSynapsesPlacement,
     index,
-    synapsesConfiguration.synapses[index]?.id,
+    synapsesConfiguration.synapses[index]?.id
   );
 
   const onShowSynapse = async () => {
@@ -121,7 +121,7 @@ export function SynapticInputItem({
           },
           signal: abortController.current.signal,
           ctx: { virtualLabId, projectId },
-        }),
+        })
       );
       if (error) {
         return onVisualizationError();
@@ -184,7 +184,7 @@ export function SynapticInputItem({
             <div
               className={cn(
                 'bg-primary-8 flex h-12 w-12 items-center justify-center rounded-full',
-                'text-center align-middle font-bold text-white',
+                'text-center align-middle font-bold text-white'
               )}
             >
               {index + 1}
@@ -271,11 +271,11 @@ export function SynapticInputItem({
                 'border-neutral-3! rounded-md border-[1px]!',
                 '[&_.ant-select-selection-item]:text-primary-9! [&_.ant-select-selection-item]:font-bold',
                 '[&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!',
-                '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!',
+                '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!'
               )}
               popupClassName={cn(
                 '[&_.ant-select-item-option-content]:text-primary-9!',
-                '[&_.rc-virtual-list-holder-inner]:gap-1',
+                '[&_.rc-virtual-list-holder-inner]:gap-1'
               )}
               placement="bottomLeft"
               size={breakpoint === 'l' ? 'middle' : 'large'}
@@ -327,7 +327,7 @@ function useHideSynapseHandler(
               count?: number;
               meshId?: string;
             } | null
-          > | null,
+          > | null
         ) => Record<
           string,
           {
@@ -337,10 +337,10 @@ function useHideSynapseHandler(
             meshId?: string;
           } | null
         > | null)
-      | null,
+      | null
   ) => void,
   index: number,
-  id: string | undefined,
+  id: string | undefined
 ) {
   return () => {
     if (synapsesPlacement) {
@@ -377,7 +377,7 @@ function isSynapseDisplayed(
       meshId?: string;
     } | null
   > | null,
-  key: string,
+  key: string
 ) {
   if (!synapsesPlacement) return false;
 

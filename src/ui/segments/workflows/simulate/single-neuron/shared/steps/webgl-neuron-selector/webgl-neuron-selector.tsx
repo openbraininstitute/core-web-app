@@ -36,7 +36,7 @@ export const WebglNeuronSelector = React.memo(
         disableClick={disableClick ?? false}
       />
     );
-  },
+  }
 );
 
 type WebglNeuronSelectorContentProps = {

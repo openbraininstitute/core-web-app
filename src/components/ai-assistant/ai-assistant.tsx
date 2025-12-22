@@ -45,7 +45,7 @@ export default function AiAssistant({ className, fullscreen, section }: AiAssist
             <div
               className={classNames(
                 styles.overlay,
-                panelWidth > MINIMAL_PANEL_SIZE && styles.shadow,
+                panelWidth > MINIMAL_PANEL_SIZE && styles.shadow
               )}
             >
               <nav>

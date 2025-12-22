@@ -46,10 +46,10 @@ export function useVisibleRegions(dataKey: string): {
 } {
   const { node: brainRegionNode } = useBrainRegionHierarchy({ dataKey });
   const rootBrainRegions = useAtomValue(
-    React.useMemo(() => unwrap(brainRegionRootHierarchyAtom), []),
+    React.useMemo(() => unwrap(brainRegionRootHierarchyAtom), [])
   );
   const brainRegions = useAtomValue(
-    React.useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), []),
+    React.useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
   );
   return React.useMemo(() => {
     const rootBrainRegion = find(rootBrainRegions?.options, {
@@ -59,7 +59,7 @@ export function useVisibleRegions(dataKey: string): {
       value: brainRegionNode.id,
     })?.data;
     const regions = compact(
-      brainRegionNode ? [currentBrainRegion, rootBrainRegion] : [rootBrainRegion],
+      brainRegionNode ? [currentBrainRegion, rootBrainRegion] : [rootBrainRegion]
     );
     return {
       region: regions.find((region) => region.id === brainRegionNode.id),
@@ -120,11 +120,11 @@ export function getAtlasViewerDefaultSettings(): SettingsDefinitions {
 
 const atlasViewerSettingsAtom = atomWithStorage(
   'AtlasViewerSettings',
-  getAtlasViewerDefaultSettings(),
+  getAtlasViewerDefaultSettings()
 );
 
 export function useAtlasViewerSettingsValues(
-  painter: Painter,
+  painter: Painter
 ): [values: SettingsDefinitions, setValues: (values: SettingsDefinitions) => void] {
   const [values, setValues] = useAtom(atlasViewerSettingsAtom);
   React.useEffect(() => {

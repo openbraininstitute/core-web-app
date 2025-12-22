@@ -203,7 +203,7 @@ function Form({ onPrevious }: Props) {
               'hover:bg-primary-8/40',
               'hover:shadow-[1px_2px_4px_0px_#00000099]',
               'shadow-[8px_12px_24px_0px_#00000099]',
-              'shadow-[-8px_-8px_42px_0px_#FFFFFF29]',
+              'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
             )}
             disabled={disableForm}
           >

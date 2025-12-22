@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
               'GitHub token is invalid or expired. Please check your GITHUB_FEEDBACK_TOKEN environment variable.',
             help: 'You can create a new token at https://github.com/settings/tokens with the following scopes: repo, project (if using projects)',
           },
-          { status: 401 },
+          { status: 401 }
         );
       }
     }
@@ -71,17 +71,17 @@ export async function POST(req: NextRequest) {
         const error = repoError as { status?: number; message?: string };
         if (error.status === 401) {
           throw new Error(
-            'GitHub token is invalid or expired. Please check your GITHUB_FEEDBACK_TOKEN environment variable and ensure it has the "repo" scope.',
+            'GitHub token is invalid or expired. Please check your GITHUB_FEEDBACK_TOKEN environment variable and ensure it has the "repo" scope.'
           );
         }
         if (error.status === 403) {
           throw new Error(
-            'GitHub token does not have permission to access this repository. Please ensure the token has the "repo" scope and access to the "openbraininstitute/feedback" repository.',
+            'GitHub token does not have permission to access this repository. Please ensure the token has the "repo" scope and access to the "openbraininstitute/feedback" repository.'
           );
         }
         if (error.status === 404) {
           throw new Error(
-            'Repository "openbraininstitute/feedback" not found or token does not have access. For private repositories, ensure: 1) The token has the "repo" scope, 2) The token has been granted access to the "openbraininstitute" organization (if required), and 3) The repository name is correct.',
+            'Repository "openbraininstitute/feedback" not found or token does not have access. For private repositories, ensure: 1) The token has the "repo" scope, 2) The token has been granted access to the "openbraininstitute" organization (if required), and 3) The repository name is correct.'
           );
         }
         throw new Error(`Cannot access repository: ${error.message || 'Unknown error'}`);
@@ -117,11 +117,11 @@ export async function POST(req: NextRequest) {
         });
       } else if (error.status === 401) {
         throw new Error(
-          'GitHub token is invalid or expired. Please check your GITHUB_FEEDBACK_TOKEN environment variable.',
+          'GitHub token is invalid or expired. Please check your GITHUB_FEEDBACK_TOKEN environment variable.'
         );
       } else if (error.status === 403) {
         throw new Error(
-          'GitHub token does not have permission to create issues. Please ensure the token has the "repo" scope.',
+          'GitHub token does not have permission to create issues. Please ensure the token has the "repo" scope.'
         );
       } else {
         throw labelError;
@@ -260,7 +260,7 @@ export async function POST(req: NextRequest) {
             `,
             {
               projectId: process.env.GITHUB_FEEDBACK_PROJECT_ID,
-            },
+            }
           );
         } catch (_projectCheckError) {
           // Don't throw - we'll try to add the item anyway
@@ -279,7 +279,7 @@ export async function POST(req: NextRequest) {
           {
             projectId: process.env.GITHUB_FEEDBACK_PROJECT_ID,
             contentId: issueNodeId,
-          },
+          }
         );
 
         const result = addToProject as {
@@ -320,7 +320,7 @@ export async function POST(req: NextRequest) {
                 itemId,
                 fieldId: process.env.STATUS_FIELD_ID,
                 optionId: process.env.RECEIVED_ID,
-              },
+              }
             );
 
             const statusUpdateResult = statusResult as {
@@ -384,7 +384,7 @@ export async function POST(req: NextRequest) {
         error: errorMessage,
         details: errorDetails,
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

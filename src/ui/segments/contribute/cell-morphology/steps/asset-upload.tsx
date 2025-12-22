@@ -85,7 +85,7 @@ export function AssetUpload({
         const fsAdded = await Promise.all(
           Object.entries(unzippedData.files)
             .filter(([, value]) => !value.dir)
-            .map(([_, value]) => value.async('blob')),
+            .map(([_, value]) => value.async('blob'))
         );
         const { name: originalFileName } = parseFileName(file.name);
 
@@ -158,7 +158,7 @@ export function AssetUpload({
               'border-neutral-1 shadow-bnb relative rounded-xl border p-8 text-center transition-colors',
               isDragging
                 ? 'border-primary-8 bg-primary/5'
-                : 'border-neutral-1 hover:border-neutral-1',
+                : 'border-neutral-1 hover:border-neutral-1'
             )}
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
@@ -171,7 +171,7 @@ export function AssetUpload({
               <div
                 className={cn(
                   'flex h-16 w-16 items-center justify-center rounded-full',
-                  isDragging ? 'bg-primary-9/10' : 'bg-transparent',
+                  isDragging ? 'bg-primary-9/10' : 'bg-transparent'
                 )}
               >
                 {resolveNeuronFileLoading ? (
@@ -226,7 +226,7 @@ export function AssetUpload({
                   {formatBytes(
                     Object.values(assets)
                       .filter((file) => !isNil(file))
-                      .reduce((acc, file) => acc + file.size, 0),
+                      .reduce((acc, file) => acc + file.size, 0)
                   )}
                 </div>
               </div>
@@ -264,7 +264,7 @@ export function AssetUpload({
                       <div
                         className={cn(
                           'bg-background flex h-full w-full flex-col items-center justify-center rounded-t-lg border border-b-0',
-                          isGenerated ? 'border-primary-6 border-2' : 'border-neutral-1',
+                          isGenerated ? 'border-primary-6 border-2' : 'border-neutral-1'
                         )}
                       >
                         <FileDownloadLine className="text-primary-6 h-8 w-8" />
@@ -273,7 +273,7 @@ export function AssetUpload({
                       <div
                         className={cn(
                           'bg-neutral-1 text-primary-9 flex items-center justify-between gap-1.5 rounded-b-lg border border-t-0 py-2 pl-2 opacity-100 transition-opacity',
-                          isGenerated ? 'border-primary-6 border-2 border-t-0' : 'border-neutral-1',
+                          isGenerated ? 'border-primary-6 border-2 border-t-0' : 'border-neutral-1'
                         )}
                       >
                         <div className="flex max-w-full min-w-0 flex-col gap-1">

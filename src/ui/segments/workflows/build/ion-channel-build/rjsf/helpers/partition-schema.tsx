@@ -41,7 +41,7 @@ import { cloneDeep } from 'es-toolkit/compat';
  */
 export function partitionSchemaByRequiredProperties<T extends RJSFSchema>(
   schema: T,
-  propertyNames?: string[],
+  propertyNames?: string[]
 ): T[] {
   if (!schema || typeof schema !== 'object') {
     return [];

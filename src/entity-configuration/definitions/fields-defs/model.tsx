@@ -89,7 +89,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       renderPreview(
         r as EntityCoreResource,
         { width: 184, height: 116 },
-        'border border-neutral-3 h-full',
+        'border border-neutral-3 h-full'
       ),
     vocabulary: {
       plural: 'responses',
@@ -125,7 +125,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       renderPreview(
         r as EntityCoreResource,
         { width: 184, height: 116 },
-        'border border-neutral-3 h-full',
+        'border border-neutral-3 h-full'
       ),
     vocabulary: {
       plural: 'Trace',
@@ -141,7 +141,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     filter: null,
     render: (r) => {
       return renderEmptyOrValue(
-        (r as IMEModel).validation_status === ValidationStatus.Done ? 'True' : 'False',
+        (r as IMEModel).validation_status === ValidationStatus.Done ? 'True' : 'False'
       );
     },
     vocabulary: {
@@ -219,7 +219,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isDisplayable: true,
     render: (r) =>
       renderEmptyOrValue(
-        find(CircuitBuildCategory, { key: (r as ICircuit).build_category })?.label,
+        find(CircuitBuildCategory, { key: (r as ICircuit).build_category })?.label
       ),
     defaultConstraint: 'build_category__in',
     vocabulary: {
@@ -327,7 +327,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.IsStochastic]: iCMBooleanField('Stochastic', 'is_stochastic'),
   [EntityCoreFields.IsTemperatureDependent]: iCMBooleanField(
     'Temperature dependent',
-    'is_temperature_dependent',
+    'is_temperature_dependent'
   ),
   [EntityCoreFields.TemperatureCelsius]: {
     className: 'text-left',

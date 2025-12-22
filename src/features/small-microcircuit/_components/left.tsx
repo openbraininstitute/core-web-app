@@ -127,7 +127,7 @@ export default function Left({
             'flex min-h-[50px] w-[95%] items-center justify-center rounded-full text-lg drop-shadow',
             (errors && errors.length > 0) || loading
               ? 'bg-gray-300 text-gray-500'
-              : 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white',
+              : 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
           )}
           onClick={async () => {
             if (loading) return;
@@ -152,7 +152,7 @@ export default function Left({
                     'virtual-lab-id': virtualLabId,
                     'project-id': projectId,
                   },
-                },
+                }
               );
 
               if (coordinateCountRes.status !== 200) {

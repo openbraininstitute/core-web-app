@@ -36,7 +36,7 @@ const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
   {
     ttl: 120000, // 2 minutes
     areEqual: isEqual,
-  },
+  }
 );
 
 export const simExecRemoteStatusMapAtomFamily = atomFamilyWithExpiration(
@@ -49,22 +49,22 @@ export const simExecRemoteStatusMapAtomFamily = atomFamilyWithExpiration(
 
       const executionsGrouped = simExecutions.reduce<Map<string, ICircuitSimulationExecution[]>>(
         (map, exec) => map.set(exec.used[0].id, [...(map.get(exec.used[0].id) ?? []), exec]),
-        new Map(),
+        new Map()
       );
 
       Array.from(executionsGrouped.values()).forEach((executions) =>
-        executions.sort((a, b) => b.creation_date.localeCompare(a.creation_date)),
+        executions.sort((a, b) => b.creation_date.localeCompare(a.creation_date))
       );
 
       return Array.from(executionsGrouped.keys()).reduce(
         (map, simId) => map.set(simId, executionsGrouped.get(simId)?.[0].status),
-        new Map(),
+        new Map()
       );
     }),
   {
     ttl: 120000, // 2 minutes
     areEqual: isEqual,
-  },
+  }
 );
 
 type SimExecStatusMapAtomFamilyArg = {
@@ -105,16 +105,16 @@ export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
       (get, set, simId, status) => {
         const newStatusMap = new Map(get(localStatusMapAtom)).set(
           simId,
-          status as EntitycoreExecutionStatus,
+          status as EntitycoreExecutionStatus
         );
         set(localStatusMapAtom, newStatusMap);
-      },
+      }
     );
   },
   {
     ttl: 2 * 60 * 1000, // 2 minutes
     areEqual: isEqual,
-  },
+  }
 );
 
 export const simResultBySimIdAtomFamily = readAtomFamilyWithExpiration(
@@ -146,7 +146,7 @@ export const simResultBySimIdAtomFamily = readAtomFamilyWithExpiration(
   {
     ttl: 120000, // 2 minutes
     areEqual: isEqual,
-  },
+  }
 );
 
 export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
@@ -169,7 +169,7 @@ export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
   {
     ttl: 120000, // 2 minutes
     areEqual: isEqual,
-  },
+  }
 );
 
 // TODO Refactor to use tanstack query
@@ -194,7 +194,7 @@ export const modelAtomFamily = readAtomFamilyWithExpiration(
   {
     ttl: 120000, // 2 minutes
     areEqual: isEqual,
-  },
+  }
 );
 
 export const jsonFileAtomFamily = readAtomFamilyWithExpiration(
@@ -226,5 +226,5 @@ export const jsonFileAtomFamily = readAtomFamilyWithExpiration(
   {
     ttl: 120000, // 2 minutes
     areEqual: isEqual,
-  },
+  }
 );

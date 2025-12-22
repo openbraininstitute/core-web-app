@@ -72,7 +72,7 @@ class TicketStore {
       logInfo(
         'Available ones are:',
         Array.from(this.tickets.keys()).join(', '),
-        `(${this.tickets.size})`,
+        `(${this.tickets.size})`
       );
       return null;
     }

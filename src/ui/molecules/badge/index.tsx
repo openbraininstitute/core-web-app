@@ -25,7 +25,7 @@ const badgeVariants = cva(
     defaultVariants: {
       variant: 'default',
     },
-  },
+  }
 );
 
 function Badge({
@@ -64,7 +64,7 @@ const badgeButtonVariants = cva(
     defaultVariants: {
       variant: 'default',
     },
-  },
+  }
 );
 
 function BadgeButton({

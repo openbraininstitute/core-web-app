@@ -35,7 +35,7 @@ export function ErrorComponent({
     <div
       className={cn(
         'flex h-full w-full flex-col items-center justify-center bg-white p-6 text-white',
-        cls?.container,
+        cls?.container
       )}
     >
       <div className="mx-auto w-full max-w-md">

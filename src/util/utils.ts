@@ -9,7 +9,7 @@ export function createHeaders(
   extraOptions: Record<string, string> | null = {
     'Content-Type': 'application/json',
     Accept: '*/*',
-  },
+  }
 ) {
   return new Headers({
     Authorization: `Bearer ${token}`,
@@ -164,7 +164,7 @@ https://jotai.org/docs/utilities/family#caveat-memory-leaks
 export function memoize<Param, T>(
   initialize: (param: Param) => T,
   resolver?: (a: Param) => string,
-  maxSize?: number,
+  maxSize?: number
 ) {
   if (maxSize === undefined) maxSize = 100; // eslint-disable-line
   const newFamily = _memoize(initialize, resolver);

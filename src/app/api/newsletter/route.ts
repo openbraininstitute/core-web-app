@@ -68,7 +68,7 @@ export async function POST(req: Request) {
           message: 'Oops! There was an error subscribing you to the newsletter',
           reason,
         },
-        { status: 422 },
+        { status: 422 }
       );
     }
 
@@ -78,7 +78,7 @@ export async function POST(req: Request) {
         reason:
           'message' in (error as { message: string }) ? (error as { message: string }).message : '',
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 
@@ -123,7 +123,7 @@ export async function POST(req: Request) {
         {
           message: 'Awesome! You have successfully subscribed!',
         },
-        { status: 200 },
+        { status: 200 }
       );
     }
 
@@ -134,7 +134,7 @@ export async function POST(req: Request) {
         message: getErrorMessage(result.title ?? 'default'),
         reason: result.title ?? null,
       },
-      { status: result.status ?? 400 },
+      { status: result.status ?? 400 }
     );
   } catch (error) {
     captureException(error, {
@@ -150,7 +150,7 @@ export async function POST(req: Request) {
         reason:
           'message' in (error as { message: string }) ? (error as { message: string }).message : '',
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

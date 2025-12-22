@@ -25,7 +25,7 @@ function SkeletonLoader({ count = 5 }: { count?: number }) {
           key={`select-skeleton-${index}`}
           className={cn(
             'from-neutral-1 via-neutral-2 to-neutral-1 animate-shimmer',
-            'relative h-10 overflow-hidden rounded-md bg-gradient-to-r bg-[length:200%_100%]',
+            'relative h-10 overflow-hidden rounded-md bg-gradient-to-r bg-[length:200%_100%]'
           )}
           style={{
             animationDelay: `${index * 100}ms`,
@@ -130,7 +130,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
   // persist seen options across searches/pages so we can still display the
   // selected label even if it is not present in the current options list.
   const persistedOptionsRef = useRef<Map<string, AsyncSelectOption<T>> | null>(
-    new Map<string, AsyncSelectOption<T>>(),
+    new Map<string, AsyncSelectOption<T>>()
   );
 
   const currentOptionsMap = useMemo<Map<string, AsyncSelectOption<T>>>(() => {
@@ -180,7 +180,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
       onSelect?.(option);
       setOpen(false);
     },
-    [onSelect],
+    [onSelect]
   );
 
   const handleOpenChange = useCallback((newOpen: boolean) => {
@@ -199,7 +199,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
           'hover:text-primary-8 border bg-white shadow-xs hover:border-2',
           'text-md active:border-primary-9 h-full flex-1 gap-1.5 rounded-md pr-3 pl-5 active:bg-white',
           'group flex w-full grow justify-between self-stretch',
-          clsx?.trigger,
+          clsx?.trigger
         )}
       >
         <Button variant="outline" role="combobox" disabled={isLoading} className="select-none">
@@ -218,7 +218,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
             <div
               className={cn(
                 'group-hover:bg-neutral-1 group-hover:text-primary-8',
-                'flex cursor-pointer items-center justify-center rounded-full p-1',
+                'flex cursor-pointer items-center justify-center rounded-full p-1'
               )}
               role="button"
               tabIndex={-1}
@@ -237,7 +237,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
             <div
               className={cn(
                 'group-hover:bg-neutral-1 group-hover:text-primary-8',
-                'flex cursor-pointer items-center justify-center rounded-full p-1',
+                'flex cursor-pointer items-center justify-center rounded-full p-1'
               )}
             >
               <DownOutlined className="opacity-50 [&_svg]:size-3!" />
@@ -250,7 +250,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
         id={id}
         className={cn(
           'border-neutral-2 bg-white p-0 shadow-md transition-all duration-150',
-          clsx?.content,
+          clsx?.content
         )}
         style={{
           width: 'var(--radix-popover-trigger-width)',
@@ -261,7 +261,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
             <div
               data-slot="command-input-wrapper"
               className={cn(
-                'focus-within:bg-neutral-0.5 flex h-9 items-center gap-2 rounded-md px-3 transition-colors duration-200',
+                'focus-within:bg-neutral-0.5 flex h-9 items-center gap-2 rounded-md px-3 transition-colors duration-200'
               )}
             >
               <SearchOutlined className="text-primary-8 size-4 shrink-0 transition-opacity duration-200" />
@@ -274,7 +274,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
                   'placeholder:text-label flex h-10 w-full rounded-md bg-transparent py-3 text-sm',
                   'border-none',
                   { 'h-9 text-base': breakpoint === 'l' },
-                  { 'h-10 text-lg': breakpoint === 'xl' },
+                  { 'h-10 text-lg': breakpoint === 'xl' }
                 )}
               />
             </div>
@@ -318,7 +318,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
                       'items-center justify-start px-3 text-left transition-colors duration-150',
                       'group-first:hover:rounded-t-md',
                       { 'p-2 text-base': breakpoint === 'l' },
-                      { 'p-3 text-lg': breakpoint === 'xl' },
+                      { 'p-3 text-lg': breakpoint === 'xl' }
                     )}
                     title={label}
                   >
@@ -327,7 +327,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
                       <CheckOutlined
                         className={cn(
                           'ml-auto text-sm transition-opacity duration-200',
-                          isSelected ? 'opacity-100' : 'opacity-0',
+                          isSelected ? 'opacity-100' : 'opacity-0'
                         )}
                       />
                       {tooltip && (

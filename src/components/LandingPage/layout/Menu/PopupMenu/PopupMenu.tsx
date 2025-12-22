@@ -68,7 +68,7 @@ export default function PopupMenu({ className, visible, onChange }: PopupMenuPro
         'fixed top-0 left-0 z-[9999] h-full w-full cursor-pointer bg-white transition-all duration-200',
         visible
           ? 'pointer-events-auto translate-x-0 opacity-100'
-          : 'pointer-events-none translate-x-full opacity-100 lg:pointer-events-none lg:opacity-0',
+          : 'pointer-events-none translate-x-full opacity-100 lg:pointer-events-none lg:opacity-0'
       )}
       onClick={() => onChange(false)}
       role="dialog"

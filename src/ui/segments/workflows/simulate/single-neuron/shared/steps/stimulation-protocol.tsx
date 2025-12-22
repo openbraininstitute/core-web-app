@@ -73,7 +73,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
           log(
             'debug',
             'Stimulation protocol partial update (validation pending):',
-            validationError,
+            validationError
           );
         }
       }
@@ -100,7 +100,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
         initialValues={spcState}
         className={cn(
           'relative flex w-full flex-col items-start select-none [&_.ant-form-item-explain-error]:text-sm! [&_.ant-form-item-label]:pb-0.5!',
-          '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!',
+          '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!'
         )}
         onValuesChange={onValuesChange}
         validateTrigger={['onChange']}
@@ -117,7 +117,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
             {
               validator: createZodValidator(
                 StimulationConfigurationSchema.shape.inject_to,
-                'Injection target section is required',
+                'Injection target section is required'
               ),
             },
           ]}
@@ -128,7 +128,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
             options={sections.map((sec) => ({ label: sec, value: sec }))}
             className={cn(
               'border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! w-full rounded-md border-[1px]! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!',
-              '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!',
+              '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!'
             )}
             popupClassName="[&_.ant-select-item-option-content]:text-primary-9!"
             placement="bottomLeft"
@@ -151,7 +151,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
             {
               validator: createZodValidator(
                 StimulationConfigurationSchema.shape.stimulus.shape.stimulus_type,
-                'Stimulation mode is required',
+                'Stimulation mode is required'
               ),
             },
           ]}
@@ -167,7 +167,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
               }))}
             className={cn(
               'border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! w-full rounded-md border-[1px]! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!',
-              '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!',
+              '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!'
             )}
             popupClassName="[&_.ant-select-item-option-content]:text-primary-9!"
             placement="bottomLeft"
@@ -183,7 +183,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
               {
                 validator: createZodValidator(
                   StimulationConfigurationSchema.shape.stimulus.shape.stimulus_protocol,
-                  'Stimulus protocol is required',
+                  'Stimulus protocol is required'
                 ),
               },
             ]}
@@ -198,7 +198,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
               }))}
               className={cn(
                 'border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! w-full rounded-md border-[1px]! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!',
-                '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!',
+                '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!'
               )}
               popupClassName="[&_.ant-select-item-option-content]:text-primary-9!"
               placement="bottomLeft"
@@ -211,7 +211,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
                 get(PROTOCOL_DETAILS, `${spcState.stimulus.stimulus_protocol}`, {
                   defaults: {},
                 }) as TProtocolDetails
-              ).defaults?.time ?? {},
+              ).defaults?.time ?? {}
             ).map(([key, value]) => (
               <div key={`${key}/${value}`} className="">
                 <div>{label(startCase(camelCase(key)), false)}</div>
@@ -222,7 +222,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
                   suffix="ms"
                   className={cn(
                     'text-primary-9 [&_.ant-input-suffix]:text-neutral-3 cursor-none border-none font-bold shadow-none outline-0 select-none focus-within:border-none focus-within:shadow-none hover:border-none',
-                    '[&_input]:cursor-default [&_input]:select-none',
+                    '[&_input]:cursor-default [&_input]:select-none'
                   )}
                 />
               </div>

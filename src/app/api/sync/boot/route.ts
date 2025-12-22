@@ -91,7 +91,7 @@ async function* fetchItems<T>(body: Body) {
           updateUserProfile({
             ...pick(workspaceResolution?.profile, ['first_name', 'last_name', 'address', 'email']),
             ...pick(accountPayload, ['first_name', 'last_name', 'email']),
-          }),
+          })
         );
         if (data) {
           profile = data.profile;
@@ -122,7 +122,7 @@ async function* fetchItems<T>(body: Body) {
             reference_email: accountPayload.email,
             name: accountPayload.name,
             description: '',
-          }),
+          })
         );
         if (data?.data?.virtual_lab) {
           virtualLab = data.data?.virtual_lab;
@@ -156,7 +156,7 @@ async function* fetchItems<T>(body: Body) {
               Personalize its name and description to showcase your goals and make it truly yours.
               `,
             include_members: [],
-          }),
+          })
         );
         if (data?.data?.project) {
           project = data.data?.project;

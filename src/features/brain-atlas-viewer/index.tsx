@@ -28,7 +28,7 @@ export function AtlasViewer({ dataKey, children }: { dataKey: string; children?:
         <BrainAtlasViewerGltf dataKey={dataKey} onLoading={setIsLoading} />
       </ErrorBoundary>
     ),
-    [dataKey],
+    [dataKey]
   );
 
   return match(isFullScreen)

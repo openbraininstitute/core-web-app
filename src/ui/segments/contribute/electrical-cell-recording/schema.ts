@@ -46,7 +46,7 @@ export const ElectricalCellRecordingSetupExtension = z.object({
  * extended setup schema for electrical cell recording
  */
 export const ElectricalCellRecordingSetupSchema = BaseSetupSchema.merge(
-  ElectricalCellRecordingSetupExtension,
+  ElectricalCellRecordingSetupExtension
 );
 
 /**

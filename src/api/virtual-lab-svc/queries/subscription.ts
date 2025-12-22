@@ -27,7 +27,7 @@ function getBaseUrl() {
  * @throws {Error} - Throws an error if the request fails
  */
 export async function createSubscription(
-  payload: CreateSubscriptionRequest,
+  payload: CreateSubscriptionRequest
 ): Promise<CreateSubscriptionResponse | null> {
   const session = await getSession();
   const response = await fetch(getBaseUrl(), {
@@ -57,7 +57,7 @@ export async function createSubscription(
  * @throws {Error} - Throws an error if the request fails
  */
 export async function cancelSubscription(
-  request: CancelSubscriptionRequest,
+  request: CancelSubscriptionRequest
 ): Promise<CancelSubscriptionResponse | null> {
   const session = await getSession();
   const response = await fetch(getBaseUrl(), {

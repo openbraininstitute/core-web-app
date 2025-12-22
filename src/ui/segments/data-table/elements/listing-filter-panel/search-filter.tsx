@@ -76,7 +76,7 @@ export function SearchFilter({
         }}
         value={options.reduce(
           (acc: string[], { checked, label }) => (checked ? [...acc, label] : acc),
-          [],
+          []
         )}
       />
     )

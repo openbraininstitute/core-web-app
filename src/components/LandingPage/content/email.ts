@@ -15,7 +15,7 @@ export function useSanityContentForEMail(type: EMailTypes): ContentForEMail | nu
   label,
   email
 }`,
-      isContentForEMail,
+      isContentForEMail
     ) ?? null
   );
 }

@@ -19,7 +19,7 @@ import type { TTreeNode } from '@/components/tree/types';
  */
 export const flattenTreeAsObject = <TNode extends TTreeNode>(
   node: TNode,
-  result: TNode[] = [],
+  result: TNode[] = []
 ): TNode[] => {
   result.push(node);
 
@@ -47,7 +47,7 @@ export const flattenTreeAsObject = <TNode extends TTreeNode>(
 export function findNodeByKey<TNode extends TTreeNode>(
   key: string,
   id: string | number,
-  rootNode: TNode,
+  rootNode: TNode
 ): TNode | null {
   if (rootNode[key as keyof TNode]?.toString() === id.toString()) {
     return rootNode;
@@ -78,7 +78,7 @@ export function findNodeByKey<TNode extends TTreeNode>(
  */
 export function getParentsToRoot<TNode extends TTreeNode>(
   targetId: string,
-  rootNode: TNode,
+  rootNode: TNode
 ): TNode[] {
   function findPath(currentNode: TNode, currentPath: TNode[]): TNode[] | null {
     if (currentNode.id === targetId) {
@@ -113,7 +113,7 @@ export function getParentsToRoot<TNode extends TTreeNode>(
  */
 export function scrollToNode<TNode extends TTreeNode>(
   node: TNode | null,
-  block: ScrollLogicalPosition = 'nearest',
+  block: ScrollLogicalPosition = 'nearest'
 ): void {
   if (!node || typeof document === 'undefined') return;
 
@@ -200,7 +200,7 @@ export function renameKeyDeep<T extends Record<string, any>>(
   obj: T | null,
   field: string,
   newKey: string,
-  keepOriginal: boolean = false,
+  keepOriginal: boolean = false
 ): T | null {
   if (!obj) return null;
 

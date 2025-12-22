@@ -31,14 +31,14 @@ export function SingleNeuronSynaptomePreview({ record }: { record: ISingleNeuron
           active
           className={cn('h-[200px]! w-full! rounded-none!')}
           rootClassName={cn(
-            'flex h-full! w-full! flex-col items-center justify-center  m-0 rounded-none!',
+            'flex h-full! w-full! flex-col items-center justify-center  m-0 rounded-none!'
           )}
         />
         <Skeleton.Image
           active
           className={cn('h-[200px]! w-full! rounded-none!')}
           rootClassName={cn(
-            'flex h-full! w-full! flex-col items-center justify-center  m-0 rounded-none!',
+            'flex h-full! w-full! flex-col items-center justify-center  m-0 rounded-none!'
           )}
         />
       </div>

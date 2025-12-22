@@ -24,7 +24,7 @@ export function useVisibleSynapses() {
 export function useRecordingsAndInjection(sessionId: string) {
   const recordingsKey = getSessionKey(RECORDING_LOCATION_CONFIGURATION_SESSION_KEY, sessionId);
   const [recordings, updateRecordings] = useAtom(
-    RecordLocationConfigurationAtomFamily(recordingsKey),
+    RecordLocationConfigurationAtomFamily(recordingsKey)
   );
   const injectionKey = getSessionKey(STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
   const [injection, updateInjection] = useAtom(StimulationConfigurationAtomFamily(injectionKey));

@@ -22,7 +22,7 @@ export const expandIcon = ({
         fill="#003a8c"
         className={classNames(
           'transform transition-transform duration-200 ease-in-out',
-          expanded ? 'rotate-90' : 'rotate-0',
+          expanded ? 'rotate-90' : 'rotate-0'
         )}
       />
     </Button>

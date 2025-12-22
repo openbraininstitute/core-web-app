@@ -29,7 +29,7 @@ export interface UseExpandableTableOptions<T extends EntityCoreIdentifiable> {
  * Reusable hook for managing expandable tables with hierarchy support
  */
 export function useExpandableTable<T extends EntityCoreIdentifiable>(
-  options: UseExpandableTableOptions<T>,
+  options: UseExpandableTableOptions<T>
 ): {
   expandableConfig: ExpandableConfig<T>;
   isRowExpanded: (record: T) => boolean;
@@ -70,7 +70,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable>(
       const key = getRowKey(record);
       return key in state.expandedData;
     },
-    [state.expandedData, getRowKey],
+    [state.expandedData, getRowKey]
   );
 
   const getExpandedData = useCallback(
@@ -78,7 +78,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable>(
       const key = getRowKey(record);
       return state.expandedData[key] || null;
     },
-    [state.expandedData, getRowKey],
+    [state.expandedData, getRowKey]
   );
 
   const onExpand = useCallback(
@@ -93,7 +93,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable>(
           const newState: ExpandableTableState<T> = {
             expandedData: newExpandedData,
             expandedRowKeys: new Set(
-              Array.from(prev.expandedRowKeys).filter((rowKey) => rowKey !== key),
+              Array.from(prev.expandedRowKeys).filter((rowKey) => rowKey !== key)
             ),
           };
 
@@ -110,7 +110,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable>(
         expandedRowKeys: new Set(prev.expandedRowKeys.add(key)),
       }));
     },
-    [data, getRowKey],
+    [data, getRowKey]
   );
 
   const expandedRowRender = useCallback(
@@ -124,7 +124,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable>(
 
       return renderExpanded(records, record);
     },
-    [state.expandedData, getRowKey, renderExpanded],
+    [state.expandedData, getRowKey, renderExpanded]
   );
 
   // create expandable config - use controlled mode only for top-level tables

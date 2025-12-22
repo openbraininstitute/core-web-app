@@ -24,7 +24,7 @@ export default function TreeSearch({ options, onSelect }: Props) {
         }, 500);
       }
     },
-    [options, onSelect],
+    [options, onSelect]
   );
 
   return (
@@ -76,7 +76,7 @@ export default function TreeSearch({ options, onSelect }: Props) {
             '[&_.ant-select-selector]:border-neutral-1!',
             '[&_.ant-select-selector]:shadow-lg!',
             '[&_.ant-select-selection-search-input]:text-sm!',
-            '[&_.ant-select-selection-placeholder]:text-neutral-3',
+            '[&_.ant-select-selection-placeholder]:text-neutral-3'
           )}
         />
       </ConfigProvider>

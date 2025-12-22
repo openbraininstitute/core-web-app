@@ -110,7 +110,7 @@ function CustomInput({
         className={cn(
           'border-neutral-1 text-primary-9! h-auto rounded-full bg-white py-2.5! pr-10 pl-4 shadow-sm md:text-base lg:py-3 lg:text-lg',
           'placeholder:text-sm placeholder:font-light disabled:font-black disabled:opacity-70',
-          'focus-visible:text-primary-9! font-black! focus-visible:font-bold!',
+          'focus-visible:text-primary-9! font-black! focus-visible:font-bold!'
         )}
         // eslint-disable-next-line react/jsx-props-no-spreading
         {...rest}
@@ -273,7 +273,7 @@ export function WorkspaceCustomization({
               className={cn(
                 'relative flex h-full grow flex-col px-4 py-2 [&_.ant-form-item-explain-error]:pl-2',
                 '[&_.ant-form-item-explain-error]:text-sm xl:[&_.ant-form-item-explain-error]:text-base',
-                '[&_.ant-form-item-label]:pb-0!',
+                '[&_.ant-form-item-label]:pb-0!'
               )}
               requiredMark={false}
               initialValues={{
@@ -299,7 +299,7 @@ export function WorkspaceCustomization({
                           return Promise.reject(
                             error instanceof z.ZodError
                               ? error.errors.at(0)?.message
-                              : 'Virtual lab name is required !',
+                              : 'Virtual lab name is required !'
                           );
                         }
                         return Promise.resolve();
@@ -340,7 +340,7 @@ export function WorkspaceCustomization({
                           return Promise.reject(
                             error instanceof z.ZodError
                               ? error.errors.at(0)?.message
-                              : 'Project name is required !',
+                              : 'Project name is required !'
                           );
                         }
                         return Promise.resolve();

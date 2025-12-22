@@ -5,7 +5,7 @@ import { logError } from '@/util/logger';
 
 export function useSanity<T>(
   query: string,
-  typeGuard: (data: unknown) => data is T,
+  typeGuard: (data: unknown) => data is T
 ): T | undefined | null {
   const [data, setData] = React.useState<T | undefined | null>(undefined);
   React.useEffect(() => {

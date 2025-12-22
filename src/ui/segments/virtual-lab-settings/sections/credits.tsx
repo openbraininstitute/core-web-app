@@ -46,7 +46,7 @@ export function Credits({ virtualLabId }: Props) {
       },
       () => {
         return <ManageCreditsStep virtualLabId={virtualLabId} onBack={handleBackToListing} />;
-      },
+      }
     )
     .otherwise(() => (
       <div className="h-full grow px-6 py-3">

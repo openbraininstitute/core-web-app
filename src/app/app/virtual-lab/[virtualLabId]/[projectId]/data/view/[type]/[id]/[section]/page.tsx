@@ -32,7 +32,7 @@ export default async function Page({
       type: snakeCase(type) as EntityCoreExtendedType,
       ctx: context,
       id,
-    }),
+    })
   );
 
   if (!entity || error) notFound();

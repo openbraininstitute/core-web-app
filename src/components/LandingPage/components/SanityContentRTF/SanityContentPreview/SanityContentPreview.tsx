@@ -19,7 +19,7 @@ export default function SanityContentPreview({ value }: SanityContentPreviewProp
       className={classNames(
         styles.sanityContentPreview,
         styleLayout,
-        value.background ? styles.dark : styles.light,
+        value.background ? styles.dark : styles.light
       )}
     >
       {value.background && (

@@ -37,7 +37,7 @@ export const StainingType = {
 } as const;
 
 export const StainingTypeDictionary = Object.fromEntries(
-  Object.entries(StainingType).map(([name, value]) => [name, value.key]),
+  Object.entries(StainingType).map(([name, value]) => [name, value.key])
 ) as {
   [K in keyof typeof StainingType]: (typeof StainingType)[K]['key'];
 };
@@ -64,7 +64,7 @@ export const SlicingDirectionType = {
 } as const;
 
 export const SlicingDirectionTypeDictionary = Object.fromEntries(
-  Object.entries(SlicingDirectionType).map(([name, value]) => [name, value.key]),
+  Object.entries(SlicingDirectionType).map(([name, value]) => [name, value.key])
 ) as {
   [K in keyof typeof SlicingDirectionType]: (typeof SlicingDirectionType)[K]['key'];
 };
@@ -92,7 +92,7 @@ export const CellMorphologyGenerationType = {
 } as const;
 
 export const CellMorphologyGenerationTypeDictionary = Object.fromEntries(
-  Object.entries(CellMorphologyGenerationType).map(([name, value]) => [name, value.key]),
+  Object.entries(CellMorphologyGenerationType).map(([name, value]) => [name, value.key])
 ) as {
   [K in keyof typeof CellMorphologyGenerationType]: (typeof CellMorphologyGenerationType)[K]['key'];
 };
@@ -120,7 +120,7 @@ export const ModifiedMorphologyMethodType = {
 } as const;
 
 export const ModifiedMorphologyMethodTypeDictionary = Object.fromEntries(
-  Object.entries(ModifiedMorphologyMethodType).map(([name, value]) => [name, value.key]),
+  Object.entries(ModifiedMorphologyMethodType).map(([name, value]) => [name, value.key])
 ) as {
   [K in keyof typeof ModifiedMorphologyMethodType]: (typeof ModifiedMorphologyMethodType)[K]['key'];
 };
@@ -154,7 +154,7 @@ export const CellMorphologyProtocolDesign = {
 } as const;
 
 export const CellMorphologyProtocolDesignDictionary = Object.fromEntries(
-  Object.entries(CellMorphologyProtocolDesign).map(([name, value]) => [name, value.key]),
+  Object.entries(CellMorphologyProtocolDesign).map(([name, value]) => [name, value.key])
 ) as {
   [K in keyof typeof CellMorphologyProtocolDesign]: (typeof CellMorphologyProtocolDesign)[K]['key'];
 };

@@ -10,7 +10,7 @@ import useBreakpoint from 'use-breakpoint';
 import { isBrowser } from '@/utils/environment';
 
 export const createBreakpoint = <T extends Record<string, number>>(
-  breakpoints?: T,
+  breakpoints?: T
 ): (() => keyof T) => {
   return () => {
     const [screen, setScreen] = useState(isBrowser() ? window.innerWidth : 0);

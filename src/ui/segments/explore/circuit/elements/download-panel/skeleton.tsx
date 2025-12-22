@@ -11,7 +11,7 @@ function Skeleton({ className, animate = true }: SkeletonProps) {
       className={classNames(
         'bg-skeleton relative overflow-hidden rounded-md',
         animate && 'animate-pulse',
-        className,
+        className
       )}
     >
       {animate && (

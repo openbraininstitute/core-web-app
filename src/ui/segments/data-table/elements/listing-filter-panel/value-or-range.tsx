@@ -53,11 +53,11 @@ export function ValueOrRange({
       : {
           gte: null,
           lte: null,
-        },
+        }
   );
 
   const [value, setValue] = useState<number | undefined>(
-    typeof filter.value === 'number' ? filter.value : undefined,
+    typeof filter.value === 'number' ? filter.value : undefined
   );
 
   function getInitialRadio() {
@@ -89,7 +89,7 @@ export function ValueOrRange({
   function updateRange(
     newValue: {
       [x in keyof Partial<GteLteValue>]: number;
-    },
+    }
   ) {
     setRange({ ...range, ...newValue });
     setFilter({ ...range, ...newValue });

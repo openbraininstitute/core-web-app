@@ -6,7 +6,7 @@ import type { WorkspaceContext } from '@/types/common';
 export async function downloadArchive(
   entityType: TEntityTypeDict,
   entityIds: string[],
-  ctx?: WorkspaceContext,
+  ctx?: WorkspaceContext
 ) {
   const { ticketId } = await createDownloadTicket({
     entityType,

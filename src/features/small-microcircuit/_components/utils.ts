@@ -58,7 +58,7 @@ const simExecStatusListordered = [
 
 export function getLatestSimExecStatus(
   remoteStatus: EntitycoreExecutionStatus,
-  localStatus: EntitycoreExecutionStatus,
+  localStatus: EntitycoreExecutionStatus
 ) {
   const remoteStatusIdx = simExecStatusListordered.indexOf(remoteStatus);
   const localStatusIdx = simExecStatusListordered.indexOf(localStatus);

@@ -13,7 +13,7 @@ export function validateEMail(_rule: RuleObject, email: string): Promise<void> {
 
   return Promise.reject(
     new Error(
-      `The platform is not available in ${forbiddenCountry}. Please select a different email.`,
-    ),
+      `The platform is not available in ${forbiddenCountry}. Please select a different email.`
+    )
   );
 }

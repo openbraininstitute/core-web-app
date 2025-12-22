@@ -42,7 +42,7 @@ export class Painter extends TgdPainterGroup {
       new TgdPainterState(context, {
         depth: webglPresetDepth.less,
         children: [this.groupSegments, this.groupSynapses, this.groupHover],
-      }),
+      })
     );
   }
 
@@ -92,7 +92,7 @@ export class Painter extends TgdPainterGroup {
             direction: new TgdVec3(0, 0, -1),
           }),
         }),
-      }),
+      })
     );
     context.paint();
   }

@@ -5,7 +5,7 @@ function mapKeysDeep(obj: any, fn: (value: any, key: string) => string): any {
   if (Array.isArray(obj)) return obj.map((item) => mapKeysDeep(item, fn));
   if (obj !== null && typeof obj === 'object') {
     return Object.fromEntries(
-      Object.entries(obj).map(([key, value]) => [fn(value, key), mapKeysDeep(value, fn)]),
+      Object.entries(obj).map(([key, value]) => [fn(value, key), mapKeysDeep(value, fn)])
     );
   }
   return obj;

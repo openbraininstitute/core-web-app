@@ -49,7 +49,7 @@ export function OBIShowcaseLeftMenu({ className }: Props) {
             variant="outline"
             className={cn(
               'h-auto w-full justify-start font-bold shadow-sm',
-              activeSection === url && 'bg-primary-9 text-white',
+              activeSection === url && 'bg-primary-9 text-white'
             )}
             size={breakpoint === 'xl' ? 'lg' : 'md'}
             aria-label={activeSection === url ? 'active' : ''}

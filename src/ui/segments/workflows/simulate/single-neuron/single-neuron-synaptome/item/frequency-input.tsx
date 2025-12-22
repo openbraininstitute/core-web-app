@@ -39,10 +39,10 @@ export function FrequencyFormItem({
   const breakpoint = useDefaultBreakpoint();
   const frequencyKey = getSessionKey(
     FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY,
-    `${sessionId}_${index}`,
+    `${sessionId}_${index}`
   );
   const [frequencyConfig, setFrequencyConfig] = useAtom(
-    FrequencyInputConfigurationAtomFamily(frequencyKey),
+    FrequencyInputConfigurationAtomFamily(frequencyKey)
   );
 
   const { constantOrSteps, stepFrequencyState } = frequencyConfig;
@@ -144,7 +144,7 @@ export function FrequencyFormItem({
       const stepFrequencies = calculateRangeOutput(
         stepFrequencyState.start,
         stepFrequencyState.stop,
-        stepFrequencyState.step,
+        stepFrequencyState.step
       );
       return stepFrequencies;
     } catch (error) {
@@ -193,7 +193,7 @@ export function FrequencyFormItem({
           <span
             className={cn(
               'text-primary-9 mr-2 text-sm font-light',
-              disableFrequencyStepper && 'text-gray-400!',
+              disableFrequencyStepper && 'text-gray-400!'
             )}
           >
             Has steps
@@ -216,7 +216,7 @@ export function FrequencyFormItem({
               size={breakpoint === 'l' ? 'middle' : 'large'}
               className={cn(
                 'border-neutral-2! [&_.ant-input-number-input]:text-primary-8! flex w-full items-center justify-between gap-2 rounded-sm! bg-white font-bold! [&_input]:placeholder:!font-light',
-                '[&_.ant-input-number-suffix]:text-neutral-3 [&_.ant-input-number-suffix]:pointer-events-auto',
+                '[&_.ant-input-number-suffix]:text-neutral-3 [&_.ant-input-number-suffix]:pointer-events-auto'
               )}
               step={0.01}
               min={0}
@@ -241,7 +241,7 @@ export function FrequencyFormItem({
                   size={breakpoint === 'l' ? 'middle' : 'large'}
                   className={cn(
                     'border-neutral-2! [&_.ant-input-number-input]:text-primary-8! flex w-full items-center justify-between gap-2 rounded-sm! bg-white font-bold! [&_input]:placeholder:!font-light',
-                    '[&_.ant-input-number-suffix]:text-neutral-3 [&_.ant-input-number-suffix]:pointer-events-auto',
+                    '[&_.ant-input-number-suffix]:text-neutral-3 [&_.ant-input-number-suffix]:pointer-events-auto'
                   )}
                   min={0}
                   step={1}
@@ -268,7 +268,7 @@ export function FrequencyFormItem({
                   size={breakpoint === 'l' ? 'middle' : 'large'}
                   className={cn(
                     'border-neutral-2! [&_.ant-input-number-input]:text-primary-8! flex w-full items-center justify-between gap-2 rounded-sm! bg-white font-bold! [&_input]:placeholder:!font-light',
-                    '[&_.ant-input-number-suffix]:text-neutral-3 [&_.ant-input-number-suffix]:pointer-events-auto',
+                    '[&_.ant-input-number-suffix]:text-neutral-3 [&_.ant-input-number-suffix]:pointer-events-auto'
                   )}
                   min={0}
                   step={1}
@@ -293,7 +293,7 @@ export function FrequencyFormItem({
                 size={breakpoint === 'l' ? 'middle' : 'large'}
                 className={cn(
                   'border-neutral-2! [&_.ant-input-number-input]:text-primary-8! flex w-full items-center justify-between gap-2 rounded-sm! bg-white font-bold! [&_input]:placeholder:!font-light',
-                  '[&_.ant-input-number-suffix]:text-neutral-3 [&_.ant-input-number-suffix]:pointer-events-auto',
+                  '[&_.ant-input-number-suffix]:text-neutral-3 [&_.ant-input-number-suffix]:pointer-events-auto'
                 )}
                 step={1}
                 min={1}

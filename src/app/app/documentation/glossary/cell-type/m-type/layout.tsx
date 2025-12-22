@@ -43,7 +43,7 @@ export default function CellTypeLayout({ children }: CellTypeLayoutProps) {
   const sortedData = data.sort((a, b) => a.pref_label.localeCompare(b.pref_label));
 
   const filteredData = sortedData.filter((item) =>
-    item.pref_label.toLowerCase().includes(searchTerm.toLowerCase()),
+    item.pref_label.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleScrollTo = useCallback((slug: string) => {
@@ -61,7 +61,7 @@ export default function CellTypeLayout({ children }: CellTypeLayoutProps) {
       handleScrollTo(slug);
       setHighlightedCellType(slug);
     },
-    [pathname, searchParams, router, handleScrollTo],
+    [pathname, searchParams, router, handleScrollTo]
   );
 
   return (
@@ -94,7 +94,7 @@ export default function CellTypeLayout({ children }: CellTypeLayoutProps) {
               onClick={() => handleItemClick(slug)}
               className={classNames(
                 'text-left text-lg',
-                isActive ? 'font-bold text-white' : 'text-primary-1 font-normal',
+                isActive ? 'font-bold text-white' : 'text-primary-1 font-normal'
               )}
             >
               {item.pref_label}
@@ -109,7 +109,7 @@ export default function CellTypeLayout({ children }: CellTypeLayoutProps) {
                 highlightedCellType,
                 setHighlightedCellType,
               } as CellTypeDefinitionsFullListProps)
-            : child,
+            : child
         )}
       </div>
     </div>

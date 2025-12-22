@@ -21,7 +21,7 @@ const isBrainRegionClickEvent = (event: Event): event is CustomEvent<TBrainRegio
 };
 
 export const brainRegionClickEventListener = (
-  cb: (event: CustomEvent<TBrainRegionClickEvent>) => void,
+  cb: (event: CustomEvent<TBrainRegionClickEvent>) => void
 ) => {
   const abortController = new AbortController();
   const { signal } = abortController;

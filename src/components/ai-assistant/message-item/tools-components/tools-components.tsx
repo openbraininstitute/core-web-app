@@ -24,7 +24,7 @@ export default function ToolsComponents({ className, part }: ToolsComponentsProp
             'thumbnail-generation-morphology-getone',
             'thumbnail-generation-electricalcellrecording-getone',
           ],
-          isToolResult,
+          isToolResult
         )}
       />
     </div>
@@ -34,7 +34,7 @@ export default function ToolsComponents({ className, part }: ToolsComponentsProp
 function extractToolResults<T>(
   part: ToolInvocationUIPart,
   toolsIds: string[],
-  typeGuard: (data: unknown) => data is T,
+  typeGuard: (data: unknown) => data is T
 ): T | null {
   const invocation = part.toolInvocation;
 

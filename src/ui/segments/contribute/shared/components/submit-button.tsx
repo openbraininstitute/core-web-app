@@ -55,7 +55,7 @@ export function SubmitButton<
           size="lg"
           className={cn(
             'disabled:bg-neutral-1 disabled:text-neutral-3!',
-            'px-10 select-none hover:text-white disabled:cursor-not-allowed',
+            'px-10 select-none hover:text-white disabled:cursor-not-allowed'
           )}
           onClick={() => navigate(detailsUrl)}
         >
@@ -75,7 +75,7 @@ export function SubmitButton<
         size="lg"
         className={cn(
           'disabled:bg-neutral-1 disabled:text-neutral-3!',
-          'px-10 select-none hover:text-white disabled:cursor-not-allowed',
+          'px-10 select-none hover:text-white disabled:cursor-not-allowed'
         )}
         onClick={onSubmit}
       >

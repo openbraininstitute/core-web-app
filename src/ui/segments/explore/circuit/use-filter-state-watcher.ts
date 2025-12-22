@@ -39,7 +39,7 @@ export function useFilterStateWatcher({
     coreFiltersAtom({
       dataType,
       key: dataKey,
-    }),
+    })
   );
   const searchString = useAtomValue(coreSearchStringAtom(dataKey));
   const setResetFilterSignal = useSetAtom(resetFilterSignalAtom);

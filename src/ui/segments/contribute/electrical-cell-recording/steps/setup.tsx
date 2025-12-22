@@ -95,7 +95,7 @@ export function Setup() {
             validator: createZodFieldValidator(
               ElectricalCellRecordingSchema,
               'setup.description',
-              form,
+              form
             ),
           },
         ]}
@@ -116,7 +116,7 @@ export function Setup() {
             validator: createZodFieldValidator(
               ElectricalCellRecordingSchema,
               'setup.brain_region_id',
-              form,
+              form
             ),
           },
         ]}
@@ -133,7 +133,7 @@ export function Setup() {
             validator: createZodFieldValidator(
               ElectricalCellRecordingSchema,
               'setup.experiment_date',
-              form,
+              form
             ),
           },
         ]}
@@ -150,7 +150,7 @@ export function Setup() {
             validator: createZodFieldValidator(
               ElectricalCellRecordingSchema,
               'setup.contact_email',
-              form,
+              form
             ),
           },
         ]}
@@ -170,7 +170,7 @@ export function Setup() {
             validator: createZodFieldValidator(
               ElectricalCellRecordingSchema,
               'setup.published_in',
-              form,
+              form
             ),
           },
         ]}
@@ -185,7 +185,7 @@ export function Setup() {
           className: '[&_svg]:text-primary-8!',
           rootClassName: cn(
             '[&_.ant-tooltip-inner]:bg-white [&_.ant-tooltip-inner]:text-primary-8 ',
-            '[&_.ant-tooltip-arrow]:before:bg-white',
+            '[&_.ant-tooltip-arrow]:before:bg-white'
           ),
           title: (
             <div className="flex items-center gap-1">
@@ -212,7 +212,7 @@ export function Setup() {
                 validator: createZodFieldValidator(
                   ElectricalCellRecordingSchema,
                   'setup.location.x',
-                  form,
+                  form
                 ),
               },
             ]}
@@ -233,7 +233,7 @@ export function Setup() {
                 validator: createZodFieldValidator(
                   ElectricalCellRecordingSchema,
                   'setup.location.y',
-                  form,
+                  form
                 ),
               },
             ]}
@@ -254,7 +254,7 @@ export function Setup() {
                 validator: createZodFieldValidator(
                   ElectricalCellRecordingSchema,
                   'setup.location.z',
-                  form,
+                  form
                 ),
               },
             ]}
@@ -283,7 +283,7 @@ export function Setup() {
           className={cn(
             'h-12 w-full rounded-full! placeholder:text-sm [&_.ant-input-number-handler-wrap]:hidden',
             '[&_.ant-input-number-in-form-item]:rounded-l-full!',
-            '[&_.ant-input-number-group-addon]:rounded-r-full!',
+            '[&_.ant-input-number-group-addon]:rounded-r-full!'
           )}
           placeholder="Enter ljp value (mV)"
           min={-150}
@@ -304,7 +304,7 @@ export function Setup() {
             validator: createZodFieldValidator(
               ElectricalCellRecordingSchema,
               'setup.recording_location',
-              form,
+              form
             ),
           },
         ]}
@@ -321,7 +321,7 @@ export function Setup() {
             validator: createZodFieldValidator(
               ElectricalCellRecordingSchema,
               'setup.recording_type',
-              form,
+              form
             ),
           },
         ]}
@@ -338,7 +338,7 @@ export function Setup() {
             validator: createZodFieldValidator(
               ElectricalCellRecordingSchema,
               'setup.recording_origin',
-              form,
+              form
             ),
           },
         ]}
@@ -356,7 +356,7 @@ export function Setup() {
             validator: createZodFieldValidator(
               ElectricalCellRecordingSchema,
               'setup.temperature',
-              form,
+              form
             ),
           },
         ]}

@@ -67,8 +67,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
             (r.me_model.mtypes &&
               r.me_model.mtypes.length > 0 &&
               r.me_model.mtypes.map((m) => m.pref_label)) ||
-              morphologyMtypes(r.me_model.morphology),
-          ),
+              morphologyMtypes(r.me_model.morphology)
+          )
         );
       }
       if (isMemodel(r) && isEmpty(r.etypes)) {
@@ -77,9 +77,9 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       return renderEmptyOrValue(
         renderArray(
           (r as EntityCoreObjectTypes & { mtypes: IMType[] | null }).mtypes?.map(
-            (m: IMType) => m.pref_label,
-          ) || [],
-        ),
+            (m: IMType) => m.pref_label
+          ) || []
+        )
       );
     },
     vocabulary: {
@@ -114,8 +114,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
             (r.me_model.etypes &&
               r.me_model.etypes.length > 0 &&
               r.me_model.etypes.map((m) => m.pref_label)) ||
-              emodelEtypes(r.me_model.emodel),
-          ),
+              emodelEtypes(r.me_model.emodel)
+          )
         );
       }
       if (isMemodel(r) && isEmpty(r.etypes)) {
@@ -124,9 +124,9 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       return renderEmptyOrValue(
         renderArray(
           (r as EntityCoreObjectTypes & { etypes: IEType[] | null }).etypes?.map(
-            (e: IEType) => e.pref_label,
-          ) || [],
-        ),
+            (e: IEType) => e.pref_label
+          ) || []
+        )
       );
     },
     vocabulary: {
@@ -156,8 +156,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
           }),
           {
             unit: MeasurementUnit.dimensionless,
-          },
-        )?.value,
+          }
+        )?.value
       );
     },
     vocabulary: {
@@ -291,7 +291,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         StructuralDomain.Axon,
         'total_length',
         'raw',
-        true,
+        true
       ),
   },
   [EntityCoreFields.AxonStrahlerNumber]: {
@@ -308,7 +308,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         r as ICellMorphology,
         StructuralDomain.Axon,
         'section_strahler_orders',
-        'maximum',
+        'maximum'
       ),
   },
   [EntityCoreFields.AxonArborAsymmetryIndex]: {
@@ -325,7 +325,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         r as ICellMorphology,
         StructuralDomain.Axon,
         'partition_asymmetry',
-        'mean',
+        'mean'
       ),
   },
   [EntityCoreFields.BasalDendriticTotalLength]: {
@@ -343,7 +343,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         StructuralDomain.BasalDendrite,
         'total_length',
         'raw',
-        true,
+        true
       ),
   },
   [EntityCoreFields.BasalDendriteStrahlerNumber]: {
@@ -360,7 +360,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         r as ICellMorphology,
         StructuralDomain.BasalDendrite,
         'section_strahler_orders',
-        'maximum',
+        'maximum'
       ),
   },
   [EntityCoreFields.BasalArborAsymmetryIndex]: {
@@ -377,7 +377,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         r as ICellMorphology,
         StructuralDomain.BasalDendrite,
         'partition_asymmetry',
-        'mean',
+        'mean'
       ),
   },
   [EntityCoreFields.ApicalDendriticTotalLength]: {
@@ -395,7 +395,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         StructuralDomain.ApicalDendrite,
         'Total Length',
         'raw',
-        true,
+        true
       ),
   },
   [EntityCoreFields.ApicalDendtriteStrahlerNumber]: {
@@ -412,7 +412,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         r as ICellMorphology,
         StructuralDomain.ApicalDendrite,
         'section_strahler_orders',
-        'maximum',
+        'maximum'
       ),
   },
   [EntityCoreFields.ApicalArborAsymmetryIndex]: {
@@ -429,7 +429,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         r as ICellMorphology,
         StructuralDomain.ApicalDendrite,
         'partition_asymmetry',
-        'mean',
+        'mean'
       ),
   },
   [EntityCoreFields.NeuronMorphologyWidth]: {
@@ -447,7 +447,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         StructuralDomain.NeuronMorphology,
         'total_width',
         'raw',
-        true,
+        true
       ),
   },
   [EntityCoreFields.NeuronMorphologyHeight]: {
@@ -465,7 +465,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         StructuralDomain.NeuronMorphology,
         'total_height',
         'raw',
-        true,
+        true
       ),
   },
   [EntityCoreFields.NeuronMorphologyDepth]: {
@@ -483,7 +483,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         StructuralDomain.NeuronMorphology,
         'total_depth',
         'raw',
-        true,
+        true
       ),
   },
   [EntityCoreFields.SomaDiameter]: {

@@ -46,10 +46,10 @@ export function Root({ circuit }: Props) {
             dataType: ExtendedEntitiesTypeDict.Circuit,
             dataScope: WorkspaceScope.Custom,
             key: circuit.id,
-          }),
+          })
         ),
-      [circuit.id],
-    ),
+      [circuit.id]
+    )
   );
   const columns = cols.filter(({ key }) => (activeColumns || []).includes(key as string));
 
@@ -59,7 +59,7 @@ export function Root({ circuit }: Props) {
         ctx: { virtualLabId, projectId },
         dataType: ExtendedEntitiesTypeDict.Circuit,
         entityId: record.id,
-      }),
+      })
     );
   };
 
@@ -71,7 +71,7 @@ export function Root({ circuit }: Props) {
           getCircuit({
             id: circuit.root_circuit_id,
             context: { virtualLabId, projectId },
-          }),
+          })
         );
         if (result) {
           setRootCircuit({

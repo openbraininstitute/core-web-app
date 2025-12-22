@@ -120,7 +120,7 @@ export function ContributionModal() {
         entityType: P.string.select('type'),
         entity: P.not(P.nullish).select('entity'),
       },
-      ({ entity: et }) => `Add new ${et.title ?? 'artifact'}`,
+      ({ entity: et }) => `Add new ${et.title ?? 'artifact'}`
     )
     .otherwise(() => null);
 
@@ -135,7 +135,7 @@ export function ContributionModal() {
       },
       ({ sId, type }) => {
         return <RenderEntityTypeContent type={type} sessionId={sId} />;
-      },
+      }
     )
     .otherwise(() => null);
 

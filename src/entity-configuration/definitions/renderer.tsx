@@ -69,14 +69,14 @@ export const renderArray = (array: Array<string | JSX.Element | null>) => {
       if (isValidElement(item)) return item;
       return null;
     }),
-    (o) => !isNil(o),
+    (o) => !isNil(o)
   );
 };
 
 export const renderDictionaryKeys = (
   dictionary: Record<string, string>,
   Component: React.ComponentType<{ field: string; value: string }>,
-  containerClassName?: string,
+  containerClassName?: string
 ) => {
   return (
     <div className={containerClassName}>
@@ -135,7 +135,7 @@ export function RenderCustomField<R extends EntityCoreIdentifiable>({
           entityConfig.api.query.one({
             id: entityId,
             context: { virtualLabId, projectId },
-          }),
+          })
         );
         if (data) setPayload({ entity: data, error: null, loading: false });
         if (error)
@@ -177,7 +177,7 @@ export function renderPreview<T extends EntityCoreResource>(
   loadingClassName?: string,
   fill?: boolean,
   customRender?: (src: string) => ReactNode,
-  target?: TThumbnailServiceTarget,
+  target?: TThumbnailServiceTarget
 ): JSX.Element;
 
 export function renderPreview<T extends EntityCoreResource>(
@@ -189,7 +189,7 @@ export function renderPreview<T extends EntityCoreResource>(
   fill?: boolean,
   customRender?: (src: string) => ReactNode,
   target?: TEntityAssetTarget,
-  label?: AssetLabel,
+  label?: AssetLabel
 ): JSX.Element;
 
 export function renderPreview<T extends EntityCoreResource>(
@@ -201,7 +201,7 @@ export function renderPreview<T extends EntityCoreResource>(
   fill?: boolean,
   customRender?: (src: string) => ReactNode,
   target?: TThumbnailServiceTarget | TEntityAssetTarget,
-  label?: AssetLabel,
+  label?: AssetLabel
 ) {
   if (target === PreviewTarget.AssetLabel) {
     return (
@@ -266,7 +266,7 @@ export function renderMeanStd({
 
 export function renderLocalizedNumber(
   value: number | null,
-  options?: Intl.NumberFormatOptions,
+  options?: Intl.NumberFormatOptions
 ): string {
   if (typeof value !== 'number' || Number.isNaN(value)) return EmptyValue;
 
@@ -293,14 +293,14 @@ export const renderMorphologyMeasurement = (
   structuralDomain: string,
   label: string,
   measurementType: string,
-  showUnits?: boolean,
+  showUnits?: boolean
 ): ReactNode => {
   if (!morphology || !('measurement_annotation' in morphology)) return EmptyValue;
 
   const measurementKinds = morphology.measurement_annotation.measurement_kinds;
 
   const measurementKind = measurementKinds?.find(
-    (mk) => mk.structural_domain === structuralDomain && mk.pref_label === label,
+    (mk) => mk.structural_domain === structuralDomain && mk.pref_label === label
   );
 
   const measurement = measurementKind?.measurement_items.find((mi) => mi.name === measurementType);
@@ -339,7 +339,7 @@ export const renderContributorsModal = (
   contributors: IContributor[],
   open: boolean,
   onClose: () => void,
-  mode: 'modal' | 'inline' = 'modal',
+  mode: 'modal' | 'inline' = 'modal'
 ): ReactNode => {
   const getName = (c: IContributor) =>
     `${`${'given_name' in c.agent ? c.agent.given_name : ''} ${'family_name' in c.agent ? c.agent.family_name : ''}`}`.trim() ||

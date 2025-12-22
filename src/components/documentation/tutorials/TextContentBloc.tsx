@@ -38,7 +38,7 @@ export default function TextContentBloc({
         className={classNames(
           styles.transcript,
           'text-primary-9 transition-height overflow-hidden duration-300 ease-in-out',
-          transcriptVisible ? 'h-auto' : 'h-0',
+          transcriptVisible ? 'h-auto' : 'h-0'
         )}
       >
         <PortableText value={content.transcript ?? []} />

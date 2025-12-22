@@ -174,7 +174,7 @@ export function Menu({ sessionId, type }: Props) {
                 </div>
               </Button>
             );
-          },
+          }
         )}
       </div>
       <div className="mt-auto flex w-full items-center justify-center gap-2 pr-1.5">
@@ -186,7 +186,7 @@ export function Menu({ sessionId, type }: Props) {
                 variant="outline"
                 size={breakpoint === 'l' ? 'md' : 'lg'}
                 className={cn(
-                  'disabled:bg-neutral-2 disabled:text-neutral-4! w-full justify-center px-10 font-medium!',
+                  'disabled:bg-neutral-2 disabled:text-neutral-4! w-full justify-center px-10 font-medium!'
                 )}
                 onClick={() => mutateDownloadResultsAsZip.mutateAsync()}
                 disabled={controlsDisabled}
@@ -226,7 +226,7 @@ export function Menu({ sessionId, type }: Props) {
                 variant="success"
                 size={breakpoint === 'l' ? 'md' : 'lg'}
                 className={cn(
-                  'disabled:bg-neutral-2 disabled:text-neutral-4! w-full justify-center px-10 font-medium!',
+                  'disabled:bg-neutral-2 disabled:text-neutral-4! w-full justify-center px-10 font-medium!'
                 )}
                 disabled={controlsDisabled}
               >

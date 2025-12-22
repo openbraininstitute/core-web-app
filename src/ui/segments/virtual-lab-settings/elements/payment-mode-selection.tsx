@@ -22,7 +22,7 @@ export const PurchaseMode = {
 } as const;
 
 export const PurchaseModeDictionary = Object.fromEntries(
-  Object.entries(PurchaseMode).map(([name, value]) => [name, value.key]),
+  Object.entries(PurchaseMode).map(([name, value]) => [name, value.key])
 ) as {
   [K in keyof typeof PurchaseMode]: (typeof PurchaseMode)[K]['key'];
 };
@@ -50,7 +50,7 @@ export function PaymentModeSelection({
         className={cn(
           'group relative w-full overflow-hidden rounded-2xl bg-gradient-to-br',
           'from-[#0a3a76]/40 to-[#0a3a76]/10 p-8 text-left backdrop-blur-lg transition-all',
-          'hover:scale-105 hover:from-white/20 hover:to-white/10 hover:shadow-2xl',
+          'hover:scale-105 hover:from-white/20 hover:to-white/10 hover:shadow-2xl'
         )}
       >
         <div className="relative z-10">
@@ -69,7 +69,7 @@ export function PaymentModeSelection({
         <div
           className={cn(
             'absolute -top-8 -right-8 h-32 w-32 rounded-full',
-            'bg-white/10 blur-2xl transition-all group-hover:bg-white/20',
+            'bg-white/10 blur-2xl transition-all group-hover:bg-white/20'
           )}
         />
       </button>
@@ -82,7 +82,7 @@ export function PaymentModeSelection({
             'group relative overflow-hidden rounded-2xl bg-gradient-to-br',
             'from-emerald-500/30 to-emerald-500/10 hover:shadow-2xl',
             'p-8 text-left backdrop-blur-lg',
-            'transition-all hover:scale-105',
+            'transition-all hover:scale-105'
           )}
         >
           <div className="relative z-10">
@@ -101,7 +101,7 @@ export function PaymentModeSelection({
           <div
             className={cn(
               'absolute -top-8 -right-8 h-32 w-32 rounded-full bg-emerald-400/20',
-              'blur-2xl transition-all group-hover:bg-emerald-400/30',
+              'blur-2xl transition-all group-hover:bg-emerald-400/30'
             )}
           />
         </button>

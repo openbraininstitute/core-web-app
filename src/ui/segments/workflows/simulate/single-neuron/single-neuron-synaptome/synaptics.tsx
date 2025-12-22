@@ -74,7 +74,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
       }),
   });
   const placementConfigForForm = (
-    simFormIndex: number,
+    simFormIndex: number
   ): TSingleNeuronSynaptomeConfiguration | undefined => {
     const simConfigForForm = state.find((_: SynapseConfiguration, ind) => ind === simFormIndex);
     return data?.synapses.find((s) => s.id === simConfigForForm?.id);
@@ -85,7 +85,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
       state.forEach((_, index) => {
         const frequencyKey = getSessionKey(
           FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY,
-          `${sessionId}_${index}`,
+          `${sessionId}_${index}`
         );
         safeStorage.removeItem(frequencyKey);
       });
@@ -108,7 +108,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
             [configKey]: newValue,
             color,
           }
-        : s,
+        : s
     );
 
     update(updatedState);
@@ -196,7 +196,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
         key={key}
         className={cn(
           'bg-background relative flex w-full flex-col items-start select-none',
-          '[&_.ant-form-item-explain-error]:text-sm [&_.ant-form-item-label]:pb-0.5!',
+          '[&_.ant-form-item-explain-error]:text-sm [&_.ant-form-item-label]:pb-0.5!'
         )}
         validateTrigger={['onChange']}
         name="synaptic-inputs-configuration"
@@ -260,7 +260,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
 function useViewer3D(
   synapticInputs: SynapseConfiguration[],
   selection: Record<string, SectionSynapsesWith3D | null>,
-  data: { synapses: Array<{ id: string; color?: string }> } | null | undefined,
+  data: { synapses: Array<{ id: string; color?: string }> } | null | undefined
 ) {
   const update = useVisibleSynapsesSetter();
   useEffect(() => {
@@ -271,7 +271,7 @@ function useViewer3D(
     for (let index = 0; index < synapticInputs.length; index++) {
       const synapticInput = synapticInputs[index];
       const match = Object.values(selection).find(
-        (item) => item?.synapsePlacementConfigId === synapticInput.id,
+        (item) => item?.synapsePlacementConfigId === synapticInput.id
       );
       if (match) {
         synapses.push({
@@ -292,7 +292,7 @@ function makeData(
     synapses: Array<{
       coordinates: number[];
     }>;
-  }[],
+  }[]
 ) {
   const data: number[] = [];
   for (const section of sections) {
@@ -306,7 +306,7 @@ function makeData(
 
 function findColor(
   synapses: { id: string; color?: string }[] | undefined,
-  id: string,
+  id: string
 ): string | null | undefined {
   if (!synapses) return null;
 

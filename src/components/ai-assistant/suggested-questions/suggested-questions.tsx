@@ -29,7 +29,7 @@ export default function SuggestedQuestions({
 }: SuggestedQuestionsProps) {
   const [suggestions, clearSuggestions] = useServiceAiAgentSuggestionFromUserJourney(
     threadId ?? '',
-    messagesLength === 0 ? 1 : 3,
+    messagesLength === 0 ? 1 : 3
   );
   const hardcodedSuggestions = useHardcodedSuggestions(messagesLength === 0 ? 2 : 0);
   const allSuggestions = [...hardcodedSuggestions, ...suggestions]

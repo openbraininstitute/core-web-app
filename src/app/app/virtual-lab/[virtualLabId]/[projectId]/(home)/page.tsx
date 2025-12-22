@@ -21,7 +21,7 @@ export default async function Home({
     queryClient.fetchQuery({
       queryKey: keyBuilder.getWorkspace({ virtualLabId, projectId }),
       queryFn: () => getProject({ virtualLabId, projectId }),
-    }),
+    })
   );
 
   if (!data || error) {

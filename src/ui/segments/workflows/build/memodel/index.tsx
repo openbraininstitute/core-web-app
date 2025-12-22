@@ -31,22 +31,22 @@ export function Content({ sessionId }: Props) {
     .with(
       { step: BuildStep.MModel },
       () => isNil(sessionValue) || isNil(sessionValue.mmodel),
-      () => <MModel sessionId={sessionId} />,
+      () => <MModel sessionId={sessionId} />
     )
     .with(
       { step: BuildStep.MModel, sessionValue: P.when((v) => !isNil(v.mmodel)) },
       () => !isNil(sessionValue.mmodel),
-      () => <MModelMiniDetail sessionId={sessionId} />,
+      () => <MModelMiniDetail sessionId={sessionId} />
     )
     .with(
       { step: BuildStep.EModel },
       () => isNil(sessionValue) || isNil(sessionValue.emodel),
-      () => <EModel sessionId={sessionId} />,
+      () => <EModel sessionId={sessionId} />
     )
     .with(
       { step: BuildStep.EModel },
       () => !isNil(sessionValue.emodel),
-      () => <EModelMiniDetail sessionId={sessionId} />,
+      () => <EModelMiniDetail sessionId={sessionId} />
     )
     .otherwise(() => null);
 

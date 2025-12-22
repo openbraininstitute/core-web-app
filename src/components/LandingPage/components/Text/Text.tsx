@@ -20,7 +20,7 @@ export function Text({ className, value, raw, maxLines = 0 }: TextProps) {
         className,
         styles.text,
         raw && styles.raw,
-        maxLines > 0 && styles.maxLines,
+        maxLines > 0 && styles.maxLines
       )}
       style={{
         '--custom-max-lines': maxLines,

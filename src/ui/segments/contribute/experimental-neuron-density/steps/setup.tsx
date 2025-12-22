@@ -56,7 +56,7 @@ export function Setup() {
             validator: createZodFieldValidator(
               ExperimentalNeuronDensitySchema,
               'setup.description',
-              form,
+              form
             ),
           },
         ]}
@@ -77,7 +77,7 @@ export function Setup() {
             validator: createZodFieldValidator(
               ExperimentalNeuronDensitySchema,
               'setup.brain_region_id',
-              form,
+              form
             ),
           },
         ]}

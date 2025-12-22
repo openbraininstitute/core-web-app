@@ -91,7 +91,7 @@ function isContentForSingleTutorial(data: unknown): data is ContentForSingleTuto
         steps: typeStepsOrNull,
         transcript: typePortableTextOrNull,
       },
-      'ContentForSingleTutorial',
+      'ContentForSingleTutorial'
     );
     return true;
   } catch (ex) {

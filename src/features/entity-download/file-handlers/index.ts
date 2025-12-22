@@ -18,7 +18,7 @@ import { getSingleNeuronSynaptomeSimulationFiles } from './single-neuron-synapto
 type GetEntityFilesHandler = (
   entityIds: string[],
   ctx?: WorkspaceContext,
-  abortSignal?: AbortSignal,
+  abortSignal?: AbortSignal
 ) => AsyncGenerator<FileEntry>;
 
 export const getEntityFilesHandlerMap: Partial<Record<TEntityTypeDict, GetEntityFilesHandler>> = {

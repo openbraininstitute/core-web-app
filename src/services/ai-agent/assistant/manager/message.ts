@@ -8,7 +8,7 @@ export class MessageManager {
   constructor(
     private readonly target: {
       initialMessages: Signal<Message[]>;
-    },
+    }
   ) {}
 
   /**

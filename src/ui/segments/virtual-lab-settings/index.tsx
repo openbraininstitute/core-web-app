@@ -86,7 +86,7 @@ function EditableName({
       const previousData = queryClient.getQueryData(
         keyBuilder.listAllLabs({
           includes: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS],
-        }),
+        })
       ) as VirtualLabListResponse;
       queryClient.setQueryData(
         keyBuilder.listAllLabs({
@@ -103,7 +103,7 @@ function EditableName({
             ...old.data.membership_labs,
             results:
               old.data.membership_labs?.results?.map((lab) =>
-                lab.id === virtualLabId ? { ...lab, name } : lab,
+                lab.id === virtualLabId ? { ...lab, name } : lab
               ) || [],
           };
 
@@ -115,7 +115,7 @@ function EditableName({
               membership_labs: updatedMembershipLabs,
             },
           };
-        },
+        }
       );
 
       return { previousData };
@@ -126,7 +126,7 @@ function EditableName({
           keyBuilder.listAllLabs({
             includes: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS],
           }),
-          context.previousData,
+          context.previousData
         );
         const prevData = context.previousData;
         if (prevData?.data) {
@@ -282,7 +282,7 @@ function EditableName({
                 {
                   'border-primary-4 focus:border-white': validation.isValid,
                   'border-red-400 focus:border-red-400': !validation.isValid,
-                },
+                }
               )}
               placeholder="Enter virtual lab name..."
               disabled={updateMutation.isPending}
@@ -313,7 +313,7 @@ function EditableName({
             className={cn(
               'h-8 w-8 rounded-full p-0 transition-all duration-200',
               'hover:text-secondary-3 bg-green-500/20',
-              'disabled:cursor-not-allowed disabled:opacity-50',
+              'disabled:cursor-not-allowed disabled:opacity-50'
             )}
           >
             <CheckOutlined className="text-sm" />
@@ -325,7 +325,7 @@ function EditableName({
             className={cn(
               'h-8 w-8 rounded-full p-0 transition-all duration-200',
               'hover:text-destructive bg-red-500/20',
-              'disabled:cursor-not-allowed disabled:opacity-50',
+              'disabled:cursor-not-allowed disabled:opacity-50'
             )}
           >
             <CloseOutlined className="text-sm" />
@@ -350,7 +350,7 @@ function EditableName({
             aria-controls="virtual-lab-less-more"
             className={cn(
               'text-white/90 underline decoration-white/40 underline-offset-4 transition-colors hover:text-white',
-              'text-sm',
+              'text-sm'
             )}
           >
             {isExpanded ? 'Show less' : 'Show more'}
@@ -363,7 +363,7 @@ function EditableName({
           onClick={handleStartEdit}
           className={cn(
             'h-8 w-8 rounded-full p-0 transition-all duration-200',
-            'hover:text-primary-4 hover:bg-white/10',
+            'hover:text-primary-4 hover:bg-white/10'
           )}
         >
           <EditOutlined className="text-sm" />
@@ -456,7 +456,7 @@ function Tabs({ id }: { id?: string | null }) {
           value="team"
           className={cn(
             'hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:text-primary-9 h-10 px-14! py-3 text-base text-white select-none data-[state=active]:bg-white data-[state=active]:font-bold',
-            { 'h-12': breakpoint === 'xl' },
+            { 'h-12': breakpoint === 'xl' }
           )}
         >
           Administrators
@@ -476,7 +476,7 @@ function Tabs({ id }: { id?: string | null }) {
               {
                 'h-12': breakpoint === 'xl',
                 'cursor-not-allowed opacity-50': !isAdmin,
-              },
+              }
             )}
             onMouseLeave={() => setIsPopoverOpen(false)}
           >

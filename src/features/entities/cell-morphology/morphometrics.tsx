@@ -17,7 +17,7 @@ const measurementAnnotationsAtomFamily = atomFamily((entityId: string) =>
     });
 
     return measurementAnnotationsRes.data.flatMap((annotation) => annotation.measurement_kinds);
-  }),
+  })
 );
 
 export function Morphometrics({

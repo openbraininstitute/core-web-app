@@ -56,12 +56,12 @@ export const CircuitScale = {
 } as const;
 
 export const CircuitScaleDictionary = Object.fromEntries(
-  Object.entries(CircuitScale).map(([name, value]) => [name, value.key]),
+  Object.entries(CircuitScale).map(([name, value]) => [name, value.key])
 ) as {
   [K in keyof typeof CircuitScale]: (typeof CircuitScale)[K]['key'];
 };
 export const CircuitBuildCategoryDictionary = Object.fromEntries(
-  Object.entries(CircuitBuildCategory).map(([name, value]) => [name, value.key]),
+  Object.entries(CircuitBuildCategory).map(([name, value]) => [name, value.key])
 ) as {
   [K in keyof typeof CircuitBuildCategory]: (typeof CircuitBuildCategory)[K]['key'];
 };

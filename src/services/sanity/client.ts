@@ -21,7 +21,7 @@ export function getClient(): SanityClient {
 
 export async function fetchSanity<T>(
   query: string,
-  typeGuard: (data: unknown) => data is T,
+  typeGuard: (data: unknown) => data is T
 ): Promise<T | undefined | null> {
   const data = await fetchSanityContent(query);
   if (isUndefined(data)) return undefined;
@@ -49,7 +49,7 @@ async function fetchSanityContent(query: string): Promise<unknown> {
       {
         cache: 'force-cache',
         next: { revalidate: 3600 },
-      },
+      }
     );
     return data;
   } catch (ex) {

@@ -80,7 +80,7 @@ export function Section({
   const newKeyError = allEntries.has(newKey) || !newKey || newKey === selectedEntry;
 
   const onNameChangeConfirm = (
-    e: React.MouseEvent<HTMLSpanElement, MouseEvent> | React.KeyboardEvent<HTMLInputElement>,
+    e: React.MouseEvent<HTMLSpanElement, MouseEvent> | React.KeyboardEvent<HTMLInputElement>
   ) => {
     e.stopPropagation();
     if (newKeyError) return;
@@ -187,7 +187,7 @@ export function Section({
                 key={subkey}
                 className={classNames(
                   'text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
-                  isSelected ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white' : '',
+                  isSelected ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white' : ''
                 )}
                 tabIndex={0}
                 role="button"

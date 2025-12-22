@@ -51,7 +51,7 @@ export default function TableControls<T extends EntityCoreIdentifiable>({
   const { left, right } = useScrollNav(
     typeof document !== 'undefined'
       ? (document.querySelector('.ant-table-body') as HTMLDivElement)
-      : undefined,
+      : undefined
   );
 
   if (!visible) return null;

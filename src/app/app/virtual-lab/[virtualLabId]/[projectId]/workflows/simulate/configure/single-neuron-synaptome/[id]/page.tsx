@@ -83,7 +83,7 @@ export default function Page({
               },
               {
                 'grid-cols-[2.5fr_5rem]': visualizerState === threeDVisualizerState.Collapsed,
-              },
+              }
             )}
           >
             <HydrateWrapper>

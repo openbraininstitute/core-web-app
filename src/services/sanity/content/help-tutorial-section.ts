@@ -36,7 +36,7 @@ function isContentForTutorials(data: unknown): data is ContentForTutorialItem {
           },
         ],
       },
-      'ContentForTutorial',
+      'ContentForTutorial'
     );
     return true;
   } catch (ex) {
@@ -53,7 +53,7 @@ export async function getTutorialContent(): Promise<ContentForTutorialItem> {
       {
         cache: 'force-cache',
         next: { revalidate: 3600 },
-      },
+      }
     );
     if (isContentForTutorials(data)) return data;
   } catch (err) {

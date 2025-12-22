@@ -21,7 +21,7 @@ export default async function InvitePage({
         error: null,
         accessToken: session?.accessToken,
         inviteToken: token,
-      }),
+      })
     );
   }
 
@@ -33,7 +33,7 @@ export default async function InvitePage({
         error: error.cause as ApiErrorCause,
         accessToken: session?.accessToken,
         inviteToken: token,
-      }),
+      })
     );
   }
 

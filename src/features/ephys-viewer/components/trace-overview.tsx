@@ -73,7 +73,7 @@ function TraceThumbnail({
     recordingType,
     repetition,
     sweeps,
-    trace,
+    trace
   );
   const yTitle = `${startCase(recordingType)} (${dataUnit === 'amperes' ? 'pA' : 'mV'})`;
   const { layout, config } = useOverviewPlotConfig({
@@ -197,9 +197,9 @@ function CellComponent({
     () =>
       protocols.reduce(
         (map, protocolItem) => map.set(protocolItem, trace.getRepetitions(cellId, protocolItem)),
-        new Map<string, string[]>(),
+        new Map<string, string[]>()
       ),
-    [protocols, trace, cellId],
+    [protocols, trace, cellId]
   );
 
   const content = protocols.map((protocolItem) => (
@@ -244,12 +244,12 @@ export default function TraceOverview({
 
   const filteredProtocols = useMemo(
     () => allProtocols.filter((p) => p === protocol || protocol === 'All'),
-    [allProtocols, protocol],
+    [allProtocols, protocol]
   );
 
   const selectedCellIds = useMemo(
     () => cellIds.filter((cId) => cId === cellId || cellId === 'All'),
-    [cellIds, cellId],
+    [cellIds, cellId]
   );
 
   // When there are multiple cells each having only one repetition and one sweep
@@ -328,7 +328,7 @@ function useDataWithUnit(
   recordingType: RecordingType,
   repetition: string,
   sweeps: string[],
-  trace: NWBTrace,
+  trace: NWBTrace
 ): [
   data: {
     x: any[];
@@ -350,7 +350,7 @@ function useDataWithUnit(
         protocol,
         repetition,
         sweep,
-        recordingType,
+        recordingType
       );
 
       if (idx === 0) {

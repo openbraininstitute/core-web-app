@@ -110,7 +110,7 @@ export default class Color {
    */
   public static contrast(
     background: ColorOrString | undefined,
-    foreground: ColorOrString | undefined,
+    foreground: ColorOrString | undefined
   ): number {
     const backColor = Color.fromColorOrString(background);
     const color2 = Color.fromColorOrString(foreground);
@@ -212,7 +212,7 @@ export default class Color {
   public static mix(
     colorOrString1: ColorOrString,
     colorOrString2: ColorOrString,
-    alpha = HALF,
+    alpha = HALF
   ): Color {
     const color1 = Color.fromColorOrString(colorOrString1);
     const color2 = Color.fromColorOrString(colorOrString2);
@@ -222,7 +222,7 @@ export default class Color {
       alpha * color2.R + beta * color1.R,
       alpha * color2.G + beta * color1.G,
       alpha * color2.B + beta * color1.B,
-      alpha * color2.A + beta * color1.A,
+      alpha * color2.A + beta * color1.A
     );
   }
 

@@ -6,7 +6,7 @@ export interface SetComparaisonResult<T> {
 
 export function compareSets<T>(
   setOrArrayA: Set<T> | T[],
-  setOrArrayB: Set<T> | T[],
+  setOrArrayB: Set<T> | T[]
 ): SetComparaisonResult<T> {
   const result: SetComparaisonResult<T> = {
     common: [],

@@ -63,7 +63,7 @@ export async function getGuidesContent(): Promise<GuidesContentsProps> {
       {
         cache: 'force-cache',
         next: { revalidate: 3600 },
-      },
+      }
     );
     if (isContentForGuides(data)) return data;
   } catch (err) {

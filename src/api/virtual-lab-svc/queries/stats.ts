@@ -44,7 +44,7 @@ export async function getUserStats(): Promise<VlmUserStatsResponse> {
  */
 export async function getProjectStats(
   virtualLabId: string,
-  projectId: string,
+  projectId: string
 ): Promise<VlmProjectStatsResponse> {
   const session = await getSession();
   const response = await fetch(
@@ -54,7 +54,7 @@ export async function getProjectStats(
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session?.accessToken}`,
       },
-    },
+    }
   );
 
   if (!response.ok) {
@@ -75,7 +75,7 @@ export async function getProjectStats(
  * @throws {Error} - Throws an error if the request fails
  */
 export async function getVirtualLabStats(
-  virtualLabId: string,
+  virtualLabId: string
 ): Promise<VlmVirtualLabStatsResponse> {
   const session = await getSession();
   const response = await fetch(`${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/stats`, {

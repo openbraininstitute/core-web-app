@@ -18,7 +18,7 @@ export default function useTrace({
 }: UseTraceArgs): [IonChannelRecordingParser | null, Error | null, boolean] {
   const nwbAtom = useMemo(
     () => loadable(nwbArrayBufferAtomFamily({ entity: resource, ctx })),
-    [ctx, resource],
+    [ctx, resource]
   );
   const nwb = useAtomValue(nwbAtom);
 

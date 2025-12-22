@@ -115,7 +115,7 @@ function Tabs({ defaultKey }: { defaultKey?: string }) {
             value={tab.key}
             className={cn(
               'hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:text-primary-9 h-10 px-14! py-3 text-base text-white select-none data-[state=active]:bg-white data-[state=active]:font-bold',
-              { 'h-12': breakpoint === 'xl' },
+              { 'h-12': breakpoint === 'xl' }
             )}
           >
             {tab.title}
@@ -180,7 +180,7 @@ export function AccountSettings({ onClose, data }: Props) {
       <div
         id="account-settings-content"
         className={cn(
-          'primary-scrollbar mb-1 h-full flex-1 overflow-y-auto px-6 py-4 transition-opacity duration-200 ease-in-out',
+          'primary-scrollbar mb-1 h-full flex-1 overflow-y-auto px-6 py-4 transition-opacity duration-200 ease-in-out'
         )}
       >
         <Content defaultKey={data?.section} />

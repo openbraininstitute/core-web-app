@@ -32,11 +32,11 @@ function CellDetails({ trace, cellId, defaultProtocol, defaultRepetition }: Cell
   useResizeObserver(plotContainerRef, updatePlots);
 
   const [selectedProtocol, setSelectedDataSet] = useState<string>(
-    defaultProtocol || trace.getProtocols(cellId)[0],
+    defaultProtocol || trace.getProtocols(cellId)[0]
   );
 
   const [selectedRepetition, setSelectedRepetition] = useState<string>(
-    defaultRepetition || trace.getRepetitions(cellId, selectedProtocol)[0],
+    defaultRepetition || trace.getRepetitions(cellId, selectedProtocol)[0]
   );
 
   const [selectedSweeps, setSelectedSweeps] = useState<string[]>([]);
@@ -45,14 +45,14 @@ function CellDetails({ trace, cellId, defaultProtocol, defaultRepetition }: Cell
 
   const repetitions: string[] = useMemo(
     () => trace.getRepetitions(cellId, selectedProtocol),
-    [cellId, selectedProtocol, trace],
+    [cellId, selectedProtocol, trace]
   );
 
   const { sweeps, sweepDataMap, colorMap } = useSweeps(
     trace,
     cellId,
     selectedProtocol,
-    selectedRepetition,
+    selectedRepetition
   );
 
   const dataSetOptions = trace.getProtocols(cellId).map((protocol) => {
@@ -103,7 +103,7 @@ function CellDetails({ trace, cellId, defaultProtocol, defaultRepetition }: Cell
       previewSweep: previewItem,
       plotRevision, // This is used to force a re-render of the plot
     }),
-    [selectedSweeps, previewItem, sweeps, colorMap, sweepDataMap, plotRevision],
+    [selectedSweeps, previewItem, sweeps, colorMap, sweepDataMap, plotRevision]
   );
 
   useEffect(() => updatePlots(), [updatePlots]);
@@ -171,12 +171,12 @@ function TraceDetailsView({
 }: TraceDetailsViewProps) {
   const cellIds = useMemo(() => trace.getCellIds(), [trace]);
   const [selectedCellId, setSelectedCellId] = useState<string>(
-    defaultCellId || cellIds[0] || 'All',
+    defaultCellId || cellIds[0] || 'All'
   );
 
   const selectedCellIds = useMemo(
     () => cellIds.filter((cId: string) => cId === selectedCellId || selectedCellId === 'All'),
-    [cellIds, selectedCellId],
+    [cellIds, selectedCellId]
   );
 
   return (
@@ -221,7 +221,7 @@ function useSweeps(
   trace: NWBTrace,
   cellId: string,
   selectedProtocol: string,
-  selectedRepetition: string,
+  selectedRepetition: string
 ): {
   sweeps: string[];
   sweepDataMap: Map<string, SweepData>;
@@ -233,13 +233,13 @@ function useSweeps(
 
     const colorMap = sweeps.reduce(
       (map, sweep, idx) => map.set(sweep, colors[idx].hex()),
-      new Map<string, string>(),
+      new Map<string, string>()
     );
 
     const sweepDataMap = sweeps.reduce(
       (map, sweep) =>
         map.set(sweep, trace.getSweepData(cellId, selectedProtocol, selectedRepetition, sweep)),
-      new Map<string, SweepData>(),
+      new Map<string, SweepData>()
     );
 
     return { sweeps, sweepDataMap, colorMap };

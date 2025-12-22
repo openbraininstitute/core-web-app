@@ -35,7 +35,7 @@ export function useSnapshot(): Snapshot {
     `${selectedBrainRegion.annotation_value}` ===
     BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE;
   const result = useAtomValue(
-    React.useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), []),
+    React.useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
   );
   const regionId = selectedBrainRegion?.id ?? '';
   const node = (result?.options ?? []).find((o) => o.data.id === selectedBrainRegion?.id);

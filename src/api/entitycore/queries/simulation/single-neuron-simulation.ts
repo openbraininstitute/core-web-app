@@ -104,7 +104,7 @@ export async function createSingleNeuronSimulation({
 
 export async function getSingleNeuronSimulationIOResult(
   source: ISingleNeuronSimulation,
-  context?: WorkspaceContext,
+  context?: WorkspaceContext
 ): Promise<SimulationPayload | null> {
   const configAsset = getAssetElement({
     assets: source.assets,
@@ -121,7 +121,7 @@ export async function getSingleNeuronSimulationIOResult(
         entityType: EntityTypeDict.SingleNeuronSimulation,
         id: configAsset.id,
         asRawResponse: true,
-      }),
+      })
     );
 
     const asset = await data?.json();

@@ -11,7 +11,7 @@ export const getEntityCoreContext = (
         projectId?: string;
       }
     | undefined
-    | null,
+    | null
 ) => {
   if (ctx?.virtualLabId && ctx?.projectId) {
     return {
@@ -32,7 +32,7 @@ export async function entityCoreApi(url?: string) {
 export function getAssetElement(
   config:
     | (Partial<EntityCoreBaseAsset> & { filter: (i: IAsset) => boolean })
-    | (Partial<EntityCoreBaseAsset> & { type: string; path: string }),
+    | (Partial<EntityCoreBaseAsset> & { type: string; path: string })
 ) {
   if ('filter' in config) {
     return find(config.assets, config.filter);

@@ -37,7 +37,7 @@ export const CELL_MORPHOLOGY_PROGRESS_STEPS: Array<{
 ];
 
 export function createCellMorphologyConfig(
-  steps: IContributionStep<TCellMorphologyForm>[],
+  steps: IContributionStep<TCellMorphologyForm>[]
 ): IContributionFormConfig<TCellMorphologyForm, typeof CellMorphologySchema> {
   return {
     entityType: ExtendedEntitiesTypeDict.CellMorphology,

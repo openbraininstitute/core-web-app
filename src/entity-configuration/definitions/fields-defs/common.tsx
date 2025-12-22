@@ -67,7 +67,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
             undefined,
             undefined,
             'assetLabel',
-            AssetLabel.ion_channel_model_thumbnail,
+            AssetLabel.ion_channel_model_thumbnail
           );
         }
         return renderPreview(r, { width: 184, height: 116 }, 'border border-neutral-3 h-full');
@@ -178,7 +178,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     render: (r) =>
       transformAgentToNames(
         (r as EntityCoreObjectTypes & { contributions?: IContributor[] | null }).contributions,
-        false,
+        false
       ),
     renderForDetailView: (r) => renderContributors(r, AgentType.Person),
     vocabulary: {
@@ -200,7 +200,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     render: (r) =>
       transformAgentToNames(
         (r as EntityCoreObjectTypes & { contributions?: IContributor[] | null }).contributions,
-        false,
+        false
       ),
     renderForDetailView: (r) => renderContributors(r, AgentType.Organization),
     vocabulary: {
@@ -253,7 +253,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     render: (r) => {
       if ('species' in r)
         return renderEmptyOrValue(
-          renderArray(ensureArray({ input: r.species }).map((s) => s.name)),
+          renderArray(ensureArray({ input: r.species }).map((s) => s.name))
         );
       if ('subject' in r && 'species' in r.subject)
         return renderEmptyOrValue(r.subject.species.name);

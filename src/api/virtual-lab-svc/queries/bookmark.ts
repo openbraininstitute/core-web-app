@@ -25,7 +25,7 @@ const baseUri = '/virtual-labs';
  */
 export async function bookmarkToProjectLibrary(
   { virtualLabId, projectId }: WorkspaceContext,
-  { entity_id, category }: BookmarkRequest,
+  { entity_id, category }: BookmarkRequest
 ): Promise<AddBookmarkResponse> {
   const api = await virtualLabRootApi();
   const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks`;
@@ -51,7 +51,7 @@ export async function bookmarkToProjectLibrary(
  */
 export async function getAllBookmarksByCategory(
   { virtualLabId, projectId }: WorkspaceContext,
-  { category }: { category?: TExtendedEntitiesTypeDict },
+  { category }: { category?: TExtendedEntitiesTypeDict }
 ): Promise<VlmGetProjectBookmarksResponse> {
   const api = await virtualLabRootApi();
   const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks`;
@@ -74,7 +74,7 @@ export async function getAllBookmarksByCategory(
  */
 export async function deleteBookmarksFromProjectLibrary(
   { virtualLabId, projectId }: WorkspaceContext,
-  { bookmarks }: { bookmarks: BookmarkRequest[] },
+  { bookmarks }: { bookmarks: BookmarkRequest[] }
 ): Promise<DeleteBookmarksResponse> {
   const api = await virtualLabRootApi();
   const url = `${baseUri}/${virtualLabId}/projects/${projectId}/bookmarks/delete`;

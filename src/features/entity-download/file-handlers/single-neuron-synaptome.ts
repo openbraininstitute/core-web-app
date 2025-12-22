@@ -42,7 +42,7 @@ export async function* getSingleNeuronSynaptomeFiles(entityIds: string[], ctx?: 
 
     // Synaptome config
     const synaptomeConfigAsset = singleNeuronSynaptomeModel.assets.find(
-      (asset) => asset.label === 'single_neuron_synaptome_config',
+      (asset) => asset.label === 'single_neuron_synaptome_config'
     )!;
     try {
       const path = `${dataPath}/${synaptomeConfigAsset.path}`;

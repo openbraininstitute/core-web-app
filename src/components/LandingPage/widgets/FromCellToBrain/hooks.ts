@@ -17,7 +17,7 @@ export function useSanityContentForFromCelltoBrainContent(): FromCellToBrainColu
   "cardImageWidth": cards[].image.asset->metadata.dimensions.width,
   "cardImageHeight": cards[].image.asset->metadata.dimensions.height,
 }`,
-      isContentForFromCellToBrainColumns,
+      isContentForFromCellToBrainColumns
     ) ?? [];
 
   return data.map((item) => {

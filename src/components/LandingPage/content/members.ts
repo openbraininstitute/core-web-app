@@ -40,7 +40,7 @@ export function useSanityContentForMembers() {
   "imageHeight": image.asset->metadata.dimensions.height,
 }
   `,
-      isContentForMembers,
+      isContentForMembers
     ) ?? []
   );
 }

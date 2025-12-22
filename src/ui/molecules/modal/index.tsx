@@ -276,7 +276,7 @@ export function Modal({
     if (!open || !focusTrap || !modalRef.current) return;
 
     const focusableElements = modalRef.current.querySelectorAll(
-      'a[href], button, textarea, input[type="text"], input[type="radio"], input[type="checkbox"], select, [tabindex]:not([tabindex="-1"])',
+      'a[href], button, textarea, input[type="text"], input[type="radio"], input[type="checkbox"], select, [tabindex]:not([tabindex="-1"])'
     );
     const firstFocusable = focusableElements[0] as HTMLElement;
     const lastFocusable = focusableElements[focusableElements.length - 1] as HTMLElement;
@@ -308,7 +308,7 @@ export function Modal({
         onClose();
       }
     },
-    [maskClosable, onClose],
+    [maskClosable, onClose]
   );
 
   // prevent body scroll when modal is open
@@ -341,7 +341,7 @@ export function Modal({
         className={cn(
           'fixed inset-0 bg-black/50 backdrop-blur-sm',
           modalAnimations[animation].overlay,
-          overlayClassName,
+          overlayClassName
         )}
         style={{
           zIndex,
@@ -363,7 +363,7 @@ export function Modal({
           getModalSizeClasses(size),
           getModalPositionClasses(position),
           modalAnimations[animation].modal,
-          className,
+          className
         )}
         style={{
           zIndex: zIndex + 1,
@@ -380,7 +380,7 @@ export function Modal({
             id="modal-header"
             className={cn(
               'border-neutral-2 flex items-center justify-between px-6 py-4',
-              headerClassName,
+              headerClassName
             )}
           >
             {title && (
@@ -394,7 +394,7 @@ export function Modal({
                 onClick={onClose}
                 className={cn(
                   'hover:bg-neutral-1 ml-auto rounded-md p-2 transition-colors',
-                  closeIconClassName,
+                  closeIconClassName
                 )}
                 aria-label="Close modal"
               >
@@ -416,7 +416,7 @@ export function Modal({
             id="modal-footer"
             className={cn(
               'border-neutral-2 flex items-center justify-end gap-2 border-t px-6 py-4',
-              footerClassName,
+              footerClassName
             )}
           >
             {footer}
@@ -456,7 +456,7 @@ export const useModal = () => {
 
     const closeModal = () => {
       setModals((prev) =>
-        prev.map((m) => (m.id === id ? { ...m, props: { ...m.props, open: false } } : m)),
+        prev.map((m) => (m.id === id ? { ...m, props: { ...m.props, open: false } } : m))
       );
       setTimeout(() => {
         setModals((prev) => prev.filter((m) => m.id !== id));
@@ -507,7 +507,7 @@ export const useModal = () => {
       close: closeModal,
       update: (newOptions: Partial<ModalHookOptions>) => {
         setModals((prev) =>
-          prev.map((m) => (m.id === id ? { ...m, props: { ...m.props, ...newOptions } } : m)),
+          prev.map((m) => (m.id === id ? { ...m, props: { ...m.props, ...newOptions } } : m))
         );
       },
     };

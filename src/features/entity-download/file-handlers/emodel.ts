@@ -50,7 +50,7 @@ export async function* getEmodelFiles(entityIds: string[], ctx?: WorkspaceContex
 
     // Emodel optimization output
     const emodelOptOutputAsset = emodel.assets.find(
-      (asset) => asset.label === 'emodel_optimization_output',
+      (asset) => asset.label === 'emodel_optimization_output'
     )!;
     try {
       const path = `${dataPath}/${emodelOptOutputAsset.label}/${emodelOptOutputAsset.path}`;

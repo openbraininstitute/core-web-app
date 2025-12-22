@@ -36,7 +36,7 @@ export const ELECTRICAL_CELL_RECORDING_PROGRESS_STEPS: Array<{
 ];
 
 export function createElectricalCellRecordingConfig(
-  steps: IContributionStep<TElectricalCellRecordingForm>[],
+  steps: IContributionStep<TElectricalCellRecordingForm>[]
 ): IContributionFormConfig<TElectricalCellRecordingForm, typeof ElectricalCellRecordingSchema> {
   return {
     entityType: ExtendedEntitiesTypeDict.ElectricalCellRecording,

@@ -10,7 +10,7 @@ import { serviceAiAgentSuggestionFromUserJourney } from '../api/suggestion';
 
 export function useServiceAiAgentSuggestionFromUserJourney(
   threadId: string,
-  count: number,
+  count: number
 ): [suggestions: string[], clearSuggestions: () => void] {
   const snapshot = useSnapshot();
   const virtualLabId = useParamVirtualLabId();
@@ -27,7 +27,7 @@ export function useServiceAiAgentSuggestionFromUserJourney(
             threadId,
             virtualLabId,
             projectId,
-          },
+          }
         );
         setSuggestions(data.slice(0, count));
       } catch {

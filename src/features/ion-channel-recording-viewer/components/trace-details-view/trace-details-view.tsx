@@ -19,7 +19,7 @@ export function TraceDetailsView({ trace, cls }: TraceDetailsViewProps) {
   const [protocolName, setProtocolName] = React.useState<string>(protocolsNames[0] ?? '');
   const protocol = React.useMemo(
     () => trace.protocols.find((p) => p.name === protocolName),
-    [protocolName, trace.protocols],
+    [protocolName, trace.protocols]
   );
   const repetitionsNames = React.useMemo(() => {
     if (!protocol) return [];
@@ -32,7 +32,7 @@ export function TraceDetailsView({ trace, cls }: TraceDetailsViewProps) {
   }, [repetitionsNames]);
   const repetition = React.useMemo(
     () => trace.findRepetition(protocolName, repetitionName),
-    [trace, protocolName, repetitionName],
+    [trace, protocolName, repetitionName]
   );
   const lines = useVisibleLines(repetition?.plot);
   const colorMap = useColorMap(repetition?.plot);
@@ -41,7 +41,7 @@ export function TraceDetailsView({ trace, cls }: TraceDetailsViewProps) {
     repetition,
     colorMap,
     lines.selection,
-    lines.preview,
+    lines.preview
   );
   return (
     <div className={styles.main}>

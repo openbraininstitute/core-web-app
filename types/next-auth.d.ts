@@ -20,7 +20,7 @@ declare module 'next-auth/jwt' {
   Next-auth's JWT is not typesafe since it extends Record<string, unknown>  which
   allows for any property to exist in JWT */
   function getToken<R extends boolean = false, E = any>(
-    params: GetTokenParams<R>,
+    params: GetTokenParams<R>
   ): Promise<R extends true ? string : (Token & E) | null>;
 
   interface Token {

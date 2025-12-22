@@ -34,7 +34,7 @@ function CustomRenderer({ data, selected, onSelect }: ICustomRendererProps) {
         className={cn(
           'text-primary-9 hover:bg-background flex h-full w-full cursor-pointer',
           'items-center justify-start px-3 text-left transition-colors duration-150',
-          'p-2 text-base group-first:hover:rounded-t-md xl:p-3 xl:text-lg',
+          'p-2 text-base group-first:hover:rounded-t-md xl:p-3 xl:text-lg'
         )}
         title={data.label}
       >
@@ -46,7 +46,7 @@ function CustomRenderer({ data, selected, onSelect }: ICustomRendererProps) {
           <CheckOutlined
             className={cn(
               'ml-auto text-sm transition-opacity duration-200',
-              selected ? 'opacity-100' : 'opacity-0',
+              selected ? 'opacity-100' : 'opacity-0'
             )}
           />
         </div>
@@ -86,7 +86,7 @@ export function ETypeClassificationSelector<TSchema extends ZodObject<ZodRawShap
         customItemRender: CustomRenderer,
         onSelect: handleSelect,
       }),
-    [virtualLabId, projectId, handleSelect],
+    [virtualLabId, projectId, handleSelect]
   );
 
   return (

@@ -37,7 +37,7 @@ export const activeColumnsAtom = atomFamily(
       const { columns } = { ...ViewsDefinitionRegistry[scope.dataType] };
       return ['index', ...(columns || [])];
     }),
-  (a: DataAtomBinding, b: DataAtomBinding): boolean => a.key === b.key,
+  (a: DataAtomBinding, b: DataAtomBinding): boolean => a.key === b.key
 );
 
 export const coreActiveColumnsAtom = atomFamily(
@@ -46,7 +46,7 @@ export const coreActiveColumnsAtom = atomFamily(
       const { columns } = { ...ViewsDefinitionRegistry[dataType] };
       return ['index', ...(columns || [])];
     }),
-  (a, b) => a.key === b.key,
+  (a, b) => a.key === b.key
 );
 
 export const coreFiltersAtom = atomFamily(
@@ -57,7 +57,7 @@ export const coreFiltersAtom = atomFamily(
     childAtom.debugLabel = `filter-atom/${key}`;
     return childAtom;
   },
-  (a, b) => a.key === b.key,
+  (a, b) => a.key === b.key
 );
 
 export const coreSearchStringAtom = atomFamily((key: string) => {
@@ -80,7 +80,7 @@ export const coreSortStateAtom = atomFamily(
 
     return writableAtom;
   },
-  (a, b) => a.key === b.key,
+  (a, b) => a.key === b.key
 );
 
 export const corePageNumberAtom = atomFamily((key: string) => {
@@ -95,7 +95,7 @@ export const coreSelectedRowsAtom = atomFamily(
     childAtom.debugLabel = `selected-rows/${_key}`;
     return childAtom;
   },
-  (a, b) => a === b,
+  (a, b) => a === b
 );
 
 /**
@@ -114,12 +114,12 @@ export const DataListStateSnapshotStorageAtomFamily = atomFamily(
       dataKey,
       initialValue,
       createSuperJsonStorage<typeof initialValue>(resolvedStorage),
-      { getOnInit: true },
+      { getOnInit: true }
     );
     childAtom.debugLabel = `list-params-storage-${dataKey}`;
     return childAtom;
   },
-  (a, b) => a.dataKey === b.dataKey,
+  (a, b) => a.dataKey === b.dataKey
 );
 
 type AtomValue<T> = T extends Atom<infer V> ? V : never;
@@ -202,12 +202,12 @@ export const DataListSnapshotSyncAtomFamily = atomFamily(
               dataType,
             });
           });
-      },
+      }
     );
     childAtom.debugLabel = `data-list-store-params-sync-${dataKey}`;
     return childAtom;
   },
-  (a, b) => a.dataKey === b.dataKey,
+  (a, b) => a.dataKey === b.dataKey
 );
 
 export type ResetRegistryFn = (key: string, resetFn: () => void) => void;
@@ -238,14 +238,14 @@ export function useDataListStateSnapshotActions({
   section?: TWorkspaceSection;
 }) {
   const updateSync = useSetAtom(
-    useMemo(() => DataListSnapshotSyncAtomFamily({ dataKey, dataType }), [dataKey, dataType]),
+    useMemo(() => DataListSnapshotSyncAtomFamily({ dataKey, dataType }), [dataKey, dataType])
   );
 
   const registerReset = use(DataListStateSnapshotContext);
 
   const reset = useCallback(
     () => updateSync({ type: DataListStateSnapshotSyncAction.RESET }),
-    [updateSync],
+    [updateSync]
   );
 
   useEffect(() => {

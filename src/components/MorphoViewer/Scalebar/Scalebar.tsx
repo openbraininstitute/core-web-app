@@ -44,7 +44,7 @@ function useScalebar(painter: MorphologyCanvas): ScalebarAttributes | null {
       setScalebar(
         painter.computeScalebar({
           preferedSizeInPixels: 256,
-        }),
+        })
       );
     };
     painter.eventPixelScaleChange.addListener(update);

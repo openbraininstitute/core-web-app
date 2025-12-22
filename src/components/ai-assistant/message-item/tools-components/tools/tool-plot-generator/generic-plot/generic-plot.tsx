@@ -28,7 +28,7 @@ export default function GenericPlot<T>({
 }: GenericPlotProps<T>) {
   const props = React.useMemo(
     () => makeProps(plotType, value, convert, assert),
-    [plotType, value, convert, assert],
+    [plotType, value, convert, assert]
   );
 
   if (!props) return null;
@@ -80,7 +80,7 @@ function makeProps<T>(
   plotType: string,
   value: string,
   convert: (value: T) => { data: Data[]; layout: Partial<Layout> } | null,
-  assert: (data: unknown) => asserts data is T,
+  assert: (data: unknown) => asserts data is T
 ): any {
   try {
     const obj = JSON.parse(value);

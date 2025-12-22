@@ -40,14 +40,14 @@ export function DownloadPanel() {
         onClick={onClose}
         className={cn(
           'fixed top-0 left-0 z-80 h-screen w-screen bg-black transition-opacity duration-500',
-          circuit ? 'opacity-50' : 'pointer-events-none opacity-0',
+          circuit ? 'opacity-50' : 'pointer-events-none opacity-0'
         )}
       />
       <div
         data-testid="circuit-download-panel"
         className={cn(
           'bg-primary-9 primary-scrollbar fixed top-0 right-0 z-100 flex h-full min-h-screen w-[50svw] shrink-0 flex-col space-y-4 overflow-x-hidden overflow-y-auto',
-          circuit ? 'block' : 'hidden',
+          circuit ? 'block' : 'hidden'
         )}
       >
         <div className="bg-primary-9 sticky top-0 z-20 mb-2 flex items-center justify-between gap-4 px-8 py-6">

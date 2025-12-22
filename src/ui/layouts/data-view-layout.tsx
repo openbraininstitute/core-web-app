@@ -38,7 +38,7 @@ export async function DataViewLayout({
       type,
       id,
       ctx: { virtualLabId, projectId },
-    }),
+    })
   );
 
   if (error || !entity) notFound();
@@ -61,7 +61,7 @@ export async function DataViewLayout({
         ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
         ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
       ],
-      type,
+      type
     )
   ) {
     return (
@@ -97,7 +97,7 @@ export async function DataViewLayout({
       </div>
       {includes(
         [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.MEModelWithSynapses],
-        type,
+        type
       ) && <CircuitDownloadPanel />}
     </>
   );

@@ -12,7 +12,7 @@ import type { SanityShowcaseType } from '@/ui/segments/reports/obi-showcases/typ
 
 const getActiveArtifactsCount = (
   activeArtifactType: string | null,
-  content: SanityShowcaseType,
+  content: SanityShowcaseType
 ): number => {
   if (!activeArtifactType || !content) {
     return 0;
@@ -34,7 +34,7 @@ const getActiveArtifactsCount = (
 
 export default function ArtifactsSection({ content }: { content: SanityShowcaseType }) {
   const [activeArtifactType, setActiveArtifactType] = useState<string | null>(
-    content?.artifactType?.[0] ?? null,
+    content?.artifactType?.[0] ?? null
   );
 
   let activeTable;

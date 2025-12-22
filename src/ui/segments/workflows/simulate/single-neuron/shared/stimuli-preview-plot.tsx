@@ -16,7 +16,7 @@ const PlotRenderer = dynamic(
   () => import('@/features/entities/neuron-simulation/experiment/visualization/plot-renderer'),
   {
     ssr: false,
-  },
+  }
 );
 
 const PLOT_LAYOUT: Partial<Layout> = {

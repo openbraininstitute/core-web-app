@@ -154,7 +154,7 @@ export async function createTemplateFileEntry(entityType: TEntityTypeDict): Prom
   const templatePath = fsPath.join(
     process.cwd(),
     README_TEMPLATE_DIR,
-    `${kebabCase(entityType)}.md`,
+    `${kebabCase(entityType)}.md`
   );
   const templateContent = await fs.readFile(templatePath, 'utf-8');
 

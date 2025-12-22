@@ -33,7 +33,7 @@ export default function Results({ modelId }: Props) {
           filters: { synaptome__id: modelId },
           withFacets: false,
         }),
-        () => setLoading(false),
+        () => setLoading(false)
       );
       if (result) setSimulations(result.data);
       if (simulationError) setError(!!simulationError);

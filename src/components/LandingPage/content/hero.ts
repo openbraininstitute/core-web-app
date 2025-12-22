@@ -60,7 +60,7 @@ export function useSanityContentForHero(sectionIndex: EnumSection): ContentForHe
   "posterWidth": posterImage.asset->metadata.dimensions.width,
   "posterHeight": posterImage.asset->metadata.dimensions.height,
 }`,
-      isContentForHero,
+      isContentForHero
     ) ?? DEFAULT_CONTENT_FOR_HERO
   );
 }

@@ -45,7 +45,7 @@ export function renderLabel(
   text: string,
   type: 'main' | 'secondary' = 'main',
   extra?: ReactNode,
-  cls?: ComponentProps<'span'>['className'],
+  cls?: ComponentProps<'span'>['className']
 ): ReactNode {
   return (
     <span
@@ -53,7 +53,7 @@ export function renderLabel(
         'text-base font-light',
         type === 'main' && 'text-primary-8 !font-bold',
         type === 'secondary' && 'text-label',
-        cls,
+        cls
       )}
     >
       {text} {extra}
@@ -73,7 +73,7 @@ export function createZodFieldValidator<TSchema extends ZodTypeAny, TFormValues>
   schema: TSchema,
   fieldPath: string,
   form: FormInstance<TFormValues>,
-  extraCustomValidator?: (values: TFormValues) => void | Promise<void>,
+  extraCustomValidator?: (values: TFormValues) => void | Promise<void>
 ) {
   return async (_rule: unknown, _value: unknown): Promise<void> => {
     try {
@@ -103,7 +103,7 @@ export function createZodFieldValidator<TSchema extends ZodTypeAny, TFormValues>
 export function getValidationStatus<T>(
   validator: SafeParseReturnType<T, T>,
   fieldKey: string,
-  dirtyFields: string[],
+  dirtyFields: string[]
 ): TStepValidationStatus {
   if (validator.success) return 'valid';
   if (dirtyFields.includes(fieldKey)) return 'invalid';
@@ -163,7 +163,7 @@ export function getCurrentStepIndex(steps: Array<{ key: string }>, activeStepKey
  */
 export function getPreviousStepKey(
   steps: Array<{ key: string }>,
-  activeStepKey: string,
+  activeStepKey: string
 ): string | null {
   const currentIndex = getCurrentStepIndex(steps, activeStepKey);
   if (currentIndex > 0) {
@@ -177,7 +177,7 @@ export function getPreviousStepKey(
  */
 export function getNextStepKey(
   steps: Array<{ key: string }>,
-  activeStepKey: string,
+  activeStepKey: string
 ): string | null {
   const currentIndex = getCurrentStepIndex(steps, activeStepKey);
   if (currentIndex < steps.length - 1) {

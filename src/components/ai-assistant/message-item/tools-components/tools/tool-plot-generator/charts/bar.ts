@@ -17,7 +17,7 @@ export interface BarChartInput {
 }
 
 export function convertBarChart(
-  obj: BarChartInput,
+  obj: BarChartInput
 ): { data: Data[]; layout: Partial<Layout> } | null {
   const props: { data: Data[]; layout: Partial<Layout> } = {
     data: [

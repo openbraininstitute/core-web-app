@@ -65,7 +65,7 @@ export default function GlossaryNavigation({
                     key={displayName}
                     className={cn(
                       'flex w-full items-center justify-between text-left',
-                      isChildActive && 'font-bold',
+                      isChildActive && 'font-bold'
                     )}
                   >
                     {displayName}

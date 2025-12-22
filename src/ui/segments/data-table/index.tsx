@@ -97,10 +97,10 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           coreFiltersAtom({
             dataType,
             key: dataKey,
-          }),
+          })
         ),
-      [dataType, dataKey],
-    ),
+      [dataType, dataKey]
+    )
   );
 
   return (
@@ -110,13 +110,13 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
         data-testid="data-table-with-filters"
         className={cn(
           'flex h-full w-full min-w-0 flex-col before:shadow-lg after:shadow-md',
-          cls?.container,
+          cls?.container
         )}
       >
         <div
           className={cn(
             'mb-5 grid w-full grid-cols-[2fr_2fr] items-center justify-center gap-5 pt-2',
-            '[grid-template-areas:"search_pagination_filter"]',
+            '[grid-template-areas:"search_pagination_filter"]'
           )}
         >
           {searchEnabled && (

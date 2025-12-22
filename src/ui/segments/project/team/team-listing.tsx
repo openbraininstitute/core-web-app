@@ -72,17 +72,17 @@ export function ListingMembers({
                 ? compact([get(record, 'first_name'), get(record, 'last_name')]).join(' ') ||
                     get(record, 'username') ||
                     record.email
-                : record.email,
+                : record.email
             )}
             cls={{
               text: cn(
                 'text-white  wrap-text',
-                record.invite_accepted ? 'font-bold' : 'font-light',
+                record.invite_accepted ? 'font-bold' : 'font-light'
               ),
               pending: cn(
                 '[&_.avatar-email]:text-primary-9!',
                 '[&_.avatar-role]:text-primary-8!',
-                '[&_.avatar-icon]:text-primary-9!',
+                '[&_.avatar-icon]:text-primary-9!'
               ),
             }}
             pendingIcon={{
@@ -125,7 +125,7 @@ export function ListingMembers({
         (member) => (member.invite_accepted ? 0 : 1),
         'created_at',
       ]),
-    [users, ownerId, data?.user.id],
+    [users, ownerId, data?.user.id]
   );
 
   return (
@@ -188,7 +188,7 @@ export function ListingMembers({
               '[&_.ant-table-cell-row-hover]:bg-gray-200!',
               '[&_.ant-table-tbody>tr.ant-table-row-remove]:h-0 [&_.ant-table-tbody>tr.ant-table-row-remove]:opacity-40',
               '[&_.ant-table-body]:max-h-full [&_.ant-table-body]:overflow-auto [&_.ant-table-container]:h-full',
-              '[&_.ant-table-body]:secondary-scrollbar! [&_.ant-table-body]:pr-3',
+              '[&_.ant-table-body]:secondary-scrollbar! [&_.ant-table-body]:pr-3'
             )}
             rowClassName={() => {
               return 'hover:bg-primary-9/10 hover:text-white';

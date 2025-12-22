@@ -14,7 +14,7 @@ import type { WorkspaceContext } from '@/types/common';
 
 export async function* getElectricalCellRecordingFiles(
   entityIds: string[],
-  ctx?: WorkspaceContext,
+  ctx?: WorkspaceContext
 ) {
   const metadata = new Metadata<ElectricalCellRecordingJsonMetadata>();
 

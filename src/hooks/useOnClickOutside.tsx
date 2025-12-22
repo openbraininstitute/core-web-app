@@ -23,7 +23,7 @@ const useOnClickOutside = <E extends Event = Event>(
   ref: RefObject<HTMLElement | null>,
   onClickAway: (event: E) => void,
   events: string[] = defaultEvents,
-  ignore?: (event: any) => boolean,
+  ignore?: (event: any) => boolean
 ) => {
   const savedCallback = useRef(onClickAway);
 

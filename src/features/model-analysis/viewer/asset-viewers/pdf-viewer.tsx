@@ -58,7 +58,7 @@ export default function PDFViewer({
       <div
         className={classNames(
           'flex h-64! w-96! items-center justify-center rounded-lg',
-          'bg-white px-4 py-3 lg:w-2/3',
+          'bg-white px-4 py-3 lg:w-2/3'
         )}
         role="alert"
       >

@@ -98,7 +98,7 @@ export class IonChannelRecordingParser extends H5Parser {
 
   public findRepetition(
     protocolName: string,
-    repetitionName: string,
+    repetitionName: string
   ): IonChannelRecordingRepetition | undefined {
     const protocol = this.protocols.find((p) => p.name === protocolName);
     if (!protocol) return undefined;
@@ -152,7 +152,7 @@ export class IonChannelRecordingParser extends H5Parser {
         id: `${lineIndex}`,
         color: TgdColor.fromPaletteClosest(
           lineIndex / Math.max(1, stimuliLinesCount - 1),
-          palette,
+          palette
         ).toString(),
         x: [],
         y: [],
@@ -281,7 +281,7 @@ function countStimuliLines(stimuli: Stimulus[]) {
       if (voltageMax > voltageMin && voltageStep > 0) {
         count = Math.max(
           Math.ceil((0.5 * voltageStep + voltageMax - voltageMin) / voltageStep),
-          count,
+          count
         );
       } else {
         count = Math.max(1, count);
@@ -291,7 +291,7 @@ function countStimuliLines(stimuli: Stimulus[]) {
       if (durationMax > durationMin && durationStep > 0) {
         count = Math.max(
           Math.ceil((0.5 * durationStep + durationMax - durationMin) / durationStep),
-          count,
+          count
         );
       } else {
         count = Math.max(1, count);

@@ -49,7 +49,7 @@ export default function History({ className, onBack }: HistoryProps) {
                         <div
                           className={classNames(
                             styles.card,
-                            threadId === thread.id && styles.currentThread,
+                            threadId === thread.id && styles.currentThread
                           )}
                           key={thread.id}
                         >
@@ -95,7 +95,7 @@ export default function History({ className, onBack }: HistoryProps) {
                         </div>
                       ))}
                     </div>
-                  ),
+                  )
               )}
             </div>
           )}

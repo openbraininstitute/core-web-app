@@ -15,7 +15,7 @@ export function useFilterItems(
   setFilterValues: React.Dispatch<React.SetStateAction<CoreFilterValues>>,
   activeColumns: string[] | undefined,
   showDisplayTrigger: boolean,
-  onToggleActive: (key: string) => void,
+  onToggleActive: (key: string) => void
 ) {
   return React.useMemo(
     () =>
@@ -33,7 +33,7 @@ export function useFilterItems(
                     facets,
                     filterValues,
                     setFilterValues,
-                    item.filterData,
+                    item.filterData
                   )
                 : undefined,
             display: item?.isDisplayable && activeColumns?.includes(filter.field),
@@ -52,6 +52,6 @@ export function useFilterItems(
       showDisplayTrigger,
       onToggleActive,
       entity,
-    ],
+    ]
   );
 }

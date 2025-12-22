@@ -16,7 +16,7 @@ export function buildLink(
     remove?: string[];
     activeKey?: string;
     activeValue?: string;
-  },
+  }
 ): { href: string; isActive: boolean } {
   const { preserve = true, remove = [], activeKey, activeValue } = options ?? {};
 

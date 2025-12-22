@@ -42,7 +42,7 @@ export function SchemaGeneratedForm({
         schema,
         formDataRef.current,
         schema,
-        true,
+        true
       );
 
       // Validate the initial form data
@@ -50,7 +50,7 @@ export function SchemaGeneratedForm({
       try {
         const validationResult = validator.validateFormData(
           formDataWithDefaults,
-          schema as RJSFSchema,
+          schema as RJSFSchema
         );
 
         if (validationResult.errors && validationResult.errors.length > 0) {

@@ -66,7 +66,7 @@ export default function SimulationsTab({
     simulationIds,
   });
   const fetchRemoteSimExecStatuseMap = useSetAtom(
-    simExecRemoteStatusMapAtomFamily({ simulationIds, context }),
+    simExecRemoteStatusMapAtomFamily({ simulationIds, context })
   );
 
   const statusMap = useLastTruthyValue(simExecStatusMapAtom);
@@ -99,7 +99,7 @@ export default function SimulationsTab({
   const selectableSimulationIds = useMemo(() => {
     return simulations
       .filter((simulation) =>
-        [undefined, 'created', 'error'].includes(statusMap?.get(simulation.id)),
+        [undefined, 'created', 'error'].includes(statusMap?.get(simulation.id))
       )
       .map((s) => s.id);
   }, [simulations, statusMap]);
@@ -128,7 +128,7 @@ export default function SimulationsTab({
 
     const hasActiveSimulations = statusMap
       ? Array.from(statusMap.values()).some((status) =>
-          [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING].includes(status),
+          [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING].includes(status)
         )
       : false;
 
@@ -228,7 +228,7 @@ export default function SimulationsTab({
     () =>
       selectableSimulationIds.length > 0 &&
       selectableSimulationIds.length === selectedSimulationIds.length,
-    [selectableSimulationIds, selectedSimulationIds],
+    [selectableSimulationIds, selectedSimulationIds]
   );
 
   const launchSimBtnLabelPrefix = selectedSimulationIds.length
@@ -273,7 +273,7 @@ export default function SimulationsTab({
             className={classNames(
               'min-h-[50] w-full cursor-pointer rounded-3xl p-2 text-white',
               'bg-[linear-gradient(94.93deg,_#389E0D_18.84%,_#143805_116.7%)]',
-              'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none',
+              'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none'
             )}
             type="button"
             onClick={() => run(selectedSimulationIds)}

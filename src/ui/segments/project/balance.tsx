@@ -51,7 +51,7 @@ export function Wallet() {
   })
     .with(
       P.when((s) => s.isLoading || s.loadingRoles),
-      () => <LoadingOutlined spin />,
+      () => <LoadingOutlined spin />
     )
     .with({ isError: true, error: P.select() }, (err) => (
       <Tooltip>

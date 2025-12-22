@@ -79,7 +79,7 @@ function isVoltagePlot(entry: PlotDataEntry) {
 
 function updatePlots(
   lines: PlotInstance['lines'] | undefined,
-  line: PlotInstance['lines'][0],
+  line: PlotInstance['lines'][0]
 ): PlotInstance['lines'] {
   if (!lines) return [line];
 

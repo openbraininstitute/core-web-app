@@ -62,7 +62,7 @@ const ELECTRICAL_CELL_RECORDING_STEP_CONFIG: IContributionStep<TElectricalCellRe
 ];
 
 const electricalCellRecordingConfig = createElectricalCellRecordingConfig(
-  ELECTRICAL_CELL_RECORDING_STEP_CONFIG,
+  ELECTRICAL_CELL_RECORDING_STEP_CONFIG
 );
 
 interface IElectricalCellRecordingProps {

@@ -53,7 +53,7 @@ export async function getSetupIntent(): Promise<SetupIntentResponse> {
  * @returns payment details including receipt URL and card information
  */
 export async function createStandalonePayment(
-  payload: StandalonePaymentRequest,
+  payload: StandalonePaymentRequest
 ): Promise<StandalonePaymentResponse> {
   const session = await getSession();
   const response = await fetch(`${getPaymentsPrl()}/standalone`, {

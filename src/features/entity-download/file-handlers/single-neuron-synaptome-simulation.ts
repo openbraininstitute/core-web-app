@@ -14,7 +14,7 @@ import type { WorkspaceContext } from '@/types/common';
 
 export async function* getSingleNeuronSynaptomeSimulationFiles(
   entityIds: string[],
-  ctx?: WorkspaceContext,
+  ctx?: WorkspaceContext
 ) {
   const metadata = new Metadata<Record<string, any>>();
 
@@ -39,7 +39,7 @@ export async function* getSingleNeuronSynaptomeSimulationFiles(
     });
 
     const configAsset = singleNeuronSimulation.assets.find(
-      (asset) => asset.label === 'single_neuron_synaptome_simulation_data',
+      (asset) => asset.label === 'single_neuron_synaptome_simulation_data'
     )!;
     try {
       const path = `${dataPath}/${configAsset.path}`;

@@ -79,17 +79,17 @@ export function findNodeInTree(roots: HierarchyNode[], targetId: string): Hierar
 export function filterAndEnrichTree(
   nodes: HierarchyNode[],
   filteredIds: Set<string>,
-  fullById: Record<string, ICircuit & { sub_circuits: ICircuit; children: ICircuit }>,
+  fullById: Record<string, ICircuit & { sub_circuits: ICircuit; children: ICircuit }>
 ): HierarchyOutputNode[];
 export function filterAndEnrichTree(
   nodes: HierarchyNode[],
   filteredIds: Set<string>,
-  fullById: Record<string, ICircuit>,
+  fullById: Record<string, ICircuit>
 ): HierarchyOutputNode[];
 export function filterAndEnrichTree<T extends ICircuit>(
   nodes: HierarchyNode[],
   filteredIds: Set<string>,
-  fullById: Record<string, T>,
+  fullById: Record<string, T>
 ): HierarchyOutputNode[] {
   return nodes
     .map((node) => {
@@ -126,7 +126,7 @@ export function collectIdsFromNode(root: HierarchyNode): string[] {
 export function buildFilteredHierarchyTree(
   hierarchy: HierarchyTreeResponse,
   result: EntityCoreResponse<ICircuit>,
-  filteredResult: EntityCoreResponse<ICircuit>,
+  filteredResult: EntityCoreResponse<ICircuit>
 ): HierarchyOutputNode[] {
   const fullById = keyBy(result.data, 'id') as Record<
     string,

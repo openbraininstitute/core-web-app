@@ -39,7 +39,7 @@ const RecordingType = {
 } as const;
 
 export const RecordingTypeDictionary = Object.fromEntries(
-  Object.entries(RecordingType).map(([name, value]) => [name, value.key]),
+  Object.entries(RecordingType).map(([name, value]) => [name, value.key])
 ) as {
   [K in keyof typeof RecordingType]: (typeof RecordingType)[K]['key'];
 };

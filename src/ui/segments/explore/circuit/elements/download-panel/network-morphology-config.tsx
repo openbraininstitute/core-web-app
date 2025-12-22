@@ -65,13 +65,13 @@ export default function NetworkAndMorphologyConfig({ circuit }: { circuit: ICirc
         edges: result.config?.networks.edges.length,
         containerizedMorphologies: extractWithAlternateMorphologies(
           result.config?.networks.nodes ?? [],
-          result.config?.components,
+          result.config?.components
         ),
         morphologies: Object.entries(
           extractWithAlternateMorphologies(
             result.config?.networks.nodes ?? [],
-            result.config?.components,
-          ),
+            result.config?.components
+          )
         ).filter(([, value]) => Boolean(value.alternate_morphologies)).length,
         error: result.error,
       };
@@ -108,7 +108,7 @@ export default function NetworkAndMorphologyConfig({ circuit }: { circuit: ICirc
         return (
           <Error icon={null} title="Networks" description={err} cls={{ container: 'text-white' }} />
         );
-      },
+      }
     )
     .with({ data: { directory: P.nullish, config: P.nonNullable } }, () => (
       <Error
@@ -136,7 +136,7 @@ export default function NetworkAndMorphologyConfig({ circuit }: { circuit: ICirc
         })) as unknown as Record<string, Omit<ConfigItemProps, 'className'>>;
         const containerizedMorphologies = extractWithAlternateMorphologies(
           config.networks.nodes,
-          config.components,
+          config.components
         );
 
         const items = compact(
@@ -160,7 +160,7 @@ export default function NetworkAndMorphologyConfig({ circuit }: { circuit: ICirc
               };
             }
             return null;
-          }),
+          })
         );
 
         const morphologyConfig = {
@@ -209,7 +209,7 @@ export default function NetworkAndMorphologyConfig({ circuit }: { circuit: ICirc
             />
           </>
         );
-      },
+      }
     )
     .otherwise(() => null);
 }

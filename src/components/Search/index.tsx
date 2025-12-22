@@ -96,7 +96,7 @@ export default function Search<T extends DefaultOptionType>({
                   ((option?.label as string)?.toLowerCase() ?? '').includes(input.toLowerCase()),
                 filterSort: (optionA: T, optionB: T) =>
                   ((optionA?.label as string).toLowerCase() ?? '').localeCompare(
-                    (optionB?.label as string).toLowerCase() ?? '',
+                    (optionB?.label as string).toLowerCase() ?? ''
                   ),
               })}
         />

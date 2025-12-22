@@ -34,7 +34,7 @@ export default async function RelatedArtifacts({
   if (
     includes(
       [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.MEModelWithSynapses],
-      extendedType,
+      extendedType
     )
   ) {
     return <RelatedCircuits circuit={entity as ICircuit} />;

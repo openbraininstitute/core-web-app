@@ -19,7 +19,7 @@ const optimizePlotData = (
     xstart?: number;
     xend?: number;
   },
-  desiredLength = 1000,
+  desiredLength = 1000
 ) => {
   if (!rawData) return [];
 

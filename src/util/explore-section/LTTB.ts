@@ -103,12 +103,12 @@ const createLegacyDataPointConfig = (): SmoothingFunctionConfig<DataPoint> => ({
 function calculateTriangleArea(
   pointA: NormalizedDataPoint,
   pointB: NormalizedDataPoint,
-  pointC: NormalizedDataPoint,
+  pointC: NormalizedDataPoint
 ): number {
   return (
     Math.abs(
       (pointA[0] - pointC[0]) * (pointB[1] - pointA[1]) -
-        (pointA[0] - pointB[0]) * (pointC[1] - pointA[1]),
+        (pointA[0] - pointB[0]) * (pointC[1] - pointA[1])
     ) / 2
   );
 }
@@ -132,7 +132,7 @@ function LTTBIndexesForBuckets(buckets: NormalizedDataPoint[][]): number[] {
       const area = calculateTriangleArea(
         lastSelectedDataPoint,
         dataPoint,
-        averageDataPointFromNextBucket,
+        averageDataPointFromNextBucket
       );
 
       if (area > maxArea) {
@@ -153,7 +153,7 @@ function LTTBIndexesForBuckets(buckets: NormalizedDataPoint[][]): number[] {
 }
 
 const getPointValueExtractor = <P>(
-  accessor: NumericPropertyAccessor<P> | PointValueExtractor<P>,
+  accessor: NumericPropertyAccessor<P> | PointValueExtractor<P>
 ): PointValueExtractor<P> => {
   if (typeof accessor === 'function') return accessor;
 
@@ -170,7 +170,7 @@ const mapToArray = <P, R>(input: Indexable<P>, callback: (element: P, index: num
 
 const createNormalize = <P>(
   x: NumericPropertyAccessor<P> | PointValueExtractor<P>,
-  y: NumericPropertyAccessor<P> | PointValueExtractor<P>,
+  y: NumericPropertyAccessor<P> | PointValueExtractor<P>
 ) => {
   const getX = getPointValueExtractor(x);
   const getY = getPointValueExtractor(y);
@@ -181,7 +181,7 @@ const createNormalize = <P>(
 
 // Largest triangle three buckets data downsampling algorithm implementation
 const createLTTB = <P>(
-  config: DownsamplingFunctionConfig<P>,
+  config: DownsamplingFunctionConfig<P>
 ): DownsamplingFunction<P, [number]> => {
   const normalize = createNormalize(config.x, config.y);
 

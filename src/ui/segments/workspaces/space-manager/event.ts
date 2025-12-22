@@ -21,25 +21,25 @@ export type TTriggerWorkspaceConfigurationClickEvent<T> = {
 const TriggerWorkspaceConfigurationClickEvent = 'TriggerWorkspaceConfigurationClickEvent' as const;
 
 export const makeTriggerWorkspaceConfigurationClickEvent = <T>(
-  detail: TTriggerWorkspaceConfigurationClickEvent<T>,
+  detail: TTriggerWorkspaceConfigurationClickEvent<T>
 ) => {
   const event = new CustomEvent<TTriggerWorkspaceConfigurationClickEvent<T>>(
     TriggerWorkspaceConfigurationClickEvent,
     {
       detail,
-    },
+    }
   );
   if (isBrowser()) window.dispatchEvent(event);
 };
 
 const isWorkspaceConfigurationClickEvent = <T>(
-  event: Event,
+  event: Event
 ): event is CustomEvent<TTriggerWorkspaceConfigurationClickEvent<T>> => {
   return event instanceof CustomEvent && event.type === TriggerWorkspaceConfigurationClickEvent;
 };
 
 export const workspaceConfigurationClickEventListener = <T>(
-  cb: (event: CustomEvent<TTriggerWorkspaceConfigurationClickEvent<T>>) => void,
+  cb: (event: CustomEvent<TTriggerWorkspaceConfigurationClickEvent<T>>) => void
 ) => {
   const abortController = new AbortController();
   const { signal } = abortController;
@@ -61,7 +61,7 @@ export const workspaceConfigurationClickEventListener = <T>(
 };
 
 export const useWorkspaceConfigurationClickEvent = <T>(
-  cb: (event: CustomEvent<TTriggerWorkspaceConfigurationClickEvent<T>>) => void,
+  cb: (event: CustomEvent<TTriggerWorkspaceConfigurationClickEvent<T>>) => void
 ) => {
   useEffect(() => {
     const unsubscribe = workspaceConfigurationClickEventListener(cb);

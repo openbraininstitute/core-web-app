@@ -55,7 +55,7 @@ export function LeftMenu({ className }: Props) {
       baseUrl: link.url,
       url: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks/${link.url}`,
     })),
-    (link) => !link.requireRole || (link.requireRole && isProjectAdmin),
+    (link) => !link.requireRole || (link.requireRole && isProjectAdmin)
   );
 
   return (
@@ -70,7 +70,7 @@ export function LeftMenu({ className }: Props) {
             variant="outline"
             className={cn(
               'h-auto w-full justify-start font-bold shadow-sm',
-              activeSection === baseUrl && 'bg-primary-9 text-white',
+              activeSection === baseUrl && 'bg-primary-9 text-white'
             )}
             size={breakpoint === 'xl' ? 'lg' : 'md'}
             aria-label={activeSection === baseUrl ? 'active' : ''}

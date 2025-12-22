@@ -24,7 +24,7 @@ export class HistoryManager {
     private readonly target: {
       history: Signal<AiAssistantHistory>;
       error: Signal<AssistantError>;
-    },
+    }
   ) {}
 
   get hasMore() {
@@ -113,7 +113,7 @@ export class HistoryManager {
   }
 
   private async getLastThread(
-    context: AssistantContext,
+    context: AssistantContext
   ): Promise<AiAssistantHistoryItem | undefined> {
     try {
       const { accessToken, projectId, virtualLabId } = context;

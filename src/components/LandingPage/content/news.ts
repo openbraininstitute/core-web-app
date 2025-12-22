@@ -83,7 +83,7 @@ export function useSanityContentForNewsItem(slug: string): ContentForNewsItem | 
         thumbnailIntroduction,
         isExternalLink
       }`,
-      isContentForNewsItem,
+      isContentForNewsItem
     ) ?? null
   );
 }
@@ -111,8 +111,8 @@ export function useSanityContentForNewsList(length = 0, start = 0): ContentForNe
         "isExternalLink": isExternalLink
 
 }`,
-      isContentForNewsList,
-    ) ?? [],
+      isContentForNewsList
+    ) ?? []
   );
 }
 

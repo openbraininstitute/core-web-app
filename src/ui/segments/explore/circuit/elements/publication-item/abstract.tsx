@@ -30,7 +30,7 @@ export function Abstract({ abstract, className }: Props) {
         ref={visibleRef}
         className={classNames(
           'text-justify leading-relaxed transition-all duration-300',
-          !isExpanded && 'line-clamp-2',
+          !isExpanded && 'line-clamp-2'
         )}
       >
         {abstract}

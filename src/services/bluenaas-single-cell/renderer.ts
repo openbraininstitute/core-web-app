@@ -520,7 +520,7 @@ export class NeuronViewerRenderer {
 
   private removeSecMarker(config: SecMarkerConfig) {
     const secMarkerObj = this.secMarkerObj.children.find((obj) =>
-      isEqual(obj.userData.config, config),
+      isEqual(obj.userData.config, config)
     );
 
     if (!secMarkerObj) {
@@ -542,7 +542,7 @@ export class NeuronViewerRenderer {
 
   ensureSecMarkers = (configs: SecMarkerConfig[]) => {
     const existingMarkerConfigs = this.secMarkerObj.children.map<SecMarkerConfig>(
-      (obj) => obj.userData.config,
+      (obj) => obj.userData.config
     );
 
     const toCreate = differenceWith(configs, existingMarkerConfigs, isEqual);

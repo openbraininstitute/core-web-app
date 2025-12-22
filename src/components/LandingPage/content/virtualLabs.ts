@@ -27,7 +27,7 @@ export function useSanityContentForVirtualLabsBlocks(): ContentForVirtualLabsBlo
   description,
   "videoURL": video
 }`,
-      isContentForVirtualLabsBlocks,
+      isContentForVirtualLabsBlocks
     ) ?? []
   );
 }

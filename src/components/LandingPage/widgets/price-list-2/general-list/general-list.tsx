@@ -42,7 +42,7 @@ export default function GeneralList({ value, plans }: GeneralListProps) {
 function getPrice(
   prices: ContentForPriceList2GeneralPriceItem[],
   currency: string,
-  planId: string,
+  planId: string
 ): React.ReactNode {
   const forCurrency = prices.find((p) => p.currency === currency);
   if (!forCurrency) return null;

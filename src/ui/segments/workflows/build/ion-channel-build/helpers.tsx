@@ -77,8 +77,8 @@ export const IonChannelRecordingAtomFamily = atomFamily((key: string) =>
     createSuperJsonStorage<IIonChannelRecording | null>(safeStorage),
     {
       getOnInit: true,
-    },
-  ),
+    }
+  )
 );
 
 export const GenerativeFromAtomFamily = atomFamily((key: string) =>
@@ -88,6 +88,6 @@ export const GenerativeFromAtomFamily = atomFamily((key: string) =>
     createSuperJsonStorage<Record<string, any>>(safeStorage),
     {
       getOnInit: true,
-    },
-  ),
+    }
+  )
 );

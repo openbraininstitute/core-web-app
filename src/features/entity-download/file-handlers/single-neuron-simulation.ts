@@ -36,7 +36,7 @@ export async function* getSingleNeuronSimulationFiles(entityIds: string[], ctx?:
     });
 
     const configAsset = singleNeuronSimulation.assets.find(
-      (asset) => asset.label === 'single_neuron_simulation_data',
+      (asset) => asset.label === 'single_neuron_simulation_data'
     )!;
     try {
       const path = `${dataPath}/${configAsset.path}`;

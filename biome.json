@@ -41,7 +41,8 @@
     "formatter": {
       "semicolons": "always",
       "bracketSameLine": false,
-      "quoteStyle": "single"
+      "quoteStyle": "single",
+      "trailingCommas": "es5"
     }
   },
   "css": {

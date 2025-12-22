@@ -58,19 +58,19 @@ export function useSingleNeuronSimulationAtoms(sessionId: string) {
 
   const [overviewConfiguration, updateOverviewConfiguration] = useAtom(overviewConfigurationAtom);
   const [stimulationConfiguration, updateStimulationConfiguration] = useAtom(
-    stimulationConfigurationAtom,
+    stimulationConfigurationAtom
   );
   const [experimentalSetupConfiguration, updateExperimentalSetupConfiguration] = useAtom(
-    experimentalSetupConfigurationAtom,
+    experimentalSetupConfigurationAtom
   );
   const [recordLocationConfiguration, updateRecordLocationConfiguration] = useAtom(
-    recordLocationConfigurationAtom,
+    recordLocationConfigurationAtom
   );
   const [synaptomeConfiguration, updateSynaptomeConfiguration] = useAtom(
-    synaptomeConfigurationAtom,
+    synaptomeConfigurationAtom
   );
   const [frequencyConfiguration, updateFrequencyConfiguration] = useAtom(
-    frequencyConfigurationAtom,
+    frequencyConfigurationAtom
   );
   const [amperageConfiguration, updateAmperageConfiguration] = useAtom(amperageConfigurationAtom);
 

@@ -55,7 +55,7 @@ export function Settings({ className, values, onChange }: SettingsProps) {
       <div
         className={classNames(
           styles.reset,
-          show && areNewSettings(values) ? styles.show : styles.hide,
+          show && areNewSettings(values) ? styles.show : styles.hide
         )}
       >
         <Button onClick={handleReset} rounded>

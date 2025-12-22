@@ -40,7 +40,7 @@ export default function Tabs<T extends string>({
     <ul
       className={classNames(
         '!border-neutral-3 flex w-full items-center justify-center border',
-        cls?.container,
+        cls?.container
       )}
     >
       {tabsConfig?.map(({ key, title }) => (
@@ -55,7 +55,7 @@ export default function Tabs<T extends string>({
               ? cls.tab
               : activeTab === key
                 ? cls?.tab?.active
-                : cls?.tab?.inactive,
+                : cls?.tab?.inactive
           )}
         >
           <button
@@ -87,7 +87,7 @@ export function useTabs<T extends string>({
     tabKey,
     parseAsString
       .withOptions({ shallow, clearOnDefault })
-      .withDefault(defaultKey ?? tabsConfig?.at(0)?.key!) as Parser<T>,
+      .withDefault(defaultKey ?? tabsConfig?.at(0)?.key!) as Parser<T>
   );
 
   const onChangeTab = (key: string) => () => setActiveTab(key as T);

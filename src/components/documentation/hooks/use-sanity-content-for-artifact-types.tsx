@@ -25,7 +25,7 @@ function isContentForGlossary(data: unknown): data is ContentForGlossaryItem[] {
           Status: typeStringOrNull,
         },
       ],
-      'ContentForGlossary',
+      'ContentForGlossary'
     );
     return true;
   } catch (ex) {

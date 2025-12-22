@@ -107,7 +107,7 @@ function DataPreloader({ file, context, onLoaded }: FilePreloaderProps) {
       entityType: file.entity.type,
       assetPath: file.assetPath,
       context,
-    }),
+    })
   );
 
   useEffect(() => {
@@ -130,7 +130,7 @@ function JsonFileViewer({ file, context }: JsonFileViewerProps) {
       entityType: file.entity.type,
       assetPath: file.assetPath,
       context,
-    }),
+    })
   );
 
   return <pre>{JSON.stringify(parsedJson, null, 2)}</pre>;

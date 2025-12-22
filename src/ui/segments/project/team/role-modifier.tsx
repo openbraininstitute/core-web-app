@@ -227,7 +227,7 @@ export function RoleModifier({
                 '[&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!bg-transparent',
                 '[&_.ant-select-selector]:!border-primary-7 [&_.ant-select-selector]:!border',
                 '[&_.ant-select-selection-item]:!text-primary-8 [&_.ant-select-selection-item]:!font-bold',
-                '[&_.ant-select-arrow]:!text-primary-8 min-w-[140px] [&_.ant-select-selection-item]:!text-left',
+                '[&_.ant-select-arrow]:!text-primary-8 min-w-[140px] [&_.ant-select-selection-item]:!text-left'
               )}
               onChange={(value) => {
                 updateRole(value);
@@ -254,7 +254,7 @@ export function RoleModifier({
                   '[&_.ant-popover-inner]:rounded-none! [&_.ant-popconfirm-description]:text-white!',
                   '[&_.ant-popconfirm-title]:text-white!',
                   '[&_.ant-popconfirm-buttons>button]:rounded-none! [&_.ant-popconfirm-buttons>button]:px-5!',
-                  '[&_.ant-popover-arrow]:after:bg-primary-9!',
+                  '[&_.ant-popover-arrow]:after:bg-primary-9!'
                 ),
               }}
             >

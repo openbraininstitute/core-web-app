@@ -11,14 +11,14 @@ export function useToggleColumns<T>(columns: Column<T>[]) {
     (key: keyof T) => {
       setColumnHidden({ ...columnHidden, [key]: !columnHidden[key] });
     },
-    [columnHidden],
+    [columnHidden]
   );
 
   const isColumnHidden = useCallback(
     (key: keyof T) => {
       return columnHidden[key];
     },
-    [columnHidden],
+    [columnHidden]
   );
 
   return {
@@ -50,14 +50,14 @@ export function useFilters<T>(data: T[]) {
       }
       return true;
     },
-    [filters],
+    [filters]
   );
 
   // eslint-disable-next-line
   const onFilterChange = useCallback(function onFilterChange<K extends keyof T>(
     dataIndex: K,
     value: T[K] | null,
-    filterFun: (value: T[K]) => boolean,
+    filterFun: (value: T[K]) => boolean
   ) {
     setFilters((f) => {
       return {
@@ -79,7 +79,7 @@ export function useFilters<T>(data: T[]) {
         return colValue.toLocaleLowerCase().includes(value.toLocaleLowerCase());
       });
     },
-    [onFilterChange],
+    [onFilterChange]
   );
 
   const onDateChange = useCallback(
@@ -103,7 +103,7 @@ export function useFilters<T>(data: T[]) {
         return true;
       });
     },
-    [onFilterChange],
+    [onFilterChange]
   );
 
   const onFilterReset = useCallback(() => {
@@ -113,7 +113,7 @@ export function useFilters<T>(data: T[]) {
   const filterValue = useCallback(
     // eslint-disable-next-line
     <K extends keyof T>(dataIndex: K) => filters[dataIndex]?.value ?? null,
-    [filters],
+    [filters]
   );
 
   return {

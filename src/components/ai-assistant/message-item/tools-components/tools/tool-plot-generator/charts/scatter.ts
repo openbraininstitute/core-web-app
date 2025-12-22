@@ -11,7 +11,7 @@ export interface ScatterChartInput {
 }
 
 export function convertScatterChart(
-  obj: ScatterChartInput,
+  obj: ScatterChartInput
 ): { data: Data[]; layout: Partial<Layout> } | null {
   const props: { data: Data[]; layout: Partial<Layout> } = {
     data: [

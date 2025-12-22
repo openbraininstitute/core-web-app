@@ -43,7 +43,7 @@ export async function startNotebook(
   id: string,
   filename: string,
   vlabId: string,
-  projectId: string,
+  projectId: string
 ): Promise<NotebookStartResponse> {
   const session = await getSession();
 
@@ -110,7 +110,7 @@ export async function startNotebook(
 
 export async function startEmptyNotebook(
   vlabId: string,
-  projectId: string,
+  projectId: string
 ): Promise<NotebookStartResponse> {
   const session = await getSession();
 

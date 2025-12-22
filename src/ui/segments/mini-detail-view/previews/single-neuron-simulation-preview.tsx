@@ -34,7 +34,7 @@ export function SingleNeuronSimulationPreview({
         className="h-full! w-full! rounded-md object-contain"
       />
     ),
-    'simulation',
+    'simulation'
   );
   const stimulus = renderPreview(
     record,
@@ -51,7 +51,7 @@ export function SingleNeuronSimulationPreview({
         className="h-full! w-full! rounded-md object-contain"
       />
     ),
-    'stimulus',
+    'stimulus'
   );
 
   return (

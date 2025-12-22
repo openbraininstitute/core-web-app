@@ -9,7 +9,7 @@ import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
 export default function columnKeyToFilter(
   key: EntityCoreFields,
-  dataType: TExtendedEntitiesTypeDict,
+  dataType: TExtendedEntitiesTypeDict
 ): TCoreFilter {
   const fieldConfig = getFieldDefinition(key);
   if (!fieldConfig) {

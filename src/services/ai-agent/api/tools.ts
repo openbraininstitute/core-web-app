@@ -10,7 +10,7 @@ export const serviceAiAgentListTools = asyncCreateSquash(
       typeGuard: isAiAgentListToolsResponse,
     });
     return data;
-  },
+  }
 );
 
 type AiAgentListToolsResponse = Array<{ name: string; name_frontend: string }>;
@@ -28,7 +28,7 @@ export const serviceAiAgentGetTool = asyncCreateSquash(
       typeGuard: isAiAgentGetToolResponse,
     });
     return data;
-  },
+  }
 );
 
 export type AiAgentGetToolResponse = {

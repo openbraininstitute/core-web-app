@@ -47,7 +47,7 @@ export function useBuildSingleNeuronSynaptomeSessionState(props: Props) {
       initializeWithValue: true,
       serializer: (value) => superjson.stringify(value),
       deserializer: (value) => superjson.parse(value),
-    },
+    }
   );
 
   return {
@@ -62,7 +62,7 @@ export const label = (text: string, type: 'main' | 'secondary' = 'main', extra?:
     className={cn(
       'text-base font-light uppercase',
       type === 'main' && 'text-primary-8 !font-bold',
-      type === 'secondary' && 'text-label',
+      type === 'secondary' && 'text-label'
     )}
   >
     {text} {extra}

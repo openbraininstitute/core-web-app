@@ -23,7 +23,7 @@ export class AIAssistantTool {
     /**
      * A human friendly description to display in the UI
      */
-    public readonly description: string,
+    public readonly description: string
   ) {
     this.icon = getIcon(id);
   }

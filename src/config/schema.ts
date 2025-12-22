@@ -123,7 +123,7 @@ const platformApiUrlFields = {
 } as const satisfies Partial<Record<keyof typeof configFields, string>>;
 
 const baseServerSchema = z.object(
-  Object.fromEntries(Object.entries(configFields).map(([key, { schema }]) => [key, schema])),
+  Object.fromEntries(Object.entries(configFields).map(([key, { schema }]) => [key, schema]))
 ) as z.ZodObject<{
   [K in keyof typeof configFields]: (typeof configFields)[K]['schema'];
 }>;
@@ -147,7 +147,7 @@ const applyApiUrlTransforms = <T extends z.ZodObject<any>>(schema: T) =>
         Object.entries(platformApiUrlFields).map(([field, path]) => [
           field,
           data[field] ?? `${data.API_ORIGIN}${DEFAULT_API_BASE_PATH}${path}`,
-        ]),
+        ])
       ),
     })) as any as z.ZodEffects<
     T,
@@ -160,8 +160,8 @@ export const baseClientSchema = z.object(
   Object.fromEntries(
     Object.entries(configFields)
       .filter(([, { public: isPublic }]) => isPublic)
-      .map(([key, { schema }]) => [key, schema]),
-  ),
+      .map(([key, { schema }]) => [key, schema])
+  )
 ) as z.ZodObject<{
   [K in keyof typeof configFields as (typeof configFields)[K]['public'] extends true
     ? K

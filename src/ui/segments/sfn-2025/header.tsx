@@ -27,7 +27,7 @@ export default function HeaderSFN2025() {
         <video
           className={cn(
             'h-full w-full scale-110 object-cover',
-            videoReady ? 'opacity-100' : 'opacity-0',
+            videoReady ? 'opacity-100' : 'opacity-0'
           )}
           loop
           muted

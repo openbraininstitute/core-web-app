@@ -60,7 +60,7 @@ const CREDIT_TYPE: Record<string, React.ReactNode> = {
 
 function getPrice(
   plans: ContentForPriceList2LabBlocSectionPlanItem[],
-  planId: string,
+  planId: string
 ): React.ReactNode {
   const plan = plans.find((p) => p.id === planId);
   if (!plan) return null;

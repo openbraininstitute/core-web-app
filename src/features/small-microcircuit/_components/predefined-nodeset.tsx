@@ -73,7 +73,7 @@ async function fetchNodesets({
         'virtual-lab-id': virtualLabId,
         'project-id': projectId,
       },
-    },
+    }
   );
 
   if (!res.ok) {

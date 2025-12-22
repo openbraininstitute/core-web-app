@@ -7,7 +7,7 @@ export class ThreadManager {
   constructor(
     readonly _target: {
       threadId: Signal<string | undefined>;
-    },
+    }
   ) {}
 
   /**

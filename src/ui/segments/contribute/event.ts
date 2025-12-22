@@ -19,13 +19,13 @@ export const makeSelectContributionEntityClickEvent = (detail: TSelectedContribu
 };
 
 const isContributionClickEvent = (
-  event: Event,
+  event: Event
 ): event is CustomEvent<TSelectedContributionType> => {
   return event instanceof CustomEvent && event.type === SelectContributionEntityClickEvent;
 };
 
 export const ContributionClickEventListener = (
-  cb: (event: CustomEvent<TSelectedContributionType>) => void,
+  cb: (event: CustomEvent<TSelectedContributionType>) => void
 ) => {
   const abortController = new AbortController();
   const { signal } = abortController;
@@ -47,7 +47,7 @@ export const ContributionClickEventListener = (
 };
 
 export const useContributionEntityClickEvent = (
-  cb: (event: CustomEvent<TSelectedContributionType>) => void,
+  cb: (event: CustomEvent<TSelectedContributionType>) => void
 ) => {
   useEffect(() => {
     const unsubscribe = ContributionClickEventListener(cb);

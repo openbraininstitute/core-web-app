@@ -49,6 +49,6 @@ export async function runSimulation({
       },
       signal,
     },
-    { asRawResponse: true },
+    { asRawResponse: true }
   );
 }

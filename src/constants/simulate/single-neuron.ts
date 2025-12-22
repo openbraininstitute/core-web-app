@@ -161,7 +161,7 @@ export const SYNAPSE_CODE_TO_TYPE: Record<number, SynapseType> = {
 };
 
 export const getDefaultSynapseConfig = (
-  synapsePlacementConfig?: TSingleNeuronSynaptomeConfiguration[],
+  synapsePlacementConfig?: TSingleNeuronSynaptomeConfiguration[]
 ): SynapseConfig | null => {
   if (synapsePlacementConfig) {
     return {

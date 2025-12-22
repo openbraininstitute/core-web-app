@@ -27,7 +27,7 @@ export function IonChannelModelBuilding({ sessionId }: { sessionId: string }) {
   });
 
   const [ionState, updateIoChannelState] = useAtom(
-    useMemo(() => IonChannelModelingSharedStateFamily(sessionId!), [sessionId]),
+    useMemo(() => IonChannelModelingSharedStateFamily(sessionId!), [sessionId])
   );
 
   const content = match({ isLoading, RootSchema, panel: ionState.panel })
@@ -50,7 +50,7 @@ export function IonChannelModelBuilding({ sessionId }: { sessionId: string }) {
       },
       () => {
         return <Configuration sessionId={sessionId} />;
-      },
+      }
     )
     .with({ isLoading: false, panel: GenerationWorkflowFormPanelKeys.output }, () => {
       return <Output sessionId={sessionId} />;

@@ -66,7 +66,7 @@ export function PromotionCode({
     <div
       className={cn(
         'rounded-2xl bg-gradient-to-br from-emerald-500/15',
-        'to-emerald-500/5 p-6 backdrop-blur-lg select-none md:p-8',
+        'to-emerald-500/5 p-6 backdrop-blur-lg select-none md:p-8'
       )}
     >
       <div className="mb-6 flex items-center gap-3">
@@ -114,7 +114,7 @@ export function PromotionCode({
               className={cn(
                 'h-16 w-full rounded-xl border-white/20 bg-[#052f66] text-white placeholder:text-white/50',
                 '[appearance:textfield] border px-4 py-1 pr-28 text-xl! font-bold placeholder:text-sm',
-                '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
+                '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
               )}
             />
           </Form.Item>

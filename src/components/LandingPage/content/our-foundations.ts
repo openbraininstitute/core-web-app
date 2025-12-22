@@ -27,7 +27,7 @@ export function useSanityContentForOurFoundationsText() {
   description,
   "videoURL": video
 }`,
-      isContentForOurFoundationsText,
+      isContentForOurFoundationsText
     ) ?? {
       title: '',
       subtitle: '',
@@ -64,7 +64,7 @@ export function useSanityContentForOurFoundationsLinks() {
   url
 }
 `,
-      isContentForOurFoundationsLinks,
+      isContentForOurFoundationsLinks
     ) ?? []
   );
 }

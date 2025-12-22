@@ -61,7 +61,7 @@ export function NeuronVisualizer({
           { 'text-primary-9 w-full': isExpanded },
           {
             'rounded-full border-black bg-black text-white shadow-md': isCollapsed,
-          },
+          }
         )}
         animate={{
           width: targetWidth,
@@ -109,7 +109,7 @@ export function NeuronVisualizer({
                   type="button"
                   className={cn(
                     'inline-flex size-10 items-center justify-center rounded bg-[#3A3A3A] px-3 py-3',
-                    styles.hideInFullscreen,
+                    styles.hideInFullscreen
                   )}
                   aria-label="Collapse 3D visualizer"
                   onClick={() => updateVisualizerState(threeDVisualizerState.Collapsed)}

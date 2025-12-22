@@ -15,7 +15,7 @@ type UseTraceArgs = {
 export default function useTrace({ resource, ctx }: UseTraceArgs): [NWBTrace | null, Error | null] {
   const nwbAtom = useMemo(
     () => loadable(nwbArrayBufferAtomFamily({ entity: resource, ctx })),
-    [ctx, resource],
+    [ctx, resource]
   );
   const nwb = useAtomValue(nwbAtom);
 

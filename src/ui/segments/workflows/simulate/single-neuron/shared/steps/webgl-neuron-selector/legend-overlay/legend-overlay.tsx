@@ -44,7 +44,7 @@ function resolveLegendTargets(data: {
           origin: 'recording',
           offset,
           color,
-        }) satisfies LegendTarget,
+        }) satisfies LegendTarget
     ),
     {
       section: data.injection.inject_to,

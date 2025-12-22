@@ -20,7 +20,7 @@ export function useHardcodedSuggestions(maxNumberOfQuestions: number = 2): strin
           .replace('{rodent}', 'rodent')
           .replace('{rodents}', 'rodents')
           .replace('{rodent/human}', 'rodent')
-          .replace('{rodents/humans}', 'rodents'),
+          .replace('{rodents/humans}', 'rodents')
       );
     setSuggestions(questions);
   }, [maxNumberOfQuestions, snapshot]);

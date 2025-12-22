@@ -480,7 +480,7 @@ export const isOBIShowcaseProjectProps = (data: unknown): data is OBIShowcasePro
 
 // New validation function for OBIShowcaseType
 export const isOBIShowcaseTypeProps = (
-  data: unknown,
+  data: unknown
 ): data is import('@/types/virtual-lab/obi-showcases').OBIShowcaseType[] => {
   const result = OBIShowcaseTypeArraySchema.safeParse(data);
   return result.success;

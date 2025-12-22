@@ -54,7 +54,7 @@ export async function readNdjsonResponse<T>(response: Response, onMessage?: (dat
             controller.enqueue(buffer);
           }
         },
-      }),
+      })
     );
 
   const reader = stream.getReader();

@@ -41,10 +41,10 @@ export function Subcircuits({ data }: Props) {
             dataType: ExtendedEntitiesTypeDict.Circuit,
             dataScope: WorkspaceScope.Custom,
             key: '',
-          }),
+          })
         ),
-      [],
-    ),
+      []
+    )
   );
   const columns = cols.filter(({ key }) => (activeColumns || []).includes(key as string));
 
@@ -54,7 +54,7 @@ export function Subcircuits({ data }: Props) {
         ctx: { virtualLabId, projectId },
         dataType: ExtendedEntitiesTypeDict.Circuit,
         entityId: record.id,
-      }),
+      })
     );
   };
 

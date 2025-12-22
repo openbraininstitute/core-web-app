@@ -18,7 +18,7 @@ export async function getVirtualLabsOfUser(): Promise<
 
 export async function patchVirtualLab(
   partialVlab: Partial<VirtualLab>,
-  id: string,
+  id: string
 ): Promise<
   VlmResponse<{
     virtual_lab: VirtualLab;
@@ -44,7 +44,7 @@ export async function getVirtualLabAccountBalance({
   searchParams.set('include_projects', includeProjects.toString());
 
   const url = new URL(
-    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/accounting/balance`,
+    `${config.VIRTUAL_LAB_API_URL}/virtual-labs/${virtualLabId}/accounting/balance`
   );
   url.search = searchParams.toString();
 

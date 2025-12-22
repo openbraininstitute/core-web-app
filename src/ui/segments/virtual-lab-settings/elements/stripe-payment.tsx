@@ -36,7 +36,7 @@ export const PaymentMode = {
 } as const;
 
 export const PaymentModeDictionary = Object.fromEntries(
-  Object.entries(PaymentMode).map(([name, value]) => [name, value.key]),
+  Object.entries(PaymentMode).map(([name, value]) => [name, value.key])
 ) as {
   [K in keyof typeof PaymentMode]: (typeof PaymentMode)[K]['key'];
 };
@@ -117,7 +117,7 @@ function AmountForm({
             placeholder="0"
             className={cn(
               'h-16 w-full rounded-xl border-white/20 bg-[#052f66] pr-28 text-xl! font-bold text-white placeholder:text-white/50',
-              '[appearance:textfield] border px-4 py-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
+              '[appearance:textfield] border px-4 py-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
             )}
             disabled={formLoading}
           />
@@ -147,7 +147,7 @@ function AmountForm({
               disabled={!credits || credits <= 0}
               className={cn(
                 'h-12 flex-1 bg-white text-base font-semibold',
-                'text-blue-900 hover:bg-white/90 disabled:opacity-50',
+                'text-blue-900 hover:bg-white/90 disabled:opacity-50'
               )}
             >
               Continue to Payment
@@ -301,7 +301,7 @@ function PaymentForm({
               'hover:bg-primary-8/40',
               'hover:shadow-[1px_2px_4px_0px_#00000099]',
               'shadow-[8px_12px_24px_0px_#00000099]',
-              'shadow-[-8px_-8px_42px_0px_#FFFFFF29]',
+              'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
             )}
             disabled={disableForm}
             onClick={onSubmit}

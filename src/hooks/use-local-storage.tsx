@@ -29,7 +29,7 @@ const useLocalStorageSubscribe = (callback: (event: StorageEvent) => void): (() 
 
 export function useLocalStorage<T>(
   key: string,
-  initialValue: T,
+  initialValue: T
 ): [T, (value: T | ((val: T) => T)) => void] {
   const getSnapshot = () => getLocalStorageItem(key);
 
@@ -69,7 +69,7 @@ export function useLocalStorage<T>(
         }
       } catch (_e) {}
     },
-    [key, store, initialValue],
+    [key, store, initialValue]
   );
 
   useEffect(() => {

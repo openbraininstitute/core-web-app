@@ -129,7 +129,7 @@ export function Setup() {
           className: '[&_svg]:text-primary-8!',
           rootClassName: cn(
             '[&_.ant-tooltip-inner]:bg-white [&_.ant-tooltip-inner]:text-primary-8 ',
-            '[&_.ant-tooltip-arrow]:before:bg-white',
+            '[&_.ant-tooltip-arrow]:before:bg-white'
           ),
           title: (
             <div className="flex items-center gap-1">

@@ -50,7 +50,7 @@ export async function loadExpandedSingleNeuronSynaptome({
   id: string;
 }) {
   const { data: source, error } = await tryCatch(
-    getSingleNeuronSynaptome({ id, context: { virtualLabId, projectId } }),
+    getSingleNeuronSynaptome({ id, context: { virtualLabId, projectId } })
   );
 
   if (error) {
@@ -67,8 +67,8 @@ export async function loadExpandedSingleNeuronSynaptome({
         {
           virtualLabId,
           projectId,
-        },
-      ),
+        }
+      )
     ));
   }
 
@@ -147,7 +147,7 @@ export default async function Configuration({
     try {
       config = await singleNeuronSimulationApiQueryExpand.config(
         entity as ISingleNeuronSimulation,
-        ctx,
+        ctx
       );
     } catch {
       notFound();
@@ -168,7 +168,7 @@ export default async function Configuration({
     try {
       config = await singleNeuronSynaptomeSimulationApiQueryExpand.config(
         entity as ISingleNeuronSynaptomeSimulation,
-        ctx,
+        ctx
       );
     } catch {
       notFound();

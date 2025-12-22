@@ -123,7 +123,7 @@ export default abstract class NWBTrace {
     protocol: string,
     repetition: string,
     sweep: string,
-    recordingType: RecordingType,
+    recordingType: RecordingType
   ): RecordingData;
 
   public getGroup(key: string): Group {
@@ -146,7 +146,7 @@ export default abstract class NWBTrace {
     cellId: string,
     protocol: string,
     repetition: string,
-    sweep: string,
+    sweep: string
   ): SweepData {
     return this.recordingTypes.reduce(
       (acc, recordingType) => ({
@@ -156,10 +156,10 @@ export default abstract class NWBTrace {
           protocol,
           repetition,
           sweep,
-          recordingType,
+          recordingType
         ),
       }),
-      {},
+      {}
     );
   }
 
@@ -257,7 +257,7 @@ class NWBLNMCTrace extends NWBTrace {
     protocol: string,
     repetition: string,
     sweep: string,
-    recordingType: RecordingType,
+    recordingType: RecordingType
   ): RecordingData {
     const sweepGroupKey = `${NWBKey.DATA_ORGANIZATION}/${cellId}/${protocol}/${repetition}/${sweep}`;
     const sweepGroup = this.getGroup(sweepGroupKey);
@@ -372,7 +372,7 @@ class NWBGenericTrace extends NWBTrace {
     _protocol: string,
     _repetition: string,
     sweep: string,
-    recordingType: RecordingType,
+    recordingType: RecordingType
   ): RecordingData {
     const recId = this.getRecId(sweep, recordingType);
 
@@ -485,7 +485,7 @@ class NWBCircuitSimulationTrace extends NWBTrace {
     _protocol: string,
     _repetition: string,
     _sweep: string,
-    recordingType: RecordingType,
+    recordingType: RecordingType
   ): RecordingData {
     const datasetKey = `${NWBKey.ACQUISITION}/${cellId}/${NWBKey.DATA}`;
 
@@ -529,7 +529,7 @@ function tryGetAttribute(dataset: Dataset, name: string) {
         attributesNames.length === 0
           ? 'This dataset has no attribute.'
           : `Available attributes are: ${attributesNames.join(', ')}.`
-      }`,
+      }`
     );
   }
 }

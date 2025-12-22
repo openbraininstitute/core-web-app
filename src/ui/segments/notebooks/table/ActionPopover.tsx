@@ -35,7 +35,7 @@ export default function ActionPopover({ notebook }: ActionPopoverProps) {
         notebook.id,
         asset.path,
         virtualLabId,
-        projectId,
+        projectId
       );
       notification.success({
         message: `Notebook starting`,

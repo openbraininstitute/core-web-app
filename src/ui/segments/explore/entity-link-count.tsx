@@ -54,7 +54,7 @@ export function EntityLinkCount() {
   const { selectedBrainRegion } = useGetSelectedBrainRegion();
   const scope = (useSearchParams().get('scope') ?? WorkspaceScope.Public) as TWorkspaceScope;
   const brainRegionHierarchy = useAtomValue(
-    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), []),
+    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
   );
   const loadableValue = useLoadableValue(brainRegionBasicCellGroupsRegionsHierarchyAtom);
   const brainRegionHierarchyLoading = loadableValue.state === 'loading';
@@ -67,15 +67,15 @@ export function EntityLinkCount() {
 
   const experimental = Object.values(ExperimentalEntitiesTileTypes).filter(
     (config) =>
-      !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag]),
+      !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
   );
   const models = Object.values(ModelEntitiesTileTypes).filter(
     (config) =>
-      !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag]),
+      !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
   );
   const simulations = Object.values(SimulationEntitiesTileTypes).filter(
     (config) =>
-      !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag]),
+      !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
   );
 
   const content = match(activeTab)
@@ -89,7 +89,7 @@ export function EntityLinkCount() {
           currentBrainRegionId={selectedBrainRegion?.id}
           defaultBrainRegionId={brainRegionHierarchy?.root.id}
         />
-      )),
+      ))
     )
     .with(ExploreDataTypeTabs.Models, () =>
       map(models, (value) => {
@@ -103,7 +103,7 @@ export function EntityLinkCount() {
             defaultBrainRegionId={brainRegionHierarchy?.root.id}
           />
         );
-      }),
+      })
     )
     .with(ExploreDataTypeTabs.Simulations, () =>
       map(simulations, (value) => {
@@ -117,7 +117,7 @@ export function EntityLinkCount() {
             defaultBrainRegionId={brainRegionHierarchy?.root.id}
           />
         );
-      }),
+      })
     )
     .otherwise(() => null);
 
@@ -152,7 +152,7 @@ export function EntityLinkCount() {
                   className={cn(
                     'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3 text-base select-none',
                     'data-[state=active]:font-bold data-[state=active]:text-white',
-                    { 'h-12': breakpoint === 'xl' },
+                    { 'h-12': breakpoint === 'xl' }
                   )}
                 >
                   {tab.title}

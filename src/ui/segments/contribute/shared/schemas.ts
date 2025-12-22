@@ -33,7 +33,7 @@ export const ContributionArraySchema = z
 
     arr.forEach((contrib, idx) => {
       const filledFields = [contrib.agent_type, contrib.agent_id, contrib.role_id].filter(
-        (field) => !isNil(field) && (typeof field !== 'string' || field !== ''),
+        (field) => !isNil(field) && (typeof field !== 'string' || field !== '')
       );
 
       // if partially filled, mark required fields as invalid
@@ -113,7 +113,7 @@ export const LocationSchema = z
         message: 'All coordinates (x, y, z) are required if one is provided',
         path: difference,
       };
-    },
+    }
   );
 
 export const ExperimentDateSchema = z
@@ -128,7 +128,7 @@ export const ExperimentDateSchema = z
       }
       return false;
     },
-    { message: 'Experiment date should be today or in the past' },
+    { message: 'Experiment date should be today or in the past' }
   )
   .nullish();
 
@@ -160,7 +160,7 @@ export const LicenseIdSchema = z
   .nonempty({ message: 'License is required' });
 
 export function createFileSchema(
-  fileTypes: string[],
+  fileTypes: string[]
 ): z.ZodObject<Record<string, z.ZodType<File>>> {
   const shape: Record<string, z.ZodType<File>> = {};
   fileTypes.forEach((type) => {

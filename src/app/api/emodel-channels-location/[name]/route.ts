@@ -19,7 +19,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ name: stri
     }
     return NextResponse.json(
       { error: 'Failed to read file', code: 'FailedToReadFile' },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

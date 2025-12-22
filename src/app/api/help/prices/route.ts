@@ -29,7 +29,7 @@ export async function GET() {
       {
         cache: 'force-cache',
         next: { revalidate: 3600 },
-      },
+      }
     );
 
     return NextResponse.json({ prices: data ?? [] });

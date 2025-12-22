@@ -26,5 +26,5 @@ export type SectionSynapsesWith3D = {
 };
 
 export const synapsesPlacementAtom = atom<Record<string, SectionSynapsesWith3D | null> | null>(
-  null,
+  null
 );

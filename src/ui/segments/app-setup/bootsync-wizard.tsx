@@ -50,7 +50,7 @@ export function WorkspaceWizard({
       ({ resolvedWorkspace: rw }) => {
         return hasNoVirtualLab(rw);
       },
-      () => <WorkspaceIdentity data={resolvedWorkspace} move={toProvision} />,
+      () => <WorkspaceIdentity data={resolvedWorkspace} move={toProvision} />
     )
     .with(
       { current: WizardSteps.Provision },
@@ -70,7 +70,7 @@ export function WorkspaceWizard({
             move={toCustomization}
           />
         );
-      },
+      }
     )
     .with(
       {
@@ -79,7 +79,7 @@ export function WorkspaceWizard({
       },
       ({ customizationPayload: cp }) => isCustomizationPayload(cp),
       // eslint-disable-next-line react/jsx-props-no-spreading
-      ({ payload }) => <WorkspaceCustomization {...payload} />,
+      ({ payload }) => <WorkspaceCustomization {...payload} />
     )
     .otherwise(() => null);
 }

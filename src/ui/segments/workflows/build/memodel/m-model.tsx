@@ -51,7 +51,7 @@ export function MModel({ sessionId }: Props) {
         selectionType: 'radio',
         onCellClick: (_, record) => {
           navigate(
-            `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(EntityTypeDict.CellMorphology)}/${record.id}/overview`,
+            `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(EntityTypeDict.CellMorphology)}/${record.id}/overview`
           );
         },
         onRowsSelected: (rows) => {
@@ -153,7 +153,7 @@ export function MModelMiniDetail({ sessionId }: { sessionId: string }) {
               rootClassName=" w-full h-full flex items-center! justify-center! [&_.ant-image-mask]:rounded-2xl"
               className="max-h-full w-full rounded-2xl object-contain"
             />
-          ),
+          )
         )}
       </div>
     </div>

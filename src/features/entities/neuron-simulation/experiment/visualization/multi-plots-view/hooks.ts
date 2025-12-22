@@ -6,7 +6,7 @@ import type { PlotInstance } from '../plots-parser';
 export function usePlotly(
   refPlot: React.RefObject<HTMLDivElement | null>,
   instance: PlotInstance,
-  disabledLines: string[],
+  disabledLines: string[]
 ) {
   React.useEffect(() => {
     const container = refPlot.current;

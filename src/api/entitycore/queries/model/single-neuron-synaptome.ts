@@ -102,7 +102,7 @@ export async function createSingleNeuronSynaptome({
 
 export async function getSingleNeuronSynaptomeConfiguration(
   source: ISingleNeuronSynaptome,
-  context?: WorkspaceContext,
+  context?: WorkspaceContext
 ): Promise<{
   synapses: TSingleNeuronSynaptomeConfiguration[];
 } | null> {
@@ -112,7 +112,7 @@ export async function getSingleNeuronSynaptomeConfiguration(
       return (
         i.label === AssetLabel.single_neuron_synaptome_config ||
         some(['single_neuron_synaptome_config', 'synaptome_config'], (prefix) =>
-          startsWith(i.path, prefix),
+          startsWith(i.path, prefix)
         )
       );
     },
@@ -126,7 +126,7 @@ export async function getSingleNeuronSynaptomeConfiguration(
         entityType: EntityTypeDict.SingleNeuronSynaptome,
         id: configAsset.id,
         asRawResponse: true,
-      }),
+      })
     );
     const data = await asset?.json();
 

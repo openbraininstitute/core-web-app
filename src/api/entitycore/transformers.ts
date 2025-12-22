@@ -42,7 +42,7 @@ function transformToIlikePattern(str: string) {
  * // output: { "contribution_perf_label__in": "A,B,C", }
  */
 export function transformQueryParamsListToServerString(
-  queryParams: Record<string, any>,
+  queryParams: Record<string, any>
 ): Record<string, any> {
   const transformedParams: Record<string, any> = {};
 
@@ -65,7 +65,7 @@ export function transformQueryParamsListToServerString(
  * @returns {TransformFiltersToQueryReturnValue} The transformed query object
  */
 export function transformFiltersToQuery(
-  filters: TCoreFilter[],
+  filters: TCoreFilter[]
 ): TransformFiltersToQueryReturnValue {
   return filters.reduce((acc, filter) => {
     // Skip filters with null values
@@ -129,7 +129,7 @@ export function transformFiltersToQuery(
 
 export function transformAgentToNames(
   agentsWithRoles: IContributor[] | undefined | null,
-  asArray: boolean = false,
+  asArray: boolean = false
 ): string | string[] {
   if (!agentsWithRoles) {
     return '';

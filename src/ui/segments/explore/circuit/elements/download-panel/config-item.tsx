@@ -56,7 +56,7 @@ function ConfigChild({
         'hover:text-primary-6!',
         shouldBeDisabled
           ? 'pointer-events-none cursor-not-allowed border-gray-300 bg-transparent text-gray-400!'
-          : 'border-primary-6 text-white',
+          : 'border-primary-6 text-white'
       )}
       aria-label={`Download ${title}`}
       title={`Download ${title}`}
@@ -73,7 +73,7 @@ function ConfigChild({
         <div
           className={classNames(
             'flex flex-row items-center gap-x-3 font-light',
-            shouldBeDisabled ? 'text-gray-400' : 'text-primary-2',
+            shouldBeDisabled ? 'text-gray-400' : 'text-primary-2'
           )}
         >
           <div>{renderEmptyOrValue(asset.size ? formatBytes(asset.size) : null)}</div>
@@ -139,7 +139,7 @@ export function NetworkConfigItem({
         virtualLabId: context.virtualLabId,
         projectId: context.projectId,
         assetPath: path,
-      }),
+      })
     );
     if (data) {
       window.open(data.url, '_blank', 'noopener,noreferrer');

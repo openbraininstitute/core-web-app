@@ -23,7 +23,7 @@ export async function exportSingleSimulationResultAsZip({
     result.forEach((trace) => {
       folder.file(
         `${type === 'stimulus' ? 'stimulus' : trace.recording}_${trace.name}.csv`,
-        getPlotlyAsCsv(trace),
+        getPlotlyAsCsv(trace)
       );
     });
     const zipBlob = await zip.generateAsync({ type: 'blob' });
@@ -55,7 +55,7 @@ export async function exportSingleSimulationResultWithCurrentsAsZip({
         for (const line of instance.lines) {
           folder.file(
             `${prefix}_current_${instance.title}_${line.name}.csv`,
-            getPlotInstanceAsCsv(instance, line),
+            getPlotInstanceAsCsv(instance, line)
           );
         }
       } else {

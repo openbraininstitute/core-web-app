@@ -38,7 +38,7 @@ export const RecordingType = {
 } as const;
 
 export const RecordingTypeDictionary = Object.fromEntries(
-  Object.entries(RecordingType).map(([name, value]) => [name, value.key]),
+  Object.entries(RecordingType).map(([name, value]) => [name, value.key])
 ) as {
   [K in keyof typeof RecordingType]: (typeof RecordingType)[K]['key'];
 };
@@ -66,7 +66,7 @@ export const ElectricalRecordingOrigin = {
 } as const;
 
 export const ElectricalRecordingOriginDictionary = Object.fromEntries(
-  Object.entries(ElectricalRecordingOrigin).map(([name, value]) => [name, value.key]),
+  Object.entries(ElectricalRecordingOrigin).map(([name, value]) => [name, value.key])
 ) as {
   [K in keyof typeof ElectricalRecordingOrigin]: (typeof ElectricalRecordingOrigin)[K]['key'];
 };

@@ -121,7 +121,7 @@ function FormContent<
                   }}
                   className={cn(
                     'secondary-scrollbar h-full flex-1 overflow-auto rounded-xl pr-4 pl-4',
-                    isActive ? 'relative' : 'absolute inset-0',
+                    isActive ? 'relative' : 'absolute inset-0'
                   )}
                 >
                   <StepComponent />
@@ -138,7 +138,7 @@ function FormContent<
           variant="outline"
           className={cn(
             'text-primary-9 border-primary-9 disabled:border-neutral-1',
-            'shadow-bnb size-12 active:text-white',
+            'shadow-bnb size-12 active:text-white'
           )}
           size="lg"
           type="button"
@@ -162,7 +162,7 @@ function FormContent<
           size="lg"
           className={cn(
             'text-primary-9 border-primary-9 disabled:border-neutral-1',
-            'shadow-bnb size-12 active:text-white',
+            'shadow-bnb size-12 active:text-white'
           )}
           onClick={goToNextStep}
           disabled={isLastStep}

@@ -165,7 +165,7 @@ function BaseInputTemplate(props: BaseInputTemplateProps) {
         'border-label placeholder:text-sm placeholder:font-light',
         {
           'aria-invalid:ring-destructive/20 aria-invalid:border-destructive': isInvalid,
-        },
+        }
       )}
       {...inputProps}
     />
@@ -257,7 +257,7 @@ function FieldTemplate(props: FieldTemplateProps) {
             className={cn(
               labelClasses,
               'flex items-start justify-between uppercase',
-              titleClassname,
+              titleClassname
             )}
           >
             <span className="w-full">

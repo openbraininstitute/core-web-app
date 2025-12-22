@@ -159,7 +159,7 @@ export function CreationForm() {
                 'focus-within:border-primary-4! focus-within:border-b-2! focus-within:ring-0!',
                 '[&.ant-input-status-error]:border-0! [&.ant-input-status-error]:border-b-2! [&.ant-input-status-error]:border-red-300!',
                 'bg-primary-9! focus-within:[&_input]:text-white! [&.ant-input-status-error]:focus:ring-0!',
-                '[&_.ant-input-disabled]:opacity-40!',
+                '[&_.ant-input-disabled]:opacity-40!'
               )}
               suffix={
                 validName.loading ? (
@@ -194,7 +194,7 @@ export function CreationForm() {
                 'focus-within:border-primary-4! focus-within:border-b-2! focus-within:ring-0!',
                 '[&.ant-input-status-error]:border-0! [&.ant-input-status-error]:border-b-2! [&.ant-input-status-error]:border-red-300!',
                 'bg-primary-9! focus-within:text-white! [&.ant-input-status-error]:focus:ring-0!',
-                'disabled:opacity-40',
+                'disabled:opacity-40'
               )}
               placeholder="Write your description here"
             />
@@ -219,7 +219,7 @@ export function CreationForm() {
               'hover:bg-primary-8/40',
               'hover:shadow-[1px_2px_4px_0px_#00000099]',
               'shadow-[8px_12px_24px_0px_#00000099]',
-              'shadow-[-8px_-8px_42px_0px_#FFFFFF29]',
+              'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
             )}
             disabled={isPending}
           >

@@ -120,7 +120,7 @@ export async function downloadAsset<T>({
       queryParams: compactRecord({ asset_path: assetPath }),
       signal,
     },
-    { asRawResponse, retryOnError },
+    { asRawResponse, retryOnError }
   );
 }
 
@@ -212,7 +212,7 @@ export async function listDirectoryOfAssets({
         'content-type': 'application/json',
       },
     },
-    { retryOnError },
+    { retryOnError }
   );
 }
 

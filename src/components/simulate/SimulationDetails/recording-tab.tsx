@@ -12,7 +12,7 @@ const PlotRenderer = dynamic(
   () => import('@/features/entities/neuron-simulation/experiment/visualization/plot-renderer'),
   {
     ssr: false,
-  },
+  }
 );
 
 type Props = {

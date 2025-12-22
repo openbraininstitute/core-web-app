@@ -52,7 +52,7 @@ async function resolveSimulationCampaigns({
   // extract all simulation IDs
   const allSimIds = flatMap(
     source.data,
-    (campaign) => campaign.simulations?.map((sim) => sim.id) ?? [],
+    (campaign) => campaign.simulations?.map((sim) => sim.id) ?? []
   );
 
   const executions = await resolveExecutions({ context, allSimIds });

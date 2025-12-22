@@ -117,7 +117,7 @@ export function StepNavigation() {
                       type="button"
                       variant="outline"
                       className={cn(
-                        'active:text-primary-6 text-label active:bg-neutral-1 bg-transparent px-2 text-base shadow-none',
+                        'active:text-primary-6 text-label active:bg-neutral-1 bg-transparent px-2 text-base shadow-none'
                       )}
                       onClick={() => setActiveStep(step.key)}
                     >

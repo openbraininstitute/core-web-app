@@ -17,7 +17,7 @@ interface GithubFlavorMarkdownProps {
 
 export const GithubFlavorMarkdown = React.memo(
   RawGithubFlavorMarkdown,
-  (prevProps, nextProps) => prevProps.children === nextProps.children,
+  (prevProps, nextProps) => prevProps.children === nextProps.children
 );
 
 function RawGithubFlavorMarkdown({

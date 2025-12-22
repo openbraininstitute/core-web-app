@@ -141,7 +141,7 @@ function TiersComparison({
   const getFeatureDetails = (
     t: Tier,
     categoryTitle: string,
-    featureTitle: string,
+    featureTitle: string
   ): TierFeature | undefined => {
     const category = t.features.find((cat) => cat.title === categoryTitle);
     if (!category) return undefined;
@@ -200,7 +200,7 @@ function TiersComparison({
               className={classNames(
                 'rounded-lg',
                 (isSelected || isFree) && 'border-primary-3 bg-primary-8/90 border-2',
-                isHovered && !isSelected && 'bg-primary-5/20',
+                isHovered && !isSelected && 'bg-primary-5/20'
               )}
             />
           );
@@ -228,7 +228,7 @@ function TiersComparison({
                     <span
                       className={classNames(
                         'text-sm font-light text-white',
-                        interval === 'month' && 'font-bold',
+                        interval === 'month' && 'font-bold'
                       )}
                     >
                       Monthly
@@ -243,7 +243,7 @@ function TiersComparison({
                     <span
                       className={classNames(
                         'text-sm font-light text-white',
-                        interval === 'month' && 'font-bold',
+                        interval === 'month' && 'font-bold'
                       )}
                     >
                       Yearly
@@ -319,7 +319,7 @@ function TiersComparison({
                   >
                     {renderFeatureAvailability(
                       isFeatureAvailable(t, category.title, feature),
-                      getFeatureDetails(t, category.title, feature),
+                      getFeatureDetails(t, category.title, feature)
                     )}
                   </div>
                 ))}
@@ -373,7 +373,7 @@ function TiersComparison({
                   'hover:bg-primary-8/40',
                   'hover:shadow-[1px_2px_4px_0px_#00000099]',
                   'shadow-[8px_12px_24px_0px_#00000099]',
-                  'shadow-[-8px_-8px_42px_0px_#FFFFFF29]',
+                  'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
                 )}
                 data-testid={`select-${t.title.toLowerCase()}-btn`}
                 onClick={controller}

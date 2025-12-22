@@ -62,7 +62,7 @@ type AsyncAction<T extends unknown[], R> = (...args: T) => Promise<R>;
  * Useful for network calls you don't want to have in parallel.
  */
 export function asyncCreateSquash<T extends unknown[], R>(
-  action: AsyncAction<T, R>,
+  action: AsyncAction<T, R>
 ): AsyncAction<T, R> {
   let currentAction: Promise<R> | null = null;
 

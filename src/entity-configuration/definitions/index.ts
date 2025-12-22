@@ -32,7 +32,7 @@ export default fieldsDefinitionRegistry;
  * @returns The field definition of type `FieldDefinition<T>` if found, otherwise `null`.
  */
 export function getFieldDefinition<F extends EntityCoreFields, T extends EntityCoreIdentifiable>(
-  field: F,
+  field: F
 ): FieldDefinition<T> | null {
   return get(fieldsDefinitionRegistry, field, null) as FieldDefinition<T> | null;
 }
@@ -45,7 +45,7 @@ export function getFieldDefinition<F extends EntityCoreFields, T extends EntityC
  * @returns An object containing the selected field definitions from the `FieldsDefinitionRegistry`.
  */
 export function getFieldsDefinition<T extends EntityCoreFields[]>(
-  fields: [...T],
+  fields: [...T]
 ): Pick<typeof fieldsDefinitionRegistry, T[number]> {
   return pick(fieldsDefinitionRegistry, fields);
 }

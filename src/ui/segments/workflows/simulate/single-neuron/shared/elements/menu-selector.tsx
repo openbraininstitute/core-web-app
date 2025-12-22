@@ -35,8 +35,8 @@ export function MenuSelector({ sessionId, synaptome, memodel, type }: Props) {
         shallow: true,
       })
       .withDefault(
-        WorkflowSimulatePanels.Configuration,
-      ) as SingleParserBuilder<WorkflowSimulatePanelKeys>,
+        WorkflowSimulatePanels.Configuration
+      ) as SingleParserBuilder<WorkflowSimulatePanelKeys>
   );
 
   const MenuWrapper = match({ panelId, type })
@@ -54,7 +54,7 @@ export function MenuSelector({ sessionId, synaptome, memodel, type }: Props) {
             memodelId={memodel.id}
           />
         );
-      },
+      }
     )
     .with(
       {
@@ -70,7 +70,7 @@ export function MenuSelector({ sessionId, synaptome, memodel, type }: Props) {
             memodelId={memodel.id}
           />
         );
-      },
+      }
     )
     .with(
       {
@@ -79,7 +79,7 @@ export function MenuSelector({ sessionId, synaptome, memodel, type }: Props) {
       },
       () => {
         return <ResultMenu sessionId={sessionId} type={SimulationType.SingleNeuron} />;
-      },
+      }
     )
     .with(
       {
@@ -88,7 +88,7 @@ export function MenuSelector({ sessionId, synaptome, memodel, type }: Props) {
       },
       () => {
         return <ResultMenu sessionId={sessionId} type={SimulationType.SingleNeuronSynaptome} />;
-      },
+      }
     )
     .otherwise(() => {
       return null;

@@ -63,7 +63,7 @@ function makeQueryFn(workspace: { virtualLabId: string; projectId: string }, id:
             entityType: EntityTypeDict.ValidationResult,
             entityId: entity.id,
           });
-        }),
+        })
       )
     ).map((result, i) => {
       return {

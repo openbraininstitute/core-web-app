@@ -14,7 +14,7 @@ export default function SanityContentVerticalDivider({ value }: SanityContentVer
       className={classNames(
         styles.sanityContentVerticalSpace,
         styles[value.spacing],
-        styleBlockFullWidth,
+        styleBlockFullWidth
       )}
     />
   );

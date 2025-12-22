@@ -44,7 +44,7 @@ const Recording = dynamic(
         <LoadingOutlined />
       </div>
     ),
-  },
+  }
 );
 
 type Props = {
@@ -60,22 +60,22 @@ export function Configuration({ sessionId }: Props) {
   const [formDataStorage, updateFormDataStorage] = useAtom(
     useMemo(
       () => GenerativeFromAtomFamily(`${CONFIGURATION_FORM_STATE_KEY}/${sessionId}`),
-      [sessionId],
-    ),
+      [sessionId]
+    )
   );
 
   const [recording, updateRecording] = useAtom(
     useMemo(
       () => IonChannelRecordingAtomFamily(`${CONFIGURATION_RECORDING_STATE_KEY}/${sessionId}`),
-      [sessionId],
-    ),
+      [sessionId]
+    )
   );
 
   const [, updateIoChannelState] = useAtom(
-    useMemo(() => IonChannelModelingSharedStateFamily(sessionId), [sessionId]),
+    useMemo(() => IonChannelModelingSharedStateFamily(sessionId), [sessionId])
   );
   const [validationErrorsMap, setValidationErrorsMap] = useState<ErrorSchema | undefined>(
-    undefined,
+    undefined
   );
 
   const [activeBlock, updateActiveBlock] = useState<string>('');
@@ -225,7 +225,7 @@ export function Configuration({ sessionId }: Props) {
         },
       },
     }),
-    [],
+    []
   );
 
   // generate dynamic ui schema that hides all fields except the active block
@@ -281,7 +281,7 @@ export function Configuration({ sessionId }: Props) {
       updateFormDataStorage(data || {});
       setValidationErrorsMap(errorSchema);
     },
-    [updateFormDataStorage],
+    [updateFormDataStorage]
   ); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onResetForm = useCallback(
@@ -302,7 +302,7 @@ export function Configuration({ sessionId }: Props) {
         callback: onFormChange,
       });
     },
-    [formDataStorage, RootSchema, onFormChange, updateRecording],
+    [formDataStorage, RootSchema, onFormChange, updateRecording]
   );
 
   const onFormSubmit = useCallback(async () => {
@@ -370,7 +370,7 @@ export function Configuration({ sessionId }: Props) {
                   onClick={() => onResetForm(activeBlock)}
                   className={cn(
                     'size-10! min-h-10! min-w-10! rounded-full md:size-10!',
-                    'md:min-h-10! md:min-w-10! lg:size-12! lg:min-h-12! lg:min-w-12!',
+                    'md:min-h-10! md:min-w-10! lg:size-12! lg:min-h-12! lg:min-w-12!'
                   )}
                 >
                   <CloseOutlined />
@@ -425,7 +425,7 @@ export function Configuration({ sessionId }: Props) {
         <div
           className={cn(
             'secondary-scrollbar h-full max-h-[calc(100%-.5rem)] overflow-x-hidden overflow-y-auto rounded-2xl',
-            'rounded-2xl border-white bg-white p-4 shadow-xs',
+            'rounded-2xl border-white bg-white p-4 shadow-xs'
           )}
         >
           {!isNil(recording) && <Recording sessionId={sessionId} />}

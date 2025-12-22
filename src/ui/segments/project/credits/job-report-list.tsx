@@ -107,7 +107,7 @@ export function JobReportList() {
       const user = find(users?.data?.users, { id: userId });
       return user ? `${user.first_name} ${user.last_name}` : 'Unknown user';
     },
-    [users],
+    [users]
   );
 
   return (
@@ -124,7 +124,7 @@ export function JobReportList() {
               '[&_.ant-table-thead_th]:bg-neutral-1! [&_.ant-table-tbody]:bg-neutral-1!',
               '[&_.ant-table-tbody_td]:text-primary-9 [&_.ant-pagination]:gap-2',
               '[&:has(.ant-table-empty)_td:last]:border-b-none! [&:has(.ant-table-empty)_tr]:bg-neutral-1! [&:has(.ant-table-empty)_tr]:hover:bg-neutral-1!',
-              '[&_th]:uppercase!',
+              '[&_th]:uppercase!'
             )}
             loading={isLoading}
             dataSource={jobReports}

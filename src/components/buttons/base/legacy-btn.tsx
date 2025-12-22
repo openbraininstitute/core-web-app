@@ -20,7 +20,7 @@ export function Btn({
     <button
       className={classNames(
         'flex items-center justify-between gap-2 rounded-none px-7 py-4 font-bold text-white',
-        className,
+        className
       )}
       onClick={onClick}
       type="button"
@@ -47,7 +47,7 @@ export function FileInputBtn({
     <label
       className={classNames(
         'flex cursor-pointer items-center justify-between gap-2 rounded-none px-7 py-4 font-bold text-white',
-        className,
+        className
       )}
       htmlFor={htmlFor}
     >

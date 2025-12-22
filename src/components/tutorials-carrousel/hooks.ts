@@ -27,7 +27,7 @@ function isContentForTutorialsList(data: unknown): data is ContentForTutorialIte
           },
         ],
       },
-      'ContentForTutorialItem',
+      'ContentForTutorialItem'
     );
 
     return true;

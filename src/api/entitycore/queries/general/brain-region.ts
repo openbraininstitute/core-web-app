@@ -14,7 +14,7 @@ import { config } from '@/config';
  * @returns {Promise<BrainRegion>} A promise that resolves to the brain region hierarchy or flattened list
  */
 export async function getTemporaryBrainRegionHierarchy<T extends boolean>(
-  { flat }: { flat?: T } = {} as { flat?: T },
+  { flat }: { flat?: T } = {} as { flat?: T }
 ): Promise<T extends true ? TemporaryFlatBrainRegionHierarchy : ITemporaryBrainRegionHierarchy> {
   // TODO: the caching could be also passed to a specific function
   const api = await entityCoreApi(); // cached it for 1 day

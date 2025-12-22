@@ -90,7 +90,7 @@ export function SpaceSwitcher({ className }: Props) {
       virtualLabs?.data?.virtual_lab
         ? { ...virtualLabs?.data?.virtual_lab, isMine: true }
         : undefined,
-    [virtualLabs?.data?.virtual_lab],
+    [virtualLabs?.data?.virtual_lab]
   );
 
   const membershipLabs = useMemo(
@@ -101,7 +101,7 @@ export function SpaceSwitcher({ className }: Props) {
             isMine: false,
           }))
         : [],
-    [virtualLabs?.data?.membership_labs],
+    [virtualLabs?.data?.membership_labs]
   );
 
   const { isLoading: projectsLoading, data: projects } = useQuery({
@@ -112,11 +112,11 @@ export function SpaceSwitcher({ className }: Props) {
 
   const labs = useMemo(
     () => compact([myVirtualLab, ...membershipLabs]),
-    [myVirtualLab, membershipLabs],
+    [myVirtualLab, membershipLabs]
   );
 
   const onProfileClick = (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent> | React.KeyboardEvent<HTMLDivElement>,
+    e: React.MouseEvent<HTMLDivElement, MouseEvent> | React.KeyboardEvent<HTMLDivElement>
   ) => {
     e.preventDefault();
     e.stopPropagation();
@@ -229,7 +229,7 @@ export function SpaceSwitcher({ className }: Props) {
                 !isExpanded,
             },
             { 'z-[1001]': boardModalOpen },
-            { 'h-12': breakpoint === 'xl' },
+            { 'h-12': breakpoint === 'xl' }
           )}
           aria-label={`${currentVirtualLabName}/${currentProjectName}`}
           disabled={labsLoading || projectsLoading}
@@ -254,7 +254,7 @@ export function SpaceSwitcher({ className }: Props) {
               <div
                 className={cn(
                   'flex items-center gap-1.5 rounded-full',
-                  'hover:bg-background border-none',
+                  'hover:bg-background border-none'
                 )}
                 onKeyDown={onProfileClick}
                 onClick={onProfileClick}
@@ -293,7 +293,7 @@ export function SpaceSwitcher({ className }: Props) {
                   {
                     'border-neutral-2 h-16! rounded-md rounded-b-none border border-b-0 bg-white':
                       isExpanded,
-                  },
+                  }
                 )}
               >
                 {virtualLabId && (
@@ -336,7 +336,7 @@ export function SpaceSwitcher({ className }: Props) {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.1 }}
                   className={cn(
-                    'hover:text-primary-8! text-primary-9! flex w-full items-center justify-between gap-2',
+                    'hover:text-primary-8! text-primary-9! flex w-full items-center justify-between gap-2'
                   )}
                 >
                   <ProfileButton username={username} onProfileClick={onProfileClick} />
@@ -371,7 +371,7 @@ export function SpaceSwitcher({ className }: Props) {
                 'relative flex flex-col pt-1 pb-2 shadow-2xl',
                 'h-full max-h-[calc(100vh-4.5rem)] min-h-[calc(100vh-5rem)] lg:max-h-[calc(100vh-4.5rem)]',
                 { 'rounded-t-none': isExpanded },
-                { 'z-[1001]': boardModalOpen },
+                { 'z-[1001]': boardModalOpen }
               )}
             >
               {subscription?.subscription.tier === 'FREE' && (
@@ -448,7 +448,7 @@ function ProfileButton({
 }: {
   username?: string;
   onProfileClick: (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent> | React.KeyboardEvent<HTMLDivElement>,
+    e: React.MouseEvent<HTMLDivElement, MouseEvent> | React.KeyboardEvent<HTMLDivElement>
   ) => void;
 }) {
   const [isActive, setIsActive] = useState(false);
@@ -458,7 +458,7 @@ function ProfileButton({
       if (incomingType === WorkspaceActions.ProfileSettings) {
         setIsActive(true);
       }
-    }, []),
+    }, [])
   );
 
   return (
@@ -468,7 +468,7 @@ function ProfileButton({
         'hover:bg-background',
         {
           'bg-primary-9 hover:text-primary-9 text-white hover:bg-white': isActive,
-        },
+        }
       )}
       onKeyDown={onProfileClick}
       onClick={onProfileClick}

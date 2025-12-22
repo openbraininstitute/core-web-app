@@ -43,11 +43,11 @@ export default function SingleFeatureContent() {
 
   const featureContent: ContentForFeatureItem[] = (() => {
     const filteredBySlug = content.filter(
-      (item: ContentForFeatureItem) => Slugify(item.Scale) === slug,
+      (item: ContentForFeatureItem) => Slugify(item.Scale) === slug
     );
 
     const filteredByStatus = filteredBySlug.filter(
-      (item: ContentForFeatureItem) => item.Status === 'Available',
+      (item: ContentForFeatureItem) => item.Status === 'Available'
     );
 
     return filteredByStatus.length > 0 ? filteredByStatus : [];

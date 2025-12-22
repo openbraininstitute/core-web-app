@@ -19,7 +19,7 @@ export function useObioneJsonSchema(
   model: ICircuit | IMEModel,
   notification: NotificationInstance,
   setAtomsMap: (atomsMap: AtomsMap) => void,
-  initialConfig?: Config,
+  initialConfig?: Config
 ) {
   const [schema, setSchema] = useState<JSONSchema | null>(null);
 
@@ -37,7 +37,7 @@ export function useObioneJsonSchema(
               type: EntityTypeDict.Circuit,
               scale: CircuitScaleDictionary.Single,
             },
-            () => 'MEModelWithSynapsesCircuitSimulationScanConfig',
+            () => 'MEModelWithSynapsesCircuitSimulationScanConfig'
           )
           .with({ type: EntityTypeDict.Circuit }, () => 'CircuitSimulationScanConfig')
           .otherwise(() => {
@@ -96,7 +96,7 @@ export function useObioneJsonSchema(
                     type: EntityTypeDict.Circuit,
                     scale: CircuitScaleDictionary.Single,
                   },
-                  () => 'MEModelWithSynapsesCircuitFromID',
+                  () => 'MEModelWithSynapsesCircuitFromID'
                 )
                 .with({ type: EntityTypeDict.Circuit }, () => 'CircuitFromID')
 
@@ -153,7 +153,7 @@ export function isNonEmptyCategory(category: string, schema: JSONSchema) {
   return (
     schema?.properties &&
     Object.entries(schema.properties).filter(
-      ([k]) => k !== 'type' && ORDERING[k]?.category === category,
+      ([k]) => k !== 'type' && ORDERING[k]?.category === category
     ).length > 0
   );
 }

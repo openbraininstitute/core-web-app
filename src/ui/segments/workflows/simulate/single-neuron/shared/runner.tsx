@@ -79,7 +79,7 @@ export const createSingleNeuronSimulationAtom = atom(
     recordingConfiguration: NeuronLocationArray,
     synaptomeConfiguration: SynapseConfigurationArray | undefined,
     simulationResult: Record<string, PlotData> | null,
-    stimulusResult: PlotData | null,
+    stimulusResult: PlotData | null
   ) => {
     if (!simulationResult || !modelId) return null;
 
@@ -87,9 +87,9 @@ export const createSingleNeuronSimulationAtom = atom(
       uniqBy(recordingConfiguration, (item) =>
         values(pick(item, ['section', 'offset']))
           .map(String)
-          .join(),
+          .join()
       ),
-      (obj) => omit(obj, ['color']),
+      (obj) => omit(obj, ['color'])
     );
 
     const singleNeuronSimulationConfig: SingleNeuronModelSimulationConfig = {
@@ -106,7 +106,7 @@ export const createSingleNeuronSimulationAtom = atom(
       getMEModel({
         id: memodelId,
         context: { virtualLabId, projectId },
-      }),
+      })
     );
     if (error || isNil(meModel)) {
       throw new Error(messages.SimulationPrerequisitesMEModelError);
@@ -119,7 +119,7 @@ export const createSingleNeuronSimulationAtom = atom(
       seed: experimentalSetupConfiguration.seed,
       injection_location: [singleNeuronSimulationConfig.current_injection.inject_to],
       recording_location: singleNeuronSimulationConfig.record_from.map(
-        (r) => `${r.section}_${r.offset}`,
+        (r) => `${r.section}_${r.offset}`
       ),
       brain_region_id: meModel.brain_region.id,
     };
@@ -173,7 +173,7 @@ export const createSingleNeuronSimulationAtom = atom(
               config: convertObjectKeysToSnakeCase(singleNeuronSimulationConfig),
             },
             ...assetBasePayload,
-          }),
+          })
         );
         if (asset) {
           return {
@@ -186,7 +186,7 @@ export const createSingleNeuronSimulationAtom = atom(
         }
       }
     }
-  },
+  }
 );
 
 export const launchSimulationAtom = atom<
@@ -228,7 +228,7 @@ export const launchSimulationAtom = atom<
     simulationType: TSimulationType,
     duration: number,
     onChangePanel: () => void,
-    notify: NotificationInstance,
+    notify: NotificationInstance
   ) => {
     if (simulationType === 'single-neuron-simulation') {
       if (!stimulationConfiguration) {
@@ -257,7 +257,7 @@ export const launchSimulationAtom = atom<
     const recordFromUniq = uniqBy(recordingConfiguration, (item) =>
       values(pick(item, ['section', 'offset']))
         .map(String)
-        .join(),
+        .join()
     );
     onChangePanel();
 
@@ -277,7 +277,7 @@ export const launchSimulationAtom = atom<
             type: simulationType,
             duration,
           },
-        }),
+        })
       );
 
       if (error) {
@@ -365,8 +365,8 @@ export const launchSimulationAtom = atom<
                 recordingConfiguration,
                 synaptomeConfiguration,
                 get(plotDataAtom),
-                stimulusGraphResult as PlotData,
-              ),
+                stimulusGraphResult as PlotData
+              )
             );
             if (saveError) {
               set(simulationStatusAtom, {
@@ -481,7 +481,7 @@ export const launchSimulationAtom = atom<
         set(plotDataAtom, updatedPlot);
       }
     }
-  },
+  }
 );
 
 function makeKey(entry: PlotDataEntry): string {

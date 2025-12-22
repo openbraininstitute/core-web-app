@@ -38,7 +38,7 @@ function computeDistance(camera: TgdCamera, bbox: BoundingBox, scale: number) {
       Math.max(1, Math.abs(bbox.center[0] - bbox.min[0]), Math.abs(bbox.center[0] - bbox.max[0])),
     2 *
       scale *
-      Math.max(1, Math.abs(bbox.center[1] - bbox.min[1]), Math.abs(bbox.center[1] - bbox.max[1])),
+      Math.max(1, Math.abs(bbox.center[1] - bbox.min[1]), Math.abs(bbox.center[1] - bbox.max[1]))
   );
   return camera.transfo.distance;
 }

@@ -62,7 +62,7 @@ export default function SimulationCampaignConfiguration({
     useObioneJsonSchema(model, notification, setAtomsMap, initialConfig);
 
   const selectedCatSchema = schema?.properties?.[configTab]?.additionalProperties?.oneOf?.find(
-    (s) => s.properties?.type.const === selectedCategory,
+    (s) => s.properties?.type.const === selectedCategory
   );
 
   const allEntries = useEntries({ initialConfig, schema });

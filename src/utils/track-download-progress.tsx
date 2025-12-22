@@ -2,7 +2,7 @@ import { log } from '@/utils/logger';
 
 export async function trackDownloadProgress(
   fn: (...params: any) => Promise<Response>,
-  onProgress?: (progress: number) => void,
+  onProgress?: (progress: number) => void
 ): Promise<Uint8Array[]> {
   const response = await fn();
   const reader = response.body?.getReader();

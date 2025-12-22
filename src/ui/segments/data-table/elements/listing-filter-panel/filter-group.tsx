@@ -51,7 +51,7 @@ export function FilterGroup({ items, filters, setFilters }: FilterGroupProps) {
               <Accordion.Trigger
                 className={classNames(
                   styles.accordionTrigger,
-                  'flex w-full items-center justify-between',
+                  'flex w-full items-center justify-between'
                 )}
               >
                 <span className="text-lg font-bold text-white">{label}</span>

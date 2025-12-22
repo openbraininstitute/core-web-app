@@ -17,5 +17,5 @@ export const bookmarksForProjectAtomFamily = atomFamily(
     childAtom.debugLabel = `bookmarks/${projectId}/${category ?? 'all'}`;
     return childAtom;
   },
-  isEqual,
+  isEqual
 );

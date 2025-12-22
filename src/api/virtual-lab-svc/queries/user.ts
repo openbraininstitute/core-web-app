@@ -46,7 +46,7 @@ export const getUserProfile = async (): Promise<{
  * @returns  updated user profile information
  */
 export const updateUserProfile = async (
-  payload: UpdateUserProfileRequest,
+  payload: UpdateUserProfileRequest
 ): Promise<{ profile: UserProfileResponse } | null> => {
   const session = await getSession();
   const response = await fetch(`${getBaseUrl()}/profile`, {

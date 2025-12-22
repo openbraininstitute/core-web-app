@@ -32,7 +32,7 @@ export default async function Results({
     try {
       config = await singleNeuronSimulationApiQueryExpand.config(
         entity as ISingleNeuronSimulation,
-        ctx,
+        ctx
       );
 
       if (!config) notFound();
@@ -51,7 +51,7 @@ export default async function Results({
     try {
       config = await singleNeuronSynaptomeSimulationApiQueryExpand.config(
         entity as ISingleNeuronSynaptomeSimulation,
-        ctx,
+        ctx
       );
 
       if (!config) notFound();

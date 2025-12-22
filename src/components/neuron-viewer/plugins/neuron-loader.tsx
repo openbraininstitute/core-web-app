@@ -13,7 +13,7 @@ export function NeuronLoader({ text, w, h }: { text: string; w?: number; h?: num
         className={classNames(
           'relative box-border inline-block text-white',
           !w && 'w-52',
-          !h && 'h-52',
+          !h && 'h-52'
         )}
         style={{ width: w, height: h }}
       >

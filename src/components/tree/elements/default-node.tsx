@@ -31,7 +31,7 @@ export default function DefaultNode<TNode extends TTreeNode>({
         'text-primary-9 hover:text-primary-8 hover:bg-primary-highlight/40 my-1.5 h-[var(--height)] px-2 py-2 hover:font-bold',
         isSelected
           ? 'text-primary-8 bg-primary-highlight rounded-full font-bold'
-          : 'transparent rounded-md font-medium',
+          : 'transparent rounded-md font-medium'
       )}
       onClick={onClick}
       onKeyDown={(evt) => {
@@ -54,7 +54,7 @@ export default function DefaultNode<TNode extends TTreeNode>({
         <button
           className={classNames(
             'ml-auto flex flex-shrink-0 items-center justify-center',
-            isSelected ? 'text-primary-9' : 'text-primary-9/60',
+            isSelected ? 'text-primary-9' : 'text-primary-9/60'
           )}
           type="button"
           onClick={onToggle}
@@ -64,7 +64,7 @@ export default function DefaultNode<TNode extends TTreeNode>({
             size={14}
             className={classNames(
               'text-base text-current transition-transform duration-300 ease-in-out',
-              isExpanded ? 'rotate-90' : '',
+              isExpanded ? 'rotate-90' : ''
             )}
           />
         </button>

@@ -11,7 +11,7 @@ export interface StreamItem {
 
 export async function* streamingFetch(
   url: string,
-  options: RequestInit,
+  options: RequestInit
 ): AsyncGenerator<StreamItem, void, unknown> {
   const response = await fetch(url, options);
 

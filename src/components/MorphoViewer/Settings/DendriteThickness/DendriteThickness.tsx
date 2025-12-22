@@ -32,7 +32,7 @@ export function DendriteThickness({ className, painter }: DendriteThicknessProps
 
 function useRadiusMultiplier(
   painter: MorphologyCanvas,
-  value: number,
+  value: number
 ): [number, (value: number) => void] {
   const [radiusMultiplier, setRadiusMultiplier] = useState(value);
   useEffect(() => {

@@ -12,7 +12,7 @@ export interface LineChartInput {
 }
 
 export function convertLineChart(
-  obj: LineChartInput,
+  obj: LineChartInput
 ): { data: Data[]; layout: Partial<Layout> } | null {
   const props: { data: Data[]; layout: Partial<Layout> } = {
     data: [

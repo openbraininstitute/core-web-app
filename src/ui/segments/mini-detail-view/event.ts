@@ -20,13 +20,13 @@ export const makeSelectEntityClickEvent = <T>(detail: TSelectedExploreEntity<T>)
 };
 
 const isVirtualLabClickEvent = <T>(
-  event: Event,
+  event: Event
 ): event is CustomEvent<TSelectedExploreEntity<T>> => {
   return event instanceof CustomEvent && event.type === SelectEntityClickEvent;
 };
 
 export const virtualLabClickEventListener = <T>(
-  cb: (event: CustomEvent<TSelectedExploreEntity<T>>) => void,
+  cb: (event: CustomEvent<TSelectedExploreEntity<T>>) => void
 ) => {
   const abortController = new AbortController();
   const { signal } = abortController;
@@ -46,7 +46,7 @@ export const virtualLabClickEventListener = <T>(
 };
 
 export const useSelectEntityClickEvent = <T>(
-  cb: (event: CustomEvent<TSelectedExploreEntity<T>>) => void,
+  cb: (event: CustomEvent<TSelectedExploreEntity<T>>) => void
 ) => {
   useEffect(() => {
     const unsubscribe = virtualLabClickEventListener(cb);

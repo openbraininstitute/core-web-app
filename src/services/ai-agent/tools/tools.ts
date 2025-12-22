@@ -52,7 +52,7 @@ async function loadTools(accessToken: string | undefined): Promise<AIAssistantTo
 
   const list = await serviceAiAgentListTools(accessToken);
   const tools: AIAssistantTool[] = list.map(
-    (summary) => new AIAssistantTool(summary.name, summary.name_frontend, ''),
+    (summary) => new AIAssistantTool(summary.name, summary.name_frontend, '')
   );
   return tools.sort(sortToolsByName);
 }

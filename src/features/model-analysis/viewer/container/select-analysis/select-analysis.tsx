@@ -69,7 +69,7 @@ function ComboItemLabel({ label }: ComboItemLabelProps) {
 }
 
 function isFlatValidationResult(
-  data: FlatValidationResult | ReactNode,
+  data: FlatValidationResult | ReactNode
 ): data is FlatValidationResult {
   return isType(data, { name: 'string', passed: 'boolean' });
 }

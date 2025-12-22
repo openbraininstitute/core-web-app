@@ -51,7 +51,7 @@ function SweepSelector({
           'px-1 pb-1 last:pr-0',
           styles.main,
           preview ? styles.previewOn : styles.previewOff,
-          selectedSweeps.length > 0 ? styles.selectionOn : styles.selectionOff,
+          selectedSweeps.length > 0 ? styles.selectionOn : styles.selectionOff
         )}
         onMouseEnter={() => handlePreviewSweep(value)}
         onMouseLeave={() => handlePreviewSweep(undefined)}
@@ -59,7 +59,7 @@ function SweepSelector({
         <label // eslint-disable-line jsx-a11y/label-has-associated-control
           className={classNames(
             'flex h-[32px] w-[32px] cursor-pointer items-center rounded border-1 hover:opacity-75',
-            isSelected && styles.selected,
+            isSelected && styles.selected
           )}
           style={{
             background: colorMap.get(value) ?? '#1890ff',

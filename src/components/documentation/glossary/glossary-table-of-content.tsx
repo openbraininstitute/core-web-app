@@ -38,7 +38,7 @@ export default function GlossaryTableOfContent() {
               key={item.Name}
               className={classNames(
                 'text-lg',
-                slug === Slugify(item.Name) ? 'font-bold text-white' : 'text-primary-1 font-normal',
+                slug === Slugify(item.Name) ? 'font-bold text-white' : 'text-primary-1 font-normal'
               )}
             >
               {item.Name}
@@ -61,7 +61,7 @@ export default function GlossaryTableOfContent() {
               key={item.Name}
               className={classNames(
                 'text-lg',
-                slug === Slugify(item.Name) ? 'font-bold text-white' : 'text-primary-1 font-normal',
+                slug === Slugify(item.Name) ? 'font-bold text-white' : 'text-primary-1 font-normal'
               )}
             >
               {item.Name}
@@ -82,7 +82,7 @@ export default function GlossaryTableOfContent() {
             aria-label="Select glossary item "
             className={classNames(
               'text-lg',
-              slug === 'm-type' ? 'font-bold text-white' : 'text-primary-1 font-normal',
+              slug === 'm-type' ? 'font-bold text-white' : 'text-primary-1 font-normal'
             )}
           >
             Morphological types (m-types)
@@ -92,7 +92,7 @@ export default function GlossaryTableOfContent() {
             aria-label="Select glossary item "
             className={classNames(
               'text-lg',
-              slug === 'e-type' ? 'font-bold text-white' : 'text-primary-1 font-normal',
+              slug === 'e-type' ? 'font-bold text-white' : 'text-primary-1 font-normal'
             )}
           >
             Electrical types (e-types)

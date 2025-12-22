@@ -75,7 +75,7 @@ const SingleNeuronSynaptomeExclusionRuleSchema = z
     {
       message: 'At least one of distance_soma_gte or distance_soma_lte must be provided',
       path: ['distance_soma_gte', 'distance_soma_lte'],
-    },
+    }
   );
 
 export const SingleNeuronSynaptomeBaseSchema = z.object({
@@ -106,7 +106,7 @@ export const SingleNeuronSynaptomeConfigurationSchema = SingleNeuronSynaptomeBas
         path: ['soma_synapse_count'],
       });
     }
-  },
+  }
 ).superRefine(async (synapse, ctx) => {
   if (synapse.target !== 'soma') {
     const v = await validateSingleNeuronSynapseGenerationFormula(synapse.formula!);

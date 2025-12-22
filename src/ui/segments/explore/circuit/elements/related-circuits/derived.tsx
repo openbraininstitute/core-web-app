@@ -45,10 +45,10 @@ export function Derived({ data }: Props) {
             dataType,
             dataScope: WorkspaceScope.Custom,
             key: '',
-          }),
+          })
         ),
-      [dataType],
-    ),
+      [dataType]
+    )
   );
   const columns = cols.filter(({ key }) => (activeColumns || []).includes(key as string));
 
@@ -58,7 +58,7 @@ export function Derived({ data }: Props) {
         ctx: { virtualLabId, projectId },
         dataType,
         entityId: record.id,
-      }),
+      })
     );
   };
 

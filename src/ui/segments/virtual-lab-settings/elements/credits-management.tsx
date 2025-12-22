@@ -42,7 +42,7 @@ export function CreditsManagement({
       const LabBalance = accountingQuery.data?.data.balance;
       const balanceList = (accountingQuery.data?.data.projects ?? []).reduce(
         (map, p) => map.set(p.proj_id, p),
-        new Map<string, ProjectBalance>(),
+        new Map<string, ProjectBalance>()
       );
       return {
         isLoading: loading,
@@ -60,7 +60,7 @@ export function CreditsManagement({
         name: project.name,
         balance: balanceMap.get(project.id)?.balance ?? 0,
       })),
-    [projects, balanceMap],
+    [projects, balanceMap]
   );
 
   const handlePageChange = (page: number, size: number) => {
@@ -108,7 +108,7 @@ export function CreditsManagement({
         id="credit-management-list"
         className={cn(
           'border-primary-4 b bg-primary-9 [&_.ant-list-item]:border-b-primary-4 rounded-md border px-4 pt-4!',
-          '[&_.ant-spin-blur]:opacity-0!',
+          '[&_.ant-spin-blur]:opacity-0!'
         )}
         loading={isLoading}
         itemLayout="horizontal"
@@ -122,7 +122,7 @@ export function CreditsManagement({
           hideOnSinglePage: true,
           className: cn(
             '[&_.ant-pagination-item]:bg-primary-9! [&_.ant-pagination-item_a]:text-white! [&_.ant-pagination-item-active]:bg-white! [&_.ant-pagination-item-active_a]:text-primary-9!',
-            '[&_.ant-pagination-disabled_button]:text-neutral-1 [&_button.ant-pagination-item-link]:text-white',
+            '[&_.ant-pagination-disabled_button]:text-neutral-1 [&_button.ant-pagination-item-link]:text-white'
           ),
         }}
         renderItem={(item) => (

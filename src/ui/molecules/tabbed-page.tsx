@@ -30,7 +30,7 @@ export default function Tabs({ children, defaultIndex = 0, defaultMessage }: Tab
       <div
         className={cn(
           'text-primary-8 border-neutral-2 flex w-full',
-          'items-center justify-center rounded-2xl border p-5 select-none',
+          'items-center justify-center rounded-2xl border p-5 select-none'
         )}
       >
         {defaultMessage}

@@ -125,28 +125,28 @@ export function useScrollNav(element?: HTMLDivElement): Record<'left' | 'right',
     <Button
       className={classNames(
         'flex items-center justify-center',
-        !displayFloatButtons.right && 'collapse',
+        !displayFloatButtons.right && 'collapse'
       )}
       onClick={handleScrollToRight}
       icon={<ChevronLast className="" />}
       disabled={!displayFloatButtons.right}
       shape="circle"
       size="large"
-    />,
+    />
   );
 
   const left = useTheme(
     <Button
       className={classNames(
         'flex items-center justify-center',
-        !displayFloatButtons.left && 'collapse',
+        !displayFloatButtons.left && 'collapse'
       )}
       onClick={handleScrollToLeft}
       icon={<ChevronLast className="rotate-180 transform" />}
       disabled={!displayFloatButtons.left}
       shape="circle"
       size="large"
-    />,
+    />
   );
 
   return {

@@ -11,7 +11,7 @@
 export const calculateNewExtendedNodeId = (
   extendedNodeId: string,
   childNodeId: string,
-  childAbout: string,
+  childAbout: string
 ): string => {
   if (childAbout === 'BrainRegion') {
     return '';

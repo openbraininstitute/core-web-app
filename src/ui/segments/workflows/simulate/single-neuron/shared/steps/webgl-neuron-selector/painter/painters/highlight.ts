@@ -18,7 +18,7 @@ import { type StructureItem, StructureItemType } from '../structure';
 export class PainterHover extends TgdPainterGroup {
   constructor(
     readonly context: TgdContext,
-    item: StructureItem,
+    item: StructureItem
   ) {
     super();
     const segments = new TgdPainterSegmentsData();
@@ -50,7 +50,7 @@ export class PainterHover extends TgdPainterGroup {
             }),
           }),
         ],
-      }),
+      })
     );
   }
 }

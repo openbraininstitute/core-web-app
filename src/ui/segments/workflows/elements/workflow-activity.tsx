@@ -70,7 +70,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
           shallow: true,
         })
         .withDefault(
-          ExtendedEntitiesTypeDict.Memodel,
+          ExtendedEntitiesTypeDict.Memodel
         ) as SingleParserBuilder<TExtendedEntitiesTypeDict>,
     },
     {
@@ -78,7 +78,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
         activityType: 'tactivity',
         entityType: 'ttype',
       },
-    },
+    }
   );
   const [{ page, pageSize }, updatePagination] = useState<{
     page: number;
@@ -222,7 +222,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
       navigate(
         `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/memodel/${
           (selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
-        }?dataType=${ExtendedEntitiesTypeDict.MemodelCircuit}&initialCampaignId=${selectedRow?.id}`,
+        }?dataType=${ExtendedEntitiesTypeDict.MemodelCircuit}&initialCampaignId=${selectedRow?.id}`
       );
 
       return;
@@ -232,7 +232,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
       navigate(
         `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${
           (selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
-        }?initialCampaignId=${selectedRow.id}`,
+        }?initialCampaignId=${selectedRow.id}`
       );
     }
   };
@@ -249,7 +249,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
         id="workflow-activity-type-selectors"
         className={cn(
           'mb-5 grid w-full grid-cols-[2fr_2fr] items-center justify-center gap-5 pt-2',
-          '[grid-template-areas:"selectors_filters"]',
+          '[grid-template-areas:"selectors_filters"]'
         )}
       >
         <div
@@ -294,7 +294,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                   '[&_.ant-table-thead_th]:text-neutral-4!',
                   '[&_.ant-table-placeholder]:bg-background!',
                   '[&_.ant-table-sticky-holder]:shadow-none',
-                  '[&_.ant-table-body]:secondary-scrollbar!',
+                  '[&_.ant-table-body]:secondary-scrollbar!'
                 )}
                 loading={isFetching}
                 dataSource={activityResult?.data}
@@ -302,7 +302,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                 rowKey={(o) => o.id}
                 rowClassName={cn(
                   '[&.ant-table-row-selected]:translate-x-2 [&.ant-table-row-selected]:ease-out ',
-                  '[&.ant-table-row-selected]:transition-transform [&.ant-table-row-selected]:duration-200',
+                  '[&.ant-table-row-selected]:transition-transform [&.ant-table-row-selected]:duration-200'
                 )}
                 rowSelection={{
                   ...rowSelection,
@@ -310,7 +310,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                     _checked: boolean,
                     record: any,
                     _index: number,
-                    _: React.ReactNode,
+                    _: React.ReactNode
                   ) => {
                     return (
                       <div className="flex items-center justify-center">
@@ -320,7 +320,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                             'h-5 w-5 cursor-pointer appearance-none rounded-full border border-gray-400',
                             'shadow-[4px_4px_14px_0px_#0000001F,-4px_-4px_10px_0px_#FFFFFFD1]',
                             'checked:border-primary-9 checked:bg-primary-9',
-                            'transition-colors duration-200',
+                            'transition-colors duration-200'
                           )}
                           checked={_checked}
                           onChange={() => onRowSelect([], [record])}
@@ -370,7 +370,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                     aria-label="pagination for listing results"
                     className={cn(
                       '[&_.ant-pagination-item-active]:bg-primary-9 [&_.ant-pagination-item-active_a]:text-white!',
-                      '[&_.ant-pagination-disabled_button]:text-neutral-2 [&_button.ant-pagination-item-link]:text-primary-9',
+                      '[&_.ant-pagination-disabled_button]:text-neutral-2 [&_button.ant-pagination-item-link]:text-primary-9'
                     )}
                   />
                 </div>

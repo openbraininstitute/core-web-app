@@ -92,7 +92,7 @@ export function BrowseLinkContent({
             <div
               className={cn(
                 'text-neutral-4 group-hover:text-label text-sm font-light group-hover:font-bold',
-                { 'font-bold text-white': entityType === extendedType },
+                { 'font-bold text-white': entityType === extendedType }
               )}
             >
               {isLoading ? (
@@ -113,7 +113,7 @@ export function BrowseLinkContent({
               'transition-all duration-500 ease-out',
               'w-0 scale-0 opacity-0',
               'group-hover:w-auto group-hover:scale-100 group-hover:opacity-100',
-              'flex origin-left items-center',
+              'flex origin-left items-center'
             )}
           >
             <Button
@@ -126,7 +126,7 @@ export function BrowseLinkContent({
                 'shadow-md group-hover:ml-2 group-hover:shadow-xl',
                 'group-hover:scale-100',
                 { 'h-10! w-10!': breakpoint === 'l' },
-                { 'h-12! w-12!': breakpoint === 'xl' },
+                { 'h-12! w-12!': breakpoint === 'xl' }
               )}
               onClick={onContribute}
             >

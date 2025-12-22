@@ -83,13 +83,13 @@ type Build = {
 export function Output({ sessionId }: { sessionId: string | null }) {
   const context = useWorkspace();
   const [ionState] = useAtom(
-    useMemo(() => IonChannelModelingSharedStateFamily(sessionId!), [sessionId]),
+    useMemo(() => IonChannelModelingSharedStateFamily(sessionId!), [sessionId])
   );
   const [payload] = useAtom(
     useMemo(
       () => GenerativeFromAtomFamily(`${CONFIGURATION_FORM_STATE_KEY}/${sessionId}`),
-      [sessionId],
-    ),
+      [sessionId]
+    )
   );
 
   const [selectedBuildIndex, setSelectedBuildIndex] = useState<number | null>(null);
@@ -100,7 +100,7 @@ export function Output({ sessionId }: { sessionId: string | null }) {
   } | null>(null);
 
   const [selectedProtocol, setSelectedProtocol] = useState<IonChannelModelProtocolGroup | null>(
-    null,
+    null
   );
   const [selectedModFile, setSelectedModFile] = useState<{
     asset: IAsset;
@@ -127,7 +127,7 @@ export function Output({ sessionId }: { sessionId: string | null }) {
       refetchOnWindowFocus: false,
       enabled:
         ionState.schema && payload && isFormValid({ data: payload, schema: ionState.schema }),
-    }),
+    })
   );
 
   const builds = useMemo(() => {
@@ -212,7 +212,7 @@ export function Output({ sessionId }: { sessionId: string | null }) {
   const hasOutputForSelectedBuild = selectedBuild?.modelEntity !== undefined;
 
   const summaryAsset = selectedBuild?.modelEntity?.assets?.find(
-    (a) => a.label === AssetLabel.ion_channel_model_figure_summary_json,
+    (a) => a.label === AssetLabel.ion_channel_model_figure_summary_json
   );
 
   const { data: summaryData, isLoading: loadingSummary } = useQuery({
@@ -251,10 +251,10 @@ export function Output({ sessionId }: { sessionId: string | null }) {
 
     Object.entries(summaryData).forEach(([key, value]) => {
       const tracesAsset = selectedBuild.modelEntity?.assets?.find(
-        (a) => a.path === value.traces || a.path.endsWith(`/${value.traces}`),
+        (a) => a.path === value.traces || a.path.endsWith(`/${value.traces}`)
       );
       const stimuliAsset = selectedBuild.modelEntity?.assets?.find(
-        (a) => a.path === value.stimuli || a.path.endsWith(`/${value.stimuli}`),
+        (a) => a.path === value.stimuli || a.path.endsWith(`/${value.stimuli}`)
       );
 
       if (tracesAsset && stimuliAsset) {
@@ -271,7 +271,7 @@ export function Output({ sessionId }: { sessionId: string | null }) {
   }, [summaryData, selectedBuild?.modelEntity]);
 
   const modFile = selectedBuild?.modelEntity?.assets?.find(
-    (a) => a.label === AssetLabel.neuron_mechanisms,
+    (a) => a.label === AssetLabel.neuron_mechanisms
   );
 
   useEffect(() => {

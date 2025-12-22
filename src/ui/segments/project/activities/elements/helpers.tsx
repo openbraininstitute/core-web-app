@@ -118,7 +118,7 @@ export const getScaleArray = (): Array<{
 };
 
 export const getScaleAvailableActivities = (
-  scaleType: TExtendedEntitiesTypeDict,
+  scaleType: TExtendedEntitiesTypeDict
 ): Array<{ label: string; value: TActivityValue }> => {
   const scale = Scales[scaleType];
   if (!scale) {

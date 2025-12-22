@@ -13,7 +13,7 @@ export function usePlotParams(
   repetition: IonChannelRecordingRepetition | undefined,
   colorMap: Map<string, string>,
   selectedLines: string[],
-  preview: string | undefined,
+  preview: string | undefined
 ) {
   return React.useMemo(
     () => ({
@@ -32,7 +32,7 @@ export function usePlotParams(
         lineWidth: 2,
       },
     }),
-    [protocol, repetition, colorMap, selectedLines, preview],
+    [protocol, repetition, colorMap, selectedLines, preview]
   );
 }
 

@@ -23,6 +23,6 @@ export async function runBatch({ ctx, simulationIds, signal }: Params) {
       body: { simulation_ids: simulationIds },
       signal,
     },
-    { asRawResponse: true },
+    { asRawResponse: true }
   );
 }

@@ -30,7 +30,7 @@ const defaultColumnsFields = getFieldsDefinition([
 
 function makeColumns(
   virtualLabId: string,
-  projectId: string,
+  projectId: string
 ): ColumnsType<IElectricalCellRecording> {
   return Object.entries(defaultColumnsFields).map(([key, field]) => ({
     title: isString(field.title) ? field.title.toUpperCase() : field.title,
@@ -74,7 +74,7 @@ export function ExemplarTraces({ source }: Props) {
   const total = derivations?.pagination.total_items;
   const columns: ColumnsType<IElectricalCellRecording> = useMemo(
     () => makeColumns(virtualLabId, projectId),
-    [virtualLabId, projectId],
+    [virtualLabId, projectId]
   );
 
   const content = match({
@@ -87,7 +87,7 @@ export function ExemplarTraces({ source }: Props) {
     .with(
       P.union(
         { isLoading: true, isLoadingExemplarTraces: P._ },
-        { isLoading: P._, isLoadingExemplarTraces: true },
+        { isLoading: P._, isLoadingExemplarTraces: true }
       ),
       () => (
         <div className="mx-auto mt-4 w-full">
@@ -108,12 +108,12 @@ export function ExemplarTraces({ source }: Props) {
             ))}
           </div>
         </div>
-      ),
+      )
     )
     .with(
       P.union(
         { error: P.nonNullable, errorExemplarTraces: P._ },
-        { errorExemplarTraces: P.nonNullable, error: P._ },
+        { errorExemplarTraces: P.nonNullable, error: P._ }
       ),
       () => {
         return (
@@ -127,7 +127,7 @@ export function ExemplarTraces({ source }: Props) {
             }}
           />
         );
-      },
+      }
     )
     .with(
       {
@@ -153,7 +153,7 @@ export function ExemplarTraces({ source }: Props) {
             }}
           />
         );
-      },
+      }
     )
     .otherwise(() => null);
 

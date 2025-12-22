@@ -39,7 +39,7 @@ export function InvitationProcessing({ data }: { data: InvitationContentResponse
           error: error.cause as ApiErrorCause,
           accessToken: session?.accessToken,
           inviteToken,
-        }),
+        })
       );
     },
     async onSettled(result, err) {
@@ -53,7 +53,7 @@ export function InvitationProcessing({ data }: { data: InvitationContentResponse
                 virtualLabId: result.data.virtual_lab_id,
                 page: 1,
                 size: 1,
-              }),
+              })
             );
             if (error) {
               navigate(`${config.ROOT_ROUTE}/sync`);
@@ -66,7 +66,7 @@ export function InvitationProcessing({ data }: { data: InvitationContentResponse
             }
           } else if (origin === InviteOriginDict.Project) {
             navigate(
-              `${config.ROOT_ROUTE}/${result.data.virtual_lab_id}/${result.data.project_id}`,
+              `${config.ROOT_ROUTE}/${result.data.virtual_lab_id}/${result.data.project_id}`
             );
           }
         }
@@ -96,7 +96,7 @@ export function InvitationProcessing({ data }: { data: InvitationContentResponse
       borderless
       className={cn(
         'relative z-[9999] w-full max-w-2xl bg-white',
-        '[box-shadow:12px_12px_45px_0px_#0000001F,_-8px_-8px_24px_0px_#FFFFFFD1]',
+        '[box-shadow:12px_12px_45px_0px_#0000001F,_-8px_-8px_24px_0px_#FFFFFFD1]'
       )}
     >
       <CardDescription className="flex flex-col items-center gap-4 px-10 select-none">

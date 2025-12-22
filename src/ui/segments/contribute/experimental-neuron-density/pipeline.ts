@@ -35,7 +35,7 @@ export function useExperimentalNeuronDensityPipeline({
             const d = measurementSchema.safeParse(m);
             if (d.success) return d.data;
             return null;
-          }),
+          })
         ) ?? [];
       return createExperimentalNeuronDensity({
         context: { projectId, virtualLabId },
@@ -65,7 +65,7 @@ export function useExperimentalNeuronDensityPipeline({
             return (
               get(
                 (query.queryKey as ExtendedEntityTypeQueryKey)[0],
-                'context.extendedEntityType',
+                'context.extendedEntityType'
               ) === ExtendedEntitiesTypeDict.ExperimentalNeuronDensity
             );
           },
@@ -93,8 +93,8 @@ export function useExperimentalNeuronDensityPipeline({
                 role_id: c.role_id!,
                 entity_id: entityId,
               },
-            }),
-          ),
+            })
+          )
       );
     },
   });
@@ -136,7 +136,7 @@ export function useExperimentalNeuronDensityPipeline({
         };
         return acc;
       },
-      {} as Record<string, IMutationKeyConfig>,
+      {} as Record<string, IMutationKeyConfig>
     ),
   };
 }

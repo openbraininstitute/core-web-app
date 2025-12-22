@@ -52,7 +52,7 @@ export async function getGalleryContent(): Promise<GalleryContentProps[]> {
       {
         cache: 'force-cache',
         next: { revalidate: 3600 },
-      },
+      }
     );
 
     if (Array.isArray(data)) {

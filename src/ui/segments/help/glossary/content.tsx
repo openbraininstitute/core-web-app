@@ -148,18 +148,18 @@ export default function GlossaryContent({ glossarySections }: GlossaryContentPro
     const counts: Record<string, number> = alphabet.reduce(
       (acc, letter) => {
         acc[letter] = sorted.filter((it) =>
-          (it.Name ?? '').toString().toUpperCase().startsWith(letter),
+          (it.Name ?? '').toString().toUpperCase().startsWith(letter)
         ).length;
         return acc;
       },
-      {} as Record<string, number>,
+      {} as Record<string, number>
     );
 
     const filtered =
       selectedLetter === 'All'
         ? sorted
         : sorted.filter((it) =>
-            (it.Name ?? '').toString().toUpperCase().startsWith(selectedLetter),
+            (it.Name ?? '').toString().toUpperCase().startsWith(selectedLetter)
           );
 
     return (

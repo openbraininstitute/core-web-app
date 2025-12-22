@@ -66,7 +66,7 @@ export default function ContributorsList({ className, list }: ContributorsListPr
 
 function useResizeObserver(
   div: HTMLDivElement | null,
-  setContributorsPerPage: React.Dispatch<React.SetStateAction<number>>,
+  setContributorsPerPage: React.Dispatch<React.SetStateAction<number>>
 ) {
   useEffect(() => {
     if (!div) return;
@@ -75,7 +75,7 @@ function useResizeObserver(
       const contributorEstimatedWidth = 440;
       const contributorsPerRow = Math.max(
         1,
-        Math.floor(div.clientWidth / contributorEstimatedWidth),
+        Math.floor(div.clientWidth / contributorEstimatedWidth)
       );
       const rowsPerPage = 6;
       setContributorsPerPage(contributorsPerRow * rowsPerPage);

@@ -116,7 +116,7 @@ function useMoveTo(div: HTMLDivElement | null, count: number, makeId: (index: nu
         behavior: 'smooth',
       });
     },
-    [div, count, makeId],
+    [div, count, makeId]
   );
 }
 
@@ -124,7 +124,7 @@ function useScrollWatcher(
   div: HTMLDivElement | null,
   count: number,
   setCardIndex: React.Dispatch<React.SetStateAction<number>>,
-  makeId: (index: number) => string,
+  makeId: (index: number) => string
 ) {
   React.useEffect(() => {
     if (!div || count === 0) return;

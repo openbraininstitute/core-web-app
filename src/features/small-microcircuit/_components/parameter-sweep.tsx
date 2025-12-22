@@ -18,7 +18,7 @@ export default function ParameterSwep({
   k: string;
 }) {
   const [mode, setMode] = useState<'single' | 'multiple'>(
-    Array.isArray(value) ? 'multiple' : 'single',
+    Array.isArray(value) ? 'multiple' : 'single'
   );
 
   const [singleValue, setSingleValue] = useState(Array.isArray(value) ? null : value);

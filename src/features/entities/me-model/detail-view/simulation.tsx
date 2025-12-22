@@ -32,7 +32,7 @@ export default function Results({ modelId }: Props) {
           filters: { me_model__id: modelId },
           withFacets: false,
         }),
-        () => setLoading(false),
+        () => setLoading(false)
       );
 
       if (result) setSimulations(result.data);

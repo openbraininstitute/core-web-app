@@ -93,7 +93,7 @@ export async function build({
       body: payload,
       signal,
     },
-    { asRawResponse: stream },
+    { asRawResponse: stream }
   );
 }
 

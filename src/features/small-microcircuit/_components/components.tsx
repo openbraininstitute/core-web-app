@@ -362,7 +362,7 @@ export function Tab({
         rounded,
         tab === selectedTab
           ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
-          : 'text-primary-8 bg-white',
+          : 'text-primary-8 bg-white'
       )}
     >
       {children}

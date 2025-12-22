@@ -94,7 +94,7 @@ export const Switch = forwardRef<
       'data-[state=unchecked]:bg-input border-primary-8 rounded-full border-2 transition-colors',
       'focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden',
       'focus-visible:ring-offset-background data-[state=checked]:bg-primary disabled:cursor-not-allowed disabled:opacity-50',
-      className,
+      className
     )}
     // eslint-disable-next-line react/jsx-props-no-spreading
     {...props}
@@ -104,7 +104,7 @@ export const Switch = forwardRef<
       className={classNames(
         'bg-background pointer-events-none block h-3 w-3 rounded-full shadow-lg ring-0 transition-transform',
         'data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0',
-        thumbCls,
+        thumbCls
       )}
     />
   </SwitchPrimitives.Root>
@@ -173,7 +173,7 @@ function transformData(data: any): TiersData {
 
 const renameAndRemove = (arr: any[], oldKey: string, newKey: string) =>
   map(arr, (obj) =>
-    obj[oldKey] !== undefined ? { ...omit(obj, oldKey), [newKey]: obj[oldKey] } : obj,
+    obj[oldKey] !== undefined ? { ...omit(obj, oldKey), [newKey]: obj[oldKey] } : obj
   );
 
 export async function getAllTiers(): Promise<ExtendedTier[]> {

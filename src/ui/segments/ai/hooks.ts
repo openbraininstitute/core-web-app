@@ -8,7 +8,7 @@ export function usePanelState() {
 
   const setState = useCallback(
     (newState: PanelState) => setFlag(aiPanelStateFlag.key, newState),
-    [],
+    []
   );
 
   return {

@@ -185,8 +185,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
               {field}
             </div>
           ),
-          'flex flex-wrap gap-2 items-center justify-start text-sm',
-        ),
+          'flex flex-wrap gap-2 items-center justify-start text-sm'
+        )
       );
     },
     isDisplayable: true,
@@ -229,7 +229,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         status,
         <div className="w-max rounded-full px-3 py-1 text-sm font-bold text-gray-800 shadow-sm">
           Generated
-        </div>,
+        </div>
       );
       if (component) {
         return <div className="flex w-full items-center justify-center">{component}</div>;

@@ -58,7 +58,7 @@ class UserJourneyTracker {
             artifact: null,
           },
         ],
-        isUserJourney,
+        isUserJourney
       );
       if (this.trim()) this.save();
     } catch (ex) {

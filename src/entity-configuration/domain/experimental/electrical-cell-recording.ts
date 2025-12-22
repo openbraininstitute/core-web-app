@@ -15,7 +15,7 @@ import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 export const recordingOriginFilter = {
   recording_origin__in: without(
     Object.values(ElectricalRecordingOriginDictionary),
-    ElectricalRecordingOriginDictionary.InSilico,
+    ElectricalRecordingOriginDictionary.InSilico
   ),
 };
 

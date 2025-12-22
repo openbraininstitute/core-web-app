@@ -73,7 +73,7 @@ export function EModel({ sessionId }: Props) {
   });
 
   const brainRegionHierarchy = useAtomValue(
-    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), []),
+    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
   );
 
   useEffect(() => {
@@ -99,7 +99,7 @@ export function EModel({ sessionId }: Props) {
         selectionType: 'radio',
         onCellClick: (_, record) => {
           navigate(
-            `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(EntityTypeDict.Emodel)}/${record.id}/overview`,
+            `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(EntityTypeDict.Emodel)}/${record.id}/overview`
           );
         },
         onRowsSelected: (rows) => {
@@ -145,7 +145,7 @@ export function EModel({ sessionId }: Props) {
                   [tr:has(.ant-radio-wrapper)]:hover:after:z-50
                   [tr:has(.ant-radio-wrapper)]:hover:after:top-[10px]
                   [tr:has(.ant-radio-wrapper)]:hover:after:left-[10px]
-                `,
+                `
               )
             : '';
         },
@@ -239,7 +239,7 @@ export function EModelMiniDetail({ sessionId }: Props) {
               rootClassName=" w-full h-full flex items-center! justify-center! [&_.ant-image-mask]:rounded-2xl"
               className="max-h-full w-full rounded-2xl object-contain"
             />
-          ),
+          )
         )}
       </div>
     </div>

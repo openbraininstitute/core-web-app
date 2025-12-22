@@ -30,7 +30,7 @@ export function BrainRegionHierarchy({
 }) {
   const isCollapsed = useAtomValue(brainRegionSidebarAtom);
   const brainRegionHierarchyResult = useAtomValue(
-    brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom,
+    brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom
   );
   const { updateHierarchyConfig } = useBrainRegionHierarchy({
     dataKey,
@@ -49,7 +49,7 @@ export function BrainRegionHierarchy({
   }
 
   const defaultBrainRegion = brainRegionHierarchyResult.options.find(
-    (o) => o.data.annotation_value === DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE,
+    (o) => o.data.annotation_value === DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE
   )?.value;
 
   const onClick = (clickedNode: TTreeNode) => {
@@ -68,7 +68,7 @@ export function BrainRegionHierarchy({
     <div
       className={classNames(
         'group flex h-full min-h-0 flex-col rounded-xl transition-all duration-300 ease-in-out',
-        isCollapsed ? 'collapsed w-full' : 'w-full',
+        isCollapsed ? 'collapsed w-full' : 'w-full'
       )}
     >
       <div className="flex h-full min-h-0 w-full flex-col gap-4 overflow-hidden p-4 pt-0">
@@ -76,7 +76,7 @@ export function BrainRegionHierarchy({
           <div
             className={classNames(
               'flex min-h-0 w-full flex-col gap-4 overflow-hidden transition-all duration-300 ease-in-out',
-              isCollapsed ? 'invisible max-h-0 opacity-0' : 'visible h-full opacity-100',
+              isCollapsed ? 'invisible max-h-0 opacity-0' : 'visible h-full opacity-100'
             )}
           >
             <HydrateWrapper>

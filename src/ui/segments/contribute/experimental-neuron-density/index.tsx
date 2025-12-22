@@ -55,7 +55,7 @@ const EXPERIMENTAL_NEURON_DENSITY_STEP_CONFIG: IContributionStep<TExperimentalNe
   ];
 
 const experimentalNeuronDensityConfig = createExperimentalNeuronDensityConfig(
-  EXPERIMENTAL_NEURON_DENSITY_STEP_CONFIG,
+  EXPERIMENTAL_NEURON_DENSITY_STEP_CONFIG
 );
 
 interface IExperimentalNeuronDensityProps {

@@ -89,7 +89,7 @@ function MorphologyOverviewCard({ mode = 'summary', data, reselectLink = false }
       }}
       className={classNames(
         'border-neutral-2 text-neutral-4 hover:bg-primary-7 flex h-48 w-full',
-        'items-center rounded-lg border pl-32 text-4xl hover:text-white',
+        'items-center rounded-lg border pl-32 text-4xl hover:text-white'
       )}
     >
       Select {title.toLowerCase()}

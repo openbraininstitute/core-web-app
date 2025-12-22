@@ -11,7 +11,7 @@ function buildAssetUrl(
   options?: {
     dpi?: number;
     target?: 'simulation' | 'stimulus';
-  },
+  }
 ) {
   let queryParams = '';
   const extension = getEntityByCoreType({ type: resource.type })?.asset.extension;
@@ -44,7 +44,7 @@ export async function getPreviewBlob(
   virtualLabId?: string,
   projectId?: string,
   target?: 'simulation' | 'stimulus',
-  accept: string = 'image/png',
+  accept: string = 'image/png'
 ) {
   const url = buildAssetUrl(resource, { dpi: 400, target });
   const session = await getSession();

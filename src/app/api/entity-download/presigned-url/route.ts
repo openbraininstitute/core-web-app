@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     }
     return NextResponse.json(
       { error: 'Failed to process download request' },
-      { status: response.status },
+      { status: response.status }
     );
   } catch (error) {
     log('error', error);

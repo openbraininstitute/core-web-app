@@ -26,7 +26,7 @@ export function DateRange({
         }
       />
     ),
-    [filter.value.gte, filter.value.lte, onChange],
+    [filter.value.gte, filter.value.lte, onChange]
   );
 
   return (
