@@ -1,6 +1,6 @@
+import { assertApiResponse } from '@/util/utils';
 import authFetch, { getSession } from '@/auth-fetch';
 import { config } from '@/config';
-import { assertApiResponse } from '@/util/utils';
 
 export type NotebookStartResponse = {
   message: string;

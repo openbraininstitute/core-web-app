@@ -1,6 +1,8 @@
 import { isNil, omitBy } from 'es-toolkit/compat';
-import type { TEntityTypeDict } from '@/api/entitycore/types';
+
 import { compactRecord } from '@/utils/dictionary';
+
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 
 export async function getEntityCorePresignedUrl({
   entityType,
@@ -47,7 +49,5 @@ export async function getEntityCorePresignedUrl({
     const result = await response.json();
     return result;
   }
-  throw new Error('Error creating presigned url', {
-    cause: await response.text(),
-  });
+  throw new Error('Error creating presigned url', { cause: await response.text() });
 }

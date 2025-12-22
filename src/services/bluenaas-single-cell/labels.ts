@@ -1,5 +1,5 @@
 /* eslint-disable no-param-reassign */
-import { type Camera, type Object3D, type Scene, Vector3 } from 'three';
+import { Camera, Object3D, Scene, Vector3 } from 'three';
 
 import { getSimulationColor } from '@/constants/simulate/single-neuron';
 
@@ -54,10 +54,7 @@ export class Labels {
   private injectionIcon: HTMLImageElement | null = null;
 
   constructor(
-    private readonly getRendererEnvironment: () => {
-      scene: Scene;
-      camera: Camera;
-    },
+    private readonly getRendererEnvironment: () => { scene: Scene; camera: Camera },
     options: Partial<LabelsOptions> = {}
   ) {
     this.observer = new ResizeObserver(this.paint);

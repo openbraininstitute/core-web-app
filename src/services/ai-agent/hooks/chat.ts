@@ -1,12 +1,14 @@
 'use client';
 
-import { type CreateMessage, type Message, useChat } from '@ai-sdk/react';
-import type { ChatRequestOptions } from '@ai-sdk/ui-utils';
 import React from 'react';
-import { useAIActiveTools } from '@/components/ai-assistant/state';
-import { logError } from '@/util/logger';
+import { ChatRequestOptions } from '@ai-sdk/ui-utils';
+import { CreateMessage, Message, useChat } from '@ai-sdk/react';
+
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { useAiAssistant } from '../assistant';
+
+import { useAIActiveTools } from '@/components/ai-assistant/state';
+import { logError } from '@/util/logger';
 
 export interface AiAgentRateLimit {
   limit: number;

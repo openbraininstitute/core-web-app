@@ -1,19 +1,19 @@
 import {
-  Color,
-  type ColorRepresentation,
   CylinderGeometry,
   DoubleSide,
-  InstancedBufferAttribute,
-  InstancedBufferGeometry,
-  type Material,
+  Material,
   Mesh,
   MeshLambertMaterial,
   Quaternion,
-  ShaderMaterial,
-  SphereGeometry,
   Vector3,
+  SphereGeometry,
+  ColorRepresentation,
+  InstancedBufferAttribute,
+  InstancedBufferGeometry,
+  Color,
+  ShaderMaterial,
 } from 'three';
-import type { NeuronSectionInfo } from './types';
+import { NeuronSectionInfo } from './types';
 
 export type NeuronSegmentInfo = {
   segIdx: number;

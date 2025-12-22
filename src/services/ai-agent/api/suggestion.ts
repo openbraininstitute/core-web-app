@@ -1,6 +1,6 @@
+import { fetchJSON, asyncCreateSquash } from './util';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { isType } from '@/util/type-guards';
-import { asyncCreateSquash, fetchJSON } from './util';
 
 export const serviceAiAgentSuggestionFromUserJourney = asyncCreateSquash(
   async (

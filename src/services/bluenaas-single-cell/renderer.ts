@@ -1,14 +1,14 @@
-import { differenceWith, isEqual, throttle } from 'es-toolkit/compat';
+import { throttle, isEqual, differenceWith } from 'es-toolkit/compat';
 import {
   AmbientLight,
   Color,
-  type CylinderGeometry,
+  CylinderGeometry,
   DoubleSide,
   EdgesGeometry,
   Fog,
   LineBasicMaterial,
   LineSegments,
-  type Mesh,
+  Mesh,
   MeshLambertMaterial,
   Object3D,
   PerspectiveCamera,
@@ -23,11 +23,13 @@ import {
 // TODO: to check if three js version is compatible with this
 // @ts-expect-error
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import type { SynapsesMesh } from '@/components/neuron-viewer/hooks/events';
-import { Labels } from './labels';
+
 import RendererCtrl from './renderer-ctrl';
-import { createSegMarkerMesh, createSegmentMesh, type NeuronSegmentInfo } from './renderer-utils';
 import type { Morphology, SecMarkerConfig } from './types';
+import { createSegMarkerMesh, createSegmentMesh, NeuronSegmentInfo } from './renderer-utils';
+import { Labels } from './labels';
+
+import { SynapsesMesh } from '@/components/neuron-viewer/hooks/events';
 
 const FOG_COLOR = 0xffffff;
 const FOG_NEAR = 1;
@@ -162,7 +164,7 @@ export class NeuronViewerRenderer {
 
   private animationFrameHandle: number | null = null;
 
-  private synapses: SynapsesMesh[] = [];
+  private synapses: Array<SynapsesMesh> = [];
 
   constructor(container: HTMLDivElement, config: TNeuronViewerConfig) {
     this.labels = new Labels(() => ({
@@ -322,10 +324,7 @@ export class NeuronViewerRenderer {
     hoverData.mesh.getWorldQuaternion(this.hoverBox.quaternion);
     this.hoverBox.name = hoverData.mesh.name;
 
-    this.hoverBox.userData = {
-      ...hoverData.mesh.userData,
-      skipHoverDetection: true,
-    };
+    this.hoverBox.userData = { ...hoverData.mesh.userData, skipHoverDetection: true };
     this.scene.add(this.hoverBox);
 
     this.config.onHover?.({
@@ -399,7 +398,7 @@ export class NeuronViewerRenderer {
     this.config.onHover = onHover;
   }
 
-  public set configOnHoverEnd(onHoverEnd: (data: TNeuronViewerHoverData) => void,) {
+  public set configOnHoverEnd(onHoverEnd: (data: TNeuronViewerHoverData) => void) {
     this.config.onHoverEnd = onHoverEnd;
   }
 

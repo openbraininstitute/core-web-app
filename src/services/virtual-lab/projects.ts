@@ -1,7 +1,7 @@
-import type { MembersResponse } from '@/api/virtual-lab-svc/queries/types';
+import { MembersResponse } from '@/api/virtual-lab-svc/queries/types';
 import authFetch, { authFetchRetryOnError, authFetchWithoutRetry } from '@/auth-fetch';
 import { config } from '@/config';
-import type {
+import {
   ProjectBalance,
   ProjectBalanceResponse,
   ProjectJobReportsResponse,
