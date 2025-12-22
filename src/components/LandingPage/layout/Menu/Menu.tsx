@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
+
 import { classNames } from '@/util/utils';
 import { ID_MENU } from '../../constants';
 import { IconChevronRight } from '../../icons/IconChevronRight';
@@ -12,7 +13,6 @@ import PopupMenu from './PopupMenu/PopupMenu';
 
 interface MenuProps {
   className?: string;
-  scrollHasStarted: boolean;
   section?: EnumSection;
 }
 
@@ -65,11 +65,26 @@ const MENU_ITEMS: MenuItem[] = [
   },
 ];
 
-export default function Menu({ className, scrollHasStarted, section }: MenuProps) {
-  const [showMenu, setShowMenu] = React.useState(false);
-  const [showMenuComponent, setShowMenuComponent] = React.useState(true);
-  const [lastScrollY, setLastScrollY] = React.useState(0);
+function useScrollHasStarted() {
+  const [scrollHasStarted, setScrollHasStarted] = useState(false);
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollHasStarted(window.scrollY > 0);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  return scrollHasStarted;
+}
+
+export default function Menu({ className, section }: MenuProps) {
+  const [showMenu, setShowMenu] = useState(false);
+  const [showMenuComponent, setShowMenuComponent] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+
+  const scrollHasStarted = useScrollHasStarted();
 
   // Check if current section is in a submenu, and return the parent item if so
   const getParentItemForSection = (currentSection?: EnumSection): MenuItem | null => {
@@ -86,7 +101,7 @@ export default function Menu({ className, scrollHasStarted, section }: MenuProps
 
   const parentItem = getParentItemForSection(section);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
 

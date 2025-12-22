@@ -34,7 +34,14 @@ function isContentForAbout(data: unknown): data is AboutContentProps {
 
 export async function getAboutContent(): Promise<AboutContentProps> {
   try {
-    const data = await getClient().fetch<AboutContentProps>(queryForAboutContent);
+    const data = await getClient().fetch<AboutContentProps>(
+      queryForAboutContent,
+      {},
+      {
+        cache: 'force-cache',
+        next: { revalidate: 3600 },
+      },
+    );
     if (isContentForAbout(data)) return data;
   } catch (err) {
     logError(err);

@@ -19,7 +19,14 @@ const queryForCreditsPacks = `*[_type == "credits"][] {
 
 export async function GET() {
   try {
-    const data = await getClient().fetch<CreditsPack[]>(queryForCreditsPacks);
+    const data = await getClient().fetch<CreditsPack[]>(
+      queryForCreditsPacks,
+      {},
+      {
+        cache: 'force-cache',
+        next: { revalidate: 3600 },
+      },
+    );
 
     return NextResponse.json({ creditsPacks: data ?? [] });
   } catch (error) {

@@ -5,7 +5,7 @@ import { assertType, type TypeDef } from '@/util/type-guards';
 
 const queryForAboutContent = `*[_type == "documentationSettings"][0] {
   tutorialOrder[]-> {
-    title, 
+    title,
     description,
     "slug": slug.current,
     "url": videoUrl,
@@ -47,7 +47,14 @@ function isContentForTutorials(data: unknown): data is ContentForTutorialItem {
 
 export async function getTutorialContent(): Promise<ContentForTutorialItem> {
   try {
-    const data = await getClient().fetch<ContentForTutorialItem>(queryForAboutContent);
+    const data = await getClient().fetch<ContentForTutorialItem>(
+      queryForAboutContent,
+      {},
+      {
+        cache: 'force-cache',
+        next: { revalidate: 3600 },
+      },
+    );
     if (isContentForTutorials(data)) return data;
   } catch (err) {
     logError(err);

@@ -5,7 +5,14 @@ import { logError } from '@/util/logger';
 
 export async function getSanityTiers(): Promise<ContentForPricing | undefined | null> {
   try {
-    const data = await getClient().fetch<ContentForPricing>(tiersQuery, {});
+    const data = await getClient().fetch<ContentForPricing>(
+      tiersQuery,
+      {},
+      {
+        cache: 'force-cache',
+        next: { revalidate: 3600 },
+      },
+    );
     return data;
   } catch (ex) {
     logError('Failed to fetch Sanity tiers:', ex);

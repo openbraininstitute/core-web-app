@@ -1,7 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
 import { InvitationErrorDialog } from '@/ui/segments/invites/error-dialog';
 import { logError } from '@/util/logger';
 import { classNames } from '@/util/utils';
@@ -31,18 +29,9 @@ interface LandingPageProps {
 }
 
 export default function LandingPage({ className, section, error }: LandingPageProps) {
-  const scrollHasStarted = useScrollHasStarted();
-
-  useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'instant',
-    });
-  }, []);
-
   return (
     <div className={classNames(className, styles.landingPage)}>
-      <Menu scrollHasStarted={scrollHasStarted} section={section} />
+      <Menu section={section} />
       <Hero section={section} />
       <PaddedBlock>{renderSection(section)}</PaddedBlock>
       <VerticalSpace height="30px" />
@@ -76,17 +65,4 @@ function renderSection(section: EnumSection): React.ReactNode {
       logError('This slug has NOT been implemented yet!', getSection(section));
       return null;
   }
-}
-
-function useScrollHasStarted() {
-  const [scrollHasStarted, setScrollHasStarted] = useState(false);
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollHasStarted(window.scrollY > 0);
-    };
-    handleScroll();
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-  return scrollHasStarted;
 }

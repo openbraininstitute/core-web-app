@@ -23,7 +23,14 @@ const queryForSinglePrice = `*[_type == "singlePrice"][] {
 
 export async function GET() {
   try {
-    const data = await getClient().fetch<SinglePrice[]>(queryForSinglePrice);
+    const data = await getClient().fetch<SinglePrice[]>(
+      queryForSinglePrice,
+      {},
+      {
+        cache: 'force-cache',
+        next: { revalidate: 3600 },
+      },
+    );
 
     return NextResponse.json({ prices: data ?? [] });
   } catch (error) {

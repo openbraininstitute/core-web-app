@@ -46,7 +46,14 @@ function isContentForGallery(data: unknown): data is GalleryContentProps {
 
 export async function getGalleryContent(): Promise<GalleryContentProps[]> {
   try {
-    const data = await getClient().fetch<GalleryContentProps[]>(queryForGalleryContent);
+    const data = await getClient().fetch<GalleryContentProps[]>(
+      queryForGalleryContent,
+      {},
+      {
+        cache: 'force-cache',
+        next: { revalidate: 3600 },
+      },
+    );
 
     if (Array.isArray(data)) {
       const filtered = data.filter((item) => {

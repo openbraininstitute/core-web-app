@@ -57,7 +57,14 @@ function isContentForGuides(data: unknown): data is GuidesContentsProps {
 
 export async function getGuidesContent(): Promise<GuidesContentsProps> {
   try {
-    const data = await getClient().fetch<GuidesContentsProps>(queryForGuidesContent);
+    const data = await getClient().fetch<GuidesContentsProps>(
+      queryForGuidesContent,
+      {},
+      {
+        cache: 'force-cache',
+        next: { revalidate: 3600 },
+      },
+    );
     if (isContentForGuides(data)) return data;
   } catch (err) {
     logError(err);
