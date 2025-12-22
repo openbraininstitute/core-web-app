@@ -1,5 +1,5 @@
 import { useDocumentationArchitecture } from '../content/architecture-content';
-import type { SingleSectionProps } from '../type';
+import { SingleSectionProps } from '../type';
 import NavItem from './nav-item';
 import TutorialNavList from './tutorial-nav-list';
 

@@ -28,90 +28,90 @@
 
 .template-1 {
   grid-template-areas:
-    "a a a a a a"
-    "a a a a a a"
-    "a a a a a a"
-    "a a a a a a"
-    "a a a a a a"
-    "a a a a a a";
+    'a a a a a a'
+    'a a a a a a'
+    'a a a a a a'
+    'a a a a a a'
+    'a a a a a a'
+    'a a a a a a';
 }
 
 .template-2 {
   grid-template-areas:
-    "a a a b b b"
-    "a a a b b b"
-    "a a a b b b"
-    "a a a b b b"
-    "a a a b b b"
-    "a a a b b b";
+    'a a a b b b'
+    'a a a b b b'
+    'a a a b b b'
+    'a a a b b b'
+    'a a a b b b'
+    'a a a b b b';
 }
 
 .template-3 {
   grid-template-areas:
-    "a a b b c c"
-    "a a b b c c"
-    "a a b b c c"
-    "a a b b c c"
-    "a a b b c c"
-    "a a b b c c";
+    'a a b b c c'
+    'a a b b c c'
+    'a a b b c c'
+    'a a b b c c'
+    'a a b b c c'
+    'a a b b c c';
 }
 
 .template-4 {
   grid-template-areas:
-    "a a a b b b"
-    "a a a b b b"
-    "a a a b b b"
-    "c c c d d d"
-    "c c c d d d"
-    "c c c d d d";
+    'a a a b b b'
+    'a a a b b b'
+    'a a a b b b'
+    'c c c d d d'
+    'c c c d d d'
+    'c c c d d d';
 }
 
 .template-5 {
   grid-template-areas:
-    "a a a b b b"
-    "a a a b b b"
-    "a a a b b b"
-    "c c d d e e"
-    "c c d d e e"
-    "c c d d e e";
+    'a a a b b b'
+    'a a a b b b'
+    'a a a b b b'
+    'c c d d e e'
+    'c c d d e e'
+    'c c d d e e';
 }
 
 .template-6 {
   grid-template-areas:
-    "a a b b c c"
-    "a a b b c c"
-    "a a b b c c"
-    "d d e e f f"
-    "d d e e f f"
-    "d d e e f f";
+    'a a b b c c'
+    'a a b b c c'
+    'a a b b c c'
+    'd d e e f f'
+    'd d e e f f'
+    'd d e e f f';
 }
 
 .template-7 {
   grid-template-areas:
-    ". a a b b ."
-    ". a a b b ."
-    "c c d d e e"
-    "c c d d e e"
-    ". f f g g ."
-    ". f f g g .";
+    '. a a b b .'
+    '. a a b b .'
+    'c c d d e e'
+    'c c d d e e'
+    '. f f g g .'
+    '. f f g g .';
 }
 
 .template-8 {
   grid-template-areas:
-    ". a a b b ."
-    ". a a b b ."
-    "c c d d e e"
-    "c c d d e e"
-    "f f g g h h"
-    "f f g g h h";
+    '. a a b b .'
+    '. a a b b .'
+    'c c d d e e'
+    'c c d d e e'
+    'f f g g h h'
+    'f f g g h h';
 }
 
 .template-9 {
   grid-template-areas:
-    "a a b b c c"
-    "a a b b c c"
-    "d d e e f f"
-    "d d e e f f"
-    "g g h h i i"
-    "g g h h i i";
+    'a a b b c c'
+    'a a b b c c'
+    'd d e e f f'
+    'd d e e f f'
+    'g g h h i i'
+    'g g h h i i';
 }

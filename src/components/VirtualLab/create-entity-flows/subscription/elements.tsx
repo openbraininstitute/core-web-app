@@ -1,4 +1,4 @@
-import { CloseCircleFilled, ExclamationCircleFilled, InfoCircleFilled } from '@ant-design/icons';
+import { ExclamationCircleFilled, CloseCircleFilled, InfoCircleFilled } from '@ant-design/icons';
 
 export function getStatusColor(status: string): string {
   switch (status.toLowerCase()) {

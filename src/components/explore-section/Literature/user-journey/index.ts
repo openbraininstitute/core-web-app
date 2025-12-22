@@ -30,7 +30,7 @@ function isUserJourney(data: unknown): data is UserJourney {
   try {
     assertUserJourney(data);
     return true;
-  } catch (_ex) {
+  } catch (ex) {
     logError('Invalid format for UserJourney:', data);
     return false;
   }

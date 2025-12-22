@@ -1,8 +1,9 @@
-import { useSanity } from '@/services/sanity/hooks';
-import { logError } from '@/util/logger';
-import { assertType, type TypeDef } from '@/util/type-guards';
 import queryForArtifactTypes from '../query/experimental-types-query';
-import type { ContentForGlossaryItem } from '../type';
+import { ContentForGlossaryItem } from '../type';
+
+import { useSanity } from '@/services/sanity';
+import { logError } from '@/util/logger';
+import { assertType, TypeDef } from '@/util/type-guards';
 
 export function useSanityContentForArtifactTypes() {
   return useSanity(queryForArtifactTypes, isContentForGlossary) ?? [];

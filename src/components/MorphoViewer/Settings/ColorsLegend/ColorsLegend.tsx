@@ -1,12 +1,12 @@
 /* eslint-disable no-param-reassign */
-
-import type { MorphologyCanvas } from '@bbp/morphoviewer';
 import { useEffect, useState } from 'react';
-import { Switch } from '@/components/common/Switch';
-import { ResetIcon } from '@/components/icons';
-import { classNames } from '@/util/utils';
-import { type MorphoViewerSettings, useMorphoViewerSettings } from '../../hooks/settings';
+import { MorphologyCanvas } from '@bbp/morphoviewer';
+
+import { MorphoViewerSettings, useMorphoViewerSettings } from '../../hooks/settings';
 import { ColorInput } from './ColorInput';
+import { classNames } from '@/util/utils';
+import { ResetIcon } from '@/components/icons';
+import { Switch } from '@/components/common/Switch';
 
 import styles from './colors-legend.module.css';
 

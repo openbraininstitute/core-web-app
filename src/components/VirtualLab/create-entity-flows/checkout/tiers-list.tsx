@@ -1,29 +1,29 @@
 'use client';
 
 import { CheckCircleFilled, InfoCircleOutlined } from '@ant-design/icons';
-import { Tooltip } from 'antd';
-import kebabCase from 'es-toolkit/compat/kebabCase';
-import noop from 'es-toolkit/compat/noop';
-import toUpper from 'es-toolkit/compat/toUpper';
-import { useAtom } from 'jotai';
 import { useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
+import { Tooltip } from 'antd';
+import { useAtom } from 'jotai';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import toUpper from 'es-toolkit/compat/toUpper';
+import noop from 'es-toolkit/compat/noop';
 
 import { tryCatch } from '@/api/utils';
-import type { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';
+import { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';
 import ContactUs from '@/components/VirtualLab/create-entity-flows/checkout/contact-us';
 import DowngradeFree from '@/components/VirtualLab/create-entity-flows/checkout/downgrade';
 import {
-  type ExtendedTier,
+  ExtendedTier,
   flowAtom,
   getAllTiers,
   Switch,
-  type Tier,
-  type TierFeature,
+  Tier,
+  TierFeature,
 } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
 import { TiersListSkeleton } from '@/components/VirtualLab/create-entity-flows/checkout/skeleton';
-import { Button } from '@/ui/molecules/button';
 import { classNames } from '@/util/utils';
+import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
 type Props = {
@@ -41,7 +41,7 @@ type TTiersStep = (typeof TiersStep)[keyof typeof TiersStep];
 
 type TiersComparisonPros = {
   currentTier?: 'FREE' | 'PRO' | 'PREMIUM';
-  tiers: ExtendedTier[];
+  tiers: Array<ExtendedTier>;
   onSelectPremiumTier: () => void;
   onSelectFree: () => void;
   subscriptionData: UserActiveSubscriptionResponse;
@@ -149,22 +149,14 @@ function TiersComparison({
     return category.featuresList.find((f) => f.title === featureTitle);
   };
 
-  const allCategories: {
-    title: string;
-    available?: boolean;
-    features: string[];
-  }[] = [];
+  const allCategories: { title: string; available?: boolean; features: string[] }[] = [];
 
   tiers?.forEach((t) => {
     t.features.forEach((category) => {
       let existingCategory = allCategories.find((c) => c.title === category.title);
 
       if (!existingCategory) {
-        existingCategory = {
-          title: category.title,
-          available: category.available,
-          features: [],
-        };
+        existingCategory = { title: category.title, available: category.available, features: [] };
         allCategories.push(existingCategory);
       }
 
@@ -392,7 +384,7 @@ function TiersComparison({
 
 export default function TiersList({ currentTier, subscriptionData }: Props) {
   const [loading, setLoading] = useState(true);
-  const [tiers, setTiers] = useState<{ data: ExtendedTier[] } | { error: any }>({ data: [] });
+  const [tiers, setTiers] = useState<{ data: Array<ExtendedTier> } | { error: any }>({ data: [] });
   const [currentStep, setCurrentStep] = useState<TTiersStep>(TiersStep.Listing);
 
   const onSelectPremiumTier = () => setCurrentStep(TiersStep.ContactUs);

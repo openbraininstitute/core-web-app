@@ -1,7 +1,7 @@
 import React from 'react';
-import { isString } from '@/util/type-guards';
 import { useSnapshot } from './snapshot';
-import { SuggestionsListFullBrain, SuggestionsListPerRegion } from './suggestions-list';
+import { SuggestionsListPerRegion, SuggestionsListFullBrain } from './suggestions-list';
+import { isString } from '@/util/type-guards';
 
 export function useHardcodedSuggestions(maxNumberOfQuestions: number = 2): string[] {
   const snapshot = useSnapshot();

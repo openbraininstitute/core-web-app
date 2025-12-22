@@ -1,5 +1,5 @@
 import { CloseOutlined } from '@ant-design/icons';
-import type { ColumnType } from 'antd/lib/table';
+import { ColumnType } from 'antd/lib/table';
 import { classNames } from '@/util/utils';
 
 export type Column<T> = ColumnType<T> & {

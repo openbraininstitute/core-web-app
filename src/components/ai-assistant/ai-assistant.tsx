@@ -1,17 +1,19 @@
 'use client';
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import dynamic from 'next/dynamic';
 import React, { type CSSProperties } from 'react';
-import { useAiAssistant } from '@/services/ai-agent/assistant';
-import { classNames } from '@/util/utils';
-import type { TAppUInterfaceSection } from '@/utils/key-builder';
-import styles from './ai-assistant.module.css';
+import dynamic from 'next/dynamic';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
 import { AiContextProvider, MINIMAL_PANEL_SIZE, usePanelWidth } from './hooks';
+import PanelSplitter from './panel-splitter';
 import { IconChat } from './icons/chat';
 import { IconHistory } from './icons/history';
 import PanelContent from './panel-content';
-import PanelSplitter from './panel-splitter';
+import { classNames } from '@/util/utils';
+import { useAiAssistant } from '@/services/ai-agent/assistant';
+import type { TAppUInterfaceSection } from '@/utils/key-builder';
+
+import styles from './ai-assistant.module.css';
 
 interface AiAssistantProps {
   className?: string;

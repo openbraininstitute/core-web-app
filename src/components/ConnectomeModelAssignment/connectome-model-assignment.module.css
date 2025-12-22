@@ -43,5 +43,5 @@
 }
 
 .table :global(.ant-table-placeholder) {
-  z-index: 0;
+  z-index: 0 !important;
 }

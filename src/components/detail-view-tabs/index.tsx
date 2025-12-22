@@ -1,6 +1,6 @@
 'use client';
 
-import { type Parser, parseAsString, useQueryState } from 'nuqs';
+import { parseAsString, Parser, useQueryState } from 'nuqs';
 import { classNames } from '@/util/utils';
 
 type Props<T> = {
@@ -87,7 +87,7 @@ export function useTabs<T extends string>({
     tabKey,
     parseAsString
       .withOptions({ shallow, clearOnDefault })
-      .withDefault(defaultKey ?? tabsConfig?.at(0)?.key!) as Parser<T>
+      .withDefault(defaultKey ?? tabsConfig?.at(0)!.key!) as Parser<T>
   );
 
   const onChangeTab = (key: string) => () => setActiveTab(key as T);

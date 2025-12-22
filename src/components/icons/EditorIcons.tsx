@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import type { SVGProps } from 'react';
+import { SVGProps } from 'react';
 
 export function Undo(props: SVGProps<SVGSVGElement>) {
   return (

@@ -1,7 +1,9 @@
-import type { MorphologyCanvas } from '@bbp/morphoviewer';
-import ChevronDownIcon from '@/components/icons/ChevronDownIcon';
-import { classNames } from '@/util/utils';
+import React from 'react';
+import { MorphologyCanvas } from '@bbp/morphoviewer';
+
 import { useMorphoViewerSettings } from '../../hooks/settings';
+import { classNames } from '@/util/utils';
+import ChevronDownIcon from '@/components/icons/ChevronDownIcon';
 
 import styles from './color-mode.module.css';
 
@@ -13,9 +15,7 @@ interface ColorModeProps {
 export function ColorMode({ className, painter }: ColorModeProps) {
   const [settings, update] = useMorphoViewerSettings(painter);
   const handleToggle = () => {
-    update({
-      colorBy: settings.colorBy === 'distance' ? 'section' : 'distance',
-    });
+    update({ colorBy: settings.colorBy === 'distance' ? 'section' : 'distance' });
   };
   return (
     <div className={classNames(styles.main, className)}>

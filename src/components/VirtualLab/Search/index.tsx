@@ -1,6 +1,6 @@
 import { SearchOutlined } from '@ant-design/icons';
 import { ConfigProvider } from 'antd';
-import { type JSX, useState } from 'react';
+import { useState, type JSX } from 'react';
 import { classNames } from '@/util/utils';
 
 export default function useSearch(

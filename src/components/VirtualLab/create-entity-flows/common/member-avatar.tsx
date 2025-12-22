@@ -1,13 +1,14 @@
-import { CheckCircleFilled, ClockCircleOutlined } from '@ant-design/icons';
 import { Avatar } from 'antd';
 import get from 'es-toolkit/compat/get';
 import nth from 'es-toolkit/compat/nth';
-import { PendingInvite, StashUsersCrown } from '@/components/icons/EditorIcons';
+
+import { CheckCircleFilled, ClockCircleOutlined } from '@ant-design/icons';
 import {
   MemberRoleMap,
+  TMember,
   SIZE_MAP,
-  type TMember,
 } from '@/components/VirtualLab/create-entity-flows/common/types';
+import { PendingInvite, StashUsersCrown } from '@/components/icons/EditorIcons';
 import { COLOR_DICTIONARY } from '@/util/color';
 import { cn } from '@/utils/css-class';
 

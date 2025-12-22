@@ -1,12 +1,13 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAtom } from 'jotai';
-import { useEffect, useState } from 'react';
-import type { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';
+
+import TiersList from '@/components/VirtualLab/create-entity-flows/checkout/tiers-list';
 import PaymentForm from '@/components/VirtualLab/create-entity-flows/checkout/payment-form';
 import { flowAtom } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
-import TiersList from '@/components/VirtualLab/create-entity-flows/checkout/tiers-list';
+import { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';
 
 type Props = {
   data: UserActiveSubscriptionResponse | null;

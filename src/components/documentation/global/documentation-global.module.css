@@ -13,7 +13,7 @@
 }
 
 .pagination :global(.ant-pagination-item-link) {
-  color: white;
+  color: white !important;
 }
 
 .pagination :global(.ant-pagination-item-ellipsis) {
@@ -86,7 +86,7 @@
 }
 
 .ant-pagination-item-ellipsis {
-  display: none;
+  display: none !important;
 }
 
 .pagination .ant-pagination-prev .ant-pagination-item-link,

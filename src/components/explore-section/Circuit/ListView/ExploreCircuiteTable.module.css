@@ -1,5 +1,5 @@
 .circuitTable {
   & :global(.ant-table-cell) {
-    padding-left: 10px;
+    padding-left: 10px !important;
   }
 }

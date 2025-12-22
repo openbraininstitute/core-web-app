@@ -1,15 +1,15 @@
 'use client';
 
 import * as SwitchPrimitives from '@radix-ui/react-switch';
+import { atom } from 'jotai';
 import keyBy from 'es-toolkit/compat/keyBy';
 import map from 'es-toolkit/compat/map';
 import merge from 'es-toolkit/compat/merge';
 import omit from 'es-toolkit/compat/omit';
-import { atom } from 'jotai';
 import { forwardRef } from 'react';
 
+import { getSanityTiers } from '@/api/sanity/client';
 import { listSubscriptionTiers } from '@/api/virtual-lab-svc/queries/subscription';
-import { getSanityTiers } from '@/services/sanity/content/tiers';
 import { classNames } from '@/util/utils';
 
 type JsonValue = string | number | boolean | null | JsonObject | JsonArray;
@@ -18,7 +18,7 @@ type JsonObject = {
   [key: string]: JsonValue;
 };
 
-type JsonArray = JsonValue[];
+type JsonArray = Array<JsonValue>;
 
 type PriceValue = {
   value: number;
@@ -26,29 +26,29 @@ type PriceValue = {
 };
 
 type TierPrice = {
-  month: PriceValue[];
-  discount: PriceValue[];
-  yearNormal: PriceValue[];
-  yearDiscount: PriceValue[];
+  month: Array<PriceValue>;
+  discount: Array<PriceValue>;
+  yearNormal: Array<PriceValue>;
+  yearDiscount: Array<PriceValue>;
 };
 
 export type TierFeature = {
   title: string;
-  specialLabel?: string[];
-  tooltip?: string[];
+  specialLabel?: Array<string>;
+  tooltip?: Array<string>;
 };
 
 type FeatureCategory = {
   title: string;
   available: boolean;
-  featuresList: TierFeature[];
+  featuresList: Array<TierFeature>;
 };
 export type Tier = {
   id: string;
   title: string;
-  notes?: string[];
+  notes?: Array<string>;
   price?: TierPrice;
-  features: FeatureCategory[];
+  features: Array<FeatureCategory>;
 };
 export type Interval = 'month' | 'year';
 
@@ -171,15 +171,15 @@ function transformData(data: any): TiersData {
   };
 }
 
-const renameAndRemove = (arr: any[], oldKey: string, newKey: string) =>
+const renameAndRemove = (arr: Array<any>, oldKey: string, newKey: string) =>
   map(arr, (obj) =>
     obj[oldKey] !== undefined ? { ...omit(obj, oldKey), [newKey]: obj[oldKey] } : obj
   );
 
-export async function getAllTiers(): Promise<ExtendedTier[]> {
+export async function getAllTiers(): Promise<Array<ExtendedTier>> {
   const [appTiers, sanityTiers] = await Promise.all([
     listSubscriptionTiers(),
-    getSanityTiers({ next: { revalidate: 3600 } }),
+    getSanityTiers()({ next: { revalidate: 3600 } }),
   ]);
   if (!appTiers || !sanityTiers) {
     throw new Error('Tiers can not be fetched');

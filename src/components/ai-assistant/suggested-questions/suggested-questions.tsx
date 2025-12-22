@@ -1,9 +1,11 @@
 'use client';
 
+import React from 'react';
+
+import { useHardcodedSuggestions } from './hardcoded-suggestions';
+import { classNames } from '@/util/utils';
 import IconIdea from '@/components/icons/Idea';
 import { useServiceAiAgentSuggestionFromUserJourney } from '@/services/ai-agent';
-import { classNames } from '@/util/utils';
-import { useHardcodedSuggestions } from './hardcoded-suggestions';
 
 import styles from './suggested-questions.module.css';
 

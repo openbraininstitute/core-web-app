@@ -1,3 +1,5 @@
+import React from 'react';
+
 import { classNames } from '@/util/utils';
 
 import styles from './welcome.module.css';

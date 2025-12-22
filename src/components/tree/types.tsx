@@ -1,9 +1,9 @@
-import type { JSX } from 'react';
+import { JSX } from 'react';
 
 export interface TTreeNode {
   id: string;
   name: string;
-  children?: TTreeNode[];
+  children?: Array<TTreeNode>;
 }
 
 export type NodeSubtitle<T extends TTreeNode> = ({

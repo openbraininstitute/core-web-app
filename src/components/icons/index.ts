@@ -24,10 +24,10 @@ import IconPlus from './Plus';
 import RangeIcon from './Range';
 import ReadMeIcon from './ReadMeIcon';
 import ResetIcon from './ResetIcon';
-import { SettingsIcon } from './Settings';
 import UndoIcon from './UndoIcon';
 import UserIcon from './UserIcon';
 import VirtualLabIcon from './VirtualLab';
+import { SettingsIcon } from './Settings';
 import { ZoomInIcon, ZoomOutIcon } from './Zoom';
 
 export {

@@ -1,4 +1,4 @@
-import type { Data, Layout } from 'plotly.js-dist-min';
+import { Data, Layout } from 'plotly.js-dist-min';
 
 import { assertType } from '@/util/type-guards';
 

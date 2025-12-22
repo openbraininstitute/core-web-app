@@ -10,10 +10,7 @@ const formatInputValue = (value: number) => {
 };
 
 export const CONVERSION_RATE = 0.1;
-export const creditAtom = atom<{
-  credits: number;
-  step: 'overview' | 'pay' | null;
-}>({
+export const creditAtom = atom<{ credits: number; step: 'overview' | 'pay' | null }>({
   credits: 0,
   step: 'overview',
 });

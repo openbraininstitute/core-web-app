@@ -3,9 +3,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-import { classNames } from '@/util/utils';
 import PlaceholderImage from '../img/thumbnail_placeholder.jpg';
-import type { TutorialProps } from '../type';
+import { TutorialProps } from '../type';
+
+import { classNames } from '@/util/utils';
 
 export default function SingleTutorialCard({ content }: { content: TutorialProps }) {
   const [isMouseHover, setIsMouseHover] = useState<boolean>(false);

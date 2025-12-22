@@ -1,9 +1,9 @@
 'use client';
 
+import { NavigationItem, NavigationItemProps } from '../ApplicationSidebar';
 import { classNames } from '@/util/utils';
-import { NavigationItem, type NavigationItemProps } from '../ApplicationSidebar';
 
-const MAIN_NAVIGATION_LIST: NavigationItemProps[] = [
+const MAIN_NAVIGATION_LIST: Array<NavigationItemProps> = [
   {
     name: 'About',
     description: 'Explore the literature and query publications using a chatbot.',

@@ -2,12 +2,12 @@
 
 import { RightOutlined } from '@ant-design/icons';
 import { Collapse } from 'antd';
-import type { SimulationType } from '@/types/small-scale-simulator/common';
-import type { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
 import ConditionsDetails from './ConditionsDetails';
-import RecordingLocations from './recording-locations';
 import SynapticInputs from './SynapticInputs';
 import StimulationDetails from './stimulation-details';
+import RecordingLocations from './recording-locations';
+import { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
+import { SimulationType } from '@/types/small-scale-simulator/common';
 
 type Props = {
   type: SimulationType;

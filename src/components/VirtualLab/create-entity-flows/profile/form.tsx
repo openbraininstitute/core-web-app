@@ -1,19 +1,20 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
-import { Form } from 'antd';
 import { useState } from 'react';
-import type { UserProfileResponse } from '@/api/virtual-lab-svc/queries/types';
-import { useAppNotification } from '@/components/notification';
+import { Form } from 'antd';
+
+import countries from '../../../../../public/static/country';
+import { ProfileFormData } from './types';
+import { Label, XInput } from './elements';
+import { validate, validateEMail } from './validator';
+import { useFieldsChangeHandler, useSubmitCallback } from './hooks';
 import { Select } from '@/components/VirtualLab/create-entity-flows/common/inputs';
+import { UserProfileResponse } from '@/api/virtual-lab-svc/queries/types';
+import { useAppNotification } from '@/components/notification';
 import { Button } from '@/ui/molecules/button';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
-import countries from '../../../../../public/static/country';
-import { Label, XInput } from './elements';
-import { useFieldsChangeHandler, useSubmitCallback } from './hooks';
-import type { ProfileFormData } from './types';
-import { validate, validateEMail } from './validator';
 
 type ProfileProps = {
   data: UserProfileResponse | undefined;
@@ -91,10 +92,7 @@ export function Profile({ data }: ProfileProps) {
                   const countriesObject = countries
                     .sort((a, b) => a.name.localeCompare(b.name))
                     .filter((o) => o.name.toLowerCase().includes(va.toLowerCase()));
-                  return countriesObject.map((o) => ({
-                    label: o.name,
-                    value: o.name,
-                  }));
+                  return countriesObject.map((o) => ({ label: o.name, value: o.name }));
                 }}
                 options={countries
                   .sort((a, b) => a.name.localeCompare(b.name))

@@ -1,7 +1,10 @@
-import { isString } from '@/util/type-guards';
-import { classNames } from '@/util/utils';
+import React from 'react';
+
+import { ToolResult } from '../types';
+
 import { usePlotFile } from '../hooks';
-import type { ToolResult } from '../types';
+import { classNames } from '@/util/utils';
+import { isString } from '@/util/type-guards';
 
 import styles from './tool-thumbnail-generation-morphology-getone.module.css';
 

@@ -1,6 +1,6 @@
 import { LoadingOutlined } from '@ant-design/icons';
+import { HTMLProps, ReactNode } from 'react';
 import { Spin } from 'antd';
-import type { HTMLProps, ReactNode } from 'react';
 
 import { classNames } from '@/util/utils';
 

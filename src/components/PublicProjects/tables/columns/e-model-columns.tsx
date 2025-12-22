@@ -1,7 +1,8 @@
 import { Tooltip } from 'antd';
 import Image from 'next/image';
+import { EModelsProps } from '../../type/artifactsType';
+
 import truncateText from '@/util/truncate';
-import type { EModelsProps } from '../../type/artifactsType';
 
 function formatDate(isoDateString: string | null) {
   if (!isoDateString) return '';

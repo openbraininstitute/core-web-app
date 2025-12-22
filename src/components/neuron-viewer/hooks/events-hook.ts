@@ -1,12 +1,13 @@
-import { type RefObject, useEffect } from 'react';
+import { RefObject, useEffect } from 'react';
+
+import { NeuronViewerRenderer } from '@/services/bluenaas-single-cell/renderer';
 import {
   DISPLAY_SYNAPSES_3D_EVENT,
-  type DisplaySynapses3DEvent,
   REMOVE_SYNAPSES_3D_EVENT,
   RESET_SYNAPSES_3D_EVENT,
-  type RemoveSynapses3DEvent,
+  DisplaySynapses3DEvent,
+  RemoveSynapses3DEvent,
 } from '@/components/neuron-viewer/hooks/events';
-import type { NeuronViewerRenderer } from '@/services/bluenaas-single-cell/renderer';
 
 export function useNeuronViewerEvents({
   renderer,

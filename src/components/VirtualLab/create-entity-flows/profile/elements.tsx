@@ -1,6 +1,6 @@
 import { CloseCircleFilled } from '@ant-design/icons';
-import { Input, type InputProps, type InputRef } from 'antd';
-import type { ForwardedRef } from 'react';
+import { InputProps, InputRef, Input } from 'antd';
+import { ForwardedRef } from 'react';
 
 import { classNames } from '@/util/utils';
 

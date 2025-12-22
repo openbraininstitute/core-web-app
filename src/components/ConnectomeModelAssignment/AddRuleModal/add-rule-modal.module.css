@@ -11,7 +11,7 @@
 
 .grid h2 {
   margin-top: 1em;
-  grid-column: 1 / 6;
+  grid-column: 1/6;
   font-size: 150%;
   font-weight: bolder;
 }

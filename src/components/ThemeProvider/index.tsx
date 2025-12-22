@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from 'react';
+import { ReactElement, ReactNode } from 'react';
 import useTheme from '@/hooks/theme';
 
 interface ThemeProviderProps {

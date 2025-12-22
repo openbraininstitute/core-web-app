@@ -1,16 +1,19 @@
 'use client';
 
 import React from 'react';
-import IconPlus from '@/components/icons/Plus';
-import Tooltip from '@/components/tooltip';
-import { useAiAssistant } from '@/services/ai-agent/assistant';
-import { classNames } from '@/util/utils';
-import { IconDelete } from '../../icons/delete';
+
 import { IconEdit } from '../../icons/edit';
-import DialogDelete from './dialog-delete';
+import { IconDelete } from '../../icons/delete';
 import DialogEdit from './dialog-edit';
-import styles from './history.module.css';
+import DialogDelete from './dialog-delete';
 import { useSections } from './hooks';
+
+import Tooltip from '@/components/tooltip';
+import { classNames } from '@/util/utils';
+import { useAiAssistant } from '@/services/ai-agent/assistant';
+import IconPlus from '@/components/icons/Plus';
+
+import styles from './history.module.css';
 
 export interface HistoryProps {
   className?: string;

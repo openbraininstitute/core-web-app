@@ -1,4 +1,4 @@
-import type { JSX, ReactNode } from 'react';
+import { JSX, ReactNode } from 'react';
 
 export function ToolbarButton({
   icon,

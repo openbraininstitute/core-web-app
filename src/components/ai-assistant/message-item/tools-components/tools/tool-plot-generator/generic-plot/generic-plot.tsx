@@ -1,8 +1,9 @@
-import dynamic from 'next/dynamic';
-import type { Data, Layout } from 'plotly.js-dist-min';
 import React from 'react';
-import { logError } from '@/util/logger';
+import dynamic from 'next/dynamic';
+import { Data, Layout } from 'plotly.js-dist-min';
+
 import { classNames } from '@/util/utils';
+import { logError } from '@/util/logger';
 
 import styles from './generic-plot.module.css';
 

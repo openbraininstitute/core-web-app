@@ -43,7 +43,7 @@ dialog.toolsSelector {
     display: grid;
     place-items: center;
     border-radius: 0 0 99vmax 99vmax;
-    clip-path: path("M-32,0h256v256h-256Z");
+    clip-path: path('M-32,0h256v256h-256Z');
   }
 
   > div {

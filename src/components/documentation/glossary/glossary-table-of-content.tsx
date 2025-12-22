@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import Slugify from '@/util/slugify';
-import { classNames } from '@/util/utils';
 import { useSanityContentForArtifactTypes } from '../hooks/use-sanity-content-for-artifact-types';
 import { useSanityContentForExperimentsModels } from '../hooks/use-sanity-content-for-data-type';
-import type { ContentForGlossaryItem } from '../type';
+import { ContentForGlossaryItem } from '../type';
+
+import Slugify from '@/util/slugify';
+import { classNames } from '@/util/utils';
 
 export default function GlossaryTableOfContent() {
   const { slug } = useParams();

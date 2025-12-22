@@ -1,5 +1,5 @@
 /* eslint-disable no-param-reassign */
-import type { Morphology, NeuronSectionInfo } from '@/services/bluenaas-single-cell/types';
+import { Morphology, NeuronSectionInfo } from '@/services/bluenaas-single-cell/types';
 
 export interface Tree {
   children: TreeItem[];

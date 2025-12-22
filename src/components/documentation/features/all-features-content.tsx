@@ -2,7 +2,7 @@
 
 import SingleFeatureCard from '@/components/documentation/features/single-feature-card';
 import {
-  type ContentForFeatureItem,
+  ContentForFeatureItem,
   useSanityContentForFeatureItems,
 } from '@/components/documentation/hooks/use-sanity-content-for-features';
 

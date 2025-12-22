@@ -1,10 +1,11 @@
 'use client';
 
-import { Table, type TableProps } from 'antd';
-import { type Key, useState } from 'react';
-import { classNames } from '@/util/utils';
-import type { EModelsProps } from '../type/artifactsType';
+import { Table, TableProps } from 'antd';
+import { Key, useState } from 'react';
+import { EModelsProps } from '../type/artifactsType';
 import columns from './columns/e-model-columns';
+
+import { classNames } from '@/util/utils';
 import styles from './tables.module.scss';
 
 export default function EModelTable({ content }: { content: EModelsProps[] }) {
@@ -12,7 +13,7 @@ export default function EModelTable({ content }: { content: EModelsProps[] }) {
 
   const rowSelection: TableProps<EModelsProps>['rowSelection'] = {
     type: 'radio',
-    onChange: (_selectedRowKeys: Key[], selectedRows: EModelsProps[]) => {
+    onChange: (selectedRowKeys: Key[], selectedRows: EModelsProps[]) => {
       setSelectedRow(selectedRows[0] || null);
     },
   };

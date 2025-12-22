@@ -1,17 +1,17 @@
 import { ArrowRightOutlined } from '@ant-design/icons';
 import { atom, useAtomValue } from 'jotai';
-import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { usePathname } from 'next/navigation';
 
 import ApplicationSidebar, {
   NavigationItem,
-  type NavigationItemProps,
+  NavigationItemProps,
 } from '@/components/ApplicationSidebar';
 import Link from '@/components/Link';
 import { MainNavigation } from '@/components/main';
 import { classNames } from '@/util/utils';
 
-const EXPLORE_NAVIGATION_LIST: NavigationItemProps[] = [
+const EXPLORE_NAVIGATION_LIST: Array<NavigationItemProps> = [
   {
     name: 'Interactive exploration',
     description:

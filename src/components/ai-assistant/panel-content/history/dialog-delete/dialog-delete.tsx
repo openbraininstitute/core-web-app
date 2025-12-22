@@ -1,7 +1,8 @@
-import { Button } from 'antd';
 import React from 'react';
-import { useAiAssistant } from '@/services/ai-agent/assistant';
+import { Button } from 'antd';
+
 import { classNames } from '@/util/utils';
+import { useAiAssistant } from '@/services/ai-agent/assistant';
 
 import styles from './dialog-delete.module.css';
 

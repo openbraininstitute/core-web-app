@@ -36,14 +36,14 @@
   gap: 1em;
 
   .mask {
-    content: "";
+    content: '';
     position: relative;
     width: 100%;
     height: 0;
     overflow: visible;
 
     &::after {
-      content: "";
+      content: '';
       position: absolute;
       left: 0;
       top: 0;

@@ -1,4 +1,4 @@
-import type { Data, Frame, Layout } from 'plotly.js-dist-min';
+import { Data, Layout, Frame } from 'plotly.js-dist-min';
 import { assertType } from '@/util/type-guards';
 
 export interface PlotlyJson {
@@ -33,14 +33,8 @@ export function convertPlotlyChart(obj: PlotlyJson): PlotlyJson | null {
         ...obj.layout.template,
         layout: {
           ...obj.layout.template?.layout,
-          xaxis: {
-            gridcolor: 'rgba(0,0,0,0.3)',
-            zerolinecolor: 'rgba(0,0,0,0.5)',
-          },
-          yaxis: {
-            gridcolor: 'rgba(0,0,0,0.3)',
-            zerolinecolor: 'rgba(0,0,0,0.5)',
-          },
+          xaxis: { gridcolor: 'rgba(0,0,0,0.3)', zerolinecolor: 'rgba(0,0,0,0.5)' },
+          yaxis: { gridcolor: 'rgba(0,0,0,0.3)', zerolinecolor: 'rgba(0,0,0,0.5)' },
         },
       },
       ...axisUpdates,

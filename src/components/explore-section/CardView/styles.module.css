@@ -1,11 +1,11 @@
 .custom {
   @apply border-y;
   :global(.ant-collapse-content-box) {
-    padding-right: 0;
-    padding-left: 0;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
   }
   :global(.ant-collapse-header) {
-    cursor: default;
+    cursor: default !important;
   }
   :global(.ant-collapse-header-text) {
     visibility: hidden;

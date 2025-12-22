@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Spinner } from '@/components/ai-assistant/spinner';
+
 import { useAITool } from '@/services/ai-agent/tools/tools';
+import { Spinner } from '@/components/ai-assistant/spinner';
 
 export default function SingleAIToolsContent() {
   const { toolId } = useParams<{ toolId: string }>();

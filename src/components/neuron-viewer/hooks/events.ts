@@ -1,6 +1,6 @@
 /* eslint-disable max-classes-per-file */
 
-import type { InstancedBufferGeometry, Mesh, ShaderMaterial } from 'three';
+import { InstancedBufferGeometry, Mesh, ShaderMaterial } from 'three';
 
 export const DISPLAY_SYNAPSES_3D_EVENT = 'DISPLAY_SYNAPSES_3D';
 export const REMOVE_SYNAPSES_3D_EVENT = 'REMOVE_SYNAPSES_3D';

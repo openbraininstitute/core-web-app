@@ -1,4 +1,4 @@
-import type React from 'react';
+import React from 'react';
 import { cn } from '@/utils/css-class';
 import styles from './loading-dots.module.css';
 
