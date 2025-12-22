@@ -51,7 +51,7 @@ export function Info({ sessionId }: Props) {
           <Input
             placeholder="your model name"
             size="large"
-            className="border-neutral-2! text-primary-8! rounded-sm! font-bold! [&_input]:placeholder:!font-light"
+            className="border-neutral-2! text-primary-8! rounded-sm! font-bold! [&_input]:placeholder:font-light!"
           />
         </Form.Item>
         <Form.Item hasFeedback label={label('Description', 'secondary')} name="description">
@@ -65,7 +65,9 @@ export function Info({ sessionId }: Props) {
         <div className="flex flex-col gap-10 select-none">
           <div className="flex flex-col">
             <div>{label('Created by', 'secondary')}</div>
-            <div className="text-neutral-4 font-bold">{data?.user.name ?? data?.user.username}</div>
+            <div className="text-neutral-4 font-bold">
+              {data?.user?.name ?? data?.user?.username}
+            </div>
           </div>
           <div className="flex flex-col">
             <div>{label('created at', 'secondary')}</div>
