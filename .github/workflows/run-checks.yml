@@ -1,4 +1,4 @@
-name: Lint, Format, Test, Build
+name: PR checks
 
 on:
   push:
@@ -45,7 +45,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-
 
-  linter:
+  lint:
     needs: install_packages
     runs-on: ubuntu-latest
     steps:
