@@ -1,8 +1,9 @@
 'use client';
 
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
-import { Button } from '@/ui/molecules/button';
+
 import { useCarousel } from '@/ui/molecules/carousel';
+import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
 export function CarouselButtons() {

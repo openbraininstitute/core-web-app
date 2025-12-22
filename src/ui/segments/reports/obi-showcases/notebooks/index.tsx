@@ -1,5 +1,5 @@
 import SingleNotebook from '@/ui/segments/reports/obi-showcases/notebooks/single-notebook';
-import type {
+import {
   NotebooksProps,
   ShowCaseProjectQueryType,
 } from '@/ui/segments/reports/obi-showcases/showcase-type';

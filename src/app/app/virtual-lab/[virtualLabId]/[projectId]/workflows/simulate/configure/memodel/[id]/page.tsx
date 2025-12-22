@@ -6,14 +6,14 @@ import { use } from 'react';
 import { getMEModel } from '@/api/entitycore/queries';
 import {
   ExtendedEntitiesTypeDict,
-  type TExtendedEntitiesTypeDict,
+  TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import SimulationConfig from '@/features/small-microcircuit';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import {
-  type ThreeDVisualizerQueryParamKeys,
   threeDVisualizerState,
+  type ThreeDVisualizerQueryParamKeys,
   type WorkflowSimulatePanelKeys,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { Header } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/header';
@@ -51,11 +51,7 @@ export default function Page({
   if (!sessionId) sessionId = crypto.randomUUID();
 
   const { data: entity } = useSuspenseQuery({
-    queryKey: keyBuilder.meModel({
-      virtualLabId,
-      projectId,
-      entityId: modelId,
-    }),
+    queryKey: keyBuilder.meModel({ virtualLabId, projectId, entityId: modelId }),
     queryFn: () => getMEModel({ id: modelId, context: { virtualLabId, projectId } }),
   });
 
@@ -104,12 +100,8 @@ export default function Page({
             data-testid="simulation-panel-wrapper"
             className={cn(
               'grid h-full min-h-0 gap-4 overflow-hidden overflow-y-auto',
-              {
-                'grid-cols-[2fr_3fr]': visualizerState === threeDVisualizerState.Expanded,
-              },
-              {
-                'grid-cols-[2.5fr_5rem]': visualizerState === threeDVisualizerState.Collapsed,
-              }
+              { 'grid-cols-[2fr_3fr]': visualizerState === threeDVisualizerState.Expanded },
+              { 'grid-cols-[2.5fr_5rem]': visualizerState === threeDVisualizerState.Collapsed }
             )}
           >
             <HydrateWrapper>

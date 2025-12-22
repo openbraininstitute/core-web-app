@@ -1,5 +1,5 @@
 import { InfoCircleFilled } from '@ant-design/icons';
-import type { ReactNode } from 'react';
+import { ReactNode } from 'react';
 
 import { classNames } from '@/util/utils';
 

@@ -1,12 +1,14 @@
 'use client';
 
-import snakeCase from 'es-toolkit/compat/snakeCase';
 import { use } from 'react';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TWorkspaceScope } from '@/constants';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import snakeCase from 'es-toolkit/compat/snakeCase';
+
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
+import { WorkspaceScope, WorkspaceSection } from '@/constants';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import type { TWorkspaceScope } from '@/constants';
 import type { KebabCase } from '@/utils/type';
 
 export default function Page({

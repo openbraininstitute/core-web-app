@@ -1,4 +1,4 @@
-import type { UiSchema } from '@rjsf/utils';
+import { UiSchema } from '@rjsf/utils';
 
 /**
  * recursively merges two UI schema objects, combining their properties.

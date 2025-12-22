@@ -1,22 +1,23 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
-import { useAtom } from 'jotai';
-import { useMemo } from 'react';
 import { match, P } from 'ts-pattern';
-import { config } from '@/config';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { useMemo } from 'react';
+import { useAtom } from 'jotai';
+
 import { AutomatedFormBreadcrumb } from '@/ui/segments/workflows/build/ion-channel-build/elements/breadcrumb';
+import { Configuration } from '@/ui/segments/workflows/build/ion-channel-build/sections/configuration';
+import { Output } from '@/ui/segments/workflows/build/ion-channel-build/sections/output';
 import {
-  GenerationWorkflowFormPanel,
   GenerationWorkflowFormPanelKeys,
+  GenerationWorkflowFormPanel,
 } from '@/ui/segments/workflows/build/ion-channel-build/elements/panel-tabs';
 import {
   IonChannelModelingSharedStateFamily,
   useGenerativeFormSchemaApi,
 } from '@/ui/segments/workflows/build/ion-channel-build/helpers';
-import { Configuration } from '@/ui/segments/workflows/build/ion-channel-build/sections/configuration';
-import { Output } from '@/ui/segments/workflows/build/ion-channel-build/sections/output';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { config } from '@/config';
 
 import 'katex/dist/katex.min.css';
 
@@ -43,15 +44,9 @@ export function IonChannelModelBuilding({ sessionId }: { sessionId: string }) {
         </div>
       );
     })
-    .with(
-      {
-        isLoading: false,
-        panel: GenerationWorkflowFormPanelKeys.configuration,
-      },
-      () => {
-        return <Configuration sessionId={sessionId} />;
-      }
-    )
+    .with({ isLoading: false, panel: GenerationWorkflowFormPanelKeys.configuration }, () => {
+      return <Configuration sessionId={sessionId} />;
+    })
     .with({ isLoading: false, panel: GenerationWorkflowFormPanelKeys.output }, () => {
       return <Output sessionId={sessionId} />;
     })

@@ -1,22 +1,24 @@
 'use client';
 
-import get from 'es-toolkit/compat/get';
-import { useAtomValue } from 'jotai';
-import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
+import { useAtomValue } from 'jotai';
 import { match } from 'ts-pattern';
 
+import get from 'es-toolkit/compat/get';
+import dynamic from 'next/dynamic';
+
 import { SimulationColors } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import {
-  SimulationStatus,
-  simulationStatusAtomFamily,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import {
   useCurrentSimulationConfig,
   useRecordingPlotData,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/hooks';
-import type { PlotData } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import {
+  SimulationStatus,
+  simulationStatusAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { cn } from '@/utils/css-class';
+
+import type { PlotData } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 const PlotRenderer = dynamic(
   () => import('@/features/entities/neuron-simulation/experiment/visualization/plot-renderer'),
@@ -85,10 +87,7 @@ export function Results({ sessionId }: { sessionId: string }) {
                   !!value.length && simulationStatus?.status === SimulationStatus.EXECUTED
                 }
                 onlyAmplitudeLegend={false}
-                data={value.map((v, i) => ({
-                  ...v,
-                  line: { color: SimulationColors[i] },
-                }))}
+                data={value.map((v, i) => ({ ...v, line: { color: SimulationColors[i] } }))}
                 isLoading={isLoading}
                 className="h-full w-full"
                 plotConfig={{
@@ -120,10 +119,7 @@ export function Results({ sessionId }: { sessionId: string }) {
                   !!recordData.length && simulationStatus?.status === SimulationStatus.EXECUTED
                 }
                 onlyAmplitudeLegend={false}
-                data={recordData.map((v, i) => ({
-                  ...v,
-                  line: { color: SimulationColors[i] },
-                }))}
+                data={recordData.map((v, i) => ({ ...v, line: { color: SimulationColors[i] } }))}
                 isLoading={isLoading}
                 className="h-full w-full"
                 plotConfig={{

@@ -2,9 +2,9 @@
 
 'use client';
 
-import { CheckOutlined as CheckIcon } from '@ant-design/icons';
+import * as React from 'react';
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
-import type * as React from 'react';
+import { CheckOutlined as CheckIcon } from '@ant-design/icons';
 
 import { cn } from '@/utils/css-class';
 

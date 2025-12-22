@@ -1,16 +1,18 @@
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Progress, Empty, Image as AntdImage } from 'antd';
 import { CloseCircleFilled } from '@ant-design/icons';
-import { Image as AntdImage, Empty, Progress } from 'antd';
+import { useParams } from 'next/navigation';
+import { match, P } from 'ts-pattern';
 import isNumber from 'es-toolkit/compat/isNumber';
 import NextImage from 'next/image';
-import { useParams } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { match, P } from 'ts-pattern';
+
+import { trackDownloadProgress } from '@/utils/track-download-progress';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
+import { cn } from '@/utils/css-class';
+
 import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
-import { cn } from '@/utils/css-class';
-import { trackDownloadProgress } from '@/utils/track-download-progress';
 
 interface Props {
   bordered?: boolean;
@@ -144,16 +146,7 @@ export function ProgressiveEntityImage({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      entityId,
-      asset?.id,
-      context.virtualLabId,
-      context.projectId,
-      assetPath,
-      computeResponsiveSize,
-      asset,
-      context,
-    ]
+    [entityId, asset?.id, context.virtualLabId, context.projectId, assetPath, computeResponsiveSize]
   );
 
   const retryDownload = () => {

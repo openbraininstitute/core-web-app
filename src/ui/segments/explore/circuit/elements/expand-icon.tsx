@@ -1,9 +1,10 @@
 import { Button } from 'antd';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+
 import ChevronRight from '@/components/icons/ChevronRight';
+import { classNames } from '@/util/utils';
 
 import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
-import { classNames } from '@/util/utils';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export const expandIcon = ({
   expanded,

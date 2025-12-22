@@ -3,35 +3,37 @@
 'use client';
 
 import { AlertOutlined, LoadingOutlined } from '@ant-design/icons';
+import { reject, isNil } from 'es-toolkit/compat';
 import { Form, Spin } from 'antd';
-import { isNil, reject } from 'es-toolkit/compat';
-import JSZip from 'jszip';
 import { useState } from 'react';
-import { resolveNeuronFile } from '@/api/one/cell-morphology';
-import { tryCatch } from '@/api/utils';
-import { DownloadAsBoxIcon } from '@/components/icons/buttons';
-import { FileDownloadLine } from '@/components/icons/File';
-import { messages } from '@/i18n/en/upload';
-import { type FileWithPreview, formatBytes, useFileUpload } from '@/ui/hooks/use-file-upload';
+import JSZip from 'jszip';
+
 import { Alert, AlertContent, AlertDescription, AlertIcon, AlertTitle } from '@/ui/molecules/alert';
-import { Button } from '@/ui/molecules/button';
-import type { TCellMorphologyForm } from '@/ui/segments/contribute/cell-morphology/schema';
+import { formatBytes, useFileUpload, type FileWithPreview } from '@/ui/hooks/use-file-upload';
 import { CELL_MORPHOLOGY_FILE_TYPES } from '@/ui/segments/contribute/cell-morphology/schema';
-import type { IFileTypeConfig } from '@/ui/segments/contribute/shared/helpers';
-import { getFileExtension, parseFileName } from '@/ui/segments/contribute/shared/helpers';
+import { parseFileName, getFileExtension } from '@/ui/segments/contribute/shared/helpers';
+import { DownloadAsBoxIcon } from '@/components/icons/buttons';
+import { resolveNeuronFile } from '@/api/one/cell-morphology';
+import { FileDownloadLine } from '@/components/icons/File';
+import { Button } from '@/ui/molecules/button';
+import { messages } from '@/i18n/en/upload';
+import { tryCatch } from '@/api/utils';
 import { cn } from '@/utils/css-class';
+
+import type { TCellMorphologyForm } from '@/ui/segments/contribute/cell-morphology/schema';
+import type { IFileTypeConfig } from '@/ui/segments/contribute/shared/helpers';
 
 interface IAssetUploadProps {
   maxFiles?: number;
   maxSize?: number;
-  accept?: string | string[];
+  accept?: string | Array<string>;
   multiple?: boolean;
   className?: string;
-  onFilesChange?: (files: FileWithPreview[]) => void;
+  onFilesChange?: (files: Array<FileWithPreview>) => void;
 }
 
 function getFileExtensionByTypeOrMimeType(file: File): string | undefined {
-  return getFileExtension(file, CELL_MORPHOLOGY_FILE_TYPES as unknown as IFileTypeConfig[]);
+  return getFileExtension(file, CELL_MORPHOLOGY_FILE_TYPES as unknown as Array<IFileTypeConfig>);
 }
 
 export function AssetUpload({
@@ -43,9 +45,7 @@ export function AssetUpload({
   onFilesChange,
 }: IAssetUploadProps) {
   const form = Form.useFormInstance();
-  const { assets } = form.getFieldsValue(['assets']) as {
-    assets: TCellMorphologyForm['assets'];
-  };
+  const { assets } = form.getFieldsValue(['assets']) as { assets: TCellMorphologyForm['assets'] };
   const [resolveNeuronFileLoading, setResolveNeuronFileLoading] = useState(false);
   const [originalFileType, setOriginalFileType] = useState<string | null>(null);
 
@@ -79,7 +79,7 @@ export function AssetUpload({
         }));
         return;
       }
-      if (resolution?.isValid) {
+      if (resolution && resolution.isValid) {
         const zip = new JSZip();
         const unzippedData = await zip.loadAsync(resolution.buffer, {});
         const fsAdded = await Promise.all(

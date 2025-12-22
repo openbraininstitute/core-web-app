@@ -1,10 +1,10 @@
 import sortBy from 'es-toolkit/compat/sortBy';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import PDFViewer from '@/features/model-analysis/viewer/asset-viewers/pdf-viewer';
-import type { WorkspaceContext } from '@/types/common';
+import { WorkspaceContext } from '@/types/common';
 
 type SummaryJson = Record<
   string,

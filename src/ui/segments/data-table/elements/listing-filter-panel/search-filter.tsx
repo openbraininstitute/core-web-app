@@ -1,13 +1,14 @@
 import { CloseOutlined } from '@ant-design/icons';
 import { ConfigProvider, Tag } from 'antd';
-import type { DefaultOptionType } from 'antd/es/select';
 import type { CustomTagProps } from 'rc-select/lib/BaseSelect';
-import Search from '@/components/Search';
+import type { DefaultOptionType } from 'antd/es/select';
+
+import { useOptions } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/use-options';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
-import type { TCoreFilter } from '@/entity-configuration/definitions/types';
+import Search from '@/components/Search';
 
 import type { FacetLabelValuePair } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/use-options';
-import { useOptions } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/use-options';
+import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
 export function SearchFilter({
   data,
@@ -15,7 +16,7 @@ export function SearchFilter({
   values,
   onChange,
 }: {
-  data: FacetLabelValuePair[];
+  data: Array<FacetLabelValuePair>;
   filter: TCoreFilter;
   values: string[];
   onChange: (newValues: string[]) => void;

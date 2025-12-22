@@ -1,22 +1,24 @@
 'use client';
 
-import type { FormInstance } from 'antd';
+import { createContext, useContext, useCallback, useMemo, useState } from 'react';
 import { Form } from 'antd';
-import type { ReactNode } from 'react';
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+
 import type { ZodObject, ZodRawShape } from 'zod';
+import type { FormInstance } from 'antd';
+import type { ReactNode } from 'react';
 
 import {
-  getCurrentStepIndex,
   getDirtyFields,
   getValidationStatus,
+  getCurrentStepIndex,
 } from '@/ui/segments/contribute/shared/helpers';
+import { cn } from '@/utils/css-class';
+
 import type {
   IContributionFormConfig,
   IContributionStep,
   TStepValidationStatus,
 } from '@/ui/segments/contribute/shared/types';
-import { cn } from '@/utils/css-class';
 
 interface IContributionPipelineContextValue<TFormValues extends Record<string, unknown>> {
   form: FormInstance<TFormValues>;
@@ -28,7 +30,7 @@ interface IContributionPipelineContextValue<TFormValues extends Record<string, u
   isLastStep: boolean;
   sessionId: string;
   stepValidationStatus: Record<string, TStepValidationStatus>;
-  progressSteps: IContributionStep<TFormValues>[];
+  progressSteps: Array<IContributionStep<TFormValues>>;
   config: IContributionFormConfig<TFormValues, ZodObject<ZodRawShape>>;
 }
 

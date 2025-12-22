@@ -1,8 +1,9 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { ReactNode } from 'react';
+
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
-import type { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { classNames } from '@/util/utils';
 
 type FieldProps = {

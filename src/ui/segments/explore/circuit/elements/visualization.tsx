@@ -1,9 +1,10 @@
 'use client';
 
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { ProgressiveEntityImage } from '@/ui/segments/explore/circuit/elements/use-progressive-img';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
-import { ProgressiveEntityImage } from '@/ui/segments/explore/circuit/elements/use-progressive-img';
+
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 type Props = {
   circuit: ICircuit;

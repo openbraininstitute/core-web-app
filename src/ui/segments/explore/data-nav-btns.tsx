@@ -1,21 +1,23 @@
 'use client';
 
-import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { config } from '@/config';
-import type { TWorkspaceScope } from '@/constants';
-import { WorkspaceSection } from '@/constants';
-import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
-import { EntityTypeGroup } from '@/entity-configuration/domain/group';
-import type { WorkspaceContext } from '@/types/common';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import Breadcrumb from '@/ui/molecules/breadcrumb';
-import Close from '@/ui/molecules/close';
+import Link from 'next/link';
+
 import { useDataListStateSnapshotActions } from '@/ui/segments/data-table/elements/context';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
-import { isBrowser } from '@/utils/environment';
+import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getRouteSegmentsAfterWorkspace } from '@/utils/path';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { WorkspaceSection } from '@/constants';
+import { isBrowser } from '@/utils/environment';
+import { config } from '@/config';
+import Breadcrumb from '@/ui/molecules/breadcrumb';
+import Close from '@/ui/molecules/close';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
+import type { WorkspaceContext } from '@/types/common';
+import type { TWorkspaceScope } from '@/constants';
 
 function getGroupDisplayName(group: TEntityTypeGroup): string {
   const groupLabels: Record<TEntityTypeGroup, string> = {
@@ -152,15 +154,7 @@ export function DataBreadcrumb({
       <BackToListingOriginButton {...{ virtualLabId, projectId, onClick: onLinkClick }} />
       <BackToCategory {...{ virtualLabId, projectId, group, onClick: onLinkClick }} />
       <BackToEntityType
-        {...{
-          virtualLabId,
-          projectId,
-          type,
-          title,
-          group,
-          scope,
-          onClick: onLinkClick,
-        }}
+        {...{ virtualLabId, projectId, type, title, group, scope, onClick: onLinkClick }}
       />
     </div>
   );

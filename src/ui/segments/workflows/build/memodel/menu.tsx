@@ -9,13 +9,14 @@ import {
 } from '@ant-design/icons';
 import { useRouter } from '@bprogress/next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
+import { z } from 'zod';
+
 import delay from 'es-toolkit/compat/delay';
 import get from 'es-toolkit/compat/get';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 import omit from 'es-toolkit/compat/omit';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
-import type { z } from 'zod';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { createModel } from '@/api/small-scale-simulator/single-neuron/single-neuron';
@@ -31,7 +32,7 @@ import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import {
   BuildStep,
-  type BuildStepKeys,
+  BuildStepKeys,
   useBuildMeModelSessionState,
 } from '@/ui/segments/workflows/build/memodel/helpers';
 import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
@@ -123,13 +124,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
     },
     async onSettled() {
       await queryClient.invalidateQueries({
-        queryKey: [
-          {
-            context: {
-              key: `${virtualLabId}/${projectId}/data/memodel/project`,
-            },
-          },
-        ],
+        queryKey: [{ context: { key: `${virtualLabId}/${projectId}/data/memodel/project` } }],
       });
       await queryClient.invalidateQueries({
         queryKey: [

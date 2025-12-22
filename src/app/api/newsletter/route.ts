@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { createHash } from 'crypto';
 import { captureException } from '@sentry/nextjs';
 import { z } from 'zod';
 
@@ -30,7 +30,7 @@ type MailchimpErrorResponse = {
 type RequestBody = {
   email: string;
   name?: string;
-  tags?: string[];
+  tags?: Array<string>;
 };
 
 function getErrorMessage(key: ErrorMessageMapType) {
@@ -44,18 +44,11 @@ export async function POST(req: Request) {
 
   try {
     const { email, name, tags } = (await req.json()) as RequestBody;
-    formValidation = await newsletterFormSchema.parseAsync({
-      email,
-      name,
-      tags,
-    });
+    formValidation = await newsletterFormSchema.parseAsync({ email, name, tags });
   } catch (error) {
     if (error instanceof z.ZodError) {
       const issues = error.issues.map((o) => o.message);
-      const reason = error.issues.map((o) => ({
-        path: o.path,
-        message: o.message,
-      }));
+      const reason = error.issues.map((o) => ({ path: o.path, message: o.message }));
       captureException(error, {
         tags: { section: 'landing-page', feature: 'newsletter' },
         extra: {
@@ -90,7 +83,7 @@ export async function POST(req: Request) {
     tags.push('test');
   }
 
-  if (formValidation.tags?.length) {
+  if (formValidation.tags && formValidation.tags.length) {
     tags = [...tags, ...formValidation.tags];
   }
 
@@ -137,6 +130,8 @@ export async function POST(req: Request) {
       { status: result.status ?? 400 }
     );
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('error sending newsletter email', error);
     captureException(error, {
       tags: { section: 'landing-page', feature: 'newsletter' },
       extra: {

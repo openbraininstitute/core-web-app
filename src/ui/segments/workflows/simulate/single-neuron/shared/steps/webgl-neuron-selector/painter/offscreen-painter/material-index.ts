@@ -1,4 +1,4 @@
-import { TgdMaterial, tgdCodeFunction_float01ToVec3 } from '@tolokoban/tgd';
+import { tgdCodeFunction_float01ToVec3, TgdMaterial } from '@tolokoban/tgd';
 
 export class MaterialIndex extends TgdMaterial {
   constructor() {

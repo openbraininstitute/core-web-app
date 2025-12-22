@@ -1,14 +1,15 @@
-import { CloseCircleTwoTone, LoadingOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { Empty, List } from 'antd';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
-import { getScientificArtifactPublicationLinks } from '@/api/entitycore/queries/general/scientific-artifact-publication-link';
-import type { TPublicationTypeDictionary } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
-import type { EntityTypeValue } from '@/entity-configuration/domain';
-import type { WorkspaceContext } from '@/types/common';
+import { CloseCircleTwoTone, LoadingOutlined } from '@ant-design/icons';
+
 import { Card } from '@/ui/segments/explore/circuit/elements/publication-item/card';
+import { getScientificArtifactPublicationLinks } from '@/api/entitycore/queries/general/scientific-artifact-publication-link';
+import type { WorkspaceContext } from '@/types/common';
 import { keyBuilder } from '@/ui/use-query-keys/data';
+import type { TPublicationTypeDictionary } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
+import { EntityTypeValue } from '@/entity-configuration/domain';
 
 export function PerTypePublications({
   entity,

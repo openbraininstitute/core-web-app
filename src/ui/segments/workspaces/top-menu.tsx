@@ -1,11 +1,12 @@
 'use client';
 
 import type { ComponentProps } from 'react';
-import { Wallet } from '@/ui/segments/project/balance';
-import { SpaceSwitcher } from '@/ui/segments/workspaces/space-switcher';
+
 import { TopMenuNavigation } from '@/ui/segments/workspaces/top-menu-nav';
-import { cn } from '@/utils/css-class';
+import { SpaceSwitcher } from '@/ui/segments/workspaces/space-switcher';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
+import { Wallet } from '@/ui/segments/project/balance';
+import { cn } from '@/utils/css-class';
 
 type Props = {
   className?: ComponentProps<'div'>['className'];

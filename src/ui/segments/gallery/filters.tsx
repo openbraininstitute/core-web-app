@@ -3,7 +3,7 @@
 import { Select } from 'antd';
 import { useMemo } from 'react';
 
-import type { GalleryContentProps } from '@/services/sanity/content/gallery';
+import type { GalleryContentProps } from '@/api/sanity/gallery/route';
 
 type GalleryFiltersProps = {
   galleryContent: GalleryContentProps[];

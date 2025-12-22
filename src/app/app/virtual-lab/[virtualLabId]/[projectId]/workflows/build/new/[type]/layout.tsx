@@ -1,10 +1,11 @@
 'use client';
 
+import { type ReactNode } from 'react';
 import { motion } from 'motion/react';
-import type { ReactNode } from 'react';
-import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
+
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { BuildWorkflowsBreadcrumb } from '@/ui/segments/workflows/elements/build-breadcrumb';
+import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { cn } from '@/utils/css-class';
 
 export default function Layout({ children }: { children: ReactNode }) {

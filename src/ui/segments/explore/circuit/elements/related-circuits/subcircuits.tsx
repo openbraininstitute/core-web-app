@@ -1,23 +1,24 @@
+import { useRouter } from 'next/navigation';
+import { ReactNode, useMemo } from 'react';
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
-import { useRouter } from 'next/navigation';
-import { type ReactNode, useMemo } from 'react';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
-import { WorkspaceScope } from '@/constants';
-import type { VirtualLabInfo } from '@/types/virtual-lab/common';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
-import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
+
 import { createExpandableTableConfig } from '@/ui/segments/data-table/expandable-row/expandable-base-table';
-import { useExpandableTable } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
-import { BaseTable } from '@/ui/segments/data-table/table';
-import { expandIcon } from '@/ui/segments/explore/circuit/elements/expand-icon';
 import { RecursiveExpandableTable } from '@/ui/segments/explore/circuit/elements/recursive-expandable-table';
+import { useExpandableTable } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
+import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { expandIcon } from '@/ui/segments/explore/circuit/elements/expand-icon';
+import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
+import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+import { VirtualLabInfo } from '@/types/virtual-lab/common';
+import { BaseTable } from '@/ui/segments/data-table/table';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { WorkspaceScope } from '@/constants';
 
 import type { HierarchyOutputNode, ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
-import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 type Props = {
   data: HierarchyOutputNode[] | undefined;
@@ -48,7 +49,7 @@ export function Subcircuits({ data }: Props) {
   );
   const columns = cols.filter(({ key }) => (activeColumns || []).includes(key as string));
 
-  const onCellClick = (_basePath: string, record: ICircuit) => {
+  const onCellClick = (basePath: string, record: ICircuit) => {
     navigate(
       resolveExploreDetailsPageUrl({
         ctx: { virtualLabId, projectId },
@@ -77,7 +78,7 @@ export function Subcircuits({ data }: Props) {
       dataType: ExtendedEntitiesTypeDict.Circuit,
     },
     expandedColumns: columns,
-    renderWrapper: (_baseTable: ReactNode, records: ICircuit[]) => {
+    renderWrapper: (baseTable: ReactNode, records: Array<ICircuit>) => {
       return (
         <div className="my-5 flex flex-col items-start gap-5">
           <div className="ml-2 flex flex-row items-center gap-2">
@@ -87,7 +88,7 @@ export function Subcircuits({ data }: Props) {
           <div className="w-full">
             <div className="ml-4">
               <RecursiveExpandableTable
-                circuits={records as ICircuitEnriched[]}
+                circuits={records as Array<ICircuitEnriched>}
                 columns={columns}
                 dataType={ExtendedEntitiesTypeDict.Circuit}
                 dataScope={WorkspaceScope.Custom}
@@ -108,15 +109,17 @@ export function Subcircuits({ data }: Props) {
   const { expandableConfig } = useExpandableTable<ICircuit, VirtualLabInfo>(expandableOptions);
 
   return (
-    <BaseTable
-      loading={false}
-      columns={columns}
-      dataType={ExtendedEntitiesTypeDict.Circuit}
-      dataSource={data}
-      onCellClick={onCellClick}
-      expandableConfig={expandableConfig}
-      wrapperClassname="[&_.ant-table-body]:max-h-full!"
-      rowKey={(record: ICircuit) => `subcircuits-hierarchy-${record.id}`}
-    />
+    <>
+      <BaseTable
+        loading={false}
+        columns={columns}
+        dataType={ExtendedEntitiesTypeDict.Circuit}
+        dataSource={data}
+        onCellClick={onCellClick}
+        expandableConfig={expandableConfig}
+        wrapperClassname="[&_.ant-table-body]:max-h-full!"
+        rowKey={(record: ICircuit) => `subcircuits-hierarchy-${record.id}`}
+      />
+    </>
   );
 }

@@ -1,20 +1,23 @@
 'use client';
 
+import { compact, sortBy, get } from 'es-toolkit/compat';
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
-import { ConfigProvider, Table } from 'antd';
-import type { ColumnType } from 'antd/es/table';
-import { compact, get, sortBy } from 'es-toolkit/compat';
 import { useSession } from 'next-auth/react';
+import { ConfigProvider, Table } from 'antd';
+import { ColumnType } from 'antd/es/table';
 import { useMemo } from 'react';
-import type { Member, MembersResponse, Role } from '@/api/virtual-lab-svc/queries/types';
+
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
-import { useUserRole } from '@/hooks/use-user-role';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Badge } from '@/ui/molecules/badge';
-import { Button } from '@/ui/molecules/button';
 import { RoleModifier } from '@/ui/segments/project/team/role-modifier';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { useUserRole } from '@/hooks/use-user-role';
 import { extractInitials } from '@/util/slugify';
+import { Button } from '@/ui/molecules/button';
+import { Badge } from '@/ui/molecules/badge';
+
 import { cn } from '@/utils/css-class';
+
+import type { Member, MembersResponse, Role } from '@/api/virtual-lab-svc/queries/types';
 
 export function ListingMembers({
   onAddMemberClick,
@@ -40,7 +43,7 @@ export function ListingMembers({
   const total = list?.data?.total;
   const users = list?.data?.users;
 
-  const columns: ColumnType<Member>[] = [
+  const columns: Array<ColumnType<Member>> = [
     {
       title: 'name',
       dataIndex: 'name',

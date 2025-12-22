@@ -1,6 +1,6 @@
-import React, { type ReactElement, type ReactNode, useState } from 'react';
-import { cn } from '@/utils/css-class';
+import React, { useState, ReactNode, ReactElement } from 'react';
 import { Button } from './button';
+import { cn } from '@/utils/css-class';
 
 type TabProps = {
   visible?: boolean; //eslint-disable-line

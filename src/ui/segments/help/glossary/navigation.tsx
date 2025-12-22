@@ -1,9 +1,11 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import type { CellTypeContentForGlossaryItem, ContentForGlossaryItem } from '@/types/help/type';
-import AccordionButton from '@/ui/molecules/dropdown';
+
 import type { CellTypeContentProps } from '@/ui/segments/help/glossary';
+
+import { CellTypeContentForGlossaryItem, ContentForGlossaryItem } from '@/types/help/type';
+import AccordionButton from '@/ui/molecules/dropdown';
 import Slugify from '@/util/slugify';
 import { cn } from '@/utils/css-class';
 
@@ -58,9 +60,7 @@ export default function GlossaryNavigation({
                     onClick={() => {
                       const url = new URL(window.location.href);
                       url.searchParams.set('term', slug);
-                      router.replace(`${url.pathname}${url.search}`, {
-                        scroll: false,
-                      });
+                      router.replace(`${url.pathname}${url.search}`, { scroll: false });
                     }}
                     key={displayName}
                     className={cn(

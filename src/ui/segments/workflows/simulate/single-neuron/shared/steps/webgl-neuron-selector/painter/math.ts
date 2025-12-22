@@ -1,6 +1,6 @@
-import { type TgdCamera, TgdMat4, TgdVec2, TgdVec4, tgdCalcClamp } from '@tolokoban/tgd';
+import { TgdVec4, TgdCamera, TgdMat4, TgdVec2, tgdCalcClamp } from '@tolokoban/tgd';
 
-import type { Structure, StructureItem } from './structure';
+import { Structure, StructureItem } from './structure';
 
 export function computeSectionOffset(
   structure: Structure,

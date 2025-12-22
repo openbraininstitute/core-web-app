@@ -1,23 +1,25 @@
 'use client';
 
 import { get as _get, compact } from 'es-toolkit/compat';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
-import { DEFAULT_PAGE_NUMBER } from '@/constants';
-import { getFieldsDefinition } from '@/entity-configuration/definitions';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import {
-  SortOrder,
-  type TCoreFilter,
-  type TSortOrder,
-  type TSortState,
-} from '@/entity-configuration/definitions/types';
+
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
 import { columnKeyToFilter } from '@/ui/segments/data-table/elements/column-key-to-filter';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import { getFieldsDefinition } from '@/entity-configuration/definitions';
 import {
   CircuitRepresentationView,
   type TCircuitRepresentationView,
 } from '@/ui/segments/explore/circuit/helpers';
+import { DEFAULT_PAGE_NUMBER } from '@/constants';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import {
+  SortOrder,
+  TSortState,
+  type TCoreFilter,
+  type TSortOrder,
+} from '@/entity-configuration/definitions/types';
+import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 
 export const makeTypeDefaultFilters = ({ dataType }: { dataType: TExtendedEntitiesTypeDict }) => {
   const columns = getViewDefinitionByExtendedType(dataType)?.columns;
@@ -38,7 +40,7 @@ type DataListStateSnapshot = {
   Sort: TSortState;
   Search: string;
   Page: number;
-  Filters: TCoreFilter[];
+  Filters: Array<TCoreFilter>;
   View: TCircuitRepresentationView;
 };
 

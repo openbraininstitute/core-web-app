@@ -19,17 +19,23 @@ export type FacetOptionsList =
     }>
   | undefined;
 
-export function useOptions(values: string[], data?: FacetLabelValuePair[]): FacetOptionsList {
+export function useOptions(
+  values: Array<string>,
+  data?: Array<FacetLabelValuePair>
+): FacetOptionsList {
   return useMemo(() => {
-    return data?.map(({ id, label, value, type, count }) => {
-      return {
-        id,
-        label,
-        type,
-        value,
-        count,
-        checked: values?.includes(label),
-      };
-    });
+    return (
+      data &&
+      data.map(({ id, label, value, type, count }) => {
+        return {
+          id,
+          label,
+          type,
+          value,
+          count,
+          checked: values?.includes(label),
+        };
+      })
+    );
   }, [data, values]);
 }

@@ -1,17 +1,19 @@
 'use client';
 
+import { useParams, useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
-import { useParams, useRouter } from 'next/navigation';
 import { useMemo } from 'react';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { WorkspaceScope } from '@/constants';
-import type { WorkspaceContext } from '@/types/common';
-import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
+
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
-import { BaseTable } from '@/ui/segments/data-table/table';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { activeColumnsAtom } from '@/ui/segments/data-table/elements/context';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+import { BaseTable } from '@/ui/segments/data-table/table';
+import { WorkspaceScope } from '@/constants';
+
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
   data: ICircuit | undefined;
@@ -42,7 +44,7 @@ export function Parent({ data }: Props) {
     )
   );
   const columns = cols.filter(({ key }) => (activeColumns || []).includes(key as string));
-  const onCellClick = (_basePath: string, record: ICircuit) => {
+  const onCellClick = (basePath: string, record: ICircuit) => {
     navigate(
       resolveExploreDetailsPageUrl({
         ctx: { virtualLabId, projectId },

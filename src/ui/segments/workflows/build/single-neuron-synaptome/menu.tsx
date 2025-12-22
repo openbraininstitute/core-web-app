@@ -1,5 +1,9 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useRouter } from '@bprogress/next';
 import {
   CheckCircleFilled,
   LoadingOutlined,
@@ -7,41 +11,41 @@ import {
   SettingFilled,
   WarningFilled,
 } from '@ant-design/icons';
-import { useRouter } from '@bprogress/next';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import delay from 'es-toolkit/compat/delay';
-import isNil from 'es-toolkit/compat/isNil';
-import kebabCase from 'es-toolkit/compat/kebabCase';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
 import { z } from 'zod';
-import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import isNil from 'es-toolkit/compat/isNil';
+import delay from 'es-toolkit/compat/delay';
+
+import { useVisibleSynapsesSetter } from '../../simulate/single-neuron/shared/steps/webgl-neuron-selector/hooks';
+
+import { SynapseSetMenuItems } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-set-menu-item';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { createSingleNeuronSynaptome } from '@/api/small-scale-simulator';
+import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
+import {
+  BuildStep,
+  BuildStepKeys,
+  DefaultSynapseValue,
+  useBuildSingleNeuronSynaptomeSessionState,
+} from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import {
   SingleNeuronSynaptomeBaseSchema,
   SingleNeuronSynaptomeConfigurationSchema,
 } from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { createSingleNeuronSynaptome } from '@/api/small-scale-simulator';
-import { tryCatch } from '@/api/utils';
 import { useAppNotification } from '@/components/notification';
-import { config } from '@/config';
-import { messages } from '@/i18n/en/synaptome';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Button } from '@/ui/molecules/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import {
-  BuildStep,
-  type BuildStepKeys,
-  DefaultSynapseValue,
-  useBuildSingleNeuronSynaptomeSessionState,
-} from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import { SynapseSetMenuItems } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-set-menu-item';
-import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { browserHistoryReplace } from '@/utils/browser';
+import { messages } from '@/i18n/en/synaptome';
+import { Button } from '@/ui/molecules/button';
+import { tryCatch } from '@/api/utils';
 import { cn } from '@/utils/css-class';
-import { useVisibleSynapsesSetter } from '../../simulate/single-neuron/shared/steps/webgl-neuron-selector/hooks';
+import { config } from '@/config';
+
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 
 type Props = { sessionId: string };
 

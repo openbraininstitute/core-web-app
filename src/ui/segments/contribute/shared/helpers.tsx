@@ -1,13 +1,16 @@
-import type { FormInstance } from 'antd';
-import { initial, join, last, split } from 'es-toolkit/compat';
-import type { ComponentProps, ReactNode } from 'react';
-import type { SafeParseReturnType, ZodTypeAny } from 'zod';
+import { initial, last, join, split } from 'es-toolkit/compat';
 import { z } from 'zod';
+
+import type { SafeParseReturnType, ZodTypeAny } from 'zod';
+import type { ComponentProps, ReactNode } from 'react';
+import type { FormInstance } from 'antd';
+
+import { cn } from '@/utils/css-class';
+
 import type {
   ICustomFormErrorOptions,
   TStepValidationStatus,
 } from '@/ui/segments/contribute/shared/types';
-import { cn } from '@/utils/css-class';
 
 export class CustomFormError extends Error {
   public readonly cause?: unknown;
@@ -103,7 +106,7 @@ export function createZodFieldValidator<TSchema extends ZodTypeAny, TFormValues>
 export function getValidationStatus<T>(
   validator: SafeParseReturnType<T, T>,
   fieldKey: string,
-  dirtyFields: string[]
+  dirtyFields: Array<string>
 ): TStepValidationStatus {
   if (validator.success) return 'valid';
   if (dirtyFields.includes(fieldKey)) return 'invalid';
@@ -113,7 +116,7 @@ export function getValidationStatus<T>(
 /**
  * gets dirty fields from an Ant Design form
  */
-export function getDirtyFields<TFormValues>(form: FormInstance<TFormValues>): string[] {
+export function getDirtyFields<TFormValues>(form: FormInstance<TFormValues>): Array<string> {
   const allFields = form.getFieldsValue(true) as Record<string, unknown>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return Object.keys(allFields).filter((field) => (form as any).isFieldTouched(field));
@@ -136,7 +139,10 @@ export function parseFileName(fileName: string): { name: string; ext: string } {
 /**
  * gets the file extension based on file type config
  */
-export function getFileExtension(file: File, fileTypes: IFileTypeConfig[]): string | undefined {
+export function getFileExtension(
+  file: File,
+  fileTypes: Array<IFileTypeConfig>
+): string | undefined {
   const { ext } = parseFileName(file.name);
   const fileType = fileTypes.find((f) => ext === f.type || file.type === f.mimeType);
   return fileType?.extension;
@@ -145,7 +151,7 @@ export function getFileExtension(file: File, fileTypes: IFileTypeConfig[]): stri
 /**
  * gets the MIME type based on file extension
  */
-export function getMimeType(file: File, fileTypes: IFileTypeConfig[]): string | undefined {
+export function getMimeType(file: File, fileTypes: Array<IFileTypeConfig>): string | undefined {
   const ext = getFileExtension(file, fileTypes);
   const fileType = fileTypes.find((f) => ext === f.extension);
   return fileType?.mimeType;

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { getClient } from '@/services/sanity/client';
+import { getClient } from '@/api/sanity/client';
 import { logError } from '@/util/logger';
 
 export type CreditsPack = {
@@ -19,14 +19,9 @@ const queryForCreditsPacks = `*[_type == "credits"][] {
 
 export async function GET() {
   try {
-    const data = await getClient().fetch<CreditsPack[]>(
-      queryForCreditsPacks,
-      {},
-      {
-        cache: 'force-cache',
-        next: { revalidate: 3600 },
-      }
-    );
+    const data = await getClient().fetch<CreditsPack[]>({
+      query: queryForCreditsPacks,
+    });
 
     return NextResponse.json({ creditsPacks: data ?? [] });
   } catch (error) {

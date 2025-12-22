@@ -17,13 +17,14 @@ import { CoinsIcon } from '@/components/icons/buttons';
 import { useAppNotification } from '@/components/notification';
 import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
 import { assignProjectBudget, reverseProjectBudget } from '@/services/virtual-lab/projects';
-import type { ProjectBalance } from '@/types/accounting';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge } from '@/ui/molecules/badge';
 import { Button, Button as UiButton } from '@/ui/molecules/button';
 import { Input } from '@/ui/molecules/input';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
+
+import type { ProjectBalance } from '@/types/accounting';
 
 type Props = {
   virtualLabId: string;
@@ -132,14 +133,9 @@ export function ManageCreditsStep({
         direction: isLabToProject ? 'vlab->proj' : 'proj->vlab',
       }),
     onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: keyBuilder.accounting({ virtualLabId }) });
       await queryClient.invalidateQueries({
-        queryKey: keyBuilder.accounting({ virtualLabId }),
-      });
-      await queryClient.invalidateQueries({
-        queryKey: keyBuilder.wallet({
-          virtualLabId,
-          projectId: selectedProjectId!,
-        }),
+        queryKey: keyBuilder.wallet({ virtualLabId, projectId: selectedProjectId! }),
       });
       notify.success({
         message: <span className="text-primary-9 text-lg font-bold">Credits transfer</span>,
@@ -196,7 +192,7 @@ export function ManageCreditsStep({
 
   const balanceMap: Map<string, number> = useMemo(() => {
     const map = new Map<string, number>();
-    const balances = (accountingRes?.data?.data?.projects ?? []) as ProjectBalance[];
+    const balances = (accountingRes?.data?.data?.projects ?? []) as Array<ProjectBalance>;
     for (const item of balances) {
       const numericBalance = typeof item.balance === 'string' ? Number(item.balance) : item.balance;
       map.set(item.proj_id, Number.isFinite(numericBalance) ? numericBalance : 0);

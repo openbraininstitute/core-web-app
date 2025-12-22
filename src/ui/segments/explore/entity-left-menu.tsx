@@ -2,15 +2,17 @@
 
 import { motion } from 'motion/react';
 import { Suspense, useState } from 'react';
-import type { TTreeNode } from '@/components/tree/types';
-import { BrainRegionHierarchy } from '@/features/brain-region-hierarchy';
+
 import { TreeSkeleton } from '@/features/brain-region-hierarchy/brain-region-skeleton';
-import type { TExploreLeftMenuContext } from '@/features/brain-region-hierarchy/region-banner';
+import { EntityLinkCount } from '@/ui/segments/explore/entity-link-count';
+import { BrainRegionHierarchy } from '@/features/brain-region-hierarchy';
 import {
   ExploreLeftMenuContext,
   RegionBanner,
 } from '@/features/brain-region-hierarchy/region-banner';
-import { EntityLinkCount } from '@/ui/segments/explore/entity-link-count';
+
+import type { TExploreLeftMenuContext } from '@/features/brain-region-hierarchy/region-banner';
+import type { TTreeNode } from '@/components/tree/types';
 
 type Props = { dataKey: string };
 

@@ -1,26 +1,30 @@
 'use client';
 
-import { VerticalAlignMiddleOutlined } from '@ant-design/icons';
-import { ConfigProvider, Table, type TableProps } from 'antd';
-import type { TableRef } from 'antd/es/table';
-import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
-import { isString } from 'es-toolkit/compat';
-import type { ComponentProps, CSSProperties, ReactNode } from 'react';
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import useResizeObserver from '@/hooks/useResizeObserver';
-import useScrollComplete from '@/hooks/useScrollComplete';
+import { VerticalAlignMiddleOutlined } from '@ant-design/icons';
+import { ConfigProvider, Table, TableProps } from 'antd';
+import { isString } from 'es-toolkit/compat';
 
-import TableControls from '@/ui/segments/data-table/elements/controls';
+import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
+import type { ComponentProps, CSSProperties, ReactNode } from 'react';
+import type { TableRef } from 'antd/es/table';
+
 import { useOnCellRouteHandler } from '@/ui/segments/data-table/elements/hooks';
-import styles from '@/ui/segments/data-table/elements/table.module.css';
 import {
-  type RenderButtonProps,
   useRowSelection,
+  type RenderButtonProps,
 } from '@/ui/segments/data-table/elements/use-row-selection';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
+
+import TableControls from '@/ui/segments/data-table/elements/controls';
+import useScrollComplete from '@/hooks/useScrollComplete';
+import useResizeObserver from '@/hooks/useResizeObserver';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+
+import styles from '@/ui/segments/data-table/elements/table.module.css';
 
 export type OnCellClick<T> = (basePath: string, record: T, type: TExtendedEntitiesTypeDict) => void;
 
@@ -127,10 +131,7 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
     dataType: TExtendedEntitiesTypeDict;
     wrapperClassname?: ComponentProps<'div'>['className'];
   }) {
-  const [containerDimension, setContainerDimension] = useState<{
-    height: number;
-    width: number;
-  }>({
+  const [containerDimension, setContainerDimension] = useState<{ height: number; width: number }>({
     height: 0,
     width: 0,
   });
@@ -189,10 +190,13 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
           style={tableStyle}
           aria-label="listing-view-table"
           className={cn(styles.table, 'grow [&_.ant-table-sticky-holder]:shadow-md', className)}
-          columns={columns?.map((col) => ({
-            ...col,
-            ...onCellRouteHandler(col),
-          }))}
+          columns={
+            columns &&
+            columns.map((col) => ({
+              ...col,
+              ...onCellRouteHandler(col),
+            }))
+          }
           components={{
             header: {
               cell: CustomTH,
@@ -253,7 +257,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
     renderButton?: (props: RenderButtonProps<T>) => ReactNode;
     selectionType?: RowSelectionType;
     scrollable?: boolean;
-    onRowsSelected?: (rows: T[]) => void;
+    onRowsSelected?: (rows: Array<T>) => void;
     dataKey: string;
     expandableConfig?: ExpandableConfig<T>;
     tableStyle?: CSSProperties | undefined;

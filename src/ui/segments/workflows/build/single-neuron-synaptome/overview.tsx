@@ -1,11 +1,11 @@
 'use client';
 
-import { Form, Input } from 'antd';
 import { useSession } from 'next-auth/react';
+import { Form, Input } from 'antd';
 
 import {
-  label,
   useBuildSingleNeuronSynaptomeSessionState,
+  label,
 } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import { makeDateToAppFormat } from '@/util/date';
 
@@ -22,11 +22,7 @@ export function Info({ sessionId }: Props) {
   });
 
   const onValuesChange = (changedValues: { name: string; description?: string }) => {
-    setSessionValue({
-      ...sessionValue,
-      seed: sessionValue?.seed ?? 100,
-      ...changedValues,
-    });
+    setSessionValue({ ...sessionValue, seed: sessionValue?.seed ?? 100, ...changedValues });
   };
 
   return (

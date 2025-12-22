@@ -2,12 +2,14 @@
 
 import { CheckOutlined, CloseOutlined, LoadingOutlined } from '@ant-design/icons';
 import { isNil } from 'es-toolkit/compat';
-import type { IProgressStep } from '@/ui/segments/contribute/shared/types';
-import { cn } from '@/utils/css-class';
+
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
+import { cn } from '@/utils/css-class';
+
+import type { IProgressStep } from '@/ui/segments/contribute/shared/types';
 
 interface ISubmitEntityProgressProps {
-  steps: IProgressStep[];
+  steps: Array<IProgressStep>;
 }
 
 interface IProgressCircleProps {

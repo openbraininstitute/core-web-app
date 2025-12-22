@@ -2,8 +2,8 @@
 
 'use client';
 
+import * as React from 'react';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
-import type * as React from 'react';
 import { cn } from '@/utils/css-class';
 
 function Popover({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Root>) {

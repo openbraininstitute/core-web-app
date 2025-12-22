@@ -63,9 +63,7 @@ export function MenuItem<T>({
           className={cn(
             'text-neutral-3 group-hover:text-primary-9 flex items-center justify-center gap-1 self-end text-sm',
             'rounded-full px-4 py-1 group-hover:bg-white group-hover:shadow-sm',
-            {
-              'bg-primary-9! group-hover:border-primary-9/40 border text-white!': active,
-            }
+            { 'bg-primary-9! group-hover:border-primary-9/40 border text-white!': active }
           )}
         >
           <span>Start</span>

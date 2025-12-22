@@ -2,8 +2,8 @@
 
 'use client';
 
-import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-react';
 import React, { useMemo } from 'react';
+import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-react';
 
 import ArrowLeft from '@/components/icons/ArrowLeft';
 import { Button } from '@/ui/molecules/button';

@@ -2,19 +2,21 @@
 
 import { CheckCircleFilled, InfoCircleFilled, RightOutlined } from '@ant-design/icons';
 import { Fragment, useMemo } from 'react';
+
+import { useContributionPipeline } from '@/ui/segments/contribute/shared/pipeline/context';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { DEFAULT_LICENSE_NAME } from '@/ui/segments/contribute/shared/schemas';
 import {
   Breadcrumb,
+  BreadcrumbList,
   BreadcrumbItem,
   BreadcrumbLink,
-  BreadcrumbList,
   BreadcrumbSeparator,
 } from '@/ui/molecules/breadcrumb/index';
 import { Button } from '@/ui/molecules/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { useContributionPipeline } from '@/ui/segments/contribute/shared/pipeline/context';
-import { DEFAULT_LICENSE_NAME } from '@/ui/segments/contribute/shared/schemas';
-import type { TStepValidationStatus } from '@/ui/segments/contribute/shared/types';
 import { cn } from '@/utils/css-class';
+
+import type { TStepValidationStatus } from '@/ui/segments/contribute/shared/types';
 
 interface IStepLabelProps {
   label: string;

@@ -1,19 +1,21 @@
 'use client';
 
 import { InfoCircleFilled } from '@ant-design/icons';
-import { type ReactNode, useState } from 'react';
-import { CenteredMessage } from '@/components/CenteredMessage';
-import { DEFAULT_CHECKLIST_RENDER_LENGTH } from '@/constants';
-import { getFieldDefinition } from '@/entity-configuration/definitions';
-import type { TCoreFilter } from '@/entity-configuration/definitions/types';
-import type { CheckListProps } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/default-checklist';
-import type { FacetLabelValuePair } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/use-options';
+import { useState, type ReactNode } from 'react';
+
 import { useOptions } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/use-options';
 import { SearchFilter } from '@/ui/segments/data-table/elements/listing-filter-panel/search-filter';
+import { getFieldDefinition } from '@/entity-configuration/definitions';
+import { CenteredMessage } from '@/components/CenteredMessage';
+import { DEFAULT_CHECKLIST_RENDER_LENGTH } from '@/constants';
+
+import type { CheckListProps } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/default-checklist';
+import type { FacetLabelValuePair } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/use-options';
+import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
 type Props = {
   children: (props: CheckListProps) => ReactNode;
-  data: FacetLabelValuePair[];
+  data: Array<FacetLabelValuePair>;
   filter: TCoreFilter;
   values: string[];
   onChange: (value: string[]) => void;

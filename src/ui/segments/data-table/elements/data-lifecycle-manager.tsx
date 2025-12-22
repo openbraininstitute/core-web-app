@@ -1,7 +1,7 @@
 'use client';
 
-import type { PropsWithChildren } from 'react';
 import { useCallback, useEffect, useRef } from 'react';
+import type { PropsWithChildren } from 'react';
 
 import { DataListStateSnapshotContext } from '@/ui/segments/data-table/elements/context';
 

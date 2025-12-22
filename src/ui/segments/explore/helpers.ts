@@ -6,9 +6,10 @@ import { getElectricalCellRecordings } from '@/api/entitycore/queries/experiment
 import { getEntitiesCount } from '@/api/entitycore/queries/general/entity';
 import { ElectricalRecordingOriginDictionary } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
+
 import { config } from '@/config';
-import type { TWorkspaceScope } from '@/constants';
+
+import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { BoutonDensity } from '@/entity-configuration/domain/experimental/bouton-density';
 import { CellMorphology } from '@/entity-configuration/domain/experimental/cell-morphology';
 import { ElectricalCellRecording } from '@/entity-configuration/domain/experimental/electrical-cell-recording';
@@ -22,12 +23,14 @@ import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { MEModelWithSynapsesCircuit } from '@/entity-configuration/domain/model/me-model-with-synapses';
 import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import { MEModelCircuitSimulation } from '@/entity-configuration/domain/simulation/memodel-circuit-simulation';
-import { MicrocircuitSimulation } from '@/entity-configuration/domain/simulation/microcircuit-simulation';
 import { PairedNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/paired-neurons-simulation';
 import { SingeNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/single-neuron-circuit-simulation';
 import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation/single-neuron-simulation';
 import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/simulation/single-neuron-synaptome-simulation';
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
+import { MicrocircuitSimulation } from '@/entity-configuration/domain/simulation/microcircuit-simulation';
+
+import type { TWorkspaceScope } from '@/constants';
 import type { WorkspaceContext } from '@/types/common';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 

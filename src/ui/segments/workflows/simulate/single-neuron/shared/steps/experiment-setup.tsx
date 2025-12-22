@@ -1,7 +1,7 @@
 import { Form, InputNumber } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
 import z from 'zod';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+
 import { EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
   ExperimentalSetupConfigurationAtomFamily,
@@ -12,6 +12,7 @@ import {
   getSessionKey,
   label,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import {
   ExperimentalSetupConfigurationSchema,
   type SimulationExperimentalSetupKeys,
@@ -30,7 +31,7 @@ type SetupInputProps = {
   onChange: (key: SimulationExperimentalSetupKeys, newValue: number | null) => void;
 };
 
-const CONDITIONS_FIELDS: Omit<SetupInputProps, 'onChange'>[] = [
+const CONDITIONS_FIELDS: Array<Omit<SetupInputProps, 'onChange'>> = [
   {
     id: 'celsius',
     text: 'Temperature',

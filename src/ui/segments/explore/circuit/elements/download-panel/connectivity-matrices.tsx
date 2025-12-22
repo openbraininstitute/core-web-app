@@ -1,30 +1,33 @@
 import { useQuery } from '@tanstack/react-query';
-import flatMap from 'es-toolkit/compat/flatMap';
-import get from 'es-toolkit/compat/get';
-import isString from 'es-toolkit/compat/isString';
-import last from 'es-toolkit/compat/last';
-import map from 'es-toolkit/compat/map';
+import { match, P } from 'ts-pattern';
 import { useSetAtom } from 'jotai';
 import { useEffect } from 'react';
-import { match, P } from 'ts-pattern';
-import type {
-  CircuitConnectivityMatricesConfiguration,
-  ICircuit,
-} from '@/api/entitycore/types/entities/circuit';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { getAssetElement } from '@/api/entitycore/utils';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import type { ConfigItemProps } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
-import { NetworkConfigItem } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
+
+import isString from 'es-toolkit/compat/isString';
+import flatMap from 'es-toolkit/compat/flatMap';
+import last from 'es-toolkit/compat/last';
+import map from 'es-toolkit/compat/map';
+import get from 'es-toolkit/compat/get';
+
 import { connectivityMetricsContentConfiguration } from '@/ui/segments/explore/circuit/elements/download-panel/content-configuration';
+import { NetworkConfigItem } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
+import { SkeletonItem } from '@/ui/segments/explore/circuit/elements/download-panel/skeleton';
 import { Error } from '@/ui/segments/explore/circuit/elements/download-panel/error';
 import {
   countConnectivityPaths,
   resolveCircuitConfigAndDirectory,
   updateFileCounterAtom,
 } from '@/ui/segments/explore/circuit/elements/download-panel/helpers';
-import { SkeletonItem } from '@/ui/segments/explore/circuit/elements/download-panel/skeleton';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { getAssetElement } from '@/api/entitycore/utils';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
+
+import type { ConfigItemProps } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
+import type {
+  CircuitConnectivityMatricesConfiguration,
+  ICircuit,
+} from '@/api/entitycore/types/entities/circuit';
 
 const AssetDefaultPath = 'matrix_config.json';
 
@@ -48,7 +51,7 @@ export default function ConnectivityMatrices({ circuit }: { circuit: ICircuit })
     queryFn: () =>
       resolveCircuitConfigAndDirectory<CircuitConnectivityMatricesConfiguration>({
         entityId: circuit.id,
-        assetId: configAsset?.id,
+        assetId: configAsset!.id,
         assetPath: AssetDefaultPath,
         context: { virtualLabId, projectId },
       }),
@@ -72,10 +75,7 @@ export default function ConnectivityMatrices({ circuit }: { circuit: ICircuit })
   return match(connectivityMetrics)
     .with({ isLoading: true }, () => <SkeletonItem />)
     .with(
-      {
-        data: { error: P.string.select('error') },
-        error: P.select('catchError'),
-      },
+      { data: { error: P.string.select('error') }, error: P.select('catchError') },
       ({ error }) => {
         let err = '';
         if (isString(connectivityMetrics.error)) err = connectivityMetrics.error;

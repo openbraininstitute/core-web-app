@@ -1,10 +1,11 @@
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TWorkspaceScope } from '@/constants';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
-import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import { BrowseCircuit } from '@/ui/segments/explore/circuit';
-import type { KebabCase } from '@/utils/type';
+import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import { KebabCase } from '@/utils/type';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import type { TWorkspaceScope } from '@/constants';
 
 export default async function Page({
   searchParams,

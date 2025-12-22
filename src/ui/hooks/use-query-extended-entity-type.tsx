@@ -1,30 +1,32 @@
-import {
-  hashKey,
-  keepPreviousData,
-  type QueryFunction,
-  type UseQueryOptions,
-  useQuery,
-} from '@tanstack/react-query';
 import { isEmpty } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
-import { transformFiltersToQuery } from '@/api/entitycore/transformers';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import {
+  useQuery,
+  keepPreviousData,
+  UseQueryOptions,
+  type QueryFunction,
+  hashKey,
+} from '@tanstack/react-query';
+
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
-import type { TWorkspaceScope } from '@/constants';
-import { DEFAULT_PAGE_SIZE } from '@/constants';
+import { transformFiltersToQuery } from '@/api/entitycore/transformers';
+import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 import {
   DEFAULT_BRAIN_REGION_HIERARCHY_ID,
   selectedBrainRegionAtom,
 } from '@/features/brain-region-hierarchy/context';
-import type { WorkspaceContext } from '@/types/common';
+import { compactRecord } from '@/utils/dictionary';
+import { DEFAULT_PAGE_SIZE } from '@/constants';
 import {
   coreFiltersAtom,
+  coreSortStateAtom,
   corePageNumberAtom,
   coreSearchStringAtom,
-  coreSortStateAtom,
 } from '@/ui/segments/data-table/elements/context';
-import { compactRecord } from '@/utils/dictionary';
-import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { WorkspaceContext } from '@/types/common';
+import type { TWorkspaceScope } from '@/constants';
 
 export type QueryContext = {
   key: string;

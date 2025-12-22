@@ -1,4 +1,4 @@
-@reference "../../../../styles/globals.css";
+@reference '../../../../styles/globals.css';
 
 .table a {
   @apply text-primary-7;
@@ -26,11 +26,11 @@
 }
 
 .alignmentHack > div {
-  align-items: normal;
+  align-items: normal !important;
 }
 
 .tableRow {
-  border: none;
+  border: none !important;
   @apply cursor-pointer;
 }
 
@@ -47,11 +47,11 @@
   gap: 0px 0px;
   grid-auto-flow: row;
   grid-template-areas:
-    "explore-header content"
-    "braincells content"
-    "experimental content"
-    "reconstructions content"
-    "simulations info";
+    'explore-header content'
+    'braincells content'
+    'experimental content'
+    'reconstructions content'
+    'simulations info';
 }
 
 .content {

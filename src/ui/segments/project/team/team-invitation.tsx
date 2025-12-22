@@ -1,20 +1,21 @@
 'use client';
 
-import { ArrowLeftOutlined, DeleteFilled, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, ArrowLeftOutlined, LoadingOutlined, DeleteFilled } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ConfigProvider, Empty, Input, List, Select } from 'antd';
-import { filter, find, map, uniqBy } from 'es-toolkit/compat';
-import { useEffect, useRef, useState } from 'react';
+import { ConfigProvider, Select, Empty, List, Input } from 'antd';
+import { filter, uniqBy, find, map } from 'es-toolkit/compat';
+import { useState, useRef, useEffect } from 'react';
 import z from 'zod';
 
 import { inviteToProject } from '@/api/virtual-lab-svc/queries/invite';
-import type { Role } from '@/api/virtual-lab-svc/queries/types';
+import { roleOptions } from '@/ui/segments/project/team/role-modifier';
 import { useAppNotification } from '@/components/notification';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
-import { roleOptions } from '@/ui/segments/project/team/role-modifier';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
+
+import type { Role } from '@/api/virtual-lab-svc/queries/types';
 
 const emailSchema = z.string().min(3, 'Email is required').email('Email is not valid');
 
@@ -34,7 +35,7 @@ function EmailInput({
   value: string;
   onChange: (v: string) => void;
   disabled: boolean;
-  inviteList: InvitePayload[];
+  inviteList: Array<InvitePayload>;
 }) {
   const [error, setError] = useState<string | null>(null);
 
@@ -92,7 +93,9 @@ export function InviteMembers({ onBack }: { onBack: () => void }) {
   const queryClient = useQueryClient();
   const { virtualLabId, projectId } = useWorkspace();
   const { error: notifyError, success: notifySuccess } = useAppNotification();
-  const [inviteList, setInviteList] = useState<InvitePayload[]>([{ email: '', role: 'member' }]);
+  const [inviteList, setInviteList] = useState<Array<InvitePayload>>([
+    { email: '', role: 'member' },
+  ]);
 
   const addEmailField = () => {
     setInviteList((prev) => [...prev, { email: '', role: 'member' }]);

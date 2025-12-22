@@ -1,19 +1,24 @@
 'use client';
 
 import { AntdRegistry } from '@ant-design/nextjs-registry';
-import { App, ConfigProvider } from 'antd';
-import { Provider as JotaiProvider } from 'jotai';
-import { SessionProvider } from 'next-auth/react';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
-import type { ReactNode } from 'react';
-import { ProgressBarProvider } from '@/app/app/progress-provider';
+import { SessionProvider } from 'next-auth/react';
+import { Provider as JotaiProvider } from 'jotai';
+import { ConfigProvider, App } from 'antd';
+import { DevTools } from 'jotai-devtools';
+import { ReactNode } from 'react';
+
 import SessionStateProvider from '@/components/SessionStateProvider';
 import ThemeProvider from '@/components/ThemeProvider';
-import { type FeatureFlags, FlagsProvider } from '@/features/feature-flags';
-import type { SessionOrNull } from '@/hooks/session';
-import { QueryProvider } from '@/query-provider/client';
-import { AtomProvider } from '@/state/state';
 import commonAntdTheme from '@/theme/antd';
+
+import { ProgressBarProvider } from '@/app/app/progress-provider';
+import { QueryProvider } from '@/query-provider/client';
+import { SessionOrNull } from '@/hooks/session';
+import { AtomProvider } from '@/state/state';
+import { FeatureFlags, FlagsProvider } from '@/features/feature-flags';
+
+import 'jotai-devtools/styles.css';
 
 type ProvidersProps = {
   children: ReactNode;
@@ -30,6 +35,9 @@ export function Providers({ children, session, flags }: ProvidersProps) {
             <NuqsAdapter>
               <QueryProvider>
                 <JotaiProvider>
+                  {process.env.NEXT_PUBLIC_JOTAI_DEVTOOLS_ENABLED && (
+                    <DevTools {...{ isInitialOpen: false, position: 'bottom-right' }} />
+                  )}
                   <ThemeProvider>
                     <SessionProvider session={session} refetchInterval={2 * 60}>
                       <SessionStateProvider>

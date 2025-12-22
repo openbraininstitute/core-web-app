@@ -1,28 +1,30 @@
+import { useState, useCallback, ReactNode, useEffect } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
+import { useAtomValue } from 'jotai';
 import { Spin } from 'antd';
 import type { ExpandableConfig } from 'antd/es/table/interface';
-import { useAtomValue } from 'jotai';
-import { type ReactNode, useCallback, useEffect, useState } from 'react';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+
 import { resetFilterSignalAtom } from '@/ui/segments/explore/circuit/helpers';
 import { log } from '@/utils/logger';
 
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+
 export interface ExpandableTableState<T extends EntityCoreIdentifiable> {
-  expandedData: Record<string, T[] | null>;
+  expandedData: Record<string, Array<T> | null>;
   loadingRows: Record<string, boolean>;
-  expandedRowKeys: string[];
+  expandedRowKeys: Array<string>;
 }
 
 export interface UseExpandableTableOptions<T extends EntityCoreIdentifiable, P = unknown> {
   // fetch data for expanded row
-  fetcher?: (record: T, params?: P) => Promise<T | T[]>;
+  fetcher?: (record: T, params?: P) => Promise<T | Array<T>>;
   // optional parameters to pass to fetcher
   fetcherParams?: P;
   getRowKey: (record: T) => string;
   // get the id to fetch (e.g., id of circuit)
   getFetchId: (record: T) => string | null;
   // render expanded content
-  renderExpanded: (records: T[], originalRecord: T, isLoading: boolean) => ReactNode;
+  renderExpanded: (records: Array<T>, originalRecord: T, isLoading: boolean) => ReactNode;
   // determine if row is expandable
   isRowExpandable?: (record: T) => boolean;
   // index of the column to render the expand icon
@@ -42,7 +44,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
   expandableConfig: ExpandableConfig<T>;
   isRowExpanded: (record: T) => boolean;
   isRowLoading: (record: T) => boolean;
-  getExpandedData: (record: T) => T[] | null;
+  getExpandedData: (record: T) => Array<T> | null;
 } {
   const {
     fetcher,
@@ -91,7 +93,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
   );
 
   const getExpandedData = useCallback(
-    (record: T): T[] | null => {
+    (record: T): Array<T> | null => {
       const key = getRowKey(record);
       return state.expandedData[key] || null;
     },
@@ -148,7 +150,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
             },
             expandedRowKeys: prev.expandedRowKeys,
           }));
-        } catch (_error) {
+        } catch (error) {
           setState((prev) => ({
             expandedData: {
               ...prev.expandedData,

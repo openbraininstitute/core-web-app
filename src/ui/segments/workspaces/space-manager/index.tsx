@@ -2,21 +2,22 @@
 
 import { useCallback, useState } from 'react';
 import { match } from 'ts-pattern';
-import { usePrevious } from '@/hooks/hooks';
+
 import { useDisableWorkspaceModalFullHeight } from '@/ui/hooks/use-disable-workspace-modal-full-height';
+import { VirtualLabConfiguration } from '@/ui/segments/virtual-lab-settings';
 import { useResetQueryParams } from '@/ui/hooks/use-reset-query-params';
-import { Modal } from '@/ui/molecules/modal';
-import { AccountSettings } from '@/ui/segments/profile';
 import { ProjectCreation } from '@/ui/segments/project/create';
 import { ProjectPreview } from '@/ui/segments/project/preview';
-import { VirtualLabConfiguration } from '@/ui/segments/virtual-lab-settings';
+import { AccountSettings } from '@/ui/segments/profile';
 import {
-  makeTriggerWorkspaceConfigurationClickEvent,
   type TTriggerWorkspaceConfigurationClickEvent,
-  useWorkspaceConfigurationClickEvent,
-  WorkspaceActions,
   type WorkspaceActionType,
+  WorkspaceActions,
+  makeTriggerWorkspaceConfigurationClickEvent,
+  useWorkspaceConfigurationClickEvent,
 } from '@/ui/segments/workspaces/space-manager/event';
+import { Modal } from '@/ui/molecules/modal';
+import { usePrevious } from '@/hooks/hooks';
 
 export function SpaceManagerContainer() {
   const resetQueryParams = useResetQueryParams();
@@ -35,11 +36,7 @@ export function SpaceManagerContainer() {
   const onClose = () => {
     resetQueryParams();
     updateContextConfig({ open: false, type: null, payload: null });
-    makeTriggerWorkspaceConfigurationClickEvent<null>({
-      on: false,
-      data: null,
-      type: null,
-    });
+    makeTriggerWorkspaceConfigurationClickEvent<null>({ on: false, data: null, type: null });
   };
 
   useDisableWorkspaceModalFullHeight({
@@ -63,11 +60,7 @@ export function SpaceManagerContainer() {
     useCallback((data: CustomEvent<TTriggerWorkspaceConfigurationClickEvent<any>>) => {
       const incomingType = data.detail.type;
       const shouldOpen = data.detail.on;
-      updateContextConfig({
-        open: shouldOpen,
-        type: incomingType,
-        payload: data.detail.data,
-      });
+      updateContextConfig({ open: shouldOpen, type: incomingType, payload: data.detail.data });
     }, [])
   );
 

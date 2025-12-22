@@ -40,9 +40,7 @@ export function PaymentModeSelection({
   const { isVirtualLabOwner: isOwner } = useUserRole({ virtualLabId });
   return (
     <div
-      className={cn('grid gap-4 p-5 select-none md:grid-cols-2', {
-        'md:grid-cols-1': !isOwner,
-      })}
+      className={cn('grid gap-4 p-5 select-none md:grid-cols-2', { 'md:grid-cols-1': !isOwner })}
     >
       <button
         type="button"

@@ -1,21 +1,24 @@
 'use client';
 
-import type { ColumnProps } from 'antd/lib/table';
-import { isString, throttle } from 'es-toolkit/compat';
-import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { throttle, isString } from 'es-toolkit/compat';
+import { ColumnProps } from 'antd/lib/table';
+
 import { fieldsDefinitionRegistry, getFieldDefinition } from '@/entity-configuration/definitions';
-import type { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { classNames, fieldTitleSentenceCase } from '@/util/utils';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
-  type OrderShape,
   SortOrder,
+  type OrderShape,
   type TSortOrder,
   type TSortState,
 } from '@/entity-configuration/definitions/types';
-import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
+
 import styles from '@/ui/segments/data-table/elements/table.module.css';
-import { classNames, fieldTitleSentenceCase } from '@/util/utils';
 
 type ResizeInit = {
   key: string | null;

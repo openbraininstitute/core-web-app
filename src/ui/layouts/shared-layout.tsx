@@ -1,7 +1,7 @@
 'use client';
 
+import { PropsWithChildren } from 'react';
 import Image from 'next/image';
-import type { PropsWithChildren } from 'react';
 
 import Logo from '@/components/logo/as-svg';
 

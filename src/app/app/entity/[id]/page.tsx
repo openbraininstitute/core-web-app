@@ -1,15 +1,17 @@
-import { notFound, redirect } from 'next/navigation';
-import { getEntity } from '@/api/entitycore/queries/general/entity';
-import { getCircuit } from '@/api/entitycore/queries/model/circuit';
-import { EntityTypeDict, type TEntityTypeDict } from '@/api/entitycore/types';
-import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { redirect, notFound } from 'next/navigation';
+
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { tryCatch } from '@/api/utils';
-import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
-import type { WorkspaceContext } from '@/types/common';
-import { resolveWorkspace } from '@/ui/segments/app-setup/helpers';
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { getCircuit } from '@/api/entitycore/queries/model/circuit';
+import { getEntity } from '@/api/entitycore/queries/general/entity';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+import { resolveWorkspace } from '@/ui/segments/app-setup/helpers';
+import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
+import { EntityTypeDict, TEntityTypeDict } from '@/api/entitycore/types';
+import { tryCatch } from '@/api/utils';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { WorkspaceContext } from '@/types/common';
 
 async function retrieveCircuit({
   id,

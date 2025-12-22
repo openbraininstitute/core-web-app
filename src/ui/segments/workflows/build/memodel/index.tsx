@@ -1,16 +1,17 @@
 'use client';
 
-import isNil from 'es-toolkit/compat/isNil';
 import { useSearchParams } from 'next/navigation';
 import { match, P } from 'ts-pattern';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { EModel, EModelMiniDetail } from '@/ui/segments/workflows/build/memodel/e-model';
+import isNil from 'es-toolkit/compat/isNil';
+
 import {
   BuildStep,
   useBuildMeModelSessionState,
 } from '@/ui/segments/workflows/build/memodel/helpers';
+import { EModel, EModelMiniDetail } from '@/ui/segments/workflows/build/memodel/e-model';
 import { MModel, MModelMiniDetail } from '@/ui/segments/workflows/build/memodel/m-model';
 import { Info } from '@/ui/segments/workflows/build/memodel/overview';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 type Props = {
   sessionId: string;

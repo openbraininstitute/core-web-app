@@ -1,4 +1,4 @@
-import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import ICMRelatedArtifactEvents from '@/ui/segments/detail-view/related-artifacts/ion-channel-model-events';

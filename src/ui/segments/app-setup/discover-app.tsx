@@ -1,18 +1,20 @@
 'use client';
 
-import { LeftOutlined, RightOutlined } from '@ant-design/icons';
-import type { CardComponentProps, Tour } from 'nextstepjs';
 import {
   NextStepProvider as OnboardingProvider,
   NextStep as OnboardingSteps,
   useNextStep,
 } from 'nextstepjs';
-import { type ReactNode, useLayoutEffect } from 'react';
-import type { TOnboardingFeature } from '@/api/virtual-lab-svc/queries/types';
+import { LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { useLayoutEffect, type ReactNode } from 'react';
+import type { CardComponentProps, Tour } from 'nextstepjs';
+
 import { useOnboardingStatus, useUpdateOnboardingStatus } from '@/hooks/use-onboarding';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
 import { cn } from '@/utils/css-class';
+
+import type { TOnboardingFeature } from '@/api/virtual-lab-svc/queries/types';
 
 const TourAction = {
   Skip: 'skip',
@@ -124,9 +126,7 @@ export function OnboardingDiscoverCard({
             onClick={() => {
               if (currentStep + 1 <= totalSteps && currentStep > 0) prevStep();
             }}
-            className={cn('text-primary-8 text-sm', {
-              'text-neutral-3': currentStep === 0,
-            })}
+            className={cn('text-primary-8 text-sm', { 'text-neutral-3': currentStep === 0 })}
           />
           <span className="w-max min-w-max">
             {currentStep + 1} of {totalSteps}

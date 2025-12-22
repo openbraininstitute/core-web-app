@@ -3,6 +3,9 @@
 
 'use client';
 
+import { ComponentProps, ReactNode, useEffect, useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { Alert, Form, Popover } from 'antd';
 import {
   CheckCircleFilled,
   EditOutlined,
@@ -10,23 +13,22 @@ import {
   LoadingOutlined,
   RightOutlined,
 } from '@ant-design/icons';
-import { useMutation } from '@tanstack/react-query';
-import { Alert, Form, Popover } from 'antd';
-import { type ComponentProps, type ReactNode, useEffect, useState } from 'react';
 import z from 'zod';
+
+import { VerificationCode } from '@/components/VirtualLab/create-entity-flows/common/otp-code';
+import { EmailStatusSchema } from '@/api/virtual-lab-svc/validation';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import {
   getEmailVerificationCode,
   verifyOtpCode,
 } from '@/api/virtual-lab-svc/queries/email-verification';
-import { EmailStatusSchema } from '@/api/virtual-lab-svc/validation';
-import { VerificationCode } from '@/components/VirtualLab/create-entity-flows/common/otp-code';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { Button } from '@/ui/molecules/button';
 import { Card, CardContent } from '@/ui/molecules/card';
+import { Button } from '@/ui/molecules/button';
 import { Input } from '@/ui/molecules/input';
-import type { TResolvedWorkspace } from '@/ui/segments/app-setup/helpers';
 import { cn } from '@/utils/css-class';
-import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
+
+import type { TResolvedWorkspace } from '@/ui/segments/app-setup/helpers';
 
 export const WorkspaceIdentitySchema = z.object({
   name: z.string({ message: 'Virtual lab name is required' }).min(1),
@@ -128,14 +130,14 @@ export function WorkspaceIdentity({
     }));
   };
 
-  const _values = Form.useWatch([], form);
+  const values = Form.useWatch([], form);
 
   useEffect(() => {
     form
       .validateFields({ validateOnly: true })
       .then(() => setSubmittable(true))
       .catch(() => setSubmittable(false));
-  }, [form]);
+  }, [form, values, editableField]);
 
   const fullName =
     [data?.profile?.first_name, data?.profile?.last_name].filter(Boolean).join(' ') ||
@@ -257,7 +259,7 @@ export function WorkspaceIdentity({
                     rules={[
                       {
                         required: true,
-                        validator(_rule, value) {
+                        validator(rule, value) {
                           if (
                             !EmailStatusSchema.options.includes(value) ||
                             value !== EmailStatusSchema.Enum.verified

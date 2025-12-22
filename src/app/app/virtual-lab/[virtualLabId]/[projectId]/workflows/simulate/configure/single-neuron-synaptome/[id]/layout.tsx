@@ -1,17 +1,16 @@
-import { type ReactNode, Suspense } from 'react';
+import { Suspense, type ReactNode } from 'react';
 
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
-import { getQueryClient, HydrateClient } from '@/query-provider/server';
-import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import { WorkflowSimulateLayout } from '@/ui/layouts/workflow-simulate-layout';
+import { getQueryClient, HydrateClient } from '@/query-provider/server';
 import { keyBuilder } from '@/ui/use-query-keys/data';
+
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 export default async function Layout({
   params,
   children,
-}: ServerSideComponentProp<WorkspaceContext & { id: string }, null> & {
-  children: ReactNode;
-}) {
+}: ServerSideComponentProp<WorkspaceContext & { id: string }, null> & { children: ReactNode }) {
   const queryClient = getQueryClient();
   const { virtualLabId, projectId, id } = await params;
 

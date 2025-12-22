@@ -1,20 +1,22 @@
-import type { ExpandableConfig } from 'antd/es/table/interface';
+import { useState, useCallback, ReactNode, useEffect } from 'react';
 import { useAtomValue } from 'jotai';
-import { type ReactNode, useCallback, useEffect, useState } from 'react';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { ExpandableConfig } from 'antd/es/table/interface';
+
 import { resetFilterSignalAtom } from '@/ui/segments/explore/circuit/helpers';
 
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+
 export interface ExpandableTableState<T extends EntityCoreIdentifiable> {
-  expandedData: Record<string, T[] | null>;
+  expandedData: Record<string, Array<T> | null>;
   expandedRowKeys: Set<string>;
 }
 
 export interface UseExpandableTableOptions<T extends EntityCoreIdentifiable> {
   // fetch data for expanded row
-  data: (record: T) => T[];
+  data: (record: T) => Array<T>;
   getRowKey: (record: T) => string;
   // render expanded content
-  renderExpanded: (records: T[], originalRecord: T) => ReactNode;
+  renderExpanded: (records: Array<T>, originalRecord: T) => ReactNode;
   // determine if row is expandable
   isRowExpandable?: (record: T) => boolean;
   // index of the column to render the expand icon
@@ -33,7 +35,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable>(
 ): {
   expandableConfig: ExpandableConfig<T>;
   isRowExpanded: (record: T) => boolean;
-  getExpandedData: (record: T) => T[] | null;
+  getExpandedData: (record: T) => Array<T> | null;
   resetState: () => void;
 } {
   const {
@@ -63,7 +65,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable>(
     if (resetFilterSignal > 0) {
       resetState();
     }
-  }, [resetFilterSignal, resetState]);
+  }, [resetFilterSignal]);
 
   const isRowExpanded = useCallback(
     (record: T): boolean => {
@@ -74,7 +76,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable>(
   );
 
   const getExpandedData = useCallback(
-    (record: T): T[] | null => {
+    (record: T): Array<T> | null => {
       const key = getRowKey(record);
       return state.expandedData[key] || null;
     },

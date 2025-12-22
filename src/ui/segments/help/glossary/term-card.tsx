@@ -1,8 +1,10 @@
 import { PortableText } from 'next-sanity';
 
 import type { ContentForGlossaryItem } from '@/components/documentation/type';
-import styles from '@/ui/segments/help/glossary/term-card.module.css';
+
 import Slugify from '@/util/slugify';
+
+import styles from '@/ui/segments/help/glossary/term-card.module.css';
 
 export default function TermCard({
   content,

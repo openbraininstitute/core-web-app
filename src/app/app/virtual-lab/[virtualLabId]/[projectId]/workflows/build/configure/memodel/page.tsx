@@ -1,12 +1,13 @@
 'use client';
 
 import { use } from 'react';
-import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
-import { Content } from '@/ui/segments/workflows/build/memodel';
+
 import { Header } from '@/ui/segments/workflows/build/memodel/header';
+import { Menu } from '@/ui/segments/workflows/build/memodel/menu';
+import { Content } from '@/ui/segments/workflows/build/memodel';
 
 import type { BuildStepKeys } from '@/ui/segments/workflows/build/memodel/helpers';
-import { Menu } from '@/ui/segments/workflows/build/memodel/menu';
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 export default function Page({
   searchParams,

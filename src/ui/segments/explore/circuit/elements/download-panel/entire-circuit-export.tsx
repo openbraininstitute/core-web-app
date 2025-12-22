@@ -1,17 +1,19 @@
-import { Button } from 'antd';
-import { get } from 'es-toolkit/compat';
 import { useParams } from 'next/navigation';
-import { EntityTypeDict } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { getAssetElement } from '@/api/entitycore/utils';
-import { tryCatch } from '@/api/utils';
-import { DownloadIcon } from '@/components/icons';
-import { useAppNotification } from '@/components/notification';
+import { get } from 'es-toolkit/compat';
+import { Button } from 'antd';
+
 import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
-import type { WorkspaceContext } from '@/types/common';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { useAppNotification } from '@/components/notification';
+import { getAssetElement } from '@/api/entitycore/utils';
+import { EntityTypeDict } from '@/api/entitycore/types';
+import { DownloadIcon } from '@/components/icons';
 import { formatBytes } from '@/utils/format';
+import { tryCatch } from '@/api/utils';
 import { log } from '@/utils/logger';
+
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
   circuit: ICircuit;

@@ -1,39 +1,41 @@
 'use client';
 
+import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Form, Input } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
 import { useSession } from 'next-auth/react';
-import { useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { Form, Input } from 'antd';
 import z from 'zod';
-import {
-  getSingleNeuronSimulations,
-  getSingleNeuronSynaptomeSimulations,
-} from '@/api/entitycore/queries';
-import type {
-  ISingleNeuronSimulation,
-  ISingleNeuronSynaptomeSimulation,
-} from '@/api/entitycore/types';
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
+
 import { OVERVIEW_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
   OverviewConfigurationAtomFamily,
-  SimulationStatus,
   simulationStatusAtomFamily,
+  SimulationStatus,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import {
-  getSessionKey,
-  label,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 import {
   OverviewConfigurationSchema,
   SimulationType,
   type TSimulationType,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import {
+  getSessionKey,
+  label,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { makeDateToAppFormat } from '@/util/date';
 import { log } from '@/utils/logger';
+import {
+  getSingleNeuronSimulations,
+  getSingleNeuronSynaptomeSimulations,
+} from '@/api/entitycore/queries';
+
+import type {
+  ISingleNeuronSimulation,
+  ISingleNeuronSynaptomeSimulation,
+} from '@/api/entitycore/types';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 
 type Props = {
   sessionId: string;

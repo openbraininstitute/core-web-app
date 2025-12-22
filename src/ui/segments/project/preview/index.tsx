@@ -2,20 +2,22 @@
 
 import { CloseOutlined, RightOutlined } from '@ant-design/icons';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import Image from 'next/image';
 import Link from 'next/link';
-import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
-import type { Member, Project } from '@/api/virtual-lab-svc/queries/types';
-import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
-import { PeopleCommunity } from '@/components/icons/buttons';
-import { config } from '@/config';
-import type { WorkspaceContext } from '@/types/common';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { Button } from '@/ui/molecules/button';
-import { ExpandableText } from '@/ui/molecules/more-less-text';
-import { Bar } from '@/ui/segments/project/metrics/metrics-skeleton';
+import Image from 'next/image';
+
 import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager/event';
+import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
+import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { Bar } from '@/ui/segments/project/metrics/metrics-skeleton';
+import { ExpandableText } from '@/ui/molecules/more-less-text';
+import { PeopleCommunity } from '@/components/icons/buttons';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { Button } from '@/ui/molecules/button';
+import { config } from '@/config';
+
+import type { Member, Project } from '@/api/virtual-lab-svc/queries/types';
+import type { WorkspaceContext } from '@/types/common';
 
 function Header({ onClose, project }: { onClose: () => void; project?: Project | null }) {
   if (!project) return null;
@@ -39,7 +41,7 @@ function Header({ onClose, project }: { onClose: () => void; project?: Project |
   );
 }
 
-function buildUsersList(users: Member[] | undefined) {
+function buildUsersList(users: Array<Member> | undefined) {
   return (
     users?.map((user) => {
       if (user.first_name && user.last_name) {
@@ -64,10 +66,7 @@ function Users({
   virtualLabId: string | undefined;
 }) {
   const { isLoading, data: result } = useQuery({
-    queryKey: keyBuilder.listProjectTeam({
-      virtualLabId: virtualLabId!,
-      projectId: data?.id!,
-    }),
+    queryKey: keyBuilder.listProjectTeam({ virtualLabId: virtualLabId!, projectId: data?.id! }),
     queryFn: () => listProjectMembers({ virtualLabId: virtualLabId!, projectId: data?.id! }),
     enabled: Boolean(virtualLabId && data?.id),
   });
@@ -166,9 +165,7 @@ function Content({
   const breakpoint = useDefaultBreakpoint();
   const mutateRecentWorkspace = useMutation({
     mutationFn: ({ vlabId, prjId }: { vlabId: string; prjId: string }) =>
-      setUserRecentWorkspace({
-        workspace: { virtualLabId: vlabId, projectId: prjId },
-      }),
+      setUserRecentWorkspace({ workspace: { virtualLabId: vlabId, projectId: prjId } }),
   });
 
   const onProjectClick = () => {
@@ -210,13 +207,7 @@ function Content({
               onClick={onProjectClick}
               className="h-auto w-full justify-start font-semibold shadow-[0px_2px_16px_0px_#0000003D,-2px_-2px_16px_0px_#9FC4FF24]"
             >
-              <Link
-                prefetch
-                href={url({
-                  virtualLabId: virtualLabId!,
-                  projectId: data?.id!,
-                })}
-              >
+              <Link prefetch href={url({ virtualLabId: virtualLabId!, projectId: data?.id! })}>
                 {title}
                 <RightOutlined className="ml-auto text-current" />
               </Link>

@@ -187,8 +187,10 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
       if (modalOverlay) modalOverlay.style.display = originalOverlayDisplay || '';
 
       return dataUrl;
-    } catch (_error) {
+    } catch (error) {
       if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.warn('Screenshot capture unavailable.', error);
       }
 
       const modal = document.querySelector('[role="dialog"]') as HTMLElement;
@@ -228,7 +230,10 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
         try {
           const base64 = await convertFileToBase64(file);
           uploadedScreenshots.push(base64);
-        } catch (_error) {}
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.warn('Failed to convert image to base64:', error);
+        }
       }
 
       const screenshot = await captureScreenshot().catch(() => {
@@ -243,6 +248,13 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
     const labels = [type, section].filter(Boolean);
 
     try {
+      // eslint-disable-next-line no-console
+      console.log('Submitting feedback:', {
+        title,
+        body: body.substring(0, 100) + '...',
+        label: getMonthYearLabel(),
+      });
+
       const res = await fetch('/api/feedback/create-ticket', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -258,11 +270,16 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
 
       const responseData = await res.json().catch(() => ({ error: 'Failed to parse response' }));
 
+      // eslint-disable-next-line no-console
+      console.log('API response:', { status: res.status, data: responseData });
+
       if (!res.ok) {
         throw new Error(responseData.error || 'Failed to create ticket');
       }
 
       if (responseData.warning) {
+        // eslint-disable-next-line no-console
+        console.warn('Warning:', responseData.warning);
       }
 
       setIsSuccess(true);
@@ -279,6 +296,8 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error creating ticket';
       setMessage(`Error: ${errorMessage}`);
+      // eslint-disable-next-line no-console
+      console.error('Error creating ticket:', error);
     } finally {
       setLoading(false);
     }

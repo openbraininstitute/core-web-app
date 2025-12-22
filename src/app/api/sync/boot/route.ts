@@ -1,26 +1,27 @@
 /* eslint-disable prefer-destructuring */
 
 import pick from 'es-toolkit/compat/pick';
-import type { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 
 import { tryCatch } from '@/api/utils';
 import { createProject } from '@/api/virtual-lab-svc/queries/project';
-import type { Project, UserProfileResponse, VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 import { updateUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import { createVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import type { TEmailStatus } from '@/api/virtual-lab-svc/validation';
 import { auth } from '@/auth';
-import type {
-  TResolvedWorkspace,
-  TWorkspaceBootstrapStepStatus,
-} from '@/ui/segments/app-setup/helpers';
 import {
   WorkspaceBootstrap,
   WorkspaceBootstrapStep,
   WorkspaceBootstrapStepStatus,
 } from '@/ui/segments/app-setup/helpers';
-import type { TWorkspaceIdentitySchema } from '@/ui/segments/app-setup/workspace-identity';
 import { log } from '@/utils/logger';
+
+import type { Project, UserProfileResponse, VirtualLab } from '@/api/virtual-lab-svc/queries/types';
+import type { TEmailStatus } from '@/api/virtual-lab-svc/validation';
+import type {
+  TResolvedWorkspace,
+  TWorkspaceBootstrapStepStatus,
+} from '@/ui/segments/app-setup/helpers';
+import type { TWorkspaceIdentitySchema } from '@/ui/segments/app-setup/workspace-identity';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -60,7 +61,7 @@ const makeStream = <T extends StreamItem>(generator: AsyncGenerator<T, void, unk
   return new ReadableStream<any>({
     async start(controller) {
       for await (const chunk of generator) {
-        const chunkData = encoder.encode(`${JSON.stringify(chunk)}\n`);
+        const chunkData = encoder.encode(JSON.stringify(chunk) + '\n');
         controller.enqueue(chunkData);
       }
       controller.close();
@@ -124,7 +125,7 @@ async function* fetchItems<T>(body: Body) {
             description: '',
           })
         );
-        if (data?.data?.virtual_lab) {
+        if (data && data.data?.virtual_lab) {
           virtualLab = data.data?.virtual_lab;
           VirtualLabStatus = WorkspaceBootstrapStepStatus.Completed;
         } else {
@@ -158,7 +159,7 @@ async function* fetchItems<T>(body: Body) {
             include_members: [],
           })
         );
-        if (data?.data?.project) {
+        if (data && data.data?.project) {
           project = data.data?.project;
           ProjectStatus = WorkspaceBootstrapStepStatus.Completed;
         } else {

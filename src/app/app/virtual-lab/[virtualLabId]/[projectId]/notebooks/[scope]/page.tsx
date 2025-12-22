@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
+import { WorkspaceScope, WorkspaceSection } from '@/constants';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 

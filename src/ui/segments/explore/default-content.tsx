@@ -1,9 +1,10 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { Card } from '@/ui/molecules/card';
-import { EntityLeftMenu } from '@/ui/segments/explore/entity-left-menu';
+
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
+import { EntityLeftMenu } from '@/ui/segments/explore/entity-left-menu';
+import { Card } from '@/ui/molecules/card';
 import { cn } from '@/utils/css-class';
 
 type Props = { dataKey: string; children: ReactNode };

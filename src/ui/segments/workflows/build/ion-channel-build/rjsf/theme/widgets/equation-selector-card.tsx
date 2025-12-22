@@ -1,10 +1,11 @@
 'use client';
 
-import type { FieldProps, RJSFSchema } from '@rjsf/utils';
+import { useMemo, useCallback, useEffect, useRef } from 'react';
 import { get } from 'es-toolkit/compat';
 import katex from 'katex';
 import renderMathInElement from 'katex/contrib/auto-render';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+
+import type { FieldProps, RJSFSchema } from '@rjsf/utils';
 
 import { renderMathInText } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers/render-mathematic-symbol';
 import { cn } from '@/utils/css-class';
@@ -32,7 +33,7 @@ function renderLatex(latex: string): string {
       throwOnError: false,
       displayMode: false,
     });
-  } catch (_error) {
+  } catch (error) {
     return latex;
   }
 }
@@ -108,7 +109,7 @@ export function EquationSelectorField(props: FieldProps) {
   const entry = schema.anyOf ?? schema.oneOf;
 
   const options = useMemo(() => {
-    let opts: EquationOption[] = [];
+    let opts: Array<EquationOption> = [];
     if (schema.anyOf) {
       opts = (entry
         ?.filter((p) => get(p, 'type') !== 'null')
@@ -131,14 +132,14 @@ export function EquationSelectorField(props: FieldProps) {
               schema,
             },
           ];
-        }) ?? []) as EquationOption[];
+        }) ?? []) as Array<EquationOption>;
     } else {
       opts = (schema.oneOf?.map((i) => ({
         value: get(i, 'properties.type.const', ''),
         label: get(i, 'title'),
         latexEquation: get(i, 'latex_equation'),
         schema,
-      })) ?? []) as EquationOption[];
+      })) ?? []) as Array<EquationOption>;
     }
     return opts;
   }, [entry, schema]);

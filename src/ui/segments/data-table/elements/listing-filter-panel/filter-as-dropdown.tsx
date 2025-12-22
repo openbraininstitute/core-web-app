@@ -1,14 +1,15 @@
-import { Select } from 'antd';
-import type { DefaultOptionType } from 'antd/es/select';
-import map from 'es-toolkit/compat/map';
 import { useCallback, useEffect, useState } from 'react';
-import type { TCoreFilter } from '@/entity-configuration/definitions/types';
+import { DefaultOptionType } from 'antd/es/select';
+import { Select } from 'antd';
+import map from 'es-toolkit/compat/map';
 import { cn } from '@/utils/css-class';
+
+import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
 export type OptionType = DefaultOptionType;
 type Props = {
   filter: TCoreFilter;
-  data?: OptionType[];
+  data?: Array<OptionType>;
   onChange: (values: string[]) => void;
   placeholder?: string;
   allowMultiple?: boolean;
@@ -21,7 +22,7 @@ export function DropdownList({
   placeholder = 'Select options...',
   allowMultiple = false,
 }: Props) {
-  const [selectedValues, setSelectedValues] = useState<string[]>([]);
+  const [selectedValues, setSelectedValues] = useState<Array<string>>([]);
 
   useEffect(() => {
     if (filter.value) {

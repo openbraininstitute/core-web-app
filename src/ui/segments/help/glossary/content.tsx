@@ -2,8 +2,10 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
-import type { ContentForGlossaryItem } from '@/components/documentation/type';
+
 import TermCard from '@/ui/segments/help/glossary/term-card';
+
+import type { ContentForGlossaryItem } from '@/components/documentation/type';
 import Slugify from '@/util/slugify';
 
 export type CellGroup = {
@@ -29,7 +31,7 @@ const toSlug = (v: unknown) => Slugify((v ?? '').toString());
 const asArray = (value: any): any[] => {
   if (Array.isArray(value)) return value;
   if (value && Array.isArray(value.data)) return value.data;
-  if (value?.data && Array.isArray(value.data.data)) return value.data.data;
+  if (value && value.data && Array.isArray(value.data.data)) return value.data.data;
   return [];
 };
 

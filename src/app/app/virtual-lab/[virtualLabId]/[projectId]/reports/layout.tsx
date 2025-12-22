@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import { ReportsInnerLayout } from '@/ui/layouts/reports-inner-layout';
 import { ReportsLayout } from '@/ui/layouts/reports-layout';
 import { ConditionalLeftMenu } from '@/ui/segments/reports/conditional-left-menu';

@@ -1,30 +1,32 @@
 'use client';
 
-import { InfoCircleFilled } from '@ant-design/icons';
 import { DatePicker, Form, Input, InputNumber, Space } from 'antd';
-import dayjs from 'dayjs';
+import { InfoCircleFilled } from '@ant-design/icons';
 import { upperFirst } from 'es-toolkit/compat';
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-import {
-  ElectricalRecordingOrigin,
-  ElectricalRecordingOriginDictionary,
-  RecordingType,
-} from '@/api/entitycore/types/entities/electrical-cell-recording';
+import dayjs from 'dayjs';
+
 import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
 import {
   ElectricalCellRecordingSchema,
   RECORDING_LOCATION_OPTIONS,
 } from '@/ui/segments/contribute/electrical-cell-recording/schema';
 import {
+  ElectricalRecordingOrigin,
+  ElectricalRecordingOriginDictionary,
+  RecordingType,
+} from '@/api/entitycore/types/entities/electrical-cell-recording';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import {
+  renderLabel,
   createZodFieldValidator,
   RequiredFieldMarker,
-  renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
 import { cn } from '@/utils/css-class';
-import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
+
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
 export function Setup() {
   const form = Form.useFormInstance();

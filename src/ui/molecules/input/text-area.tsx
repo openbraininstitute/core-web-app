@@ -1,6 +1,6 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
-import type { ComponentProps } from 'react';
+import { ComponentProps } from 'react';
 
 import { cn } from '@/utils/css-class';
 

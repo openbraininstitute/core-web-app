@@ -1,5 +1,5 @@
-import isEmpty from 'es-toolkit/compat/isEmpty';
 import isNumber from 'es-toolkit/compat/isNumber';
+import isEmpty from 'es-toolkit/compat/isEmpty';
 
 import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 

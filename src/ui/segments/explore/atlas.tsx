@@ -1,7 +1,7 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import type { ReactNode } from 'react';
+import dynamic from 'next/dynamic';
 
 import { Loader } from '@/components/loader';
 

@@ -3,36 +3,38 @@
 'use client';
 
 import { AlertOutlined, LoadingOutlined } from '@ant-design/icons';
-import { Form, Spin } from 'antd';
 import { isNil } from 'es-toolkit/compat';
+import { Form, Spin } from 'antd';
 import { useState } from 'react';
+
+import { ELECTRICAL_CELL_RECORDING_FILE_TYPES } from '@/ui/segments/contribute/electrical-cell-recording/schema';
+import { Alert, AlertContent, AlertDescription, AlertIcon, AlertTitle } from '@/ui/molecules/alert';
+import { formatBytes, useFileUpload, type FileWithPreview } from '@/ui/hooks/use-file-upload';
+import { getFileExtension } from '@/ui/segments/contribute/shared/helpers';
 import { resolveNWBFile } from '@/api/one/electrical-cell-recording';
-import { tryCatch } from '@/api/utils';
 import { DownloadAsBoxIcon } from '@/components/icons/buttons';
 import { FileDownloadLine } from '@/components/icons/File';
-import { messages } from '@/i18n/en/upload';
-import { type FileWithPreview, formatBytes, useFileUpload } from '@/ui/hooks/use-file-upload';
-import { Alert, AlertContent, AlertDescription, AlertIcon, AlertTitle } from '@/ui/molecules/alert';
 import { Button } from '@/ui/molecules/button';
-import type { TElectricalCellRecordingForm } from '@/ui/segments/contribute/electrical-cell-recording/schema';
-import { ELECTRICAL_CELL_RECORDING_FILE_TYPES } from '@/ui/segments/contribute/electrical-cell-recording/schema';
-import type { IFileTypeConfig } from '@/ui/segments/contribute/shared/helpers';
-import { getFileExtension } from '@/ui/segments/contribute/shared/helpers';
+import { messages } from '@/i18n/en/upload';
+import { tryCatch } from '@/api/utils';
 import { cn } from '@/utils/css-class';
+
+import type { TElectricalCellRecordingForm } from '@/ui/segments/contribute/electrical-cell-recording/schema';
+import type { IFileTypeConfig } from '@/ui/segments/contribute/shared/helpers';
 
 interface IAssetUploadProps {
   maxFiles?: number;
   maxSize?: number;
-  accept?: string | string[];
+  accept?: string | Array<string>;
   multiple?: boolean;
   className?: string;
-  onFilesChange?: (files: FileWithPreview[]) => void;
+  onFilesChange?: (files: Array<FileWithPreview>) => void;
 }
 
 function getFileExtensionByTypeOrMimeType(file: File): string | undefined {
   return getFileExtension(
     file,
-    ELECTRICAL_CELL_RECORDING_FILE_TYPES as unknown as IFileTypeConfig[]
+    ELECTRICAL_CELL_RECORDING_FILE_TYPES as unknown as Array<IFileTypeConfig>
   );
 }
 
@@ -49,7 +51,7 @@ export function AssetUpload({
     assets: TElectricalCellRecordingForm['assets'];
   };
   const [resolveNWBFileLoading, setResolveNWBFileLoading] = useState(false);
-  const [originalFileTypes, setOriginalFileTypes] = useState<string[]>([]);
+  const [originalFileTypes, setOriginalFileTypes] = useState<Array<string>>([]);
 
   const flattenedFiles = assets
     ? Object.values(assets)
@@ -78,8 +80,8 @@ export function AssetUpload({
     async onFilesAdded(addedFiles, setState) {
       setResolveNWBFileLoading(true);
 
-      const localErrors: string[] = [];
-      const validFiles: FileWithPreview[] = [];
+      const localErrors: Array<string> = [];
+      const validFiles: Array<FileWithPreview> = [];
 
       for (const addedFile of addedFiles) {
         const file = addedFile.file as File;
@@ -91,7 +93,7 @@ export function AssetUpload({
           continue;
         }
 
-        if (resolution?.isValid) {
+        if (resolution && resolution.isValid) {
           const originalFile = {
             file,
             id: crypto.randomUUID(),

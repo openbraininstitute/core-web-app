@@ -1,10 +1,14 @@
 'use client';
 
-import { RightOutlined } from '@ant-design/icons';
-import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Button } from '@/ui/molecules/button';
+
+import { RightOutlined } from '@ant-design/icons';
+
+import Link from 'next/link';
+
 import type { AIChatToolsSectionProps } from '@/ui/segments/help/ai-chat-tools';
+
+import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 import { buildLink } from '@/utils/searchparams-to-link';
 

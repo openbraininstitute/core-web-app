@@ -1,6 +1,6 @@
 .card {
   background:
-    url("/images/help/background-help-get_started-banner.webp") no-repeat center center,
+    url('/images/help/background-help-get_started-banner.webp') no-repeat center center,
     #003a8c;
   background-size: cover;
 }

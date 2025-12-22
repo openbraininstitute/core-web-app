@@ -3,7 +3,7 @@
 import { RightOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import type { ComponentProps } from 'react';
+import { ComponentProps } from 'react';
 
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';

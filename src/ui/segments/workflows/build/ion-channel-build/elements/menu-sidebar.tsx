@@ -1,11 +1,11 @@
 'use client';
 
-import type { ErrorSchema } from '@rjsf/utils';
-import type { ReactNode } from 'react';
+import { ErrorSchema } from '@rjsf/utils';
+import { ReactNode } from 'react';
 
 import { MenuButton } from '@/ui/segments/workflows/build/ion-channel-build/elements/menu-button';
 import {
-  type BlockGroupProperties,
+  BlockGroupProperties,
   extractParentErrors,
 } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers';
 

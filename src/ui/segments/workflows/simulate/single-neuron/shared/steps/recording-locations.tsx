@@ -3,14 +3,9 @@ import { Checkbox, Form, InputNumber, Select } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import z from 'zod';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { Button } from '@/ui/molecules/button';
+
+import { getColorFromGeneratedPalette } from './webgl-neuron-selector/colors';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import {
-  buildDefaultRecordingLocation,
-  getSimulationColor,
-  RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
   neuronSectionNamesAtomFamily,
   RecordLocationConfigurationAtomFamily,
@@ -22,12 +17,18 @@ import {
   label,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 import {
+  RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
+  buildDefaultRecordingLocation,
+  getSimulationColor,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import {
   type NeuronLocation,
   NeuronLocationSchema,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
-import { getColorFromGeneratedPalette } from './webgl-neuron-selector/colors';
 
 type Props = {
   sessionId: string;
@@ -38,7 +39,7 @@ type RecordItemProps = {
   name: number | string;
   disable: boolean;
   disableDelete: boolean;
-  sections: string[];
+  sections: Array<string>;
   onRemove: (idx: number) => void;
   record?: NeuronLocation;
 };
@@ -83,9 +84,9 @@ function RecordItem({
             {
               validator: async (_rule, value) => {
                 try {
-                  await NeuronLocationSchema.pick({
-                    section: true,
-                  }).shape.section.parseAsync(value);
+                  await NeuronLocationSchema.pick({ section: true }).shape.section.parseAsync(
+                    value
+                  );
                 } catch (error) {
                   return Promise.reject(
                     error instanceof z.ZodError
@@ -129,9 +130,7 @@ function RecordItem({
             {
               validator: async (_rule, value) => {
                 try {
-                  await NeuronLocationSchema.pick({
-                    offset: true,
-                  }).shape.offset.parseAsync(value);
+                  await NeuronLocationSchema.pick({ offset: true }).shape.offset.parseAsync(value);
                 } catch (error) {
                   return Promise.reject(
                     error instanceof z.ZodError ? error.errors.at(0)?.message : 'Offset is required'
@@ -236,9 +235,7 @@ export function Recording({ sessionId }: Props) {
   const onAdd = () => {
     try {
       const colorIndex = state.length;
-      const newRecording = {
-        ...buildDefaultRecordingLocation(getSimulationColor(colorIndex)),
-      };
+      const newRecording = { ...buildDefaultRecordingLocation(getSimulationColor(colorIndex)) };
 
       const updatedState = [...state, newRecording];
       update(updatedState);

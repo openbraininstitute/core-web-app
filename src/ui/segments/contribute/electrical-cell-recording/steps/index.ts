@@ -1,6 +1,6 @@
 export { AssetUpload } from './asset-upload';
-export { Contribution } from './contribution';
-export { ETypeClassification } from './etype';
-export { License } from './license';
 export { Setup } from './setup';
+export { Contribution } from './contribution';
 export { Subject } from './subject';
+export { License } from './license';
+export { ETypeClassification } from './etype';

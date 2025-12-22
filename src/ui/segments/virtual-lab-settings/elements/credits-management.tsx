@@ -1,13 +1,14 @@
-import { SwapOutlined } from '@ant-design/icons';
 import { useQueries } from '@tanstack/react-query';
-import { List } from 'antd';
+import { SwapOutlined } from '@ant-design/icons';
 import { useMemo, useState } from 'react';
-import { listProjects } from '@/api/virtual-lab-svc/queries/project';
-import { useUserRole } from '@/hooks/use-user-role';
+import { List } from 'antd';
+
 import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
-import type { ProjectBalance } from '@/types/accounting';
-import { Button } from '@/ui/molecules/button';
+import { listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { ProjectBalance } from '@/types/accounting';
+import { useUserRole } from '@/hooks/use-user-role';
+import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
 type Props = {

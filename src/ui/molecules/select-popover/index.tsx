@@ -1,3 +1,5 @@
+import { ComponentProps, useCallback, useMemo, useState } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   CheckOutlined,
   CloseOutlined,
@@ -5,11 +7,10 @@ import {
   LoadingOutlined,
   SearchOutlined,
 } from '@ant-design/icons';
-import { useVirtualizer } from '@tanstack/react-virtual';
-import { type ComponentProps, useCallback, useMemo, useState } from 'react';
+
+import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
 
 export type SelectPopoverOption<T = unknown> = {
@@ -19,7 +20,7 @@ export type SelectPopoverOption<T = unknown> = {
 };
 
 export type SelectPopoverProps<T = unknown> = {
-  options: SelectPopoverOption<T>[];
+  options: Array<SelectPopoverOption<T>>;
   placeholder?: string;
   searchPlaceholder?: string;
   onSelect?: (option: SelectPopoverOption<T> | undefined) => void;
@@ -54,9 +55,12 @@ export function SelectPopover<T = unknown>({
     );
   }, [options, searchTerm]);
 
-  const parentSetter = useCallback((el: HTMLDivElement) => {
-    setParent(el);
-  }, []);
+  const parentSetter = useCallback(
+    (el: HTMLDivElement) => {
+      setParent(el);
+    },
+    [setParent]
+  );
 
   const rowVirtualizer = useVirtualizer({
     count: filteredOptions.length,

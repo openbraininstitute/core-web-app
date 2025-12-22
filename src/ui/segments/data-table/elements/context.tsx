@@ -1,28 +1,30 @@
 'use client';
 
-import { isNil, noop } from 'es-toolkit/compat';
-import { type Atom, atom, useSetAtom } from 'jotai';
 import { atomFamily, atomWithDefault, atomWithReset, atomWithStorage } from 'jotai/utils';
-import { createContext, use, useCallback, useEffect, useMemo } from 'react';
+import { use, useCallback, useEffect, useMemo, createContext } from 'react';
+import { isNil, noop } from 'es-toolkit/compat';
+import { Atom, atom, useSetAtom } from 'jotai';
 import { match } from 'ts-pattern';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
+import { createSuperJsonStorage, memoryStorage } from '@/ui/hooks/use-storage-atom-with-validation';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
+import { circuitRepresentationViewAtom } from '@/ui/segments/explore/circuit/helpers';
 import {
   DEFAULT_PAGE_NUMBER,
-  type TWorkspaceScope,
-  type TWorkspaceSection,
+  TWorkspaceScope,
+  TWorkspaceSection,
   WorkspaceSection,
 } from '@/constants';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import type { TCoreFilter, TSortState } from '@/entity-configuration/definitions/types';
 import { SortOrder } from '@/entity-configuration/definitions/types';
-import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
-import type { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
-import { createSuperJsonStorage, memoryStorage } from '@/ui/hooks/use-storage-atom-with-validation';
 import {
   makeDataListStateSnapshotAtomsInitialValue,
   makeTypeDefaultFilters,
 } from '@/ui/segments/data-table/elements/helpers';
-import { circuitRepresentationViewAtom } from '@/ui/segments/explore/circuit/helpers';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TCoreFilter, TSortState } from '@/entity-configuration/definitions/types';
+import type { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
 
 type DataAtomBinding = {
   key: string;
@@ -51,7 +53,7 @@ export const coreActiveColumnsAtom = atomFamily(
 
 export const coreFiltersAtom = atomFamily(
   ({ dataType, key }: { key: string; dataType: TExtendedEntitiesTypeDict }) => {
-    const childAtom = atomWithDefault<TCoreFilter[]>(() => {
+    const childAtom = atomWithDefault<Array<TCoreFilter>>(() => {
       return makeTypeDefaultFilters({ dataType });
     });
     childAtom.debugLabel = `filter-atom/${key}`;
@@ -91,7 +93,7 @@ export const corePageNumberAtom = atomFamily((key: string) => {
 
 export const coreSelectedRowsAtom = atomFamily(
   (_key: string) => {
-    const childAtom = atom<any[]>([]);
+    const childAtom = atom<Array<any>>([]);
     childAtom.debugLabel = `selected-rows/${_key}`;
     return childAtom;
   },
@@ -107,9 +109,7 @@ export const coreSelectedRowsAtom = atomFamily(
 export const DataListStateSnapshotStorageAtomFamily = atomFamily(
   ({ dataKey, dataType }: { dataKey: string; dataType: TExtendedEntitiesTypeDict }) => {
     const resolvedStorage = typeof window !== 'undefined' ? sessionStorage : memoryStorage;
-    const initialValue = makeDataListStateSnapshotAtomsInitialValue({
-      dataType,
-    });
+    const initialValue = makeDataListStateSnapshotAtomsInitialValue({ dataType });
     const childAtom = atomWithStorage(
       dataKey,
       initialValue,
@@ -163,10 +163,7 @@ export const DataListSnapshotSyncAtomFamily = atomFamily(
         return { filters, page, search, sort, view };
       },
       (get, set, action: TDataListStoreParamsSyncAction) => {
-        const storageAtom = DataListStateSnapshotStorageAtomFamily({
-          dataKey,
-          dataType,
-        });
+        const storageAtom = DataListStateSnapshotStorageAtomFamily({ dataKey, dataType });
 
         return match({ type: action.type })
           .with({ type: DataListStateSnapshotSyncAction.SYNC }, ({ type: t }) => {
@@ -197,10 +194,7 @@ export const DataListSnapshotSyncAtomFamily = atomFamily(
             if (typeof window !== 'undefined') {
               sessionStorage.removeItem(dataKey);
             }
-            DataListStateSnapshotStorageAtomFamily.remove({
-              dataKey,
-              dataType,
-            });
+            DataListStateSnapshotStorageAtomFamily.remove({ dataKey, dataType });
           });
       }
     );

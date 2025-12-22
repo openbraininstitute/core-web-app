@@ -3,9 +3,11 @@ import get from 'es-toolkit/compat/get';
 import groupBy from 'es-toolkit/compat/groupBy';
 import sortBy from 'es-toolkit/compat/sortBy';
 import values from 'es-toolkit/compat/values';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { type FeatureFlags, type FlagKey, microcircuitFlag } from '@/features/feature-flags/flags';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { FeatureFlags, FlagKey, microcircuitFlag } from '@/features/feature-flags/flags';
 
 export const WorkflowSessionIdSearchParam = 'sessionId';
 export const EntityScopeDict = {
@@ -23,12 +25,7 @@ export const ActivityDict = [
   { label: 'Extract', value: 'extract', disabled: true, name: 'Extract' },
   { label: 'Optimize', value: 'optimize', disabled: true, name: 'Optimize' },
   { label: 'Validate', value: 'validate', disabled: true, name: 'Validate' },
-  {
-    label: 'Process Data',
-    value: 'process_data',
-    disabled: true,
-    name: 'Process Data',
-  },
+  { label: 'Process Data', value: 'process_data', disabled: true, name: 'Process Data' },
 ] as const;
 
 export type TActivityValue = (typeof ActivityDict)[number]['value'];
@@ -39,7 +36,7 @@ export const ActivityValues = Object.fromEntries(ActivityDict.map((c) => [c.labe
 type EntityTypeProperties = {
   disabled: boolean;
   type: TExtendedEntitiesTypeDict;
-  requiredFeatures?: FlagKey[];
+  requiredFeatures?: Array<FlagKey>;
 };
 
 type EntityTypeOption = {
@@ -51,7 +48,7 @@ type EntityTypeOption = {
 
 type EntityTypeGroupedOptions = {
   group: string;
-  options: EntityTypeOption[];
+  options: Array<EntityTypeOption>;
 };
 
 export const EntityWorkflowConfiguration: Partial<
@@ -61,7 +58,7 @@ export const EntityWorkflowConfiguration: Partial<
       group: TEntityScopeValue;
       label: string;
       properties: Partial<Record<TActivityValue, EntityTypeProperties>>;
-      requiredFeatures?: FlagKey[];
+      requiredFeatures?: Array<FlagKey>;
     }
   >
 > = {
@@ -271,15 +268,15 @@ export type EntityDropdownOption = {
 
 export type TEntityDropdownOptionsGrouped = Array<{
   group: TEntityScopeValue;
-  options: EntityDropdownOption[];
+  options: Array<EntityDropdownOption>;
 }>;
 
 export function getDropdownOptionsByCategory(
   category: TActivityValue,
   featureFlags?: FeatureFlags
 ): {
-  allOptions: EntityTypeGroupedOptions[];
-  enabledOptions: EntityTypeGroupedOptions[];
+  allOptions: Array<EntityTypeGroupedOptions>;
+  enabledOptions: Array<EntityTypeGroupedOptions>;
 } {
   const options = Object.values(EntityWorkflowConfiguration)
     .filter((config): config is NonNullable<typeof config> => config !== undefined)
@@ -338,7 +335,7 @@ export function getDropdownOptionsByCategory(
 export function getAllOptionsOrdered(
   category: TActivityValue,
   featureFlags: FeatureFlags
-): EntityTypeOption[] {
+): Array<EntityTypeOption> {
   const options = Object.values(EntityWorkflowConfiguration)
     .filter((config): config is NonNullable<typeof config> => config !== undefined)
     .filter(

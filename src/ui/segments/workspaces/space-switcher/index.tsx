@@ -1,31 +1,32 @@
 'use client';
 
+import { ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DownOutlined, PlusOutlined, RightOutlined } from '@ant-design/icons';
 import { useQueries, useQuery } from '@tanstack/react-query';
-import { compact } from 'es-toolkit/compat';
-import { AnimatePresence, motion } from 'framer-motion';
 import { usePathname, useRouter } from 'next/navigation';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
-import { type ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { listProjects } from '@/api/virtual-lab-svc/queries/project';
+import { compact } from 'es-toolkit/compat';
+
 import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscription';
-import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
+import { listProjects } from '@/api/virtual-lab-svc/queries/project';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
+import { Item } from '@/ui/segments/workspaces/space-switcher/item';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import { UserFilled } from '@/components/icons/buttons';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Button } from '@/ui/molecules/button';
-import { Skeleton } from '@/ui/molecules/skeleton';
 import {
   makeTriggerWorkspaceConfigurationClickEvent,
   type TTriggerWorkspaceConfigurationClickEvent,
   useWorkspaceConfigurationClickEvent,
   WorkspaceActions,
 } from '@/ui/segments/workspaces/space-manager/event';
-import { Item } from '@/ui/segments/workspaces/space-switcher/item';
-import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { Skeleton } from '@/ui/molecules/skeleton';
+import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
 type Props = {
@@ -64,9 +65,7 @@ export function SpaceSwitcher({ className }: Props) {
           includes: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS],
         }),
         queryFn: async () =>
-          await listVirtualLabs({
-            include: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS],
-          }),
+          await listVirtualLabs({ include: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS] }),
       },
       {
         queryKey: userKeyBuilder.subscription(),
@@ -466,9 +465,7 @@ function ProfileButton({
       className={cn(
         'flex max-w-[calc(100%-100px)] flex-row items-center gap-1.5 rounded-full bg-white px-5 py-2 shadow-md md:h-9 lg:h-10',
         'hover:bg-background',
-        {
-          'bg-primary-9 hover:text-primary-9 text-white hover:bg-white': isActive,
-        }
+        { 'bg-primary-9 hover:text-primary-9 text-white hover:bg-white': isActive }
       )}
       onKeyDown={onProfileClick}
       onClick={onProfileClick}

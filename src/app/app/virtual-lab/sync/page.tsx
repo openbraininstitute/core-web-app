@@ -1,12 +1,13 @@
-import { RedirectType, redirect } from 'next/navigation';
+import { redirect, RedirectType } from 'next/navigation';
 import { match, P } from 'ts-pattern';
 
 import { tryCatch } from '@/api/utils';
 import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
-import type { ServerSideComponentProp } from '@/types/common';
 import { WorkspaceWizard } from '@/ui/segments/app-setup/bootsync-wizard';
 import { resolveWorkspace, WizardSteps } from '@/ui/segments/app-setup/helpers';
+
+import type { ServerSideComponentProp } from '@/types/common';
 
 export default async function Page({
   searchParams,

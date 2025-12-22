@@ -1,9 +1,9 @@
-import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { notFound } from 'next/navigation';
 // import { useNextStep } from 'nextstepjs';
 // import find from 'es-toolkit/compat/find';
 
-import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import { NotebooksLayout } from '@/ui/layouts/notebooks-layout';
 
 // import { notebookTour } from '@/ui/segments/app-setup/discover-app';

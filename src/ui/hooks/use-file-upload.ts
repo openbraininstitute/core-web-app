@@ -3,12 +3,12 @@
 import isString from 'es-toolkit/compat/isString';
 
 import {
-  type ChangeEvent,
-  type DragEvent,
-  type InputHTMLAttributes,
   useCallback,
   useRef,
   useState,
+  type ChangeEvent,
+  type DragEvent,
+  type InputHTMLAttributes,
 } from 'react';
 
 import { messages } from '@/i18n/en/upload';
@@ -31,7 +31,7 @@ export type FileWithPreview = {
 export type FileUploadOptions = {
   maxFiles?: number;
   maxSize?: number;
-  accept?: string | string[];
+  accept?: string | Array<string>;
   multiple?: boolean;
   initialFiles?: FileMetadata[];
   onFilesChange?: (files: FileWithPreview[]) => void;
@@ -284,7 +284,8 @@ export const useFileUpload = (
       setState((prev) => {
         const fileToRemove = prev.files.find((file) => file.id === id);
         if (
-          fileToRemove?.preview &&
+          fileToRemove &&
+          fileToRemove.preview &&
           fileToRemove.file instanceof File &&
           fileToRemove.file.type.startsWith('image/')
         ) {

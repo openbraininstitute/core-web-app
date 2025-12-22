@@ -1,14 +1,16 @@
-import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
+import { ChangeEvent, ComponentProps, useDeferredValue, useRef, useState } from 'react';
+import { SearchOutlined, CloseOutlined } from '@ant-design/icons';
 import { useAtom, useSetAtom } from 'jotai';
-import { type ChangeEvent, type ComponentProps, useDeferredValue, useRef, useState } from 'react';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { DEFAULT_PAGE_NUMBER } from '@/constants';
+
 import {
   corePageNumberAtom,
   coreSearchStringAtom,
   useDataListStateSnapshotActions,
 } from '@/ui/segments/data-table/elements/context';
+import { DEFAULT_PAGE_NUMBER } from '@/constants';
 import { cn } from '@/utils/css-class';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 type SearchProps = {
   dataKey: string;

@@ -1,16 +1,18 @@
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
+import { useCallback, useState } from 'react';
 import { Table } from 'antd';
 import find from 'es-toolkit/compat/find';
-import { useCallback, useState } from 'react';
-import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
+
 import { getProjectJobReports } from '@/services/virtual-lab/projects';
-import type { JobReport } from '@/types/accounting';
-import { ServiceSubtype } from '@/types/accounting';
+import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Card, CardContent } from '@/ui/molecules/card';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { ServiceSubtype } from '@/types/accounting';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
+
+import type { JobReport } from '@/types/accounting';
 
 const { Column } = Table;
 

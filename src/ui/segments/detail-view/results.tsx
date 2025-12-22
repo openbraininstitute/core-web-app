@@ -1,19 +1,17 @@
 import { notFound } from 'next/navigation';
-import type {
-  ISingleNeuronSimulation,
-  ISingleNeuronSynaptomeSimulation,
-} from '@/api/entitycore/types';
-import SimulationResults from '@/components/simulate/SimulationDetails/recording-tab';
-import type { EntityTypeValue } from '@/entity-configuration/domain';
 import {
-  type EntityCoreExtendedType,
+  EntityCoreExtendedType,
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
+
+import { EntityTypeValue } from '@/entity-configuration/domain';
+import { WorkspaceContext, AwaitedType } from '@/types/common';
+import { ISingleNeuronSimulation, ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types';
 import {
   singleNeuronSimulationApiQueryExpand,
   singleNeuronSynaptomeSimulationApiQueryExpand,
 } from '@/entity-configuration/domain/simulation';
-import type { AwaitedType, WorkspaceContext } from '@/types/common';
+import SimulationResults from '@/components/simulate/SimulationDetails/recording-tab';
 
 export default async function Results({
   entity,

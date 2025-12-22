@@ -1,5 +1,6 @@
 import {
-  type TgdContext,
+  tgdCanvasCreatePalette,
+  TgdContext,
   TgdLight,
   TgdMaterialDiffuse,
   TgdPainterClear,
@@ -8,12 +9,11 @@ import {
   TgdPainterState,
   TgdTexture2D,
   TgdVec3,
-  tgdCanvasCreatePalette,
   webglPresetDepth,
 } from '@tolokoban/tgd';
 
 import { makeSegments } from '../segments';
-import { Structure, type StructureItem } from '../structure';
+import { Structure, StructureItem } from '../structure';
 import { PALETTE } from './contants';
 import { PainterHover as PainterHighlight } from './highlight';
 import { PainterSynapses } from './synapses';

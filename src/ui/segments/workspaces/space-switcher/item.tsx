@@ -7,7 +7,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect } from 'react';
 
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
-import type { Project, VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 import { LabCompany } from '@/components/icons/buttons';
 import { Button } from '@/ui/molecules/button';
 import {
@@ -16,6 +15,8 @@ import {
 } from '@/ui/segments/workspaces/space-manager/event';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
+
+import type { Project, VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 
 type Props = {
   lab: VirtualLab & { isMine: boolean };
@@ -128,9 +129,7 @@ export function Item({
             />
           )}
           <LabCompany
-            className={cn('text-label size-4! min-h-4 min-w-4', {
-              'text-primary-3': lab.isMine,
-            })}
+            className={cn('text-label size-4! min-h-4 min-w-4', { 'text-primary-3': lab.isMine })}
           />
           <h4
             className={cn('text-primary-9 text-md line-clamp-1 truncate font-bold', {

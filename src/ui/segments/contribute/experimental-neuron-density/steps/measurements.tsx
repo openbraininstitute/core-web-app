@@ -1,14 +1,15 @@
 // measurements.tsx
 
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Form, InputNumber, Space } from 'antd';
-import { MeasurementStatistic, MeasurementUnit } from '@/api/entitycore/types/shared/global';
-import { Button } from '@/ui/molecules/button';
-import { Card } from '@/ui/molecules/card';
-import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
+
 import type { TMeasurement } from '@/ui/segments/contribute/experimental-neuron-density/schema';
 import { ExperimentalNeuronDensitySchema } from '@/ui/segments/contribute/experimental-neuron-density/schema';
+import { MeasurementStatistic, MeasurementUnit } from '@/api/entitycore/types/shared/global';
 import { createZodFieldValidator, renderLabel } from '@/ui/segments/contribute/shared';
+import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
+import { Button } from '@/ui/molecules/button';
+import { Card } from '@/ui/molecules/card';
 import { cn } from '@/utils/css-class';
 
 export function Measurements() {
@@ -137,14 +138,14 @@ export function Measurements() {
                 variant="outline"
                 size="lg"
                 onClick={() => {
-                  const current = form.getFieldValue('measurements') as TMeasurement[];
+                  const current = form.getFieldValue('measurements') as Array<TMeasurement>;
                   form.setFieldValue('measurements', [
                     ...(current ?? []),
                     { name: undefined, unit: undefined, value: undefined },
                   ]);
                 }}
                 disabled={(() => {
-                  const measurements = form.getFieldValue('measurements') as TMeasurement[];
+                  const measurements = form.getFieldValue('measurements') as Array<TMeasurement>;
                   return measurements?.some((measurement) => {
                     const filledFields = [
                       measurement.name,

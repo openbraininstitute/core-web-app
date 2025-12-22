@@ -1,32 +1,34 @@
 'use client';
 
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import { Form } from 'antd';
-import { capitalize, get, isNil } from 'es-toolkit/compat';
+import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { capitalize, isNil, get } from 'es-toolkit/compat';
 import { useMemo } from 'react';
+import { Form } from 'antd';
 import type { ZodObject, ZodRawShape } from 'zod';
-import { getConsortia } from '@/api/entitycore/queries/general/consortium-agent';
+
 import { getOrganizations } from '@/api/entitycore/queries/general/organization-agent';
+import { getConsortia } from '@/api/entitycore/queries/general/consortium-agent';
+import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 import { getPersons } from '@/api/entitycore/queries/general/person-agent';
-import { getRoles } from '@/api/entitycore/queries/general/role';
-import type { Agent } from '@/api/entitycore/types/shared/global';
-import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
-import type { IRole } from '@/api/entitycore/types/shared/role';
+import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
 import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
+import { AgentType } from '@/ui/segments/contribute/shared/types';
+import { getRoles } from '@/api/entitycore/queries/general/role';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
-import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
+import { cn } from '@/utils/css-class';
 import {
+  renderLabel,
   createZodFieldValidator,
   RequiredFieldMarker,
-  renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
+
+import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
 import type { TContribution } from '@/ui/segments/contribute/shared/schemas';
-import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 import type { TAgentType } from '@/ui/segments/contribute/shared/types';
-import { AgentType } from '@/ui/segments/contribute/shared/types';
-import { keyBuilder } from '@/ui/use-query-keys/data';
-import { cn } from '@/utils/css-class';
+import type { Agent } from '@/api/entitycore/types/shared/global';
+import type { IRole } from '@/api/entitycore/types/shared/role';
 
 interface IContributionSelectorProps<TSchema extends ZodObject<ZodRawShape>> {
   schema: TSchema;
@@ -228,18 +230,14 @@ export function ContributionSelector<TSchema extends ZodObject<ZodRawShape>>({
           variant="outline"
           size="lg"
           onClick={() => {
-            const current = form.getFieldValue('contribution') as TContribution[];
+            const current = form.getFieldValue('contribution') as Array<TContribution>;
             form.setFieldValue('contribution', [
               ...current,
-              {
-                agent_type: undefined,
-                agent_id: undefined,
-                role_id: undefined,
-              },
+              { agent_type: undefined, agent_id: undefined, role_id: undefined },
             ]);
           }}
           disabled={(() => {
-            const contributions = form.getFieldValue('contribution') as TContribution[];
+            const contributions = form.getFieldValue('contribution') as Array<TContribution>;
             return contributions.some(
               (contrib) => ContributionSchema.required().safeParse(contrib).success === false
             );

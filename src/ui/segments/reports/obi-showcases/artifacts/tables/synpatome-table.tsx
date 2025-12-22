@@ -1,19 +1,21 @@
 'use client';
 
-import { Table, type TableProps } from 'antd';
+import { Table, TableProps } from 'antd';
 import { useState } from 'react';
 
 import columns from '@/ui/segments/reports/obi-showcases/artifacts/columns/synaptome-column';
-import styles from '@/ui/segments/reports/obi-showcases/artifacts/styles/synaptome.module.css';
-import type { SynaptomeProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
+import { SynaptomeProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
+
 import { classNames } from '@/util/utils';
+
+import styles from '@/ui/segments/reports/obi-showcases/artifacts/styles/synaptome.module.css';
 
 export default function SynaptomeTable({ content }: { content: SynaptomeProps[] }) {
   const [selectedRow, setSelectedRow] = useState<SynaptomeProps | null>(null);
 
   const rowSelection: TableProps<SynaptomeProps>['rowSelection'] = {
     type: 'radio',
-    onChange: (_selectedRowKeys: React.Key[], selectedRows: SynaptomeProps[]) => {
+    onChange: (selectedRowKeys: React.Key[], selectedRows: SynaptomeProps[]) => {
       setSelectedRow(selectedRows[0] || null);
     },
   };

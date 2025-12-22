@@ -2,13 +2,15 @@
 
 import { useSearchParams } from 'next/navigation';
 import { match } from 'ts-pattern';
-import type { IMEModel } from '@/api/entitycore/types';
-import { ExperimentStep } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu';
-import { ExperimentSetup } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/experiment-setup';
-import { Info } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/overview';
-import { Recording } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/recording-locations';
+
 import { StimulationProtocol } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/stimulation-protocol';
+import { ExperimentSetup } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/experiment-setup';
+import { Recording } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/recording-locations';
+import { ExperimentStep } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu';
 import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { Info } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/overview';
+
+import type { IMEModel } from '@/api/entitycore/types';
 
 type Props = {
   sessionId: string;

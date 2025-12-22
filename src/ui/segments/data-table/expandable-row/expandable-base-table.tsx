@@ -1,17 +1,19 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
-import type { TableProps } from 'antd';
+import { ReactNode, CSSProperties } from 'react';
+import { TableProps } from 'antd';
 import type { ExpandableConfig } from 'antd/es/table/interface';
-import type { CSSProperties, ReactNode } from 'react';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import type { TWorkspaceScope } from '@/constants';
-import type { WorkspaceContext } from '@/types/common';
-import {
-  type UseExpandableTableOptions,
-  useExpandableTable,
-} from '@/ui/segments/data-table/expandable-row/use-expandable-table';
+
 import { BaseTable } from '@/ui/segments/data-table/table';
+import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import {
+  useExpandableTable,
+  UseExpandableTableOptions,
+} from '@/ui/segments/data-table/expandable-row/use-expandable-table';
+import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+
+import type { WorkspaceContext } from '@/types/common';
+import { TWorkspaceScope } from '@/constants';
 
 type AdditionalTableProps<T> = {
   context: {
@@ -70,7 +72,7 @@ export function createExpandableTableConfig<T extends EntityCoreIdentifiable, P 
     /**
      * columns to use in the expanded table
      */
-    expandedColumns: any[];
+    expandedColumns: Array<any>;
     /**
      * additional props to pass to the expanded BaseTable (dataContext is required)
      */
@@ -93,7 +95,7 @@ export function createExpandableTableConfig<T extends EntityCoreIdentifiable, P 
      * @param originalRecord - the parent record that was expanded
      * @returns JSX element with custom wrapper/styling
      */
-    renderWrapper?: (baseTable: ReactNode, records: T[], originalRecord: T) => ReactNode;
+    renderWrapper?: (baseTable: ReactNode, records: Array<T>, originalRecord: T) => ReactNode;
   }
 ): UseExpandableTableOptions<T, P> {
   const { expandedColumns, expandedTableProps, wrapperProps, renderWrapper, ...restOptions } =
@@ -101,7 +103,7 @@ export function createExpandableTableConfig<T extends EntityCoreIdentifiable, P 
 
   return {
     ...restOptions,
-    renderExpanded: (records: T[], originalRecord: T, isLoading: boolean): ReactNode => {
+    renderExpanded: (records: Array<T>, originalRecord: T, isLoading: boolean): ReactNode => {
       if (isLoading) {
         return <div style={{ padding: '16px', textAlign: 'center' }}>Loading...</div>;
       }

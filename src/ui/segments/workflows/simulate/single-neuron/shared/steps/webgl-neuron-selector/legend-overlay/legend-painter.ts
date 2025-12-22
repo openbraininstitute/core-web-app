@@ -1,9 +1,9 @@
 /* eslint-disable no-param-reassign */
-
-import { TgdVec4, tgdCalcMapRange } from '@tolokoban/tgd';
 import React from 'react';
+import { tgdCalcMapRange, TgdVec4 } from '@tolokoban/tgd';
+
+import { PainterManager } from '../painter';
 import { getColorFromGeneratedPalette } from '../colors';
-import type { PainterManager } from '../painter';
 
 export interface LegendTarget {
   section: string;
@@ -37,7 +37,7 @@ export class LegendPainter {
 
   private targets: LegendTarget[] = [];
 
-  constructor(readonly painterManager: PainterManager) {
+  constructor(private readonly painterManager: PainterManager) {
     painterManager.eventPaint.addListener(this.repaint);
   }
 

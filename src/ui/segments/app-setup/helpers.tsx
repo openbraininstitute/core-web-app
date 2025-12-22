@@ -1,16 +1,18 @@
-import head from 'es-toolkit/compat/head';
 import { isMatching, P } from 'ts-pattern';
-import { tryCatch } from '@/api/utils';
+import head from 'es-toolkit/compat/head';
+
+import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
+import { getUserProfile, getUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
+import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
+import { tryCatch } from '@/api/utils';
+
 import type {
   Project,
   RecentWorkspace,
   UserProfileResponse,
   VirtualLab,
 } from '@/api/virtual-lab-svc/queries/types';
-import { getUserProfile, getUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
-import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 
 export type TResolvedWorkspace = {
   project: Project | null;
@@ -91,11 +93,7 @@ export const WorkspaceBootstrapStep = {
 } as const;
 
 export const WorkspaceBootstrap = [
-  {
-    step: WorkspaceBootstrapStep.Identity,
-    message: 'Your account ...',
-    progress: 33,
-  },
+  { step: WorkspaceBootstrapStep.Identity, message: 'Your account ...', progress: 33 },
   {
     step: WorkspaceBootstrapStep.VirtualLab,
     message: 'Setting up your Virtual Lab ...',

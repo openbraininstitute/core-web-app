@@ -1,9 +1,11 @@
 /* eslint-disable no-param-reassign */
-
-import { ZoomInOutlined, ZoomOutOutlined } from '@ant-design/icons';
+import React from 'react';
 import { Slider } from 'antd';
+import { ZoomInOutlined, ZoomOutOutlined } from '@ant-design/icons';
+
+import { PainterManager } from '../painter';
+
 import { classNames } from '@/util/utils';
-import type { PainterManager } from '../painter';
 
 import styles from './zoom-slider.module.css';
 

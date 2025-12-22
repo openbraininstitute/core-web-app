@@ -1,13 +1,18 @@
 'use client';
 
+import { useParams, usePathname } from 'next/navigation';
 import { RightOutlined } from '@ant-design/icons';
 import snakeCase from 'es-toolkit/compat/snakeCase';
 import Link from 'next/link';
-import { useParams, usePathname } from 'next/navigation';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { config } from '@/config';
+
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { config } from '@/config';
+import {
+  getEntityTypeWorkflowConfigurationItem,
+  getCategoryDictItem,
+  getWorkflowSegment,
+} from '@/ui/segments/workflows/elements/helpers';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -15,11 +20,8 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from '@/ui/molecules/breadcrumb/index';
-import {
-  getCategoryDictItem,
-  getEntityTypeWorkflowConfigurationItem,
-  getWorkflowSegment,
-} from '@/ui/segments/workflows/elements/helpers';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { KebabCase } from '@/utils/type';
 
 export function BuildWorkflowsBreadcrumb() {

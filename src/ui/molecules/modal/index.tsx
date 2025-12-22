@@ -2,16 +2,16 @@
 
 'use client';
 
-import { CloseOutlined } from '@ant-design/icons';
 import {
-  type CSSProperties,
-  type ReactNode,
-  useCallback,
   useEffect,
   useRef,
   useState,
+  useCallback,
+  type CSSProperties,
+  type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
+import { CloseOutlined } from '@ant-design/icons';
 import { cn } from '@/utils/css-class';
 
 export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full' | 'auto';
@@ -242,7 +242,7 @@ export function Modal({
         setShouldRender(false);
         afterClose?.();
         // restore focus
-        if (previousActiveElement.current?.focus) {
+        if (previousActiveElement.current && previousActiveElement.current.focus) {
           previousActiveElement.current.focus();
         }
       }, exitDuration);
@@ -560,7 +560,7 @@ class ModalManager {
   }
 
   static confirm(options: ModalHookOptions & { content?: ReactNode }) {
-    const instance: { close: () => void } = ModalManager.renderModal({
+    const instance: { close: () => void } = this.renderModal({
       ...options,
       open: true,
       children: options.content || options.children,
@@ -577,7 +577,7 @@ class ModalManager {
   }
 
   static info(options: ModalHookOptions & { content?: ReactNode }) {
-    const instance: { close: () => void } = ModalManager.renderModal({
+    const instance: { close: () => void } = this.renderModal({
       ...options,
       open: true,
       title: options.title || 'Information',
@@ -604,7 +604,7 @@ class ModalManager {
   }
 
   static error(options: ModalHookOptions & { content?: ReactNode }) {
-    return ModalManager.confirm({
+    return this.confirm({
       ...options,
       title: options.title || 'Error',
       className: cn('border-2 border-error', options.className),
@@ -612,7 +612,7 @@ class ModalManager {
   }
 
   static warning(options: ModalHookOptions & { content?: ReactNode }) {
-    return ModalManager.confirm({
+    return this.confirm({
       ...options,
       title: options.title || 'Warning',
       className: cn('border-2 border-warning', options.className),
@@ -620,7 +620,7 @@ class ModalManager {
   }
 
   static success(options: ModalHookOptions & { content?: ReactNode }) {
-    return ModalManager.confirm({
+    return this.confirm({
       ...options,
       title: options.title || 'Success',
       className: cn('border-2 border-accent-dark', options.className),

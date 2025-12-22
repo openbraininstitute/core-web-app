@@ -1,8 +1,9 @@
 'use client';
 
+import Link from 'next/link';
+
 import { CloseOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import Link from 'next/link';
 import { match } from 'ts-pattern';
 
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';

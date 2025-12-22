@@ -1,4 +1,4 @@
-import type { LinkAndDownloadArtifactProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
+import { LinkAndDownloadArtifactProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
 
 export default function SingleArtifact({ content }: { content: LinkAndDownloadArtifactProps }) {
   return content._type === 'artifactDownload' ? (

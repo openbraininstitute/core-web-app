@@ -1,12 +1,14 @@
 'use client';
 
-import { Select } from 'antd';
 import { useState } from 'react';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { Select } from 'antd';
+
 import {
   getScaleArray,
   getScaleAvailableActivities,
 } from '@/ui/segments/project/activities/elements/helpers';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 
 type Props = {

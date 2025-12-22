@@ -1,16 +1,17 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { Layout } from 'plotly.js-dist-min';
 import dynamic from 'next/dynamic';
-import type { Layout } from 'plotly.js-dist-min';
+
+import { SimulationColors } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import { getSingleNeuronStimuliPlot } from '@/api/small-scale-simulator';
 import { useAppNotification } from '@/components/notification';
-import type { PlotData } from '@/services/bluenaas-single-cell/types';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { SimulationColors } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { TStimulusModuleValue } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { keyBuilder } from '@/ui/use-query-keys/data';
+import type { PlotData } from '@/services/bluenaas-single-cell/types';
 
 const PlotRenderer = dynamic(
   () => import('@/features/entities/neuron-simulation/experiment/visualization/plot-renderer'),
@@ -53,7 +54,7 @@ const PLOT_LAYOUT: Partial<Layout> = {
 
 type Props = {
   memodelId: string;
-  amplitudes: number[];
+  amplitudes: Array<number>;
   protocol: TStimulusModuleValue;
 };
 

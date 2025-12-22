@@ -2,7 +2,7 @@
 
 import ItemCard from '@/components/documentation/global/item-card';
 import { useSanityContentForExperimentsModels } from '@/components/documentation/hooks/use-sanity-content-for-data-type';
-import type { ContentForGlossaryItem } from '@/components/documentation/type';
+import { ContentForGlossaryItem } from '@/components/documentation/type';
 
 export default function DataTypesPage() {
   const experimentAndModelContent = useSanityContentForExperimentsModels();

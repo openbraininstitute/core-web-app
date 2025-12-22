@@ -1,16 +1,17 @@
 import { ExclamationCircleOutlined } from '@ant-design/icons';
-import { useQuery } from '@tanstack/react-query';
 import { Button, ConfigProvider, theme } from 'antd';
-import Table, { type ColumnsType } from 'antd/es/table';
-import { format } from 'date-fns';
+import Table, { ColumnsType } from 'antd/es/table';
+import { useQuery } from '@tanstack/react-query';
 import flatMap from 'es-toolkit/compat/flatMap';
-import { listUserSubscriptionsHistory } from '@/api/virtual-lab-svc/queries/subscription';
-import type { SubscriptionPaymentDetails } from '@/api/virtual-lab-svc/queries/types';
-import { FileDownloadFill } from '@/components/icons/EditorIcons';
+import { format } from 'date-fns';
+
 import { getStatusColor } from '@/components/VirtualLab/create-entity-flows/subscription/elements';
+import { listUserSubscriptionsHistory } from '@/api/virtual-lab-svc/queries/subscription';
+import { SubscriptionPaymentDetails } from '@/api/virtual-lab-svc/queries/types';
+import { FileDownloadFill } from '@/components/icons/EditorIcons';
 import { keyBuilder } from '@/ui/use-query-keys/user';
-import { cn } from '@/utils/css-class';
 import { formatCurrency } from '@/utils/format';
+import { cn } from '@/utils/css-class';
 
 export function Invoices() {
   const { data, isError, isLoading } = useQuery({

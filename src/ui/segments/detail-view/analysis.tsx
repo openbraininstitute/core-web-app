@@ -1,14 +1,16 @@
 import { notFound } from 'next/navigation';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityTypeValue } from '@/entity-configuration/domain';
 import {
   circuitTypes,
-  type EntityCoreExtendedType,
+  EntityCoreExtendedType,
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
-import Analysis from '@/features/model-analysis/explorer/container';
+
+import { EntityTypeValue } from '@/entity-configuration/domain';
+
 import Overview from '@/ui/segments/explore/circuit/elements/overview';
+import Analysis from '@/features/model-analysis/explorer/container';
+import { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 export default async function Configuration({
   entity,

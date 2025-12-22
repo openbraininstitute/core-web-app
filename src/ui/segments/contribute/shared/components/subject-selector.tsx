@@ -2,30 +2,31 @@
 
 'use client';
 
-import { Form } from 'antd';
-import { isNil } from 'es-toolkit/compat';
 import { useCallback, useMemo } from 'react';
+import { isNil } from 'es-toolkit/compat';
+import { Form } from 'antd';
 import type { ZodObject, ZodRawShape } from 'zod';
 
 import { getSubjects } from '@/api/entitycore/queries/general/subject';
-import type { ISubject } from '@/api/entitycore/types/shared/global';
 import { AgePeriod, Sex } from '@/api/entitycore/types/shared/global';
-import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 import {
+  renderLabel,
   createZodFieldValidator,
   RequiredFieldMarker,
-  renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
-import { keyBuilder } from '@/ui/use-query-keys/data';
+
+import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
+import type { ISubject } from '@/api/entitycore/types/shared/global';
 
 interface ISubjectSelectorProps<TSchema extends ZodObject<ZodRawShape>> {
   schema: TSchema;
 }
 
 function SubjectDataTooltip(data: ISubject) {
-  const fields: string[] = [];
+  const fields: Array<string> = [];
 
   if (data.strain?.name) {
     fields.push(`Strain: ${data.strain.name}`);

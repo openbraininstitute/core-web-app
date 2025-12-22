@@ -1,6 +1,6 @@
-import { type ArrayNumber2, TgdPainterSegmentsData } from '@tolokoban/tgd';
+import { ArrayNumber2, TgdPainterSegmentsData } from '@tolokoban/tgd';
 
-import { type Structure, StructureItemType } from './structure';
+import { Structure, StructureItemType } from './structure';
 
 export function makeSegments(structure: Structure) {
   const segments = new TgdPainterSegmentsData();

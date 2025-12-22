@@ -2,33 +2,21 @@
 
 'use client';
 
+import { mergeWith, flatMap, isArray, uniqBy, keyBy, chunk, get } from 'es-toolkit/compat';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { chunk, flatMap, get, isArray, keyBy, mergeWith, uniqBy } from 'es-toolkit/compat';
 import pMap from 'p-map';
+
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
+import { DerivationTypeDictionary } from '@/api/entitycore/types/entities/derivation';
+import { circuitScaleFilter } from '@/entity-configuration/domain/model/circuit';
+import { DEFAULT_PAGE_SIZE, WorkspaceScope } from '@/constants';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 import {
   getCircuitHierarchyByDerivation,
   getCircuits,
 } from '@/api/entitycore/queries/model/circuit';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
-import { DerivationTypeDictionary } from '@/api/entitycore/types/entities/derivation';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { HierarchyTreeResponse } from '@/api/entitycore/types/shared/hierarchy';
-import type {
-  EntityCoreResponse,
-  Facets,
-  Pagination,
-} from '@/api/entitycore/types/shared/response';
-import type { TWorkspaceScope } from '@/constants';
-import { DEFAULT_PAGE_SIZE, WorkspaceScope } from '@/constants';
-import { circuitScaleFilter } from '@/entity-configuration/domain/model/circuit';
-import type { WorkspaceContext } from '@/types/common';
-import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import type {
-  HierarchyOutputNode,
-  TCircuitRepresentationView,
-} from '@/ui/segments/explore/circuit/helpers';
 import {
   buildFilteredHierarchyTree,
   CircuitRepresentationView,
@@ -38,7 +26,21 @@ import {
   findParentInTree,
   getAllCircuitIds,
 } from '@/ui/segments/explore/circuit/helpers';
-import { keyBuilder } from '@/ui/use-query-keys/data';
+
+import type {
+  HierarchyOutputNode,
+  TCircuitRepresentationView,
+} from '@/ui/segments/explore/circuit/helpers';
+import type { HierarchyTreeResponse } from '@/api/entitycore/types/shared/hierarchy';
+import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { WorkspaceContext } from '@/types/common';
+import type { TWorkspaceScope } from '@/constants';
+import type {
+  EntityCoreResponse,
+  Facets,
+  Pagination,
+} from '@/api/entitycore/types/shared/response';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
 export function useFullRawHierarchy({
@@ -169,9 +171,7 @@ export function useHierarchy({
     view,
     derivationType: DerivationTypeDictionary.CircuitExtraction,
   });
-  const { circuitHierarchy, isLoadingFullHierarchy } = useFullRawHierarchy({
-    view,
-  });
+  const { circuitHierarchy, isLoadingFullHierarchy } = useFullRawHierarchy({ view });
 
   const {
     data: circuitHierarchyFiltered,
@@ -266,7 +266,7 @@ export function useHierarchy({
       hierarchyByDerivation,
       circuitHierarchy,
       circuitHierarchyFiltered
-    ) as unknown as HierarchyOutputNode[];
+    ) as unknown as Array<HierarchyOutputNode>;
     const { pagination, facets } = circuitHierarchy;
     return {
       queryKeyHash,

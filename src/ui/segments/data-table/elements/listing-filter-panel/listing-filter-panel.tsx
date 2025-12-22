@@ -1,19 +1,19 @@
 /* eslint-disable no-case-declarations */
 
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CloseOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useIsFetching } from '@tanstack/react-query';
 import { get } from 'es-toolkit/compat';
-import { useAtom, useSetAtom } from 'jotai';
 import { unwrap, useResetAtom } from 'jotai/utils';
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { Facets } from '@/api/entitycore/types/shared/response';
-import { DEFAULT_PAGE_NUMBER, type TWorkspaceScope, type TWorkspaceSection } from '@/constants';
-import type { CoreFilterValues, TCoreFilter } from '@/entity-configuration/definitions/types';
+import { useAtom, useSetAtom } from 'jotai';
+
+import { ClearFilters } from '@/ui/segments/data-table/elements/listing-filter-panel/clear-filters';
+import { FilterGroup } from '@/ui/segments/data-table/elements/listing-filter-panel/filter-group';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
-import type { WorkspaceContext } from '@/types/common';
-import { Button } from '@/ui/molecules/button';
+import { useFilterItems } from '@/ui/segments/data-table/elements/listing-filter-panel/hooks';
+import { DEFAULT_PAGE_NUMBER, TWorkspaceSection, type TWorkspaceScope } from '@/constants';
+import { makeTypeDefaultFilters } from '@/ui/segments/data-table/elements/helpers';
 import {
   coreActiveColumnsAtom,
   coreFiltersAtom,
@@ -21,11 +21,13 @@ import {
   coreSearchStringAtom,
   useDataListStateSnapshotActions,
 } from '@/ui/segments/data-table/elements/context';
-import { makeTypeDefaultFilters } from '@/ui/segments/data-table/elements/helpers';
-import { ClearFilters } from '@/ui/segments/data-table/elements/listing-filter-panel/clear-filters';
-import { FilterGroup } from '@/ui/segments/data-table/elements/listing-filter-panel/filter-group';
-import { useFilterItems } from '@/ui/segments/data-table/elements/listing-filter-panel/hooks';
+import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { Facets } from '@/api/entitycore/types/shared/response';
+import type { WorkspaceContext } from '@/types/common';
+import type { CoreFilterValues, TCoreFilter } from '@/entity-configuration/definitions/types';
 
 type Props = {
   children?: ReactNode;
@@ -91,7 +93,7 @@ export function ListingFilterPanel({
       setIsApplyingFilters(false);
     }
     prevIsFetchingRef.current = isFetching;
-  }, [isFetching, isApplyingFilters]);
+  }, [isFetching, isApplyingFilters, isFetchingCount]);
 
   const [activeColumns, setActiveColumns] = useAtom(
     useMemo(
@@ -109,7 +111,7 @@ export function ListingFilterPanel({
   const onToggleActive = useCallback(
     (key: string) => {
       if (!activeColumns) return;
-      const existingIndex = activeColumns.indexOf(key);
+      const existingIndex = activeColumns.findIndex((existingKey) => existingKey === key);
 
       if (existingIndex === -1) {
         setActiveColumns([...activeColumns, key]);
@@ -142,10 +144,7 @@ export function ListingFilterPanel({
       value: filterValues[fil.field],
     }));
     setFilters(appliedFilters);
-    runStorageSync({
-      Filters: appliedFilters as TCoreFilter[],
-      Page: DEFAULT_PAGE_NUMBER,
-    });
+    runStorageSync({ Filters: appliedFilters as Array<TCoreFilter>, Page: DEFAULT_PAGE_NUMBER });
   };
 
   const entity = getViewDefinitionByExtendedType(dataType);
@@ -204,7 +203,8 @@ export function ListingFilterPanel({
               Filters
               <small className="text-primary-3 text-base font-light">{activeColumnsText}</small>
             </span>
-            <button // eslint-disable-line jsx-a11y/no-autofocus
+            <button
+              autoFocus // eslint-disable-line jsx-a11y/no-autofocus
               type="button"
               onClick={toggleDisplay}
               className="hover:bg-neutral-1/10 rounded-md px-2 py-1 text-white"

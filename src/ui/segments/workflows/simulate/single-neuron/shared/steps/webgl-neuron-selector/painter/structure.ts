@@ -1,6 +1,6 @@
-import { type ArrayNumber3, TgdVec3 } from '@tolokoban/tgd';
+import { ArrayNumber3, TgdVec3 } from '@tolokoban/tgd';
 
-import type { Morphology } from '@/services/bluenaas-single-cell/types';
+import { Morphology } from '@/services/bluenaas-single-cell/types';
 import { logWarn } from '@/utils/logger';
 
 export enum StructureItemType {

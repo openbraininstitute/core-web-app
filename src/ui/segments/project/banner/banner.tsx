@@ -2,20 +2,20 @@
 
 import { CheckOutlined, CloseOutlined, EditOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useMutation, useSuspenseQuery } from '@tanstack/react-query';
-import { Form, type FormProps, Input } from 'antd';
-import delay from 'es-toolkit/compat/delay';
-import get from 'es-toolkit/compat/get';
+import { useRef, useState, useEffect, type ReactElement } from 'react';
 import { motion, transform, useAnimate } from 'motion/react';
-import Image from 'next/image';
-import { type ReactElement, useEffect, useRef, useState } from 'react';
+import { Form, Input, type FormProps } from 'antd';
 import { z } from 'zod';
+import delay from 'es-toolkit/compat/delay';
+import Image from 'next/image';
+import get from 'es-toolkit/compat/get';
 
 import { getProject, updateProject } from '@/api/virtual-lab-svc/queries/project';
 import { useUserPermissions } from '@/hooks/use-user-permissions';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Button } from '@/ui/molecules/button/index';
 import { ExpandableText } from '@/ui/molecules/more-less-text';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Button } from '@/ui/molecules/button/index';
 import { cn } from '@/utils/css-class';
 
 type TCardContent = {
@@ -78,7 +78,7 @@ export function ProjectCard(): ReactElement {
         damping: 80,
       }
     );
-  }, [animateName, nameCharactersRemaining, isEditing, nameCounterRef.current]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [animateName, nameCharactersRemaining, isEditing]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const maxDescriptionLength = 600;
   const descriptionValue = Form.useWatch('description', form) || '';
@@ -101,12 +101,7 @@ export function ProjectCard(): ReactElement {
         damping: 80,
       }
     );
-  }, [
-    animateDescription,
-    descriptionCharactersRemaining,
-    isEditing,
-    descriptionCounterRef.current,
-  ]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [animateDescription, descriptionCharactersRemaining, isEditing]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { mutateAsync, isPending, variables } = useMutation({
     mutationFn: (payload: TCardContent) =>
@@ -230,10 +225,7 @@ export function ProjectCard(): ReactElement {
                   name="name"
                   rules={[
                     { required: true, message: 'Name is required' },
-                    {
-                      max: maxNameLength,
-                      message: 'Name must be less than 60 characters',
-                    },
+                    { max: maxNameLength, message: 'Name must be less than 60 characters' },
                   ]}
                   initialValue={result.data.project.name}
                 >

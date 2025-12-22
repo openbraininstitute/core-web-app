@@ -1,17 +1,18 @@
 import {
+  NeuronLocationOriginDict,
+  StimulusModuleDict,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import {
   DefaultColor,
   SimulationColors,
 } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+
 import type {
   SimulationExperimentalSetup,
   StimulusConfig,
-  TProtocolDetails,
   TStimulationConfiguration,
+  TProtocolDetails,
   TStimulusModuleValue,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import {
-  NeuronLocationOriginDict,
-  StimulusModuleDict,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 export const PanelQueryParam = 'panel';

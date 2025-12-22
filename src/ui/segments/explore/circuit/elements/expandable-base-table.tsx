@@ -1,15 +1,18 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
-import type { TableProps } from 'antd';
+import { ReactNode, CSSProperties } from 'react';
+import { TableProps } from 'antd';
+
 import type { ExpandableConfig } from 'antd/es/table/interface';
-import type { CSSProperties, ReactNode } from 'react';
+
+import {
+  useExpandableTable,
+  UseExpandableTableOptions,
+} from '@/ui/segments/explore/circuit/elements/use-expandable-table';
+import { BaseTable } from '@/ui/segments/data-table/table';
+
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import { BaseTable } from '@/ui/segments/data-table/table';
-import {
-  type UseExpandableTableOptions,
-  useExpandableTable,
-} from '@/ui/segments/explore/circuit/elements/use-expandable-table';
 
 type AdditionalTableProps<T> = {
   hasError?: boolean;
@@ -46,7 +49,7 @@ export function ExpandableBaseTable<T extends EntityCoreIdentifiable>({
 
 export function createExpandableTableConfig<T extends EntityCoreIdentifiable>(
   options: Omit<UseExpandableTableOptions<T>, 'renderExpanded'> & {
-    expandedColumns: any[];
+    expandedColumns: Array<any>;
 
     expandedTableProps: BaseTableProps<T> & Partial<BaseTableProps<T>>;
     wrapperProps?: {
@@ -55,7 +58,7 @@ export function createExpandableTableConfig<T extends EntityCoreIdentifiable>(
       id?: string;
       [key: string]: any;
     };
-    renderWrapper?: (baseTable: ReactNode, records: T[], originalRecord: T) => ReactNode;
+    renderWrapper?: (baseTable: ReactNode, records: Array<T>, originalRecord: T) => ReactNode;
   }
 ): UseExpandableTableOptions<T> {
   const { expandedColumns, expandedTableProps, wrapperProps, renderWrapper, ...restOptions } =
@@ -63,7 +66,7 @@ export function createExpandableTableConfig<T extends EntityCoreIdentifiable>(
 
   return {
     ...restOptions,
-    renderExpanded: (records: T[], originalRecord: T): ReactNode => {
+    renderExpanded: (records: Array<T>, originalRecord: T): ReactNode => {
       // create the base table with enhanced props for nested styling
       const enhancedTableProps = {
         ...expandedTableProps,

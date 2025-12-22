@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import { Metadata } from 'next';
 
 import SingleFeatureContent from '@/components/documentation/features/single-feature-content';
 

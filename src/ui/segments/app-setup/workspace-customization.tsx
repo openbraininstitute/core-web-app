@@ -2,6 +2,10 @@
 
 'use client';
 
+import { ComponentProps, ReactNode, useEffect, useState, useTransition } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { useRouter } from '@bprogress/next/app';
+import { Form } from 'antd';
 import {
   CheckCircleFilled,
   CloseCircleFilled,
@@ -9,23 +13,20 @@ import {
   LoadingOutlined,
   RightOutlined,
 } from '@ant-design/icons';
-import { useRouter } from '@bprogress/next/app';
-import { useMutation } from '@tanstack/react-query';
-import { Form } from 'antd';
-import { type ComponentProps, type ReactNode, useEffect, useState, useTransition } from 'react';
 import z from 'zod';
-import { checkProjectExists, updateProject } from '@/api/virtual-lab-svc/queries/project';
+
+import { updateVirtualLab, checkVirtualLabExists } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { updateProject, checkProjectExists } from '@/api/virtual-lab-svc/queries/project';
 import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
-import { checkVirtualLabExists, updateVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { Button } from '@/ui/molecules/button';
+import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import { Card, CardContent } from '@/ui/molecules/card';
+import { Button } from '@/ui/molecules/button';
 import { Input } from '@/ui/molecules/input';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
-import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 export type Props = {
   virtualLabId: string;
@@ -48,7 +49,7 @@ const virtualLabNameSchema = z
             'Another virtual lab with same name already exists, Please use a different name.',
         });
       }
-    } catch (_error) {
+    } catch (error) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'Failed to validate virtual lab name',
@@ -71,7 +72,7 @@ export const createProjectNameSchema = (virtualLabId: string) =>
           message: 'You already have a project with this name',
         });
       }
-    } catch (_error) {
+    } catch (error) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'Failed to validate project name',
@@ -160,7 +161,7 @@ export function WorkspaceCustomization({
   });
   const [form] = Form.useForm();
   const [submittable, setSubmittable] = useState<boolean>(true);
-  const _values = Form.useWatch([], form);
+  const values = Form.useWatch([], form);
 
   useEffect(() => {
     if (!editableField.project_name && !editableField.virtual_lab_name) {
@@ -174,7 +175,7 @@ export function WorkspaceCustomization({
         .then(() => setSubmittable(true))
         .catch(() => setSubmittable(false));
     }
-  }, [form, editableField]);
+  }, [form, values, editableField]);
 
   const handleEdit = (fieldName: keyof typeof editableField) => {
     setEditableField((prev) => ({
@@ -204,11 +205,7 @@ export function WorkspaceCustomization({
 
   const mutateProject = useMutation({
     mutationFn: async ({ projName }: { projName: string }) => {
-      await updateProject({
-        virtualLabId,
-        projectId,
-        payload: { name: projName },
-      });
+      await updateProject({ virtualLabId, projectId, payload: { name: projName } });
     },
     onError(error, variables) {
       notifyError({
@@ -229,9 +226,7 @@ export function WorkspaceCustomization({
 
   const onSubmitForm = async (_values: FinalFormType) => {
     if (editableField.virtual_lab_name) {
-      await mutateVirtualLab.mutateAsync({
-        vlabName: _values.virtual_lab_name,
-      });
+      await mutateVirtualLab.mutateAsync({ vlabName: _values.virtual_lab_name });
     }
     if (editableField.project_name) {
       await mutateProject.mutateAsync({ projName: _values.project_name });

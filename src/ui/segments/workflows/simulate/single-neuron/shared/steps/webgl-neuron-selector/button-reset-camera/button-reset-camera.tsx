@@ -1,7 +1,10 @@
+import React from 'react';
+
+import { PainterManager } from '../painter';
+
 import { IconCenter } from '@/components/icons/Center';
 import Tooltip from '@/components/tooltip';
 import { classNames } from '@/util/utils';
-import type { PainterManager } from '../painter';
 
 import styles from './button-reset-camera.module.css';
 

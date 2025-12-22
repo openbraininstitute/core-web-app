@@ -1,9 +1,9 @@
-import type { RJSFSchema, UiSchema } from '@rjsf/utils';
+import { RJSFSchema, UiSchema } from '@rjsf/utils';
 
 export const makeHiddenTypeUiSchema = (rootSchema?: RJSFSchema): UiSchema => {
   const result: UiSchema = {};
 
-  const assignDeep = (target: UiSchema, path: string[], value: UiSchema) => {
+  const assignDeep = (target: UiSchema, path: Array<string>, value: UiSchema) => {
     let cursor: UiSchema = target;
     for (let i = 0; i < path.length; i += 1) {
       const key = path[i];
@@ -13,7 +13,7 @@ export const makeHiddenTypeUiSchema = (rootSchema?: RJSFSchema): UiSchema => {
     Object.assign(cursor, value);
   };
 
-  const walk = (node: any, path: string[]) => {
+  const walk = (node: any, path: Array<string>) => {
     if (!node || typeof node !== 'object') return;
 
     if (node.properties && typeof node.properties === 'object') {
@@ -23,7 +23,7 @@ export const makeHiddenTypeUiSchema = (rootSchema?: RJSFSchema): UiSchema => {
         typeProp &&
         typeof typeProp === 'object' &&
         typeProp.type === 'string' &&
-        Object.hasOwn(typeProp, 'const')
+        Object.prototype.hasOwnProperty.call(typeProp, 'const')
       ) {
         assignDeep(result, [...path, 'type'], {
           'ui:widget': 'hidden',

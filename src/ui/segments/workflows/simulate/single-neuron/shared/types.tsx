@@ -1,5 +1,5 @@
-import isNil from 'es-toolkit/compat/isNil';
 import { z } from 'zod';
+import isNil from 'es-toolkit/compat/isNil';
 
 import { DefaultColor } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 
@@ -58,12 +58,12 @@ export const StimulusModuleDict = Object.fromEntries(
 
 export type CurrentInjectionGraphRequest = {
   stimulusProtocol: TStimulusModuleValue;
-  amplitudes: number[];
+  amplitudes: Array<number>;
 };
 
 export type CurrentInjectionGraphResponse = {
-  x: number[];
-  y: number[];
+  x: Array<number>;
+  y: Array<number>;
   name: string;
   amplitude: number;
 };
@@ -72,7 +72,7 @@ export type TProtocolDetails = {
   description: string;
   name: TStimulusModuleValue;
   label: string;
-  usedBy: TStimulationModeValue[];
+  usedBy: Array<TStimulationModeValue>;
 
   defaults: {
     time: {
@@ -115,33 +115,23 @@ export const SynapseTypeDict = Object.fromEntries(
 
 export const ExperimentalSetupConfigurationSchema = z.object({
   celsius: z
-    .number({
-      message: 'Please enter a valid numeric value for Temperature (°C).',
-    })
+    .number({ message: 'Please enter a valid numeric value for Temperature (°C).' })
     .min(0, 'Temperature must be between 0 and 50°C')
     .max(50, 'Temperature must be between 0 and 50°C'),
   vinit: z
-    .number({
-      message: 'Please enter a valid numeric value for initial membrane voltage (mV).',
-    })
+    .number({ message: 'Please enter a valid numeric value for initial membrane voltage (mV).' })
     .min(-200, 'Initial voltage must be between -200 and 100 mV')
     .max(100, 'Initial voltage must be between -200 and 100 mV'),
   hypamp: z
-    .number({
-      message: 'Please enter a valid numeric value for holding current (nA).',
-    })
+    .number({ message: 'Please enter a valid numeric value for holding current (nA).' })
     .min(-20, 'Holding current must be between -20 and 20 nA')
     .max(20, 'Holding current must be between -20 and 20 nA'),
   max_time: z
-    .number({
-      message: 'Please enter a valid numeric value for simulation duration (ms).',
-    })
+    .number({ message: 'Please enter a valid numeric value for simulation duration (ms).' })
     .min(0, 'Simulation duration must be between 0 and 3000 ms')
     .max(3000, 'Simulation duration must be between 0 and 3000 ms'),
   time_step: z
-    .number({
-      message: 'Please enter a valid numeric value for time step (ms).',
-    })
+    .number({ message: 'Please enter a valid numeric value for time step (ms).' })
     .min(0.001, 'Time step must be between 0.001 and 10 ms')
     .max(10, 'Time step must be between 0.001 and 10 ms'),
   seed: z
@@ -231,19 +221,13 @@ export type NeuronLocationArray = z.infer<typeof NeuronLocationArraySchema>;
 export const SynapseConfigSchema = z.object({
   id: z.string(),
   config_id: z.string({ message: 'Synapse configuration ID is required' }),
-  delay: z.number({
-    message: 'Synapse delay (ms) is required and must be a number',
-  }),
-  duration: z.number({
-    message: 'Synapse duration (ms) is required and must be a number',
-  }),
+  delay: z.number({ message: 'Synapse delay (ms) is required and must be a number' }),
+  duration: z.number({ message: 'Synapse duration (ms) is required and must be a number' }),
   frequency: z
     .union(
       [
         z
-          .number({
-            message: 'Synapse frequency (Hz) must be a positive number',
-          })
+          .number({ message: 'Synapse frequency (Hz) must be a positive number' })
           .min(0, 'Synapse frequency must be a positive number'),
         z.array(
           z
@@ -268,9 +252,7 @@ export const SynapseConfigSchema = z.object({
     .refine((val) => !isNil(val), {
       message: 'Synapse frequency is required',
     }),
-  weight_scalar: z.number({
-    message: 'Synapse weight scalar is required and must be a number',
-  }),
+  weight_scalar: z.number({ message: 'Synapse weight scalar is required and must be a number' }),
   color: z.string({ message: 'Synapse color is required' }).default(DefaultColor).optional(),
 });
 
@@ -296,7 +278,7 @@ export type AmperageStateType = {
   start: number;
   end: number;
   stepValue: number;
-  computed: number[];
+  computed: Array<number>;
   error: null | string;
 };
 
@@ -319,8 +301,8 @@ export const SimulationType = {
 export type TSimulationType = (typeof SimulationType)[keyof typeof SimulationType];
 
 export type PlotDataEntry = {
-  x: number[];
-  y: number[];
+  x: Array<number>;
+  y: Array<number>;
   type: 'scatter';
   name: string;
   recording?: string;
@@ -339,15 +321,9 @@ export const FrequencyInputConfigSchema = z.object({
   constantOrSteps: z.enum(['constant', 'step']),
   stepFrequencyState: z
     .object({
-      start: z.number({
-        message: 'Start frequency (Hz) is required and must be a number',
-      }),
-      stop: z.number({
-        message: 'Stop frequency (Hz) is required and must be a number',
-      }),
-      step: z.number({
-        message: 'Number of frequency steps is required and must be a number',
-      }),
+      start: z.number({ message: 'Start frequency (Hz) is required and must be a number' }),
+      stop: z.number({ message: 'Stop frequency (Hz) is required and must be a number' }),
+      step: z.number({ message: 'Number of frequency steps is required and must be a number' }),
     })
     .nullable()
     .refine((value) => value === null || value.start < value.stop, {
@@ -366,12 +342,8 @@ export const AmperageBaseSchema = z.object({
     StimulusModule.IV.value,
     StimulusModule.FirePattern.value,
   ]),
-  start: z.number({
-    message: 'Start current amplitude (nA) is required and must be a number',
-  }),
-  end: z.number({
-    message: 'End current amplitude (nA) is required and must be a number',
-  }),
+  start: z.number({ message: 'Start current amplitude (nA) is required and must be a number' }),
+  end: z.number({ message: 'End current amplitude (nA) is required and must be a number' }),
   stepValue: z.number({
     message: 'Number of current amplitude steps is required and must be a number',
   }),

@@ -1,3 +1,4 @@
+import { ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   CheckOutlined,
   CloseOutlined,
@@ -7,14 +8,15 @@ import {
   SearchOutlined,
 } from '@ant-design/icons';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { type ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { Button } from '@/ui/molecules/button';
+
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
+
+import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 
 function SkeletonLoader({ count = 5 }: { count?: number }) {
   return (
@@ -49,7 +51,7 @@ export type AsyncSelectQueryFn<
 
 export type AsyncSelectProps<R extends Partial<PaginationFilter & SearchFilter>, T = unknown> = {
   id?: string;
-  dataKey: string[] | Array<string | Record<string, any>>;
+  dataKey: Array<string> | Array<string | Record<string, any>>;
   queryFn: AsyncSelectQueryFn<R, T>;
   getOptionLabel: (item: T) => string;
   getOptionValue: (item: T) => string;
@@ -119,7 +121,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
     return data?.pages.flatMap((page) => page.data) ?? [];
   }, [data]);
 
-  const options = useMemo<AsyncSelectOption<T>[]>(() => {
+  const options = useMemo<Array<AsyncSelectOption<T>>>(() => {
     return allItems.map((item) => ({
       value: getOptionValue(item),
       label: getOptionLabel(item),
@@ -154,9 +156,12 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
     return currentOptionsMap.get(selectedValue) ?? persistedOptionsRef.current?.get(selectedValue);
   }, [currentOptionsMap, selectedValue]);
 
-  const parentSetter = useCallback((el: HTMLDivElement) => {
-    setParent(el);
-  }, []);
+  const parentSetter = useCallback(
+    (el: HTMLDivElement) => {
+      setParent(el);
+    },
+    [setParent]
+  );
 
   useEffect(() => {
     if (!open || !parent) return;
@@ -294,68 +299,70 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
               <span className="text-neutral-4 text-sm">No results found</span>
             </div>
           ) : (
-            options.map((option) => {
-              if (!option) return null;
+            <>
+              {options.map((option) => {
+                if (!option) return null;
 
-              const { value, label, data: optionData } = option;
-              const isSelected = value === selectedValue;
-              if (customItemRender) {
-                return customItemRender({
-                  data: option,
-                  selected: isSelected,
-                  onSelect: handleSelect,
-                });
-              }
+                const { value, label, data: optionData } = option;
+                const isSelected = value === selectedValue;
+                if (customItemRender) {
+                  return customItemRender({
+                    data: option,
+                    selected: isSelected,
+                    onSelect: handleSelect,
+                  });
+                }
 
-              return (
-                <div key={option?.value} className="group mb-1 flex items-center justify-start">
-                  <button
-                    type="button"
-                    aria-label={label}
-                    onClick={() => handleSelect(option)}
-                    className={cn(
-                      'text-primary-9 hover:bg-background flex h-full w-full cursor-pointer',
-                      'items-center justify-start px-3 text-left transition-colors duration-150',
-                      'group-first:hover:rounded-t-md',
-                      { 'p-2 text-base': breakpoint === 'l' },
-                      { 'p-3 text-lg': breakpoint === 'xl' }
-                    )}
-                    title={label}
-                  >
-                    <span className="line-clamp-2 w-full group-hover:font-black">{label}</span>
-                    <div className="flex items-center justify-center gap-1">
-                      <CheckOutlined
-                        className={cn(
-                          'ml-auto text-sm transition-opacity duration-200',
-                          isSelected ? 'opacity-100' : 'opacity-0'
-                        )}
-                      />
-                      {tooltip && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="h-8 rounded-full border-none">
-                              <InfoCircleFilled className="text-primary-8" />
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent
-                            avoidCollisions
-                            align="end"
-                            side="bottom"
-                            sideOffset={-9}
-                            collisionPadding={{ left: 0 }}
-                            arrowPadding={0}
-                            className="shadow-bnb bg-primary-9 z-[99999] text-white!"
-                            arrowClassName="bg-primary-9"
-                          >
-                            {tooltip(optionData)}
-                          </TooltipContent>
-                        </Tooltip>
+                return (
+                  <div key={option?.value} className="group mb-1 flex items-center justify-start">
+                    <button
+                      type="button"
+                      aria-label={label}
+                      onClick={() => handleSelect(option)}
+                      className={cn(
+                        'text-primary-9 hover:bg-background flex h-full w-full cursor-pointer',
+                        'items-center justify-start px-3 text-left transition-colors duration-150',
+                        'group-first:hover:rounded-t-md',
+                        { 'p-2 text-base': breakpoint === 'l' },
+                        { 'p-3 text-lg': breakpoint === 'xl' }
                       )}
-                    </div>
-                  </button>
-                </div>
-              );
-            })
+                      title={label}
+                    >
+                      <span className="line-clamp-2 w-full group-hover:font-black">{label}</span>
+                      <div className="flex items-center justify-center gap-1">
+                        <CheckOutlined
+                          className={cn(
+                            'ml-auto text-sm transition-opacity duration-200',
+                            isSelected ? 'opacity-100' : 'opacity-0'
+                          )}
+                        />
+                        {tooltip && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="h-8 rounded-full border-none">
+                                <InfoCircleFilled className="text-primary-8" />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              avoidCollisions
+                              align="end"
+                              side="bottom"
+                              sideOffset={-9}
+                              collisionPadding={{ left: 0 }}
+                              arrowPadding={0}
+                              className="shadow-bnb bg-primary-9 z-[99999] text-white!"
+                              arrowClassName="bg-primary-9"
+                            >
+                              {tooltip(optionData)}
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </button>
+                  </div>
+                );
+              })}
+            </>
           )}
           {isFetchingNextPage && (
             <div className="sticky bottom-0 left-0 z-[99999] flex items-center justify-center gap-2 py-3">

@@ -6,24 +6,26 @@ import {
   DownloadOutlined,
   ExperimentOutlined,
 } from '@ant-design/icons';
-import { useAtom } from 'jotai';
-import NextLink from 'next/link';
-import { notFound } from 'next/navigation';
 import { useState } from 'react';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import { config } from '@/config';
-import type { EntityTypeValue } from '@/entity-configuration/domain';
-import {
-  type EntityCoreExtendedType,
-  getEntityByExtendedType,
-} from '@/entity-configuration/domain/helpers';
+import { notFound } from 'next/navigation';
+import NextLink from 'next/link';
+import { useAtom } from 'jotai';
+
+import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
+import { EntityTypeValue } from '@/entity-configuration/domain';
 import { downloadArchive } from '@/services/entity-download';
 import Action from '@/ui/molecules/side-menu-action';
-import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
+import {
+  EntityCoreExtendedType,
+  getEntityByExtendedType,
+} from '@/entity-configuration/domain/helpers';
 import {
   PanelQueryParam,
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { config } from '@/config';
+
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export default function ActionMenu({
   entity,

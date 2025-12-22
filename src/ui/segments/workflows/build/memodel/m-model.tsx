@@ -5,11 +5,12 @@ import { Image } from 'antd';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 
 import { useRouter } from 'next/navigation';
-import { EntityTypeDict, type ICellMorphology } from '@/api/entitycore/types';
+import { label, useBuildMeModelSessionState } from '@/ui/segments/workflows/build/memodel/helpers';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
-import { config } from '@/config';
+import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
+import { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   renderArray,
   renderDate,
@@ -17,11 +18,11 @@ import {
   renderLicense,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
-import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
-import { label, useBuildMeModelSessionState } from '@/ui/segments/workflows/build/memodel/helpers';
 import { cn } from '@/utils/css-class';
+import { config } from '@/config';
+
+import { EntityTypeDict, type ICellMorphology } from '@/api/entitycore/types';
 
 type Props = {
   sessionId: string;
@@ -77,16 +78,9 @@ export function MModelMiniDetail({ sessionId }: { sessionId: string }) {
   const data = sessionValue.mmodel;
 
   const details = [
-    {
-      label: 'Name',
-      value: renderEmptyOrValue(data?.name),
-      className: 'font-bold',
-    },
+    { label: 'Name', value: renderEmptyOrValue(data?.name), className: 'font-bold' },
     { label: 'Description', value: renderEmptyOrValue(data?.description) },
-    {
-      label: 'Brain Region',
-      value: renderEmptyOrValue(data?.brain_region.name),
-    },
+    { label: 'Brain Region', value: renderEmptyOrValue(data?.brain_region.name) },
     { label: 'Species', value: renderEmptyOrValue(data?.subject.species.name) },
     {
       label: 'M-Type',

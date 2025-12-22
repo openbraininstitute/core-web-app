@@ -1,11 +1,12 @@
 'use client';
 
-import { Select } from 'antd';
 import { useEffect, useState, useTransition } from 'react';
-import { useAppNotification } from '@/components/notification';
+import { Select } from 'antd';
+
 import { resetFlags, setFlag } from '@/features/feature-flags';
 import { flags } from '@/features/feature-flags/flags';
 import { useFlags } from '@/features/feature-flags/provider';
+import { useAppNotification } from '@/components/notification';
 
 export function ExperimentalFeatures() {
   const { error: errorNotify } = useAppNotification();
@@ -22,7 +23,7 @@ export function ExperimentalFeatures() {
   );
 
   // Clean up optimistic values after server update
-  useEffect(() => setOptimisticFlags({}), []);
+  useEffect(() => setOptimisticFlags({}), [flagValues]);
 
   const handleFlagChange = (key: string, value: unknown) => {
     setOptimisticFlags((prev) => ({ ...prev, [key]: value }));
@@ -31,17 +32,14 @@ export function ExperimentalFeatures() {
     startTransition(async () => {
       try {
         await setFlag(key as any, value as any);
-      } catch (_error) {
+      } catch (error) {
         // Rollback on error
         setOptimisticFlags((prev) => {
           const next = { ...prev };
           delete next[key];
           return next;
         });
-        errorNotify({
-          message: 'Failed to update feature flag',
-          placement: 'topRight',
-        });
+        errorNotify({ message: 'Failed to update feature flag', placement: 'topRight' });
       } finally {
         setUpdatingFlags((prev) => {
           const next = new Set(prev);

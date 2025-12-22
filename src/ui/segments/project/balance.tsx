@@ -3,12 +3,12 @@ import { useQueries } from '@tanstack/react-query';
 import { useState } from 'react';
 import { match, P } from 'ts-pattern';
 
-import type { VlmUserGroupsResponse } from '@/api/virtual-lab-svc/queries/types';
+import { VlmUserGroupsResponse } from '@/api/virtual-lab-svc/queries/types';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { CoinsIcon } from '@/components/icons/buttons';
 import { makeRoles } from '@/hooks/use-user-role';
 import { getProjectAccountBalance } from '@/services/virtual-lab/projects';
-import type { ProjectBalance } from '@/types/accounting';
+import { ProjectBalance } from '@/types/accounting';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge } from '@/ui/molecules/badge';
@@ -41,14 +41,7 @@ export function Wallet() {
 
   const isAdmin = roles?.isVirtualLabAdmin;
 
-  const content = match({
-    isError,
-    isLoading,
-    loadingRoles,
-    isSuccess,
-    data,
-    error,
-  })
+  const content = match({ isError, isLoading, loadingRoles, isSuccess, data, error })
     .with(
       P.when((s) => s.isLoading || s.loadingRoles),
       () => <LoadingOutlined spin />

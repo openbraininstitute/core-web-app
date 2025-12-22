@@ -1,16 +1,17 @@
 'use client';
 
 import { ArrowLeftOutlined } from '@ant-design/icons';
-import { useState } from 'react';
 import { match } from 'ts-pattern';
-import { Button as UiButton } from '@/ui/molecules/button';
+import { useState } from 'react';
+
+import { PromotionCode } from '@/ui/segments/virtual-lab-settings/elements/promotion-code-form';
+import { StripePaymentFlow } from '@/ui/segments/virtual-lab-settings/elements/stripe-payment';
 import {
   PaymentModeSelection,
   PurchaseModeDictionary,
-  type TPurchaseModeDictionary,
+  TPurchaseModeDictionary,
 } from '@/ui/segments/virtual-lab-settings/elements/payment-mode-selection';
-import { PromotionCode } from '@/ui/segments/virtual-lab-settings/elements/promotion-code-form';
-import { StripePaymentFlow } from '@/ui/segments/virtual-lab-settings/elements/stripe-payment';
+import { Button as UiButton } from '@/ui/molecules/button';
 
 type Props = {
   virtualLabId: string;

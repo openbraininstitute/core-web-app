@@ -1,11 +1,13 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import {
-  type ContentForFeatureItem,
-  useSanityContentForFeatureItems,
-} from '@/components/documentation/hooks/use-sanity-content-for-features';
+
 import FeaturesCard from '@/ui/segments/help/features/features-card';
+
+import {
+  useSanityContentForFeatureItems,
+  type ContentForFeatureItem,
+} from '@/components/documentation/hooks/use-sanity-content-for-features';
 import Slugify from '@/util/slugify';
 
 export default function FeaturesContent() {

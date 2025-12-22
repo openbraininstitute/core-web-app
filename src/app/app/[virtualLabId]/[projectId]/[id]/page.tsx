@@ -1,6 +1,6 @@
-import { notFound, redirect } from 'next/navigation';
+import { redirect, notFound } from 'next/navigation';
 import { getEntity } from '@/api/entitycore/queries/general/entity';
-import type { IEntity } from '@/api/entitycore/types/entities/entity';
+import { IEntity } from '@/api/entitycore/types/entities/entity';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 export default async function EntityDetail({
@@ -19,7 +19,7 @@ export default async function EntityDetail({
       entityId: id,
       dataType: entity.type,
     });
-  } catch (_e) {
+  } catch (e) {
     notFound();
   }
 

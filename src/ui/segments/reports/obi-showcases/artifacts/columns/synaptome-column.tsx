@@ -1,4 +1,4 @@
-import type { SynaptomeProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
+import { SynaptomeProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
 
 const columns = () => {
   return [

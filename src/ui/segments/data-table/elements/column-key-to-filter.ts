@@ -1,10 +1,11 @@
 import get from 'es-toolkit/compat/get';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { getFieldDefinition } from '@/entity-configuration/definitions';
 import {
   CoreFieldFilterTypeEnum,
-  type EntityCoreFields,
+  EntityCoreFields,
 } from '@/entity-configuration/definitions/fields-defs/enums';
+import { getFieldDefinition } from '@/entity-configuration/definitions';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
 export function columnKeyToFilter(

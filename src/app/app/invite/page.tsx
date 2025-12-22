@@ -1,13 +1,14 @@
-import { redirect } from 'next/navigation';
 import { ErrorBoundary } from 'react-error-boundary';
-import type { ApiErrorCause } from '@/api/error';
-import { tryCatch } from '@/api/utils';
-import { getInviteContent } from '@/api/virtual-lab-svc/queries/invite';
-import { getSession } from '@/auth-fetch';
+import { redirect } from 'next/navigation';
+
 import { ErrorComponent as SimpleErrorComponent } from '@/components/GenericErrorFallback';
-import type { ServerSideComponentProp } from '@/types/common';
+import { getInviteContent } from '@/api/virtual-lab-svc/queries/invite';
 import { InvitationProcessing } from '@/ui/segments/invites';
 import { getErrorUrl } from '@/ui/segments/invites/helpers';
+import { ServerSideComponentProp } from '@/types/common';
+import { ApiErrorCause } from '@/api/error';
+import { getSession } from '@/auth-fetch';
+import { tryCatch } from '@/api/utils';
 
 export default async function InvitePage({
   searchParams,

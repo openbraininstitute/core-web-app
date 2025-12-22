@@ -1,6 +1,6 @@
-import dayjs from 'dayjs';
 import { isEmpty, isNil, pickBy, size } from 'es-toolkit/compat';
 import { z } from 'zod';
+import dayjs from 'dayjs';
 
 import { AgentType, type TAgentType } from '@/ui/segments/contribute/shared/types';
 
@@ -9,7 +9,7 @@ export const DEFAULT_LICENSE_NAME = 'CC BY 4.0';
 
 export const ContributionSchema = z.object({
   agent_type: z
-    .enum(Object.values(AgentType).map((type) => type.key) as [TAgentType, ...TAgentType[]], {
+    .enum(Object.values(AgentType).map((type) => type.key) as [TAgentType, ...Array<TAgentType>], {
       message: 'Contributor type is required',
     })
     .optional(),
@@ -117,9 +117,7 @@ export const LocationSchema = z
   );
 
 export const ExperimentDateSchema = z
-  .custom((data) => dayjs.isDayjs(data), {
-    message: 'Experiment date should be a valid date',
-  })
+  .custom((data) => dayjs.isDayjs(data), { message: 'Experiment date should be a valid date' })
   .refine(
     (data) => {
       const today = dayjs();
@@ -160,7 +158,7 @@ export const LicenseIdSchema = z
   .nonempty({ message: 'License is required' });
 
 export function createFileSchema(
-  fileTypes: string[]
+  fileTypes: Array<string>
 ): z.ZodObject<Record<string, z.ZodType<File>>> {
   const shape: Record<string, z.ZodType<File>> = {};
   fileTypes.forEach((type) => {

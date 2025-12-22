@@ -6,7 +6,6 @@ import { useAtom } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
 
 import { Switch } from '@/components/common/Switch';
-import type { UpdateSynapseSimulationProperty } from '@/types/small-scale-simulator/single-neuron';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { FREQUENCY_INPUT_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
@@ -20,6 +19,8 @@ import { FrequencyInputConfigSchema } from '@/ui/segments/workflows/simulate/sin
 import { cn } from '@/utils/css-class';
 import { isBrowser } from '@/utils/environment';
 import { log } from '@/utils/logger';
+
+import type { UpdateSynapseSimulationProperty } from '@/types/small-scale-simulator/single-neuron';
 
 const defaultStepFrequencies = { start: 5, stop: 20, step: 3 };
 
@@ -236,7 +237,7 @@ export function FrequencyFormItem({
               <div className="flex flex-col items-start">
                 {label('Start', false, 'pb-0.5')}
                 <InputNumber
-                  defaultValue={stepFrequencyState?.start}
+                  defaultValue={stepFrequencyState!.start}
                   placeholder="start"
                   size={breakpoint === 'l' ? 'middle' : 'large'}
                   className={cn(
@@ -251,9 +252,13 @@ export function FrequencyFormItem({
                     onFrequencyStepChange(v, stepFrequencyState.stop, stepFrequencyState.step)
                   }
                   suffix={<span className="normal-case">[hz]</span>}
-                  status={validationError?.includes('Start value must be less than') ? 'error' : ''}
+                  status={
+                    validationError && validationError.includes('Start value must be less than')
+                      ? 'error'
+                      : ''
+                  }
                 />
-                {validationError?.includes('Start value must be less than') && (
+                {validationError && validationError.includes('Start value must be less than') && (
                   <div className="mt-1 text-xs text-red-500">{validationError}</div>
                 )}
               </div>
@@ -264,7 +269,7 @@ export function FrequencyFormItem({
               <div className="flex flex-col items-start">
                 {label('stop')}
                 <InputNumber
-                  defaultValue={stepFrequencyState?.stop}
+                  defaultValue={stepFrequencyState!.stop}
                   size={breakpoint === 'l' ? 'middle' : 'large'}
                   className={cn(
                     'border-neutral-2! [&_.ant-input-number-input]:text-primary-8! flex w-full items-center justify-between gap-2 rounded-sm! bg-white font-bold! [&_input]:placeholder:!font-light',
@@ -279,9 +284,13 @@ export function FrequencyFormItem({
                     onFrequencyStepChange(stepFrequencyState.start, v, stepFrequencyState.step)
                   }
                   suffix={<span className="normal-case">[hz]</span>}
-                  status={validationError?.includes('Start value must be less than') ? 'error' : ''}
+                  status={
+                    validationError && validationError.includes('Start value must be less than')
+                      ? 'error'
+                      : ''
+                  }
                 />
-                {validationError?.includes('Start value must be less than') && (
+                {validationError && validationError.includes('Start value must be less than') && (
                   <div className="mt-1 text-xs text-red-500">{validationError}</div>
                 )}
               </div>
@@ -289,7 +298,7 @@ export function FrequencyFormItem({
             <div className="flex flex-col items-start text-sm">
               {label('N° of steps', false, 'pb-0.5')}
               <InputNumber
-                defaultValue={stepFrequencyState?.step}
+                defaultValue={stepFrequencyState!.step}
                 size={breakpoint === 'l' ? 'middle' : 'large'}
                 className={cn(
                   'border-neutral-2! [&_.ant-input-number-input]:text-primary-8! flex w-full items-center justify-between gap-2 rounded-sm! bg-white font-bold! [&_input]:placeholder:!font-light',

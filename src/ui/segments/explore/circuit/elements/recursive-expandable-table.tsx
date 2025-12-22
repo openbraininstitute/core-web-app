@@ -1,22 +1,25 @@
 import type { ReactNode } from 'react';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
-import type { TWorkspaceScope } from '@/constants';
-import type { WorkspaceContext } from '@/types/common';
+
 import { BaseTable } from '@/ui/segments/data-table/table';
 import { expandIcon } from '@/ui/segments/explore/circuit/elements/expand-icon';
+import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
+
 import { createExpandableTableConfig } from '@/ui/segments/explore/circuit/elements/expandable-base-table';
 import { useExpandableTable } from '@/ui/segments/explore/circuit/elements/use-expandable-table';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type {
   ICircuitEnriched,
   TCircuitRepresentationView,
 } from '@/ui/segments/explore/circuit/helpers';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { WorkspaceContext } from '@/types/common';
+import type { TWorkspaceScope } from '@/constants';
 
 type Props = {
   id?: string;
-  circuits: ICircuitEnriched[];
-  columns: any[];
+  circuits: Array<ICircuitEnriched>;
+  columns: Array<any>;
   dataType: TExtendedEntitiesTypeDict;
   dataScope: TWorkspaceScope | null;
   workspace?: WorkspaceContext;
@@ -53,7 +56,7 @@ export function RecursiveExpandableTable({
     expandedTableProps: {
       dataType,
     },
-    renderWrapper: (_: ReactNode, records: ICircuit[]) => {
+    renderWrapper: (_: ReactNode, records: Array<ICircuit>) => {
       return (
         <div className="my-5 flex flex-col items-start gap-5">
           <div className="ml-7 flex flex-row items-center gap-2">
@@ -64,7 +67,7 @@ export function RecursiveExpandableTable({
             <div className="ml-4">
               <RecursiveExpandableTable
                 key={`${id}-level-${level + 1}`}
-                circuits={records as ICircuitEnriched[]}
+                circuits={records as Array<ICircuitEnriched>}
                 columns={columns}
                 dataType={dataType}
                 dataScope={dataScope}

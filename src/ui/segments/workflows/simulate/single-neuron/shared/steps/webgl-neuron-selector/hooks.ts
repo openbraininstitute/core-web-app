@@ -1,14 +1,15 @@
 /* eslint-disable no-param-reassign */
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import {
-  RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
-  STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
-} from '../../constant';
+
 import {
   RecordLocationConfigurationAtomFamily,
   StimulationConfigurationAtomFamily,
 } from '../../context';
 import { getSessionKey } from '../../helpers';
+import {
+  RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
+  STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
+} from '../../constant';
 import { getColorFromGeneratedPalette } from './colors';
 
 const atomSynapsesToShowInViewer = atom<Array<{ color: string; data: Float32Array }>>([]);

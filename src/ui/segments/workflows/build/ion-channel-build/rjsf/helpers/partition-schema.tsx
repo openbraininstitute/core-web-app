@@ -1,4 +1,4 @@
-import type { RJSFSchema } from '@rjsf/utils';
+import { RJSFSchema } from '@rjsf/utils';
 import { cloneDeep } from 'es-toolkit/compat';
 
 /**
@@ -41,13 +41,13 @@ import { cloneDeep } from 'es-toolkit/compat';
  */
 export function partitionSchemaByRequiredProperties<T extends RJSFSchema>(
   schema: T,
-  propertyNames?: string[]
-): T[] {
+  propertyNames?: Array<string>
+): Array<T> {
   if (!schema || typeof schema !== 'object') {
     return [];
   }
 
-  const propertiesToSplit: string[] =
+  const propertiesToSplit: Array<string> =
     propertyNames || (Array.isArray(schema.required) ? schema.required : []);
 
   if (propertiesToSplit.length === 0) {
@@ -60,7 +60,7 @@ export function partitionSchemaByRequiredProperties<T extends RJSFSchema>(
 
   const schemaProperties = schema.properties;
 
-  const splitSchemas: T[] = propertiesToSplit
+  const splitSchemas: Array<T> = propertiesToSplit
     .filter((propName) => {
       // Only include properties that exist in the schema
       return propName in schemaProperties;

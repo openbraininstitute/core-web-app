@@ -1,14 +1,16 @@
 'use client';
 
 import { hashKey, keepPreviousData, useQuery } from '@tanstack/react-query';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import type { WorkspaceContext } from '@/types/common';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
+
 import { ACTIVITY_DEFAULT_PAGE_SIZE } from '@/ui/segments/project/activities/elements/helpers';
-import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
+import type { WorkspaceContext } from '@/types/common';
 
 type QueryKey = WorkspaceContext & {
   page: number;

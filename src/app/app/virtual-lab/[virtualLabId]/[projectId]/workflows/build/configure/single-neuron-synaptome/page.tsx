@@ -1,12 +1,13 @@
 'use client';
 
 import { use } from 'react';
-import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
-import { Content } from '@/ui/segments/workflows/build/single-neuron-synaptome';
+
 import { Header } from '@/ui/segments/workflows/build/single-neuron-synaptome/header';
+import { Menu } from '@/ui/segments/workflows/build/single-neuron-synaptome/menu';
+import { Content } from '@/ui/segments/workflows/build/single-neuron-synaptome';
 
 import type { BuildStepKeys } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import { Menu } from '@/ui/segments/workflows/build/single-neuron-synaptome/menu';
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 export default function Page({
   searchParams,

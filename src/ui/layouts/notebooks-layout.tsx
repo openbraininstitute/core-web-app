@@ -1,13 +1,13 @@
 'use client';
 
-import { LoadingOutlined } from '@ant-design/icons';
-import Image from 'next/image';
+import { ReactNode, useState } from 'react';
 import NextLink from 'next/link';
-import { type ReactNode, useState } from 'react';
-import { useAppNotification } from '@/components/notification';
-import { startEmptyNotebook } from '@/services/notebooks';
-import { cn } from '@/utils/css-class';
+import Image from 'next/image';
+import { LoadingOutlined } from '@ant-design/icons';
 import { useWorkspace } from '../hooks/use-workspace';
+import { cn } from '@/utils/css-class';
+import { startEmptyNotebook } from '@/services/notebooks';
+import { useAppNotification } from '@/components/notification';
 
 type Props = {
   children: ReactNode;

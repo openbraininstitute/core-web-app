@@ -1,8 +1,8 @@
 import snakeCase from 'es-toolkit/compat/snakeCase';
-import { type NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import type { TEntityTypeDict } from '@/api/entitycore/types';
+import { TEntityTypeDict } from '@/api/entitycore/types';
 import { auth } from '@/auth';
 import { ticketStore } from '@/features/entity-download/ticket-store';
 

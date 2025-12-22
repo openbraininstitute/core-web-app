@@ -1,9 +1,10 @@
 'use client';
 
-import { capitalize } from 'es-toolkit/compat';
 import { usePathname, useSearchParams } from 'next/navigation';
-import type { TDetailViewSectionDict } from '@/entity-configuration/definitions/types';
+import { capitalize } from 'es-toolkit/compat';
 import Tab from '@/ui/molecules/tab';
+
+import type { TDetailViewSectionDict } from '@/entity-configuration/definitions/types';
 
 export default function DetailMenu({ sections }: { sections: TDetailViewSectionDict[] }) {
   const path = usePathname();

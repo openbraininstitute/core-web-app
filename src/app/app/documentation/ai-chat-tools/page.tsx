@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import { Metadata } from 'next';
 
 import AllAIToolsContent from '@/components/documentation/ai-tools/all-tools';
 

@@ -41,7 +41,7 @@
 }
 
 .tooltip::after {
-  content: "";
+  content: '';
   background-color: transparent;
   position: absolute;
   left: 50%;

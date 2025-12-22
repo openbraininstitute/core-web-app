@@ -1,10 +1,10 @@
 import type { JSX } from 'react';
+import { Filter } from '@/features/listing-filter-panel/types';
 import {
   CheckListDescription,
   CheckListOption,
 } from '@/features/listing-filter-panel/checklist/option';
-import type { FacetOptionsList } from '@/features/listing-filter-panel/checklist/use-options';
-import type { Filter } from '@/features/listing-filter-panel/types';
+import { FacetOptionsList } from '@/features/listing-filter-panel/checklist/use-options';
 
 export type CheckListProps = {
   options: FacetOptionsList;

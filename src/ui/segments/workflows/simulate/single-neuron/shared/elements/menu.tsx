@@ -1,42 +1,46 @@
 'use client';
 
 import { RightOutlined, SettingFilled, WarningFilled } from '@ant-design/icons';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
-import { getSingleNeuronStimuliPlot } from '@/api/small-scale-simulator';
-import { useAppNotification } from '@/components/notification';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Button } from '@/ui/molecules/button';
+import { useEffect, useState, useMemo } from 'react';
+
+import { useVisibleSynapsesSetter } from '../steps/webgl-neuron-selector/hooks';
+
+import { useSingleNeuronSimulationAtoms } from '@/ui/segments/workflows/simulate/single-neuron/shared/use-simulation-atoms';
+import { launchSimulationAtom } from '@/ui/segments/workflows/simulate/single-neuron/shared/runner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import {
-  PROTOCOL_DETAILS,
-  WorkflowSimulatePanels,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { getSingleNeuronStimuliPlot } from '@/api/small-scale-simulator';
 import {
   SimulationStatus,
   simulationStatusAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import { launchSimulationAtom } from '@/ui/segments/workflows/simulate/single-neuron/shared/runner';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import {
-  AmperageStateSchema,
-  ExperimentalSetupConfigurationSchema,
-  FrequencyInputConfigSchema,
+  SynapseConfigurationArraySchema,
   NeuronLocationArraySchema,
   OverviewConfigurationSchema,
-  type PlotData,
-  SimulationType,
   StimulationConfigurationSchema,
-  SynapseConfigurationArraySchema,
+  ExperimentalSetupConfigurationSchema,
+  AmperageStateSchema,
+  FrequencyInputConfigSchema,
+  PlotData,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import {
+  PROTOCOL_DETAILS,
+  WorkflowSimulatePanels,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { useAppNotification } from '@/components/notification';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { browserHistoryReplace } from '@/utils/browser';
+import { keyBuilder } from '@/ui/use-query-keys/data';
+import { Button } from '@/ui/molecules/button';
+import { cn } from '@/utils/css-class';
+import {
+  SimulationType,
   type TSimulationType,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { useSingleNeuronSimulationAtoms } from '@/ui/segments/workflows/simulate/single-neuron/shared/use-simulation-atoms';
-import { keyBuilder } from '@/ui/use-query-keys/data';
-import { browserHistoryReplace } from '@/utils/browser';
-import { cn } from '@/utils/css-class';
-import { useVisibleSynapsesSetter } from '../steps/webgl-neuron-selector/hooks';
 
 export const ExperimentStep = {
   Info: 'info',

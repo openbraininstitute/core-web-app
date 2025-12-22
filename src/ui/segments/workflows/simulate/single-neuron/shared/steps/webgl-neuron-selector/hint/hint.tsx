@@ -1,7 +1,9 @@
-import type React from 'react';
+import React from 'react';
+
+import { PainterManager } from '../painter';
+import { StructureItem, StructureItemType } from '../painter/structure';
+
 import { classNames } from '@/util/utils';
-import type { PainterManager } from '../painter';
-import { type StructureItem, StructureItemType } from '../painter/structure';
 
 import styles from './hint.module.css';
 
@@ -11,12 +13,7 @@ export interface HintProps {
 }
 
 export function HintPanel({ className, painterManager }: HintProps) {
-  const hovered = painterManager.eventHover.useValue({
-    x: 0,
-    y: 0,
-    item: null,
-    offset: 0,
-  });
+  const hovered = painterManager.eventHover.useValue({ x: 0, y: 0, item: null, offset: 0 });
   const visible = painterManager.eventHintVisible.useValue(false);
 
   if (!visible || !hovered.item) {

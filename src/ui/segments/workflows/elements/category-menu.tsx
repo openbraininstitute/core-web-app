@@ -4,9 +4,10 @@ import { WheelGesturesPlugin } from 'embla-carousel-wheel-gestures';
 
 import { Carousel, CarouselContent, CarouselItem } from '@/ui/molecules/carousel';
 import { CarouselButtons } from '@/ui/segments/workflows/elements/carousel-buttons';
-import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 import { ActivityDict } from '@/ui/segments/workflows/elements/helpers';
 import { MenuItem } from '@/ui/segments/workflows/elements/menu-item';
+
+import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 
 type Props = {
   current: TActivityValue | null;

@@ -1,15 +1,17 @@
-import { RedirectType, redirect } from 'next/navigation';
+import { redirect, RedirectType } from 'next/navigation';
 import { Suspense } from 'react';
-import { tryCatch } from '@/api/utils';
-import { getProject } from '@/api/virtual-lab-svc/queries/project';
-import { config } from '@/config';
-import { getQueryClient, HydrateClient } from '@/query-provider/server';
-import type { ServerSideComponentProp } from '@/types/common';
-import { ProjectActivities } from '@/ui/segments/project/activities';
-import { ProjectCard } from '@/ui/segments/project/banner/banner';
+
 import { ProjectCardSkeletonShimmer } from '@/ui/segments/project/banner/banner-skeleton';
+import { getQueryClient, HydrateClient } from '@/query-provider/server';
 import { Shortcuts } from '@/ui/segments/project/bottom-nav-shortcuts';
+import { ProjectActivities } from '@/ui/segments/project/activities';
+import { getProject } from '@/api/virtual-lab-svc/queries/project';
+import { ProjectCard } from '@/ui/segments/project/banner/banner';
+import { config } from '@/config';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { tryCatch } from '@/api/utils';
+
+import type { ServerSideComponentProp } from '@/types/common';
 
 export default async function Home({
   params: promisedParams,

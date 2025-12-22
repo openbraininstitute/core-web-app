@@ -1,10 +1,12 @@
 import { Empty } from 'antd';
-import { hasAssets } from '@/api/entitycore/guards';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+
+import { ProgressiveEntityImage } from '@/ui/segments/explore/circuit/elements/use-progressive-img';
+import { EmptyPreview } from '@/entity-configuration/definitions/renderer';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
-import { EmptyPreview } from '@/entity-configuration/definitions/renderer';
-import { ProgressiveEntityImage } from '@/ui/segments/explore/circuit/elements/use-progressive-img';
+import { hasAssets } from '@/api/entitycore/guards';
+
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export function CircuitPreview({ record }: { record: ICircuit }) {
   if (!hasAssets(record)) return EmptyPreview;

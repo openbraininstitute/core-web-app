@@ -1,72 +1,75 @@
 'use client';
 
 import { captureException } from '@sentry/nextjs';
-import type { NotificationInstance } from 'antd/es/notification/interface';
+import { RESET } from 'jotai/utils';
+import { match } from 'ts-pattern';
+import Link from 'next/link';
+import { atom } from 'jotai';
 import {
-  delay,
-  isNil,
-  kebabCase,
-  get as lget,
-  map,
-  omit,
-  pick,
   sortBy,
   uniqBy,
   values,
+  isNil,
+  delay,
+  pick,
+  omit,
+  map,
+  get as lget,
+  kebabCase,
 } from 'es-toolkit/compat';
-import { atom } from 'jotai';
-import { RESET } from 'jotai/utils';
-import Link from 'next/link';
-import { match } from 'ts-pattern';
-import {
-  createSingleNeuronSimulation,
-  createSingleNeuronSynaptomeSimulation,
-  getMEModel,
-} from '@/api/entitycore/queries';
-import { createJsonAsset } from '@/api/entitycore/queries/assets';
-import type {
-  ISingleNeuronSimulation,
-  ISingleNeuronSynaptomeSimulation,
-} from '@/api/entitycore/types';
+import type { NotificationInstance } from 'antd/es/notification/interface';
+
 import { SingleNeuronSimulationStatus } from '@/api/entitycore/types/shared/neuron-simulation';
+import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
-import { tryCatch } from '@/api/utils';
-import { config } from '@/config';
-import {
-  SingleNeuronSimulation,
-  SingleNeuronSynaptomeSimulation,
-} from '@/entity-configuration/domain/simulation';
-import { messages } from '@/i18n/en/simulation';
-import type { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
-import { JobStatus, type Message, MessageType } from '@/services/small-scale-simulator/types';
-import type {
-  SimulationStreamData,
-  SingleNeuronModelSimulationConfig,
-} from '@/types/small-scale-simulator/single-neuron';
 import {
   genericSingleNeuronSimulationPlotDataAtomFamily,
   SimulationStatus,
   simulationStatusAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import { createJsonAsset } from '@/api/entitycore/queries/assets';
+import { readNdjsonResponse } from '@/utils/response';
+import {
+  SingleNeuronSimulation,
+  SingleNeuronSynaptomeSimulation,
+} from '@/entity-configuration/domain/simulation';
+import { messages } from '@/i18n/en/simulation';
+import { tryCatch } from '@/api/utils';
+import {
+  createSingleNeuronSimulation,
+  createSingleNeuronSynaptomeSimulation,
+  getMEModel,
+} from '@/api/entitycore/queries';
+
+import { type Message, JobStatus, MessageType } from '@/services/small-scale-simulator/types';
+import type { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
 import type {
   NeuronLocationArray,
   SimulationExperimentalSetup,
+  TStimulationConfiguration,
   SynapseConfigurationArray,
   TOverviewConfiguration,
   TSimulationType,
-  TStimulationConfiguration,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
-import { readNdjsonResponse } from '@/utils/response';
+import type {
+  SimulationStreamData,
+  SingleNeuronModelSimulationConfig,
+} from '@/types/small-scale-simulator/single-neuron';
+import type {
+  ISingleNeuronSimulation,
+  ISingleNeuronSynaptomeSimulation,
+} from '@/api/entitycore/types';
+
+import { config } from '@/config';
 
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
 
 export const createSingleNeuronSimulationAtom = atom(
   null,
   async (
-    _get,
-    _set,
+    get,
+    set,
     name: string,
     description: string,
     modelId: string,
@@ -340,9 +343,7 @@ export const launchSimulationAtom = atom<
             });
           })
           .with({ message_type: MessageType.STATUS, status: JobStatus.DONE }, async () => {
-            set(simulationStatusAtom, {
-              status: SimulationStatus.EXECUTED,
-            });
+            set(simulationStatusAtom, { status: SimulationStatus.EXECUTED });
             notify.success({
               message: `Simulation ${overviewConfiguration.name}`,
               description: messages.ExecutionSimulationSucceed,
@@ -451,7 +452,7 @@ export const launchSimulationAtom = atom<
         unit: streamData.unit,
       };
       const currentPlotData = get(plotDataAtom);
-      const currentRecording = currentPlotData?.[streamData.recording];
+      const currentRecording = currentPlotData![streamData.recording];
 
       if (currentRecording) {
         const key = makeKey(newPlot);

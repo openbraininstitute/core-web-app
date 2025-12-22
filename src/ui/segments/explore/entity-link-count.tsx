@@ -1,27 +1,29 @@
-import { map } from 'es-toolkit/compat';
-import { useAtomValue } from 'jotai';
-import { unwrap } from 'jotai/utils';
 import { useSearchParams } from 'next/navigation';
-import { useMemo } from 'react';
+import { map } from 'es-toolkit/compat';
+import { unwrap } from 'jotai/utils';
+import { useAtomValue } from 'jotai';
 import { match } from 'ts-pattern';
+import { useMemo } from 'react';
+
+import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { BrowseLink } from '@/ui/segments/explore/browse-link';
 import { useTabs } from '@/components/detail-view-tabs';
-import type { TWorkspaceScope } from '@/constants';
-import { WorkspaceScope } from '@/constants';
+import { useFlags } from '@/features/feature-flags';
 import {
   brainRegionBasicCellGroupsRegionsHierarchyAtom,
   useGetSelectedBrainRegion,
 } from '@/features/brain-region-hierarchy/context';
-import { useFlags } from '@/features/feature-flags';
 import { useLoadableValue } from '@/hooks/hooks';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
-import { BrowseLink } from '@/ui/segments/explore/browse-link';
+import { WorkspaceScope } from '@/constants';
 import {
   ExperimentalEntitiesTileTypes,
   ModelEntitiesTileTypes,
   SimulationEntitiesTileTypes,
 } from '@/ui/segments/explore/helpers';
 import { cn } from '@/utils/css-class';
+
+import { type TWorkspaceScope } from '@/constants';
 
 export const ExploreDataTypeTabs = {
   Experimental: 'experimental',

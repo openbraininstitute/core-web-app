@@ -3,9 +3,10 @@
 import { useState } from 'react';
 
 import Menu from '@/components/LandingPage/layout/Menu';
-import styles from '@/ui/segments/sfn-2025/landing-page.module.css';
 import { cn } from '@/utils/css-class';
 import { useScrollHasStarted } from '@/utils/scroll-has-started';
+
+import styles from '@/ui/segments/sfn-2025/landing-page.module.css';
 
 export default function HeaderSFN2025() {
   const scrollHasStarted = useScrollHasStarted();

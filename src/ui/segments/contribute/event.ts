@@ -1,7 +1,9 @@
-import noop from 'es-toolkit/compat/noop';
 import { useEffect } from 'react';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import noop from 'es-toolkit/compat/noop';
+
 import { isBrowser } from '@/utils/environment';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 export type TSelectedContributionType = {
   display: boolean;
@@ -36,9 +38,7 @@ export const ContributionClickEventListener = (
         cb(event);
       }
     };
-    window.addEventListener(SelectContributionEntityClickEvent, handler, {
-      signal,
-    });
+    window.addEventListener(SelectContributionEntityClickEvent, handler, { signal });
 
     return () => abortController.abort();
   }

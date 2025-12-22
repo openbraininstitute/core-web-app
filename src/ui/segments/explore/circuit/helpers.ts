@@ -1,9 +1,10 @@
+import { atomWithReset } from 'jotai/utils';
 import { keyBy } from 'es-toolkit/compat';
 import { atom } from 'jotai';
-import { atomWithReset } from 'jotai/utils';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+
 import type { HierarchyNode, HierarchyTreeResponse } from '@/api/entitycore/types/shared/hierarchy';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export const CircuitRepresentationView = {
   Flat: 'flat',
@@ -43,7 +44,7 @@ export function getAllCircuitIds(tree: HierarchyTreeResponse): string[] {
  * @param node The node whose descendants you want to count.
  * @returns Total number of descendant sub_circuits.
  */
-export type ICircuitEnriched = ICircuit & { sub_circuits: ICircuitEnriched[] };
+export type ICircuitEnriched = ICircuit & { sub_circuits: Array<ICircuitEnriched> };
 
 export function countDeepSubCircuits(node: ICircuitEnriched): number {
   if (!node.sub_circuits || node.sub_circuits.length === 0) {

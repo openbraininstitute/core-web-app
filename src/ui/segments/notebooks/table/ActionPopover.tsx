@@ -1,16 +1,18 @@
 'use client';
 
-import { LoadingOutlined, PlayCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { Modal } from 'antd';
-import { Popover } from 'antd/lib';
 import { useState } from 'react';
-import type { INotebook } from '@/api/entitycore/types/entities/notebook';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { LoadingOutlined, PlayCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import { Popover } from 'antd/lib';
+
 import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
 import { EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
-import { useAppNotification } from '@/components/notification';
+import { INotebook } from '@/api/entitycore/types/entities/notebook';
+
 import { downloadArchive } from '@/services/entity-download';
-import { type NotebookStartResponse, startNotebook } from '@/services/notebooks';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { useAppNotification } from '@/components/notification';
+import { NotebookStartResponse, startNotebook } from '@/services/notebooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 interface ActionPopoverProps {

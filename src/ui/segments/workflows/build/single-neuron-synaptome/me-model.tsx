@@ -1,19 +1,22 @@
 'use client';
 
-import isNil from 'es-toolkit/compat/isNil';
-import kebabCase from 'es-toolkit/compat/kebabCase';
-import { motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
-import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { config } from '@/config';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
-import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
+import { motion } from 'motion/react';
+
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import isNil from 'es-toolkit/compat/isNil';
+
 import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
+import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
+import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { config } from '@/config';
 import { cn } from '@/utils/css-class';
+
+import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
 
 type Props = {
   sessionId: string;

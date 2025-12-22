@@ -3,9 +3,9 @@ import { z } from 'zod';
 import {
   BaseSetupSchema,
   ContributionArraySchema,
-  createFileSchema,
-  LicenseIdSchema,
   SubjectIdSchema,
+  LicenseIdSchema,
+  createFileSchema,
 } from '@/ui/segments/contribute/shared/schemas';
 
 export const MTypeClassIdSchema = z

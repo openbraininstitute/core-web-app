@@ -1,28 +1,29 @@
 'use client';
 
-import { LoadingOutlined } from '@ant-design/icons';
-import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
-import type { StripeElementsOptions } from '@stripe/stripe-js';
+import { PaymentElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js';
 import { useQueries, useQueryClient } from '@tanstack/react-query';
-import { Spin } from 'antd';
-import { isObject } from 'es-toolkit/compat';
+import { StripeElementsOptions } from '@stripe/stripe-js';
+import { LoadingOutlined } from '@ant-design/icons';
 import { useState, useTransition } from 'react';
+import { isObject } from 'es-toolkit/compat';
 import { match, P } from 'ts-pattern';
-import { tryCatch } from '@/api/utils';
+import { Spin } from 'antd';
+
 import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
-import { CoinsIcon } from '@/components/icons/buttons';
-import { useAppNotification } from '@/components/notification';
-import { getStripe } from '@/components/VirtualLab/Billing/utils';
-import { Button, Button as UiButton } from '@/ui/molecules/button';
-import { Input } from '@/ui/molecules/input';
 import { CONVERSION_RATE } from '@/ui/segments/virtual-lab-settings/elements/helpers';
+import { keyBuilder as externalKeyBuilder } from '@/ui/use-query-keys/third-parties';
 import {
   PurchaseModeDictionary,
   type TPurchaseModeDictionary,
 } from '@/ui/segments/virtual-lab-settings/elements/payment-mode-selection';
-import { keyBuilder as externalKeyBuilder } from '@/ui/use-query-keys/third-parties';
+import { Button, Button as UiButton } from '@/ui/molecules/button';
+import { getStripe } from '@/components/VirtualLab/Billing/utils';
+import { useAppNotification } from '@/components/notification';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { CoinsIcon } from '@/components/icons/buttons';
+import { Input } from '@/ui/molecules/input';
 import { cn } from '@/utils/css-class';
+import { tryCatch } from '@/api/utils';
 
 export const PaymentMode = {
   SetCredits: {
@@ -238,9 +239,7 @@ function PaymentForm({
           placement: 'topRight',
           key: 'credits-purchase-success',
         });
-        await queryClient.invalidateQueries({
-          queryKey: keyBuilder.accounting({ virtualLabId }),
-        });
+        await queryClient.invalidateQueries({ queryKey: keyBuilder.accounting({ virtualLabId }) });
         onCancel();
       }
 

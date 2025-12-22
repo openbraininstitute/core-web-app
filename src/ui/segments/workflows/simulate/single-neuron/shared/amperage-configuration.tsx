@@ -1,24 +1,13 @@
-import { Form, InputNumber, Switch } from 'antd';
+import { useEffect, useMemo, useCallback } from 'react';
+import { InputNumber, Switch, Form } from 'antd';
+import { useAtom, useAtomValue } from 'jotai';
 import isEqual from 'es-toolkit/compat/isEqual';
 import isNil from 'es-toolkit/compat/isNil';
-import { useAtom, useAtomValue } from 'jotai';
-import { useCallback, useEffect, useMemo } from 'react';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+
+import { StimuliPreviewPlot } from '@/ui/segments/workflows/simulate/single-neuron/shared/stimuli-preview-plot';
+import { AmperageBaseSchema } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/molecules/tooltip';
-import {
-  AMPERAGE_CONFIGURATION_SESSION_KEY,
-  DEFAULT_STIMULUS_CONFIG,
-  PROTOCOL_DETAILS,
-  STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
-  SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import {
-  AmperageStateAtomFamily,
-  SimulationStatus,
-  StimulationConfigurationAtomFamily,
-  SynaptomeConfigurationAtomFamily,
-  simulationStatusAtomFamily,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import {
   calculateRangeOutput,
   createZodValidator,
@@ -26,15 +15,28 @@ import {
   label,
   MAX_AMPERAGE_STEPS,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
-import { StimuliPreviewPlot } from '@/ui/segments/workflows/simulate/single-neuron/shared/stimuli-preview-plot';
+import {
+  DEFAULT_STIMULUS_CONFIG,
+  STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
+  SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
+  AMPERAGE_CONFIGURATION_SESSION_KEY,
+  PROTOCOL_DETAILS,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import {
+  StimulationConfigurationAtomFamily,
+  SynaptomeConfigurationAtomFamily,
+  AmperageStateAtomFamily,
+  simulationStatusAtomFamily,
+  SimulationStatus,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import { cn } from '@/utils/css-class';
+import { log } from '@/utils/logger';
+
 import type {
   AmperageActionType,
   AmperageStateType,
   TStimulusModuleValue,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { AmperageBaseSchema } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { cn } from '@/utils/css-class';
-import { log } from '@/utils/logger';
 
 type Props = {
   sessionId: string;

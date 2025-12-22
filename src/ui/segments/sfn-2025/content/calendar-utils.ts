@@ -10,11 +10,11 @@ export function generateICalendar(item: AgendaItem): void {
   const startDate = new Date(`2024-11-02 ${startTime}:00`);
   const endDate = new Date(`2024-11-02 ${endTime}:00`);
 
-  const dtStamp = `${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`;
-  const dtStart = `${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z`;
-  const dtEnd = `${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z`;
+  const dtStamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  const dtStart = startDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  const dtEnd = endDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
 
-  const summary = `${item.title} - Open Brain Institute @ SFN 2025`;
+  const summary = item.title + ' - Open Brain Institute @ SFN 2025';
   const description =
     item.agendaText || `${item.subtitle} at SFN 2025. Open Brain Platform booth #3631.`;
   const location = 'San Diego Convention Center, booth #3631';
