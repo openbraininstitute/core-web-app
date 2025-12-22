@@ -1,4 +1,4 @@
-import { getGalleryContent } from '@/services/sanity/content/gallery';
+import { getGalleryContent } from '@/api/sanity/gallery/route';
 import GalleryPage from '@/ui/segments/gallery';
 
 export const dynamic = 'force-dynamic';
