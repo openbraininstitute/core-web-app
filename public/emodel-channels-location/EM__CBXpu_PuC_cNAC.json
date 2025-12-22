@@ -1,39 +1,49 @@
 {
-  "axonal": ["Leak", "Kv1_1", "Nav1_6", "Kv3_4", "Cav2_1", "Cav3_1", "cdp5_CAM"],
-  "somatic": [
-    "Leak",
-    "Nav1_6",
-    "Kv1_1",
-    "Kv1_5",
-    "Kv3_4",
-    "Kir2_3",
-    "Cav2_1",
-    "Cav3_1",
-    "Cav3_2",
-    "Cav3_3",
-    "Kca1_1",
-    "Kca2_2",
-    "Kca3_1",
-    "HCN1_PC",
-    "cdp5_CAM"
-  ],
-  "myelinated": ["pas"],
-  "basal": [
-    "Kv1_1",
-    "Kv1_5",
-    "Kir2_3",
-    "Kca3_1",
-    "Cav3_1",
-    "Cav3_2",
-    "Nav1_6",
-    "Leak",
-    "Kv3_3",
-    "Kv4_3",
-    "Kca1_1",
-    "Cav2_1",
-    "Cav3_3",
-    "HCN1_PC",
-    "Kca2_2",
-    "cdp5_CAM"
-  ]
+    "axonal": [
+        "Leak",
+        "Kv1_1",
+        "Nav1_6",
+        "Kv3_4",
+        "Cav2_1",
+        "Cav3_1",
+        "cdp5_CAM"
+    ],
+    "somatic": [
+        "Leak",
+        "Nav1_6",
+        "Kv1_1",
+        "Kv1_5",
+        "Kv3_4",
+        "Kir2_3",
+        "Cav2_1",
+        "Cav3_1",
+        "Cav3_2",
+        "Cav3_3",
+        "Kca1_1",
+        "Kca2_2",
+        "Kca3_1",
+        "HCN1_PC",
+        "cdp5_CAM"
+    ],
+    "myelinated": [
+        "pas"
+    ],
+    "basal": [
+        "Kv1_1",
+        "Kv1_5",
+        "Kir2_3",
+        "Kca3_1",
+        "Cav3_1",
+        "Cav3_2",
+        "Nav1_6",
+        "Leak",
+        "Kv3_3",
+        "Kv4_3",
+        "Kca1_1",
+        "Cav2_1",
+        "Cav3_3",
+        "HCN1_PC",
+        "Kca2_2",
+        "cdp5_CAM"
+    ]
 }

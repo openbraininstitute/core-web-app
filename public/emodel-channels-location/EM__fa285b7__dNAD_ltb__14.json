@@ -1,7 +1,29 @@
 {
-  "all": ["pas"],
-  "somatic": ["TC_cad", "TC_ih_Bud97", "TC_Nap_Et2", "TC_iA", "TC_iL", "SK_E2", "TC_HH"],
-  "axonal": ["TC_HH"],
-  "alldend": ["TC_cad", "TC_ih_Bud97", "TC_Nap_Et2", "TC_iA", "TC_iL", "SK_E2", "TC_HH"],
-  "somadend": ["TC_iT_Des98"]
+    "all": [
+        "pas"
+    ],
+    "somatic": [
+        "TC_cad",
+        "TC_ih_Bud97",
+        "TC_Nap_Et2",
+        "TC_iA",
+        "TC_iL",
+        "SK_E2",
+        "TC_HH"
+    ],
+    "axonal": [
+        "TC_HH"
+    ],
+    "alldend": [
+        "TC_cad",
+        "TC_ih_Bud97",
+        "TC_Nap_Et2",
+        "TC_iA",
+        "TC_iL",
+        "SK_E2",
+        "TC_HH"
+    ],
+    "somadend": [
+        "TC_iT_Des98"
+    ]
 }

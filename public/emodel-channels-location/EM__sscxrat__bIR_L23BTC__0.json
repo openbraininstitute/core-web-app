@@ -1,6 +1,21 @@
 {
-  "all": ["pas"],
-  "allact": ["CaDynamics_DC0", "Ca_HVA2", "Ca_LVAst", "SK_E2", "StochKv3"],
-  "somaxon": ["NaTg", "SKv3_1", "K_Pst", "K_Tst"],
-  "somadend": ["Ih"]
+    "all": [
+        "pas"
+    ],
+    "allact": [
+        "CaDynamics_DC0",
+        "Ca_HVA2",
+        "Ca_LVAst",
+        "SK_E2",
+        "StochKv3"
+    ],
+    "somaxon": [
+        "NaTg",
+        "SKv3_1",
+        "K_Pst",
+        "K_Tst"
+    ],
+    "somadend": [
+        "Ih"
+    ]
 }
