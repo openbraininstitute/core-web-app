@@ -12,12 +12,18 @@ on:
       - develop
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  install_packages:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -31,60 +37,19 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install
-
-      # Cache pnpm store for use in subsequent jobs
-      - name: Cache pnpm store
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.pnpm-store
-            node_modules
-            */*/node_modules
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
-
-  lint:
-    needs: install_packages
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Set-up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: "pnpm"
-
-      # Restore cached dependencies
-      - name: Restore pnpm cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.pnpm-store
-            node_modules
-            */*/node_modules
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
+        run: pnpm install --frozen-lockfile
 
       - name: Run linter
         run: pnpm run ci
         continue-on-error: true
 
   build:
-    needs: install_packages
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -97,17 +62,8 @@ jobs:
           node-version: 24
           cache: "pnpm"
 
-      # Restore cached dependencies
-      - name: Restore pnpm cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.pnpm-store
-            node_modules
-            */*/node_modules
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Build app
         run: pnpm run build
