@@ -1,6 +1,8 @@
+import React from 'react';
+
 import SanityContentRTF from '../../components/SanityContentRTF';
 import { useSanityContentRTF } from '../../content/content';
-import type { EnumSection } from '../sections';
+import { EnumSection } from '../sections';
 
 interface GenericSectionProps {
   section: EnumSection;

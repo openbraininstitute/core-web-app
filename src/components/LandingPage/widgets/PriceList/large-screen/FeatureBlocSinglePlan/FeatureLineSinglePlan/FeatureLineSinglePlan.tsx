@@ -1,9 +1,10 @@
-import type {
+import FeatureCell from './FeatureCellSinglePlan/FeatureCellSinglePlan';
+
+import {
   ContentForPricingFeatureItem,
   ContentForPricingPlan,
 } from '@/components/LandingPage/content/pricing';
 import { classNames } from '@/util/utils';
-import FeatureCell from './FeatureCellSinglePlan/FeatureCellSinglePlan';
 
 import styles from './FeatureLineSinglePlan.module.css';
 

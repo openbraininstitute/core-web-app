@@ -1,9 +1,10 @@
 /* eslint-disable no-param-reassign */
-import type { PortableTextBlock } from 'next-sanity';
-import { useSanity } from '@/services/sanity/hooks';
-import { isNumber } from '@/util/type-guards';
+import { PortableTextBlock } from 'next-sanity';
 import { tryType, typeImage } from './_common';
-import { type ContentForRichText, typeBooleanOrNull, typeStringOrNull } from './types';
+import { ContentForRichText, typeBooleanOrNull, typeStringOrNull } from './types';
+
+import { useSanity } from '@/services/sanity';
+import { isNumber } from '@/util/type-guards';
 
 export interface ContentForNewsItem {
   id: string;

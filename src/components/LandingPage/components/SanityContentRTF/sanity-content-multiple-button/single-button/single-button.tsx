@@ -1,7 +1,9 @@
+import React from 'react';
 import Link from 'next/link';
-import { IconDownloadFile } from '@/components/LandingPage/icons/IconDownloadFile';
-import { classNames } from '@/util/utils';
+
 import ProgressiveImage from '../../../ProgressiveImage';
+import { classNames } from '@/util/utils';
+import { IconDownloadFile } from '@/components/LandingPage/icons/IconDownloadFile';
 
 import styles from './single-button.module.css';
 

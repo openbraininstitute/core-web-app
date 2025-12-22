@@ -11,11 +11,11 @@
 }
 
 a.error {
-  display: inline-block;
+  display: inline-block !important;
   border-radius: 99vmax;
   padding: 0 1em;
-  background-color: #e30;
-  color: #fff;
+  background-color: #e30 !important;
+  color: #fff !important;
   font-weight: bold;
 }
 

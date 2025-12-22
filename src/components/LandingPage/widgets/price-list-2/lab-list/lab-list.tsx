@@ -1,9 +1,6 @@
-import type React from 'react';
+import React from 'react';
 
-import type {
-  ContentForPriceList2LabBlocSectionPlanItem,
-  ContentForPriceList2LabItem,
-} from '../hooks';
+import { ContentForPriceList2LabBlocSectionPlanItem, ContentForPriceList2LabItem } from '../hooks';
 import SectionTitle from '../section-title';
 
 import styles from './lab-list.module.css';

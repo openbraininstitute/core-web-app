@@ -1,9 +1,13 @@
-import { classNames } from '@/util/utils';
+/* eslint-disable react/no-array-index-key */
+import React from 'react';
+
 import { styleBlockMedium } from '../../styles';
-import styles from './CompanyMembers.module.css';
+import { Group } from './types';
 import { useMembersBlocs } from './hook';
 import TeamMember from './TeamMember';
-import type { Group } from './types';
+import { classNames } from '@/util/utils';
+
+import styles from './CompanyMembers.module.css';
 
 interface WidgetCompanyMembersProps {
   className?: string;

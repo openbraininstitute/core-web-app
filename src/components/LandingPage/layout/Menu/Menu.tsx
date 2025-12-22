@@ -1,18 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
-import { classNames } from '@/util/utils';
 import { ID_MENU } from '../../constants';
 import { IconChevronRight } from '../../icons/IconChevronRight';
 import { IconMenu } from '../../icons/IconMenu';
 import { EnumSection } from '../../sections/sections';
-import styles from './Menu.module.css';
 import PopupMenu from './PopupMenu/PopupMenu';
+
+import { classNames } from '@/util/utils';
+import styles from './Menu.module.css';
 
 interface MenuProps {
   className?: string;
+  scrollHasStarted: boolean;
   section?: EnumSection;
 }
 
@@ -30,11 +32,7 @@ const MENU_ITEMS: MenuItem[] = [
     index: EnumSection.About,
     submenu: [
       { caption: 'About OBI', slug: '/about', index: EnumSection.About },
-      {
-        caption: 'Our story',
-        slug: '/the-real-digital-brain-story',
-        index: EnumSection.Story,
-      },
+      { caption: 'Our story', slug: '/the-real-digital-brain-story', index: EnumSection.Story },
       { caption: 'Mission', slug: '/mission', index: EnumSection.Mission },
       { caption: 'Team', slug: '/team', index: EnumSection.Team },
     ],
@@ -65,26 +63,11 @@ const MENU_ITEMS: MenuItem[] = [
   },
 ];
 
-function useScrollHasStarted() {
-  const [scrollHasStarted, setScrollHasStarted] = useState(false);
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollHasStarted(window.scrollY > 0);
-    };
-    handleScroll();
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-  return scrollHasStarted;
-}
-
-export default function Menu({ className, section }: MenuProps) {
-  const [showMenu, setShowMenu] = useState(false);
-  const [showMenuComponent, setShowMenuComponent] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+export default function Menu({ className, scrollHasStarted, section }: MenuProps) {
+  const [showMenu, setShowMenu] = React.useState(false);
+  const [showMenuComponent, setShowMenuComponent] = React.useState(true);
+  const [lastScrollY, setLastScrollY] = React.useState(0);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-
-  const scrollHasStarted = useScrollHasStarted();
 
   // Check if current section is in a submenu, and return the parent item if so
   const getParentItemForSection = (currentSection?: EnumSection): MenuItem | null => {
@@ -101,7 +84,7 @@ export default function Menu({ className, section }: MenuProps) {
 
   const parentItem = getParentItemForSection(section);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
 

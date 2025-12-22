@@ -21,11 +21,11 @@
 }
 
 .planHeader ul > li::marker {
-  content: "+";
+  content: '+';
 }
 
 .pill {
-  content: "Launch";
+  content: 'Launch';
   color: var(--color-primary);
   font-size: var(--font-size-S);
   height: 1.5em;

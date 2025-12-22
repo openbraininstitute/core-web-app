@@ -1,7 +1,9 @@
-import type { ContentForRichTextImage } from '@/components/LandingPage/content';
-import { styleBlockMedium } from '@/components/LandingPage/styles';
-import { classNames } from '@/util/utils';
+import React from 'react';
+
 import ProgressiveImage from '../../ProgressiveImage';
+import { classNames } from '@/util/utils';
+import { ContentForRichTextImage } from '@/components/LandingPage/content';
+import { styleBlockMedium } from '@/components/LandingPage/styles';
 
 import styles from './sanity-content-image.module.css';
 
@@ -16,11 +18,18 @@ export default function iSanityContentImage({ className, value }: SanityContentI
   if (!image) return null;
 
   return (
-    <div
-      className={classNames(className, styles.sanityContentImage, styleBlockMedium)}
-      style={{ '--custom-aspect-ratio': image.width / image.height }}
-    >
-      <ProgressiveImage src={image.url} width={image.width} height={image.height} alt={value.alt} />
-    </div>
+    <>
+      <div
+        className={classNames(className, styles.sanityContentImage, styleBlockMedium)}
+        style={{ '--custom-aspect-ratio': image.width / image.height }}
+      >
+        <ProgressiveImage
+          src={image.url}
+          width={image.width}
+          height={image.height}
+          alt={value.alt}
+        />
+      </div>
+    </>
   );
 }

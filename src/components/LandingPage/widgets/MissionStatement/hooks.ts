@@ -1,5 +1,5 @@
-import { useSanity } from '@/services/sanity/hooks';
-import { type RichText, tryType, typeImage } from '../../content/_common';
+import { RichText, tryType, typeImage } from '../../content/_common';
+import { useSanity } from '@/services/sanity';
 
 interface ContentForOurMissionDownload {
   title: string;

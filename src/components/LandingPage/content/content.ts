@@ -1,10 +1,9 @@
 /* eslint-disable no-console */
-
-import { useSanity } from '@/services/sanity/hooks';
-import type { EnumSection } from '../sections/sections';
+import { EnumSection } from '../sections/sections';
 import { getSection } from '../utils';
+import { ContentForRichText, isContentForRichText } from './types';
 import queryContentRTF from './content.groq';
-import { type ContentForRichText, isContentForRichText } from './types';
+import { useSanity } from '@/services/sanity';
 
 export function useSanityContentRTF(sectionIndex: EnumSection): ContentForRichText {
   const section = getSection(sectionIndex);

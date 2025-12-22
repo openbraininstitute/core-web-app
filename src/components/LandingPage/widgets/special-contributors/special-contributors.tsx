@@ -1,7 +1,9 @@
-import { classNames } from '@/util/utils';
+import React from 'react';
+
 import { styleBlockFullWidthPadded } from '../../styles';
 import Card from './card';
 import { useSanityContentForSpecialContributors } from './hooks';
+import { classNames } from '@/util/utils';
 
 import styles from './special-contributors.module.css';
 

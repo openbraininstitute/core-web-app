@@ -1,5 +1,5 @@
-import { useSanity } from '@/services/sanity/hooks';
 import { tryType } from './_common';
+import { useSanity } from '@/services/sanity';
 
 interface ContentForEMail {
   label: string;

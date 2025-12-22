@@ -1,8 +1,10 @@
-import { PortableText, type PortableTextReactComponents } from 'next-sanity';
-import { isString } from '@/util/type-guards';
-import { classNames } from '@/util/utils';
-import type { RichText } from '../../content/_common';
+import React from 'react';
+import { PortableText, PortableTextReactComponents } from 'next-sanity';
+
+import { RichText } from '../../content/_common';
 import Spacer from './spacer';
+import { classNames } from '@/util/utils';
+import { isString } from '@/util/type-guards';
 
 import styles from './Text.module.css';
 

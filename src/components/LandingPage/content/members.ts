@@ -1,5 +1,5 @@
-import { useSanity } from '@/services/sanity/hooks';
 import { tryType, typeImage } from './_common';
+import { useSanity } from '@/services/sanity';
 
 export interface ContentForMember {
   firstName: string;

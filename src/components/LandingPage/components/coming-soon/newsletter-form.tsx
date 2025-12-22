@@ -2,14 +2,15 @@
 
 'use client';
 
-import { Alert, Button, Checkbox, ConfigProvider, Form, Result } from 'antd';
-import delay from 'es-toolkit/compat/delay';
-import Link from 'next/link';
-import { type HTMLProps, useState } from 'react';
+import { HTMLProps, useState } from 'react';
+import { Form, Button, ConfigProvider, Checkbox, Result, Alert } from 'antd';
 import { z } from 'zod';
-import subscribeNewsletterHandler from '@/api/mailchimp/subscribe-newsletter';
-import { Input } from '@/components/inputs/input-outline';
+import Link from 'next/link';
+import delay from 'es-toolkit/compat/delay';
+
 import { classNames } from '@/util/utils';
+import { Input } from '@/components/inputs/input-outline';
+import subscribeNewsletterHandler from '@/api/mailchimp/subscribe-newsletter';
 
 type TNewsletterForm = {
   email: string;
@@ -56,7 +57,7 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
         });
         setStatus('success');
       }
-    } catch (_error) {
+    } catch (error) {
       setStatus('error');
       delay(() => setStatus(null), 6000);
     } finally {
@@ -117,13 +118,7 @@ export default function NewsletterForm({ cls, position = 'page' }: Props) {
                   Email
                 </span>
               }
-              rules={[
-                {
-                  required: true,
-                  message: 'Please enter your email',
-                  type: 'email',
-                },
-              ]}
+              rules={[{ required: true, message: 'Please enter your email', type: 'email' }]}
             >
               <Input
                 placeholder="Enter your email address"

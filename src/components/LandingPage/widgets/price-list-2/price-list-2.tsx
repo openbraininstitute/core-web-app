@@ -1,10 +1,13 @@
-import { classNames } from '@/util/utils';
+import React from 'react';
+
 import { styleBlockLarge } from '../../styles';
+import LabList from './lab-list';
 import GeneralList from './general-list';
 import { useSanityContentForPriceList2 } from './hooks';
-import LabList from './lab-list';
-import styles from './price-list-2.module.css';
 import SectionTitle from './section-title';
+import { classNames } from '@/util/utils';
+
+import styles from './price-list-2.module.css';
 
 interface WidgetPriceList2Props {
   className?: string;

@@ -35,7 +35,7 @@
 }
 
 .smallScreen > header > button::after {
-  content: "";
+  content: '';
   width: 2em;
   height: 0.25em;
   border-radius: 99vmax;

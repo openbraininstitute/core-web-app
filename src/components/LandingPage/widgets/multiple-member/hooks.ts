@@ -1,6 +1,6 @@
-import { useSanity } from '@/services/sanity/hooks';
+import { RichText, tryType } from '../../content/_common';
 import { typeImage } from '../../content';
-import { type RichText, tryType } from '../../content/_common';
+import { useSanity } from '@/services/sanity';
 
 export function useSanityContentForMultipleMember() {
   return (

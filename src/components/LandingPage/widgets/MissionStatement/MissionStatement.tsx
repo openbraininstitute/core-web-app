@@ -1,8 +1,10 @@
-import { IconDownloadFile } from '@/components/LandingPage/icons/IconDownloadFile';
-import { classNames } from '@/util/utils';
-import ProgressiveImage from '../../components/ProgressiveImage';
+import React from 'react';
+
 import { styleBlockSmall } from '../../styles';
+import ProgressiveImage from '../../components/ProgressiveImage';
 import { useSanityContentForOurMissionDownload } from './hooks';
+import { classNames } from '@/util/utils';
+import { IconDownloadFile } from '@/components/LandingPage/icons/IconDownloadFile';
 
 import styles from './MissionStatement.module.css';
 

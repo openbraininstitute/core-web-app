@@ -1,6 +1,8 @@
-import { classNames } from '@/util/utils';
+import React from 'react';
+
 import ProgressiveImage from '../ProgressiveImage';
 import { useSanityContentForSocialMediaLinks } from './hooks';
+import { classNames } from '@/util/utils';
 
 import styles from './social-media-links.module.css';
 

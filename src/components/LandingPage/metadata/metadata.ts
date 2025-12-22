@@ -1,9 +1,10 @@
-import type { Metadata } from 'next';
+import { Metadata } from 'next';
+
+import { tryType, typeStringOrNull } from '../content';
+import queryTemplate from './metadata.groq';
+import { DEFAULT_METADATA } from './default';
 import { fetchSanity } from '@/services/sanity';
 import { logError } from '@/util/logger';
-import { tryType, typeStringOrNull } from '../content';
-import { DEFAULT_METADATA } from './default';
-import queryTemplate from './metadata.groq';
 
 export async function generateMetadataFromSanity(slug: string): Promise<Metadata> {
   const query = queryTemplate.replace('{{SLUG}}', slug);

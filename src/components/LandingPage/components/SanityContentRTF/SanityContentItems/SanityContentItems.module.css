@@ -3,7 +3,7 @@ ul.sanityContentItems {
 }
 
 ul.sanityContentItems > li {
-  list-style-type: "⎯";
+  list-style-type: '⎯';
   padding-inline-start: 1ch;
   margin-bottom: 1em;
   clear: both;

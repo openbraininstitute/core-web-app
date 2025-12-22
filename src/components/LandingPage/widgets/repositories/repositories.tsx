@@ -1,8 +1,11 @@
-import { classNames } from '@/util/utils';
+import React from 'react';
+
 import { styleBlockFullWidthPadded } from '../../styles';
 import { useSanityContentForRepositories } from './hooks';
-import styles from './repositories.module.css';
 import RepositoryCard from './repository-card';
+import { classNames } from '@/util/utils';
+
+import styles from './repositories.module.css';
 
 interface WidgetRepositoriesProps {
   className?: string;

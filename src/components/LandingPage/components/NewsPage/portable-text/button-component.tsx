@@ -1,6 +1,7 @@
-import Image from 'next/image';
 import Link from 'next/link';
-import type { ButtonBlockValue } from '../NewsPage';
+
+import Image from 'next/image';
+import { ButtonBlockValue } from '../NewsPage';
 
 export default function ButtonComponent({ value }: { value: ButtonBlockValue }) {
   const link = value.buttonType === 'file' ? value.file : value.link;

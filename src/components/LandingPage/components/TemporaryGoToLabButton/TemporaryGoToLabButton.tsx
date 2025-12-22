@@ -1,8 +1,10 @@
+import React from 'react';
 import Link from 'next/link';
-import { classNames } from '@/util/utils';
-import { styleBlockSmall } from '../../styles';
+
 import ProgressiveImage from '../ProgressiveImage';
+import { styleBlockSmall } from '../../styles';
 import BackgroundURL from './background.jpg';
+import { classNames } from '@/util/utils';
 
 import styles from './TemporaryGoToLabButton.module.css';
 

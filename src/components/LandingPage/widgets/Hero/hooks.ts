@@ -1,5 +1,5 @@
-import { useSanity } from '@/services/sanity/hooks';
-import { type RichText, tryType } from '../../content/_common';
+import { RichText, tryType } from '../../content/_common';
+import { useSanity } from '@/services/sanity';
 
 export function useContentForHero() {
   const query = `*[_type=="heroContent"][0]

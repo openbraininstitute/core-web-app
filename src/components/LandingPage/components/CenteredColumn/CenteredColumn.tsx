@@ -1,6 +1,7 @@
-import type React from 'react';
-import { classNames } from '@/util/utils';
+import React from 'react';
+
 import { styleBlockFullWidth } from '../../styles';
+import { classNames } from '@/util/utils';
 
 import styles from './CenteredColumn.module.css';
 

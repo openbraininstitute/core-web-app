@@ -1,7 +1,7 @@
 import React from 'react';
 
-import { type ContentForMember, useSanityContentForMembers } from '../../content';
-import type { Group } from './types';
+import { ContentForMember, useSanityContentForMembers } from '../../content';
+import { Group } from './types';
 
 export function useMembersBlocs(group: Group) {
   const [data, setData] = React.useState<{

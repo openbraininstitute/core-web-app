@@ -1,11 +1,11 @@
 /* eslint-disable jsx-a11y/control-has-associated-label */
 /* eslint-disable jsx-a11y/alt-text */
 /* eslint-disable @next/next/no-img-element */
-
-import Link from 'next/link';
 import React from 'react';
-import { logError } from '@/util/logger';
+import Link from 'next/link';
+
 import { classNames } from '@/util/utils';
+import { logError } from '@/util/logger';
 
 import styles from './truncable-image.module.css';
 

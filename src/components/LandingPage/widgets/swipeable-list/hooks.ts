@@ -1,6 +1,6 @@
-import { useSanity } from '@/services/sanity/hooks';
 import { tryType, typeStringOrNull } from '../../content';
 import query from './hooks.groq';
+import { useSanity } from '@/services/sanity';
 
 export function useSanityContentForSwipeableList() {
   return useSanity(query, isContentForSwipeableList);

@@ -1,9 +1,11 @@
-import type {
+import FeatureLineSinglePlan from './FeatureLineSinglePlan';
+
+import {
   ContentForPricingFeatureBloc,
   ContentForPricingPlan,
 } from '@/components/LandingPage/content/pricing';
+
 import styles from './FeatureBlocSinglePlan.module.css';
-import FeatureLineSinglePlan from './FeatureLineSinglePlan';
 
 interface FeatureBlocSinglePlanProps {
   bloc: ContentForPricingFeatureBloc;

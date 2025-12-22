@@ -1,14 +1,17 @@
 /* eslint-disable react/no-array-index-key */
 
 import { useState } from 'react';
+
+import ContactUs from '../../contact-us';
+
 import { useCurrency } from '@/components/LandingPage/atoms';
-import type {
+import {
   ContentForPricingPlan,
   MultiCurrencyPrice,
 } from '@/components/LandingPage/content/pricing';
-import { Switch } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
 import { classNames } from '@/util/utils';
-import ContactUs from '../../contact-us';
+
+import { Switch } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
 
 import styles from './PlanHeader.module.css';
 

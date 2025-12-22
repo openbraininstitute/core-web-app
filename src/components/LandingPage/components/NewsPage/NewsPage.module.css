@@ -17,7 +17,7 @@
 }
 
 header.header {
-  grid-column: 1 / -1;
+  grid-column: 1/-1;
   color: #fffe;
 }
 
@@ -77,7 +77,7 @@ header.header h2 {
 }
 
 .content > h4::after {
-  content: "";
+  content: '';
   display: block;
   width: 40px;
   height: 2px;

@@ -1,10 +1,13 @@
-import { classNames } from '@/util/utils';
-import ProgressiveImage from '../../components/ProgressiveImage';
+import React from 'react';
+
 import { Text } from '../../components/Text';
 import { styleBlockMedium, styleLayout } from '../../styles';
+import ProgressiveImage from '../../components/ProgressiveImage';
 import { gotoSection } from '../../utils';
-import styles from './Hero.module.css';
 import { useContentForHero } from './hooks';
+import { classNames } from '@/util/utils';
+
+import styles from './Hero.module.css';
 
 interface WidgetHeroProps {
   className?: string;

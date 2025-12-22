@@ -1,6 +1,6 @@
-import { useSanity } from '@/services/sanity/hooks';
-import { isString } from '@/util/type-guards';
 import { tryType } from './_common';
+import { useSanity } from '@/services/sanity';
+import { isString } from '@/util/type-guards';
 
 export function useSanityContentForPortalsTitle(): string {
   return (

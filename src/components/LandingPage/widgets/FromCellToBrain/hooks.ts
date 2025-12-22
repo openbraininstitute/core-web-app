@@ -1,9 +1,9 @@
-import { useSanity } from '@/services/sanity/hooks';
 import {
-  type FromCellToBrainCard,
-  type FromCellToBrainColumn,
+  FromCellToBrainCard,
+  FromCellToBrainColumn,
   isContentForFromCellToBrainColumns,
 } from './types';
+import { useSanity } from '@/services/sanity';
 
 export function useSanityContentForFromCelltoBrainContent(): FromCellToBrainColumn[] {
   const data =

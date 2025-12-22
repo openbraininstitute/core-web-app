@@ -1,8 +1,11 @@
-import type { ContentForRichTextMultipleButton } from '@/components/LandingPage/content';
-import { styleBlockMedium } from '@/components/LandingPage/styles';
-import { classNames } from '@/util/utils';
-import styles from './sanity-content-multiple-button.module.css';
+import React from 'react';
+
 import { SingleButton } from './single-button';
+import { classNames } from '@/util/utils';
+import { ContentForRichTextMultipleButton } from '@/components/LandingPage/content';
+import { styleBlockMedium } from '@/components/LandingPage/styles';
+
+import styles from './sanity-content-multiple-button.module.css';
 
 interface SanityContentMultipleButtonProps {
   className?: string;

@@ -1,9 +1,10 @@
 /* eslint-disable react/no-array-index-key */
 import React from 'react';
-import type { ContentForRichTextVideo } from '@/components/LandingPage/content';
-import { styleBlockMedium } from '@/components/LandingPage/styles';
-import { classNames } from '@/util/utils';
+
 import ProgressiveVideo from '../../Video';
+import { classNames } from '@/util/utils';
+import { ContentForRichTextVideo } from '@/components/LandingPage/content';
+import { styleBlockMedium } from '@/components/LandingPage/styles';
 
 import styles from './sanity-content-video.module.css';
 
@@ -54,7 +55,7 @@ export default function SanityContentVideo({ className, value }: SanityContentVi
                   className={styles.step}
                   onClick={() => jumpTo(index)}
                 >
-                  {index === 0 ? label : `${`${index}`.padStart(2, '0')}. ${label}`}
+                  {index === 0 ? label : `${index}`.padStart(2, '0') + '. ' + label}
                 </button>
               )
             )}

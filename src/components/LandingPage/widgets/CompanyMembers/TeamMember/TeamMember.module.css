@@ -13,7 +13,7 @@
 
 .teamMember > div.image {
   position: relative;
-  content: "";
+  content: '';
   background-size: cover;
   background-color: var(--color-primary);
 }

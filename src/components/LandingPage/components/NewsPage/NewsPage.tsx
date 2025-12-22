@@ -1,17 +1,21 @@
 'use client';
 
 import { PortableText } from 'next-sanity';
-import styles from '@/components/LandingPage/components/NewsPage/single-news-page.module.css';
-import { classNames } from '@/util/utils';
-import { useSanityContentForNewsItem } from '../../content';
+
 import LandingPage from '../../LandingPage';
+import { useSanityContentForNewsItem } from '../../content';
 import FooterPanel from '../../layout/FooterPanel';
-import Menu from '../../layout/Menu';
 import { EnumSection } from '../../sections/sections';
+
+import Menu from '../../layout/Menu';
 import HeaderNews from './HeaderNews';
 import ButtonComponent from './portable-text/button-component';
 import ImageFullScreen from './portable-text/image-full-screen';
 import SimpleImage from './portable-text/simple-image';
+
+import { classNames } from '@/util/utils';
+
+import styles from '@/components/LandingPage/components/NewsPage/single-news-page.module.css';
 
 type NewsPageProps = {
   className?: string;

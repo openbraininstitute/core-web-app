@@ -45,7 +45,7 @@
 }
 
 .planHeader ul > li::marker {
-  content: "+";
+  content: '+';
 }
 
 .pill {

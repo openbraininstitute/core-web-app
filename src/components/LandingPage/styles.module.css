@@ -27,9 +27,9 @@ button.squareButton,
 a.squareButton {
   display: inline-block;
   color: var(--color-primary);
-  border: 1px solid currentColor;
+  border: 1px solid currentColor !important;
   line-height: 3;
-  padding: 0.8em 2em;
+  padding: 0.8em 2em !important;
   white-space: nowrap;
   transition: all 0.5s ease-in-out;
 }
@@ -67,7 +67,7 @@ a.roundedButton {
   --colM: calc(0.5 * (var(--M) - var(--S)));
   --colL: calc(0.5 * (var(--L) - var(--M)));
 
-  grid-column: 1 / -1;
+  grid-column: 1/-1;
   padding: 0;
   padding-top: 60px;
   margin: 0;
@@ -79,36 +79,36 @@ a.roundedButton {
 }
 
 .layout .blockFullWidth {
-  grid-column: 1 / -1;
+  grid-column: 1/-1;
 }
 
 .layout .blockFullWidthPadded {
-  grid-column: 2 / -2;
+  grid-column: 2/-2;
 }
 
 .layout .blockSmall {
-  grid-column: 5 / 6;
+  grid-column: 5/6;
   max-width: var(--S);
   margin-left: 30px;
   margin: 20px 0;
 }
 
 .layout .blockSmallExpandRight {
-  grid-column: 5 / -1;
+  grid-column: 5/-1;
   max-width: none;
   margin-bottom: 60px;
 }
 
 .layout .blockMedium {
-  grid-column: 4 / 7;
+  grid-column: 4/7;
   max-width: var(--M);
 }
 
 .layout .blockLarge {
-  grid-column: 3 / 8;
+  grid-column: 3/8;
   max-width: var(--L);
 }
 
 .layout .blockSmallMarginLeft {
-  grid-column: 1 / 5;
+  grid-column: 1/5;
 }

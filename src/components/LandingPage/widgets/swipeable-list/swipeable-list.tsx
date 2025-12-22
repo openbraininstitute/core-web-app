@@ -1,7 +1,11 @@
-import SwipeableCardsList from '../../components/swipeable-cards-list';
+/* eslint-disable no-param-reassign */
+/* eslint-disable react/no-array-index-key */
+import React from 'react';
+
 import Title from '../../components/Title/Title';
-import { styleBlockSmallExpandRight } from '../../styles';
+import SwipeableCardsList from '../../components/swipeable-cards-list';
 import { gotoSection } from '../../utils';
+import { styleBlockSmallExpandRight } from '../../styles';
 import NewsCard from './card';
 import { useSanityContentForSwipeableList } from './hooks';
 

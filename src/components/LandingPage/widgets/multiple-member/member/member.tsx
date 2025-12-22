@@ -1,9 +1,10 @@
 import React from 'react';
-import ProgressiveImage from '@/components/LandingPage/components/ProgressiveImage';
+
+import { ContentForMultipleMemberItem } from '../hooks';
 import { Text } from '@/components/LandingPage/components/Text';
-import { styleButtonHoverable } from '@/components/LandingPage/styles';
 import { classNames } from '@/util/utils';
-import type { ContentForMultipleMemberItem } from '../hooks';
+import ProgressiveImage from '@/components/LandingPage/components/ProgressiveImage';
+import { styleButtonHoverable } from '@/components/LandingPage/styles';
 
 import styles from './member.module.css';
 

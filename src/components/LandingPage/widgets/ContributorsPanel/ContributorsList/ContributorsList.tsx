@@ -1,8 +1,10 @@
 import React, { useEffect, useRef } from 'react';
+
+import { Contributor } from '../data';
+import { classNames } from '@/util/utils';
+
 import CenteredColumn from '@/components/LandingPage/components/CenteredColumn';
 import { styleBlockFullWidthPadded, styleButtonHoverable } from '@/components/LandingPage/styles';
-import { classNames } from '@/util/utils';
-import type { Contributor } from '../data';
 import styles from './ContributorsList.module.css';
 
 interface ContributorsListProps {
@@ -13,7 +15,7 @@ interface ContributorsListProps {
 export default function ContributorsList({ className, list }: ContributorsListProps) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [pagesToDisplay, setPagesToDisplay] = React.useState(1);
-  useEffect(() => setPagesToDisplay(1), []);
+  useEffect(() => setPagesToDisplay(1), [list]);
   const [contributorsPerPage, setContributorsPerPage] = React.useState(6);
   useResizeObserver(ref.current, setContributorsPerPage);
 

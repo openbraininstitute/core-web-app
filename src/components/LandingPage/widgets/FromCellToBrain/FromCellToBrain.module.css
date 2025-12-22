@@ -57,7 +57,7 @@
 }
 
 .description {
-  grid-column: 1 / -1;
+  grid-column: 1/-1;
   font-size: var(--font-size-M);
   place-self: start;
 }

@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+
+import { ContentForRepository } from '../hooks';
+
 import ProgressiveImage from '@/components/LandingPage/components/ProgressiveImage';
 import { IconEye } from '@/components/LandingPage/icons/IconEye';
 import { styleButtonHoverable } from '@/components/LandingPage/styles';
 import { classNames } from '@/util/utils';
-import type { ContentForRepository } from '../hooks';
 
 import styles from './repository-card.module.css';
 

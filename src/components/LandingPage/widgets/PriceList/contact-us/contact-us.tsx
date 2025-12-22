@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type React from 'react';
+import React from 'react';
 
 import { styleButtonSquare } from '@/components/LandingPage/styles';
 import { classNames } from '@/util/utils';

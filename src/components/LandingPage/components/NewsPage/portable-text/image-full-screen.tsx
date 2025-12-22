@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import type { FullScreenImageValue } from '../NewsPage';
+import { FullScreenImageValue } from '../NewsPage';
 
 export default function ImageFullScreen({ value }: { value: FullScreenImageValue }) {
   return (

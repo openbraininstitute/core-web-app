@@ -1,6 +1,6 @@
+import { DEFAULT_SECTION, Section, SECTIONS } from './constants';
+import { EnumSection } from './sections/sections';
 import { isString } from '@/util/type-guards';
-import { DEFAULT_SECTION, SECTIONS, type Section } from './constants';
-import type { EnumSection } from './sections/sections';
 
 export function getSection(slugOrIndex: string | EnumSection): Section {
   return isString(slugOrIndex) ? getSectionFromSlug(slugOrIndex) : getSectionFromIndex(slugOrIndex);
