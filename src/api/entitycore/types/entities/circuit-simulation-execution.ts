@@ -1,10 +1,7 @@
 import { z } from 'zod';
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+
 import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
-import {
-  EntitycoreExecutionStatus,
-  type TEntitycoreExecutionStatus,
-} from '@/api/entitycore/types/entities/execution';
+import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import type { IActivity, IActivityFilter } from '@/api/entitycore/types/shared/activity';
 import type {
   ActivityType,
@@ -12,6 +9,10 @@ import type {
   EntityCoreIdentifiable,
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
+import {
+  EntitycoreExecutionStatus,
+  type TEntitycoreExecutionStatus,
+} from '@/api/entitycore/types/entities/execution';
 
 interface ICircuitSimulationExecutionBase {
   status: TEntitycoreExecutionStatus;

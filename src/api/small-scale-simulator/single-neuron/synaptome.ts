@@ -1,13 +1,14 @@
+import { getEntityCoreContext } from '@/api/entitycore/utils';
+import { smallScaleSimulatorApi } from '@/api/small-scale-simulator/utils';
+
 import type {
   ISingleNeuronSynaptome,
   TSingleNeuronSynaptomeConfiguration,
 } from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import { getEntityCoreContext } from '@/api/entitycore/utils';
 import type {
   SectionSynapses,
   TCreateSingleNeuronSynaptome,
 } from '@/api/small-scale-simulator/types';
-import { smallScaleSimulatorApi } from '@/api/small-scale-simulator/utils';
 import type { WorkspaceContext } from '@/types/common';
 import type { ApiResponse } from '@/types/small-scale-simulator/common';
 
@@ -26,7 +27,7 @@ async function validateSynapseGenerationFormula(formula: string) {
 export async function validateFormula(value: string) {
   try {
     return validateSynapseGenerationFormula(value);
-  } catch (_error) {
+  } catch (error) {
     return false;
   }
 }
@@ -49,7 +50,7 @@ export async function getSynaptomePlacement({
 }: GetSynaptomePlacementParams) {
   const api = await smallScaleSimulatorApi();
 
-  return await api.post<{ synapses: SectionSynapses[] }>('/single-neuron/synaptome/generate', {
+  return await api.post<{ synapses: Array<SectionSynapses> }>('/single-neuron/synaptome/generate', {
     queryParams: { model_id: modelId },
     headers: {
       ...getEntityCoreContext(ctx).headers,

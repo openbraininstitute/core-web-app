@@ -1,4 +1,4 @@
-import type { PortableTextBlock } from 'next-sanity';
+import { PortableTextBlock } from 'next-sanity';
 
 export type ShowcaseAuthorType = {
   _key: string;

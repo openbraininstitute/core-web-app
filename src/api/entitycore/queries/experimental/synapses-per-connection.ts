@@ -1,9 +1,9 @@
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type {
   ExperimentalSynapsesPerConnectionFilter,
   IExperimentalSynapsesPerConnection,
 } from '@/api/entitycore/types/entities/synapses-per-connection';
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/experimental-synapses-per-connection';

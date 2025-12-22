@@ -1,5 +1,5 @@
 import { Button, Select } from 'antd';
-import type { ConfigObject } from './utils';
+import { ConfigObject } from './utils';
 
 export default function Reference({
   onAddReferenceClick,

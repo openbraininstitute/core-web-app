@@ -1,6 +1,6 @@
-import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
-import type { EntityCoreIdentifiable, Timestamps } from '@/api/entitycore/types/shared/global';
-import type { PaginationFilter, TimestampsFilter } from '@/api/entitycore/types/shared/request';
+import { Timestamps, EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import { TimestampsFilter, PaginationFilter } from '@/api/entitycore/types/shared/request';
+import { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 
 type MeasurementItem = {
   name: string;

@@ -3,23 +3,24 @@
 // import { LoadingOutlined, UpOutlined } from '@ant-design/icons';
 import { LoadingOutlined } from '@ant-design/icons';
 import { Suspense, useState } from 'react';
-
 // import { useRouter } from 'next/navigation';
 
-import { useAppNotification } from '@/components/notification';
-import type { Config } from '@/features/small-microcircuit/_components/components';
-import { useConfigAtom } from '@/features/small-microcircuit/_components/hooks/config-atom';
-import { useObioneJsonSchema } from '@/features/small-microcircuit/_components/hooks/schema';
-import ModelPreview from '@/features/small-microcircuit/_components/model-preview';
-import TabsSelector from '@/features/small-microcircuit/_components/tabs-selector';
-import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
-import type { AtomsMap, TabType } from '@/features/small-microcircuit/types';
-import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
-import { cn } from '@/utils/css-class';
 import { useEntries, useModel } from './_components/hooks';
 import Left from './_components/left';
 import Middle from './_components/middle';
 import SimulationsTab from './_components/simulations';
+
+import { useAppNotification } from '@/components/notification';
+import { Config } from '@/features/small-microcircuit/_components/components';
+import { useConfigAtom } from '@/features/small-microcircuit/_components/hooks/config-atom';
+import { useObioneJsonSchema } from '@/features/small-microcircuit/_components/hooks/schema';
+import ModelPreview from '@/features/small-microcircuit/_components/model-preview';
+import TabsSelector from '@/features/small-microcircuit/_components/tabs-selector';
+import { AtomsMap, TabType } from '@/features/small-microcircuit/types';
+import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
+import { cn } from '@/utils/css-class';
+
+import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
 
 export default function SimulationCampaignConfiguration({
   modelId,
@@ -54,10 +55,7 @@ export default function SimulationCampaignConfiguration({
   const [newKey, setNewKey] = useState('');
 
   const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
-  const { model } = useModel({
-    id: modelId,
-    context: { virtualLabId, projectId },
-  });
+  const { model } = useModel({ id: modelId, context: { virtualLabId, projectId } });
   const { schema, refLabels, referenceTypesToConfigKeys, referenceTypesToTitles } =
     useObioneJsonSchema(model, notification, setAtomsMap, initialConfig);
 

@@ -3,9 +3,9 @@
 import { getExperimentalNeuronDensity } from '@/api/entitycore/queries';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { Metadata } from '@/features/entity-download/metadata';
-import type { ExperimentalNeuronDensityJsonMetadata } from '@/features/entity-download/types';
+import { ExperimentalNeuronDensityJsonMetadata } from '@/features/entity-download/types';
 import { createTemplateFileEntry, getMetadataCsvEntryBase } from '@/features/entity-download/utils';
-import type { WorkspaceContext } from '@/types/common';
+import { WorkspaceContext } from '@/types/common';
 
 export async function* getExperimentalNeuronDensityFiles(
   entityIds: string[],
@@ -18,10 +18,7 @@ export async function* getExperimentalNeuronDensityFiles(
   } catch {}
 
   for (const entityId of entityIds) {
-    const neuronDensity = await getExperimentalNeuronDensity({
-      id: entityId,
-      context: ctx,
-    });
+    const neuronDensity = await getExperimentalNeuronDensity({ id: entityId, context: ctx });
 
     const idx = metadata.entriesCount;
 

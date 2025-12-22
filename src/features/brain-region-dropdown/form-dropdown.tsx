@@ -1,23 +1,18 @@
 import { CheckOutlined, DownOutlined, LoadingOutlined, SearchOutlined } from '@ant-design/icons';
+import { ComponentProps, startTransition, useCallback, useEffect, useMemo, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useAtomValue } from 'jotai';
 import { loadable, unwrap } from 'jotai/utils';
-import {
-  type ComponentProps,
-  startTransition,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-import { BrainIcon } from '@/components/icons';
-import type { TBrainRegionHierarchyExtendedOption } from '@/features/brain-region-hierarchy/context';
+import { useAtomValue } from 'jotai';
+
 import { brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom } from '@/features/brain-region-hierarchy/context';
+import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
+import { BrainIcon } from '@/components/icons';
 import { cn } from '@/utils/css-class';
+
+import type { TBrainRegionHierarchyExtendedOption } from '@/features/brain-region-hierarchy/context';
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
 type Props = {
   onSelectBrainRegion?: (br: IBrainRegionHierarchy) => void;
@@ -51,12 +46,16 @@ export function BrainRegionDropdown({
 
   const [selectedNode, updateSelectedNode] = useState(defaultBrainRegion);
 
-  const parentSetter = useCallback((el: HTMLDivElement) => {
-    setParent(el);
-  }, []);
+  const parentSetter = useCallback(
+    (el: HTMLDivElement) => {
+      setParent(el);
+    },
+    [setParent]
+  );
 
-  const filteredOptions = useMemo<TBrainRegionHierarchyExtendedOption[]>(() => {
-    const options = (brainRegionHierarchy?.options ?? []) as TBrainRegionHierarchyExtendedOption[];
+  const filteredOptions = useMemo<Array<TBrainRegionHierarchyExtendedOption>>(() => {
+    const options = (brainRegionHierarchy?.options ??
+      []) as Array<TBrainRegionHierarchyExtendedOption>;
     if (!searchTerm.trim()) return options;
 
     return options.filter(({ label }) => label.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -262,7 +261,7 @@ export function BrainRegionDropdownWithFormItem({
             });
             onSelectBrainRegion?.(br);
           },
-          [onChange, onSelectBrainRegion]
+          [onChange]
         );
 
         return (

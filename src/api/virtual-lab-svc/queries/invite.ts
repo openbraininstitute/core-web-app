@@ -1,7 +1,8 @@
-import type { InviteResponse } from '@/api/virtual-lab-svc/queries/types';
-import type { Role } from '@/api/virtual-lab-svc/types';
+import { InviteResponse } from '@/api/virtual-lab-svc/queries/types';
 import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
+
 import type { AcceptInviteResponse, InvitationContentResponse } from '@/types/virtual-lab/invites';
+import type { Role } from '@/api/virtual-lab-svc/types';
 
 export async function inviteToProject({
   virtualLabId,

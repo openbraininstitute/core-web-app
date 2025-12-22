@@ -1,5 +1,8 @@
 import flatMap from 'es-toolkit/compat/flatMap';
 import keyBy from 'es-toolkit/compat/keyBy';
+
+import { migrateConfig } from './utils';
+
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
@@ -11,10 +14,6 @@ import {
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
-import type {
-  ICircuitSimulationCampaign,
-  ICircuitSimulationCampaignFilter,
-} from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
@@ -22,9 +21,13 @@ import { getAssetElement } from '@/api/entitycore/utils';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+
+import type {
+  ICircuitSimulationCampaign,
+  ICircuitSimulationCampaignFilter,
+} from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
-import { migrateConfig } from './utils';
 
 // NOTE: this is due entitycore do not support yet
 async function resolveSimulationCampaigns({
@@ -39,11 +42,7 @@ async function resolveSimulationCampaigns({
   // eslint-disable-next-line no-param-reassign
   filters = discardBrainRegionQueryParams(filters);
 
-  const source = await getCircuitSimulationCampaigns({
-    context,
-    withFacets,
-    filters,
-  });
+  const source = await getCircuitSimulationCampaigns({ context, withFacets, filters });
   // extract all simulation IDs
   const allSimIds = flatMap(
     source.data,
@@ -100,10 +99,7 @@ export async function resolveSimulationByCampaignId({
   context: WorkspaceContext | undefined;
 }) {
   const campaign = await getCircuitSimulationCampaign({ id, context });
-  const source = await getCircuitSimulations({
-    context,
-    filters: { simulation_campaign_id: id },
-  });
+  const source = await getCircuitSimulations({ context, filters: { simulation_campaign_id: id } });
 
   const simulation = source.data.at(0);
   const assets = campaign?.assets ?? [];

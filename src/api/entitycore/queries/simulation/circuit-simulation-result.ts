@@ -1,5 +1,6 @@
-import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
+
+import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/simulation-result';

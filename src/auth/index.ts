@@ -1,7 +1,8 @@
-import type { GetServerSidePropsContext, NextApiRequest, NextApiResponse } from 'next';
-import { getServerSession, type NextAuthOptions, type Session, type TokenSet } from 'next-auth';
-import { serverConfig as config } from '@/config/server';
+import { getServerSession, type NextAuthOptions, type TokenSet, type Session } from 'next-auth';
+import { GetServerSidePropsContext, NextApiRequest, NextApiResponse } from 'next';
+
 import { log } from '../utils/logger';
+import { serverConfig as config } from '@/config/server';
 
 const issuer = config.KEYCLOAK_ISSUER;
 const clientId = config.KEYCLOAK_CLIENT_ID;
@@ -133,7 +134,7 @@ export const authOptions: NextAuthOptions = {
       if (account && user) {
         // eslint-disable-next-line no-void
         void (async () => {
-          if (account?.access_token && account.refresh_token)
+          if (account && account.access_token && account.refresh_token)
             await upsertRefreshTokenInAuthManager({
               accessToken: account.access_token,
               refreshToken: account.refresh_token,

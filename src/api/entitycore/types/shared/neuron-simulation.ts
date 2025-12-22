@@ -1,7 +1,4 @@
-import type {
-  EntityCoreIdentifiable,
-  EntityCoreOwnership,
-} from '@/api/entitycore/types/shared/global';
+import { EntityCoreIdentifiable, EntityCoreOwnership } from '@/api/entitycore/types/shared/global';
 
 export enum SingleNeuronSimulationStatus {
   started = 'started',
@@ -14,8 +11,8 @@ export interface ISingleNeuronSimulationBase extends EntityCoreIdentifiable, Ent
   description: string;
   seed: number;
   status: SingleNeuronSimulationStatus;
-  injection_location: string[];
-  recording_location: string[];
+  injection_location: Array<string>;
+  recording_location: Array<string>;
 }
 
 export type SimulationStatusFilter = {

@@ -1,10 +1,11 @@
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
+
 import type {
   IMEModel,
   IMEModelFilter,
   TCreateMEModel,
 } from '@/api/entitycore/types/entities/me-model';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/memodel';

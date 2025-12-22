@@ -12,7 +12,7 @@ export const cleanSearchParams = ({
   keepKeys,
 }: {
   searchParams: URLSearchParams | string | Record<string, string>;
-  keepKeys: string[];
+  keepKeys: Array<string>;
 }): URLSearchParams => {
   let paramsObj: Record<string, string>;
 

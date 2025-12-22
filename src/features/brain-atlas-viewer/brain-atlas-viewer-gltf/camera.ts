@@ -1,16 +1,16 @@
 import {
-  type TgdCamera,
-  TgdCameraPerspective,
-  type TgdCameraState,
-  type TgdContext,
-  TgdControllerCameraOrbit,
-  TgdQuat,
-  TgdVec3,
   tgdActionCreateCameraInterpolation,
   tgdCalcDegToRad,
+  TgdCamera,
+  TgdCameraPerspective,
+  TgdCameraState,
+  TgdContext,
+  TgdQuat,
+  TgdVec3,
+  TgdControllerCameraOrbit,
 } from '@tolokoban/tgd';
 
-import type GenericEvent from '@/util/generic-event';
+import GenericEvent from '@/util/generic-event';
 
 export function setCamera(context: TgdContext, eventChange: GenericEvent<TgdCamera>) {
   const restTransfo: Partial<TgdCameraState> = {
@@ -33,9 +33,7 @@ export function setCamera(context: TgdContext, eventChange: GenericEvent<TgdCame
   controller.eventChange.addListener((camera) => eventChange.dispatch(camera));
   return () => {
     context.animSchedule({
-      action: tgdActionCreateCameraInterpolation(context.camera, {
-        ...restTransfo,
-      }),
+      action: tgdActionCreateCameraInterpolation(context.camera, { ...restTransfo }),
       duration: 0.5,
       onEnd: () => {
         controller.resetZoom();

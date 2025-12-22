@@ -1,9 +1,9 @@
-import type {
+import { entityCoreApi } from '@/api/entitycore/utils';
+import {
   IBrainRegionHierarchy,
   ITemporaryBrainRegionHierarchy,
   TemporaryFlatBrainRegionHierarchy,
 } from '@/api/entitycore/types/entities/brain-region';
-import { entityCoreApi } from '@/api/entitycore/utils';
 import { config } from '@/config';
 
 /**

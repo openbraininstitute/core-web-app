@@ -1,10 +1,12 @@
 import groupBy from 'es-toolkit/compat/groupBy';
 import omit from 'es-toolkit/compat/omit';
-import type { ICellMorphologyExpanded } from '@/api/entitycore/types/entities/cell-morphology';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
 import { fieldsDefinitionRegistry, getFieldDefinition } from '@/entity-configuration/definitions';
-import { EmptyValue } from '@/entity-configuration/definitions/renderer';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
+import { EmptyValue } from '@/entity-configuration/definitions/renderer';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
+import type { ICellMorphologyExpanded } from '@/api/entitycore/types/entities/cell-morphology';
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 
 export const useMorphometrics = (
@@ -12,7 +14,7 @@ export const useMorphometrics = (
   showLabel: boolean = false
 ) => {
   const groupedCardFields = groupBy(
-    getViewDefinitionByExtendedType(ExtendedEntitiesTypeDict.CellMorphology)?.cardViewFields,
+    getViewDefinitionByExtendedType(ExtendedEntitiesTypeDict.CellMorphology)!.cardViewFields,
     (item) => fieldsDefinitionRegistry[item.field]?.group ?? 'Metadata'
   );
 

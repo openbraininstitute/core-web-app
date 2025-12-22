@@ -1,6 +1,7 @@
-import { EntitySlug } from '@/entity-configuration/domain/slug';
+import { DataTypeGroup, ViewDefinitionConfig } from '../types';
 import { EntityCoreFields } from '../../fields-defs/enums';
-import { DataTypeGroup, type ViewDefinitionConfig } from '../types';
+
+import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 export const ViewDefForMemodel: ViewDefinitionConfig = {
   title: 'ME-model',

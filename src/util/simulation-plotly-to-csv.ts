@@ -1,7 +1,8 @@
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
-import type { PlotInstance } from '@/features/entities/neuron-simulation/experiment/visualization/plots-parser';
-import type { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
+
+import { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
+import { PlotInstance } from '@/features/entities/neuron-simulation/experiment/visualization/plots-parser';
 
 function getPlotlyAsCsv(trace: PlotDataEntry) {
   const csvContent = `time[ms],voltage[mV]\n${trace.x.map((x, i) => `${x},${trace.y[i]}`).join('\n')}`;

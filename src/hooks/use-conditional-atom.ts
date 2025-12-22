@@ -1,6 +1,6 @@
-import isNil from 'es-toolkit/compat/isNil';
-import { type Atom, atom } from 'jotai';
 import { loadable } from 'jotai/utils';
+import { Atom, atom } from 'jotai';
+import isNil from 'es-toolkit/compat/isNil';
 
 /**
  * Creates a loadable atom that returns the provided data if available,

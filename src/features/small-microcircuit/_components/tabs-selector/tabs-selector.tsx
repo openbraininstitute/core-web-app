@@ -1,6 +1,8 @@
-import { classNames } from '@/util/utils';
-import type { TabType } from '../../types';
+import React from 'react';
+
 import { Tab } from '../components';
+import { TabType } from '../../types';
+import { classNames } from '@/util/utils';
 
 interface TabsSelectorProps {
   className?: string;

@@ -1,16 +1,16 @@
 /* eslint-disable no-empty */
 
-import { getCellMorphology, getEModel } from '@/api/entitycore/queries';
+import { getEModel, getCellMorphology } from '@/api/entitycore/queries';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { ASSET_BASE_PATH } from '@/features/entity-download/constants';
 import { Metadata } from '@/features/entity-download/metadata';
-import type { EmodelJsonMetadata } from '@/features/entity-download/types';
+import { EmodelJsonMetadata } from '@/features/entity-download/types';
 import {
   createAssetFileEntry,
   createTemplateFileEntry,
   getMetadataCsvEntryBase,
 } from '@/features/entity-download/utils';
-import type { WorkspaceContext } from '@/types/common';
+import { WorkspaceContext } from '@/types/common';
 
 export async function* getEmodelFiles(entityIds: string[], ctx?: WorkspaceContext) {
   const metadata = new Metadata<EmodelJsonMetadata>();
@@ -40,12 +40,7 @@ export async function* getEmodelFiles(entityIds: string[], ctx?: WorkspaceContex
 
     try {
       const path = `${dataPath}/${hocFileAsset.label}/${hocFileAsset.path}`;
-      yield await createAssetFileEntry({
-        entity: emodel,
-        asset: hocFileAsset,
-        path,
-        ctx,
-      });
+      yield await createAssetFileEntry({ entity: emodel, asset: hocFileAsset, path, ctx });
     } catch {}
 
     // Emodel optimization output
@@ -54,12 +49,7 @@ export async function* getEmodelFiles(entityIds: string[], ctx?: WorkspaceContex
     )!;
     try {
       const path = `${dataPath}/${emodelOptOutputAsset.label}/${emodelOptOutputAsset.path}`;
-      yield await createAssetFileEntry({
-        entity: emodel,
-        asset: emodelOptOutputAsset,
-        path,
-        ctx,
-      });
+      yield await createAssetFileEntry({ entity: emodel, asset: emodelOptOutputAsset, path, ctx });
     } catch {}
 
     // Morphologies
@@ -73,12 +63,7 @@ export async function* getEmodelFiles(entityIds: string[], ctx?: WorkspaceContex
     for await (const asset of morphAssets) {
       const path = `${dataPath}/${asset.label}/${asset.path}`;
       try {
-        yield await createAssetFileEntry({
-          entity: exemplarMorphology,
-          asset,
-          path,
-          ctx,
-        });
+        yield await createAssetFileEntry({ entity: exemplarMorphology, asset, path, ctx });
       } catch {}
     }
 
@@ -87,12 +72,7 @@ export async function* getEmodelFiles(entityIds: string[], ctx?: WorkspaceContex
       const modAsset = icEntity.assets.find((asset) => asset.label === 'neuron_mechanisms')!;
       const path = `${dataPath}/${modAsset.label}/${modAsset.path}`;
       try {
-        yield await createAssetFileEntry({
-          entity: icEntity,
-          asset: modAsset,
-          path,
-          ctx,
-        });
+        yield await createAssetFileEntry({ entity: icEntity, asset: modAsset, path, ctx });
       } catch {}
     }
   }

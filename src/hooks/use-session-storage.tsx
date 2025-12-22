@@ -1,5 +1,5 @@
-import type { Dispatch, SetStateAction } from 'react';
 import { useCallback, useEffect, useState } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 
 declare global {
   interface WindowEventMap {
@@ -52,7 +52,7 @@ export function useSessionStorage<T>(
       let parsed: unknown;
       try {
         parsed = JSON.parse(value);
-      } catch (_error) {
+      } catch (error) {
         return defaultValue; // Return initialValue if parsing fails
       }
 
@@ -73,7 +73,7 @@ export function useSessionStorage<T>(
     try {
       const raw = window.sessionStorage.getItem(key);
       return raw ? deserializer(raw) : initialValueToUse;
-    } catch (_error) {
+    } catch (error) {
       return initialValueToUse;
     }
   }, [initialValue, key, deserializer]);
@@ -106,7 +106,7 @@ export function useSessionStorage<T>(
 
         // We dispatch a custom event so very similar useSessionStorage hook is notified
         window.dispatchEvent(new StorageEvent('session-storage', { key }));
-      } catch (_error) {
+      } catch (error) {
         throw new Error(`Error setting sessionStorage key “${key}”:`);
       }
     },
@@ -134,7 +134,7 @@ export function useSessionStorage<T>(
   useEffect(() => {
     setStoredValue(readValue());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readValue]);
+  }, [key]);
 
   const handleStorageChange = useCallback(
     (event: StorageEvent | CustomEvent) => {
@@ -148,9 +148,7 @@ export function useSessionStorage<T>(
 
   useEffect(() => {
     const abortController = new AbortController();
-    window.addEventListener('storage', handleStorageChange, {
-      signal: abortController.signal,
-    });
+    window.addEventListener('storage', handleStorageChange, { signal: abortController.signal });
     window.addEventListener('session-storage', handleStorageChange, {
       signal: abortController.signal,
     });

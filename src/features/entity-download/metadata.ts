@@ -1,7 +1,9 @@
-import { Readable } from 'node:stream';
+import { Readable } from 'stream';
+
 import { format } from 'fast-csv';
+
+import { CsvEntry } from './types';
 import { bufferStream } from '@/features/entity-download/utils';
-import type { CsvEntry } from './types';
 
 type FileEntry = {
   path: string;

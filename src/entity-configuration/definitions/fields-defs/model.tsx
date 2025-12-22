@@ -1,19 +1,10 @@
 import { LoadingOutlined, WarningFilled } from '@ant-design/icons';
-import { find, isNil, map, omit } from 'es-toolkit/compat';
-import { hasAssets } from '@/api/entitycore/guards';
-import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { isNil, find, map, omit } from 'es-toolkit/compat';
+
 import { CircuitBuildCategory, CircuitScale } from '@/api/entitycore/types/entities/circuit';
-import type { IEModel } from '@/api/entitycore/types/entities/e-model';
-import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
-import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
-import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
-import {
-  CoreFieldFilterTypeEnum,
-  EntityCoreFields,
-} from '@/entity-configuration/definitions/fields-defs/enums';
+import { countDeepSubCircuits } from '@/ui/segments/explore/circuit/helpers';
+import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 import {
   EmptyPreview,
   EmptyValue,
@@ -25,10 +16,21 @@ import {
   renderLocalizedNumber,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
-import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
-import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
-import { countDeepSubCircuits } from '@/ui/segments/explore/circuit/helpers';
+import {
+  CoreFieldFilterTypeEnum,
+  EntityCoreFields,
+} from '@/entity-configuration/definitions/fields-defs/enums';
+import { hasAssets } from '@/api/entitycore/guards';
 import { isNumber } from '@/util/type-guards';
+
+import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
+import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
+import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { IEModel } from '@/api/entitycore/types/entities/e-model';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
 function iCMBooleanField(title: string, field: keyof IonChannelModel) {
   return {

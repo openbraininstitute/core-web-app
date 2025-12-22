@@ -1,13 +1,15 @@
 import { FileImageOutlined, LineChartOutlined } from '@ant-design/icons';
-import { Empty, Radio, type RadioChangeEvent, Spin } from 'antd';
+import { Empty, Radio, RadioChangeEvent, Spin } from 'antd';
 import { useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
-import SimpleErrorComponent from '@/components/GenericErrorFallback';
-import type { WorkspaceContext } from '@/types/common';
-import { TraceDetailsView } from './components/trace-details-view';
-import { TraceOverview } from './components/trace-overview';
+
 import useTrace from './hooks/use-nwb-trace';
+import { TraceOverview } from './components/trace-overview';
+import { TraceDetailsView } from './components/trace-details-view';
+
+import SimpleErrorComponent from '@/components/GenericErrorFallback';
+import { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
+import type { WorkspaceContext } from '@/types/common';
 
 // import './styles/ephys-plugin-styles.css';
 

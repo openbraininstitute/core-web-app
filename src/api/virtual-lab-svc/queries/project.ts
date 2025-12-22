@@ -1,3 +1,8 @@
+import { getSession } from '@/auth-fetch';
+
+import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
+import { config } from '@/config';
+
 import type {
   ProjectCreationResponse,
   ProjectExistsVerificationResponse,
@@ -5,9 +10,6 @@ import type {
   VlmProjectsResponse,
 } from '@/api/virtual-lab-svc/queries/types';
 import type { ProjectPayload, Role } from '@/api/virtual-lab-svc/types';
-import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
-import { getSession } from '@/auth-fetch';
-import { config } from '@/config';
 import type { WorkspaceContext } from '@/types/common';
 import type { ProjectResponse } from '@/types/virtual-lab/projects';
 
@@ -43,9 +45,7 @@ export async function checkProjectExists({
   );
 
   if (!response.ok) {
-    throw new Error('Validating project name failed', {
-      cause: await response.json(),
-    });
+    throw new Error('Validating project name failed', { cause: await response.json() });
   }
 
   const result = (await response.json()) as ProjectExistsVerificationResponse;
@@ -71,9 +71,7 @@ export async function createProject(
   });
 
   if (!response.ok) {
-    throw new Error(`Creating project failed`, {
-      cause: await response.json(),
-    });
+    throw new Error(`Creating project failed`, { cause: await response.json() });
   }
 
   const result: ProjectCreationResponse = await response.json();
@@ -113,9 +111,7 @@ export async function listProjects({
   );
 
   if (!response.ok) {
-    throw new Error(`Fetching projects failed`, {
-      cause: await response.json(),
-    });
+    throw new Error(`Fetching projects failed`, { cause: await response.json() });
   }
 
   const result = (await response.json()) as VlmProjectsResponse;
@@ -157,9 +153,7 @@ export async function attachUsersToProject({
   );
 
   if (!response.ok) {
-    throw new Error(`Attaching users to project failed`, {
-      cause: await response.json(),
-    });
+    throw new Error(`Attaching users to project failed`, { cause: await response.json() });
   }
 
   const result = (await response.json()) as VlmAttachUsersToProjectResponse;

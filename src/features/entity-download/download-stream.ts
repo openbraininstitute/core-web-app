@@ -1,9 +1,10 @@
-import { pipeline, Readable } from 'node:stream';
-import { promisify } from 'node:util';
-import { createGzip } from 'node:zlib';
+import { pipeline, Readable } from 'stream';
+import { createGzip } from 'zlib';
+import { promisify } from 'util';
 import tar from 'tar-stream';
-import type { TEntityTypeDict } from '@/api/entitycore/types';
+
 import { getEntityFilesHandlerMap } from '@/features/entity-download/file-handlers';
+import { TEntityTypeDict } from '@/api/entitycore/types';
 
 type CreateDownloadStreamParams = {
   entityIds: string[];

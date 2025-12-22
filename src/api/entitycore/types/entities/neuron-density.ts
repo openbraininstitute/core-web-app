@@ -13,8 +13,8 @@ import type {
 } from '@/api/entitycore/types/shared/request';
 
 export interface IExperimentalNeuronDensity extends IExperimentalDensity, EntityCoreType {
-  mtypes: IMType[] | null;
-  etypes: IEType[] | null;
+  mtypes: Array<IMType> | null;
+  etypes: Array<IEType> | null;
 }
 
 export type ExperimentalNeuronDensityFilter = Partial<

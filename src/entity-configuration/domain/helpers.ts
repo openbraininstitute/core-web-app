@@ -1,11 +1,12 @@
 import { filter, find, set } from 'es-toolkit/compat';
-import type { TEntityTypeDict } from '@/api/entitycore/types';
+
+import { EntityCoreConfiguration } from '@/entity-configuration/domain';
 
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import { EntityCoreConfiguration } from '@/entity-configuration/domain';
+import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
-import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 
 export type EntityCoreExtendedType =
   (typeof EntityCoreConfiguration)[keyof typeof EntityCoreConfiguration]['extendedType'];

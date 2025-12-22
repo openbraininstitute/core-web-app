@@ -11,6 +11,8 @@ export function useCacheLastRecentlyInserted<T>(): CacheLastRecentlyInserted<T> 
 class CacheLastRecentlyInserted<T> {
   private readonly map = new Map<string, T>();
 
+  private readonly keys: string[] = [];
+
   constructor(public readonly maxSize = 100) {}
 
   set(key: string, value: T) {

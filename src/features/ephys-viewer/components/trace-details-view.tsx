@@ -5,9 +5,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import InteractivePlot from '@/features/ephys-viewer/components/interactive-plot';
 import OptionSelect from '@/features/ephys-viewer/components/option-select';
 import SweepSelector from '@/features/ephys-viewer/components/sweep-selector';
-import type NWBTrace from '@/features/ephys-viewer/nwb-trace';
-import { RecordingType, type SweepData } from '@/features/ephys-viewer/nwb-trace';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
+import NWBTrace, { RecordingType, SweepData } from '@/features/ephys-viewer/nwb-trace';
 
 interface TraceDetailsViewProps {
   trace: NWBTrace;
@@ -106,26 +105,23 @@ function CellDetails({ trace, cellId, defaultProtocol, defaultRepetition }: Cell
     [selectedSweeps, previewItem, sweeps, colorMap, sweepDataMap, plotRevision]
   );
 
-  useEffect(() => updatePlots(), [updatePlots]);
+  useEffect(
+    () => updatePlots(),
+    [selectedProtocol, selectedRepetition, selectedSweeps, updatePlots]
+  );
 
   return (
     <div className="flex flex-col gap-10">
       <div className="text-primary-9 text-xl font-bold">{cellId}</div>
       <div className="flex flex-wrap gap-8">
         <OptionSelect
-          label={{
-            title: 'Protocol',
-            numberOfAvailable: trace.getProtocols(cellId).length,
-          }}
+          label={{ title: 'Protocol', numberOfAvailable: trace.getProtocols(cellId).length }}
           options={dataSetOptions}
           value={selectedProtocol}
           onChange={handleProtocolChange}
         />
         <OptionSelect
-          label={{
-            title: 'Repetition',
-            numberOfAvailable: Object.keys(repetitions).length,
-          }}
+          label={{ title: 'Repetition', numberOfAvailable: Object.keys(repetitions).length }}
           options={repetitionOptions}
           value={selectedRepetition}
           onChange={handleRepetitionChange}
@@ -222,11 +218,7 @@ function useSweeps(
   cellId: string,
   selectedProtocol: string,
   selectedRepetition: string
-): {
-  sweeps: string[];
-  sweepDataMap: Map<string, SweepData>;
-  colorMap: Map<string, string>;
-} {
+): { sweeps: string[]; sweepDataMap: Map<string, SweepData>; colorMap: Map<string, string> } {
   return useMemo(() => {
     const sweeps: string[] = trace.getSweeps(cellId, selectedProtocol, selectedRepetition);
     const colors = DistinctColors({ count: sweeps.length });

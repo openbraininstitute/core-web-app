@@ -5,7 +5,7 @@ export default async function subscribeNewsletterHandler({
 }: {
   email: string;
   name: string;
-  tags: string[];
+  tags: Array<string>;
 }) {
   const response = await fetch('/api/newsletter', {
     method: 'post',

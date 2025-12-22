@@ -17,7 +17,7 @@ export interface RawTreeNode {
 export interface TreeNode {
   about: 'MType';
   cellCounts: { neuron: number; glia: number };
-  children: TreeNode[];
+  children: Array<TreeNode>;
   compositeId: string;
   count: number;
   density: number;

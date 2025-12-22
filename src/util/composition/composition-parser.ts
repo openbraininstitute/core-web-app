@@ -1,5 +1,10 @@
 import uniq from 'es-toolkit/compat/uniq';
-import type {
+import {
+  OriginalComposition,
+  OriginalCompositionNode,
+  OriginalCompositionPair,
+} from '@/types/composition/original';
+import {
   AnalysedComposition,
   CalculatedCompositionNode,
   CalculationLink,
@@ -7,11 +12,6 @@ import type {
   CompositionLink,
   CountPair,
 } from '@/types/composition/calculation';
-import type {
-  OriginalComposition,
-  OriginalCompositionNode,
-  OriginalCompositionPair,
-} from '@/types/composition/original';
 import { calculateNewExtendedNodeId } from '@/util/composition/utils';
 
 /* eslint-disable no-param-reassign */
@@ -144,7 +144,7 @@ export function iterateNode(
     subTree.composition = convertCountPairToComposition(totalCountPair, regionVolume);
     return totalCountPair;
   }
-  // @ts-expect-error
+  // @ts-ignore
   return convertCompositionToCountPair(subTree.composition, regionVolume);
 }
 

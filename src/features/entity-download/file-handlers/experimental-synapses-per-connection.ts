@@ -1,11 +1,11 @@
 /* eslint-disable no-empty */
 
 import { getExperimentalSynapsesPerConnection } from '@/api/entitycore/queries';
-import { EntityTypeDict } from '@/api/entitycore/types';
 import { Metadata } from '@/features/entity-download/metadata';
-import type { ExperimentalSynapsesPerConnectionJsonMetadata } from '@/features/entity-download/types';
+import { EntityTypeDict } from '@/api/entitycore/types';
+import { ExperimentalSynapsesPerConnectionJsonMetadata } from '@/features/entity-download/types';
 import { createTemplateFileEntry, getMetadataCsvEntryBase } from '@/features/entity-download/utils';
-import type { WorkspaceContext } from '@/types/common';
+import { WorkspaceContext } from '@/types/common';
 
 export async function* getExperimentalSynapsesPerConnectionFiles(
   entityIds: string[],
@@ -28,10 +28,7 @@ export async function* getExperimentalSynapsesPerConnectionFiles(
     const idxExtra = { idx };
 
     metadata.add({
-      csv: {
-        ...idxExtra,
-        ...getMetadataCsvEntryBase(expSynapsesPerConnection),
-      },
+      csv: { ...idxExtra, ...getMetadataCsvEntryBase(expSynapsesPerConnection) },
       json: { ...idxExtra, ...expSynapsesPerConnection },
     });
   }

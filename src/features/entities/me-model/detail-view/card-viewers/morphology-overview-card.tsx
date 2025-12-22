@@ -1,8 +1,8 @@
-import Link from 'next/link';
-import { useParams, useSearchParams } from 'next/navigation';
 import React from 'react';
-import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { useParams, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+
+import CardContainer from '@/features/entities/me-model/detail-view/card-viewers/card-container';
 import {
   EmptyValue,
   renderArray,
@@ -10,9 +10,11 @@ import {
   renderLicense,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
-import CardContainer from '@/features/entities/me-model/detail-view/card-viewers/card-container';
-import { classNames } from '@/util/utils';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { classNames } from '@/util/utils';
+
+import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 
 type Props = {
   mode: 'select' | 'summary';
@@ -38,14 +40,8 @@ function MorphologyOverviewCard({ mode = 'summary', data, reselectLink = false }
 
   if (data) {
     const details = [
-      {
-        label: 'Brain Region',
-        value: renderEmptyOrValue(data.brain_region.name),
-      },
-      {
-        label: 'Species',
-        value: renderEmptyOrValue(data.subject.species.name),
-      },
+      { label: 'Brain Region', value: renderEmptyOrValue(data.brain_region.name) },
+      { label: 'Species', value: renderEmptyOrValue(data.subject.species.name) },
       {
         label: 'License',
         value: renderEmptyOrValue(renderLicense({ license: data.license })),
@@ -73,10 +69,7 @@ function MorphologyOverviewCard({ mode = 'summary', data, reselectLink = false }
         exploreUrl={exploreUrl}
         modelDetails={details}
         reselectLink={reselectLink}
-        thumbnail={renderPreview<ICellMorphology>(data, {
-          height: 200,
-          width: 200,
-        })}
+        thumbnail={renderPreview<ICellMorphology>(data, { height: 200, width: 200 })}
       />
     );
   }

@@ -1,5 +1,6 @@
-import type { VerificationCodeEmailResponse } from '@/api/virtual-lab-svc/queries/types';
 import { getSession } from '@/auth-fetch';
+
+import { VerificationCodeEmailResponse } from '@/api/virtual-lab-svc/queries/types';
 import { config } from '@/config';
 
 type VerificationCodeResponse<T extends 'init' | 'verify'> = T extends 'init'
@@ -50,7 +51,7 @@ export async function getEmailVerificationCode({
     );
     const result = (await response.json()) as VerificationCodeEmailResponse;
     return result.data as VerificationCodeResponse<'init'>;
-  } catch (_error) {
+  } catch (error) {
     return {
       status: 'error',
       message: 'Error during generating a new verification code',
@@ -81,7 +82,7 @@ export async function verifyOtpCode({
     });
     const result = (await response.json()) as VerificationCodeEmailResponse;
     return result.data as VerificationCodeResponse<'verify'>;
-  } catch (_error) {
+  } catch (error) {
     return {
       status: 'error',
       message: 'Error during verification the code',

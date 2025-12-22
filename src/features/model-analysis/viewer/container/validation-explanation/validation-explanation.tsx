@@ -1,5 +1,8 @@
-import { Explanation } from '@/components/explanation';
+import React from 'react';
+
 import { classNames } from '@/util/utils';
+
+import { Explanation } from '@/components/explanation';
 import styles from './validation-explanation.module.css';
 
 export interface ValidationExplanationProps {

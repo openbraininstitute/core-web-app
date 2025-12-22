@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { HydrationBoundary, dehydrate } from '@tanstack/react-query';
 import { cache } from 'react';
 
 import { makeQueryClient } from '@/query-provider/query-client';

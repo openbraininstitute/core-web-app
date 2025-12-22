@@ -1,24 +1,27 @@
-import { Pagination } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import isString from 'es-toolkit/compat/isString';
-
-import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { match, P } from 'ts-pattern';
+import { Pagination } from 'antd';
+
+import Link from 'next/link';
+import isString from 'es-toolkit/compat/isString';
+
+import type { ColumnsType } from 'antd/es/table';
+
+import { useElectricalCellRecordingsByDerivations, useEmodelDerivations } from '@/ui/hooks/data';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { getFieldsDefinition } from '@/entity-configuration/definitions';
+import { Header } from '@/features/entities/e-model/detail-view/header';
+import { ErrorData } from '@/components/message-banners/error';
+import { BaseTable } from '@/ui/segments/data-table/table';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { DEFAULT_PAGE_XSMALL_SIZE } from '@/constants';
+
 import type {
   EntityCoreObjectTypes,
   IElectricalCellRecording,
   IEModel,
 } from '@/api/entitycore/types';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { ErrorData } from '@/components/message-banners/error';
-import { DEFAULT_PAGE_XSMALL_SIZE } from '@/constants';
-import { getFieldsDefinition } from '@/entity-configuration/definitions';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { Header } from '@/features/entities/e-model/detail-view/header';
-import { useElectricalCellRecordingsByDerivations, useEmodelDerivations } from '@/ui/hooks/data';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { BaseTable } from '@/ui/segments/data-table/table';
 
 const defaultColumnsFields = getFieldsDefinition([
   EntityCoreFields.Preview,
@@ -67,7 +70,7 @@ export function ExemplarTraces({ source }: Props) {
     useElectricalCellRecordingsByDerivations({
       virtualLabId,
       projectId,
-      enabled: isSuccessDerivations ? !!(derivations?.pagination.total_items > 0) : false,
+      enabled: isSuccessDerivations ? !!(derivations!.pagination.total_items > 0) : false,
       Ids: derivations?.data.map((p) => p.id) || [],
     });
 

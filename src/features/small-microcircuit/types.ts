@@ -1,6 +1,7 @@
-import type { atom } from 'jotai';
-import type { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
-import type { ConfigValue } from './_components/components';
+import { atom } from 'jotai';
+
+import { ConfigValue } from './_components/components';
+import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 
 export type JSONSchema = {
   type?: 'string' | 'number' | 'integer' | 'object' | 'array' | 'boolean' | 'null';

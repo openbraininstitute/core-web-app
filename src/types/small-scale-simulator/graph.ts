@@ -1,4 +1,4 @@
-import type { StimulusModule } from './single-neuron';
+import { StimulusModule } from './single-neuron';
 
 export type CurrentInjectionGraphRequest = {
   stimulusProtocol: StimulusModule;

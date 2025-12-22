@@ -1,12 +1,14 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
-import { Spin } from 'antd';
 import { useParams } from 'next/navigation';
+import { Spin } from 'antd';
+
+import { useInputResistance } from './use-input-resistance';
+
 import { useAnalysis } from '@/features/model-analysis/explorer/use-analysis';
 import { ViewerContainer } from '@/features/model-analysis/viewer/container/container';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { useInputResistance } from './use-input-resistance';
 
 export default function Analysis() {
   const workspace = useWorkspace();

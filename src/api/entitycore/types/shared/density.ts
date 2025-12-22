@@ -1,4 +1,4 @@
-import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
+import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type {
   EntityAuthorization,
   EntityCoreIdentifiable,
@@ -20,6 +20,6 @@ export interface IExperimentalDensity
   subject: ISubject;
   license: ILicense;
   brain_region: BrainRegionHierarchyBase;
-  measurements: MeasurementBase[] | null;
-  assets: IAsset[] | null;
+  measurements: Array<MeasurementBase> | null;
+  assets: Array<IAsset> | null;
 }

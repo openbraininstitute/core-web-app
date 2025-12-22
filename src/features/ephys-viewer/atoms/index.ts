@@ -1,10 +1,10 @@
-import isEqual from 'es-toolkit/compat/isEqual';
 import { atom } from 'jotai';
+import isEqual from 'es-toolkit/compat/isEqual';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import type { IElectricalCellRecording } from '@/api/entitycore/types';
-import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
-import type { WorkspaceContext } from '@/types/common';
+import { IElectricalCellRecording } from '@/api/entitycore/types';
+import { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
+import { WorkspaceContext } from '@/types/common';
 import { readAtomFamilyWithExpiration } from '@/util/atoms';
 
 export const nwbArrayBufferAtomFamily = readAtomFamilyWithExpiration(

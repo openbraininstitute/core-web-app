@@ -1,10 +1,12 @@
+import React from 'react';
 import { FullscreenOutlined } from '@ant-design/icons';
 import { tgdFullscreenToggle } from '@tolokoban/tgd';
-import type { Data, Layout } from 'plotly.js-dist-min';
-import React from 'react';
-import { classNames } from '@/util/utils';
-import type { IonChannelRecordingPlot } from '../../../ion-channel-recording-parser';
+import { Data, Layout } from 'plotly.js-dist-min';
+
+import { IonChannelRecordingPlot } from '../../../ion-channel-recording-parser';
 import { GenericPlot } from '../../generic-plot';
+
+import { classNames } from '@/util/utils';
 
 import styles from './trace-overview-plot.module.css';
 

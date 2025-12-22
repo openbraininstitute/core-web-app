@@ -1,4 +1,4 @@
-import { format, formatDate, formatDistanceToNow, isValid } from 'date-fns';
+import { formatDistanceToNow, isValid, format, formatDate } from 'date-fns';
 
 export type DateISOString = string;
 

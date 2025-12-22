@@ -1,5 +1,5 @@
 import {
-  type EntityCoreExtendedType,
+  EntityCoreExtendedType,
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';

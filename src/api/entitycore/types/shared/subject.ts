@@ -1,5 +1,5 @@
-import isNil from 'es-toolkit/compat/isNil';
 import { z } from 'zod';
+import isNil from 'es-toolkit/compat/isNil';
 
 import { AgePeriodEnum, SexEnum } from '@/api/entitycore/types/shared/global';
 import type {

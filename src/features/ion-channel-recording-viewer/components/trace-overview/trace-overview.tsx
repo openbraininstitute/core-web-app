@@ -1,6 +1,7 @@
-import type { IonChannelRecordingParser } from '../../ion-channel-recording-parser';
-import styles from './trace-overview.module.css';
+import { IonChannelRecordingParser } from '../../ion-channel-recording-parser';
 import { TraceOverviewPlot } from './trace-overview-plot';
+
+import styles from './trace-overview.module.css';
 
 export interface TraceOverviewProps {
   trace: IonChannelRecordingParser;
@@ -14,8 +15,7 @@ export function TraceOverview({ trace }: TraceOverviewProps) {
           <h2>
             {protocol.name}{' '}
             <small>
-              {protocol.repetitions.length} repetition
-              {protocol.repetitions.length > 1 ? 's' : ''}
+              {protocol.repetitions.length} repetition{protocol.repetitions.length > 1 ? 's' : ''}
             </small>
           </h2>
           <div className={styles.repetitions}>

@@ -2,15 +2,17 @@
 
 import { LoadingOutlined } from '@ant-design/icons';
 import { ErrorBoundary } from '@sentry/nextjs';
-import { Spin } from 'antd';
-import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { Spin } from 'antd';
+
+import SimulationDetail from '@/features/entities/neuron-simulation/simulation-results/simulation-details';
+import { withErrorConfig } from '@/components/GenericErrorFallback';
 import { getSingleNeuronSimulations } from '@/api/entitycore/queries';
-import type { ISingleNeuronSimulation } from '@/api/entitycore/types';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { tryCatch } from '@/api/utils';
-import { withErrorConfig } from '@/components/GenericErrorFallback';
-import SimulationDetail from '@/features/entities/neuron-simulation/simulation-results/simulation-details';
+
+import type { ISingleNeuronSimulation } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
@@ -19,7 +21,7 @@ type Props = {
 
 export default function Results({ modelId }: Props) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
-  const [simulations, setSimulations] = useState<ISingleNeuronSimulation[]>([]);
+  const [simulations, setSimulations] = useState<Array<ISingleNeuronSimulation>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
@@ -40,7 +42,7 @@ export default function Results({ modelId }: Props) {
     }
 
     getSimulations();
-  }, [modelId, virtualLabId, projectId]);
+  }, [modelId, error, virtualLabId, projectId]);
 
   if (loading) {
     return (
@@ -86,9 +88,7 @@ export default function Results({ modelId }: Props) {
               cls: { container: 'bg-white' },
               showButtons: false,
               customError: 'Error while loading experiment',
-            })({
-              error: returnedError as (Error & { cause?: unknown }) | undefined,
-            })
+            })({ error: returnedError as (Error & { cause?: unknown }) | undefined })
           }
           key={sim.id}
         >

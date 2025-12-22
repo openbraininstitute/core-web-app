@@ -1,6 +1,6 @@
 import cloneDeep from 'es-toolkit/compat/cloneDeep';
-import type { CalculatedCompositionNode } from '@/types/composition/calculation';
-import type { OriginalComposition, OriginalCompositionNode } from '@/types/composition/original';
+import { OriginalComposition, OriginalCompositionNode } from '@/types/composition/original';
+import { CalculatedCompositionNode } from '@/types/composition/calculation';
 
 /* eslint-disable no-param-reassign */
 

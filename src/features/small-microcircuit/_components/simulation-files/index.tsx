@@ -3,18 +3,18 @@ import { useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
 import { useEffect, useMemo } from 'react';
 
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import type { IEntity } from '@/api/entitycore/types/entities/entity';
-import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
-import { AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
+import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import { IEntity } from '@/api/entitycore/types/entities/entity';
+import { AssetLabel, IAsset } from '@/api/entitycore/types/shared/global';
 import { Loader } from '@/components/loader';
 import {
   modelAtomFamily,
   simResultBySimIdAtomFamily,
 } from '@/features/small-microcircuit/_components/atoms';
 import { useLastTruthyValue } from '@/hooks/hooks';
-import type { WorkspaceContext } from '@/types/common';
+import { WorkspaceContext } from '@/types/common';
 import { classNames } from '@/util/utils';
+import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 
 export type File = {
   asset: IAsset;

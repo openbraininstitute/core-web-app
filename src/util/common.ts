@@ -1,4 +1,4 @@
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 export const switchStateType = {
   COUNT: 'count',
@@ -26,7 +26,7 @@ export const isValidBase64 = (str: string): boolean => {
       Buffer.from(Buffer.from(str, 'base64').toString('binary'), 'binary').toString('base64') ===
       str
     );
-  } catch (_err) {
+  } catch (err) {
     return false;
   }
 };

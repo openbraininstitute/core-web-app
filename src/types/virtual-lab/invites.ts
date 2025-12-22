@@ -1,4 +1,4 @@
-import type { VlmResponse } from './common';
+import { VlmResponse } from './common';
 
 export const InviteOriginDict = {
   Lab: 'Lab',
@@ -16,7 +16,7 @@ export type InviteData = {
 export type AcceptInviteResponse = VlmResponse<InviteData>;
 
 export type InvitationContent = {
-  accepted: boolean;
+  accepted: Boolean;
   invite_id: string;
   inviter_full_name: string;
 } & (

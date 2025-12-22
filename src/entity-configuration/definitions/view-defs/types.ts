@@ -1,4 +1,4 @@
-import type { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
 export type TypeSummaryProps = { field: EntityCoreFields; className?: string };
 
@@ -11,13 +11,13 @@ export enum DataTypeGroup {
 export type ViewDefinitionConfig = {
   title: string;
   name: string;
-  columns: EntityCoreFields[];
+  columns: Array<EntityCoreFields>;
   curated?: boolean;
   group?: DataTypeGroup;
-  cardViewFields?: TypeSummaryProps[];
-  summaryViewFields?: TypeSummaryProps[];
-  miniDetailView?: TypeSummaryProps[];
-  filterableFields?: EntityCoreFields[];
-  displayableFields?: EntityCoreFields[];
+  cardViewFields?: Array<TypeSummaryProps>;
+  summaryViewFields?: Array<TypeSummaryProps>;
+  miniDetailView?: Array<TypeSummaryProps>;
+  filterableFields?: Array<EntityCoreFields>;
+  displayableFields?: Array<EntityCoreFields>;
   mlTopic?: string;
 };

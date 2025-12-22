@@ -61,6 +61,8 @@ class ApiClient {
 
   private _token?: string;
 
+  private _timeout?: number;
+
   private _attempts?: number;
 
   private _backoff?: BackoffStrategy;
@@ -209,10 +211,7 @@ class ApiClient {
     method: string,
     endpoint: string,
     options: RequestOptions = {},
-    config: RequestConfiguration & {
-      cache?: CacheConfiguration;
-      asRawResponse?: boolean;
-    } = {},
+    config: RequestConfiguration & { cache?: CacheConfiguration; asRawResponse?: boolean } = {},
     onAbort?: () => void
   ): Promise<T> {
     let attempt = 0;
@@ -222,7 +221,7 @@ class ApiClient {
 
     Object.entries(omitBy(options.queryParams, isNil) || {}).forEach(([key, value]) => {
       if (Array.isArray(value)) {
-        value.forEach((v) => void url.searchParams.append(`${key}`, `${v}`));
+        value.forEach((v) => url.searchParams.append(`${key}`, `${v}`));
       } else {
         url.searchParams.append(key, String(value));
       }
@@ -362,10 +361,7 @@ class ApiClient {
         await new Promise((resolve) => {
           setTimeout(resolve, delay);
         });
-        return this._request<T>(method, endpoint, options, {
-          ...config,
-          attempts: attempt + 1,
-        });
+        return this._request<T>(method, endpoint, options, { ...config, attempts: attempt + 1 });
       }
       throw error;
     }
@@ -419,10 +415,7 @@ class ApiClient {
   get<T>(
     endpoint: string,
     options?: RequestOptions,
-    config?: RequestConfiguration & {
-      cache?: CacheConfiguration;
-      asRawResponse?: boolean;
-    }
+    config?: RequestConfiguration & { cache?: CacheConfiguration; asRawResponse?: boolean }
   ) {
     return this._request<T>('get', endpoint, options, config);
   }

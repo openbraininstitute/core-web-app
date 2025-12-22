@@ -1,6 +1,7 @@
-import { EntitySlug } from '@/entity-configuration/domain/slug';
+import { ViewDefinitionConfig } from '../types';
 import { EntityCoreFields } from '../../fields-defs/enums';
-import type { ViewDefinitionConfig } from '../types';
+
+import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 export const ViewDefForSingleNeuronCircuit: ViewDefinitionConfig = {
   title: 'Single neuron',

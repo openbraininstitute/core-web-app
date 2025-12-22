@@ -1,19 +1,21 @@
-import some from 'es-toolkit/compat/some';
 import startsWith from 'es-toolkit/compat/startsWith';
+import some from 'es-toolkit/compat/some';
+
+import { entityCoreApi, getAssetElement, getEntityCoreContext } from '@/api/entitycore/utils';
+import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
+import { compactRecord } from '@/utils/dictionary';
+import { tryCatch } from '@/api/utils';
+
 import type {
   ISingleNeuronSimulation,
-  ISingleNeuronSimulationFilter,
   TCreateSingleNeuronSimulation,
+  ISingleNeuronSimulationFilter,
 } from '@/api/entitycore/types/entities/single-neuron-simulation';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import { entityCoreApi, getAssetElement, getEntityCoreContext } from '@/api/entitycore/utils';
-import { tryCatch } from '@/api/utils';
-import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation';
 import type { WorkspaceContext } from '@/types/common';
 import type { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
-import { compactRecord } from '@/utils/dictionary';
 
 const baseUri = '/single-neuron-simulation';
 

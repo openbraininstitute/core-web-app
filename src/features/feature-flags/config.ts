@@ -1,4 +1,4 @@
-import { type FeatureFlags, flags } from './flags';
+import { flags, FeatureFlags } from './flags';
 
 export const FEATURE_FLAGS_COOKIE = 'feature-flags';
 export const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;

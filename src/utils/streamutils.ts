@@ -62,7 +62,9 @@ export async function* messageGenerator<T>(
         try {
           const msg = JSON.parse(line) as T;
           yield msg;
-        } catch (_err) {}
+        } catch (err) {
+          continue;
+        }
       }
     }
   } finally {

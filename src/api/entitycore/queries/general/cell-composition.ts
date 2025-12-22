@@ -1,10 +1,11 @@
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
+
 import type {
   ICellComposition,
   ICellCompositionFilter,
 } from '@/api/entitycore/types/entities/cell-composition';
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import type { WorkspaceContext } from '@/types/common';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 
 const baseUri = '/cell-composition';
 
@@ -19,9 +20,7 @@ const baseUri = '/cell-composition';
  */
 export async function getCellComposition({ ctx, id }: { ctx?: WorkspaceContext; id: string }) {
   const api = await entityCoreApi();
-  return await api.get<ICellComposition>(`${baseUri}/${id}`, {
-    ...getEntityCoreContext(ctx),
-  });
+  return await api.get<ICellComposition>(`${baseUri}/${id}`, { ...getEntityCoreContext(ctx) });
 }
 
 export async function getCellCompositions({

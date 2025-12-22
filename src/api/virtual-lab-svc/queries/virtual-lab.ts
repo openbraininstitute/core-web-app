@@ -1,13 +1,14 @@
 import isEmpty from 'es-toolkit/compat/isEmpty';
-import type {
+
+import { LabTypeEnum, VirtualLabPayload } from '@/api/virtual-lab-svc/types';
+import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
+import { getSession } from '@/auth-fetch';
+import {
   VirtualLab,
   VirtualLabExistsVerificationResponse,
   VirtualLabListResponse,
   VirtualLabResponse,
 } from '@/api/virtual-lab-svc/queries/types';
-import { LabTypeEnum, type VirtualLabPayload } from '@/api/virtual-lab-svc/types';
-import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
-import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
 
 import type { VlmResponse } from '@/types/virtual-lab/common';
@@ -35,9 +36,7 @@ export async function checkVirtualLabExists({ name }: { name: string }): Promise
     });
 
     if (!response.ok) {
-      throw new Error('validating virtual lab name failed', {
-        cause: await response.json(),
-      });
+      throw new Error('validating virtual lab name failed', { cause: await response.json() });
     }
 
     const result = (await response.json()) as VirtualLabExistsVerificationResponse;
@@ -89,7 +88,7 @@ export async function listVirtualLabs({
   size = 10,
   query = '',
 }: {
-  include: LabTypeEnum[];
+  include: Array<LabTypeEnum>;
   page?: number;
   size?: number;
   query?: string;
@@ -118,9 +117,7 @@ export async function listVirtualLabs({
   });
 
   if (!response.ok) {
-    throw new Error(`listing virtual labs failed`, {
-      cause: await response.json(),
-    });
+    throw new Error(`listing virtual labs failed`, { cause: await response.json() });
   }
 
   const result: VirtualLabListResponse = await response.json();
@@ -145,9 +142,7 @@ export async function getVirtualLab(id: string): Promise<VirtualLabResponse> {
   });
 
   if (!response.ok) {
-    throw new Error(`getting virtual lab failed`, {
-      cause: await response.json(),
-    });
+    throw new Error(`getting virtual lab failed`, { cause: await response.json() });
   }
 
   const result: VirtualLabResponse = await response.json();

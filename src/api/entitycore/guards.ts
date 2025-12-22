@@ -1,16 +1,17 @@
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+
+import type { EntityCoreBaseAsset } from '@/api/entitycore/types/shared/global';
 import type {
-  EntityCoreObjectTypes,
-  ICellMorphology,
-  IElectricalCellRecording,
-  IEModel,
+  IExperimentalSynapsesPerConnection,
   IExperimentalBoutonDensity,
   IExperimentalNeuronDensity,
-  IExperimentalSynapsesPerConnection,
-  IMEModel,
+  ICellMorphology,
+  IElectricalCellRecording,
   ISingleNeuronSynaptome,
+  EntityCoreObjectTypes,
+  IEModel,
+  IMEModel,
 } from '@/api/entitycore/types';
-import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
-import type { EntityCoreBaseAsset } from '@/api/entitycore/types/shared/global';
 
 export function hasAssets(
   obj?: EntityCoreObjectTypes | null

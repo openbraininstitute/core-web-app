@@ -16,7 +16,7 @@ export function useLocalStorage<T>(
   );
   React.useEffect(() => {
     getLocalStorageHelper().set(key, value);
-  }, [value, key]);
+  }, [value, key, typeGuard]);
   return [value, setValue];
 }
 

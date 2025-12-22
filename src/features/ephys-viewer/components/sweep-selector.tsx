@@ -1,5 +1,5 @@
+import React, { ChangeEvent } from 'react';
 import { Button } from 'antd';
-import React, { type ChangeEvent } from 'react';
 
 import { classNames } from '@/util/utils';
 

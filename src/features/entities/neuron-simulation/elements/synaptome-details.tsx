@@ -1,12 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import type { IMEModel, ISingleNeuronSynaptome } from '@/api/entitycore/types';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
 import { renderArray, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
 import { Field } from '@/features/entities/neuron-simulation/elements/field';
-import { PreviewThumbnail } from '@/features/thumbnail/preview';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { PreviewThumbnail } from '@/features/thumbnail/preview';
+
+import type { IMEModel, ISingleNeuronSynaptome } from '@/api/entitycore/types';
 
 type Props = {
   virtualLabId: string;

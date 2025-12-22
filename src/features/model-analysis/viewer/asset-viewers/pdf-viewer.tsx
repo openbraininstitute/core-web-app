@@ -4,10 +4,12 @@ import { Empty, Skeleton } from 'antd';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 import { Fragment, useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
-import type { TEntityTypeDict } from '@/api/entitycore/types';
+
+import { useClientCachedUrl } from '@/features/model-analysis/viewer/asset-viewers/storage';
+
+import { TEntityTypeDict } from '@/api/entitycore/types';
 import { IconDownloadFile } from '@/components/LandingPage/icons/IconDownloadFile';
 import { config } from '@/config';
-import { useClientCachedUrl } from '@/features/model-analysis/viewer/asset-viewers/storage';
 import { classNames } from '@/util/utils';
 
 import styles from './pdf-viewer.module.css';

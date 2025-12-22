@@ -1,8 +1,9 @@
 'use client';
 
 import { ErrorBoundary } from 'react-error-boundary';
-import { withErrorConfig } from '@/components/GenericErrorFallback';
+
 import { CellCompositionMETypeTree } from '@/features/cell-composition/elements/m-e-type-tree';
+import { withErrorConfig } from '@/components/GenericErrorFallback';
 
 export function CellCompositionExplorer() {
   return (

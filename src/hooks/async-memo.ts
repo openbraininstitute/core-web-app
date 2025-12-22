@@ -1,6 +1,6 @@
 import React from 'react';
-import { logError } from '@/util/logger';
 import { useCacheLastRecentlyInserted } from './cache';
+import { logError } from '@/util/logger';
 
 const DEFAULT_MAKE_KEY = (param: unknown) => JSON.stringify(param);
 

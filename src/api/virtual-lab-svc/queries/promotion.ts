@@ -1,5 +1,5 @@
 import { virtualLabRootApi } from '../utils';
-import type { RedeemPromotionCodeRequest, VlmPromotionResponse } from './types';
+import { RedeemPromotionCodeRequest, VlmPromotionResponse } from './types';
 
 const baseUri = '/promotions';
 

@@ -1,5 +1,5 @@
-import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 
 interface VlmResponse<T> {
   message: string;
@@ -21,7 +21,7 @@ export type Member = {
 
 export type MembersResponse = VlmResponse<{
   owner_id: string;
-  users: Member[];
+  users: Array<Member>;
   total_active: number;
   total: number;
 }>;
@@ -41,7 +41,7 @@ export type Project = {
 };
 
 type ProjectsResponse = {
-  results: Project[];
+  results: Array<Project>;
   page: number;
   size: number;
   page_size: number;
@@ -91,7 +91,7 @@ export type InviteResponse = VlmResponse<{
 
 export type VirtualLabResponseData = {
   virtual_lab: VirtualLab;
-  admins: string[] | null;
+  admins: Array<string> | null;
 };
 
 export type VirtualLabResponse = VlmResponse<VirtualLabResponseData>;
@@ -165,7 +165,7 @@ export type CancelSubscriptionResponse = {
 };
 
 export type SubscriptionTiersResponse = {
-  tiers: SubscriptionTier[];
+  tiers: Array<SubscriptionTier>;
 };
 
 export type VirtualLabListResponse = VlmResponse<{
@@ -177,7 +177,7 @@ export type VirtualLabListResponse = VlmResponse<{
     page: number;
     size: number;
     page_size: number;
-    results: VirtualLab[];
+    results: Array<VirtualLab>;
     has_next: boolean;
     has_previous: boolean;
   };
@@ -324,8 +324,8 @@ type ProjectStats = {
   total_pending_invites: number;
   total_members: number;
   total_notebooks: number;
-  admin_users: string[];
-  member_users: string[];
+  admin_users: Array<string>;
+  member_users: Array<string>;
 };
 
 type VirtualLabStats = {
@@ -333,8 +333,8 @@ type VirtualLabStats = {
   total_projects: number;
   total_members: number;
   total_pending_invites: number;
-  admin_users: string[];
-  member_users: string[];
+  admin_users: Array<string>;
+  member_users: Array<string>;
 };
 
 type DeleteProjectMember = {
@@ -387,7 +387,7 @@ type AttachUsersToProject = {
 };
 
 interface UserGroupsResponse {
-  groups: UserGroup[];
+  groups: Array<UserGroup>;
 }
 
 export type BookmarkRequest = {
@@ -396,8 +396,8 @@ export type BookmarkRequest = {
 };
 
 export type DeleteBookmarksResponse = {
-  successfully_deleted: BookmarkRequest[];
-  failed_to_delete: BookmarkRequest[];
+  successfully_deleted: Array<BookmarkRequest>;
+  failed_to_delete: Array<BookmarkRequest>;
 };
 
 export interface AddBookmarkResponse extends BookmarkRequest {
@@ -406,7 +406,7 @@ export interface AddBookmarkResponse extends BookmarkRequest {
 
 export interface LibraryBookmark extends AddBookmarkResponse {}
 
-type BookmarksByCategoryResponse = Record<TExtendedEntitiesTypeDict, LibraryBookmark[]>;
+type BookmarksByCategoryResponse = Record<TExtendedEntitiesTypeDict, Array<LibraryBookmark>>;
 export type ProjectBookmarksCategories = Record<TEntityTypeDict, number>;
 
 export type RecentWorkspace = {
@@ -449,7 +449,7 @@ export type VlmCreateSubscriptionResponse = VlmResponse<CreateSubscriptionRespon
 export type VlmCancelSubscriptionResponse = VlmResponse<CancelSubscriptionResponse>;
 export type VlmSubscriptionStatusResponse = VlmResponse<SubscriptionStatusResponse>;
 export type VlmUserSubscriptionsResponse = VlmResponse<UserSubscriptionsResponse>;
-export type VlmListSubscriptionResponse = VlmResponse<SubscriptionDetails[]>;
+export type VlmListSubscriptionResponse = VlmResponse<Array<SubscriptionDetails>>;
 export type VlmListSubscriptionTiersResponse = VlmResponse<SubscriptionTiersResponse>;
 export type VlmActiveSubscriptionResponse = VlmResponse<UserActiveSubscriptionResponse>;
 export type VlmNextPaymentResponse = VlmResponse<NextPaymentDateResponse>;
@@ -465,7 +465,7 @@ export type VlmAttachUsersToProjectResponse = VlmResponse<AttachUsersToProject>;
 export type VlmGetProjectBookmarksResponse = VlmResponse<BookmarksByCategoryResponse>;
 export type VlmGetProjectLibraryCategories = VlmResponse<ProjectBookmarksCategories>;
 export type VlmGetProjectLibraryPerCategory = VlmResponse<{
-  results: LibraryBookmark[];
+  results: Array<LibraryBookmark>;
   page: number;
   page_size: number;
   total: number;

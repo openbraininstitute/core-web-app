@@ -1,35 +1,35 @@
-import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
-import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
+import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import type {
-  EntityAuthorization,
-  EntityCoreBaseAsset,
   EntityCoreIdentifiable,
-  EntityCoreOwnership,
-  EntityCoreType,
+  EntityAuthorization,
+  PointLocationBase,
   IContributor,
-  IEType,
-  IMType,
+  Timestamps,
   ISpecies,
   IStrain,
-  PointLocationBase,
-  Timestamps,
+  IEType,
+  IMType,
+  EntityCoreType,
+  EntityCoreBaseAsset,
+  EntityCoreOwnership,
 } from '@/api/entitycore/types/shared/global';
 import type {
-  BrainRegionFilter,
   ContributionFilter,
-  EtypeFilter,
   IMorphologyFilter,
-  MtypeFilter,
-  PaginationFilter,
-  SharedFilter,
+  BrainRegionFilter,
   SpeciesFilter,
+  SharedFilter,
+  MtypeFilter,
+  EtypeFilter,
+  PaginationFilter,
 } from '@/api/entitycore/types/shared/request';
 
 interface ExemplarMorphology extends Timestamps, EntityCoreIdentifiable {
   name: string;
   description: string;
   location: PointLocationBase | null;
-  legacy_id: string[] | null;
+  legacy_id: Array<string> | null;
 }
 
 interface IEModelBase extends EntityCoreIdentifiable, EntityCoreOwnership {
@@ -49,11 +49,11 @@ export interface IEModel
   species: ISpecies;
   strain?: IStrain | null;
   brain_region: BrainRegionHierarchyBase;
-  contributions?: IContributor[] | null;
-  mtypes: IMType[] | null;
-  etypes: IEType[] | null;
+  contributions?: Array<IContributor> | null;
+  mtypes: Array<IMType> | null;
+  etypes: Array<IEType> | null;
   exemplar_morphology: ExemplarMorphology;
-  ion_channel_models: IonChannelModel[];
+  ion_channel_models: Array<IonChannelModel>;
 }
 
 export interface IEModelFilter

@@ -13,7 +13,7 @@ import type {
 } from '@/api/entitycore/types/shared/request';
 
 export interface IExperimentalSynapsesPerConnection extends IExperimentalDensity, EntityCoreType {
-  mtypes: IMType[] | null;
+  mtypes: Array<IMType> | null;
   pre_mtype: IMType;
   post_mtype: IMType;
   pre_region: IBrainRegionHierarchy;

@@ -1,5 +1,5 @@
-import type { PlotData } from '@/services/bluenaas-single-cell/types';
-import type { ApiError } from './common';
+import { ApiError } from './common';
+import { PlotData } from '@/services/bluenaas-single-cell/types';
 
 export enum SimulationTypeNames {
   SYNAPTOME_SIMULATION = 'synaptome-simulation',
@@ -69,7 +69,7 @@ export interface SingleNeuronModelSimulationConfig {
   record_from: RecordLocation[];
   conditions: SimulationExperimentalSetup;
   current_injection: CurrentInjectionSimulationConfig;
-  synaptome?: SynapseConfig[];
+  synaptome?: Array<SynapseConfig>;
 }
 
 export interface SimulationPayload {
@@ -112,8 +112,8 @@ export type SimulationStreamData = {
   frequency?: number;
   recording: string;
   varying_key: string;
-  x: number[];
-  y: number[];
+  x: Array<number>;
+  y: Array<number>;
   variable_name?: string;
   unit?: string;
 };

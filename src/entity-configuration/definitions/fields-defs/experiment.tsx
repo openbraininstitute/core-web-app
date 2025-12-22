@@ -1,25 +1,26 @@
 import get from 'es-toolkit/compat/get';
 
-import type { ReactNode } from 'react';
-import { hasAssets } from '@/api/entitycore/guards';
-import type {
-  EntityCoreObjectTypes,
-  ISingleNeuronSynaptomeSimulation,
-} from '@/api/entitycore/types';
-import type { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import { ReactNode } from 'react';
+
+import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import { PreviewThumbnail } from '@/features/thumbnail/preview';
+import {
+  renderArray,
+  renderEmptyOrValue,
+  EmptyPreview,
+  renderDictionaryKeys,
+} from '@/entity-configuration/definitions/renderer';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
 } from '@/entity-configuration/definitions/fields-defs/enums';
-import {
-  EmptyPreview,
-  renderArray,
-  renderDictionaryKeys,
-  renderEmptyOrValue,
-} from '@/entity-configuration/definitions/renderer';
+import { hasAssets } from '@/api/entitycore/guards';
 
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
-import { PreviewThumbnail } from '@/features/thumbnail/preview';
+import type {
+  EntityCoreObjectTypes,
+  ISingleNeuronSynaptomeSimulation,
+} from '@/api/entitycore/types';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.SimulationSeed]: {

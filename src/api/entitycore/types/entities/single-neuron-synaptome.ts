@@ -1,26 +1,28 @@
 import isNil from 'es-toolkit/compat/isNil';
 import { z } from 'zod';
-import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
+
+import { validateSingleNeuronSynapseGenerationFormula } from '@/api/small-scale-simulator';
+import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
+
 import type { IMEModel, IMEModelFilter } from '@/api/entitycore/types/entities/me-model';
 import type {
-  EntityAuthorization,
-  EntityCoreBaseAsset,
   EntityCoreIdentifiable,
-  EntityCoreOwnership,
-  EntityCoreType,
+  EntityAuthorization,
   IContributor,
   Timestamps,
+  EntityCoreOwnership,
+  EntityCoreType,
+  EntityCoreBaseAsset,
 } from '@/api/entitycore/types/shared/global';
 import type {
-  BrainRegionFilter,
   ContributionFilter,
-  EtypeFilter,
-  MtypeFilter,
-  OwnershipFilter,
-  PaginationFilter,
+  BrainRegionFilter,
   SharedFilter,
+  MtypeFilter,
+  EtypeFilter,
+  PaginationFilter,
+  OwnershipFilter,
 } from '@/api/entitycore/types/shared/request';
-import { validateSingleNeuronSynapseGenerationFormula } from '@/api/small-scale-simulator';
 
 export interface SingleNeuronSynaptomeBase {
   name: string;
@@ -36,7 +38,7 @@ export interface ISingleNeuronSynaptome
     EntityCoreOwnership,
     EntityCoreType,
     EntityCoreBaseAsset {
-  contributions?: IContributor[] | null;
+  contributions?: Array<IContributor> | null;
   brain_region: BrainRegionHierarchyBase;
   me_model: IMEModel;
 }

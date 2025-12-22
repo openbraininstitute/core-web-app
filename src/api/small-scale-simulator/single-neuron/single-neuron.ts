@@ -1,10 +1,10 @@
-import type { IMEModel } from '@/api/entitycore/types';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
+import { smallScaleSimulatorApi } from '@/api/small-scale-simulator/utils';
 
 import type { TCreateSingleNeuron } from '@/api/small-scale-simulator/types';
-import { smallScaleSimulatorApi } from '@/api/small-scale-simulator/utils';
-import type { WorkspaceContext } from '@/types/common';
 import type { ApiResponse } from '@/types/small-scale-simulator/common';
+import type { WorkspaceContext } from '@/types/common';
+import { IMEModel } from '@/api/entitycore/types';
 
 type CreateSingleNeuronParams = {
   ctx: WorkspaceContext;

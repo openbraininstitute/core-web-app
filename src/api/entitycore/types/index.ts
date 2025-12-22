@@ -1,23 +1,23 @@
-import type { ISingleNeuronSimulation } from 'src/api/entitycore/types/entities/single-neuron-simulation';
-import type { IExperimentalBoutonDensity } from '@/api/entitycore/types/entities/bouton-density';
+import type { ICircuit } from './entities/circuit';
+import type { ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types/entities/single-neuron-synaptome-simulation';
+import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
 import type {
   ICellMorphology,
   ICellMorphologyExpanded,
 } from '@/api/entitycore/types/entities/cell-morphology';
-import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
-import type { IEModel } from '@/api/entitycore/types/entities/e-model';
+import type { ISingleNeuronSimulation } from 'src/api/entitycore/types/entities/single-neuron-simulation';
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
-import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
-import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
-import type { IExperimentalNeuronDensity } from '@/api/entitycore/types/entities/neuron-density';
 import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import type { ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types/entities/single-neuron-synaptome-simulation';
-import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
-import type { ICircuit } from './entities/circuit';
+import type { IExperimentalNeuronDensity } from '@/api/entitycore/types/entities/neuron-density';
+import type { IExperimentalBoutonDensity } from '@/api/entitycore/types/entities/bouton-density';
+import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
+import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
+import type { IEModel } from '@/api/entitycore/types/entities/e-model';
+import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 
 export * from '@/api/entitycore/types/entity-type';
 
-export type {
+export {
   ICellMorphologyExpanded,
   IExperimentalSynapsesPerConnection,
   IExperimentalNeuronDensity,

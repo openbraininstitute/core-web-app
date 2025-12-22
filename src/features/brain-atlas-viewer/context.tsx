@@ -76,10 +76,7 @@ export const getAtlasMeshAsset = atomFamily((brainRegionId: string) => {
     const atlasItem = fullAtlas.data?.data.find((o) => o.brain_region_id === brainRegionId);
     if (!atlasItem) throw new Error(`Atlas details for brain region ${brainRegionId} not found`);
     const { data, error } = await tryCatch(
-      resolveBrainRegionAtlasMesh({
-        atlasId: brainAtlas?.id,
-        atlasRegionId: atlasItem.id,
-      })
+      resolveBrainRegionAtlasMesh({ atlasId: brainAtlas?.id, atlasRegionId: atlasItem.id })
     );
     if (error || !data) throw error ?? new Error('Mesh is empty');
     return { data, error };

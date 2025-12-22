@@ -1,4 +1,4 @@
-import { type DataPoint, LTTB } from './LTTB';
+import { LTTB, DataPoint } from './LTTB';
 
 interface RawData {
   y: number[];

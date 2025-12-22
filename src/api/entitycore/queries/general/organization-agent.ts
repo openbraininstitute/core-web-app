@@ -1,8 +1,9 @@
 import { authApiClient } from '@/api/apiClient';
+import { config } from '@/config';
+
 import type { IOrganizationFilter } from '@/api/entitycore/types/entities/agent';
 import type { IOrganization } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import { config } from '@/config';
 
 const baseUri = '/organization';
 /**

@@ -1,4 +1,4 @@
-import type { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
+import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
 
 export interface GteLteValue {
   gte: Date | number | null;

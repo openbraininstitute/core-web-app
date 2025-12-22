@@ -1,7 +1,8 @@
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
 export const viewDefForNotebook: ViewDefinitionConfig = {
   title: 'Notebook',

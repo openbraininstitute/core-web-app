@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode, useMemo, useState } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { match } from 'ts-pattern';
 

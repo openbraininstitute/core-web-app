@@ -1,10 +1,10 @@
 /* eslint-disable no-empty */
 
 import { getElectricalCellRecording } from '@/api/entitycore/queries';
-import { EntityTypeDict } from '@/api/entitycore/types';
+import { ElectricalCellRecordingJsonMetadata } from '@/features/entity-download/types';
 import { ASSET_BASE_PATH } from '@/features/entity-download/constants';
 import { Metadata } from '@/features/entity-download/metadata';
-import type { ElectricalCellRecordingJsonMetadata } from '@/features/entity-download/types';
+import { EntityTypeDict } from '@/api/entitycore/types';
 import {
   createAssetFileEntry,
   createTemplateFileEntry,

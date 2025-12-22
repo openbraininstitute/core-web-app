@@ -1,5 +1,5 @@
-import { Popover, type PopoverProps } from 'antd';
-import type React from 'react';
+import { Popover, PopoverProps } from 'antd';
+import React from 'react';
 
 import { classNames } from '@/util/utils';
 

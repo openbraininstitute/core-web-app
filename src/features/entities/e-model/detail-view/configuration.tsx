@@ -1,7 +1,8 @@
 'use client';
 
-import type { ICellMorphology, IEModel } from '@/api/entitycore/types';
 import EModelView from '@/features/entities/e-model/detail-view/wrapper';
+
+import type { ICellMorphology, IEModel } from '@/api/entitycore/types';
 
 type Props = {
   payload: {

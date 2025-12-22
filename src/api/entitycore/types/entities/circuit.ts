@@ -1,16 +1,16 @@
 import type {
   EntityAuthorization,
-  EntityCoreBaseAsset,
-  EntityCoreIdentifiableNamed,
+  Timestamps,
   EntityCoreOwnership,
   EntityCoreType,
-  Timestamps,
+  EntityCoreBaseAsset,
+  EntityCoreIdentifiableNamed,
 } from '@/api/entitycore/types/shared/global';
 import type {
   BrainRegionFilter,
-  IdFilter,
-  PaginationFilter,
   SharedFilter,
+  PaginationFilter,
+  IdFilter,
 } from '@/api/entitycore/types/shared/request';
 
 export const CircuitBuildCategory = {
@@ -96,7 +96,7 @@ export interface ICircuit
 
 type CircuitScaleFilter = {
   scale: string | null;
-  scale__in: string[];
+  scale__in: Array<string>;
 };
 export interface ICircuitFilter
   extends IdFilter,
@@ -129,8 +129,8 @@ export type SonataCircuitNetworkNodeConfigItem = {
 };
 
 export type SonataCircuitConfigNetworks = {
-  edges: SonataCircuitNetworkEdgeConfigItem[];
-  nodes: SonataCircuitNetworkNodeConfigItem[];
+  edges: Array<SonataCircuitNetworkEdgeConfigItem>;
+  nodes: Array<SonataCircuitNetworkNodeConfigItem>;
 };
 
 export type SonataCircuitComponentConfig = {

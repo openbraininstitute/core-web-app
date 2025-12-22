@@ -1,9 +1,10 @@
+import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
+
 import type {
-  OnboardingUpdateRequest,
   TOnboardingFeature,
+  OnboardingUpdateRequest,
   VlmOnboardingResponse,
 } from '@/api/virtual-lab-svc/queries/types';
-import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
 
 const baseUri = '/users/preferences/onboarding';
 

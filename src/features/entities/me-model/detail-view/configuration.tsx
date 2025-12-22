@@ -1,11 +1,13 @@
 'use client';
 
-import { ErrorBoundary } from '@sentry/nextjs';
 import { useSearchParams } from 'next/navigation';
-import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
-import CardError from '@/features/entities/me-model/detail-view/card-viewers/card-error';
-import EModelOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/emodel-overview-card';
+import { ErrorBoundary } from '@sentry/nextjs';
+
 import MorphologyOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/morphology-overview-card';
+import EModelOverviewCard from '@/features/entities/me-model/detail-view/card-viewers/emodel-overview-card';
+import CardError from '@/features/entities/me-model/detail-view/card-viewers/card-error';
+
+import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 
 export default function Configuration({ model: { morphology, emodel } }: { model: IMEModel }) {
   const params = useSearchParams();

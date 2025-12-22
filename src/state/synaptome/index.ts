@@ -15,11 +15,11 @@ type SynapsePosition = {
 
 export type SectionSynapses = {
   section_id: string;
-  synapses: SynapsePosition[];
+  synapses: Array<SynapsePosition>;
 };
 
 export type SectionSynapsesWith3D = {
-  sectionSynapses: SectionSynapses[];
+  sectionSynapses: Array<SectionSynapses>;
   synapsePlacementConfigId: string;
   count?: number;
   meshId?: string;

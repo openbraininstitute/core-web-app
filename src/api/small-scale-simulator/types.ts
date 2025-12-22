@@ -11,7 +11,7 @@ interface SynapsePosition {
 
 export interface SectionSynapses {
   section_id: string;
-  synapses: SynapsePosition[];
+  synapses: Array<SynapsePosition>;
 }
 
 export const CreateSingleNeuronSchema = z.object({

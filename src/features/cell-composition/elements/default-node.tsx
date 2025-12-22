@@ -1,7 +1,10 @@
+import React from 'react';
 import { CaretRightFilled } from '@ant-design/icons';
-import type { RenderNodeProps, TTreeNode } from '@/components/tree/types';
+
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
+
+import type { TTreeNode, RenderNodeProps } from '@/components/tree/types';
 
 type Props<TNode extends TTreeNode = TTreeNode> = RenderNodeProps<TNode>;
 

@@ -1,7 +1,7 @@
-import { randomUUID } from 'node:crypto';
+import { randomUUID } from 'crypto';
 
-import type { TEntityTypeDict } from '@/api/entitycore/types';
-import type { PartialBy } from '@/types/common';
+import { TEntityTypeDict } from '@/api/entitycore/types';
+import { PartialBy } from '@/types/common';
 import { logError, logInfo } from '@/utils/logger';
 
 type DownloadTicket = {

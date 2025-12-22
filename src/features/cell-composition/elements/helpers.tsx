@@ -1,4 +1,4 @@
-import type { CalculatedCompositionPair } from '@/types/composition/calculation';
+import { CalculatedCompositionPair } from '@/types/composition/calculation';
 import { formatNumber } from '@/util/common';
 
 export function getMetric(

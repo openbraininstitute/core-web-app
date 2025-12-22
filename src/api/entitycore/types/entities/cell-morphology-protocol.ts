@@ -230,7 +230,7 @@ export type NestedCellMorphologyProtocolRead = Prettify<
 
 export type CellMorphologyProtocolNestedFilter = {
   cell_morphology_protocol__id: string | null;
-  cell_morphology_protocol__id__in: string | string[] | null;
+  cell_morphology_protocol__id__in: string | Array<string> | null;
   cell_morphology_protocol__generation_type: TCellMorphologyGenerationType | null;
-  cell_morphology_protocol__generation_type__in: TCellMorphologyGenerationType[] | null;
+  cell_morphology_protocol__generation_type__in: Array<TCellMorphologyGenerationType> | null;
 };

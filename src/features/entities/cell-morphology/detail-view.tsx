@@ -1,18 +1,19 @@
 'use client';
 
-import { LoadingOutlined } from '@ant-design/icons';
-import { Spin } from 'antd';
-import { useParams } from 'next/navigation';
 import { ErrorBoundary } from 'react-error-boundary';
+import { LoadingOutlined } from '@ant-design/icons';
+import { useParams } from 'next/navigation';
+import { Spin } from 'antd';
 
 // We disable enhanced somas until they are fixed on the backend.
 // import { useSwcContentUrl } from '@/util/content-url';
 
-import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
-import { withErrorConfig } from '@/components/GenericErrorFallback';
-import { MorphoViewer } from '@/components/MorphoViewer';
 import { Morphometrics } from '@/features/entities/cell-morphology/morphometrics';
 import { useLoadCellMorphology3DAsset } from '@/state/morpho-viewer';
+import { withErrorConfig } from '@/components/GenericErrorFallback';
+import { MorphoViewer } from '@/components/MorphoViewer';
+
+import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { WorkspaceContext } from '@/types/common';
 
 export function CellMorphologyViewer({ entity }: { entity: ICellMorphology }) {
@@ -38,10 +39,7 @@ export function CellMorphologyViewer({ entity }: { entity: ICellMorphology }) {
 function MorphoViewerLoader({ morphology }: { morphology: ICellMorphology }) {
   const ctx = useParams<WorkspaceContext>();
 
-  const { isLoading, result, error } = useLoadCellMorphology3DAsset({
-    morphology,
-    ctx,
-  });
+  const { isLoading, result, error } = useLoadCellMorphology3DAsset({ morphology, ctx });
   // We disable enhanced somas until they are fixed on the backend.
   // const swcContentUrl = useSwcContentUrl(resource.distribution);
   if (isLoading) {

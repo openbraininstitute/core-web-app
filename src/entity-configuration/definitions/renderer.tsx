@@ -1,26 +1,28 @@
 'use client';
 
-import { Button, Empty, Modal } from 'antd';
+import { isEmpty, isNil, find, filter, reject, isString } from 'es-toolkit/compat';
 import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
-import { filter, find, isEmpty, isNil, isString, reject } from 'es-toolkit/compat';
+import { JSX, ReactNode, useEffect, useState, isValidElement } from 'react';
+import { Button, Empty, Modal } from 'antd';
 import { useParams } from 'next/navigation';
-import { isValidElement, type JSX, type ReactNode, useEffect, useState } from 'react';
-import type { EntityCoreDensityObjectTypes, ICellMorphology } from '@/api/entitycore/types';
-import type { ICellMorphologyExpanded } from '@/api/entitycore/types/entities/cell-morphology';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type {
-  AssetLabel,
-  EntityCoreIdentifiable,
-  EntityCoreResource,
-  IContributor,
-  ILicense,
-  MeasurementBase,
-} from '@/api/entitycore/types/shared/global';
+
 import { AgentType, MeasurementStatistic } from '@/api/entitycore/types/shared/global';
-import { tryCatch } from '@/api/utils';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { PreviewThumbnail } from '@/features/thumbnail/preview';
+import { tryCatch } from '@/api/utils';
+
+import type { ICellMorphologyExpanded } from '@/api/entitycore/types/entities/cell-morphology';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreDensityObjectTypes, ICellMorphology } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
+import {
+  type AssetLabel,
+  type EntityCoreIdentifiable,
+  type EntityCoreResource,
+  type IContributor,
+  type ILicense,
+  type MeasurementBase,
+} from '@/api/entitycore/types/shared/global';
 
 export const EmptyValue = '—';
 
@@ -129,25 +131,17 @@ export function RenderCustomField<R extends EntityCoreIdentifiable>({
   useEffect(() => {
     async function getEntity() {
       setPayload({ entity: null, error: null, loading: true });
-      if (entityConfig?.api.query.one && entityId) {
+      if (entityConfig && entityConfig.api.query.one && entityId) {
         const { data, error } = await tryCatch<R, any>(
-          // @ts-expect-error
-          entityConfig.api.query.one({
-            id: entityId,
-            context: { virtualLabId, projectId },
-          })
+          // @ts-ignore
+          entityConfig.api.query.one({ id: entityId, context: { virtualLabId, projectId } })
         );
         if (data) setPayload({ entity: data, error: null, loading: false });
-        if (error)
-          setPayload({
-            entity: null,
-            error: 'error loading entity',
-            loading: false,
-          });
+        if (error) setPayload({ entity: null, error: 'error loading entity', loading: false });
       }
     }
     getEntity();
-  }, [entityId, virtualLabId, projectId, entityConfig]);
+  }, [entityId, entityType, virtualLabId, projectId, entityConfig]);
 
   return (
     <CustomComponent loading={payload?.loading} error={payload?.error} data={payload?.entity} />
@@ -236,13 +230,9 @@ export function renderPreview<T extends EntityCoreResource>(
 
 export default function getMeasurements(r: EntityCoreDensityObjectTypes) {
   const mean = find(r.measurements, { name: MeasurementStatistic.mean });
-  const std = find(r.measurements, {
-    name: MeasurementStatistic.standard_deviation,
-  });
+  const std = find(r.measurements, { name: MeasurementStatistic.standard_deviation });
   const ss = find(r.measurements, { name: MeasurementStatistic.sample_size });
-  const se = find(r.measurements, {
-    name: MeasurementStatistic.standard_error,
-  });
+  const se = find(r.measurements, { name: MeasurementStatistic.standard_error });
   return { mean, std, ss, se };
 }
 
@@ -321,14 +311,13 @@ export const renderMorphologyMeasurement = (
 function ContributorsModalTrigger({
   contributors,
 }: {
-  contributors: IContributor[];
+  contributors: Array<IContributor>;
 }): React.ReactElement {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <>
       <Button type="link" onClick={() => setIsOpen(true)} className="mt-2 h-auto p-0 text-gray-600">
-        View {contributors.length} Contributor
-        {contributors.length > 1 ? 's' : ''}
+        View {contributors.length} Contributor{contributors.length > 1 ? 's' : ''}
       </Button>
       {renderContributorsModal(contributors, isOpen, () => setIsOpen(false), 'modal')}
     </>
@@ -336,18 +325,16 @@ function ContributorsModalTrigger({
 }
 
 export const renderContributorsModal = (
-  contributors: IContributor[],
+  contributors: Array<IContributor>,
   open: boolean,
   onClose: () => void,
   mode: 'modal' | 'inline' = 'modal'
 ): ReactNode => {
   const getName = (c: IContributor) =>
-    `${`${'given_name' in c.agent ? c.agent.given_name : ''} ${'family_name' in c.agent ? c.agent.family_name : ''}`}`.trim() ||
+    `${('given_name' in c.agent ? c.agent.given_name : '') + ' ' + ('family_name' in c.agent ? c.agent.family_name : '')}`.trim() ||
     c.agent.pref_label;
 
-  const consortia = filter(contributors, {
-    agent: { type: AgentType.Consortium },
-  });
+  const consortia = filter(contributors, { agent: { type: AgentType.Consortium } });
   const other = reject(contributors, { agent: { type: AgentType.Consortium } });
 
   const sortedContributors = [...consortia, ...other];

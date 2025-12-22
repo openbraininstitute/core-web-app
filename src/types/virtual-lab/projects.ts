@@ -1,4 +1,4 @@
-import type { VlmResponse } from './common';
+import { VlmResponse } from './common';
 
 export type ProjectResponse = VlmResponse<{ project: Project }>;
 
@@ -12,5 +12,5 @@ export type Project = {
   updated_at: string;
   virtual_lab_id: string;
   user_count?: number;
-  admins?: string[];
+  admins?: Array<string>;
 };

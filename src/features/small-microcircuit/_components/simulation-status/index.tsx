@@ -1,4 +1,4 @@
-import type { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import { ExecutionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
 
 export function SimulationStatusBadge({ status }: { status?: EntitycoreExecutionStatus }) {

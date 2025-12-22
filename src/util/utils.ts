@@ -1,8 +1,8 @@
+import { ReactNode } from 'react';
 import { format } from 'date-fns';
 import capitalize from 'es-toolkit/compat/capitalize';
 import isString from 'es-toolkit/compat/isString';
 import _memoize from 'es-toolkit/compat/memoize';
-import type { ReactNode } from 'react';
 
 export function createHeaders(
   token: string,
@@ -237,7 +237,7 @@ export function isJSON(str: any) {
   try {
     JSON.parse(str);
     return true;
-  } catch (_e) {
+  } catch (e) {
     return false;
   }
 }

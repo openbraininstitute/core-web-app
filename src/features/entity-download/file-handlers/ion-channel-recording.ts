@@ -1,10 +1,10 @@
 /* eslint-disable no-empty */
 
 import { getIonChannelRecording } from '@/api/entitycore/queries';
-import { EntityTypeDict } from '@/api/entitycore/types';
+import { IonChannelRecordingJsonMetadata } from '@/features/entity-download/types';
 import { ASSET_BASE_PATH } from '@/features/entity-download/constants';
 import { Metadata } from '@/features/entity-download/metadata';
-import type { IonChannelRecordingJsonMetadata } from '@/features/entity-download/types';
+import { EntityTypeDict } from '@/api/entitycore/types';
 import {
   createAssetFileEntry,
   createTemplateFileEntry,

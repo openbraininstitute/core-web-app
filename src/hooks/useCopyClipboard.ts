@@ -1,5 +1,5 @@
-import delay from 'es-toolkit/compat/delay';
 import { useCallback, useState } from 'react';
+import delay from 'es-toolkit/compat/delay';
 
 type CopiedValue = string | null;
 type CopyFn = (text: string) => Promise<boolean>;
@@ -19,7 +19,7 @@ export function useCopyToClipboard(): [CopiedValue, CopyFn, ResetFn, boolean] {
       setCopiedText(text);
       delay(() => setCopying(false), 2000);
       return true;
-    } catch (_error) {
+    } catch (error) {
       setCopiedText(null);
       setCopying(false);
       return false;

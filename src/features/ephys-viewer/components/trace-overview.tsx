@@ -7,9 +7,8 @@ import { useInView } from 'react-intersection-observer';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
 import { useOverviewPlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
-import type NWBTrace from '@/features/ephys-viewer/nwb-trace';
-import type { RecordingType } from '@/features/ephys-viewer/nwb-trace';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
+import NWBTrace, { RecordingType } from '@/features/ephys-viewer/nwb-trace';
 import optimizePlotData from '@/util/explore-section/optimizeTrace';
 import { convertCurrentSeries, convertVoltageSeries } from '@/util/explore-section/plotHelpers';
 
@@ -113,7 +112,7 @@ function TraceThumbnailContainer({
 
   useEffect(() => {
     if (ref.current) setInViewRef(ref.current);
-  }, [setInViewRef]);
+  }, [ref, setInViewRef]);
 
   return (
     <div ref={ref} className="relative aspect-4/3 overflow-hidden bg-gray-100 last:mt-7">
@@ -330,13 +329,7 @@ function useDataWithUnit(
   sweeps: string[],
   trace: NWBTrace
 ): [
-  data: {
-    x: any[];
-    y: any[];
-    sweepName: string;
-    name: string;
-    line: { color: string };
-  }[],
+  data: { x: any[]; y: any[]; sweepName: string; name: string; line: { color: string } }[],
   unit: string | null,
 ] {
   return useMemo(() => {

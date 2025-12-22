@@ -1,15 +1,17 @@
-import Ajv, { type AnySchema } from 'ajv';
+import Ajv, { AnySchema } from 'ajv';
 import { useAtomValue } from 'jotai';
 import { useEffect, useMemo, useRef } from 'react';
 import { match } from 'ts-pattern';
-import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
-import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
-import { config as appConfig } from '@/config';
-import type { Config } from '@/features/small-microcircuit/_components/components';
-import type { JSONSchema } from '@/features/small-microcircuit/types';
-import type { WorkspaceContext } from '@/types/common';
+
 import { modelAtomFamily } from '../atoms';
 import { isRootCategory } from './schema';
+
+import { EntityTypeDict, IMEModel } from '@/api/entitycore/types';
+import { CircuitScaleDictionary, ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { config as appConfig } from '@/config';
+import { Config } from '@/features/small-microcircuit/_components/components';
+import { JSONSchema } from '@/features/small-microcircuit/types';
+import { WorkspaceContext } from '@/types/common';
 
 export function useModel({ id, context }: { id: string; context: WorkspaceContext }) {
   const modelAtom = modelAtomFamily({ id, context });

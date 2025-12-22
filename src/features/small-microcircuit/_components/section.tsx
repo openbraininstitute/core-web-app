@@ -1,5 +1,7 @@
 /* eslint-disable no-param-reassign */
-
+import React from 'react';
+import { Input } from 'antd';
+import { atom } from 'jotai';
 import {
   CheckCircleFilled,
   CheckOutlined,
@@ -9,16 +11,15 @@ import {
   PlusCircleOutlined,
   WarningFilled,
 } from '@ant-design/icons';
-import type { ErrorObject } from 'ajv';
-import { Input } from 'antd';
-import { atom } from 'jotai';
-import type React from 'react';
+import { ErrorObject } from 'ajv';
+
+import { AtomsMap, JSONSchema } from '../types';
+import { Chevron, Config, ConfigValue, Tab } from './components';
+import { isAtom, isPlainObject } from './utils';
+import { isRootCategory } from './hooks/schema';
+
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
-import type { AtomsMap, JSONSchema } from '../types';
-import { Chevron, type Config, type ConfigValue, Tab } from './components';
-import { isRootCategory } from './hooks/schema';
-import { isAtom, isPlainObject } from './utils';
 
 export function Section({
   schema,
@@ -169,7 +170,7 @@ export function Section({
       >
         {schema.properties?.[k]?.title}
         <div className="flex gap-1">
-          {errors?.find((error) => error.instancePath.startsWith(`/${k}`)) ? (
+          {errors?.find((error) => error.instancePath.startsWith('/' + k)) ? (
             <WarningFilled className="text-yellow-400" />
           ) : (
             <CheckCircleFilled className="text-green-600" />

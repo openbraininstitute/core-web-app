@@ -1,23 +1,24 @@
 /* eslint-disable no-param-reassign */
-
-import { TgdColor, TgdVec4 } from '@tolokoban/tgd';
+import React from 'react';
 import compact from 'es-toolkit/compat/compact';
 import find from 'es-toolkit/compat/find';
 import { useAtom, useAtomValue } from 'jotai';
 import { atomWithStorage, unwrap } from 'jotai/utils';
-import React from 'react';
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-import { useAppNotification } from '@/components/notification';
+import { TgdColor, TgdVec4 } from '@tolokoban/tgd';
+
+import { brainRegionAtlasAtom } from '../context';
+import { Painter } from './painter';
+import { SettingsDefinitions } from './settings';
+import { VisibleRegion } from './types';
+
 import {
   brainRegionBasicCellGroupsRegionsHierarchyAtom,
   brainRegionRootHierarchyAtom,
   ROOT_BRAIN_REGION_ID,
   useBrainRegionHierarchy,
 } from '@/features/brain-region-hierarchy/context';
-import { brainRegionAtlasAtom } from '../context';
-import { Painter } from './painter';
-import type { SettingsDefinitions } from './settings';
-import type { VisibleRegion } from './types';
+import { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import { useAppNotification } from '@/components/notification';
 
 export function usePainter(): Painter {
   const notif = useAppNotification();
@@ -52,12 +53,8 @@ export function useVisibleRegions(dataKey: string): {
     React.useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
   );
   return React.useMemo(() => {
-    const rootBrainRegion = find(rootBrainRegions?.options, {
-      value: ROOT_BRAIN_REGION_ID,
-    })?.data;
-    const currentBrainRegion = find(brainRegions?.options, {
-      value: brainRegionNode.id,
-    })?.data;
+    const rootBrainRegion = find(rootBrainRegions?.options, { value: ROOT_BRAIN_REGION_ID })?.data;
+    const currentBrainRegion = find(brainRegions?.options, { value: brainRegionNode.id })?.data;
     const regions = compact(
       brainRegionNode ? [currentBrainRegion, rootBrainRegion] : [rootBrainRegion]
     );

@@ -10,17 +10,17 @@ import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulationResult } from '@/api/entitycore/queries/simulation/circuit-simulation-result';
-import { EntityTypeDict, type IMEModel, type TEntityTypeDict } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import type { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/circuit-simulation-execution';
-import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
-import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import { EntityTypeDict, IMEModel, TEntityTypeDict } from '@/api/entitycore/types';
+import { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/circuit-simulation-execution';
+import { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import { resolveExecutions } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { getLatestSimExecStatus } from '@/features/small-microcircuit/_components/utils';
-import type { SimExecStatusMap } from '@/features/small-microcircuit/types';
-import type { WorkspaceContext } from '@/types/common';
+import { SimExecStatusMap } from '@/features/small-microcircuit/types';
+import { WorkspaceContext } from '@/types/common';
 import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';
+import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 
 const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
   ({ simulationId, context }: { simulationId: string; context: WorkspaceContext }) =>
@@ -42,10 +42,7 @@ const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
 export const simExecRemoteStatusMapAtomFamily = atomFamilyWithExpiration(
   ({ simulationIds, context }: { simulationIds: string[]; context: WorkspaceContext }) =>
     atomWithRefresh<Promise<SimExecStatusMap>>(async () => {
-      const simExecutions = await resolveExecutions({
-        context,
-        allSimIds: simulationIds,
-      });
+      const simExecutions = await resolveExecutions({ context, allSimIds: simulationIds });
 
       const executionsGrouped = simExecutions.reduce<Map<string, ICircuitSimulationExecution[]>>(
         (map, exec) => map.set(exec.used[0].id, [...(map.get(exec.used[0].id) ?? []), exec]),
@@ -57,7 +54,7 @@ export const simExecRemoteStatusMapAtomFamily = atomFamilyWithExpiration(
       );
 
       return Array.from(executionsGrouped.keys()).reduce(
-        (map, simId) => map.set(simId, executionsGrouped.get(simId)?.[0].status),
+        (map, simId) => map.set(simId, executionsGrouped.get(simId)![0].status),
         new Map()
       );
     }),
@@ -67,10 +64,7 @@ export const simExecRemoteStatusMapAtomFamily = atomFamilyWithExpiration(
   }
 );
 
-type SimExecStatusMapAtomFamilyArg = {
-  simulationIds: string[];
-  context: WorkspaceContext;
-};
+type SimExecStatusMapAtomFamilyArg = { simulationIds: string[]; context: WorkspaceContext };
 
 export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
   ({ simulationIds, context }: SimExecStatusMapAtomFamilyArg) => {
@@ -138,10 +132,7 @@ export const simResultBySimIdAtomFamily = readAtomFamilyWithExpiration(
         throw new Error('Simulation Result not found');
       }
 
-      return getCircuitSimulationResult({
-        id: execution.generated[0].id,
-        context,
-      });
+      return getCircuitSimulationResult({ id: execution.generated[0].id, context });
     }),
   {
     ttl: 120000, // 2 minutes
@@ -158,10 +149,7 @@ export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
       const simulations = res.data;
 
       // To correctly sort simulations by name which might contain a simulation index.
-      const collator = new Intl.Collator(undefined, {
-        numeric: true,
-        sensitivity: 'base',
-      });
+      const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
       const sortedSimulations = simulations.sort((a, b) => collator.compare(a.name, b.name));
 
       return sortedSimulations;

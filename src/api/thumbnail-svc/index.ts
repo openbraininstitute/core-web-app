@@ -1,10 +1,12 @@
 import find from 'es-toolkit/compat/find';
 import kebabCase from 'es-toolkit/compat/kebabCase';
-import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+
 import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
 import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
 import buildQueryString from '@/util/query-params-builder';
+
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 
 function buildAssetUrl(
   resource: EntityCoreResource,
@@ -63,9 +65,7 @@ export async function getPreviewBlob(
     headers,
   });
   if (!response.ok) {
-    throw new Error('Error generating thumbnail', {
-      cause: await response.json(),
-    });
+    throw new Error('Error generating thumbnail', { cause: await response.json() });
   }
   const blob = await response.blob();
   return blob;

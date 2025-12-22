@@ -1,11 +1,13 @@
-import { RightOutlined } from '@ant-design/icons';
 import React from 'react';
+import { RightOutlined } from '@ant-design/icons';
+
+import { FlatValidationResult } from '../hooks';
+import PDFViewer from '../../asset-viewers/pdf-viewer';
+import ImageViewer from '../../asset-viewers/image-viewer';
+import Documentation from './documentation';
+
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { classNames } from '@/util/utils';
-import ImageViewer from '../../asset-viewers/image-viewer';
-import PDFViewer from '../../asset-viewers/pdf-viewer';
-import type { FlatValidationResult } from '../hooks';
-import Documentation from './documentation';
 
 import styles from './validation-result-card.module.css';
 

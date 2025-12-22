@@ -1,7 +1,7 @@
 import { config } from '@/config';
 
 // add logs color to the logs
-const _logColors = {
+const logColors = {
   log: '\x1b[32m',
   error: '\x1b[31m',
   warn: '\x1b[33m',
@@ -9,17 +9,16 @@ const _logColors = {
   trace: '\x1b[35m',
   info: '\x1b[36m',
 };
-const _resetColor = '\x1b[0m';
+const resetColor = '\x1b[0m';
 
 type LogArgs = Parameters<
   typeof console.log | typeof console.error | typeof console.warn | typeof console.debug
 >;
 
-export function log(
-  _type: 'log' | 'error' | 'warn' | 'debug' | 'trace' | 'info',
-  ..._args: LogArgs
-) {
+export function log(type: 'log' | 'error' | 'warn' | 'debug' | 'trace' | 'info', ...args: LogArgs) {
   if (config.DEPLOYMENT_ENV !== 'production') {
+    // eslint-disable-next-line no-console
+    console[type](`${logColors[type]}${args[0]}${resetColor}`, ...args.slice(1), '\n');
   }
 }
 

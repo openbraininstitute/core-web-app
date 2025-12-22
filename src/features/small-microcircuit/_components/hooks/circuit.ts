@@ -27,9 +27,7 @@ export function useCircuitImageURL(circuitId: string) {
         (item) => item.label === AssetLabel.simulation_designer_image
       );
       if (!asset) {
-        error({
-          message: `No image found for circuit "${circuit.name}" (${circuitId})!`,
-        });
+        error({ message: `No image found for circuit "${circuit.name}" (${circuitId})!` });
         return;
       }
       try {

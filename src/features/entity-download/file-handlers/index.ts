@@ -1,19 +1,19 @@
-import { EntityTypeDict, type TEntityTypeDict } from '@/api/entitycore/types';
-import type { FileEntry } from '@/features/entity-download/types';
-import type { WorkspaceContext } from '@/types/common';
-import { getCellMorphologyFiles } from './cell-morphology';
 import { getElectricalCellRecordingFiles } from './electrical-cell-recording';
 import { getEmodelFiles } from './emodel';
 import { getExperimentalBoutonDensityFiles } from './experimental-bouton-density';
 import { getExperimentalNeuronDensityFiles } from './experimental-neuron-density';
 import { getExperimentalSynapsesPerConnectionFiles } from './experimental-synapses-per-connection';
 import { getIonChannelModelFiles } from './ion-channel-model';
-import { getIonChannellRecordingFiles } from './ion-channel-recording';
 import { getMEmodelFiles } from './memodel';
-import { getNotebookFiles } from './notebook';
-import { getSingleNeuronSimulationFiles } from './single-neuron-simulation';
+import { getCellMorphologyFiles } from './cell-morphology';
 import { getSingleNeuronSynaptomeFiles } from './single-neuron-synaptome';
+import { getSingleNeuronSimulationFiles } from './single-neuron-simulation';
 import { getSingleNeuronSynaptomeSimulationFiles } from './single-neuron-synaptome-simulation';
+import { getNotebookFiles } from './notebook';
+import { getIonChannellRecordingFiles } from './ion-channel-recording';
+import { WorkspaceContext } from '@/types/common';
+import { FileEntry } from '@/features/entity-download/types';
+import { EntityTypeDict, type TEntityTypeDict } from '@/api/entitycore/types';
 
 type GetEntityFilesHandler = (
   entityIds: string[],

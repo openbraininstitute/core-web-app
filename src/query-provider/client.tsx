@@ -1,8 +1,8 @@
 'use client';
 
-import type { QueryClient } from '@tanstack/react-query';
-import { isServer, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider, isServer } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import type { QueryClient } from '@tanstack/react-query';
 
 import { makeQueryClient } from '@/query-provider/query-client';
 

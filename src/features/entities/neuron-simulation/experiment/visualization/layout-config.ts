@@ -1,4 +1,4 @@
-import type Plotly from 'plotly.js-dist-min';
+import Plotly from 'plotly.js-dist-min';
 
 export const PLOT_LAYOUT: Partial<Plotly.Layout> = {
   plot_bgcolor: '#fff',

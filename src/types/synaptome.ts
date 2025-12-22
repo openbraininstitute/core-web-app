@@ -1,7 +1,7 @@
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 
 export type SynapsesConfiguration = {
-  synapses: TSingleNeuronSynaptomeConfiguration[];
+  synapses: Array<TSingleNeuronSynaptomeConfiguration>;
 };
 
 export type SynaptomeModelConfiguration = {
@@ -9,5 +9,5 @@ export type SynaptomeModelConfiguration = {
   description: string;
   seed: number;
   modelUrl: string;
-  synapses: TSingleNeuronSynaptomeConfiguration[];
+  synapses: Array<TSingleNeuronSynaptomeConfiguration>;
 };

@@ -1,11 +1,11 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { Select } from 'antd';
-import { type atom, useAtom } from 'jotai';
+import { atom, useAtom } from 'jotai';
 
 import authFetch from '@/auth-fetch';
 import { config } from '@/config';
-import type { ConfigValue } from '@/features/small-microcircuit/_components/components';
+import { ConfigValue } from '@/features/small-microcircuit/_components/components';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 export default function PredefinedNodeset({

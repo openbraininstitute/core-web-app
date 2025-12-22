@@ -1,15 +1,16 @@
+import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
+
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { WorkspaceContext } from '@/types/common';
 import type {
-  AddBookmarkResponse,
   BookmarkRequest,
+  AddBookmarkResponse,
   DeleteBookmarksResponse,
   VlmGetProjectBookmarksResponse,
   VlmGetProjectLibraryCategories,
   VlmGetProjectLibraryPerCategory,
 } from '@/api/virtual-lab-svc/queries/types';
-import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
-import type { WorkspaceContext } from '@/types/common';
+import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 const baseUri = '/virtual-labs';
 

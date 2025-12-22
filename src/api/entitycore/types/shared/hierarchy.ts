@@ -1,15 +1,15 @@
-import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
+import { TDerivationType } from '@/api/entitycore/types/entities/derivation';
 
 export interface HierarchyNode {
   id: string;
   name: string;
   parent_id: string | null;
-  children: HierarchyNode[];
+  children: Array<HierarchyNode>;
   authorized_public: boolean;
   authorized_project_id: string;
 }
 
 export interface HierarchyTreeResponse {
   derivation_type: TDerivationType;
-  data: HierarchyNode[];
+  data: Array<HierarchyNode>;
 }

@@ -1,8 +1,9 @@
 import z from 'zod';
+import { EntityCoreConfiguration } from '@/entity-configuration/domain';
+
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { AssetLegacyMeta } from '@/api/entitycore/types/shared/legacy';
 import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
-import type { EntityCoreConfiguration } from '@/entity-configuration/domain';
 import type { Prettify } from '@/utils/type';
 
 export type EntityCoreDataType =
@@ -10,7 +11,7 @@ export type EntityCoreDataType =
 
 export type EntityCoreIdentifiable = {
   id: string;
-  legacy_id: string[] | null;
+  legacy_id: Array<string> | null;
 };
 
 export type EntityCoreType = {
@@ -37,7 +38,7 @@ type EntityCoreBaseType = {
 };
 
 export interface EntityCoreBaseAsset {
-  assets: IAsset[];
+  assets: Array<IAsset>;
 }
 
 export interface EntityCoreResource

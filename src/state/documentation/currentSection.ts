@@ -1,5 +1,5 @@
 import { atom } from 'jotai';
 
-import type { SingleSectionProps } from '@/components/documentation/type';
+import { SingleSectionProps } from '@/components/documentation/type';
 
 export const activeNavItemAtom = atom<SingleSectionProps | null>(null);

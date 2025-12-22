@@ -10,7 +10,7 @@ import {
   createTemplateFileEntry,
   getMetadataCsvEntryBase,
 } from '@/features/entity-download/utils';
-import type { WorkspaceContext } from '@/types/common';
+import { WorkspaceContext } from '@/types/common';
 
 export async function* getSingleNeuronSynaptomeSimulationFiles(
   entityIds: string[],
@@ -49,7 +49,7 @@ export async function* getSingleNeuronSynaptomeSimulationFiles(
         path,
         ctx,
       });
-    } catch (_error) {}
+    } catch (error) {}
 
     for await (const metadataFileEntry of metadata.getFileEntries()) {
       yield metadataFileEntry;

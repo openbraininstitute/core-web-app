@@ -1,22 +1,22 @@
-import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
-import type {
-  EntityAuthorization,
-  EntityCoreBaseAsset,
-  EntityCoreIdentifiable,
-  EntityCoreOwnership,
-  EntityCoreType,
-  IBrainLocation,
-  ILicense,
-  Timestamps,
-} from '@/api/entitycore/types/shared/global';
+import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type {
   BrainRegionFilter,
   ContributionFilter,
-  IDFilter,
+  TimestampsFilter,
   PaginationFilter,
   SharedFilter,
-  TimestampsFilter,
+  IDFilter,
 } from '@/api/entitycore/types/shared/request';
+import type {
+  EntityCoreIdentifiable,
+  EntityCoreBaseAsset,
+  EntityAuthorization,
+  IBrainLocation,
+  Timestamps,
+  ILicense,
+  EntityCoreType,
+  EntityCoreOwnership,
+} from '@/api/entitycore/types/shared/global';
 
 export const RecordingType = {
   Intracellular: {
@@ -76,9 +76,9 @@ export type TElectricalRecordingOriginDictionary =
 
 export interface IRecordingFilter {
   recording_type: TRecordingTypeDictionary | null;
-  recording_type__in: TRecordingTypeDictionary[] | null;
+  recording_type__in: Array<TRecordingTypeDictionary> | null;
   recording_origin: TElectricalRecordingOriginDictionary | null;
-  recording_origin__in: TElectricalRecordingOriginDictionary[] | null;
+  recording_origin__in: Array<TElectricalRecordingOriginDictionary> | null;
 }
 
 export type ElectricalCellRecordingFilter = Partial<

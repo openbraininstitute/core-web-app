@@ -1,3 +1,7 @@
+import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
+import { config } from '@/config';
+import { getSession } from '@/auth-fetch';
+
 import type {
   UpdateUserProfileRequest,
   UserProfileResponse,
@@ -5,9 +9,6 @@ import type {
   VlmUserGroupsResponse,
   VlmUserProfile,
 } from '@/api/virtual-lab-svc/queries/types';
-import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
-import { getSession } from '@/auth-fetch';
-import { config } from '@/config';
 import type { WorkspaceContext } from '@/types/common';
 
 function getBaseUrl() {
@@ -19,9 +20,7 @@ function getBaseUrl() {
  *
  * @returns user profile information
  */
-export const getUserProfile = async (): Promise<{
-  profile: UserProfileResponse;
-} | null> => {
+export const getUserProfile = async (): Promise<{ profile: UserProfileResponse } | null> => {
   const session = await getSession();
   const response = await fetch(`${getBaseUrl()}/profile`, {
     method: 'get',
@@ -70,9 +69,7 @@ export const updateUserProfile = async (
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to update user profile`, {
-      cause: await response.json(),
-    });
+    throw new Error(`Failed to update user profile`, { cause: await response.json() });
   }
 
   const result: VlmUserProfile = await response.json();
@@ -95,9 +92,7 @@ export const getUserGroups = async (): Promise<VlmUserGroupsResponse> => {
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to get user groups`, {
-      cause: await response.json(),
-    });
+    throw new Error(`Failed to get user groups`, { cause: await response.json() });
   }
 
   return await response.json();

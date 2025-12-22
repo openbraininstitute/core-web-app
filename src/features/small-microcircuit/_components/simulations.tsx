@@ -7,7 +7,7 @@ import { match } from 'ts-pattern';
 
 import { requestOfflineTokenConsent } from '@/api/auth-manager';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import ApiError from '@/api/error';
 import { runSimulation } from '@/api/launch-system';
@@ -19,13 +19,9 @@ import {
   simulationsByCampaignIdAtomFamily,
 } from '@/features/small-microcircuit/_components/atoms';
 import { FileViewer } from '@/features/small-microcircuit/_components/file-viewer';
-import {
-  type File,
-  SimulationFiles,
-} from '@/features/small-microcircuit/_components/simulation-files';
+import { File, SimulationFiles } from '@/features/small-microcircuit/_components/simulation-files';
 import { SimulationStatusBadge } from '@/features/small-microcircuit/_components/simulation-status';
 import errorRegistry from '@/features/small-microcircuit/error-registry';
-import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/simulation';
 import { useConsent } from '@/services/consent';
@@ -35,6 +31,8 @@ import { ExecutionStatusColorMap } from '@/ui/segments/activity-execution/color-
 import { classNames } from '@/util/utils';
 import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
+
+import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
 
 type SimulationTabProps = {
   campaignId: string;
@@ -50,10 +48,7 @@ export default function SimulationsTab({
   const notification = useAppNotification();
   const { waitForConsent } = useConsent();
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
-  const simulationsAtom = simulationsByCampaignIdAtomFamily({
-    campaignId,
-    context,
-  });
+  const simulationsAtom = simulationsByCampaignIdAtomFamily({ campaignId, context });
   const simulations = useAtomValue(simulationsAtom);
 
   const modelAtom = modelAtomFamily({ id: simulations[0].entity_id, context });
@@ -61,10 +56,7 @@ export default function SimulationsTab({
 
   const simulationIds = simulations.map((s) => s.id);
 
-  const simExecStatusMapAtom = simExecStatusMapAtomFamily({
-    context,
-    simulationIds,
-  });
+  const simExecStatusMapAtom = simExecStatusMapAtomFamily({ context, simulationIds });
   const fetchRemoteSimExecStatuseMap = useSetAtom(
     simExecRemoteStatusMapAtomFamily({ simulationIds, context })
   );
@@ -167,10 +159,7 @@ export default function SimulationsTab({
     setWaitingForConsent(false);
     setLaunchSystemParamsModalOpen(false);
 
-    notification.success({
-      message: `Simulation submitted successfuly`,
-      duration: 10,
-    });
+    notification.success({ message: `Simulation submitted successfuly`, duration: 10 });
   };
 
   // TODO Refactor
@@ -199,9 +188,7 @@ export default function SimulationsTab({
               if (msg.status !== 'done') return;
               const simulation = simulations.find((s) => s.id === simId);
               if (!simulation) return;
-              notification.success({
-                message: `Simulation ${simulation?.name} done`,
-              });
+              notification.success({ message: `Simulation ${simulation?.name} done` });
             })
             .otherwise(() => null);
         },

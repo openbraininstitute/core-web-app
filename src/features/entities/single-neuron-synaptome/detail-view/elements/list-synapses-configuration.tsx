@@ -1,17 +1,19 @@
 'use client';
 
 import { Empty } from 'antd';
-import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import { getSimulationColor, SYNAPSE_CODE_TO_TYPE } from '@/constants/simulate/single-neuron';
-import ConfigItem from '@/features/entities/single-neuron-synaptome/build/elements/config-item';
+
 import {
   SECTION_TARGET_MAPPING,
-  type SectionTargetMappingKeys,
+  SectionTargetMappingKeys,
 } from '@/features/entities/single-neuron-synaptome/build/elements/constants';
+import ConfigItem from '@/features/entities/single-neuron-synaptome/build/elements/config-item';
+import { getSimulationColor, SYNAPSE_CODE_TO_TYPE } from '@/constants/simulate/single-neuron';
+
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 
 type Props = {
   config: {
-    synapses: TSingleNeuronSynaptomeConfiguration[];
+    synapses: Array<TSingleNeuronSynaptomeConfiguration>;
   } | null;
 };
 
@@ -48,19 +50,11 @@ export default function SynapseGroupList({ config }: Props) {
                     }}
                   />
                   <ConfigItem
-                    {...{
-                      label: 'type',
-                      value: type ? SYNAPSE_CODE_TO_TYPE[type] : undefined,
-                    }}
+                    {...{ label: 'type', value: type ? SYNAPSE_CODE_TO_TYPE[type] : undefined }}
                   />
                 </div>
                 {target === 'soma' ? (
-                  <ConfigItem
-                    {...{
-                      label: 'Synapse Count',
-                      value: `${soma_synapse_count}`,
-                    }}
-                  />
+                  <ConfigItem {...{ label: 'Synapse Count', value: `${soma_synapse_count}` }} />
                 ) : (
                   <ConfigItem {...{ label: 'formula', value: formula }} />
                 )}

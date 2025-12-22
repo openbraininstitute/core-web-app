@@ -1,27 +1,29 @@
 import flatMap from 'es-toolkit/compat/flatMap';
 import keyBy from 'es-toolkit/compat/keyBy';
-import { getMEModels } from '@/api/entitycore/queries';
-import { downloadAsset } from '@/api/entitycore/queries/assets';
+
+import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
+import { EntityTypeGroup } from '@/entity-configuration/domain/group';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
+import { getAssetElement } from '@/api/entitycore/utils';
+import { getMEModels } from '@/api/entitycore/queries';
 import {
   createSimulationCampaign,
   getCircuitSimulationCampaign,
   getCircuitSimulationCampaigns,
 } from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
-import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
-import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
+
+import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import {
+  SimulationCampaignEntityTypeDict,
   type ICircuitSimulationCampaign,
   type ICircuitSimulationCampaignFilter,
-  SimulationCampaignEntityTypeDict,
 } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
-import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { getAssetElement } from '@/api/entitycore/utils';
-import { EntityTypeGroup } from '@/entity-configuration/domain/group';
-import { EntitySlug } from '@/entity-configuration/domain/slug';
-import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { WorkspaceContext } from '@/types/common';
 
 const ENTITY_TYPE = SimulationCampaignEntityTypeDict.memodel;
@@ -51,7 +53,7 @@ export async function resolveExecutions({
 
   const executionsResponses = await Promise.all(promises);
 
-  return executionsResponses.flatMap((r) => r.data);
+  return executionsResponses.map((r) => r.data).flat();
 }
 
 // NOTE: this is due entitycore do not support yet the circuit inclusion
@@ -123,10 +125,7 @@ export async function resolveSimulationByCampaignId({
   context: WorkspaceContext | undefined;
 }) {
   const campaign = await getCircuitSimulationCampaign({ id, context });
-  const source = await getCircuitSimulations({
-    context,
-    filters: { simulation_campaign_id: id },
-  });
+  const source = await getCircuitSimulations({ context, filters: { simulation_campaign_id: id } });
 
   const simulation = source.data.at(0);
   const assets = campaign?.assets ?? [];

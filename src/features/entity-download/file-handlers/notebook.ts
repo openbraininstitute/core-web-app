@@ -1,17 +1,17 @@
 /* eslint-disable no-empty */
 
-import { getNotebook } from '@/api/entitycore/queries/notebook';
-import { EntityTypeDict } from '@/api/entitycore/types';
 import { ASSET_BASE_PATH } from '@/features/entity-download/constants';
 import { Metadata } from '@/features/entity-download/metadata';
-
-import type { NotebookJsonMetadata } from '@/features/entity-download/types';
+import { EntityTypeDict } from '@/api/entitycore/types';
 import {
   createAssetFileEntry,
   createTemplateFileEntry,
   getMetadataCsvEntryBase,
 } from '@/features/entity-download/utils';
+
+import type { NotebookJsonMetadata } from '@/features/entity-download/types';
 import type { WorkspaceContext } from '@/types/common';
+import { getNotebook } from '@/api/entitycore/queries/notebook';
 
 export async function* getNotebookFiles(entityIds: string[], ctx?: WorkspaceContext) {
   const metadata = new Metadata<NotebookJsonMetadata>();
@@ -39,13 +39,8 @@ export async function* getNotebookFiles(entityIds: string[], ctx?: WorkspaceCont
     for await (const asset of notebook.assets) {
       const path = `${dataPath}/${asset.path}`;
       try {
-        yield await createAssetFileEntry({
-          entity: notebook,
-          asset,
-          path,
-          ctx,
-        });
-      } catch (_error) {}
+        yield await createAssetFileEntry({ entity: notebook, asset, path, ctx });
+      } catch (error) {}
     }
   }
 

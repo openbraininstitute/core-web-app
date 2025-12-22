@@ -1,14 +1,16 @@
-import { useAtomValue } from 'jotai';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { match } from 'ts-pattern';
-import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
-import { Loader } from '@/components/loader';
+import { useAtomValue } from 'jotai';
+
+import { File } from '../simulation-files';
+import { jsonFileAtomFamily } from '../atoms';
 
 import { EphysViewer } from '@/features/ephys-viewer';
-import type { WorkspaceContext } from '@/types/common';
+import { Loader } from '@/components/loader';
 import { classNames } from '@/util/utils';
-import { jsonFileAtomFamily } from '../atoms';
-import type { File } from '../simulation-files';
+
+import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
+import type { WorkspaceContext } from '@/types/common';
 
 type FileViewerProps = {
   file?: File;

@@ -1,7 +1,7 @@
-import { config } from '@/config';
+import { defineFlag } from './define-flag';
 
 import { PanelState } from '@/ui/segments/ai/types';
-import { defineFlag } from './define-flag';
+import { config } from '@/config';
 
 export const aiPanelStateFlag = defineFlag<PanelState>({
   key: 'aiPanelState',

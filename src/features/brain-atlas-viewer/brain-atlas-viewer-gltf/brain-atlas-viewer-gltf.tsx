@@ -1,13 +1,12 @@
-import { CameraFilled } from '@ant-design/icons';
 import React from 'react';
+import { CameraFilled } from '@ant-design/icons';
 
 import { usePainter, useVisibleRegions } from './hooks';
-
 // Temporary disabled
 // import { Settings } from './settings/settings';
 
-import { useAccessToken } from '@/hooks/useAccessToken';
 import { classNames } from '@/util/utils';
+import { useAccessToken } from '@/hooks/useAccessToken';
 
 import styles from './brain-atlas-viewer-gltf.module.css';
 

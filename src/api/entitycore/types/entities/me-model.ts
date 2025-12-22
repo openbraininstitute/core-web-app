@@ -1,32 +1,32 @@
 import z from 'zod';
-import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
+import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type {
-  EntityAuthorization,
   EntityCoreIdentifiable,
-  EntityCoreOwnership,
-  EntityCoreType,
+  EntityAuthorization,
   IContributor,
-  IEType,
-  IMType,
+  Timestamps,
   ISpecies,
   IStrain,
-  Timestamps,
+  IEType,
+  IMType,
+  EntityCoreType,
+  EntityCoreOwnership,
 } from '@/api/entitycore/types/shared/global';
 import type {
-  BrainRegionFilter,
   ContributionFilter,
+  IMorphologyFilter,
+  BrainRegionFilter,
+  PaginationFilter,
+  IEModelFilter,
+  SpeciesFilter,
+  SharedFilter,
+  MtypeFilter,
   EtypeFilter,
   IdFilter,
-  IEModelFilter,
-  IMorphologyFilter,
-  MtypeFilter,
   OwnershipFilter,
-  PaginationFilter,
-  SharedFilter,
-  SpeciesFilter,
 } from '@/api/entitycore/types/shared/request';
 
 export enum ValidationStatus {
@@ -53,9 +53,9 @@ export interface IMEModel
   species: ISpecies;
   strain?: IStrain | null;
   brain_region: BrainRegionHierarchyBase;
-  contributions?: IContributor[] | null;
-  mtypes: IMType[] | null;
-  etypes: IEType[] | null;
+  contributions?: Array<IContributor> | null;
+  mtypes: Array<IMType> | null;
+  etypes: Array<IEType> | null;
   morphology: ICellMorphology;
   emodel: IEModel;
   calibration_result: {
@@ -65,8 +65,8 @@ export interface IMEModel
 
 export interface INestedMEModel extends IMEModelBase, Timestamps {
   id: string;
-  mtypes: IMType[];
-  etypes: IEType[];
+  mtypes: Array<IMType>;
+  etypes: Array<IEType>;
 }
 
 export interface IMEModelFilter

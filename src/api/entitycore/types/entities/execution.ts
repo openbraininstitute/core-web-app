@@ -1,11 +1,11 @@
 import type {
-  EntityAuthorization,
-  EntityCoreBaseAsset,
   EntityCoreIdentifiable,
+  EntityAuthorization,
   EntityCoreOwnership,
-  EntityCoreType,
-  IContributor,
   Timestamps,
+  EntityCoreType,
+  EntityCoreBaseAsset,
+  IContributor,
 } from '@/api/entitycore/types/shared/global';
 
 export enum EntitycoreExecutionStatus {
@@ -25,7 +25,7 @@ export interface EntitycoreUsedEntity
     EntityCoreType {
   name: string | null;
   description: string | null;
-  contributions?: IContributor[] | null;
+  contributions?: Array<IContributor> | null;
 }
 
 export interface IEntitycoreExecution
@@ -37,6 +37,6 @@ export interface IEntitycoreExecution
   start_time: string;
   end_time: string | null;
   status: TEntitycoreExecutionStatus;
-  generated: unknown[];
-  used: EntitycoreUsedEntity[];
+  generated: Array<unknown>;
+  used: Array<EntitycoreUsedEntity>;
 }

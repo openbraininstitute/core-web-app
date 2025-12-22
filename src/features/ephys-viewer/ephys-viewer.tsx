@@ -1,13 +1,15 @@
 import { FileImageOutlined, LineChartOutlined } from '@ant-design/icons';
-import { Empty, Radio, type RadioChangeEvent, Spin } from 'antd';
+import { Empty, Radio, RadioChangeEvent, Spin } from 'antd';
 import { useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
-import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
+
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import TraceDetailsView from '@/features/ephys-viewer/components/trace-details-view';
 import TraceOverview from '@/features/ephys-viewer/components/trace-overview';
 import useTrace from '@/features/ephys-viewer/hooks/use-nwb-trace';
+
+import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
+import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { WorkspaceContext } from '@/types/common';
 
 import './styles/ephys-plugin-styles.css';

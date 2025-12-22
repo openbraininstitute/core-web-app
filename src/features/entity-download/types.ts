@@ -1,4 +1,4 @@
-import type { Readable } from 'node:stream';
+import { Readable } from 'stream';
 
 export type FileEntry = {
   path: string;

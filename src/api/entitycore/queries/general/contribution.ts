@@ -1,11 +1,12 @@
 import z from 'zod';
 
 import { authApiClient } from '@/api/apiClient';
+import { getEntityCoreContext } from '@/api/entitycore/utils';
+import { config } from '@/config';
+
 import type { IPersonFilter } from '@/api/entitycore/types/entities/agent';
 import type { IContributor } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import { getEntityCoreContext } from '@/api/entitycore/utils';
-import { config } from '@/config';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/contribution';

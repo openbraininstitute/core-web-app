@@ -1,7 +1,7 @@
 'use client';
 
-import isNil from 'es-toolkit/compat/isNil';
 import { useCallback, useEffect, useSyncExternalStore } from 'react';
+import isNil from 'es-toolkit/compat/isNil';
 
 function dispatchStorageEvent(key: string, newValue: string | null): void {
   window.dispatchEvent(new StorageEvent('storage', { key, newValue }));
@@ -37,7 +37,12 @@ export function useLocalStorage<T>(
     if (typeof window !== 'undefined') {
       try {
         return getLocalStorageItem(key);
-      } catch (_e) {
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          'useLocalStorage: Error reading from localStorage on client during getServerSnapshot call',
+          e
+        );
         return null;
       }
     }
@@ -47,7 +52,12 @@ export function useLocalStorage<T>(
     }
     try {
       return JSON.stringify(initialValue);
-    } catch (_error) {
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `useLocalStorage: Non-JSON serializable initialValue for key "${key}" during SSR. Falling back to null snapshot.`,
+        error
+      );
       return null;
     }
   }, [key, initialValue]);
@@ -67,7 +77,10 @@ export function useLocalStorage<T>(
         } else {
           setLocalStorageItem(key, nextState);
         }
-      } catch (_e) {}
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn(e);
+      }
     },
     [key, store, initialValue]
   );

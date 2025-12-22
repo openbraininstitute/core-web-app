@@ -2,9 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
+import { keyBuilder } from '@/ui/use-query-keys/data';
+
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { WorkspaceContext } from '@/types/common';
-import { keyBuilder } from '@/ui/use-query-keys/data';
 
 export function useLoadCellMorphology3DAsset({
   morphology,

@@ -6,11 +6,6 @@ import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 import { useEffect, useRef } from 'react';
 
 import { getBrainRegionHierarchy } from '@/api/entitycore/queries/general/brain-region';
-import type { IBrainAtlasRegion } from '@/api/entitycore/types/entities/brain-atlas';
-import type {
-  BrainRegionHierarchyBase,
-  IBrainRegionHierarchy,
-} from '@/api/entitycore/types/entities/brain-region';
 import { tryCatch } from '@/api/utils';
 import {
   findNodeByKey,
@@ -24,6 +19,12 @@ import { useUnwrappedValue } from '@/hooks/hooks';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { getSectionFromDataKey } from '@/utils/key-builder';
 import { log } from '@/utils/logger';
+
+import type { IBrainAtlasRegion } from '@/api/entitycore/types/entities/brain-atlas';
+import type {
+  BrainRegionHierarchyBase,
+  IBrainRegionHierarchy,
+} from '@/api/entitycore/types/entities/brain-region';
 
 type Props = {
   dataKey: string;
@@ -63,7 +64,7 @@ export type TBrainRegionHierarchyOption = {
 export type TBrainRegionHierarchyAtomReturnType = {
   root: IBrainRegionHierarchy;
   nodes: IBrainRegionHierarchy | null;
-  options: TBrainRegionHierarchyOption[];
+  options: Array<TBrainRegionHierarchyOption>;
   leaves: Map<string, IBrainRegionHierarchy[]>;
 } | null;
 
@@ -71,7 +72,7 @@ export interface IBrainRegionHierarchyExtended extends IBrainRegionHierarchy {
   is_leaf_region: boolean;
   volume: number;
   is_volumetric_region: boolean;
-  children: IBrainRegionHierarchyExtended[];
+  children: Array<IBrainRegionHierarchyExtended>;
 }
 
 export type TBrainRegionHierarchyExtendedOption = {
@@ -83,7 +84,7 @@ export type TBrainRegionHierarchyExtendedOption = {
 export type TBrainRegionHierarchyExtendedAtomReturnType = {
   root: IBrainRegionHierarchyExtended;
   nodes: IBrainRegionHierarchyExtended | null;
-  options: TBrainRegionHierarchyExtendedOption[];
+  options: Array<TBrainRegionHierarchyExtendedOption>;
   leaves: Map<string, IBrainRegionHierarchyExtended[]>;
 } | null;
 
@@ -130,7 +131,7 @@ export const brainRegionBasicCellGroupsRegionsHierarchyAtom = atom(
       );
       return null;
     }
-    let options: TBrainRegionHierarchyOption[] = [];
+    let options: Array<TBrainRegionHierarchyOption> = [];
     let leaves: Map<string, IBrainRegionHierarchy[]> = new Map();
     const nodes = renameKeyDeep<IBrainRegionHierarchy>(root, 'color_hex_triplet', 'color', true);
 
@@ -174,7 +175,7 @@ function mergeHierarchyWithAtlas(
   const isLeafRegion = atlasRegion?.is_leaf_region ?? false;
 
   // process children first (recursive) so their is_volumetric_region is computed
-  const extendedChildren: IBrainRegionHierarchyExtended[] = node.children
+  const extendedChildren: Array<IBrainRegionHierarchyExtended> = node.children
     .filter((child) => !isNil(child))
     .map((child) => mergeHierarchyWithAtlas(child, atlasMap));
 
@@ -201,12 +202,14 @@ function getLeavesForEachRegionExtended(
 ): Map<string, IBrainRegionHierarchyExtended[]> {
   const leavesMap = new Map<string, IBrainRegionHierarchyExtended[]>();
 
-  function collectLeaves(node: IBrainRegionHierarchyExtended): IBrainRegionHierarchyExtended[] {
+  function collectLeaves(
+    node: IBrainRegionHierarchyExtended
+  ): Array<IBrainRegionHierarchyExtended> {
     if (!node.children || node.children.length === 0) {
       return [node];
     }
 
-    const leaves: IBrainRegionHierarchyExtended[] = [];
+    const leaves: Array<IBrainRegionHierarchyExtended> = [];
     for (const child of node.children) {
       leaves.push(...collectLeaves(child));
     }
@@ -263,7 +266,7 @@ export const brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom = atom(
       true
     );
 
-    const options: TBrainRegionHierarchyExtendedOption[] =
+    const options: Array<TBrainRegionHierarchyExtendedOption> =
       flattenTreeAsObject<IBrainRegionHierarchyExtended>(root)
         .map((region) => ({
           av: region.annotation_value,
@@ -385,16 +388,7 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
     isInitializedRef.current = true;
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    brainRegions,
-    id,
-    annotationValue,
-    stored,
-    defaultSelectedBrainRegion,
-    selectedBrainRegion?.id,
-    setSearchParamHierarchyConfig,
-    updateSelectedBrainRegion,
-  ]);
+  }, [brainRegions, id, annotationValue, stored, defaultSelectedBrainRegion]);
 
   // Sync localStorage when URL params change
   useEffect(() => {
@@ -413,11 +407,7 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
    */
   const updateHierarchyConfig = (node: IBrainRegionHierarchy | null) => {
     const regionConfig = node
-      ? {
-          id: node.id,
-          name: node.name,
-          annotation_value: node?.annotation_value,
-        }
+      ? { id: node.id, name: node.name, annotation_value: node?.annotation_value }
       : null;
 
     // Only update if the values are actually different

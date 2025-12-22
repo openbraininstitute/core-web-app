@@ -1,5 +1,7 @@
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { smallScaleSimulatorApi } from '@/api/small-scale-simulator/utils';
+import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
+
 import type { WorkspaceContext } from '@/types/common';
 import type { SimulationType } from '@/types/small-scale-simulator/common';
 import type {
@@ -8,10 +10,9 @@ import type {
   SimulationExperimentalSetup,
   SynaptomeConfig,
 } from '@/types/small-scale-simulator/single-neuron';
-import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 
 type SimulationConfiguration = {
-  recordFrom: RecordLocation[];
+  recordFrom: Array<RecordLocation>;
   conditions: SimulationExperimentalSetup;
   currentInjection?: CurrentInjectionSimulationConfig;
   synaptome?: SynaptomeConfig;

@@ -1,5 +1,5 @@
 import kebabCase from 'es-toolkit/compat/kebabCase';
-import type { TEntityTypeDict } from '@/api/entitycore/types';
+import { TEntityTypeDict } from '@/api/entitycore/types';
 
 type CreateTicketResponse = {
   ticketId: string;

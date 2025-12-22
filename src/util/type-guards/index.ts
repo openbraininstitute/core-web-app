@@ -106,8 +106,14 @@ export function isType<T>(
   try {
     assertType<T>(data, type);
     return true;
-  } catch (_ex) {
+  } catch (ex) {
     if (logErrors) {
+      // eslint-disable-next-line no-console
+      console.error('[Invalid type]', logErrors);
+      // eslint-disable-next-line no-console
+      console.error(data);
+      // eslint-disable-next-line no-console
+      console.debug(ex);
     }
     return false;
   }

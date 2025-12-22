@@ -1,4 +1,4 @@
-import type {
+import {
   EntityCoreTypeConfig,
   SerializedEntityCoreTypeConfig,
 } from '@/entity-configuration/domain/types';

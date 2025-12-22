@@ -22,17 +22,17 @@ import type {
 
 type UseIon = {
   ion_name: string;
-  read: string[];
-  write: string[];
+  read: Array<string>;
+  write: Array<string>;
   valence?: number | null;
   main_ion?: boolean | null;
 };
 
 interface NeuronBlock {
-  global: Record<string, string | null>[];
-  range: Record<string, string | null>[];
+  global: Array<Record<string, string | null>>;
+  range: Array<Record<string, string | null>>;
   useion: UseIon[];
-  nonspecific: Record<string, string | null>[];
+  nonspecific: Array<Record<string, string | null>>;
 }
 
 interface IonChannelModelBase extends EntityCoreIdentifiableNamed {
@@ -55,7 +55,7 @@ export interface IonChannelModel
   species: ISpecies;
   strain?: IStrain | null;
   brain_region: IBrainRegionHierarchy;
-  contributions: IContributor[];
+  contributions: Array<IContributor>;
 }
 
 export interface IonChannelModelFilter

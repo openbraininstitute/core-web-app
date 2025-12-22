@@ -1,11 +1,12 @@
 import { useQueries } from '@tanstack/react-query';
-import { find, groupBy } from 'es-toolkit/compat';
-import { getProject } from '@/api/virtual-lab-svc/queries/project';
-import type { VlmUserGroupsResponse } from '@/api/virtual-lab-svc/queries/types';
-import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
+import { groupBy, find } from 'es-toolkit/compat';
+
 import { getVirtualLab, listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
+import { VlmUserGroupsResponse } from '@/api/virtual-lab-svc/queries/types';
+import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
+import { getProject } from '@/api/virtual-lab-svc/queries/project';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 
 type Props = {
   virtualLabId?: string;
@@ -39,10 +40,7 @@ export function useUserRole({ virtualLabId, projectId }: Props) {
           projectId: projectId || '',
         }),
         queryFn: async () =>
-          await getProject({
-            virtualLabId: virtualLabId!,
-            projectId: projectId!,
-          }),
+          await getProject({ virtualLabId: virtualLabId!, projectId: projectId! }),
         enabled: !!virtualLabId && !!projectId,
       },
     ],
@@ -82,16 +80,12 @@ export function makeRoles(
   // if virtual lab id is provided, return whether the user is a member or admin of the virtual lab
   // if project id is provided (which requires virtual lab id too),
   // return whether the user is a member or admin of the project and virtual lab too
-  const isVirtualLabMember = !!find(groupedUserGroups.vlab, {
-    virtual_lab_id: virtualLabId,
-  });
+  const isVirtualLabMember = !!find(groupedUserGroups.vlab, { virtual_lab_id: virtualLabId });
   const isVirtualLabAdmin = !!find(groupedUserGroups.vlab, {
     virtual_lab_id: virtualLabId,
     role: 'admin',
   });
-  const isProjectMember = !!find(groupedUserGroups.project, {
-    project_id: projectId,
-  });
+  const isProjectMember = !!find(groupedUserGroups.project, { project_id: projectId });
   const isProjectAdmin = !!find(groupedUserGroups.project, {
     project_id: projectId,
     role: 'admin',

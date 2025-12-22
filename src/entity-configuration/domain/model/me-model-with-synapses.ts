@@ -1,9 +1,9 @@
-import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
-import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
+import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -19,10 +19,7 @@ export const MEModelWithSynapsesCircuit: EntityCoreTypeConfig<ICircuit> = {
   type: EntityTypeDict.Circuit,
   slug: EntitySlug.Circuit,
   api: {
-    config: {
-      allowedFacets: true,
-      extraRequiredListFilters: circuitScaleFilter,
-    },
+    config: { allowedFacets: true, extraRequiredListFilters: circuitScaleFilter },
     query: {
       list: (...params) => {
         return getCircuits({

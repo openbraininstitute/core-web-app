@@ -1,8 +1,10 @@
+import React from 'react';
 import { Input } from 'antd';
-import type { IMEModel } from '@/api/entitycore/types';
 
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import Tooltip from '../tooltip';
+
+import { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { IMEModel } from '@/api/entitycore/types';
 
 interface ModelDetailsProps {
   className?: string;

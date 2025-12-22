@@ -1,6 +1,6 @@
-import type { StepsProps } from 'antd/lib/steps';
+import { StepsProps } from 'antd/lib/steps';
 
-import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
+import { EntitySlugValue } from '@/entity-configuration/domain/slug';
 
 export type SimulationType = Extract<
   EntitySlugValue,
@@ -20,7 +20,7 @@ export type SimulationStep = {
 };
 
 export type SimulationStepsTracker = {
-  steps: SimulationStep[];
+  steps: Array<SimulationStep>;
   current: SimulationStep;
 };
 

@@ -1,9 +1,10 @@
-import type { ILicense } from '@/api/entitycore/types/shared/global';
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
+import { compactRecord } from '@/utils/dictionary';
+
 import type { ILicenseFilter } from '@/api/entitycore/types/shared/license';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
+import type { ILicense } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
-import { compactRecord } from '@/utils/dictionary';
 
 const baseUri = '/license';
 

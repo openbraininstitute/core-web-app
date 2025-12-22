@@ -1,23 +1,24 @@
-import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
-import type {
-  EntityAuthorization,
-  EntityCoreBaseAsset,
-  EntityCoreIdentifiable,
-  EntityCoreOwnership,
-  EntityCoreType,
-  IBrainLocation,
-  ILicense,
-  Timestamps,
-} from '@/api/entitycore/types/shared/global';
+import { IRecordingFilter } from './electrical-cell-recording';
+
+import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type {
   BrainRegionFilter,
   ContributionFilter,
-  IDFilter,
+  TimestampsFilter,
   PaginationFilter,
   SharedFilter,
-  TimestampsFilter,
+  IDFilter,
 } from '@/api/entitycore/types/shared/request';
-import type { IRecordingFilter } from './electrical-cell-recording';
+import type {
+  EntityCoreIdentifiable,
+  EntityCoreBaseAsset,
+  EntityAuthorization,
+  IBrainLocation,
+  Timestamps,
+  ILicense,
+  EntityCoreType,
+  EntityCoreOwnership,
+} from '@/api/entitycore/types/shared/global';
 
 const RecordingType = {
   Intracellular: {
@@ -66,7 +67,7 @@ export interface IonChannel {
   description: string;
   label: string;
   gene: string;
-  synonyms: string[];
+  synonyms: Array<string>;
 }
 
 export interface IIonChannelRecording

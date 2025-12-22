@@ -16,13 +16,13 @@ Based on https://unpkg.com/tailwindcss@3.2.3/src/css/preflight.css
   /* 2 */
   border-style: solid;
   /* 2 */
-  border-color: theme("borderColor.DEFAULT", currentColor);
+  border-color: theme('borderColor.DEFAULT', currentColor);
   /* 2 */
 }
 
 ::before,
 ::after {
-  --tw-content: "";
+  --tw-content: '';
 }
 
 /*
@@ -48,19 +48,19 @@ html {
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
-    "Segoe UI",
+    'Segoe UI',
     Roboto,
-    "Helvetica Neue",
+    'Helvetica Neue',
     Arial,
-    "Noto Sans",
+    'Noto Sans',
     sans-serif,
-    "Apple Color Emoji",
-    "Segoe UI Emoji",
-    "Segoe UI Symbol",
-    "Noto Color Emoji"
+    'Apple Color Emoji',
+    'Segoe UI Emoji',
+    'Segoe UI Symbol',
+    'Noto Color Emoji'
   );
   /* 4 */
-  font-feature-settings: theme("fontFamily.sans[1].fontFeatureSettings", normal);
+  font-feature-settings: theme('fontFamily.sans[1].fontFeatureSettings', normal);
   /* 5 */
 }
 
@@ -147,8 +147,8 @@ pre {
     Menlo,
     Monaco,
     Consolas,
-    "Liberation Mono",
-    "Courier New",
+    'Liberation Mono',
+    'Courier New',
     monospace
   );
   /* 1 */
@@ -241,16 +241,16 @@ select {
 */
 
 button,
-[type="button"],
-[type="reset"],
-[type="submit"] {
+[type='button'],
+[type='reset'],
+[type='submit'] {
   -webkit-appearance: button;
   /* 1 */
   background-image: none;
   /* 2 */
 }
 
-:where(button, [type="button"], [type="reset"], [type="submit"]) {
+:where(button, [type='button'], [type='reset'], [type='submit']) {
   background-color: transparent;
 }
 
@@ -292,7 +292,7 @@ Correct the cursor style of increment and decrement buttons in Safari.
 2. Correct the outline style in Safari.
 */
 
-[type="search"] {
+[type='search'] {
   -webkit-appearance: textfield;
   /* 1 */
   outline-offset: -2px;
@@ -390,7 +390,7 @@ Set the default cursor for buttons.
 */
 
 button,
-[role="button"] {
+[role='button'] {
   cursor: pointer;
 }
 

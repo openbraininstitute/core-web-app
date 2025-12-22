@@ -1,31 +1,32 @@
 import z from 'zod';
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-import type { MeTypeFilter } from '@/api/entitycore/types/entities/single-neuron-simulation';
-import type { SingleNeuronSynaptomeBase } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+
+import { SingleNeuronSimulationStatus } from '@/api/entitycore/types/shared/neuron-simulation';
+import {
+  type SimulationStatusFilter,
+  type ISingleNeuronSimulationBase,
+} from '@/api/entitycore/types/shared/neuron-simulation';
 import type {
-  EntityAuthorization,
-  EntityCoreBaseAsset,
   EntityCoreIdentifiable,
-  EntityCoreType,
+  EntityAuthorization,
   Timestamps,
+  EntityCoreType,
+  EntityCoreBaseAsset,
 } from '@/api/entitycore/types/shared/global';
 import type {
-  ISingleNeuronSimulationBase,
-  SimulationStatusFilter,
-} from '@/api/entitycore/types/shared/neuron-simulation';
-import { SingleNeuronSimulationStatus } from '@/api/entitycore/types/shared/neuron-simulation';
-import type {
-  BrainRegionFilter,
   ContributionFilter,
-  CreatorFilter,
-  EtypeFilter,
-  IDFilter,
-  MtypeFilter,
-  OwnershipFilter,
-  PaginationFilter,
+  BrainRegionFilter,
   SharedFilter,
+  MtypeFilter,
+  EtypeFilter,
+  CreatorFilter,
   TimestampsFilter,
+  IDFilter,
+  PaginationFilter,
+  OwnershipFilter,
 } from '@/api/entitycore/types/shared/request';
+import type { SingleNeuronSynaptomeBase } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import type { MeTypeFilter } from '@/api/entitycore/types/entities/single-neuron-simulation';
 import type { Prettify } from '@/utils/type';
 
 export interface ISingleNeuronSynaptomeSimulation

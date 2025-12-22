@@ -1,11 +1,11 @@
-import { isEmpty, map, omit, sortBy } from 'es-toolkit/compat';
+import { isEmpty, sortBy, omit, map } from 'es-toolkit/compat';
 
-import { type Agent, AgentType, type IContributor } from '@/api/entitycore/types/shared/global';
+import { AgentType, type Agent, type IContributor } from '@/api/entitycore/types/shared/global';
 import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
 type TransformFiltersToQueryReturnValue = Record<
   string,
-  string | string[] | number | number[] | Date | null | boolean
+  string | Array<string> | number | Array<number> | Date | null | boolean
 >;
 
 /**
@@ -65,7 +65,7 @@ export function transformQueryParamsListToServerString(
  * @returns {TransformFiltersToQueryReturnValue} The transformed query object
  */
 export function transformFiltersToQuery(
-  filters: TCoreFilter[]
+  filters: Array<TCoreFilter>
 ): TransformFiltersToQueryReturnValue {
   return filters.reduce((acc, filter) => {
     // Skip filters with null values
@@ -128,9 +128,9 @@ export function transformFiltersToQuery(
 }
 
 export function transformAgentToNames(
-  agentsWithRoles: IContributor[] | undefined | null,
+  agentsWithRoles: Array<IContributor> | undefined | null,
   asArray: boolean = false
-): string | string[] {
+): string | Array<string> {
   if (!agentsWithRoles) {
     return '';
   }

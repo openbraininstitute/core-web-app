@@ -1,23 +1,26 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
-import { useAtomValue } from 'jotai';
-import { loadable } from 'jotai/utils';
-import { useParams } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { loadable } from 'jotai/utils';
 import { match, P } from 'ts-pattern';
+import { useAtomValue } from 'jotai';
+
+import Node from '@/features/cell-composition/elements/default-node';
 import Tree from '@/components/tree';
-import type { RenderNodeProps } from '@/components/tree/types';
-import { renderFloatNumber } from '@/entity-configuration/definitions/renderer';
-import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { annotationTypesAtom, cellCompositionAtom } from '@/features/cell-composition/context';
+
 import { CellCompositionSkeleton } from '@/features/cell-composition/elements/cell-composition-skeleton';
 import { DensityOrCountToggle } from '@/features/cell-composition/elements/composition-type-toggle';
-import Node from '@/features/cell-composition/elements/default-node';
+import { cellCompositionAtom, annotationTypesAtom } from '@/features/cell-composition/context';
 import { getMetric, metricToUnit } from '@/features/cell-composition/elements/helpers';
-import type { DensityOrCount, TreeNode } from '@/features/cell-composition/types';
-import type { WorkspaceContext } from '@/types/common';
-import { classNames } from '@/util/utils';
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
+import { renderFloatNumber } from '@/entity-configuration/definitions/renderer';
 import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
+import { classNames } from '@/util/utils';
+
+import type { DensityOrCount, TreeNode } from '@/features/cell-composition/types';
+import type { RenderNodeProps } from '@/components/tree/types';
+import type { WorkspaceContext } from '@/types/common';
 
 export function CellCompositionMETypeTree() {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
@@ -120,7 +123,7 @@ export function CellCompositionMETypeTree() {
           <h6 className="text-primary-3 px-1.5 text-sm font-normal">M-TYPES</h6>
           <Tree<TreeNode>
             dataKey="cell-composition-tree-container"
-            data={testComposition.neurons as TreeNode[]}
+            data={testComposition.neurons as Array<TreeNode>}
             selectedNode={null}
             renderNode={defaultNode}
             indentation={{ h: false, v: false, size: 10 }}
