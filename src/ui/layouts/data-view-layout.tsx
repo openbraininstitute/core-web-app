@@ -7,7 +7,6 @@ import {
   TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import { tryCatch } from '@/api/utils';
-import { ROOT_ROUTE } from '@/config';
 import { WorkspaceScope } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';

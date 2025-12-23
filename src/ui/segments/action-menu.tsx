@@ -24,7 +24,6 @@ import {
   PanelQueryParam,
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import { ROOT_ROUTE } from '@/config';
 import { deleteCellMorphology } from '@/api/entitycore/queries/experimental/cell-morphology';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
