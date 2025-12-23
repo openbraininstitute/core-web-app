@@ -71,6 +71,31 @@ export async function getCellMorphology({
   });
 }
 
+/**
+ * Deletes a specific cell morphology by its ID from the EntityCoreAPI.
+ *
+ * @param {Object} params - The parameters object
+ * @param {string} params.id - The unique identifier of the cell morphology to delete
+ * @returns {Promise<void>} A promise that resolves upon successful deletion
+ */
+export async function deleteCellMorphology({
+  id,
+  context,
+}: {
+  id: string;
+  context?: WorkspaceContext | null;
+}) {
+  const api = await entityCoreApi();
+  // Using api.delete with the base URI and the entity ID. No body/payload is needed.
+  return await api.delete<void>(`${baseUri}/${id}`, {
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+  });
+}
+
 const cellMorphologySchema = z.object({
   name: z
     .string({ message: 'Cell morphology name is required' })
