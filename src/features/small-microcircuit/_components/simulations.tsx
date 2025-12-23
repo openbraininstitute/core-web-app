@@ -27,7 +27,7 @@ import { messages } from '@/i18n/en/simulation';
 import { useConsent } from '@/services/consent';
 import { runSimulationBatch } from '@/services/small-scale-simulator/circuit';
 import { MessageType } from '@/services/small-scale-simulator/types';
-import { ExecutionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
+import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
 import { classNames } from '@/util/utils';
 import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
@@ -375,7 +375,7 @@ function SimulationListItem({
   selectedForSim,
   selectionForSimDisabled,
 }: SimulationBlockProps) {
-  const color = ExecutionStatusColorMap[execStatus ?? EntitycoreExecutionStatus.CREATED];
+  const color = executionStatusColorMap[execStatus ?? EntitycoreExecutionStatus.CREATED];
 
   return (
     <div className="flex-none">

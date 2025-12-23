@@ -2,14 +2,15 @@ import { get } from 'es-toolkit/compat';
 
 import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 
-export const ExecutionStatusColorMap = {
-  [EntitycoreExecutionStatus.CREATED]: '#1890ff',
-  [EntitycoreExecutionStatus.PENDING]: '#fa8c16',
-  [EntitycoreExecutionStatus.RUNNING]: '#389e0d',
-  [EntitycoreExecutionStatus.ERROR]: '#f5222d',
-  [EntitycoreExecutionStatus.DONE]: '#002766',
+export const executionStatusColorMap = {
+  [EntitycoreExecutionStatus.CREATED]: '#004793',
+  [EntitycoreExecutionStatus.PENDING]: '#a24fcc',
+  [EntitycoreExecutionStatus.RUNNING]: '#1890ff',
+  [EntitycoreExecutionStatus.ERROR]: '#e81f1f',
+  [EntitycoreExecutionStatus.DONE]: '#389e0d',
+  [EntitycoreExecutionStatus.CANCELLED]: '#a4a4a4',
 };
 
 export function getStatusColor(status: EntitycoreExecutionStatus): string {
-  return get(ExecutionStatusColorMap, status, '#000000');
+  return get(executionStatusColorMap, status, '#000000');
 }
