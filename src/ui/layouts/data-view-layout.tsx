@@ -20,6 +20,7 @@ import {
 } from '@/ui/segments/explore/entity-name-display';
 
 import type { WorkspaceContext } from '@/types/common';
+import { config } from '@/config';
 
 export async function DataViewLayout({
   children,
@@ -52,7 +53,7 @@ export async function DataViewLayout({
   const sessionId = isPublicEntity ? null : projectId;
 
   // Calculate the parent URL for redirection after actions (like delete)
-  const parentLink = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}&scope=${isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project}`;
+  const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}&scope=${isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project}`;
 
   const breadcrumbs = (
     <DataBreadcrumb title={entityType.title} type={type} group={entityType.group} />

@@ -11,7 +11,7 @@ import { notFound } from 'next/navigation';
 import NextLink from 'next/link';
 import { useAtom } from 'jotai';
 import { useQueryClient } from '@tanstack/react-query';
-
+import { config } from '@/config';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { EntityTypeValue } from '@/entity-configuration/domain';
 import { downloadArchive } from '@/services/entity-download';
@@ -118,7 +118,7 @@ export default function ActionMenu({
           icon={
             <NextLink
               href={{
-                pathname: `${ROOT_ROUTE}/${ctx.virtualLabId}/${ctx.projectId}/workflows/simulate/configure/${entityType.type.replaceAll('_', '-')}/${entity.id}`,
+                pathname: `${config.ROOT_ROUTE}/${ctx.virtualLabId}/${ctx.projectId}/workflows/simulate/configure/${entityType.type.replaceAll('_', '-')}/${entity.id}`,
                 query: {
                   sessionId: crypto.randomUUID(),
                   [PanelQueryParam]: WorkflowSimulatePanels.Configuration,
