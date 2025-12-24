@@ -2,44 +2,45 @@
 
 'use client';
 
-import { parseAsString, SingleParserBuilder, useQueryState } from 'nuqs';
-import { ReactElement, useEffect, type ComponentProps } from 'react';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { WarningOutlined } from '@ant-design/icons';
 import { compact, get } from 'es-toolkit/compat';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { RESET } from 'jotai/utils';
 import dynamic from 'next/dynamic';
+import { SingleParserBuilder, parseAsString, useQueryState } from 'nuqs';
+import { type ComponentProps, ReactElement, useEffect, useMemo } from 'react';
 
-import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
+import { listExpandedViewRegistry } from '@/entity-configuration/definitions/list-expanded-view-defs';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
+import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 
 import { DEFAULT_PAGE_NUMBER, WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
-import { MiniDetailView } from '@/ui/segments/mini-detail-view';
-import { GenericError } from '@/ui/molecules/generic-error';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { GenericError } from '@/ui/molecules/generic-error';
 import {
-  useDataListStateSnapshotActions,
   coreActiveColumnsAtom,
   coreFiltersAtom,
   corePageNumberAtom,
   coreSortStateAtom,
+  useDataListStateSnapshotActions,
 } from '@/ui/segments/data-table/elements/context';
+import { MiniDetailView } from '@/ui/segments/mini-detail-view';
 import {
   makeSelectEntityClickEvent,
-  useSelectEntityClickEvent,
   useMiniDetailView,
+  useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
+import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { Props as MainTableProps } from '@/ui/segments/data-table';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
+import type { Props as MainTableProps } from '@/ui/segments/data-table';
 
 const MainTable = dynamic(() => import('@/ui/segments/data-table'), { ssr: false }) as (
   props: MainTableProps<EntityCoreIdentifiableNamed>
@@ -113,6 +114,26 @@ export function BrowseEntityScope({
     setSortState: onSortChange,
   });
   const columns = allColumns.filter(({ key }) => (activeColumns || []).includes(key as string));
+
+  const expandableOptions = useMemo(() => {
+    const entity = getEntityByExtendedType({ type: dataType });
+    const expandedViewConfig = listExpandedViewRegistry[dataType];
+
+    if (!entity?.api?.expandRow || !expandedViewConfig) return undefined;
+
+    return {
+      getRowKey: (record: EntityCoreIdentifiableNamed) => record.id,
+      getFetchId: (record: EntityCoreIdentifiableNamed) => record.id,
+      fetcher: (record: EntityCoreIdentifiableNamed) =>
+        entity.api.expandRow!(record, { virtualLabId, projectId }),
+      renderExpanded: (
+        records: EntityCoreIdentifiableNamed[],
+        originalRecord: EntityCoreIdentifiableNamed
+      ) => expandedViewConfig.render(originalRecord, records),
+      isRowExpandable: expandedViewConfig.isExpandable || (() => true),
+      isTopLevel: true,
+    };
+  }, [dataType, virtualLabId, projectId, entity]);
 
   useEffect(() => {
     // allow restoring the data table state snapshot when the section is "Data" only.
@@ -233,6 +254,7 @@ export function BrowseEntityScope({
             }}
             {...mainTableProps}
             filterClassNames={classNames?.filterClassNames}
+            expandableOptions={expandableOptions}
           />
         </div>
       </div>

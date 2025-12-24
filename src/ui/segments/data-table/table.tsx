@@ -14,6 +14,10 @@ import {
   useRowSelection,
   type RenderButtonProps,
 } from '@/ui/segments/data-table/elements/use-row-selection';
+import {
+  useExpandableTable,
+  type UseExpandableTableOptions,
+} from '@/ui/segments/data-table/expandable-row/use-expandable-table';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
@@ -244,6 +248,8 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
   scrollable = true,
   dataKey,
   expandableConfig,
+  expandableOptions,
+  showExpandButtons = true,
   rowClassName,
   tableStyle,
   onRow,
@@ -260,6 +266,8 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
     onRowsSelected?: (rows: Array<T>) => void;
     dataKey: string;
     expandableConfig?: ExpandableConfig<T>;
+    expandableOptions?: UseExpandableTableOptions<T, any>;
+    showExpandButtons?: boolean;
     tableStyle?: CSSProperties | undefined;
     dataType: TExtendedEntitiesTypeDict;
     controls?: ReactNode;
@@ -271,6 +279,13 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
     selectionType,
     onRowsSelected,
   });
+
+  const { expandableConfig: generatedExpandableConfig } = expandableOptions
+    ? useExpandableTable(expandableOptions)
+    : { expandableConfig: undefined };
+
+  const finalExpandableConfig =
+    expandableConfig || (showExpandButtons ? generatedExpandableConfig : undefined);
 
   return (
     <>
@@ -284,7 +299,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
         rowKey={(row) => row.id}
         rowSelection={rowSelection}
         scrollable={scrollable}
-        expandableConfig={expandableConfig}
+        expandableConfig={finalExpandableConfig}
         rowClassName={rowClassName}
         style={tableStyle}
         className={className}
