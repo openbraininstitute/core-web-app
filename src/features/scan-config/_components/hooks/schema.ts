@@ -9,9 +9,9 @@ import { CircuitScaleDictionary, ICircuit } from '@/api/entitycore/types/entitie
 
 import { config } from '@/config';
 
-import { Config, ConfigValue } from '@/features/small-microcircuit/_components/components';
-import { isAtom, isPlainObject, ORDERING } from '@/features/small-microcircuit/_components/utils';
-import { AtomsMap, JSONSchema } from '@/features/small-microcircuit/types';
+import { Config, ConfigValue } from '@/features/scan-config/_components/components';
+import { isAtom, isPlainObject, ORDERING } from '@/features/scan-config/_components/utils';
+import { AtomsMap, JSONSchema } from '@/features/scan-config/types';
 
 import { assertErrorMessage } from '@/util/utils';
 

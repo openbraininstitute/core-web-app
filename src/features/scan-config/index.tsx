@@ -11,18 +11,18 @@ import Middle from './_components/middle';
 import SimulationsTab from './_components/simulations';
 
 import { useAppNotification } from '@/components/notification';
-import { Config } from '@/features/small-microcircuit/_components/components';
-import { useConfigAtom } from '@/features/small-microcircuit/_components/hooks/config-atom';
-import { useObioneJsonSchema } from '@/features/small-microcircuit/_components/hooks/schema';
-import ModelPreview from '@/features/small-microcircuit/_components/model-preview';
-import TabsSelector from '@/features/small-microcircuit/_components/tabs-selector';
-import { AtomsMap, TabType } from '@/features/small-microcircuit/types';
+import { Config } from '@/features/scan-config/_components/components';
+import { useConfigAtom } from '@/features/scan-config/_components/hooks/config-atom';
+import { useObioneJsonSchema } from '@/features/scan-config/_components/hooks/schema';
+import ModelPreview from '@/features/scan-config/_components/model-preview';
+import TabsSelector from '@/features/scan-config/_components/tabs-selector';
+import { AtomsMap, TabType } from '@/features/scan-config/types';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
-import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
+import styles from '@/features/scan-config/scan-config.module.css';
 
-export default function SimulationCampaignConfiguration({
+export default function ScanConfiguration({
   modelId,
   virtualLabId,
   projectId,

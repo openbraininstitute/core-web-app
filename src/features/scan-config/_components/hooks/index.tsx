@@ -9,8 +9,8 @@ import { isRootCategory } from './schema';
 import { EntityTypeDict, IMEModel } from '@/api/entitycore/types';
 import { CircuitScaleDictionary, ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { config as appConfig } from '@/config';
-import { Config } from '@/features/small-microcircuit/_components/components';
-import { JSONSchema } from '@/features/small-microcircuit/types';
+import { Config } from '@/features/scan-config/_components/components';
+import { JSONSchema } from '@/features/scan-config/types';
 import { WorkspaceContext } from '@/types/common';
 
 export function useModel({ id, context }: { id: string; context: WorkspaceContext }) {

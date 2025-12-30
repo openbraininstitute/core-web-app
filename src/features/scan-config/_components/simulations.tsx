@@ -17,11 +17,11 @@ import {
   simExecRemoteStatusMapAtomFamily,
   simExecStatusMapAtomFamily,
   simulationsByCampaignIdAtomFamily,
-} from '@/features/small-microcircuit/_components/atoms';
-import { FileViewer } from '@/features/small-microcircuit/_components/file-viewer';
-import { File, SimulationFiles } from '@/features/small-microcircuit/_components/simulation-files';
-import { SimulationStatusBadge } from '@/features/small-microcircuit/_components/simulation-status';
-import errorRegistry from '@/features/small-microcircuit/error-registry';
+} from '@/features/scan-config/_components/atoms';
+import { FileViewer } from '@/features/scan-config/_components/file-viewer';
+import { File, SimulationFiles } from '@/features/scan-config/_components/simulation-files';
+import { SimulationStatusBadge } from '@/features/scan-config/_components/simulation-status';
+import errorRegistry from '@/features/scan-config/error-registry';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/simulation';
 import { useConsent } from '@/services/consent';
@@ -32,7 +32,7 @@ import { classNames } from '@/util/utils';
 import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
 
-import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
+import styles from '@/features/scan-config/scan-config.module.css';
 
 type SimulationTabProps = {
   campaignId: string;

@@ -7,7 +7,7 @@ import { AssetLabel } from '@/api/entitycore/types/shared/global';
 
 import { useAppNotification } from '@/components/notification';
 
-import { modelAtomFamily } from '@/features/small-microcircuit/_components/atoms';
+import { modelAtomFamily } from '@/features/scan-config/_components/atoms';
 
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 

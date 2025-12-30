@@ -1,6 +1,6 @@
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import ZoomableImage from '@/components/zoomable-image';
-import { useCircuitImageURL } from '@/features/small-microcircuit/_components/hooks/circuit';
+import { useCircuitImageURL } from '@/features/scan-config/_components/hooks/circuit';
 import { classNames } from '@/util/utils';
 
 import styles from './circuit-preview.module.css';

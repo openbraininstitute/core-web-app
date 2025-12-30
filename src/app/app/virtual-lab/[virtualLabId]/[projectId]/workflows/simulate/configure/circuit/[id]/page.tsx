@@ -6,7 +6,7 @@ import { use } from 'react';
 
 import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
-import SimulationConfig from '@/features/small-microcircuit';
+import ScanConfig from '@/features/scan-config';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { WorkflowSimulatePanelKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
@@ -62,7 +62,7 @@ export default function Page({
   ) {
     return (
       <div className="border-neutral-2 ml-2 h-full rounded-2xl border pt-3">
-        <SimulationConfig
+        <ScanConfig
           modelId={entity.id}
           virtualLabId={virtualLabId}
           projectId={projectId}

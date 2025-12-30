@@ -10,7 +10,7 @@ import { Loader } from '@/components/loader';
 import {
   modelAtomFamily,
   simResultBySimIdAtomFamily,
-} from '@/features/small-microcircuit/_components/atoms';
+} from '@/features/scan-config/_components/atoms';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { WorkspaceContext } from '@/types/common';
 import { classNames } from '@/util/utils';

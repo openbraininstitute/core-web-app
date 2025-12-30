@@ -6,13 +6,13 @@ import { useEffect, useState } from 'react';
 import { EntityTypeDict, IMEModel } from '@/api/entitycore/types';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
-import ModelDetails from '@/features/small-microcircuit/_components/model-details';
-import ParameterSwep from '@/features/small-microcircuit/_components/parameter-sweep';
-import PredefinedNodeset from '@/features/small-microcircuit/_components/predefined-nodeset';
-import Reference from '@/features/small-microcircuit/_components/reference';
-import Tooltip from '@/features/small-microcircuit/_components/tooltip';
-import { isPlainObject } from '@/features/small-microcircuit/_components/utils';
-import { JSONSchema } from '@/features/small-microcircuit/types';
+import ModelDetails from '@/features/scan-config/_components/model-details';
+import ParameterSwep from '@/features/scan-config/_components/parameter-sweep';
+import PredefinedNodeset from '@/features/scan-config/_components/predefined-nodeset';
+import Reference from '@/features/scan-config/_components/reference';
+import Tooltip from '@/features/scan-config/_components/tooltip';
+import { isPlainObject } from '@/features/scan-config/_components/utils';
+import { JSONSchema } from '@/features/scan-config/types';
 
 import { classNames } from '@/util/utils';
 

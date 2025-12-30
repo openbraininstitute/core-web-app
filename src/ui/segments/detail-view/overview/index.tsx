@@ -19,7 +19,7 @@ import MEModelDetails from '@/features/entities/neuron-simulation/elements/me-mo
 import SynaptomeDetails from '@/features/entities/neuron-simulation/elements/synaptome-details';
 import { EphysViewer } from '@/features/ephys-viewer';
 import { IonChannelRecordingViewer } from '@/features/ion-channel-recording-viewer';
-import SmallMicrocircuitSimulation from '@/features/small-microcircuit';
+import ScanConfig from '@/features/scan-config';
 import { Field } from '@/ui/segments/detail-view/overview/field';
 import IonChannelModelOverview from '@/ui/segments/detail-view/overview/ion-channel-model';
 import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
@@ -107,7 +107,7 @@ export default async function Overview({
     if (!config.simulation?.entity_id) notFound();
 
     return (
-      <SmallMicrocircuitSimulation
+      <ScanConfig
         modelId={config.simulation.entity_id}
         virtualLabId={ctx.virtualLabId}
         projectId={ctx.projectId}

@@ -6,16 +6,16 @@ import { useApiUrl, useValidateSchema } from './hooks';
 
 import { config as appConfig } from '@/config';
 import authFetch from '@/auth-fetch';
-import { isNonEmptyCategory } from '@/features/small-microcircuit/_components/hooks/schema';
-import { Section } from '@/features/small-microcircuit/_components/section';
-import { CATEGORIES, ORDERING } from '@/features/small-microcircuit/_components/utils';
+import { isNonEmptyCategory } from '@/features/scan-config/_components/hooks/schema';
+import { Section } from '@/features/scan-config/_components/section';
+import { CATEGORIES, ORDERING } from '@/features/scan-config/_components/utils';
 import { assertErrorMessage, classNames } from '@/util/utils';
-import { AtomsMap, JSONSchema, TabType } from '@/features/small-microcircuit/types';
+import { AtomsMap, JSONSchema, TabType } from '@/features/scan-config/types';
 import { useAppNotification } from '@/components/notification';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { IMEModel } from '@/api/entitycore/types';
 
-import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
+import styles from '@/features/scan-config/scan-config.module.css';
 
 export default function Left({
   virtualLabId,

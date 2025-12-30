@@ -16,8 +16,8 @@ import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simu
 import { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import { resolveExecutions } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
-import { getLatestSimExecStatus } from '@/features/small-microcircuit/_components/utils';
-import { SimExecStatusMap } from '@/features/small-microcircuit/types';
+import { getLatestSimExecStatus } from '@/features/scan-config/_components/utils';
+import { SimExecStatusMap } from '@/features/scan-config/types';
 import { WorkspaceContext } from '@/types/common';
 import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';
 import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';

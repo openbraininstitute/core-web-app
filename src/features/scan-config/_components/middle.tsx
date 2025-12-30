@@ -1,17 +1,13 @@
 import { atom } from 'jotai';
 
-import {
-  Config,
-  ConfigValue,
-  JSONSchemaForm,
-} from '@/features/small-microcircuit/_components/components';
-import { AtomsMap, JSONSchema } from '@/features/small-microcircuit/types';
-import { isRootCategory } from '@/features/small-microcircuit/_components/hooks/schema';
-import { isAtom } from '@/features/small-microcircuit/_components/utils';
+import { Config, ConfigValue, JSONSchemaForm } from '@/features/scan-config/_components/components';
+import { AtomsMap, JSONSchema } from '@/features/scan-config/types';
+import { isRootCategory } from '@/features/scan-config/_components/hooks/schema';
+import { isAtom } from '@/features/scan-config/_components/utils';
 import { classNames } from '@/util/utils';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { IMEModel } from '@/api/entitycore/types';
-import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
+import styles from '@/features/scan-config/scan-config.module.css';
 
 type MiddleProps = {
   schema: JSONSchema;
