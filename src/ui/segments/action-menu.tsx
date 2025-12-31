@@ -5,12 +5,14 @@ import {
   DownloadOutlined,
   ExperimentOutlined,
   DeleteOutlined,
+  CheckOutlined,
 } from '@ant-design/icons';
 import { useState, useCallback } from 'react';
-import { notFound } from 'next/navigation';
+import { useRouter , notFound } from 'next/navigation';
 import NextLink from 'next/link';
 import { useAtom } from 'jotai';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { App } from 'antd';
 import { config } from '@/config';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { EntityTypeValue } from '@/entity-configuration/domain';
@@ -44,40 +46,80 @@ export default function ActionMenu({
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
   const [, setCircuit] = useAtom(downloadPanelCircuitAtom);
+  const { notification } = App.useApp();
 
   const entityType = getEntityByExtendedType({ type });
   if (!entityType) notFound();
 
-  const handleDelete = useCallback(async () => {
+  const handleCopyId = useCallback(async () => {
+    if (copied) return;
+
     try {
-      if (type === ExtendedEntitiesTypeDict.CellMorphology) {
-        // 1. Perform the API Call
-        await deleteCellMorphology({ id: entity.id, context: ctx });
+      await navigator.clipboard.writeText(entity.id);
+      setCopied(true);
+      notification.success({
+        message: 'ID Copied',
+        description: 'The entity ID has been copied to your clipboard.',
+        duration: 3,
+        placement: 'bottomRight',
+      });
+      setTimeout(() => setCopied(false), 5000);
+    } catch (err) {
+      notification.error({
+        message: 'Copy Failed',
+        description: 'Could not copy to clipboard. Please copy the ID manually.',
+        placement: 'bottomRight',
+      });
+      console.error('Failed to copy:', err);
+    }
+  }, [entity.id, copied, notification]);
 
-        // 2. Clear all React Query caches aggressively
-        await queryClient.resetQueries({
-          queryKey: ['experimental-data'],
-          exact: false,
-        });
-        await queryClient.resetQueries({
-          queryKey: ['experimental-data-count'],
-          exact: false,
-        });
-
-        // 3. THE "NUCLEAR" FIX:
-        // Instead of router.push (which is a soft navigation),
-        // we use window.location.assign to force a hard browser reload.
-        window.location.assign(parentLink);
-      } else {
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (type !== ExtendedEntitiesTypeDict.CellMorphology) {
         throw new Error(`Deletion not implemented for type ${type}`);
       }
-    } catch (error) {
-      const errorMessage = `Deletion failed! ${
-        error instanceof Error ? error.message : 'Unknown error'
-      }`;
-      alert(errorMessage);
-    }
-  }, [entity.id, type, ctx, parentLink, queryClient]);
+      await deleteCellMorphology({ id: entity.id, context: ctx });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['experimental-data'], exact: false });
+      await queryClient.invalidateQueries({ queryKey: ['experimental-data-count'], exact: false });
+
+      notification.success({
+        message: 'Deleted Successfully',
+        description: 'The item has been deleted.',
+        placement: 'bottomRight',
+      });
+
+      // Force a hard navigation → full page reload on the parent page
+      window.location.href = parentLink;
+    },
+    onError: (error: Error) => {
+      const errorMessage = error.message || 'Unknown error';
+      notification.error({
+        message: 'Deletion Failed',
+        description: `Deletion failed! ${errorMessage}`,
+        placement: 'bottomRight',
+        duration: 5,
+      });
+    },
+  });
+
+  const handleDeleteClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const confirmed = window.confirm(
+        'Are you sure you want to delete this item? This action cannot be undone.'
+      );
+
+      if (confirmed) {
+        deleteMutation.mutate();
+      }
+    },
+    [deleteMutation]
+  );
 
   const isSimulatable =
     typeof entityType.isSimulatable === 'boolean'
@@ -89,24 +131,9 @@ export default function ActionMenu({
       <Action
         icon={
           !copied ? (
-            <CopyOutlined
-              onClick={() => {
-                if (copied) return;
-                setCopied(true);
-                const tempInput = document.createElement('input');
-                tempInput.value = entity.id;
-                document.body.appendChild(tempInput);
-                tempInput.select();
-                document.execCommand('copy');
-                document.body.removeChild(tempInput);
-                window.setTimeout(() => setCopied(false), 5000);
-              }}
-            />
+            <CopyOutlined onClick={handleCopyId} />
           ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1em" height="1em">
-              <title>check</title>
-              <path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z" fill="#3e0" />
-            </svg>
+            <CheckOutlined className="text-teal-400" />
           )
         }
       >
@@ -151,7 +178,16 @@ export default function ActionMenu({
       )}
 
       {entityType.isDeletable && (
-        <Action icon={<DeleteOutlined onClick={handleDelete} />}>Delete</Action>
+        <Action
+          icon={
+            <DeleteOutlined
+              onClick={handleDeleteClick}
+              style={{ color: deleteMutation.isPending ? '#999' : 'inherit' }}
+            />
+          }
+        >
+          {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+        </Action>
       )}
     </div>
   );

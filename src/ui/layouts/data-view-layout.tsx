@@ -49,10 +49,6 @@ export async function DataViewLayout({
 
   const isPublicEntity = entity.authorized_public;
 
-  // Logic to create a sessionId only for non-public entities
-  const sessionId = isPublicEntity ? null : projectId;
-
-  // Calculate the parent URL for redirection after actions (like delete)
   const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}&scope=${isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project}`;
 
   const breadcrumbs = (
@@ -67,10 +63,12 @@ export async function DataViewLayout({
     type === ExtendedEntitiesTypeDict.MemodelCircuitSimulation
   ) {
     return (
-      <div className="relative ml-5 flex h-full flex-col rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
-        {closePage}
-        {breadcrumbs}
-        {children}
+      <div className="ml-5 flex h-full flex-col rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
+        <div className="mb-5">
+          {closePage}
+          {breadcrumbs}
+        </div>
+        <div className="relative flex-1 overflow-auto">{children}</div>
       </div>
     );
   }
@@ -90,8 +88,7 @@ export async function DataViewLayout({
             entity={entity}
             type={type}
             ctx={{ virtualLabId, projectId }}
-            sessionId={sessionId}
-            parentLink={parentLink} // <-- PASSED THE REDIRECTION LINK
+            parentLink={parentLink}
           />
         </div>
         <div className="w-4/5 pr-1">
