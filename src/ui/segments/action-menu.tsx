@@ -8,7 +8,7 @@ import {
   CheckOutlined,
 } from '@ant-design/icons';
 import { useState, useCallback } from 'react';
-import { useRouter , notFound } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import NextLink from 'next/link';
 import { useAtom } from 'jotai';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
