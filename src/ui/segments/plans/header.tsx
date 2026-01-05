@@ -3,18 +3,19 @@ import Link from 'next/link';
 import { RiInformation2Line } from '@remixicon/react';
 import { Tooltip } from 'antd';
 
-import { PlanV2 } from '@/api/sanity/pricing/planv2';
 import SubscriptionToggle from '@/ui/segments/plans/subscription-toggle';
 import SubscriptionsCosts from '@/ui/segments/plans/subscriptions-costs';
+import { PlanV2, AdvantagesProps } from '@/types/virtual-lab/pricing';
+
 
 export default function PlanHeader({
   plan,
-  subscription,
-  setSubscription,
+  billingInterval,
+  setBillingInterval,
 }: {
   plan: PlanV2;
-  subscription: 'month' | 'year';
-  setSubscription: (subscription: 'month' | 'year') => void;
+  billingInterval: 'month' | 'year';
+  setBillingInterval: (subscription: 'month' | 'year') => void;
 }) {
   return (
     <header className="relative flex h-[260px] w-full flex-col justify-between">
@@ -23,12 +24,12 @@ export default function PlanHeader({
           <div className="flex flex-row items-center" style={{ justifyContent: 'space-between' }}>
             <div className="font-serif text-4xl font-normal">{plan.name}</div>
             {plan.has_subscription && (
-              <SubscriptionToggle subscription={subscription} setSubscription={setSubscription} />
+              <SubscriptionToggle billingInterval={billingInterval} setBillingInterval={setBillingInterval} />
             )}
           </div>
           {plan.has_subtitle && <div className="text-lg font-normal">{plan.subtitle}</div>}
         </div>
-        {plan.has_subscription && <SubscriptionsCosts subscription={subscription} plan={plan} />}
+        {plan.has_subscription && <SubscriptionsCosts billingInterval={billingInterval} plan={plan} />}
       </div>
       {plan.has_contact_button && (
         <div className="w-full">
@@ -42,7 +43,7 @@ export default function PlanHeader({
       )}
       {plan.advantages.length > 0 && (
         <div className="flex flex-col gap-1">
-          {plan.advantages.map((advantage) => (
+          {plan.advantages.map((advantage: AdvantagesProps) => (
             <div
               key={advantage.title}
               className="text-primary-9 flex items-center gap-2 text-lg font-normal"

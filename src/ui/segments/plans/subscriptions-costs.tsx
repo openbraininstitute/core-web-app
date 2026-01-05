@@ -1,15 +1,15 @@
-import { PlanV2 } from '@/api/sanity/pricing/planv2';
+import { PlanV2 } from '@/types/virtual-lab/pricing';
 
-export default function SubscriptionsCosts({
-  subscription,
+export default function BillingIntervalCosts({
+  billingInterval,
   plan,
 }: {
-  subscription: 'month' | 'year';
+  billingInterval: 'month' | 'year';
   plan: PlanV2;
 }) {
   return (
     <div className="border-neutral-2 relative my-2 w-full border-y py-2">
-      {subscription === 'month' ? (
+      {billingInterval === 'month' ? (
         <div>
           <span className="text-2xl font-bold">
             {plan.monthly_subscriptions[0].currency} {plan.monthly_subscriptions[0].price}

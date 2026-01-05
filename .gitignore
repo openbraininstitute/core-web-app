@@ -29,6 +29,7 @@ cypress/videos/*
 # Misc
 .DS_Store
 *.pem
+.md
 
 # Debug
 npm-debug.log*
