@@ -36,3 +36,56 @@ export interface AtomsMap {
 export type TabType = 'configuration' | 'simulations';
 
 export type SimExecStatusMap = Map<string, EntitycoreExecutionStatus>;
+
+export type SchemaName =
+  | 'CircuitSimulationScanConfig'
+  | 'MEModelSimulationScanConfig'
+  | 'MEModelWithSynapsesCircuitSimulationScanConfig';
+
+export type RootElement = {
+  description: string;
+  title: string;
+  group: string;
+  group_order: number;
+};
+
+export type BlockElement = {
+  default?: ConfigValue;
+  title: string;
+  description: string;
+  properties: Record<string, JSONSchema>;
+  required: string[];
+};
+
+export type Block = {
+  title: string;
+  description: string;
+  properties: Record<string, BlockElement> & { type: { const: string; default: string } };
+  required: string[];
+};
+
+export interface RootBlock extends RootElement, Block {
+  ui_element: 'root_block';
+  additionalProperties: false;
+  required: string[];
+}
+
+export interface BlockDictionary extends RootElement {
+  ui_element: 'block_dictionary';
+  reference_type: string;
+  singular_name: string;
+  additionalProperties: {
+    oneOf: Block[];
+  };
+}
+
+export type ConfigSchema = {
+  additionalProperties: false;
+  default_block_reference_labels: Record<string, string>;
+  description: string;
+  group_order: string[];
+  properties: Record<string, RootBlock | BlockDictionary> & {
+    type: { const: string; default: string };
+  };
+  title: string;
+};

@@ -10,7 +10,7 @@ import { EntityTypeDict, IMEModel } from '@/api/entitycore/types';
 import { CircuitScaleDictionary, ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { config as appConfig } from '@/config';
 import { Config } from '@/features/scan-config/_components/components';
-import { JSONSchema } from '@/features/scan-config/types';
+import { ConfigSchema, JSONSchema, SchemaName } from '@/features/scan-config/types';
 import { WorkspaceContext } from '@/types/common';
 
 export function useModel({ id, context }: { id: string; context: WorkspaceContext }) {
@@ -34,6 +34,20 @@ export function useApiUrl({ model }: { model: ICircuit | IMEModel }) {
   return `${appConfig.OBI_ONE_URL}/generated/${apiPath}`;
 }
 
+export function useSchemaName({ model }: { model: ICircuit | IMEModel }) {
+  const schemaName = match(model)
+    .with({ type: EntityTypeDict.Memodel }, () => 'MEModelSimulationScanConfig')
+    .with(
+      { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single },
+      () => 'MEModelWithSynapsesCircuitSimulationScanConfig'
+    )
+    .with({ type: EntityTypeDict.Circuit }, () => 'CircuitSimulationScanConfig')
+    .otherwise(() => {
+      throw new Error(`Unsupported entity type: ${model.type}`);
+    });
+  return schemaName as SchemaName;
+}
+
 export function useValidateSchema({
   initialConfig,
   config,
@@ -41,7 +55,7 @@ export function useValidateSchema({
 }: {
   initialConfig?: Config;
   config?: Config;
-  schema: JSONSchema | null;
+  schema: AnySchema | null;
 }) {
   const initialConfigValidated = useRef(false);
   const validate = useMemo(() => {
@@ -69,7 +83,7 @@ export function useEntries({
   initialConfig,
   schema,
 }: {
-  schema: JSONSchema | null;
+  schema: ConfigSchema | null;
   initialConfig?: Config;
 }) {
   const allEntries = useRef<Set<string>>(new Set());

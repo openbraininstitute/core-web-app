@@ -1,11 +1,11 @@
 import React from 'react';
 import { atom, useAtom } from 'jotai';
 
-import { JSONSchema, AtomsMap } from '../../types';
+import { AtomsMap, ConfigSchema } from '../../types';
 import { Config } from '../components';
 import { isAtom } from '../utils';
 
-export function useConfigAtom(schema: JSONSchema | null, atomsMap: AtomsMap) {
+export function useConfigAtom(schema: ConfigSchema | null, atomsMap: AtomsMap) {
   const configAtom = React.useMemo(() => {
     return atom((get) => {
       const result: Config = {};

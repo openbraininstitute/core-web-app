@@ -12,7 +12,7 @@ import PredefinedNodeset from '@/features/scan-config/_components/predefined-nod
 import Reference from '@/features/scan-config/_components/reference';
 import Tooltip from '@/features/scan-config/_components/tooltip';
 import { isPlainObject } from '@/features/scan-config/_components/utils';
-import { JSONSchema } from '@/features/scan-config/types';
+import { Block, JSONSchema } from '@/features/scan-config/types';
 
 import { classNames } from '@/util/utils';
 
@@ -24,14 +24,6 @@ interface Object {
 export type ConfigValue = Primitive | Primitive[] | Object;
 
 export type Config = Record<string, Object | string>;
-
-function skipParam(k: string, v: JSONSchema, referenceTypesToConfigKeys: Record<string, string>) {
-  const skip = ['type'];
-  if (skip.includes(k)) return true;
-
-  // If a reference skip if not in the main config dictionary
-  return !!v.is_block_reference && !referenceTypesToConfigKeys[v.properties?.type.const ?? ''];
-}
 
 function isNullableRef(schema: JSONSchema) {
   return (
@@ -54,22 +46,16 @@ export function JSONSchemaForm({
   selectedCategory,
   virtualLabId,
   projectId,
-  refLabels,
-  referenceTypesToConfigKeys,
-  referenceTypesToTitles,
 }: {
   selectedCategory: string;
   disabled: boolean;
   config: Config;
-  schema: JSONSchema;
+  schema?: Block;
   model: ICircuit | IMEModel | undefined | null;
   stateAtom: ReturnType<typeof atom<{ [key: string]: ConfigValue }>>;
   onAddReferenceClick: (reference: string) => void;
   virtualLabId: string;
   projectId: string;
-  refLabels: Record<string, string>;
-  referenceTypesToConfigKeys: Record<string, string>;
-  referenceTypesToTitles: Record<string, string>;
 }) {
   const [state, setState] = useAtom(stateAtom);
 
@@ -77,7 +63,7 @@ export function JSONSchemaForm({
   const [newElement, setNewElement] = useState<number | string | null>(null);
 
   useEffect(() => {
-    if (!schema.properties) return;
+    if (!schema || !schema.properties) return;
 
     const initial: Record<string, ConfigValue> = {};
 
@@ -89,7 +75,7 @@ export function JSONSchemaForm({
     setState((prev) => {
       return { ...initial, ...prev };
     });
-  }, [stateAtom, setState, schema.properties]);
+  }, [stateAtom, setState, schema]);
 
   function renderInput(k: string, v: JSONSchema) {
     if (
@@ -287,6 +273,8 @@ export function JSONSchemaForm({
       );
   }
 
+  if (!schema) return null;
+
   return (
     <div className="flex flex-col gap-2">
       <div className="text-lg text-gray-500 uppercase">{schema.title}</div>
@@ -305,8 +293,8 @@ export function JSONSchemaForm({
                 },
               ] as const;
             })
-            .filter(([k, v]) => {
-              return !skipParam(k, v, referenceTypesToConfigKeys);
+            .filter(([k]) => {
+              return k !== 'type';
             })
             .map(([k, v]) => {
               return (

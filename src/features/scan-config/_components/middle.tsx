@@ -1,7 +1,7 @@
 import { atom } from 'jotai';
 
 import { Config, ConfigValue, JSONSchemaForm } from '@/features/scan-config/_components/components';
-import { AtomsMap, JSONSchema } from '@/features/scan-config/types';
+import { AtomsMap, ConfigSchema, Block } from '@/features/scan-config/types';
 import { isRootCategory } from '@/features/scan-config/_components/hooks/schema';
 import { isAtom } from '@/features/scan-config/_components/utils';
 import { classNames } from '@/util/utils';
@@ -10,7 +10,7 @@ import { IMEModel } from '@/api/entitycore/types';
 import styles from '@/features/scan-config/scan-config.module.css';
 
 type MiddleProps = {
-  schema: JSONSchema;
+  schema: ConfigSchema;
   configTab: string;
   selectedCategory: string;
   editing: boolean;
@@ -19,14 +19,11 @@ type MiddleProps = {
   setSelectedCategory: (s: string) => void;
   selectedEntry: string;
   setSelectedEntry: (entry: string) => void;
-  referenceTypesToConfigKeys: Record<string, string>;
-  referenceTypesToTitles: Record<string, string>;
-  refLabels: Record<string, string>;
   handleAddReferenceClick: (ref: string) => void;
   campaignId: string;
   loading: boolean;
   config: Config;
-  selectedCatSchema?: JSONSchema;
+  selectedBlockSchema?: Block;
   model: ICircuit | IMEModel;
   virtualLabId: string;
   projectId: string;
@@ -44,14 +41,11 @@ export default function Middle({
   setSelectedCategory,
   selectedEntry,
   setSelectedEntry,
-  referenceTypesToConfigKeys,
-  referenceTypesToTitles,
-  refLabels,
   handleAddReferenceClick,
   campaignId,
   loading,
   config,
-  selectedCatSchema,
+  selectedBlockSchema,
   model,
   virtualLabId,
   projectId,
@@ -65,8 +59,7 @@ export default function Middle({
         'h-full overflow-y-auto border-r border-l border-gray-200 px-5'
       )}
     >
-      {schema.properties &&
-        schema.properties?.[configTab]?.additionalProperties?.oneOf &&
+      {schema.properties?.[configTab]?.ui_element === 'block_dictionary' &&
         !selectedCategory &&
         editing && (
           <div className="flex flex-col items-center gap-5">
@@ -89,7 +82,10 @@ export default function Middle({
                         else initial[subkey] = subValue.default ?? null;
                       });
 
-                    const baseName = schema.properties?.[configTab]?.singular_name ?? 'element';
+                    const element = schema.properties?.[configTab];
+
+                    const baseName =
+                      element.ui_element === 'block_dictionary' ? element.singular_name : 'element';
                     let counter = 0;
                     let newEntry: string;
 
@@ -120,17 +116,18 @@ export default function Middle({
       {schema.properties &&
         schema.properties?.[configTab] &&
         editing &&
-        (isRootCategory(schema, configTab) || selectedCatSchema) && (
+        (isRootCategory(schema, configTab) || selectedBlockSchema) && (
           <JSONSchemaForm
-            referenceTypesToConfigKeys={referenceTypesToConfigKeys}
-            referenceTypesToTitles={referenceTypesToTitles}
-            refLabels={refLabels}
             key={isRootCategory(schema, configTab) ? configTab : `${configTab}_${selectedEntry}`}
             selectedCategory={selectedCategory}
             onAddReferenceClick={handleAddReferenceClick}
             disabled={!!campaignId || loading}
             config={config}
-            schema={selectedCatSchema ?? schema.properties[configTab]}
+            schema={
+              schema.properties[configTab].ui_element === 'root_block'
+                ? schema.properties[configTab]
+                : selectedBlockSchema
+            }
             stateAtom={
               isAtom(atomsMap[configTab])
                 ? atomsMap[configTab]

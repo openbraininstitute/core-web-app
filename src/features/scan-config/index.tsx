@@ -16,7 +16,7 @@ import { useConfigAtom } from '@/features/scan-config/_components/hooks/config-a
 import { useObioneJsonSchema } from '@/features/scan-config/_components/hooks/schema';
 import ModelPreview from '@/features/scan-config/_components/model-preview';
 import TabsSelector from '@/features/scan-config/_components/tabs-selector';
-import { AtomsMap, TabType } from '@/features/scan-config/types';
+import { AtomsMap, TabType, Block } from '@/features/scan-config/types';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
@@ -43,9 +43,9 @@ export default function ScanConfiguration({
 }) {
   //  const router = useRouter();
   const [tab, setTab] = useState<TabType>(defaultTab);
-  const [configTab, setConfigTab] = useState<string>('info');
+  const [selectedRootElement, setSelectedRootElement] = useState<string>('info');
   const [editing, setEditing] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedBlock, setSelectedBlock] = useState('');
   const [selectedEntry, setSelectedEntry] = useState('');
   const [loading, setLoading] = useState(false);
   const notification = useAppNotification();
@@ -56,23 +56,25 @@ export default function ScanConfiguration({
 
   const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
   const { model } = useModel({ id: modelId, context: { virtualLabId, projectId } });
-  const { schema, refLabels, referenceTypesToConfigKeys, referenceTypesToTitles } =
-    useObioneJsonSchema(model, notification, setAtomsMap, initialConfig);
+  const schema = useObioneJsonSchema(model, notification, setAtomsMap, initialConfig);
 
-  const selectedCatSchema = schema?.properties?.[configTab]?.additionalProperties?.oneOf?.find(
-    (s) => s.properties?.type.const === selectedCategory
-  );
+  const selectedBlockSchema: Block | undefined =
+    schema?.properties?.[selectedRootElement]?.ui_element === 'block_dictionary'
+      ? schema.properties[selectedRootElement].additionalProperties.oneOf.find(
+          (o: Block) => o.properties?.type.const === selectedBlock
+        )
+      : undefined;
 
   const allEntries = useEntries({ initialConfig, schema });
 
   const handleAddReferenceClick = (referenceTab: string) => {
-    setConfigTab(referenceTab);
+    setSelectedRootElement(referenceTab);
     setEditing(true);
-    setSelectedCategory('');
+    setSelectedBlock('');
   };
   const config = useConfigAtom(schema, atomsMap);
 
-  if (!schema || !refLabels || !referenceTypesToConfigKeys || !referenceTypesToTitles) {
+  if (!schema) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <LoadingOutlined />
@@ -103,15 +105,15 @@ export default function ScanConfiguration({
             schema={schema}
             atomsMap={atomsMap}
             setAtomsMap={setAtomsMap}
-            configTab={configTab}
-            setConfigTab={setConfigTab}
+            selectedRootElement={selectedRootElement}
+            setSelectedRootElement={setSelectedRootElement}
             config={config}
             campaignId={campaignId}
             loading={loading}
             selectedEntry={selectedEntry}
             setSelectedEntry={setSelectedEntry}
             setEditing={setEditing}
-            setSelectedCategory={setSelectedCategory}
+            setSelectedCategory={setSelectedBlock}
             readOnly={readOnly}
             setCampaignId={setCampaignId}
             setLoading={setLoading}
@@ -127,22 +129,19 @@ export default function ScanConfiguration({
 
           <Middle
             schema={schema}
-            configTab={configTab}
-            selectedCategory={selectedCategory}
+            configTab={selectedRootElement}
+            selectedCategory={selectedBlock}
             editing={editing}
             atomsMap={atomsMap}
             setAtomsMap={setAtomsMap}
-            setSelectedCategory={setSelectedCategory}
+            setSelectedCategory={setSelectedBlock}
             selectedEntry={selectedEntry}
             setSelectedEntry={setSelectedEntry}
-            referenceTypesToConfigKeys={referenceTypesToConfigKeys}
-            referenceTypesToTitles={referenceTypesToTitles}
-            refLabels={refLabels}
             handleAddReferenceClick={handleAddReferenceClick}
             campaignId={campaignId}
             loading={loading}
             config={config}
-            selectedCatSchema={selectedCatSchema}
+            selectedBlockSchema={selectedBlockSchema}
             model={model}
             virtualLabId={virtualLabId}
             projectId={projectId}

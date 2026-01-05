@@ -6,11 +6,9 @@ import { useApiUrl, useValidateSchema } from './hooks';
 
 import { config as appConfig } from '@/config';
 import authFetch from '@/auth-fetch';
-import { isNonEmptyCategory } from '@/features/scan-config/_components/hooks/schema';
 import { Section } from '@/features/scan-config/_components/section';
-import { CATEGORIES, ORDERING } from '@/features/scan-config/_components/utils';
 import { assertErrorMessage, classNames } from '@/util/utils';
-import { AtomsMap, JSONSchema, TabType } from '@/features/scan-config/types';
+import { AtomsMap, ConfigSchema, TabType } from '@/features/scan-config/types';
 import { useAppNotification } from '@/components/notification';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { IMEModel } from '@/api/entitycore/types';
@@ -23,8 +21,8 @@ export default function Left({
   schema,
   atomsMap,
   setAtomsMap,
-  configTab,
-  setConfigTab,
+  selectedRootElement,
+  setSelectedRootElement,
   config,
   campaignId,
   loading,
@@ -46,11 +44,11 @@ export default function Left({
 }: {
   virtualLabId: string;
   projectId: string;
-  schema: JSONSchema;
+  schema: ConfigSchema;
   atomsMap: AtomsMap;
   setAtomsMap: React.Dispatch<React.SetStateAction<AtomsMap>>;
-  configTab: string; // Key for selected section
-  setConfigTab: (configTab: string) => void;
+  selectedRootElement: string;
+  setSelectedRootElement: (rootElement: string) => void;
   config: Config;
   campaignId: string;
   loading: boolean;
@@ -77,48 +75,50 @@ export default function Left({
   return (
     <div className={styles.scrollable}>
       <div className="flex flex-grow flex-col items-center gap-5 overflow-y-auto pr-5 pb-5">
-        {CATEGORIES.map((c) => {
+        {schema.group_order.map((group) => {
           return (
-            isNonEmptyCategory(c, schema) && (
-              <Fragment key={c}>
-                <div className="self-start text-gray-500 uppercase">{c}</div>
-                {schema.properties &&
-                  Object.entries(schema.properties)
-                    .filter(([k]) => k !== 'type' && ORDERING[k]?.category === c)
-                    .sort((a, b) => {
-                      const order = (k: string) => ORDERING[k]?.order ?? 999;
-                      return order(a[0]) - order(b[0]);
-                    })
-                    .map(([k, v]) => {
-                      return (
-                        <Section
-                          key={k}
-                          k={k}
-                          schema={schema}
-                          sectionSchema={v}
-                          atomsMap={atomsMap}
-                          setAtomsMap={setAtomsMap}
-                          configTab={configTab}
-                          setConfigTab={setConfigTab}
-                          config={config}
-                          campaignId={campaignId}
-                          loading={loading}
-                          errors={errors}
-                          selectedEntry={selectedEntry}
-                          setSelectedEntry={setSelectedEntry}
-                          setEditing={setEditing}
-                          setSelectedCategory={setSelectedCategory}
-                          readOnly={readOnly}
-                          allEntries={allEntries}
-                          newKey={newKey}
-                          setNewKey={setNewKey}
-                          isEditingKey={isEditingKey}
-                          setIsEditingKey={setIsEditingKey}
-                        />
-                      );
-                    })}
-              </Fragment>
-            )
+            <Fragment key={group}>
+              <div className="self-start text-gray-500 uppercase">{group}</div>
+              {schema.properties &&
+                Object.entries(schema.properties)
+                  .filter(
+                    ([_, root_element]) => 'group' in root_element && root_element.group === group
+                  )
+                  .sort(([_, a], [__, b]) => {
+                    if ('const' in a || 'const' in b) return 0;
+
+                    return a.group_order - b.group_order;
+                  })
+                  .map(([k, root_element]) => {
+                    if ('const' in root_element) return null;
+                    return (
+                      <Section
+                        key={k}
+                        k={k}
+                        schema={schema}
+                        sectionSchema={root_element}
+                        atomsMap={atomsMap}
+                        setAtomsMap={setAtomsMap}
+                        selectedRootElement={selectedRootElement}
+                        setSelectedRootElement={setSelectedRootElement}
+                        config={config}
+                        campaignId={campaignId}
+                        loading={loading}
+                        errors={errors}
+                        selectedEntry={selectedEntry}
+                        setSelectedEntry={setSelectedEntry}
+                        setEditing={setEditing}
+                        setSelectedCategory={setSelectedCategory}
+                        readOnly={readOnly}
+                        allEntries={allEntries}
+                        newKey={newKey}
+                        setNewKey={setNewKey}
+                        isEditingKey={isEditingKey}
+                        setIsEditingKey={setIsEditingKey}
+                      />
+                    );
+                  })}
+            </Fragment>
           );
         })}
       </div>
