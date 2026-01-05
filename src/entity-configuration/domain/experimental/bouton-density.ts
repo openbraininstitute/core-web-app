@@ -20,6 +20,7 @@ export const BoutonDensity: EntityCoreTypeConfig<IExperimentalBoutonDensity> = {
   api: {
     config: {
       allowedFacets: true,
+      ilikeSearchEnabled: true,
     },
     query: {
       list: getExperimentalBoutonDensities,

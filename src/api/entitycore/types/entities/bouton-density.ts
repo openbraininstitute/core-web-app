@@ -11,6 +11,7 @@ import type {
   BrainRegionFilter,
   StainFilter,
   MtypeFilter,
+  IlikeSearchFilter,
 } from '@/api/entitycore/types/shared/request';
 import type { IExperimentalDensity } from '@/api/entitycore/types/shared/density';
 
@@ -26,5 +27,6 @@ export type ExperimentalBoutonDensityFilter = Partial<
     BrainRegionFilter &
     StainFilter &
     MtypeFilter &
-    EntityAuthorization
+    EntityAuthorization &
+    IlikeSearchFilter
 >;
