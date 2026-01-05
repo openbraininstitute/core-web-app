@@ -23,12 +23,17 @@ export default function PlanHeader({
           <div className="flex flex-row items-center" style={{ justifyContent: 'space-between' }}>
             <div className="font-serif text-4xl font-normal">{plan.name}</div>
             {plan.has_subscription && (
-              <SubscriptionToggle billingInterval={billingInterval} setBillingInterval={setBillingInterval} />
+              <SubscriptionToggle
+                billingInterval={billingInterval}
+                setBillingInterval={setBillingInterval}
+              />
             )}
           </div>
           {plan.has_subtitle && <div className="text-lg font-normal">{plan.subtitle}</div>}
         </div>
-        {plan.has_subscription && <SubscriptionsCosts billingInterval={billingInterval} plan={plan} />}
+        {plan.has_subscription && (
+          <SubscriptionsCosts billingInterval={billingInterval} plan={plan} />
+        )}
       </div>
       {plan.has_contact_button && (
         <div className="w-full">

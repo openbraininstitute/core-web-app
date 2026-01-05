@@ -11,7 +11,11 @@ export default function PlanCard({ plan }: { plan: PlanV2 }) {
 
   return (
     <div className="border-neutral-2 relative w-full rounded-xl border bg-white p-6">
-      <PlanHeader plan={plan} billingInterval={billingInterval} setBillingInterval={setBillingInterval} />
+      <PlanHeader
+        plan={plan}
+        billingInterval={billingInterval}
+        setBillingInterval={setBillingInterval}
+      />
       <PlanBody plan={plan} />
     </div>
   );
