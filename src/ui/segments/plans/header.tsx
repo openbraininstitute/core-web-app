@@ -41,7 +41,7 @@ export default function PlanHeader({
           </Link>
         </div>
       )}
-      {plan.advantages.length > 0 && (
+      {plan.advantages && plan.advantages.length > 0 && (
         <div className="flex flex-col gap-1">
           {plan.advantages.map((advantage: AdvantagesProps) => (
             <div

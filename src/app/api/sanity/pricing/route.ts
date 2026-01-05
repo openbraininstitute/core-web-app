@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { getPricingContent } from '@/api/sanity/pricing/route';
+import { getPricingContent } from '@/ui/segments/plans/get-pricing-content';
 import { logError } from '@/util/logger';
 
 export async function GET() {
