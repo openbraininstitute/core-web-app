@@ -3,28 +3,30 @@ import { lowerCase, upperFirst } from 'es-toolkit/compat';
 import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { BaseTable } from '@/ui/segments/data-table/table';
-import { formatNumber } from '@/util/common';
 import type { ListExpandedViewConfig } from '../types';
 
 function getParamLabel(param: string) {
   return upperFirst(lowerCase(param.split('.').at(-1))) // e.g. "initialize.random_seed" -> "Random seed"
 }
 
-export const viewConfig: ListExpandedViewConfig<ICircuitSimulationCampaign> = {
-  render: (simulationCampaign) => {
+const className = 'text-primary-7';
 
+export const viewConfig: ListExpandedViewConfig<ICircuitSimulationCampaign> = {
+  expandIconColumnIndex: 5,
+  render: (simulationCampaign) => {
     const simulations = simulationCampaign.simulations ?? [];
 
     const allScanParamSet = simulations.reduce((set, simulation) => set.union(new Set(Object.keys(simulation.scan_parameters))), new Set<string>());
 
     const columns = [
-      { title: 'Name', dataIndex: 'name', key: 'name', fixed: 'left' as const },
+      { title: 'Name', className, dataIndex: 'name', key: 'name', fixed: 'left' as const },
       ...Array.from(allScanParamSet).map((param) => ({
         title: <span title={param}>{getParamLabel(param)}</span>,
+        className,
         dataIndex: ['scan_parameters', param],
         key: param,
       })),
-      { title: 'Status', dataIndex: ['execution', 'status'], key: 'status', fixed: 'right' as const },
+      { title: 'Status', className, dataIndex: ['execution', 'status'], key: 'status', fixed: 'right' as const },
     ];
 
     return (

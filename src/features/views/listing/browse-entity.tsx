@@ -41,6 +41,7 @@ import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import type { Props as MainTableProps } from '@/ui/segments/data-table';
+import { expandIcon } from '@/ui/segments/explore/circuit/elements/expand-icon';
 
 const MainTable = dynamic(() => import('@/ui/segments/data-table'), { ssr: false }) as (
   props: MainTableProps<EntityCoreIdentifiableNamed>
@@ -130,7 +131,9 @@ export function BrowseEntityScope({
         records: EntityCoreIdentifiableNamed[],
         originalRecord: EntityCoreIdentifiableNamed
       ) => expandedViewConfig.render(originalRecord, records),
-      isRowExpandable: expandedViewConfig.isExpandable || (() => true),
+      expandIconColumnIndex: expandedViewConfig.expandIconColumnIndex,
+      expandIcon: expandedViewConfig.expandIcon,
+      isRowExpandable: expandedViewConfig.isExpandable,
       isTopLevel: true,
     };
   }, [dataType, virtualLabId, projectId, entity]);
