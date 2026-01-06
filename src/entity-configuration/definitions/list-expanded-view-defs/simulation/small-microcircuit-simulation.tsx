@@ -32,13 +32,22 @@ export const viewConfig: ListExpandedViewConfig<ICircuitSimulationCampaign> = {
     const allScanParamSet = simulations.reduce((set, simulation) => set.union(new Set(Object.keys(simulation.scan_parameters))), new Set<string>());
 
     const columns = [
-      { title: 'Name', className: cn(className, 'whitespace-nowrap'), dataIndex: 'name', key: 'name', width: 120, fixed: 'left' as const },
+      {
+        title: 'Name',
+        className: cn(className, 'whitespace-nowrap'),
+        dataIndex: 'name',
+        key: 'name',
+        width: 120,
+        fixed: 'left' as const
+      },
+
       ...Array.from(allScanParamSet).map((param) => ({
         title: <span title={param}>{getParamLabel(param)}</span>,
         className,
         dataIndex: ['scan_parameters', param],
         key: param,
       })),
+
       {
         title: 'Status',
         render: (simulation: ICircuitSimulation) => <ExecutionStatus status={getSimulationExecutionStatus(simulation)} />,
