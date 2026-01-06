@@ -160,7 +160,7 @@ export function Section({
             return;
           }
 
-          setSelectedRootElement('');
+          setSelectedRootElement(k);
           setSelectedEntry('');
           setSelectedCategory('');
 

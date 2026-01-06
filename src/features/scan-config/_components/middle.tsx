@@ -52,6 +52,9 @@ export default function Middle({
   allEntries,
   onNewBlockClick,
 }: MiddleProps) {
+
+  console.log(configTab)
+
   return (
     <div
       className={classNames(

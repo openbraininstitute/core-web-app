@@ -13,7 +13,7 @@ import SimulationsTab from './_components/simulations';
 import { useAppNotification } from '@/components/notification';
 import { Config } from '@/features/scan-config/_components/components';
 import { useConfigAtom } from '@/features/scan-config/_components/hooks/config-atom';
-import { useObioneJsonSchema } from '@/features/scan-config/_components/hooks/schema';
+import { useAtomsMap, useObioneJsonSchema } from '@/features/scan-config/_components/hooks/schema';
 import ModelPreview from '@/features/scan-config/_components/model-preview';
 import TabsSelector from '@/features/scan-config/_components/tabs-selector';
 import { AtomsMap, TabType, Block } from '@/features/scan-config/types';
@@ -48,15 +48,13 @@ export default function ScanConfiguration({
   const [selectedBlock, setSelectedBlock] = useState('');
   const [selectedEntry, setSelectedEntry] = useState('');
   const [loading, setLoading] = useState(false);
-  const notification = useAppNotification();
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
 
   const [isEditingKey, setIsEditingKey] = useState(false);
   const [newKey, setNewKey] = useState('');
 
-  const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
   const { model } = useModel({ id: modelId, context: { virtualLabId, projectId } });
-  const schema = useObioneJsonSchema(model, notification, setAtomsMap, initialConfig);
+  const schema = useObioneJsonSchema(model);
 
   const selectedBlockSchema: Block | undefined =
     schema?.properties?.[selectedRootElement]?.ui_element === 'block_dictionary'
@@ -72,9 +70,12 @@ export default function ScanConfiguration({
     setEditing(true);
     setSelectedBlock('');
   };
+
+  const [atomsMap, setAtomsMap] = useAtomsMap({ schema, initialConfig, model });
+
   const config = useConfigAtom(schema, atomsMap);
 
-  if (!schema) {
+  if (!schema || Object.keys(atomsMap).length === 0) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <LoadingOutlined />

@@ -5,10 +5,11 @@ import { AtomsMap, ConfigSchema } from '../../types';
 import { Config } from '../components';
 import { isAtom } from '../utils';
 
-export function useConfigAtom(schema: ConfigSchema | null, atomsMap: AtomsMap) {
+export function useConfigAtom(schema: ConfigSchema | null, atomsMap: AtomsMap | null) {
   const configAtom = React.useMemo(() => {
     return atom((get) => {
       const result: Config = {};
+      if (!schema || !atomsMap) return result;
       Object.keys(atomsMap).forEach((key) => {
         if (isAtom(atomsMap[key])) result[key] = get(atomsMap[key]);
         else {

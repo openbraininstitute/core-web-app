@@ -89,3 +89,12 @@ export type ConfigSchema = {
   };
   title: string;
 };
+
+type Type = {
+  const: string;
+  default: string;
+};
+
+export function isType(v: RootElement | Type): v is Type {
+  return 'const' in v;
+}

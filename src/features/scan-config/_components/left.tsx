@@ -8,7 +8,7 @@ import { config as appConfig } from '@/config';
 import authFetch from '@/auth-fetch';
 import { Section } from '@/features/scan-config/_components/section';
 import { assertErrorMessage, classNames } from '@/util/utils';
-import { AtomsMap, ConfigSchema, TabType } from '@/features/scan-config/types';
+import { AtomsMap, ConfigSchema, isType, TabType } from '@/features/scan-config/types';
 import { useAppNotification } from '@/components/notification';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { IMEModel } from '@/api/entitycore/types';
@@ -85,7 +85,7 @@ export default function Left({
                     ([_, root_element]) => 'group' in root_element && root_element.group === group
                   )
                   .sort(([_, a], [__, b]) => {
-                    if ('const' in a || 'const' in b) return 0;
+                    if (isType(a) || isType(b)) return 0;
 
                     return a.group_order - b.group_order;
                   })
