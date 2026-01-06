@@ -34,19 +34,3 @@ export async function runSimulation({
     signal,
   });
 }
-
-type RunSimulationBatchParams = {
-  ctx: WorkspaceContext;
-  simulationIds: string[];
-  signal?: AbortSignal;
-};
-
-export async function runSimulationBatch({
-  ctx,
-  simulationIds,
-  signal,
-}: RunSimulationBatchParams) {
-  for (const simulationId of simulationIds) {
-    await runSimulation({ ctx, simulationId, signal });
-  }
-};

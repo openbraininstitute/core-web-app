@@ -1,6 +1,6 @@
 import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
 import type { CheckboxProps } from 'antd';
-import { Checkbox, ConfigProvider, Form, Input, InputNumber, Modal } from 'antd';
+import { Checkbox, ConfigProvider, Modal } from 'antd';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
@@ -34,11 +34,18 @@ import { log } from '@/utils/logger';
 
 import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
 
+const USER_CANCELLED = 'user_cancelled';
+
 type SimulationTabProps = {
   campaignId: string;
   virtualLabId: string;
   projectId: string;
 };
+
+type Consent = {
+  controller: AbortController;
+  url: string;
+}
 
 export default function SimulationsTab({
   campaignId,
@@ -70,9 +77,8 @@ export default function SimulationsTab({
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [filesLoading, setFilesLoading] = useState(false);
-  const [launchSystemParamsModalOpen, setLaunchSystemParamsModalOpen] = useState(false);
   const [waitingForConsent, setWaitingForConsent] = useState(false);
-  const [form] = Form.useForm();
+  const [consent, setConsent] = useState<Consent | null>(null);
 
   const activeSimulationExecStatus = activeSimulation && statusMap?.get(activeSimulation.id);
 
@@ -120,8 +126,8 @@ export default function SimulationsTab({
 
     const hasActiveSimulations = statusMap
       ? Array.from(statusMap.values()).some((status) =>
-          [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING].includes(status)
-        )
+        [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING].includes(status)
+      )
       : false;
 
     if (!hasActiveSimulations) return;
@@ -131,35 +137,67 @@ export default function SimulationsTab({
     return () => clearInterval(intervalId);
   }, [fetchRemoteSimExecStatuseMap, simRequestInProgress, statusMap]);
 
-  // TODO: this is a POC, refactor once confirmed viable.
-  const runViaLaunchSystem = async (simIds: string[]) => {
-    form.setFieldsValue({ simulationId: simIds[0] });
-    setLaunchSystemParamsModalOpen(true);
+  const onConsentModalClose = () => {
+    if (consent) {
+      consent.controller.abort(USER_CANCELLED);
+    }
+    setConsent(null);
+    setWaitingForConsent(false);
   };
 
-  const handleModalOk = async () => {
-    const values = form.getFieldsValue();
+  // TODO: this is a POC, refactor once confirmed viable.
+  const runViaLaunchSystem = async (simulationIds: string[]) => {
     setWaitingForConsent(true);
 
     const consent = await requestOfflineTokenConsent();
-    window.open(consent.data.consent_url, '_blank');
+    const consentUrl = consent.data.consent_url
 
-    await waitForConsent();
+    if (consentUrl) {
+      const controller = new AbortController();
+      setConsent({ controller, url: consentUrl });
+      window.open(consent.data.consent_url, '_blank');
 
-    const submissionRes = await runSimulation({
-      ctx: { virtualLabId, projectId },
-      simulationId: values.simulationId,
-      name: values.name,
-      instances: values.instances,
-      instanceType: values.instanceType,
-    });
+      try {
+        await waitForConsent(controller.signal);
+      } catch (error) {
+        if (error === USER_CANCELLED) return;
 
-    log('info', submissionRes);
+        notification.error({
+          message: 'Unexpected error occured, please try again later',
+          duration: 10
+        });
 
+        return;
+      }
+    }
+
+    for (const simulationId of simulationIds) {
+      let nSubmissions = 0;
+
+      try {
+        const res = await runSimulation({
+          ctx: { virtualLabId, projectId },
+          simulationId,
+        });
+        log('info', res);
+        setSimStatus(simulationId, EntitycoreExecutionStatus.PENDING)
+        nSubmissions += 1;
+      } catch { }
+
+      if (nSubmissions !== simulationIds.length) {
+        notification.error({
+          message: 'We ran into a problem submitting your simulation(s). Please try again later.',
+          duration: 10
+        });
+      } else {
+        notification.success({
+          message: 'Simulation(s) submitted successfully.',
+          duration: 10
+        });
+      }
+    }
     setWaitingForConsent(false);
-    setLaunchSystemParamsModalOpen(false);
-
-    notification.success({ message: `Simulation submitted successfuly`, duration: 10 });
+    setConsent(null);
   };
 
   // TODO Refactor
@@ -241,7 +279,7 @@ export default function SimulationsTab({
             Select all
           </Checkbox>
           {/* List of simulations */}
-          <div className="flex flex-grow flex-col justify-start gap-5 overflow-y-auto">
+          <div className="flex grow flex-col justify-start gap-5 overflow-y-auto">
             {!loading &&
               simulations.map((simulation) => (
                 <SimulationListItem
@@ -299,30 +337,17 @@ export default function SimulationsTab({
       </div>
 
       <Modal
-        title="Launch Configuration"
-        open={launchSystemParamsModalOpen}
-        onOk={handleModalOk}
-        onCancel={() => setLaunchSystemParamsModalOpen(false)}
-        confirmLoading={waitingForConsent}
-        cancelButtonProps={{ disabled: waitingForConsent }}
+        title="Waiting for the user consent"
+        open={!!consent}
+        onCancel={onConsentModalClose}
+        okButtonProps={{ style: { display: 'none' } }}
       >
-        {waitingForConsent && (
-          <div className="mb-4 text-center text-gray-600">Waiting for user consent...</div>
-        )}
-        <Form form={form} layout="vertical">
-          <Form.Item label="Simulation ID" name="simulationId">
-            <Input readOnly disabled={waitingForConsent} />
-          </Form.Item>
-          <Form.Item label="Name" name="name">
-            <Input disabled={waitingForConsent} />
-          </Form.Item>
-          <Form.Item label="Instances" name="instances">
-            <InputNumber style={{ width: '100%' }} disabled={waitingForConsent} />
-          </Form.Item>
-          <Form.Item label="Instance Type" name="instanceType">
-            <Input disabled={waitingForConsent} />
-          </Form.Item>
-        </Form>
+        <p className="text-lg">
+          If the authorization window did not open automatically,
+          please click the link below to continue.
+        </p>
+
+        <a className="text-primary-9 font-semibold text-lg inline-block mt-4" href={consent?.url} target="_blank">Grant consent</a>
       </Modal>
     </div>
   );
