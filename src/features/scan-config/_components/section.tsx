@@ -36,7 +36,7 @@ export function Section({
   selectedEntry,
   setSelectedEntry,
   setEditing,
-  setSelectedBlock
+  setSelectedBlock,
   readOnly,
   allEntries,
   newKey,
@@ -154,7 +154,7 @@ export function Section({
         onClick={() => {
           if (selectedRootElement === k && !isRootCategory(schema, k)) {
             setEditing(false);
-            setSelectedBlock
+            setSelectedBlock('');
             setSelectedEntry('');
             setSelectedRootElement('');
             return;
@@ -162,7 +162,7 @@ export function Section({
 
           setSelectedRootElement(k);
           setSelectedEntry('');
-          setSelectedBlock('')
+          setSelectedBlock('');
 
           if (sectionSchema.ui_element === 'root_block') setEditing(true);
           else setEditing(false);
@@ -274,7 +274,7 @@ export function Section({
                         onClick={(e) => {
                           e.stopPropagation();
 
-                          setSelectedBlock('')
+                          setSelectedBlock('');
                           setEditing(false);
 
                           const selectedTabAtoms = atomsMap[selectedRootElement];
