@@ -465,6 +465,15 @@ export function usePainterManager(morphology: Morphology) {
     refPainter.current = new PainterManager();
     refPainter.current.morphology = morphology;
   }
+
+  // Update morphology when it changes (even if object reference changes)
+  React.useEffect(() => {
+    if (refPainter.current) {
+      refPainter.current.morphology = morphology;
+    }
+  }, [morphology]);
+
+  // Cleanup only on unmount
   React.useEffect(() => {
     return () => {
       const painterManager = refPainter.current;
@@ -472,7 +481,7 @@ export function usePainterManager(morphology: Morphology) {
 
       painterManager.delete();
     };
-  });
+  }, []); // Empty dependency array - only run on mount/unmount
   return refPainter.current;
 }
 
