@@ -23,6 +23,7 @@ import type {
   MtypeFilter,
   EtypeFilter,
   PaginationFilter,
+  IlikeSearchFilter,
 } from '@/api/entitycore/types/shared/request';
 
 interface ExemplarMorphology extends Timestamps, EntityCoreIdentifiable {
@@ -64,7 +65,8 @@ export interface IEModelFilter
     BrainRegionFilter,
     SharedFilter,
     IMorphologyFilter,
-    PaginationFilter {
+    PaginationFilter,
+    IlikeSearchFilter {
   score__lte: number | null;
   score__gte: number | null;
 }

@@ -14,6 +14,7 @@ import type {
 import type {
   BrainRegionFilter,
   ContributionFilter,
+  IlikeSearchFilter,
   IMorphologyFilter,
   PaginationFilter,
   SharedFilter,
@@ -64,4 +65,5 @@ export interface IonChannelModelFilter
     IMorphologyFilter,
     PaginationFilter,
     SharedFilter,
-    SubjectFilter {}
+    SubjectFilter,
+    IlikeSearchFilter {}

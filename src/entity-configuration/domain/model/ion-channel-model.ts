@@ -20,6 +20,7 @@ export const IonChannelModel: EntityCoreTypeConfig<IIonChannelModel> = {
   api: {
     config: {
       allowedFacets: true,
+      ilikeSearchEnabled: true,
     },
     query: {
       list: (...params) => {
