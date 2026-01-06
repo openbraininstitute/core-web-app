@@ -1,6 +1,6 @@
 import { PortableText } from 'next-sanity';
 
-import type { PortableTextBlock } from '@sanity/types';
+import type { PortableTextBlock } from 'next-sanity';
 
 import { cn } from '@/utils/css-class';
 
