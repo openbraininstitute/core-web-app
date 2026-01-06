@@ -88,7 +88,7 @@ export function ValueOrRange({
     setFilter(newValue);
   }
 
-  function updateRange(newValue: { [x in keyof Partial<GteLteValue>]: number }) {
+  function updateRange(newValue: { [x in keyof Partial<GteLteValue>]: number | undefined }) {
     setRange({ ...range, ...newValue });
     setFilter({ ...range, ...newValue });
   }
@@ -132,7 +132,9 @@ export function ValueOrRange({
           <input
             className="border-primary-6 min-w-0 rounded-md border bg-transparent px-2 py-2 text-center"
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              updateRange({ gte: Number(e.target.value) })
+              updateRange({
+                gte: e.target.value.trim() === '' ? undefined : Number(e.target.value),
+              })
             }
             step={1}
             type="number"
@@ -142,7 +144,9 @@ export function ValueOrRange({
           <input
             className="border-primary-6 min-w-0 rounded-md border bg-transparent px-2 py-2 text-center"
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              updateRange({ lte: Number(e.target.value) })
+              updateRange({
+                lte: e.target.value.trim() === '' ? undefined : Number(e.target.value),
+              })
             }
             step={1}
             type="number"
