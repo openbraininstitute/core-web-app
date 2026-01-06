@@ -77,7 +77,6 @@ export default function SimulationsTab({
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [filesLoading, setFilesLoading] = useState(false);
-  const [waitingForConsent, setWaitingForConsent] = useState(false);
   const [consent, setConsent] = useState<Consent | null>(null);
 
   const activeSimulationExecStatus = activeSimulation && statusMap?.get(activeSimulation.id);
@@ -142,13 +141,10 @@ export default function SimulationsTab({
       consent.controller.abort(USER_CANCELLED);
     }
     setConsent(null);
-    setWaitingForConsent(false);
   };
 
   // TODO: this is a POC, refactor once confirmed viable.
   const runViaLaunchSystem = async (simulationIds: string[]) => {
-    setWaitingForConsent(true);
-
     const consent = await requestOfflineTokenConsent();
     const consentUrl = consent.data.consent_url
 
@@ -196,7 +192,6 @@ export default function SimulationsTab({
         });
       }
     }
-    setWaitingForConsent(false);
     setConsent(null);
   };
 
@@ -347,7 +342,13 @@ export default function SimulationsTab({
           please click the link below to continue.
         </p>
 
-        <a className="text-primary-9 font-semibold text-lg inline-block mt-4" href={consent?.url} target="_blank">Grant consent</a>
+        <a
+          className="text-primary-9 font-semibold text-lg inline-block mt-4"
+          href={consent?.url}
+          target="_blank"
+        >
+          Grant consent
+        </a>
       </Modal>
     </div>
   );
