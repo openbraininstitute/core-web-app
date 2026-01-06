@@ -125,8 +125,8 @@ export default function SimulationsTab({
 
     const hasActiveSimulations = statusMap
       ? Array.from(statusMap.values()).some((status) =>
-          [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING].includes(status)
-        )
+        [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING].includes(status)
+      )
       : false;
 
     if (!hasActiveSimulations) return;
@@ -144,14 +144,14 @@ export default function SimulationsTab({
   };
 
   // TODO: this is a POC, refactor once confirmed viable.
-  const runViaLaunchSystem = async (simulationIds: string[]) => {
-    const consent = await requestOfflineTokenConsent();
-    const consentUrl = consent.data.consent_url;
+  const runViaLaunchSystem = async (simIds: string[]) => {
+    const consentRes = await requestOfflineTokenConsent();
+    const consentUrl = consentRes.data.consent_url;
 
     if (consentUrl) {
       const controller = new AbortController();
       setConsent({ controller, url: consentUrl });
-      window.open(consent.data.consent_url, '_blank');
+      window.open(consentUrl, '_blank');
 
       try {
         await waitForConsent(controller.signal);
@@ -167,20 +167,22 @@ export default function SimulationsTab({
       }
     }
 
-    for (const simulationId of simulationIds) {
+    for (const simId of simIds) {
       let nSubmissions = 0;
 
       try {
         const res = await runSimulation({
           ctx: { virtualLabId, projectId },
-          simulationId,
+          simulationId: simId,
         });
         log('info', res);
-        setSimStatus(simulationId, EntitycoreExecutionStatus.PENDING);
+        setSimStatus(simId, EntitycoreExecutionStatus.PENDING);
         nSubmissions += 1;
-      } catch {}
+      } catch {
+        log('error', 'Failed to submit a simulation');
+      }
 
-      if (nSubmissions !== simulationIds.length) {
+      if (nSubmissions !== simIds.length) {
         notification.error({
           message: 'We ran into a problem submitting your simulation(s). Please try again later.',
           duration: 10,
