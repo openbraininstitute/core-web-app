@@ -15,11 +15,7 @@ type RunSimulationParams = {
   signal?: AbortSignal;
 };
 
-export async function runSimulation({
-  ctx,
-  simulationId,
-  signal,
-}: RunSimulationParams) {
+export async function runSimulation({ ctx, simulationId, signal }: RunSimulationParams) {
   const api = await launchSystemApi();
 
   return api.post<any>('/simulation', {

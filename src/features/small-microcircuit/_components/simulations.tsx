@@ -45,7 +45,7 @@ type SimulationTabProps = {
 type Consent = {
   controller: AbortController;
   url: string;
-}
+};
 
 export default function SimulationsTab({
   campaignId,
@@ -125,8 +125,8 @@ export default function SimulationsTab({
 
     const hasActiveSimulations = statusMap
       ? Array.from(statusMap.values()).some((status) =>
-        [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING].includes(status)
-      )
+          [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING].includes(status)
+        )
       : false;
 
     if (!hasActiveSimulations) return;
@@ -146,7 +146,7 @@ export default function SimulationsTab({
   // TODO: this is a POC, refactor once confirmed viable.
   const runViaLaunchSystem = async (simulationIds: string[]) => {
     const consent = await requestOfflineTokenConsent();
-    const consentUrl = consent.data.consent_url
+    const consentUrl = consent.data.consent_url;
 
     if (consentUrl) {
       const controller = new AbortController();
@@ -160,7 +160,7 @@ export default function SimulationsTab({
 
         notification.error({
           message: 'Unexpected error occured, please try again later',
-          duration: 10
+          duration: 10,
         });
 
         return;
@@ -176,19 +176,19 @@ export default function SimulationsTab({
           simulationId,
         });
         log('info', res);
-        setSimStatus(simulationId, EntitycoreExecutionStatus.PENDING)
+        setSimStatus(simulationId, EntitycoreExecutionStatus.PENDING);
         nSubmissions += 1;
-      } catch { }
+      } catch {}
 
       if (nSubmissions !== simulationIds.length) {
         notification.error({
           message: 'We ran into a problem submitting your simulation(s). Please try again later.',
-          duration: 10
+          duration: 10,
         });
       } else {
         notification.success({
           message: 'Simulation(s) submitted successfully.',
-          duration: 10
+          duration: 10,
         });
       }
     }
@@ -338,12 +338,12 @@ export default function SimulationsTab({
         okButtonProps={{ style: { display: 'none' } }}
       >
         <p className="text-lg">
-          If the authorization window did not open automatically,
-          please click the link below to continue.
+          If the authorization window did not open automatically, please click the link below to
+          continue.
         </p>
 
         <a
-          className="text-primary-9 font-semibold text-lg inline-block mt-4"
+          className="text-primary-9 mt-4 inline-block text-lg font-semibold"
           href={consent?.url}
           target="_blank"
         >
