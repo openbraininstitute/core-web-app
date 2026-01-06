@@ -84,9 +84,7 @@ export type ConfigSchema = {
   default_block_reference_labels: Record<string, string>;
   description: string;
   group_order: string[];
-  properties: Record<string, RootBlock | BlockDictionary> & {
-    type: { const: string; default: string };
-  };
+  properties: Record<string, RootBlock | BlockDictionary> & { type: Type };
   title: string;
 };
 

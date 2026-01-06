@@ -21,10 +21,10 @@ import { isRootCategory } from './hooks/schema';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
-export function Section({
+export function RootElement({
   schema,
-  k,
-  sectionSchema,
+  rootElement,
+  rootElementSchema,
   atomsMap,
   setAtomsMap,
   selectedRootElement,
@@ -45,8 +45,8 @@ export function Section({
   setIsEditingKey,
 }: {
   schema: ConfigSchema | null; // The global schema
-  k: string; // secition key
-  sectionSchema: RootBlock | BlockDictionary;
+  rootElement: string;
+  rootElementSchema: RootBlock | BlockDictionary;
   atomsMap: AtomsMap;
   setAtomsMap: React.Dispatch<React.SetStateAction<AtomsMap>>;
   selectedRootElement: string;
@@ -149,10 +149,10 @@ export function Section({
   return (
     <>
       <Tab
-        tab={k}
+        tab={rootElement}
         selectedTab={selectedRootElement}
         onClick={() => {
-          if (selectedRootElement === k && !isRootCategory(schema, k)) {
+          if (selectedRootElement === rootElement && !isRootCategory(schema, rootElement)) {
             setEditing(false);
             setSelectedBlock('');
             setSelectedEntry('');
@@ -160,31 +160,31 @@ export function Section({
             return;
           }
 
-          setSelectedRootElement(k);
+          setSelectedRootElement(rootElement);
           setSelectedEntry('');
           setSelectedBlock('');
 
-          if (sectionSchema.ui_element === 'root_block') setEditing(true);
+          if (rootElementSchema.ui_element === 'root_block') setEditing(true);
           else setEditing(false);
         }}
         extraClass="w-full flex justify-between h-[50px] min-h-[50px] items-center drop-shadow"
       >
-        {schema.properties?.[k]?.title}
+        {schema.properties?.[rootElement]?.title}
         <div className="flex gap-1">
-          {errors?.find((error) => error.instancePath.startsWith('/' + k)) ? (
+          {errors?.find((error) => error.instancePath.startsWith('/' + rootElement)) ? (
             <WarningFilled className="text-yellow-400" />
           ) : (
             <CheckCircleFilled className="text-green-600" />
           )}
-          <Chevron rotate={sectionSchema.ui_element === 'block_dictionary' ? 90 : 0} />
+          <Chevron rotate={rootElementSchema.ui_element === 'block_dictionary' ? 90 : 0} />
         </div>
       </Tab>
-      {sectionSchema.ui_element === 'block_dictionary' &&
-        selectedRootElement === k &&
-        config[k] && (
+      {rootElementSchema.ui_element === 'block_dictionary' &&
+        selectedRootElement === rootElement &&
+        config[rootElement] && (
           <>
-            {Object.entries(config[k]).map(([subkey, subValue]) => {
-              const isSelected = selectedRootElement === k && subkey === selectedEntry;
+            {Object.entries(config[rootElement]).map(([subkey, subValue]) => {
+              const isSelected = selectedRootElement === rootElement && subkey === selectedEntry;
 
               return (
                 <div
@@ -262,7 +262,9 @@ export function Section({
                   </div>
 
                   <div className="flex gap-2">
-                    {errors?.find((error) => error.instancePath.startsWith(`/${k}/${subkey}`)) ? (
+                    {errors?.find((error) =>
+                      error.instancePath.startsWith(`/${rootElement}/${subkey}`)
+                    ) ? (
                       <WarningFilled className="text-yellow-400" />
                     ) : (
                       <CheckCircleFilled className="text-green-600" />
@@ -354,7 +356,7 @@ export function Section({
                   setSelectedBlock('');
                 }}
               >
-                Add {sectionSchema.singular_name ?? sectionSchema.title ?? 'element'}
+                Add {rootElementSchema.singular_name ?? rootElementSchema.title ?? 'element'}
                 <PlusCircleOutlined />
               </button>
             )}

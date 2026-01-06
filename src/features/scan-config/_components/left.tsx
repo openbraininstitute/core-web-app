@@ -6,7 +6,7 @@ import { useApiUrl, useValidateSchema } from './hooks';
 
 import { config as appConfig } from '@/config';
 import authFetch from '@/auth-fetch';
-import { Section } from '@/features/scan-config/_components/section';
+import { RootElement } from '@/features/scan-config/_components/root-element';
 import { assertErrorMessage, classNames } from '@/util/utils';
 import { AtomsMap, ConfigSchema, isType, TabType } from '@/features/scan-config/types';
 import { useAppNotification } from '@/components/notification';
@@ -82,21 +82,22 @@ export default function Left({
               {schema.properties &&
                 Object.entries(schema.properties)
                   .filter(
-                    ([_, root_element]) => 'group' in root_element && root_element.group === group
+                    ([_, rootElementSchema]) =>
+                      'group' in rootElementSchema && rootElementSchema.group === group
                   )
                   .sort(([_, a], [__, b]) => {
                     if (isType(a) || isType(b)) return 0;
 
                     return a.group_order - b.group_order;
                   })
-                  .map(([k, root_element]) => {
-                    if (isType(root_element)) return null;
+                  .map(([k, rootElementSchema]) => {
+                    if (isType(rootElementSchema)) return null;
                     return (
-                      <Section
+                      <RootElement
                         key={k}
-                        k={k}
+                        rootElement={k}
                         schema={schema}
-                        sectionSchema={root_element}
+                        rootElementSchema={rootElementSchema}
                         atomsMap={atomsMap}
                         setAtomsMap={setAtomsMap}
                         selectedRootElement={selectedRootElement}
