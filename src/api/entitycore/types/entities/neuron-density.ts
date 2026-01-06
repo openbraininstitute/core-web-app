@@ -4,6 +4,7 @@ import type {
   BrainRegionFilter,
   ContributionFilter,
   EtypeFilter,
+  IlikeSearchFilter,
   MtypeFilter,
   PaginationFilter,
   SharedFilter,
@@ -26,5 +27,6 @@ export type ExperimentalNeuronDensityFilter = Partial<
     PaginationFilter &
     StainFilter &
     SubjectFilter &
-    TimestampsFilter
+    TimestampsFilter &
+    IlikeSearchFilter
 >;

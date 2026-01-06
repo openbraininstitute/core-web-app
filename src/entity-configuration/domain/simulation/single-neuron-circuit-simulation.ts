@@ -139,7 +139,10 @@ export const SingeNeuronCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulati
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.SingleNeuronCircuitSimulation,
   api: {
-    config: { allowedFacets: true },
+    config: {
+      allowedFacets: true,
+      ilikeSearchEnabled: true,
+    },
     query: {
       count: (...params) => {
         const filters = discardBrainRegionQueryParams(params[0].filters);

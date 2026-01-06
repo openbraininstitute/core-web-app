@@ -21,6 +21,7 @@ export const SingleNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
   api: {
     config: {
       allowedFacets: true,
+      ilikeSearchEnabled: true,
       extraRequiredListFilters: circuitScaleFilter,
     },
     query: {
