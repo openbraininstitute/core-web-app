@@ -36,7 +36,7 @@ export function Section({
   selectedEntry,
   setSelectedEntry,
   setEditing,
-  setSelectedCategory,
+  setSelectedBlock
   readOnly,
   allEntries,
   newKey,
@@ -58,7 +58,7 @@ export function Section({
   selectedEntry: string;
   setSelectedEntry: (selectedEntry: string) => void;
   setEditing: React.Dispatch<React.SetStateAction<boolean>>;
-  setSelectedCategory: React.Dispatch<React.SetStateAction<string>>;
+  setSelectedBlock: React.Dispatch<React.SetStateAction<string>>;
   readOnly?: boolean;
   allEntries: Set<string>;
   newKey: string;
@@ -70,7 +70,7 @@ export function Section({
 
   const handleHeaderClick = (subkey: string, subValue: unknown) => {
     if (isPlainObject(subValue)) {
-      setSelectedCategory(typeof subValue.type === 'string' ? subValue.type : '');
+      setSelectedBlock(typeof subValue.type === 'string' ? subValue.type : '');
       setSelectedEntry(subkey);
     }
     setEditing(true);
@@ -154,7 +154,7 @@ export function Section({
         onClick={() => {
           if (selectedRootElement === k && !isRootCategory(schema, k)) {
             setEditing(false);
-            setSelectedCategory('');
+            setSelectedBlock
             setSelectedEntry('');
             setSelectedRootElement('');
             return;
@@ -162,7 +162,7 @@ export function Section({
 
           setSelectedRootElement(k);
           setSelectedEntry('');
-          setSelectedCategory('');
+          setSelectedBlock('')
 
           if (sectionSchema.ui_element === 'root_block') setEditing(true);
           else setEditing(false);
@@ -274,7 +274,7 @@ export function Section({
                         onClick={(e) => {
                           e.stopPropagation();
 
-                          setSelectedCategory('');
+                          setSelectedBlock('')
                           setEditing(false);
 
                           const selectedTabAtoms = atomsMap[selectedRootElement];
@@ -351,7 +351,7 @@ export function Section({
                 type="button"
                 onClick={() => {
                   setEditing(true);
-                  setSelectedCategory('');
+                  setSelectedBlock('');
                 }}
               >
                 Add {sectionSchema.singular_name ?? sectionSchema.title ?? 'element'}
