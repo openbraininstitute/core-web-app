@@ -1,6 +1,6 @@
 import { RiCheckboxCircleFill } from '@remixicon/react';
 
-import { PlanV2 } from '@/api/sanity/pricing/planv2';
+import { PlanV2 } from '@/types/pricing/planv2';
 
 export default function PlanBody({ plan }: { plan: PlanV2 }) {
   return (

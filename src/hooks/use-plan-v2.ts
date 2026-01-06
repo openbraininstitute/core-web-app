@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import type { PlanV2 } from '@/api/sanity/pricing/planv2';
+import type { PlanV2 } from '@/types/pricing/planv2';
 
 interface UsePlanV2Return {
   plans: PlanV2[];
