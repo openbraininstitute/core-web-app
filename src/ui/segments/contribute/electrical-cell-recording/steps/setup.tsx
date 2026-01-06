@@ -366,8 +366,9 @@ export function Setup() {
         <InputNumber
           className="h-12 w-full rounded-full placeholder:text-sm [&_.ant-input-number-handler-wrap]:hidden"
           size="large"
-          placeholder="Enter temperature (°C)"
+          placeholder="Enter temperature"
           step={0.1}
+          addonAfter="°C"
         />
       </Form.Item>
 
