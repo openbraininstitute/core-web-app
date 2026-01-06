@@ -1,6 +1,6 @@
 import { get } from 'es-toolkit/compat';
 
-import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import { EntitycoreExecutionStatus, TEntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 
 export const executionStatusColorMap = {
   [EntitycoreExecutionStatus.CREATED]: '#004793',
@@ -11,6 +11,6 @@ export const executionStatusColorMap = {
   [EntitycoreExecutionStatus.CANCELLED]: '#a4a4a4',
 };
 
-export function getStatusColor(status: EntitycoreExecutionStatus): string {
+export function getStatusColor(status: TEntitycoreExecutionStatus): string {
   return get(executionStatusColorMap, status, '#000000');
 }

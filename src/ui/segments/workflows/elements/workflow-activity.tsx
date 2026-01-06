@@ -1,38 +1,43 @@
 'use client';
 
-import { Card, ConfigProvider, Empty, Pagination as AntPagination } from 'antd';
-import { parseAsString, SingleParserBuilder, useQueryStates } from 'nuqs';
-import { kebabCase, find, get } from 'es-toolkit/compat';
 import { useRouter } from '@bprogress/next';
-import { useState } from 'react';
+import { Card, ConfigProvider, Empty, Pagination as AntPagination } from 'antd';
+import { find, get, kebabCase, sortBy } from 'es-toolkit/compat';
 import Link from 'next/link';
+import { SingleParserBuilder, parseAsString, useQueryStates } from 'nuqs';
+import { useState } from 'react';
 
 import type { ColumnsType } from 'antd/es/table/interface';
 
-import { useSearchParams } from 'next/navigation';
 import { EntityCoreObjectTypes, EntityTypeDict, TEntityTypeDict } from '@/api/entitycore/types';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { config } from '@/config';
+import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { usePrevious } from '@/hooks/hooks';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Button } from '@/ui/molecules/button';
+import { CardContent } from '@/ui/molecules/card';
+import { useRowSelection } from '@/ui/segments/data-table/elements/use-row-selection';
+import { BaseTable } from '@/ui/segments/data-table/table';
+import { StatusMap } from '@/ui/segments/project/activities/elements/helpers';
 import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
 import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/browse-header';
 import { ActivityDict, ActivityValues } from '@/ui/segments/workflows/elements/helpers';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { useRowSelection } from '@/ui/segments/data-table/elements/use-row-selection';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { StatusMap } from '@/ui/segments/project/activities/elements/helpers';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { BaseTable } from '@/ui/segments/data-table/table';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
-import { CardContent } from '@/ui/molecules/card';
 import { renderDateAndHour } from '@/util/date';
-import { Button } from '@/ui/molecules/button';
-import { usePrevious } from '@/hooks/hooks';
 import { cn } from '@/utils/css-class';
-import { config } from '@/config';
+import { useSearchParams } from 'next/navigation';
 
+import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
+import { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/circuit-simulation-execution';
+import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { ExtendedCampaignsType } from '@/entity-configuration/domain/simulation';
-import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
+import { type ExtendedCampaignsType, getStatusCountMap } from '@/entity-configuration/domain/simulation';
+import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
+import ExecutionAggregatedStatus from '../../activity-execution/status';
 
 const AllowedDuplicateEntityTypes: TEntityTypeDict[] = [EntityTypeDict.SimulationCampaign];
 export interface WorkflowActivityRef {
@@ -143,10 +148,26 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
       },
     },
     {
+      title: 'Date',
+      dataIndex: 'date',
+      key: 'creation_date',
+      render: (_, record) => {
+        return <span className="text-primary-9">{renderDateAndHour(record.creation_date)}</span>;
+      },
+    },
+    {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
       render: (_, record) => {
+        if (record.type === EntityTypeDict.SimulationCampaign) {
+          const statusCountMap = getStatusCountMap(record as ICircuitSimulationCampaign);
+
+          return (
+            <ExecutionAggregatedStatus statusCountMap={statusCountMap} />
+          );
+        }
+
         const status = get(record, 'status', 'default');
         const mapper = get(StatusMap, status, null);
         const className = mapper?.class;
@@ -158,14 +179,6 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
             {title}
           </span>
         );
-      },
-    },
-    {
-      title: 'Date',
-      dataIndex: 'date',
-      key: 'creation_date',
-      render: (_, record) => {
-        return <span className="text-primary-9">{renderDateAndHour(record.creation_date)}</span>;
       },
     },
   ];
@@ -190,7 +203,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
   }>({
     dataKey: queryKeyHash,
     selectionType: 'radio',
-    onRowsSelected: () => {},
+    onRowsSelected: () => { },
   });
 
   const selectedRow = selectedRows.at(0);
@@ -219,8 +232,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
   const onDuplicate = () => {
     if (entityType === ExtendedEntitiesTypeDict.MemodelCircuitSimulation) {
       navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/memodel/${
-          (selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
+        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/memodel/${(selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
         }?dataType=${ExtendedEntitiesTypeDict.MemodelCircuit}&initialCampaignId=${selectedRow?.id}`
       );
 
@@ -229,8 +241,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
 
     if (selectedRow?.type === ExtendedEntitiesTypeDict.SimulationCampaign) {
       navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${
-          (selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
+        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${(selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
         }?initialCampaignId=${selectedRow.id}`
       );
     }

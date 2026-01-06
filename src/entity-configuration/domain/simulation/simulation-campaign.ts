@@ -22,12 +22,16 @@ import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
+import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import type {
   ICircuitSimulationCampaign,
   ICircuitSimulationCampaignFilter,
 } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
+import { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/circuit-simulation-execution';
+import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
+import { get, sortBy } from 'es-toolkit/compat';
 
 // NOTE: this is due entitycore do not support yet
 async function resolveSimulationCampaigns({
@@ -140,6 +144,19 @@ export async function resolveSimulationByCampaignId({
     simulation,
     config,
   };
+}
+
+export function getStatusCountMap(simCampaign: ICircuitSimulationCampaign) {
+  const simulations = get(simCampaign, 'simulations', []) as ICircuitSimulation[];
+
+  const statusCountMap = simulations.reduce((map, simulation) => {
+    const executions = get(simulation, 'executions', []) as ICircuitSimulationExecution[];
+    const sortedExecutions = sortBy(executions, (exec) => exec.creation_date);
+    const status = sortedExecutions.at(-1)?.status ?? EntitycoreExecutionStatus.CREATED;
+    return map.set(status, (map.get(status) ?? 0) + 1);
+  }, new Map());
+
+  return statusCountMap;
 }
 
 export type ExtendedCampaignsType = AwaitedType<ReturnType<typeof resolveSimulationCampaigns>>;

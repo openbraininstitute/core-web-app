@@ -1,10 +1,6 @@
 import get from 'es-toolkit/compat/get';
-import sortBy from 'es-toolkit/compat/sortBy';
-
-import { ReactNode } from 'react';
 
 import { hasAssets } from '@/api/entitycore/guards';
-import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
@@ -21,11 +17,9 @@ import type {
   EntityCoreObjectTypes,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
-import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/circuit-simulation-execution';
+import { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
-import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
-import { executionStatusIconMap } from '@/ui/segments/activity-execution/icons';
+import { getStatusCountMap } from '@/entity-configuration/domain/simulation/simulation-campaign';
 import ExecutionAggregatedStatus from '@/ui/segments/activity-execution/status';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
@@ -204,14 +198,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     filter: null,
     style: { width: 160 },
     render: (r) => {
-      const simulations = get(r, 'simulations', []) as ICircuitSimulation[];
-      const statusCountMap = simulations.reduce((map, simulation) => {
-        const executions = get(simulation, 'executions', []) as ICircuitSimulationExecution[];
-        const sortedExecutions = sortBy(executions, (exec) => exec.creation_date);
-        const status = sortedExecutions.at(-1)?.status ?? EntitycoreExecutionStatus.CREATED;
-        return map.set(status, (map.get(status) ?? 0) + 1);
-      }, new Map());
-
+      const statusCountMap = getStatusCountMap(r as ICircuitSimulationCampaign);
       return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
     },
     isDisplayable: true,
