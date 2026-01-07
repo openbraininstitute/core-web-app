@@ -27,7 +27,7 @@ export function SelectAnalysis({ className, value, onChange, results }: SelectAn
     ...results.map((result) => {
       return {
         label: result,
-        value: result.name,
+        value: result.id,
       };
     }),
   ];
@@ -40,7 +40,11 @@ export function SelectAnalysis({ className, value, onChange, results }: SelectAn
         className="min-w-[200px]"
         value={value}
         onChange={onChange}
-        labelRender={(label) => <div className="text-primary-8 font-bold">{label.label}</div>}
+        labelRender={(label) => (
+          <div className="text-primary-8 font-bold">
+            {isFlatValidationResult(label.label) ? label.label.name : label.label}
+          </div>
+        )}
         optionRender={(option) => <ComboItemLabel label={option.label} />}
       />
     </div>
