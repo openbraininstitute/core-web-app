@@ -1,8 +1,6 @@
 'use client';
 
-// import { useSanityContentRTF } from '../../content/content';
 import { styleBlockFullWidth } from '../../styles';
-// import { EnumSection } from '../sections';
 
 import { useCredits } from '@/hooks/use-credits';
 import { usePlanV2 } from '@/hooks/use-plan-v2';
@@ -12,7 +10,6 @@ import Plans from '@/ui/segments/plans';
 import { classNames } from '@/util/utils';
 
 export default function SectionPricing() {
-  // const content = useSanityContentRTF(EnumSection.Pricing);
   const { prices, loading: pricesLoading, error: pricesError } = usePrices();
   const { creditsPacks, loading: creditsLoading, error: creditsError } = useCredits();
   const { plans, loading: plansLoading, error: plansError } = usePlanV2();
@@ -22,7 +19,6 @@ export default function SectionPricing() {
 
   return (
     <>
-      {/* <SanityContentRTF value={content} /> */}
       <Plans plans={plans} />
       <div
         className={classNames('flex w-full flex-col', styleBlockFullWidth)}
