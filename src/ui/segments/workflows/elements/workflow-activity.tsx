@@ -1,8 +1,8 @@
 'use client';
 
 import { useRouter } from '@bprogress/next';
-import { Card, ConfigProvider, Empty, Pagination as AntPagination } from 'antd';
-import { find, get, kebabCase, sortBy } from 'es-toolkit/compat';
+import { Pagination as AntPagination, Card, ConfigProvider, Empty } from 'antd';
+import { find, get, kebabCase } from 'es-toolkit/compat';
 import Link from 'next/link';
 import { SingleParserBuilder, parseAsString, useQueryStates } from 'nuqs';
 import { useMemo, useState } from 'react';
@@ -32,10 +32,7 @@ import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
 import { useSearchParams } from 'next/navigation';
 
-import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
-import { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/circuit-simulation-execution';
-import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import {
@@ -255,17 +252,18 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
 
   const shouldShowEmptyState = !activityResult?.pagination.total_items && !isFetching;
 
+  // TODO If there are other entity types that need to have expandable rows - refactor this
+  // to registry-based solution (as it is done for browse-entity)
   const expandableOptions = useMemo(() => {
-    if (
-      ![
-        ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
-        ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
-        ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
-        ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
-        ExtendedEntitiesTypeDict.MicrocircuitSimulation,
-      ].includes(entityType)
-    )
-      return undefined;
+    const expandableTypes: TExtendedEntitiesTypeDict[] = [
+      ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
+      ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+      ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
+      ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+      ExtendedEntitiesTypeDict.MicrocircuitSimulation,
+    ];
+
+    if (!entityType || !expandableTypes.includes(entityType)) return undefined;
 
     return {
       getRowKey: (record: any) => record.id,
