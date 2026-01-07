@@ -128,6 +128,7 @@ export function BlockUI({
         isPlainObject(state[k]) && typeof state[k].block_name === 'string'
           ? state[k].block_name
           : null;
+
       return (
         <Reference
           config={config}

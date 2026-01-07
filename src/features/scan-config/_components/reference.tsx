@@ -5,13 +5,9 @@ import { useObioneJsonSchema, useReferenceTypeDict } from './hooks/schema';
 import { Config } from './components';
 
 export default function Reference({
-  // onAddReferenceClick,
   value,
   onChange,
   disabled,
-  // defaultLabel,
-  // referees,
-  // refTitle,
   schemaName,
   referenceSchema,
   config,
@@ -19,13 +15,9 @@ export default function Reference({
   schemaName: SchemaName;
   referenceSchema: ReferenceSchema;
   config: Config;
-  // onAddReferenceClick: () => void;
   value: string | null;
   onChange: (block_name: string | null, block_dict_name: string | null) => void;
   disabled: boolean;
-  // defaultLabel: string | null;
-  // referees: [string, ConfigObject][];
-  // refTitle: string;
 }) {
   const referenceTypeDict = useReferenceTypeDict(schemaName);
   const schema = useObioneJsonSchema(schemaName);
