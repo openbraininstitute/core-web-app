@@ -2,31 +2,6 @@ import { atom } from 'jotai';
 
 import { ConfigValue } from './_components/components';
 import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
-import { Ref } from 'react';
-
-export type JSONSchema = {
-  type?: 'string' | 'number' | 'integer' | 'object' | 'array' | 'boolean' | 'null';
-  properties?: { [key: string]: JSONSchema };
-  items?: JSONSchema | JSONSchema[];
-  required?: string[];
-  enum?: any[];
-  const?: string;
-  additionalProperties?: JSONSchema;
-  oneOf?: JSONSchema[];
-  anyOf?: JSONSchema[];
-  allOf?: JSONSchema[];
-  not?: JSONSchema;
-  format?: string;
-  title?: string;
-  description?: string;
-  default?: any;
-  examples?: any[];
-  [key: string]: any;
-  singular_name?: string;
-  is_block_reference?: boolean;
-  default_block_reference_labels: Record<string, string>;
-  reference_type?: string;
-};
 
 export interface AtomsMap {
   [key: string]:
@@ -101,6 +76,10 @@ export interface Reference extends BlockElement {
   reference_type: string;
 }
 
+export interface NeuronIds extends BlockElement {
+  ui_element: 'neuron_ids';
+}
+
 export type BlockElement = {
   default?: ConfigValue;
   title: string;
@@ -114,7 +93,8 @@ export type ParamSchema =
   | ModelIdentifier
   | FloatParameterSweep
   | IntParameterSweep
-  | Reference;
+  | Reference
+  | NeuronIds;
 
 export type Block = {
   title: string;

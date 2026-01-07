@@ -20,7 +20,6 @@ type MiddleProps = {
   setSelectedCategory: (s: string) => void;
   selectedEntry: string;
   setSelectedEntry: (entry: string) => void;
-  handleAddReferenceClick: (ref: string) => void;
   campaignId: string;
   loading: boolean;
   config: Config;
@@ -43,7 +42,6 @@ export default function Middle({
   setSelectedCategory,
   selectedEntry,
   setSelectedEntry,
-  handleAddReferenceClick,
   campaignId,
   loading,
   config,
@@ -80,8 +78,7 @@ export default function Middle({
                     const initial: Record<string, ConfigValue> = {};
                     if (o.properties)
                       Object.entries(o.properties).forEach(([subkey, subValue]) => {
-                        if (subkey === 'type') initial[subkey] = subValue.const ?? null;
-                        else initial[subkey] = subValue.default ?? null;
+                        initial[subkey] = subValue.default ?? null;
                       });
 
                     const element = schema.properties?.[configTab];
@@ -123,7 +120,6 @@ export default function Middle({
             schemaName={schemaName}
             key={isRootBlock(schema, configTab) ? configTab : `${configTab}_${selectedEntry}`}
             selectedCategory={selectedCategory}
-            onAddReferenceClick={handleAddReferenceClick}
             disabled={!!campaignId || loading}
             config={config}
             blockSchema={

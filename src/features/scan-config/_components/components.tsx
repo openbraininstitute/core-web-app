@@ -23,6 +23,7 @@ import {
 } from '@/features/scan-config/types';
 
 import { classNames } from '@/util/utils';
+import NeuronIds from './neuron-ids';
 
 type Primitive = null | boolean | number | string;
 interface Object {
@@ -33,17 +34,6 @@ export type ConfigValue = Primitive | Primitive[] | Object;
 
 export type Config = Record<string, Object | string>;
 
-function isNullableRef(schema: JSONSchema) {
-  return (
-    schema.anyOf?.find((s) => s.is_block_reference) && schema.anyOf.find((s) => s.type === 'null')
-  );
-}
-
-function getRefDefaultLabel(schema: JSONSchema, labels: Record<string, string>) {
-  if (!isNullableRef(schema)) return null;
-  return labels[schema.properties?.type.const ?? ''] ?? 'Default';
-}
-
 export function BlockUI({
   schemaName,
   disabled,
@@ -51,7 +41,6 @@ export function BlockUI({
   stateAtom,
   config,
   model,
-  onAddReferenceClick,
   selectedCategory,
   virtualLabId,
   projectId,
@@ -63,14 +52,10 @@ export function BlockUI({
   blockSchema?: Block;
   model: ICircuit | IMEModel | undefined | null;
   stateAtom: ReturnType<typeof atom<{ [key: string]: ConfigValue }>>;
-  onAddReferenceClick: (reference: string) => void;
   virtualLabId: string;
   projectId: string;
 }) {
   const [state, setState] = useAtom(stateAtom);
-
-  const [addingElement, setAddingElement] = useState(false);
-  const [newElement, setNewElement] = useState<number | string | null>(null);
 
   useEffect(() => {
     if (!blockSchema || !blockSchema.properties) return;
@@ -78,8 +63,7 @@ export function BlockUI({
     const initial: Record<string, ConfigValue> = {};
 
     Object.entries(blockSchema.properties).forEach(([key, value]) => {
-      if (key === 'type') initial[key] = value.const ?? null;
-      else initial[key] = value.default ?? null;
+      initial[key] = value.default ?? null;
     });
 
     setState((prev) => {
@@ -154,6 +138,45 @@ export function BlockUI({
       );
     }
 
+    if (paramSchema.ui_element === 'neuron_ids') {
+      const elements: number[] =
+        isPlainObject(state[k]) && Array.isArray(state[k].elements) ? state[k].elements : [];
+      return (
+        <NeuronIds
+          elements={elements}
+          disabled={disabled}
+          onDeleteElement={(i: number) => {
+            if (!isPlainObject(state[k]) || !Array.isArray(state[k].elements)) return;
+
+            if (state[k].elements.length === 1) {
+              setState({ ...state, [k]: null });
+              return;
+            }
+
+            state[k].elements.splice(i, 1); // delete in place
+
+            setState({
+              ...state,
+              [k]: { elements: [...state[k].elements] },
+            });
+          }}
+          onAddElement={(newElement: number) => {
+            if (!state[k]) {
+              setState({
+                ...state,
+                [k]: { elements: [newElement] },
+              });
+            } else if (isPlainObject(state[k]) && Array.isArray(state[k].elements)) {
+              setState({
+                ...state,
+                [k]: { elements: [...state[k].elements, newElement] },
+              });
+            }
+          }}
+        />
+      );
+    }
+
     return null;
 
     // if (
@@ -171,133 +194,6 @@ export function BlockUI({
     //     />
     //   );
     // }
-
-    // if (k === 'circuit' && model) r;
-
-    // if (v.is_block_reference) {
-    //   const refType = v.properties?.type.const ?? '';
-    //   const referenceKey = referenceTypesToConfigKeys[refType];
-
-    //   const defaultV: string | null =
-    //     isPlainObject(state[k]) && typeof state[k].block_name === 'string'
-    //       ? state[k].block_name
-    //       : null;
-
-    //   const referenceConfig = config[referenceKey];
-    //   if (!isPlainObject(referenceConfig)) return null;
-
-    //   const referees = Object.entries(referenceConfig).filter(([_, val]) => {
-    //     return isPlainObject(val);
-    //   });
-
-    //   return (
-
-    //   );
-    // }
-
-    // if (k === 'neuron_ids') {
-    //   return (
-    //     <div className="text-primary-8 mt-2 flex flex-col gap-2">
-    //       <div className="flex flex-wrap gap-3">
-    //         {isPlainObject(state[k]) &&
-    //           isPlainObject(state[k]) &&
-    //           Array.isArray(state[k].elements) &&
-    //           state[k].elements.map((e, i) => (
-    //             // eslint-disable-next-line
-    //             <div key={i} className="flex gap-1">
-    //               {e}{' '}
-    //               {!disabled && (
-    //                 <CloseCircleOutlined
-    //                   onClick={() => {
-    //                     if (!isPlainObject(state[k]) || !Array.isArray(state[k].elements)) return;
-
-    //                     if (state[k].elements.length === 1) {
-    //                       setState({ ...state, [k]: null });
-    //                       return;
-    //                     }
-
-    //                     state[k].elements.splice(i, 1); // delete in place
-
-    //                     setState({
-    //                       ...state,
-    //                       [k]: {
-    //                         type: 'NamedTuple',
-    //                         name: 'example_id_neuron_set',
-    //                         elements: [...state[k].elements],
-    //                       },
-    //                     });
-    //                   }}
-    //                 />
-    //               )}
-    //             </div>
-    //           ))}
-    //       </div>
-
-    //       {!addingElement && !disabled && (
-    //         <PlusCircleOutlined onClick={() => setAddingElement(true)} className="text-primary-8" />
-    //       )}
-
-    //       {addingElement && !disabled && (
-    //         <div className="flex gap-2">
-    //           <InputNumber
-    //             disabled={disabled}
-    //             step={1}
-    //             min={0}
-    //             onChange={(newV) => {
-    //               setNewElement(newV);
-    //             }}
-    //           />
-    //           {newElement !== null && (
-    //             <CheckCircleOutlined
-    //               className="text-primary-8"
-    //               onClick={() => {
-    //                 if (!state[k]) {
-    //                   setState({
-    //                     ...state,
-    //                     [k]: {
-    //                       type: 'NamedTuple',
-    //                       name: 'example_id_neuron_set',
-    //                       elements: [newElement],
-    //                     },
-    //                   });
-    //                 } else if (isPlainObject(state[k]) && Array.isArray(state[k].elements)) {
-    //                   setState({
-    //                     ...state,
-    //                     [k]: {
-    //                       type: 'NamedTuple',
-    //                       name: 'example_id_neuron_set',
-    //                       elements: [...state[k].elements, newElement],
-    //                     },
-    //                   });
-    //                 }
-    //               }}
-    //             />
-    //           )}
-    //           <CloseCircleOutlined
-    //             onClick={() => {
-    //               setAddingElement(false);
-    //               setNewElement(null);
-    //             }}
-    //             className="text-primary-8"
-    //           />
-    //         </div>
-    //       )}
-    //     </div>
-    //   );
-    // }
-
-    // if (v.enum)
-    //   return (
-    //     <Select
-    //       disabled={disabled}
-    //       onChange={(newV) => setState({ ...state, [k]: newV })}
-    //       value={state[k]}
-    //       className="w-full"
-    //       options={v.enum.map((subv: string) => {
-    //         return { label: subv, value: subv };
-    //       })}
-    //     />
-    //   );
   }
 
   if (!blockSchema) return null;

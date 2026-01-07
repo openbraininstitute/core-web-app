@@ -1,5 +1,4 @@
-import { Button, Select } from 'antd';
-import { ConfigObject } from './utils';
+import { Select } from 'antd';
 import { Reference as ReferenceSchema, SchemaName } from '../types';
 import { useObioneJsonSchema, useReferenceTypeDict } from './hooks/schema';
 import { Config } from './components';

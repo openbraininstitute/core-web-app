@@ -66,15 +66,11 @@ export default function ScanConfiguration({
 
   const allEntries = useEntries({ initialConfig, schema });
 
-  const handleAddReferenceClick = (referenceTab: string) => {
-    setSelectedRootElement(referenceTab);
-    setEditing(true);
-    setSelectedBlock('');
-  };
-
   const [atomsMap, setAtomsMap] = useAtomsMap({ schema, initialConfig, model });
 
   const config = useConfigAtom(schema, atomsMap);
+
+  console.log(config)
 
   if (!schema || Object.keys(atomsMap).length === 0) {
     return (
@@ -140,7 +136,6 @@ export default function ScanConfiguration({
             setSelectedCategory={setSelectedBlock}
             selectedEntry={selectedEntry}
             setSelectedEntry={setSelectedEntry}
-            handleAddReferenceClick={handleAddReferenceClick}
             campaignId={campaignId}
             loading={loading}
             config={config}
