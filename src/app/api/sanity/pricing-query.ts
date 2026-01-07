@@ -1,4 +1,4 @@
-*[_type == "planV2"][] {
+const pricingQuery = `*[_type == "planV2"][] {
   name,
   subtitle,
   custom_plan,
@@ -23,4 +23,6 @@
     currency
   },
   planOrder,
-}
+}`;
+
+export default pricingQuery;

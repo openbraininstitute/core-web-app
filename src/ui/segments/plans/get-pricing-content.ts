@@ -1,7 +1,7 @@
 import { getClient } from '@/api/sanity/client';
 import { PlanV2 } from '@/types/virtual-lab/pricing';
 import { logError } from '@/util/logger';
-import plansQuery from '@/ui/segments/plans/planV2.query.groq';
+import pricingQuery from '@/app/api/sanity/pricing-query';
 
 export type PricingContentProps = PlanV2;
 
@@ -27,7 +27,7 @@ function normalizePlan(plan: PlanV2): PlanV2 {
 export async function getPricingContent(): Promise<PlanV2[]> {
   try {
     const data = await getClient().fetch<PlanV2[]>({
-      query: plansQuery,
+      query: pricingQuery,
       config: { cache: 'no-cache' },
     });
 
