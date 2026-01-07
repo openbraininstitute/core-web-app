@@ -13,9 +13,9 @@ type Props = {
 };
 
 export function ViewerContainer({ rin, validationResults }: Props) {
-  const [selected, setSelected] = useState<string>('all');
+  const [selectedId, setSelectedId] = useState<string>('all');
   const flatValidationResults = useFlatValidationResults(validationResults, rin);
-  const selectedValidationResults = useSelectedValidationResults(flatValidationResults, selected);
+  const selectedValidationResults = useSelectedValidationResults(flatValidationResults, selectedId);
   if (flatValidationResults.length === 0) return <div>No validation results found</div>;
 
   const passed = flatValidationResults.reduce(
@@ -26,7 +26,7 @@ export function ViewerContainer({ rin, validationResults }: Props) {
   return (
     <>
       <ValidationExplanation passed={passed} />
-      <SelectAnalysis value={selected} onChange={setSelected} results={flatValidationResults} />
+      <SelectAnalysis value={selectedId} onChange={setSelectedId} results={flatValidationResults} />
       {selectedValidationResults.map((result) => (
         <ValidationResultCard key={result.id} value={result} />
       ))}
