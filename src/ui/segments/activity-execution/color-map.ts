@@ -1,6 +1,9 @@
 import { get } from 'es-toolkit/compat';
 
-import { EntitycoreExecutionStatus, TEntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import {
+  EntitycoreExecutionStatus,
+  TEntitycoreExecutionStatus,
+} from '@/api/entitycore/types/entities/execution';
 
 export const executionStatusColorMap = {
   [EntitycoreExecutionStatus.CREATED]: '#004793',

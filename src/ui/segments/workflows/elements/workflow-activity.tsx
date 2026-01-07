@@ -5,7 +5,10 @@ import { Card, ConfigProvider, Empty, Pagination as AntPagination } from 'antd';
 import { find, get, kebabCase, sortBy } from 'es-toolkit/compat';
 import Link from 'next/link';
 import { SingleParserBuilder, parseAsString, useQueryStates } from 'nuqs';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+
+import { viewConfig as simulationCampaignExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation/small-microcircuit-simulation';
+import { useExpandableTable } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
 
 import type { ColumnsType } from 'antd/es/table/interface';
 
@@ -35,7 +38,10 @@ import { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/cir
 import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
-import { type ExtendedCampaignsType, getStatusCountMap } from '@/entity-configuration/domain/simulation';
+import {
+  type ExtendedCampaignsType,
+  getStatusCountMap,
+} from '@/entity-configuration/domain/simulation';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 import ExecutionAggregatedStatus from '../../activity-execution/status';
 
@@ -163,9 +169,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
         if (record.type === EntityTypeDict.SimulationCampaign) {
           const statusCountMap = getStatusCountMap(record as ICircuitSimulationCampaign);
 
-          return (
-            <ExecutionAggregatedStatus statusCountMap={statusCountMap} />
-          );
+          return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
         }
 
         const status = get(record, 'status', 'default');
@@ -203,7 +207,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
   }>({
     dataKey: queryKeyHash,
     selectionType: 'radio',
-    onRowsSelected: () => { },
+    onRowsSelected: () => {},
   });
 
   const selectedRow = selectedRows.at(0);
@@ -232,7 +236,8 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
   const onDuplicate = () => {
     if (entityType === ExtendedEntitiesTypeDict.MemodelCircuitSimulation) {
       navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/memodel/${(selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
+        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/memodel/${
+          (selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
         }?dataType=${ExtendedEntitiesTypeDict.MemodelCircuit}&initialCampaignId=${selectedRow?.id}`
       );
 
@@ -241,13 +246,48 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
 
     if (selectedRow?.type === ExtendedEntitiesTypeDict.SimulationCampaign) {
       navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${(selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
+        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${
+          (selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
         }?initialCampaignId=${selectedRow.id}`
       );
     }
   };
 
   const shouldShowEmptyState = !activityResult?.pagination.total_items && !isFetching;
+
+  const expandableOptions = useMemo(() => {
+    if (
+      ![
+        ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
+        ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+        ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
+        ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+        ExtendedEntitiesTypeDict.MicrocircuitSimulation,
+      ].includes(entityType)
+    )
+      return undefined;
+
+    return {
+      getRowKey: (record: any) => record.id,
+      getFetchId: (record: any) => record.id,
+      fetcher: async (record: any) => {
+        return record.simulations ?? [];
+      },
+      renderExpanded: (records: any[], originalRecord: any) =>
+        simulationCampaignExpandedViewConfig.render(originalRecord, records),
+      expandIconColumnIndex: 6,
+      expandIcon: simulationCampaignExpandedViewConfig.expandIcon,
+      isRowExpandable: (record: any) => {
+        const simulations = record.simulations ?? [];
+        return simulations.length > 1;
+      },
+      isTopLevel: true,
+    };
+  }, [entityType]);
+
+  const { expandableConfig } = expandableOptions
+    ? useExpandableTable(expandableOptions)
+    : { expandableConfig: undefined };
 
   return (
     <section
@@ -294,6 +334,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
           >
             <ConfigProvider theme={{ hashed: false }}>
               <BaseTable
+                expandableConfig={expandableConfig}
                 sticky
                 id="activities-table"
                 data-testid="activities-table"

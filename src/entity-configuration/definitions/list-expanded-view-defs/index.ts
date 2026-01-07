@@ -6,5 +6,6 @@ import { smallMicrocircuitSimulationExpandedViewConfig } from './simulation';
 import { ListExpandedViewRegistry } from './types';
 
 export const listExpandedViewRegistry: ListExpandedViewRegistry = {
-  [ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation]: smallMicrocircuitSimulationExpandedViewConfig,
-}
+  [ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation]:
+    smallMicrocircuitSimulationExpandedViewConfig,
+};

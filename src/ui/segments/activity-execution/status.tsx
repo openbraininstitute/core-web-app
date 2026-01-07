@@ -1,4 +1,7 @@
-import { EntitycoreExecutionStatus, TEntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import {
+  EntitycoreExecutionStatus,
+  TEntitycoreExecutionStatus,
+} from '@/api/entitycore/types/entities/execution';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { executionStatusIconMap } from '@/ui/segments/activity-execution//icons';
 import { getStatusColor } from '@/ui/segments/activity-execution/color-map';
@@ -13,19 +16,21 @@ const statusLabel = {
   [EntitycoreExecutionStatus.CANCELLED]: 'Cancelled',
 };
 
-
 type ExecutionStatusProps = {
   status: TEntitycoreExecutionStatus;
-}
+};
 
 export function ExecutionStatus({ status }: ExecutionStatusProps) {
   const color = getStatusColor(status);
 
   return (
-    <div className="flex items-center gap-2 rounded-full border px-1.5 justify-center w-32 py-0.5" style={{
-      color,
-      borderColor: color,
-    }}>
+    <div
+      className="flex w-32 items-center justify-center gap-2 rounded-full border px-1.5 py-0.5"
+      style={{
+        color,
+        borderColor: color,
+      }}
+    >
       <span className="capitalize">{status}</span>
       <span className="text-xs">{executionStatusIconMap[status]}</span>
     </div>
@@ -47,7 +52,7 @@ export default function ExecutionAggregatedStatus({
 
   return (
     <div className="flex">
-      < Tooltip >
+      <Tooltip>
         <TooltipTrigger asChild>
           <div className="divide-neutral-2 border-neutral-2 flex divide-x rounded-full border px-1.5">
             {statuses.map((status) => (
@@ -74,7 +79,9 @@ export default function ExecutionAggregatedStatus({
             {statuses.map((status) => (
               <Fragment key={status}>
                 <dt style={{ color: getColor(status) }}>
-                  <span className="mr-2 inline-block text-xs">{executionStatusIconMap[status]}</span>
+                  <span className="mr-2 inline-block text-xs">
+                    {executionStatusIconMap[status]}
+                  </span>
                   <span className="uppercase">{statusLabel[status]}:</span>
                 </dt>
 
@@ -85,7 +92,7 @@ export default function ExecutionAggregatedStatus({
             ))}
           </dl>
         </TooltipContent>
-      </Tooltip >
+      </Tooltip>
     </div>
   );
 }
