@@ -5,7 +5,7 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { Suspense, useState } from 'react';
 // import { useRouter } from 'next/navigation';
 
-import { useEntries, useModel } from './_components/hooks';
+import { useEntries, useModel, useSchemaName } from './_components/hooks';
 import Left from './_components/left';
 import Middle from './_components/middle';
 import SimulationsTab from './_components/simulations';
@@ -53,7 +53,9 @@ export default function ScanConfiguration({
   const [newKey, setNewKey] = useState('');
 
   const { model } = useModel({ id: modelId, context: { virtualLabId, projectId } });
-  const schema = useObioneJsonSchema(model);
+
+  const schemaName = useSchemaName({ model });
+  const schema = useObioneJsonSchema(schemaName);
 
   const selectedBlockSchema: Block | undefined =
     schema?.properties?.[selectedRootElement]?.ui_element === 'block_dictionary'
@@ -128,6 +130,7 @@ export default function ScanConfiguration({
           />
 
           <Middle
+            schemaName={schemaName}
             schema={schema}
             configTab={selectedRootElement}
             selectedCategory={selectedBlock}

@@ -1,8 +1,8 @@
 import { atom } from 'jotai';
 
-import { Config, ConfigValue, JSONSchemaForm } from '@/features/scan-config/_components/components';
-import { AtomsMap, ConfigSchema, Block } from '@/features/scan-config/types';
-import { isRootCategory } from '@/features/scan-config/_components/hooks/schema';
+import { Config, ConfigValue, BlockUI } from '@/features/scan-config/_components/components';
+import { AtomsMap, ConfigSchema, Block, SchemaName } from '@/features/scan-config/types';
+import { isRootBlock } from '@/features/scan-config/_components/hooks/schema';
 import { isAtom } from '@/features/scan-config/_components/utils';
 import { classNames } from '@/util/utils';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -10,6 +10,7 @@ import { IMEModel } from '@/api/entitycore/types';
 import styles from '@/features/scan-config/scan-config.module.css';
 
 type MiddleProps = {
+  schemaName: SchemaName;
   schema: ConfigSchema;
   configTab: string;
   selectedCategory: string;
@@ -32,6 +33,7 @@ type MiddleProps = {
 };
 
 export default function Middle({
+  schemaName,
   schema,
   configTab,
   selectedCategory,
@@ -52,9 +54,6 @@ export default function Middle({
   allEntries,
   onNewBlockClick,
 }: MiddleProps) {
-
-  console.log(configTab)
-
   return (
     <div
       className={classNames(
@@ -73,7 +72,7 @@ export default function Middle({
                   type="button"
                   className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 text-left hover:bg-white"
                   onClick={() => {
-                    if (isRootCategory(schema, configTab)) return;
+                    if (isRootBlock(schema, configTab)) return;
 
                     if (onNewBlockClick) onNewBlockClick();
 
@@ -119,14 +118,15 @@ export default function Middle({
       {schema.properties &&
         schema.properties?.[configTab] &&
         editing &&
-        (isRootCategory(schema, configTab) || selectedBlockSchema) && (
-          <JSONSchemaForm
-            key={isRootCategory(schema, configTab) ? configTab : `${configTab}_${selectedEntry}`}
+        (isRootBlock(schema, configTab) || selectedBlockSchema) && (
+          <BlockUI
+            schemaName={schemaName}
+            key={isRootBlock(schema, configTab) ? configTab : `${configTab}_${selectedEntry}`}
             selectedCategory={selectedCategory}
             onAddReferenceClick={handleAddReferenceClick}
             disabled={!!campaignId || loading}
             config={config}
-            schema={
+            blockSchema={
               schema.properties[configTab].ui_element === 'root_block'
                 ? schema.properties[configTab]
                 : selectedBlockSchema

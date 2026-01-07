@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { match } from 'ts-pattern';
 
 import { modelAtomFamily } from '../atoms';
-import { isRootCategory } from './schema';
+import { isRootBlock } from './schema';
 
 import { EntityTypeDict, IMEModel } from '@/api/entitycore/types';
 import { CircuitScaleDictionary, ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -91,7 +91,7 @@ export function useEntries({
   useEffect(() => {
     if (!initialConfig || !schema) return;
     Object.entries(initialConfig)
-      .filter(([k]) => !isRootCategory(schema, k))
+      .filter(([k]) => !isRootBlock(schema, k))
       .forEach(([_key, value]) => {
         Object.keys(value).forEach((entryKey) => allEntries.current.add(entryKey));
       });

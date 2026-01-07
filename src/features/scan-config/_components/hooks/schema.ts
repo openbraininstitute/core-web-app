@@ -3,7 +3,7 @@ import $RefParser from '@apidevtools/json-schema-ref-parser';
 import { atom } from 'jotai';
 
 import { match } from 'ts-pattern';
-import { useSchemaName } from '.';
+import { useModel, useSchemaName } from '.';
 
 import { EntityTypeDict, IMEModel } from '@/api/entitycore/types';
 import { CircuitScaleDictionary, ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -19,9 +19,7 @@ import { useQuery } from '@tanstack/react-query';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { useEffect, useState } from 'react';
 
-export function useObioneJsonSchema(model: ICircuit | IMEModel) {
-  const schemaName = useSchemaName({ model });
-
+export function useObioneJsonSchema(schemaName: SchemaName) {
   const { data: schema } = useQuery({
     queryKey: keyBuilder.obiOneJsonSchema(schemaName),
     queryFn: () => fetchSchema({ schemaName }),
@@ -33,7 +31,7 @@ export function useObioneJsonSchema(model: ICircuit | IMEModel) {
   return schema as ConfigSchema;
 }
 
-export function isRootCategory(schema: ConfigSchema, key: string) {
+export function isRootBlock(schema: ConfigSchema, key: string) {
   return schema.properties?.[key] && schema.properties[key].ui_element === 'root_block';
 }
 
@@ -71,13 +69,13 @@ export function useAtomsMap({
     // Logic to build the atoms map based on initialConfig OR schema defaults
     if (initialConfig) {
       Object.entries(initialConfig)
-        .filter(([k]) => isRootCategory(schema, k))
+        .filter(([k]) => isRootBlock(schema, k))
         .forEach(([k, v]) => {
           if (isPlainObject(v)) map[k] = atom<Record<string, ConfigValue>>(v);
         });
 
       Object.entries(initialConfig)
-        .filter(([k]) => !isRootCategory(schema, k))
+        .filter(([k]) => !isRootBlock(schema, k))
         .forEach(([k, v]) => {
           map[k] = {};
           Object.entries(v).forEach(([subK, subV]) => {
@@ -93,25 +91,12 @@ export function useAtomsMap({
 
           Object.entries(v.properties).forEach(([subkey, subValue]) => {
             initial[subkey] = subValue.default ?? null;
+            if (!isType(subValue) && subValue.ui_element === 'model_identifier') {
+              initial[subkey] = {
+                id_str: model.id,
+              };
+            }
           });
-
-          const formModelType = match(model)
-            .with({ type: EntityTypeDict.Memodel }, () => 'MEModelFromID')
-            .with(
-              { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single },
-              () => 'MEModelWithSynapsesCircuitFromID'
-            )
-            .with({ type: EntityTypeDict.Circuit }, () => 'CircuitFromID')
-            .otherwise(() => {
-              throw new Error(`Unsupported entity type: ${model.type}`);
-            });
-
-          if (k === 'initialize') {
-            initial.circuit = {
-              type: formModelType,
-              id_str: model.id,
-            };
-          }
 
           map[k] = atom<Record<string, ConfigValue>>(initial);
         } else {
@@ -124,4 +109,29 @@ export function useAtomsMap({
   }, [schema, model, initialConfig]);
 
   return [atomsMap, setAtomsMap] as const;
+}
+
+export function useReferenceTypeDict(schemaName: SchemaName) {
+  const schema = useObioneJsonSchema(schemaName);
+
+  const referenceTypeDict: Record<
+    string,
+    {
+      configKey: string;
+      singularName: string;
+    }
+  > = {};
+
+  if (!schema) return referenceTypeDict;
+
+  Object.keys(schema?.properties).forEach((k) => {
+    const v = schema.properties[k];
+
+    if (v.ui_element === 'block_dictionary') {
+      const refType = v.reference_type;
+      referenceTypeDict[refType] = { configKey: k, singularName: v.singular_name };
+    }
+  });
+
+  return referenceTypeDict;
 }

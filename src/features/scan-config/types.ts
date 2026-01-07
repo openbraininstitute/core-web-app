@@ -2,6 +2,7 @@ import { atom } from 'jotai';
 
 import { ConfigValue } from './_components/components';
 import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import { Ref } from 'react';
 
 export type JSONSchema = {
   type?: 'string' | 'number' | 'integer' | 'object' | 'array' | 'boolean' | 'null';
@@ -49,25 +50,83 @@ export type RootElement = {
   group_order: number;
 };
 
+export interface StringInput extends BlockElement {
+  ui_element: 'string_input';
+}
+
+export interface ModelIdentifier extends BlockElement {
+  ui_element: 'model_identifier';
+}
+
+export interface FloatParameterSweep extends BlockElement {
+  ui_element: 'float_parameter_sweep';
+  anyOf: [
+    {
+      type: 'number';
+      minimum?: number;
+      maximum?: number;
+    },
+    {
+      type: 'array';
+      items: {
+        type: 'number';
+        minimum?: number;
+        maximum?: number;
+      };
+    },
+  ];
+}
+
+export interface IntParameterSweep extends BlockElement {
+  ui_element: 'int_parameter_sweep';
+  anyOf: [
+    {
+      type: 'integer';
+      minimum?: number;
+      maximum?: number;
+    },
+    {
+      type: 'array';
+      items: {
+        type: 'integer';
+        minimum?: number;
+        maximum?: number;
+      };
+    },
+  ];
+}
+
+export interface Reference extends BlockElement {
+  ui_element: 'reference';
+  reference_type: string;
+}
+
 export type BlockElement = {
   default?: ConfigValue;
   title: string;
   description: string;
-  properties: Record<string, JSONSchema>;
-  required: string[];
+  units?: string;
+  ui_hidden?: boolean;
 };
+
+export type ParamSchema =
+  | StringInput
+  | ModelIdentifier
+  | FloatParameterSweep
+  | IntParameterSweep
+  | Reference;
 
 export type Block = {
   title: string;
   description: string;
-  properties: Record<string, BlockElement> & { type: { const: string; default: string } };
-  required: string[];
+  properties: Record<string, ParamSchema> & { type: Type };
+  required?: string[];
 };
 
 export interface RootBlock extends RootElement, Block {
   ui_element: 'root_block';
   additionalProperties: false;
-  required: string[];
+  required?: string[];
 }
 
 export interface BlockDictionary extends RootElement {
@@ -93,6 +152,6 @@ type Type = {
   default: string;
 };
 
-export function isType(v: RootElement | Type): v is Type {
+export function isType(v: RootElement | Type | BlockElement): v is Type {
   return 'const' in v;
 }

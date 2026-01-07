@@ -16,7 +16,7 @@ import { ErrorObject } from 'ajv';
 import { AtomsMap, BlockDictionary, ConfigSchema, RootBlock } from '../types';
 import { Chevron, Config, ConfigValue, Tab } from './components';
 import { isAtom, isPlainObject } from './utils';
-import { isRootCategory } from './hooks/schema';
+import { isRootBlock } from './hooks/schema';
 
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
@@ -152,7 +152,7 @@ export function RootElement({
         tab={rootElement}
         selectedTab={selectedRootElement}
         onClick={() => {
-          if (selectedRootElement === rootElement && !isRootCategory(schema, rootElement)) {
+          if (selectedRootElement === rootElement && !isRootBlock(schema, rootElement)) {
             setEditing(false);
             setSelectedBlock('');
             setSelectedEntry('');

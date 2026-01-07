@@ -1,46 +1,54 @@
 import { Button, Select } from 'antd';
 import { ConfigObject } from './utils';
+import { Reference as ReferenceSchema, SchemaName } from '../types';
+import { useObioneJsonSchema, useReferenceTypeDict } from './hooks/schema';
+import { Config } from './components';
 
 export default function Reference({
-  onAddReferenceClick,
+  // onAddReferenceClick,
   value,
   onChange,
   disabled,
-  defaultLabel,
-  referees,
-  refTitle,
+  // defaultLabel,
+  // referees,
+  // refTitle,
+  schemaName,
+  referenceSchema,
+  config,
 }: {
-  onAddReferenceClick: () => void;
+  schemaName: SchemaName;
+  referenceSchema: ReferenceSchema;
+  config: Config;
+  // onAddReferenceClick: () => void;
   value: string | null;
-  onChange: (value: string | null) => void;
+  onChange: (block_name: string | null, block_dict_name: string | null) => void;
   disabled: boolean;
-  defaultLabel: string | null;
-  referees: [string, ConfigObject][];
-  refTitle: string;
+  // defaultLabel: string | null;
+  // referees: [string, ConfigObject][];
+  // refTitle: string;
 }) {
-  if (referees.length === 0 && defaultLabel === null) {
-    return (
-      <Button className="w-full" onClick={onAddReferenceClick}>
-        Add {refTitle}
-      </Button>
-    );
-  }
+  const referenceTypeDict = useReferenceTypeDict(schemaName);
+  const schema = useObioneJsonSchema(schemaName);
+  const configOptions = referenceTypeDict[referenceSchema.reference_type];
 
-  const options: { label: string; value: string | null }[] = referees.map(([subkey]) => {
-    return {
-      label: subkey,
-      value: subkey,
-    };
+  const options: { label: string; value: string | null }[] = Object.keys(
+    config[configOptions.configKey]
+  ).map((k) => ({
+    label: k,
+    value: k,
+  }));
+
+  options.unshift({
+    label: schema.default_block_reference_labels[referenceSchema.reference_type] ?? 'Default',
+    value: null,
   });
-
-  if (defaultLabel) options.unshift({ label: defaultLabel, value: null });
 
   return (
     <Select
-      placeholder={`Select ${refTitle}`}
+      placeholder={`Select ${configOptions.singularName}`}
       className="w-full"
       disabled={disabled}
-      onChange={onChange}
+      onChange={(newV: string | null) => onChange(newV, configOptions.configKey)}
       value={value}
       options={options}
     />
