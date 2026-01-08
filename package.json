@@ -73,6 +73,7 @@
     "html2canvas": "^1.4.1",
     "input-otp": "^1.4.2",
     "jotai": "^2.16.0",
+    "jotai-devtools": "^0.13.0",
     "jszip": "^3.10.1",
     "katex": "^0.16.25",
     "memoize-one": "^6.0.0",

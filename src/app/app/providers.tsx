@@ -6,6 +6,7 @@ import { Provider as JotaiProvider } from 'jotai';
 import { SessionProvider } from 'next-auth/react';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import type { ReactNode } from 'react';
+
 import { ProgressBarProvider } from '@/app/app/progress-provider';
 import SessionStateProvider from '@/components/SessionStateProvider';
 import ThemeProvider from '@/components/ThemeProvider';
@@ -14,6 +15,7 @@ import type { SessionOrNull } from '@/hooks/session';
 import { QueryProvider } from '@/query-provider/client';
 import { AtomProvider } from '@/state/state';
 import commonAntdTheme from '@/theme/antd';
+import { JotaiDevTools } from '@/utils/jotai-devtools';
 
 type ProvidersProps = {
   children: ReactNode;
@@ -30,6 +32,7 @@ export function Providers({ children, session, flags }: ProvidersProps) {
             <NuqsAdapter>
               <QueryProvider>
                 <JotaiProvider>
+                  <JotaiDevTools />
                   <ThemeProvider>
                     <SessionProvider session={session} refetchInterval={2 * 60}>
                       <SessionStateProvider>

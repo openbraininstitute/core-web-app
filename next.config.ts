@@ -74,17 +74,18 @@ const nextConfig = (phase: string): NextConfig => {
     },
     devIndicators: process.env.NEXT_PUBLIC_NEXT_DEVTOOLS_POSITION
       ? {
-          position:
-            (process.env.NEXT_PUBLIC_NEXT_DEVTOOLS_POSITION as Exclude<
-              NextConfig['devIndicators'],
-              false | undefined
-            >['position']) ?? 'top-right',
-        }
+        position:
+          (process.env.NEXT_PUBLIC_NEXT_DEVTOOLS_POSITION as Exclude<
+            NextConfig['devIndicators'],
+            false | undefined
+          >['position']) ?? 'top-right',
+      }
       : false,
     assetPrefix: isDev || !cdnUrl ? undefined : `${cdnUrl}/${appVersion}`,
     reactStrictMode: true,
     compress: false,
     output: 'standalone',
+    transpilePackages: ["jotai-devtools"],
     typescript: {
       ignoreBuildErrors: true,
     },
