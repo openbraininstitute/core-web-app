@@ -96,8 +96,6 @@ export default function ScanConfiguration({
       {tab === 'configuration' && (
         <div className={styles.threeColumns}>
           <Left
-            virtualLabId={virtualLabId}
-            projectId={projectId}
             schema={schema}
             atomsMap={atomsMap}
             setAtomsMap={setAtomsMap}
