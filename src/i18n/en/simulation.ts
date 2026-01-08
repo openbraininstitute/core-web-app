@@ -13,7 +13,9 @@ export const messages = {
   CreationSimulationIOAssetFailed:
     'Unable to save the simulation data files. Please try again or contact support if this problem persists.',
   LowFundsError:
-    'The project does not have enough credits to run the simulation, please add credits and try again',
+    'The project does not have sufficient credits to run the simulation. Please buy or transfer more credits and try again.',
+  LowFundsErrorNonAdmin:
+    'The project does not have sufficient credits to run the simulation. Please contact your project administrator to request additional credits.',
   DefaultSimulationError:
     'Simulation encountered an error, please be sure that the configuration is correct and try again',
   RunningSimulationDefaultError:
