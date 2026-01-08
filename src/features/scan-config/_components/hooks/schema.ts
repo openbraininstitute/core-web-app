@@ -1,12 +1,10 @@
+import { useEffect, useState } from 'react';
 import $RefParser from '@apidevtools/json-schema-ref-parser';
-
+import { useQuery } from '@tanstack/react-query';
 import { atom } from 'jotai';
 
-import { match } from 'ts-pattern';
-import { useModel, useSchemaName } from '.';
-
-import { EntityTypeDict, IMEModel } from '@/api/entitycore/types';
-import { CircuitScaleDictionary, ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { IMEModel } from '@/api/entitycore/types';
+import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 import { config } from '@/config';
 
@@ -15,9 +13,7 @@ import { isAtom, isPlainObject } from '@/features/scan-config/_components/utils'
 
 import { AtomsMap, ConfigSchema, SchemaName, isType } from '@/features/scan-config/types';
 
-import { useQuery } from '@tanstack/react-query';
 import { keyBuilder } from '@/ui/use-query-keys/data';
-import { useEffect, useState } from 'react';
 
 export function useObioneJsonSchema(schemaName: SchemaName) {
   const { data: schema } = useQuery({
