@@ -16,6 +16,7 @@ export const Notebook: EntityCoreTypeConfig<INotebook> = {
   api: {
     config: {
       allowedFacets: true,
+      ilikeSearchEnabled: true,
     },
     query: {
       list: getNotebooks,

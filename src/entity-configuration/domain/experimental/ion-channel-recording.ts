@@ -23,7 +23,11 @@ export const IonChannelRecording: EntityCoreTypeConfig<IElectricalCellRecording>
   type: EntityTypeDict.IonChannelRecording,
   slug: EntitySlug.IonChannelRecording,
   api: {
-    config: { allowedFacets: true, extraRequiredListFilters: recordingOriginFilter },
+    config: {
+      allowedFacets: true,
+      ilikeSearchEnabled: true,
+      extraRequiredListFilters: recordingOriginFilter,
+    },
     query: {
       list: (params: Parameters<typeof getIonChannelRecordings>[0]) =>
         getIonChannelRecordings({

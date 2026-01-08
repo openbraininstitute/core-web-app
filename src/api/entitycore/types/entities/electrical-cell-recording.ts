@@ -6,6 +6,7 @@ import type {
   PaginationFilter,
   SharedFilter,
   IDFilter,
+  IlikeSearchFilter,
 } from '@/api/entitycore/types/shared/request';
 import type {
   EntityCoreIdentifiable,
@@ -88,7 +89,8 @@ export type ElectricalCellRecordingFilter = Partial<
     BrainRegionFilter &
     PaginationFilter &
     SharedFilter &
-    IRecordingFilter
+    IRecordingFilter &
+    IlikeSearchFilter
 >;
 
 interface IElectricalCellRecordingBase extends EntityCoreIdentifiable, EntityCoreOwnership {

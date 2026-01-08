@@ -11,6 +11,7 @@ import type {
   SubjectFilter,
   IDFilter,
   MtypeFilter,
+  IlikeSearchFilter,
 } from '@/api/entitycore/types/shared/request';
 import type {
   EntityCoreIdentifiable,
@@ -35,7 +36,8 @@ export type CellMorphologyFilter = Partial<
     PaginationFilter &
     MtypeFilter &
     SubjectFilter &
-    SharedFilter
+    SharedFilter &
+    IlikeSearchFilter
 >;
 
 interface ICellMorphologyBase extends EntityCoreIdentifiable {

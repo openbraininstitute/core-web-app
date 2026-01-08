@@ -6,7 +6,7 @@ import { Form } from 'antd';
 
 import countries from '../../../../../public/static/country';
 import { ProfileFormData } from './types';
-import { Label, XInput } from './elements';
+import { label, Label, XInput } from './elements';
 import { validate, validateEMail } from './validator';
 import { useFieldsChangeHandler, useSubmitCallback } from './hooks';
 import { Select } from '@/components/VirtualLab/create-entity-flows/common/inputs';
@@ -44,13 +44,29 @@ export function Profile({ data }: ProfileProps) {
           onFinish={mutateAsync}
           onInvalid={() => setValid(false)}
           scrollToFirstError
+          requiredMark={false}
+          preserve={false}
           onFieldsChange={handleFieldsChange}
+          rootClassName={cn(
+            '[&_.ant-form-item-explain-error]:text-sm! ',
+            '[&_.ant-form-item-explain-error]:pl-0.5! [&_.ant-form-item-explain-error]:select-none!'
+          )}
         >
           <div className="grid grid-cols-1 gap-x-8 gap-y-3 md:grid-cols-2">
-            <Form.Item name="first_name" className="space-y-1" label={<Label title="First name" />}>
+            <Form.Item
+              rules={[{ required: true, message: 'Please provide a first name!' }]}
+              name="first_name"
+              className="space-y-1"
+              label={label('First name', <sup className="text-base text-red-500">*</sup>)}
+            >
               <XInput id="first_name" name="first_name" type="text" />
             </Form.Item>
-            <Form.Item name="last_name" className="space-y-1" label={<Label title="Last name" />}>
+            <Form.Item
+              rules={[{ required: true, message: 'Please provide a last name!' }]}
+              name="last_name"
+              className="space-y-1"
+              label={label('Last name', <sup className="text-base text-red-500">*</sup>)}
+            >
               <XInput id="last_name" name="last_name" type="text" />
             </Form.Item>
             <Form.Item
