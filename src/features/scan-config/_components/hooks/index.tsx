@@ -10,7 +10,7 @@ import { EntityTypeDict, IMEModel } from '@/api/entitycore/types';
 import { CircuitScaleDictionary, ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { config as appConfig } from '@/config';
 import { Config } from '@/features/scan-config/_components/components';
-import { ConfigSchema, JSONSchema, SchemaName } from '@/features/scan-config/types';
+import { ConfigSchema, SchemaName } from '@/features/scan-config/types';
 import { WorkspaceContext } from '@/types/common';
 
 export function useModel({ id, context }: { id: string; context: WorkspaceContext }) {
@@ -83,7 +83,7 @@ export function useEntries({
   initialConfig,
   schema,
 }: {
-  schema: ConfigSchema | null;
+  schema: ConfigSchema | undefined;
   initialConfig?: Config;
 }) {
   const allEntries = useRef<Set<string>>(new Set());

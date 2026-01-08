@@ -1,29 +1,30 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { Select } from 'antd';
-import { atom, useAtom } from 'jotai';
 
 import authFetch from '@/auth-fetch';
 import { config } from '@/config';
-import { ConfigValue } from '@/features/scan-config/_components/components';
 import { keyBuilder } from '@/ui/use-query-keys/data';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 
-export default function PredefinedNodeset({
-  circuitId,
-  virtualLabId,
-  projectId,
-  stateAtom,
+export default function EntityPropertyDropdown({
+  modelId,
+  value,
+  onChange,
+  entity_type,
+  property,
 }: {
-  circuitId: string;
-  virtualLabId: string;
-  projectId: string;
-  stateAtom: ReturnType<typeof atom<{ [key: string]: ConfigValue }>>;
+  modelId: string;
+  value: string | null;
+  onChange: (v: string | null) => void;
+  entity_type: string;
+  property: string;
 }) {
-  const [state, setState] = useAtom(stateAtom);
+  const { virtualLabId, projectId } = useWorkspace();
 
   const { data, error, isLoading } = useQuery({
-    queryKey: keyBuilder.circuitProperties({ circuitId }),
-    queryFn: () => fetchNodesets({ circuitId, virtualLabId, projectId }),
+    queryKey: keyBuilder.modelProperties({ modelId }),
+    queryFn: () => fetchProperties({ modelId, virtualLabId, projectId, entity_type, property }),
   });
 
   if (error) {
@@ -38,13 +39,11 @@ export default function PredefinedNodeset({
   return (
     <Select
       className="w-full"
-      value={typeof state.node_set === 'string' ? state.node_set : null}
-      onChange={(v) => {
-        setState({ ...state, node_set: v });
-      }}
+      value={value}
+      onChange={onChange}
       options={[
         { label: '—', value: null },
-        ...data['Circuit.NodeSet'].map((n) => {
+        ...data.map((n) => {
           return {
             label: n,
             value: n,
@@ -55,17 +54,21 @@ export default function PredefinedNodeset({
   );
 }
 
-async function fetchNodesets({
-  circuitId,
+async function fetchProperties({
+  modelId,
   virtualLabId,
   projectId,
+  entity_type,
+  property,
 }: {
-  circuitId: string;
+  modelId: string;
   virtualLabId: string;
   projectId: string;
+  entity_type: string;
+  property: string;
 }) {
   const res = await authFetch(
-    `${config.OBI_ONE_URL}/declared/mapped-circuit-properties/${circuitId}`,
+    `${config.OBI_ONE_URL}/declared/mapped-${entity_type}-properties/${modelId}`,
     {
       headers: {
         Accept: 'application/json',
@@ -80,7 +83,7 @@ async function fetchNodesets({
     throw new Error('Error fetching node sets');
   }
 
-  return (await res.json()) as {
-    'Circuit.NodeSet': string[];
-  };
+  const properties = (await res.json()) as Record<string, string[]>;
+
+  return properties[property];
 }

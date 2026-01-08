@@ -20,6 +20,15 @@ export default function Reference({
 }) {
   const referenceTypeDict = useReferenceTypeDict(schemaName);
   const schema = useObioneJsonSchema(schemaName);
+
+  if (
+    !schema ||
+    !schema.default_block_reference_labels ||
+    !schema.default_block_reference_labels[referenceSchema.reference_type]
+  ) {
+    return null;
+  }
+
   const configOptions = referenceTypeDict[referenceSchema.reference_type];
 
   const options: { label: string; value: string | null }[] = Object.keys(

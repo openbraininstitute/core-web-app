@@ -25,8 +25,6 @@ type MiddleProps = {
   config: Config;
   selectedBlockSchema?: Block;
   model: ICircuit | IMEModel;
-  virtualLabId: string;
-  projectId: string;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
 };
@@ -47,8 +45,6 @@ export default function Middle({
   config,
   selectedBlockSchema,
   model,
-  virtualLabId,
-  projectId,
   allEntries,
   onNewBlockClick,
 }: MiddleProps) {
@@ -119,7 +115,6 @@ export default function Middle({
           <BlockUI
             schemaName={schemaName}
             key={isRootBlock(schema, configTab) ? configTab : `${configTab}_${selectedEntry}`}
-            selectedCategory={selectedCategory}
             disabled={!!campaignId || loading}
             config={config}
             blockSchema={
@@ -133,8 +128,6 @@ export default function Middle({
                 : atomsMap[configTab]?.[selectedEntry]
             }
             model={model}
-            virtualLabId={virtualLabId}
-            projectId={projectId}
           />
         )}
     </div>

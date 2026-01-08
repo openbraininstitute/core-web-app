@@ -5,7 +5,7 @@ import { AtomsMap, ConfigSchema } from '../../types';
 import { Config } from '../components';
 import { isAtom } from '../utils';
 
-export function useConfigAtom(schema: ConfigSchema | null, atomsMap: AtomsMap | null) {
+export function useConfigAtom(schema: ConfigSchema | undefined, atomsMap: AtomsMap | null) {
   const configAtom = React.useMemo(() => {
     return atom((get) => {
       const result: Config = {};

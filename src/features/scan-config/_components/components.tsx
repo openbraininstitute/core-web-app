@@ -1,29 +1,20 @@
-import { CheckCircleOutlined, CloseCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
-import { Input, InputNumber, Select } from 'antd';
+import { Input } from 'antd';
 import { atom, useAtom } from 'jotai';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
-import { EntityTypeDict, IMEModel } from '@/api/entitycore/types';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { IMEModel } from '@/api/entitycore/types';
 
 import ModelDetails from '@/features/scan-config/_components/model-details';
 import ParameterSwep from '@/features/scan-config/_components/parameter-sweep';
-import PredefinedNodeset from '@/features/scan-config/_components/predefined-nodeset';
+import EntityPropertyDropdown from '@/features/scan-config/_components/entity-property-dropdown';
 import Reference from '@/features/scan-config/_components/reference';
+import NeuronIds from '@/features/scan-config/_components/neuron-ids';
 import Tooltip from '@/features/scan-config/_components/tooltip';
 import { isPlainObject } from '@/features/scan-config/_components/utils';
-import {
-  Block,
-  BlockElement,
-  isType,
-  JSONSchema,
-  Parameter,
-  ParamSchema,
-  SchemaName,
-} from '@/features/scan-config/types';
+import { Block, isType, ParamSchema, SchemaName } from '@/features/scan-config/types';
 
 import { classNames } from '@/util/utils';
-import NeuronIds from './neuron-ids';
 
 type Primitive = null | boolean | number | string;
 interface Object {
@@ -41,19 +32,13 @@ export function BlockUI({
   stateAtom,
   config,
   model,
-  selectedCategory,
-  virtualLabId,
-  projectId,
 }: {
   schemaName: SchemaName;
-  selectedCategory: string;
   disabled: boolean;
   config: Config;
   blockSchema?: Block;
   model: ICircuit | IMEModel | undefined | null;
   stateAtom: ReturnType<typeof atom<{ [key: string]: ConfigValue }>>;
-  virtualLabId: string;
-  projectId: string;
 }) {
   const [state, setState] = useAtom(stateAtom);
 
@@ -177,23 +162,19 @@ export function BlockUI({
       );
     }
 
-    return null;
+    if (paramSchema.ui_element === 'entity_property_dropdown' && model) {
+      return (
+        <EntityPropertyDropdown
+          modelId={model.id}
+          value={typeof state.node_set === 'string' ? state.node_set : null}
+          onChange={(newV: string | null) => setState({ ...state, node_set: newV })}
+          entity_type={paramSchema.entity_type}
+          property={paramSchema.property}
+        />
+      );
+    }
 
-    // if (
-    //   selectedCategory === 'PredefinedNeuronSet' &&
-    //   k === 'node_set' &&
-    //   model &&
-    //   model.type === EntityTypeDict.Circuit
-    // ) {
-    //   return (
-    //     <PredefinedNodeset
-    //       circuitId={model.id}
-    //       virtualLabId={virtualLabId}
-    //       projectId={projectId}
-    //       stateAtom={stateAtom}
-    //     />
-    //   );
-    // }
+    return null;
   }
 
   if (!blockSchema) return null;

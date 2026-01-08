@@ -76,6 +76,12 @@ export interface Reference extends BlockElement {
   reference_type: string;
 }
 
+export interface EntityPropertyDropdown extends BlockElement {
+  ui_element: 'entity_property_dropdown';
+  entity_type: string;
+  property: string;
+}
+
 export interface NeuronIds extends BlockElement {
   ui_element: 'neuron_ids';
 }
@@ -94,7 +100,8 @@ export type ParamSchema =
   | FloatParameterSweep
   | IntParameterSweep
   | Reference
-  | NeuronIds;
+  | NeuronIds
+  | EntityPropertyDropdown;
 
 export type Block = {
   title: string;

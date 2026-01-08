@@ -70,8 +70,6 @@ export default function ScanConfiguration({
 
   const config = useConfigAtom(schema, atomsMap);
 
-  console.log(config)
-
   if (!schema || Object.keys(atomsMap).length === 0) {
     return (
       <div className="flex h-full w-full items-center justify-center">
@@ -141,8 +139,6 @@ export default function ScanConfiguration({
             config={config}
             selectedBlockSchema={selectedBlockSchema}
             model={model}
-            virtualLabId={virtualLabId}
-            projectId={projectId}
             allEntries={allEntries}
             onNewBlockClick={() => {
               setNewKey('');

@@ -142,9 +142,6 @@ export default function Left({
 
             setLoading(true);
             try {
-              const configCopy = { ...config };
-              configCopy.type = 'CircuitSimulationScanConfig';
-
               const coordinateCountRes = await authFetch(
                 `${appConfig.OBI_ONE_URL}/declared/scan_config/grid-scan-coordinate-count`,
                 {

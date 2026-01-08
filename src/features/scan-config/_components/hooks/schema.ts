@@ -28,7 +28,7 @@ export function useObioneJsonSchema(schemaName: SchemaName) {
     refetchOnWindowFocus: false,
   });
 
-  return schema as ConfigSchema;
+  return schema;
 }
 
 export function isRootBlock(schema: ConfigSchema, key: string) {
