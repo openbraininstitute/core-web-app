@@ -26,18 +26,14 @@ export default async function AboutContent({
 
   const aboutParam = getSearchParam(searchParams, 'subsection') ?? 'about'; // Default to 'about'
 
-  const contentFiltered = (): PortableTextBlock[] => {
-    if (aboutParam === 'about') {
-      return content.aboutContent;
-    }
-    if (aboutParam === 'terms-and-conditions') {
-      return content.termsAndConditionContent;
-    }
-    if (aboutParam === 'about-the-app') {
-      return content.aboutTheAppContent;
-    }
-    return content.aboutContent; // Fallback to about content
-  };
+  const contentFiltered: PortableTextBlock[] =
+    aboutParam === 'about'
+      ? content.aboutContent
+      : aboutParam === 'terms-and-conditions'
+        ? content.termsAndConditionContent
+        : aboutParam === 'about-the-app'
+          ? content.aboutTheAppContent
+          : content.aboutContent; // Fallback to about content
 
   return (
     <div
@@ -46,7 +42,7 @@ export default async function AboutContent({
         styles.content
       )}
     >
-      <PortableText value={contentFiltered()} />
+      <PortableText value={contentFiltered} />
     </div>
   );
 }
