@@ -1,3 +1,5 @@
+import { Fragment } from 'react';
+
 import {
   EntitycoreExecutionStatus,
   TEntitycoreExecutionStatus,
@@ -5,7 +7,6 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { executionStatusIconMap } from '@/ui/segments/activity-execution//icons';
 import { getStatusColor } from '@/ui/segments/activity-execution/color-map';
-import { Fragment } from 'react';
 
 const statusLabel = {
   [EntitycoreExecutionStatus.CREATED]: 'Generated',
@@ -57,6 +58,7 @@ export default function ExecutionAggregatedStatus({
           <div className="divide-neutral-2 border-neutral-2 flex divide-x rounded-full border px-1.5">
             {statuses.map((status) => (
               <div
+                key={status}
                 className="flex items-center gap-1 px-1.5 py-0.5"
                 style={{ color: getColor(status) }}
               >

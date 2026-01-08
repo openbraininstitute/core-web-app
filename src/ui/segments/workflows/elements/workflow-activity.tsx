@@ -2,15 +2,15 @@
 
 import { useRouter } from '@bprogress/next';
 import { Pagination as AntPagination, Card, ConfigProvider, Empty } from 'antd';
+import type { ColumnsType } from 'antd/es/table/interface';
 import { find, get, kebabCase } from 'es-toolkit/compat';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { SingleParserBuilder, parseAsString, useQueryStates } from 'nuqs';
 import { useMemo, useState } from 'react';
 
 import { viewConfig as simulationCampaignExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation/small-microcircuit-simulation';
 import { useExpandableTable } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
-
-import type { ColumnsType } from 'antd/es/table/interface';
 
 import { EntityCoreObjectTypes, EntityTypeDict, TEntityTypeDict } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -30,7 +30,6 @@ import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/brows
 import { ActivityDict, ActivityValues } from '@/ui/segments/workflows/elements/helpers';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
-import { useSearchParams } from 'next/navigation';
 
 import { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -39,8 +38,8 @@ import {
   type ExtendedCampaignsType,
   getStatusCountMap,
 } from '@/entity-configuration/domain/simulation';
+import ExecutionAggregatedStatus from '@/ui/segments/activity-execution/status';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
-import ExecutionAggregatedStatus from '../../activity-execution/status';
 
 const AllowedDuplicateEntityTypes: TEntityTypeDict[] = [EntityTypeDict.SimulationCampaign];
 export interface WorkflowActivityRef {

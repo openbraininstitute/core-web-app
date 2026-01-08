@@ -1,12 +1,13 @@
-import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import { ReactNode } from 'react';
 
-import CancelledIcon from './cancelled';
-import DoneIcon from './done';
-import ErrorIcon from './error';
-import GeneratedIcon from './generated';
-import PendingIcon from './pending';
-import RunningIcon from './running';
+import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+
+import CancelledIcon from '@/ui/segments/activity-execution/icons/cancelled';
+import DoneIcon from '@/ui/segments/activity-execution/icons/done';
+import ErrorIcon from '@/ui/segments/activity-execution/icons/error';
+import GeneratedIcon from '@/ui/segments/activity-execution/icons/generated';
+import PendingIcon from '@/ui/segments/activity-execution/icons/pending';
+import RunningIcon from '@/ui/segments/activity-execution/icons/running';
 
 export const executionStatusIconMap: Record<EntitycoreExecutionStatus, ReactNode> = {
   [EntitycoreExecutionStatus.CREATED]: <GeneratedIcon />,

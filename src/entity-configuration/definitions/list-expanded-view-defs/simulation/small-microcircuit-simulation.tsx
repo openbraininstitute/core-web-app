@@ -8,10 +8,10 @@ import {
   TEntitycoreExecutionStatus,
 } from '@/api/entitycore/types/entities/execution';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { ListExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/types';
 import { ExecutionStatus } from '@/ui/segments/activity-execution/status';
 import { BaseTable } from '@/ui/segments/data-table/table';
 import { cn } from '@/utils/css-class';
-import type { ListExpandedViewConfig } from '../types';
 
 function getParamLabel(param: string) {
   return upperFirst(lowerCase(param.split('.').at(-1))); // e.g. "initialize.random_seed" -> "Random seed"

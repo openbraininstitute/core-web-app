@@ -41,7 +41,6 @@ import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import type { Props as MainTableProps } from '@/ui/segments/data-table';
-import { expandIcon } from '@/ui/segments/explore/circuit/elements/expand-icon';
 
 const MainTable = dynamic(() => import('@/ui/segments/data-table'), { ssr: false }) as (
   props: MainTableProps<EntityCoreIdentifiableNamed>
@@ -117,7 +116,6 @@ export function BrowseEntityScope({
   const columns = allColumns.filter(({ key }) => (activeColumns || []).includes(key as string));
 
   const expandableOptions = useMemo(() => {
-    const entity = getEntityByExtendedType({ type: dataType });
     const expandedViewConfig = listExpandedViewRegistry[dataType];
 
     if (!entity?.api?.expandRow || !expandedViewConfig) return undefined;

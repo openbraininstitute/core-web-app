@@ -1,3 +1,4 @@
+import { get, sortBy } from 'es-toolkit/compat';
 import flatMap from 'es-toolkit/compat/flatMap';
 import keyBy from 'es-toolkit/compat/keyBy';
 
@@ -31,7 +32,6 @@ import { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/cir
 import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
-import { get, sortBy } from 'es-toolkit/compat';
 
 // NOTE: this is due entitycore do not support yet
 async function resolveSimulationCampaigns({
