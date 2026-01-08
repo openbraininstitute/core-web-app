@@ -203,7 +203,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
   }>({
     dataKey: queryKeyHash,
     selectionType: 'radio',
-    onRowsSelected: () => {},
+    onRowsSelected: () => { },
   });
 
   const selectedRow = selectedRows.at(0);
@@ -232,8 +232,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
   const onDuplicate = () => {
     if (entityType === ExtendedEntitiesTypeDict.MemodelCircuitSimulation) {
       navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/memodel/${
-          (selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
+        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/memodel/${(selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
         }?dataType=${ExtendedEntitiesTypeDict.MemodelCircuit}&initialCampaignId=${selectedRow?.id}`
       );
 
@@ -242,8 +241,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
 
     if (selectedRow?.type === ExtendedEntitiesTypeDict.SimulationCampaign) {
       navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${
-          (selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
+        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${(selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
         }?initialCampaignId=${selectedRow.id}`
       );
     }
@@ -282,9 +280,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
     };
   }, [entityType]);
 
-  const { expandableConfig } = expandableOptions
-    ? useExpandableTable(expandableOptions)
-    : { expandableConfig: undefined };
+  const { expandableConfig } = useExpandableTable(expandableOptions);
 
   return (
     <section
