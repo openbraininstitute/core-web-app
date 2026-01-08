@@ -26,14 +26,17 @@ export default async function AboutContent({
 
   const aboutParam = getSearchParam(searchParams, 'subsection') ?? 'about'; // Default to 'about'
 
-  const contentFiltered: PortableTextBlock[] =
-    aboutParam === 'about'
-      ? content.aboutContent
-      : aboutParam === 'terms-and-conditions'
-        ? content.termsAndConditionContent
-        : aboutParam === 'about-the-app'
-          ? content.aboutTheAppContent
-          : content.aboutContent; // Fallback to about content
+  let contentFiltered: PortableTextBlock[];
+
+  if (aboutParam === 'about') {
+    contentFiltered = content.aboutContent;
+  } else if (aboutParam === 'terms-and-conditions') {
+    contentFiltered = content.termsAndConditionContent;
+  } else if (aboutParam === 'about-the-app') {
+    contentFiltered = content.aboutTheAppContent;
+  } else {
+    contentFiltered = content.aboutContent; // Fallback to about content
+  }
 
   return (
     <div
