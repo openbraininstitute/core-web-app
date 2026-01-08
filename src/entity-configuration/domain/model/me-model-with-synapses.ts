@@ -19,7 +19,11 @@ export const MEModelWithSynapsesCircuit: EntityCoreTypeConfig<ICircuit> = {
   type: EntityTypeDict.Circuit,
   slug: EntitySlug.Circuit,
   api: {
-    config: { allowedFacets: true, extraRequiredListFilters: circuitScaleFilter },
+    config: {
+      allowedFacets: true,
+      ilikeSearchEnabled: true,
+      extraRequiredListFilters: circuitScaleFilter,
+    },
     query: {
       list: (...params) => {
         return getCircuits({

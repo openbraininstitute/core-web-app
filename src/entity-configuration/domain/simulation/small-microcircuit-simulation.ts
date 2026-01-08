@@ -167,7 +167,10 @@ export const SmallMicrocircuitSimulation: EntityCoreTypeConfig<ICircuitSimulatio
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.SmallMicrocircuitSimulation,
   api: {
-    config: { allowedFacets: true },
+    config: {
+      allowedFacets: true,
+      ilikeSearchEnabled: true,
+    },
     query: {
       count: (...params) => {
         const filters = discardBrainRegionQueryParams(params[0].filters);

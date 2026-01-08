@@ -27,6 +27,7 @@ import {
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkspaceContext } from '@/types/common';
 import type { TWorkspaceScope } from '@/constants';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 
 export type QueryContext = {
   key: string;
@@ -71,12 +72,23 @@ function useQueryParameters(
   const filters = useAtomValue(
     coreFiltersAtom({ dataType: context.extendedEntityType, key: context.key })
   );
+  const entity = getEntityByExtendedType({ type: context.extendedEntityType });
+
+  function search() {
+    if (entity && !!entity.api.config.ilikeSearchEnabled && !isEmpty(searchString)) {
+      return { ilike_search: `*${searchString}*` };
+    }
+    if (!isEmpty(searchString)) {
+      return { search: searchString };
+    }
+    return null;
+  }
 
   const queryParameters = compactRecord({
     page_size: DEFAULT_PAGE_SIZE,
     page: pageNumber,
     with_facets: true,
-    search: isEmpty(searchString) ? null : searchString,
+    ...search(),
     order_by: `${sortState.order === 'asc' ? '+' : '-'}${sortState.backendField}`,
     ...(requireBrainRegion
       ? {

@@ -19,7 +19,11 @@ export const PairedNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
   type: EntityTypeDict.Circuit,
   slug: EntitySlug.PairedNeuronsCircuit,
   api: {
-    config: { allowedFacets: true, extraRequiredListFilters: circuitScaleFilter },
+    config: {
+      allowedFacets: true,
+      ilikeSearchEnabled: true,
+      extraRequiredListFilters: circuitScaleFilter,
+    },
     query: {
       list: (...params) =>
         getCircuits({

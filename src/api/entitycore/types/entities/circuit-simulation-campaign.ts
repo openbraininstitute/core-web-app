@@ -16,6 +16,7 @@ import type {
 import type {
   BrainRegionFilter,
   IEntityFilter,
+  IlikeSearchFilter,
   NameFilter,
   PaginationFilter,
 } from '@/api/entitycore/types/shared/request';
@@ -74,7 +75,8 @@ export interface ICircuitSimulationCampaignFilter
     BrainRegionFilter, // Entitycore API doesn't support brain_region_id filtering, to be removed
     NameFilter,
     PaginationFilter,
-    ISimulationCampaignCircuitFilter {}
+    ISimulationCampaignCircuitFilter,
+    IlikeSearchFilter {}
 
 const CreateCircuitSimulationCampaignSchema = z.object({
   name: z.string(),

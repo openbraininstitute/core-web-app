@@ -24,6 +24,7 @@ export const CellMorphology: EntityCoreTypeConfig<ICellMorphology | ICellMorphol
   api: {
     config: {
       allowedFacets: true,
+      ilikeSearchEnabled: true,
     },
     query: {
       list: getCellMorphologies,
