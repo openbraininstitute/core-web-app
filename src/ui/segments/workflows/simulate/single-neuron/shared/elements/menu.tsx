@@ -33,6 +33,7 @@ import {
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { useAppNotification } from '@/components/notification';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { useUserRole } from '@/hooks/use-user-role';
 import { browserHistoryReplace } from '@/utils/browser';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { Button } from '@/ui/molecules/button';
@@ -67,6 +68,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const queryClient = useQueryClient();
   const launchSimulation = useSetAtom(launchSimulationAtom);
+  const { isProjectAdmin } = useUserRole({ virtualLabId, projectId });
   const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
   const step = searchParams.get('step') ?? ExperimentStep.Info;
   const setVisibleSynapses = useVisibleSynapsesSetter();
@@ -183,7 +185,8 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
       simulationType,
       experimentalSetupConfiguration.max_time ?? currentInjectionDuration,
       () => updatePanelSelection(),
-      notify
+      notify,
+      isProjectAdmin
     );
 
     setIsLaunching(false);
