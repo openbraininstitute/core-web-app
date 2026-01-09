@@ -2,10 +2,10 @@ import 'server-only';
 
 import '@ant-design/v5-patch-for-react-19';
 import { DM_Serif_Text, Gabarito, Titillium_Web } from 'next/font/google';
-import { ReactNode, Suspense } from 'react';
+import { type ReactNode, Suspense } from 'react';
 
 import MatomoAnalyticsConsent from '@/components/Matomo';
-import { config, ConfigProvider, getClientEnvInjectionConfig } from '@/config';
+import { ConfigProvider, config, getClientEnvInjectionConfig } from '@/config';
 
 import '@/styles/globals.css';
 
