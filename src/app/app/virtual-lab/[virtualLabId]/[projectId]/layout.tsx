@@ -4,12 +4,20 @@ import { SpaceManagerContainer } from '@/ui/segments/workspaces/space-manager';
 import { Container as AiContainer } from '@/ui/segments/ai/container';
 import { ProjectRootLayout } from '@/ui/layouts/project-root-layout';
 import { WorkspaceTopMenu } from '@/ui/segments/workspaces/top-menu';
+import { getQueryClient } from '@/query-provider/server';
+import { keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
+import { getBrainRegionHierarchiesWithSpecies } from '@/api/entitycore/queries/general/brain-region-hierarchy';
 
 type Props = {
   children: ReactNode;
 };
 
 export default async function Layout({ children }: Props) {
+  const queryClient = getQueryClient();
+  queryClient.prefetchQuery({
+    queryKey: keyBuilderHierarchy.hierarchies(),
+    queryFn: () => getBrainRegionHierarchiesWithSpecies(),
+  });
   return (
     <div className="h-screen w-full">
       <ProjectRootLayout>
