@@ -241,6 +241,15 @@ export function BrowseLink({
   const count = current?.pagination.total_items;
   const rootCount = root?.pagination.total_items;
   const isLoading = loadingCurrent || loadingRoot;
+  console.log('–– – BrowseLink – extendedType––', {
+    extendedType,
+    isCurrentError,
+    count,
+    rootCount,
+    isRootError,
+    enabled,
+    isLoading,
+  });
 
   const countRenderer = match({ isCurrentError, count, rootCount, isRootError, enabled, isLoading })
     .with({ isLoading: false, enabled: true, rootCount: P.number, count: P.number }, () => (

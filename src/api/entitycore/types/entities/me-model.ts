@@ -1,8 +1,8 @@
-import z from 'zod';
-import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
+import z from "zod";
+import type { BrainRegionHierarchyBase } from "@/api/entitycore/types/entities/brain-region";
 
-import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
-import type { IEModel } from '@/api/entitycore/types/entities/e-model';
+import type { ICellMorphology } from "@/api/entitycore/types/entities/cell-morphology";
+import type { IEModel } from "@/api/entitycore/types/entities/e-model";
 import type {
   EntityAuthorization,
   EntityCoreIdentifiable,
@@ -14,28 +14,29 @@ import type {
   ISpecies,
   IStrain,
   Timestamps,
-} from '@/api/entitycore/types/shared/global';
+} from "@/api/entitycore/types/shared/global";
 import type {
-  BrainRegionFilter,
   ContributionFilter,
+  IMorphologyFilter,
+  BrainRegionHierarchyFilter,
+  PaginationFilter,
+  IEModelFilter,
+  SpeciesFilter,
+  SharedFilter,
+  MtypeFilter,
   EtypeFilter,
   IdFilter,
-  IEModelFilter,
   IlikeSearchFilter,
-  IMorphologyFilter,
-  MtypeFilter,
   OwnershipFilter,
-  PaginationFilter,
-  SharedFilter,
-  SpeciesFilter,
-} from '@/api/entitycore/types/shared/request';
+  BrainRegionFilter,
+} from "@/api/entitycore/types/shared/request";
 
 export enum ValidationStatus {
-  Created = 'created',
-  Initialized = 'initialized',
-  Running = 'running',
-  Done = 'done',
-  Error = 'error',
+  Created = "created",
+  Initialized = "initialized",
+  Running = "running",
+  Done = "done",
+  Error = "error",
 }
 
 interface IMEModelBase {
@@ -77,6 +78,7 @@ export interface IMEModelFilter
     EtypeFilter,
     SpeciesFilter,
     BrainRegionFilter,
+    BrainRegionHierarchyFilter,
     IMorphologyFilter,
     PaginationFilter,
     IEModelFilter,
