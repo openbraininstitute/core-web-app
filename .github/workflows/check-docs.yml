@@ -7,20 +7,28 @@ on:
 jobs:
   check-docs:
     runs-on: ubuntu-latest
-    if: ${{ github.base_ref != 'develop' && !contains(github.event.pull_request.labels.*.name, 'skip docs') }}
+    if: github.base_ref != 'develop'
     steps:
-      - name: Debug info
+      - name: Check for skip docs label
+        id: check-label
         run: |
-          echo "Base ref: ${{ github.base_ref }}"
-          echo "Labels: ${{ join(github.event.pull_request.labels.*.name, ', ') }}"
-          echo "Has skip docs: ${{ contains(github.event.pull_request.labels.*.name, 'skip docs') }}"
+          LABELS="${{ join(github.event.pull_request.labels.*.name, ',') }}"
+          if [ -z "$LABELS" ]; then
+            echo "skip=false" >> $GITHUB_OUTPUT
+          elif echo "$LABELS" | grep -q "skip docs"; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Check out code
+        if: steps.check-label.outputs.skip != 'true'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Check for documentation changes
+        if: steps.check-label.outputs.skip != 'true'
         run: |
           if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q "^docs/"; then
             echo "✅ Documentation has been updated"
