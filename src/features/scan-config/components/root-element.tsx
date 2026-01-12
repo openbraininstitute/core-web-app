@@ -201,7 +201,7 @@ export function RootElement({
                     }
                   }}
                 >
-                  <div className="w-full">
+                  <div className="w-full text-left">
                     {isSelected && isEditingKey && !readOnly && (
                       <>
                         <Input
