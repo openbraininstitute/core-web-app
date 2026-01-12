@@ -64,6 +64,14 @@ mkdocs serve
 
 This will start a local documentation server, typically accessible at [http://localhost:8000](http://localhost:8000)
 
+#### Documentation Updates
+
+Pull requests are automatically checked to ensure documentation is kept up to date. The CI will require at least one file in `/docs/` to be modified, unless:
+- The PR targets the `develop` branch, or
+- The PR has the `skip docs` label
+
+This helps maintain documentation quality by encouraging updates alongside code changes.
+
 ## Additional Resources
 
 ### Next.js
