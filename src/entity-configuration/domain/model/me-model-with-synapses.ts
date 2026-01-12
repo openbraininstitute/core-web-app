@@ -50,5 +50,5 @@ export const MEModelWithSynapsesCircuit: EntityCoreTypeConfig<ICircuit> = {
   isBookmarkable: false,
   isDownloadable: true,
   isCopyable: true,
-  isSimulatable: false,
+  isSimulatable: true,
 } as const;

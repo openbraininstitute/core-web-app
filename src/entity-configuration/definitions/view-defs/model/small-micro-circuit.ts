@@ -17,4 +17,16 @@ export const ViewDefForSmallMicrocircuit: ViewDefinitionConfig = {
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
   ],
+  miniDetailView: [
+    { field: EntityCoreFields.BrainRegion },
+    { field: EntityCoreFields.CircuitScale },
+    { field: EntityCoreFields.SpeciesName },
+    { field: EntityCoreFields.CircuitSubCircuit },
+    { field: EntityCoreFields.CircuitNumberNeurons },
+    { field: EntityCoreFields.CircuitNumberSynapses },
+    { field: EntityCoreFields.CircuitNumberConnections },
+    { field: EntityCoreFields.CircuitBuildCategory },
+    { field: EntityCoreFields.RegistrationDate },
+    { field: EntityCoreFields.License },
+  ],
 };
