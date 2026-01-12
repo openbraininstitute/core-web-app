@@ -7,7 +7,7 @@ import { match } from 'ts-pattern';
 
 import { requestOfflineTokenConsent } from '@/api/auth-manager';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
-import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import ApiError from '@/api/error';
 import { runSimulation } from '@/api/launch-system';
@@ -19,9 +19,10 @@ import {
   simulationsByCampaignIdAtomFamily,
 } from '@/features/scan-config/_components/atoms';
 import { FileViewer } from '@/features/scan-config/_components/file-viewer';
-import { File, SimulationFiles } from '@/features/scan-config/_components/simulation-files';
+import { type File, SimulationFiles } from '@/features/scan-config/_components/simulation-files';
 import { SimulationStatusBadge } from '@/features/scan-config/_components/simulation-status';
 import errorRegistry from '@/features/scan-config/error-registry';
+import styles from '@/features/scan-config/scan-config.module.css';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/simulation';
 import { useConsent } from '@/services/consent';
@@ -31,8 +32,6 @@ import { ExecutionStatusColorMap } from '@/ui/segments/activity-execution/color-
 import { classNames } from '@/util/utils';
 import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
-
-import styles from '@/features/scan-config/scan-config.module.css';
 
 const USER_CANCELLED = 'user_cancelled';
 

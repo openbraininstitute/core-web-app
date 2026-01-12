@@ -1,9 +1,8 @@
-import Link from 'next/link';
-
 import { RiInformation2Line } from '@remixicon/react';
 import { Tooltip } from 'antd';
+import Link from 'next/link';
 
-import { PlanV2, AdvantagesProps } from '@/types/virtual-lab/pricing';
+import type { AdvantagesProps, PlanV2 } from '@/types/virtual-lab/pricing';
 import SubscriptionToggle from '@/ui/segments/plans/subscription-toggle';
 import SubscriptionsCosts from '@/ui/segments/plans/subscriptions-costs';
 

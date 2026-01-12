@@ -1,13 +1,9 @@
-import { PortableText } from 'next-sanity';
-
 import type { PortableTextBlock } from 'next-sanity';
-
-import { cn } from '@/utils/css-class';
-
+import { PortableText } from 'next-sanity';
 import { getAboutContent } from '@/api/sanity/help-about-section/route';
-import { getSearchParam } from '@/utils/getSearchParams';
-
 import styles from '@/ui/segments/help/about/about-content.module.css';
+import { cn } from '@/utils/css-class';
+import { getSearchParam } from '@/utils/getSearchParams';
 
 export const dynamic = 'force-dynamic';
 

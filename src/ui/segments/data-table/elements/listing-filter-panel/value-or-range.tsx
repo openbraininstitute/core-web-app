@@ -1,10 +1,9 @@
 'use client';
 
-import { ChangeEvent, HTMLProps, useState } from 'react';
-
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { getFieldDefinition } from '@/entity-configuration/definitions';
+import { type ChangeEvent, type HTMLProps, useState } from 'react';
 import { RangeIcon } from '@/components/icons';
+import { getFieldDefinition } from '@/entity-configuration/definitions';
+import type { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
 import type { GteLteValue, ValueOrRangeFilter } from '@/entity-configuration/definitions/types';
 

@@ -1,10 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
-import { getPricingContent } from '@/ui/segments/plans/get-pricing-content';
-
 import type { PlanV2 } from '@/types/virtual-lab/pricing';
+import { getPricingContent } from '@/ui/segments/plans/get-pricing-content';
 
 interface UsePlanV2Return {
   plans: PlanV2[];

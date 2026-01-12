@@ -9,14 +9,13 @@ import {
 } from '@ant-design/icons';
 import { useRouter } from '@bprogress/next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
-import { z } from 'zod';
-
 import delay from 'es-toolkit/compat/delay';
 import get from 'es-toolkit/compat/get';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 import omit from 'es-toolkit/compat/omit';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
+import type { z } from 'zod';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { createModel } from '@/api/small-scale-simulator/single-neuron/single-neuron';
@@ -24,16 +23,16 @@ import { CreateSingleNeuronSchema } from '@/api/small-scale-simulator/types';
 import { useAppNotification } from '@/components/notification';
 import { LowFundsNotification } from '@/components/notification/low-funds-notification';
 import { config } from '@/config';
+import { useUserRole } from '@/hooks/use-user-role';
 import { LOW_FUNDS_ERROR_CODE, messages } from '@/i18n/en/me-model';
 import { WorkspaceContextSchema } from '@/types/common';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { useUserRole } from '@/hooks/use-user-role';
 import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import {
   BuildStep,
-  BuildStepKeys,
+  type BuildStepKeys,
   useBuildMeModelSessionState,
 } from '@/ui/segments/workflows/build/memodel/helpers';
 import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
