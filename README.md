@@ -12,6 +12,7 @@ This is the repository for the Blue Brain Open Platform's core web application.
   - [Installation](#installation)
     - [Development](#development)
     - [Testing](#testing)
+    - [Documentation](#documentation)
   - [Additional Resources](#additional-resources)
     - [Next.js](#nextjs)
   - [Contribution Guidelines](#contribution-guidelines)
@@ -44,6 +45,24 @@ npm run test
 # or
 yarn test
 ```
+
+### Documentation
+
+To serve the documentation locally using MkDocs, first set up a Python virtual environment and install the required packages:
+
+```bash
+python -m venv venv
+source ./venv/bin/activate
+pip install mkdocs mkdocs-material
+```
+
+Then serve the documentation:
+
+```bash
+mkdocs serve
+```
+
+This will start a local documentation server, typically accessible at [http://localhost:8000](http://localhost:8000)
 
 ## Additional Resources
 
