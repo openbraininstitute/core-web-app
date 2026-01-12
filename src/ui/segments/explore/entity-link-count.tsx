@@ -1,18 +1,13 @@
-import { map } from "es-toolkit/compat";
-import { useAtomValue } from "jotai";
-import { unwrap } from "jotai/utils";
 import { useSearchParams } from "next/navigation";
-import { useMemo } from "react";
+import { map } from "es-toolkit/compat";
 import { match } from "ts-pattern";
 import { useTabs } from "@/components/detail-view-tabs";
 import { type TWorkspaceScope, WorkspaceScope } from "@/constants";
 import {
-  PrimaryAnatomicalDivisionsHierarchyAtom,
   useGetSelectedBrainRegion,
   usePrimaryHierarchyQuery,
 } from "@/features/brain-region-hierarchy/context";
 import { useFlags } from "@/features/feature-flags";
-import { useLoadableValue } from "@/hooks/hooks";
 import { useDefaultBreakpoint } from "@/ui/hooks/create-break-point";
 import { PillTabs, PillTabsList, PillTabsTrigger } from "@/ui/molecules/tabs";
 import { BrowseLink } from "@/ui/segments/explore/browse-link";
@@ -57,10 +52,6 @@ export function EntityLinkCount() {
     WorkspaceScope.Public) as TWorkspaceScope;
 
   const { result: brainRegionHierarchy, loading } = usePrimaryHierarchyQuery();
-  /* const brainRegionHierarchy = useAtomValue(
-    useMemo(() => unwrap(PrimaryAnatomicalDivisionsHierarchyAtom), []),
-  ); */
-
   const brainRegionHierarchyLoading = loading;
 
   const { activeTab, onChangeTab } = useTabs<TExploreDataTypeTabs>({

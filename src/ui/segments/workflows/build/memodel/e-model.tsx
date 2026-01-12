@@ -1,19 +1,10 @@
 "use client";
 
+import { compact, kebabCase, omit } from "es-toolkit/compat";
 import { ReloadOutlined } from "@ant-design/icons";
 import { Image } from "antd";
-import compact from "es-toolkit/compat/compact";
-import kebabCase from "es-toolkit/compat/kebabCase";
-import omit from "es-toolkit/compat/omit";
-import { useAtomValue } from "jotai";
-import { unwrap } from "jotai/utils";
 import { useRouter } from "next/navigation";
-import {
-  type HTMLAttributes,
-  type TdHTMLAttributes,
-  useEffect,
-  useMemo,
-} from "react";
+import { type HTMLAttributes, type TdHTMLAttributes, useEffect } from "react";
 import type { IEModel } from "@/api/entitycore/types";
 import { EntityTypeDict } from "@/api/entitycore/types";
 import { ExtendedEntitiesTypeDict } from "@/api/entitycore/types/extended-entity-type";
@@ -27,8 +18,6 @@ import {
   renderPreview,
 } from "@/entity-configuration/definitions/renderer";
 import {
-  PrimaryAnatomicalDivisionsHierarchyAtom,
-  useBrainRegionHierarchy,
   usePrimaryHierarchyQuery,
   useSetSelectedBrainRegion,
 } from "@/features/brain-region-hierarchy/context";
@@ -40,6 +29,7 @@ import {
   useBuildMeModelSessionState,
 } from "@/ui/segments/workflows/build/memodel/helpers";
 import { cn } from "@/utils/css-class";
+import { useWorkspaceAtlasHierarchy } from "@/features/brain-region-hierarchy/hooks";
 
 type Props = {
   sessionId: string;
@@ -77,22 +67,18 @@ export function EModel({ sessionId }: Props) {
   ]).join("/");
 
   const { updateSelectedBrainRegion } = useSetSelectedBrainRegion();
-  const { updateHierarchyConfig } = useBrainRegionHierarchy({
+  const { changeBrainRegion } = useWorkspaceAtlasHierarchy({
     dataKey,
   });
   const { result: brainRegionHierarchy } = usePrimaryHierarchyQuery();
 
-  /* const brainRegionHierarchy = useAtomValue(
-    useMemo(() => unwrap(PrimaryAnatomicalDivisionsHierarchyAtom), []),
-  ); */
-
   useEffect(() => {
     if (brainRegionHierarchy) {
       const defaultBrainRegion = brainRegionHierarchy?.root;
-      updateHierarchyConfig(defaultBrainRegion);
+      changeBrainRegion(defaultBrainRegion);
       updateSelectedBrainRegion(omit(defaultBrainRegion, "children"));
     }
-  }, [brainRegionHierarchy, updateHierarchyConfig]);
+  }, [brainRegionHierarchy, changeBrainRegion]);
 
   return (
     <BrowseEntityScope

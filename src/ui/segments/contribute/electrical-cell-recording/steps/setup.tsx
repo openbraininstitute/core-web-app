@@ -1,46 +1,45 @@
-'use client';
+"use client";
 
-import { DatePicker, Form, Input, InputNumber, Space } from 'antd';
-import { InfoCircleFilled } from '@ant-design/icons';
-import { upperFirst } from 'es-toolkit/compat';
-import dayjs from 'dayjs';
+import { DatePicker, Form, Input, InputNumber, Space } from "antd";
+import { InfoCircleFilled } from "@ant-design/icons";
+import { upperFirst } from "es-toolkit/compat";
+import dayjs from "dayjs";
 
-import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
-import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
-import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
+import { BrainRegionDropdownWithFormItem } from "@/features/brain-region-dropdown/form-dropdown";
+import { AppUInterfaceSection, resolveDataKey } from "@/utils/key-builder";
+import { SelectPopoverFormItem } from "@/ui/molecules/select-popover";
 import {
   ElectricalCellRecordingSchema,
   RECORDING_LOCATION_OPTIONS,
-} from '@/ui/segments/contribute/electrical-cell-recording/schema';
+} from "@/ui/segments/contribute/electrical-cell-recording/schema";
 import {
   ElectricalRecordingOrigin,
   ElectricalRecordingOriginDictionary,
   RecordingType,
-} from '@/api/entitycore/types/entities/electrical-cell-recording';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
+} from "@/api/entitycore/types/entities/electrical-cell-recording";
+import { useWorkspace } from "@/ui/hooks/use-workspace";
 import {
   renderLabel,
   createZodFieldValidator,
   RequiredFieldMarker,
-} from '@/ui/segments/contribute/shared/helpers';
-import { cn } from '@/utils/css-class';
+} from "@/ui/segments/contribute/shared/helpers";
+import { cn } from "@/utils/css-class";
 
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import type { IBrainRegionHierarchy } from "@/api/entitycore/types/entities/brain-region";
+import { useWorkspaceAtlasHierarchy } from "@/features/brain-region-hierarchy/hooks";
 
 export function Setup() {
   const form = Form.useFormInstance();
   const { projectId } = useWorkspace();
-
-  const { node: defaultBrainRegion } = useBrainRegionHierarchy({
+  const { selectedBrainRegion } = useWorkspaceAtlasHierarchy({
     dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
   });
 
   const BrainRegionDropdown = BrainRegionDropdownWithFormItem({
-    clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
+    clsx: { trigger: "rounded-full w-full h-12", content: "z-[99999]" },
     showIcon: false,
     charsPerLine: 200,
-    defaultBrainRegion: defaultBrainRegion as IBrainRegionHierarchy,
+    defaultBrainRegion: selectedBrainRegion as IBrainRegionHierarchy,
   });
 
   const RecordingTypeFormInput = SelectPopoverFormItem<typeof RecordingType>({
@@ -48,36 +47,42 @@ export function Setup() {
       value: key,
       label: upperFirst(label),
     })),
-    clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
-    placeholder: 'Select recording type',
+    clsx: { trigger: "rounded-full w-full h-12", content: "z-[99999]" },
+    placeholder: "Select recording type",
   });
 
-  const RecordingOriginFormInput = SelectPopoverFormItem<typeof ElectricalRecordingOrigin>({
+  const RecordingOriginFormInput = SelectPopoverFormItem<
+    typeof ElectricalRecordingOrigin
+  >({
     options: Object.values(ElectricalRecordingOrigin)
       .filter((o) => o.key !== ElectricalRecordingOriginDictionary.InSilico)
       .map(({ key, label }) => ({
         value: key,
         label: upperFirst(label),
       })),
-    clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
-    placeholder: 'Select recording origin',
+    clsx: { trigger: "rounded-full w-full h-12", content: "z-[99999]" },
+    placeholder: "Select recording origin",
   });
 
   const RecordingLocationFormInput = SelectPopoverFormItem({
     options: RECORDING_LOCATION_OPTIONS,
-    clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
-    placeholder: 'Select recording location',
+    clsx: { trigger: "rounded-full w-full h-12", content: "z-[99999]" },
+    placeholder: "Select recording location",
   });
 
   return (
     <div className="h-full w-full">
       <Form.Item
-        name={['setup', 'name']}
-        label={renderLabel('Name', 'main', RequiredFieldMarker)}
+        name={["setup", "name"]}
+        label={renderLabel("Name", "main", RequiredFieldMarker)}
         rules={[
           {
             required: true,
-            validator: createZodFieldValidator(ElectricalCellRecordingSchema, 'setup.name', form),
+            validator: createZodFieldValidator(
+              ElectricalCellRecordingSchema,
+              "setup.name",
+              form,
+            ),
           },
         ]}
       >
@@ -89,15 +94,15 @@ export function Setup() {
       </Form.Item>
 
       <Form.Item
-        name={['setup', 'description']}
-        label={renderLabel('Description', 'main', RequiredFieldMarker)}
+        name={["setup", "description"]}
+        label={renderLabel("Description", "main", RequiredFieldMarker)}
         rules={[
           {
             required: true,
             validator: createZodFieldValidator(
               ElectricalCellRecordingSchema,
-              'setup.description',
-              form
+              "setup.description",
+              form,
             ),
           },
         ]}
@@ -110,15 +115,15 @@ export function Setup() {
       </Form.Item>
 
       <Form.Item
-        name={['setup', 'brain_region_id']}
-        label={renderLabel('Brain region', 'main', RequiredFieldMarker)}
+        name={["setup", "brain_region_id"]}
+        label={renderLabel("Brain region", "main", RequiredFieldMarker)}
         rules={[
           {
             required: true,
             validator: createZodFieldValidator(
               ElectricalCellRecordingSchema,
-              'setup.brain_region_id',
-              form
+              "setup.brain_region_id",
+              form,
             ),
           },
         ]}
@@ -127,32 +132,36 @@ export function Setup() {
       </Form.Item>
 
       <Form.Item
-        name={['setup', 'experiment_date']}
-        label={renderLabel('Experiment date', 'main')}
+        name={["setup", "experiment_date"]}
+        label={renderLabel("Experiment date", "main")}
         rules={[
           {
             required: true,
             validator: createZodFieldValidator(
               ElectricalCellRecordingSchema,
-              'setup.experiment_date',
-              form
+              "setup.experiment_date",
+              form,
             ),
           },
         ]}
       >
-        <DatePicker className="h-12 w-full rounded-full" format="DD/MM/YYYY" maxDate={dayjs()} />
+        <DatePicker
+          className="h-12 w-full rounded-full"
+          format="DD/MM/YYYY"
+          maxDate={dayjs()}
+        />
       </Form.Item>
 
       <Form.Item
-        name={['setup', 'contact_email']}
-        label={renderLabel('Contact email', 'main')}
+        name={["setup", "contact_email"]}
+        label={renderLabel("Contact email", "main")}
         rules={[
           {
             required: false,
             validator: createZodFieldValidator(
               ElectricalCellRecordingSchema,
-              'setup.contact_email',
-              form
+              "setup.contact_email",
+              form,
             ),
           },
         ]}
@@ -164,30 +173,33 @@ export function Setup() {
       </Form.Item>
 
       <Form.Item
-        name={['setup', 'published_in']}
-        label={renderLabel('Published in', 'main')}
+        name={["setup", "published_in"]}
+        label={renderLabel("Published in", "main")}
         rules={[
           {
             required: false,
             validator: createZodFieldValidator(
               ElectricalCellRecordingSchema,
-              'setup.published_in',
-              form
+              "setup.published_in",
+              form,
             ),
           },
         ]}
       >
-        <Input className="h-12 rounded-full placeholder:text-sm" placeholder="Enter published in" />
+        <Input
+          className="h-12 rounded-full placeholder:text-sm"
+          placeholder="Enter published in"
+        />
       </Form.Item>
 
       <Form.Item
-        label={renderLabel('Location (x, y, z)', 'main')}
+        label={renderLabel("Location (x, y, z)", "main")}
         tooltip={{
           icon: <InfoCircleFilled />,
-          className: '[&_svg]:text-primary-8!',
+          className: "[&_svg]:text-primary-8!",
           rootClassName: cn(
-            '[&_.ant-tooltip-inner]:bg-white [&_.ant-tooltip-inner]:text-primary-8 ',
-            '[&_.ant-tooltip-arrow]:before:bg-white'
+            "[&_.ant-tooltip-inner]:bg-white [&_.ant-tooltip-inner]:text-primary-8 ",
+            "[&_.ant-tooltip-arrow]:before:bg-white",
           ),
           title: (
             <div className="flex items-center gap-1">
@@ -206,15 +218,15 @@ export function Setup() {
       >
         <Space.Compact className="flex gap-2">
           <Form.Item
-            name={['setup', 'location', 'x']}
+            name={["setup", "location", "x"]}
             required={false}
-            validateTrigger={['onChange', 'onBlur']}
+            validateTrigger={["onChange", "onBlur"]}
             rules={[
               {
                 validator: createZodFieldValidator(
                   ElectricalCellRecordingSchema,
-                  'setup.location.x',
-                  form
+                  "setup.location.x",
+                  form,
                 ),
               },
             ]}
@@ -227,15 +239,15 @@ export function Setup() {
             />
           </Form.Item>
           <Form.Item
-            name={['setup', 'location', 'y']}
+            name={["setup", "location", "y"]}
             required={false}
-            validateTrigger={['onChange', 'onBlur']}
+            validateTrigger={["onChange", "onBlur"]}
             rules={[
               {
                 validator: createZodFieldValidator(
                   ElectricalCellRecordingSchema,
-                  'setup.location.y',
-                  form
+                  "setup.location.y",
+                  form,
                 ),
               },
             ]}
@@ -248,15 +260,15 @@ export function Setup() {
             />
           </Form.Item>
           <Form.Item
-            name={['setup', 'location', 'z']}
+            name={["setup", "location", "z"]}
             required={false}
-            validateTrigger={['onChange', 'onBlur']}
+            validateTrigger={["onChange", "onBlur"]}
             rules={[
               {
                 validator: createZodFieldValidator(
                   ElectricalCellRecordingSchema,
-                  'setup.location.z',
-                  form
+                  "setup.location.z",
+                  form,
                 ),
               },
             ]}
@@ -272,20 +284,28 @@ export function Setup() {
       </Form.Item>
 
       <Form.Item
-        name={['setup', 'ljp']}
-        label={renderLabel('Liquid junction potential', 'main', RequiredFieldMarker)}
+        name={["setup", "ljp"]}
+        label={renderLabel(
+          "Liquid junction potential",
+          "main",
+          RequiredFieldMarker,
+        )}
         rules={[
           {
             required: false,
-            validator: createZodFieldValidator(ElectricalCellRecordingSchema, 'ljp', form),
+            validator: createZodFieldValidator(
+              ElectricalCellRecordingSchema,
+              "ljp",
+              form,
+            ),
           },
         ]}
       >
         <InputNumber
           className={cn(
-            'h-12 w-full rounded-full! placeholder:text-sm [&_.ant-input-number-handler-wrap]:hidden',
-            '[&_.ant-input-number-in-form-item]:rounded-l-full!',
-            '[&_.ant-input-number-group-addon]:rounded-r-full!'
+            "h-12 w-full rounded-full! placeholder:text-sm [&_.ant-input-number-handler-wrap]:hidden",
+            "[&_.ant-input-number-in-form-item]:rounded-l-full!",
+            "[&_.ant-input-number-group-addon]:rounded-r-full!",
           )}
           placeholder="Enter ljp value (mV)"
           min={-150}
@@ -298,15 +318,15 @@ export function Setup() {
       </Form.Item>
 
       <Form.Item
-        name={['setup', 'recording_location']}
-        label={renderLabel('Recording location', 'main')}
+        name={["setup", "recording_location"]}
+        label={renderLabel("Recording location", "main")}
         rules={[
           {
             required: false,
             validator: createZodFieldValidator(
               ElectricalCellRecordingSchema,
-              'setup.recording_location',
-              form
+              "setup.recording_location",
+              form,
             ),
           },
         ]}
@@ -315,15 +335,15 @@ export function Setup() {
       </Form.Item>
 
       <Form.Item
-        name={['setup', 'recording_type']}
-        label={renderLabel('Recording type', 'main', RequiredFieldMarker)}
+        name={["setup", "recording_type"]}
+        label={renderLabel("Recording type", "main", RequiredFieldMarker)}
         rules={[
           {
             required: false,
             validator: createZodFieldValidator(
               ElectricalCellRecordingSchema,
-              'setup.recording_type',
-              form
+              "setup.recording_type",
+              form,
             ),
           },
         ]}
@@ -332,15 +352,15 @@ export function Setup() {
       </Form.Item>
 
       <Form.Item
-        name={['setup', 'recording_origin']}
-        label={renderLabel('Recording origin', 'main', RequiredFieldMarker)}
+        name={["setup", "recording_origin"]}
+        label={renderLabel("Recording origin", "main", RequiredFieldMarker)}
         rules={[
           {
             required: false,
             validator: createZodFieldValidator(
               ElectricalCellRecordingSchema,
-              'setup.recording_origin',
-              form
+              "setup.recording_origin",
+              form,
             ),
           },
         ]}
@@ -349,25 +369,25 @@ export function Setup() {
       </Form.Item>
 
       <Form.Item
-        name={['setup', 'temperature']}
-        label={renderLabel('Temperature', 'main')}
+        name={["setup", "temperature"]}
+        label={renderLabel("Temperature", "main")}
         required={false}
         rules={[
           {
             required: false,
             validator: createZodFieldValidator(
               ElectricalCellRecordingSchema,
-              'setup.temperature',
-              form
+              "setup.temperature",
+              form,
             ),
           },
         ]}
       >
         <InputNumber
           className={cn(
-            'h-12 w-full rounded-full! placeholder:text-sm [&_.ant-input-number-handler-wrap]:hidden',
-            '[&_.ant-input-number-in-form-item]:rounded-l-full!',
-            '[&_.ant-input-number-group-addon]:rounded-r-full!'
+            "h-12 w-full rounded-full! placeholder:text-sm [&_.ant-input-number-handler-wrap]:hidden",
+            "[&_.ant-input-number-in-form-item]:rounded-l-full!",
+            "[&_.ant-input-number-group-addon]:rounded-r-full!",
           )}
           size="large"
           placeholder="Enter temperature"
@@ -378,11 +398,15 @@ export function Setup() {
 
       <Form.Item
         name="comment"
-        label={renderLabel('Comment', 'main')}
+        label={renderLabel("Comment", "main")}
         rules={[
           {
             required: false,
-            validator: createZodFieldValidator(ElectricalCellRecordingSchema, 'comment', form),
+            validator: createZodFieldValidator(
+              ElectricalCellRecordingSchema,
+              "comment",
+              form,
+            ),
           },
         ]}
       >

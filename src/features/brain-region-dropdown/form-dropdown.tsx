@@ -15,10 +15,7 @@ import {
 } from "react";
 import type { IBrainRegionHierarchy } from "@/api/entitycore/types/entities/brain-region";
 import { BrainIcon } from "@/components/icons";
-import {
-  PrimaryAnatomicalDivisionsExtendedHierarchyAtom,
-  usePrimaryHierarchyQuery,
-} from "@/features/brain-region-hierarchy/context";
+import { usePrimaryExtendedHierarchyQuery } from "@/features/brain-region-hierarchy/context";
 import { useDefaultBreakpoint } from "@/ui/hooks/create-break-point";
 import { Button } from "@/ui/molecules/button";
 import {
@@ -52,14 +49,7 @@ export function BrainRegionDropdown({
   const [searchTerm, setSearchTerm] = useState("");
   const [parent, setParent] = useState<HTMLDivElement | null>(null);
   const { result: brainRegionHierarchy, loading: isLoading } =
-    usePrimaryHierarchyQuery();
-  /* const brainRegionHierarchy = useAtomValue(
-    useMemo(() => unwrap(PrimaryAnatomicalDivisionsExtendedHierarchyAtom), []),
-  );
-  const isLoading =
-    useAtomValue(loadable(PrimaryAnatomicalDivisionsExtendedHierarchyAtom))
-      .state === "loading"; */
-
+    usePrimaryExtendedHierarchyQuery();
   const [selectedNode, updateSelectedNode] = useState(defaultBrainRegion);
 
   const parentSetter = useCallback(
@@ -273,11 +263,12 @@ export function BrainRegionDropdownWithFormItem({
   showIcon = true,
   charsPerLine = 200,
 }: Props) {
-  const { result: brainRegionHierarchy } = usePrimaryHierarchyQuery();
-  /*   const brainRegionHierarchy = useAtomValue(
-    useMemo(() => unwrap(PrimaryAnatomicalDivisionsExtendedHierarchyAtom), []),
+  const { result: brainRegionHierarchy } = usePrimaryExtendedHierarchyQuery();
+  console.log(
+    "–– – BrainRegionDropdownWithFormItem – brainRegionHierarchy––",
+    brainRegionHierarchy,
   );
- */
+
   const wrapper = useMemo(
     () =>
       function Wrapper({

@@ -33,12 +33,7 @@ export function RegionBanner({ view, onSwitchView, dataKey }: Props) {
     changeSpecies,
     isLoadingHierarchies,
   } = useWorkspaceAtlasHierarchy({ dataKey });
-  console.log("————banner———", {
-    selectedSpecies,
-    selectedBrainRegion,
-    changeSpecies,
-    isLoadingHierarchies,
-  });
+
   if (!selectedBrainRegion && !isLoadingHierarchies) {
     return (
       <div className="relative mb-2 px-2 pt-4 pb-1">

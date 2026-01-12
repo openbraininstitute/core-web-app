@@ -23,6 +23,7 @@ export default async function Layout({ children }: Props) {
     queryFn: () => getBrainRegionPreference(),
     staleTime: Infinity,
   });
+
   return (
     <div className="h-screen w-full">
       <ProjectRootLayout>

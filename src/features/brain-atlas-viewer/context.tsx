@@ -91,7 +91,7 @@ export const useBrainRegionAtlasQuery = () => {
   });
 
   return {
-    atlas: data?.data,
+    result: { atlas: data?.data },
     loadingAtlas: isLoading,
     error,
   };

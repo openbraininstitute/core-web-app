@@ -1,24 +1,22 @@
 /* eslint-disable no-param-reassign */
 
 import { TgdColor, TgdVec4 } from "@tolokoban/tgd";
-import compact from "es-toolkit/compat/compact";
-import find from "es-toolkit/compat/find";
+import { find, compact } from "es-toolkit/compat";
 import { useAtom, useAtomValue } from "jotai";
-import { atomWithStorage, unwrap } from "jotai/utils";
+import { atomWithStorage } from "jotai/utils";
 import React from "react";
 import type { IBrainRegionHierarchy } from "@/api/entitycore/types/entities/brain-region";
 import { useAppNotification } from "@/components/notification";
 import {
-  brainRegionRootHierarchyAtom,
-  MOUSE_ROOT_BRAIN_REGION_ID,
-  PrimaryAnatomicalDivisionsHierarchyAtom,
-  useBrainRegionHierarchy,
+  AtlasHierarchyConfig,
+  useBrainRegionRootHierarchyAtom,
   usePrimaryHierarchyQuery,
 } from "@/features/brain-region-hierarchy/context";
 import { brainRegionAtlasAtom } from "../context";
 import { Painter } from "./painter";
 import type { SettingsDefinitions } from "./settings";
 import type { VisibleRegion } from "./types";
+import { useWorkspaceAtlasHierarchy } from "@/features/brain-region-hierarchy/hooks";
 
 export function usePainter(): Painter {
   const notif = useAppNotification();
@@ -45,20 +43,24 @@ export function useVisibleRegions(dataKey: string): {
   region: IBrainRegionHierarchy | undefined;
   regions: VisibleRegion[];
 } {
-  const { node: brainRegionNode } = useBrainRegionHierarchy({ dataKey });
-  const rootBrainRegions = useAtomValue(
-    React.useMemo(() => unwrap(brainRegionRootHierarchyAtom), []),
-  );
+  const { selectedBrainRegion: brainRegionNode, currentHierarchyId } =
+    useWorkspaceAtlasHierarchy({
+      dataKey,
+    });
+  const { result: rootBrainRegions } = useBrainRegionRootHierarchyAtom();
   const { result: brainRegions } = usePrimaryHierarchyQuery();
-  /* const brainRegions = useAtomValue(
-    React.useMemo(() => unwrap(PrimaryAnatomicalDivisionsHierarchyAtom), [])
-  ); */
+
+  const ROOT_BRAIN_REGION_ID =
+    currentHierarchyId === AtlasHierarchyConfig.Global.DefaultHierarchyId
+      ? AtlasHierarchyConfig.Mouse.RootId
+      : AtlasHierarchyConfig.Human.RootId;
+
   return React.useMemo(() => {
     const rootBrainRegion = find(rootBrainRegions?.options, {
-      value: MOUSE_ROOT_BRAIN_REGION_ID,
+      value: ROOT_BRAIN_REGION_ID,
     })?.data;
     const currentBrainRegion = find(brainRegions?.options, {
-      value: brainRegionNode.id,
+      value: brainRegionNode?.id,
     })?.data;
     const regions = compact(
       brainRegionNode
@@ -66,7 +68,7 @@ export function useVisibleRegions(dataKey: string): {
         : [rootBrainRegion],
     );
     return {
-      region: regions.find((region) => region.id === brainRegionNode.id),
+      region: regions.find((region) => region.id === brainRegionNode?.id),
       regions: regions.map((region) => ({
         id: region.id,
         name: region.name,

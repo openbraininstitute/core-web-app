@@ -15,7 +15,6 @@ import {
 } from "react";
 import { BrainIcon } from "@/components/icons";
 import {
-  useBrainRegionHierarchy,
   usePrimaryHierarchyQuery,
   useSetSelectedBrainRegion,
 } from "@/features/brain-region-hierarchy/context";
@@ -28,6 +27,7 @@ import {
 } from "@/ui/molecules/popover";
 import { cn } from "@/utils/css-class";
 import type { TBrainRegionHierarchyExtendedOption } from "../brain-region-hierarchy/helpers";
+import { useWorkspaceAtlasHierarchy } from "@/features/brain-region-hierarchy/hooks";
 
 export function BrainRegionDropdown({
   dataKey,
@@ -50,10 +50,13 @@ export function BrainRegionDropdown({
   const { result: brainRegionHierarchy, loading: isLoading } =
     usePrimaryHierarchyQuery();
   const { updateSelectedBrainRegion } = useSetSelectedBrainRegion();
-
-  const { node, updateHierarchyConfig } = useBrainRegionHierarchy({
+  const {
+    selectedBrainRegion: node,
+    changeBrainRegion: updateHierarchyConfig,
+  } = useWorkspaceAtlasHierarchy({
     dataKey,
   });
+
   const [selectedNode, updateSelectedNode] = useState(() => node);
 
   const parentSetter = useCallback((el: HTMLDivElement) => {

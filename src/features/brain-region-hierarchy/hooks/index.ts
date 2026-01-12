@@ -8,4 +8,4 @@ export {
   useCurrentHierarchyId,
   useCurrentSpecies,
   useWorkspaceAtlasHierarchy,
-} from "./use-selected-hierarchy";
+} from "./use-workspace-hierarchy";

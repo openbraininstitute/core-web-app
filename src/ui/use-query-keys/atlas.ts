@@ -1,5 +1,4 @@
 const prefix = "atlas";
-
 export const keyBuilderAtlas = {
   atlas: ({
     atlasId,
@@ -13,8 +12,18 @@ export const keyBuilderAtlas = {
   defaultBrainAtlas: () => [prefix, "default-brain-atlas"],
 };
 
+const hierarchyPrefix = "brain-region-hierarchy";
 export const keyBuilderHierarchy = {
-  hierarchy: (id: string) => ["brain-region-hierarchy", { id }],
-  hierarchies: () => ["brain-region-hierarchies"],
-  hierarchyPreference: () => ["brain-region-hierarchy-preference"],
+  hierarchy: (id: string) => [`${hierarchyPrefix}/one`, { id }],
+  hierarchies: () => [`${"brain-region-hierarchies"}/all`],
+  hierarchyPreference: () => [`${hierarchyPrefix}/user-preference`],
+};
+
+const cellCompositionPrefix = "cell-composition";
+export const cellCompositionKeyBuilder = {
+  summary: () => [`${cellCompositionKeyBuilder}/summary`],
+  summaryAsset: (id: string) => [
+    `${cellCompositionKeyBuilder}/summary/asset`,
+    {},
+  ],
 };

@@ -1,19 +1,17 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { find, lowerCase, omit } from "es-toolkit/compat";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
-import { useCallback, useEffect, useRef } from "react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useQueryClient } from "@tanstack/react-query";
+import { find, omit } from "es-toolkit/compat";
+import { useEffect, useRef } from "react";
 import type { IBrainRegionHierarchy } from "@/api/entitycore/types/entities/brain-region";
 import { setBrainRegionPreference } from "@/api/virtual-lab-svc/queries/brain-region-preferences";
-import { getBrainRegionPreference } from "@/api/virtual-lab-svc/queries/brain-region-preferences";
 
 import { config } from "@/config";
 import {
   AtlasHierarchyConfig,
   currentHierarchyIdAtom,
-  getDefaultSelectedBrainRegionName,
   selectedBrainRegionAtom,
   selectedSpeciesAtom,
   usePrimaryHierarchyQuery,
@@ -63,6 +61,7 @@ interface UseWorkspaceHierarchyOptions {
 export function useWorkspaceAtlasHierarchy({
   dataKey,
 }: UseWorkspaceHierarchyOptions) {
+  // track initialization to prevent infinite loops
   const isInitializedRef = useRef(false);
   const key = getSectionFromDataKey(dataKey);
   const storageKey = `${STORAGE_KEY_PREFIX}-${key}`;
@@ -100,8 +99,6 @@ export function useWorkspaceAtlasHierarchy({
     },
   );
 
-  // track initialization to prevent infinite loops
-
   // get default hierarchy based on configured species
   const defaultHierarchy = hierarchies?.find(
     (h) => h.id === config.APP_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
@@ -127,7 +124,7 @@ export function useWorkspaceAtlasHierarchy({
    * fire-and-forget api persistence
    * persists selection to backend without blocking ui
    */
-  const persistToRemote = (selection: BrainRegionHierarchySelection) => {
+  function persistToRemote(selection: BrainRegionHierarchySelection) {
     setBrainRegionPreference({
       hierarchy_id: selection.hierarchyId,
       species_taxonomy_id: selection.speciesTaxonomyId,
@@ -135,9 +132,9 @@ export function useWorkspaceAtlasHierarchy({
       brain_region_annotation_value:
         selection.brainRegionAnnotationValue || null,
     });
-  };
+  }
 
-  const updateAllStores = (selection: BrainRegionHierarchySelection) => {
+  function updateAllStores(selection: BrainRegionHierarchySelection) {
     setLocalStoredSelection(selection);
     setUrlState({
       brainRegionId: selection.brainRegionId,
@@ -147,13 +144,13 @@ export function useWorkspaceAtlasHierarchy({
 
     // fire-and-forget api persistence
     persistToRemote(selection);
-  };
+  }
 
   /**
    * change the selected species
    * this resets the brain region to the default for the new hierarchy
    */
-  const changeSpecies = (hId: string) => {
+  function changeSpecies(hId: string) {
     const hierarchy = hierarchies?.find((h) => h.id === hId);
     if (!hierarchy) return;
 
@@ -180,18 +177,18 @@ export function useWorkspaceAtlasHierarchy({
     queryClient.invalidateQueries({
       queryKey: keyBuilderHierarchy.hierarchyPreference(),
     });
-  };
+  }
 
   /**
    * change the selected brain region within the current hierarchy
    */
-  const changeBrainRegion = (region: IBrainRegionHierarchy | null) => {
+  function changeBrainRegion(region: IBrainRegionHierarchy | null) {
     if (!region) {
       setSelectedBrainRegion(null);
 
       const currentHierarchyId =
         urlState.hierarchyId ||
-        remotePreference?.data?.preference.hierarchy_id ||
+        remoteHierarchyPreference?.hierarchy_id ||
         storedSelection?.hierarchyId ||
         defaultHierarchy?.id ||
         "";
@@ -234,7 +231,7 @@ export function useWorkspaceAtlasHierarchy({
       brainRegionId: region.id,
       brainRegionAnnotationValue: region.annotation_value,
     });
-  };
+  }
 
   /**
    * initialize state from URL or localStorage on mount

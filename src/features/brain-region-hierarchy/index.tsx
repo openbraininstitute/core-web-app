@@ -12,8 +12,7 @@ import { DEFAULT_PAGE_NUMBER } from "@/constants";
 import {
   brainRegionSidebarAtom,
   MOUSE_DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE,
-  PrimaryAnatomicalDivisionsExtendedHierarchyAtom,
-  usePrimaryHierarchyQuery,
+  usePrimaryExtendedHierarchyQuery,
 } from "@/features/brain-region-hierarchy/context";
 import { makeBrainRegionClickEvent } from "@/features/brain-region-hierarchy/event";
 import { useWorkspaceAtlasHierarchy } from "@/features/brain-region-hierarchy/hooks";
@@ -30,8 +29,8 @@ export function BrainRegionHierarchy({
   onClickCallback?: (node: TTreeNode) => void;
 }) {
   const isCollapsed = useAtomValue(brainRegionSidebarAtom);
-  const { result: brainRegionHierarchyResult } = usePrimaryHierarchyQuery();
-  /* const brainRegionHierarchyResult = useAtomValue(PrimaryAnatomicalDivisionsExtendedHierarchyAtom); */
+  const { result: brainRegionHierarchyResult } =
+    usePrimaryExtendedHierarchyQuery();
   const { changeBrainRegion, selectedBrainRegion } = useWorkspaceAtlasHierarchy(
     {
       dataKey,

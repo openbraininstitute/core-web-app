@@ -1,18 +1,17 @@
-'use client';
+"use client";
 
-import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { AppUInterfaceSection, resolveDataKey } from "@/utils/key-builder";
+import { useWorkspace } from "@/ui/hooks/use-workspace";
 
-import { useElectricalCellRecordingPipeline } from '@/ui/segments/contribute/electrical-cell-recording/pipeline';
-import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
+import { useElectricalCellRecordingPipeline } from "@/ui/segments/contribute/electrical-cell-recording/pipeline";
+import { ContributionForm } from "@/ui/segments/contribute/shared/components/contribution-form";
 import {
   ELECTRICAL_CELL_RECORDING_PROGRESS_STEPS,
   createElectricalCellRecordingConfig,
-} from '@/ui/segments/contribute/electrical-cell-recording/config';
+} from "@/ui/segments/contribute/electrical-cell-recording/config";
 
-import type { TElectricalCellRecordingForm } from '@/ui/segments/contribute/electrical-cell-recording/schema';
-import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
+import type { TElectricalCellRecordingForm } from "@/ui/segments/contribute/electrical-cell-recording/schema";
+import type { IContributionStep } from "@/ui/segments/contribute/shared/types";
 
 import {
   ETypeClassification,
@@ -21,61 +20,64 @@ import {
   Subject,
   License,
   Setup,
-} from '@/ui/segments/contribute/electrical-cell-recording/steps';
+} from "@/ui/segments/contribute/electrical-cell-recording/steps";
+import { useWorkspaceAtlasHierarchy } from "@/features/brain-region-hierarchy/hooks";
 
 const ELECTRICAL_CELL_RECORDING_STEP_CONFIG: Array<
   IContributionStep<TElectricalCellRecordingForm>
 > = [
   {
-    key: 'assets',
-    label: 'Asset Upload',
-    schemaFieldKey: 'assets',
+    key: "assets",
+    label: "Asset Upload",
+    schemaFieldKey: "assets",
     component: AssetUpload,
   },
   {
-    key: 'setup',
-    label: 'Setup',
-    schemaFieldKey: 'setup',
+    key: "setup",
+    label: "Setup",
+    schemaFieldKey: "setup",
     component: Setup,
   },
   {
-    key: 'contribution',
-    label: 'Contribution',
-    schemaFieldKey: 'contribution',
+    key: "contribution",
+    label: "Contribution",
+    schemaFieldKey: "contribution",
     component: Contribution,
   },
   {
-    key: 'subject',
-    label: 'Subject',
-    schemaFieldKey: 'subject_id',
+    key: "subject",
+    label: "Subject",
+    schemaFieldKey: "subject_id",
     component: Subject,
   },
   {
-    key: 'license',
-    label: 'License',
-    schemaFieldKey: 'license_id',
+    key: "license",
+    label: "License",
+    schemaFieldKey: "license_id",
     component: License,
     hasTooltip: true,
   },
   {
-    key: 'etype',
-    label: 'E-Type',
-    schemaFieldKey: 'etype_class_id',
+    key: "etype",
+    label: "E-Type",
+    schemaFieldKey: "etype_class_id",
     component: ETypeClassification,
   },
 ];
 
 const electricalCellRecordingConfig = createElectricalCellRecordingConfig(
-  ELECTRICAL_CELL_RECORDING_STEP_CONFIG
+  ELECTRICAL_CELL_RECORDING_STEP_CONFIG,
 );
 
 interface IElectricalCellRecordingProps {
   sessionId: string;
 }
 
-export function ElectricalCellRecording({ sessionId }: IElectricalCellRecordingProps) {
+export function ElectricalCellRecording({
+  sessionId,
+}: IElectricalCellRecordingProps) {
   const { projectId, virtualLabId } = useWorkspace();
-  const { node: defaultBrainRegion } = useBrainRegionHierarchy({
+  const { selectedBrainRegion } = useWorkspaceAtlasHierarchy({
     dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
   });
 
@@ -83,7 +85,7 @@ export function ElectricalCellRecording({ sessionId }: IElectricalCellRecordingP
     <ContributionForm
       config={electricalCellRecordingConfig}
       sessionId={sessionId}
-      brainRegionId={defaultBrainRegion.id}
+      brainRegionId={selectedBrainRegion?.id!}
       pipeline={useElectricalCellRecordingPipeline}
       progressSteps={ELECTRICAL_CELL_RECORDING_PROGRESS_STEPS}
       virtualLabId={virtualLabId}

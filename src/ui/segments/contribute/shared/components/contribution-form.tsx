@@ -1,28 +1,28 @@
-'use client';
+"use client";
 
-import { LeftOutlined, RightOutlined } from '@ant-design/icons';
-import { motion } from 'framer-motion';
-import { useState } from 'react';
-import { Form } from 'antd';
+import { LeftOutlined, RightOutlined } from "@ant-design/icons";
+import { motion } from "framer-motion";
+import { useState } from "react";
+import { Form } from "antd";
 
-import type { ZodObject, ZodRawShape } from 'zod';
+import type { ZodObject, ZodRawShape } from "zod";
 
-import { SubmitEntityProgress } from '@/ui/segments/contribute/shared/components/submit-progress';
-import { StepNavigation } from '@/ui/segments/contribute/shared/components/step-navigation';
-import { SubmitButton } from '@/ui/segments/contribute/shared/components/submit-button';
+import { SubmitEntityProgress } from "@/ui/segments/contribute/shared/components/submit-progress";
+import { StepNavigation } from "@/ui/segments/contribute/shared/components/step-navigation";
+import { SubmitButton } from "@/ui/segments/contribute/shared/components/submit-button";
 import {
   ContributionPipelineProvider,
   useContributionPipeline,
-} from '@/ui/segments/contribute/shared/pipeline/context';
-import { Button } from '@/ui/molecules/button';
-import { cn } from '@/utils/css-class';
+} from "@/ui/segments/contribute/shared/pipeline/context";
+import { Button } from "@/ui/molecules/button";
+import { cn } from "@/utils/css-class";
 
-import type { WorkspaceContext } from '@/types/common';
+import type { WorkspaceContext } from "@/types/common";
 import type {
   IContributionFormConfig,
   IProgressStep,
   TPipelineHookFactory,
-} from '@/ui/segments/contribute/shared/types';
+} from "@/ui/segments/contribute/shared/types";
 
 interface IContributionFormProps<
   TFormValues extends Record<string, unknown>,
@@ -72,15 +72,21 @@ function FormContent<
 
   const { createEntity, loading, status } = pipeline({ sessionId });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [createdEntityId, setCreatedEntityId] = useState<string | undefined>(undefined);
+  const [createdEntityId, setCreatedEntityId] = useState<string | undefined>(
+    undefined,
+  );
 
-  const progressStepsWithStatus: Array<IProgressStep> = progressSteps.map((step) => ({
-    key: step.key,
-    label: step.label,
-    status: status[step.mutationKey],
-  }));
+  const progressStepsWithStatus: Array<IProgressStep> = progressSteps.map(
+    (step) => ({
+      key: step.key,
+      label: step.label,
+      status: status[step.mutationKey],
+    }),
+  );
 
-  const onSubmit = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+  const onSubmit = async (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+  ) => {
     e.preventDefault();
     setIsSubmitting(true);
     const values = form.getFieldsValue(true) as TFormValues;
@@ -89,7 +95,7 @@ function FormContent<
   };
 
   return (
-    <div className={cn('relative mx-auto h-full w-full px-6 py-2')}>
+    <div className={cn("relative mx-auto h-full w-full px-6 py-2")}>
       <Form.Item noStyle>
         <input type="hidden" />
       </Form.Item>
@@ -103,6 +109,7 @@ function FormContent<
         ) : (
           <div className="relative h-full w-full">
             {steps.map((step) => {
+              console.log("# # FormContent # step:", step);
               const StepComponent = step.component;
               const isActive = activeStep === step.key;
 
@@ -119,11 +126,11 @@ function FormContent<
                   }}
                   transition={{ duration: 0.2 }}
                   style={{
-                    pointerEvents: isActive ? 'auto' : 'none',
+                    pointerEvents: isActive ? "auto" : "none",
                   }}
                   className={cn(
-                    'secondary-scrollbar h-full flex-1 overflow-auto rounded-xl pr-4 pl-4',
-                    isActive ? 'relative' : 'absolute inset-0'
+                    "secondary-scrollbar h-full flex-1 overflow-auto rounded-xl pr-4 pl-4",
+                    isActive ? "relative" : "absolute inset-0",
                   )}
                 >
                   <StepComponent />
@@ -134,13 +141,13 @@ function FormContent<
         )}
       </div>
 
-      <div className="flex w-full flex-shrink-0 items-center justify-between gap-2 py-3">
+      <div className="flex w-full shrink-0 items-center justify-between gap-2 py-3">
         <Button
           rounded
           variant="outline"
           className={cn(
-            'text-primary-9 border-primary-9 disabled:border-neutral-1',
-            'shadow-bnb size-12 active:text-white'
+            "text-primary-9 border-primary-9 disabled:border-neutral-1",
+            "shadow-bnb size-12 active:text-white",
           )}
           size="lg"
           type="button"
@@ -163,8 +170,8 @@ function FormContent<
           type="button"
           size="lg"
           className={cn(
-            'text-primary-9 border-primary-9 disabled:border-neutral-1',
-            'shadow-bnb size-12 active:text-white'
+            "text-primary-9 border-primary-9 disabled:border-neutral-1",
+            "shadow-bnb size-12 active:text-white",
           )}
           onClick={goToNextStep}
           disabled={isLastStep}
@@ -180,8 +187,15 @@ export function ContributionForm<
   TFormValues extends Record<string, unknown>,
   TSchema extends ZodObject<ZodRawShape>,
 >(props: IContributionFormProps<TFormValues, TSchema>) {
-  const { config, sessionId, brainRegionId, pipeline, progressSteps, virtualLabId, projectId } =
-    props;
+  const {
+    config,
+    sessionId,
+    brainRegionId,
+    pipeline,
+    progressSteps,
+    virtualLabId,
+    projectId,
+  } = props;
 
   return (
     <ContributionPipelineProvider

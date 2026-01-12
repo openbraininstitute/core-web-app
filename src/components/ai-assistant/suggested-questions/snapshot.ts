@@ -1,15 +1,16 @@
-import { useParams, usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 import { useAiContext } from "@/components/ai-assistant/hooks";
 
 import {
   MOUSE_PRIMARY_ANATOMICAL_DIVISIONS_ANNOTATION_VALUE,
-  useBrainRegionHierarchy,
   usePrimaryHierarchyQuery,
 } from "@/features/brain-region-hierarchy/context";
 
 import { useCurrentExplorerArtifactValue } from "@/state/explore-section/artifact";
+import { useWorkspace } from "@/ui/hooks/use-workspace";
 import { resolveDataKey } from "@/utils/key-builder";
+import { useWorkspaceAtlasHierarchy } from "@/features/brain-region-hierarchy/hooks";
 
 export interface Snapshot {
   isRootRegion: boolean;
@@ -20,22 +21,18 @@ export interface Snapshot {
 }
 
 export function useSnapshot(): Snapshot {
-  const params = useParams<{ projectId: string }>();
-  const { projectId } = params;
+  const { projectId } = useWorkspace();
   const { section } = useAiContext();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const dataKey = resolveDataKey({ projectId, section });
-  const { node: selectedBrainRegion } = useBrainRegionHierarchy({ dataKey });
+  const { selectedBrainRegion } = useWorkspaceAtlasHierarchy({ dataKey });
   const isRootRegion =
-    `${selectedBrainRegion.annotation_value}` ===
+    `${selectedBrainRegion?.annotation_value}` ===
     MOUSE_PRIMARY_ANATOMICAL_DIVISIONS_ANNOTATION_VALUE;
 
   const { result } = usePrimaryHierarchyQuery();
 
-  /* const result = useAtomValue(
-    React.useMemo(() => unwrap(PrimaryAnatomicalDivisionsHierarchyAtom), [])
-  ); */
   const regionId = selectedBrainRegion?.id ?? "";
   const node = (result?.options ?? []).find(
     (o) => o.data.id === selectedBrainRegion?.id,

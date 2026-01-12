@@ -42,12 +42,10 @@ export function useBrainRegionHierarchySpeciesQuery() {
       return await getBrainRegionHierarchiesWithSpecies();
     },
     staleTime: Infinity,
-    gcTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: false,
     select: (response) => transformHierarchiesResponse(response),
   });
 
-  console.log("——", { d: query.data });
   return {
     hierarchies: query.data,
     isLoading: query.isLoading,
