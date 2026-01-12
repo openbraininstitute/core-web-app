@@ -11,6 +11,7 @@ import type {
   SharedFilter,
   PaginationFilter,
   IdFilter,
+  IlikeSearchFilter,
 } from '@/api/entitycore/types/shared/request';
 
 export const CircuitBuildCategory = {
@@ -103,7 +104,8 @@ export interface ICircuitFilter
     BrainRegionFilter,
     SharedFilter,
     PaginationFilter,
-    CircuitScaleFilter {}
+    CircuitScaleFilter,
+    IlikeSearchFilter {}
 
 export type SonataCircuitNetworkEdgeConfigItem = {
   edges_file: string;

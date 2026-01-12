@@ -27,6 +27,7 @@ import type {
   EtypeFilter,
   IdFilter,
   OwnershipFilter,
+  IlikeSearchFilter,
 } from '@/api/entitycore/types/shared/request';
 
 export enum ValidationStatus {
@@ -80,7 +81,8 @@ export interface IMEModelFilter
     PaginationFilter,
     IEModelFilter,
     SharedFilter,
-    OwnershipFilter {
+    OwnershipFilter,
+    IlikeSearchFilter {
   score__lte: number | null;
   score__gte: number | null;
   validation_status: ValidationStatus;

@@ -1,5 +1,5 @@
-import nextAuthMiddleware, { NextRequestWithAuth } from 'next-auth/middleware';
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
+import nextAuthMiddleware, { type NextRequestWithAuth } from 'next-auth/middleware';
 
 const { PRIMARY_HOSTNAME } = process.env;
 
@@ -68,7 +68,7 @@ function isFreeAccessRoute(requestUrl: string, paths: string[]) {
       // Remove the trailing '*' to get the base path
       const basePath = p.slice(0, -1);
       // Matches basePath or all subroutes
-      return requestUrl === basePath || requestUrl.startsWith(basePath + '/'); //eslint-disable-line
+      return requestUrl === basePath || requestUrl.startsWith(`${basePath}/`); //eslint-disable-line
     }
     return p === requestUrl;
   });
@@ -102,7 +102,7 @@ function stripFirstPathSegment(pathname: string): string {
  * - allows free-access application and API routes as configured.
  * - delegates remaining routes to next-auth middleware for authentication.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const requestPathname = request.nextUrl.pathname;
   const pathnameWithoutLeadingSegment = stripFirstPathSegment(requestPathname);
 

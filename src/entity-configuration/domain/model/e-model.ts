@@ -16,7 +16,7 @@ export const Emodel: EntityCoreTypeConfig<IEModel> = {
   type: EntityTypeDict.Emodel,
   slug: EntitySlug.EModel,
   api: {
-    config: { allowedFacets: true },
+    config: { allowedFacets: true, ilikeSearchEnabled: true },
     query: {
       list: getEModels,
       one: getEModel,

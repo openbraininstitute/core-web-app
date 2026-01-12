@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { PortableText, PortableTextReactComponents } from 'next-sanity';
 
 import { RichText } from '../../content/_common';
@@ -15,7 +15,15 @@ interface TextProps {
   maxLines?: number;
 }
 
+const COMPONENTS: Partial<PortableTextReactComponents> = {
+  types: {
+    spacer: (value: unknown) => <Spacer value={value} />,
+  },
+};
+
 export function Text({ className, value, raw, maxLines = 0 }: TextProps) {
+  const memoizedComponents = useMemo(() => COMPONENTS, []);
+
   return (
     <div
       className={classNames(
@@ -28,13 +36,7 @@ export function Text({ className, value, raw, maxLines = 0 }: TextProps) {
         '--custom-max-lines': maxLines,
       }}
     >
-      {isString(value) ? value : <PortableText value={value} components={COMPONENTS} />}
+      {isString(value) ? value : <PortableText value={value} components={memoizedComponents} />}
     </div>
   );
 }
-
-const COMPONENTS: Partial<PortableTextReactComponents> = {
-  types: {
-    spacer: (value: unknown) => <Spacer value={value} />,
-  },
-};

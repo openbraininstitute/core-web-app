@@ -210,6 +210,7 @@ export const launchSimulationAtom = atom<
     number,
     () => void,
     NotificationInstance,
+    boolean,
   ],
   void
 >(
@@ -231,7 +232,8 @@ export const launchSimulationAtom = atom<
     simulationType: TSimulationType,
     duration: number,
     onChangePanel: () => void,
-    notify: NotificationInstance
+    notify: NotificationInstance,
+    isProjectAdmin: boolean
   ) => {
     if (simulationType === 'single-neuron-simulation') {
       if (!stimulationConfiguration) {
@@ -284,13 +286,21 @@ export const launchSimulationAtom = atom<
       );
 
       if (error) {
+        let errorMessage =
+          lget(error, 'cause.message', null) ?? messages.RunningSimulationDefaultError;
+        const isLowFundsError = lget(error, 'cause.code') === LOW_FUNDS_ERROR_CODE;
+
+        if (isLowFundsError) {
+          errorMessage = isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin;
+        }
+
         set(simulationStatusAtom, {
           status: SimulationStatus.ERROR,
-          description: lget(error, 'cause.message', null) ?? messages.RunningSimulationDefaultError,
+          description: errorMessage,
         });
         notify.error({
           message: `Simulation ${overviewConfiguration.name}`,
-          description: lget(error, 'cause.message', null) ?? messages.RunningSimulationDefaultError,
+          description: errorMessage,
           placement: 'topRight',
           key: `simulation-failed-${sessionId}`,
         });
@@ -303,7 +313,7 @@ export const launchSimulationAtom = atom<
         try {
           const errResponseObj = await response?.json();
           if (errResponseObj.error_code === LOW_FUNDS_ERROR_CODE) {
-            errorMessage = messages.LowFundsError;
+            errorMessage = isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin;
           }
         } catch {
           // ignore

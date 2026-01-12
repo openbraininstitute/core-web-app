@@ -17,6 +17,7 @@ export const MEModelCircuit: EntityCoreTypeConfig<IMEModel> = {
   api: {
     config: {
       allowedFacets: true,
+      ilikeSearchEnabled: true,
     },
     query: {
       list: getMEModels,

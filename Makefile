@@ -19,8 +19,8 @@ install:  ## Install dependencies
 lint:  ## Run linter
 	pnpm lint
 
-format:  ## Apply formatter (Prettier)
-	pnpm run prettier:write
+format:  ## Apply formatter
+	pnpm run format
 
 build:  ## Build the Docker image
 	@echo "Building image $(IMAGE_NAME):$(APP_VERSION)"
