@@ -5,9 +5,6 @@ permissions:
   contents: read # Standard permission for GitHub Actions
 
 on:
-  push:
-    branches:
-      - task/v2
   workflow_dispatch:
 
 concurrency:
@@ -19,6 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IMAGE_NAME: ${{ vars.PUBLICECR_URI }}
+      IMAGE_TAG: preview
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,13 +33,8 @@ jobs:
         with:
           registry-type: public
 
-      - name: Build a Docker image for AWS
-        run: |
-          docker build --build-arg DEPLOYMENT_ENV=preview -t ${{ vars.PUBLICECR_URI }}:preview .
-
-      - name: Publish the image for AWS To AWS ECR
-        run: |
-          docker push ${{ vars.PUBLICECR_URI }}:preview
+      - name: Build and publish Docker image for AWS
+        run: make publish
 
       - name: Authenticate with AWS ECS
         uses: aws-actions/configure-aws-credentials@v4

@@ -29,7 +29,7 @@
 
   > header {
     position: absolute;
-    left: 1em;
+    left: 4em;
     top: 1em;
     display: flex;
     flex-wrap: nowrap;

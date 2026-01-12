@@ -7,6 +7,7 @@ import type {
   ContributionFilter,
   OwnershipFilter,
   SearchFilter,
+  IlikeSearchFilter,
 } from '@/api/entitycore/types/shared/request';
 import type {
   EntityCoreIdentifiable,
@@ -68,7 +69,8 @@ export interface IonChannelModelingCampaignFilter
     ContributionFilter,
     OwnershipFilter,
     SearchFilter,
-    BrainRegionFilter {
+    BrainRegionFilter,
+    IlikeSearchFilter {
   ion_channel_modeling_config_id?: string | null;
   ion_channel_modeling_config__id__in?: string[] | null;
   ion_channel_modeling_config_name?: string | null;

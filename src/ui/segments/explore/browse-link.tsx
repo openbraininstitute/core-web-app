@@ -24,8 +24,7 @@ import { WorkspaceContext } from '@/types/common';
 import { Button } from '@/ui/molecules/button';
 import { WorkspaceScope } from '@/constants';
 import { cn } from '@/utils/css-class';
-import { ROOT_ROUTE } from '@/config';
-import { env } from '@/env';
+import { config } from '@/config';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceScope } from '@/constants';
@@ -36,7 +35,7 @@ function buildDataUrl({
   projectId,
   extendedType,
 }: WorkspaceContext & { extendedType: TExtendedEntitiesTypeDict }) {
-  return `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(extendedType)}`;
+  return `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(extendedType)}`;
 }
 
 type BrowseLinkContentProps = {
@@ -170,7 +169,7 @@ function buildQuery({
     filters: {
       page: 1,
       page_size: 1,
-      within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+      within_brain_region_hierarchy_id: config.DEFAULT_BRAIN_REGION_HIERARCHY_ID,
       within_brain_region_brain_region_id: brainRegionId ?? null,
       within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
       ...getWorkspaceScopeFilters(scope, { virtualLabId, projectId }),

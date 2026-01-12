@@ -2,7 +2,7 @@ import { getGuidesContent, GuideCardProps } from '@/api/sanity/help-guides-secti
 import GuideCard from '@/ui/segments/help/guides/card';
 import { getSearchParam } from '@/utils/getSearchParams';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 export default async function GuidesContent({
   searchParams,

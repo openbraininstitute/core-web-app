@@ -1,8 +1,11 @@
 import { Fragment } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
+
 import { Config } from './components';
 import { useApiUrl, useValidateSchema } from './hooks';
-import authFetch from '@/authFetch';
+
+import { config as appConfig } from '@/config';
+import authFetch from '@/auth-fetch';
 import { isNonEmptyCategory } from '@/features/small-microcircuit/_components/hooks/schema';
 import { Section } from '@/features/small-microcircuit/_components/section';
 import { CATEGORIES, ORDERING } from '@/features/small-microcircuit/_components/utils';
@@ -11,6 +14,7 @@ import { AtomsMap, JSONSchema, TabType } from '@/features/small-microcircuit/typ
 import { useAppNotification } from '@/components/notification';
 import { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { IMEModel } from '@/api/entitycore/types';
+
 import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
 
 export default function Left({
@@ -141,7 +145,7 @@ export default function Left({
               configCopy.type = 'CircuitSimulationScanConfig';
 
               const coordinateCountRes = await authFetch(
-                `${process.env.NEXT_PUBLIC_OBI_ONE_URL}/declared/scan_config/grid-scan-coordinate-count`,
+                `${appConfig.OBI_ONE_URL}/declared/scan_config/grid-scan-coordinate-count`,
                 {
                   method: 'POST',
                   body: JSON.stringify(config),

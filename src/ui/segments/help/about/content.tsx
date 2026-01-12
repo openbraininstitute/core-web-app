@@ -1,6 +1,6 @@
 import { PortableText } from 'next-sanity';
 
-import type { PortableTextBlock } from '@sanity/types';
+import type { PortableTextBlock } from 'next-sanity';
 
 import { cn } from '@/utils/css-class';
 
@@ -9,7 +9,7 @@ import { getSearchParam } from '@/utils/getSearchParams';
 
 import styles from '@/ui/segments/help/about/about-content.module.css';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 export type AboutContentProps = {
   aboutContent: PortableTextBlock[];
@@ -26,18 +26,17 @@ export default async function AboutContent({
 
   const aboutParam = getSearchParam(searchParams, 'subsection') ?? 'about'; // Default to 'about'
 
-  const contentFiltered = (): PortableTextBlock[] => {
-    if (aboutParam === 'about') {
-      return content.aboutContent;
-    }
-    if (aboutParam === 'terms-and-conditions') {
-      return content.termsAndConditionContent;
-    }
-    if (aboutParam === 'about-the-app') {
-      return content.aboutTheAppContent;
-    }
-    return content.aboutContent; // Fallback to about content
-  };
+  let contentFiltered: PortableTextBlock[];
+
+  if (aboutParam === 'about') {
+    contentFiltered = content.aboutContent;
+  } else if (aboutParam === 'terms-and-conditions') {
+    contentFiltered = content.termsAndConditionContent;
+  } else if (aboutParam === 'about-the-app') {
+    contentFiltered = content.aboutTheAppContent;
+  } else {
+    contentFiltered = content.aboutContent; // Fallback to about content
+  }
 
   return (
     <div
@@ -46,7 +45,7 @@ export default async function AboutContent({
         styles.content
       )}
     >
-      <PortableText value={contentFiltered()} />
+      <PortableText value={contentFiltered} />
     </div>
   );
 }

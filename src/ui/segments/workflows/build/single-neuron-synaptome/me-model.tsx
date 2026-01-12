@@ -13,7 +13,7 @@ import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overfl
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 import { cn } from '@/utils/css-class';
 
 import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
@@ -71,7 +71,7 @@ export function MEModel({ sessionId }: Props) {
           selectionType: 'radio',
           onCellClick: (_, record) => {
             navigate(
-              `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(EntityTypeDict.Memodel)}/${record.id}/overview`
+              `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(EntityTypeDict.Memodel)}/${record.id}/overview`
             );
           },
           onRowsSelected: (rows) => {

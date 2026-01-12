@@ -14,10 +14,8 @@ import {
   TgdPainterSegmentsData,
   TgdVec3,
 } from '@tolokoban/tgd';
-import { useAtomValue } from 'jotai';
 
 import { useVisibleSynapses } from '../hooks';
-import { SimulationStatus, simulationStatusAtomFamily } from '../../../context';
 import { computeSectionOffset } from './math';
 import { makeCamera } from './camera';
 import { Structure, StructureItem, StructureItemType } from './structure';
@@ -461,11 +459,21 @@ export class PainterManager {
   }
 }
 
-export function usePainterManager() {
+export function usePainterManager(morphology: Morphology) {
   const refPainter = React.useRef<PainterManager | null>(null);
   if (!refPainter.current) {
     refPainter.current = new PainterManager();
+    refPainter.current.morphology = morphology;
   }
+
+  // Update morphology when it changes (even if object reference changes)
+  React.useEffect(() => {
+    if (refPainter.current) {
+      refPainter.current.morphology = morphology;
+    }
+  }, [morphology]);
+
+  // Cleanup only on unmount
   React.useEffect(() => {
     return () => {
       const painterManager = refPainter.current;
@@ -473,15 +481,15 @@ export function usePainterManager() {
 
       painterManager.delete();
     };
-  });
+  }, []); // Empty dependency array - only run on mount/unmount
   return refPainter.current;
 }
 
 export function usePainterController(
   painter: PainterManager,
-  sessionId: string,
   disableElectrodes: boolean,
-  disableSynapses: boolean
+  disableSynapses: boolean,
+  disableClick: boolean
 ) {
   const notif = useAppNotification();
   React.useEffect(() => {
@@ -495,13 +503,11 @@ export function usePainterController(
     return () => painter.eventForbiddenClick.removeListener(action);
   }, [notif, painter]);
 
-  const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
   React.useEffect(() => {
-    const s = simulationStatus?.status;
     if (painter) {
-      painter.clickable = s !== SimulationStatus.LAUNCHED;
+      painter.clickable = disableClick !== true;
     }
-  }, [simulationStatus, painter]);
+  }, [disableClick, painter]);
 
   const synapses = useVisibleSynapses();
   React.useEffect(() => {

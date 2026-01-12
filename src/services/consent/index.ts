@@ -3,7 +3,9 @@ import { useEffect, useRef, useState } from 'react';
 const MESSAGE_TYPE = 'consent_granted';
 
 export function emitConsentGranted() {
-  window.opener.postMessage({ messageType: MESSAGE_TYPE }, window.location.origin);
+  if (typeof window === 'undefined') return;
+  // TODO: provide explicit origin, remove wildcard.
+  window.opener?.postMessage({ messageType: MESSAGE_TYPE }, '*');
 }
 
 export function useConsent() {
@@ -27,14 +29,34 @@ export function useConsent() {
     };
   }, []);
 
-  const waitForConsent = () => {
+  const waitForConsent = (signal?: AbortSignal) => {
     return new Promise<void>((resolve, reject) => {
       if (consentGranted) {
         resolve();
-      } else {
-        resolveRef.current = resolve;
-        rejectRef.current = reject;
+        return;
       }
+
+      if (signal?.aborted) {
+        reject(signal.reason || new Error('Aborted'));
+        return;
+      }
+
+      const onAbort = () => {
+        resolveRef.current = null;
+        rejectRef.current = null;
+        reject(signal!.reason || new Error('Aborted'));
+      };
+
+      signal?.addEventListener('abort', onAbort, { once: true });
+
+      resolveRef.current = () => {
+        signal?.removeEventListener('abort', onAbort);
+        resolve();
+      };
+      rejectRef.current = (reason) => {
+        signal?.removeEventListener('abort', onAbort);
+        reject(reason);
+      };
     });
   };
 

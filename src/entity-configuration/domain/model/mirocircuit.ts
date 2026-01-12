@@ -17,6 +17,7 @@ export const Microcircuit: EntityCoreTypeConfig<ICircuit> = {
   api: {
     config: {
       allowedFacets: true,
+      ilikeSearchEnabled: true,
     },
     query: {
       list: (...params) =>

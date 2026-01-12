@@ -1,5 +1,6 @@
-import React from 'react';
 import Image from 'next/image';
+import { useState } from 'react';
+
 import { classNames } from '@/util/utils';
 
 import styles from './ProgressiveImage.module.css';
@@ -23,7 +24,7 @@ export default function ProgressiveImage({
   background = 'var(--color-primary)',
   forceAspectRatio = false,
 }: ProgressiveImageProps) {
-  const [loaded, setLoaded] = useLoaded();
+  const [loaded, setLoaded] = useState(false);
 
   return (
     <div
@@ -35,9 +36,7 @@ export default function ProgressiveImage({
     >
       <Image
         className={classNames(styles.image, loaded && styles.show)}
-        onLoad={() => {
-          setLoaded(true);
-        }}
+        onLoad={() => setLoaded(true)}
         src={src}
         width={width}
         height={height}
@@ -45,8 +44,4 @@ export default function ProgressiveImage({
       />
     </div>
   );
-}
-
-function useLoaded() {
-  return React.useState(false);
 }

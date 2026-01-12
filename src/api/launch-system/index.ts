@@ -9,23 +9,13 @@ export async function launchSystemApi(url?: string) {
   return api;
 }
 
-type Params = {
+type RunSimulationParams = {
   ctx: WorkspaceContext;
   simulationId: string;
-  name: string;
-  instances: number;
-  instanceType: string;
   signal?: AbortSignal;
 };
 
-export async function runSimulation({
-  ctx,
-  simulationId,
-  name,
-  instances,
-  instanceType,
-  signal,
-}: Params) {
+export async function runSimulation({ ctx, simulationId, signal }: RunSimulationParams) {
   const api = await launchSystemApi();
 
   return api.post<any>('/simulation', {
@@ -35,10 +25,7 @@ export async function runSimulation({
       'Content-Type': 'application/json',
     },
     body: {
-      name,
-      instances,
       simulation_id: simulationId,
-      instance_type: instanceType,
     },
     signal,
   });

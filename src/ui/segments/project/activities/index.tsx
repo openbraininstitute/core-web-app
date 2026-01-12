@@ -22,7 +22,7 @@ import {
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
@@ -96,7 +96,7 @@ export function ProjectActivities() {
         const scaleType = get(record, 'type', null);
 
         if (scaleType) {
-          const linkUrl = `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entity?.extendedType)}/${record.id}`;
+          const linkUrl = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entity?.extendedType)}/${record.id}`;
           return (
             <Link href={linkUrl} aria-label={record.name} className={className}>
               <RightSquareOutlined />

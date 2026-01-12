@@ -4,11 +4,12 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { Suspense, useState } from 'react';
 // import { useRouter } from 'next/navigation';
-import SimulationsTab from './_components/simulations';
-import Left from './_components/left';
-import { useEntries, useModel } from './_components/hooks';
 
+import { useEntries, useModel } from './_components/hooks';
+import Left from './_components/left';
 import Middle from './_components/middle';
+import SimulationsTab from './_components/simulations';
+
 import { useAppNotification } from '@/components/notification';
 import { Config } from '@/features/small-microcircuit/_components/components';
 import { useConfigAtom } from '@/features/small-microcircuit/_components/hooks/config-atom';
@@ -18,6 +19,7 @@ import TabsSelector from '@/features/small-microcircuit/_components/tabs-selecto
 import { AtomsMap, TabType } from '@/features/small-microcircuit/types';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
+
 import styles from '@/features/small-microcircuit/small-microcircuit.module.css';
 
 export default function SimulationCampaignConfiguration({
@@ -26,7 +28,7 @@ export default function SimulationCampaignConfiguration({
   projectId,
   initialCampaignId,
   initialConfig,
-  defaultTab = 'simulations',
+  defaultTab = 'configuration',
   readOnly,
   className,
 }: {

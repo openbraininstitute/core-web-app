@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 
 import type { WorkspaceContext } from '@/types/common';
 
@@ -15,19 +15,19 @@ const links = [
     key: 'browse-data',
     title: 'Browse data',
     url: ({ virtualLabId, projectId }: WorkspaceContext) =>
-      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data`,
+      `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data`,
   },
   {
     key: 'start-workflow',
     title: 'Start a workflow',
     url: ({ virtualLabId, projectId }: WorkspaceContext) =>
-      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`,
+      `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`,
   },
   {
     key: 'run-notebook',
     title: 'Run a notebook',
     url: ({ virtualLabId, projectId }: WorkspaceContext) =>
-      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
+      `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
   },
 ];
 

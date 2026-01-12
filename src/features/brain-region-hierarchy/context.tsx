@@ -1,30 +1,30 @@
 'use client';
 
-import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
+import { find, isNil, lowerCase, omit } from 'es-toolkit/compat';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { find, omit, lowerCase, isNil } from 'es-toolkit/compat';
+import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 import { useEffect, useRef } from 'react';
 
+import { getBrainRegionHierarchy } from '@/api/entitycore/queries/general/brain-region';
+import { tryCatch } from '@/api/utils';
 import {
-  flattenTreeAsObject,
   findNodeByKey,
+  flattenTreeAsObject,
   renameKeyDeep,
 } from '@/components/tree/elements/helpers';
-import { getBrainRegionHierarchy } from '@/api/entitycore/queries/general/brain-region';
-import { getLeavesForEachRegion } from '@/features/brain-region-hierarchy/helpers';
+import { config } from '@/config';
 import { brainAtlasAtom, brainRegionAtlasAtom } from '@/features/brain-atlas-viewer/context';
+import { getLeavesForEachRegion } from '@/features/brain-region-hierarchy/helpers';
+import { useUnwrappedValue } from '@/hooks/hooks';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { getSectionFromDataKey } from '@/utils/key-builder';
-import { useUnwrappedValue } from '@/hooks/hooks';
-import { tryCatch } from '@/api/utils';
 import { log } from '@/utils/logger';
-import { env } from '@/env';
 
+import type { IBrainAtlasRegion } from '@/api/entitycore/types/entities/brain-atlas';
 import type {
   BrainRegionHierarchyBase,
   IBrainRegionHierarchy,
 } from '@/api/entitycore/types/entities/brain-region';
-import type { IBrainAtlasRegion } from '@/api/entitycore/types/entities/brain-atlas';
 
 type Props = {
   dataKey: string;
@@ -35,15 +35,22 @@ export const defaultExploreRegion = {
   title: 'Cerebrum',
 };
 
-export const DEFAULT_BRAIN_ATLAS_ID = env.NEXT_PUBLIC_DEFAULT_BRAIN_ATLAS_ID;
-export const DEFAULT_BRAIN_REGION_HIERARCHY_ID = env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID;
+const {
+  DEFAULT_BRAIN_ATLAS_ID,
+  DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+  DEFAULT_SELECTED_BRAIN_REGION_ID,
+  ROOT_BRAIN_REGION_ANNOTATION_VALUE,
+  ROOT_BRAIN_REGION_ID,
+  BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE,
+} = config;
+
+export { DEFAULT_BRAIN_ATLAS_ID };
+export { DEFAULT_BRAIN_REGION_HIERARCHY_ID };
 const DEFAULT_SELECTED_BRAIN_REGION_NAME = 'Cerebrum'; // Awful but requested from entitycore for the moment
-export const DEFAULT_SELECTED_BRAIN_REGION_ID = env.NEXT_PUBLIC_DEFAULT_SELECTED_BRAIN_REGION_ID;
-export const ROOT_BRAIN_REGION_ANNOTATION_VALUE =
-  env.NEXT_PUBLIC_ROOT_BRAIN_REGION_ANNOTATION_VALUE;
-export const ROOT_BRAIN_REGION_ID = env.NEXT_PUBLIC_ROOT_BRAIN_REGION_ID;
-export const BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE =
-  env.NEXT_PUBLIC_BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE;
+export { DEFAULT_SELECTED_BRAIN_REGION_ID };
+export { ROOT_BRAIN_REGION_ANNOTATION_VALUE };
+export { ROOT_BRAIN_REGION_ID };
+export { BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE };
 export const DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE = 567;
 export const DEFAULT_BRAIN_REGION_ANNOTATION_FIELD = 'annotation_value';
 export const DEFAULT_BRAIN_REGION_QUERY_ID = 'br_id';
@@ -88,7 +95,7 @@ export const brainRegionRootHierarchyAtom = atom(async (get) => {
 
   const { data: root, error } = await tryCatch(
     getBrainRegionHierarchy({
-      id: atlas?.hierarchy_id ?? env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+      id: atlas?.hierarchy_id ?? config.DEFAULT_BRAIN_REGION_HIERARCHY_ID,
     })
   );
   if (error) {
@@ -386,8 +393,8 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
   // Sync localStorage when URL params change
   useEffect(() => {
     if (id && annotationValue && defaultSelectedBrainRegion) {
-      const config = { id, annotation_value: annotationValue };
-      updateLocalStorage(config);
+      const hierarchyConfig = { id, annotation_value: annotationValue };
+      updateLocalStorage(hierarchyConfig);
     }
   }, [id, annotationValue, defaultSelectedBrainRegion, updateLocalStorage]);
 
@@ -399,22 +406,25 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
    * containing the `id`, `name`, and `annotation_value` properties.
    */
   const updateHierarchyConfig = (node: IBrainRegionHierarchy | null) => {
-    const region = node
+    const regionConfig = node
       ? { id: node.id, name: node.name, annotation_value: node?.annotation_value }
       : null;
 
     // Only update if the values are actually different
-    if (region && (id !== region.id || annotationValue !== region.annotation_value)) {
+    if (
+      regionConfig &&
+      (id !== regionConfig.id || annotationValue !== regionConfig.annotation_value)
+    ) {
       // Ensure the UI (e.g., RegionBanner) reflects the new selection immediately
       // before any URL updates that may cause re-renders.
       updateSelectedBrainRegion(omit(node, 'children'));
-      updateLocalStorage(region);
-      setSearchParamHierarchyConfig(region);
-    } else if (!region && (id !== '' || annotationValue !== 0)) {
+      updateLocalStorage(regionConfig);
+      setSearchParamHierarchyConfig(regionConfig);
+    } else if (!regionConfig && (id !== '' || annotationValue !== 0)) {
       // Clear selection first to keep UI in sync, then update storage and URL
       updateSelectedBrainRegion(null);
-      updateLocalStorage(region);
-      setSearchParamHierarchyConfig(region);
+      updateLocalStorage(regionConfig);
+      setSearchParamHierarchyConfig(regionConfig);
     }
   };
 

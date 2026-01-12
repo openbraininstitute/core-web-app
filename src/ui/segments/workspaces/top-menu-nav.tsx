@@ -15,7 +15,7 @@ import {
   WorkflowIcon,
 } from '@/components/icons/buttons';
 import FeedbacksIcon from '@/components/icons/FeedbacksIcon';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 import {
   DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
   DEFAULT_BRAIN_REGION_QUERY_ID,
@@ -87,7 +87,7 @@ const links: Array<LinkItem> = [
     className: 'px-6 gap-8',
     hasAction: true,
     action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
-      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`,
+      `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`,
   },
   {
     id: 'workspace-notebooks',
@@ -99,7 +99,7 @@ const links: Array<LinkItem> = [
     className: 'px-6 gap-8',
     hasAction: true,
     action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
-      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
+      `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
   },
   {
     id: 'workspace-reports',
@@ -111,7 +111,7 @@ const links: Array<LinkItem> = [
     className: 'px-6 gap-8',
     hasAction: true,
     action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
-      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
+      `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
   },
   {
     id: 'workspace-help',
@@ -146,7 +146,7 @@ export function TopMenuNavigation() {
   const hashedLinks = links.map((link) => ({
     ...link,
     baseUrl: link.url,
-    url: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/${link.url}`,
+    url: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${link.url}`,
   }));
 
   // (after tests:) breakpoint for 950px threshold

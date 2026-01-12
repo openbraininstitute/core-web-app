@@ -166,7 +166,10 @@ export const MicrocircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCamp
   slug: EntitySlug.MicrocircuitSimulation,
   requiredFeatures: [microcircuitFlag.key],
   api: {
-    config: { allowedFacets: true },
+    config: {
+      allowedFacets: true,
+      ilikeSearchEnabled: true,
+    },
     query: {
       count: (...params) => {
         const filters = discardBrainRegionQueryParams(params[0].filters);

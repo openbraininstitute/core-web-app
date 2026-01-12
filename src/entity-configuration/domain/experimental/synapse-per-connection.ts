@@ -20,6 +20,7 @@ export const SynapsePerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPer
   api: {
     config: {
       allowedFacets: true,
+      ilikeSearchEnabled: true,
     },
     query: {
       list: getExperimentalSynapsesPerConnections,

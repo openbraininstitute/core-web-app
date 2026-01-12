@@ -1,27 +1,27 @@
 /* eslint-disable prefer-destructuring */
 
-import { NextRequest } from 'next/server';
 import pick from 'es-toolkit/compat/pick';
+import { NextRequest } from 'next/server';
 
-import { createVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { updateUserProfile } from '@/api/virtual-lab-svc/queries/user';
-import { createProject } from '@/api/virtual-lab-svc/queries/project';
-import {
-  WorkspaceBootstrapStepStatus,
-  WorkspaceBootstrapStep,
-  WorkspaceBootstrap,
-} from '@/ui/segments/app-setup/helpers';
 import { tryCatch } from '@/api/utils';
-import { log } from '@/utils/logger';
+import { createProject } from '@/api/virtual-lab-svc/queries/project';
+import { updateUserProfile } from '@/api/virtual-lab-svc/queries/user';
+import { createVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { auth } from '@/auth';
+import {
+  WorkspaceBootstrap,
+  WorkspaceBootstrapStep,
+  WorkspaceBootstrapStepStatus,
+} from '@/ui/segments/app-setup/helpers';
+import { log } from '@/utils/logger';
 
 import type { Project, UserProfileResponse, VirtualLab } from '@/api/virtual-lab-svc/queries/types';
-import type { TWorkspaceIdentitySchema } from '@/ui/segments/app-setup/workspace-identity';
 import type { TEmailStatus } from '@/api/virtual-lab-svc/validation';
 import type {
   TResolvedWorkspace,
   TWorkspaceBootstrapStepStatus,
 } from '@/ui/segments/app-setup/helpers';
+import type { TWorkspaceIdentitySchema } from '@/ui/segments/app-setup/workspace-identity';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -153,7 +153,7 @@ async function* fetchItems<T>(body: Body) {
           createProject(ID!, {
             name: `${fullName} first project`,
             description: `
-              Your initial project has been set up as a ready-to-use workspace to jumpstart your work. 
+              Your initial project has been set up as a ready-to-use workspace to jumpstart your work.
               Personalize its name and description to showcase your goals and make it truly yours.
               `,
             include_members: [],

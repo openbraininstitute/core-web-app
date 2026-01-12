@@ -23,11 +23,12 @@ import { createModel } from '@/api/small-scale-simulator/single-neuron/single-ne
 import { CreateSingleNeuronSchema } from '@/api/small-scale-simulator/types';
 import { useAppNotification } from '@/components/notification';
 import { LowFundsNotification } from '@/components/notification/low-funds-notification';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 import { LOW_FUNDS_ERROR_CODE, messages } from '@/i18n/en/me-model';
 import { WorkspaceContextSchema } from '@/types/common';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { useUserRole } from '@/hooks/use-user-role';
 import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import {
@@ -53,6 +54,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
   const { push: navigate } = useRouter();
   const step = searchParams.get('step');
   const [showLowFundsNotification, setShowLowFundsNotification] = useState(false);
+  const { isProjectAdmin } = useUserRole({ virtualLabId, projectId });
 
   const { sessionValue } = useBuildMeModelSessionState({
     sessionId,
@@ -102,14 +104,18 @@ export function Menu({ sessionId }: { sessionId: string }) {
       });
       delay(() => {
         navigate(
-          `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.Memodel)}/${data.data.id}`
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.Memodel)}/${data.data.id}`
         );
       }, 500);
     },
     onError(err) {
       log('error', 'Build me-model failed:', err);
       const isLowFundsError = get(err, 'cause.code') === LOW_FUNDS_ERROR_CODE;
-      const message = isLowFundsError ? messages.LowFundsError : messages.DefaultErrorMsg;
+
+      let message = messages.DefaultErrorMsg;
+      if (isLowFundsError) {
+        message = isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin;
+      }
 
       if (isLowFundsError) {
         setShowLowFundsNotification(true);
@@ -148,7 +154,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
       {showLowFundsNotification && (
         <LowFundsNotification
           title="ME-model creation failed"
-          description={messages.LowFundsError}
+          description={isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin}
           onClose={() => setShowLowFundsNotification(false)}
           duration={10000}
         />

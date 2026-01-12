@@ -1,5 +1,5 @@
 import { authApiClient } from '@/api/apiClient';
-import { entityCoreUrl } from '@/config';
+import { config } from '@/config';
 
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { IPersonFilter } from '@/api/entitycore/types/entities/agent';
@@ -12,7 +12,7 @@ const baseUri = '/person';
  * @returns {Promise<EntityCoreResponse<IPerson>>} A promise that resolves to the list of people (contributors)
  */
 export async function getPersons({ filters }: { filters: Partial<IPersonFilter> }) {
-  const api = await authApiClient(entityCoreUrl);
+  const api = await authApiClient(config.ENTITY_CORE_URL);
   return await api.get<EntityCoreResponse<IPerson>>(baseUri, {
     queryParams: {
       ...filters,
@@ -26,6 +26,6 @@ export async function getPersons({ filters }: { filters: Partial<IPersonFilter> 
  * @returns {Promise<IPerson>} A promise that resolves to the single person
  */
 export async function getPerson({ id }: { id: string }) {
-  const api = await authApiClient(entityCoreUrl);
+  const api = await authApiClient(config.ENTITY_CORE_URL);
   return await api.get<IPerson>(`${baseUri}/${id}`);
 }

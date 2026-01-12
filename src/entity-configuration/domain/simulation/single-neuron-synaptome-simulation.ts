@@ -56,7 +56,10 @@ export const SingleNeuronSynaptomeSimulation: EntityCoreTypeConfig<ISingleNeuron
     type: EntityTypeDict.SingleNeuronSynaptomeSimulation,
     slug: EntitySlug.SingleNeuronSynaptomeSimulation,
     api: {
-      config: { allowedFacets: true },
+      config: {
+        allowedFacets: true,
+        ilikeSearchEnabled: true,
+      },
       query: {
         list: getSingleNeuronSynaptomeSimulations,
         one: getSingleNeuronSynaptomeSimulation,

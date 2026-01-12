@@ -149,7 +149,7 @@ export default async function Overview({
             meModel={singleNeuronSynaptomeSimulationPayload.memodel}
             synaptome={singleNeuronSynaptomeSimulationPayload.synaptome}
             virtualLabId={ctx.virtualLabId}
-            projectId={ctx.virtualLabId}
+            projectId={ctx.projectId}
           />
         )}
       {circuitTypes.includes(extendedType) && <CircuitViz circuit={entity as ICircuit} />}
