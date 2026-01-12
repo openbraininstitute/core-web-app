@@ -15,6 +15,7 @@ theme:
 nav:
   - Home: index.md
   - Explore: explore.md
+  - Single Neuron Simulation: simulate.md
 
 # Plugins
 plugins:
