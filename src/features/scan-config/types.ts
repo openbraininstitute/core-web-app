@@ -1,7 +1,6 @@
-import { atom } from 'jotai';
-
-import { ConfigValue } from './_components/components';
-import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import type { atom } from 'jotai';
+import type { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import type { ConfigValue } from './components/components';
 
 export interface AtomsMap {
   [key: string]:

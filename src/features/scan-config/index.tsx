@@ -3,22 +3,22 @@
 // import { LoadingOutlined, UpOutlined } from '@ant-design/icons';
 import { LoadingOutlined } from '@ant-design/icons';
 import { Suspense, useState } from 'react';
-import SimulationsTab from './_components/simulations';
+import SimulationsTab from './components/simulations';
 
 // import { useRouter } from 'next/navigation';
 
-import type { Config } from '@/features/scan-config/_components/components';
-import { useConfigAtom } from '@/features/scan-config/_components/hooks/config-atom';
-import { useAtomsMap, useObioneJsonSchema } from '@/features/scan-config/_components/hooks/schema';
-import ModelPreview from '@/features/scan-config/_components/model-preview';
-import TabsSelector from '@/features/scan-config/_components/tabs-selector';
+import type { Config } from '@/features/scan-config/components/components';
+import { useConfigAtom } from '@/features/scan-config/components/hooks/config-atom';
+import { useAtomsMap, useObioneJsonSchema } from '@/features/scan-config/components/hooks/schema';
+import ModelPreview from '@/features/scan-config/components/model-preview';
+import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import styles from '@/features/scan-config/scan-config.module.css';
 import type { Block, TabType } from '@/features/scan-config/types';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
-import { useEntries, useModel, useSchemaName } from './_components/hooks';
-import Left from './_components/left';
-import Middle from './_components/middle';
+import { useEntries, useModel, useSchemaName } from './components/hooks';
+import Left from './components/left';
+import Middle from './components/middle';
 
 export default function ScanConfiguration({
   modelId,
