@@ -83,17 +83,61 @@ const configFields = {
     schema: z.string().nonempty(),
     public: true,
   },
-
-  BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE: {
-    schema: z.string().nonempty(),
-    public: true,
-  },
   DEFAULT_BRAIN_ATLAS_ID: { schema: z.string().nonempty(), public: true },
-  DEFAULT_BRAIN_REGION_HIERARCHY_ID: {
+  APP_DEFAULT_BRAIN_REGION_HIERARCHY_ID: {
     schema: z.string().nonempty(),
     public: true,
   },
-  DEFAULT_SELECTED_BRAIN_REGION_ID: {
+  // MOUSE
+  MOUSE_ROOT_BRAIN_REGION_ID: {
+    schema: z.string().nonempty(),
+    public: true,
+  },
+  MOUSE_ROOT_BRAIN_REGION_ANNOTATION_VALUE: {
+    schema: z.string().nonempty().default('997'),
+    public: true,
+  },
+  /**
+   * Represents the primary anatomical division annotation value for a given voxel
+   * or region in the Allen Mouse Brain Common Coordinate Framework (CCF).
+   * This value encodes the highest-level anatomical partition (e.g., major
+   * brain compartments) assigned to the voxel according to the Allen structural
+   * ontology hierarchy, facilitating region-specific analysis and lookup.
+   */
+  MOUSE_PRIMARY_ANATOMICAL_DIVISIONS_ANNOTATION_VALUE: {
+    schema: z.string().nonempty().default('8'),
+    public: true,
+  },
+  MOUSE_DEFAULT_SELECTED_BRAIN_REGION_ID: {
+    schema: z.string().nonempty(),
+    public: true,
+  },
+  // HUMAN
+  HUMAN_MOUSE_ROOT_BRAIN_REGION_ID: {
+    schema: z.string().nonempty(),
+    public: true,
+  },
+  /**
+   * Annotation value representing the primary anatomical division for a given
+   * voxel or region in the Allen Human Brain Reference Atlas. This value
+   * encodes the top-level anatomical partition (major structural compartments
+   * of the human brain) according to the atlas’s hierarchical ontology.
+   * It is intended for use in region lookup, grouping, and spatial analysis.
+   */
+  HUMAN_PRIMARY_ANATOMICAL_DIVISIONS_ANNOTATION_VALUE: {
+    schema: z.string().nonempty('999'),
+    public: true,
+  },
+  HUMAN_ROOT_BRAIN_REGION_ANNOTATION_VALUE: {
+    schema: z.string().nonempty().default('999'),
+    public: true,
+  },
+  HUMAN_DEFAULT_SELECTED_BRAIN_REGION_ID: {
+    schema: z.string().nonempty(),
+    public: true,
+  },
+  // ----
+  DEFAULT_SPECIES_TAXONOMY_ID: {
     schema: z.string().nonempty(),
     public: true,
   },
@@ -101,11 +145,6 @@ const configFields = {
     schema: z.string().url().nonempty(),
     public: true,
   },
-  ROOT_BRAIN_REGION_ANNOTATION_VALUE: {
-    schema: z.string().nonempty(),
-    public: true,
-  },
-  ROOT_BRAIN_REGION_ID: { schema: z.string().nonempty(), public: true },
 
   NOTEBOOK_REPO_URL: { schema: z.string().url(), public: true },
 } as const;
@@ -128,6 +167,7 @@ const baseServerSchema = z.object(
   [K in keyof typeof configFields]: (typeof configFields)[K]['schema'];
 }>;
 
+// biome-ignore lint/suspicious/noExplicitAny: reason for using any
 const applyApiUrlTransforms = <T extends z.ZodObject<any>>(schema: T) =>
   schema
     .superRefine((data, ctx) => {

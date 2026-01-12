@@ -1,5 +1,5 @@
-import { atomFamily } from 'jotai/utils';
-import { atom } from 'jotai';
+import { atomFamily } from "jotai-family";
+import { atom } from "jotai";
 
 export const makeSessionAtomWithDefault = <T = any,>(defaults: T) =>
   atomFamily(
@@ -8,5 +8,5 @@ export const makeSessionAtomWithDefault = <T = any,>(defaults: T) =>
       childAtom.debugLabel = `session/${_key}`;
       return childAtom;
     },
-    (a, b) => a === b
+    (a, b) => a === b,
   );

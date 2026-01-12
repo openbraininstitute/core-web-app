@@ -1,17 +1,15 @@
-import React from 'react';
-import { useAtomValue } from 'jotai';
-import { unwrap } from 'jotai/utils';
-import { useParams, usePathname, useSearchParams } from 'next/navigation';
+import { useParams, usePathname, useSearchParams } from "next/navigation";
 
-import { useAiContext } from '../hooks';
+import { useAiContext } from "@/components/ai-assistant/hooks";
 
-import { useCurrentExplorerArtifactValue } from '@/state/explore-section/artifact';
 import {
-  BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE,
-  brainRegionBasicCellGroupsRegionsHierarchyAtom,
+  MOUSE_PRIMARY_ANATOMICAL_DIVISIONS_ANNOTATION_VALUE,
   useBrainRegionHierarchy,
-} from '@/features/brain-region-hierarchy/context';
-import { resolveDataKey } from '@/utils/key-builder';
+  usePrimaryHierarchyQuery,
+} from "@/features/brain-region-hierarchy/context";
+
+import { useCurrentExplorerArtifactValue } from "@/state/explore-section/artifact";
+import { resolveDataKey } from "@/utils/key-builder";
 
 export interface Snapshot {
   isRootRegion: boolean;
@@ -31,13 +29,18 @@ export function useSnapshot(): Snapshot {
   const { node: selectedBrainRegion } = useBrainRegionHierarchy({ dataKey });
   const isRootRegion =
     `${selectedBrainRegion.annotation_value}` ===
-    BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE;
-  const result = useAtomValue(
-    React.useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
+    MOUSE_PRIMARY_ANATOMICAL_DIVISIONS_ANNOTATION_VALUE;
+
+  const { result } = usePrimaryHierarchyQuery();
+
+  /* const result = useAtomValue(
+    React.useMemo(() => unwrap(PrimaryAnatomicalDivisionsHierarchyAtom), [])
+  ); */
+  const regionId = selectedBrainRegion?.id ?? "";
+  const node = (result?.options ?? []).find(
+    (o) => o.data.id === selectedBrainRegion?.id,
   );
-  const regionId = selectedBrainRegion?.id ?? '';
-  const node = (result?.options ?? []).find((o) => o.data.id === selectedBrainRegion?.id);
-  const regionTitle = node?.label ?? '';
+  const regionTitle = node?.label ?? "";
   const artifact = useCurrentExplorerArtifactValue();
   const search = searchParams.toString();
   const frontendUrl = search ? `${pathname}?${search}` : pathname;

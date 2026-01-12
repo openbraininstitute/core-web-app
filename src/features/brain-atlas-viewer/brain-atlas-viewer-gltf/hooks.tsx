@@ -1,24 +1,24 @@
 /* eslint-disable no-param-reassign */
-import React from 'react';
-import compact from 'es-toolkit/compat/compact';
-import find from 'es-toolkit/compat/find';
-import { useAtom, useAtomValue } from 'jotai';
-import { atomWithStorage, unwrap } from 'jotai/utils';
-import { TgdColor, TgdVec4 } from '@tolokoban/tgd';
 
-import { brainRegionAtlasAtom } from '../context';
-import { Painter } from './painter';
-import { SettingsDefinitions } from './settings';
-import { VisibleRegion } from './types';
-
+import { TgdColor, TgdVec4 } from "@tolokoban/tgd";
+import compact from "es-toolkit/compat/compact";
+import find from "es-toolkit/compat/find";
+import { useAtom, useAtomValue } from "jotai";
+import { atomWithStorage, unwrap } from "jotai/utils";
+import React from "react";
+import type { IBrainRegionHierarchy } from "@/api/entitycore/types/entities/brain-region";
+import { useAppNotification } from "@/components/notification";
 import {
-  brainRegionBasicCellGroupsRegionsHierarchyAtom,
   brainRegionRootHierarchyAtom,
-  ROOT_BRAIN_REGION_ID,
+  MOUSE_ROOT_BRAIN_REGION_ID,
+  PrimaryAnatomicalDivisionsHierarchyAtom,
   useBrainRegionHierarchy,
-} from '@/features/brain-region-hierarchy/context';
-import { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-import { useAppNotification } from '@/components/notification';
+  usePrimaryHierarchyQuery,
+} from "@/features/brain-region-hierarchy/context";
+import { brainRegionAtlasAtom } from "../context";
+import { Painter } from "./painter";
+import type { SettingsDefinitions } from "./settings";
+import type { VisibleRegion } from "./types";
 
 export function usePainter(): Painter {
   const notif = useAppNotification();
@@ -28,7 +28,7 @@ export function usePainter(): Painter {
     refPainter.current.eventError.addListener((message) => {
       notif.warning({
         message,
-        key: '3d-mesh-error',
+        key: "3d-mesh-error",
       });
     });
     refPainter.current.uniforms = getAtlasViewerDefaultSettings();
@@ -47,16 +47,23 @@ export function useVisibleRegions(dataKey: string): {
 } {
   const { node: brainRegionNode } = useBrainRegionHierarchy({ dataKey });
   const rootBrainRegions = useAtomValue(
-    React.useMemo(() => unwrap(brainRegionRootHierarchyAtom), [])
+    React.useMemo(() => unwrap(brainRegionRootHierarchyAtom), []),
   );
-  const brainRegions = useAtomValue(
-    React.useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
-  );
+  const { result: brainRegions } = usePrimaryHierarchyQuery();
+  /* const brainRegions = useAtomValue(
+    React.useMemo(() => unwrap(PrimaryAnatomicalDivisionsHierarchyAtom), [])
+  ); */
   return React.useMemo(() => {
-    const rootBrainRegion = find(rootBrainRegions?.options, { value: ROOT_BRAIN_REGION_ID })?.data;
-    const currentBrainRegion = find(brainRegions?.options, { value: brainRegionNode.id })?.data;
+    const rootBrainRegion = find(rootBrainRegions?.options, {
+      value: MOUSE_ROOT_BRAIN_REGION_ID,
+    })?.data;
+    const currentBrainRegion = find(brainRegions?.options, {
+      value: brainRegionNode.id,
+    })?.data;
     const regions = compact(
-      brainRegionNode ? [currentBrainRegion, rootBrainRegion] : [rootBrainRegion]
+      brainRegionNode
+        ? [currentBrainRegion, rootBrainRegion]
+        : [rootBrainRegion],
     );
     return {
       region: regions.find((region) => region.id === brainRegionNode.id),
@@ -77,37 +84,37 @@ export function makeColor(textColor: string): TgdVec4 {
 export function getAtlasViewerDefaultSettings(): SettingsDefinitions {
   return {
     shadowIntensity: {
-      label: 'Shadow strength',
+      label: "Shadow strength",
       value: 0.1,
     },
     shadowThickness: {
-      label: 'Shadow spread',
+      label: "Shadow spread",
       min: 0,
       max: 2,
       value: 1,
     },
     specularExponent: {
-      label: 'Specular exponent',
+      label: "Specular exponent",
       value: 10,
       min: 0,
       max: 50,
     },
     specularIntensity: {
-      label: 'Specular intensity',
+      label: "Specular intensity",
       value: 0.05,
     },
     light: {
-      label: 'Points luminance',
+      label: "Points luminance",
       value: 1,
     },
     ghostExponent: {
-      label: 'X-ray exponent',
+      label: "X-ray exponent",
       value: 2.5,
       min: 0,
       max: 50,
     },
     ghostIntensity: {
-      label: 'X-ray intensity',
+      label: "X-ray intensity",
       value: 0.7,
       min: 0,
       max: 50,
@@ -116,13 +123,16 @@ export function getAtlasViewerDefaultSettings(): SettingsDefinitions {
 }
 
 const atlasViewerSettingsAtom = atomWithStorage(
-  'AtlasViewerSettings',
-  getAtlasViewerDefaultSettings()
+  "AtlasViewerSettings",
+  getAtlasViewerDefaultSettings(),
 );
 
 export function useAtlasViewerSettingsValues(
-  painter: Painter
-): [values: SettingsDefinitions, setValues: (values: SettingsDefinitions) => void] {
+  painter: Painter,
+): [
+  values: SettingsDefinitions,
+  setValues: (values: SettingsDefinitions) => void,
+] {
   const [values, setValues] = useAtom(atlasViewerSettingsAtom);
   React.useEffect(() => {
     painter.uniforms = values;

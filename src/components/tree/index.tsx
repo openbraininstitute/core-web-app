@@ -1,17 +1,16 @@
-import React, { useState, useCallback, useEffect, ReactNode } from 'react';
 import flatMap from 'es-toolkit/compat/flatMap';
 import map from 'es-toolkit/compat/map';
+import React, { type ReactNode, useCallback, useEffect, useState } from 'react';
 
 import { getParentsToRoot, scrollToNode } from '@/components/tree/elements/helpers';
 import { MemoizedNode as Node } from '@/components/tree/elements/node';
-import { classNames } from '@/util/utils';
-
 import type {
-  RenderNodeProps,
   NodeIndentation,
   NodeSubtitle,
+  RenderNodeProps,
   TTreeNode,
 } from '@/components/tree/types';
+import { classNames } from '@/util/utils';
 
 interface Props<TNode extends TTreeNode> {
   dataKey: string;
@@ -52,7 +51,7 @@ function Container({
   );
 }
 
-export default function Tree<TNode extends TTreeNode>({
+export function Tree<TNode extends TTreeNode>({
   dataKey,
   data,
   onClick,
@@ -168,3 +167,5 @@ export default function Tree<TNode extends TTreeNode>({
     </Container>
   );
 }
+
+export default Tree;

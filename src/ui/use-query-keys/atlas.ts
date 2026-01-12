@@ -1,10 +1,20 @@
-const prefix = 'atlas';
+const prefix = "atlas";
 
 export const keyBuilderAtlas = {
-  atlasId: (accessToken: string | undefined) => [prefix, 'atlasID', accessToken ? 'IN' : 'OUT'],
-  atlas: (atlasId: string) => [prefix, atlasId],
+  atlas: ({
+    atlasId,
+    page,
+    page_size,
+  }: {
+    atlasId: string;
+    page: number;
+    page_size: number;
+  }) => [prefix, { atlasId, page, page_size }],
+  defaultBrainAtlas: () => [prefix, "default-brain-atlas"],
 };
 
 export const keyBuilderHierarchy = {
-  hierarchies: () => ['brain-region-hierarchy'],
+  hierarchy: (id: string) => ["brain-region-hierarchy", { id }],
+  hierarchies: () => ["brain-region-hierarchies"],
+  hierarchyPreference: () => ["brain-region-hierarchy-preference"],
 };

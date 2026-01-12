@@ -1,34 +1,32 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
-'use client';
+"use client";
 
-import { PlusOutlined, WarningOutlined } from '@ant-design/icons';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { snakeCase, kebabCase } from 'es-toolkit/compat';
-import { useQueries } from '@tanstack/react-query';
-import { match, P } from 'ts-pattern';
-import Link from 'next/link';
-import type { ReactNode } from 'react';
-
-import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
-import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute/event';
-import { getEntityTypeFromUrlOnEntityScope } from '@/ui/segments/explore/helpers';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { keyBuilder } from '@/ui/use-query-keys/data';
-import { Skeleton } from '@/ui/molecules/skeleton';
-import { WorkspaceContext } from '@/types/common';
-import { Button } from '@/ui/molecules/button';
-import { WorkspaceScope } from '@/constants';
-import { cn } from '@/utils/css-class';
-import { config } from '@/config';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TWorkspaceScope } from '@/constants';
-import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
+import { PlusOutlined, WarningOutlined } from "@ant-design/icons";
+import { useQueries } from "@tanstack/react-query";
+import { kebabCase, snakeCase } from "es-toolkit/compat";
+import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
+import type { ReactNode } from "react";
+import { match, P } from "ts-pattern";
+import type { TExtendedEntitiesTypeDict } from "@/api/entitycore/types/extended-entity-type";
+import { BrainRegionDirection } from "@/api/entitycore/types/shared/request";
+import { userJourneyTracker } from "@/components/explore-section/Literature/user-journey";
+import { config } from "@/config";
+import type { TWorkspaceScope } from "@/constants";
+import { WorkspaceScope } from "@/constants";
+import { getEntityByExtendedType } from "@/entity-configuration/domain/helpers";
+import type { WorkspaceContext } from "@/types/common";
+import { useDefaultBreakpoint } from "@/ui/hooks/create-break-point";
+import { useWorkspace } from "@/ui/hooks/use-workspace";
+import { Button } from "@/ui/molecules/button";
+import { Skeleton } from "@/ui/molecules/skeleton";
+import { makeSelectContributionEntityClickEvent } from "@/ui/segments/contribute/event";
+import { getEntityTypeFromUrlOnEntityScope } from "@/ui/segments/explore/helpers";
+import { keyBuilder } from "@/ui/use-query-keys/data";
+import { cn } from "@/utils/css-class";
+import { getWorkspaceScopeFilters } from "@/utils/workspace-scope";
+import { HydrateWrapper } from "@/wrappers/hydrate-wrapper";
 
 function buildDataUrl({
   virtualLabId,
@@ -58,8 +56,11 @@ export function BrowseLinkContent({
   const breakpoint = useDefaultBreakpoint();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const scope = (searchParams.get('scope') ?? WorkspaceScope.Public) as TWorkspaceScope;
-  const entityType = snakeCase(getEntityTypeFromUrlOnEntityScope(pathname) ?? '');
+  const scope = (searchParams.get("scope") ??
+    WorkspaceScope.Public) as TWorkspaceScope;
+  const entityType = snakeCase(
+    getEntityTypeFromUrlOnEntityScope(pathname) ?? "",
+  );
 
   const onContribute = () =>
     makeSelectContributionEntityClickEvent({
@@ -93,8 +94,8 @@ export function BrowseLinkContent({
             <div className="font-bold text-current">{title}</div>
             <div
               className={cn(
-                'text-neutral-4 group-hover:text-label text-sm font-light group-hover:font-bold',
-                { 'font-bold text-white': entityType === extendedType }
+                "text-neutral-4 group-hover:text-label text-sm font-light group-hover:font-bold",
+                { "font-bold text-white": entityType === extendedType },
               )}
             >
               {isLoading ? (
@@ -112,23 +113,23 @@ export function BrowseLinkContent({
         {isUploadable && scope === WorkspaceScope.Project && (
           <div
             className={cn(
-              'transition-all duration-500 ease-out',
-              'w-0 scale-0 opacity-0',
-              'group-hover:w-auto group-hover:scale-100 group-hover:opacity-100',
-              'flex origin-left items-center'
+              "transition-all duration-500 ease-out",
+              "w-0 scale-0 opacity-0",
+              "group-hover:w-auto group-hover:scale-100 group-hover:opacity-100",
+              "flex origin-left items-center",
             )}
           >
             <Button
               rounded
               variant="outline"
               className={cn(
-                'border-neutral-2 hover:bg-primary-9 hover:border-primary-9',
-                'h-12 w-12! bg-transparent p-0 hover:text-white',
-                'transition-all duration-900 ease-out',
-                'shadow-md group-hover:ml-2 group-hover:shadow-xl',
-                'group-hover:scale-100',
-                { 'h-10! w-10!': breakpoint === 'l' },
-                { 'h-12! w-12!': breakpoint === 'xl' }
+                "border-neutral-2 hover:bg-primary-9 hover:border-primary-9",
+                "h-12 w-12! bg-transparent p-0 hover:text-white",
+                "transition-all duration-900 ease-out",
+                "shadow-md group-hover:ml-2 group-hover:shadow-xl",
+                "group-hover:scale-100",
+                { "h-10! w-10!": breakpoint === "l" },
+                { "h-12! w-12!": breakpoint === "xl" },
               )}
               onClick={onContribute}
             >
@@ -145,6 +146,7 @@ type Props = {
   extendedType: TExtendedEntitiesTypeDict;
   scope: TWorkspaceScope;
   currentBrainRegionId?: string;
+  hierarchyId?: string;
   defaultBrainRegionId?: string;
   enabled: boolean;
 };
@@ -152,10 +154,12 @@ type Props = {
 function buildQuery({
   virtualLabId,
   projectId,
+  hierarchyId,
   brainRegionId,
   scope,
   extendedType,
 }: WorkspaceContext & {
+  hierarchyId: string;
   brainRegionId: string;
   scope: TWorkspaceScope;
   extendedType: TExtendedEntitiesTypeDict;
@@ -169,9 +173,11 @@ function buildQuery({
     filters: {
       page: 1,
       page_size: 1,
-      within_brain_region_hierarchy_id: config.DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+      within_brain_region_hierarchy_id:
+        hierarchyId ?? config.APP_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
       within_brain_region_brain_region_id: brainRegionId ?? null,
-      within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
+      within_brain_region_direction:
+        BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
       ...getWorkspaceScopeFilters(scope, { virtualLabId, projectId }),
     },
   };
@@ -191,6 +197,7 @@ export function BrowseLink({
   scope,
   enabled,
   extendedType,
+  hierarchyId,
   currentBrainRegionId,
   defaultBrainRegionId,
 }: Props) {
@@ -200,6 +207,7 @@ export function BrowseLink({
   const currentQuery = buildQuery({
     virtualLabId,
     projectId,
+    hierarchyId: hierarchyId!,
     brainRegionId: currentBrainRegionId!,
     scope,
     extendedType,
@@ -208,6 +216,7 @@ export function BrowseLink({
   const rootQuery = buildQuery({
     virtualLabId,
     projectId,
+    hierarchyId: hierarchyId!,
     brainRegionId: defaultBrainRegionId!,
     scope,
     extendedType,
@@ -221,7 +230,8 @@ export function BrowseLink({
       {
         queryKey: currentQuery.queryKey,
         queryFn: () => {
-          if (entity?.api.query.count) return entity?.api.query.count(currentQuery.query);
+          if (entity?.api.query.count)
+            return entity?.api.query.count(currentQuery.query);
           return entity?.api.query.list?.(currentQuery.query);
         },
         enabled: !!currentBrainRegionId && enabled,
@@ -230,7 +240,8 @@ export function BrowseLink({
       {
         queryKey: rootQuery.queryKey,
         queryFn: () => {
-          if (entity?.api.query.count) return entity?.api.query.count(rootQuery.query);
+          if (entity?.api.query.count)
+            return entity?.api.query.count(rootQuery.query);
           return entity?.api.query.list?.(rootQuery.query);
         },
         enabled: !!defaultBrainRegionId && enabled,
@@ -243,14 +254,24 @@ export function BrowseLink({
   const rootCount = root?.pagination.total_items;
   const isLoading = loadingCurrent || loadingRoot;
 
-  const countRenderer = match({ isCurrentError, count, rootCount, isRootError, enabled, isLoading })
-    .with({ isLoading: false, enabled: true, rootCount: P.number, count: P.number }, () => (
-      <span className="flex items-center justify-center gap-1">
-        <span className="font-bold">{count}</span>
-        <span className="font-light">of</span>
-        <span className="font-bold">{rootCount}</span>
-      </span>
-    ))
+  const countRenderer = match({
+    isCurrentError,
+    count,
+    rootCount,
+    isRootError,
+    enabled,
+    isLoading,
+  })
+    .with(
+      { isLoading: false, enabled: true, rootCount: P.number, count: P.number },
+      () => (
+        <span className="flex items-center justify-center gap-1">
+          <span className="font-bold">{count}</span>
+          <span className="font-light">of</span>
+          <span className="font-bold">{rootCount}</span>
+        </span>
+      ),
+    )
     .with(P.union({ isCurrentError: true }, { isRootError: true }), () => {
       return <WarningOutlined className="text-warning" />;
     })
@@ -267,7 +288,7 @@ export function BrowseLink({
   return (
     <HydrateWrapper>
       <BrowseLinkContent
-        key={`${href.replace('/', '-')}`}
+        key={`${href.replace("/", "-")}`}
         {...{
           extendedType,
           href,

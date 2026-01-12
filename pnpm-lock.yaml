@@ -182,6 +182,9 @@ importers:
       jotai-devtools:
         specifier: ^0.13.0
         version: 0.13.0(@types/react@19.2.7)(jotai@2.16.0(@babel/core@7.27.4)(@babel/template@7.27.2)(@types/react@19.2.7)(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(redux@5.0.1)
+      jotai-family:
+        specifier: ^1.0.1
+        version: 1.0.1(jotai@2.16.0(@babel/core@7.27.4)(@babel/template@7.27.2)(@types/react@19.2.7)(react@19.2.3))
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
@@ -5646,7 +5649,6 @@ packages:
 
   get-random-values-esm@1.0.2:
     resolution: {integrity: sha512-HMSDTgj1HPFAuZG0FqxzHbYt5JeEGDUeT9r1RLXhS6RZQS8rLRjokgjZ0Pd28CN0lhXlRwfH6eviZqZEJ2kIoA==}
-    deprecated: use crypto.getRandomValues() instead
 
   get-random-values@1.2.2:
     resolution: {integrity: sha512-lMyPjQyl0cNNdDf2oR+IQ/fM3itDvpoHy45Ymo2r0L1EjazeSl13SfbKZs7KtZ/3MDCeueiaJiuOEfKqRTsSgA==}
@@ -6246,6 +6248,12 @@ packages:
       jotai: '>=2.14.0'
       react: '>=17.0.0'
 
+  jotai-family@1.0.1:
+    resolution: {integrity: sha512-Zb/79GNDhC/z82R+6qTTpeKW4l4H6ZCApfF5W8G4SH37E4mhbysU7r8DkP0KX94hWvjB/6lt/97nSr3wB+64Zg==}
+    engines: {node: '>=12.20.0'}
+    peerDependencies:
+      jotai: '>=2.9.0'
+
   jotai@2.16.0:
     resolution: {integrity: sha512-NmkwPBet0SHQ28GBfEb10sqnbVOYyn6DL4iazZgGRDUKxSWL0iqcm+IK4TqTSFC2ixGk+XX2e46Wbv364a3cKg==}
     engines: {node: '>=12.20.0'}
@@ -6355,6 +6363,7 @@ packages:
     resolution: {integrity: sha512-Quz3MvAwHxVYNXsOByL7xI5EB2WYOeFswqaHIA3qOK3isRWTxiplBEocmmru6XmxDB2L7jDNYtYA4FyimoAFEw==}
     engines: {node: '>=8.17.0'}
     hasBin: true
+    bundledDependencies: []
 
   jsonpointer@5.0.1:
     resolution: {integrity: sha512-p/nXbhSEcu3pZRdkW1OfJhpsVtW1gd4Wa1fnQc9YLiTfAjn0312eMKimbdIQzuZl9aa9xUGaRlP9T/CJE/ditQ==}
@@ -16162,6 +16171,10 @@ snapshots:
       - '@types/react'
       - react-dom
       - redux
+
+  jotai-family@1.0.1(jotai@2.16.0(@babel/core@7.27.4)(@babel/template@7.27.2)(@types/react@19.2.7)(react@19.2.3)):
+    dependencies:
+      jotai: 2.16.0(@babel/core@7.27.4)(@babel/template@7.27.2)(@types/react@19.2.7)(react@19.2.3)
 
   jotai@2.16.0(@babel/core@7.27.4)(@babel/template@7.27.2)(@types/react@19.2.7)(react@19.2.3):
     optionalDependencies:

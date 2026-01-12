@@ -1,36 +1,35 @@
-import { useSearchParams } from 'next/navigation';
-import { map } from 'es-toolkit/compat';
-import { unwrap } from 'jotai/utils';
-import { useAtomValue } from 'jotai';
-import { match } from 'ts-pattern';
-import { useMemo } from 'react';
-
-import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { BrowseLink } from '@/ui/segments/explore/browse-link';
-import { useTabs } from '@/components/detail-view-tabs';
-import { useFlags } from '@/features/feature-flags';
+import { map } from "es-toolkit/compat";
+import { useAtomValue } from "jotai";
+import { unwrap } from "jotai/utils";
+import { useSearchParams } from "next/navigation";
+import { useMemo } from "react";
+import { match } from "ts-pattern";
+import { useTabs } from "@/components/detail-view-tabs";
+import { type TWorkspaceScope, WorkspaceScope } from "@/constants";
 import {
-  brainRegionBasicCellGroupsRegionsHierarchyAtom,
+  PrimaryAnatomicalDivisionsHierarchyAtom,
   useGetSelectedBrainRegion,
-} from '@/features/brain-region-hierarchy/context';
-import { useLoadableValue } from '@/hooks/hooks';
-import { WorkspaceScope } from '@/constants';
+  usePrimaryHierarchyQuery,
+} from "@/features/brain-region-hierarchy/context";
+import { useFlags } from "@/features/feature-flags";
+import { useLoadableValue } from "@/hooks/hooks";
+import { useDefaultBreakpoint } from "@/ui/hooks/create-break-point";
+import { PillTabs, PillTabsList, PillTabsTrigger } from "@/ui/molecules/tabs";
+import { BrowseLink } from "@/ui/segments/explore/browse-link";
 import {
   ExperimentalEntitiesTileTypes,
   ModelEntitiesTileTypes,
   SimulationEntitiesTileTypes,
-} from '@/ui/segments/explore/helpers';
-import { cn } from '@/utils/css-class';
-
-import { type TWorkspaceScope } from '@/constants';
+} from "@/ui/segments/explore/helpers";
+import { cn } from "@/utils/css-class";
 
 export const ExploreDataTypeTabs = {
-  Experimental: 'experimental',
-  Models: 'models',
-  Simulations: 'simulations',
+  Experimental: "experimental",
+  Models: "models",
+  Simulations: "simulations",
 } as const;
-export type TExploreDataTypeTabs = (typeof ExploreDataTypeTabs)[keyof typeof ExploreDataTypeTabs];
+export type TExploreDataTypeTabs =
+  (typeof ExploreDataTypeTabs)[keyof typeof ExploreDataTypeTabs];
 
 export const tabsConfigItems: Array<{
   key: TExploreDataTypeTabs;
@@ -38,15 +37,15 @@ export const tabsConfigItems: Array<{
 }> = [
   {
     key: ExploreDataTypeTabs.Experimental,
-    title: 'Experimental',
+    title: "Experimental",
   },
   {
     key: ExploreDataTypeTabs.Models,
-    title: 'Model',
+    title: "Model",
   },
   {
     key: ExploreDataTypeTabs.Simulations,
-    title: 'Simulations',
+    title: "Simulations",
   },
 ];
 
@@ -54,30 +53,36 @@ export function EntityLinkCount() {
   const featureFlags = useFlags();
   const breakpoint = useDefaultBreakpoint();
   const { selectedBrainRegion } = useGetSelectedBrainRegion();
-  const scope = (useSearchParams().get('scope') ?? WorkspaceScope.Public) as TWorkspaceScope;
-  const brainRegionHierarchy = useAtomValue(
-    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
-  );
-  const loadableValue = useLoadableValue(brainRegionBasicCellGroupsRegionsHierarchyAtom);
-  const brainRegionHierarchyLoading = loadableValue.state === 'loading';
+  const scope = (useSearchParams().get("scope") ??
+    WorkspaceScope.Public) as TWorkspaceScope;
+
+  const { result: brainRegionHierarchy, loading } = usePrimaryHierarchyQuery();
+  /* const brainRegionHierarchy = useAtomValue(
+    useMemo(() => unwrap(PrimaryAnatomicalDivisionsHierarchyAtom), []),
+  ); */
+
+  const brainRegionHierarchyLoading = loading;
 
   const { activeTab, onChangeTab } = useTabs<TExploreDataTypeTabs>({
     tabsConfig: tabsConfigItems,
-    tabKey: 'group',
+    tabKey: "group",
     shallow: true,
   });
 
   const experimental = Object.values(ExperimentalEntitiesTileTypes).filter(
     (config) =>
-      !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
+      !config.requiredFeatures ||
+      config.requiredFeatures.every((flag) => featureFlags?.[flag]),
   );
   const models = Object.values(ModelEntitiesTileTypes).filter(
     (config) =>
-      !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
+      !config.requiredFeatures ||
+      config.requiredFeatures.every((flag) => featureFlags?.[flag]),
   );
   const simulations = Object.values(SimulationEntitiesTileTypes).filter(
     (config) =>
-      !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
+      !config.requiredFeatures ||
+      config.requiredFeatures.every((flag) => featureFlags?.[flag]),
   );
 
   const content = match(activeTab)
@@ -88,10 +93,11 @@ export function EntityLinkCount() {
           key={`link-${value.title}/${value.type}`}
           scope={scope}
           extendedType={value.extendedType}
+          hierarchyId={selectedBrainRegion?.hierarchy_id}
           currentBrainRegionId={selectedBrainRegion?.id}
           defaultBrainRegionId={brainRegionHierarchy?.root.id}
         />
-      ))
+      )),
     )
     .with(ExploreDataTypeTabs.Models, () =>
       map(models, (value) => {
@@ -101,11 +107,12 @@ export function EntityLinkCount() {
             key={`link-${value.title}/${value.type}`}
             extendedType={value.extendedType}
             scope={scope}
+            hierarchyId={selectedBrainRegion?.hierarchy_id}
             currentBrainRegionId={selectedBrainRegion?.id}
             defaultBrainRegionId={brainRegionHierarchy?.root.id}
           />
         );
-      })
+      }),
     )
     .with(ExploreDataTypeTabs.Simulations, () =>
       map(simulations, (value) => {
@@ -115,11 +122,12 @@ export function EntityLinkCount() {
             key={`link-${value.title}/${value.type}`}
             scope={scope}
             extendedType={value.extendedType}
+            hierarchyId={selectedBrainRegion?.hierarchy_id}
             currentBrainRegionId={selectedBrainRegion?.id}
             defaultBrainRegionId={brainRegionHierarchy?.root.id}
           />
         );
-      })
+      }),
     )
     .otherwise(() => null);
 
@@ -143,18 +151,21 @@ export function EntityLinkCount() {
             }}
           >
             <PillTabsList
-              className={cn('grid h-10 w-full grid-cols-3 bg-white p-0 shadow-2xl', {
-                'h-12': breakpoint === 'xl',
-              })}
+              className={cn(
+                "grid h-10 w-full grid-cols-3 bg-white p-0 shadow-2xl",
+                {
+                  "h-12": breakpoint === "xl",
+                },
+              )}
             >
               {tabsConfigItems.map((tab) => (
                 <PillTabsTrigger
                   key={tab.key}
                   value={tab.key}
                   className={cn(
-                    'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3 text-base select-none',
-                    'data-[state=active]:font-bold data-[state=active]:text-white',
-                    { 'h-12': breakpoint === 'xl' }
+                    "data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3 text-base select-none",
+                    "data-[state=active]:font-bold data-[state=active]:text-white",
+                    { "h-12": breakpoint === "xl" },
                   )}
                 >
                   {tab.title}

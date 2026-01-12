@@ -2,11 +2,12 @@
 
 'use client';
 
-import * as React from 'react';
 import * as SelectPrimitive from '@radix-ui/react-select';
+import { RiCheckFill } from '@remixicon/react';
+import type * as React from 'react';
+
 import ChevronDownIcon from '@/components/icons/ChevronDownIcon';
 import { cn } from '@/utils/css-class';
-import { CheckIcon } from '@/components/icons';
 
 function Select({ ...props }: React.ComponentProps<typeof SelectPrimitive.Root>) {
   return <SelectPrimitive.Root data-slot="select" {...props} />;
@@ -93,9 +94,12 @@ function SelectLabel({ className, ...props }: React.ComponentProps<typeof Select
 
 function SelectItem({
   className,
+  checkIConClassName,
   children,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Item>) {
+}: React.ComponentProps<typeof SelectPrimitive.Item> & {
+  checkIConClassName?: string;
+}) {
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
@@ -107,7 +111,7 @@ function SelectItem({
     >
       <span className="absolute right-2 flex size-3.5 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
-          <CheckIcon className="size-4" />
+          <RiCheckFill className={cn('size-4', checkIConClassName)} />
         </SelectPrimitive.ItemIndicator>
       </span>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
