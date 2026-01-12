@@ -2,12 +2,19 @@ name: Check Documentation Updates
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
 
 jobs:
   check-docs:
     runs-on: ubuntu-latest
-    if: github.base_ref != 'develop' && !contains(join(github.event.pull_request.labels.*.name, ','), 'skip docs')
+    if: ${{ github.base_ref != 'develop' && !contains(github.event.pull_request.labels.*.name, 'skip docs') }}
     steps:
+      - name: Debug info
+        run: |
+          echo "Base ref: ${{ github.base_ref }}"
+          echo "Labels: ${{ join(github.event.pull_request.labels.*.name, ', ') }}"
+          echo "Has skip docs: ${{ contains(github.event.pull_request.labels.*.name, 'skip docs') }}"
+
       - name: Check out code
         uses: actions/checkout@v4
         with:
