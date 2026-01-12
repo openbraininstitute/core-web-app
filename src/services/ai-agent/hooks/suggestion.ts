@@ -1,48 +1,48 @@
 'use client';
 
 import React from 'react';
-
-import { serviceAiAgentSuggestionFromUserJourney } from '../api/suggestion';
+import { useSnapshot } from '@/components/ai-assistant/suggested-questions/snapshot';
 import { useAccessToken } from '@/hooks/useAccessToken';
-import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
-import { useGenericEventListener } from '@/util/generic-event';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
-import { useSnapshot } from '@/components/ai-assistant/suggested-questions/hardcoded-suggestions/snapshot';
+import { serviceAiAgentSuggestionFromUserJourney } from '../api/suggestion';
 
 export function useServiceAiAgentSuggestionFromUserJourney(
-  threadId: string,
-  count: number
-): [suggestions: string[], clearSuggestions: () => void] {
+  threadId: string
+): [suggestions: string[], clearSuggestions: () => void, isLoading: boolean] {
   const snapshot = useSnapshot();
   const virtualLabId = useParamVirtualLabId();
   const projectId = useParamProjectId();
   const accessToken = useAccessToken();
   const [suggestions, setSuggestions] = React.useState<string[]>([]);
+  const [isLoading, setIsLoading] = React.useState(false);
 
-  const fetchSuggestions = React.useCallback(() => {
-    const action = async () => {
-      try {
-        const data = await serviceAiAgentSuggestionFromUserJourney(
-          accessToken ?? 'no-access-token',
-          {
-            threadId,
-            virtualLabId,
-            projectId,
-          }
-        );
-        setSuggestions(data.slice(0, count));
-      } catch {
-        setSuggestions([]);
-      }
-    };
-    action();
-  }, [threadId, count, accessToken, projectId, virtualLabId]);
+  const requestIdRef = React.useRef(0);
 
-  React.useEffect(fetchSuggestions, [fetchSuggestions]);
-  useGenericEventListener(userJourneyTracker.eventChange, fetchSuggestions);
   React.useEffect(() => {
-    userJourneyTracker.registerArtifactClick(snapshot.artifact);
-    userJourneyTracker.registerBrainRegionClick(snapshot.regionTitle);
-  }, [snapshot]);
-  return [suggestions, () => setSuggestions([])];
+    const currentRequestId = ++requestIdRef.current;
+
+    setIsLoading(true);
+    serviceAiAgentSuggestionFromUserJourney(accessToken ?? 'no-access-token', {
+      threadId,
+      virtualLabId,
+      projectId,
+      frontendUrl: snapshot.frontendUrl,
+    })
+      .then((data) => {
+        if (currentRequestId === requestIdRef.current) {
+          setSuggestions(data);
+        }
+      })
+      .catch(() => {
+        if (currentRequestId === requestIdRef.current) {
+          setSuggestions([]);
+        }
+      })
+      .finally(() => {
+        if (currentRequestId === requestIdRef.current) {
+          setIsLoading(false);
+        }
+      });
+  }, [snapshot.frontendUrl, threadId, accessToken, projectId, virtualLabId]);
+  return [suggestions, () => setSuggestions([]), isLoading];
 }
