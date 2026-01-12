@@ -1,18 +1,19 @@
-import { useEffect, useState } from 'react';
 import $RefParser from '@apidevtools/json-schema-ref-parser';
 import { useQuery } from '@tanstack/react-query';
 import { atom } from 'jotai';
-
-import { IMEModel } from '@/api/entitycore/types';
-import { ICircuit } from '@/api/entitycore/types/entities/circuit';
-
+import { useEffect, useState } from 'react';
+import { match } from 'ts-pattern';
+import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
+import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { config } from '@/config';
-
-import { Config, ConfigValue } from '@/features/scan-config/_components/components';
+import type { Config, ConfigValue } from '@/features/scan-config/_components/components';
 import { isAtom, isPlainObject } from '@/features/scan-config/_components/utils';
-
-import { AtomsMap, ConfigSchema, SchemaName, isType } from '@/features/scan-config/types';
-
+import {
+  type AtomsMap,
+  type ConfigSchema,
+  isType,
+  type SchemaName,
+} from '@/features/scan-config/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 export function useObioneJsonSchema(schemaName: SchemaName) {
@@ -36,7 +37,7 @@ async function fetchSchema({ schemaName }: { schemaName: SchemaName }) {
   const json = await res.json();
   const dereferenced = await $RefParser.dereference(json);
 
-  // @ts-ignore
+  // @ts-expect-error
   const theSchema = dereferenced.components.schemas[schemaName] as ConfigSchema;
 
   return theSchema;
@@ -88,7 +89,21 @@ export function useAtomsMap({
           Object.entries(v.properties).forEach(([subkey, subValue]) => {
             initial[subkey] = subValue.default ?? null;
             if (!isType(subValue) && subValue.ui_element === 'model_identifier') {
+              const formModelType = match(model)
+                .with({ type: EntityTypeDict.Memodel }, () => 'MEModelFromID')
+                .with(
+                  {
+                    type: EntityTypeDict.Circuit,
+                    scale: CircuitScaleDictionary.Single,
+                  },
+                  () => 'MEModelWithSynapsesCircuitFromID'
+                )
+                .with({ type: EntityTypeDict.Circuit }, () => 'CircuitFromID')
+                .otherwise(() => {
+                  throw new Error(`Unsupported entity type: ${model.type}`);
+                });
               initial[subkey] = {
+                type: formModelType,
                 id_str: model.id,
               };
             }
@@ -125,7 +140,10 @@ export function useReferenceTypeDict(schemaName: SchemaName) {
 
     if (v.ui_element === 'block_dictionary') {
       const refType = v.reference_type;
-      referenceTypeDict[refType] = { configKey: k, singularName: v.singular_name };
+      referenceTypeDict[refType] = {
+        configKey: k,
+        singularName: v.singular_name,
+      };
     }
   });
 
