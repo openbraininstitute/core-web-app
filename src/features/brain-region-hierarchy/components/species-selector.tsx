@@ -1,7 +1,7 @@
 "use client";
 
 import { useBrainRegionHierarchySpeciesQuery } from "@/features/brain-region-hierarchy/hooks";
-import type { ISpeciesInfo } from "@/features/brain-region-hierarchy/types";
+import type { IWorkspaceSpecies } from "@/features/brain-region-hierarchy/types";
 import {
   Select,
   SelectContent,
@@ -12,7 +12,7 @@ import {
 import { cn } from "@/utils/css-class";
 
 interface SpeciesSelectorProps {
-  selectedSpecies: ISpeciesInfo | null;
+  selectedSpecies: IWorkspaceSpecies | null;
   onSpeciesChange: (taxonomyId: string) => void;
   disabled?: boolean;
   className?: string;

@@ -3,14 +3,14 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useAiContext } from "@/components/ai-assistant/hooks";
 
 import {
-  MOUSE_PRIMARY_ANATOMICAL_DIVISIONS_ANNOTATION_VALUE,
+  MOUSE_PRIMARY__DIVISION_ANNOTATION_VALUE,
   usePrimaryHierarchyQuery,
 } from "@/features/brain-region-hierarchy/context";
 
 import { useCurrentExplorerArtifactValue } from "@/state/explore-section/artifact";
 import { useWorkspace } from "@/ui/hooks/use-workspace";
 import { resolveDataKey } from "@/utils/key-builder";
-import { useWorkspaceAtlasHierarchy } from "@/features/brain-region-hierarchy/hooks";
+import { useWorkspaceSpeciesBrainRegion } from "@/features/brain-region-hierarchy/hooks";
 
 export interface Snapshot {
   isRootRegion: boolean;
@@ -26,10 +26,10 @@ export function useSnapshot(): Snapshot {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const dataKey = resolveDataKey({ projectId, section });
-  const { selectedBrainRegion } = useWorkspaceAtlasHierarchy({ dataKey });
+  const { selectedBrainRegion } = useWorkspaceSpeciesBrainRegion({ dataKey });
   const isRootRegion =
     `${selectedBrainRegion?.annotation_value}` ===
-    MOUSE_PRIMARY_ANATOMICAL_DIVISIONS_ANNOTATION_VALUE;
+    MOUSE_PRIMARY__DIVISION_ANNOTATION_VALUE;
 
   const { result } = usePrimaryHierarchyQuery();
 

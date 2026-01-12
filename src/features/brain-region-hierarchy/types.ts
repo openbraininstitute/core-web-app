@@ -1,7 +1,6 @@
 export const SPECIES_DISPLAY_NAMES: Record<string, string> = {
   "Homo sapiens": "Human",
   "Mus musculus": "Mouse",
-  "Rattus norvegicus": "Rat",
 } as const;
 
 /**
@@ -15,7 +14,7 @@ export const SPECIES_TAXONOMY_IDS = {
 /**
  * Species information with both scientific and display names
  */
-export interface ISpeciesInfo {
+export interface IWorkspaceSpecies {
   id: string;
   name: string;
   hierarchId: string;
@@ -26,10 +25,10 @@ export interface ISpeciesInfo {
 /**
  * Brain region hierarchy with associated species information
  */
-export interface HierarchyWithSpecies {
+export interface IHierarchyWithSpecies {
   id: string;
   name: string;
-  species: ISpeciesInfo;
+  species: IWorkspaceSpecies;
 }
 
 /**
@@ -46,7 +45,7 @@ export interface BrainRegionHierarchySelection {
 /**
  * API request/response shape for brain region preference
  */
-export interface IBrainRegionPreference {
+export interface IWorkspaceHierarchySpeciesPreference {
   hierarchy_id: string;
   species_taxonomy_id: string;
   brain_region_id: string | null;
@@ -70,7 +69,7 @@ export function transformSpecies(
     name: string;
     taxonomy_id: string;
   },
-): ISpeciesInfo {
+): IWorkspaceSpecies {
   return {
     id: apiSpecies.id,
     name: apiSpecies.name,

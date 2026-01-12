@@ -6,14 +6,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { find, omit } from "es-toolkit/compat";
 import { useEffect, useRef } from "react";
 import type { IBrainRegionHierarchy } from "@/api/entitycore/types/entities/brain-region";
-import { setBrainRegionPreference } from "@/api/virtual-lab-svc/queries/brain-region-preferences";
+import { updateBrainRegionPreference } from "@/api/virtual-lab-svc/queries/brain-region-preferences";
 
 import { config } from "@/config";
 import {
   AtlasHierarchyConfig,
-  currentHierarchyIdAtom,
+  workspaceHierarchyIdAtom,
   selectedBrainRegionAtom,
-  selectedSpeciesAtom,
+  workspaceHierarchySpeciesAtom,
   usePrimaryHierarchyQuery,
 } from "@/features/brain-region-hierarchy/context";
 import {
@@ -22,7 +22,7 @@ import {
 } from "@/features/brain-region-hierarchy/hooks/use-brain-region-species";
 import type {
   BrainRegionHierarchySelection,
-  ISpeciesInfo,
+  IWorkspaceSpecies,
 } from "@/features/brain-region-hierarchy/types";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { getSectionFromDataKey } from "@/utils/key-builder";
@@ -39,7 +39,7 @@ export const URL_PARAMS = {
 
 const STORAGE_KEY_PREFIX = "brain-region-hierarchy";
 
-interface UseWorkspaceHierarchyOptions {
+interface WorkspaceSpeciesBrainRegionProps {
   dataKey: string;
 }
 
@@ -58,9 +58,9 @@ interface UseWorkspaceHierarchyOptions {
  * 3. localStorage (session persistence)
  * 3. Config defaults (fallback)
  */
-export function useWorkspaceAtlasHierarchy({
+export function useWorkspaceSpeciesBrainRegion({
   dataKey,
-}: UseWorkspaceHierarchyOptions) {
+}: WorkspaceSpeciesBrainRegionProps) {
   // track initialization to prevent infinite loops
   const isInitializedRef = useRef(false);
   const key = getSectionFromDataKey(dataKey);
@@ -73,11 +73,13 @@ export function useWorkspaceAtlasHierarchy({
 
   const { hierarchies, isLoading: isLoadingHierarchies } =
     useBrainRegionHierarchySpeciesQuery();
-  const { remoteHierarchyPreference, loading: isLoadingRemotePreference } =
+  const { hierarchySpeciesUserPreference, loading: isLoadingRemotePreference } =
     useRemoteHierarchyUserPreferenceQuery();
 
-  const [selectedSpecies, setSelectedSpecies] = useAtom(selectedSpeciesAtom);
-  const setCurrentHierarchyId = useSetAtom(currentHierarchyIdAtom);
+  const [selectedSpecies, setSelectedSpecies] = useAtom(
+    workspaceHierarchySpeciesAtom,
+  );
+  const setCurrentHierarchyId = useSetAtom(workspaceHierarchyIdAtom);
   const { result: brainRegions } = usePrimaryHierarchyQuery();
   const [storedSelection, setLocalStoredSelection] =
     useLocalStorage<BrainRegionHierarchySelection | null>(storageKey, null);
@@ -101,14 +103,14 @@ export function useWorkspaceAtlasHierarchy({
 
   // get default hierarchy based on configured species
   const defaultHierarchy = hierarchies?.find(
-    (h) => h.id === config.APP_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+    (h) => h.id === config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID,
   );
 
   const defaultingCurrentHierarchyId =
     urlState.hierarchyId ||
-    remoteHierarchyPreference?.hierarchy_id ||
+    hierarchySpeciesUserPreference?.hierarchy_id ||
     storedSelection?.hierarchyId ||
-    config.APP_DEFAULT_BRAIN_REGION_HIERARCHY_ID;
+    config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID;
 
   const defaultBrainRegionId =
     defaultingCurrentHierarchyId ===
@@ -124,8 +126,10 @@ export function useWorkspaceAtlasHierarchy({
    * fire-and-forget api persistence
    * persists selection to backend without blocking ui
    */
-  function persistToRemote(selection: BrainRegionHierarchySelection) {
-    setBrainRegionPreference({
+  function syncHierarchySelectionPreference(
+    selection: BrainRegionHierarchySelection,
+  ) {
+    updateBrainRegionPreference({
       hierarchy_id: selection.hierarchyId,
       species_taxonomy_id: selection.speciesTaxonomyId,
       brain_region_id: selection.brainRegionId || null,
@@ -143,7 +147,7 @@ export function useWorkspaceAtlasHierarchy({
     });
 
     // fire-and-forget api persistence
-    persistToRemote(selection);
+    syncHierarchySelectionPreference(selection);
   }
 
   /**
@@ -188,7 +192,7 @@ export function useWorkspaceAtlasHierarchy({
 
       const currentHierarchyId =
         urlState.hierarchyId ||
-        remoteHierarchyPreference?.hierarchy_id ||
+        hierarchySpeciesUserPreference?.hierarchy_id ||
         storedSelection?.hierarchyId ||
         defaultHierarchy?.id ||
         "";
@@ -216,7 +220,7 @@ export function useWorkspaceAtlasHierarchy({
 
     const currentHierarchyId =
       urlState.hierarchyId ||
-      remoteHierarchyPreference?.hierarchy_id ||
+      hierarchySpeciesUserPreference?.hierarchy_id ||
       storedSelection?.hierarchyId ||
       defaultHierarchy?.id ||
       "";
@@ -268,7 +272,7 @@ export function useWorkspaceAtlasHierarchy({
       return;
     }
     // priority 2: remote
-    const remoteHierarchyId = remoteHierarchyPreference?.hierarchy_id;
+    const remoteHierarchyId = hierarchySpeciesUserPreference?.hierarchy_id;
     if (remoteHierarchyId) {
       const hierarchy = hierarchies?.find((h) => h.id === remoteHierarchyId);
       if (hierarchy) {
@@ -278,15 +282,15 @@ export function useWorkspaceAtlasHierarchy({
         setLocalStoredSelection({
           hierarchyId: hierarchy.id,
           speciesTaxonomyId: hierarchy.species.taxonomyId,
-          brainRegionId: remoteHierarchyPreference.brain_region_id || "",
+          brainRegionId: hierarchySpeciesUserPreference.brain_region_id || "",
           brainRegionAnnotationValue:
-            remoteHierarchyPreference.brain_region_annotation_value || 0,
+            hierarchySpeciesUserPreference.brain_region_annotation_value || 0,
         });
         setUrlState({
           hierarchyId: hierarchy.id,
-          brainRegionId: remoteHierarchyPreference.brain_region_id || "",
+          brainRegionId: hierarchySpeciesUserPreference.brain_region_id || "",
           annotationValue:
-            remoteHierarchyPreference.brain_region_annotation_value || 0,
+            hierarchySpeciesUserPreference.brain_region_annotation_value || 0,
         });
         isInitializedRef.current = true;
         return;
@@ -402,7 +406,7 @@ export function useWorkspaceAtlasHierarchy({
     urlState.hierarchyId ||
     storedSelection?.hierarchyId ||
     defaultHierarchy?.id ||
-    config.APP_DEFAULT_BRAIN_REGION_HIERARCHY_ID;
+    config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID;
 
   return {
     selectedSpecies,
@@ -412,15 +416,6 @@ export function useWorkspaceAtlasHierarchy({
     isLoadingHierarchies,
     changeSpecies,
     changeBrainRegion,
-
-    // backward compatibility with useBrainRegionHierarchy
-    /** @deprecated use changeBrainRegion instead */
-    updateHierarchyConfig: changeBrainRegion,
-    /** @deprecated use selectedBrainRegion?.id and selectedBrainRegion?.annotation_value instead */
-    node: {
-      id: urlState.brainRegionId,
-      annotation_value: urlState.annotationValue,
-    },
   };
 }
 
@@ -428,8 +423,8 @@ export function useWorkspaceAtlasHierarchy({
  * lightweight hook to just get the current species selection
  * use this when you only need to read the species, not change it
  */
-export function useCurrentSpecies(): ISpeciesInfo | null {
-  return useAtomValue(selectedSpeciesAtom);
+export function useWorkspaceHierarchySpecies(): IWorkspaceSpecies | null {
+  return useAtomValue(workspaceHierarchySpeciesAtom);
 }
 
 /**
@@ -437,5 +432,5 @@ export function useCurrentSpecies(): ISpeciesInfo | null {
  * use this when you only need to read the hierarchy ID, not change it
  */
 export function useCurrentHierarchyId(): string {
-  return useAtomValue(currentHierarchyIdAtom);
+  return useAtomValue(workspaceHierarchyIdAtom);
 }

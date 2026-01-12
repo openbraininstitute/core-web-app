@@ -28,11 +28,11 @@ import type {
 import type { RenderNodeProps } from "@/components/tree/types";
 import type { WorkspaceContext } from "@/types/common";
 import { cn } from "@/utils/css-class";
-import { useWorkspaceAtlasHierarchy } from "@/features/brain-region-hierarchy/hooks";
+import { useWorkspaceSpeciesBrainRegion } from "@/features/brain-region-hierarchy/hooks";
 
 export function CellCompositionMETypeTree() {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
-  const { selectedBrainRegion } = useWorkspaceAtlasHierarchy({
+  const { selectedBrainRegion } = useWorkspaceSpeciesBrainRegion({
     dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
   });
 

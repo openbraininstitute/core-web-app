@@ -13,20 +13,13 @@ import {
 } from "@/ui/segments/contribute/shared/helpers";
 
 import type { IBrainRegionHierarchy } from "@/api/entitycore/types/entities/brain-region";
-import { useWorkspaceAtlasHierarchy } from "@/features/brain-region-hierarchy/hooks";
+import { useWorkspaceSpeciesBrainRegion } from "@/features/brain-region-hierarchy/hooks";
 
 export function Setup() {
   const form = Form.useFormInstance();
   const { projectId } = useWorkspace();
-  const { selectedBrainRegion } = useWorkspaceAtlasHierarchy({
+  const { selectedBrainRegion } = useWorkspaceSpeciesBrainRegion({
     dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
-  });
-
-  const BrainRegionDropdown = BrainRegionDropdownWithFormItem({
-    clsx: { trigger: "rounded-full w-full h-12", content: "z-[99999]" },
-    showIcon: false,
-    charsPerLine: 200,
-    defaultBrainRegion: selectedBrainRegion as IBrainRegionHierarchy,
   });
 
   return (
@@ -87,7 +80,12 @@ export function Setup() {
           },
         ]}
       >
-        <BrainRegionDropdown />
+        <BrainRegionDropdownWithFormItem
+          clsx={{ trigger: "rounded-full w-full h-12", content: "z-[99999]" }}
+          showIcon={false}
+          charsPerLine={200}
+          defaultBrainRegion={selectedBrainRegion as IBrainRegionHierarchy}
+        />
       </Form.Item>
     </div>
   );

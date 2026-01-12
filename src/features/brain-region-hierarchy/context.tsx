@@ -29,11 +29,11 @@ import {
   type TBrainRegionHierarchyExtendedOption,
   type TBrainRegionHierarchyOption,
 } from "@/features/brain-region-hierarchy/helpers";
-import type { ISpeciesInfo } from "@/features/brain-region-hierarchy/types";
+import type { IWorkspaceSpecies } from "@/features/brain-region-hierarchy/types";
 import { log } from "@/utils/logger";
 import { useQuery } from "@tanstack/react-query";
 import { keyBuilderHierarchy } from "@/ui/use-query-keys/atlas";
-import { getBrainRegionPreference } from "@/api/virtual-lab-svc/queries/brain-region-preferences";
+import { getWorkspaceHierarchySpeciesPreference } from "@/api/virtual-lab-svc/queries/brain-region-preferences";
 
 export const defaultExploreRegion = {
   id: "http://api.brain-map.org/api/v2/data/Structure/567",
@@ -42,17 +42,17 @@ export const defaultExploreRegion = {
 
 export const {
   DEFAULT_BRAIN_ATLAS_ID,
-  APP_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+  APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID,
   // MOUSE
-  MOUSE_ROOT_BRAIN_REGION_ID,
-  MOUSE_DEFAULT_SELECTED_BRAIN_REGION_ID,
-  MOUSE_ROOT_BRAIN_REGION_ANNOTATION_VALUE, // 997
-  MOUSE_PRIMARY_ANATOMICAL_DIVISIONS_ANNOTATION_VALUE, // 8
+  MOUSE_ROOT__BRAIN_REGION_ID,
+  MOUSE_ROOT__BRAIN_REGION_ANNOTATION_VALUE, // 997
+  MOUSE_DEFAULT__SELECTED_BRAIN_REGION_ID,
+  MOUSE_PRIMARY__DIVISION_ANNOTATION_VALUE, // 8
   // HUMAN
-  HUMAN_MOUSE_ROOT_BRAIN_REGION_ID,
-  HUMAN_DEFAULT_SELECTED_BRAIN_REGION_ID,
-  HUMAN_ROOT_BRAIN_REGION_ANNOTATION_VALUE, // 999
-  HUMAN_PRIMARY_ANATOMICAL_DIVISIONS_ANNOTATION_VALUE, // 999
+  HUMAN_ROOT__BRAIN_REGION_ID,
+  HUMAN_ROOT__BRAIN_REGION_ANNOTATION_VALUE, // 999
+  HUMAN_DEFAULT__SELECTED_BRAIN_REGION_ID,
+  HUMAN_PRIMARY__DIVISION_ANNOTATION_VALUE, // 999
 } = config;
 
 // MOUSE
@@ -72,24 +72,22 @@ export const DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE = "br_av";
 
 export const AtlasHierarchyConfig = {
   Global: {
-    DefaultHierarchyId: config.APP_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+    DefaultHierarchyId: config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID,
   },
   Human: {
-    RootId: HUMAN_MOUSE_ROOT_BRAIN_REGION_ID,
-    RootAnnotationValue: HUMAN_ROOT_BRAIN_REGION_ANNOTATION_VALUE, // 999
-    PrimaryAnatomicalDivisionsAnnotationValue:
-      HUMAN_PRIMARY_ANATOMICAL_DIVISIONS_ANNOTATION_VALUE, // 999
-    DefaultSelectedId: HUMAN_DEFAULT_SELECTED_BRAIN_REGION_ID,
+    RootId: HUMAN_ROOT__BRAIN_REGION_ID,
+    RootAnnotationValue: HUMAN_ROOT__BRAIN_REGION_ANNOTATION_VALUE, // 999
+    PrimaryDivisionAnnotationValue: HUMAN_PRIMARY__DIVISION_ANNOTATION_VALUE, // 999
+    DefaultSelectedId: HUMAN_DEFAULT__SELECTED_BRAIN_REGION_ID,
     DefaultSelectedAnnotationValue:
       HUMAN_DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE,
     DefaultSelectedName: HUMAN_DEFAULT_SELECTED_BRAIN_REGION_NAME,
   },
   Mouse: {
-    RootId: MOUSE_ROOT_BRAIN_REGION_ID,
-    RootAnnotationValue: MOUSE_ROOT_BRAIN_REGION_ANNOTATION_VALUE, // 997
-    PrimaryAnatomicalDivisionsAnnotationValue:
-      MOUSE_PRIMARY_ANATOMICAL_DIVISIONS_ANNOTATION_VALUE, // 8
-    DefaultSelectedId: MOUSE_DEFAULT_SELECTED_BRAIN_REGION_ID,
+    RootId: MOUSE_ROOT__BRAIN_REGION_ID,
+    RootAnnotationValue: MOUSE_ROOT__BRAIN_REGION_ANNOTATION_VALUE, // 997
+    PrimaryDivisionAnnotationValue: MOUSE_PRIMARY__DIVISION_ANNOTATION_VALUE, // 8
+    DefaultSelectedId: MOUSE_DEFAULT__SELECTED_BRAIN_REGION_ID,
     DefaultSelectedAnnotationValue:
       MOUSE_DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE,
     DefaultSelectedName: MOUSE_DEFAULT_SELECTED_BRAIN_REGION_NAME,
@@ -105,44 +103,93 @@ export const selectedBrainRegionAtom = atom<BrainRegionHierarchyBase | null>(
  * atom for storing the currently selected species information
  * used for multi-species brain region hierarchy support
  */
-export const selectedSpeciesAtom = atom<ISpeciesInfo | null>(null);
+export const workspaceHierarchySpeciesAtom = atom<IWorkspaceSpecies | null>(
+  null,
+);
 
 /**
  * atom for storing the current hierarchy ID
  * this allows dynamic switching between different species hierarchies
  */
-export const currentHierarchyIdAtom = atom<string>(
-  config.APP_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+export const workspaceHierarchyIdAtom = atom<string>(
+  config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID,
 );
 
-const useBrainRegionUserPreference = () => {
+/**
+ * fetches and manages user preferences for brain region hierarchy species selection.
+ *
+ * This hook retrieves the user's preferred brain region hierarchy ID from the workspace
+ * hierarchy species preference API. It's designed to support multi-species brain region
+ * hierarchies by allowing users to persist their species selection across sessions.
+ *
+ * The hook uses React Query with optimized caching settings:
+ * - `staleTime: Infinity` - Data never becomes stale, reducing unnecessary re-fetches
+ * - `refetchOnWindowFocus: false` - Prevents refetching when the window regains focus
+ *
+ * @returns An object containing:
+ *   - `remoteHierarchyId`: The user's preferred hierarchy ID from remote preferences, or undefined if not set
+ *   - `error`: Boolean indicating if there was an error fetching the preferences
+ *   - `loadingRemote`: Boolean indicating if the remote preference data is still being fetched
+ */
+const useHierarchySpeciesUserPreference = () => {
   const {
     data: remotePreference,
     isLoading: isLoadingRemotePreference,
     isError,
   } = useQuery({
     queryKey: keyBuilderHierarchy.hierarchyPreference(),
-    queryFn: () => getBrainRegionPreference(),
+    queryFn: () => getWorkspaceHierarchySpeciesPreference(),
     staleTime: Infinity,
     refetchOnWindowFocus: false,
   });
 
   return {
-    remoteHierarchyId: remotePreference?.data?.preference.hierarchy_id,
+    userRemoteHierarchyId: remotePreference?.data?.preference.hierarchy_id,
     error: isError,
-    loadingRemote: isLoadingRemotePreference,
+    loading: isLoadingRemotePreference,
   };
 };
 
-export const useBrainRegionRootHierarchyAtom = () => {
-  const [currentHierarchyId] = useAtom(currentHierarchyIdAtom);
+/**
+ * fetches and manages the root brain region hierarchy data.
+ *
+ * This hook handles the complex logic of determining which brain region hierarchy
+ * to use based on multiple sources with a defined priority order. It fetches the
+ * hierarchy data and processes it into a format suitable for UI components.
+ *
+ * Priority order for hierarchy ID selection:
+ * 1. User's remote preference (from workspace hierarchy species preference)
+ * 2. Current workspace hierarchy ID (from local atom state)
+ * 3. Atlas hierarchy ID (from the current brain atlas)
+ * 4. Default hierarchy ID (from application configuration)
+ *
+ * The hook performs the following operations:
+ * - Determines the appropriate hierarchy ID using the priority order
+ * - Fetches the brain region hierarchy data from the API
+ * - Flattens the hierarchy tree into selectable options for UI components
+ * - Handles loading states and error conditions
+ * - Waits for remote preferences to load before making API calls
+ *
+ * @returns An object containing:
+ *   - `result`: The processed hierarchy data
+ *     - `currentHierarchyId`: The hierarchy ID that was ultimately used
+ *     - `root`: The root node of the brain region hierarchy tree
+ *     - `options`: Flattened array of selectable regions with metadata
+ *   - `loading`: Boolean indicating if data is being fetched (includes remote preference loading)
+ *   - `error`: Error object if the hierarchy fails to load
+ */
+export const useBrainRegionRootHierarchyQuery = () => {
+  const [workspaceHierarchyId] = useAtom(workspaceHierarchyIdAtom);
   const { atlas } = useBrainAtlasQuery();
-  const { remoteHierarchyId, loadingRemote } = useBrainRegionUserPreference();
+  const { userRemoteHierarchyId, loading: loadingRemote } =
+    useHierarchySpeciesUserPreference();
+
   // Priority: explicit hierarchy ID > Remote ID > atlas hierarchy  > config default
-  const hierarchyId = currentHierarchyId;
-  remoteHierarchyId ||
+  const hierarchyId =
+    userRemoteHierarchyId ||
+    workspaceHierarchyId ||
     atlas?.hierarchy_id ||
-    config.APP_DEFAULT_BRAIN_REGION_HIERARCHY_ID;
+    config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID;
 
   const {
     data: root,
@@ -160,8 +207,8 @@ export const useBrainRegionRootHierarchyAtom = () => {
   if (isLoading || error || !root) {
     return {
       result: {
-        currentHierarchyId,
         root,
+        workspaceHierarchyId: hierarchyId,
         options: [],
       },
       error,
@@ -173,13 +220,13 @@ export const useBrainRegionRootHierarchyAtom = () => {
 
   return {
     result: {
-      currentHierarchyId,
       root,
+      workspaceHierarchyId: hierarchyId,
       options: flattenTreeAsObject<IBrainRegionHierarchy>(root).map(
         (region) => ({
           value: region.id,
           label: `${region.name}`,
-          data: region,
+          data: { ...region, hierarchy_id: hierarchyId },
         }),
       ),
     },
@@ -187,41 +234,6 @@ export const useBrainRegionRootHierarchyAtom = () => {
     error,
   };
 };
-
-export const brainRegionRootHierarchyAtom = atom(async (get) => {
-  const atlas = await get(brainAtlasAtom);
-  const currentHierarchyId = get(currentHierarchyIdAtom);
-
-  // Priority: explicit hierarchy ID > atlas hierarchy > config default
-  const hierarchyId =
-    currentHierarchyId ||
-    atlas?.hierarchy_id ||
-    config.APP_DEFAULT_BRAIN_REGION_HIERARCHY_ID;
-
-  const { data: root, error } = await tryCatch(
-    getBrainRegionHierarchy({
-      id: hierarchyId,
-    }),
-  );
-
-  if (error) {
-    log("error", "Failed to fetch brain regions:", error);
-    throw error;
-  }
-  const options = flattenTreeAsObject<IBrainRegionHierarchy>(root).map(
-    (region) => ({
-      value: region.id,
-      label: `${region.name}`,
-      data: region,
-    }),
-  );
-
-  return {
-    currentHierarchyId,
-    root,
-    options,
-  };
-});
 
 /**
  * Determines the appropriate primary anatomical divisions annotation value based on the hierarchy ID.
@@ -235,30 +247,18 @@ export const brainRegionRootHierarchyAtom = atom(async (get) => {
  *   - For mouse (default hierarchy): Returns MOUSE_PRIMARY_ANATOMICAL_DIVISIONS_ANNOTATION_VALUE (8)
  *   - For human (non-default hierarchy): Returns HUMAN_PRIMARY_ANATOMICAL_DIVISIONS_ANNOTATION_VALUE (999)
  *
- * @example
- * ```tsx
- * const mouseAnnotationValue = getPrimaryAnatomicalDivisionsAnnotationValue(
- *   config.APP_DEFAULT_BRAIN_REGION_HIERARCHY_ID
- * ); // Returns 8
- *
- * const humanAnnotationValue = getPrimaryAnatomicalDivisionsAnnotationValue(
- *   "human-hierarchy-id"
- * ); // Returns 999
- * ```
  */
-export function getPrimaryAnatomicalDivisionsAnnotationValue(
-  currentHierarchyId: string,
-) {
-  let primaryAnatomicalDivisionsAnnotationValue =
-    AtlasHierarchyConfig.Mouse.PrimaryAnatomicalDivisionsAnnotationValue;
-  if (currentHierarchyId === config.APP_DEFAULT_BRAIN_REGION_HIERARCHY_ID) {
-    primaryAnatomicalDivisionsAnnotationValue =
-      AtlasHierarchyConfig.Mouse.PrimaryAnatomicalDivisionsAnnotationValue;
+export function getPrimaryDivisionAnnotationValue(currentHierarchyId: string) {
+  let primaryDivisionAnnotationValue =
+    AtlasHierarchyConfig.Mouse.PrimaryDivisionAnnotationValue;
+  if (currentHierarchyId === config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID) {
+    primaryDivisionAnnotationValue =
+      AtlasHierarchyConfig.Mouse.PrimaryDivisionAnnotationValue;
   } else {
-    primaryAnatomicalDivisionsAnnotationValue =
-      AtlasHierarchyConfig.Human.PrimaryAnatomicalDivisionsAnnotationValue;
+    primaryDivisionAnnotationValue =
+      AtlasHierarchyConfig.Human.PrimaryDivisionAnnotationValue;
   }
-  return primaryAnatomicalDivisionsAnnotationValue;
+  return primaryDivisionAnnotationValue;
 }
 
 /**
@@ -272,21 +272,10 @@ export function getPrimaryAnatomicalDivisionsAnnotationValue(
  * @returns The default selected brain region name:
  *   - For mouse (default hierarchy): Returns MOUSE_DEFAULT_SELECTED_BRAIN_REGION_NAME ("Cerebrum")
  *   - For human (non-default hierarchy): Returns HUMAN_DEFAULT_SELECTED_BRAIN_REGION_NAME ("telencephalon")
- *
- * @example
- * ```tsx
- * const mouseDefaultName = getDefaultSelectedBrainRegionName(
- *   config.APP_DEFAULT_BRAIN_REGION_HIERARCHY_ID
- * ); // Returns "Cerebrum"
- *
- * const humanDefaultName = getDefaultSelectedBrainRegionName(
- *   "human-hierarchy-id"
- * ); // Returns "telencephalon"
- * ```
  */
 export function getDefaultSelectedBrainRegionName(currentHierarchyId: string) {
   let defaultName = AtlasHierarchyConfig.Mouse.DefaultSelectedId;
-  if (currentHierarchyId === config.APP_DEFAULT_BRAIN_REGION_HIERARCHY_ID) {
+  if (currentHierarchyId === config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID) {
     AtlasHierarchyConfig.Mouse.DefaultSelectedId;
   } else {
     defaultName = AtlasHierarchyConfig.Human.DefaultSelectedId;
@@ -321,24 +310,24 @@ export function getDefaultSelectedBrainRegionName(currentHierarchyId: string) {
  */
 export const usePrimaryHierarchyQuery = () => {
   const {
-    result: { root: master, currentHierarchyId },
+    result: { root: master, workspaceHierarchyId },
     loading: loadingRootHierarchy,
     error,
-  } = useBrainRegionRootHierarchyAtom();
+  } = useBrainRegionRootHierarchyQuery();
 
-  const primaryAnatomicalDivisionsAnnotationValue =
-    getPrimaryAnatomicalDivisionsAnnotationValue(currentHierarchyId);
+  const primaryDivisionAnnotationValue =
+    getPrimaryDivisionAnnotationValue(workspaceHierarchyId);
 
   if (master) {
     const root = findNodeByKey<IBrainRegionHierarchy>(
       DEFAULT_BRAIN_REGION_ANNOTATION_FIELD,
-      primaryAnatomicalDivisionsAnnotationValue,
+      primaryDivisionAnnotationValue,
       master,
     );
     if (!root) {
       log(
         "warn",
-        `Brain region with annotation_value ${primaryAnatomicalDivisionsAnnotationValue} not found.`,
+        `Brain region with annotation_value ${primaryDivisionAnnotationValue} not found.`,
       );
       return {
         result: null,
@@ -388,11 +377,37 @@ export const usePrimaryHierarchyQuery = () => {
   };
 };
 
+/**
+ * provides the extended primary anatomical divisions brain region hierarchy.
+ *
+ * This hook builds upon the primary hierarchy by merging it with brain atlas data to create
+ * an extended hierarchy that includes additional atlas-specific information (volumetric date).
+ * It fetches both the brain region hierarchy and atlas data, then combines them
+ * to provide a comprehensive view of brain regions with their associated atlas properties.
+ *
+ * The hook performs the following operations:
+ * - Retrieves the master brain region hierarchy and atlas data
+ * - Creates a map of atlas regions for efficient lookup by brain_region_id
+ * - Determines the correct primary division annotation value based on species
+ * - Finds the root node matching the annotation value in the hierarchy tree
+ * - Merges the hierarchy with atlas data to create extended region objects
+ * - Flattens the extended hierarchy into selectable options for UI components
+ * - Generates a map of leaf regions for each parent region in the extended format
+ * - Renames color properties for consistent UI usage
+ *
+ * @returns An object containing:
+ *   - `result`: The processed extended hierarchy data or null if not found/error
+ *     - `root`: The root node of the extended primary anatomical divisions
+ *     - `nodes`: The extended hierarchy with renamed color properties
+ *     - `options`: Flattened array of selectable extended regions with metadata
+ *     - `leaves`: Map of region IDs to their extended leaf descendants
+ *   - `loading`: Boolean indicating if either hierarchy or atlas data is still being fetched
+ */
 export const usePrimaryExtendedHierarchyQuery = () => {
   const {
-    result: { root: master, currentHierarchyId },
+    result: { root: master, workspaceHierarchyId },
     loading: loadingRootHierarchy,
-  } = useBrainRegionRootHierarchyAtom();
+  } = useBrainRegionRootHierarchyQuery();
   const {
     result: { atlas },
     loadingAtlas,
@@ -411,19 +426,19 @@ export const usePrimaryExtendedHierarchyQuery = () => {
   for (const region of atlas) {
     atlasMap.set(region.brain_region_id, region);
   }
-  const primaryAnatomicalDivisionsAnnotationValue =
-    getPrimaryAnatomicalDivisionsAnnotationValue(currentHierarchyId);
+  const primaryDivisionAnnotationValue =
+    getPrimaryDivisionAnnotationValue(workspaceHierarchyId);
 
   const baseRoot = findNodeByKey<IBrainRegionHierarchy>(
     DEFAULT_BRAIN_REGION_ANNOTATION_FIELD,
-    primaryAnatomicalDivisionsAnnotationValue,
+    primaryDivisionAnnotationValue,
     master,
   );
 
   if (!baseRoot) {
     log(
       "warn",
-      `Brain region with annotation_value ${primaryAnatomicalDivisionsAnnotationValue} not found.`,
+      `Brain region with annotation_value ${primaryDivisionAnnotationValue} not found.`,
     );
     return {
       result: null,
@@ -465,176 +480,6 @@ export const usePrimaryExtendedHierarchyQuery = () => {
 };
 
 /**
- * Custom hook for managing the state of a brain region hierarchy selection.
- *
- * This hook synchronizes the selected brain region's state between URL query parameters
- * and local storage, providing a consistent experience across sessions and shareable URLs.
- *
- * @param props - The properties for the hook.
- * @param props.dataKey - The key used to store and retrieve the hierarchy state from local storage.
- * @returns An object containing:
- *   - `node`: The currently selected brain region hierarchy node, including `id`, `name`, and `annotation_value`.
- *   - `updateHierarchyConfig`: A function to update the selected brain region node and persist the changes.
- *
- * NOTE: The `dataKey` should be unique for each context, you should use the resolveDataKey along with
- * getSectionFromDataKey to extract the right key for brain region used
- */
-/* 
-export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
-  const key = getSectionFromDataKey(dataKey);
-  const [selectedBrainRegion, updateSelectedBrainRegion] = useAtom(
-    selectedBrainRegionAtom,
-  );
-  const brainRegions = useUnwrappedValue(
-    PrimaryAnatomicalDivisionsHierarchyAtom,
-  );
-
-  const defaultSelectedBrainRegion = brainRegions?.options.find(
-    (o) =>
-      lowerCase(o.label).trim() ===
-      lowerCase(MOUSE_DEFAULT_SELECTED_BRAIN_REGION_NAME).trim(),
-  );
-
-  const [stored, updateLocalStorage] = useLocalStorage<{
-    id: string;
-    annotation_value: number;
-  } | null>(key, null);
-
-  const [
-    { id, annotation_value: annotationValue },
-    setSearchParamHierarchyConfig,
-  ] = useQueryStates(
-    {
-      id: parseAsString.withDefault(""),
-      annotation_value: parseAsInteger.withDefault(0),
-    },
-    {
-      urlKeys: {
-        id: DEFAULT_BRAIN_REGION_QUERY_ID,
-        annotation_value: DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
-      },
-      shallow: false,
-      clearOnDefault: false,
-    },
-  );
-  // track if config was already initialized to avoid infinite loop
-  const isInitializedRef = useRef(false);
-
-  useEffect(() => {
-    if (!brainRegions) return;
-
-    const hasURLParams = !!id && !!annotationValue;
-
-    // reset initialization if we're missing URL params but have localStorage data
-    // this handles navigation back to /data from other routes
-    if (
-      !hasURLParams &&
-      stored?.id &&
-      stored?.annotation_value &&
-      isInitializedRef.current
-    ) {
-      isInitializedRef.current = false;
-    }
-
-    if (isInitializedRef.current) return;
-
-    if (hasURLParams) {
-      isInitializedRef.current = true;
-      if (selectedBrainRegion?.id !== id) {
-        const foundNode = find(
-          brainRegions?.options,
-          (o) => o.data.id === id,
-        )?.data;
-        if (foundNode) {
-          updateSelectedBrainRegion(omit(foundNode, "children"));
-        }
-      }
-      return;
-    }
-
-    if (stored?.id && stored?.annotation_value) {
-      if (id !== stored.id || annotationValue !== stored.annotation_value) {
-        const foundNode = find(
-          brainRegions?.options,
-          (o) => o.data.id === stored.id,
-        )?.data;
-        if (foundNode) {
-          setSearchParamHierarchyConfig({
-            id: foundNode.id,
-            annotation_value: foundNode.annotation_value,
-          });
-          updateSelectedBrainRegion(omit(foundNode, "children"));
-        }
-      }
-      isInitializedRef.current = true;
-      return;
-    }
-
-    if (defaultSelectedBrainRegion) {
-      if (
-        id !== defaultSelectedBrainRegion.value ||
-        annotationValue !== defaultSelectedBrainRegion.data.annotation_value
-      ) {
-        updateSelectedBrainRegion(
-          omit(defaultSelectedBrainRegion.data, "children"),
-        );
-        setSearchParamHierarchyConfig({
-          id: defaultSelectedBrainRegion.value,
-          annotation_value: defaultSelectedBrainRegion.data.annotation_value,
-        });
-      }
-    }
-
-    isInitializedRef.current = true;
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [brainRegions, id, annotationValue, stored, defaultSelectedBrainRegion]);
-
-  // Sync localStorage when URL params change
-  useEffect(() => {
-    if (id && annotationValue && defaultSelectedBrainRegion) {
-      const hierarchyConfig = { id, annotation_value: annotationValue };
-      updateLocalStorage(hierarchyConfig);
-    }
-  }, [id, annotationValue, defaultSelectedBrainRegion, updateLocalStorage]);
-
-  
-  const updateHierarchyConfig = (node: IBrainRegionHierarchy | null) => {
-    const regionConfig = node
-      ? {
-          id: node.id,
-          name: node.name,
-          annotation_value: node?.annotation_value,
-        }
-      : null;
-
-    // Only update if the values are actually different
-    if (
-      regionConfig &&
-      (id !== regionConfig.id ||
-        annotationValue !== regionConfig.annotation_value)
-    ) {
-      // Ensure the UI (e.g., RegionBanner) reflects the new selection immediately
-      // before any URL updates that may cause re-renders.
-      updateSelectedBrainRegion(omit(node, "children"));
-      updateLocalStorage(regionConfig);
-      setSearchParamHierarchyConfig(regionConfig);
-    } else if (!regionConfig && (id !== "" || annotationValue !== 0)) {
-      // Clear selection first to keep UI in sync, then update storage and URL
-      updateSelectedBrainRegion(null);
-      updateLocalStorage(regionConfig);
-      setSearchParamHierarchyConfig(regionConfig);
-    }
-  };
-
-  return {
-    node: { id, annotation_value: annotationValue },
-    updateHierarchyConfig,
-  };
-};
-**/
-
-/**
  * hook return a setter function to update the highlighted brain region state.
  *
  * @returns An object containing the `updateSelectedBrainRegion` function,
@@ -656,8 +501,3 @@ export const useGetSelectedBrainRegion = () => {
   const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
   return { selectedBrainRegion };
 };
-
-brainRegionSidebarAtom.debugLabel = "brainRegionSidebarAtom";
-selectedBrainRegionAtom.debugLabel = "selectedBrainRegionAtom";
-selectedSpeciesAtom.debugLabel = "selectedSpeciesAtom";
-currentHierarchyIdAtom.debugLabel = "currentHierarchyIdAtom";

@@ -3,7 +3,7 @@
 import { CloseOutlined } from "@ant-design/icons";
 import { HierarchySquare } from "@/components/icons/buttons";
 import { SpeciesSelector } from "@/features/brain-region-hierarchy/components/species-selector";
-import { useWorkspaceAtlasHierarchy } from "@/features/brain-region-hierarchy/hooks";
+import { useWorkspaceSpeciesBrainRegion } from "@/features/brain-region-hierarchy/hooks";
 import { Button } from "@/ui/molecules/button";
 import {
   Tooltip,
@@ -32,7 +32,7 @@ export function RegionBanner({ view, onSwitchView, dataKey }: Props) {
     selectedBrainRegion,
     changeSpecies,
     isLoadingHierarchies,
-  } = useWorkspaceAtlasHierarchy({ dataKey });
+  } = useWorkspaceSpeciesBrainRegion({ dataKey });
 
   if (!selectedBrainRegion && !isLoadingHierarchies) {
     return (

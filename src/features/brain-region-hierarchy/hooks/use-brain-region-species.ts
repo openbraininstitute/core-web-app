@@ -2,13 +2,12 @@
 
 import { useQuery } from "@tanstack/react-query";
 
+import { getWorkspaceHierarchySpeciesPreference } from "@/api/virtual-lab-svc/queries/brain-region-preferences";
 import { getBrainRegionHierarchiesWithSpecies } from "@/api/entitycore/queries/general/brain-region";
 import { transformSpecies } from "@/features/brain-region-hierarchy/types";
 import { keyBuilderHierarchy } from "@/ui/use-query-keys/atlas";
 
 import type { IBrainRegionHierarchiesResponse } from "@/api/entitycore/types/entities/brain-region-hierarchy";
-import type { HierarchyWithSpecies } from "@/features/brain-region-hierarchy/types";
-import { getBrainRegionPreference } from "@/api/virtual-lab-svc/queries/brain-region-preferences";
 
 /**
  * Transform API response to HierarchyWithSpecies array with display names
@@ -77,14 +76,14 @@ export function useRemoteHierarchyUserPreferenceQuery() {
     error,
   } = useQuery({
     queryKey: keyBuilderHierarchy.hierarchyPreference(),
-    queryFn: () => getBrainRegionPreference(),
+    queryFn: () => getWorkspaceHierarchySpeciesPreference(),
     staleTime: Infinity,
     gcTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: false,
   });
 
   return {
-    remoteHierarchyPreference: data?.data?.preference,
+    hierarchySpeciesUserPreference: data?.data?.preference,
     loading: isLoadingRemotePreference,
     error,
   };

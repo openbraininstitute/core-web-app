@@ -1,7 +1,7 @@
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-import type { IBrainRegionHierarchiesResponse } from '@/api/entitycore/types/entities/brain-region-hierarchy';
-import { entityCoreApi } from '@/api/entitycore/utils';
-import { config } from '@/config';
+import type { IBrainRegionHierarchy } from "@/api/entitycore/types/entities/brain-region";
+import type { IBrainRegionHierarchiesResponse } from "@/api/entitycore/types/entities/brain-region-hierarchy";
+import { entityCoreApi } from "@/api/entitycore/utils";
+import { config } from "@/config";
 
 /**
  * Retrieves the brain region hierarchy from the entity core API.
@@ -11,12 +11,14 @@ import { config } from '@/config';
  * @returns A promise that resolves to the brain region hierarchy data.
  */
 export async function getBrainRegionHierarchy({
-  id = config.APP_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+  id = config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID,
 }: {
   id?: string;
 }) {
   const api = await entityCoreApi();
-  return await api.get<IBrainRegionHierarchy>(`/brain-region-hierarchy/${id}/hierarchy`);
+  return await api.get<IBrainRegionHierarchy>(
+    `/brain-region-hierarchy/${id}/hierarchy`,
+  );
 }
 
 /**
@@ -26,5 +28,7 @@ export async function getBrainRegionHierarchy({
  */
 export async function getBrainRegionHierarchiesWithSpecies() {
   const api = await entityCoreApi();
-  return await api.get<IBrainRegionHierarchiesResponse>(`/brain-region-hierarchy`);
+  return await api.get<IBrainRegionHierarchiesResponse>(
+    `/brain-region-hierarchy`,
+  );
 }

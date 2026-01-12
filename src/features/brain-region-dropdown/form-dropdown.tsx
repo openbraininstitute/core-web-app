@@ -262,59 +262,38 @@ export function BrainRegionDropdownWithFormItem({
   defaultBrainRegion,
   showIcon = true,
   charsPerLine = 200,
-}: Props) {
+  value,
+  onChange,
+}: Props & {
+  value?: string;
+  onChange?: (value: string) => void;
+}) {
   const { result: brainRegionHierarchy } = usePrimaryExtendedHierarchyQuery();
-  console.log(
-    "–– – BrainRegionDropdownWithFormItem – brainRegionHierarchy––",
-    brainRegionHierarchy,
+  const handleSelectBrainRegion = useCallback(
+    (br: IBrainRegionHierarchy) => {
+      startTransition(() => {
+        onChange?.(br.id);
+      });
+      onSelectBrainRegion?.(br);
+    },
+    [onChange, onSelectBrainRegion],
   );
 
-  const wrapper = useMemo(
-    () =>
-      function Wrapper({
-        value,
-        onChange,
-      }: {
-        value?: string;
-        onChange?: (value: string) => void;
-      }) {
-        const handleSelectBrainRegion = useCallback(
-          (br: IBrainRegionHierarchy) => {
-            startTransition(() => {
-              onChange?.(br.id);
-            });
-            onSelectBrainRegion?.(br);
-          },
-          [onChange],
-        );
-
-        return (
-          <BrainRegionDropdown
-            defaultBrainRegion={
-              value
-                ? brainRegionHierarchy?.options.find(
-                    ({ value: _value }) => value === _value,
-                  )?.data
-                : brainRegionHierarchy?.options.find(
-                    ({ value: _value }) => defaultBrainRegion?.id === _value,
-                  )?.data
-            }
-            onSelectBrainRegion={handleSelectBrainRegion}
-            charsPerLine={charsPerLine}
-            clsx={clsx}
-            showIcon={showIcon}
-          />
-        );
-      },
-    [
-      brainRegionHierarchy,
-      defaultBrainRegion,
-      charsPerLine,
-      clsx,
-      showIcon,
-      onSelectBrainRegion,
-    ],
+  return (
+    <BrainRegionDropdown
+      defaultBrainRegion={
+        value
+          ? brainRegionHierarchy?.options.find(
+              ({ value: _value }) => value === _value,
+            )?.data
+          : brainRegionHierarchy?.options.find(
+              ({ value: _value }) => defaultBrainRegion?.id === _value,
+            )?.data
+      }
+      onSelectBrainRegion={handleSelectBrainRegion}
+      charsPerLine={charsPerLine}
+      clsx={clsx}
+      showIcon={showIcon}
+    />
   );
-
-  return wrapper;
 }

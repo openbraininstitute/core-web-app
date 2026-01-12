@@ -6,7 +6,7 @@ import { Container as AiContainer } from "@/ui/segments/ai/container";
 import { SpaceManagerContainer } from "@/ui/segments/workspaces/space-manager";
 import { WorkspaceTopMenu } from "@/ui/segments/workspaces/top-menu";
 import { keyBuilderHierarchy } from "@/ui/use-query-keys/atlas";
-import { getBrainRegionPreference } from "@/api/virtual-lab-svc/queries/brain-region-preferences";
+import { getWorkspaceHierarchySpeciesPreference } from "@/api/virtual-lab-svc/queries/brain-region-preferences";
 
 type Props = {
   children: ReactNode;
@@ -20,7 +20,7 @@ export default async function Layout({ children }: Props) {
   });
   queryClient.prefetchQuery({
     queryKey: keyBuilderHierarchy.hierarchyPreference(),
-    queryFn: () => getBrainRegionPreference(),
+    queryFn: () => getWorkspaceHierarchySpeciesPreference(),
     staleTime: Infinity,
   });
 

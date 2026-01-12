@@ -1,5 +1,5 @@
 import { virtualLabRootApi } from "@/api/virtual-lab-svc/utils";
-import type { IBrainRegionPreference } from "@/features/brain-region-hierarchy/types";
+import type { IWorkspaceHierarchySpeciesPreference } from "@/features/brain-region-hierarchy/types";
 import { log } from "@/utils/logger";
 
 const BASE_URI = "/users/preferences/brain-region-hierarchy";
@@ -7,11 +7,11 @@ const BASE_URI = "/users/preferences/brain-region-hierarchy";
 /**
  * Response shape for brain region preference API
  */
-export interface VlmBrainRegionPreferenceResponse {
+export interface IVlmWorkspaceHierarchySpeciesPreference {
   message: string;
   data: {
     user_id: string;
-    preference: IBrainRegionPreference;
+    preference: IWorkspaceHierarchySpeciesPreference;
     updated_at: string;
   } | null;
 }
@@ -21,10 +21,10 @@ export interface VlmBrainRegionPreferenceResponse {
  *
  * @returns Promise with the user's brain region preference, or null if not set
  */
-export async function getBrainRegionPreference(): Promise<VlmBrainRegionPreferenceResponse | null> {
+export async function getWorkspaceHierarchySpeciesPreference(): Promise<IVlmWorkspaceHierarchySpeciesPreference | null> {
   try {
     const api = await virtualLabRootApi();
-    return await api.get<VlmBrainRegionPreferenceResponse>(BASE_URI);
+    return await api.get<IVlmWorkspaceHierarchySpeciesPreference>(BASE_URI);
   } catch (error) {
     log("warn", "Failed to fetch brain region preference from API:", error);
     return null;
@@ -32,15 +32,15 @@ export async function getBrainRegionPreference(): Promise<VlmBrainRegionPreferen
 }
 
 /**
- * Sets the user's brain region hierarchy preference (fire-and-forget)
+ * Sets the user's brain region hierarchy species preference (fire-and-forget)
  *
  * This is a non-blocking operation - the function returns immediately
  * and any errors are logged but not thrown, ensuring the UI remains responsive
  *
  * @param preference - The brain region preference to persist
  */
-export function setBrainRegionPreference(
-  preference: IBrainRegionPreference,
+export function updateBrainRegionPreference(
+  preference: IWorkspaceHierarchySpeciesPreference,
 ): void {
   // Fire-and-forget: execute async but don't await
   (async () => {

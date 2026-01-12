@@ -21,7 +21,7 @@ import {
   License,
   Setup,
 } from "@/ui/segments/contribute/electrical-cell-recording/steps";
-import { useWorkspaceAtlasHierarchy } from "@/features/brain-region-hierarchy/hooks";
+import { useWorkspaceSpeciesBrainRegion } from "@/features/brain-region-hierarchy/hooks";
 
 const ELECTRICAL_CELL_RECORDING_STEP_CONFIG: Array<
   IContributionStep<TElectricalCellRecordingForm>
@@ -77,7 +77,7 @@ export function ElectricalCellRecording({
   sessionId,
 }: IElectricalCellRecordingProps) {
   const { projectId, virtualLabId } = useWorkspace();
-  const { selectedBrainRegion } = useWorkspaceAtlasHierarchy({
+  const { selectedBrainRegion } = useWorkspaceSpeciesBrainRegion({
     dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
   });
 

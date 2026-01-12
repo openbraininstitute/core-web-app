@@ -9,14 +9,14 @@ import type { IBrainRegionHierarchy } from "@/api/entitycore/types/entities/brai
 import { useAppNotification } from "@/components/notification";
 import {
   AtlasHierarchyConfig,
-  useBrainRegionRootHierarchyAtom,
+  useBrainRegionRootHierarchyQuery,
   usePrimaryHierarchyQuery,
 } from "@/features/brain-region-hierarchy/context";
 import { brainRegionAtlasAtom } from "../context";
 import { Painter } from "./painter";
 import type { SettingsDefinitions } from "./settings";
 import type { VisibleRegion } from "./types";
-import { useWorkspaceAtlasHierarchy } from "@/features/brain-region-hierarchy/hooks";
+import { useWorkspaceSpeciesBrainRegion } from "@/features/brain-region-hierarchy/hooks";
 
 export function usePainter(): Painter {
   const notif = useAppNotification();
@@ -44,10 +44,10 @@ export function useVisibleRegions(dataKey: string): {
   regions: VisibleRegion[];
 } {
   const { selectedBrainRegion: brainRegionNode, currentHierarchyId } =
-    useWorkspaceAtlasHierarchy({
+    useWorkspaceSpeciesBrainRegion({
       dataKey,
     });
-  const { result: rootBrainRegions } = useBrainRegionRootHierarchyAtom();
+  const { result: rootBrainRegions } = useBrainRegionRootHierarchyQuery();
   const { result: brainRegions } = usePrimaryHierarchyQuery();
 
   const ROOT_BRAIN_REGION_ID =

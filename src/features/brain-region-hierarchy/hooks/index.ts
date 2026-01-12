@@ -6,6 +6,6 @@ export {
 export {
   URL_PARAMS,
   useCurrentHierarchyId,
-  useCurrentSpecies,
-  useWorkspaceAtlasHierarchy,
+  useWorkspaceHierarchySpecies,
+  useWorkspaceSpeciesBrainRegion,
 } from "./use-workspace-hierarchy";

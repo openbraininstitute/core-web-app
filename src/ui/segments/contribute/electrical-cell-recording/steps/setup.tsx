@@ -6,6 +6,7 @@ import { upperFirst } from "es-toolkit/compat";
 import dayjs from "dayjs";
 
 import { BrainRegionDropdownWithFormItem } from "@/features/brain-region-dropdown/form-dropdown";
+import { useWorkspaceSpeciesBrainRegion } from "@/features/brain-region-hierarchy/hooks";
 import { AppUInterfaceSection, resolveDataKey } from "@/utils/key-builder";
 import { SelectPopoverFormItem } from "@/ui/molecules/select-popover";
 import {
@@ -26,12 +27,11 @@ import {
 import { cn } from "@/utils/css-class";
 
 import type { IBrainRegionHierarchy } from "@/api/entitycore/types/entities/brain-region";
-import { useWorkspaceAtlasHierarchy } from "@/features/brain-region-hierarchy/hooks";
 
 export function Setup() {
   const form = Form.useFormInstance();
   const { projectId } = useWorkspace();
-  const { selectedBrainRegion } = useWorkspaceAtlasHierarchy({
+  const { selectedBrainRegion } = useWorkspaceSpeciesBrainRegion({
     dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
   });
 
@@ -128,7 +128,12 @@ export function Setup() {
           },
         ]}
       >
-        <BrainRegionDropdown />
+        <BrainRegionDropdownWithFormItem
+          clsx={{ trigger: "rounded-full w-full h-12", content: "z-[99999]" }}
+          showIcon={false}
+          charsPerLine={200}
+          defaultBrainRegion={selectedBrainRegion as IBrainRegionHierarchy}
+        />
       </Form.Item>
 
       <Form.Item

@@ -15,7 +15,7 @@ import {
   usePrimaryExtendedHierarchyQuery,
 } from "@/features/brain-region-hierarchy/context";
 import { makeBrainRegionClickEvent } from "@/features/brain-region-hierarchy/event";
-import { useWorkspaceAtlasHierarchy } from "@/features/brain-region-hierarchy/hooks";
+import { useWorkspaceSpeciesBrainRegion } from "@/features/brain-region-hierarchy/hooks";
 import { BrainRegionHierarchyNodeRender } from "@/features/brain-region-hierarchy/node-render";
 import { corePageNumberAtom } from "@/ui/segments/data-table/elements/context";
 import { classNames } from "@/util/utils";
@@ -31,11 +31,10 @@ export function BrainRegionHierarchy({
   const isCollapsed = useAtomValue(brainRegionSidebarAtom);
   const { result: brainRegionHierarchyResult } =
     usePrimaryExtendedHierarchyQuery();
-  const { changeBrainRegion, selectedBrainRegion } = useWorkspaceAtlasHierarchy(
-    {
+  const { changeBrainRegion, selectedBrainRegion } =
+    useWorkspaceSpeciesBrainRegion({
       dataKey,
-    },
-  );
+    });
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
 
   if (!brainRegionHierarchyResult) {

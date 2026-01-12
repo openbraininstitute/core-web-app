@@ -20,7 +20,7 @@ import {
 
 import type { TCellMorphologyForm } from "@/ui/segments/contribute/cell-morphology/schema";
 import type { IContributionStep } from "@/ui/segments/contribute/shared/types";
-import { useWorkspaceAtlasHierarchy } from "@/features/brain-region-hierarchy/hooks";
+import { useWorkspaceSpeciesBrainRegion } from "@/features/brain-region-hierarchy/hooks";
 
 const CELL_MORPHOLOGY_STEP_CONFIG: Array<
   IContributionStep<TCellMorphologyForm>
@@ -74,7 +74,7 @@ interface ICellMorphologyProps {
 
 export function CellMorphology({ sessionId }: ICellMorphologyProps) {
   const { projectId, virtualLabId } = useWorkspace();
-  const { selectedBrainRegion } = useWorkspaceAtlasHierarchy({
+  const { selectedBrainRegion } = useWorkspaceSpeciesBrainRegion({
     dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
   });
 

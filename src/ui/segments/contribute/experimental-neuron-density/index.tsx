@@ -2,7 +2,7 @@
 
 import { useExperimentalNeuronDensityPipeline } from "@/ui/segments/contribute/experimental-neuron-density/pipeline";
 import { ContributionForm } from "@/ui/segments/contribute/shared/components/contribution-form";
-import { useWorkspaceAtlasHierarchy } from "@/features/brain-region-hierarchy/hooks";
+import { useWorkspaceSpeciesBrainRegion } from "@/features/brain-region-hierarchy/hooks";
 import { AppUInterfaceSection, resolveDataKey } from "@/utils/key-builder";
 import {
   EXPERIMENTAL_NEURON_DENSITY_PROGRESS_STEPS,
@@ -68,7 +68,7 @@ export function ExperimentalNeuronDensity({
   sessionId,
 }: IExperimentalNeuronDensityProps) {
   const { projectId, virtualLabId } = useWorkspace();
-  const { selectedBrainRegion } = useWorkspaceAtlasHierarchy({
+  const { selectedBrainRegion } = useWorkspaceSpeciesBrainRegion({
     dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
   });
 

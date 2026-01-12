@@ -1,21 +1,23 @@
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { arrayToTree } from "performant-array-to-tree";
+
+import { resolveBrainRegionCellComposition } from "@/features/cell-composition/composition-constructor";
+import { getCellCompositions } from "@/api/entitycore/queries/general/cell-composition";
+import { usePrimaryHierarchyQuery } from "@/features/brain-region-hierarchy/context";
+import { useBrainRegionAtlasQuery } from "@/features/brain-atlas-viewer/context";
 import { getEtypes } from "@/api/entitycore/queries/annotations/etype";
 import { getMtypes } from "@/api/entitycore/queries/annotations/mtype";
-import { downloadAsset } from "@/api/entitycore/queries/assets";
-import { getCellCompositions } from "@/api/entitycore/queries/general/cell-composition";
-import { EntityTypeDict } from "@/api/entitycore/types";
-import type { ICellCompositionRoot } from "@/api/entitycore/types/entities/cell-composition";
-import { AssetLabel } from "@/api/entitycore/types/shared/global";
-import { getAssetElement } from "@/api/entitycore/utils";
-import { renameKeyDeep } from "@/components/tree/elements/helpers";
-import { useBrainRegionAtlasQuery } from "@/features/brain-atlas-viewer/context";
-import { usePrimaryHierarchyQuery } from "@/features/brain-region-hierarchy/context";
-import { resolveBrainRegionCellComposition } from "@/features/cell-composition/composition-constructor";
-import type { WorkspaceContext } from "@/types/common";
-import { log } from "@/utils/logger";
-import { useQueries, useQuery } from "@tanstack/react-query";
 import { keyBuilderAnnotation } from "@/ui/use-query-keys/annotation";
 import { cellCompositionKeyBuilder } from "@/ui/use-query-keys/atlas";
+import { renameKeyDeep } from "@/components/tree/elements/helpers";
+import { AssetLabel } from "@/api/entitycore/types/shared/global";
+import { downloadAsset } from "@/api/entitycore/queries/assets";
+import { getAssetElement } from "@/api/entitycore/utils";
+import { EntityTypeDict } from "@/api/entitycore/types";
+import { log } from "@/utils/logger";
+
+import type { ICellCompositionRoot } from "@/api/entitycore/types/entities/cell-composition";
+import type { WorkspaceContext } from "@/types/common";
 
 const defaultCellCompositionName = "Cell Composition from Blue Brain Atlas";
 

@@ -17,6 +17,7 @@ import {
   SimulationEntitiesTileTypes,
 } from "@/ui/segments/explore/helpers";
 import { cn } from "@/utils/css-class";
+import { useWorkspaceHierarchySpecies } from "@/features/brain-region-hierarchy/hooks";
 
 export const ExploreDataTypeTabs = {
   Experimental: "experimental",
@@ -47,6 +48,8 @@ export const tabsConfigItems: Array<{
 export function EntityLinkCount() {
   const featureFlags = useFlags();
   const breakpoint = useDefaultBreakpoint();
+  const currentSpecies = useWorkspaceHierarchySpecies();
+
   const { selectedBrainRegion } = useGetSelectedBrainRegion();
   const scope = (useSearchParams().get("scope") ??
     WorkspaceScope.Public) as TWorkspaceScope;
@@ -84,7 +87,7 @@ export function EntityLinkCount() {
           key={`link-${value.title}/${value.type}`}
           scope={scope}
           extendedType={value.extendedType}
-          hierarchyId={selectedBrainRegion?.hierarchy_id}
+          hierarchyId={currentSpecies?.hierarchId}
           currentBrainRegionId={selectedBrainRegion?.id}
           defaultBrainRegionId={brainRegionHierarchy?.root.id}
         />
@@ -98,7 +101,7 @@ export function EntityLinkCount() {
             key={`link-${value.title}/${value.type}`}
             extendedType={value.extendedType}
             scope={scope}
-            hierarchyId={selectedBrainRegion?.hierarchy_id}
+            hierarchyId={currentSpecies?.hierarchId}
             currentBrainRegionId={selectedBrainRegion?.id}
             defaultBrainRegionId={brainRegionHierarchy?.root.id}
           />
@@ -113,7 +116,7 @@ export function EntityLinkCount() {
             key={`link-${value.title}/${value.type}`}
             scope={scope}
             extendedType={value.extendedType}
-            hierarchyId={selectedBrainRegion?.hierarchy_id}
+            hierarchyId={currentSpecies?.hierarchId}
             currentBrainRegionId={selectedBrainRegion?.id}
             defaultBrainRegionId={brainRegionHierarchy?.root.id}
           />

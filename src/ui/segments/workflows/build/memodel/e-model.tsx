@@ -29,7 +29,7 @@ import {
   useBuildMeModelSessionState,
 } from "@/ui/segments/workflows/build/memodel/helpers";
 import { cn } from "@/utils/css-class";
-import { useWorkspaceAtlasHierarchy } from "@/features/brain-region-hierarchy/hooks";
+import { useWorkspaceSpeciesBrainRegion } from "@/features/brain-region-hierarchy/hooks";
 
 type Props = {
   sessionId: string;
@@ -67,7 +67,7 @@ export function EModel({ sessionId }: Props) {
   ]).join("/");
 
   const { updateSelectedBrainRegion } = useSetSelectedBrainRegion();
-  const { changeBrainRegion } = useWorkspaceAtlasHierarchy({
+  const { changeBrainRegion } = useWorkspaceSpeciesBrainRegion({
     dataKey,
   });
   const { result: brainRegionHierarchy } = usePrimaryHierarchyQuery();

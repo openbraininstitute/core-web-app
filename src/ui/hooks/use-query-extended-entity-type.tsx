@@ -14,7 +14,7 @@ import type { TWorkspaceScope } from "@/constants";
 import { DEFAULT_PAGE_SIZE } from "@/constants";
 import { getEntityByExtendedType } from "@/entity-configuration/domain/helpers";
 import {
-  APP_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+  APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID,
   selectedBrainRegionAtom,
 } from "@/features/brain-region-hierarchy/context";
 import type { WorkspaceContext } from "@/types/common";
@@ -26,7 +26,10 @@ import {
 } from "@/ui/segments/data-table/elements/context";
 import { compactRecord } from "@/utils/dictionary";
 import { getWorkspaceScopeFilters } from "@/utils/workspace-scope";
-import { useCurrentHierarchyId } from "@/features/brain-region-hierarchy/hooks";
+import {
+  useCurrentHierarchyId,
+  useWorkspaceHierarchySpecies,
+} from "@/features/brain-region-hierarchy/hooks";
 
 export type QueryContext = {
   key: string;
@@ -67,6 +70,7 @@ function useQueryParameters(
     defaultBrainRegion,
   }: { requireBrainRegion?: boolean; defaultBrainRegion?: string },
 ) {
+  const currentSpecies = useWorkspaceHierarchySpecies();
   const selectedBrainRegin = useAtomValue(selectedBrainRegionAtom);
   const sortState = useAtomValue(coreSortStateAtom({ key: context.key }));
   const searchString = useAtomValue(coreSearchStringAtom(context.key));
@@ -99,8 +103,8 @@ function useQueryParameters(
     ...(requireBrainRegion
       ? {
           within_brain_region_hierarchy_id:
-            selectedBrainRegin?.hierarchy_id ??
-            APP_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+            currentSpecies?.hierarchId ??
+            APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID,
           within_brain_region_brain_region_id:
             defaultBrainRegion ?? selectedBrainRegin?.id,
           within_brain_region_direction:
