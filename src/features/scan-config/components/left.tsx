@@ -64,8 +64,6 @@ export default function Left({
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
 
-  console.log(schema);
-
   return (
     <div className={styles.scrollable}>
       <div className="flex flex-grow flex-col items-center gap-5 overflow-y-auto pr-5 pb-5">
