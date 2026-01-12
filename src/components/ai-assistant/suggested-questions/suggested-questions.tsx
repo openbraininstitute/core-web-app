@@ -2,7 +2,6 @@
 
 import React from 'react';
 
-import { useHardcodedSuggestions } from './hardcoded-suggestions';
 import { classNames } from '@/util/utils';
 import IconIdea from '@/components/icons/Idea';
 import { useServiceAiAgentSuggestionFromUserJourney } from '@/services/ai-agent';
@@ -16,11 +15,11 @@ interface SuggestedQuestionsProps {
    */
   threadId: string | undefined;
   /**
-   * When there is no message yet, we only use 1 generated suggestion and 2 hard-coded ones.
-   * Otherwise, we use 3 generated suggestions.
+   * Backend always returns 3 suggestions.
    */
   messagesLength: number;
   onClick(prompt: string): void;
+  isLoading?: boolean;
 }
 
 export default function SuggestedQuestions({
@@ -28,38 +27,49 @@ export default function SuggestedQuestions({
   threadId,
   messagesLength,
   onClick,
+  isLoading,
 }: SuggestedQuestionsProps) {
-  const [suggestions, clearSuggestions] = useServiceAiAgentSuggestionFromUserJourney(
-    threadId ?? '',
-    messagesLength === 0 ? 1 : 3
-  );
-  const hardcodedSuggestions = useHardcodedSuggestions(messagesLength === 0 ? 2 : 0);
-  const allSuggestions = [...hardcodedSuggestions, ...suggestions]
-    .filter((prompt) => Boolean(prompt))
-    .slice(0, 3);
+  const [allSuggestions, clearSuggestions, isLoadingFromHook] =
+    useServiceAiAgentSuggestionFromUserJourney(threadId ?? '');
+  const actualLoading = isLoading ?? isLoadingFromHook;
 
-  if (!threadId || allSuggestions.length === 0) return null;
+  if (!threadId) return null;
+  if (allSuggestions.length === 0 && !actualLoading) return null;
 
   return (
-    <div className={classNames(className, styles.suggestedQuestions)}>
+    <div className={classNames(className, styles.suggestedQuestions, styles.container)}>
       <div className={styles.title}>
         {messagesLength === 0 ? 'Based on the content you have been browsing' : 'Related'}
       </div>
-      <div className={styles.suggestions}>
-        {allSuggestions.map((prompt) => (
-          <button
-            key={prompt}
-            type="button"
-            onClick={() => {
-              onClick(prompt ?? '');
-              clearSuggestions();
-            }}
-          >
-            <IconIdea />
-            <div>{prompt}</div>
-          </button>
-        ))}
-      </div>
+      {allSuggestions.length === 0 && actualLoading ? (
+        <div className={styles.spinnerContainer}>
+          <div className={styles.spinner} />
+        </div>
+      ) : (
+        <>
+          <div className={classNames(styles.suggestions, actualLoading && styles.loading)}>
+            {allSuggestions.map((prompt) => (
+              <button
+                key={prompt}
+                type="button"
+                onClick={() => {
+                  onClick(prompt ?? '');
+                  clearSuggestions();
+                }}
+                disabled={actualLoading}
+              >
+                <IconIdea />
+                <div>{prompt}</div>
+              </button>
+            ))}
+          </div>
+          {actualLoading && (
+            <div className={styles.spinnerOverlay}>
+              <div className={styles.spinner} />
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
