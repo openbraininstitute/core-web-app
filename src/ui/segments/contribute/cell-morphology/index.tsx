@@ -1,72 +1,65 @@
-"use client";
+'use client';
 
-import { AppUInterfaceSection, resolveDataKey } from "@/utils/key-builder";
-import { useWorkspace } from "@/ui/hooks/use-workspace";
-
-import { ContributionForm } from "@/ui/segments/contribute/shared/components/contribution-form";
-import { useCellMorphologyPipeline } from "@/ui/segments/contribute/cell-morphology/pipeline";
+import { useWorkspaceHierarchyTracker } from '@/features/brain-region-hierarchy/hooks';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
-  createCellMorphologyConfig,
   CELL_MORPHOLOGY_PROGRESS_STEPS,
-} from "@/ui/segments/contribute/cell-morphology/config";
+  createCellMorphologyConfig,
+} from '@/ui/segments/contribute/cell-morphology/config';
+import { useCellMorphologyPipeline } from '@/ui/segments/contribute/cell-morphology/pipeline';
+import type { TCellMorphologyForm } from '@/ui/segments/contribute/cell-morphology/schema';
 import {
-  MTypeClassification,
-  Contribution,
   AssetUpload,
+  Contribution,
+  License,
+  MTypeClassification,
   Setup,
   Subject,
-  License,
-} from "@/ui/segments/contribute/cell-morphology/steps";
+} from '@/ui/segments/contribute/cell-morphology/steps';
+import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
+import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
 
-import type { TCellMorphologyForm } from "@/ui/segments/contribute/cell-morphology/schema";
-import type { IContributionStep } from "@/ui/segments/contribute/shared/types";
-import { useWorkspaceSpeciesBrainRegion } from "@/features/brain-region-hierarchy/hooks";
-
-const CELL_MORPHOLOGY_STEP_CONFIG: Array<
-  IContributionStep<TCellMorphologyForm>
-> = [
+const CELL_MORPHOLOGY_STEP_CONFIG: Array<IContributionStep<TCellMorphologyForm>> = [
   {
-    key: "assets",
-    label: "Asset Upload",
-    schemaFieldKey: "assets",
+    key: 'assets',
+    label: 'Asset Upload',
+    schemaFieldKey: 'assets',
     component: AssetUpload,
   },
   {
-    key: "setup",
-    label: "Setup",
-    schemaFieldKey: "setup",
+    key: 'setup',
+    label: 'Setup',
+    schemaFieldKey: 'setup',
     component: Setup,
   },
   {
-    key: "contribution",
-    label: "Contribution",
-    schemaFieldKey: "contribution",
+    key: 'contribution',
+    label: 'Contribution',
+    schemaFieldKey: 'contribution',
     component: Contribution,
   },
   {
-    key: "subject",
-    label: "Subject",
-    schemaFieldKey: "subject_id",
+    key: 'subject',
+    label: 'Subject',
+    schemaFieldKey: 'subject_id',
     component: Subject,
   },
   {
-    key: "license",
-    label: "License",
-    schemaFieldKey: "license_id",
+    key: 'license',
+    label: 'License',
+    schemaFieldKey: 'license_id',
     component: License,
     hasTooltip: true,
   },
   {
-    key: "mtype",
-    label: "M-Type",
-    schemaFieldKey: "mtype_class_id",
+    key: 'mtype',
+    label: 'M-Type',
+    schemaFieldKey: 'mtype_class_id',
     component: MTypeClassification,
   },
 ];
 
-const cellMorphologyConfig = createCellMorphologyConfig(
-  CELL_MORPHOLOGY_STEP_CONFIG,
-);
+const cellMorphologyConfig = createCellMorphologyConfig(CELL_MORPHOLOGY_STEP_CONFIG);
 
 interface ICellMorphologyProps {
   sessionId: string;
@@ -74,9 +67,7 @@ interface ICellMorphologyProps {
 
 export function CellMorphology({ sessionId }: ICellMorphologyProps) {
   const { projectId, virtualLabId } = useWorkspace();
-  const { selectedBrainRegion } = useWorkspaceSpeciesBrainRegion({
-    dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
-  });
+  const { selectedBrainRegion } = useWorkspaceHierarchyTracker();
 
   return (
     <ContributionForm

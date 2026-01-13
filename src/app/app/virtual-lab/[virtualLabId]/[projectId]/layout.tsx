@@ -1,12 +1,12 @@
-import type { ReactNode } from "react";
-import { getBrainRegionHierarchiesWithSpecies } from "@/api/entitycore/queries/general/brain-region";
-import { getQueryClient } from "@/query-provider/server";
-import { ProjectRootLayout } from "@/ui/layouts/project-root-layout";
-import { Container as AiContainer } from "@/ui/segments/ai/container";
-import { SpaceManagerContainer } from "@/ui/segments/workspaces/space-manager";
-import { WorkspaceTopMenu } from "@/ui/segments/workspaces/top-menu";
-import { keyBuilderHierarchy } from "@/ui/use-query-keys/atlas";
-import { getWorkspaceHierarchySpeciesPreference } from "@/api/virtual-lab-svc/queries/brain-region-preferences";
+import type { ReactNode } from 'react';
+import { getBrainRegionHierarchiesWithSpecies } from '@/api/entitycore/queries/general/brain-region';
+import { getWorkspaceHierarchySpeciesPreference } from '@/api/virtual-lab-svc/queries/user';
+import { getQueryClient } from '@/query-provider/server';
+import { ProjectRootLayout } from '@/ui/layouts/project-root-layout';
+import { Container as AiContainer } from '@/ui/segments/ai/container';
+import { SpaceManagerContainer } from '@/ui/segments/workspaces/space-manager';
+import { WorkspaceTopMenu } from '@/ui/segments/workspaces/top-menu';
+import { keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
 
 type Props = {
   children: ReactNode;

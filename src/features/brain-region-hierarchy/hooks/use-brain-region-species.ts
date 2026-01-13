@@ -1,20 +1,16 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
-
-import { getWorkspaceHierarchySpeciesPreference } from "@/api/virtual-lab-svc/queries/brain-region-preferences";
-import { getBrainRegionHierarchiesWithSpecies } from "@/api/entitycore/queries/general/brain-region";
-import { transformSpecies } from "@/features/brain-region-hierarchy/types";
-import { keyBuilderHierarchy } from "@/ui/use-query-keys/atlas";
-
-import type { IBrainRegionHierarchiesResponse } from "@/api/entitycore/types/entities/brain-region-hierarchy";
+import { useQuery } from '@tanstack/react-query';
+import { getBrainRegionHierarchiesWithSpecies } from '@/api/entitycore/queries/general/brain-region';
+import type { IBrainRegionHierarchiesResponse } from '@/api/entitycore/types/entities/brain-region-hierarchy';
+import { getWorkspaceHierarchySpeciesPreference } from '@/api/virtual-lab-svc/queries/user';
+import { transformSpecies } from '@/features/brain-region-hierarchy/types';
+import { keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
 
 /**
  * Transform API response to HierarchyWithSpecies array with display names
  */
-function transformHierarchiesResponse(
-  response: IBrainRegionHierarchiesResponse,
-) {
+function transformHierarchiesResponse(response: IBrainRegionHierarchiesResponse) {
   if (!response?.data) return [];
 
   const result = response.data.map((hierarchy) => ({
@@ -34,7 +30,7 @@ function transformHierarchiesResponse(
  * - Automatic caching infinitely, 30 min garbage collection)
  * - Loading and error states
  */
-export function useBrainRegionHierarchySpeciesQuery() {
+export function useAvailableHierarchySpeciesQuery() {
   const query = useQuery({
     queryKey: keyBuilderHierarchy.hierarchies(),
     queryFn: async () => {
@@ -46,30 +42,13 @@ export function useBrainRegionHierarchySpeciesQuery() {
   });
 
   return {
-    hierarchies: query.data,
-    isLoading: query.isLoading,
-    isError: query.isError,
+    remoteAvailableHierarchies: query.data,
+    loading: query.isLoading,
     error: query.error,
-    refetch: query.refetch,
-    isFetching: query.isFetching,
   };
 }
 
-/**
- * get the species info for a given hierarchy id
- *
- * @param hierarchyId - the hierarchy id
- * @returns the species info or null if not found
- */
-export function useSpeciesForHierarchy(hierarchyId: string | null) {
-  const { hierarchies } = useBrainRegionHierarchySpeciesQuery();
-
-  if (!hierarchyId || hierarchies?.length === 0) return null;
-
-  return hierarchies?.find((h) => h.id === hierarchyId)?.species ?? null;
-}
-
-export function useRemoteHierarchyUserPreferenceQuery() {
+export function useRemoteUserPreferenceHierarchySpeciesQuery() {
   const {
     data,
     isLoading: isLoadingRemotePreference,
@@ -78,12 +57,11 @@ export function useRemoteHierarchyUserPreferenceQuery() {
     queryKey: keyBuilderHierarchy.hierarchyPreference(),
     queryFn: () => getWorkspaceHierarchySpeciesPreference(),
     staleTime: Infinity,
-    gcTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: false,
   });
 
   return {
-    hierarchySpeciesUserPreference: data?.data?.preference,
+    remoteUserPreferenceHierarchySpecies: data?.data?.preference,
     loading: isLoadingRemotePreference,
     error,
   };

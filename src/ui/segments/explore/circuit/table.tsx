@@ -1,37 +1,34 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
-import { useMemo, useState } from 'react';
-import { unwrap } from 'jotai/utils';
-import { useAtom } from 'jotai';
 import { Spin } from 'antd';
-
-import type { ComponentProps, CSSProperties, ReactNode } from 'react';
-import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
 import type { ColumnProps, TableProps } from 'antd/es/table';
-
-import { ListingFilterPanel } from '@/ui/segments/data-table/elements/listing-filter-panel/listing-filter-panel';
-import { CircuitViewToggle } from '@/ui/segments/explore/circuit/elements/view-toggle';
-import { FilterControls } from '@/ui/segments/data-table/elements/filter-controls';
-import { CircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
-import { coreFiltersAtom } from '@/ui/segments/data-table/elements/context';
-import { OnCellClick, WrapperTable } from '@/ui/segments/data-table/table';
-import { Pagination } from '@/ui/segments/data-table/elements/pagination';
-import { BrainRegionDropdown } from '@/features/brain-region-dropdown';
-import { Search } from '@/ui/segments/data-table/search';
-import { WorkspaceScope } from '@/constants';
-import { cn } from '@/utils/css-class';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
-import type { TCircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
+import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
+import { useAtom } from 'jotai';
+import { unwrap } from 'jotai/utils';
+import type { ComponentProps, CSSProperties, ReactNode } from 'react';
+import { useMemo, useState } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
-import type { WorkspaceContext } from '@/types/common';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type {
-  Facets,
   Pagination as EntitycorePagination,
+  Facets,
 } from '@/api/entitycore/types/shared/response';
+import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
+import { WorkspaceScope } from '@/constants';
+import { BrainRegionDropdown } from '@/features/brain-region-dropdown';
+import type { WorkspaceContext } from '@/types/common';
+import { coreFiltersAtom } from '@/ui/segments/data-table/elements/context';
+import { FilterControls } from '@/ui/segments/data-table/elements/filter-controls';
+import { ListingFilterPanel } from '@/ui/segments/data-table/elements/listing-filter-panel/listing-filter-panel';
+import { Pagination } from '@/ui/segments/data-table/elements/pagination';
+import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
+import { Search } from '@/ui/segments/data-table/search';
+import { type OnCellClick, WrapperTable } from '@/ui/segments/data-table/table';
+import { CircuitViewToggle } from '@/ui/segments/explore/circuit/elements/view-toggle';
+import type { TCircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
+import { CircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
+import { cn } from '@/utils/css-class';
 
 export type Props<T> = {
   facets: Facets | undefined;
@@ -125,9 +122,7 @@ export function MainTable({
           <div className="[grid-area:filter]">
             <div className="ml-auto flex h-12 items-stretch justify-center gap-3">
               {(dataScope === WorkspaceScope.BuildMeModelM ||
-                dataScope === WorkspaceScope.BuildSynaptomeModel) && (
-                <BrainRegionDropdown dataKey={dataKey} />
-              )}
+                dataScope === WorkspaceScope.BuildSynaptomeModel) && <BrainRegionDropdown />}
               <CircuitViewToggle {...{ dataKey }} />
               <FilterControls
                 filters={filters}

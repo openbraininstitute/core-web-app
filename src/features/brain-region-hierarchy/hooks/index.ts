@@ -1,11 +1,9 @@
 export {
-  useBrainRegionHierarchySpeciesQuery,
-  useSpeciesForHierarchy,
-} from "./use-brain-region-species";
+  useAvailableHierarchySpeciesQuery,
+  useRemoteUserPreferenceHierarchySpeciesQuery,
+} from './use-brain-region-species';
 
 export {
-  URL_PARAMS,
-  useCurrentHierarchyId,
   useWorkspaceHierarchySpecies,
-  useWorkspaceSpeciesBrainRegion,
-} from "./use-workspace-hierarchy";
+  useWorkspaceHierarchyTracker,
+} from './use-workspace-hierarchy';

@@ -1,7 +1,7 @@
-const prefix = "annotation";
+const prefix = 'annotation';
 
 export const keyBuilderAnnotation = {
-  annotation: ({ id, type }: { id: string; type: "eType" | "mType" }) => [
+  annotation: ({ id, type }: { id: string; type: 'eType' | 'mType' }) => [
     `${prefix}/one`,
     { id, type },
   ],
@@ -9,6 +9,6 @@ export const keyBuilderAnnotation = {
     type,
     ...props
   }: {
-    type: "eType" | "mType";
+    type: 'eType' | 'mType';
   } & Record<string, any>) => [`${prefix}/all`, { type, ...props }],
 };

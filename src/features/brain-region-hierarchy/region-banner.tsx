@@ -1,20 +1,22 @@
-"use client";
+'use client';
 
-import { CloseOutlined } from "@ant-design/icons";
-import { HierarchySquare } from "@/components/icons/buttons";
-import { SpeciesSelector } from "@/features/brain-region-hierarchy/components/species-selector";
-import { useWorkspaceSpeciesBrainRegion } from "@/features/brain-region-hierarchy/hooks";
-import { Button } from "@/ui/molecules/button";
+import { CloseOutlined } from '@ant-design/icons';
+import { capitalize } from 'es-toolkit/compat';
+import { HierarchySquare } from '@/components/icons/buttons';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/ui/molecules/tooltip";
-import { cn } from "@/utils/css-class";
+  useAvailableHierarchySpeciesQuery,
+  useRemoteUserPreferenceHierarchySpeciesQuery,
+  useWorkspaceHierarchyTracker,
+} from '@/features/brain-region-hierarchy/hooks';
+import { SpeciesSelector } from '@/features/brain-region-hierarchy/species-selector';
+import { Button } from '@/ui/molecules/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { cn } from '@/utils/css-class';
+import { useBrainRegionRootHierarchyQuery } from './context';
 
 export const ExploreLeftMenuContext = {
-  BrainRegionHierarchy: "brain-region-hierarchy",
-  DataGroup: "group",
+  BrainRegionHierarchy: 'brain-region-hierarchy',
+  DataGroup: 'group',
 } as const;
 
 export type TExploreLeftMenuContext =
@@ -23,25 +25,17 @@ export type TExploreLeftMenuContext =
 type Props = {
   view: TExploreLeftMenuContext;
   onSwitchView: (_view: TExploreLeftMenuContext) => void;
-  dataKey: string;
 };
 
-export function RegionBanner({ view, onSwitchView, dataKey }: Props) {
-  const {
-    selectedSpecies,
-    selectedBrainRegion,
-    changeSpecies,
-    isLoadingHierarchies,
-  } = useWorkspaceSpeciesBrainRegion({ dataKey });
+export function RegionBanner({ view, onSwitchView }: Props) {
+  const { workspaceSpecies, selectedBrainRegion, changeBulkStoreHierarchySpecies } =
+    useWorkspaceHierarchyTracker();
+  const { loading: isLoadingRootHierarchy } = useBrainRegionRootHierarchyQuery();
 
-  if (!selectedBrainRegion && !isLoadingHierarchies) {
-    return (
-      <div className="relative mb-2 px-2 pt-4 pb-1">
-        <div className="h-12 animate-pulse rounded-full bg-gray-100" />
-      </div>
-    );
-  }
+  const { loading: isLoadingAvailableHierarchySpecies } = useAvailableHierarchySpeciesQuery();
 
+  const { loading: isLoadingRemoteUserPreferenceHierarchySpecies } =
+    useRemoteUserPreferenceHierarchySpeciesQuery();
   return (
     <div
       id="brain-region-entities-switcher"
@@ -52,83 +46,101 @@ export function RegionBanner({ view, onSwitchView, dataKey }: Props) {
         id="atlas-regions-selector"
         data-testid="atlas-regions-selector"
         className={cn(
-          "border-neutral-1 flex h-auto min-h-12 w-full items-center justify-between gap-2 rounded-full py-2 pr-2 pl-4",
-          "cursor-pointer",
-          { "shadow-bnb": Boolean(selectedBrainRegion?.id) },
-          { "hover:bg-background": view === ExploreLeftMenuContext.DataGroup },
+          'border-neutral-1 flex h-auto min-h-12 w-full items-center justify-between gap-2 rounded-full',
+          'cursor-pointer shadow-bnb relative',
+          { 'hover:bg-background': view === ExploreLeftMenuContext.DataGroup }
         )}
         data-label="brain-region-banner"
       >
-        <div className="flex items-center gap-3 flex-nowrap">
-          <SpeciesSelector
-            selectedSpecies={selectedSpecies}
-            onSpeciesChange={changeSpecies}
-          />
+        <div className="flex items-center flex-nowrap w-full">
+          <div className="pr-3 pl-4 hover:bg-gray-100 rounded-l-full">
+            <SpeciesSelector
+              selectedSpecies={workspaceSpecies}
+              onSpeciesChange={changeBulkStoreHierarchySpecies}
+            />
+          </div>
           <div className="h-6 w-px bg-gray-200" />
-          {selectedBrainRegion && (
+          <div className="items-stretch h-12 w-full rounded-r-full pl-3 hover:bg-gray-100 py-2">
+            {/** biome-ignore lint/a11y/useSemanticElements: tooltip is using button internally */}
             <div
               data-label="brain-region-switcher"
-              className="flex items-center gap-1 select-none"
-              role="button"
+              className="flex items-center gap-1 h-full select-none max-w-9/11"
               tabIndex={0}
+              role="button"
               onKeyDown={(e) => {
                 // Only trigger on Enter or Space, not when interacting with dropdown
-                if (e.key === "Enter" || e.key === " ") {
+                if (e.key === 'Enter' || e.key === ' ') {
                   onSwitchView(ExploreLeftMenuContext.BrainRegionHierarchy);
                 }
               }}
-              onClick={() =>
-                onSwitchView(ExploreLeftMenuContext.BrainRegionHierarchy)
-              }
+              onClick={() => onSwitchView(ExploreLeftMenuContext.BrainRegionHierarchy)}
             >
               <span className="text-neutral-5 text-base">Region</span>
-              <div className="text-primary-9/90 flex items-center gap-1.5">
-                <div
-                  key={`color-${selectedBrainRegion.id}-${selectedBrainRegion.color_hex_triplet}`}
-                  className="block h-3 w-3 min-w-3 rounded-full"
-                  style={{
-                    backgroundColor: `#${selectedBrainRegion.color_hex_triplet}`,
-                  }}
-                />
+              {(isLoadingRootHierarchy ||
+                isLoadingAvailableHierarchySpecies ||
+                isLoadingRemoteUserPreferenceHierarchySpecies) && (
+                <div className="h-5 w-full animate-pulse rounded-full bg-gray-200 max-w-3/5" />
+              )}
+              {selectedBrainRegion && !isLoadingRootHierarchy && (
+                <div className="text-primary-9/90 flex items-center gap-1.5 ">
+                  <div
+                    key={`color-${selectedBrainRegion.id}-${selectedBrainRegion.color_hex_triplet}`}
+                    className="block h-3 w-3 min-w-3 rounded-full"
+                    style={{
+                      backgroundColor: `#${selectedBrainRegion.color_hex_triplet}`,
+                    }}
+                  />
 
-                <Tooltip>
-                  <TooltipTrigger>
-                    <span className="line-clamp-1 text-left text-base font-bold leading-6">
+                  <Tooltip disableHoverableContent>
+                    <TooltipTrigger>
+                      <span className="line-clamp-1 text-left text-base font-bold leading-6">
+                        {capitalize(selectedBrainRegion.name)}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      avoidCollisions
+                      side="top"
+                      sideOffset={0}
+                      className="bg-white shadow-bnb text-primary-8 border-gray-200"
+                      arrowClassName="bg-white"
+                    >
                       {selectedBrainRegion.name}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    avoidCollisions
-                    side="top"
-                    sideOffset={10}
-                    collisionPadding={{ left: 25 }}
-                    className="bg-white shadow-bnb text-primary-8 border-gray-200"
-                    arrowClassName="bg-white"
-                  >
-                    {selectedBrainRegion.name}
-                  </TooltipContent>
-                </Tooltip>
-              </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              )}
             </div>
+          </div>
+        </div>
+        <div className="absolute top-1/2 -translate-y-1/2 right-1.5 bg-white rounded-full">
+          {view === ExploreLeftMenuContext.BrainRegionHierarchy ? (
+            <Button
+              rounded
+              variant="ghost"
+              className="h-8 w-8 shrink-0"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onSwitchView(ExploreLeftMenuContext.DataGroup);
+              }}
+            >
+              <CloseOutlined className="text-primary-9/90" />
+            </Button>
+          ) : (
+            <Button
+              rounded
+              variant="ghost"
+              className="h-8 w-8 shrink-0"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onSwitchView(ExploreLeftMenuContext.BrainRegionHierarchy);
+              }}
+            >
+              <HierarchySquare className="text-primary-9/90" />
+            </Button>
           )}
         </div>
-
-        {view === ExploreLeftMenuContext.BrainRegionHierarchy ? (
-          <Button
-            rounded
-            variant="ghost"
-            className="h-8 w-8 shrink-0"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onSwitchView(ExploreLeftMenuContext.DataGroup);
-            }}
-          >
-            <CloseOutlined className="text-primary-9/90" />
-          </Button>
-        ) : (
-          <HierarchySquare className="mr-2 shrink-0" />
-        )}
       </div>
     </div>
   );

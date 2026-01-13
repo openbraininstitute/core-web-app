@@ -1,14 +1,14 @@
 export const SPECIES_DISPLAY_NAMES: Record<string, string> = {
-  "Homo sapiens": "Human",
-  "Mus musculus": "Mouse",
+  'Homo sapiens': 'Human',
+  'Mus musculus': 'Mouse',
 } as const;
 
 /**
  * NCBI Taxonomy IDs for supported species
  */
 export const SPECIES_TAXONOMY_IDS = {
-  HOMO_SAPIENS: "NCBITaxon:9606",
-  MUS_MUSCULUS: "NCBITaxon:10090",
+  HOMO_SAPIENS: 'NCBITaxon:9606',
+  MUS_MUSCULUS: 'NCBITaxon:10090',
 } as const;
 
 /**
@@ -19,7 +19,6 @@ export interface IWorkspaceSpecies {
   name: string;
   hierarchId: string;
   displayName: string;
-  taxonomyId: string;
 }
 
 /**
@@ -37,9 +36,9 @@ export interface IHierarchyWithSpecies {
  */
 export interface BrainRegionHierarchySelection {
   hierarchyId: string;
-  speciesTaxonomyId: string;
+  speciesName: string;
   brainRegionId: string;
-  brainRegionAnnotationValue: number;
+  brainRegionName: string;
 }
 
 /**
@@ -47,9 +46,9 @@ export interface BrainRegionHierarchySelection {
  */
 export interface IWorkspaceHierarchySpeciesPreference {
   hierarchy_id: string;
-  species_taxonomy_id: string;
+  species_name: string;
   brain_region_id: string | null;
-  brain_region_annotation_value: number | null;
+  brain_region_name: string | null;
 }
 
 /**
@@ -68,13 +67,12 @@ export function transformSpecies(
     id: string;
     name: string;
     taxonomy_id: string;
-  },
+  }
 ): IWorkspaceSpecies {
   return {
     id: apiSpecies.id,
     name: apiSpecies.name,
     hierarchId,
     displayName: getSpeciesDisplayName(apiSpecies.name),
-    taxonomyId: apiSpecies.taxonomy_id,
   };
 }

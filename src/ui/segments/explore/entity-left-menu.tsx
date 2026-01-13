@@ -24,7 +24,7 @@ export function EntityLeftMenu({ dataKey }: Props) {
 
   return (
     <div className="flex h-full flex-col">
-      <RegionBanner view={view} onSwitchView={onSwitchView} dataKey={dataKey} />
+      <RegionBanner view={view} onSwitchView={onSwitchView} />
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <motion.div
           key="brain-region-hierarchy"

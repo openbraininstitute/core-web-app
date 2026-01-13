@@ -237,3 +237,14 @@ export function getLeavesForEachRegionExtended(
   traverse(root);
   return leavesMap;
 }
+
+export function injectHierarchyId(
+  node: Omit<IBrainRegionHierarchy, 'hierarchy_id'>,
+  hierarchyId: string
+): IBrainRegionHierarchy {
+  return {
+    ...node,
+    hierarchy_id: hierarchyId,
+    children: node.children.map((child) => injectHierarchyId(child, hierarchyId)),
+  };
+}

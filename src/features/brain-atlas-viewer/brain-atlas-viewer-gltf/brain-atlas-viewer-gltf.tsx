@@ -1,28 +1,28 @@
-import React from 'react';
 import { CameraFilled } from '@ant-design/icons';
+import React from 'react';
 
 import { usePainter, useVisibleRegions } from './hooks';
+
 // Temporary disabled
 // import { Settings } from './settings/settings';
 
-import { classNames } from '@/util/utils';
 import { useAccessToken } from '@/hooks/useAccessToken';
+import { classNames } from '@/util/utils';
 
 import styles from './brain-atlas-viewer-gltf.module.css';
 
 export interface BrainAtlasViewerGltfProps {
   className?: string;
-  dataKey: string;
   onLoading(loading: boolean): void;
 }
 
-export function BrainAtlasViewerGltf({ className, dataKey, onLoading }: BrainAtlasViewerGltfProps) {
+export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerGltfProps) {
   const [showResetCamera, setShowResetCamera] = React.useState(false);
   const accessToken = useAccessToken();
   const painter = usePainter();
   // Temporary disabled
   // const [values, setValues] = useAtlasViewerSettingsValues(painter);
-  const { region, regions } = useVisibleRegions(dataKey);
+  const { region, regions } = useVisibleRegions();
   React.useEffect(() => {
     if (accessToken) {
       painter.setRegions(regions, accessToken);

@@ -1,25 +1,23 @@
-import { useQueries, useQuery } from "@tanstack/react-query";
-import { arrayToTree } from "performant-array-to-tree";
+import { useQueries, useQuery } from '@tanstack/react-query';
+import { arrayToTree } from 'performant-array-to-tree';
+import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
+import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
+import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { getCellCompositions } from '@/api/entitycore/queries/general/cell-composition';
+import { EntityTypeDict } from '@/api/entitycore/types';
+import type { ICellCompositionRoot } from '@/api/entitycore/types/entities/cell-composition';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { getAssetElement } from '@/api/entitycore/utils';
+import { renameKeyDeep } from '@/components/tree/elements/helpers';
+import { useBrainRegionAtlasQuery } from '@/features/brain-atlas-viewer/context';
+import { usePrimaryHierarchySpeciesQuery } from '@/features/brain-region-hierarchy/context';
+import { resolveBrainRegionCellComposition } from '@/features/cell-composition/composition-constructor';
+import type { WorkspaceContext } from '@/types/common';
+import { keyBuilderAnnotation } from '@/ui/use-query-keys/annotation';
+import { cellCompositionKeyBuilder } from '@/ui/use-query-keys/atlas';
+import { log } from '@/utils/logger';
 
-import { resolveBrainRegionCellComposition } from "@/features/cell-composition/composition-constructor";
-import { getCellCompositions } from "@/api/entitycore/queries/general/cell-composition";
-import { usePrimaryHierarchyQuery } from "@/features/brain-region-hierarchy/context";
-import { useBrainRegionAtlasQuery } from "@/features/brain-atlas-viewer/context";
-import { getEtypes } from "@/api/entitycore/queries/annotations/etype";
-import { getMtypes } from "@/api/entitycore/queries/annotations/mtype";
-import { keyBuilderAnnotation } from "@/ui/use-query-keys/annotation";
-import { cellCompositionKeyBuilder } from "@/ui/use-query-keys/atlas";
-import { renameKeyDeep } from "@/components/tree/elements/helpers";
-import { AssetLabel } from "@/api/entitycore/types/shared/global";
-import { downloadAsset } from "@/api/entitycore/queries/assets";
-import { getAssetElement } from "@/api/entitycore/utils";
-import { EntityTypeDict } from "@/api/entitycore/types";
-import { log } from "@/utils/logger";
-
-import type { ICellCompositionRoot } from "@/api/entitycore/types/entities/cell-composition";
-import type { WorkspaceContext } from "@/types/common";
-
-const defaultCellCompositionName = "Cell Composition from Blue Brain Atlas";
+const defaultCellCompositionName = 'Cell Composition from Blue Brain Atlas';
 
 const useCellCompositionSummaryQuery = () => {
   const {
@@ -49,9 +47,7 @@ const useCellCompositionSummaryQuery = () => {
     data: cellCompositionSummary,
     error: assetError,
   } = useQuery({
-    queryKey: cellCompositionKeyBuilder.summaryAsset(
-      cellComposition?.at(0)?.id!,
-    ),
+    queryKey: cellCompositionKeyBuilder.summaryAsset(cellComposition?.at(0)?.id!),
     queryFn: () =>
       downloadAsset<ICellCompositionRoot>({
         entityType: EntityTypeDict.CellComposition,
@@ -68,17 +64,13 @@ const useCellCompositionSummaryQuery = () => {
   }
   if (!cellComposition?.length)
     return {
-      error: new Error(
-        `No cell composition found for ${defaultCellCompositionName}`,
-      ),
+      error: new Error(`No cell composition found for ${defaultCellCompositionName}`),
       loading: loadingSummary,
       result: null,
     };
   if (!summaryAsset) {
     return {
-      error: new Error(
-        `No summary asset found for ${defaultCellCompositionName}`,
-      ),
+      error: new Error(`No summary asset found for ${defaultCellCompositionName}`),
       loading: loadingSummary,
       result: null,
     };
@@ -86,9 +78,7 @@ const useCellCompositionSummaryQuery = () => {
 
   if (assetError)
     return {
-      error: new Error(
-        `No summary asset found for ${defaultCellCompositionName}`,
-      ),
+      error: new Error(`No summary asset found for ${defaultCellCompositionName}`),
       loading: loadingSummary,
       result: null,
     };
@@ -105,21 +95,19 @@ export const useAnnotationTypesQuery = (ctx: WorkspaceContext) => {
     queries: [
       {
         queryKey: keyBuilderAnnotation.annotations({
-          type: "eType",
+          type: 'eType',
           page: 1,
           page_size: 1000,
         }),
-        queryFn: () =>
-          getEtypes({ ctx, filters: { page: 1, page_size: 1000 } }),
+        queryFn: () => getEtypes({ ctx, filters: { page: 1, page_size: 1000 } }),
       },
       {
         queryKey: keyBuilderAnnotation.annotations({
-          type: "mType",
+          type: 'mType',
           page: 1,
           page_size: 1000,
         }),
-        queryFn: () =>
-          getMtypes({ ctx, filters: { page: 1, page_size: 1000 } }),
+        queryFn: () => getMtypes({ ctx, filters: { page: 1, page_size: 1000 } }),
       },
     ],
     combine: ([p1, p2]) => {
@@ -133,21 +121,13 @@ export const useAnnotationTypesQuery = (ctx: WorkspaceContext) => {
   return annotations;
 };
 
-export const useCellCompositionQuery = ({
-  brainRegionId,
-}: {
-  brainRegionId?: string;
-}) => {
-  const {
-    result: brainRegionAtlas,
-    loadingAtlas,
-    error: atlasError,
-  } = useBrainRegionAtlasQuery();
+export const useCellCompositionQuery = ({ brainRegionId }: { brainRegionId?: string }) => {
+  const { result: brainRegionAtlas, loadingAtlas, error: atlasError } = useBrainRegionAtlasQuery();
   const {
     result: brainRegions,
     loading: loadingHierarchy,
     error: hierarchyError,
-  } = usePrimaryHierarchyQuery();
+  } = usePrimaryHierarchySpeciesQuery();
   const {
     result: cellComposition,
     loading: loadingComposition,
@@ -155,7 +135,7 @@ export const useCellCompositionQuery = ({
   } = useCellCompositionSummaryQuery();
 
   if (!cellComposition || !brainRegions || !brainRegionAtlas.atlas) {
-    log("warn", "Missing required data for composition", {
+    log('warn', 'Missing required data for composition', {
       hasCellComposition: !!cellComposition,
       hasBrainRegions: !!brainRegions,
       hasBrainRegionAtlas: !!brainRegionAtlas.atlas,
@@ -203,12 +183,12 @@ export const useCellCompositionQuery = ({
         })),
         {
           dataField: null,
-          parentId: "parentId",
-          childrenField: "children",
-        },
+          parentId: 'parentId',
+          childrenField: 'children',
+        }
       ),
-      "title",
-      "name",
+      'title',
+      'name'
     );
     return {
       error: null,
@@ -216,7 +196,7 @@ export const useCellCompositionQuery = ({
       loading: loadingAtlas || loadingHierarchy || loadingComposition,
     };
   } catch (error) {
-    log("error", "Error in cellCompositionAtom:", error);
+    log('error', 'Error in cellCompositionAtom:', error);
     return {
       error,
       result: {

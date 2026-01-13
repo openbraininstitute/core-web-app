@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { match } from 'ts-pattern';
 
@@ -9,7 +9,7 @@ import { Loader } from '@/components/loader';
 import { BrainAtlasViewerGltf } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf';
 import { FullScreen } from '@/features/brain-atlas-viewer/full-screen';
 
-export function AtlasViewer({ dataKey, children }: { dataKey: string; children?: ReactNode }) {
+export function AtlasViewer({ children }: { children?: ReactNode }) {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const handleFullScreenToggle = () => {
@@ -25,16 +25,16 @@ export function AtlasViewer({ dataKey, children }: { dataKey: string; children?:
           showButtons: false,
         })}
       >
-        <BrainAtlasViewerGltf dataKey={dataKey} onLoading={setIsLoading} />
+        <BrainAtlasViewerGltf onLoading={setIsLoading} />
       </ErrorBoundary>
     ),
-    [dataKey]
+    []
   );
 
   return match(isFullScreen)
     .with(true, () => {
       return (
-        <div className="fixed inset-0 z-[9999] bg-black">
+        <div className="fixed inset-0 z-9999 bg-black">
           <FullScreen isFullScreen={isFullScreen} onToggle={handleFullScreenToggle} />
           {isLoading && (
             <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-black/5">
