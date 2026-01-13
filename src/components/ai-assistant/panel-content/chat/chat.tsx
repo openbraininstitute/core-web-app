@@ -33,9 +33,8 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
   const refContainer = React.useRef<HTMLDivElement | null>(null);
 
   const [scrollHeight, setScrollHeight] = React.useState(0);
-  const [isAtBottom, setIsAtBottom] = React.useState(true);
 
-  // Monitor scroll height changes and maintain bottom position
+  // Monitor scroll height changes for auto-scroll
   React.useEffect(() => {
     if (!refContainer.current) return;
 
@@ -45,19 +44,7 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
     const updateScrollHeight = () => {
       const newScrollHeight = container.scrollHeight;
 
-      console.log(
-        "ScrollHeight changed:",
-        previousScrollHeight,
-        "->",
-        newScrollHeight,
-        "AutoScroll:",
-        isAutoScrollEnabled,
-      );
-
-      // If auto-scroll is enabled, always go to bottom when content changes
       if (isAutoScrollEnabled && newScrollHeight > previousScrollHeight) {
-        console.log("Scrolling to bottom");
-        // Use requestAnimationFrame to ensure layout is complete
         requestAnimationFrame(() => {
           const maxScroll = container.scrollHeight - container.clientHeight;
           if (maxScroll > 0) {
@@ -78,11 +65,9 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
       characterData: true,
     });
 
-    // Also use ResizeObserver to catch layout changes from images
     const resizeObserver = new ResizeObserver(updateScrollHeight);
     resizeObserver.observe(container);
 
-    // Initial measurement
     updateScrollHeight();
 
     return () => {
@@ -116,10 +101,10 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
     } else {
       const container = refContainer.current;
       if (!container) return;
-      const atBottom =
+      const isAtBottom =
         container.scrollHeight - container.scrollTop <=
         container.clientHeight + 200;
-      setIsAutoScrollEnabled(atBottom);
+      setIsAutoScrollEnabled(isAtBottom);
     }
   };
 
