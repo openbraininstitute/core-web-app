@@ -8,13 +8,37 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 import { executionStatusIconMap } from '@/components/icons/activity-execution';
 import { getStatusColor } from '@/ui/segments/activity-execution/color-map';
 
-const statusLabel = {
-  [EntitycoreExecutionStatus.CREATED]: 'Generated',
-  [EntitycoreExecutionStatus.PENDING]: 'Pending',
-  [EntitycoreExecutionStatus.RUNNING]: 'Running',
-  [EntitycoreExecutionStatus.DONE]: 'Done',
-  [EntitycoreExecutionStatus.ERROR]: 'Error',
-  [EntitycoreExecutionStatus.CANCELLED]: 'Cancelled',
+const StatusConfig = {
+  [EntitycoreExecutionStatus.CREATED]: {
+    label: 'Generated',
+    icon: executionStatusIconMap[EntitycoreExecutionStatus.CREATED],
+    value: EntitycoreExecutionStatus.CREATED,
+  },
+  [EntitycoreExecutionStatus.PENDING]: {
+    label: 'Pending',
+    icon: executionStatusIconMap[EntitycoreExecutionStatus.PENDING],
+    value: EntitycoreExecutionStatus.PENDING,
+  },
+  [EntitycoreExecutionStatus.RUNNING]: {
+    label: 'Running',
+    icon: executionStatusIconMap[EntitycoreExecutionStatus.RUNNING],
+    value: EntitycoreExecutionStatus.RUNNING
+  },
+  [EntitycoreExecutionStatus.DONE]: {
+    label: 'Done',
+    icon: executionStatusIconMap[EntitycoreExecutionStatus.DONE],
+    value: EntitycoreExecutionStatus.DONE
+  },
+  [EntitycoreExecutionStatus.ERROR]: {
+    label: 'Error',
+    icon: executionStatusIconMap[EntitycoreExecutionStatus.ERROR],
+    value: EntitycoreExecutionStatus.ERROR
+  },
+  [EntitycoreExecutionStatus.CANCELLED]: {
+    label: 'Cancelled',
+    icon: executionStatusIconMap[EntitycoreExecutionStatus.CANCELLED],
+    value: EntitycoreExecutionStatus.CANCELLED
+  },
 };
 
 type ExecutionStatusProps = {
@@ -24,6 +48,8 @@ type ExecutionStatusProps = {
 export function ExecutionStatus({ status }: ExecutionStatusProps) {
   const color = getStatusColor(status);
 
+  const statusConfig = StatusConfig[status];
+
   return (
     <div
       className="flex w-32 items-center justify-center gap-2 rounded-full border px-1.5 py-0.5"
@@ -32,8 +58,8 @@ export function ExecutionStatus({ status }: ExecutionStatusProps) {
         borderColor: color,
       }}
     >
-      <span className="capitalize">{status}</span>
-      <span className="text-xs">{executionStatusIconMap[status]}</span>
+      <span className="capitalize">{statusConfig.label}</span>
+      <span className="text-xs">{statusConfig.icon}</span>
     </div>
   );
 }
@@ -56,14 +82,14 @@ export default function ExecutionAggregatedStatus({
       <Tooltip>
         <TooltipTrigger asChild>
           <div className="divide-neutral-2 border-neutral-2 flex divide-x rounded-full border px-1.5">
-            {statuses.map((status) => (
+            {statuses.map(status => StatusConfig[status]).map((statusConfig) => (
               <div
-                key={status}
+                key={statusConfig.value}
                 className="flex items-center gap-1 px-1.5 py-0.5"
-                style={{ color: getColor(status) }}
+                style={{ color: getColor(statusConfig.value) }}
               >
-                <span>{statusCountMap.get(status) ?? 0}</span>
-                <span className="text-xs">{executionStatusIconMap[status]}</span>
+                <span>{statusCountMap.get(statusConfig.value) ?? 0}</span>
+                <span className="text-xs">{statusConfig.icon}</span>
               </div>
             ))}
           </div>
@@ -78,17 +104,17 @@ export default function ExecutionAggregatedStatus({
           arrowClassName="bg-white"
         >
           <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 p-2">
-            {statuses.map((status) => (
-              <Fragment key={status}>
-                <dt style={{ color: getColor(status) }}>
+            {statuses.map(status => StatusConfig[status]).map((statusConfig) => (
+              <Fragment key={statusConfig.value}>
+                <dt style={{ color: getColor(statusConfig.value) }}>
                   <span className="mr-2 inline-block text-xs">
-                    {executionStatusIconMap[status]}
+                    {statusConfig.icon}
                   </span>
-                  <span className="uppercase">{statusLabel[status]}:</span>
+                  <span className="uppercase">{statusConfig.label}:</span>
                 </dt>
 
-                <dd style={{ color: getColor(status) }}>
-                  <span>{statusCountMap.get(status) ?? 0}</span>
+                <dd style={{ color: getColor(statusConfig.value) }}>
+                  <span>{statusCountMap.get(statusConfig.value) ?? 0}</span>
                 </dd>
               </Fragment>
             ))}
