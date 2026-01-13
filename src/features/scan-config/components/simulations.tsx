@@ -60,11 +60,9 @@ export default function SimulationsTab({
   const modelAtom = modelAtomFamily({ id: simulations[0].entity_id, context });
   const model = useAtomValue(modelAtom);
 
-  const simulationIds = simulations.map((s) => s.id);
-
-  const simExecStatusMapAtom = simExecStatusMapAtomFamily({ context, simulationIds });
+  const simExecStatusMapAtom = simExecStatusMapAtomFamily({ context, campaignId });
   const fetchRemoteSimExecStatuseMap = useSetAtom(
-    simExecRemoteStatusMapAtomFamily({ simulationIds, context })
+    simExecRemoteStatusMapAtomFamily({ campaignId, context })
   );
 
   const statusMap = useLastTruthyValue(simExecStatusMapAtom);
