@@ -15,7 +15,8 @@ theme:
 nav:
   - Home: index.md
   - Explore: explore.md
-  - Single Neuron Simulation: simulate.md
+  - Single Neuron Simulation: single-neuron-simulation.md
+  - Small Microcircuit Simulation: small-microcircuit-simulation.md
 
 # Plugins
 plugins:
