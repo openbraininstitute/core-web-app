@@ -22,33 +22,36 @@ export interface ChatProps {
 
 export default function Chat({ className, threadId, onClearChat }: ChatProps) {
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = React.useState(true);
-  const [containerHeight, setContainerHeight] = React.useState(0)
   const { messages, clear, status, append, error, stop, rateLimitRemaining } =
     useServiceAiAgentChat(threadId ?? '');
   const [suggestions, clearSuggestions, isLoadingSuggestions] = useServiceAiAgentSuggestionFromUserJourney(
     threadId ?? '', status
   );
-  const isStorageQueryFetching = useIsFetching({
-    predicate: (query) => {
-      const fullQueryKey = query.queryKey.at(0);
-      return fullQueryKey === 'storage';
-    },
-    fetchStatus: 'fetching',
-  });
   const refChatBottom = React.useRef<HTMLDivElement | null>(null);
   const refContainer = React.useRef<HTMLDivElement | null>(null);
 
-  // Monitor container height
+  const [scrollHeight, setScrollHeight] = React.useState(0);
+
+  // Monitor scroll height changes
   React.useEffect(() => {
     if (!refContainer.current) return;
 
-    const observer = new ResizeObserver(entries => {
-      for (const entry of entries) {
-        setContainerHeight(entry.contentRect.height);
+    const updateScrollHeight = () => {
+      if (refContainer.current) {
+        setScrollHeight(refContainer.current.scrollHeight);
       }
+    };
+
+    const observer = new MutationObserver(updateScrollHeight);
+    observer.observe(refContainer.current, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      characterData: true
     });
 
-    observer.observe(refContainer.current);
+    // Initial measurement
+    updateScrollHeight();
 
     return () => observer.disconnect();
   }, []);
@@ -59,7 +62,7 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
           refChatBottom.current?.scrollIntoView({ behavior: 'smooth' });
         }, 200);
     }
-  }, [containerHeight, messages, error, status, isAutoScrollEnabled, isStorageQueryFetching, suggestions, isLoadingSuggestions]);
+  }, [scrollHeight, isAutoScrollEnabled]);
 
   const handleClearChat = () => {
     onClearChat();
