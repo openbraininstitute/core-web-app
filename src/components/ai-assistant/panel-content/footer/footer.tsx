@@ -44,7 +44,7 @@ export default function Footer({
       {status !== "ready" && status !== "error" && (
         <div className={styles.spinnerContainer}>
           <Spinner />
-          {status === "streaming" && (
+          {(status === "streaming" || status === "submitted") && (
             <div className={styles.cancelButton}>
               <button type="button" onClick={stop}>
                 Cancel

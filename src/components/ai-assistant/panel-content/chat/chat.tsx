@@ -33,30 +33,63 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
   const refContainer = React.useRef<HTMLDivElement | null>(null);
 
   const [scrollHeight, setScrollHeight] = React.useState(0);
+  const [isAtBottom, setIsAtBottom] = React.useState(true);
 
-  // Monitor scroll height changes
+  // Monitor scroll height changes and maintain bottom position
   React.useEffect(() => {
     if (!refContainer.current) return;
 
+    const container = refContainer.current;
+    let previousScrollHeight = container.scrollHeight;
+
     const updateScrollHeight = () => {
-      if (refContainer.current) {
-        setScrollHeight(refContainer.current.scrollHeight);
+      const newScrollHeight = container.scrollHeight;
+
+      console.log(
+        "ScrollHeight changed:",
+        previousScrollHeight,
+        "->",
+        newScrollHeight,
+        "AutoScroll:",
+        isAutoScrollEnabled,
+      );
+
+      // If auto-scroll is enabled, always go to bottom when content changes
+      if (isAutoScrollEnabled && newScrollHeight > previousScrollHeight) {
+        console.log("Scrolling to bottom");
+        // Use requestAnimationFrame to ensure layout is complete
+        requestAnimationFrame(() => {
+          const maxScroll = container.scrollHeight - container.clientHeight;
+          if (maxScroll > 0) {
+            container.scrollTop = maxScroll;
+          }
+        });
       }
+
+      setScrollHeight(newScrollHeight);
+      previousScrollHeight = newScrollHeight;
     };
 
     const observer = new MutationObserver(updateScrollHeight);
-    observer.observe(refContainer.current, {
+    observer.observe(container, {
       childList: true,
       subtree: true,
       attributes: true,
       characterData: true,
     });
 
+    // Also use ResizeObserver to catch layout changes from images
+    const resizeObserver = new ResizeObserver(updateScrollHeight);
+    resizeObserver.observe(container);
+
     // Initial measurement
     updateScrollHeight();
 
-    return () => observer.disconnect();
-  }, []);
+    return () => {
+      observer.disconnect();
+      resizeObserver.disconnect();
+    };
+  }, [isAutoScrollEnabled]);
 
   React.useEffect(() => {
     if (isAutoScrollEnabled && refContainer.current) {
@@ -83,10 +116,10 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
     } else {
       const container = refContainer.current;
       if (!container) return;
-      const isAtBottom =
+      const atBottom =
         container.scrollHeight - container.scrollTop <=
         container.clientHeight + 200;
-      setIsAutoScrollEnabled(isAtBottom);
+      setIsAutoScrollEnabled(atBottom);
     }
   };
 
