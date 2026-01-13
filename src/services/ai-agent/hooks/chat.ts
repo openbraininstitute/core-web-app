@@ -49,7 +49,7 @@ export function useServiceAiAgentChat(threadId: string) {
   const initialMessages = assistant.initialMessages.useValue();
   const { accessToken } = assistant.useContext();
   const activeTools = useAIActiveTools();
-  const [rateLimitRemaining, setRateLimitRemaining] = React.useState(getStoredRateLimit);
+  const [rateLimitRemaining, setRateLimitRemaining] = React.useState(() => getStoredRateLimit());
   const chat = useChat({
     api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
     id: threadId,
