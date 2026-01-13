@@ -5,7 +5,7 @@ import {
   TEntitycoreExecutionStatus,
 } from '@/api/entitycore/types/entities/execution';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { executionStatusIconMap } from '@/ui/segments/activity-execution//icons';
+import { executionStatusIconMap } from '@/components/icons/activity-execution';
 import { getStatusColor } from '@/ui/segments/activity-execution/color-map';
 
 const statusLabel = {
