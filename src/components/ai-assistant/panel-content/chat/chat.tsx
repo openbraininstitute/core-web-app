@@ -9,10 +9,7 @@ import ErrorPanel from '../../error';
 import Footer from '../footer';
 
 import { IconPrice } from '../../icons/price';
-import {
-  useServiceAiAgentChat,
-  useServiceAiAgentSuggestionFromUserJourney,
-} from '@/services/ai-agent';
+import { useServiceAiAgentChat, useServiceAiAgentSuggestionFromUserJourney } from '@/services/ai-agent';
 import { classNames } from '@/util/utils';
 
 import styles from './chat.module.css';
@@ -27,7 +24,7 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = React.useState(true);
   const { messages, clear, status, append, error, stop, rateLimitRemaining } =
     useServiceAiAgentChat(threadId ?? '');
-  const [suggestions, , isLoadingSuggestions] = useServiceAiAgentSuggestionFromUserJourney(
+  const [suggestions, clearSuggestions, isLoadingSuggestions] = useServiceAiAgentSuggestionFromUserJourney(
     threadId ?? ''
   );
   const isStorageQueryFetching = useIsFetching({
@@ -41,20 +38,12 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
   const refContainer = React.useRef<HTMLDivElement | null>(null);
 
   React.useEffect(() => {
-    if (isAutoScrollEnabled) {
-      requestAnimationFrame(() => {
-        refChatBottom.current?.scrollIntoView({ behavior: 'smooth' });
-      });
+    if (isAutoScrollEnabled && refContainer.current) {
+        setTimeout(() => {
+          refChatBottom.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
     }
-  }, [
-    messages,
-    error,
-    status,
-    isAutoScrollEnabled,
-    isStorageQueryFetching,
-    suggestions,
-    isLoadingSuggestions,
-  ]);
+  }, [messages, error, status, isAutoScrollEnabled, isStorageQueryFetching, suggestions, isLoadingSuggestions]);
 
   const handleClearChat = () => {
     onClearChat();
@@ -106,14 +95,20 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
                 </div>
               </div>
             </div>
-            <SuggestedQuestions
-              threadId={threadId}
-              messagesLength={messages.length}
-              onClick={handlePrompt}
-              isLoading={isLoadingSuggestions}
-            />
           </>
         )}
+        {suggestions !== undefined && status === 'ready' && 
+            <div className={styles.suggestedQuestionsContainer}>
+              <SuggestedQuestions
+                threadId={threadId}
+                messagesLength={messages.length}
+                onClick={handlePrompt}
+                suggestions={suggestions}
+                clearSuggestions={clearSuggestions}
+                isLoading={isLoadingSuggestions}
+              />
+            </div>
+              }
         {error && <ErrorPanel value={error} />}
         <div ref={refChatBottom} className={styles.bottom} />
       </div>
@@ -124,7 +119,6 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
         onPrompt={handlePrompt}
         messagesCount={messages.length}
         stop={stop}
-        isLoadingSuggestions={isLoadingSuggestions}
       />
     </>
   );
