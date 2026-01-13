@@ -22,10 +22,11 @@ export interface ChatProps {
 
 export default function Chat({ className, threadId, onClearChat }: ChatProps) {
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = React.useState(true);
+  const [containerHeight, setContainerHeight] = React.useState(0)
   const { messages, clear, status, append, error, stop, rateLimitRemaining } =
     useServiceAiAgentChat(threadId ?? '');
   const [suggestions, clearSuggestions, isLoadingSuggestions] = useServiceAiAgentSuggestionFromUserJourney(
-    threadId ?? ''
+    threadId ?? '', status
   );
   const isStorageQueryFetching = useIsFetching({
     predicate: (query) => {
@@ -37,13 +38,28 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
   const refChatBottom = React.useRef<HTMLDivElement | null>(null);
   const refContainer = React.useRef<HTMLDivElement | null>(null);
 
+  // Monitor container height
+  React.useEffect(() => {
+    if (!refContainer.current) return;
+
+    const observer = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        setContainerHeight(entry.contentRect.height);
+      }
+    });
+
+    observer.observe(refContainer.current);
+
+    return () => observer.disconnect();
+  }, []);
+
   React.useEffect(() => {
     if (isAutoScrollEnabled && refContainer.current) {
         setTimeout(() => {
           refChatBottom.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
+        }, 200);
     }
-  }, [messages, error, status, isAutoScrollEnabled, isStorageQueryFetching, suggestions, isLoadingSuggestions]);
+  }, [containerHeight, messages, error, status, isAutoScrollEnabled, isStorageQueryFetching, suggestions, isLoadingSuggestions]);
 
   const handleClearChat = () => {
     onClearChat();
