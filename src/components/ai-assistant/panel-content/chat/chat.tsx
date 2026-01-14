@@ -31,6 +31,13 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
     useServiceAiAgentSuggestionFromUserJourney(threadId ?? "", status);
   const refChatBottom = React.useRef<HTMLDivElement | null>(null);
   const refContainer = React.useRef<HTMLDivElement | null>(null);
+  const isStorageQueryFetching = useIsFetching({
+    predicate: (query) => {
+      const fullQueryKey = query.queryKey.at(0);
+      return fullQueryKey === "storage";
+    },
+    fetchStatus: "fetching",
+  });
 
   const [scrollHeight, setScrollHeight] = React.useState(0);
 
@@ -82,7 +89,7 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
         refChatBottom.current?.scrollIntoView({ behavior: "smooth" });
       }, 200);
     }
-  }, [scrollHeight, isAutoScrollEnabled]);
+  }, [scrollHeight, isAutoScrollEnabled, isStorageQueryFetching]);
 
   const handleClearChat = () => {
     onClearChat();
