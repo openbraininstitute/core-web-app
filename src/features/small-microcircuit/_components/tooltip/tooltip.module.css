@@ -26,7 +26,7 @@
 }
 
 .tooltip::after {
-  content: '';
+  content: "";
   border: 16px solid transparent;
   border-bottom: 16px solid #0050b3ee;
   position: absolute;

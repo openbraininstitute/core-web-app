@@ -1,7 +1,13 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.3.10/schema.json",
-  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
-  "files": { "ignoreUnknown": false },
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "ignoreUnknown": false
+  },
   "formatter": {
     "enabled": true,
     "formatWithErrors": false,
@@ -18,14 +24,18 @@
     "enabled": true,
     "rules": {
       "recommended": true,
-      "a11y": { "useButtonType": "error" },
-      "correctness": { "noUnusedVariables": "error" },
+      "a11y": {
+        "useButtonType": "error"
+      },
+      "correctness": {
+        "noUnusedVariables": "error"
+      },
       "style": {
         "noParameterAssign": "error",
-        "useConsistentArrayType": "error",
         "useConst": "error",
         "useExportType": "error",
-        "useImportType": "error"
+        "useImportType": "error",
+        "useConsistentArrayType": "off"
       },
       "suspicious": {
         "noArrayIndexKey": "warn",
@@ -33,7 +43,8 @@
         "noVar": "error",
         "noExplicitAny": "warn",
         "noImplicitAnyLet": "warn",
-        "useIterableCallbackReturn": "warn"
+        "useIterableCallbackReturn": "warn",
+        "noNonNullAssertedOptionalChain": "warn"
       }
     }
   },
@@ -50,8 +61,12 @@
       "cssModules": true,
       "tailwindDirectives": true
     },
-    "formatter": { "enabled": true },
-    "linter": { "enabled": true },
+    "formatter": {
+      "enabled": true
+    },
+    "linter": {
+      "enabled": true
+    },
     "assist": null
   },
   "html": {
@@ -62,6 +77,10 @@
   },
   "assist": {
     "enabled": true,
-    "actions": { "source": { "organizeImports": "on" } }
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
   }
 }

@@ -6,7 +6,7 @@
 }
 
 .coordLabel > div:first-child {
-  content: '';
+  content: "";
   flex: 0 0 auto;
   width: 1em;
   height: 1em;

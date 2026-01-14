@@ -1,29 +1,15 @@
 {
-    "somatic": [
-        "Leak",
-        "GRC_CA",
-        "Kv1_1",
-        "Kv3_4",
-        "Kv4_3",
-        "Kir2_3",
-        "Kv1_5",
-        "Kv2_2_0010",
-        "cdp5_CR"
-    ],
-    "axonal": [
-        "Leak",
-        "GRC_CA",
-        "GRC_NA",
-        "Kv3_4",
-        "cdp5_CR",
-        "GRC_NA_FHF",
-        "GRC_KM"
-    ],
-    "basal": [
-        "Leak",
-        "Kca1_1",
-        "GRC_CA",
-        "Kv1_1",
-        "cdp5_CR"
-    ]
+  "somatic": [
+    "Leak",
+    "GRC_CA",
+    "Kv1_1",
+    "Kv3_4",
+    "Kv4_3",
+    "Kir2_3",
+    "Kv1_5",
+    "Kv2_2_0010",
+    "cdp5_CR"
+  ],
+  "axonal": ["Leak", "GRC_CA", "GRC_NA", "Kv3_4", "cdp5_CR", "GRC_NA_FHF", "GRC_KM"],
+  "basal": ["Leak", "Kca1_1", "GRC_CA", "Kv1_1", "cdp5_CR"]
 }

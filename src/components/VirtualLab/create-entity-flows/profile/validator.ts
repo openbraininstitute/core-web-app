@@ -1,7 +1,6 @@
-import { RuleObject } from 'antd/es/form';
-
-import { ProfileFormData } from './types';
+import type { RuleObject } from 'antd/es/form';
 import { isEMailFromForbiddenCountry } from '@/util/email';
+import type { ProfileFormData } from './types';
 
 export function validate(data: ProfileFormData): boolean {
   const forbiddenCountry = isEMailFromForbiddenCountry(data.email);

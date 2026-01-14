@@ -6,10 +6,10 @@
 */
 /* @layer theme, base, components, utilities; */
 
-@import './tailwind-preflight.css';
+@import "./tailwind-preflight.css";
 
-@import 'tailwindcss/theme.css';
-@import 'tailwindcss/utilities.css';
+@import "tailwindcss/theme.css";
+@import "tailwindcss/utilities.css";
 
 /* @import './tailwind-preflight.css' layer(base); */
 
@@ -72,13 +72,13 @@
   --color-background: #fafafa;
   --color-label: #8c8c8c;
   --font-sans:
-    var(--font-titillium-web), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
-    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    var(--font-titillium-web), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-title:
-    var(--font-gabarito), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
-    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    var(--font-gabarito), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-serif:
-    var(--font-DMSerifText), ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+    var(--font-DMSerifText), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
 
   --transition-property-padding: padding;
   --transition-property-transform: transform;
@@ -441,9 +441,9 @@
     }
   }
 
-  input[type='number']::-webkit-inner-spin-button,
-  input[type='number']::-webkit-outer-spin-button,
-  input[type='number'] {
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"] {
     -webkit-appearance: none;
     -moz-appearance: textfield;
     appearance: textfield;
