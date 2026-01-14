@@ -1,11 +1,11 @@
 import { get, lowerCase, sortBy, upperFirst } from 'es-toolkit/compat';
 
-import { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
-import { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/circuit-simulation-execution';
+import type { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import {
   EntitycoreExecutionStatus,
-  TEntitycoreExecutionStatus,
+  type TEntitycoreExecutionStatus,
 } from '@/api/entitycore/types/entities/execution';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ListExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/types';

@@ -1,6 +1,11 @@
 import get from 'es-toolkit/compat/get';
 
 import { hasAssets } from '@/api/entitycore/guards';
+import type {
+  EntityCoreObjectTypes,
+  ISingleNeuronSynaptomeSimulation,
+} from '@/api/entitycore/types';
+import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
@@ -11,15 +16,9 @@ import {
   renderDictionaryKeys,
   renderEmptyOrValue,
 } from '@/entity-configuration/definitions/renderer';
-import { PreviewThumbnail } from '@/features/thumbnail/preview';
-
-import type {
-  EntityCoreObjectTypes,
-  ISingleNeuronSynaptomeSimulation,
-} from '@/api/entitycore/types';
-import { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import { getStatusCountMap } from '@/entity-configuration/domain/simulation/simulation-campaign';
+import { PreviewThumbnail } from '@/features/thumbnail/preview';
 import ExecutionAggregatedStatus from '@/ui/segments/activity-execution/status';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {

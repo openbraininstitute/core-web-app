@@ -2,7 +2,7 @@ import { get } from 'es-toolkit/compat';
 
 import {
   EntitycoreExecutionStatus,
-  TEntitycoreExecutionStatus,
+  type TEntitycoreExecutionStatus,
 } from '@/api/entitycore/types/entities/execution';
 
 export const executionStatusColorMap = {
