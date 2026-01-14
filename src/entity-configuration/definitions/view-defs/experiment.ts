@@ -1,6 +1,6 @@
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/types';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
@@ -70,8 +70,8 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.Name,
       EntityCoreFields.Description,
       EntityCoreFields.CircuitName,
-      EntityCoreFields.SimulationCampaignStatus,
       EntityCoreFields.RegistrationDate,
+      EntityCoreFields.SimulationCampaignStatus,
     ],
     filterableFields: [
       EntityCoreFields.Name,
@@ -87,8 +87,8 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     ],
     miniDetailView: [
       { field: EntityCoreFields.CircuitName },
-      { field: EntityCoreFields.SimulationCampaignStatus },
       { field: EntityCoreFields.RegistrationDate },
+      { field: EntityCoreFields.SimulationCampaignStatus },
     ],
   },
   [ExtendedEntitiesTypeDict.MemodelCircuitSimulation]: {
@@ -100,9 +100,9 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.Name,
       EntityCoreFields.Description,
       EntityCoreFields.CircuitName,
-      EntityCoreFields.SimulationCampaignStatus,
       EntityCoreFields.CreatedBy,
       EntityCoreFields.RegistrationDate,
+      EntityCoreFields.SimulationCampaignStatus,
     ],
     filterableFields: [
       EntityCoreFields.Name,
@@ -118,8 +118,8 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     ],
     miniDetailView: [
       { field: EntityCoreFields.CircuitName },
-      { field: EntityCoreFields.SimulationCampaignStatus },
       { field: EntityCoreFields.RegistrationDate },
+      { field: EntityCoreFields.SimulationCampaignStatus },
     ],
   },
   [ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation]: {
@@ -131,9 +131,9 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.Name,
       EntityCoreFields.Description,
       EntityCoreFields.CircuitName,
-      EntityCoreFields.SimulationCampaignStatus,
       EntityCoreFields.CreatedBy,
       EntityCoreFields.RegistrationDate,
+      EntityCoreFields.SimulationCampaignStatus,
     ],
     filterableFields: [
       EntityCoreFields.Name,
@@ -149,8 +149,8 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     ],
     miniDetailView: [
       { field: EntityCoreFields.CircuitName },
-      { field: EntityCoreFields.SimulationCampaignStatus },
       { field: EntityCoreFields.RegistrationDate },
+      { field: EntityCoreFields.SimulationCampaignStatus },
     ],
   },
   [ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation]: {
@@ -162,9 +162,9 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.Name,
       EntityCoreFields.Description,
       EntityCoreFields.CircuitName,
-      EntityCoreFields.SimulationCampaignStatus,
       EntityCoreFields.CreatedBy,
       EntityCoreFields.RegistrationDate,
+      EntityCoreFields.SimulationCampaignStatus,
     ],
     filterableFields: [
       EntityCoreFields.Name,
@@ -180,8 +180,8 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     ],
     miniDetailView: [
       { field: EntityCoreFields.CircuitName },
-      { field: EntityCoreFields.SimulationCampaignStatus },
       { field: EntityCoreFields.RegistrationDate },
+      { field: EntityCoreFields.SimulationCampaignStatus },
     ],
   },
   [ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation]: {
@@ -193,9 +193,9 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.Name,
       EntityCoreFields.Description,
       EntityCoreFields.CircuitName,
-      EntityCoreFields.SimulationCampaignStatus,
       EntityCoreFields.CreatedBy,
       EntityCoreFields.RegistrationDate,
+      EntityCoreFields.SimulationCampaignStatus,
     ],
     filterableFields: [
       EntityCoreFields.Name,
@@ -211,8 +211,8 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     ],
     miniDetailView: [
       { field: EntityCoreFields.CircuitName },
-      { field: EntityCoreFields.SimulationCampaignStatus },
       { field: EntityCoreFields.RegistrationDate },
+      { field: EntityCoreFields.SimulationCampaignStatus },
     ],
   },
   [ExtendedEntitiesTypeDict.MicrocircuitSimulation]: {
@@ -224,9 +224,9 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.Name,
       EntityCoreFields.Description,
       EntityCoreFields.CircuitName,
-      EntityCoreFields.SimulationCampaignStatus,
       EntityCoreFields.CreatedBy,
       EntityCoreFields.RegistrationDate,
+      EntityCoreFields.SimulationCampaignStatus,
     ],
     filterableFields: [
       EntityCoreFields.Name,
@@ -242,8 +242,8 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     ],
     miniDetailView: [
       { field: EntityCoreFields.CircuitName },
-      { field: EntityCoreFields.SimulationCampaignStatus },
       { field: EntityCoreFields.RegistrationDate },
+      { field: EntityCoreFields.SimulationCampaignStatus },
     ],
   },
 };

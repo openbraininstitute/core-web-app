@@ -1,38 +1,45 @@
 'use client';
 
-import { Card, ConfigProvider, Empty, Pagination as AntPagination } from 'antd';
-import { parseAsString, SingleParserBuilder, useQueryStates } from 'nuqs';
-import { kebabCase, find, get } from 'es-toolkit/compat';
 import { useRouter } from '@bprogress/next';
-import { useState } from 'react';
-import Link from 'next/link';
-
+import { Pagination as AntPagination, Card, ConfigProvider, Empty } from 'antd';
 import type { ColumnsType } from 'antd/es/table/interface';
-
+import { find, get, kebabCase } from 'es-toolkit/compat';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { SingleParserBuilder, parseAsString, useQueryStates } from 'nuqs';
+import { useMemo, useState } from 'react';
+
+import { viewConfig as simulationCampaignExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation/small-microcircuit-simulation';
+import { useExpandableTable } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
+
 import { EntityCoreObjectTypes, EntityTypeDict, TEntityTypeDict } from '@/api/entitycore/types';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { config } from '@/config';
+import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { usePrevious } from '@/hooks/hooks';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Button } from '@/ui/molecules/button';
+import { CardContent } from '@/ui/molecules/card';
+import { useRowSelection } from '@/ui/segments/data-table/elements/use-row-selection';
+import { BaseTable } from '@/ui/segments/data-table/table';
+import { StatusMap } from '@/ui/segments/project/activities/elements/helpers';
 import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
 import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/browse-header';
 import { ActivityDict, ActivityValues } from '@/ui/segments/workflows/elements/helpers';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { useRowSelection } from '@/ui/segments/data-table/elements/use-row-selection';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { StatusMap } from '@/ui/segments/project/activities/elements/helpers';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { BaseTable } from '@/ui/segments/data-table/table';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
-import { CardContent } from '@/ui/molecules/card';
 import { renderDateAndHour } from '@/util/date';
-import { Button } from '@/ui/molecules/button';
-import { usePrevious } from '@/hooks/hooks';
 import { cn } from '@/utils/css-class';
-import { config } from '@/config';
 
+import { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { ExtendedCampaignsType } from '@/entity-configuration/domain/simulation';
-import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
+import {
+  type ExtendedCampaignsType,
+  getStatusCountMap,
+} from '@/entity-configuration/domain/simulation';
+import ExecutionAggregatedStatus from '@/ui/segments/activity-execution/status';
+import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 
 const AllowedDuplicateEntityTypes: TEntityTypeDict[] = [EntityTypeDict.SimulationCampaign];
 export interface WorkflowActivityRef {
@@ -143,10 +150,24 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
       },
     },
     {
+      title: 'Date',
+      dataIndex: 'date',
+      key: 'creation_date',
+      render: (_, record) => {
+        return <span className="text-primary-9">{renderDateAndHour(record.creation_date)}</span>;
+      },
+    },
+    {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
       render: (_, record) => {
+        if (record.type === EntityTypeDict.SimulationCampaign) {
+          const statusCountMap = getStatusCountMap(record as ICircuitSimulationCampaign);
+
+          return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
+        }
+
         const status = get(record, 'status', 'default');
         const mapper = get(StatusMap, status, null);
         const className = mapper?.class;
@@ -158,14 +179,6 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
             {title}
           </span>
         );
-      },
-    },
-    {
-      title: 'Date',
-      dataIndex: 'date',
-      key: 'creation_date',
-      render: (_, record) => {
-        return <span className="text-primary-9">{renderDateAndHour(record.creation_date)}</span>;
       },
     },
   ];
@@ -238,6 +251,39 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
 
   const shouldShowEmptyState = !activityResult?.pagination.total_items && !isFetching;
 
+  // TODO If there are other entity types that need to have expandable rows - refactor this
+  // to registry-based solution (as it is done for browse-entity)
+  const expandableOptions = useMemo(() => {
+    const expandableTypes: TExtendedEntitiesTypeDict[] = [
+      ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
+      ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+      ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
+      ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+      ExtendedEntitiesTypeDict.MicrocircuitSimulation,
+    ];
+
+    if (!entityType || !expandableTypes.includes(entityType)) return undefined;
+
+    return {
+      getRowKey: (record: any) => record.id,
+      getFetchId: (record: any) => record.id,
+      fetcher: async (record: any) => {
+        return record.simulations ?? [];
+      },
+      renderExpanded: (records: any[], originalRecord: any) =>
+        simulationCampaignExpandedViewConfig.render(originalRecord, records),
+      expandIconColumnIndex: 6,
+      expandIcon: simulationCampaignExpandedViewConfig.expandIcon,
+      isRowExpandable: (record: any) => {
+        const simulations = record.simulations ?? [];
+        return simulations.length > 1;
+      },
+      isTopLevel: true,
+    };
+  }, [entityType]);
+
+  const { expandableConfig } = useExpandableTable(expandableOptions);
+
   return (
     <section
       id="activity-table-with-filters"
@@ -283,6 +329,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
           >
             <ConfigProvider theme={{ hashed: false }}>
               <BaseTable
+                expandableConfig={expandableConfig}
                 sticky
                 id="activities-table"
                 data-testid="activities-table"

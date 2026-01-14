@@ -9,6 +9,7 @@ import { Spin } from 'antd';
 import type { ComponentProps, CSSProperties, ReactNode } from 'react';
 import type { RowSelectionType } from 'antd/es/table/interface';
 import type { ColumnProps, TableProps } from 'antd/es/table';
+import type { UseExpandableTableOptions } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
 
 import { ListingFilterPanel } from '@/ui/segments/data-table/elements/listing-filter-panel/listing-filter-panel';
 import { BrainRegionDropdown } from '@/features/brain-region-dropdown';
@@ -62,6 +63,8 @@ export type Props<T> = {
   filterClassNames?: {
     container?: string;
   };
+  expandableOptions?: UseExpandableTableOptions<T, any>;
+  showExpandButtons?: boolean;
 };
 
 export function MainTable<T extends EntityCoreIdentifiableNamed>({
@@ -89,6 +92,8 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
   allowDownload,
   searchEnabled = true,
   filterClassNames,
+  expandableOptions,
+  showExpandButtons,
 }: Props<T>) {
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
   const onDisplayControlPanel = (value: boolean) => setDisplayControlPanel(value);
@@ -163,6 +168,8 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           sticky={sticky}
           className={cls?.table}
           allowDownload={allowDownload}
+          expandableOptions={expandableOptions}
+          showExpandButtons={showExpandButtons}
           controls={
             <div className="w-full">
               <Pagination {...{ dataKey, dataType, section, resultPagination }} />
