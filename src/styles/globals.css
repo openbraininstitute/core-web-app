@@ -236,6 +236,25 @@
       background-position: 200% 0;
     }
   }
+
+  @keyframes feedbackButtonScaleAnimation {
+    0% {
+      transform: scale(1);
+    }
+    25% {
+      transform: scale(1.5);
+    }
+    50% {
+      transform: scale(1);
+    }
+    75% {
+      transform: scale(1.5);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
 }
 
 /*
@@ -465,6 +484,16 @@
   /* Match expanded row background with main table */
   .ant-table-expanded-row > td {
     background-color: var(--color-background) !important;
+  }
+
+  .feedback-button-scale-animation {
+    animation: feedbackButtonScaleAnimation 3s ease-in-out forwards;
+    background-color: #002766 !important;
+  }
+
+  .feedback-button-scale-animation *,
+  .feedback-button-scale-animation svg {
+    color: #ffffff !important;
   }
 }
 

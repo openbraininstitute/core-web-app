@@ -1,10 +1,11 @@
 import { MenuOutlined } from '@ant-design/icons';
+import { Tooltip } from 'antd';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import React, { useState } from 'react';
-
+import type React from 'react';
 import type { ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 
 import {
   ExploreIcon,
@@ -51,7 +52,7 @@ type LinkItem = {
   action?: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) => string;
 };
 
-const links: Array<LinkItem> = [
+const links: LinkItem[] = [
   {
     id: 'workspace-home',
     key: 'home',
@@ -128,7 +129,7 @@ const links: Array<LinkItem> = [
     key: 'feedbacks',
     title: 'Feedback',
     url: 'feedback',
-    icon: <FeedbacksIcon className="group-hover:text-primary-3 relative left-0.5 h-6! w-6!" />,
+    icon: <FeedbacksIcon className="group-hover:text-primary-3 relative left-0.5 h-5! w-5!" />,
     allowText: false,
     className: '',
     hasAction: false,
@@ -142,6 +143,23 @@ export function TopMenuNavigation() {
   const queryParams = useSearchParams();
   const activeSection = getActiveSection(pathname);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    // Small delay to ensure button is rendered
+    let endTimer: NodeJS.Timeout;
+    const startTimer = setTimeout(() => {
+      setIsAnimating(true);
+      endTimer = setTimeout(() => {
+        setIsAnimating(false);
+      }, 3000); // 3 seconds animation duration
+    }, 100);
+
+    return () => {
+      clearTimeout(startTimer);
+      if (endTimer) clearTimeout(endTimer);
+    };
+  }, []);
 
   const hashedLinks = links.map((link) => ({
     ...link,
@@ -264,28 +282,29 @@ export function TopMenuNavigation() {
           if (id === 'workspace-feedbacks') {
             return (
               <div key={key} className="group flex w-max items-center justify-center gap-0">
-                <div className="relative flex items-center">
-                  <Button
-                    rounded
-                    id={id}
-                    variant="outline"
-                    size={breakpoint === 'xl' ? 'lg' : 'md'}
-                    className={cn(
-                      { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
-                      { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
-                      'group relative flex items-center justify-between',
-                      'transition-all duration-400 ease-out',
-                      clx
-                    )}
-                    active={activeSection === baseUrl || isActive?.(pathname)}
-                    onClick={() => setIsFeedbackModalOpen(true)}
-                  >
-                    {allowText && <span>{title}</span>}
-                    {icon}
-                  </Button>
-                  <span className="text-primary-9 absolute top-full right-0 text-sm whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                    Feedback
-                  </span>
+                <div className="relative flex items-center justify-center">
+                  <Tooltip title="Feedback" open={isAnimating ? true : undefined}>
+                    <Button
+                      rounded
+                      id={id}
+                      variant="outline"
+                      size={breakpoint === 'xl' ? 'lg' : 'md'}
+                      className={cn(
+                        { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
+                        { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
+                        'group relative z-10 flex items-center justify-between',
+                        isAnimating
+                          ? 'feedback-button-scale-animation bg-primary-9'
+                          : 'transition-all duration-400 ease-out',
+                        clx
+                      )}
+                      active={activeSection === baseUrl || isActive?.(pathname)}
+                      onClick={() => setIsFeedbackModalOpen(true)}
+                    >
+                      {allowText && <span>{title}</span>}
+                      {icon}
+                    </Button>
+                  </Tooltip>
                 </div>
               </div>
             );
