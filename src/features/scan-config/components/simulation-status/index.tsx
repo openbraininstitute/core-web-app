@@ -1,8 +1,12 @@
-import type { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
-import { ExecutionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
+import type {
+  EntitycoreExecutionStatus,
+} from '@/api/entitycore/types/entities/execution';
+import {
+  executionStatusColorMap,
+} from '@/ui/segments/activity-execution/color-map';
 
 export function SimulationStatusBadge({ status }: { status?: EntitycoreExecutionStatus }) {
-  const color = status ? ExecutionStatusColorMap[status] : '#fafafa';
+  const color = status ? executionStatusColorMap[status] : '#fafafa';
   const showSpinner = status && ['pending', 'running'].includes(status);
 
   // TODO: move spinner outside of the module.

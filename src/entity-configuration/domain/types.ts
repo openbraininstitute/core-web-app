@@ -17,7 +17,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   slug: EntitySlugValue;
   title: string;
   alternateTitle?: string;
-  requiredFeatures?: Array<FlagKey>;
+  requiredFeatures?: FlagKey[];
   api: {
     config: {
       allowedFacets?: boolean;
@@ -30,7 +30,22 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
       one: (query: { id: string; context?: WorkspaceContext | null }) => Promise<T>;
       create?: (body: any) => Promise<T>;
     };
+    /**
+     * Enriches a single entity with related data for detail view pages.
+     * Called when viewing entity details (e.g., /entity/{id}).
+     * Returns an object with multiple fields containing related data.
+     *
+     * Example: Fetch ME-model and synapse config for a synaptome detail page.
+     */
     expand?: Record<string, (source: T, ctx?: WorkspaceContext, ...other: any) => Promise<any>>;
+    /**
+     * Fetches nested/child data for expandable table rows in list views.
+     * Called on-demand when user clicks expand icon on a table row.
+     * Returns an array of nested items to display in the expanded row.
+     *
+     * Example: Fetch simulations for a campaign when row is expanded.
+     */
+    expandRow?: (record: T, ctx?: WorkspaceContext) => Promise<unknown>;
   };
   explore?: {
     basePrefix?: string;

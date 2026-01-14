@@ -105,7 +105,10 @@ async function resolveSimulationCampaigns({
 
   const circuits = await getCircuits({
     context,
-    filters: { id__in: source.data.map((l) => l.entity_id), ...circuitScaleFilter },
+    filters: {
+      id__in: source.data.map((l) => l.entity_id),
+      ...circuitScaleFilter,
+    },
   });
   const circuitMap = keyBy(circuits.data, 'id');
   const result = enrichedData.map((entity) => ({
@@ -128,7 +131,10 @@ export async function resolveSimulationByCampaignId({
   context: WorkspaceContext | undefined;
 }) {
   const campaign = await getCircuitSimulationCampaign({ id, context });
-  const source = await getCircuitSimulations({ context, filters: { simulation_campaign_id: id } });
+  const source = await getCircuitSimulations({
+    context,
+    filters: { simulation_campaign_id: id },
+  });
 
   const simulation = source.data.at(0);
   const assets = campaign?.assets ?? [];
@@ -191,6 +197,7 @@ export const SmallMicrocircuitSimulation: EntityCoreTypeConfig<ICircuitSimulatio
       one: getCircuitSimulationCampaign,
       create: createSimulationCampaign,
     },
+    expandRow: async (record, _context) => record,
   },
   explore: {
     basePrefix: 'simulate',

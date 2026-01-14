@@ -1,26 +1,26 @@
 import get from 'es-toolkit/compat/get';
 
-import { ReactNode } from 'react';
-
-import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
-import { PreviewThumbnail } from '@/features/thumbnail/preview';
-import {
-  renderArray,
-  renderEmptyOrValue,
-  EmptyPreview,
-  renderDictionaryKeys,
-} from '@/entity-configuration/definitions/renderer';
+import { hasAssets } from '@/api/entitycore/guards';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
 } from '@/entity-configuration/definitions/fields-defs/enums';
-import { hasAssets } from '@/api/entitycore/guards';
+import {
+  EmptyPreview,
+  renderArray,
+  renderDictionaryKeys,
+  renderEmptyOrValue,
+} from '@/entity-configuration/definitions/renderer';
+import { PreviewThumbnail } from '@/features/thumbnail/preview';
 
-import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import type {
   EntityCoreObjectTypes,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
+import { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
+import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
+import { getStatusCountMap } from '@/entity-configuration/domain/simulation/simulation-campaign';
+import ExecutionAggregatedStatus from '@/ui/segments/activity-execution/status';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.SimulationSeed]: {
@@ -196,46 +196,10 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.SimulationCampaignStatus]: {
     title: 'Status',
     filter: null,
+    style: { width: 160 },
     render: (r) => {
-      const status = get(r, 'simulations[0].executions[0].status', '') as EntitycoreExecutionStatus;
-      const statusMap: Record<EntitycoreExecutionStatus, ReactNode> = {
-        created: (
-          <div className="text-primary-8 w-max rounded-full px-3 py-1 text-sm font-bold shadow-sm">
-            Created
-          </div>
-        ),
-        pending: (
-          <div className="w-max rounded-full px-3 py-1 text-sm font-bold text-gray-500 shadow-sm">
-            Pending
-          </div>
-        ),
-        running: (
-          <div className="text-primary-6 w-max rounded-full px-3 py-1 text-sm font-bold shadow-sm">
-            Running
-          </div>
-        ),
-        done: (
-          <div className="w-max rounded-full px-3 py-1 text-sm font-bold text-green-500 shadow-sm">
-            Completed
-          </div>
-        ),
-        error: (
-          <div className="w-max rounded-full px-3 py-1 text-sm font-bold text-red-500 shadow-sm">
-            Error
-          </div>
-        ),
-      };
-      const component = get(
-        statusMap,
-        status,
-        <div className="w-max rounded-full px-3 py-1 text-sm font-bold text-gray-800 shadow-sm">
-          Generated
-        </div>
-      );
-      if (component) {
-        return <div className="flex w-full items-center justify-center">{component}</div>;
-      }
-      return null;
+      const statusCountMap = getStatusCountMap(r as ICircuitSimulationCampaign);
+      return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
     },
     isDisplayable: true,
     isFilterable: false,

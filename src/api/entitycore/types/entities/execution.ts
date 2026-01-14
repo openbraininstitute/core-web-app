@@ -1,11 +1,11 @@
 import type {
-  EntityCoreIdentifiable,
   EntityAuthorization,
-  EntityCoreOwnership,
-  Timestamps,
-  EntityCoreType,
   EntityCoreBaseAsset,
+  EntityCoreIdentifiable,
+  EntityCoreOwnership,
+  EntityCoreType,
   IContributor,
+  Timestamps,
 } from '@/api/entitycore/types/shared/global';
 
 export enum EntitycoreExecutionStatus {
@@ -14,6 +14,7 @@ export enum EntitycoreExecutionStatus {
   RUNNING = 'running',
   DONE = 'done',
   ERROR = 'error',
+  CANCELLED = 'cancelled',
 }
 
 export type TEntitycoreExecutionStatus = `${EntitycoreExecutionStatus}`;
