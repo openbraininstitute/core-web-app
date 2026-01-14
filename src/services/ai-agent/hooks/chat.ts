@@ -17,12 +17,39 @@ export interface AiAgentRateLimit {
   reset: number;
 }
 
+const RATE_LIMIT_STORAGE_KEY = 'ai-agent-rate-limit-remaining';
+
+function getStoredRateLimit(): number {
+  if (typeof window === 'undefined') return 0;
+  try {
+    const stored = localStorage.getItem(RATE_LIMIT_STORAGE_KEY);
+    if (stored !== null) {
+      const value = parseInt(stored, 10);
+      if (!Number.isNaN(value) && value >= 0) {
+        return value;
+      }
+    }
+  } catch (_error) {
+    // Ignore localStorage errors (e.g., in private browsing mode)
+  }
+  return 0;
+}
+
+function setStoredRateLimit(value: number): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(RATE_LIMIT_STORAGE_KEY, value.toString());
+  } catch (_error) {
+    // Ignore localStorage errors (e.g., in private browsing mode)
+  }
+}
+
 export function useServiceAiAgentChat(threadId: string) {
   const assistant = useAiAssistant();
   const initialMessages = assistant.initialMessages.useValue();
   const { accessToken } = assistant.useContext();
   const activeTools = useAIActiveTools();
-  const [rateLimitRemaining, setRateLimitRemaining] = React.useState(0);
+  const [rateLimitRemaining, setRateLimitRemaining] = React.useState(() => getStoredRateLimit());
   const chat = useChat({
     api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
     id: threadId,
@@ -46,6 +73,7 @@ export function useServiceAiAgentChat(threadId: string) {
         reset: parseInt(resp.headers.get('x-ratelimit-reset') ?? '-1', 10),
       };
       setRateLimitRemaining(newRateLimit.remaining);
+      setStoredRateLimit(newRateLimit.remaining);
       return resp;
     },
   });

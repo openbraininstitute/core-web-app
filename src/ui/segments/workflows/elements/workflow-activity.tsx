@@ -345,7 +345,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                   ),
                 }}
               />
-              <div className="relative flex h-[60px] w-full items-center justify-end">
+              <div className="relative flex h-15 w-full items-center justify-end">
                 <div className="absolute left-1/2 -translate-x-1/2">
                   <AntPagination
                     responsive
@@ -370,7 +370,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
                   />
                 </div>
                 {selectedRow && configurationLink && (
-                  <div className="flex h-[60px] shrink-0 items-center justify-center gap-2">
+                  <div className="flex h-15 shrink-0 items-center justify-center gap-2">
                     <Button
                       rounded
                       asChild

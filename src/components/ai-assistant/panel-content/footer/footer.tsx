@@ -15,6 +15,7 @@ interface FooterProps {
   onPrompt(prompt: string): void;
   messagesCount: number;
   stop(): void;
+  isLoadingSuggestions?: boolean;
 }
 
 export default function Footer({
@@ -24,6 +25,7 @@ export default function Footer({
   onPrompt,
   messagesCount,
   stop,
+  isLoadingSuggestions,
 }: FooterProps) {
   const tools = useAITools();
   const [prompt, setPrompt] = React.useState('');
@@ -35,7 +37,12 @@ export default function Footer({
   return (
     <footer className={className}>
       {status === 'ready' && messagesCount === 0 && (
-        <SuggestedQuestions threadId={threadId} messagesLength={0} onClick={handlePrompt} />
+        <SuggestedQuestions
+          threadId={threadId}
+          messagesLength={0}
+          onClick={handlePrompt}
+          isLoading={isLoadingSuggestions}
+        />
       )}
       {(status === 'ready' || status === 'error') && (
         <Prompt value={prompt} tools={tools ?? []} onChange={setPrompt} onClick={handlePrompt} />

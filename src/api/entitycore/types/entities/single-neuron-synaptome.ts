@@ -22,6 +22,7 @@ import type {
   EtypeFilter,
   PaginationFilter,
   OwnershipFilter,
+  IlikeSearchFilter,
 } from '@/api/entitycore/types/shared/request';
 
 export interface SingleNeuronSynaptomeBase {
@@ -51,7 +52,8 @@ export interface ISingleNeuronSynaptomeFilter
     SharedFilter,
     IMEModelFilter,
     PaginationFilter,
-    OwnershipFilter {}
+    OwnershipFilter,
+    IlikeSearchFilter {}
 
 const CreateSingleNeuronSynaptomeSchema = z.object({
   name: z.string(),

@@ -37,7 +37,9 @@ export type PaginationFilter = {
   page: number;
   page_size: number;
 };
-
+export type IlikeSearchFilter = {
+  ilike_search: string | null;
+};
 export type SpeciesFilter = {
   species__id: string | null;
   species_id__in: number | null;

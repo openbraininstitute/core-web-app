@@ -2,13 +2,12 @@
 
 import Link from 'next/link';
 
+import type { ErrorComponentProps } from '@/types/common';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { SharedLayout } from '@/ui/layouts/shared-layout';
 import { Button } from '@/ui/molecules/button';
 
-import type { ErrorComponentProps } from '@/types/common';
-
-export default function Error({ error }: ErrorComponentProps) {
+export default function ErrorPage({ error }: ErrorComponentProps) {
   const breakpoint = useDefaultBreakpoint();
 
   return (

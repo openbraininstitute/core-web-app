@@ -12,6 +12,7 @@ import type {
   SharedFilter,
   PaginationFilter,
   OwnershipFilter,
+  IlikeSearchFilter,
 } from '@/api/entitycore/types/shared/request';
 
 export interface ICircuitSimulation
@@ -33,4 +34,5 @@ export interface ICircuitSimulationFilter
     BrainRegionFilter, // Entitycore API doesn't support brain_region_id filtering, to be removed
     SharedFilter,
     PaginationFilter,
-    OwnershipFilter {}
+    OwnershipFilter,
+    IlikeSearchFilter {}

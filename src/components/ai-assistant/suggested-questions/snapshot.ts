@@ -1,9 +1,9 @@
 import React from 'react';
 import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
-import { useParams } from 'next/navigation';
+import { useParams, usePathname, useSearchParams } from 'next/navigation';
 
-import { useAiContext } from '../../hooks';
+import { useAiContext } from '../hooks';
 
 import { useCurrentExplorerArtifactValue } from '@/state/explore-section/artifact';
 import {
@@ -13,23 +13,20 @@ import {
 } from '@/features/brain-region-hierarchy/context';
 import { resolveDataKey } from '@/utils/key-builder';
 
-interface Snapshot {
+export interface Snapshot {
   isRootRegion: boolean;
   regionId: string;
   regionTitle: string;
   artifact: string;
+  frontendUrl: string;
 }
 
 export function useSnapshot(): Snapshot {
-  const [snapshot, setSnapshot] = React.useState<Snapshot>({
-    isRootRegion: true,
-    regionId: '',
-    regionTitle: '',
-    artifact: 'Morphology',
-  });
   const params = useParams<{ projectId: string }>();
   const { projectId } = params;
   const { section } = useAiContext();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const dataKey = resolveDataKey({ projectId, section });
   const { node: selectedBrainRegion } = useBrainRegionHierarchy({ dataKey });
   const isRootRegion =
@@ -42,15 +39,14 @@ export function useSnapshot(): Snapshot {
   const node = (result?.options ?? []).find((o) => o.data.id === selectedBrainRegion?.id);
   const regionTitle = node?.label ?? '';
   const artifact = useCurrentExplorerArtifactValue();
+  const search = searchParams.toString();
+  const frontendUrl = search ? `${pathname}?${search}` : pathname;
 
-  React.useEffect(() => {
-    setSnapshot({
-      isRootRegion,
-      regionId,
-      regionTitle,
-      artifact,
-    });
-  }, [isRootRegion, regionId, regionTitle, artifact]);
-
-  return snapshot;
+  return {
+    isRootRegion,
+    regionId,
+    regionTitle,
+    artifact,
+    frontendUrl,
+  };
 }

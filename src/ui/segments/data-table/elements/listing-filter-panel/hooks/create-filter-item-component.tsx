@@ -91,6 +91,7 @@ export function createFilterItemComponent(
       case CoreFieldFilterTypeEnum.ValueOrRange:
         return (
           <ValueOrRange
+            key={JSON.stringify(filter.value)}
             filter={filter}
             setFilter={(value: ValueOrRangeFilter['value']) =>
               updateFilterValues(filter.field, value)

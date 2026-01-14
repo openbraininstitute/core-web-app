@@ -30,6 +30,7 @@ export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecord
   api: {
     config: {
       allowedFacets: true,
+      ilikeSearchEnabled: true,
       extraRequiredListFilters: recordingOriginFilter,
     },
     query: {
