@@ -1,34 +1,29 @@
 'use client';
 
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { VerticalAlignMiddleOutlined } from '@ant-design/icons';
-import { ConfigProvider, Table, TableProps } from 'antd';
-import { isString } from 'es-toolkit/compat';
-
-import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
-import type { ComponentProps, CSSProperties, ReactNode } from 'react';
+import { ConfigProvider, Table, type TableProps } from 'antd';
 import type { TableRef } from 'antd/es/table';
-
+import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
+import { isString } from 'es-toolkit/compat';
+import type { ComponentProps, CSSProperties, ReactNode } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import useResizeObserver from '@/hooks/useResizeObserver';
+import useScrollComplete from '@/hooks/useScrollComplete';
+import TableControls from '@/ui/segments/data-table/elements/controls';
 import { useOnCellRouteHandler } from '@/ui/segments/data-table/elements/hooks';
+import styles from '@/ui/segments/data-table/elements/table.module.css';
 import {
-  useRowSelection,
   type RenderButtonProps,
+  useRowSelection,
 } from '@/ui/segments/data-table/elements/use-row-selection';
 import {
-  useExpandableTable,
   type UseExpandableTableOptions,
+  useExpandableTable,
 } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
-
-import TableControls from '@/ui/segments/data-table/elements/controls';
-import useScrollComplete from '@/hooks/useScrollComplete';
-import useResizeObserver from '@/hooks/useResizeObserver';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-
-import styles from '@/ui/segments/data-table/elements/table.module.css';
 
 export type OnCellClick<T> = (basePath: string, record: T, type: TExtendedEntitiesTypeDict) => void;
 

@@ -7,18 +7,20 @@ import { compact, get } from 'es-toolkit/compat';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { RESET } from 'jotai/utils';
 import dynamic from 'next/dynamic';
-import { SingleParserBuilder, parseAsString, useQueryState } from 'nuqs';
-import { type ComponentProps, ReactElement, useEffect, useMemo } from 'react';
-
-import { listExpandedViewRegistry } from '@/entity-configuration/definitions/list-expanded-view-defs';
-import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
-import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
-import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
+import { parseAsString, type SingleParserBuilder, useQueryState } from 'nuqs';
+import { type ComponentProps, type ReactElement, useEffect, useMemo } from 'react';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 
 import { DEFAULT_PAGE_NUMBER, WorkspaceScope, WorkspaceSection } from '@/constants';
+import { listExpandedViewRegistry } from '@/entity-configuration/definitions/list-expanded-view-defs';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { GenericError } from '@/ui/molecules/generic-error';
+import type { Props as MainTableProps } from '@/ui/segments/data-table';
 import {
   coreActiveColumnsAtom,
   coreFiltersAtom,
@@ -26,6 +28,8 @@ import {
   coreSortStateAtom,
   useDataListStateSnapshotActions,
 } from '@/ui/segments/data-table/elements/context';
+import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
+import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { MiniDetailView } from '@/ui/segments/mini-detail-view';
 import {
   makeSelectEntityClickEvent,
@@ -35,12 +39,6 @@ import {
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
-import type { Props as MainTableProps } from '@/ui/segments/data-table';
 
 const MainTable = dynamic(() => import('@/ui/segments/data-table'), { ssr: false }) as (
   props: MainTableProps<EntityCoreIdentifiableNamed>
