@@ -1,9 +1,11 @@
 'use client';
 
 import { Form, Input } from 'antd';
+
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+
 import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
-import { useWorkspaceHierarchyTracker } from '@/features/brain-region-hierarchy/hooks';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { ExperimentalNeuronDensitySchema } from '@/ui/segments/contribute/experimental-neuron-density/schema';
 import {
   createZodFieldValidator,
@@ -13,7 +15,7 @@ import {
 
 export function Setup() {
   const form = Form.useFormInstance();
-  const { selectedBrainRegion } = useWorkspaceHierarchyTracker();
+  const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
 
   return (
     <div className="h-full w-full">

@@ -2,17 +2,18 @@
 
 import { CloseOutlined } from '@ant-design/icons';
 import { capitalize } from 'es-toolkit/compat';
+
 import { HierarchySquare } from '@/components/icons/buttons';
+import { SpeciesSelector } from '@/features/brain-region-hierarchy/components/species-selector';
+import { useBrainRegionRootHierarchyQuery } from '@/features/brain-region-hierarchy/context';
 import {
   useAvailableHierarchySpeciesQuery,
   useRemoteUserPreferenceHierarchySpeciesQuery,
-  useWorkspaceHierarchyTracker,
+  useWorkspaceHierarchyRegistry,
 } from '@/features/brain-region-hierarchy/hooks';
-import { SpeciesSelector } from '@/features/brain-region-hierarchy/species-selector';
 import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
-import { useBrainRegionRootHierarchyQuery } from './context';
 
 export const ExploreLeftMenuContext = {
   BrainRegionHierarchy: 'brain-region-hierarchy',
@@ -29,7 +30,7 @@ type Props = {
 
 export function RegionBanner({ view, onSwitchView }: Props) {
   const { workspaceSpecies, selectedBrainRegion, changeBulkStoreHierarchySpecies } =
-    useWorkspaceHierarchyTracker();
+    useWorkspaceHierarchyRegistry();
   const { loading: isLoadingRootHierarchy } = useBrainRegionRootHierarchyQuery();
 
   const { loading: isLoadingAvailableHierarchySpecies } = useAvailableHierarchySpeciesQuery();
@@ -52,19 +53,19 @@ export function RegionBanner({ view, onSwitchView }: Props) {
         )}
         data-label="brain-region-banner"
       >
-        <div className="flex items-center flex-nowrap w-full">
-          <div className="pr-3 pl-4 hover:bg-gray-100 rounded-l-full">
+        <div className="flex items-center flex-nowrap w-full min-w-0">
+          <div className="pr-3 pl-4 hover:bg-gray-100 rounded-l-full shrink-0">
             <SpeciesSelector
               selectedSpecies={workspaceSpecies}
               onSpeciesChange={changeBulkStoreHierarchySpecies}
             />
           </div>
-          <div className="h-6 w-px bg-gray-200" />
-          <div className="items-stretch h-12 w-full rounded-r-full pl-3 hover:bg-gray-100 py-2">
+          <div className="h-6 w-px bg-gray-200 shrink-0" />
+          <div className="items-stretch h-12 w-full rounded-r-full pl-3 pr-10 hover:bg-gray-100 py-2 min-w-0 overflow-hidden">
             {/** biome-ignore lint/a11y/useSemanticElements: tooltip is using button internally */}
             <div
               data-label="brain-region-switcher"
-              className="flex items-center gap-1 h-full select-none max-w-9/11"
+              className="flex items-center gap-1 h-full select-none w-full min-w-0"
               tabIndex={0}
               role="button"
               onKeyDown={(e) => {
@@ -75,25 +76,25 @@ export function RegionBanner({ view, onSwitchView }: Props) {
               }}
               onClick={() => onSwitchView(ExploreLeftMenuContext.BrainRegionHierarchy)}
             >
-              <span className="text-neutral-5 text-base">Region</span>
+              <span className="text-neutral-5 text-base shrink-0">Region</span>
               {(isLoadingRootHierarchy ||
                 isLoadingAvailableHierarchySpecies ||
                 isLoadingRemoteUserPreferenceHierarchySpecies) && (
                 <div className="h-5 w-full animate-pulse rounded-full bg-gray-200 max-w-3/5" />
               )}
               {selectedBrainRegion && !isLoadingRootHierarchy && (
-                <div className="text-primary-9/90 flex items-center gap-1.5 ">
+                <div className="text-primary-9/90 flex items-center gap-1.5 flex-1 min-w-0">
                   <div
                     key={`color-${selectedBrainRegion.id}-${selectedBrainRegion.color_hex_triplet}`}
-                    className="block h-3 w-3 min-w-3 rounded-full"
+                    className="block h-3 w-3 min-w-3 rounded-full shrink-0"
                     style={{
                       backgroundColor: `#${selectedBrainRegion.color_hex_triplet}`,
                     }}
                   />
 
                   <Tooltip disableHoverableContent>
-                    <TooltipTrigger>
-                      <span className="line-clamp-1 text-left text-base font-bold leading-6">
+                    <TooltipTrigger className="min-w-0 flex-1">
+                      <span className="block truncate text-left text-base font-bold leading-6">
                         {capitalize(selectedBrainRegion.name)}
                       </span>
                     </TooltipTrigger>
@@ -112,7 +113,7 @@ export function RegionBanner({ view, onSwitchView }: Props) {
             </div>
           </div>
         </div>
-        <div className="absolute top-1/2 -translate-y-1/2 right-1.5 bg-white rounded-full">
+        <div className="absolute top-1/2 -translate-y-1/2 right-1.5 rounded-full">
           {view === ExploreLeftMenuContext.BrainRegionHierarchy ? (
             <Button
               rounded

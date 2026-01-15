@@ -1,3 +1,5 @@
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+
 export const SPECIES_DISPLAY_NAMES: Record<string, string> = {
   'Homo sapiens': 'Human',
   'Mus musculus': 'Mouse',
@@ -51,28 +53,35 @@ export interface IWorkspaceHierarchySpeciesPreference {
   brain_region_name: string | null;
 }
 
-/**
- * Get display name for a species, falling back to scientific name
- */
-export function getSpeciesDisplayName(scientificName: string): string {
-  return SPECIES_DISPLAY_NAMES[scientificName] ?? scientificName;
+export type TBrainRegionHierarchyOption = {
+  value: string;
+  label: string;
+  data: IBrainRegionHierarchy;
+};
+
+export type TBrainRegionHierarchyAtomReturnType = {
+  root: IBrainRegionHierarchy;
+  nodes: IBrainRegionHierarchy | null;
+  options: Array<TBrainRegionHierarchyOption>;
+  leaves: Map<string, IBrainRegionHierarchy[]>;
+} | null;
+
+export interface IBrainRegionHierarchyExtended extends IBrainRegionHierarchy {
+  is_leaf_region: boolean;
+  volume: number;
+  is_volumetric_region: boolean;
+  children: Array<IBrainRegionHierarchyExtended>;
 }
 
-/**
- * Transform API species data to SpeciesInfo with display name
- */
-export function transformSpecies(
-  hierarchId: string,
-  apiSpecies: {
-    id: string;
-    name: string;
-    taxonomy_id: string;
-  }
-): IWorkspaceSpecies {
-  return {
-    id: apiSpecies.id,
-    name: apiSpecies.name,
-    hierarchId,
-    displayName: getSpeciesDisplayName(apiSpecies.name),
-  };
-}
+export type TBrainRegionHierarchyExtendedOption = {
+  value: string;
+  label: string;
+  data: IBrainRegionHierarchyExtended;
+};
+
+export type TBrainRegionHierarchyExtendedAtomReturnType = {
+  root: IBrainRegionHierarchyExtended;
+  nodes: IBrainRegionHierarchyExtended | null;
+  options: Array<TBrainRegionHierarchyExtendedOption>;
+  leaves: Map<string, IBrainRegionHierarchyExtended[]>;
+} | null;

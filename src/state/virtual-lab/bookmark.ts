@@ -1,11 +1,12 @@
-import { atomFamily, atomWithRefresh } from 'jotai/utils';
 import isEqual from 'es-toolkit/compat/isEqual';
-
-import { VlmGetProjectBookmarksResponse } from '@/api/virtual-lab-svc/queries/types';
-import { getAllBookmarksByCategory } from '@/api/virtual-lab-svc/queries/bookmark';
-import { WorkspaceContext } from '@/types/common';
+import { atomWithRefresh } from 'jotai/utils';
+import { atomFamily } from 'jotai-family';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { VlmGetProjectBookmarksResponse } from '@/api/virtual-lab-svc/queries/types';
+import type { WorkspaceContext } from '@/types/common';
+
+import { getAllBookmarksByCategory } from '@/api/virtual-lab-svc/queries/bookmark';
 
 export const bookmarksForProjectAtomFamily = atomFamily(
   ({

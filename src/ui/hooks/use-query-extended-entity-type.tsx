@@ -7,16 +7,18 @@ import {
 } from '@tanstack/react-query';
 import { isEmpty } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
-import { transformFiltersToQuery } from '@/api/entitycore/transformers';
+
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import type { TWorkspaceScope } from '@/constants';
+import type { WorkspaceContext } from '@/types/common';
+
+import { transformFiltersToQuery } from '@/api/entitycore/transformers';
+import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { DEFAULT_PAGE_SIZE } from '@/constants';
 import { SortOrder } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { AppSpeciesBrainRegionConfig } from '@/features/brain-region-hierarchy/context';
-import { useWorkspaceHierarchyTracker } from '@/features/brain-region-hierarchy/hooks';
-import type { WorkspaceContext } from '@/types/common';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import {
   coreFiltersAtom,
   corePageNumberAtom,
@@ -62,7 +64,7 @@ function useQueryParameters(
     defaultBrainRegion,
   }: { requireBrainRegion?: boolean; defaultBrainRegion?: string }
 ) {
-  const { workspaceHierarchyId, selectedBrainRegion } = useWorkspaceHierarchyTracker();
+  const { workspaceHierarchyId, selectedBrainRegion } = useWorkspaceHierarchyRegistry();
   const sortState = useAtomValue(coreSortStateAtom({ key: context.key }));
   const searchString = useAtomValue(coreSearchStringAtom(context.key));
   const pageNumber = useAtomValue(corePageNumberAtom(context.key));

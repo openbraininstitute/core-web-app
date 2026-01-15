@@ -1,11 +1,12 @@
 'use client';
 
+import type { IWorkspaceSpecies } from '@/features/brain-region-hierarchy/types';
+
 import {
   useAvailableHierarchySpeciesQuery,
   useRemoteUserPreferenceHierarchySpeciesQuery,
-  useWorkspaceHierarchyTracker,
+  useWorkspaceHierarchyRegistry,
 } from '@/features/brain-region-hierarchy/hooks';
-import type { IWorkspaceSpecies } from '@/features/brain-region-hierarchy/types';
 import {
   Select,
   SelectContent,
@@ -40,7 +41,7 @@ export function SpeciesSelector({
   const { loading: isLoadingRemoteUserPreferenceHierarchySpecies } =
     useRemoteUserPreferenceHierarchySpeciesQuery();
 
-  const { syncSettled } = useWorkspaceHierarchyTracker();
+  const { syncSettled } = useWorkspaceHierarchyRegistry();
 
   if (
     loading ||

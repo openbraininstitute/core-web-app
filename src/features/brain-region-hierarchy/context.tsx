@@ -4,12 +4,21 @@ import { queryOptions, useQuery } from '@tanstack/react-query';
 import { capitalize, isNil } from 'es-toolkit/compat';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { parseAsString, useQueryStates } from 'nuqs';
-import { getBrainRegionHierarchy } from '@/api/entitycore/queries/general/brain-region';
+
 import type { IBrainAtlasRegion } from '@/api/entitycore/types/entities/brain-atlas';
 import type {
   BrainRegionHierarchyBase,
   IBrainRegionHierarchy,
 } from '@/api/entitycore/types/entities/brain-region';
+import type {
+  BrainRegionHierarchySelection,
+  IBrainRegionHierarchyExtended,
+  IWorkspaceSpecies,
+  TBrainRegionHierarchyExtendedOption,
+  TBrainRegionHierarchyOption,
+} from '@/features/brain-region-hierarchy/types';
+
+import { getBrainRegionHierarchy } from '@/api/entitycore/queries/general/brain-region';
 import {
   findNodeByKey,
   flattenTreeAsObject,
@@ -20,17 +29,10 @@ import { useBrainRegionAtlasQuery } from '@/features/brain-atlas-viewer/context'
 import {
   getLeavesForEachRegion,
   getLeavesForEachRegionExtended,
-  type IBrainRegionHierarchyExtended,
   injectHierarchyId,
   mergeHierarchyWithAtlas,
-  type TBrainRegionHierarchyExtendedOption,
-  type TBrainRegionHierarchyOption,
 } from '@/features/brain-region-hierarchy/helpers';
 import { useRemoteUserPreferenceHierarchySpeciesQuery } from '@/features/brain-region-hierarchy/hooks/use-brain-region-species';
-import type {
-  BrainRegionHierarchySelection,
-  IWorkspaceSpecies,
-} from '@/features/brain-region-hierarchy/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
 import { log } from '@/utils/logger';

@@ -1,14 +1,15 @@
 'use client';
 
-import { useWorkspaceHierarchyTracker } from '@/features/brain-region-hierarchy/hooks';
+import type { TElectricalCellRecordingForm } from '@/ui/segments/contribute/electrical-cell-recording/schema';
+import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
+
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   createElectricalCellRecordingConfig,
   ELECTRICAL_CELL_RECORDING_PROGRESS_STEPS,
 } from '@/ui/segments/contribute/electrical-cell-recording/config';
 import { useElectricalCellRecordingPipeline } from '@/ui/segments/contribute/electrical-cell-recording/pipeline';
-
-import type { TElectricalCellRecordingForm } from '@/ui/segments/contribute/electrical-cell-recording/schema';
 import {
   AssetUpload,
   Contribution,
@@ -18,7 +19,6 @@ import {
   Subject,
 } from '@/ui/segments/contribute/electrical-cell-recording/steps';
 import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
-import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
 
 const ELECTRICAL_CELL_RECORDING_STEP_CONFIG: Array<
   IContributionStep<TElectricalCellRecordingForm>
@@ -72,7 +72,7 @@ interface IElectricalCellRecordingProps {
 
 export function ElectricalCellRecording({ sessionId }: IElectricalCellRecordingProps) {
   const { projectId, virtualLabId } = useWorkspace();
-  const { selectedBrainRegion } = useWorkspaceHierarchyTracker();
+  const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
 
   return (
     <ContributionForm

@@ -5,14 +5,17 @@ import { compact, find } from 'es-toolkit/compat';
 import { useAtom, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import React from 'react';
+
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+
 import { useAppNotification } from '@/components/notification';
 import {
   AppSpeciesBrainRegionConfig,
   useBrainRegionRootHierarchyQuery,
   usePrimaryHierarchySpeciesQuery,
 } from '@/features/brain-region-hierarchy/context';
-import { useWorkspaceHierarchyTracker } from '@/features/brain-region-hierarchy/hooks';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
+
 import { brainRegionAtlasAtom } from '../context';
 import { Painter } from './painter';
 import type { SettingsDefinitions } from './settings';
@@ -44,7 +47,7 @@ export function useVisibleRegions(): {
   regions: VisibleRegion[];
 } {
   const { selectedBrainRegion: brainRegionNode, workspaceHierarchyId } =
-    useWorkspaceHierarchyTracker();
+    useWorkspaceHierarchyRegistry();
   const { result: rootBrainRegions } = useBrainRegionRootHierarchyQuery();
   const { result: brainRegions } = usePrimaryHierarchySpeciesQuery();
 

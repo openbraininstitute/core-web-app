@@ -1,13 +1,15 @@
 'use client';
 
-import { useWorkspaceHierarchyTracker } from '@/features/brain-region-hierarchy/hooks';
+import type { TExperimentalNeuronDensityForm } from '@/ui/segments/contribute/experimental-neuron-density/schema';
+import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
+
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   createExperimentalNeuronDensityConfig,
   EXPERIMENTAL_NEURON_DENSITY_PROGRESS_STEPS,
 } from '@/ui/segments/contribute/experimental-neuron-density/config';
 import { useExperimentalNeuronDensityPipeline } from '@/ui/segments/contribute/experimental-neuron-density/pipeline';
-import type { TExperimentalNeuronDensityForm } from '@/ui/segments/contribute/experimental-neuron-density/schema';
 import {
   Contribution,
   License,
@@ -16,7 +18,6 @@ import {
   Subject,
 } from '@/ui/segments/contribute/experimental-neuron-density/steps';
 import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
-import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
 
 const EXPERIMENTAL_NEURON_DENSITY_STEP_CONFIG: Array<
   IContributionStep<TExperimentalNeuronDensityForm>
@@ -64,7 +65,7 @@ interface IExperimentalNeuronDensityProps {
 
 export function ExperimentalNeuronDensity({ sessionId }: IExperimentalNeuronDensityProps) {
   const { projectId, virtualLabId } = useWorkspace();
-  const { selectedBrainRegion } = useWorkspaceHierarchyTracker();
+  const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
 
   return (
     <ContributionForm

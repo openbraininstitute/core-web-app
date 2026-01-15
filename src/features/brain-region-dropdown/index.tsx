@@ -2,17 +2,19 @@ import { CheckOutlined, DownOutlined, LoadingOutlined, SearchOutlined } from '@a
 import { useVirtualizer } from '@tanstack/react-virtual';
 import omit from 'es-toolkit/compat/omit';
 import { type ComponentProps, useCallback, useEffect, useMemo, useState } from 'react';
+
 import { BrainIcon } from '@/components/icons';
 import {
   usePrimaryExtendedHierarchySpeciesQuery,
   usePrimaryHierarchySpeciesQuery,
   useSetSelectedBrainRegion,
 } from '@/features/brain-region-hierarchy/context';
-import { useWorkspaceHierarchyTracker } from '@/features/brain-region-hierarchy/hooks';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
+
 import type { TBrainRegionHierarchyExtendedOption } from '../brain-region-hierarchy/helpers';
 
 export function BrainRegionDropdown({
@@ -34,7 +36,7 @@ export function BrainRegionDropdown({
   const { result: brainRegionHierarchy, loading: isLoading } =
     usePrimaryExtendedHierarchySpeciesQuery();
   const { updateSelectedBrainRegion } = useSetSelectedBrainRegion();
-  const { selectedBrainRegion: node, changeBrainRegion } = useWorkspaceHierarchyTracker();
+  const { selectedBrainRegion: node, changeBrainRegion } = useWorkspaceHierarchyRegistry();
 
   const [selectedNode, updateSelectedNode] = useState(() => node);
 

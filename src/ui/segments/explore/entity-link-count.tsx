@@ -1,16 +1,14 @@
 import { map } from 'es-toolkit/compat';
 import { useSearchParams } from 'next/navigation';
 import { match } from 'ts-pattern';
+
 import { useTabs } from '@/components/detail-view-tabs';
 import { type TWorkspaceScope, WorkspaceScope } from '@/constants';
 import {
   useGetSelectedBrainRegion,
   usePrimaryHierarchySpeciesQuery,
 } from '@/features/brain-region-hierarchy/context';
-import {
-  useWorkspaceHierarchySpecies,
-  useWorkspaceHierarchyTracker,
-} from '@/features/brain-region-hierarchy/hooks';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { useFlags } from '@/features/feature-flags';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
@@ -50,7 +48,7 @@ export const tabsConfigItems: Array<{
 export function EntityLinkCount() {
   const featureFlags = useFlags();
   const breakpoint = useDefaultBreakpoint();
-  const { workspaceHierarchyId } = useWorkspaceHierarchyTracker();
+  const { workspaceHierarchyId } = useWorkspaceHierarchyRegistry();
 
   const { selectedBrainRegion } = useGetSelectedBrainRegion();
   const scope = (useSearchParams().get('scope') ?? WorkspaceScope.Public) as TWorkspaceScope;

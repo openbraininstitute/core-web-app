@@ -1,40 +1,14 @@
 import isNil from 'es-toolkit/compat/isNil';
 import memoize from 'memoize-one';
+
 import type { IBrainAtlasRegion } from '@/api/entitycore/types/entities/brain-atlas';
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
-export type TBrainRegionHierarchyOption = {
-  value: string;
-  label: string;
-  data: IBrainRegionHierarchy;
-};
-
-export type TBrainRegionHierarchyAtomReturnType = {
-  root: IBrainRegionHierarchy;
-  nodes: IBrainRegionHierarchy | null;
-  options: Array<TBrainRegionHierarchyOption>;
-  leaves: Map<string, IBrainRegionHierarchy[]>;
-} | null;
-
-export interface IBrainRegionHierarchyExtended extends IBrainRegionHierarchy {
-  is_leaf_region: boolean;
-  volume: number;
-  is_volumetric_region: boolean;
-  children: Array<IBrainRegionHierarchyExtended>;
-}
-
-export type TBrainRegionHierarchyExtendedOption = {
-  value: string;
-  label: string;
-  data: IBrainRegionHierarchyExtended;
-};
-
-export type TBrainRegionHierarchyExtendedAtomReturnType = {
-  root: IBrainRegionHierarchyExtended;
-  nodes: IBrainRegionHierarchyExtended | null;
-  options: Array<TBrainRegionHierarchyExtendedOption>;
-  leaves: Map<string, IBrainRegionHierarchyExtended[]>;
-} | null;
+import {
+  type IBrainRegionHierarchyExtended,
+  type IWorkspaceSpecies,
+  SPECIES_DISPLAY_NAMES,
+} from '@/features/brain-region-hierarchy/types';
 
 export function findParentIds(root: IBrainRegionHierarchy, targetId: string): string[] {
   function dfs(node: IBrainRegionHierarchy, path: string[]): string[] | null {
@@ -246,5 +220,31 @@ export function injectHierarchyId(
     ...node,
     hierarchy_id: hierarchyId,
     children: node.children.map((child) => injectHierarchyId(child, hierarchyId)),
+  };
+}
+
+/**
+ * Get display name for a species, falling back to scientific name
+ */
+export function getSpeciesDisplayName(scientificName: string): string {
+  return SPECIES_DISPLAY_NAMES[scientificName] ?? scientificName;
+}
+
+/**
+ * Transform API species data to SpeciesInfo with display name
+ */
+export function transformSpecies(
+  hierarchId: string,
+  apiSpecies: {
+    id: string;
+    name: string;
+    taxonomy_id: string;
+  }
+): IWorkspaceSpecies {
+  return {
+    id: apiSpecies.id,
+    name: apiSpecies.name,
+    hierarchId,
+    displayName: getSpeciesDisplayName(apiSpecies.name),
   };
 }

@@ -5,10 +5,12 @@ import { Image } from 'antd';
 import { kebabCase, omit } from 'es-toolkit/compat';
 import { useRouter } from 'next/navigation';
 import { type HTMLAttributes, type TdHTMLAttributes, useEffect } from 'react';
+
 import type { IEModel } from '@/api/entitycore/types';
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import { config } from '@/config';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import {
@@ -21,7 +23,7 @@ import {
   usePrimaryHierarchySpeciesQuery,
   useSetSelectedBrainRegion,
 } from '@/features/brain-region-hierarchy/context';
-import { useWorkspaceHierarchyTracker } from '@/features/brain-region-hierarchy/hooks';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
@@ -55,7 +57,7 @@ export function EModel({ sessionId }: Props) {
   });
 
   const { updateSelectedBrainRegion } = useSetSelectedBrainRegion();
-  const { changeBrainRegion } = useWorkspaceHierarchyTracker();
+  const { changeBrainRegion } = useWorkspaceHierarchyRegistry();
   const { result: brainRegionHierarchy } = usePrimaryHierarchySpeciesQuery();
 
   useEffect(() => {

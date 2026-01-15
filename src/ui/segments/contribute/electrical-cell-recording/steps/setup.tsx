@@ -4,14 +4,16 @@ import { InfoCircleFilled } from '@ant-design/icons';
 import { DatePicker, Form, Input, InputNumber, Space } from 'antd';
 import dayjs from 'dayjs';
 import { upperFirst } from 'es-toolkit/compat';
+
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+
 import {
   ElectricalRecordingOrigin,
   ElectricalRecordingOriginDictionary,
   RecordingType,
 } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
-import { useWorkspaceHierarchyTracker } from '@/features/brain-region-hierarchy/hooks';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
 import {
   ElectricalCellRecordingSchema,
@@ -26,7 +28,7 @@ import { cn } from '@/utils/css-class';
 
 export function Setup() {
   const form = Form.useFormInstance();
-  const { selectedBrainRegion } = useWorkspaceHierarchyTracker();
+  const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
 
   const RecordingTypeFormInput = SelectPopoverFormItem<typeof RecordingType>({
     options: Object.values(RecordingType).map(({ key, label }) => ({

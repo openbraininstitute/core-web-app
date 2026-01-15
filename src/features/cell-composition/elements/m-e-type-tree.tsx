@@ -3,10 +3,14 @@
 import { useParams } from 'next/navigation';
 import { useCallback, useState } from 'react';
 import { match, P } from 'ts-pattern';
-import Tree from '@/components/tree';
+
 import type { RenderNodeProps } from '@/components/tree/types';
+import type { DensityOrCount, TreeNode } from '@/features/cell-composition/types';
+import type { WorkspaceContext } from '@/types/common';
+
+import Tree from '@/components/tree';
 import { renderFloatNumber } from '@/entity-configuration/definitions/renderer';
-import { useWorkspaceHierarchyTracker } from '@/features/brain-region-hierarchy/hooks';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import {
   useAnnotationTypesQuery,
   useCellCompositionQuery,
@@ -15,14 +19,12 @@ import { CellCompositionSkeleton } from '@/features/cell-composition/elements/ce
 import { DensityOrCountToggle } from '@/features/cell-composition/elements/composition-type-toggle';
 import Node from '@/features/cell-composition/elements/default-node';
 import { getMetric, metricToUnit } from '@/features/cell-composition/elements/helpers';
-import type { DensityOrCount, TreeNode } from '@/features/cell-composition/types';
-import type { WorkspaceContext } from '@/types/common';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
 export function CellCompositionMETypeTree() {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
-  const { selectedBrainRegion } = useWorkspaceHierarchyTracker();
+  const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
 
   const [densityOrCount, setDensityOrCount] = useState<DensityOrCount>('count');
   const {

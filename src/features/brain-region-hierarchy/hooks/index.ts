@@ -2,8 +2,7 @@ export {
   useAvailableHierarchySpeciesQuery,
   useRemoteUserPreferenceHierarchySpeciesQuery,
 } from './use-brain-region-species';
-
 export {
+  useWorkspaceHierarchyRegistry,
   useWorkspaceHierarchySpecies,
-  useWorkspaceHierarchyTracker,
 } from './use-workspace-hierarchy';

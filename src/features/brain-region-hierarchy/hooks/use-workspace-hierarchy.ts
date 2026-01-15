@@ -4,9 +4,14 @@ import { useQueryClient } from '@tanstack/react-query';
 import { find, omit } from 'es-toolkit/compat';
 import { useAtom, useAtomValue } from 'jotai';
 import { useEffect, useRef } from 'react';
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-import { updateBrainRegionPreference } from '@/api/virtual-lab-svc/queries/user';
 
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import type {
+  BrainRegionHierarchySelection,
+  IWorkspaceSpecies,
+} from '@/features/brain-region-hierarchy/types';
+
+import { updateBrainRegionPreference } from '@/api/virtual-lab-svc/queries/user';
 import {
   AppSpeciesBrainRegionConfig,
   getSpeciesConfigByHierarchyId,
@@ -17,15 +22,11 @@ import {
   VERSIONED__BRAIN_REGION_HIERARCHY_STORAGE_KEY_PREFIX,
   workspaceHierarchySpeciesAtom,
 } from '@/features/brain-region-hierarchy/context';
+import { getSpeciesDisplayName } from '@/features/brain-region-hierarchy/helpers';
 import {
   useAvailableHierarchySpeciesQuery,
   useRemoteUserPreferenceHierarchySpeciesQuery,
 } from '@/features/brain-region-hierarchy/hooks/use-brain-region-species';
-import {
-  type BrainRegionHierarchySelection,
-  getSpeciesDisplayName,
-  type IWorkspaceSpecies,
-} from '@/features/brain-region-hierarchy/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
 
@@ -95,7 +96,7 @@ export function useLocalStoreHierarchySpeciesAndBrainRegion() {
 
       return { brainRegion: defaultBrainRegion.data, hierarchy };
     }
-    return null;
+    return { hierarchy, brainRegion: null };
   }
 
   return {
@@ -122,7 +123,7 @@ export function useLocalStoreHierarchySpeciesAndBrainRegion() {
  * 4. LocalStorage (session persistence)
  * 5. Config defaults (fallback)
  */
-export function useWorkspaceHierarchyTracker() {
+export function useWorkspaceHierarchyRegistry() {
   // track initialization to prevent infinite loops
   const isInitializedRef = useRef(false);
   const queryClient = useQueryClient();
@@ -136,7 +137,7 @@ export function useWorkspaceHierarchyTracker() {
   } = useLocalStoreHierarchySpeciesAndBrainRegion();
 
   const { urlState, setUrlState } = useHierarchyBrainRegionUrlState();
-  const { remoteAvailableHierarchies, loading: isLoadingHierarchiesSpecies } =
+  const { remoteAvailableHierarchies, loading: isLoadingAvailableHierarchiesSpecies } =
     useAvailableHierarchySpeciesQuery();
   const { remoteUserPreferenceHierarchySpecies, loading: isLoadingRemotePreference } =
     useRemoteUserPreferenceHierarchySpeciesQuery();
@@ -210,19 +211,19 @@ export function useWorkspaceHierarchyTracker() {
    * change the selected species
    * this resets the brain region to the default for the new hierarchy
    */
-  function changeBulkStoreHierarchySpecies(hId: string) {
+  async function changeBulkStoreHierarchySpecies(hId: string) {
     const hierarchy = remoteAvailableHierarchies?.find((h) => h.id === hId);
     if (!hierarchy) return;
 
     // update Jotai atoms for immediate UI feedback
-    changeLocalStoreHierarchySpecies(hierarchy.id);
+    const result = await changeLocalStoreHierarchySpecies(hierarchy.id);
     const { DefaultSelectedId, DefaultSelectedName } = getSpeciesConfigByHierarchyId(hierarchy.id);
 
     syncExternalStores({
       hierarchyId: hierarchy.id,
       speciesName: hierarchy.species.name,
-      brainRegionId: DefaultSelectedId,
-      brainRegionName: DefaultSelectedName,
+      brainRegionId: result?.brainRegion?.id ?? DefaultSelectedId,
+      brainRegionName: result?.brainRegion?.name ?? DefaultSelectedName,
     });
   }
 
@@ -271,7 +272,7 @@ export function useWorkspaceHierarchyTracker() {
     // wait for hierarchies to load before initializing
     if (
       isInitializedRef.current ||
-      isLoadingHierarchiesSpecies ||
+      isLoadingAvailableHierarchiesSpecies ||
       isLoadingRemotePreference ||
       remoteAvailableHierarchies?.length === 0
     )
@@ -289,13 +290,13 @@ export function useWorkspaceHierarchyTracker() {
             hierarchy.id,
             urlState.brainRegionId
           );
-          if (result) {
+          if (result?.brainRegion) {
             // sync to localStorage
             setBrowserStorageHierarchy({
               hierarchyId: urlState.hierarchyId,
               speciesName: hierarchy.species.name,
               brainRegionId: urlState.brainRegionId,
-              brainRegionName: result.brainRegion.name,
+              brainRegionName: result?.brainRegion?.name,
             });
           }
         }
@@ -315,9 +316,9 @@ export function useWorkspaceHierarchyTracker() {
             hierarchyId: hierarchy.id,
             speciesName: hierarchy.species.name,
             brainRegionId:
-              result?.brainRegion.id || remoteUserPreferenceHierarchySpecies.brain_region_id || '',
+              result?.brainRegion?.id || remoteUserPreferenceHierarchySpecies.brain_region_id || '',
             brainRegionName:
-              result?.brainRegion.name ||
+              result?.brainRegion?.name ||
               remoteUserPreferenceHierarchySpecies.brain_region_name ||
               '',
           });
@@ -368,7 +369,7 @@ export function useWorkspaceHierarchyTracker() {
     isInitializedRef.current = true;
   }, [
     remoteAvailableHierarchies,
-    isLoadingHierarchiesSpecies,
+    isLoadingAvailableHierarchiesSpecies,
     isLoadingRemotePreference,
     remoteUserPreferenceHierarchySpecies,
     urlState,
@@ -441,10 +442,10 @@ export function useWorkspaceHierarchyTracker() {
     selectedBrainRegion,
     workspaceHierarchyId,
     remoteAvailableHierarchies,
-    isLoadingHierarchiesSpecies,
+    isLoadingAvailableHierarchiesSpecies,
+    syncSettled: isInitializedRef.current,
     changeBulkStoreHierarchySpecies,
     changeBrainRegion,
-    syncSettled: isInitializedRef.current,
   };
 }
 

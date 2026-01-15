@@ -3,23 +3,23 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { useAtomValue, useSetAtom } from 'jotai';
 import type { ReactNode } from 'react';
+
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import type { RenderNodeProps, TTreeNode } from '@/components/tree/types';
+
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { Tree } from '@/components/tree';
 import { scrollToNode } from '@/components/tree/elements/helpers';
 import { TreeSearch } from '@/components/tree/elements/search';
-import type { RenderNodeProps, TTreeNode } from '@/components/tree/types';
 import { DEFAULT_PAGE_NUMBER } from '@/constants';
+import { BrainRegionHierarchyNodeRender } from '@/features/brain-region-hierarchy/components/node-render';
 import {
-  AppSpeciesBrainRegionConfig,
   brainRegionSidebarAtom,
   getSpeciesConfigByHierarchyId,
-  MOUSE_DEFAULT__SELECTED_BRAIN_REGION_ANNOTATION_VALUE,
   usePrimaryExtendedHierarchySpeciesQuery,
 } from '@/features/brain-region-hierarchy/context';
 import { makeBrainRegionClickEvent } from '@/features/brain-region-hierarchy/event';
-import { useWorkspaceHierarchyTracker } from '@/features/brain-region-hierarchy/hooks';
-import { BrainRegionHierarchyNodeRender } from '@/features/brain-region-hierarchy/node-render';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { corePageNumberAtom } from '@/ui/segments/data-table/elements/context';
 import { classNames } from '@/util/utils';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
@@ -34,7 +34,7 @@ export function BrainRegionHierarchy({
   const isCollapsed = useAtomValue(brainRegionSidebarAtom);
   const { result: brainRegionHierarchyResult, loading } = usePrimaryExtendedHierarchySpeciesQuery();
   const { changeBrainRegion, selectedBrainRegion, workspaceHierarchyId } =
-    useWorkspaceHierarchyTracker();
+    useWorkspaceHierarchyRegistry();
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
 
   if (loading) {
