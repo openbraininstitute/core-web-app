@@ -1,25 +1,24 @@
 'use client';
 
-import { Modal } from 'antd';
-import { useState } from 'react';
 import { LoadingOutlined, PlayCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import { Modal } from 'antd';
 import { Popover } from 'antd/lib';
-
+import { useState } from 'react';
+import type { INotebook } from '@/api/entitycore/types/entities/notebook';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
 import { EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
-import { INotebook } from '@/api/entitycore/types/entities/notebook';
-
-import { downloadArchive } from '@/services/entity-download';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { useAppNotification } from '@/components/notification';
-import { NotebookStartResponse, startNotebook } from '@/services/notebooks';
+import { downloadArchive } from '@/services/entity-download';
+import { type NotebookStartResponse, startNotebook } from '@/services/notebooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 interface ActionPopoverProps {
   notebook: INotebook;
+  index: number;
 }
 
-export default function ActionPopover({ notebook }: ActionPopoverProps) {
+export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
   const [open, setOpen] = useState(false);
   const notification = useAppNotification();
   const { virtualLabId, projectId } = useWorkspace();
@@ -73,12 +72,13 @@ export default function ActionPopover({ notebook }: ActionPopoverProps) {
           <div className="mt-5 text-lg text-black">{notebook.description}</div>
         </div>
       </Modal>
-      <div id="popover">
+      <div id={`notebook-actions-${index}`}>
         <Popover
           content={
             <div className="text-primary-9 flex min-w-[120px] flex-col gap-2">
               <div className="flex gap-4">
                 <button
+                  data-id={`readme-btn-${index}`}
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -92,6 +92,7 @@ export default function ActionPopover({ notebook }: ActionPopoverProps) {
               </div>
               <div className="flex gap-4">
                 <button
+                  data-id={`download-btn-${index}`}
                   type="button"
                   className="hover:text-primary-4 inline-flex items-center gap-[10px]"
                   onClick={(e) => {
@@ -109,6 +110,7 @@ export default function ActionPopover({ notebook }: ActionPopoverProps) {
 
               <div className="flex gap-4">
                 <button
+                  data-id={`run-btn-${index}`}
                   disabled={loading}
                   type="button"
                   className="hover:text-primary-4 inline-flex items-center gap-[10px]"
