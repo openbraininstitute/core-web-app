@@ -1,20 +1,20 @@
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/types';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
 export const viewDefForEMCellMesh: ViewDefinitionConfig = {
   title: 'EM mesh',
   group: DataTypeGroup.ExperimentalData,
   name: EntitySlug.EMCellMesh,
   columns: [
-    EntityCoreFields.Preview,
+    // EntityCoreFields.Preview,
     EntityCoreFields.BrainRegion,
-    EntityCoreFields.MType,
-    EntityCoreFields.Name,
-    EntityCoreFields.SpeciesName,
-    EntityCoreFields.Contributions,
-    EntityCoreFields.DenseReconstructionCellId,
+    // EntityCoreFields.MType,
+    // EntityCoreFields.Name,
+    // EntityCoreFields.SpeciesName,
+    // EntityCoreFields.Contributions,
+    // EntityCoreFields.DenseReconstructionCellId,
     EntityCoreFields.GenerationMethod,
     EntityCoreFields.LevelOfDetail,
     EntityCoreFields.MeshType,
