@@ -1,6 +1,6 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-const DEFAULT_API_BASE_PATH = "/api";
+const DEFAULT_API_BASE_PATH = '/api';
 
 // ! WARNING: public configuration properties are exposed in the browser.
 // ! Only enable this for entries which are safe to be public. NO SECRETS.
@@ -9,13 +9,7 @@ const configFields = {
   APP_VERSION: { schema: z.string().nonempty(), public: true },
 
   DEPLOYMENT_ENV: {
-    schema: z.enum([
-      "local",
-      "preview",
-      "development",
-      "staging",
-      "production",
-    ]),
+    schema: z.enum(['local', 'preview', 'development', 'staging', 'production']),
     public: true,
   },
 
@@ -63,17 +57,14 @@ const configFields = {
   CDN_URL: { schema: z.string().url().optional(), public: true },
 
   SENTRY_DSN: {
-    schema: z.preprocess(
-      (sentryDsn) => sentryDsn || undefined,
-      z.string().url().optional(),
-    ),
+    schema: z.preprocess((sentryDsn) => sentryDsn || undefined, z.string().url().optional()),
     public: true,
   },
   SENTRY_ORG: { schema: z.string().optional(), public: true },
   SENTRY_PRJ: { schema: z.string().optional(), public: true },
 
   STRIPE_PUBLISHABLE_KEY: {
-    schema: z.string().startsWith("pk_"),
+    schema: z.string().startsWith('pk_'),
     public: true,
   },
 
@@ -82,7 +73,7 @@ const configFields = {
   MATOMO_URL: { schema: z.string().nonempty().optional(), public: true },
 
   SANITY_PROJECT_ID: { schema: z.string().nonempty(), public: true },
-  SANITY_DATASET: { schema: z.enum(["staging", "production"]), public: true },
+  SANITY_DATASET: { schema: z.enum(['staging', 'production']), public: true },
 
   ENTITY_CORE_PUBLIC_PROJECT_ID: {
     schema: z.string().nonempty(),
@@ -103,7 +94,7 @@ const configFields = {
     public: true,
   },
   MOUSE_ROOT__BRAIN_REGION_ANNOTATION_VALUE: {
-    schema: z.string().nonempty().default("997"),
+    schema: z.string().nonempty().default('997'),
     public: true,
   },
   /**
@@ -114,7 +105,7 @@ const configFields = {
    * ontology hierarchy, facilitating region-specific analysis and lookup.
    */
   MOUSE_PRIMARY__DIVISION_ANNOTATION_VALUE: {
-    schema: z.string().nonempty().default("8"),
+    schema: z.string().nonempty().default('8'),
     public: true,
   },
   MOUSE_DEFAULT__SELECTED_BRAIN_REGION_ID: {
@@ -127,7 +118,7 @@ const configFields = {
     public: true,
   },
   HUMAN_ROOT__BRAIN_REGION_ANNOTATION_VALUE: {
-    schema: z.string().nonempty().default("999"),
+    schema: z.string().nonempty().default('999'),
     public: true,
   },
   /**
@@ -138,16 +129,11 @@ const configFields = {
    * It is intended for use in region lookup, grouping, and spatial analysis.
    */
   HUMAN_PRIMARY__DIVISION_ANNOTATION_VALUE: {
-    schema: z.string().nonempty("999"),
+    schema: z.string().nonempty('999'),
     public: true,
   },
 
   HUMAN_DEFAULT__SELECTED_BRAIN_REGION_ID: {
-    schema: z.string().nonempty(),
-    public: true,
-  },
-  // ----
-  DEFAULT_SPECIES_TAXONOMY_ID: {
     schema: z.string().nonempty(),
     public: true,
   },
@@ -160,23 +146,21 @@ const configFields = {
 } as const;
 
 const platformApiUrlFields = {
-  AI_AGENT_URL: "/agent",
-  AUTH_MANAGER_URL: "/auth-manager/v1",
-  CELL_API_URL: "/circuit",
-  ENTITY_CORE_URL: "/entitycore",
-  NOTEBOOK_API_URL: "/notebook_service",
-  OBI_ONE_URL: "/obi-one",
-  SMALL_SCALE_SIMULATOR_URL: "/small-scale-simulator",
-  THUMBNAIL_API_URL: "/thumbnail-generation",
-  VIRTUAL_LAB_API_URL: "/virtual-lab-manager",
+  AI_AGENT_URL: '/agent',
+  AUTH_MANAGER_URL: '/auth-manager/v1',
+  CELL_API_URL: '/circuit',
+  ENTITY_CORE_URL: '/entitycore',
+  NOTEBOOK_API_URL: '/notebook_service',
+  OBI_ONE_URL: '/obi-one',
+  SMALL_SCALE_SIMULATOR_URL: '/small-scale-simulator',
+  THUMBNAIL_API_URL: '/thumbnail-generation',
+  VIRTUAL_LAB_API_URL: '/virtual-lab-manager',
 } as const satisfies Partial<Record<keyof typeof configFields, string>>;
 
 const baseServerSchema = z.object(
-  Object.fromEntries(
-    Object.entries(configFields).map(([key, { schema }]) => [key, schema]),
-  ),
+  Object.fromEntries(Object.entries(configFields).map(([key, { schema }]) => [key, schema]))
 ) as z.ZodObject<{
-  [K in keyof typeof configFields]: (typeof configFields)[K]["schema"];
+  [K in keyof typeof configFields]: (typeof configFields)[K]['schema'];
 }>;
 
 // biome-ignore lint/suspicious/noExplicitAny: reason for using any
@@ -199,7 +183,7 @@ const applyApiUrlTransforms = <T extends z.ZodObject<any>>(schema: T) =>
         Object.entries(platformApiUrlFields).map(([field, path]) => [
           field,
           data[field] ?? `${data.API_ORIGIN}${DEFAULT_API_BASE_PATH}${path}`,
-        ]),
+        ])
       ),
     })) as any as z.ZodEffects<
     T,
@@ -212,12 +196,12 @@ export const baseClientSchema = z.object(
   Object.fromEntries(
     Object.entries(configFields)
       .filter(([, { public: isPublic }]) => isPublic)
-      .map(([key, { schema }]) => [key, schema]),
-  ),
+      .map(([key, { schema }]) => [key, schema])
+  )
 ) as z.ZodObject<{
-  [K in keyof typeof configFields as (typeof configFields)[K]["public"] extends true
+  [K in keyof typeof configFields as (typeof configFields)[K]['public'] extends true
     ? K
-    : never]: (typeof configFields)[K]["schema"];
+    : never]: (typeof configFields)[K]['schema'];
 }>;
 
 export const clientSchema = applyApiUrlTransforms(baseClientSchema);
