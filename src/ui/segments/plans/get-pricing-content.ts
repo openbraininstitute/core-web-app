@@ -1,7 +1,7 @@
 import { getClient } from '@/api/sanity/client';
-import { PlanV2 } from '@/types/virtual-lab/pricing';
-import { logError } from '@/util/logger';
 import pricingQuery from '@/app/api/sanity/pricing-query';
+import type { PlanV2 } from '@/types/virtual-lab/pricing';
+import { logError } from '@/util/logger';
 
 export type PricingContentProps = PlanV2;
 

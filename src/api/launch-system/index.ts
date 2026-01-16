@@ -1,6 +1,6 @@
 import { authApiClient } from '@/api/apiClient';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
-import { WorkspaceContext } from '@/types/common';
+import type { WorkspaceContext } from '@/types/common';
 
 export async function launchSystemApi(url?: string) {
   const api = await authApiClient(

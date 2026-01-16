@@ -1,11 +1,9 @@
 import z from 'zod';
-
-import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
-
 import type {
   TCircuitBuildCategoryDictionary,
   TCircuitScaleDictionary,
 } from '@/api/entitycore/types/entities/circuit';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type {
   EntityAuthorization,
   EntityCoreBaseAsset,

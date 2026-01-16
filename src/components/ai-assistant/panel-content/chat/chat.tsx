@@ -1,19 +1,17 @@
-import React from 'react';
 import { useIsFetching } from '@tanstack/react-query';
-
-import Welcome from '../welcome';
-import { MessageItem } from '../../message-item';
-import { IconClear } from '../../icons/clear';
-import SuggestedQuestions from '../../suggested-questions';
-import ErrorPanel from '../../error';
-import Footer from '../footer';
-
-import { IconPrice } from '../../icons/price';
+import React from 'react';
 import {
   useServiceAiAgentChat,
   useServiceAiAgentSuggestionFromUserJourney,
 } from '@/services/ai-agent';
 import { classNames } from '@/util/utils';
+import ErrorPanel from '../../error';
+import { IconClear } from '../../icons/clear';
+import { IconPrice } from '../../icons/price';
+import { MessageItem } from '../../message-item';
+import SuggestedQuestions from '../../suggested-questions';
+import Footer from '../footer';
+import Welcome from '../welcome';
 
 import styles from './chat.module.css';
 

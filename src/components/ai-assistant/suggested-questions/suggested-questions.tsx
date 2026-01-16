@@ -1,10 +1,9 @@
 'use client';
 
 import React from 'react';
-
-import { classNames } from '@/util/utils';
 import IconIdea from '@/components/icons/Idea';
 import { useServiceAiAgentSuggestionFromUserJourney } from '@/services/ai-agent';
+import { classNames } from '@/util/utils';
 
 import styles from './suggested-questions.module.css';
 

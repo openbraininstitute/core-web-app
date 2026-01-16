@@ -1,30 +1,29 @@
 /* eslint-disable no-param-reassign */
-import React from 'react';
+
 import {
-  ArrayNumber2,
-  tgdCalcMapRange,
-  TgdCameraState,
+  type ArrayNumber2,
+  type TgdCameraState,
   TgdContext,
   TgdControllerCameraOrbit,
   TgdLight,
   TgdMat4,
   TgdMaterialDiffuse,
-  TgdPainter,
+  type TgdPainter,
   TgdPainterSegments,
   TgdPainterSegmentsData,
   TgdVec3,
+  tgdCalcMapRange,
 } from '@tolokoban/tgd';
-
+import React from 'react';
+import { useAppNotification } from '@/components/notification';
+import type { Morphology } from '@/services/bluenaas-single-cell/types';
+import GenericEvent from '@/util/generic-event';
 import { useVisibleSynapses } from '../hooks';
-import { computeSectionOffset } from './math';
 import { makeCamera } from './camera';
-import { Structure, StructureItem, StructureItemType } from './structure';
+import { computeSectionOffset } from './math';
 import { OffscreenPainter } from './offscreen-painter';
 import { Painter } from './painters';
-
-import { Morphology } from '@/services/bluenaas-single-cell/types';
-import GenericEvent from '@/util/generic-event';
-import { useAppNotification } from '@/components/notification';
+import { Structure, type StructureItem, StructureItemType } from './structure';
 
 interface SelectedItem {
   x: number;

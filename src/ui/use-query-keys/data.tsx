@@ -215,8 +215,8 @@ export const keyBuilder = {
     context: WorkspaceContext;
     props: Partial<ISingleNeuronSynaptomeSimulationFilter>;
   }) => [`${prefix}-single-neuron-synaptome-simulations`, { ...context, ...props }],
-  circuitProperties: ({ circuitId }: { circuitId: string }) => {
-    return [`${prefix}-circuit-properties`, circuitId];
+  modelProperties: ({ modelId }: { modelId: string }) => {
+    return [`${prefix}-circuit-properties`, modelId];
   },
   etype: ({ virtualLabId, projectId }: WorkspaceContext) => [
     `${prefix}-etype-class`,
@@ -258,4 +258,5 @@ export const keyBuilder = {
     context: WorkspaceContext;
     id: string;
   } & Record<string, any>) => [`${prefix}-validation-results`, { context, id, ...props }],
+  obiOneJsonSchema: (schemaName: string) => [`${prefix}-${schemaName}`, { schemaName }],
 };

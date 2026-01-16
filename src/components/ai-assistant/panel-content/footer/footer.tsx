@@ -1,10 +1,8 @@
 import React from 'react';
-
-import SuggestedQuestions from '../../suggested-questions';
+import { useAITools } from '@/services/ai-agent/tools/tools';
 import Prompt from '../../prompt';
 import { Spinner } from '../../spinner';
-
-import { useAITools } from '@/services/ai-agent/tools/tools';
+import SuggestedQuestions from '../../suggested-questions';
 
 import styles from './footer.module.css';
 

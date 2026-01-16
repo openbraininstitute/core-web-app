@@ -1,5 +1,3 @@
-import { FlagKey } from '@/features/feature-flags/flags';
-
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TCircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -9,6 +7,7 @@ import type { TDetailViewSectionDict } from '@/entity-configuration/definitions/
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
+import type { FlagKey } from '@/features/feature-flags/flags';
 import type { WorkspaceContext } from '@/types/common';
 
 export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
@@ -18,7 +17,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   slug: EntitySlugValue;
   title: string;
   alternateTitle?: string;
-  requiredFeatures?: Array<FlagKey>;
+  requiredFeatures?: FlagKey[];
   api: {
     config: {
       allowedFacets?: boolean;

@@ -1,13 +1,12 @@
 'use client';
 
-import { styleBlockFullWidth } from '../../styles';
-
 import { useCredits } from '@/hooks/use-credits';
 import { usePlanV2 } from '@/hooks/use-plan-v2';
 import { usePrices } from '@/hooks/use-prices';
 import PriceTable from '@/ui/segments/help/priceList/price-table';
 import Plans from '@/ui/segments/plans';
 import { classNames } from '@/util/utils';
+import { styleBlockFullWidth } from '../../styles';
 
 export default function SectionPricing() {
   const { prices, loading: pricesLoading, error: pricesError } = usePrices();
