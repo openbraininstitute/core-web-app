@@ -35,7 +35,6 @@ export default async function EntityDetail({ params }: { params: Promise<{ id: s
   const { id } = await params;
 
   const { data: entity, error: entityError } = await tryCatch(() => getEntity({ id }));
-  console.log('entity', entity, 'error', entityError)
   if (!entity || entityError) notFound();
 
   let entityType: TExtendedEntitiesTypeDict = entity.type;

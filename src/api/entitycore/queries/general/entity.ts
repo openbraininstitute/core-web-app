@@ -54,7 +54,6 @@ export async function getEntity({
   context?: WorkspaceContext;
 }): Promise<IEntity> {
   const api = await entityCoreApi();
-  console.log(api)
   return await api.get(`${baseUri}/${id}`, {
     headers: {
       accept: 'application/json',
