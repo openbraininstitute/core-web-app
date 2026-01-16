@@ -1,15 +1,13 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
-import { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
-import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
-import {
+import type { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
   EntityCoreFieldsValue,
 } from '@/entity-configuration/definitions/fields-defs/enums';
-
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 export type CoreFilterValues = {
   [field: string]: string | number | string[] | GteLteValue | null | boolean;
@@ -118,7 +116,7 @@ export type FieldDefinition<T extends EntityCoreIdentifiable> = {
   order?: OrderShape;
   unit?: ReactNode;
   group?: StructuralDomain;
-  render?: (entity: T) => ReactNode;
+  render?: (entity: T, i?: number) => ReactNode;
   renderForDetailView?: (entity: T) => ReactNode;
   vocabulary?: {
     plural: string;

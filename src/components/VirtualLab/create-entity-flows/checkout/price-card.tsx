@@ -26,6 +26,8 @@ function PricingCard({
   selectedInterval,
   onSelect,
 }: Props) {
+  
+
   return (
     <motion.button
       layout
@@ -39,8 +41,8 @@ function PricingCard({
       onClick={() => onSelect(interval)}
       type="button"
       className={classNames(
-        'border-0.5 relative flex grow flex-col items-start rounded-lg border-gray-100 p-6',
-        selectedInterval === interval ? 'bg-primary-8 text-white!' : 'text-primary-8 bg-white'
+        'border-0.5 border relative flex grow flex-col items-start rounded-lg  p-6 bg-primary-8',
+        selectedInterval === interval ? 'text-white border-green-400!' : ' text-primary-3 border-primary-8'
       )}
     >
       <div className="flex w-full items-center justify-between">
@@ -54,7 +56,7 @@ function PricingCard({
           value={interval}
         />
       </div>
-      <span className="text-2xl font-bold">{title}</span>
+      <span className="text-3xl font-bold capitalize">{interval}</span>
       <span className="inline-block text-sm">
         <small className="mr-1 text-sm font-light">{currency}</small>
         <span className="text-xl font-bold">
@@ -67,8 +69,9 @@ function PricingCard({
       {discount && (
         <div
           className={classNames(
-            'text-primary-7 flex h-max items-center justify-center rounded-full bg-green-400 px-1 text-sm',
-            'absolute top-2 right-4 p-1 px-3'
+            'text-primary-7 flex h-max items-center justify-center rounded-full  px-1 text-sm',
+            'absolute top-2 right-4 p-1 px-3',
+            selectedInterval === interval ? 'bg-green-400' : 'bg-primary-3'
           )}
         >
           Save {discount}-

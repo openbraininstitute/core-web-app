@@ -15,7 +15,7 @@ import {
   ReportsIcon,
   WorkflowIcon,
 } from '@/components/icons/buttons';
-import FeedbacksIcon from '@/components/icons/FeedbacksIcon';
+import { FeedbackStarIcon } from '@/components/icons/FeedbackStarIcon';
 import { config } from '@/config';
 import {
   DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
@@ -129,7 +129,7 @@ const links: LinkItem[] = [
     key: 'feedbacks',
     title: 'Feedback',
     url: 'feedback',
-    icon: <FeedbacksIcon className="group-hover:text-primary-3 relative left-0.5 h-5! w-5!" />,
+    icon: <FeedbackStarIcon className="group-hover:text-primary-3 relative left-0.5 h-6! w-6!" />,
     allowText: false,
     className: '',
     hasAction: false,
