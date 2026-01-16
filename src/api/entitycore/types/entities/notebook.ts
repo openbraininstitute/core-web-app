@@ -1,19 +1,19 @@
 import type {
+  EntityAuthorization,
+  EntityCoreBaseAsset,
+  EntityCoreIdentifiable,
+  EntityCoreOwnership,
+  EntityCoreType,
+  Timestamps,
+} from '@/api/entitycore/types/shared/global';
+import type {
   ContributionFilter,
-  TimestampsFilter,
-  PaginationFilter,
-  SharedFilter,
   IDFilter,
   IlikeSearchFilter,
+  PaginationFilter,
+  SharedFilter,
+  TimestampsFilter,
 } from '@/api/entitycore/types/shared/request';
-import type {
-  EntityCoreIdentifiable,
-  EntityCoreBaseAsset,
-  EntityAuthorization,
-  Timestamps,
-  EntityCoreType,
-  EntityCoreOwnership,
-} from '@/api/entitycore/types/shared/global';
 
 export type NotebookFilter = Partial<
   IDFilter &

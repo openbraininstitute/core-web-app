@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { PlanV2 } from '@/types/virtual-lab/pricing';
+import type { PlanV2 } from '@/types/virtual-lab/pricing';
 import PlanBody from '@/ui/segments/plans/body';
 import PlanHeader from '@/ui/segments/plans/header';
 

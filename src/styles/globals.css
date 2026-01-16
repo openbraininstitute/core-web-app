@@ -461,6 +461,11 @@
   .ant-table-thead .ant-table-cell {
     white-space: nowrap !important;
   }
+
+  /* Match expanded row background with main table */
+  .ant-table-expanded-row > td {
+    background-color: var(--color-background) !important;
+  }
 }
 
 dialog {

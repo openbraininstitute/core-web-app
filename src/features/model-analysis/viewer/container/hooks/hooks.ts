@@ -1,7 +1,7 @@
 import { capitalize } from 'es-toolkit/compat';
 import React from 'react';
 
-import { TValidationResultNonUndefined } from '../../../explorer/use-analysis';
+import type { TValidationResultNonUndefined } from '../../../explorer/use-analysis';
 import { AllowedTypes } from '../../asset-viewers/storage';
 import { customSorting } from './custom-sorting';
 import { getDocumentation, getDocumentationForInputResistance } from './dictionary';

@@ -1,29 +1,29 @@
-import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
-import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
+import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import type {
-  EntityCoreIdentifiable,
   EntityAuthorization,
-  PointLocationBase,
+  EntityCoreBaseAsset,
+  EntityCoreIdentifiable,
+  EntityCoreOwnership,
+  EntityCoreType,
   IContributor,
-  Timestamps,
-  ISpecies,
-  IStrain,
   IEType,
   IMType,
-  EntityCoreType,
-  EntityCoreBaseAsset,
-  EntityCoreOwnership,
+  ISpecies,
+  IStrain,
+  PointLocationBase,
+  Timestamps,
 } from '@/api/entitycore/types/shared/global';
 import type {
-  ContributionFilter,
-  IMorphologyFilter,
   BrainRegionFilter,
-  SpeciesFilter,
-  SharedFilter,
-  MtypeFilter,
+  ContributionFilter,
   EtypeFilter,
-  PaginationFilter,
   IlikeSearchFilter,
+  IMorphologyFilter,
+  MtypeFilter,
+  PaginationFilter,
+  SharedFilter,
+  SpeciesFilter,
 } from '@/api/entitycore/types/shared/request';
 
 interface ExemplarMorphology extends Timestamps, EntityCoreIdentifiable {

@@ -227,3 +227,4 @@ playwright/.auth
 
 # Sentry Config File
 .env.sentry-build-plugin
+next-env.d.ts

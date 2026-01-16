@@ -1,6 +1,5 @@
 import React from "react";
 
-import SuggestedQuestions from "../../suggested-questions";
 import Prompt from "../../prompt";
 import { Spinner } from "../../spinner";
 

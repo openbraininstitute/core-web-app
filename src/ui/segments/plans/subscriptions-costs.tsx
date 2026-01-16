@@ -1,4 +1,4 @@
-import { PlanV2 } from '@/types/virtual-lab/pricing';
+import type { PlanV2 } from '@/types/virtual-lab/pricing';
 
 export default function SubscriptionsCosts({
   billingInterval,

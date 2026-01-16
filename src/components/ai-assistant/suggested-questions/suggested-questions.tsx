@@ -1,7 +1,5 @@
 "use client";
 
-import React from "react";
-
 import { classNames } from "@/util/utils";
 import IconIdea from "@/components/icons/Idea";
 

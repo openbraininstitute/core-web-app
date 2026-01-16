@@ -1,23 +1,23 @@
-import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
+import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
+import type {
+  EntityAuthorization,
+  EntityCoreBaseAsset,
+  EntityCoreIdentifiable,
+  EntityCoreOwnership,
+  EntityCoreType,
+  IBrainLocation,
+  ILicense,
+  Timestamps,
+} from '@/api/entitycore/types/shared/global';
 import type {
   BrainRegionFilter,
   ContributionFilter,
-  TimestampsFilter,
-  PaginationFilter,
-  SharedFilter,
   IDFilter,
   IlikeSearchFilter,
+  PaginationFilter,
+  SharedFilter,
+  TimestampsFilter,
 } from '@/api/entitycore/types/shared/request';
-import type {
-  EntityCoreIdentifiable,
-  EntityCoreBaseAsset,
-  EntityAuthorization,
-  IBrainLocation,
-  Timestamps,
-  ILicense,
-  EntityCoreType,
-  EntityCoreOwnership,
-} from '@/api/entitycore/types/shared/global';
 
 export const RecordingType = {
   Intracellular: {

@@ -2,16 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
-
+import type { PlanV2 } from '@/types/virtual-lab/pricing';
 import {
-  type CarouselApi,
   Carousel,
+  type CarouselApi,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
 } from '@/ui/molecules/carousel';
-import { PlanV2 } from '@/types/virtual-lab/pricing';
 import PlanCard from '@/ui/segments/plans/card';
 
 export default function Plans({ plans }: { plans: PlanV2[] }) {

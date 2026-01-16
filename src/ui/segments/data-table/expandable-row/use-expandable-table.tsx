@@ -1,13 +1,11 @@
-import { useState, useCallback, ReactNode, useEffect } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
-import { useAtomValue } from 'jotai';
 import { Spin } from 'antd';
 import type { ExpandableConfig } from 'antd/es/table/interface';
-
+import { useAtomValue } from 'jotai';
+import { type ReactNode, useCallback, useEffect, useState } from 'react';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { resetFilterSignalAtom } from '@/ui/segments/explore/circuit/helpers';
 import { log } from '@/utils/logger';
-
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 export interface ExpandableTableState<T extends EntityCoreIdentifiable> {
   expandedData: Record<string, Array<T> | null>;
@@ -39,9 +37,9 @@ export interface UseExpandableTableOptions<T extends EntityCoreIdentifiable, P =
  * Reusable hook for managing expandable tables with hierarchy support
  */
 export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown>(
-  options: UseExpandableTableOptions<T, P>
+  options?: UseExpandableTableOptions<T, P>
 ): {
-  expandableConfig: ExpandableConfig<T>;
+  expandableConfig: ExpandableConfig<T> | undefined;
   isRowExpanded: (record: T) => boolean;
   isRowLoading: (record: T) => boolean;
   getExpandedData: (record: T) => Array<T> | null;
@@ -49,14 +47,14 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
   const {
     fetcher,
     fetcherParams,
-    getRowKey,
-    getFetchId,
-    renderExpanded,
+    getRowKey = (record: T) => record.id,
+    getFetchId = () => null,
+    renderExpanded = () => null,
     isRowExpandable = () => true,
     expandIconColumnIndex,
     expandIcon,
     isTopLevel = false,
-  } = options;
+  } = options ?? {};
 
   const [state, setState] = useState<ExpandableTableState<T>>({
     expandedData: {},
@@ -194,15 +192,17 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
   );
 
   // create expandable config - only use controlled mode for top-level tables
-  const expandableConfig: ExpandableConfig<T> = {
-    rowExpandable: isRowExpandable,
-    onExpand,
-    expandedRowRender,
-    expandIconColumnIndex,
-    expandIcon,
-    // only top-level tables use controlled mode (expandedRowKeys)
-    ...(isTopLevel && { expandedRowKeys: state.expandedRowKeys }),
-  };
+  const expandableConfig: ExpandableConfig<T> | undefined = options
+    ? {
+        rowExpandable: isRowExpandable,
+        onExpand,
+        expandedRowRender,
+        expandIconColumnIndex,
+        expandIcon,
+        // only top-level tables use controlled mode (expandedRowKeys)
+        ...(isTopLevel && { expandedRowKeys: state.expandedRowKeys }),
+      }
+    : undefined;
 
   return {
     expandableConfig,

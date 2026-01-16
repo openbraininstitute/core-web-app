@@ -2,27 +2,26 @@ import z from 'zod';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 import type { INestedMEModel } from '@/api/entitycore/types/entities/me-model';
-
+import type {
+  EntityAuthorization,
+  EntityCoreBaseAsset,
+  EntityCoreIdentifiable,
+  EntityCoreType,
+  Timestamps,
+} from '@/api/entitycore/types/shared/global';
 import {
-  SingleNeuronSimulationStatus,
   type ISingleNeuronSimulationBase,
+  SingleNeuronSimulationStatus,
 } from '@/api/entitycore/types/shared/neuron-simulation';
 import type {
-  EntityCoreIdentifiable,
-  EntityAuthorization,
-  Timestamps,
-  EntityCoreBaseAsset,
-  EntityCoreType,
-} from '@/api/entitycore/types/shared/global';
-import type {
-  ContributionFilter,
   BrainRegionFilter,
-  SharedFilter,
-  MtypeFilter,
+  ContributionFilter,
   EtypeFilter,
-  PaginationFilter,
-  OwnershipFilter,
   IlikeSearchFilter,
+  MtypeFilter,
+  OwnershipFilter,
+  PaginationFilter,
+  SharedFilter,
 } from '@/api/entitycore/types/shared/request';
 
 export interface ISingleNeuronSimulation
