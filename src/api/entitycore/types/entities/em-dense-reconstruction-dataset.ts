@@ -90,7 +90,7 @@ export interface IEmDenseReconstructionDataset
     EntityCoreType,
     Timestamps,
     Subject {
-  contributions?: Array<IContributor> | null;
+  contributions?: IContributor[] | null;
   license?: ILicense | null;
   brain_region: BrainRegionHierarchyBase;
 }

@@ -3,6 +3,7 @@ import type {
   EntityAuthorization,
   EntityCoreBaseAsset,
   EntityCoreIdentifiable,
+  EntityCoreIdentifiableNamed,
   EntityCoreOwnership,
   EntityCoreType,
   IContributor,
@@ -122,7 +123,7 @@ export interface IEMCellMeshBase {
 }
 
 export interface IEMCellMesh
-  extends EntityCoreIdentifiable,
+  extends EntityCoreIdentifiableNamed,
     EntityCoreBaseAsset,
     EntityAuthorization,
     EntityCoreType,

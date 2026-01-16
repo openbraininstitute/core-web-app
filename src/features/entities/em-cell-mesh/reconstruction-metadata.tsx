@@ -2,51 +2,31 @@ import get from 'es-toolkit/compat/get';
 import { getEmDenseReconstructionDataset } from '@/api/entitycore/queries/general/em-dense-reconstruction-dataset';
 import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import { EmptyValue } from '@/entity-configuration/definitions/renderer';
+import { ReconstructionMetadataFields } from '@/features/entities/em-cell-mesh/helpers';
 
 type Props = {
   entity: IEMCellMesh;
 };
 
-const _fields = [
-  {
-    key: 'source_database',
-    label: 'Source database',
-    path: 'source_database',
-  },
-  {
-    key: 'release_version',
-    label: 'Release version',
-    path: 'release_version',
-  },
-  {
-    key: 'mesh_type',
-    label: 'Mesh type',
-    path: 'mesh_type',
-  },
-  {
-    key: 'primary_key_id',
-    label: 'Primary key ID',
-    path: 'primary_key_id',
-  },
-  {
-    key: 'pt_root_id',
-    label: 'PT root ID',
-    path: 'pt_root_id',
-  },
-] as const;
-
 export async function ReconstructionMetadata({ entity }: Props) {
   const em = await getEmDenseReconstructionDataset({
     id: entity.em_dense_reconstruction_dataset.id,
   });
+  const resource = { em, entity };
   return (
     <div>
-      <h2 className="font-bold text-primary-8 text-2xl">Reconstruction Metadata</h2>
-      <div className="grid grid-cols-3 gap-1.5">
-        {_fields.map(({ key, label, path }) => (
-          <div key={key}>
-            <div>{label}</div>
-            <div>{get({ ...em, ...entity }, path, EmptyValue)}</div>
+      <h2 className="font-bold text-primary-8 text-2xl mb-4">Reconstruction Metadata</h2>
+      <div className="grid grid-cols-3 items-center justify-between gap-y-5">
+        {ReconstructionMetadataFields.map(({ key, label, path, renderer }) => (
+          <div key={key} className="text-primary-7 flex flex-col">
+            <div className="text-neutral-4 uppercase">{label}</div>
+            <div className="flex items-center justify-start">
+              <div>
+                {renderer
+                  ? renderer(get(resource, path, EmptyValue))
+                  : get(resource, path, EmptyValue)}
+              </div>
+            </div>
           </div>
         ))}
       </div>
