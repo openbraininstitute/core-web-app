@@ -1,13 +1,12 @@
 'use client';
 
-import { ReactNode } from 'react';
-
-import { ExploreDownloadButton } from '@/ui/segments/data-table/elements/download-button';
-import { useScrollNav } from '@/ui/segments/data-table/elements/hooks';
-
+import { AnimatePresence, motion } from 'motion/react';
+import type { ReactNode } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import { EntityDownloadButton } from '@/ui/segments/data-table/elements/download-button';
+import { useScrollNav } from '@/ui/segments/data-table/elements/hooks';
+import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
 
 function DefaultRenderButton<T extends EntityCoreIdentifiable>({
   children,
@@ -20,16 +19,12 @@ function DefaultRenderButton<T extends EntityCoreIdentifiable>({
   return children ? (
     children({ selectedRows, clearSelectedRows, dataType })
   ) : (
-    <ExploreDownloadButton<T>
+    <EntityDownloadButton<T>
       selectedRows={selectedRows}
       dataType={dataType}
       clearSelectedRows={clearSelectedRows}
       data-testid="listing-view-download-button"
-    >
-      <span>{`Download ${selectedRows.length === 1 ? 'Resource' : 'Resources'} (${
-        selectedRows.length
-      })`}</span>
-    </ExploreDownloadButton>
+    />
   );
 }
 
@@ -50,30 +45,47 @@ export default function TableControls<T extends EntityCoreIdentifiable>({
   dataType: TExtendedEntitiesTypeDict;
   allowDownload?: boolean;
 }) {
-  const { left, right } = useScrollNav(
-    typeof document !== 'undefined'
-      ? (document.querySelector('.ant-table-body') as HTMLDivElement)
-      : undefined
-  );
+  const { left, right } = useScrollNav('.ant-table-body');
 
   if (!visible) return null;
 
+  const hasSelection = !!selectedRows?.length && Boolean(clearSelectedRows) && allowDownload;
+
   return (
-    <div className="flex h-max shrink-0 items-center justify-between gap-5 px-1 pt-3">
+    <motion.div
+      layout
+      className="flex h-max shrink-0 items-center justify-between gap-5 px-1 pt-3"
+      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+    >
+      <AnimatePresence mode="wait">
+        {hasSelection && (
+          <motion.div
+            key="download-button-wrapper"
+            initial={{ opacity: 0, x: -30, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: -30, scale: 0.95 }}
+            transition={{
+              type: 'spring',
+              stiffness: 400,
+              damping: 25,
+              mass: 0.8,
+            }}
+          >
+            <DefaultRenderButton<T>
+              clearSelectedRows={clearSelectedRows}
+              selectedRows={selectedRows}
+              dataType={dataType}
+            >
+              {renderButton}
+            </DefaultRenderButton>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {left}
       <div className="flex grow items-center">
         <div className="flex grow justify-center">{children}</div>
         <div className="ml-auto">{right}</div>
       </div>
-      {!!selectedRows?.length && clearSelectedRows && allowDownload && (
-        <DefaultRenderButton<T>
-          clearSelectedRows={clearSelectedRows}
-          selectedRows={selectedRows}
-          dataType={dataType}
-        >
-          {renderButton}
-        </DefaultRenderButton>
-      )}
-    </div>
+    </motion.div>
   );
 }

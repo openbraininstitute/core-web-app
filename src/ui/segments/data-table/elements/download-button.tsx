@@ -1,58 +1,159 @@
-import { ReactNode, useCallback, useState } from 'react';
-import { LoadingOutlined } from '@ant-design/icons';
-import { useAtomValue } from 'jotai';
+'use client';
 
+import { CheckCircleFilled, DownloadOutlined, LoadingOutlined } from '@ant-design/icons';
+import { useAtomValue } from 'jotai';
+import { AnimatePresence, motion } from 'motion/react';
+import { type ReactNode, useCallback, useState } from 'react';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { downloadArchive } from '@/services/entity-download';
-import { Button } from '@/ui/molecules/button';
 import sessionAtom from '@/state/session';
+import { Button } from '@/ui/molecules/button';
 
 import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import { cn } from '@/utils/css-class';
 
-export function ExploreDownloadButton<T extends EntityCoreIdentifiable>({
+const DownloadStateDict = {
+  idle: 'idle',
+  loading: 'loading',
+  success: 'success',
+  error: 'error',
+} as const;
+
+type TDownloadState = (typeof DownloadStateDict)[keyof typeof DownloadStateDict];
+
+export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
   children,
   selectedRows,
   dataType,
-}: RenderButtonProps<T> & { children: ReactNode }) {
+  clearSelectedRows,
+}: RenderButtonProps<T> & { children?: ReactNode }) {
   const session = useAtomValue(sessionAtom);
+  const [downloadState, setDownloadState] = useState<TDownloadState>(DownloadStateDict.idle);
 
-  const [fetching, setFetching] = useState<boolean>(false);
+  const entityCount = selectedRows.length;
+  const isSingular = entityCount === 1;
 
   const download = useCallback(async () => {
-    setFetching(true);
+    setDownloadState(DownloadStateDict.loading);
 
     const entity = getEntityByExtendedType({ type: dataType });
     if (!entity) {
-      setFetching(false);
-      throw new Error(`Can not find entity for type: ${dataType}`);
+      setDownloadState(DownloadStateDict.error);
+      throw new Error(`Cannot find entity for type: ${dataType}`);
     }
 
-    const entityType = entity?.type;
+    const entity_type = entity?.type;
 
     try {
       await downloadArchive(
-        entityType,
+        entity_type,
         selectedRows.map((row) => row.id)
       );
-    } catch (error) {
-      // TODO: add error notification
-    } finally {
-      setTimeout(() => setFetching(false), 1600);
+      setDownloadState(DownloadStateDict.success);
+      setTimeout(() => {
+        setDownloadState(DownloadStateDict.idle);
+        clearSelectedRows?.();
+      }, 2000);
+    } catch {
+      setDownloadState(DownloadStateDict.error);
+      setTimeout(() => setDownloadState(DownloadStateDict.idle), 2000);
     }
-  }, [selectedRows, dataType, setFetching]);
+  }, [selectedRows, dataType, clearSelectedRows]);
 
-  return session ? (
-    <Button
-      rounded
-      variant="default"
-      className="hover:bg-primary-8 bg-primary-9 h-12 border border-white/16 px-10 font-bold shadow-sm"
-      onClick={download}
+  const getButtonLabel = (): string => {
+    if (isSingular) {
+      return `Download entity (${entityCount})`;
+    }
+    return `Download entities (${entityCount})`;
+  };
+
+  const renderButtonIcon = () => {
+    return (
+      <AnimatePresence mode="wait">
+        {downloadState === DownloadStateDict.loading && (
+          <motion.span
+            key="loading"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.15 }}
+          >
+            <LoadingOutlined spin className="text-lg" />
+          </motion.span>
+        )}
+        {downloadState === DownloadStateDict.success && (
+          <motion.span
+            key="success"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+          >
+            <CheckCircleFilled className="text-lg text-emerald-400" />
+          </motion.span>
+        )}
+        {downloadState === DownloadStateDict.idle && (
+          <motion.span
+            key="idle"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.15 }}
+          >
+            <DownloadOutlined className="text-lg" />
+          </motion.span>
+        )}
+        {downloadState === DownloadStateDict.error && (
+          <motion.span
+            key="error"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.15 }}
+            className="text-red-400"
+          >
+            !
+          </motion.span>
+        )}
+      </AnimatePresence>
+    );
+  };
+
+  if (!session) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 20 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
     >
-      <>
-        {children}
-        {fetching && <LoadingOutlined />}
-      </>
-    </Button>
-  ) : null;
+      <Button
+        rounded
+        variant="default"
+        disabled={downloadState === DownloadStateDict.loading}
+        className={cn(
+          'relative h-12 min-w-45 overflow-hidden border border-white/20 px-6 font-semibold',
+          'bg-linear-to-r from-primary-9 via-primary-8 to-primary-9 bg-size-[200%_100%]',
+          'transition-all duration-300 ease-out',
+          'hover:scale-[1.02] active:scale-[0.98]',
+          'disabled:cursor-not-allowed disabled:opacity-70'
+        )}
+        onClick={download}
+        data-testid="bulk-download-button"
+      >
+        <span className="flex items-center justify-center gap-2.5">
+          {renderButtonIcon()}
+          <span className="whitespace-nowrap">{children ?? getButtonLabel()}</span>
+        </span>
+        <div
+          className={cn(
+            'pointer-events-none absolute inset-0',
+            'bg-linear-to-b from-white/8 to-transparent'
+          )}
+        />
+      </Button>
+    </motion.div>
+  );
 }

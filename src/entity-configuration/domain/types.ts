@@ -1,7 +1,11 @@
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TCircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { AssetLabel, EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type {
+  AssetLabel,
+  EntityCoreIdentifiable,
+  EntityCoreIdentifiableNamed,
+} from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TDetailViewSectionDict } from '@/entity-configuration/definitions/types';
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
@@ -45,7 +49,10 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
      *
      * Example: Fetch simulations for a campaign when row is expanded.
      */
-    expandRow?: (record: T, ctx?: WorkspaceContext) => Promise<unknown>;
+    expandRow?: (
+      record: T,
+      ctx?: WorkspaceContext
+    ) => Promise<EntityCoreIdentifiableNamed | Array<EntityCoreIdentifiableNamed>>;
   };
   explore?: {
     basePrefix?: string;

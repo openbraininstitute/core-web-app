@@ -15,7 +15,7 @@ export interface ExpandableTableState<T extends EntityCoreIdentifiable> {
 
 export interface UseExpandableTableOptions<T extends EntityCoreIdentifiable, P = unknown> {
   // fetch data for expanded row
-  fetcher?: (record: T, params?: P) => Promise<T | Array<T>>;
+  fetcher?: (record: T, params?: P) => Promise<T | Array<T>> | undefined;
   // optional parameters to pass to fetcher
   fetcherParams?: P;
   getRowKey: (record: T) => string;
@@ -148,7 +148,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
             },
             expandedRowKeys: prev.expandedRowKeys,
           }));
-        } catch (error) {
+        } catch (_error) {
           setState((prev) => ({
             expandedData: {
               ...prev.expandedData,
