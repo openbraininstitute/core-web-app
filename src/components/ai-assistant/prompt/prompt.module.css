@@ -19,8 +19,10 @@
 .prompt > .input {
   flex: 1 1 auto;
   min-height: 1.5em;
+  max-height: 10em;
   color: #000;
   position: relative;
+  overflow: hidden;
 }
 
 .prompt > .input > .content {
@@ -28,6 +30,7 @@
   padding: 0;
   opacity: 0;
   white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .prompt > .input > textarea,
@@ -46,6 +49,8 @@
   margin: 0;
   padding: 0;
   resize: none;
+  overflow-y: auto;
+  word-break: break-word;
 }
 
 .prompt > button {
