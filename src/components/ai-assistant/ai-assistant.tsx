@@ -11,7 +11,7 @@ import styles from './ai-assistant.module.css';
 import { AiContextProvider, MINIMAL_PANEL_SIZE, usePanelWidth } from './hooks';
 import { IconChat } from './icons/chat';
 import { IconHistory } from './icons/history';
-import { IconPlus } from './icons/plus';
+import { IconNewChat } from './icons/new-chat';
 import PanelContent from './panel-content';
 import PanelSplitter from './panel-splitter';
 
@@ -82,7 +82,7 @@ export default function AiAssistant({ className, fullscreen, section }: AiAssist
                   disabled={!canCreateNewChat}
                   onClick={handleNewChat}
                 >
-                  <IconPlus />
+                  <IconNewChat />
                   <div>New Chat</div>
                 </button>
               </nav>
