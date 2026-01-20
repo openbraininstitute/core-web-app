@@ -7,6 +7,7 @@ import SimulationsTab from './components/simulations';
 
 // import { useRouter } from 'next/navigation';
 
+import { useAtom } from 'jotai';
 import type { Config } from '@/features/scan-config/components/components';
 import { useConfigAtom } from '@/features/scan-config/components/hooks/config-atom';
 import { useAtomsMap, useObioneJsonSchema } from '@/features/scan-config/components/hooks/schema';
@@ -14,7 +15,7 @@ import ModelPreview from '@/features/scan-config/components/model-preview';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import styles from '@/features/scan-config/scan-config.module.css';
 import type { Block, TabType } from '@/features/scan-config/types';
-import { useAgentState } from '@/services/ai-agent';
+import { patchesAtoms, useAgentState } from '@/services/ai-agent';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 import { useEntries, useModel, useSchemaName } from './components/hooks';
@@ -48,6 +49,8 @@ export default function ScanConfiguration({
   const [selectedEntry, setSelectedEntry] = useState('');
   const [loading, setLoading] = useState(false);
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
+
+  const [patches, setPatches] = useAtom(patchesAtoms.smc_simulation_config);
 
   const [isEditingKey, setIsEditingKey] = useState(false);
   const [newKey, setNewKey] = useState('');

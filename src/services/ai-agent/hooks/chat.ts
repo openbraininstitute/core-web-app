@@ -1,9 +1,12 @@
 'use client';
 
 import { type CreateMessage, type Message, useChat } from '@ai-sdk/react';
-import type { ChatRequestOptions } from '@ai-sdk/ui-utils';
-import React, { useCallback } from 'react';
+import type { ChatRequestOptions, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
+import { atom, useAtom } from 'jotai';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useAIActiveTools } from '@/components/ai-assistant/state';
+import type { Config } from '@/features/scan-config/components/components';
+
 import { logError } from '@/util/logger';
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { useAiAssistant } from '../assistant';
@@ -48,6 +51,18 @@ export function useServiceAiAgentChat(threadId: string) {
   const { accessToken } = assistant.useContext();
   const activeTools = useAIActiveTools();
   const [rateLimitRemaining, setRateLimitRemaining] = React.useState(() => getStoredRateLimit());
+
+  const patchAtomKey = globalThis.location.pathname.includes('workflows/simulate/configure/circuit')
+    ? 'smc_simulation_config'
+    : '';
+
+  const patchKeyToTool = useRef({
+    smc_simulation_config: 'obione-generatesimulationsconfig',
+    '': '',
+  });
+
+  const [_, setPatches] = useAtom(patchesAtoms[patchAtomKey]);
+
   const chat = useChat({
     api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
     id: threadId,
@@ -66,6 +81,9 @@ export function useServiceAiAgentChat(threadId: string) {
     },
     fetch: async (url, options) => {
       const resp = await fetch(url, options);
+
+      console.log(resp);
+
       const newRateLimit: AiAgentRateLimit = {
         limit: parseInt(resp.headers.get('x-ratelimit-limit') ?? '-1', 10),
         remaining: parseInt(resp.headers.get('x-ratelimit-remaining') ?? '-1', 10),
@@ -76,6 +94,23 @@ export function useServiceAiAgentChat(threadId: string) {
       return resp;
     },
   });
+
+  useEffect(() => {
+    const lastMessage = chat.messages[chat.messages.length - 1];
+
+    const toolInvocation = lastMessage?.parts.find(
+      (p) =>
+        p.type === 'tool-invocation' &&
+        p.toolInvocation.toolName === patchKeyToTool.current[patchAtomKey]
+    ) as ToolInvocationUIPart | undefined;
+
+    //@ts-expect-error
+    if (toolInvocation?.toolInvocation?.result) {
+      //@ts-expect-error
+      const result = JSON.parse(toolInvocation?.toolInvocation?.result ?? '');
+      setPatches(result?.patches ?? []);
+    }
+  }, [chat.messages, patchAtomKey, setPatches]);
 
   return {
     rateLimitRemaining,
@@ -105,15 +140,28 @@ export function useServiceAiAgentChat(threadId: string) {
   };
 }
 
-const AI_AGENT_STATE: Record<string, any> = {};
+const AI_AGENT_STATE: {
+  smc_simulation_config?: Config;
+} = {};
 
-export function useAgentState(key: string) {
+type Patch = {
+  op: 'replace';
+  path: string;
+  value: Config;
+};
+
+export function useAgentState(key: 'smc_simulation_config') {
   const setAgentState = useCallback(
-    (value: any) => {
+    (value: Config) => {
       AI_AGENT_STATE[key] = value;
     },
     [key]
   );
 
-  return [AI_AGENT_STATE[key], setAgentState];
+  return [AI_AGENT_STATE[key], setAgentState] as const;
 }
+
+export const patchesAtoms = {
+  smc_simulation_config: atom<Patch[]>([]),
+  '': atom<Patch[]>([]),
+};
