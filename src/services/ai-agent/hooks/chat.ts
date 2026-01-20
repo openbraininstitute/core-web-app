@@ -2,7 +2,7 @@
 
 import { type CreateMessage, type Message, useChat } from '@ai-sdk/react';
 import type { ChatRequestOptions } from '@ai-sdk/ui-utils';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useAIActiveTools } from '@/components/ai-assistant/state';
 import { logError } from '@/util/logger';
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
@@ -61,6 +61,7 @@ export function useServiceAiAgentChat(threadId: string) {
         content: (lastMessage?.content ?? '').trim(),
         tool_selection: activeTools,
         frontend_url: `${globalThis.location.pathname}${globalThis.location.search}`,
+        shared_state: AI_AGENT_STATE,
       };
     },
     fetch: async (url, options) => {
@@ -102,4 +103,17 @@ export function useServiceAiAgentChat(threadId: string) {
     stop: chat.stop,
     clear: () => chat.setMessages([]),
   };
+}
+
+const AI_AGENT_STATE: Record<string, any> = {};
+
+export function useAgentState(key: string) {
+  const setAgentState = useCallback(
+    (value: any) => {
+      AI_AGENT_STATE[key] = value;
+    },
+    [key]
+  );
+
+  return [AI_AGENT_STATE[key], setAgentState];
 }

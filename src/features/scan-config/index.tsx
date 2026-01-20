@@ -2,7 +2,7 @@
 
 // import { LoadingOutlined, UpOutlined } from '@ant-design/icons';
 import { LoadingOutlined } from '@ant-design/icons';
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import SimulationsTab from './components/simulations';
 
 // import { useRouter } from 'next/navigation';
@@ -14,6 +14,7 @@ import ModelPreview from '@/features/scan-config/components/model-preview';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import styles from '@/features/scan-config/scan-config.module.css';
 import type { Block, TabType } from '@/features/scan-config/types';
+import { useAgentState } from '@/services/ai-agent';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 import { useEntries, useModel, useSchemaName } from './components/hooks';
@@ -68,6 +69,12 @@ export default function ScanConfiguration({
   const [atomsMap, setAtomsMap] = useAtomsMap({ schema, initialConfig, model });
 
   const config = useConfigAtom(schema, atomsMap);
+
+  const [_, setAIState] = useAgentState('smc_simulation_config');
+
+  useEffect(() => {
+    setAIState(config);
+  }, [config, setAIState]);
 
   if (!schema || Object.keys(atomsMap).length === 0) {
     return (
