@@ -1,19 +1,19 @@
 'use client';
 
-import React, { type CSSProperties } from 'react';
-import dynamic from 'next/dynamic';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
+import dynamic from 'next/dynamic';
+import React, { type CSSProperties } from 'react';
+import { useServiceAiAgentChat } from '@/services/ai-agent';
+import { useAiAssistant } from '@/services/ai-agent/assistant';
+import { classNames } from '@/util/utils';
+import type { TAppUInterfaceSection } from '@/utils/key-builder';
+import styles from './ai-assistant.module.css';
 import { AiContextProvider, MINIMAL_PANEL_SIZE, usePanelWidth } from './hooks';
-import PanelSplitter from './panel-splitter';
 import { IconChat } from './icons/chat';
 import { IconHistory } from './icons/history';
+import { IconPlus } from './icons/plus';
 import PanelContent from './panel-content';
-import { classNames } from '@/util/utils';
-import { useAiAssistant } from '@/services/ai-agent/assistant';
-import type { TAppUInterfaceSection } from '@/utils/key-builder';
-
-import styles from './ai-assistant.module.css';
+import PanelSplitter from './panel-splitter';
 
 interface AiAssistantProps {
   className?: string;
@@ -30,8 +30,17 @@ export default function AiAssistant({ className, fullscreen, section }: AiAssist
   const [tab, setTab] = React.useState<'chat' | 'history'>('chat');
   const assistant = useAiAssistant();
   const threadId = assistant.threadId.useValue();
+  const { messages, status } = useServiceAiAgentChat(threadId ?? '');
   const style: CSSProperties = {
     '--custom-panel-width': fullscreen ? '100%' : `${panelWidth.toFixed(0)}px`,
+  };
+
+  const canCreateNewChat = messages.length > 0 && status === 'ready';
+
+  const handleNewChat = async () => {
+    if (!canCreateNewChat) return;
+    await assistant.createThread();
+    setTab('chat');
   };
 
   return (
@@ -67,11 +76,19 @@ export default function AiAssistant({ className, fullscreen, section }: AiAssist
                   <IconHistory />
                   <div>History</div>
                 </button>
+                <button
+                  type="button"
+                  className={styles.newChatBtn}
+                  disabled={!canCreateNewChat}
+                  onClick={handleNewChat}
+                >
+                  <IconPlus />
+                  <div>New Chat</div>
+                </button>
               </nav>
               <PanelContent
                 className={styles.content}
                 threadId={threadId}
-                onClearChat={assistant.createThread}
                 tab={tab}
                 onTabChange={setTab}
               />

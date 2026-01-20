@@ -146,6 +146,22 @@
   font-variant: small-caps;
 }
 
+.overlay nav > button.newChatBtn {
+  margin-left: auto;
+  color: var(--color-primary-5);
+  font-weight: 500;
+}
+
+.overlay nav > button.newChatBtn:hover:not(:disabled) {
+  color: var(--color-primary-3);
+  background: var(--color-neutral-6);
+}
+
+.overlay nav > button.newChatBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .content {
   background-color: var(--color-neutral-7);
   padding: 1em;

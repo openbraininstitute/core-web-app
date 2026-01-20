@@ -6,25 +6,23 @@ import {
 } from '@/services/ai-agent';
 import { classNames } from '@/util/utils';
 import ErrorPanel from '../../error';
-import { IconClear } from '../../icons/clear';
 import { IconPrice } from '../../icons/price';
 import { MessageItem } from '../../message-item';
 import SuggestedQuestions from '../../suggested-questions';
 import Footer from '../footer';
 import Welcome from '../welcome';
-
 import styles from './chat.module.css';
 
 export interface ChatProps {
   className?: string;
   threadId: string;
-  onClearChat(): void;
 }
 
-export default function Chat({ className, threadId, onClearChat }: ChatProps) {
+export default function Chat({ className, threadId }: ChatProps) {
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = React.useState(true);
-  const { messages, clear, status, append, error, stop, rateLimitRemaining } =
-    useServiceAiAgentChat(threadId ?? '');
+  const { messages, status, append, error, stop, rateLimitRemaining } = useServiceAiAgentChat(
+    threadId ?? ''
+  );
   const [suggestions, , isLoadingSuggestions] = useServiceAiAgentSuggestionFromUserJourney(
     threadId ?? ''
   );
@@ -54,10 +52,6 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
     isLoadingSuggestions,
   ]);
 
-  const handleClearChat = () => {
-    onClearChat();
-    clear();
-  };
   const handlePrompt = (content: string) => {
     setIsAutoScrollEnabled(true);
     append({
@@ -65,6 +59,7 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
       content,
     });
   };
+
   const handleWheel = (event: React.WheelEvent) => {
     if (event.deltaY < 0) {
       setIsAutoScrollEnabled(false);
@@ -92,10 +87,6 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
         {status === 'ready' && messages.length > 0 && (
           <>
             <div className={styles.footerButtons}>
-              <button type="button" className={styles.actionButton} onClick={handleClearChat}>
-                <IconClear />
-                <div>New Chat</div>
-              </button>
               <div className={styles.price}>
                 <IconPrice />
                 <div>
