@@ -5,7 +5,8 @@ import { DM_Serif_Text, Gabarito, Titillium_Web } from 'next/font/google';
 import { type ReactNode, Suspense } from 'react';
 
 import MatomoAnalyticsConsent from '@/components/Matomo';
-import { ConfigProvider, config, getClientEnvInjectionConfig } from '@/config';
+import { ConfigProvider, getClientEnvInjectionConfig } from '@/config';
+import { clientSchema } from '@/config/schema';
 
 import '@/styles/globals.css';
 
@@ -32,6 +33,13 @@ type RootLayoutProps = {
 };
 
 export default async function RootLayout({ children }: RootLayoutProps) {
+  // Get the injected config object (reads from process.env on server)
+  const injectedEnv = getClientEnvInjectionConfig();
+  
+  // Validate and parse the injected config through the schema
+  // This ensures it matches ClientConfig type and handles optional values correctly
+  const parsedConfig = clientSchema.parse(injectedEnv);
+  
   return (
     <html
       lang="en"
@@ -42,12 +50,13 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         <script
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
-            __html: `window.__ENV__=${JSON.stringify(getClientEnvInjectionConfig())};`,
+            __html: `window.__ENV__=${JSON.stringify(injectedEnv)};`,
           }}
         />
       </head>
       <body>
-        <ConfigProvider config={config}>
+        {/* Pass the parsed config which matches ClientConfig type */}
+        <ConfigProvider config={parsedConfig}>
           <Suspense fallback={null}>{children}</Suspense>
           <MatomoAnalyticsConsent />
         </ConfigProvider>

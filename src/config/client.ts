@@ -37,8 +37,16 @@ export const clientConfig = new Proxy({} as ClientConfig, {
 });
 
 export function getClientEnvInjectionConfig() {
+  // On server side, read directly from process.env to avoid caching issues
+  const env = typeof window === 'undefined' ? process.env : {};
   const clientEnvKeys = Object.keys(baseClientSchema.shape);
+  
   return Object.fromEntries(
-    clientEnvKeys.map((key) => [key, clientConfig[key as keyof typeof clientConfig]])
+    clientEnvKeys
+      .map((key) => {
+        const value = env[key];
+        return [key, value];
+      })
+      .filter(([, value]) => value !== undefined)
   );
 }
