@@ -21,15 +21,15 @@ export default function Reference({
   const referenceTypeDict = useReferenceTypeDict(schemaName);
   const schema = useObioneJsonSchema(schemaName);
 
+  const configOptions = referenceTypeDict[referenceSchema.reference_type];
+
   if (
     !schema ||
     !schema.default_block_reference_labels ||
-    !schema.default_block_reference_labels[referenceSchema.reference_type]
-  ) {
+    !schema.default_block_reference_labels[referenceSchema.reference_type] ||
+    !configOptions
+  )
     return null;
-  }
-
-  const configOptions = referenceTypeDict[referenceSchema.reference_type];
 
   const options: { label: string; value: string | null }[] = Object.keys(
     config[configOptions.configKey]
