@@ -3,6 +3,7 @@ import { atomWithStorage } from 'jotai/utils';
 
 import { useAITools } from '@/services/ai-agent/tools/tools';
 import type { AiAgentRateLimitEndpoint } from '@/services/ai-agent/hooks/chat';
+import React from 'react';
 
 const atomToolsInvertedSelection = atomWithStorage<string[]>(
   'AIAssistant/tools-inverted-selection',
@@ -24,10 +25,11 @@ export function useAIToolsInvertedSelection() {
 export function useAIActiveTools(): string[] {
   const allTools = useAITools();
   const invertedSelection = useAtomValue(atomToolsInvertedSelection);
-  
-  if (!allTools) return [];
+  return React.useMemo(() => {
+    if (!allTools) return [];
 
-  const allToolsIds = allTools.map((tool) => tool.id);
-  const activeTools = allToolsIds.filter((id) => !invertedSelection.includes(id));
-  return activeTools;
+    const allToolsIds = allTools.map((tool) => tool.id);
+    const activeTools = allToolsIds.filter((id) => !invertedSelection.includes(id));
+    return activeTools;
+  }, [allTools, invertedSelection]);
 }
