@@ -1,23 +1,16 @@
-import { notFound } from 'next/navigation';
 import snakeCase from 'es-toolkit/compat/snakeCase';
-
-import { getBuildTypeFromSimulateType } from '@/ui/segments/workflows/elements/helpers';
-import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
-
+import { notFound } from 'next/navigation';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { WorkspaceSection } from '@/constants';
+import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
-import type { TWorkspaceScope } from '@/constants';
+import { getBuildTypeFromSimulateType } from '@/ui/segments/workflows/elements/helpers';
+import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-selector';
 import type { KebabCase } from '@/utils/type';
 
 export default async function Page({
   params,
-  searchParams,
-}: ServerSideComponentProp<
-  WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict> },
-  { scope: TWorkspaceScope | null }
->) {
-  const { scope } = await searchParams;
+}: ServerSideComponentProp<WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict> }, {}>) {
   const { type } = await params;
 
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
@@ -31,13 +24,13 @@ export default async function Page({
       requireBrainRegion={false}
       classNames={{ container: 'max-h-full' }}
       dataType={buildType}
-      scope={scope ?? WorkspaceScope.Combined}
       mainTableProps={{
         selectionType: undefined,
       }}
       miniViewProps={{
         section: WorkspaceSection.SimulateWorkflow,
       }}
+      left={<WorkflowScopeTabs className="max-w-max" />}
     />
   );
 }

@@ -56,6 +56,7 @@
 
 .userContent > div {
   white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .assistant {
