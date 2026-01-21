@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React from 'react';
 import { useSnapshot } from '@/components/ai-assistant/suggested-questions/snapshot';
@@ -8,7 +8,7 @@ import { serviceAiAgentSuggestionFromUserJourney } from '../api/suggestion';
 
 export function useServiceAiAgentSuggestionFromUserJourney(
   threadId: string,
-  status?: "submitted" | "streaming" | "ready" | "error",
+  status?: 'submitted' | 'streaming' | 'ready' | 'error'
 ): [suggestions: string[], clearSuggestions: () => void, isLoading: boolean] {
   const snapshot = useSnapshot();
   const virtualLabId = useParamVirtualLabId();
@@ -20,19 +20,16 @@ export function useServiceAiAgentSuggestionFromUserJourney(
   const requestIdRef = React.useRef(0);
 
   React.useEffect(() => {
-    if (status === "ready") {
+    if (status === 'ready') {
       const currentRequestId = ++requestIdRef.current;
 
       setIsLoading(true);
-      serviceAiAgentSuggestionFromUserJourney(
-        accessToken ?? "no-access-token",
-        {
-          threadId,
-          virtualLabId,
-          projectId,
-          frontendUrl: snapshot.frontendUrl,
-        },
-      )
+      serviceAiAgentSuggestionFromUserJourney(accessToken ?? 'no-access-token', {
+        threadId,
+        virtualLabId,
+        projectId,
+        frontendUrl: snapshot.frontendUrl,
+      })
         .then((data) => {
           if (currentRequestId === requestIdRef.current) {
             setSuggestions(data);
@@ -49,13 +46,6 @@ export function useServiceAiAgentSuggestionFromUserJourney(
           }
         });
     }
-  }, [
-    snapshot.frontendUrl,
-    threadId,
-    accessToken,
-    projectId,
-    virtualLabId,
-    status,
-  ]);
+  }, [snapshot.frontendUrl, threadId, accessToken, projectId, virtualLabId, status]);
   return [suggestions, () => setSuggestions([]), isLoading];
 }
