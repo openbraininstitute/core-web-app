@@ -62,6 +62,7 @@ export type Props<T> = {
   };
   expandableOptions?: UseExpandableTableOptions<T, any>;
   showExpandButtons?: boolean;
+  left?: ReactNode;
 };
 
 export function MainTable<T extends EntityCoreIdentifiableNamed>({
@@ -91,6 +92,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
   filterClassNames,
   expandableOptions,
   showExpandButtons,
+  left,
 }: Props<T>) {
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
   const onDisplayControlPanel = (value: boolean) => setDisplayControlPanel(value);
@@ -121,12 +123,20 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
         <div
           className={cn(
             'mb-5 grid w-full grid-cols-[2fr_2fr] items-center justify-center gap-5 pt-2',
-            '[grid-template-areas:"search_pagination_filter"]'
+            '[grid-template-areas:"search_filter"]',
+            { '[grid-template-areas:"left_search_filter"] grid-cols-[auto_1fr_1fr] gap-2': !!left }
           )}
         >
+          {!!left && <div className="w-full [grid-area:left]">{left}</div>}
           {searchEnabled && (
             <div className="w-full [grid-area:search]">
-              <Search {...{ dataType, dataKey, className: 'pl-2' }} />
+              <Search
+                {...{
+                  dataType,
+                  dataKey,
+                  className: 'ml-2',
+                }}
+              />
             </div>
           )}
           <div className="[grid-area:filter]">

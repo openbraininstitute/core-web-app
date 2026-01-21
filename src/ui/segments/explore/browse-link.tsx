@@ -3,32 +3,30 @@
 'use client';
 
 import { PlusOutlined, WarningOutlined } from '@ant-design/icons';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { snakeCase, kebabCase } from 'es-toolkit/compat';
 import { useQueries } from '@tanstack/react-query';
-import { match, P } from 'ts-pattern';
+import { kebabCase, snakeCase } from 'es-toolkit/compat';
 import Link from 'next/link';
+import { usePathname, useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
-
+import { match, P } from 'ts-pattern';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
+import { config } from '@/config';
+import type { TWorkspaceScope } from '@/constants';
+import { WorkspaceScope } from '@/constants';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import type { WorkspaceContext } from '@/types/common';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Button } from '@/ui/molecules/button';
+import { Skeleton } from '@/ui/molecules/skeleton';
 import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute/event';
 import { getEntityTypeFromUrlOnEntityScope } from '@/ui/segments/explore/helpers';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
-import { Skeleton } from '@/ui/molecules/skeleton';
-import { WorkspaceContext } from '@/types/common';
-import { Button } from '@/ui/molecules/button';
-import { WorkspaceScope } from '@/constants';
 import { cn } from '@/utils/css-class';
-import { config } from '@/config';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TWorkspaceScope } from '@/constants';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
+import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 function buildDataUrl({
   virtualLabId,

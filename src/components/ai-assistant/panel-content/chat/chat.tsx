@@ -23,9 +23,11 @@ export default function Chat({ className, threadId }: ChatProps) {
   const { messages, status, append, error, stop, rateLimitRemaining } = useServiceAiAgentChat(
     threadId ?? ''
   );
-  const [suggestions, , isLoadingSuggestions] = useServiceAiAgentSuggestionFromUserJourney(
-    threadId ?? ''
-  );
+  const [suggestions, clearSuggestions, isLoadingSuggestions] =
+    useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', status);
+
+  const refChatBottom = React.useRef<HTMLDivElement | null>(null);
+  const refContainer = React.useRef<HTMLDivElement | null>(null);
   const isStorageQueryFetching = useIsFetching({
     predicate: (query) => {
       const fullQueryKey = query.queryKey.at(0);
@@ -33,24 +35,54 @@ export default function Chat({ className, threadId }: ChatProps) {
     },
     fetchStatus: 'fetching',
   });
-  const refChatBottom = React.useRef<HTMLDivElement | null>(null);
-  const refContainer = React.useRef<HTMLDivElement | null>(null);
+
+  const [scrollHeight, setScrollHeight] = React.useState(0);
+
+  // Monitor scroll height changes for auto-scroll
+  React.useEffect(() => {
+    if (!refContainer.current) return;
+
+    const container = refContainer.current;
+    let previousScrollHeight = container.scrollHeight;
+
+    const updateScrollHeight = () => {
+      const newScrollHeight = container.scrollHeight;
+
+      if (isAutoScrollEnabled && newScrollHeight > previousScrollHeight) {
+        requestAnimationFrame(() => {
+          const maxScroll = container.scrollHeight - container.clientHeight;
+          if (maxScroll > 0) {
+            container.scrollTop = maxScroll;
+          }
+        });
+      }
+
+      setScrollHeight(newScrollHeight);
+      previousScrollHeight = newScrollHeight;
+    };
+
+    const observer = new MutationObserver(updateScrollHeight);
+    observer.observe(container, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      characterData: true,
+    });
+
+    updateScrollHeight();
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isAutoScrollEnabled]);
 
   React.useEffect(() => {
-    if (isAutoScrollEnabled) {
-      requestAnimationFrame(() => {
+    if (isAutoScrollEnabled && refContainer.current) {
+      setTimeout(() => {
         refChatBottom.current?.scrollIntoView({ behavior: 'smooth' });
-      });
+      }, 200);
     }
-  }, [
-    messages,
-    error,
-    status,
-    isAutoScrollEnabled,
-    isStorageQueryFetching,
-    suggestions,
-    isLoadingSuggestions,
-  ]);
+  }, [scrollHeight, isAutoScrollEnabled, isStorageQueryFetching]);
 
   const handlePrompt = (content: string) => {
     setIsAutoScrollEnabled(true);
@@ -95,13 +127,19 @@ export default function Chat({ className, threadId }: ChatProps) {
                 </div>
               </div>
             </div>
+          </>
+        )}
+        {suggestions !== undefined && status === 'ready' && (
+          <div className={styles.suggestedQuestionsContainer}>
             <SuggestedQuestions
               threadId={threadId}
               messagesLength={messages.length}
               onClick={handlePrompt}
+              suggestions={suggestions}
+              clearSuggestions={clearSuggestions}
               isLoading={isLoadingSuggestions}
             />
-          </>
+          </div>
         )}
         {error && <ErrorPanel value={error} />}
         <div ref={refChatBottom} className={styles.bottom} />
@@ -113,7 +151,6 @@ export default function Chat({ className, threadId }: ChatProps) {
         onPrompt={handlePrompt}
         messagesCount={messages.length}
         stop={stop}
-        isLoadingSuggestions={isLoadingSuggestions}
       />
     </>
   );

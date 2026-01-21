@@ -7,7 +7,8 @@ import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 import { serviceAiAgentSuggestionFromUserJourney } from '../api/suggestion';
 
 export function useServiceAiAgentSuggestionFromUserJourney(
-  threadId: string
+  threadId: string,
+  status?: 'submitted' | 'streaming' | 'ready' | 'error'
 ): [suggestions: string[], clearSuggestions: () => void, isLoading: boolean] {
   const snapshot = useSnapshot();
   const virtualLabId = useParamVirtualLabId();
@@ -19,30 +20,32 @@ export function useServiceAiAgentSuggestionFromUserJourney(
   const requestIdRef = React.useRef(0);
 
   React.useEffect(() => {
-    const currentRequestId = ++requestIdRef.current;
+    if (status === 'ready') {
+      const currentRequestId = ++requestIdRef.current;
 
-    setIsLoading(true);
-    serviceAiAgentSuggestionFromUserJourney(accessToken ?? 'no-access-token', {
-      threadId,
-      virtualLabId,
-      projectId,
-      frontendUrl: snapshot.frontendUrl,
-    })
-      .then((data) => {
-        if (currentRequestId === requestIdRef.current) {
-          setSuggestions(data);
-        }
+      setIsLoading(true);
+      serviceAiAgentSuggestionFromUserJourney(accessToken ?? 'no-access-token', {
+        threadId,
+        virtualLabId,
+        projectId,
+        frontendUrl: snapshot.frontendUrl,
       })
-      .catch(() => {
-        if (currentRequestId === requestIdRef.current) {
-          setSuggestions([]);
-        }
-      })
-      .finally(() => {
-        if (currentRequestId === requestIdRef.current) {
-          setIsLoading(false);
-        }
-      });
-  }, [snapshot.frontendUrl, threadId, accessToken, projectId, virtualLabId]);
+        .then((data) => {
+          if (currentRequestId === requestIdRef.current) {
+            setSuggestions(data);
+          }
+        })
+        .catch(() => {
+          if (currentRequestId === requestIdRef.current) {
+            setSuggestions([]);
+          }
+        })
+        .finally(() => {
+          if (currentRequestId === requestIdRef.current) {
+            setIsLoading(false);
+          }
+        });
+    }
+  }, [snapshot.frontendUrl, threadId, accessToken, projectId, virtualLabId, status]);
   return [suggestions, () => setSuggestions([]), isLoading];
 }
