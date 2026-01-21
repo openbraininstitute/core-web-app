@@ -1,7 +1,9 @@
+'use client';
+
 import { noop } from 'es-toolkit/compat';
+import { atom } from 'jotai';
 import { useAtom } from 'jotai/react';
 import { useEffect } from 'react';
-import { atom } from 'jotai';
 
 import { isBrowser } from '@/utils/environment';
 

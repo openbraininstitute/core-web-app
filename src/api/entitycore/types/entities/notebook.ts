@@ -1,7 +1,7 @@
 import type {
   EntityAuthorization,
   EntityCoreBaseAsset,
-  EntityCoreIdentifiable,
+  EntityCoreIdentifiableNamed,
   EntityCoreOwnership,
   EntityCoreType,
   Timestamps,
@@ -25,12 +25,11 @@ export type NotebookFilter = Partial<
 >;
 
 export interface INotebook
-  extends EntityCoreIdentifiable,
+  extends EntityCoreIdentifiableNamed,
     Timestamps,
     EntityCoreBaseAsset,
     EntityAuthorization,
     EntityCoreType,
     EntityCoreOwnership {
-  name: string;
   description: string;
 }
