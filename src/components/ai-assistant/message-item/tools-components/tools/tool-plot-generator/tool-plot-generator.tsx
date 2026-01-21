@@ -1,18 +1,18 @@
 /* eslint-disable react/no-array-index-key */
-import { Data, Layout } from 'plotly.js-dist-min';
 
+import type { Data, Layout } from 'plotly.js-dist-min';
+import { isString } from '@/util/type-guards';
+import { classNames } from '@/util/utils';
 import { usePlotFile } from '../hooks';
-import { ToolResult } from '../types';
+import ToolSkeleton from '../tool-skeleton';
+import type { ToolResult } from '../types';
 import { assertBarChart, convertBarChart } from './charts/bar';
 import { assertHistogramChart, convertHistogramChart } from './charts/histogram';
 import { assertLineChart, convertLineChart } from './charts/line';
 import { assertPieChart, convertPieChart } from './charts/pie';
-import { assertScatterChart, convertScatterChart } from './charts/scatter';
 import { assertPlotlyChart, convertPlotlyChart } from './charts/plotly';
+import { assertScatterChart, convertScatterChart } from './charts/scatter';
 import GenericPlot from './generic-plot';
-
-import { isString } from '@/util/type-guards';
-import { classNames } from '@/util/utils';
 
 import styles from './tool-plot-generator.module.css';
 
@@ -23,6 +23,7 @@ export interface ToolPlotGeneratorProps {
 
 export default function ToolPlotGenerator({ className, result }: ToolPlotGeneratorProps) {
   if (!result) return null;
+
   return (
     <>
       {
@@ -55,12 +56,14 @@ const plotters: Record<
   'json-scatterplot': { convert: convertScatterChart, assert: assertScatterChart },
   'json-histogram': { convert: convertHistogramChart, assert: assertHistogramChart },
   'json-barplot': { convert: convertBarChart, assert: assertBarChart },
-  'json': { convert: convertPlotlyChart, assert: assertPlotlyChart },
+  json: { convert: convertPlotlyChart, assert: assertPlotlyChart },
 };
 
 function CustomPlot({ storage_id, className }: { storage_id: string; className?: string }) {
-  const { data } = usePlotFile(storage_id);
-  if (!data) return null;
+  const { data, isError, isLoading } = usePlotFile(storage_id);
+
+  if (isError) return null;
+  if (isLoading || !data) return <ToolSkeleton />;
 
   const plotter = plotters[data.type];
   if (!plotter) return <b>{data.type}</b>;
