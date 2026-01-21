@@ -5,7 +5,7 @@ import { DM_Serif_Text, Gabarito, Titillium_Web } from 'next/font/google';
 import { type ReactNode, Suspense } from 'react';
 
 import MatomoAnalyticsConsent from '@/components/Matomo';
-import { ConfigProvider, getClientEnvInjectionConfig } from '@/config';
+import { ConfigProvider, config, getClientEnvInjectionConfig } from '@/config';
 
 import '@/styles/globals.css';
 
@@ -32,8 +32,6 @@ type RootLayoutProps = {
 };
 
 export default async function RootLayout({ children }: RootLayoutProps) {
-  const config = getClientEnvInjectionConfig();
-
   return (
     <html
       lang="en"
@@ -42,9 +40,9 @@ export default async function RootLayout({ children }: RootLayoutProps) {
     >
       <head>
         <script
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: <false positive>
+          // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
-            __html: `window.__ENV__=${JSON.stringify(config)};`,
+            __html: `window.__ENV__=${JSON.stringify(getClientEnvInjectionConfig())};`,
           }}
         />
       </head>
