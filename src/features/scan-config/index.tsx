@@ -63,8 +63,8 @@ export default function ScanConfiguration({
   const selectedBlockSchema: Block | undefined =
     schema?.properties?.[selectedRootElement]?.ui_element === 'block_dictionary'
       ? schema.properties[selectedRootElement].additionalProperties.oneOf.find(
-          (o: Block) => o.properties?.type.const === selectedBlock
-        )
+        (o: Block) => o.properties?.type.const === selectedBlock
+      )
       : undefined;
 
   const allEntries = useEntries({ initialConfig, schema });
