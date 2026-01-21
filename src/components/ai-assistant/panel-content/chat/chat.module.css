@@ -94,3 +94,14 @@ button.actionButton {
   display: flex;
   align-items: center;
 }
+
+.creditBalanceIndicator {
+  font-size: 13px;
+  color: #8c8c8c;
+  padding: 8px 1em 4px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: var(--color-neutral-7);
+  border: none;
+}

@@ -204,9 +204,9 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
                 <IconClear />
                 <div>New Chat</div>
               </button>
-              {rateLimit && rateLimit.remaining === 0 && (
+              {/* {rateLimit && rateLimit.remaining === 0 && (
                 <div className={styles.paidCreditsIndicator}>Using Credit Balance</div>
-              )}
+              )} */}
             </div>
           </>
         )}
@@ -229,6 +229,9 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
         <div className={styles.notificationOverlay}>
           <FreeCreditsNotification onDismiss={() => setShowExhaustedNotification(false)} />
         </div>
+      )}
+      {rateLimit && rateLimit.remaining === 0 && (
+        <div className={styles.creditBalanceIndicator}>Using Credit Balance</div>
       )}
       <Footer
         className={className}
