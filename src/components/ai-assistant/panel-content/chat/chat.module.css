@@ -72,7 +72,7 @@ button.actionButton {
 .creditBalanceIndicator {
   font-size: 13px;
   color: #8c8c8c;
-  padding: 8px 1em 4px;
+  padding: 0 1em 4px;
   display: flex;
   align-items: center;
   justify-content: flex-start;

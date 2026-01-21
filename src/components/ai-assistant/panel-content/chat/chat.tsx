@@ -199,7 +199,12 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
         </div>
       )}
       {rateLimit && rateLimit.remaining === 0 && status === "ready" && (
-        <div className={styles.creditBalanceIndicator}>Using Credit Balance</div>
+        <div 
+          className={styles.creditBalanceIndicator}
+          style={{ marginTop: messages.length === 0 ? '-1.2em' : '0em' }}
+        >
+          Using Credit Balance
+        </div>
       )}
       <Footer
         className={className}
