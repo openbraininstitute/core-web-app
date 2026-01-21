@@ -7,6 +7,20 @@
   height: 1em;
 }
 
+.notificationOverlay {
+  position: absolute;
+  bottom: 80px;
+  left: 0;
+  right: 0;
+  padding: 8px 1em;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.notificationOverlay > * {
+  pointer-events: auto;
+}
+
 button.actionButton {
   font: inherit;
   border: 2px solid #f0f0f0;
@@ -64,4 +78,12 @@ button.actionButton {
   justify-content: flex-start;
   align-items: center;
   gap: 1em;
+}
+
+.paidCreditsIndicator {
+  font-size: 13px;
+  color: #8c8c8c;
+  padding: 0 0.5em;
+  display: flex;
+  align-items: center;
 }

@@ -1,13 +1,10 @@
-import React, { useState } from "react";
-import {
-  ExclamationCircleOutlined,
-  InfoCircleOutlined,
-} from "@ant-design/icons";
+import React from 'react';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
 
-import { classNames } from "@/util/utils";
-import { isString, isType } from "@/util/type-guards";
+import { classNames } from '@/util/utils';
+import { isString, isType } from '@/util/type-guards';
 
-import styles from "./error.module.css";
+import styles from './error.module.css';
 
 interface ErrorProps {
   className?: string;
