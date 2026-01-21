@@ -1,16 +1,14 @@
-import { ChangeEvent, ComponentProps, useDeferredValue, useRef, useState } from 'react';
-import { SearchOutlined, CloseOutlined } from '@ant-design/icons';
+import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
 import { useAtom, useSetAtom } from 'jotai';
-
+import { type ChangeEvent, type ComponentProps, useDeferredValue, useRef, useState } from 'react';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { DEFAULT_PAGE_NUMBER } from '@/constants';
 import {
   corePageNumberAtom,
   coreSearchStringAtom,
   useDataListStateSnapshotActions,
 } from '@/ui/segments/data-table/elements/context';
-import { DEFAULT_PAGE_NUMBER } from '@/constants';
 import { cn } from '@/utils/css-class';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 type SearchProps = {
   dataKey: string;
@@ -53,6 +51,10 @@ export function Search({ dataKey, dataType, className }: SearchProps) {
   };
 
   const handleClearSearch = (): void => {
+    if (searchInput === '') {
+      setIsSearchOpen(false);
+      return;
+    }
     setSearchInput('');
     setPageNumber(DEFAULT_PAGE_NUMBER);
     setSearchString('');
@@ -67,13 +69,17 @@ export function Search({ dataKey, dataType, className }: SearchProps) {
   };
 
   return (
-    <div className={cn('flex items-center justify-start', className)}>
+    <div
+      className={cn('flex items-center justify-start max-w-112.5', className, {
+        'border border-gray-100 rounded-full shadow-sm': isSearchOpen,
+      })}
+    >
       <div className="flex w-full items-center">
         <button
           type="button"
           onClick={handleToggleSearch}
           className={cn(
-            'focus:ring-primary-9 flex h-10 w-10 items-center justify-center bg-white transition-all duration-300 ease-in-out focus:ring-2 focus:ring-offset-2 focus:outline-none',
+            'focus:ring-primary-9 flex h-12 w-12 items-center justify-center bg-white transition-all duration-300 ease-in-out focus:ring-0 focus:outline-none',
             {
               'rounded-full shadow-md hover:scale-105 hover:shadow-lg active:scale-95':
                 !isSearchOpen,
@@ -92,7 +98,7 @@ export function Search({ dataKey, dataType, className }: SearchProps) {
             { 'w-0 opacity-0': !isSearchOpen }
           )}
         >
-          <div className="border-neutral-2 flex h-10 w-full items-center rounded-r-full border-l-0 bg-white">
+          <div className="border-neutral-2 flex h-12 w-full items-center rounded-r-full border-l-0 bg-white">
             <input
               ref={searchInputRef}
               type="text"
@@ -107,16 +113,17 @@ export function Search({ dataKey, dataType, className }: SearchProps) {
               aria-label="Search input"
             />
 
-            {searchInput && (
-              <button
-                type="button"
-                onClick={handleClearSearch}
-                className="bg-neutral-1 text-neutral-4 hover:bg-primary-9 focus:ring-primary-9 mr-3 flex items-center justify-center rounded-full p-1 transition-colors duration-200 hover:text-white focus:ring-1 focus:outline-none"
-                aria-label="Clear search"
-              >
-                <CloseOutlined className="text-[8px]" />
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className={cn(
+                'bg-neutral-1 text-neutral-4 hover:bg-primary-9 focus:ring-primary-9 mr-2 flex items-center justify-center ',
+                'rounded-full p-1.5 transition-colors duration-200 hover:text-white focus:ring-1 focus:outline-none'
+              )}
+              aria-label="Clear search"
+            >
+              <CloseOutlined className="text-[10px]" />
+            </button>
           </div>
         </div>
       </div>
