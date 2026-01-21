@@ -44,22 +44,11 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
   const refChatBottom = React.useRef<HTMLDivElement | null>(null);
   const refContainer = React.useRef<HTMLDivElement | null>(null);
 
-  console.log('[Rate Limit] Hook state:', {
-    accessToken: accessToken ? 'present' : 'missing',
-    fetchedRateLimit,
-    isLoading,
-    fetchError,
-    rateLimit,
-    prevRef: prevRemainingRef.current,
-    hasInitializedRef: hasInitializedRef.current,
-  });
-
   // Initialize rate limit from API on mount AND set the ref
   // This runs ONCE when the fetched data first arrives
   React.useEffect(() => {
     if (fetchedRateLimit && !hasInitializedRef.current) {
       const chatStreamedLimit = fetchedRateLimit.chat_streamed;
-      console.log('[Rate Limit] Initial fetch from API:', chatStreamedLimit);
       
       // Only set rate limit if it doesn't exist yet
       if (!rateLimit) {
@@ -69,7 +58,6 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
       // Always initialize the ref from the API data
       prevRemainingRef.current = chatStreamedLimit.remaining;
       hasInitializedRef.current = true;
-      console.log('[Rate Limit] Initialized prevRef to:', chatStreamedLimit.remaining);
     }
   }, [fetchedRateLimit, rateLimit, setRateLimit]);
 
@@ -79,29 +67,12 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
       const currentRemaining = rateLimit.remaining;
       const prevRemaining = prevRemainingRef.current;
 
-      console.log('[Rate Limit Boundary Check]', {
-        prevRemaining,
-        currentRemaining,
-        willShowNotification: prevRemaining !== null && prevRemaining > 0 && currentRemaining === 0,
-        currentShowState: showExhaustedNotification,
-      });
-
       // Crossing boundary: had free credits before, now at 0
       if (prevRemaining !== null && prevRemaining > 0 && currentRemaining === 0) {
-        console.log('[Rate Limit] ✅ SHOWING exhausted notification');
         setShowExhaustedNotification(true);
-      } else {
-        console.log('[Rate Limit] ❌ NOT showing notification because:', {
-          prevIsNull: prevRemaining === null,
-          prevNotPositive: prevRemaining !== null && prevRemaining <= 0,
-          currentNotZero: currentRemaining !== 0,
-        });
       }
 
       prevRemainingRef.current = currentRemaining;
-      console.log('[Rate Limit] Updated prevRemainingRef to:', currentRemaining);
-    } else {
-      console.log('[Rate Limit] No rateLimit data yet');
     }
   }, [rateLimit, showExhaustedNotification]);
 
@@ -204,9 +175,6 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
                 <IconClear />
                 <div>New Chat</div>
               </button>
-              {/* {rateLimit && rateLimit.remaining === 0 && (
-                <div className={styles.paidCreditsIndicator}>Using Credit Balance</div>
-              )} */}
             </div>
           </>
         )}
@@ -230,7 +198,7 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
           <FreeCreditsNotification onDismiss={() => setShowExhaustedNotification(false)} />
         </div>
       )}
-      {rateLimit && rateLimit.remaining === 0 && (
+      {rateLimit && rateLimit.remaining === 0 && status === "ready" && (
         <div className={styles.creditBalanceIndicator}>Using Credit Balance</div>
       )}
       <Footer
