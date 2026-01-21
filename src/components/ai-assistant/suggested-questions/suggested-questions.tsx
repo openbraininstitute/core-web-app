@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { classNames } from "@/util/utils";
-import IconIdea from "@/components/icons/Idea";
+import IconIdea from '@/components/icons/Idea';
+import { classNames } from '@/util/utils';
 
-import styles from "./suggested-questions.module.css";
+import styles from './suggested-questions.module.css';
 
 interface SuggestedQuestionsProps {
   className?: string;
@@ -34,17 +34,9 @@ export default function SuggestedQuestions({
   if (suggestions.length === 0 && !isLoading) return null;
 
   return (
-    <div
-      className={classNames(
-        className,
-        styles.suggestedQuestions,
-        styles.container,
-      )}
-    >
+    <div className={classNames(className, styles.suggestedQuestions, styles.container)}>
       <div className={styles.title}>
-        {messagesLength === 0
-          ? "Based on the content you have been browsing"
-          : "Related"}
+        {messagesLength === 0 ? 'Based on the content you have been browsing' : 'Related'}
       </div>
       {isLoading ? (
         <div className={styles.spinnerContainer}>
@@ -52,18 +44,13 @@ export default function SuggestedQuestions({
         </div>
       ) : (
         <>
-          <div
-            className={classNames(
-              styles.suggestions,
-              isLoading && styles.loading,
-            )}
-          >
+          <div className={classNames(styles.suggestions, isLoading && styles.loading)}>
             {suggestions.map((prompt) => (
               <button
                 key={prompt}
                 type="button"
                 onClick={() => {
-                  onClick(prompt ?? "");
+                  onClick(prompt ?? '');
                   clearSuggestions();
                 }}
                 disabled={isLoading}

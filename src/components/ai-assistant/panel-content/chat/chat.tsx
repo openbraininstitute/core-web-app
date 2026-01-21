@@ -10,24 +10,22 @@ import { classNames } from '@/util/utils';
 import { atomRateLimit } from '../../state';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
 import ErrorPanel from '../../error';
-import { IconClear } from '../../icons/clear';
 import { MessageItem } from '../../message-item';
 import SuggestedQuestions from '../../suggested-questions';
 import FreeCreditsNotification from '../../free-credits-notification';
 import Footer from '../footer';
 import Welcome from '../welcome';
-
 import styles from './chat.module.css';
 
 export interface ChatProps {
   className?: string;
   threadId: string;
-  onClearChat(): void;
 }
 
-export default function Chat({ className, threadId, onClearChat }: ChatProps) {
+export default function Chat({ className, threadId }: ChatProps) {
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = React.useState(true);
-  const { messages, clear, status, append, error, stop } = useServiceAiAgentChat(threadId ?? '');
+
+  const { messages, status, append, error, stop } = useServiceAiAgentChat(threadId ?? '');
   const [suggestions, clearSuggestions, isLoadingSuggestions] =
     useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', status);
   
@@ -132,11 +130,6 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
     }
   }, [scrollHeight, isAutoScrollEnabled, isStorageQueryFetching]);
 
-  const handleClearChat = () => {
-    onClearChat();
-    clear();
-    setShowExhaustedNotification(false);
-  };
   const handlePrompt = (content: string) => {
     setIsAutoScrollEnabled(true);
     append({
@@ -144,6 +137,7 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
       content,
     });
   };
+
   const handleWheel = (event: React.WheelEvent) => {
     if (event.deltaY < 0) {
       setIsAutoScrollEnabled(false);
@@ -171,10 +165,6 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
         {status === 'ready' && messages.length > 0 && (
           <>
             <div className={styles.footerButtons}>
-              <button type="button" className={styles.actionButton} onClick={handleClearChat}>
-                <IconClear />
-                <div>New Chat</div>
-              </button>
             </div>
           </>
         )}
