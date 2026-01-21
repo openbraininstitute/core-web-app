@@ -75,6 +75,7 @@ export function BrowseLinkContent({
           asChild
           rounded
           key={`counter-${extendedType}`}
+          id={`counter-${extendedType}`}
           variant="outline"
           size="lg"
           className="group w-full shrink grow border-none text-base"

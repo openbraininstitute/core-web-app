@@ -44,7 +44,8 @@
         "noVar": "error",
         "noExplicitAny": "info",
         "noImplicitAnyLet": "warn",
-        "useIterableCallbackReturn": "warn"
+        "useIterableCallbackReturn": "warn",
+        "noNonNullAssertedOptionalChain": "info"
       }
     }
   },

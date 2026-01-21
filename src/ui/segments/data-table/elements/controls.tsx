@@ -4,17 +4,20 @@ import { AnimatePresence, motion } from 'motion/react';
 import type { ReactNode } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { WorkspaceContext } from '@/types/common';
 import { EntityDownloadButton } from '@/ui/segments/data-table/elements/download-button';
 import { useScrollNav } from '@/ui/segments/data-table/elements/hooks';
 import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
 
-function DefaultRenderButton<T extends EntityCoreIdentifiable>({
+function RenderButton<T extends EntityCoreIdentifiable>({
   children,
   clearSelectedRows,
   selectedRows,
   dataType,
+  workspace,
 }: RenderButtonProps<T> & {
   children?: (props: RenderButtonProps<T>) => ReactNode;
+  workspace?: WorkspaceContext;
 }) {
   return children ? (
     children({ selectedRows, clearSelectedRows, dataType })
@@ -23,6 +26,7 @@ function DefaultRenderButton<T extends EntityCoreIdentifiable>({
       selectedRows={selectedRows}
       dataType={dataType}
       clearSelectedRows={clearSelectedRows}
+      workspace={workspace}
       data-testid="listing-view-download-button"
     />
   );
@@ -36,6 +40,7 @@ export default function TableControls<T extends EntityCoreIdentifiable>({
   visible,
   dataType,
   allowDownload,
+  workspace,
 }: {
   clearSelectedRows: RenderButtonProps<T>['clearSelectedRows'];
   children?: ReactNode;
@@ -44,6 +49,7 @@ export default function TableControls<T extends EntityCoreIdentifiable>({
   visible: boolean;
   dataType: TExtendedEntitiesTypeDict;
   allowDownload?: boolean;
+  workspace?: WorkspaceContext;
 }) {
   const { left, right } = useScrollNav('.ant-table-body');
 
@@ -71,13 +77,14 @@ export default function TableControls<T extends EntityCoreIdentifiable>({
               mass: 0.8,
             }}
           >
-            <DefaultRenderButton<T>
+            <RenderButton<T>
               clearSelectedRows={clearSelectedRows}
               selectedRows={selectedRows}
               dataType={dataType}
+              workspace={workspace}
             >
               {renderButton}
-            </DefaultRenderButton>
+            </RenderButton>
           </motion.div>
         )}
       </AnimatePresence>

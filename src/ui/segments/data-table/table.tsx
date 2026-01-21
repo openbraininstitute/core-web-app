@@ -11,6 +11,7 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import useResizeObserver from '@/hooks/useResizeObserver';
 import useScrollComplete from '@/hooks/useScrollComplete';
+import type { WorkspaceContext } from '@/types/common';
 import TableControls from '@/ui/segments/data-table/elements/controls';
 import { useOnCellRouteHandler } from '@/ui/segments/data-table/elements/hooks';
 import styles from '@/ui/segments/data-table/elements/table.module.css';
@@ -253,6 +254,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
   controls,
   baseTableWrapperClassname,
   allowDownload,
+  workspace,
 }: TableProps<T> &
   AdditionalTableProps<T> & {
     renderButton?: (props: RenderButtonProps<T>) => ReactNode;
@@ -266,6 +268,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
     tableStyle?: CSSProperties | undefined;
     dataType: TExtendedEntitiesTypeDict;
     controls?: ReactNode;
+    workspace?: WorkspaceContext;
     baseTableWrapperClassname?: ComponentProps<'div'>['className'];
     allowDownload?: boolean;
   }) {
@@ -305,6 +308,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
         selectedRows={selectedRows}
         clearSelectedRows={clearSelectedRows}
         dataType={dataType}
+        workspace={workspace}
         allowDownload={allowDownload}
       >
         {controls}

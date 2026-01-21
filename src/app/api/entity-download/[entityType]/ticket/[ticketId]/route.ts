@@ -1,9 +1,9 @@
 import kebabCase from 'es-toolkit/compat/kebabCase';
 import snakeCase from 'es-toolkit/compat/snakeCase';
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { TEntityTypeDict } from '@/api/entitycore/types';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 import { auth } from '@/auth';
 import { createDownloadStream } from '@/features/entity-download/download-stream';
 import { ticketStore } from '@/features/entity-download/ticket-store';
@@ -17,6 +17,7 @@ export async function GET(
   { params }: { params: { entityType: string; ticketId: string } }
 ) {
   const { entityType: entityTypeRaw, ticketId } = await params;
+
   const entityType = snakeCase(entityTypeRaw) as TEntityTypeDict;
 
   const session = await auth();
@@ -52,7 +53,9 @@ export async function GET(
     });
 
     return new NextResponse(downloadStream, {
-      headers: getDownloadStreamHeaders({ filename: `${kebabCase(entityType)}.tar.gz` }),
+      headers: getDownloadStreamHeaders({
+        filename: `${kebabCase(entityType)}.tar.gz`,
+      }),
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

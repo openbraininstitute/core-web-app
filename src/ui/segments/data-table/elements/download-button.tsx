@@ -5,11 +5,12 @@ import { useAtomValue } from 'jotai';
 import { AnimatePresence, motion } from 'motion/react';
 import { type ReactNode, useCallback, useState } from 'react';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import { useAppNotification } from '@/components/notification';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { downloadArchive } from '@/services/entity-download';
 import sessionAtom from '@/state/session';
+import type { WorkspaceContext } from '@/types/common';
 import { Button } from '@/ui/molecules/button';
-
 import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
 import { cn } from '@/utils/css-class';
 
@@ -27,10 +28,11 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
   selectedRows,
   dataType,
   clearSelectedRows,
-}: RenderButtonProps<T> & { children?: ReactNode }) {
+  workspace,
+}: RenderButtonProps<T> & { children?: ReactNode; workspace?: WorkspaceContext }) {
   const session = useAtomValue(sessionAtom);
   const [downloadState, setDownloadState] = useState<TDownloadState>(DownloadStateDict.idle);
-
+  const notify = useAppNotification();
   const entityCount = selectedRows.length;
   const isSingular = entityCount === 1;
 
@@ -40,7 +42,11 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
     const entity = getEntityByExtendedType({ type: dataType });
     if (!entity) {
       setDownloadState(DownloadStateDict.error);
-      throw new Error(`Cannot find entity for type: ${dataType}`);
+      notify.error({
+        message: 'Download failed',
+        description: `Cannot find entity configuration for type: ${dataType}`,
+      });
+      return;
     }
 
     const entity_type = entity?.type;
@@ -48,7 +54,8 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
     try {
       await downloadArchive(
         entity_type,
-        selectedRows.map((row) => row.id)
+        selectedRows.map((row) => row.id),
+        workspace
       );
       setDownloadState(DownloadStateDict.success);
       setTimeout(() => {
@@ -59,7 +66,7 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
       setDownloadState(DownloadStateDict.error);
       setTimeout(() => setDownloadState(DownloadStateDict.idle), 2000);
     }
-  }, [selectedRows, dataType, clearSelectedRows]);
+  }, [selectedRows, dataType, clearSelectedRows, notify.error, workspace]);
 
   const getButtonLabel = (): string => {
     if (isSingular) {

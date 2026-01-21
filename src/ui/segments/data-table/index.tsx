@@ -167,6 +167,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
             spinning: showLoadingState && isLoading,
             size: 'large',
           }}
+          workspace={workspace}
           onCellClick={onCellClick}
           renderButton={renderButton}
           selectionType={selectionType}
