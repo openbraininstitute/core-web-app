@@ -44,11 +44,11 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
     <div className={classNames('text-primary-9 relative rounded-2xl bg-white p-6', className)}>
       <div className="relative h-full overflow-auto p-6">
         <Suspense>{viewerContent}</Suspense>
-        {loading && !isFilePreloading && (
+        {/* {loading && !isFilePreloading && (
           <div className="absolute inset-0 z-10 flex h-full cursor-progress items-center justify-center rounded-2xl backdrop-blur-xs">
             <Loader className="text-neutral-3" />
           </div>
-        )}
+        )} */}
         {isFilePreloading && file && (
           <div className="absolute inset-0 z-10 cursor-progress">
             <Suspense
