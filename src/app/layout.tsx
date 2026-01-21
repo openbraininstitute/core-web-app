@@ -6,6 +6,7 @@ import { type ReactNode, Suspense } from 'react';
 
 import MatomoAnalyticsConsent from '@/components/Matomo';
 import { ConfigProvider, config, getClientEnvInjectionConfig } from '@/config';
+import { SystemMessagesWrapper } from '@/features/system-messages/components/system-messages-wrapper';
 
 import '@/styles/globals.css';
 
@@ -48,8 +49,10 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       </head>
       <body>
         <ConfigProvider config={config}>
-          <Suspense fallback={null}>{children}</Suspense>
-          <MatomoAnalyticsConsent />
+          <SystemMessagesWrapper>
+            <Suspense fallback={null}>{children}</Suspense>
+            <MatomoAnalyticsConsent />
+          </SystemMessagesWrapper>
         </ConfigProvider>
       </body>
     </html>
