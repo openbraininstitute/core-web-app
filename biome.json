@@ -36,7 +36,7 @@
         "useConst": "error",
         "useExportType": "error",
         "useImportType": "error",
-        "noNonNullAssertion": "off"
+        "noNonNullAssertion": "warn"
       },
       "suspicious": {
         "noArrayIndexKey": "warn",
