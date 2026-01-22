@@ -1,12 +1,13 @@
+import { LoadingOutlined } from '@ant-design/icons';
 import sortBy from 'es-toolkit/compat/sortBy';
 import { useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
 import { useEffect, useMemo } from 'react';
-
 import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import { AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
+import Loading from '@/app/app/virtual-lab/[virtualLabId]/[projectId]/data/view/[type]/loading';
 import { Loader } from '@/components/loader';
 import {
   modelAtomFamily,
@@ -27,7 +28,6 @@ type SimulationFilesProps = {
   execStatus: EntitycoreExecutionStatus;
   selectedFile?: File;
   onSelect: (file: File) => void;
-  onLoadingChange: (loading: boolean) => void;
   context: WorkspaceContext;
 };
 
@@ -36,7 +36,6 @@ export function SimulationFiles({
   execStatus,
   selectedFile,
   onSelect,
-  onLoadingChange,
   context,
 }: SimulationFilesProps) {
   const [inputLoading, inputFiles] = useInputFiles(simulation, context);
@@ -48,11 +47,6 @@ export function SimulationFiles({
   const [outputLoading, outputFiles] = useOutputFiles(simulation, context, outputAvailable);
 
   const loading = inputLoading || outputLoading;
-
-  // Notify parent component about the loading state
-  useEffect(() => {
-    onLoadingChange(loading);
-  }, [loading, onLoadingChange]);
 
   /*
     Handle file auto-selection
@@ -101,6 +95,10 @@ export function SimulationFiles({
       onSelect(fileToSelect);
     }
   }, [loading, inputFiles, outputFiles, onSelect, selectedFile]);
+
+  if (loading) {
+    return <LoadingOutlined />;
+  }
 
   return (
     <div className="h-full overflow-y-auto">

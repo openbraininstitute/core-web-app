@@ -124,8 +124,8 @@ export default function SimulationsTab({
 
     const hasActiveSimulations = statusMap
       ? Array.from(statusMap.values()).some((status) =>
-          [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING].includes(status)
-        )
+        [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING].includes(status)
+      )
       : false;
 
     if (!hasActiveSimulations) return;
@@ -317,7 +317,6 @@ export default function SimulationsTab({
             selectedFile={selectedFile}
             context={context}
             onSelect={setSelectedFile}
-            onLoadingChange={setFilesLoading}
           />
         )}
       </div>
@@ -328,7 +327,6 @@ export default function SimulationsTab({
           file={selectedFile}
           className="h-full"
           context={context}
-          loading={filesLoading}
         />
       </div>
 
