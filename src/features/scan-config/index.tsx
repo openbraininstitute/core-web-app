@@ -52,6 +52,8 @@ export default function ScanConfiguration({
 
   const [patches, setPatches] = useAtom(patchesAtoms.smc_simulation_config);
 
+  console.log(patches);
+
   const [isEditingKey, setIsEditingKey] = useState(false);
   const [newKey, setNewKey] = useState('');
 

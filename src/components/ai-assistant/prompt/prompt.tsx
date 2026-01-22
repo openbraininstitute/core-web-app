@@ -1,14 +1,14 @@
 'use client';
 
 import React from 'react';
-
-// import { IconGear } from '../icons/gear';
-import ToolsSelector from './tools-selector';
-import { classNames } from '@/util/utils';
 import SendIcon from '@/components/icons/Send';
-import { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
+import { setUserHasPrompted, USER_HAS_PROMPTED } from '@/services/ai-agent';
+import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
+import { classNames } from '@/util/utils';
 
 import styles from './prompt.module.css';
+// import { IconGear } from '../icons/gear';
+import ToolsSelector from './tools-selector';
 
 interface PromptProps {
   className?: string;
@@ -20,7 +20,9 @@ interface PromptProps {
 
 export default function Prompt({ className, value, tools, onChange, onClick }: PromptProps) {
   const [showToolsSelector, setShowToolsSelector] = React.useState(false);
+
   const handleSendClick = () => {
+    setUserHasPrompted(true);
     const promptText = value.trim();
     if (promptText.length > 0) onClick(promptText);
   };

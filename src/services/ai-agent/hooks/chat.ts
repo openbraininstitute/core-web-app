@@ -3,10 +3,10 @@
 import { type CreateMessage, type Message, useChat } from '@ai-sdk/react';
 import type { ChatRequestOptions, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import { atom, useAtom } from 'jotai';
+import { userAgent } from 'next/server';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useAIActiveTools } from '@/components/ai-assistant/state';
 import type { Config } from '@/features/scan-config/components/components';
-
 import { logError } from '@/util/logger';
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { useAiAssistant } from '../assistant';
@@ -82,8 +82,6 @@ export function useServiceAiAgentChat(threadId: string) {
     fetch: async (url, options) => {
       const resp = await fetch(url, options);
 
-      console.log(resp);
-
       const newRateLimit: AiAgentRateLimit = {
         limit: parseInt(resp.headers.get('x-ratelimit-limit') ?? '-1', 10),
         remaining: parseInt(resp.headers.get('x-ratelimit-remaining') ?? '-1', 10),
@@ -108,7 +106,8 @@ export function useServiceAiAgentChat(threadId: string) {
     if (toolInvocation?.toolInvocation?.result) {
       //@ts-expect-error
       const result = JSON.parse(toolInvocation?.toolInvocation?.result ?? '');
-      setPatches(result?.patches ?? []);
+      const patches = USER_HAS_PROMPTED && result?.patches ? result.patches : [];
+      setPatches(patches);
     }
   }, [chat.messages, patchAtomKey, setPatches]);
 
@@ -144,13 +143,22 @@ const AI_AGENT_STATE: {
   smc_simulation_config?: Config;
 } = {};
 
+let USER_HAS_PROMPTED = false;
+
+export function setUserHasPrompted(value: boolean) {
+  USER_HAS_PROMPTED = value;
+}
+
 type Patch = {
-  op: 'replace';
+  op: 'replace' | 'add' | 'delete';
   path: string;
   value: Config;
 };
 
 export function useAgentState(key: 'smc_simulation_config') {
+  useEffect(() => {
+    setUserHasPrompted(false);
+  }, []);
   const setAgentState = useCallback(
     (value: Config) => {
       AI_AGENT_STATE[key] = value;
