@@ -1,3 +1,8 @@
+---
+tags:
+  - single-cell-simulation
+---
+
 # Single Neuron Simulation
 
 Single neuron simulations allow you to simulate the electrical behavior of individual neurons using ME-models (multi-compartment electrical models). You can test how neurons respond to different stimulation protocols and record their electrical activity at various locations.

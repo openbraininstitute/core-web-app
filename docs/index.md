@@ -1,3 +1,8 @@
+---
+tags:
+  - explore
+---
+
 # Open Brain Platform
 
 Welcome to the Open Brain Platform, a comprehensive web-based platform for exploring, building, and simulating the brain. This platform provides researchers and scientists with powerful tools to interact with experimental data, build computational models, and run simulations across multiple scales of neuroscience.

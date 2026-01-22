@@ -1,3 +1,8 @@
+---
+tags:
+  - explore
+---
+
 # Explore
 
 The Explore section is your gateway to discovering experimental data, computational models, simulations, and scientific literature. It provides powerful tools to navigate through brain regions and find relevant resources for your research.

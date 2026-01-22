@@ -1,3 +1,8 @@
+---
+tags:
+  - circuit-simulation
+---
+
 # Small Microcircuit Simulation
 
 Small microcircuit simulations allow you to simulate neural circuits containing multiple neurons. This feature uses a JSON schema-based configuration system to define simulation parameters and creates simulation campaigns that can run multiple related simulations.
