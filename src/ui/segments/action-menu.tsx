@@ -110,10 +110,10 @@ export default function ActionMenu({
       navigate(parentLink);
     },
     onError: (error: Error) => {
-      const errorMessage = error.message || 'Unknown error';
+      const errorMessage = get(error.cause, 'message') || 'Unknown error';
       notification.error({
         message: 'Deletion Failed',
-        description: `Deletion failed! ${errorMessage}`,
+        description: errorMessage,
         placement: 'topRight',
         duration: 5,
       });
