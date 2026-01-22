@@ -60,7 +60,6 @@ export default async function Page({
           <BrowseEntityScope
             section={WorkspaceSection.Data}
             dataType={dataType}
-            scope={scope ?? WorkspaceScope.Public}
             mainTableProps={{
               selectionType: 'checkbox',
             }}

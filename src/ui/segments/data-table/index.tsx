@@ -18,7 +18,6 @@ import type {
   Facets,
 } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
-import { WorkspaceScope } from '@/constants';
 import { BrainRegionDropdown } from '@/features/brain-region-dropdown';
 import type { WorkspaceContext } from '@/types/common';
 import { coreFiltersAtom } from '@/ui/segments/data-table/elements/context';
@@ -59,6 +58,7 @@ export type Props<T extends EntityCoreIdentifiable> = {
   rowClassName?: string | TableProps<T>['rowClassName'];
   tableStyle?: CSSProperties | undefined;
   allowDownload?: boolean;
+  requireBrainRegionDropdown?: boolean;
   searchEnabled?: boolean;
   filterClassNames?: {
     container?: string;
@@ -91,6 +91,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
   onCellClick,
   tableStyle,
   allowDownload,
+  requireBrainRegionDropdown = false,
   searchEnabled = true,
   filterClassNames,
   expandableOptions,
@@ -127,7 +128,9 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           className={cn(
             'mb-5 grid w-full grid-cols-[2fr_2fr] items-center justify-center gap-5 pt-2',
             '[grid-template-areas:"search_filter"]',
-            { '[grid-template-areas:"left_search_filter"] grid-cols-[auto_1fr_1fr] gap-2': !!left }
+            {
+              '[grid-template-areas:"left_search_filter"] grid-cols-[auto_1fr_1fr] gap-2': !!left,
+            }
           )}
         >
           {!!left && <div className="w-full [grid-area:left]">{left}</div>}
@@ -143,12 +146,8 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
             </div>
           )}
           <div className="[grid-area:filter]">
-            <div className="ml-auto flex h-12 items-stretch justify-center gap-3">
-              {(dataScope === WorkspaceScope.BuildMeModelM ||
-                dataScope === WorkspaceScope.BuildMeModelE ||
-                dataScope === WorkspaceScope.BuildSynaptomeModel) && (
-                <BrainRegionDropdown dataKey={dataKey} />
-              )}
+            <div className="ml-auto flex h-12 items-stretch justify-end gap-3">
+              {requireBrainRegionDropdown && <BrainRegionDropdown dataKey={dataKey} />}
               <FilterControls
                 filters={filters}
                 displayControlPanel={displayControlPanel}

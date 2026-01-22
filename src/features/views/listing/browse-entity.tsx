@@ -44,9 +44,9 @@ import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
-const MainTable = dynamic(() => import('@/ui/segments/data-table'), { ssr: false }) as (
-  props: MainTableProps<EntityCoreIdentifiableNamed>
-) => ReactElement | null;
+const MainTable = dynamic(() => import('@/ui/segments/data-table'), {
+  ssr: false,
+}) as (props: MainTableProps<EntityCoreIdentifiableNamed>) => ReactElement | null;
 
 type Props = {
   id?: string;
@@ -66,6 +66,7 @@ type Props = {
   mainTableProps?: Partial<ComponentProps<typeof MainTable>>;
   miniViewProps?: Partial<ComponentProps<typeof MiniDetailView>>;
   allowDownload?: boolean;
+  requireBrainRegionDropdown?: boolean;
   extraQueryParams?: Record<string, any>;
   left?: ReactNode;
 };
@@ -82,6 +83,7 @@ export function BrowseEntityScope({
   mainTableProps,
   miniViewProps,
   allowDownload,
+  requireBrainRegionDropdown,
   extraQueryParams,
   left,
 }: Props) {
@@ -171,10 +173,7 @@ export function BrowseEntityScope({
     requireBrainRegion,
     defaultBrainRegion,
     useKeepPreviousData: true,
-    extraQueryParams: {
-      ...extraQueryParams,
-      ...entity?.api.config.extraRequiredListFilters,
-    },
+    extraQueryParams,
     enabled: ({ queryKey }) => {
       const [{ queryParameters }] = queryKey;
       if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
@@ -237,6 +236,7 @@ export function BrowseEntityScope({
           <MainTable
             showLoadingState
             allowDownload={allowDownload}
+            requireBrainRegionDropdown={requireBrainRegionDropdown}
             sticky={{ offsetHeader: 75.5 }}
             isLoading={isFetching}
             dataScope={scope!}
