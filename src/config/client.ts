@@ -36,9 +36,9 @@ export const clientConfig = new Proxy({} as ClientConfig, {
   },
 });
 
-export function getClientEnvInjectionConfig() {
+export function getClientEnvInjectionConfig(): ClientConfig {
   const clientEnvKeys = Object.keys(baseClientSchema.shape);
   return Object.fromEntries(
     clientEnvKeys.map((key) => [key, clientConfig[key as keyof typeof clientConfig]])
-  );
+  ) as ClientConfig;
 }
