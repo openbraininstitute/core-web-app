@@ -1,13 +1,13 @@
 import z from 'zod';
-import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
-
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type {
-  ExpandCellMorphologyParm,
   CellMorphologyFilter,
+  ExpandCellMorphologyParm,
   ICellMorphology,
   ICellMorphologyExpanded,
 } from '@/api/entitycore/types/entities/cell-morphology';
+
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/cell-morphology';
@@ -86,7 +86,6 @@ export async function deleteCellMorphology({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  // Using api.delete with the base URI and the entity ID. No body/payload is needed.
   return await api.delete<void>(`${baseUri}/${id}`, {
     headers: {
       accept: 'application/json',
