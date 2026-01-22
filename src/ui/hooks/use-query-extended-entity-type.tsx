@@ -47,7 +47,7 @@ export function buildQueryKey({
   {
     workspace: WorkspaceContext;
     context: QueryContext;
-    queryParameters: {} | Record<string, any>;
+    queryParameters: Record<string, any>;
     requireBrainRegion: boolean | undefined;
   },
 ] {
@@ -96,7 +96,7 @@ function useQueryParameters(
         }
       : {}),
     ...getWorkspaceScopeFilters(context.workspaceScope, workspace),
-    ...transformFiltersToQuery(filters as any),
+    ...transformFiltersToQuery(filters),
   });
   return queryParameters;
 }
@@ -122,7 +122,7 @@ export function useQueryExtendedEntityType<TData = unknown, TError = unknown>({
               projectId: string;
             };
             context: QueryContext;
-            queryParameters: {} | Record<string, any>;
+            queryParameters: Record<string, any>;
           },
         ],
         never
@@ -144,7 +144,7 @@ export function useQueryExtendedEntityType<TData = unknown, TError = unknown>({
           projectId: string;
         };
         context: QueryContext;
-        queryParameters: {} | Record<string, any>;
+        queryParameters: Record<string, any>;
       },
     ]
   >,
@@ -160,6 +160,7 @@ export function useQueryExtendedEntityType<TData = unknown, TError = unknown>({
     queryParameters: { ...queryParameters, ...extraQueryParams },
     requireBrainRegion,
   });
+
   const queryKeyHash = hashKey(queryKey);
 
   const query = useQuery({
