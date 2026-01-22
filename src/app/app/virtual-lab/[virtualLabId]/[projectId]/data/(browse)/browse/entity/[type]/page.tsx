@@ -64,6 +64,7 @@ export default async function Page({
             mainTableProps={{
               selectionType: 'checkbox',
             }}
+            allowDownload
           />
         );
       }

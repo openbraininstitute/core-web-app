@@ -9,7 +9,10 @@ import { RESET } from 'jotai/utils';
 import dynamic from 'next/dynamic';
 import { type ComponentProps, type ReactElement, type ReactNode, useEffect, useMemo } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
+import type {
+  EntityCoreIdentifiable,
+  EntityCoreIdentifiableNamed,
+} from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 
@@ -122,8 +125,11 @@ export function BrowseEntityScope({
     return {
       getRowKey: (record: EntityCoreIdentifiableNamed) => record.id,
       getFetchId: (record: EntityCoreIdentifiableNamed) => record.id,
-      fetcher: (record: EntityCoreIdentifiableNamed) =>
-        entity.api.expandRow?.(record, { virtualLabId, projectId }),
+      fetcher: (record: EntityCoreIdentifiable) =>
+        entity.api.expandRow?.(record as any, {
+          virtualLabId,
+          projectId,
+        }),
       renderExpanded: (
         records: EntityCoreIdentifiableNamed[],
         originalRecord: EntityCoreIdentifiableNamed

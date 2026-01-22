@@ -1,5 +1,3 @@
-/* eslint-disable no-empty */
-
 import { getSingleNeuronSimulation } from '@/api/entitycore/queries';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
@@ -10,7 +8,7 @@ import {
   createTemplateFileEntry,
   getMetadataCsvEntryBase,
 } from '@/features/entity-download/utils';
-import { WorkspaceContext } from '@/types/common';
+import type { WorkspaceContext } from '@/types/common';
 
 export async function* getSingleNeuronSimulationFiles(entityIds: string[], ctx?: WorkspaceContext) {
   const metadata = new Metadata<Record<string, any>>();
@@ -46,7 +44,7 @@ export async function* getSingleNeuronSimulationFiles(entityIds: string[], ctx?:
         path,
         ctx,
       });
-    } catch (error) {}
+    } catch {}
 
     for await (const metadataFileEntry of metadata.getFileEntries()) {
       yield metadataFileEntry;

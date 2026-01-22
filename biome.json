@@ -35,15 +35,17 @@
         "useConsistentArrayType": "off",
         "useConst": "error",
         "useExportType": "error",
-        "useImportType": "error"
+        "useImportType": "error",
+        "noNonNullAssertion": "off"
       },
       "suspicious": {
         "noArrayIndexKey": "warn",
         "noConsole": "warn",
         "noVar": "error",
-        "noExplicitAny": "warn",
+        "noExplicitAny": "info",
         "noImplicitAnyLet": "warn",
-        "useIterableCallbackReturn": "warn"
+        "useIterableCallbackReturn": "warn",
+        "noNonNullAssertedOptionalChain": "info"
       }
     }
   },

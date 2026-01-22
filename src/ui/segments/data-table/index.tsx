@@ -9,7 +9,10 @@ import { unwrap } from 'jotai/utils';
 import type { ComponentProps, CSSProperties, ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
+import type {
+  EntityCoreIdentifiable,
+  EntityCoreIdentifiableNamed,
+} from '@/api/entitycore/types/shared/global';
 import type {
   Pagination as EntitycorePagination,
   Facets,
@@ -28,7 +31,7 @@ import { Search } from '@/ui/segments/data-table/search';
 import { type OnCellClick, WrapperTable } from '@/ui/segments/data-table/table';
 import { cn } from '@/utils/css-class';
 
-export type Props<T> = {
+export type Props<T extends EntityCoreIdentifiable> = {
   facets: Facets | undefined;
   resultPagination?: {
     pagination: EntitycorePagination;
@@ -60,7 +63,7 @@ export type Props<T> = {
   filterClassNames?: {
     container?: string;
   };
-  expandableOptions?: UseExpandableTableOptions<T, any>;
+  expandableOptions?: UseExpandableTableOptions<T, any> | undefined;
   showExpandButtons?: boolean;
   left?: ReactNode;
 };
@@ -164,6 +167,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
             spinning: showLoadingState && isLoading,
             size: 'large',
           }}
+          workspace={workspace}
           onCellClick={onCellClick}
           renderButton={renderButton}
           selectionType={selectionType}
