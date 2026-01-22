@@ -7,7 +7,6 @@ import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import { AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
-import Loading from '@/app/app/virtual-lab/[virtualLabId]/[projectId]/data/view/[type]/loading';
 import { Loader } from '@/components/loader';
 import {
   modelAtomFamily,
