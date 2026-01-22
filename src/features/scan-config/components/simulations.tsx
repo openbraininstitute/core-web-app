@@ -75,7 +75,6 @@ export default function SimulationsTab({
   const [activeSimulation, setActiveSimulation] = useState<null | ICircuitSimulation>(null);
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
-  const [filesLoading, setFilesLoading] = useState(false);
   const [consent, setConsent] = useState<Consent | null>(null);
 
   const activeSimulationExecStatus = activeSimulation && statusMap?.get(activeSimulation.id);
@@ -124,8 +123,8 @@ export default function SimulationsTab({
 
     const hasActiveSimulations = statusMap
       ? Array.from(statusMap.values()).some((status) =>
-        [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING].includes(status)
-      )
+          [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING].includes(status)
+        )
       : false;
 
     if (!hasActiveSimulations) return;
@@ -323,11 +322,7 @@ export default function SimulationsTab({
 
       {/* Preview for selected file */}
       <div className="relative pl-4">
-        <FileViewer
-          file={selectedFile}
-          className="h-full"
-          context={context}
-        />
+        <FileViewer file={selectedFile} className="h-full" context={context} />
       </div>
 
       <Modal
