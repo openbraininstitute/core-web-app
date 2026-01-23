@@ -1,13 +1,13 @@
 import z from 'zod';
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
+
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type {
-  CellMorphologyFilter,
   ExpandCellMorphologyParm,
+  CellMorphologyFilter,
   ICellMorphology,
   ICellMorphologyExpanded,
 } from '@/api/entitycore/types/entities/cell-morphology';
-
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/cell-morphology';
@@ -63,30 +63,6 @@ export async function getCellMorphology({
     queryParams: {
       expand,
     },
-    headers: {
-      accept: 'application/json',
-      'content-type': 'application/json',
-      ...getEntityCoreContext(context).headers,
-    },
-  });
-}
-
-/**
- * Deletes a specific cell morphology by its ID from the EntityCoreAPI.
- *
- * @param {Object} params - The parameters object
- * @param {string} params.id - The unique identifier of the cell morphology to delete
- * @returns {Promise<void>} A promise that resolves upon successful deletion
- */
-export async function deleteCellMorphology({
-  id,
-  context,
-}: {
-  id: string;
-  context?: WorkspaceContext | null;
-}) {
-  const api = await entityCoreApi();
-  return await api.delete<void>(`${baseUri}/${id}`, {
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

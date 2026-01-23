@@ -3,122 +3,42 @@
 import {
   CheckOutlined,
   CopyOutlined,
-  DeleteOutlined,
   DownloadOutlined,
   ExperimentOutlined,
-  LoadingOutlined,
 } from '@ant-design/icons';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { App, Popconfirm } from 'antd';
-import { compact, get } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
 import NextLink from 'next/link';
-import { notFound, useRouter } from 'next/navigation';
-import { deleteCellMorphology } from '@/api/entitycore/queries/experimental/cell-morphology';
+import { notFound } from 'next/navigation';
+import { useState } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import type { EntityTypeValue } from '@/entity-configuration/domain';
 import {
   type EntityCoreExtendedType,
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
-import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
-import type { WorkspaceContext } from '@/types/common';
 import Action from '@/ui/molecules/side-menu-action';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 import {
   PanelQueryParam,
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import { cn } from '@/utils/css-class';
 
 export default function ActionMenu({
   entity,
   ctx,
   type,
-  parentLink,
-  isPublicEntity,
 }: {
   entity: EntityTypeValue;
-  ctx: WorkspaceContext;
+  ctx: { virtualLabId: string; projectId: string };
   type: EntityCoreExtendedType;
-  parentLink: string;
-  isPublicEntity: boolean;
 }) {
-  const { replace: navigate } = useRouter();
-  const queryClient = useQueryClient();
+  const [copied, setCopied] = useState(false);
   const [, setCircuit] = useAtom(downloadPanelCircuitAtom);
-  const { notification } = App.useApp();
+
   const entityType = getEntityByExtendedType({ type });
   if (!entityType) notFound();
-
-  const [, copy, , copying] = useCopyToClipboard({
-    onSuccess: () => {
-      notification.success({
-        message: 'ID Copied',
-        description: 'The entity ID has been copied to your clipboard.',
-        duration: 3,
-        placement: 'topRight',
-      });
-    },
-    onError: () => {
-      notification.error({
-        message: 'Copy Failed',
-        description: 'Could not copy to clipboard. Please copy the ID manually.',
-        placement: 'topRight',
-      });
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async () => {
-      if (type !== ExtendedEntitiesTypeDict.CellMorphology) {
-        throw new Error(`Deletion not implemented for type ${type}`);
-      }
-      await deleteCellMorphology({ id: entity.id, context: ctx });
-    },
-    onSuccess: async () => {
-      const dataKey = compact([
-        ctx.virtualLabId,
-        ctx.projectId,
-        WorkspaceSection.Data,
-        type,
-        WorkspaceScope.Project,
-      ]).join('/');
-      await queryClient.invalidateQueries({
-        predicate(query) {
-          const key = get(query.queryKey[0], 'context.key');
-          if (key === dataKey) return true;
-          return false;
-        },
-      });
-      await queryClient.invalidateQueries({
-        predicate(query) {
-          const identifierKey = query.queryKey[0];
-          const key = `data-entity-count-${type}`;
-          return identifierKey === key;
-        },
-      });
-      notification.success({
-        message: 'Deleted Successfully',
-        description: 'The item has been successfully deleted.',
-        placement: 'topRight',
-      });
-      navigate(parentLink);
-    },
-    onError: (error: Error) => {
-      const errorMessage = get(error.cause, 'message') || 'Unknown error';
-      notification.error({
-        message: 'Deletion Failed',
-        description: errorMessage,
-        placement: 'topRight',
-        duration: 5,
-      });
-    },
-  });
 
   const isSimulatable =
     typeof entityType.isSimulatable === 'boolean'
@@ -129,16 +49,22 @@ export default function ActionMenu({
     <div className="text-primary-9 mt-10 flex flex-col gap-5 px-5 text-base font-bold">
       <Action
         icon={
-          !copying ? (
-            <CopyOutlined onClick={() => copy(entity.id)} />
+          !copied ? (
+            <CopyOutlined
+              onClick={() => {
+                if (copied) return;
+                setCopied(true);
+                navigator.clipboard.writeText(entity.id);
+                window.setTimeout(() => setCopied(false), 5000);
+              }}
+            />
           ) : (
             <CheckOutlined className="text-teal-400" />
           )
         }
       >
-        {copying ? 'Copied' : 'Copy ID'}
+        {copied ? 'Copied' : 'Copy ID'}
       </Action>
-
       {isSimulatable && (
         <Action
           icon={
@@ -158,14 +84,12 @@ export default function ActionMenu({
           Simulate
         </Action>
       )}
-
       {entityType.isDownloadable && (
         <Action
           icon={
             <DownloadOutlined
               onClick={() => {
-                if (entity.type === ExtendedEntitiesTypeDict.Circuit)
-                  setCircuit(entity as ICircuit);
+                if (entity.type === 'circuit') setCircuit(entity as ICircuit);
                 else {
                   downloadArchive(entityType.type, [entity.id], ctx);
                 }
@@ -175,42 +99,6 @@ export default function ActionMenu({
         >
           Download
         </Action>
-      )}
-
-      {entityType.isDeletable && !isPublicEntity && (
-        <Popconfirm
-          autoAdjustOverflow
-          destroyOnHidden
-          placement="bottomRight"
-          title={<div className="font-bold text-lg text-primary-8">Delete the entity</div>}
-          description={
-            <div>
-              <div className="font-bold text-sm text-primary-8">
-                Are you sure you want to delete this item?
-              </div>
-              <small className="font-light text-primary-6">This action cannot be undone.</small>
-            </div>
-          }
-          okText="Yes"
-          cancelText="No"
-          arrow={{ pointAtCenter: false }}
-          onConfirm={() => deleteMutation.mutateAsync()}
-          classNames={{
-            body: cn(
-              'max-w-70',
-              '[&_.ant-popconfirm-buttons_button]:px-4',
-              '[&_.ant-popconfirm-buttons_button]:rounded-full [&_.ant-popconfirm-buttons_button]:px-5',
-              '[&_.ant-popconfirm-buttons_button:first-child]',
-              '[&_.ant-popconfirm-buttons_button:last-child]:bg-primary-8'
-            ),
-          }}
-        >
-          <span className="cursor-pointer">
-            <Action icon={deleteMutation.isPending ? <LoadingOutlined /> : <DeleteOutlined />}>
-              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-            </Action>
-          </span>
-        </Popconfirm>
       )}
     </div>
   );
