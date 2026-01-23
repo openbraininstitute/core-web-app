@@ -15,7 +15,6 @@ import {
 } from '@/features/brain-region-hierarchy/context';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import type { WorkspaceContext } from '@/types/common';
-import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-selector';
 
 type Props = {
   workspace: WorkspaceContext;
@@ -63,7 +62,6 @@ export function WorkflowBrowseEntity({ workspace, buildType }: Props) {
       miniViewProps={{
         section: WorkspaceSection.SimulateWorkflow,
       }}
-      left={<WorkflowScopeTabs className="max-w-max" />}
     />
   );
 }

@@ -1,17 +1,15 @@
 import { Pagination as AntPagination, type PaginationProps } from 'antd';
-import { useRef, useEffect } from 'react';
 import { useAtom } from 'jotai';
 import type { ComponentProps } from 'react';
-
+import { useCallback, useEffect, useRef } from 'react';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { Pagination as EntitycorePagination } from '@/api/entitycore/types/shared/response';
+import { DEFAULT_PAGE_SIZE, type TWorkspaceSection } from '@/constants';
 import {
   corePageNumberAtom,
   useDataListStateSnapshotActions,
 } from '@/ui/segments/data-table/elements/context';
-import { DEFAULT_PAGE_SIZE, TWorkspaceSection } from '@/constants';
 import { cn } from '@/utils/css-class';
-
-import type { Pagination as EntitycorePagination } from '@/api/entitycore/types/shared/response';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 type Props = {
   dataKey: string;
@@ -23,6 +21,13 @@ type Props = {
     totalData: number;
   };
   className?: ComponentProps<'ul'>['className'];
+};
+
+const scrollTableToTop = () => {
+  const tableBody = document.querySelector('#data-table-with-filters .ant-table-body');
+  if (tableBody) {
+    tableBody.scrollTo({ top: 0, behavior: 'instant' });
+  }
 };
 
 export function Pagination({
@@ -56,10 +61,15 @@ export function Pagination({
   }, [resultPagination?.pagination?.total_items]);
 
   const totalItems = resultPagination?.pagination?.total_items ?? lastTotalItemsRef.current;
-  const onUpdatePage = (p: number) => {
-    updatePage(p);
-    runStorageSync({ Page: p });
-  };
+
+  const onUpdatePage = useCallback(
+    (p: number) => {
+      scrollTableToTop();
+      updatePage(p);
+      runStorageSync({ Page: p });
+    },
+    [updatePage, runStorageSync]
+  );
 
   if (totalItems === undefined) {
     return null;
