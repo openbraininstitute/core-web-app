@@ -1,2 +1,2 @@
 export const ASSET_BASE_PATH = 'data';
-export const RESULTS_BASE_PATH = 'results';
+export const OUTPUT_BASE_PATH = 'output';
