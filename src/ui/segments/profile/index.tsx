@@ -1,15 +1,16 @@
 'use client';
 
-import Link from 'next/link';
-
 import { CloseOutlined, LoadingOutlined } from '@ant-design/icons';
+import { RiCheckFill, RiFileCopyLine } from '@remixicon/react';
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { match } from 'ts-pattern';
-
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import { useTabs } from '@/components/detail-view-tabs';
 import { SignOutFill } from '@/components/icons/EditorIcons';
 import { hasVisibleFlags } from '@/features/feature-flags/flags';
+import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
@@ -21,16 +22,19 @@ import { keyBuilder } from '@/ui/use-query-keys/user';
 import { cn } from '@/utils/css-class';
 
 function Header({ onClose }: { onClose: () => void }) {
+  const session = useSession();
   const { data, isLoading, isError } = useQuery({
     queryKey: keyBuilder.profile(),
     queryFn: getUserProfile,
     staleTime: Infinity,
     gcTime: Infinity,
   });
-
+  const [, copy, , copying] = useCopyToClipboard();
   if (isLoading) return <LoadingOutlined spin />;
   if (isError) return <div>Error</div>;
-
+  const onCopyToken = async () => {
+    if (session && session.data) copy(session.data?.accessToken);
+  };
   const userName = data?.profile.first_name
     ? `${data?.profile.first_name} ${data?.profile.last_name}`
     : data?.profile.preferred_username;
@@ -44,13 +48,38 @@ function Header({ onClose }: { onClose: () => void }) {
         </h2>
       </div>
       <div className="flex flex-row items-center gap-x-2">
-        <div className="border-primary-7 flex w-full flex-row-reverse items-center gap-x-2 rounded-full border border-solid px-6 py-2">
-          <Link href="/app/log-out" className="text-lg! font-semibold text-white">
+        <Button
+          variant="default"
+          rounded
+          size="lg"
+          onClick={onCopyToken}
+          className="border-primary-7! hover:text-primary-4 border px-6 py-2 text-lg! font-semibold text-white"
+        >
+          {copying ? (
+            <RiCheckFill className="text-primary-3 ml-auto" />
+          ) : (
+            <RiFileCopyLine className="text-primary-3 ml-auto" />
+          )}
+          Copy token
+        </Button>
+        <Button
+          variant="default"
+          rounded
+          size="lg"
+          onClick={onCopyToken}
+          className="border-primary-7! hover:text-primary-4 border px-6 py-2 text-lg! font-semibold text-white"
+          asChild
+        >
+          <Link href="/app/log-out">
+            <SignOutFill className="text-primary-3 ml-auto" />
             Logout
           </Link>
-          <SignOutFill className="text-primary-3 ml-auto" />
-        </div>
-        <Button type="button" onClick={onClose} className="h-10 w-10 hover:bg-white/10">
+        </Button>
+        <Button
+          type="button"
+          onClick={onClose}
+          className="h-10 w-10 rounded-full! hover:bg-white/10"
+        >
           <CloseOutlined />
         </Button>
       </div>
@@ -115,7 +144,8 @@ function Tabs({ defaultKey }: { defaultKey?: string }) {
             key={tab.key}
             value={tab.key}
             className={cn(
-              'hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:text-primary-9 h-10 px-14! py-3 text-base text-white select-none data-[state=active]:bg-white data-[state=active]:font-bold',
+              'hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:text-primary-9 h-10 px-14!',
+              'py-3 text-base text-white select-none data-[state=active]:bg-white data-[state=active]:font-bold',
               { 'h-12': breakpoint === 'xl' }
             )}
           >
@@ -173,7 +203,7 @@ export function AccountSettings({ onClose, data }: Props) {
     >
       <div
         id="account-settings-header"
-        className="bg-primary-9 sticky top-0 left-0 z-[1002] px-6 py-2"
+        className="bg-primary-9 sticky top-0 left-0 z-1002 px-6 py-2"
       >
         <Header onClose={onCloseLocal} />
         <Tabs defaultKey={data?.section} />

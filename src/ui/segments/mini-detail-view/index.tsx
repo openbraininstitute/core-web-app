@@ -88,7 +88,6 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!record) return null;
-
   const viewConfig = getViewDefinitionByExtendedType(dataType ?? record.type);
   const miniConfig = viewConfig?.miniDetailView;
 
@@ -305,7 +304,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
                       )}
                     >
                       <div className="text-primary-3 text-base font-light">{field?.title}</div>
-                      <div className="max-w-full text-base font-bold break-words text-white">
+                      <div className="max-w-full text-base font-bold wrap-break-word text-white">
                         {field?.render?.(record)}
                       </div>
                     </div>
@@ -335,24 +334,10 @@ function ExploreActions<T extends EntityCoreObjectTypes>({
   const [, copy, , copying] = useCopyToClipboard();
   const onCopyClipboard = () => copy(record.id);
 
-  // const { mutateAsync: saveAsync } = useMutation({
-  //   mutationFn: () =>
-  //     bookmarkToProjectLibrary(
-  //       {
-  //         virtualLabId,
-  //         projectId,
-  //       },
-  //       { entity_id: record.id, category: record.type }
-  //     ),
-  // });
-
   const { isPending: pendingDownload, mutateAsync: downloadAsync } = useMutation({
     mutationFn: () => downloadArchive(record.type, [record.id], { virtualLabId, projectId }),
   });
-
   const [, setDownloadPanelCircuit] = useAtom(downloadPanelCircuitAtom);
-
-  // const onBookmark = () => saveAsync();
   const onDownload = () => {
     if (
       includes(

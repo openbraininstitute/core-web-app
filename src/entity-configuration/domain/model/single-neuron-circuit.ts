@@ -1,9 +1,9 @@
+import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
-import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
-import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -21,14 +21,21 @@ export const SingleNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
   api: {
     config: {
       allowedFacets: true,
+      ilikeSearchEnabled: true,
       extraRequiredListFilters: circuitScaleFilter,
     },
     query: {
-      list: (...params) =>
-        getCircuits({
+      list: (...params) => {
+        return getCircuits({
           ...params,
-          filters: { ...params[0].filters, ...circuitScaleFilter },
-        }),
+          context: params[0].context,
+          withFacets: params[0].withFacets,
+          filters: {
+            ...circuitScaleFilter,
+            ...params[0].filters,
+          },
+        });
+      },
       one: getCircuit,
     },
   },

@@ -1,32 +1,33 @@
 import z from 'zod';
-import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
+import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type {
-  EntityCoreIdentifiable,
   EntityAuthorization,
+  EntityCoreIdentifiable,
+  EntityCoreOwnership,
+  EntityCoreType,
   IContributor,
-  Timestamps,
-  ISpecies,
-  IStrain,
   IEType,
   IMType,
-  EntityCoreType,
-  EntityCoreOwnership,
+  ISpecies,
+  IStrain,
+  Timestamps,
 } from '@/api/entitycore/types/shared/global';
 import type {
-  ContributionFilter,
-  IMorphologyFilter,
   BrainRegionFilter,
-  PaginationFilter,
-  IEModelFilter,
-  SpeciesFilter,
-  SharedFilter,
-  MtypeFilter,
+  ContributionFilter,
   EtypeFilter,
   IdFilter,
+  IEModelFilter,
+  IlikeSearchFilter,
+  IMorphologyFilter,
+  MtypeFilter,
   OwnershipFilter,
+  PaginationFilter,
+  SharedFilter,
+  SpeciesFilter,
 } from '@/api/entitycore/types/shared/request';
 
 export enum ValidationStatus {
@@ -80,7 +81,8 @@ export interface IMEModelFilter
     PaginationFilter,
     IEModelFilter,
     SharedFilter,
-    OwnershipFilter {
+    OwnershipFilter,
+    IlikeSearchFilter {
   score__lte: number | null;
   score__gte: number | null;
   validation_status: ValidationStatus;

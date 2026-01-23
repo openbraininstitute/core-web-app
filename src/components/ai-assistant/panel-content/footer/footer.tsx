@@ -1,10 +1,7 @@
 import React from 'react';
-
-import SuggestedQuestions from '../../suggested-questions';
+import { useAITools } from '@/services/ai-agent/tools/tools';
 import Prompt from '../../prompt';
 import { Spinner } from '../../spinner';
-
-import { useAITools } from '@/services/ai-agent/tools/tools';
 
 import styles from './footer.module.css';
 
@@ -15,16 +12,10 @@ interface FooterProps {
   onPrompt(prompt: string): void;
   messagesCount: number;
   stop(): void;
+  isLoadingSuggestions?: boolean;
 }
 
-export default function Footer({
-  className,
-  status,
-  threadId,
-  onPrompt,
-  messagesCount,
-  stop,
-}: FooterProps) {
+export default function Footer({ className, status, onPrompt, stop }: FooterProps) {
   const tools = useAITools();
   const [prompt, setPrompt] = React.useState('');
   const handlePrompt = (value: string) => {
@@ -34,16 +25,13 @@ export default function Footer({
 
   return (
     <footer className={className}>
-      {status === 'ready' && messagesCount === 0 && (
-        <SuggestedQuestions threadId={threadId} messagesLength={0} onClick={handlePrompt} />
-      )}
       {(status === 'ready' || status === 'error') && (
         <Prompt value={prompt} tools={tools ?? []} onChange={setPrompt} onClick={handlePrompt} />
       )}
       {status !== 'ready' && status !== 'error' && (
         <div className={styles.spinnerContainer}>
           <Spinner />
-          {status === 'streaming' && (
+          {(status === 'streaming' || status === 'submitted') && (
             <div className={styles.cancelButton}>
               <button type="button" onClick={stop}>
                 Cancel

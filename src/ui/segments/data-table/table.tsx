@@ -1,30 +1,30 @@
 'use client';
 
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { VerticalAlignMiddleOutlined } from '@ant-design/icons';
-import { ConfigProvider, Table, TableProps } from 'antd';
-import { isString } from 'es-toolkit/compat';
-
-import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
-import type { ComponentProps, CSSProperties, ReactNode } from 'react';
+import { ConfigProvider, Table, type TableProps } from 'antd';
 import type { TableRef } from 'antd/es/table';
-
-import { useOnCellRouteHandler } from '@/ui/segments/data-table/elements/hooks';
-import {
-  useRowSelection,
-  type RenderButtonProps,
-} from '@/ui/segments/data-table/elements/use-row-selection';
-import { classNames } from '@/util/utils';
-import { cn } from '@/utils/css-class';
-
-import TableControls from '@/ui/segments/data-table/elements/controls';
-import useScrollComplete from '@/hooks/useScrollComplete';
-import useResizeObserver from '@/hooks/useResizeObserver';
-
+import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
+import { isString } from 'es-toolkit/compat';
+import type { ComponentProps, CSSProperties, ReactNode } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-
+import useResizeObserver from '@/hooks/useResizeObserver';
+import useScrollComplete from '@/hooks/useScrollComplete';
+import type { WorkspaceContext } from '@/types/common';
+import TableControls from '@/ui/segments/data-table/elements/controls';
+import { useOnCellRouteHandler } from '@/ui/segments/data-table/elements/hooks';
 import styles from '@/ui/segments/data-table/elements/table.module.css';
+import {
+  type RenderButtonProps,
+  useRowSelection,
+} from '@/ui/segments/data-table/elements/use-row-selection';
+import {
+  type UseExpandableTableOptions,
+  useExpandableTable,
+} from '@/ui/segments/data-table/expandable-row/use-expandable-table';
+import { classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
 
 export type OnCellClick<T> = (basePath: string, record: T, type: TExtendedEntitiesTypeDict) => void;
 
@@ -244,6 +244,8 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
   scrollable = true,
   dataKey,
   expandableConfig,
+  expandableOptions,
+  showExpandButtons = true,
   rowClassName,
   tableStyle,
   onRow,
@@ -252,6 +254,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
   controls,
   baseTableWrapperClassname,
   allowDownload,
+  workspace,
 }: TableProps<T> &
   AdditionalTableProps<T> & {
     renderButton?: (props: RenderButtonProps<T>) => ReactNode;
@@ -260,9 +263,12 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
     onRowsSelected?: (rows: Array<T>) => void;
     dataKey: string;
     expandableConfig?: ExpandableConfig<T>;
+    expandableOptions?: UseExpandableTableOptions<T, any>;
+    showExpandButtons?: boolean;
     tableStyle?: CSSProperties | undefined;
     dataType: TExtendedEntitiesTypeDict;
     controls?: ReactNode;
+    workspace?: WorkspaceContext;
     baseTableWrapperClassname?: ComponentProps<'div'>['className'];
     allowDownload?: boolean;
   }) {
@@ -271,6 +277,11 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
     selectionType,
     onRowsSelected,
   });
+
+  const { expandableConfig: generatedExpandableConfig } = useExpandableTable(expandableOptions);
+
+  const finalExpandableConfig =
+    expandableConfig || (showExpandButtons ? generatedExpandableConfig : undefined);
 
   return (
     <>
@@ -284,7 +295,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
         rowKey={(row) => row.id}
         rowSelection={rowSelection}
         scrollable={scrollable}
-        expandableConfig={expandableConfig}
+        expandableConfig={finalExpandableConfig}
         rowClassName={rowClassName}
         style={tableStyle}
         className={className}
@@ -297,6 +308,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
         selectedRows={selectedRows}
         clearSelectedRows={clearSelectedRows}
         dataType={dataType}
+        workspace={workspace}
         allowDownload={allowDownload}
       >
         {controls}

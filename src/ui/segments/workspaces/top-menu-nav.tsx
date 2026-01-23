@@ -2,9 +2,9 @@ import { MenuOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import React, { useState } from 'react';
-
+import type React from 'react';
 import type { ReactNode } from 'react';
+import { useState } from 'react';
 
 import {
   ExploreIcon,
@@ -14,7 +14,7 @@ import {
   ReportsIcon,
   WorkflowIcon,
 } from '@/components/icons/buttons';
-import FeedbacksIcon from '@/components/icons/FeedbacksIcon';
+import { FeedbackStarIcon } from '@/components/icons/FeedbackStarIcon';
 import { config } from '@/config';
 import {
   DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
@@ -51,7 +51,7 @@ type LinkItem = {
   action?: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) => string;
 };
 
-const links: Array<LinkItem> = [
+const links: LinkItem[] = [
   {
     id: 'workspace-home',
     key: 'home',
@@ -128,7 +128,7 @@ const links: Array<LinkItem> = [
     key: 'feedbacks',
     title: 'Feedback',
     url: 'feedback',
-    icon: <FeedbacksIcon className="group-hover:text-primary-3 relative left-0.5 h-6! w-6!" />,
+    icon: <FeedbackStarIcon className="group-hover:text-primary-3 relative left-0.5 h-6! w-6!" />,
     allowText: false,
     className: '',
     hasAction: false,

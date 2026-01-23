@@ -1,4 +1,4 @@
-import { clientSchema, baseClientSchema, type ClientConfig } from '@/config/schema';
+import { baseClientSchema, type ClientConfig, clientSchema } from '@/config/schema';
 
 declare global {
   interface Window {

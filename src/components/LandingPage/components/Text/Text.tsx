@@ -1,10 +1,9 @@
-import React from 'react';
-import { PortableText, PortableTextReactComponents } from 'next-sanity';
-
-import { RichText } from '../../content/_common';
-import Spacer from './spacer';
-import { classNames } from '@/util/utils';
+import { PortableText, type PortableTextReactComponents } from 'next-sanity';
+import React, { useMemo } from 'react';
 import { isString } from '@/util/type-guards';
+import { classNames } from '@/util/utils';
+import type { RichText } from '../../content/_common';
+import Spacer from './spacer';
 
 import styles from './Text.module.css';
 
@@ -15,7 +14,15 @@ interface TextProps {
   maxLines?: number;
 }
 
+const COMPONENTS: Partial<PortableTextReactComponents> = {
+  types: {
+    spacer: (value: unknown) => <Spacer value={value} />,
+  },
+};
+
 export function Text({ className, value, raw, maxLines = 0 }: TextProps) {
+  const memoizedComponents = useMemo(() => COMPONENTS, []);
+
   return (
     <div
       className={classNames(
@@ -28,13 +35,7 @@ export function Text({ className, value, raw, maxLines = 0 }: TextProps) {
         '--custom-max-lines': maxLines,
       }}
     >
-      {isString(value) ? value : <PortableText value={value} components={COMPONENTS} />}
+      {isString(value) ? value : <PortableText value={value} components={memoizedComponents} />}
     </div>
   );
 }
-
-const COMPONENTS: Partial<PortableTextReactComponents> = {
-  types: {
-    spacer: (value: unknown) => <Spacer value={value} />,
-  },
-};
