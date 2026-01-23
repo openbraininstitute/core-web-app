@@ -12,6 +12,7 @@ This is the repository for the Blue Brain Open Platform's core web application.
   - [Installation](#installation)
     - [Development](#development)
     - [Testing](#testing)
+    - [Documentation](#documentation)
   - [Additional Resources](#additional-resources)
     - [Next.js](#nextjs)
   - [Contribution Guidelines](#contribution-guidelines)
@@ -44,6 +45,36 @@ npm run test
 # or
 yarn test
 ```
+
+### Documentation
+
+To serve the documentation locally using MkDocs, first set up a Python virtual environment and install the required packages:
+
+```bash
+python -m venv venv
+source ./venv/bin/activate
+pip install mkdocs mkdocs-material
+```
+
+Then serve the documentation:
+
+```bash
+mkdocs serve
+```
+
+This will start a local documentation server, typically accessible at [http://localhost:8000](http://localhost:8000)
+
+#### Documentation Tags
+
+Documentation files use tags as metadata to link markdown files to one or more products. Tags are defined in the frontmatter of each markdown file and are used to organize and filter documentation content. The allowed tags are configured in `mkdocs.yml` and include categories such as explore, launch-notebook, contribute-and-fix-data, build-ion-channel-model, single-cell-simulation, paired-neuron-simulation, circuit-simulation, neuron-skeletonization, and virtual-labs.
+
+#### Documentation Updates
+
+Pull requests are automatically checked to ensure documentation is kept up to date. The CI will require at least one file in `/docs/` to be modified, unless:
+- The PR targets the `develop` branch, or
+- The PR has the `skip docs` label
+
+This helps maintain documentation quality by encouraging updates alongside code changes.
 
 ## Additional Resources
 

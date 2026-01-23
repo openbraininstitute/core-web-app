@@ -5,6 +5,7 @@ import type {
   BrainRegionFilter,
   ContributionFilter,
   EtypeFilter,
+  IlikeSearchFilter,
   PaginationFilter,
   SharedFilter,
   StainFilter,
@@ -68,5 +69,6 @@ export type ExperimentalSynapsesPerConnectionFilter = Partial<
     PreRegionFilter &
     StainFilter &
     SubjectFilter &
-    TimestampsFilter
+    TimestampsFilter &
+    IlikeSearchFilter
 >;

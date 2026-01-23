@@ -4,8 +4,19 @@ import keyBy from 'es-toolkit/compat/keyBy';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
+import {
+  createSimulationCampaign,
+  getCircuitSimulationCampaign,
+  getCircuitSimulationCampaigns,
+} from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
+import type { ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import type {
+  ICircuitSimulationCampaign,
+  ICircuitSimulationCampaignFilter,
+} from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
@@ -13,21 +24,8 @@ import { getAssetElement } from '@/api/entitycore/utils';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-
-import {
-  createSimulationCampaign,
-  getCircuitSimulationCampaign,
-  getCircuitSimulationCampaigns,
-} from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
-import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
-import { microcircuitFlag } from '@/features/feature-flags';
-
-import type { ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
-import type {
-  ICircuitSimulationCampaign,
-  ICircuitSimulationCampaignFilter,
-} from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+import { microcircuitFlag } from '@/features/feature-flags';
 import type { WorkspaceContext } from '@/types/common';
 
 export async function resolveExecutions({
@@ -55,7 +53,7 @@ export async function resolveExecutions({
 
   const executionsResponses = await Promise.all(promises);
 
-  return executionsResponses.map((r) => r.data).flat();
+  return executionsResponses.flatMap((r) => r.data);
 }
 
 const SCALE = CircuitScaleDictionary.Microcircuit;
@@ -166,7 +164,10 @@ export const MicrocircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCamp
   slug: EntitySlug.MicrocircuitSimulation,
   requiredFeatures: [microcircuitFlag.key],
   api: {
-    config: { allowedFacets: true },
+    config: {
+      allowedFacets: true,
+      ilikeSearchEnabled: true,
+    },
     query: {
       count: (...params) => {
         const filters = discardBrainRegionQueryParams(params[0].filters);

@@ -1,8 +1,9 @@
 import NextBundleAnalyzer from '@next/bundle-analyzer';
-import { SentryBuildOptions, withSentryConfig } from '@sentry/nextjs';
+import { type SentryBuildOptions, withSentryConfig } from '@sentry/nextjs';
 import { PHASE_DEVELOPMENT_SERVER } from 'next/constants';
 
 import type { NextConfig } from 'next/dist/types';
+
 const withBundleAnalyzer = NextBundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 });
@@ -27,8 +28,6 @@ const SentryOptions: SentryBuildOptions = {
   widenClientFileUpload: true,
 
   // Automatically tree-shake Sentry logger statements to reduce bundle size
-  disableLogger: true,
-  automaticVercelMonitors: false,
   release: {
     name: appVersion,
   },
@@ -40,6 +39,10 @@ const nextConfig = (phase: string): NextConfig => {
     env: {
       APP_BUILD_TIME: new Date().toISOString(),
     },
+    experimental: {
+      turbopackFileSystemCacheForDev: true,
+    },
+    reactCompiler: true,
     turbopack: {
       rules: {
         '*.groq': {
@@ -82,13 +85,10 @@ const nextConfig = (phase: string): NextConfig => {
     reactStrictMode: true,
     compress: false,
     output: 'standalone',
-    eslint: {
-      ignoreDuringBuilds: true,
-    },
+    transpilePackages: ['jotai-devtools'],
     typescript: {
       ignoreBuildErrors: true,
     },
-    transpilePackages: ['jotai-devtools'],
     logging: {
       fetches: {
         fullUrl: true,
@@ -153,8 +153,6 @@ const nextConfig = (phase: string): NextConfig => {
 
       // Skip CORS headers if CDN URI is not configured or empty
       if (!process.env.PRIMARY_HOSTNAME) {
-        // eslint-disable-next-line no-console
-        console.debug('CDN URI is not configured, skipping CORS headers');
         return [];
       }
 

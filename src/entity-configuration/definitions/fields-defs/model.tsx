@@ -1,10 +1,19 @@
 import { LoadingOutlined, WarningFilled } from '@ant-design/icons';
-import { isNil, find, map, omit } from 'es-toolkit/compat';
-
+import { find, isNil, map, omit } from 'es-toolkit/compat';
+import { hasAssets } from '@/api/entitycore/guards';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { CircuitBuildCategory, CircuitScale } from '@/api/entitycore/types/entities/circuit';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { countDeepSubCircuits } from '@/ui/segments/explore/circuit/helpers';
+import type { IEModel } from '@/api/entitycore/types/entities/e-model';
+import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import {
+  CoreFieldFilterTypeEnum,
+  EntityCoreFields,
+} from '@/entity-configuration/definitions/fields-defs/enums';
 import {
   EmptyPreview,
   EmptyValue,
@@ -16,21 +25,10 @@ import {
   renderLocalizedNumber,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
-import {
-  CoreFieldFilterTypeEnum,
-  EntityCoreFields,
-} from '@/entity-configuration/definitions/fields-defs/enums';
-import { hasAssets } from '@/api/entitycore/guards';
-import { isNumber } from '@/util/type-guards';
-
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
-import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
-import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
-import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { IEModel } from '@/api/entitycore/types/entities/e-model';
-import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import { countDeepSubCircuits } from '@/ui/segments/explore/circuit/helpers';
+import { isNumber } from '@/util/type-guards';
 
 function iCMBooleanField(title: string, field: keyof IonChannelModel) {
   return {
@@ -268,24 +266,47 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.CircuitPublishedIn]: {
     className: 'text-left',
     title: 'Published in',
-    filter: null,
+    filter: CoreFieldFilterTypeEnum.Text,
     isDisplayable: true,
+    isSortable: false,
+    isFilterable: true,
     render: (r) => renderEmptyOrValue((r as ICircuit).published_in),
     vocabulary: {
       plural: 'Published in',
       singular: 'Published in',
     },
+    defaultConstraint: 'published_in__ilike',
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.Circuit],
+        property: 'order_by',
+        value: 'published_in',
+      },
+    ],
   },
   [EntityCoreFields.CircuitExperimentDate]: {
     className: 'text-left',
     title: 'Experiment date',
-    filter: null,
+    filter: CoreFieldFilterTypeEnum.DateRange,
     isDisplayable: true,
+    isSortable: false,
+    isFilterable: true,
     render: (r) => renderDate((r as ICircuit).experiment_date),
     vocabulary: {
       plural: 'Experiment dates',
       singular: 'Experiment dates',
     },
+    defaultConstraint: {
+      gte: 'experiment_date__gte',
+      lte: 'experiment_date__lte',
+    },
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.Circuit],
+        property: 'order_by',
+        value: 'experiment_date',
+      },
+    ],
   },
   [EntityCoreFields.CircuitContactEmail]: {
     className: 'text-left',
@@ -321,7 +342,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     render: () => null,
     vocabulary: {
-      plural: 'Registration Date',
+      plural: 'Registration Dates',
       singular: 'Registration Date',
     },
   },

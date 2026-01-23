@@ -1,32 +1,31 @@
+import {
+  hashKey,
+  keepPreviousData,
+  type QueryFunction,
+  type UseQueryOptions,
+  useQuery,
+} from '@tanstack/react-query';
 import { isEmpty } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
-import {
-  useQuery,
-  keepPreviousData,
-  UseQueryOptions,
-  type QueryFunction,
-  hashKey,
-} from '@tanstack/react-query';
-
-import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
-import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
+import type { TWorkspaceScope } from '@/constants';
+import { DEFAULT_PAGE_SIZE } from '@/constants';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
   DEFAULT_BRAIN_REGION_HIERARCHY_ID,
   selectedBrainRegionAtom,
 } from '@/features/brain-region-hierarchy/context';
-import { compactRecord } from '@/utils/dictionary';
-import { DEFAULT_PAGE_SIZE } from '@/constants';
+import type { WorkspaceContext } from '@/types/common';
 import {
   coreFiltersAtom,
-  coreSortStateAtom,
   corePageNumberAtom,
   coreSearchStringAtom,
+  coreSortStateAtom,
 } from '@/ui/segments/data-table/elements/context';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { WorkspaceContext } from '@/types/common';
-import type { TWorkspaceScope } from '@/constants';
+import { compactRecord } from '@/utils/dictionary';
+import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
 export type QueryContext = {
   key: string;
@@ -48,7 +47,7 @@ export function buildQueryKey({
   {
     workspace: WorkspaceContext;
     context: QueryContext;
-    queryParameters: {} | Record<string, any>;
+    queryParameters: Record<string, any>;
     requireBrainRegion: boolean | undefined;
   },
 ] {
@@ -71,12 +70,23 @@ function useQueryParameters(
   const filters = useAtomValue(
     coreFiltersAtom({ dataType: context.extendedEntityType, key: context.key })
   );
+  const entity = getEntityByExtendedType({ type: context.extendedEntityType });
+
+  function search() {
+    if (entity && !!entity.api.config.ilikeSearchEnabled && !isEmpty(searchString)) {
+      return { ilike_search: `*${searchString}*` };
+    }
+    if (!isEmpty(searchString)) {
+      return { search: searchString };
+    }
+    return null;
+  }
 
   const queryParameters = compactRecord({
     page_size: DEFAULT_PAGE_SIZE,
     page: pageNumber,
     with_facets: true,
-    search: isEmpty(searchString) ? null : searchString,
+    ...search(),
     order_by: `${sortState.order === 'asc' ? '+' : '-'}${sortState.backendField}`,
     ...(requireBrainRegion
       ? {
@@ -86,7 +96,7 @@ function useQueryParameters(
         }
       : {}),
     ...getWorkspaceScopeFilters(context.workspaceScope, workspace),
-    ...transformFiltersToQuery(filters as any),
+    ...transformFiltersToQuery(filters),
   });
   return queryParameters;
 }
@@ -112,7 +122,7 @@ export function useQueryExtendedEntityType<TData = unknown, TError = unknown>({
               projectId: string;
             };
             context: QueryContext;
-            queryParameters: {} | Record<string, any>;
+            queryParameters: Record<string, any>;
           },
         ],
         never
@@ -134,7 +144,7 @@ export function useQueryExtendedEntityType<TData = unknown, TError = unknown>({
           projectId: string;
         };
         context: QueryContext;
-        queryParameters: {} | Record<string, any>;
+        queryParameters: Record<string, any>;
       },
     ]
   >,
@@ -150,6 +160,7 @@ export function useQueryExtendedEntityType<TData = unknown, TError = unknown>({
     queryParameters: { ...queryParameters, ...extraQueryParams },
     requireBrainRegion,
   });
+
   const queryKeyHash = hashKey(queryKey);
 
   const query = useQuery({

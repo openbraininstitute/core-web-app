@@ -1,36 +1,36 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
-import { useMemo, useState } from 'react';
-import { unwrap } from 'jotai/utils';
-import { useAtom } from 'jotai';
 import { Spin } from 'antd';
-
-import type { ComponentProps, CSSProperties, ReactNode } from 'react';
-import type { RowSelectionType } from 'antd/es/table/interface';
 import type { ColumnProps, TableProps } from 'antd/es/table';
-
-import { ListingFilterPanel } from '@/ui/segments/data-table/elements/listing-filter-panel/listing-filter-panel';
+import type { RowSelectionType } from 'antd/es/table/interface';
+import { useAtom } from 'jotai';
+import { unwrap } from 'jotai/utils';
+import type { ComponentProps, CSSProperties, ReactNode } from 'react';
+import { useMemo, useState } from 'react';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type {
+  EntityCoreIdentifiable,
+  EntityCoreIdentifiableNamed,
+} from '@/api/entitycore/types/shared/global';
+import type {
+  Pagination as EntitycorePagination,
+  Facets,
+} from '@/api/entitycore/types/shared/response';
+import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import { BrainRegionDropdown } from '@/features/brain-region-dropdown';
-import { FilterControls } from '@/ui/segments/data-table/elements/filter-controls';
+import type { WorkspaceContext } from '@/types/common';
 import { coreFiltersAtom } from '@/ui/segments/data-table/elements/context';
-import { OnCellClick, WrapperTable } from '@/ui/segments/data-table/table';
+import { FilterControls } from '@/ui/segments/data-table/elements/filter-controls';
+import { ListingFilterPanel } from '@/ui/segments/data-table/elements/listing-filter-panel/listing-filter-panel';
 import { Pagination } from '@/ui/segments/data-table/elements/pagination';
+import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
+import type { UseExpandableTableOptions } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
 import { Search } from '@/ui/segments/data-table/search';
-import { WorkspaceScope } from '@/constants';
+import { type OnCellClick, WrapperTable } from '@/ui/segments/data-table/table';
 import { cn } from '@/utils/css-class';
 
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
-import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
-import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
-import type { WorkspaceContext } from '@/types/common';
-import type {
-  Facets,
-  Pagination as EntitycorePagination,
-} from '@/api/entitycore/types/shared/response';
-
-export type Props<T> = {
+export type Props<T extends EntityCoreIdentifiable> = {
   facets: Facets | undefined;
   resultPagination?: {
     pagination: EntitycorePagination;
@@ -58,10 +58,14 @@ export type Props<T> = {
   rowClassName?: string | TableProps<T>['rowClassName'];
   tableStyle?: CSSProperties | undefined;
   allowDownload?: boolean;
+  requireBrainRegionDropdown?: boolean;
   searchEnabled?: boolean;
   filterClassNames?: {
     container?: string;
   };
+  expandableOptions?: UseExpandableTableOptions<T, any> | undefined;
+  showExpandButtons?: boolean;
+  left?: ReactNode;
 };
 
 export function MainTable<T extends EntityCoreIdentifiableNamed>({
@@ -87,8 +91,12 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
   onCellClick,
   tableStyle,
   allowDownload,
+  requireBrainRegionDropdown = false,
   searchEnabled = true,
   filterClassNames,
+  expandableOptions,
+  showExpandButtons,
+  left,
 }: Props<T>) {
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
   const onDisplayControlPanel = (value: boolean) => setDisplayControlPanel(value);
@@ -119,21 +127,27 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
         <div
           className={cn(
             'mb-5 grid w-full grid-cols-[2fr_2fr] items-center justify-center gap-5 pt-2',
-            '[grid-template-areas:"search_pagination_filter"]'
+            '[grid-template-areas:"search_filter"]',
+            {
+              '[grid-template-areas:"left_search_filter"] grid-cols-[auto_1fr_1fr] gap-2': !!left,
+            }
           )}
         >
+          {!!left && <div className="w-full [grid-area:left]">{left}</div>}
           {searchEnabled && (
             <div className="w-full [grid-area:search]">
-              <Search {...{ dataType, dataKey, className: 'pl-2' }} />
+              <Search
+                {...{
+                  dataType,
+                  dataKey,
+                  className: 'ml-2',
+                }}
+              />
             </div>
           )}
           <div className="[grid-area:filter]">
-            <div className="ml-auto flex h-12 items-stretch justify-center gap-3">
-              {(dataScope === WorkspaceScope.BuildMeModelM ||
-                dataScope === WorkspaceScope.BuildMeModelE ||
-                dataScope === WorkspaceScope.BuildSynaptomeModel) && (
-                <BrainRegionDropdown dataKey={dataKey} />
-              )}
+            <div className="ml-auto flex h-12 items-stretch justify-end gap-3">
+              {requireBrainRegionDropdown && <BrainRegionDropdown dataKey={dataKey} />}
               <FilterControls
                 filters={filters}
                 displayControlPanel={displayControlPanel}
@@ -152,6 +166,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
             spinning: showLoadingState && isLoading,
             size: 'large',
           }}
+          workspace={workspace}
           onCellClick={onCellClick}
           renderButton={renderButton}
           selectionType={selectionType}
@@ -163,6 +178,8 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           sticky={sticky}
           className={cls?.table}
           allowDownload={allowDownload}
+          expandableOptions={expandableOptions}
+          showExpandButtons={showExpandButtons}
           controls={
             <div className="w-full">
               <Pagination {...{ dataKey, dataType, section, resultPagination }} />

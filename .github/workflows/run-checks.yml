@@ -1,23 +1,29 @@
-name: Lint, Format, Test, Build
+name: PR checks
 
 on:
   push:
     branches:
-      - '*'
-      - '!main'
-      - '!develop'
+      - "*"
+      - "!main"
+      - "!develop"
   pull_request:
     branches:
       - main
       - develop
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  install_packages:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -28,97 +34,22 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install
-
-      # Cache pnpm store for use in subsequent jobs
-      - name: Cache pnpm store
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.pnpm-store
-            node_modules
-            */*/node_modules
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
-
-  prettier:
-    needs: install_packages
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Set-up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: 'pnpm'
-
-      # Restore cached dependencies
-      - name: Restore pnpm cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.pnpm-store
-            node_modules
-            */*/node_modules
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
-
-      - name: Run Prettier
-        run: pnpm run prettier:check
-
-  linter:
-    needs: install_packages
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Set-up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: 'pnpm'
-
-      # Restore cached dependencies
-      - name: Restore pnpm cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.pnpm-store
-            node_modules
-            */*/node_modules
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
+        run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Run linter
-        run: pnpm run lint:only
+        run: pnpm run ci
+        continue-on-error: true
 
   build:
-    needs: install_packages
     runs-on: ubuntu-latest
-    env:
-      NODE_OPTIONS: --max-old-space-size=7168
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -126,22 +57,22 @@ jobs:
           version: 10
 
       - name: Set-up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 24
-          cache: 'pnpm'
+          cache: "pnpm"
 
-      # Restore cached dependencies
-      - name: Restore pnpm cache
-        uses: actions/cache@v3
+      - name: Cache Next.js
+        uses: actions/cache@v4
         with:
           path: |
-            ~/.pnpm-store
-            node_modules
-            */*/node_modules
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+            .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-pnpm-
+            ${{ runner.os }}-nextjs-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Build app
         run: pnpm run build

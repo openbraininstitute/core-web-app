@@ -1,14 +1,7 @@
 pre-commit:
   parallel: true
   commands:
-    eslint:
-      glob: '*.{js,jsx,ts,tsx}'
-      run: npx eslint --fix {staged_files}
-    prettier:
-      glob: '*.{js,jsx,ts,tsx,json}'
-      run: |
-        npx prettier --write {staged_files}
-        git add {staged_files}
-    typescript:
-      glob: '*.{js,jsx,ts,tsx}'
-      run: npx tsc --noEmit
+    check:
+      glob: "*.{js,ts,cjs,mjs,jsx,tsx,json,jsonc}"
+      run: pnpx @biomejs/biome check --write {staged_files}
+      stage_fixed: true

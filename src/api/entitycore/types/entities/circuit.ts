@@ -1,16 +1,17 @@
 import type {
   EntityAuthorization,
-  Timestamps,
-  EntityCoreOwnership,
-  EntityCoreType,
   EntityCoreBaseAsset,
   EntityCoreIdentifiableNamed,
+  EntityCoreOwnership,
+  EntityCoreType,
+  Timestamps,
 } from '@/api/entitycore/types/shared/global';
 import type {
   BrainRegionFilter,
-  SharedFilter,
-  PaginationFilter,
   IdFilter,
+  IlikeSearchFilter,
+  PaginationFilter,
+  SharedFilter,
 } from '@/api/entitycore/types/shared/request';
 
 export const CircuitBuildCategory = {
@@ -103,7 +104,8 @@ export interface ICircuitFilter
     BrainRegionFilter,
     SharedFilter,
     PaginationFilter,
-    CircuitScaleFilter {}
+    CircuitScaleFilter,
+    IlikeSearchFilter {}
 
 export type SonataCircuitNetworkEdgeConfigItem = {
   edges_file: string;

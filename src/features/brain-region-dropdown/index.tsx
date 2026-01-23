@@ -1,22 +1,20 @@
 import { CheckOutlined, DownOutlined, LoadingOutlined, SearchOutlined } from '@ant-design/icons';
-import { ComponentProps, useCallback, useEffect, useMemo, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { loadable, unwrap } from 'jotai/utils';
-import { useAtomValue } from 'jotai';
 import omit from 'es-toolkit/compat/omit';
-
-import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useAtomValue } from 'jotai';
+import { loadable, unwrap } from 'jotai/utils';
+import { type ComponentProps, useCallback, useEffect, useMemo, useState } from 'react';
+import { BrainIcon } from '@/components/icons';
+import type { TBrainRegionHierarchyExtendedOption } from '@/features/brain-region-hierarchy/context';
 import {
   brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom,
   useBrainRegionHierarchy,
   useSetSelectedBrainRegion,
 } from '@/features/brain-region-hierarchy/context';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
-import { BrainIcon } from '@/components/icons';
+import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
-
-import type { TBrainRegionHierarchyExtendedOption } from '@/features/brain-region-hierarchy/context';
 
 export function BrainRegionDropdown({
   dataKey,
@@ -51,12 +49,9 @@ export function BrainRegionDropdown({
   });
   const [selectedNode, updateSelectedNode] = useState(() => node);
 
-  const parentSetter = useCallback(
-    (el: HTMLDivElement) => {
-      setParent(el);
-    },
-    [setParent]
-  );
+  const parentSetter = useCallback((el: HTMLDivElement) => {
+    setParent(el);
+  }, []);
 
   const filteredOptions = useMemo<Array<TBrainRegionHierarchyExtendedOption>>(() => {
     const options = (brainRegionHierarchy?.options ??
@@ -121,6 +116,7 @@ export function BrainRegionDropdown({
           'text-primary-9 border-neutral-2 hover:bg-primary-9 active:bg-primary-9 border bg-white shadow-xs hover:text-white',
           'text-md h-full flex-1 gap-1.5 rounded-md px-5',
           'flex w-full grow justify-between self-stretch',
+          'max-w-64',
           clsx?.trigger
         )}
       >

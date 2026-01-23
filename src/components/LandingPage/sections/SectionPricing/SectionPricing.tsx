@@ -1,14 +1,13 @@
 'use client';
 
-import SanityContentRTF from '../../components/SanityContentRTF';
-import { useSanityContentRTF } from '../../content/content';
-import { styleBlockFullWidth } from '../../styles';
-import { EnumSection } from '../sections';
-
 import { useCredits } from '@/hooks/use-credits';
 import { usePrices } from '@/hooks/use-prices';
 import PriceTable from '@/ui/segments/help/priceList/price-table';
 import { classNames } from '@/util/utils';
+import SanityContentRTF from '../../components/SanityContentRTF';
+import { useSanityContentRTF } from '../../content/content';
+import { styleBlockFullWidth } from '../../styles';
+import { EnumSection } from '../sections';
 
 export default function SectionPricing() {
   const content = useSanityContentRTF(EnumSection.Pricing);
