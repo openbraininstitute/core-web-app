@@ -4,7 +4,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { compact, get } from 'es-toolkit/compat';
-
+import { MeasurementUnit } from '@/api/entitycore/types/shared/global';
 import { createMtypeClassification } from '@/api/entitycore/queries/annotations/mtype-classification';
 import { EXPERIMENTAL_BOUTON_DENSITY_PROGRESS_STEPS } from '@/ui/segments/contribute/experimental-bouton-density/config';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -34,12 +34,10 @@ export function useExperimentalBoutonDensityPipeline({
       const measurements =
         compact(
           values.measurements.map((m) => {
-            // FIX: Explicitly set the 'unit' using the hardcoded string literal 'per_micrometer'.
-            // This ensures all fully filled measurements are correctly transformed for the API payload.
             const measurementWithUnit = {
               name: m.name,
               value: m.value,
-              unit: '1/μm', // Hardcoded string value for MeasurementUnit.PER_MICROMETER
+              unit: MeasurementUnit.linear_density__1_um,
             };
 
             const d = measurementSchema.safeParse(measurementWithUnit);
@@ -100,13 +98,15 @@ export function useExperimentalBoutonDensityPipeline({
     }) => {
       return Promise.all(
         contribution
-          .filter((c) => ContributionSchema.safeParse(c).success)
+          .filter((c) => {
+            return c.agent_id && c.role_id && ContributionSchema.safeParse(c).success;
+          })
           .map((c) =>
             createContribution({
               context: { virtualLabId, projectId },
               contributor: {
-                agent_id: c.agent_id!,
-                role_id: c.role_id!,
+                agent_id: c.agent_id as string,
+                role_id: c.role_id as string,
                 entity_id: entityId,
               },
             })

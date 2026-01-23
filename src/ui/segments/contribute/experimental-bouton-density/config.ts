@@ -41,7 +41,7 @@ export function createExperimentalBoutonDensityConfig(
       setup: {
         brain_region_id: brainRegionId,
       } as TExperimentalBoutonDensityForm['setup'],
-      contribution: [{}] as TExperimentalBoutonDensityForm['contribution'],
+      contribution: [{}] as unknown as TExperimentalBoutonDensityForm['contribution'],
       measurements: [] as TExperimentalBoutonDensityForm['measurements'],
       license_id: DEFAULT_LICENSE_ID,
     }),

@@ -21,6 +21,7 @@ import type {
   IMutationKeyConfig,
   IPipelineHookResult,
 } from '@/ui/segments/contribute/shared/types';
+import { MeasurementUnit } from '@/api/entitycore/types/shared/global';
 
 type TExperimentalSynapsesPerConnectionForm = z.infer<
   typeof ExperimentalSynapsesPerConnectionSchema
@@ -40,12 +41,10 @@ export function useExperimentalSynapsesPerConnectionPipeline({
         compact(
           values.measurements.map(
             (m: TExperimentalSynapsesPerConnectionForm['measurements'][number]) => {
-              // FIX: Explicitly set the 'unit' using the hardcoded string literal 'DIMENSIONLESS'.
-              // This bypasses the runtime failure of the MeasurementUnit enum import, ensuring the unit is a string.
               const measurementWithUnit = {
                 name: m.name,
                 value: m.value,
-                unit: 'dimensionless', // Hardcoded to satisfy Zod's z.literal() check
+                unit: MeasurementUnit.dimensionless,
               };
 
               const d = measurementSchema.safeParse(measurementWithUnit);
@@ -111,16 +110,15 @@ export function useExperimentalSynapsesPerConnectionPipeline({
     }) => {
       return Promise.all(
         contribution
-          .filter(
-            (c: TExperimentalSynapsesPerConnectionForm['contribution'][number]) =>
-              ContributionSchema.safeParse(c).success
-          )
-          .map((c: TExperimentalSynapsesPerConnectionForm['contribution'][number]) =>
+          .filter((c) => {
+            return c.agent_id && c.role_id && ContributionSchema.safeParse(c).success;
+          })
+          .map((c) =>
             createContribution({
               context: { virtualLabId, projectId },
               contributor: {
-                agent_id: c.agent_id!,
-                role_id: c.role_id!,
+                agent_id: c.agent_id as string,
+                role_id: c.role_id as string,
                 entity_id: entityId,
               },
             })

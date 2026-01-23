@@ -4,7 +4,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { compact, get } from 'es-toolkit/compat';
-
+import { MeasurementUnit } from '@/api/entitycore/types/shared/global';
 import { createMtypeClassification } from '@/api/entitycore/queries/annotations/mtype-classification';
 import { createEtypeClassification } from '@/api/entitycore/queries/annotations/etype-classification';
 import { EXPERIMENTAL_NEURON_DENSITY_PROGRESS_STEPS } from '@/ui/segments/contribute/experimental-neuron-density/config';
@@ -41,7 +41,7 @@ export function useExperimentalNeuronDensityPipeline({
             const measurementWithUnit = {
               name: m.name,
               value: m.value,
-              unit: '1/mm³', // Hardcoded string value for the unit
+              unit: MeasurementUnit.volume_density__1_mm3,
             };
 
             const d = measurementSchema.safeParse(measurementWithUnit);
@@ -96,13 +96,15 @@ export function useExperimentalNeuronDensityPipeline({
     }) => {
       return Promise.all(
         contribution
-          .filter((c) => ContributionSchema.safeParse(c).success)
+          .filter((c) => {
+            return c.agent_id && c.role_id && ContributionSchema.safeParse(c).success;
+          })
           .map((c) =>
             createContribution({
               context: { virtualLabId, projectId },
               contributor: {
-                agent_id: c.agent_id!,
-                role_id: c.role_id!,
+                agent_id: c.agent_id as string,
+                role_id: c.role_id as string,
                 entity_id: entityId,
               },
             })

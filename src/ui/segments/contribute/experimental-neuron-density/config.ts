@@ -51,7 +51,7 @@ export function createExperimentalNeuronDensityConfig(
       setup: {
         brain_region_id: brainRegionId,
       } as TExperimentalNeuronDensityForm['setup'],
-      contribution: [{}] as TExperimentalNeuronDensityForm['contribution'],
+      contribution: [{}] as unknown as TExperimentalNeuronDensityForm['contribution'],
       measurements: [] as TExperimentalNeuronDensityForm['measurements'],
       license_id: DEFAULT_LICENSE_ID,
     }),

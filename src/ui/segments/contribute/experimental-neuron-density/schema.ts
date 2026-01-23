@@ -79,8 +79,8 @@ export const ExperimentalNeuronDensitySchema = z.object({
     .string({ message: 'License is required' })
     .uuid()
     .nonempty({ message: 'License is required' }),
-  mtype_class_id: z.string({ message: 'M-type class is optional' }).uuid().optional(),
-  etype_class_id: z.string({ message: 'E-type class is optional' }).uuid().optional(),
+  mtype_class_id: z.string({ message: 'M-type must be a valid UUID' }).uuid().optional(),
+  etype_class_id: z.string({ message: 'E-type must be a valid UUID' }).uuid().optional(),
 
   measurements: MeasurementArraySchema,
   contribution: ContributionArraySchema,

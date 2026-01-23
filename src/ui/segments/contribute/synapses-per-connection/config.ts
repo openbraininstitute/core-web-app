@@ -44,7 +44,7 @@ export function createExperimentalSynapsesPerConnectionConfig(
     schema: ExperimentalSynapsesPerConnectionSchema,
     progressSteps: steps,
     getInitialValues: () => ({
-      contribution: [{}] as TExperimentalSynapsesPerConnectionForm['contribution'],
+      contribution: [{}] as unknown as TExperimentalSynapsesPerConnectionForm['contribution'],
       measurements: [
         {
           name: undefined,
