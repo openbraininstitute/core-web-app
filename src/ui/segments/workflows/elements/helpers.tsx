@@ -3,11 +3,9 @@ import get from 'es-toolkit/compat/get';
 import groupBy from 'es-toolkit/compat/groupBy';
 import sortBy from 'es-toolkit/compat/sortBy';
 import values from 'es-toolkit/compat/values';
-
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { FeatureFlags, FlagKey, microcircuitFlag } from '@/features/feature-flags/flags';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { type FeatureFlags, type FlagKey, microcircuitFlag } from '@/features/feature-flags/flags';
 
 export const WorkflowSessionIdSearchParam = 'sessionId';
 export const EntityScopeDict = {
@@ -22,7 +20,7 @@ export type TEntityScopeValue = keyof typeof EntityScopeDict;
 export const ActivityDict = [
   { label: 'Build', value: 'build', disabled: false, name: 'Build' },
   { label: 'Simulate', value: 'simulate', disabled: false, name: 'Simulation' },
-  { label: 'Extract', value: 'extract', disabled: true, name: 'Extract' },
+  { label: 'Extract', value: 'extract', disabled: false, name: 'Extract' },
   { label: 'Optimize', value: 'optimize', disabled: true, name: 'Optimize' },
   { label: 'Validate', value: 'validate', disabled: true, name: 'Validate' },
   { label: 'Process Data', value: 'process_data', disabled: true, name: 'Process Data' },
@@ -172,6 +170,10 @@ export const EntityWorkflowConfiguration: Partial<
         disabled: false,
         type: ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
       },
+      extract: {
+        disabled: false,
+        type: ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+      },
     },
   },
   [ExtendedEntitiesTypeDict.SmallMicrocircuit]: {
@@ -183,6 +185,10 @@ export const EntityWorkflowConfiguration: Partial<
         type: ExtendedEntitiesTypeDict.SmallMicrocircuit,
       },
       simulate: {
+        disabled: false,
+        type: ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+      },
+      extract: {
         disabled: false,
         type: ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
       },

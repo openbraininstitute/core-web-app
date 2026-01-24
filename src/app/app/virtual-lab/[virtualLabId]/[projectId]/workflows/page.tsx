@@ -4,7 +4,8 @@ import { useRouter } from '@bprogress/next';
 import { kebabCase } from 'es-toolkit/compat';
 import { AnimatePresence, motion } from 'motion/react';
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
-import { use, useRef } from 'react';
+import { use } from 'react';
+import { match, P } from 'ts-pattern';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
 import { WorkspaceScope } from '@/constants';
@@ -54,20 +55,33 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
   };
 
   const onSelectType = (value: TExtendedEntitiesTypeDict | null) => {
-    if (activity === ActivityValues.Build) {
-      const sessionId = crypto.randomUUID();
-      const query = new URLSearchParams();
-      query.set(WorkflowSessionIdSearchParam, sessionId);
-      query.set(PanelQueryParam, WorkflowSimulatePanels.Configuration);
-      if (value)
+    return match({ activity, value })
+      .with(
+        {
+          activity: ActivityValues.Build,
+        },
+        () => {
+          const sessionId = crypto.randomUUID();
+          const query = new URLSearchParams();
+          query.set(WorkflowSessionIdSearchParam, sessionId);
+          query.set(PanelQueryParam, WorkflowSimulatePanels.Configuration);
+          if (value)
+            navigate(
+              `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/configure/${kebabCase(value)}?${query.toString()}`
+            );
+        }
+      )
+      .with({ activity: ActivityValues.Simulate, value: P.nonNullable }, ({ value }) => {
         navigate(
-          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/configure/${kebabCase(value)}?${query.toString()}`
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}`
         );
-    } else if (activity === ActivityValues.Simulate && value) {
-      navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}?${SCOPE_QUERY_PARAMS}=${WorkspaceScope.Public}`
-      );
-    }
+      })
+      .with({ activity: ActivityValues.Extract, value: P.nonNullable }, ({ value }) => {
+        navigate(
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}?${SCOPE_QUERY_PARAMS}=${WorkspaceScope.Public}`
+        );
+      })
+      .otherwise(() => null);
   };
 
   useNextStepOnboarding({ condition: true, tour: workflowTour });
