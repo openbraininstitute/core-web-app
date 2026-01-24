@@ -103,7 +103,7 @@ export default function ActionMenu({
         },
       });
       notification.success({
-        message: 'Deleted Successfully',
+        message: 'Deleted successfully',
         description: 'The item has been successfully deleted.',
         placement: 'topRight',
       });
@@ -111,9 +111,13 @@ export default function ActionMenu({
     },
     onError: (error: Error) => {
       const errorMessage = get(error.cause, 'message') || 'Unknown error';
+      let description = errorMessage;
+      if (errorMessage.toLowerCase().includes('foreign keys integrity violation')) {
+        description = 'This entity is referenced by another record and cannot be deleted.';
+      }
       notification.error({
-        message: 'Deletion Failed',
-        description: errorMessage,
+        message: 'Deletion failed',
+        description,
         placement: 'topRight',
         duration: 5,
       });
