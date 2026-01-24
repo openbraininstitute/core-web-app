@@ -15,7 +15,8 @@ export type SimExecStatusMap = Map<string, EntitycoreExecutionStatus>;
 export type SchemaName =
   | 'CircuitSimulationScanConfig'
   | 'MEModelSimulationScanConfig'
-  | 'MEModelWithSynapsesCircuitSimulationScanConfig';
+  | 'MEModelWithSynapsesCircuitSimulationScanConfig'
+  | 'CircuitExtractionScanConfig';
 
 export type RootElement = {
   description: string;

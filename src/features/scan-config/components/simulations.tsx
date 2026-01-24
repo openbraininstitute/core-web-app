@@ -14,10 +14,10 @@ import { runSimulation } from '@/api/launch-system';
 import { useAppNotification } from '@/components/notification';
 import { hasSimConfigAsset } from '@/entity-configuration/domain/simulation/utils';
 import {
-  modelAtomFamily,
   simExecRemoteStatusMapAtomFamily,
   simExecStatusMapAtomFamily,
   simulationsByCampaignIdAtomFamily,
+  useModelQuery,
 } from '@/features/scan-config/components/atoms';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { type File, SimulationFiles } from '@/features/scan-config/components/simulation-files';
@@ -58,8 +58,10 @@ export default function SimulationsTab({
   const simulationsAtom = simulationsByCampaignIdAtomFamily({ campaignId, context });
   const simulations = useAtomValue(simulationsAtom);
 
-  const modelAtom = modelAtomFamily({ id: simulations[0].entity_id, context });
-  const model = useAtomValue(modelAtom);
+  const { entity: model } = useModelQuery({
+    context,
+    id: simulations[0].entity_id,
+  });
 
   const simExecStatusMapAtom = simExecStatusMapAtomFamily({ context, campaignId });
   const fetchRemoteSimExecStatuseMap = useSetAtom(
@@ -158,7 +160,7 @@ export default function SimulationsTab({
         if (error === USER_CANCELLED) return;
 
         notification.error({
-          message: 'Unexpected error occured, please try again later',
+          message: 'Unexpected error occurred, please try again later',
           duration: 10,
         });
 
@@ -198,7 +200,7 @@ export default function SimulationsTab({
 
   // TODO Refactor
   const run = async (simIds: string[]) => {
-    if ('scale' in model && model.scale === CircuitScaleDictionary.Microcircuit) {
+    if (model && 'scale' in model && model.scale === CircuitScaleDictionary.Microcircuit) {
       return runViaLaunchSystem(simIds);
     }
 
@@ -295,7 +297,7 @@ export default function SimulationsTab({
           <button
             className={classNames(
               'min-h-[50] w-full cursor-pointer rounded-3xl p-2 text-white',
-              'bg-[linear-gradient(94.93deg,_#389E0D_18.84%,_#143805_116.7%)]',
+              'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)]',
               'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none'
             )}
             type="button"

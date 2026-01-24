@@ -7,6 +7,7 @@ import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overfl
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-selector';
 import { SimulateWorkflowsBreadcrumb } from '@/ui/segments/workflows/elements/simulate-breadcrumb';
+import { cn } from '@/utils/css-class';
 
 export default function Layout({ children }: { children: ReactNode }) {
   const { mdv, setMdv } = useMiniDetailView();
@@ -19,22 +20,27 @@ export default function Layout({ children }: { children: ReactNode }) {
     <div className="h-full mx-2 flex flex-col max-h-[calc(100vh-6rem)] w-[calc(100%-10px)] overflow-hidden">
       <WorkflowScopeTabs className="max-w-max mb-3" />
       <div className="bg-background border-neutral-2 h-full  overflow-hidden rounded-2xl border">
-        <SimulateWorkflowsBreadcrumb section={WorkspaceSection.SimulateWorkflow} />
+        <SimulateWorkflowsBreadcrumb section={WorkspaceSection.ExtractWorkflow} />
         <motion.div
           id="workflow-new-inner-layout"
-          className="grid gap-2 [grid-area:main] h-full max-h-[calc(100%-4rem)] px-3 py-2"
+          className={cn(
+            'grid gap-2 [grid-area:main]',
+            'h-full max-h-[calc(100%-4rem)] px-3 py-2',
+            { "grid-cols-1 [grid-template-areas:'body']": !mdv },
+            { "grid-cols-[3fr_2fr] [grid-template-areas:'body_mini-view']": mdv }
+          )}
           initial={false}
+          animate={{
+            gridTemplateColumns: mdv ? '3fr 2fr' : '1fr',
+            gridTemplateAreas: mdv ? "'body mini-view'" : "'body'",
+          }}
           transition={{
             type: 'spring',
             stiffness: 320,
             damping: 30,
             mass: 0.6,
           }}
-          style={{
-            willChange: 'grid-template-columns, grid-template-areas',
-            gridTemplateColumns: mdv ? '3fr 2fr' : '1fr',
-            gridTemplateAreas: mdv ? "'body mini-view'" : "'body'",
-          }}
+          style={{ willChange: 'grid-template-columns, grid-template-areas' }}
         >
           {children}
         </motion.div>

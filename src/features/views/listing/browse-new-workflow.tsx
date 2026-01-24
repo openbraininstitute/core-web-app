@@ -6,7 +6,7 @@ import { unwrap } from 'jotai/utils';
 import { notFound } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import type { TWorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
   brainRegionBasicCellGroupsRegionsHierarchyAtom,
@@ -15,21 +15,26 @@ import {
 } from '@/features/brain-region-hierarchy/context';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import type { WorkspaceContext } from '@/types/common';
+import { useScope } from '@/ui/hooks/use-scope';
 
 type Props = {
+  section: TWorkspaceSection;
   workspace: WorkspaceContext;
-  buildType: TExtendedEntitiesTypeDict;
+  baseModelType: TExtendedEntitiesTypeDict;
 };
 
-export function WorkflowBrowseEntity({ workspace, buildType }: Props) {
-  const dataType = getEntityByExtendedType({ type: buildType });
+export function WorkflowBrowseEntity({ section, workspace, baseModelType }: Props) {
+  const dataType = getEntityByExtendedType({ type: baseModelType });
+  const { scope } = useScope({ clearOnDefault: false });
+
   const dataKey = compact([
     workspace.virtualLabId,
     workspace.projectId,
-    WorkspaceSection.SimulateWorkflow,
-    buildType,
-    WorkspaceScope.Simulate,
+    section,
+    baseModelType,
+    scope,
   ]).join('/');
+
   const { updateSelectedBrainRegion } = useSetSelectedBrainRegion();
   const { updateHierarchyConfig } = useBrainRegionHierarchy({
     dataKey,
@@ -53,14 +58,14 @@ export function WorkflowBrowseEntity({ workspace, buildType }: Props) {
     <BrowseEntityScope
       requireMiniDetailView
       requireBrainRegion
-      section={WorkspaceSection.SimulateWorkflow}
+      section={section}
       classNames={{ container: 'max-h-full', miniView: 'max-h-[calc(100vh-15rem)]' }}
-      dataType={buildType}
+      dataType={baseModelType}
       mainTableProps={{
         selectionType: undefined,
       }}
       miniViewProps={{
-        section: WorkspaceSection.SimulateWorkflow,
+        section,
       }}
     />
   );

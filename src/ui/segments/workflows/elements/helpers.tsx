@@ -5,6 +5,7 @@ import sortBy from 'es-toolkit/compat/sortBy';
 import values from 'es-toolkit/compat/values';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TWorkspaceSection } from '@/constants';
 import { type FeatureFlags, type FlagKey, microcircuitFlag } from '@/features/feature-flags/flags';
 
 export const WorkflowSessionIdSearchParam = 'sessionId';
@@ -20,10 +21,10 @@ export type TEntityScopeValue = keyof typeof EntityScopeDict;
 export const ActivityDict = [
   { label: 'Build', value: 'build', disabled: false, name: 'Build' },
   { label: 'Simulate', value: 'simulate', disabled: false, name: 'Simulation' },
-  { label: 'Extract', value: 'extract', disabled: false, name: 'Extract' },
-  { label: 'Optimize', value: 'optimize', disabled: true, name: 'Optimize' },
-  { label: 'Validate', value: 'validate', disabled: true, name: 'Validate' },
-  { label: 'Process Data', value: 'process_data', disabled: true, name: 'Process Data' },
+  { label: 'Extract', value: 'extract', disabled: false, name: 'Extraction' },
+  { label: 'Optimize', value: 'optimize', disabled: true, name: 'Optimization' },
+  { label: 'Validate', value: 'validate', disabled: true, name: 'Validation' },
+  { label: 'Process Data', value: 'process_data', disabled: true, name: 'Processing Data' },
 ] as const;
 
 export type TActivityValue = (typeof ActivityDict)[number]['value'];
@@ -172,7 +173,7 @@ export const EntityWorkflowConfiguration: Partial<
       },
       extract: {
         disabled: false,
-        type: ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+        type: ExtendedEntitiesTypeDict.PairedNeuronCircuit,
       },
     },
   },
@@ -190,7 +191,7 @@ export const EntityWorkflowConfiguration: Partial<
       },
       extract: {
         disabled: false,
-        type: ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+        type: ExtendedEntitiesTypeDict.SmallMicrocircuit,
       },
     },
   },
@@ -365,13 +366,16 @@ export function getAllOptionsOrdered(
   return sortBy(options, ['disabled', 'group']);
 }
 
-export function getBuildTypeFromSimulateType(
-  type: TExtendedEntitiesTypeDict
-): TExtendedEntitiesTypeDict | undefined {
-  const config = find(
-    values(EntityWorkflowConfiguration),
-    (c) => c.properties.simulate?.type === type
-  );
+export function getBaseModelTypeFromActivityType({
+  type,
+  section,
+}: {
+  type: TExtendedEntitiesTypeDict;
+  section: TWorkspaceSection;
+}): TExtendedEntitiesTypeDict | undefined {
+  const config = find(values(EntityWorkflowConfiguration), (c) => {
+    return get(c.properties, `${section}`, { type: undefined }).type === type;
+  });
 
   return config?.properties.build?.type;
 }

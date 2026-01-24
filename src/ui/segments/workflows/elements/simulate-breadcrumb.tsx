@@ -1,19 +1,15 @@
 'use client';
 
-import { useParams, usePathname } from 'next/navigation';
 import { RightOutlined } from '@ant-design/icons';
-import snakeCase from 'es-toolkit/compat/snakeCase';
+import capitalize from 'es-toolkit/compat/capitalize';
 import Link from 'next/link';
-
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { useParams, usePathname } from 'next/navigation';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { convertEntitySlugToExtendedType } from '@/api/entitycore/utils';
 import { config } from '@/config';
+import type { TWorkspaceSection } from '@/constants';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import {
-  getBuildTypeFromSimulateType,
-  getCategoryDictItem,
-  getEntityTypeWorkflowConfigurationItem,
-  getWorkflowSegment,
-} from '@/ui/segments/workflows/elements/helpers';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -21,22 +17,30 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from '@/ui/molecules/breadcrumb/index';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import {
+  getBaseModelTypeFromActivityType,
+  getCategoryDictItem,
+  getEntityTypeWorkflowConfigurationItem,
+  getWorkflowSegment,
+} from '@/ui/segments/workflows/elements/helpers';
 import type { KebabCase } from '@/utils/type';
 
-export function SimulateWorkflowsBreadcrumb() {
+type Props = {
+  section: TWorkspaceSection;
+};
+
+export function SimulateWorkflowsBreadcrumb({ section }: Props) {
   const pathname = usePathname();
   const segment = getWorkflowSegment(pathname);
 
   const { type } = useParams<{ type: KebabCase<TExtendedEntitiesTypeDict> }>();
   const { virtualLabId, projectId } = useWorkspace();
 
-  const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
+  const dataType = convertEntitySlugToExtendedType({ type });
   const category = getCategoryDictItem(segment)?.name;
-  const buildType = getBuildTypeFromSimulateType(dataType);
-  const selectTitle = getEntityByExtendedType({ type: buildType })?.title;
-  const buildTitle = getEntityTypeWorkflowConfigurationItem(buildType)?.label;
+  const baseType = getBaseModelTypeFromActivityType({ type: dataType, section });
+  const selectTitle = getEntityByExtendedType({ type: baseType })?.title;
+  const baseTitle = getEntityTypeWorkflowConfigurationItem(baseType)?.label;
   const homeLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`;
 
   return (
@@ -48,16 +52,14 @@ export function SimulateWorkflowsBreadcrumb() {
               asChild
               className="text-primary-9 hover:text-primary-7 text-lg font-light select-none"
             >
-              <Link href={homeLink}>
-                {buildTitle} {category}
-              </Link>
+              <Link href={homeLink}>{capitalize(`${baseTitle} ${category}`)}</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator className="text-primary-9 text-lg font-bold">
             <RightOutlined className="text-sm" />
           </BreadcrumbSeparator>
-          <BreadcrumbItem className="text-primary-9 hover:text-primary-7 text-lg font-bold select-none">
-            Select {selectTitle}
+          <BreadcrumbItem className="text-primary-9 hover:text-primary-7 text-lg font-bold select-none cursor-pointer">
+            {capitalize(`Select ${selectTitle}`)}
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>

@@ -38,10 +38,10 @@ export default function GenerateConfigButton({
     <button
       type="button"
       className={classNames(
-        'flex min-h-[50px] w-[95%] items-center justify-center rounded-full text-lg drop-shadow',
+        'flex min-h-12.5 w-[95%] items-center justify-center rounded-full text-lg drop-shadow',
         (errors && errors.length > 0) || loading
           ? 'bg-gray-300 text-gray-500'
-          : 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
+          : 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white'
       )}
       onClick={async () => {
         if (loading) return;
@@ -69,7 +69,7 @@ export default function GenerateConfigButton({
           if (coordinateCountRes.status !== 200) {
             const message = await coordinateCountRes.json();
             notification.error({
-              message: 'An error ocurred generating the simulation campaign',
+              message: 'An error occurred generating the simulation campaign',
               description: message.detail,
             });
             return;
@@ -93,7 +93,7 @@ export default function GenerateConfigButton({
               res.status === 500 ? errorRes.detail : (errorRes?.details?.[0].msg ?? '');
 
             notification.error({
-              message: 'An error ocurred generating the simulation campaign',
+              message: 'An error occurred generating the simulation campaign',
               description: details,
             });
             return;
@@ -102,7 +102,7 @@ export default function GenerateConfigButton({
           const returnedCampaignId = (await res.json()) as string;
           if (returnedCampaignId === '') {
             notification.error({
-              message: 'An error ocurred generating the simulation campaign',
+              message: 'An error occurred generating the simulation campaign',
             });
             return;
           }

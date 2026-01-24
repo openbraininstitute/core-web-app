@@ -1,27 +1,32 @@
 'use client';
 
-// import { LoadingOutlined, UpOutlined } from '@ant-design/icons';
 import { LoadingOutlined } from '@ant-design/icons';
 import { Suspense, useState } from 'react';
-import SimulationsTab from './components/simulations';
-
-// import { useRouter } from 'next/navigation';
-
+import type { IMEModel } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { Config } from '@/features/scan-config/components/components';
+import {
+  ScanConfigActivity,
+  type TScanConfigActivity,
+  useEntries,
+  useSchemaName,
+} from '@/features/scan-config/components/hooks';
 import { useConfigAtom } from '@/features/scan-config/components/hooks/config-atom';
 import { useAtomsMap, useObioneJsonSchema } from '@/features/scan-config/components/hooks/schema';
+import Left from '@/features/scan-config/components/left';
+import Middle from '@/features/scan-config/components/middle';
 import ModelPreview from '@/features/scan-config/components/model-preview';
+import SimulationsTab from '@/features/scan-config/components/simulations';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import styles from '@/features/scan-config/scan-config.module.css';
 import type { TabType } from '@/features/scan-config/types';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
-import { useEntries, useModel, useSchemaName } from './components/hooks';
-import Left from './components/left';
-import Middle from './components/middle';
+import { useModelQuery } from './components/atoms';
+import ScanConfigSkeleton from './components/loading-skeleton';
 
-export default function ScanConfiguration({
-  modelId,
+function Template({
+  entity,
   virtualLabId,
   projectId,
   initialCampaignId,
@@ -29,8 +34,9 @@ export default function ScanConfiguration({
   defaultTab = 'configuration',
   readOnly,
   className,
+  activity = ScanConfigActivity.Simulate,
 }: {
-  modelId: string;
+  entity: ICircuit | IMEModel;
   virtualLabId: string;
   projectId: string;
   initialCampaignId?: string;
@@ -38,8 +44,8 @@ export default function ScanConfiguration({
   defaultTab?: TabType;
   readOnly?: boolean;
   className?: string;
+  activity?: TScanConfigActivity;
 }) {
-  //  const router = useRouter();
   const [tab, setTab] = useState<TabType>(defaultTab);
   const [selectedRootElement, setSelectedRootElement] = useState<string>('info');
   const [editing, setEditing] = useState(true);
@@ -50,14 +56,12 @@ export default function ScanConfiguration({
   const [isEditingKey, setIsEditingKey] = useState(false);
   const [newKey, setNewKey] = useState('');
 
-  const { model } = useModel({ id: modelId, context: { virtualLabId, projectId } });
-
-  const schemaName = useSchemaName({ model });
+  const schemaName = useSchemaName({ model: entity, activity });
   const schema = useObioneJsonSchema(schemaName);
 
   const allEntries = useEntries({ initialConfig, schema });
 
-  const [atomsMap, setAtomsMap] = useAtomsMap({ schema, initialConfig, model });
+  const [atomsMap, setAtomsMap] = useAtomsMap({ schema, initialConfig, model: entity });
 
   const config = useConfigAtom(schema, atomsMap);
 
@@ -101,7 +105,7 @@ export default function ScanConfiguration({
             readOnly={readOnly}
             setCampaignId={setCampaignId}
             setLoading={setLoading}
-            model={model}
+            model={entity}
             initialConfig={initialConfig}
             setTab={setTab}
             allEntries={allEntries}
@@ -130,7 +134,7 @@ export default function ScanConfiguration({
                 campaignId={campaignId}
                 loading={loading}
                 config={config}
-                model={model}
+                model={entity}
                 allEntries={allEntries}
                 onNewBlockClick={() => {
                   setNewKey('');
@@ -142,7 +146,7 @@ export default function ScanConfiguration({
           </div>
 
           <div className="rounded-lg">
-            <ModelPreview model={model} />
+            <ModelPreview model={entity} />
           </div>
         </div>
       )}
@@ -158,4 +162,55 @@ export default function ScanConfiguration({
       )}
     </div>
   );
+}
+
+export default function ScanConfiguration({
+  modelId,
+  virtualLabId,
+  projectId,
+  initialCampaignId,
+  initialConfig,
+  defaultTab = 'configuration',
+  readOnly,
+  className,
+  activity = ScanConfigActivity.Simulate,
+}: {
+  modelId: string;
+  virtualLabId: string;
+  projectId: string;
+  initialCampaignId?: string;
+  initialConfig?: Config;
+  defaultTab?: TabType;
+  readOnly?: boolean;
+  className?: string;
+  activity?: TScanConfigActivity;
+}) {
+  const { entity, isLoading, error } = useModelQuery({
+    id: modelId,
+    context: { virtualLabId, projectId },
+  });
+  if (isLoading) {
+    return <ScanConfigSkeleton />;
+  }
+  if (error) {
+    return <div>Error</div>;
+  }
+  if (entity) {
+    return (
+      <Template
+        {...{
+          entity,
+          virtualLabId,
+          projectId,
+          initialCampaignId,
+          initialConfig,
+          defaultTab,
+          readOnly,
+          className,
+          activity,
+        }}
+      />
+    );
+  }
+  return null;
 }

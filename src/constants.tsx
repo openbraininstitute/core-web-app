@@ -26,8 +26,9 @@ export type TWorkspaceScope = (typeof WorkspaceScope)[keyof typeof WorkspaceScop
 
 export const WorkspaceSection = {
   Data: 'data',
-  BuildWorkflow: 'workflows/build',
-  SimulateWorkflow: 'workflows/simulate',
+  BuildWorkflow: 'build',
+  SimulateWorkflow: 'simulate',
+  ExtractWorkflow: 'extract',
   Notebooks: 'notebooks',
 } as const;
 
