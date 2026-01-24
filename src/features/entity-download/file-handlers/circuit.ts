@@ -36,7 +36,7 @@ export async function* getCircuitFiles(entityIds: string[], ctx?: WorkspaceConte
     const neededAssetsLabel = ['compressed_sonata_circuit', 'circuit_visualization'];
 
     for (const assLabel of neededAssetsLabel) {
-      const configAsset = circuit.assets.find((asset) => asset.label === assLabel)!;
+      const configAsset = circuit.assets.find((asset) => asset.label === assLabel);
 
       if (configAsset) {
         try {
@@ -50,9 +50,9 @@ export async function* getCircuitFiles(entityIds: string[], ctx?: WorkspaceConte
         } catch {}
       }
     }
+  }
 
-    for await (const metadataFileEntry of metadata.getFileEntries()) {
-      yield metadataFileEntry;
-    }
+  for await (const metadataFileEntry of metadata.getFileEntries()) {
+    yield metadataFileEntry;
   }
 }

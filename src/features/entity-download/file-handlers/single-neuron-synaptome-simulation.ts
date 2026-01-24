@@ -38,19 +38,21 @@ export async function* getSingleNeuronSynaptomeSimulationFiles(
 
     const configAsset = singleNeuronSimulation.assets.find(
       (asset) => asset.label === 'single_neuron_synaptome_simulation_data'
-    )!;
-    try {
-      const path = `${dataPath}/${configAsset.path}`;
-      yield await createAssetFileEntry({
-        entity: singleNeuronSimulation,
-        asset: configAsset,
-        path,
-        ctx,
-      });
-    } catch {}
-
-    for await (const metadataFileEntry of metadata.getFileEntries()) {
-      yield metadataFileEntry;
+    );
+    if (configAsset) {
+      try {
+        const path = `${dataPath}/${configAsset.path}`;
+        yield await createAssetFileEntry({
+          entity: singleNeuronSimulation,
+          asset: configAsset,
+          path,
+          ctx,
+        });
+      } catch {}
     }
+  }
+
+  for await (const metadataFileEntry of metadata.getFileEntries()) {
+    yield metadataFileEntry;
   }
 }
