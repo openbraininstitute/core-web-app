@@ -3,6 +3,7 @@ import { type atom, useAtom } from 'jotai';
 import { useEffect } from 'react';
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import BooleanInput from '@/features/scan-config/components/boolean-input';
 import EntityPropertyDropdown from '@/features/scan-config/components/entity-property-dropdown';
 import ModelDetails from '@/features/scan-config/components/model-details';
 import NeuronIds from '@/features/scan-config/components/neuron-ids';
@@ -173,6 +174,22 @@ export function BlockUI({
           onChange={(newV: string | null) => setState({ ...state, node_set: newV })}
           entity_type={paramSchema.entity_type}
           property={paramSchema.property}
+        />
+      );
+    }
+
+    if (paramSchema.ui_element === 'boolean_input') {
+      const currentValue = typeof state[k] === 'boolean' ? state[k] : null;
+      return (
+        <BooleanInput
+          value={currentValue}
+          disabled={disabled}
+          onChange={(value: boolean) => {
+            setState({ ...state, [k]: value });
+          }}
+          trueLabel={paramSchema.true_label}
+          falseLabel={paramSchema.false_label}
+          ariaLabel={paramSchema.description}
         />
       );
     }

@@ -86,6 +86,14 @@ export interface NeuronIds extends BlockElement {
   ui_element: 'neuron_ids';
 }
 
+export interface BooleanInput extends BlockElement {
+  ui_element: 'boolean_input';
+  /** Optional label displayed when value is true */
+  true_label?: string;
+  /** Optional label displayed when value is false */
+  false_label?: string;
+}
+
 export type BlockElement = {
   default?: ConfigValue;
   title: string;
@@ -101,7 +109,8 @@ export type ParamSchema =
   | IntParameterSweep
   | Reference
   | NeuronIds
-  | EntityPropertyDropdown;
+  | EntityPropertyDropdown
+  | BooleanInput;
 
 export type Block = {
   title: string;
