@@ -1,16 +1,10 @@
 /* eslint-disable no-param-reassign */
 
 import {
-  type ArrayNumber2,
   type TgdCameraState,
   TgdContext,
   TgdControllerCameraOrbit,
-  TgdLight,
   TgdMat4,
-  TgdMaterialDiffuse,
-  type TgdPainter,
-  TgdPainterSegments,
-  TgdPainterSegmentsData,
   TgdVec3,
   tgdCalcMapRange,
 } from '@tolokoban/tgd';
@@ -23,7 +17,7 @@ import { makeCamera } from './camera';
 import { computeSectionOffset } from './math';
 import { OffscreenPainter } from './offscreen-painter';
 import { Painter } from './painters';
-import { Structure, type StructureItem, StructureItemType } from './structure';
+import { Structure, type StructureItem } from './structure';
 
 interface SelectedItem {
   x: number;
