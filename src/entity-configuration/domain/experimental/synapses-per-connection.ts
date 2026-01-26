@@ -10,7 +10,7 @@ import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
-export const SynapsePerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPerConnection> = {
+export const SynapsesPerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPerConnection> = {
   group: EntityTypeGroup.Experimental,
   title: 'Synapse per connection',
   extendedType: ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
@@ -38,4 +38,5 @@ export const SynapsePerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPer
   isCopyable: true,
   isSimulatable: false,
   isBookmarkable: true,
+  isUploadable: true,
 } as const;

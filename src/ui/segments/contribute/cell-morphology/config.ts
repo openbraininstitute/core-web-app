@@ -30,11 +30,6 @@ export const CELL_MORPHOLOGY_PROGRESS_STEPS: Array<{
     label: 'Creating M-Type Classification',
     mutationKey: 'createMtypeClassification',
   },
-  {
-    key: 'assets',
-    label: 'Uploading Assets',
-    mutationKey: 'createCellMorphologyAssets',
-  },
 ];
 
 export function createCellMorphologyConfig(

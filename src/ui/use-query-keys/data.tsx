@@ -8,6 +8,7 @@ import type { WorkspaceContext } from '@/types/common';
 import type { TWorkspaceScope } from '@/constants';
 import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ISubjectFilter } from '@/api/entitycore/types/shared/subject';
+import { IProtocolFilter } from '@/api/entitycore/types/shared/protocol';
 
 const prefix = 'data';
 
@@ -38,7 +39,11 @@ export const keyBuilder = {
     brainRegionId,
     personId,
     scope,
-  }: WorkspaceContext & { brainRegionId?: string; personId?: string; scope: TWorkspaceScope }) => [
+  }: WorkspaceContext & {
+    brainRegionId?: string;
+    personId?: string;
+    scope: TWorkspaceScope;
+  }) => [
     `${prefix}-simulations-count`,
     {
       virtualLabId,
@@ -69,7 +74,14 @@ export const keyBuilder = {
     pageSize?: number;
   } & ElectricalCellRecordingFilter) => [
     `${prefix}-electrical-cell-recordings`,
-    { virtualLabId, projectId, brainRegionId: brainRegionId ?? '', page, pageSize, ...props },
+    {
+      virtualLabId,
+      projectId,
+      brainRegionId: brainRegionId ?? '',
+      page,
+      pageSize,
+      ...props,
+    },
   ],
   meModel: ({ virtualLabId, projectId, entityId }: WorkspaceContext & { entityId: string }) => [
     `${prefix}-single-neuron-model`,
@@ -93,7 +105,11 @@ export const keyBuilder = {
     memodelId,
     amplitudes,
     protocol,
-  }: WorkspaceContext & { memodelId: string; amplitudes: string; protocol: string }) => [
+  }: WorkspaceContext & {
+    memodelId: string;
+    amplitudes: string;
+    protocol: string;
+  }) => [
     `${prefix}-stimuli-protocol-plot-data`,
     { virtualLabId, projectId, memodelId, amplitudes, protocol },
   ],
@@ -188,7 +204,15 @@ export const keyBuilder = {
     pageSize: number;
   }) => [
     `${prefix}-derivations`,
-    { virtualLabId, projectId, entityId, entityRoute, derivationType, page, pageSize },
+    {
+      virtualLabId,
+      projectId,
+      entityId,
+      entityRoute,
+      derivationType,
+      page,
+      pageSize,
+    },
   ],
   ionChannelsFile: ({ entityName }: { entityName: string }) => [
     `${prefix}-ion-channels-file`,
@@ -225,6 +249,14 @@ export const keyBuilder = {
   mtype: ({ virtualLabId, projectId }: WorkspaceContext) => [
     `${prefix}-mtype-class`,
     { context: { virtualLabId, projectId } },
+  ],
+  protocols: (context: WorkspaceContext, props?: IProtocolFilter) => [
+    `${prefix}-protocols`,
+    { ...context, ...props },
+  ],
+  protocol: ({ id, context }: { id: string; context: WorkspaceContext }) => [
+    `${prefix}-protocol`,
+    { id, context },
   ],
   subjects: (context: WorkspaceContext, props?: ISubjectFilter) => [
     `${prefix}-subjects`,

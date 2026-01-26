@@ -59,6 +59,44 @@ interface License {
 
 export interface ILicense extends License, Timestamps, EntityCoreIdentifiable {}
 
+interface Protocol {
+  generation_type: string;
+  name: string;
+  cell_morphology_protocol_id: string;
+}
+export interface IProtocol extends Protocol, Timestamps, EntityCoreIdentifiable {}
+
+export const EntityTypeSchema = z.string() as z.ZodSchema<EntityCoreDataType>;
+
+export const CellMorphologyProtocolDesignSchema = z.enum([
+  'electron_microscopy',
+  'cell_patch',
+  'fluorophore',
+  'topological_synthesis',
+]);
+
+export const CellMorphologyGenerationTypeSchema = z.enum([
+  'digital_reconstruction',
+  'modified_reconstruction',
+  'computationally_synthesized',
+  'placeholder',
+]);
+
+export const SlicingDirectionTypeSchema = z.enum(['coronal', 'sagittal', 'horizontal', 'custom']);
+
+export const RepairPipelineTypeSchema = z.enum(['raw', 'curated', 'unraveled', 'repaired']);
+
+export type ModifiedMorphologyMethodType = {
+  type: 'cloned' | 'mix_and_match' | 'mousified' | 'ratified';
+};
+
+export const ModifiedMorphologyMethodTypeSchema = z.enum([
+  'cloned',
+  'mix_and_match',
+  'mousified',
+  'ratified',
+]);
+
 export interface PointLocationBase {
   x: number;
   y: number;

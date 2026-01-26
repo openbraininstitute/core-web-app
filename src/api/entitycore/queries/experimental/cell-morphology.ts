@@ -110,6 +110,10 @@ const cellMorphologySchema = z.object({
     .string({ message: 'Subject is required' })
     .uuid()
     .nonempty({ message: 'Subject is required' }),
+  cell_morphology_protocol_id: z
+    .string({ message: 'Protocol is required' })
+    .uuid()
+    .nonempty({ message: 'Protocol is required' }),
   license_id: z
     .string({ message: 'License is required' })
     .uuid()
