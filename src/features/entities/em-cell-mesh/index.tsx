@@ -7,8 +7,8 @@ export async function EmCellMeshMetadata({ id, ctx }: { id: string; ctx: Workspa
   const emCellMeshes = await getEmCellMesh({ id, context: ctx });
   return (
     <div className="w-full pb-10">
-      <ReconstructionMetadata entity={emCellMeshes} />
       <StructuralMetadata />
+      <ReconstructionMetadata entity={emCellMeshes} />
     </div>
   );
 }

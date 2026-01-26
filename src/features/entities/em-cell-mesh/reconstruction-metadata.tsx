@@ -9,16 +9,16 @@ type Props = {
 };
 
 export async function ReconstructionMetadata({ entity }: Props) {
-  const em = await getEmDenseReconstructionDataset({
+  const emDenseReconstructionDataset = await getEmDenseReconstructionDataset({
     id: entity.em_dense_reconstruction_dataset.id,
   });
-  const resource = { em, entity };
+  const resource = { emDenseReconstructionDataset, entity };
   return (
     <div>
       <h2 className="font-bold text-primary-8 text-2xl mb-4">Reconstruction Metadata</h2>
       <div className="grid grid-cols-3 items-center justify-between gap-y-5">
         {ReconstructionMetadataFields.map(({ key, label, path, renderer }) => (
-          <div key={key} className="text-primary-7 flex flex-col">
+          <div key={key} id={key} className="text-primary-7 flex flex-col">
             <div className="text-neutral-4 uppercase">{label}</div>
             <div className="flex items-center justify-start">
               <div>

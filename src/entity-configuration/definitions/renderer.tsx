@@ -329,7 +329,7 @@ export const renderContributorsModal = (
   mode: 'modal' | 'inline' = 'modal'
 ): ReactNode => {
   const getName = (c: IContributor) =>
-    `${`${'given_name' in c.agent ? c.agent.given_name : ''} ${'family_name' in c.agent ? c.agent.family_name : ''}`}`.trim() ||
+    `${'given_name' in c.agent ? c.agent.given_name : ''} ${'family_name' in c.agent ? c.agent.family_name : ''}`.trim() ||
     c.agent.pref_label;
 
   const consortia = filter(contributors, { agent: { type: AgentType.Consortium } });

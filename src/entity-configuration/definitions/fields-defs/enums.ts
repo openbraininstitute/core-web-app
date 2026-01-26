@@ -83,11 +83,11 @@ export enum EntityCoreFields {
   CircuitName = 'circuit_name',
   CircuitBuildCategory = 'build_category',
   CircuitScale = 'scale',
-  CircuitRootCircuit = 'root_circuit_id', // TODO: change it to sub_circuits, this is only for test the nested table
-  ArtifactPublishedIn = 'published_in', // TODO: change it to sub_circuits, this is only for test the nested table
-  ArtifactContactEmail = 'contact_email', // TODO: change it to sub_circuits, this is only for test the nested table
-  ArtifactExperimentDate = 'experiment_date', // TODO: change it to sub_circuits, this is only for test the nested table
-  CircuitSubCircuit = 'xxxxx', // TODO: change it to sub_circuits, this is only for test the nested table
+  CircuitRootCircuit = 'root_circuit_id',
+  ArtifactPublishedIn = 'published_in',
+  ArtifactContactEmail = 'contact_email',
+  ArtifactExperimentDate = 'experiment_date',
+  CircuitSubCircuit = 'xxxxx',
   IsLjpCorrected = 'is_ljp_corrected',
   IsStochastic = 'is_stochastic',
   IsTemperatureDependent = 'is_temperature_dependent',
@@ -105,10 +105,4 @@ export enum EntityCoreFields {
   MeshType = 'mesh_type',
 }
 
-/* release_version: number;
-  dense_reconstruction_cell_id: number;
-  generation_method: TEMCellMeshGenerationMethod;
-  level_of_detail: number;
-  generation_parameters?: Record<string, unknown> | null;
-  mesh_type: TEMCellMeshType; */
 export type EntityCoreFieldsValue = `${EntityCoreFields}`;

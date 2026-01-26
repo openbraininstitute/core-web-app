@@ -1,12 +1,11 @@
-import { getEmCellMeshes, getEmCellMesh } from '@/api/entitycore/queries/experimental/em-cell-mesh';
+import { getEmCellMesh, getEmCellMeshes } from '@/api/entitycore/queries/experimental/em-cell-mesh';
+import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
-import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
-import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 
 export const EmCellMesh: EntityCoreTypeConfig<IEMCellMesh> = {
   group: EntityTypeGroup.Experimental,
@@ -31,4 +30,5 @@ export const EmCellMesh: EntityCoreTypeConfig<IEMCellMesh> = {
   isCopyable: true,
   isSimulatable: false,
   isUploadable: true,
+  isDeletable: false,
 } as const;
