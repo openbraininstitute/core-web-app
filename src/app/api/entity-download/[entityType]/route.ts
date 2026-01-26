@@ -1,11 +1,12 @@
-import z from 'zod';
-import snakeCase from 'es-toolkit/compat/snakeCase';
 import kebabCase from 'es-toolkit/compat/kebabCase';
-import { NextRequest, NextResponse } from 'next/server';
+import snakeCase from 'es-toolkit/compat/snakeCase';
+import { type NextRequest, NextResponse } from 'next/server';
+import z from 'zod';
+
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 import { auth } from '@/auth';
-import { TEntityTypeDict } from '@/api/entitycore/types';
-import { getDownloadStreamHeaders } from '@/features/entity-download/utils';
 import { createDownloadStream } from '@/features/entity-download/download-stream';
+import { getDownloadStreamHeaders } from '@/features/entity-download/utils';
 
 const downloadRequestSchema = z.object({
   virtualLabId: z.string().uuid().optional().nullable(),
@@ -45,6 +46,8 @@ export async function POST(request: NextRequest, { params }: { params: { entityT
   const downloadStream = await createDownloadStream({ entityType, ...reqData });
 
   return new NextResponse(downloadStream, {
-    headers: getDownloadStreamHeaders({ filename: `${kebabCase(entityType)}.tar.gz` }),
+    headers: getDownloadStreamHeaders({
+      filename: `${kebabCase(entityType)}.tar.gz`,
+    }),
   });
 }

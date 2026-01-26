@@ -1,17 +1,14 @@
 'use client';
 
-import { MouseEvent, ReactNode, useEffect, useState } from 'react';
-import { ColumnGroupType, ColumnType } from 'antd/es/table';
-import { ConfigProvider, Button } from 'antd';
-
+import { Button, ConfigProvider } from 'antd';
+import type { ColumnGroupType, ColumnType } from 'antd/es/table';
+import { usePathname } from 'next/navigation';
+import { type MouseEvent, type ReactNode, useCallback, useEffect, useState } from 'react';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import ChevronLast from '@/components/icons/ChevronLast';
-import usePathname from '@/hooks/pathname';
-
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { classNames } from '@/util/utils';
-
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 type OnCellClick<T> = (basePath: string, record: T, type: TExtendedEntitiesTypeDict) => void;
 
@@ -78,7 +75,10 @@ const isRightScrollable = (node: HTMLElement): boolean =>
 const isLeftScrollable = (node: HTMLElement): number | boolean =>
   node?.scrollLeft > 0 ? node.getBoundingClientRect().left : false;
 
-export function useScrollNav(element?: HTMLDivElement): Record<'left' | 'right', ReactNode> {
+export function useScrollNav(
+  selector: string = '.ant-table-body'
+): Record<'left' | 'right', ReactNode> {
+  const [element, setElement] = useState<HTMLDivElement | null>(null);
   const [displayFloatButtons, setDisplayFloatButtons] = useState<{
     right: boolean;
     left: number | boolean;
@@ -87,11 +87,14 @@ export function useScrollNav(element?: HTMLDivElement): Record<'left' | 'right',
     left: false,
   });
 
-  const updateDisplayControls = (node: HTMLElement) =>
-    setDisplayFloatButtons({
-      right: isRightScrollable(node),
-      left: isLeftScrollable(node),
-    });
+  const updateDisplayControls = useCallback(
+    (node: HTMLElement) =>
+      setDisplayFloatButtons({
+        right: isRightScrollable(node),
+        left: isLeftScrollable(node),
+      }),
+    []
+  );
 
   const handleScrollToRight = () =>
     element?.scrollTo({
@@ -106,23 +109,46 @@ export function useScrollNav(element?: HTMLDivElement): Record<'left' | 'right',
     });
 
   useEffect(() => {
-    const container = element as HTMLElement;
+    const findElement = () => {
+      const el = document.querySelector(selector) as HTMLDivElement | null;
+      if (el) {
+        setElement(el);
+      }
+    };
+    findElement();
+    const mutationObserver = new MutationObserver(() => {
+      findElement();
+    });
+
+    mutationObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+
+    return () => {
+      mutationObserver.disconnect();
+    };
+  }, [selector]);
+
+  useEffect(() => {
+    const container = element;
+    if (!container) return;
+
     const handleOnScroll = () => updateDisplayControls(container);
     const observer = new ResizeObserver((entries) => {
       updateDisplayControls(entries[0].target as HTMLDivElement);
     });
 
-    if (container) {
-      observer.observe(container);
-      container.addEventListener('scroll', handleOnScroll);
-    }
+    updateDisplayControls(container);
+
+    observer.observe(container);
+    container.addEventListener('scroll', handleOnScroll);
+
     return () => {
-      if (container) {
-        observer.unobserve(container);
-        container.removeEventListener('scroll', handleOnScroll);
-      }
+      observer.unobserve(container);
+      container.removeEventListener('scroll', handleOnScroll);
     };
-  }, [element]);
+  }, [element, updateDisplayControls]);
 
   const right = useTheme(
     <Button

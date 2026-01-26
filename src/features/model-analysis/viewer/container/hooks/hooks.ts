@@ -1,7 +1,7 @@
 import { capitalize } from 'es-toolkit/compat';
 import React from 'react';
 
-import { TValidationResultNonUndefined } from '../../../explorer/use-analysis';
+import type { TValidationResultNonUndefined } from '../../../explorer/use-analysis';
 import { AllowedTypes } from '../../asset-viewers/storage';
 import { customSorting } from './custom-sorting';
 import { getDocumentation, getDocumentationForInputResistance } from './dictionary';
@@ -88,11 +88,11 @@ export function useFlatValidationResults(
 
 export function useSelectedValidationResults(
   flatValidationResults: FlatValidationResult[],
-  selectedName: string
+  selectedId: string
 ) {
   return React.useMemo(
-    () => flatValidationResults.filter(filterBySelectedName(selectedName)),
-    [flatValidationResults, selectedName]
+    () => flatValidationResults.filter(filterBySelectedId(selectedId)),
+    [flatValidationResults, selectedId]
   );
 }
 
@@ -106,10 +106,10 @@ function isInputResistanceSpecialCase(name: string, assetPath: string) {
   return true;
 }
 
-function filterBySelectedName(selectedName: string) {
-  if (selectedName.toLocaleLowerCase() === 'all') return () => true;
+function filterBySelectedId(selectedId: string) {
+  if (selectedId.toLocaleLowerCase() === 'all') return () => true;
 
-  return ({ name }: { name: string }) => name === selectedName;
+  return ({ id }: { id: string }) => id === selectedId;
 }
 
 const ACRONYMS = ['AIS', 'BPAP', 'FI', 'IV'];

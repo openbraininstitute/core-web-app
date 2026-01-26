@@ -9,7 +9,7 @@ import {
   TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
-import SimulationConfig from '@/features/small-microcircuit';
+import ScanConfig from '@/features/scan-config';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import {
   threeDVisualizerState,
@@ -68,7 +68,7 @@ export default function Page({
 
   if (queryParams.dataType === ExtendedEntitiesTypeDict.MemodelCircuit) {
     return (
-      <SimulationConfig
+      <ScanConfig
         modelId={entity.id}
         virtualLabId={virtualLabId}
         projectId={projectId}
@@ -100,7 +100,7 @@ export default function Page({
             data-testid="simulation-panel-wrapper"
             className={cn(
               'grid h-full min-h-0 gap-4 overflow-hidden overflow-y-auto',
-              { 'grid-cols-[2.5fr_2fr]': visualizerState === threeDVisualizerState.Expanded },
+              { 'grid-cols-[2fr_3fr]': visualizerState === threeDVisualizerState.Expanded },
               { 'grid-cols-[2.5fr_5rem]': visualizerState === threeDVisualizerState.Collapsed }
             )}
           >

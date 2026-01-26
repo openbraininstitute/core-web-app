@@ -1,28 +1,56 @@
 'use client';
 
+import { useAtomValue } from 'jotai';
+import React from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-
-import ReloadIcon from '../icons/Reload';
-
 import { DefaultLoadingSuspense } from '@/components/DefaultLoadingSuspense';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
+import {
+  SimulationStatus,
+  simulationStatusAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import { useCleanMorphology } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/hooks';
 import { WebglNeuronSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector';
-
+import { logError } from '@/utils/logger';
+import { IconGear } from '../ai-assistant/icons/gear';
+import ReloadIcon from '../icons/Reload';
+import { ViewerDendrogram } from '../viewers/viewer-dendrogram';
 import styles from './neuron-viewer-with-actions.module.css';
+import { NeuronLoader } from './plugins/neuron-loader';
 
 type Props = {
   meModelId: string;
+  sessionId: string;
   disableElectrodes?: boolean;
   disableSynapses?: boolean;
-  sessionId: string;
 };
+
+const ENABLE_DENDROGRAM = false;
 
 export function NeuronViewerContainer({
   meModelId,
+  sessionId,
   disableElectrodes,
   disableSynapses,
-  sessionId,
 }: Props) {
+  const [viewer, setViewer] = React.useState<'3D' | 'dendrogram'>('3D');
+  const toggleViewer = () => setViewer(viewer === '3D' ? 'dendrogram' : '3D');
+  const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
+  const { loading, error, morphology } = useCleanMorphology(meModelId, sessionId);
+
+  if (error) {
+    logError('Unable to load morphology:', error);
+    throw new Error('Unable to load morphology!');
+  }
+
+  if (loading) {
+    return (
+      <div className={styles.center}>
+        <NeuronLoader text="Loading Neuron" />
+      </div>
+    );
+  }
+
   return (
     <ErrorBoundary
       FallbackComponent={withErrorConfig({
@@ -42,12 +70,23 @@ export function NeuronViewerContainer({
       })}
     >
       <DefaultLoadingSuspense>
-        <WebglNeuronSelector
-          disableElectrodes={disableElectrodes}
-          disableSynapses={disableSynapses}
-          meModelId={meModelId}
-          sessionId={sessionId}
-        />
+        {ENABLE_DENDROGRAM && (
+          <button className={styles.toggleView} type="button" onClick={toggleViewer}>
+            <IconGear />
+          </button>
+        )}
+        {(!ENABLE_DENDROGRAM || viewer === '3D') && (
+          <WebglNeuronSelector
+            morphology={morphology}
+            sessionId={sessionId}
+            disableElectrodes={disableElectrodes}
+            disableSynapses={disableSynapses}
+            disableClick={simulationStatus?.status === SimulationStatus.LAUNCHED}
+          />
+        )}
+        {ENABLE_DENDROGRAM && viewer === 'dendrogram' && (
+          <ViewerDendrogram morphology={morphology} />
+        )}
       </DefaultLoadingSuspense>
     </ErrorBoundary>
   );

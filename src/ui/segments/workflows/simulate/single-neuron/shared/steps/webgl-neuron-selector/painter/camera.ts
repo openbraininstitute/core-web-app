@@ -1,4 +1,4 @@
-import { ArrayNumber3, TgdCamera, TgdCameraPerspective } from '@tolokoban/tgd';
+import { type ArrayNumber3, type TgdCamera, TgdCameraPerspective } from '@tolokoban/tgd';
 
 interface BoundingBox {
   min: ArrayNumber3;

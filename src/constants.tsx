@@ -16,8 +16,8 @@ export const WorkspaceScope = {
   Project: 'project',
   Bookmarks: 'bookmarks',
   Custom: 'custom',
-  BuildMeModelM: 'build-me-model/m-model',
-  BuildMeModelE: 'build-me-model/e-model',
+  Build: 'build-model',
+  Simulate: 'simulate-model',
   BuildSynaptomeModel: 'build-single-neuron-synaptome-model/memodel',
   BuildIonChannelModel: 'build-ion-channel-model',
 } as const;

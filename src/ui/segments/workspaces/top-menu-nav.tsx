@@ -2,9 +2,9 @@ import { MenuOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import React, { useState } from 'react';
-
+import type React from 'react';
 import type { ReactNode } from 'react';
+import { useState } from 'react';
 
 import {
   ExploreIcon,
@@ -14,8 +14,8 @@ import {
   ReportsIcon,
   WorkflowIcon,
 } from '@/components/icons/buttons';
-import FeedbacksIcon from '@/components/icons/FeedbacksIcon';
-import { ROOT_ROUTE } from '@/config';
+import { FeedbackStarIcon } from '@/components/icons/FeedbackStarIcon';
+import { config } from '@/config';
 import {
   DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
   DEFAULT_BRAIN_REGION_QUERY_ID,
@@ -51,7 +51,7 @@ type LinkItem = {
   action?: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) => string;
 };
 
-const links: Array<LinkItem> = [
+const links: LinkItem[] = [
   {
     id: 'workspace-home',
     key: 'home',
@@ -87,7 +87,7 @@ const links: Array<LinkItem> = [
     className: 'px-6 gap-8',
     hasAction: true,
     action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
-      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`,
+      `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`,
   },
   {
     id: 'workspace-notebooks',
@@ -99,7 +99,7 @@ const links: Array<LinkItem> = [
     className: 'px-6 gap-8',
     hasAction: true,
     action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
-      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
+      `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
   },
   {
     id: 'workspace-reports',
@@ -111,7 +111,7 @@ const links: Array<LinkItem> = [
     className: 'px-6 gap-8',
     hasAction: true,
     action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
-      `${ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
+      `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
   },
   {
     id: 'workspace-help',
@@ -128,7 +128,7 @@ const links: Array<LinkItem> = [
     key: 'feedbacks',
     title: 'Feedback',
     url: 'feedback',
-    icon: <FeedbacksIcon className="group-hover:text-primary-3 relative left-0.5 h-6! w-6!" />,
+    icon: <FeedbackStarIcon className="group-hover:text-primary-3 relative left-0.5 h-6! w-6!" />,
     allowText: false,
     className: '',
     hasAction: false,
@@ -146,7 +146,7 @@ export function TopMenuNavigation() {
   const hashedLinks = links.map((link) => ({
     ...link,
     baseUrl: link.url,
-    url: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/${link.url}`,
+    url: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${link.url}`,
   }));
 
   // (after tests:) breakpoint for 950px threshold

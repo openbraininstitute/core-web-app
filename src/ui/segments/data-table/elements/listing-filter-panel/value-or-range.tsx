@@ -1,12 +1,11 @@
 'use client';
 
-import { ChangeEvent, HTMLProps, useState } from 'react';
-
+import { type ChangeEvent, type HTMLProps, useState } from 'react';
 import { RangeIcon } from '@/components/icons';
+import { getFieldDefinition } from '@/entity-configuration/definitions';
+import type { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
 import type { GteLteValue, ValueOrRangeFilter } from '@/entity-configuration/definitions/types';
-import { getFieldDefinition } from '@/entity-configuration/definitions';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
 export function getFieldUnit(field: EntityCoreFields) {
   const fieldDef = getFieldDefinition(field);
@@ -41,6 +40,28 @@ function Radio({
   );
 }
 
+const RadioOptionsDict = {
+  all: 'all',
+  value: 'value',
+  range: 'range',
+} as const;
+type TRadioOption = (typeof RadioOptionsDict)[keyof typeof RadioOptionsDict];
+
+function getInitialState(filterValue: ValueOrRangeFilter['value']) {
+  if (typeof filterValue === 'number') {
+    return { radio: RadioOptionsDict.value, value: String(filterValue), gte: '', lte: '' };
+  }
+  if (filterValue && typeof filterValue === 'object') {
+    return {
+      radio: RadioOptionsDict.range,
+      value: '',
+      gte: filterValue.gte != null ? String(filterValue.gte) : '',
+      lte: filterValue.lte != null ? String(filterValue.lte) : '',
+    };
+  }
+  return { radio: RadioOptionsDict.all as TRadioOption, value: '', gte: '', lte: '' };
+}
+
 export function ValueOrRange({
   filter,
   setFilter,
@@ -48,105 +69,78 @@ export function ValueOrRange({
   filter: ValueOrRangeFilter;
   setFilter: (value: ValueOrRangeFilter['value']) => void;
 }) {
-  const [range, setRange] = useState<GteLteValue>(
-    filter.value && Object.prototype.hasOwnProperty.call(filter.value, 'gte')
-      ? (filter.value as GteLteValue)
-      : {
-          gte: null,
-          lte: null,
-        }
-  );
+  const [state, setState] = useState(() => getInitialState(filter.value));
 
-  const [value, setValue] = useState<number | undefined>(
-    typeof filter.value === 'number' ? filter.value : undefined
-  );
-
-  function getInitialRadio() {
-    if (typeof filter.value === 'number') {
-      return 'value';
-    }
-
-    if (
-      !!filter.value &&
-      (Object.prototype.hasOwnProperty.call(filter.value, 'gte') ||
-        Object.prototype.hasOwnProperty.call(filter.value, 'lte'))
-    ) {
-      return 'range';
-    }
-
-    return 'all';
+  function handleRadio(radio: TRadioOption) {
+    setState((s) => ({ ...s, radio }));
+    if (radio === RadioOptionsDict.all) setFilter(null);
   }
 
-  type RadioOptions = 'all' | 'value' | 'range';
-
-  const [selectedRadio, setSelectedRadio] = useState<RadioOptions>(getInitialRadio());
-
-  function updateValue(e: ChangeEvent<HTMLInputElement>) {
-    const newValue = Number(e.target.value);
-
-    setValue(newValue);
-    setFilter(newValue);
+  function handleValue(e: ChangeEvent<HTMLInputElement>) {
+    const v = e.target.value;
+    setState((s) => ({ ...s, value: v }));
+    setFilter(v.trim() === '' ? null : Number(v));
   }
 
-  function updateRange(newValue: { [x in keyof Partial<GteLteValue>]: number }) {
-    setRange({ ...range, ...newValue });
-    setFilter({ ...range, ...newValue });
-  }
-
-  function updateFilter(newValue: number | GteLteValue | null, radioValue: RadioOptions) {
-    setFilter(newValue);
-    setSelectedRadio(radioValue);
+  function handleRange(key: 'gte' | 'lte', e: ChangeEvent<HTMLInputElement>) {
+    const v = e.target.value;
+    setState((s) => {
+      const newState = { ...s, [key]: v };
+      const gteVal = key === 'gte' ? v : s.gte;
+      const lteVal = key === 'lte' ? v : s.lte;
+      setFilter({
+        gte: gteVal.trim() === '' ? null : Number(gteVal),
+        lte: lteVal.trim() === '' ? null : Number(lteVal),
+      } as GteLteValue);
+      return newState;
+    });
   }
 
   return (
     <fieldset className="flex flex-col gap-4">
       <Radio
-        checked={selectedRadio === 'all'}
+        checked={state.radio === RadioOptionsDict.all}
         label="All"
-        onChange={() => updateFilter(null, 'all')}
+        onChange={() => handleRadio(RadioOptionsDict.all)}
         value="all"
       />
       <Radio
-        checked={selectedRadio === 'value'}
+        checked={state.radio === RadioOptionsDict.value}
         label="Value"
-        onChange={() => updateFilter(value ?? null, 'value')}
+        onChange={() => handleRadio(RadioOptionsDict.value)}
         value="value"
       >
         <div className="flex items-center justify-between gap-2">
           <input
             type="number"
-            className="border-primary-6 flex grow gap-2 rounded-md border bg-transparent px-2 py-2 text-sm"
-            onChange={updateValue}
-            value={value}
+            className="border-primary-6 flex grow gap-2 rounded-md border bg-transparent px-2 py-2 text-sm font-bold"
+            onChange={handleValue}
+            value={state.value}
           />
           <span>{getFieldUnit(filter.field)}</span>
         </div>
       </Radio>
       <Radio
-        checked={selectedRadio === 'range'}
+        checked={state.radio === RadioOptionsDict.range}
         label="Range"
-        onChange={() => updateFilter(range, 'range')}
+        onChange={() => handleRadio(RadioOptionsDict.range)}
         value="range"
       >
         <div className="flex items-center gap-2 text-sm">
           <input
-            className="border-primary-6 min-w-0 rounded-md border bg-transparent px-2 py-2 text-center"
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              updateRange({ gte: Number(e.target.value) })
-            }
+            className="border-primary-6 min-w-0 rounded-md border bg-transparent px-2 py-2 text-center font-bold"
+            onChange={(e) => handleRange('gte', e)}
             step={1}
             type="number"
-            value={(range.gte as number | null) ?? undefined}
+            value={state.gte}
           />
           <RangeIcon className="shrink-0" />
           <input
-            className="border-primary-6 min-w-0 rounded-md border bg-transparent px-2 py-2 text-center"
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              updateRange({ lte: Number(e.target.value) })
-            }
+            className="border-primary-6 min-w-0 rounded-md border bg-transparent px-2 py-2 text-center font-bold"
+            onChange={(e) => handleRange('lte', e)}
             step={1}
             type="number"
-            value={(range.lte as number | null) ?? undefined}
+            value={state.lte}
           />
           <span className="shrink-0">{getFieldUnit(filter.field)}</span>
         </div>

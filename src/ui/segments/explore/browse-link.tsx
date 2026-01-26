@@ -3,40 +3,37 @@
 'use client';
 
 import { PlusOutlined, WarningOutlined } from '@ant-design/icons';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { snakeCase, kebabCase } from 'es-toolkit/compat';
 import { useQueries } from '@tanstack/react-query';
-import { match, P } from 'ts-pattern';
+import { kebabCase, snakeCase } from 'es-toolkit/compat';
 import Link from 'next/link';
+import { usePathname, useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
-
+import { match, P } from 'ts-pattern';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
+import { config } from '@/config';
+import type { TWorkspaceScope } from '@/constants';
+import { WorkspaceScope } from '@/constants';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import type { WorkspaceContext } from '@/types/common';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Button } from '@/ui/molecules/button';
+import { Skeleton } from '@/ui/molecules/skeleton';
 import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute/event';
 import { getEntityTypeFromUrlOnEntityScope } from '@/ui/segments/explore/helpers';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
-import { Skeleton } from '@/ui/molecules/skeleton';
-import { WorkspaceContext } from '@/types/common';
-import { Button } from '@/ui/molecules/button';
-import { WorkspaceScope } from '@/constants';
 import { cn } from '@/utils/css-class';
-import { ROOT_ROUTE } from '@/config';
-import { env } from '@/env';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TWorkspaceScope } from '@/constants';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
+import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 function buildDataUrl({
   virtualLabId,
   projectId,
   extendedType,
 }: WorkspaceContext & { extendedType: TExtendedEntitiesTypeDict }) {
-  return `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(extendedType)}`;
+  return `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(extendedType)}`;
 }
 
 type BrowseLinkContentProps = {
@@ -78,6 +75,7 @@ export function BrowseLinkContent({
           asChild
           rounded
           key={`counter-${extendedType}`}
+          id={`counter-${extendedType}`}
           variant="outline"
           size="lg"
           className="group w-full shrink grow border-none text-base"
@@ -170,7 +168,7 @@ function buildQuery({
     filters: {
       page: 1,
       page_size: 1,
-      within_brain_region_hierarchy_id: env.NEXT_PUBLIC_DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+      within_brain_region_hierarchy_id: config.DEFAULT_BRAIN_REGION_HIERARCHY_ID,
       within_brain_region_brain_region_id: brainRegionId ?? null,
       within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
       ...getWorkspaceScopeFilters(scope, { virtualLabId, projectId }),

@@ -1,24 +1,22 @@
 'use client';
 
-import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
-import { throttle, isString } from 'es-toolkit/compat';
-import { ColumnProps } from 'antd/lib/table';
-
-import { fieldsDefinitionRegistry, getFieldDefinition } from '@/entity-configuration/definitions';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { classNames, fieldTitleSentenceCase } from '@/util/utils';
-
+import type { ColumnProps } from 'antd/lib/table';
+import { isString, throttle } from 'es-toolkit/compat';
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import { fieldsDefinitionRegistry, getFieldDefinition } from '@/entity-configuration/definitions';
+import type { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import {
-  SortOrder,
   type OrderShape,
+  SortOrder,
   type TSortOrder,
   type TSortState,
 } from '@/entity-configuration/definitions/types';
-
+import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
 import styles from '@/ui/segments/data-table/elements/table.module.css';
+import { classNames, fieldTitleSentenceCase } from '@/util/utils';
 
 type ResizeInit = {
   key: string | null;
@@ -215,7 +213,7 @@ export function useDataTableColumns<T>({
           sorter: isSortable,
           ellipsis: true,
           width: columnWidths.find(({ key: colKey }) => colKey === key)?.width,
-          render: (r) => term?.render?.(r),
+          render: (_, r, i) => term?.render?.(r as EntityCoreIdentifiable, i),
           onHeaderCell: () => ({
             handleResizing: (e: React.MouseEvent<HTMLElement>) => onMouseDown(e, key),
             onClick: () => {

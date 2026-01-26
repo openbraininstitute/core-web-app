@@ -1,9 +1,8 @@
 import find from 'es-toolkit/compat/find';
 
 import { authApiClient } from '@/api/apiClient';
-import { entityCoreUrl } from '@/config';
-
 import type { EntityCoreBaseAsset, IAsset } from '@/api/entitycore/types/shared/global';
+import { config as appConfig } from '@/config';
 
 export const getEntityCoreContext = (
   ctx:
@@ -26,7 +25,7 @@ export const getEntityCoreContext = (
 };
 
 export async function entityCoreApi(url?: string) {
-  const api = await authApiClient(url ?? entityCoreUrl);
+  const api = await authApiClient(url ?? appConfig.ENTITY_CORE_URL);
   return api;
 }
 

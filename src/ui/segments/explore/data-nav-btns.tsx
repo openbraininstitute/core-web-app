@@ -10,7 +10,7 @@ import { getRouteSegmentsAfterWorkspace } from '@/utils/path';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { WorkspaceSection } from '@/constants';
 import { isBrowser } from '@/utils/environment';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 import Breadcrumb from '@/ui/molecules/breadcrumb';
 import Close from '@/ui/molecules/close';
 
@@ -42,7 +42,7 @@ export function BackToListingOriginButton({
       <Link
         onClick={onClick}
         href={{
-          pathname: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data`,
+          pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data`,
           query: query.toString(),
         }}
         className="capitalize"
@@ -67,7 +67,7 @@ export function BackToCategory({
       <Link
         onClick={onClick}
         href={{
-          pathname: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data`,
+          pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data`,
           query: { ...Object.fromEntries(queryParams.entries()), group },
         }}
         className="capitalize"
@@ -103,7 +103,7 @@ export function BackToEntityType({
       <Link
         onClick={onClick}
         href={{
-          pathname: `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}`,
+          pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}`,
           query: query.toString(),
         }}
       >
@@ -125,7 +125,7 @@ export function DataBreadcrumb({
   title: string;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
-  const routeSegments = getRouteSegmentsAfterWorkspace(usePathname(), ROOT_ROUTE);
+  const routeSegments = getRouteSegmentsAfterWorkspace(usePathname(), config.ROOT_ROUTE);
   const section = routeSegments.at(0);
 
   const { dataKey } = makeDataKey({
@@ -161,7 +161,7 @@ export function DataBreadcrumb({
 }
 
 export function ClosePage({ url }: { url: string }) {
-  const routeSegments = getRouteSegmentsAfterWorkspace(usePathname(), ROOT_ROUTE);
+  const routeSegments = getRouteSegmentsAfterWorkspace(usePathname(), config.ROOT_ROUTE);
   const section = routeSegments.at(0);
   if (section !== WorkspaceSection.Data) return null;
 

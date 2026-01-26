@@ -1,11 +1,11 @@
 import { redirect, RedirectType } from 'next/navigation';
 import { match, P } from 'ts-pattern';
 
-import { resolveWorkspace, WizardSteps } from '@/ui/segments/app-setup/helpers';
-import { WorkspaceWizard } from '@/ui/segments/app-setup/bootsync-wizard';
-import { getSession } from '@/authFetch';
 import { tryCatch } from '@/api/utils';
-import { ROOT_ROUTE } from '@/config';
+import { getSession } from '@/auth-fetch';
+import { config } from '@/config';
+import { WorkspaceWizard } from '@/ui/segments/app-setup/bootsync-wizard';
+import { resolveWorkspace, WizardSteps } from '@/ui/segments/app-setup/helpers';
 
 import type { ServerSideComponentProp } from '@/types/common';
 
@@ -34,12 +34,12 @@ export default async function Page({
       // then forward it first
       if (workspace.recentWorkspace) {
         redirect(
-          `${ROOT_ROUTE}/${workspace.recentWorkspace.virtual_lab_id}/${workspace.recentWorkspace.project_id}`,
+          `${config.ROOT_ROUTE}/${workspace.recentWorkspace.virtual_lab_id}/${workspace.recentWorkspace.project_id}`,
           RedirectType.replace
         );
       }
       // if there is no stored recent workspace, redirect to first fetched workspace
-      redirect(`${ROOT_ROUTE}/${virtualLab.id}/${project.id}`, RedirectType.replace);
+      redirect(`${config.ROOT_ROUTE}/${virtualLab.id}/${project.id}`, RedirectType.replace);
     }
   }
 

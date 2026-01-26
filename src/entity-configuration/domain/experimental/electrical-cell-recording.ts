@@ -1,17 +1,15 @@
 import { without } from 'es-toolkit/compat';
-
+import {
+  getElectricalCellRecording,
+  getElectricalCellRecordings,
+} from '@/api/entitycore/queries/experimental/electrical-cell-recording';
+import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import { ElectricalRecordingOriginDictionary } from '@/api/entitycore/types/entities/electrical-cell-recording';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
-import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-import {
-  getElectricalCellRecordings,
-  getElectricalCellRecording,
-} from '@/api/entitycore/queries/experimental/electrical-cell-recording';
-
-import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 export const recordingOriginFilter = {
@@ -30,6 +28,7 @@ export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecord
   api: {
     config: {
       allowedFacets: true,
+      ilikeSearchEnabled: true,
       extraRequiredListFilters: recordingOriginFilter,
     },
     query: {

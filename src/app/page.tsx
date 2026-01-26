@@ -1,4 +1,4 @@
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 
 import LandingPage from '@/components/LandingPage';
 import { generateMetadataFromSanity } from '@/components/LandingPage/metadata';
@@ -8,6 +8,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const metadata = await generateMetadataFromSanity('/');
   return metadata;
 }
+
+export const dynamic = 'force-dynamic';
 
 export default async function RootPage({
   searchParams: promisedParams,

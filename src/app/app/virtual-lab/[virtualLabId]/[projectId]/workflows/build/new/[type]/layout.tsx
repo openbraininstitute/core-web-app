@@ -1,11 +1,10 @@
 'use client';
 
-import { type ReactNode } from 'react';
 import { motion } from 'motion/react';
-
+import type { ReactNode } from 'react';
+import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { BuildWorkflowsBreadcrumb } from '@/ui/segments/workflows/elements/build-breadcrumb';
-import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { cn } from '@/utils/css-class';
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -22,8 +21,8 @@ export default function Layout({ children }: { children: ReactNode }) {
         id="workflow-new-inner-layout"
         className={cn('grid gap-2 [grid-area:main]', 'h-full max-h-[calc(100%-4rem)] px-3 py-2')}
         initial={{
-          gridTemplateColumns: '1fr',
-          gridTemplateAreas: "'body'",
+          gridTemplateColumns: mdv ? '3fr 2fr' : '1fr',
+          gridTemplateAreas: mdv ? "'body mini-view'" : "'body'",
         }}
         animate={{
           gridTemplateColumns: mdv ? '3fr 2fr' : '1fr',

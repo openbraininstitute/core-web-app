@@ -2,18 +2,27 @@ import SanityClient from 'next-sanity-client';
 
 import tiersQuery from './tiers.query.groq';
 
-import { env } from '@/env';
+import { config } from '@/config';
 
 import { ContentForPricing } from '@/components/LandingPage/content/pricing';
 
-export const client = new SanityClient({
-  projectId: 'fgi7eh1v',
-  dataset: env.NEXT_PUBLIC_SANITY_DATASET!,
-  apiVersion: '2023-03-25',
-  useCdn: process.env.NODE_ENV === 'production',
-  queries: {
-    tiers: tiersQuery,
-  },
-});
+let cachedClient: SanityClient | null = null;
 
-export const getSanityTiers = client.createApiUtil<ContentForPricing | undefined | null>('tiers');
+export function getClient(): SanityClient {
+  if (cachedClient) return cachedClient;
+
+  cachedClient = new SanityClient({
+    projectId: 'fgi7eh1v',
+    dataset: config.SANITY_DATASET,
+    apiVersion: '2023-03-25',
+    useCdn: process.env.NODE_ENV === 'production',
+    queries: {
+      tiers: tiersQuery,
+    },
+  });
+
+  return cachedClient;
+}
+
+export const getSanityTiers = () =>
+  getClient().createApiUtil<ContentForPricing | undefined | null>('tiers');

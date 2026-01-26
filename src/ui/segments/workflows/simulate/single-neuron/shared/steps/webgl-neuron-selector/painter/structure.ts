@@ -1,6 +1,6 @@
-import { ArrayNumber3, TgdVec3 } from '@tolokoban/tgd';
+import { type ArrayNumber3, TgdVec3 } from '@tolokoban/tgd';
 
-import { Morphology } from '@/services/bluenaas-single-cell/types';
+import type { Morphology } from '@/services/bluenaas-single-cell/types';
 import { logWarn } from '@/utils/logger';
 
 export enum StructureItemType {
@@ -61,24 +61,14 @@ export class Structure {
   private readonly segmentsPerSection = new Map<string, StructureItem[]>();
 
   constructor(morphology: Morphology) {
-    const bbox: StructureBoundingBox = {
-      min: [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY],
-      max: [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY],
-      center: [0, 0, 0],
-    };
-    const bboxSoma: StructureBoundingBox = {
-      min: [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY],
-      max: [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY],
-      center: [0, 0, 0],
-    };
-    const bboxDendrites: StructureBoundingBox = {
-      min: [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY],
-      max: [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY],
-      center: [0, 0, 0],
-    };
+    const bbox: StructureBoundingBox = createInitialBBox();
+    const bboxSoma: StructureBoundingBox = createInitialBBox();
+    const bboxDendrites: StructureBoundingBox = createInitialBBox();
     this.bbox = bbox;
     this.bboxSoma = bboxSoma;
     this.bboxDendrites = bboxDendrites;
+    let isBBoxSomaEmpty = true;
+    let isBBoxDendritesEmpty = true;
     let somaCounts = 0;
     const somaCenter = new TgdVec3();
     const sectionNames = Object.keys(morphology);
@@ -126,12 +116,13 @@ export class Structure {
           bboxSoma.max = computeMax(bboxSoma.max, start, item.radius);
           bboxSoma.min = computeMin(bboxSoma.min, end, item.radius);
           bboxSoma.max = computeMax(bboxSoma.max, end, item.radius);
+          isBBoxSomaEmpty = false;
         } else {
           distanceFromSoma += section.length[segmentIndex];
-          bbox.min = computeMin(bbox.min, start);
-          bbox.max = computeMax(bbox.max, start);
-          bbox.min = computeMin(bbox.min, end);
-          bbox.max = computeMax(bbox.max, end);
+          bbox.min = computeMin(bbox.min, start, item.radius);
+          bbox.max = computeMax(bbox.max, start, item.radius);
+          bbox.min = computeMin(bbox.min, end, item.radius);
+          bbox.max = computeMax(bbox.max, end, item.radius);
           if (
             [
               StructureItemType.Dendrite,
@@ -140,10 +131,11 @@ export class Structure {
               StructureItemType.Soma,
             ].includes(type)
           ) {
-            bboxDendrites.min = computeMin(bboxDendrites.min, start);
-            bboxDendrites.max = computeMax(bboxDendrites.max, start);
-            bboxDendrites.min = computeMin(bboxDendrites.min, end);
-            bboxDendrites.max = computeMax(bboxDendrites.max, end);
+            bboxDendrites.min = computeMin(bboxDendrites.min, start, item.radius);
+            bboxDendrites.max = computeMax(bboxDendrites.max, start, item.radius);
+            bboxDendrites.min = computeMin(bboxDendrites.min, end, item.radius);
+            bboxDendrites.max = computeMax(bboxDendrites.max, end, item.radius);
+            isBBoxDendritesEmpty = false;
           }
         }
       }
@@ -159,6 +151,9 @@ export class Structure {
     if (somaCounts > 0) somaCenter.scale(1 / somaCounts);
     bbox.center = [...somaCenter] as ArrayNumber3;
     this.hasApicalDendrites = hasApicalDendrites;
+
+    if (isBBoxSomaEmpty) copyBBoxInto(bbox, bboxSoma);
+    if (isBBoxDendritesEmpty) copyBBoxInto(bbox, bboxDendrites);
   }
 
   getSegmentsOfSection(sectionName: string): StructureItem[] {
@@ -191,12 +186,20 @@ export class Structure {
   }
 }
 
-function computeMin(a: ArrayNumber3, b: ArrayNumber3, r = 0): ArrayNumber3 {
-  return [Math.min(a[0], b[0] - r), Math.min(a[1], b[1] - r), Math.min(a[2], b[2] - r)];
+function computeMin(prev: ArrayNumber3, curr: ArrayNumber3, radius = 0): ArrayNumber3 {
+  return [
+    Math.min(prev[0], curr[0] - radius),
+    Math.min(prev[1], curr[1] - radius),
+    Math.min(prev[2], curr[2] - radius),
+  ];
 }
 
-function computeMax(a: ArrayNumber3, b: ArrayNumber3, r = 0): ArrayNumber3 {
-  return [Math.max(a[0], b[0] + r), Math.max(a[1], b[1] + r), Math.max(a[2], b[2] + r)];
+function computeMax(prev: ArrayNumber3, curr: ArrayNumber3, radius = 0): ArrayNumber3 {
+  return [
+    Math.max(prev[0], curr[0] + radius),
+    Math.max(prev[1], curr[1] + radius),
+    Math.max(prev[2], curr[2] + radius),
+  ];
 }
 
 function resolveType(sectionName: string): StructureItemType {
@@ -228,4 +231,18 @@ function resolveSectionIndex(sectionName: string): number {
   const i = sectionName.indexOf('[');
   const suffix = sectionName.slice(i + 1);
   return parseInt(suffix.slice(0, suffix.length - 1), 10);
+}
+
+function createInitialBBox(): StructureBoundingBox {
+  return {
+    min: [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY],
+    max: [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY],
+    center: [0, 0, 0],
+  };
+}
+
+function copyBBoxInto(from: StructureBoundingBox, to: StructureBoundingBox) {
+  to.center = [...from.center];
+  to.max = [...from.max];
+  to.min = [...from.min];
 }

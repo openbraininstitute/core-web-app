@@ -7,7 +7,7 @@ import values from 'es-toolkit/compat/values';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { FeatureFlags, FlagKey } from '@/features/feature-flags/flags';
+import { FeatureFlags, FlagKey, microcircuitFlag } from '@/features/feature-flags/flags';
 
 export const WorkflowSessionIdSearchParam = 'sessionId';
 export const EntityScopeDict = {
@@ -36,6 +36,7 @@ export const ActivityValues = Object.fromEntries(ActivityDict.map((c) => [c.labe
 type EntityTypeProperties = {
   disabled: boolean;
   type: TExtendedEntitiesTypeDict;
+  requiredFeatures?: Array<FlagKey>;
 };
 
 type EntityTypeOption = {
@@ -196,7 +197,8 @@ export const EntityWorkflowConfiguration: Partial<
         type: ExtendedEntitiesTypeDict.Microcircuit,
       },
       simulate: {
-        disabled: true,
+        disabled: false,
+        requiredFeatures: [microcircuitFlag.key],
         type: ExtendedEntitiesTypeDict.MicrocircuitSimulation,
       },
     },
@@ -282,12 +284,19 @@ export function getDropdownOptionsByCategory(
       (config) =>
         !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
     )
-    .map((config) => ({
-      group: config.group,
-      label: config.label,
-      value: get(config, `properties.${category}`, undefined)?.type,
-      disabled: get(config, `properties.${category}`, undefined)?.disabled ?? true,
-    }));
+    .map((config) => {
+      const disabled = get(config, `properties.${category}`, undefined)?.disabled ?? true;
+      const requiredFeatures = config.properties[category]?.requiredFeatures;
+      const satisfiesFeatureRequirements =
+        !requiredFeatures || requiredFeatures.every((flag) => featureFlags?.[flag]);
+
+      return {
+        group: config.group,
+        label: config.label,
+        value: get(config, `properties.${category}`, undefined)?.type,
+        disabled: disabled || !satisfiesFeatureRequirements,
+      };
+    });
 
   const grouped = groupBy(options, 'group');
 
@@ -333,12 +342,19 @@ export function getAllOptionsOrdered(
       (config) =>
         !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
     )
-    .map((config) => ({
-      group: config.group,
-      label: config.label,
-      value: get(config, `properties.${category}`, undefined)?.type,
-      disabled: get(config, `properties.${category}`, undefined)?.disabled ?? true,
-    }));
+    .map((config) => {
+      const disabled = get(config, `properties.${category}`, undefined)?.disabled ?? true;
+      const requiredFeatures = config.properties[category]?.requiredFeatures;
+      const satisfiesFeatureRequirements =
+        !requiredFeatures || requiredFeatures.every((flag) => featureFlags?.[flag]);
+
+      return {
+        group: config.group,
+        label: config.label,
+        value: get(config, `properties.${category}`, undefined)?.type,
+        disabled: disabled || !satisfiesFeatureRequirements,
+      };
+    });
 
   return sortBy(options, ['disabled', 'group']);
 }

@@ -1,11 +1,9 @@
 import z from 'zod';
-
-import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
-
 import type {
   TCircuitBuildCategoryDictionary,
   TCircuitScaleDictionary,
 } from '@/api/entitycore/types/entities/circuit';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type {
   EntityAuthorization,
   EntityCoreBaseAsset,
@@ -16,6 +14,7 @@ import type {
 import type {
   BrainRegionFilter,
   IEntityFilter,
+  IlikeSearchFilter,
   NameFilter,
   PaginationFilter,
 } from '@/api/entitycore/types/shared/request';
@@ -74,7 +73,8 @@ export interface ICircuitSimulationCampaignFilter
     BrainRegionFilter, // Entitycore API doesn't support brain_region_id filtering, to be removed
     NameFilter,
     PaginationFilter,
-    ISimulationCampaignCircuitFilter {}
+    ISimulationCampaignCircuitFilter,
+    IlikeSearchFilter {}
 
 const CreateCircuitSimulationCampaignSchema = z.object({
   name: z.string(),

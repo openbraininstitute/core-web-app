@@ -1,16 +1,16 @@
 'use client';
 
-import { Document, Page, pdfjs } from 'react-pdf';
 import { Empty, Skeleton } from 'antd';
-import { Fragment, useState } from 'react';
 import kebabCase from 'es-toolkit/compat/kebabCase';
+import { Fragment, useState } from 'react';
+import { Document, Page, pdfjs } from 'react-pdf';
 
 import { useClientCachedUrl } from '@/features/model-analysis/viewer/asset-viewers/storage';
 
-import { classNames } from '@/util/utils';
-import { entityCoreUrl } from '@/config';
 import { TEntityTypeDict } from '@/api/entitycore/types';
 import { IconDownloadFile } from '@/components/LandingPage/icons/IconDownloadFile';
+import { config } from '@/config';
+import { classNames } from '@/util/utils';
 
 import styles from './pdf-viewer.module.css';
 
@@ -38,7 +38,7 @@ export default function PDFViewer({
   pageWidth,
 }: Props) {
   const [totalPages, setNumPages] = useState<number>();
-  const pdfFileUrl = `${entityCoreUrl}/${kebabCase(entityType)}/${entityId}/assets/${assetId}/download`;
+  const pdfFileUrl = `${config.ENTITY_CORE_URL}/${kebabCase(entityType)}/${entityId}/assets/${assetId}/download`;
 
   const {
     cachedUrl,

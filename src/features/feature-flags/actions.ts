@@ -3,7 +3,8 @@
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 
-import { env } from '@/env';
+import { config } from '@/config';
+
 import {
   COOKIE_MAX_AGE,
   defaultFlags,
@@ -32,9 +33,7 @@ export async function setFlag<K extends keyof FeatureFlags>(key: K, value: Featu
     maxAge: COOKIE_MAX_AGE,
     path: '/',
     sameSite: 'lax',
-    secure: ['preview', 'development', 'staging', 'production'].includes(
-      env.NEXT_PUBLIC_DEPLOYMENT_ENV
-    ),
+    secure: ['preview', 'development', 'staging', 'production'].includes(config.DEPLOYMENT_ENV),
   });
 
   revalidatePath('/', 'layout');

@@ -25,6 +25,7 @@ import { MEModelCircuitSimulation } from '@/entity-configuration/domain/simulati
 import { SingeNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/single-neuron-circuit-simulation';
 import { PairedNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/paired-neurons-simulation';
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
+import { MicrocircuitSimulation } from '@/entity-configuration/domain/simulation/microcircuit-simulation';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
@@ -59,6 +60,7 @@ const EntityCoreSimulationConfiguration = {
   SingeNeuronCircuitSimulation,
   PairedNeuronCircuitSimulation,
   SmallMicrocircuitSimulation,
+  MicrocircuitSimulation,
 };
 
 export const EntityCoreConfiguration = {

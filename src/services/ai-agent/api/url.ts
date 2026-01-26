@@ -1,6 +1,5 @@
 import { isString } from '@/util/type-guards';
-
-const AGENT_URL = process.env.NEXT_PUBLIC_AI_AGENT_URL ?? '(Missing NEXT_PUBLIC_AI_AGENT_URL)';
+import { config } from '@/config';
 
 /**
  * This function can be used to set the `api` property
@@ -10,6 +9,7 @@ export function serviceAiAgentUrl(
   entrypoint: string | string[],
   params?: Record<string, string | null>
 ) {
+  const AGENT_URL = config.AI_AGENT_URL ?? '(Missing AI_AGENT_URL)';
   const items = Array.isArray(entrypoint) ? entrypoint : [entrypoint];
   const url = [AGENT_URL, ...items]
     .map((item) => {

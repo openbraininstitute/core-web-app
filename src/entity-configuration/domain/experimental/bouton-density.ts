@@ -1,14 +1,13 @@
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
-import { EntityTypeGroup } from '@/entity-configuration/domain/group';
-import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
-import { EntitySlug } from '@/entity-configuration/domain/slug';
 import {
   getExperimentalBoutonDensities,
   getExperimentalBoutonDensity,
 } from '@/api/entitycore/queries/experimental/bouton-density';
-
 import type { IExperimentalBoutonDensity } from '@/api/entitycore/types/entities/bouton-density';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
+import { EntityTypeGroup } from '@/entity-configuration/domain/group';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 export const BoutonDensity: EntityCoreTypeConfig<IExperimentalBoutonDensity> = {
@@ -20,6 +19,7 @@ export const BoutonDensity: EntityCoreTypeConfig<IExperimentalBoutonDensity> = {
   api: {
     config: {
       allowedFacets: true,
+      ilikeSearchEnabled: true,
     },
     query: {
       list: getExperimentalBoutonDensities,

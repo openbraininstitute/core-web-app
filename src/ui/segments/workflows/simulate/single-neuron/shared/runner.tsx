@@ -1,67 +1,64 @@
 'use client';
 
 import { captureException } from '@sentry/nextjs';
-import { RESET } from 'jotai/utils';
-import { match } from 'ts-pattern';
-import Link from 'next/link';
-import { atom } from 'jotai';
+import type { NotificationInstance } from 'antd/es/notification/interface';
 import {
+  delay,
+  isNil,
+  kebabCase,
+  get as lget,
+  map,
+  omit,
+  pick,
   sortBy,
   uniqBy,
   values,
-  isNil,
-  delay,
-  pick,
-  omit,
-  map,
-  get as lget,
-  kebabCase,
 } from 'es-toolkit/compat';
-import type { NotificationInstance } from 'antd/es/notification/interface';
-
-import { SingleNeuronSimulationStatus } from '@/api/entitycore/types/shared/neuron-simulation';
-import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
-import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
-import {
-  genericSingleNeuronSimulationPlotDataAtomFamily,
-  SimulationStatus,
-  simulationStatusAtomFamily,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import { createJsonAsset } from '@/api/entitycore/queries/assets';
-import { readNdjsonResponse } from '@/utils/response';
-import {
-  SingleNeuronSimulation,
-  SingleNeuronSynaptomeSimulation,
-} from '@/entity-configuration/domain/simulation';
-import { messages } from '@/i18n/en/simulation';
-import { tryCatch } from '@/api/utils';
+import { atom } from 'jotai';
+import { RESET } from 'jotai/utils';
+import Link from 'next/link';
+import { match } from 'ts-pattern';
 import {
   createSingleNeuronSimulation,
   createSingleNeuronSynaptomeSimulation,
   getMEModel,
 } from '@/api/entitycore/queries';
-
-import { type Message, JobStatus, MessageType } from '@/services/small-scale-simulator/types';
-import type { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
-import type {
-  NeuronLocationArray,
-  SimulationExperimentalSetup,
-  TStimulationConfiguration,
-  SynapseConfigurationArray,
-  TOverviewConfiguration,
-  TSimulationType,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import type {
-  SimulationStreamData,
-  SingleNeuronModelSimulationConfig,
-} from '@/types/small-scale-simulator/single-neuron';
+import { createJsonAsset } from '@/api/entitycore/queries/assets';
 import type {
   ISingleNeuronSimulation,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
-
-import { ROOT_ROUTE } from '@/config';
+import { SingleNeuronSimulationStatus } from '@/api/entitycore/types/shared/neuron-simulation';
+import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
+import { tryCatch } from '@/api/utils';
+import { config } from '@/config';
+import {
+  SingleNeuronSimulation,
+  SingleNeuronSynaptomeSimulation,
+} from '@/entity-configuration/domain/simulation';
+import { messages } from '@/i18n/en/simulation';
+import type { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
+import { JobStatus, type Message, MessageType } from '@/services/small-scale-simulator/types';
+import type {
+  SimulationStreamData,
+  SingleNeuronModelSimulationConfig,
+} from '@/types/small-scale-simulator/single-neuron';
+import {
+  genericSingleNeuronSimulationPlotDataAtomFamily,
+  SimulationStatus,
+  simulationStatusAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import type {
+  NeuronLocationArray,
+  SimulationExperimentalSetup,
+  SynapseConfigurationArray,
+  TOverviewConfiguration,
+  TSimulationType,
+  TStimulationConfiguration,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
+import { readNdjsonResponse } from '@/utils/response';
 
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
 
@@ -210,6 +207,7 @@ export const launchSimulationAtom = atom<
     number,
     () => void,
     NotificationInstance,
+    boolean,
   ],
   void
 >(
@@ -231,7 +229,8 @@ export const launchSimulationAtom = atom<
     simulationType: TSimulationType,
     duration: number,
     onChangePanel: () => void,
-    notify: NotificationInstance
+    notify: NotificationInstance,
+    isProjectAdmin: boolean
   ) => {
     if (simulationType === 'single-neuron-simulation') {
       if (!stimulationConfiguration) {
@@ -284,13 +283,21 @@ export const launchSimulationAtom = atom<
       );
 
       if (error) {
+        let errorMessage =
+          lget(error, 'cause.message', null) ?? messages.RunningSimulationDefaultError;
+        const isLowFundsError = lget(error, 'cause.code') === LOW_FUNDS_ERROR_CODE;
+
+        if (isLowFundsError) {
+          errorMessage = isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin;
+        }
+
         set(simulationStatusAtom, {
           status: SimulationStatus.ERROR,
-          description: lget(error, 'cause.message', null) ?? messages.RunningSimulationDefaultError,
+          description: errorMessage,
         });
         notify.error({
           message: `Simulation ${overviewConfiguration.name}`,
-          description: lget(error, 'cause.message', null) ?? messages.RunningSimulationDefaultError,
+          description: errorMessage,
           placement: 'topRight',
           key: `simulation-failed-${sessionId}`,
         });
@@ -303,7 +310,7 @@ export const launchSimulationAtom = atom<
         try {
           const errResponseObj = await response?.json();
           if (errResponseObj.error_code === LOW_FUNDS_ERROR_CODE) {
-            errorMessage = messages.LowFundsError;
+            errorMessage = isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin;
           }
         } catch {
           // ignore
@@ -392,7 +399,7 @@ export const launchSimulationAtom = atom<
                   <div className="flex flex-col gap-2">
                     <p>{messages.CreationSimulationSucceed}</p>
                     <Link
-                      href={`${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(data.simulation.type)}/${data.simulation.id}`}
+                      href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(data.simulation.type)}/${data.simulation.id}`}
                       className="text-primary-8 no-underline! hover:underline"
                       onClick={() => notify.destroy(`simulation-success-${sessionId}`)}
                     >

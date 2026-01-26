@@ -2,16 +2,19 @@
 
 import { useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
+import { useEffect } from 'react';
 
-import { isServer, ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 
 export default function Page() {
   const searchParams = useSearchParams();
 
   const redirectURL = searchParams.get('callbackUrl');
 
-  const onboarding = `${typeof window !== 'undefined' ? window.location.origin : ''}${ROOT_ROUTE}/sync?redirectUrl=${encodeURIComponent(redirectURL ?? '')}`;
-  if (!isServer) signIn('keycloak', { callbackUrl: onboarding });
+  useEffect(() => {
+    const onboarding = `${window.location.origin}${config.ROOT_ROUTE}/sync?redirectUrl=${encodeURIComponent(redirectURL ?? '')}`;
+    signIn('keycloak', { callbackUrl: onboarding });
+  }, [redirectURL]);
 
   return (
     <div className="flex flex-col items-center justify-center space-y-4">

@@ -1,11 +1,11 @@
 /* eslint-disable react/no-unstable-nested-components */
-import React, { ReactNode } from 'react';
-import { Select } from 'antd';
 
-import { FlatValidationResult } from '../hooks';
+import { Select } from 'antd';
+import React, { type ReactNode } from 'react';
+import { isType } from '@/util/type-guards';
 
 import { classNames } from '@/util/utils';
-import { isType } from '@/util/type-guards';
+import type { FlatValidationResult } from '../hooks';
 
 import styles from './select-analysis.module.css';
 
@@ -27,7 +27,7 @@ export function SelectAnalysis({ className, value, onChange, results }: SelectAn
     ...results.map((result) => {
       return {
         label: result,
-        value: result.name,
+        value: result.id,
       };
     }),
   ];
@@ -40,7 +40,11 @@ export function SelectAnalysis({ className, value, onChange, results }: SelectAn
         className="min-w-[200px]"
         value={value}
         onChange={onChange}
-        labelRender={(label) => <div className="text-primary-8 font-bold">{label.label}</div>}
+        labelRender={(option) => (
+          <div className="text-primary-8 font-bold">
+            {isFlatValidationResult(option.label) ? option.label.name : option.label}
+          </div>
+        )}
         optionRender={(option) => <ComboItemLabel label={option.label} />}
       />
     </div>

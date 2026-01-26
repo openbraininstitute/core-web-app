@@ -1,6 +1,6 @@
 'use client';
 
-import { parseAsString, Parser, useQueryState } from 'nuqs';
+import { parseAsString, useQueryState } from 'nuqs';
 import { classNames } from '@/util/utils';
 
 type Props<T> = {
@@ -87,7 +87,9 @@ export function useTabs<T extends string>({
     tabKey,
     parseAsString
       .withOptions({ shallow, clearOnDefault })
-      .withDefault(defaultKey ?? tabsConfig?.at(0)!.key!) as Parser<T>
+      // biome-ignore lint/style/noNonNullAssertion: first item is always present
+      // biome-ignore lint/suspicious/noNonNullAssertedOptionalChain: allow chain
+      .withDefault(defaultKey ?? tabsConfig?.at(0)!.key!)
   );
 
   const onChangeTab = (key: string) => () => setActiveTab(key as T);

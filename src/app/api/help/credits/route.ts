@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { client } from '@/api/sanity/client';
+import { getClient } from '@/api/sanity/client';
 import { logError } from '@/util/logger';
 
 export type CreditsPack = {
@@ -19,7 +19,7 @@ const queryForCreditsPacks = `*[_type == "credits"][] {
 
 export async function GET() {
   try {
-    const data = await client.fetch<CreditsPack[]>({
+    const data = await getClient().fetch<CreditsPack[]>({
       query: queryForCreditsPacks,
     });
 

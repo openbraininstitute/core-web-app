@@ -1,17 +1,17 @@
-import { atomFamily } from 'jotai/utils';
-import { atom } from 'jotai';
-
 import isNil from 'es-toolkit/compat/isNil';
+import { atom } from 'jotai';
+import { atomFamily } from 'jotai/utils';
+
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import {
   getBrainAtlases,
   getBrainAtlasRegion,
   getBrainAtlasRegions,
 } from '@/api/entitycore/queries/general/brain-atlas';
-import { arrayBufferToString } from '@/utils/buffer';
-import { tryCatch } from '@/api/utils';
-import { env } from '@/env';
 import { EntityTypeDict } from '@/api/entitycore/types';
+import { tryCatch } from '@/api/utils';
+import { config } from '@/config';
+import { arrayBufferToString } from '@/utils/buffer';
 
 const defaultAtlasName = 'BlueBrain Atlas';
 export const brainAtlasAtom = atom(async () => {
@@ -26,7 +26,7 @@ export const brainAtlasAtom = atom(async () => {
 
 async function resolveBrainRegionAtlasMesh({
   atlasRegionId,
-  atlasId = env.NEXT_PUBLIC_DEFAULT_BRAIN_ATLAS_ID,
+  atlasId = config.DEFAULT_BRAIN_ATLAS_ID,
 }: {
   atlasRegionId: string;
   atlasId?: string;
@@ -63,7 +63,7 @@ export const brainRegionAtlasAtom = atom(async (get) => {
   const brainAtlas = await get(brainAtlasAtom);
   return await tryCatch(
     getBrainAtlasRegions({
-      atlasId: brainAtlas?.id ?? env.NEXT_PUBLIC_DEFAULT_BRAIN_ATLAS_ID,
+      atlasId: brainAtlas?.id ?? config.DEFAULT_BRAIN_ATLAS_ID,
       filters: { page: 1, page_size: 1500 },
     })
   );

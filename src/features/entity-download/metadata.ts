@@ -1,9 +1,7 @@
-import { Readable } from 'stream';
-
 import { format } from 'fast-csv';
-
-import { CsvEntry } from './types';
+import { Readable } from 'stream';
 import { bufferStream } from '@/features/entity-download/utils';
+import type { CsvEntry, CsvSimulationEntryBase } from './types';
 
 type FileEntry = {
   path: string;
@@ -12,7 +10,7 @@ type FileEntry = {
 };
 
 type MetadataEntry<JsonEntry> = {
-  csv: CsvEntry;
+  csv: CsvEntry | CsvSimulationEntryBase;
   json: JsonEntry;
 };
 
@@ -26,7 +24,7 @@ type MetadataEntry<JsonEntry> = {
 export class Metadata<JsonEntry> {
   private jsonEntries: JsonEntry[] = [];
 
-  private csvEntries: CsvEntry[] = [];
+  private csvEntries: (CsvEntry | CsvSimulationEntryBase)[] = [];
 
   public add(entry: MetadataEntry<JsonEntry>) {
     this.jsonEntries.push(entry.json);
@@ -50,7 +48,9 @@ export class Metadata<JsonEntry> {
     // Create  CSV metadata file
     const metadataCsvStream = format({ headers: true, delimiter: ',' });
 
-    this.csvEntries.forEach((entry) => metadataCsvStream.write(entry));
+    this.csvEntries.forEach((entry) => {
+      metadataCsvStream.write(entry);
+    });
     metadataCsvStream.end();
 
     const metadataCsvBuffer = await bufferStream(metadataCsvStream);

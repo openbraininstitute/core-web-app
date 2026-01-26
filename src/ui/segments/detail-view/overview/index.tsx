@@ -19,7 +19,7 @@ import MEModelDetails from '@/features/entities/neuron-simulation/elements/me-mo
 import SynaptomeDetails from '@/features/entities/neuron-simulation/elements/synaptome-details';
 import { EphysViewer } from '@/features/ephys-viewer';
 import { IonChannelRecordingViewer } from '@/features/ion-channel-recording-viewer';
-import SmallMicrocircuitSimulation from '@/features/small-microcircuit';
+import ScanConfig from '@/features/scan-config';
 import { Field } from '@/ui/segments/detail-view/overview/field';
 import IonChannelModelOverview from '@/ui/segments/detail-view/overview/ion-channel-model';
 import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
@@ -93,26 +93,34 @@ export default async function Overview({
     extendedType === ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation ||
     extendedType === ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation ||
     extendedType === ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation ||
+    extendedType === ExtendedEntitiesTypeDict.MicrocircuitSimulation ||
     extendedType === ExtendedEntitiesTypeDict.MemodelCircuitSimulation
   ) {
     let config: AwaitedType<ReturnType<typeof resolveSimulationByCampaignId>>;
 
     try {
       config = await resolveSimulationByCampaignId({ id: entity.id, context: ctx });
-    } catch {
+    } catch (err) {
       notFound();
     }
 
     if (!config.simulation?.entity_id) notFound();
 
     return (
-      <SmallMicrocircuitSimulation
+      <ScanConfig
         modelId={config.simulation.entity_id}
         virtualLabId={ctx.virtualLabId}
         projectId={ctx.projectId}
         initialCampaignId={config.campaign.id}
-        initialConfig={config.config.form}
+        initialConfig={config.config?.form}
         readOnly={!isWorkflow}
+        // This is a temporary solution to show sim campaigns not complient with obi-one gen config.
+        // TODO: remove this after microcircuit scale simulations are fully implemented.
+        defaultTab={
+          extendedType === ExtendedEntitiesTypeDict.MicrocircuitSimulation
+            ? 'simulations'
+            : undefined
+        }
       />
     );
   }
@@ -141,7 +149,7 @@ export default async function Overview({
             meModel={singleNeuronSynaptomeSimulationPayload.memodel}
             synaptome={singleNeuronSynaptomeSimulationPayload.synaptome}
             virtualLabId={ctx.virtualLabId}
-            projectId={ctx.virtualLabId}
+            projectId={ctx.projectId}
           />
         )}
       {circuitTypes.includes(extendedType) && <CircuitViz circuit={entity as ICircuit} />}

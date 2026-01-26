@@ -9,21 +9,21 @@ import {
 } from '@ant-design/icons';
 import { useRouter } from '@bprogress/next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
-import { z } from 'zod';
-
 import delay from 'es-toolkit/compat/delay';
 import get from 'es-toolkit/compat/get';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 import omit from 'es-toolkit/compat/omit';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
+import type { z } from 'zod';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { createModel } from '@/api/small-scale-simulator/single-neuron/single-neuron';
 import { CreateSingleNeuronSchema } from '@/api/small-scale-simulator/types';
 import { useAppNotification } from '@/components/notification';
 import { LowFundsNotification } from '@/components/notification/low-funds-notification';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
+import { useUserRole } from '@/hooks/use-user-role';
 import { LOW_FUNDS_ERROR_CODE, messages } from '@/i18n/en/me-model';
 import { WorkspaceContextSchema } from '@/types/common';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
@@ -32,7 +32,7 @@ import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import {
   BuildStep,
-  BuildStepKeys,
+  type BuildStepKeys,
   useBuildMeModelSessionState,
 } from '@/ui/segments/workflows/build/memodel/helpers';
 import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
@@ -53,6 +53,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
   const { push: navigate } = useRouter();
   const step = searchParams.get('step');
   const [showLowFundsNotification, setShowLowFundsNotification] = useState(false);
+  const { isProjectAdmin } = useUserRole({ virtualLabId, projectId });
 
   const { sessionValue } = useBuildMeModelSessionState({
     sessionId,
@@ -102,14 +103,18 @@ export function Menu({ sessionId }: { sessionId: string }) {
       });
       delay(() => {
         navigate(
-          `${ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.Memodel)}/${data.data.id}`
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.Memodel)}/${data.data.id}`
         );
       }, 500);
     },
     onError(err) {
       log('error', 'Build me-model failed:', err);
       const isLowFundsError = get(err, 'cause.code') === LOW_FUNDS_ERROR_CODE;
-      const message = isLowFundsError ? messages.LowFundsError : messages.DefaultErrorMsg;
+
+      let message = messages.DefaultErrorMsg;
+      if (isLowFundsError) {
+        message = isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin;
+      }
 
       if (isLowFundsError) {
         setShowLowFundsNotification(true);
@@ -148,7 +153,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
       {showLowFundsNotification && (
         <LowFundsNotification
           title="ME-model creation failed"
-          description={messages.LowFundsError}
+          description={isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin}
           onClose={() => setShowLowFundsNotification(false)}
           duration={10000}
         />

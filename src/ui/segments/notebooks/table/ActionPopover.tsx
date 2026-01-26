@@ -1,31 +1,31 @@
 'use client';
 
-import { Modal } from 'antd';
-import { useState } from 'react';
 import { LoadingOutlined, PlayCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import { Modal } from 'antd';
 import { Popover } from 'antd/lib';
-
+import { useState } from 'react';
+import type { INotebook } from '@/api/entitycore/types/entities/notebook';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
 import { EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
-import { INotebook } from '@/api/entitycore/types/entities/notebook';
-
-import { downloadArchive } from '@/services/entity-download';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { useAppNotification } from '@/components/notification';
-import { NotebookStartResponse, startNotebook } from '@/services/notebooks';
+import { config } from '@/config';
+import { downloadArchive } from '@/services/entity-download';
+import { type NotebookStartResponse, startNotebook } from '@/services/notebooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 interface ActionPopoverProps {
   notebook: INotebook;
+  index: number;
 }
 
-export default function ActionPopover({ notebook }: ActionPopoverProps) {
+export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
   const [open, setOpen] = useState(false);
   const notification = useAppNotification();
   const { virtualLabId, projectId } = useWorkspace();
   const [loading, setLoading] = useState(false);
 
-  async function handleRunNotebook() {
+  async function handleRunNotebook(cloud?: string, podNum?: number) {
     if (loading) return;
     const asset = notebook.assets.find((n) => n.label === 'jupyter_notebook');
     if (!asset) return;
@@ -37,7 +37,9 @@ export default function ActionPopover({ notebook }: ActionPopoverProps) {
         notebook.id,
         asset.path,
         virtualLabId,
-        projectId
+        projectId,
+        cloud,
+        podNum
       );
       notification.success({
         message: `Notebook starting`,
@@ -73,12 +75,13 @@ export default function ActionPopover({ notebook }: ActionPopoverProps) {
           <div className="mt-5 text-lg text-black">{notebook.description}</div>
         </div>
       </Modal>
-      <div id="popover">
+      <div id={`notebook-actions-${index}`}>
         <Popover
           content={
             <div className="text-primary-9 flex min-w-[120px] flex-col gap-2">
               <div className="flex gap-4">
                 <button
+                  data-id={`readme-btn-${index}`}
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -92,6 +95,7 @@ export default function ActionPopover({ notebook }: ActionPopoverProps) {
               </div>
               <div className="flex gap-4">
                 <button
+                  data-id={`download-btn-${index}`}
                   type="button"
                   className="hover:text-primary-4 inline-flex items-center gap-[10px]"
                   onClick={(e) => {
@@ -109,6 +113,7 @@ export default function ActionPopover({ notebook }: ActionPopoverProps) {
 
               <div className="flex gap-4">
                 <button
+                  data-id={`run-btn-${index}`}
                   disabled={loading}
                   type="button"
                   className="hover:text-primary-4 inline-flex items-center gap-[10px]"
@@ -122,6 +127,71 @@ export default function ActionPopover({ notebook }: ActionPopoverProps) {
                   Run
                 </button>
               </div>
+
+              {['local', 'preview', 'development'].includes(config.DEPLOYMENT_ENV) && (
+                <div>
+                  <div className="flex gap-4">
+                    <button
+                      disabled={loading}
+                      type="button"
+                      className="hover:text-primary-4 inline-flex items-center gap-[10px]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRunNotebook('aws', 0);
+                      }}
+                    >
+                      {!loading && <PlayCircleOutlined aria-label="Run" />}
+                      {loading && <LoadingOutlined />}
+                      Run in single pod 0 on AWS
+                    </button>
+                  </div>
+                  <div className="flex gap-4">
+                    <button
+                      disabled={loading}
+                      type="button"
+                      className="hover:text-primary-4 inline-flex items-center gap-[10px]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRunNotebook('azure', 0);
+                      }}
+                    >
+                      {!loading && <PlayCircleOutlined aria-label="Run" />}
+                      {loading && <LoadingOutlined />}
+                      Run in single pod 0 on Azure
+                    </button>
+                  </div>
+                  <div className="flex gap-4">
+                    <button
+                      disabled={loading}
+                      type="button"
+                      className="hover:text-primary-4 inline-flex items-center gap-[10px]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRunNotebook('aws', 1);
+                      }}
+                    >
+                      {!loading && <PlayCircleOutlined aria-label="Run" />}
+                      {loading && <LoadingOutlined />}
+                      Run in single pod 1 on AWS
+                    </button>
+                  </div>
+                  <div className="flex gap-4">
+                    <button
+                      disabled={loading}
+                      type="button"
+                      className="hover:text-primary-4 inline-flex items-center gap-[10px]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRunNotebook('azure', 1);
+                      }}
+                    >
+                      {!loading && <PlayCircleOutlined aria-label="Run" />}
+                      {loading && <LoadingOutlined />}
+                      Run in single pod 1 on Azure
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           }
           style={{

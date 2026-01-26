@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 
-import { TEntityTypeDict } from '@/api/entitycore/types';
-import { PartialBy } from '@/types/common';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
+import type { PartialBy } from '@/types/common';
 import { logError, logInfo } from '@/utils/logger';
 
 type DownloadTicket = {
@@ -92,6 +92,10 @@ class TicketStore {
    */
   deleteTicket(ticketId: string): void {
     this.tickets.delete(ticketId);
+  }
+
+  all() {
+    return this.tickets;
   }
 
   /**

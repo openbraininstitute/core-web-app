@@ -1,32 +1,23 @@
 /* eslint-disable no-param-reassign */
-import React from 'react';
+
 import {
-  ArrayNumber2,
-  tgdCalcMapRange,
-  TgdCameraState,
+  type TgdCameraState,
   TgdContext,
   TgdControllerCameraOrbit,
-  TgdLight,
   TgdMat4,
-  TgdMaterialDiffuse,
-  TgdPainter,
-  TgdPainterSegments,
-  TgdPainterSegmentsData,
   TgdVec3,
+  tgdCalcMapRange,
 } from '@tolokoban/tgd';
-import { useAtomValue } from 'jotai';
-
+import React from 'react';
+import { useAppNotification } from '@/components/notification';
+import type { Morphology } from '@/services/bluenaas-single-cell/types';
+import GenericEvent from '@/util/generic-event';
 import { useVisibleSynapses } from '../hooks';
-import { SimulationStatus, simulationStatusAtomFamily } from '../../../context';
-import { computeSectionOffset } from './math';
 import { makeCamera } from './camera';
-import { Structure, StructureItem, StructureItemType } from './structure';
+import { computeSectionOffset } from './math';
 import { OffscreenPainter } from './offscreen-painter';
 import { Painter } from './painters';
-
-import { Morphology } from '@/services/bluenaas-single-cell/types';
-import GenericEvent from '@/util/generic-event';
-import { useAppNotification } from '@/components/notification';
+import { Structure, type StructureItem } from './structure';
 
 interface SelectedItem {
   x: number;
@@ -431,41 +422,23 @@ export class PainterManager {
     }
     return tgdCalcMapRange(normalizedZoom, 0, +1, 1, maxZoom, true);
   }
-
-  private makeHoverPainter(item: StructureItem): TgdPainter | null {
-    const { context } = this;
-    if (!context) return null;
-
-    const segments = new TgdPainterSegmentsData();
-    const uv: ArrayNumber2 = [
-      (StructureItemType.Selected + 0.5) / (StructureItemType.Unknown + 1),
-      0,
-    ];
-    const radius = item.radius * 1.5;
-    segments.add([...item.start, radius], [...item.end, radius], uv, uv);
-
-    return new TgdPainterSegments(context, {
-      roundness: 32,
-      minRadius: 2,
-      makeDataset: segments.makeDataset,
-      material: new TgdMaterialDiffuse({
-        color: [0.8, 0.6, 0.3, 1],
-        specularExponent: 1,
-        specularIntensity: 0.5,
-        lockLightsToCamera: true,
-        light: new TgdLight({
-          direction: new TgdVec3(0, 0, -1),
-        }),
-      }),
-    });
-  }
 }
 
-export function usePainterManager() {
+export function usePainterManager(morphology: Morphology) {
   const refPainter = React.useRef<PainterManager | null>(null);
   if (!refPainter.current) {
     refPainter.current = new PainterManager();
+    refPainter.current.morphology = morphology;
   }
+
+  // Update morphology when it changes (even if object reference changes)
+  React.useEffect(() => {
+    if (refPainter.current) {
+      refPainter.current.morphology = morphology;
+    }
+  }, [morphology]);
+
+  // Cleanup only on unmount
   React.useEffect(() => {
     return () => {
       const painterManager = refPainter.current;
@@ -473,15 +446,15 @@ export function usePainterManager() {
 
       painterManager.delete();
     };
-  });
+  }, []); // Empty dependency array - only run on mount/unmount
   return refPainter.current;
 }
 
 export function usePainterController(
   painter: PainterManager,
-  sessionId: string,
   disableElectrodes: boolean,
-  disableSynapses: boolean
+  disableSynapses: boolean,
+  disableClick: boolean
 ) {
   const notif = useAppNotification();
   React.useEffect(() => {
@@ -495,13 +468,11 @@ export function usePainterController(
     return () => painter.eventForbiddenClick.removeListener(action);
   }, [notif, painter]);
 
-  const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
   React.useEffect(() => {
-    const s = simulationStatus?.status;
     if (painter) {
-      painter.clickable = s !== SimulationStatus.LAUNCHED;
+      painter.clickable = disableClick !== true;
     }
-  }, [simulationStatus, painter]);
+  }, [disableClick, painter]);
 
   const synapses = useVisibleSynapses();
   React.useEffect(() => {

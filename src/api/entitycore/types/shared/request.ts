@@ -37,7 +37,9 @@ export type PaginationFilter = {
   page: number;
   page_size: number;
 };
-
+export type IlikeSearchFilter = {
+  ilike_search: string | null;
+};
 export type SpeciesFilter = {
   species__id: string | null;
   species_id__in: number | null;
@@ -116,7 +118,7 @@ export interface IMorphologyFilter {
   exemplar_morphology__order_by?: string | null;
 }
 
-export interface CreatorFilter {}
+export type CreatorFilter = {};
 
 export interface OwnershipFilter {
   created_by__id?: string | null;

@@ -1,8 +1,11 @@
+import 'server-only';
+
 import '@ant-design/v5-patch-for-react-19';
-import { ReactNode, Suspense } from 'react';
-import { Gabarito, Titillium_Web, DM_Serif_Text } from 'next/font/google';
+import { DM_Serif_Text, Gabarito, Titillium_Web } from 'next/font/google';
+import { type ReactNode, Suspense } from 'react';
 
 import MatomoAnalyticsConsent from '@/components/Matomo';
+import { ConfigProvider, getClientEnvInjectionConfig } from '@/config';
 
 import '@/styles/globals.css';
 
@@ -29,15 +32,27 @@ type RootLayoutProps = {
 };
 
 export default async function RootLayout({ children }: RootLayoutProps) {
+  const config = getClientEnvInjectionConfig();
+
   return (
     <html
       lang="en"
       className={`${titilliumWeb.variable} ${gabarito.variable} ${DMSerifText.variable}`}
       data-scroll-behavior="smooth"
     >
+      <head>
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: <false positive>
+          dangerouslySetInnerHTML={{
+            __html: `window.__ENV__=${JSON.stringify(config)};`,
+          }}
+        />
+      </head>
       <body>
-        <Suspense fallback={null}>{children}</Suspense>
-        <MatomoAnalyticsConsent />
+        <ConfigProvider config={config}>
+          <Suspense fallback={null}>{children}</Suspense>
+          <MatomoAnalyticsConsent />
+        </ConfigProvider>
       </body>
     </html>
   );

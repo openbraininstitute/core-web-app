@@ -7,7 +7,7 @@ import { Shortcuts } from '@/ui/segments/project/bottom-nav-shortcuts';
 import { ProjectActivities } from '@/ui/segments/project/activities';
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
 import { ProjectCard } from '@/ui/segments/project/banner/banner';
-import { ROOT_ROUTE } from '@/config';
+import { config } from '@/config';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { tryCatch } from '@/api/utils';
 
@@ -27,7 +27,7 @@ export default async function Home({
   );
 
   if (!data || error) {
-    redirect(`${ROOT_ROUTE}/sync`, RedirectType.replace);
+    redirect(`${config.ROOT_ROUTE}/sync`, RedirectType.replace);
   }
 
   return (
