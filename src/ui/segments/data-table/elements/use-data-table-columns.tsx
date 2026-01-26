@@ -156,7 +156,7 @@ export function useDataTableColumns<T>({
   }, []);
 
   const onMouseDown = useCallback(
-    (mouseDownEvent: React.MouseEvent<HTMLElement>, key: string, currentWidth: number) => {
+    (mouseDownEvent: React.MouseEvent<HTMLElement>, key: string) => {
       const { clientX: startX } = mouseDownEvent;
 
       const th = (mouseDownEvent.target as HTMLElement).closest('th');
@@ -168,6 +168,8 @@ export function useDataTableColumns<T>({
       const bodyCol = tableWrapper?.querySelector(
         `.ant-table-body colgroup col:nth-child(${colIndex + 1})`
       ) as HTMLElement | null;
+
+      const currentWidth = th?.getBoundingClientRect().width ?? COL_SIZING.default;
 
       let finalWidth = currentWidth;
 
@@ -246,8 +248,7 @@ export function useDataTableColumns<T>({
               columnWidths.find(({ key: colKey }) => colKey === key)?.width ?? COL_SIZING.default;
             return {
               columnWidth: currentWidth,
-              handleResizing: (e: React.MouseEvent<HTMLElement>) =>
-                onMouseDown(e, key, currentWidth),
+              handleResizing: (e: React.MouseEvent<HTMLElement>) => onMouseDown(e, key),
               onClick: () => {
                 if (!isSortable || !term.order) return;
                 const field = getOrderValue(term.order, dataType);
