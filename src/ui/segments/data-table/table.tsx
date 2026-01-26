@@ -1,6 +1,5 @@
 'use client';
 
-import { VerticalAlignMiddleOutlined } from '@ant-design/icons';
 import { ConfigProvider, Table, type TableProps } from 'antd';
 import type { TableRef } from 'antd/es/table';
 import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
@@ -63,23 +62,21 @@ function CustomTH({
   return handleResize ? (
     <th
       {...props} /* eslint-disable-line react/jsx-props-no-spreading */
-      style={{ ...modifiedStyle, padding: '16px 16px 16px 0px' }}
+      style={{ ...modifiedStyle, padding: '16px 16px 16px 0px', position: 'relative' }}
       className="before:content-none!"
       data-testid="column-header"
     >
-      <div className="relative flex w-full">
-        <button
-          className={classNames(
-            'inline-flex w-full flex-col items-start',
-            '[&>.ant-table-column-sorters]:inline-flex [&>.ant-table-column-sorters]:flex-none [&>.ant-table-column-sorters]:items-start! [&>.ant-table-column-sorters]:gap-2'
-          )}
-          onClick={onClick}
-          type="button"
-        >
-          {children}
-        </button>
-        <VerticalAlignMiddleOutlined className={styles.dragIcons} onMouseDown={handleResize} />
-      </div>
+      <button
+        className={classNames(
+          'inline-flex w-full flex-col items-start',
+          '[&>.ant-table-column-sorters]:inline-flex [&>.ant-table-column-sorters]:flex-none [&>.ant-table-column-sorters]:items-start! [&>.ant-table-column-sorters]:gap-2'
+        )}
+        onClick={onClick}
+        type="button"
+      >
+        {children}
+      </button>
+      <button type="button" className={styles.dragHandle} onMouseDown={handleResize} />
     </th>
   ) : (
     <th
