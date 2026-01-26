@@ -8,17 +8,14 @@ import { use } from 'react';
 import { match, P } from 'ts-pattern';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
-import { WorkspaceScope } from '@/constants';
+import { WorkflowActivityDictValue, WorkspaceScope } from '@/constants';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { SCOPE_QUERY_PARAMS } from '@/ui/hooks/use-scope';
 import { useNextStepOnboarding, workflowTour } from '@/ui/segments/app-setup/discover-app';
 import { CategoryMenu } from '@/ui/segments/workflows/elements/category-menu';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
-import {
-  ActivityDictValue,
-  WorkflowSessionIdSearchParam,
-} from '@/ui/segments/workflows/elements/helpers';
+import { WorkflowSessionIdSearchParam } from '@/ui/segments/workflows/elements/helpers';
 import { TypesMenu } from '@/ui/segments/workflows/elements/types-menu';
 import { WorkflowActivity } from '@/ui/segments/workflows/elements/workflow-activity';
 import {
@@ -58,7 +55,7 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
     return match({ activity, value })
       .with(
         {
-          activity: ActivityDictValue.build,
+          activity: WorkflowActivityDictValue.build,
         },
         () => {
           const sessionId = crypto.randomUUID();
@@ -71,12 +68,12 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
             );
         }
       )
-      .with({ activity: ActivityDictValue.simulate, value: P.nonNullable }, ({ value }) => {
+      .with({ activity: WorkflowActivityDictValue.simulate, value: P.nonNullable }, ({ value }) => {
         navigate(
           `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}`
         );
       })
-      .with({ activity: ActivityDictValue.extract, value: P.nonNullable }, ({ value }) => {
+      .with({ activity: WorkflowActivityDictValue.extract, value: P.nonNullable }, ({ value }) => {
         navigate(
           `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}?${SCOPE_QUERY_PARAMS}=${WorkspaceScope.Public}`
         );

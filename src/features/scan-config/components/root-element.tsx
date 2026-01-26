@@ -15,7 +15,14 @@ import { atom } from 'jotai';
 import type React from 'react';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
-import type { AtomsMap, BlockDictionary, ConfigSchema, RootBlock } from '../types';
+import {
+  type AtomsMap,
+  type BlockDictionary,
+  type ConfigSchema,
+  type DiscriminatedUnion,
+  type RootBlock,
+  UIElementDict,
+} from '../types';
 import { Chevron, type Config, type ConfigValue, Tab } from './components';
 import { isRootBlock } from './hooks/schema';
 import { isAtom, isPlainObject } from './utils';
@@ -44,7 +51,7 @@ export function RootElement({
 }: {
   schema: ConfigSchema | null; // The global schema
   rootElement: string;
-  rootElementSchema: RootBlock | BlockDictionary;
+  rootElementSchema: RootBlock | BlockDictionary | DiscriminatedUnion;
   atomsMap: AtomsMap;
   setAtomsMap: React.Dispatch<React.SetStateAction<AtomsMap>>;
   selectedRootElement: string;
@@ -153,7 +160,7 @@ export function RootElement({
           if (
             selectedRootElement === rootElement &&
             !isRootBlock(schema, rootElement) &&
-            rootElementSchema.ui_element !== 'discriminated_union'
+            rootElementSchema.ui_element !== UIElementDict.DiscriminatedUnion
           ) {
             setEditing(false);
             setSelectedEntry('');
@@ -165,8 +172,8 @@ export function RootElement({
           setSelectedEntry('');
 
           if (
-            rootElementSchema.ui_element === 'root_block' ||
-            rootElementSchema.ui_element === 'discriminated_union'
+            rootElementSchema.ui_element === UIElementDict.RootBlock ||
+            rootElementSchema.ui_element === UIElementDict.DiscriminatedUnion
           )
             setEditing(true);
           else setEditing(false);
@@ -195,8 +202,8 @@ export function RootElement({
                   type="button"
                   key={subkey}
                   className={classNames(
-                    'text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
-                    isSelected ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white' : ''
+                    'text-primary-8 flex h-[50px] min-h-[50px] w-90percent min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
+                    isSelected ? 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white' : ''
                   )}
                   tabIndex={0}
                   onClick={() => handleHeaderClick(subkey, subValue)}
@@ -352,7 +359,7 @@ export function RootElement({
             })}
             {!campaignId && !loading && !readOnly && (
               <button
-                className="text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
+                className="text-primary-8 flex h-[50px] min-h-[50px] w-90percent min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
                 type="button"
                 onClick={() => {
                   setEditing(true);

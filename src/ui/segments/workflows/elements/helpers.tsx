@@ -7,7 +7,7 @@ import values from 'es-toolkit/compat/values';
 import { match, P } from 'ts-pattern';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { type TWorkspaceSection, WorkspaceSection } from '@/constants';
+import { type TWorkspaceSection, WorkflowActivityDictValue, WorkspaceSection } from '@/constants';
 import { type FeatureFlags, type FlagKey, microcircuitFlag } from '@/features/feature-flags/flags';
 
 export const WorkflowSessionIdSearchParam = 'sessionId';
@@ -281,19 +281,10 @@ type ActivityDictEntry = {
   name: string;
 } & ActivityConfigType;
 
-export const ActivityDictValue = {
-  build: 'build',
-  simulate: 'simulate',
-  extract: 'extract',
-  optimize: 'optimize',
-  validate: 'validate',
-  process_data: 'process_data',
-} as const;
-
 export const ActivityDict: readonly ActivityDictEntry[] = [
   {
     label: 'Build',
-    value: ActivityDictValue.build,
+    value: WorkflowActivityDictValue.build,
     disabled: false,
     name: 'Build',
     configType: 'buildSimulate',
@@ -301,7 +292,7 @@ export const ActivityDict: readonly ActivityDictEntry[] = [
   },
   {
     label: 'Simulate',
-    value: ActivityDictValue.simulate,
+    value: WorkflowActivityDictValue.simulate,
     disabled: false,
     name: 'Simulation',
     configType: 'buildSimulate',
@@ -309,7 +300,7 @@ export const ActivityDict: readonly ActivityDictEntry[] = [
   },
   {
     label: 'Extract',
-    value: ActivityDictValue.extract,
+    value: WorkflowActivityDictValue.extract,
     disabled: false,
     name: 'Extraction',
     configType: 'extract',
@@ -317,28 +308,29 @@ export const ActivityDict: readonly ActivityDictEntry[] = [
   },
   {
     label: 'Optimize',
-    value: ActivityDictValue.optimize,
+    value: WorkflowActivityDictValue.optimize,
     disabled: true,
     name: 'Optimization',
     configType: 'none',
   },
   {
     label: 'Validate',
-    value: ActivityDictValue.validate,
+    value: WorkflowActivityDictValue.validate,
     disabled: true,
     name: 'Validation',
     configType: 'none',
   },
   {
     label: 'Process Data',
-    value: ActivityDictValue.process_data,
+    value: WorkflowActivityDictValue.process_data,
     disabled: true,
     name: 'Processing Data',
     configType: 'none',
   },
 ] as const;
 
-export type TActivityValue = (typeof ActivityDictValue)[keyof typeof ActivityDictValue];
+export type TActivityValue =
+  (typeof WorkflowActivityDictValue)[keyof typeof WorkflowActivityDictValue];
 export const ActivityValues = Object.fromEntries(ActivityDict.map((c) => [c.label, c.value])) as {
   [K in (typeof ActivityDict)[number] as K['label']]: K['value'];
 };
@@ -367,7 +359,7 @@ export function getDropdownOptionsByCategory(
   ) {
     return { allOptions: [], enabledOptions: [] };
   }
-  if (category === ActivityDictValue.extract) {
+  if (category === WorkflowActivityDictValue.extract) {
     const grouped = groupBy(extractConfiguration, 'group');
     const options = Object.entries(grouped).map(([k, v]) => ({
       group: k,
@@ -378,7 +370,7 @@ export function getDropdownOptionsByCategory(
 
     return { allOptions: options, enabledOptions };
   }
-  if (includes([ActivityDictValue.build, ActivityDictValue.simulate], category)) {
+  if (includes([WorkflowActivityDictValue.build, WorkflowActivityDictValue.simulate], category)) {
     const activityKey = category as 'build' | 'simulate';
     const options = Object.values(buildAndSimulateConfiguration)
       .filter((config): config is NonNullable<typeof config> => config !== undefined)
@@ -449,11 +441,11 @@ export function getAllOptionsOrdered(
   ) {
     return [];
   }
-  if (category === ActivityDictValue.extract) {
+  if (category === WorkflowActivityDictValue.extract) {
     return extractConfiguration;
   }
 
-  if (includes([ActivityDictValue.build, ActivityDictValue.simulate], category)) {
+  if (includes([WorkflowActivityDictValue.build, WorkflowActivityDictValue.simulate], category)) {
     const activityKey = category as 'build' | 'simulate';
     const options = Object.values(buildAndSimulateConfiguration)
       .filter((config): config is NonNullable<typeof config> => config !== undefined)

@@ -20,6 +20,7 @@ import {
   type ParamSchema,
   type RootDiscriminatedUnion,
   type SchemaName,
+  UIElementDict,
 } from '@/features/scan-config/types';
 
 import { classNames } from '@/util/utils';
@@ -65,7 +66,7 @@ export function BlockUI({
   }, [setState, blockSchema]);
 
   function renderInput(k: string, paramSchema: ParamSchema) {
-    if (paramSchema.ui_element === 'string_input') {
+    if (paramSchema.ui_element === UIElementDict.StringInput) {
       return (
         <Input
           disabled={disabled}
@@ -78,13 +79,13 @@ export function BlockUI({
       );
     }
 
-    if (paramSchema.ui_element === 'model_identifier' && model) {
+    if (paramSchema.ui_element === UIElementDict.ModelIdentifier && model) {
       return <ModelDetails model={model} />;
     }
 
     if (
-      paramSchema.ui_element === 'float_parameter_sweep' ||
-      paramSchema.ui_element === 'int_parameter_sweep'
+      paramSchema.ui_element === UIElementDict.FloatParameterSweep ||
+      paramSchema.ui_element === UIElementDict.IntParameterSweep
     ) {
       return (
         <ParameterSwep
@@ -100,7 +101,7 @@ export function BlockUI({
       );
     }
 
-    if (paramSchema.ui_element === 'reference') {
+    if (paramSchema.ui_element === UIElementDict.Reference) {
       const defaultV: string | null =
         isPlainObject(state[k]) && typeof state[k].block_name === 'string'
           ? state[k].block_name
@@ -131,7 +132,7 @@ export function BlockUI({
       );
     }
 
-    if (paramSchema.ui_element === 'neuron_ids') {
+    if (paramSchema.ui_element === UIElementDict.NeuronIds) {
       const elements: number[] =
         isPlainObject(state[k]) && Array.isArray(state[k].elements) ? state[k].elements : [];
       return (
@@ -170,7 +171,7 @@ export function BlockUI({
       );
     }
 
-    if (paramSchema.ui_element === 'entity_property_dropdown' && model) {
+    if (paramSchema.ui_element === UIElementDict.EntityPropertyDropdown && model) {
       return (
         <EntityPropertyDropdown
           modelId={model.id}
@@ -182,7 +183,7 @@ export function BlockUI({
       );
     }
 
-    if (paramSchema.ui_element === 'boolean_input') {
+    if (paramSchema.ui_element === UIElementDict.BooleanInput) {
       const currentValue = typeof state[k] === 'boolean' ? state[k] : null;
       return (
         <BooleanInput
@@ -191,14 +192,12 @@ export function BlockUI({
           onChange={(value: boolean) => {
             setState({ ...state, [k]: value });
           }}
-          trueLabel={paramSchema.true_label}
-          falseLabel={paramSchema.false_label}
           ariaLabel={paramSchema.description}
         />
       );
     }
 
-    if (paramSchema.ui_element === 'discriminated_union') {
+    if (paramSchema.ui_element === UIElementDict.DiscriminatedUnion) {
       const currentValue = isPlainObject(state[k]) ? state[k] : null;
       return (
         <DiscriminatedUnion
@@ -219,10 +218,7 @@ export function BlockUI({
     return null;
   }
 
-  /**
-   * Renders a nested field within a discriminated union.
-   * This reuses the same input rendering logic but with isolated state management.
-   */
+  //renders a nested field within a discriminated union
   const renderNestedField = useCallback(
     ({
       fieldKey,
@@ -231,7 +227,7 @@ export function BlockUI({
       onChange,
       disabled: fieldDisabled,
     }: NestedFieldRendererProps) => {
-      if (paramSchema.ui_element === 'string_input') {
+      if (paramSchema.ui_element === UIElementDict.StringInput) {
         return (
           <Input
             disabled={fieldDisabled}
@@ -242,13 +238,13 @@ export function BlockUI({
         );
       }
 
-      if (paramSchema.ui_element === 'model_identifier' && model) {
+      if (paramSchema.ui_element === UIElementDict.ModelIdentifier && model) {
         return <ModelDetails model={model} />;
       }
 
       if (
-        paramSchema.ui_element === 'float_parameter_sweep' ||
-        paramSchema.ui_element === 'int_parameter_sweep'
+        paramSchema.ui_element === UIElementDict.FloatParameterSweep ||
+        paramSchema.ui_element === UIElementDict.IntParameterSweep
       ) {
         return (
           <ParameterSwep
@@ -262,7 +258,7 @@ export function BlockUI({
         );
       }
 
-      if (paramSchema.ui_element === 'reference') {
+      if (paramSchema.ui_element === UIElementDict.Reference) {
         const defaultV: string | null =
           isPlainObject(value) && typeof value.block_name === 'string' ? value.block_name : null;
 
@@ -284,7 +280,7 @@ export function BlockUI({
         );
       }
 
-      if (paramSchema.ui_element === 'neuron_ids') {
+      if (paramSchema.ui_element === UIElementDict.NeuronIds) {
         const elements: number[] =
           isPlainObject(value) && Array.isArray(value.elements) ? value.elements : [];
         return (
@@ -312,7 +308,7 @@ export function BlockUI({
         );
       }
 
-      if (paramSchema.ui_element === 'entity_property_dropdown' && model) {
+      if (paramSchema.ui_element === UIElementDict.EntityPropertyDropdown && model) {
         return (
           <EntityPropertyDropdown
             modelId={model.id}
@@ -324,15 +320,13 @@ export function BlockUI({
         );
       }
 
-      if (paramSchema.ui_element === 'boolean_input') {
+      if (paramSchema.ui_element === UIElementDict.BooleanInput) {
         const currentValue = typeof value === 'boolean' ? value : null;
         return (
           <BooleanInput
             value={currentValue}
             disabled={fieldDisabled}
             onChange={onChange}
-            trueLabel={paramSchema.true_label}
-            falseLabel={paramSchema.false_label}
             ariaLabel={paramSchema.description}
           />
         );
@@ -358,22 +352,39 @@ export function BlockUI({
             })
             .map(([k, blockElementSchema]) => {
               if (isType(blockElementSchema)) return null;
+              const isBooleanInput = blockElementSchema.ui_element === 'boolean_input';
               return (
-                <div key={k}>
-                  <div className="flex items-end gap-3">
-                    <div
-                      className="text-primary-9 text-base font-semibold uppercase"
-                      title={blockElementSchema.description}
-                    >
-                      {blockElementSchema.title}
+                <div key={k} className="w-full">
+                  <div
+                    className={classNames(
+                      'flex gap-3 w-full',
+                      isBooleanInput ? 'items-start justify-between' : 'items-end'
+                    )}
+                  >
+                    <div className={classNames('flex items-end gap-3', isBooleanInput && 'flex-1')}>
+                      <div
+                        className="text-primary-9 text-base font-semibold uppercase"
+                        title={blockElementSchema.description}
+                      >
+                        {blockElementSchema.title}
+                      </div>
+                      {blockElementSchema.units && (
+                        <div className="text-lg text-gray-500">{blockElementSchema.units}</div>
+                      )}
                     </div>
-                    {blockElementSchema.units && (
-                      <div className="text-lg text-gray-500">{blockElementSchema.units}</div>
+                    {isBooleanInput && (
+                      <div className="shrink-0">
+                        <Tooltip value={blockElementSchema.description}>
+                          {renderInput(k, blockElementSchema)}
+                        </Tooltip>
+                      </div>
                     )}
                   </div>
-                  <Tooltip value={blockElementSchema.description}>
-                    {renderInput(k, blockElementSchema)}
-                  </Tooltip>
+                  {!isBooleanInput && (
+                    <Tooltip value={blockElementSchema.description}>
+                      {renderInput(k, blockElementSchema)}
+                    </Tooltip>
+                  )}
 
                   {blockSchema.required?.includes(k) &&
                     (state[k] === null || state[k] === undefined) && (
@@ -414,7 +425,7 @@ export function Tab({
         extraClass,
         rounded,
         tab === selectedTab
-          ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
+          ? 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white'
           : 'text-primary-8 bg-white'
       )}
     >
@@ -467,9 +478,6 @@ export function DiscriminatedUnionUI({
 }) {
   const [state, setState] = useAtom(stateAtom);
 
-  /**
-   * Renders a nested field within the discriminated union.
-   */
   const renderNestedField = useCallback(
     ({
       fieldKey,
@@ -578,8 +586,6 @@ export function DiscriminatedUnionUI({
             value={currentValue}
             disabled={fieldDisabled}
             onChange={onChange}
-            trueLabel={paramSchema.true_label}
-            falseLabel={paramSchema.false_label}
             ariaLabel={paramSchema.description}
           />
         );
@@ -597,9 +603,9 @@ export function DiscriminatedUnionUI({
     [setState]
   );
 
-  // Convert RootDiscriminatedUnion to the format expected by DiscriminatedUnion component
+  // convert RootDiscriminatedUnion to the format expected by DiscriminatedUnion component
   const discriminatedUnionSchema = {
-    ui_element: 'discriminated_union' as const,
+    ui_element: UIElementDict.DiscriminatedUnion,
     title: unionSchema.title,
     description: unionSchema.description,
     discriminator: unionSchema.discriminator,

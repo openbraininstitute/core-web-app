@@ -13,9 +13,11 @@ export type TabType = 'configuration' | 'simulations';
 export type SimExecStatusMap = Map<string, EntitycoreExecutionStatus>;
 
 export type SchemaName =
+  // simulation
   | 'CircuitSimulationScanConfig'
   | 'MEModelSimulationScanConfig'
   | 'MEModelWithSynapsesCircuitSimulationScanConfig'
+  // extraction
   | 'CircuitExtractionScanConfig';
 
 export type RootElement = {
@@ -25,16 +27,30 @@ export type RootElement = {
   group_order: number;
 };
 
+export const UIElementDict = {
+  StringInput: 'string_input',
+  ModelIdentifier: 'model_identifier',
+  FloatParameterSweep: 'float_parameter_sweep',
+  IntParameterSweep: 'int_parameter_sweep',
+  Reference: 'reference',
+  EntityPropertyDropdown: 'entity_property_dropdown',
+  NeuronIds: 'neuron_ids',
+  BooleanInput: 'boolean_input',
+  DiscriminatedUnion: 'discriminated_union',
+  RootBlock: 'root_block',
+  BlockDictionary: 'block_dictionary',
+} as const;
+
 export interface StringInput extends BlockElement {
-  ui_element: 'string_input';
+  ui_element: typeof UIElementDict.StringInput;
 }
 
 export interface ModelIdentifier extends BlockElement {
-  ui_element: 'model_identifier';
+  ui_element: typeof UIElementDict.ModelIdentifier;
 }
 
 export interface FloatParameterSweep extends BlockElement {
-  ui_element: 'float_parameter_sweep';
+  ui_element: typeof UIElementDict.FloatParameterSweep;
   anyOf: [
     {
       type: 'number';
@@ -53,7 +69,7 @@ export interface FloatParameterSweep extends BlockElement {
 }
 
 export interface IntParameterSweep extends BlockElement {
-  ui_element: 'int_parameter_sweep';
+  ui_element: typeof UIElementDict.IntParameterSweep;
   anyOf: [
     {
       type: 'integer';
@@ -72,28 +88,28 @@ export interface IntParameterSweep extends BlockElement {
 }
 
 export interface Reference extends BlockElement {
-  ui_element: 'reference';
+  ui_element: typeof UIElementDict.Reference;
   reference_type: string;
 }
 
 export interface EntityPropertyDropdown extends BlockElement {
-  ui_element: 'entity_property_dropdown';
+  ui_element: typeof UIElementDict.EntityPropertyDropdown;
   entity_type: string;
   property: string;
 }
 
 export interface NeuronIds extends BlockElement {
-  ui_element: 'neuron_ids';
+  ui_element: typeof UIElementDict.NeuronIds;
 }
 
 export interface BooleanInput extends BlockElement {
-  ui_element: 'boolean_input';
+  ui_element: typeof UIElementDict.BooleanInput;
   true_label?: string;
   false_label?: string;
 }
 
 export interface DiscriminatedUnion extends BlockElement {
-  ui_element: 'discriminated_union';
+  ui_element: typeof UIElementDict.DiscriminatedUnion;
   /** The property name used to discriminate between variants (defaults to 'type') */
   /** Can be a string or an OpenAPI-style discriminator object */
   discriminator?: string | { propertyName: string; mapping?: Record<string, string> };
@@ -128,13 +144,13 @@ export type Block = {
 };
 
 export interface RootBlock extends RootElement, Block {
-  ui_element: 'root_block';
+  ui_element: typeof UIElementDict.RootBlock;
   additionalProperties: false;
   required?: string[];
 }
 
 export interface BlockDictionary extends RootElement {
-  ui_element: 'block_dictionary';
+  ui_element: typeof UIElementDict.BlockDictionary;
   reference_type: string;
   singular_name: string;
   additionalProperties: {
@@ -144,11 +160,11 @@ export interface BlockDictionary extends RootElement {
 
 /** Root-level discriminated union (single value that can be one of several types) */
 export interface RootDiscriminatedUnion extends RootElement {
-  ui_element: 'discriminated_union';
-  /** The property name used to discriminate between variants (defaults to 'type') */
-  /** Can be a string or an OpenAPI-style discriminator object */
+  ui_element: typeof UIElementDict.DiscriminatedUnion;
+  /** the property name used to discriminate between variants (defaults to 'type') */
+  /** can be a string or an OpenAPI-style discriminator object */
   discriminator?: string | { propertyName: string; mapping?: Record<string, string> };
-  /** Array of possible variant schemas */
+  /** array of possible variant schemas */
   oneOf: Block[];
 }
 
