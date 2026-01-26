@@ -12,7 +12,7 @@ import type {
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
 import type {
-  BrainRegionFilter,
+  BrainRegionHierarchyFilter,
   IEntityFilter,
   IlikeSearchFilter,
   NameFilter,
@@ -70,7 +70,7 @@ export interface ISimulationCampaignCircuitFilter {
 
 export interface ICircuitSimulationCampaignFilter
   extends IEntityFilter,
-    BrainRegionFilter, // Entitycore API doesn't support brain_region_id filtering, to be removed
+    BrainRegionHierarchyFilter, // Entitycore API doesn't support brain_region_id filtering, to be removed
     NameFilter,
     PaginationFilter,
     ISimulationCampaignCircuitFilter,

@@ -4,16 +4,15 @@ import type {
   EntityCoreIdentifiable,
   EntityCoreType,
   Timestamps,
-} from '@/api/entitycore/types/shared/global';
-import type { ICircuitSimulationBase } from '@/api/entitycore/types/shared/neuron-simulation';
+} from "@/api/entitycore/types/shared/global";
+import type { ICircuitSimulationBase } from "@/api/entitycore/types/shared/neuron-simulation";
 import type {
-  BrainRegionFilter,
   ContributionFilter,
-  IlikeSearchFilter,
-  OwnershipFilter,
-  PaginationFilter,
   SharedFilter,
-} from '@/api/entitycore/types/shared/request';
+  PaginationFilter,
+  OwnershipFilter,
+  IlikeSearchFilter,
+} from "@/api/entitycore/types/shared/request";
 
 export interface ICircuitSimulation
   extends EntityCoreIdentifiable,
@@ -31,7 +30,6 @@ interface ICircuitSimulationFilterBase {
 export interface ICircuitSimulationFilter
   extends ICircuitSimulationFilterBase,
     ContributionFilter,
-    BrainRegionFilter, // Entitycore API doesn't support brain_region_id filtering, to be removed
     SharedFilter,
     PaginationFilter,
     OwnershipFilter,

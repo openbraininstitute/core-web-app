@@ -83,11 +83,11 @@ export enum EntityCoreFields {
   CircuitName = 'circuit_name',
   CircuitBuildCategory = 'build_category',
   CircuitScale = 'scale',
-  CircuitRootCircuit = 'root_circuit_id', // TODO: change it to sub_circuits, this is only for test the nested table
-  CircuitPublishedIn = 'published_in', // TODO: change it to sub_circuits, this is only for test the nested table
-  CircuitContactEmail = 'contact_email', // TODO: change it to sub_circuits, this is only for test the nested table
-  CircuitExperimentDate = 'experiment_date', // TODO: change it to sub_circuits, this is only for test the nested table
-  CircuitSubCircuit = 'xxxxx', // TODO: change it to sub_circuits, this is only for test the nested table
+  CircuitRootCircuit = 'root_circuit_id',
+  ArtifactPublishedIn = 'published_in',
+  ArtifactContactEmail = 'contact_email',
+  ArtifactExperimentDate = 'experiment_date',
+  CircuitSubCircuit = 'xxxxx',
   IsLjpCorrected = 'is_ljp_corrected',
   IsStochastic = 'is_stochastic',
   IsTemperatureDependent = 'is_temperature_dependent',
@@ -98,6 +98,11 @@ export enum EntityCoreFields {
   ICMThumbnail = 'icm_thumbnail',
   NotebookScale = 'notebook_scale',
   NotebookActions = 'notebook_actions',
+  DenseReconstructionCellId = 'dense_reconstruction_cell_id',
+  GenerationMethod = 'generation_method',
+  LevelOfDetail = 'level_of_detail',
+  GenerationParameters = 'generation_parameters',
+  MeshType = 'mesh_type',
 }
 
 export type EntityCoreFieldsValue = `${EntityCoreFields}`;

@@ -12,7 +12,7 @@ import type {
 } from '@/api/entitycore/types/shared/global';
 
 import type {
-  BrainRegionFilter,
+  BrainRegionHierarchyFilter,
   ContributionFilter,
   IlikeSearchFilter,
   IMorphologyFilter,
@@ -61,7 +61,7 @@ export interface IonChannelModel
 
 export interface IonChannelModelFilter
   extends ContributionFilter,
-    BrainRegionFilter,
+    BrainRegionHierarchyFilter,
     IMorphologyFilter,
     PaginationFilter,
     SharedFilter,

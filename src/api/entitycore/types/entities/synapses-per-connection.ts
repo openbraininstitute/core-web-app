@@ -2,7 +2,7 @@ import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brai
 import type { IExperimentalDensity } from '@/api/entitycore/types/shared/density';
 import type { EntityCoreType, IMType } from '@/api/entitycore/types/shared/global';
 import type {
-  BrainRegionFilter,
+  BrainRegionHierarchyFilter,
   ContributionFilter,
   EtypeFilter,
   IlikeSearchFilter,
@@ -59,7 +59,7 @@ type PostMtypeFilter = {
 
 export type ExperimentalSynapsesPerConnectionFilter = Partial<
   SharedFilter &
-    BrainRegionFilter &
+    BrainRegionHierarchyFilter &
     ContributionFilter &
     EtypeFilter &
     PaginationFilter &

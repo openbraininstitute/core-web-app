@@ -263,7 +263,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     style: { width: 80, align: 'left' },
   },
-  [EntityCoreFields.CircuitPublishedIn]: {
+  [EntityCoreFields.ArtifactPublishedIn]: {
     className: 'text-left',
     title: 'Published in',
     filter: CoreFieldFilterTypeEnum.Text,
@@ -284,7 +284,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       },
     ],
   },
-  [EntityCoreFields.CircuitExperimentDate]: {
+  [EntityCoreFields.ArtifactExperimentDate]: {
     className: 'text-left',
     title: 'Experiment date',
     filter: CoreFieldFilterTypeEnum.DateRange,
@@ -308,7 +308,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       },
     ],
   },
-  [EntityCoreFields.CircuitContactEmail]: {
+  [EntityCoreFields.ArtifactContactEmail]: {
     className: 'text-left',
     title: 'Contact email',
     filter: null,

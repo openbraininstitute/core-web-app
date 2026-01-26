@@ -4,6 +4,7 @@ import { viewDefForExperimentalNeuronDensity } from './experimental-neuron-densi
 import { viewDefForExperimentalBoutonDensity } from './experimental-bouton-density';
 import { viewDefForExperimentalSynapsesPerConnection } from './experimental-synapses-per-connection';
 import { viewDefForIonChannelRecording } from './ion-channel-recording';
+import { viewDefForEMCellMesh } from './em-cell-mesh';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
@@ -16,5 +17,6 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [ExtendedEntitiesTypeDict.ExperimentalNeuronDensity]: viewDefForExperimentalNeuronDensity,
   [ExtendedEntitiesTypeDict.ExperimentalBoutonDensity]: viewDefForExperimentalBoutonDensity,
   [ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection]:
-    viewDefForExperimentalSynapsesPerConnection,
+    viewDefForExperimentalSynapsePerConnection,
+  [ExtendedEntitiesTypeDict.EMCellMesh]: viewDefForEMCellMesh,
 };

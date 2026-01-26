@@ -7,6 +7,7 @@ export const EXPERIMENTAL_DATATYPES = [
   ExtendedEntitiesTypeDict.ElectricalCellRecording,
   ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
   ExtendedEntitiesTypeDict.CellMorphology,
+  ExtendedEntitiesTypeDict.EMCellMesh,
 ] as const;
 
 export enum ExperimentTypeNames {
@@ -14,7 +15,8 @@ export enum ExperimentTypeNames {
   ELECTROPHYSIOLOGY = 'electrophysiology',
   NEURON_DENSITY = 'neuron-density',
   BOUTON_DENSITY = 'bouton-density',
-  SYNAPSES_PER_CONNECTION = 'synapses-per-connection',
+  SYNAPSE_PER_CONNECTION = 'synapse-per-connection',
+  EM_CELL_MESH = 'em-cell-mesh',
 }
 
 export type TExperimentTypeNames = `${ExperimentTypeNames}`;
