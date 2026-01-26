@@ -1,6 +1,7 @@
 import find from 'es-toolkit/compat/find';
 import isEmpty from 'es-toolkit/compat/isEmpty';
 
+import { map } from 'es-toolkit/compat';
 import { isMemodel, isSingleNeuronSynaptome } from '@/api/entitycore/guards';
 import { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -11,6 +12,7 @@ import {
 import getMeasurements, {
   EmptyValue,
   renderArray,
+  renderAsString,
   renderEmptyOrValue,
   renderFloatNumber,
   renderLicense,
@@ -30,6 +32,11 @@ import type {
 import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
 import { MeasurementUnit, type IEType, type IMType } from '@/api/entitycore/types/shared/global';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
+import {
+  EMCellMeshGenerationMethodDict,
+  EMCellMeshTypeDict,
+  IEMCellMesh,
+} from '@/api/entitycore/types/entities/em-cell-mesh';
 
 const morphologyMtypes = (morphology?: ICellMorphology) => {
   if (!morphology) return [];
@@ -534,5 +541,69 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       return cellLine;
     },
     defaultConstraint: 'cell_line__ilike',
+  },
+  [EntityCoreFields.DenseReconstructionCellId]: {
+    className: 'text-left',
+    title: 'Dense reconstruction cell Id',
+    isFilterable: true,
+    filter: CoreFieldFilterTypeEnum.Text,
+    isDisplayable: true,
+    isSortable: false,
+    render: (r) => {
+      const cellLine = ensureString('cell_line' in r ? r.cell_line : null, '—');
+      return cellLine;
+    },
+    defaultConstraint: 'cell_line__ilike',
+  },
+  [EntityCoreFields.GenerationMethod]: {
+    className: 'text-left',
+    title: 'Generation method',
+    isFilterable: true,
+    filter: CoreFieldFilterTypeEnum.Text,
+    isDisplayable: true,
+    isSortable: false,
+    render: (r) => {
+      const entity = r as IEMCellMesh;
+      if ('generation_method' in entity)
+        return renderEmptyOrValue(
+          find(EMCellMeshGenerationMethodDict, { key: entity.generation_method })?.label
+        );
+      return EmptyValue;
+    },
+  },
+  [EntityCoreFields.LevelOfDetail]: {
+    className: 'text-left',
+    title: 'Level of detail',
+    isFilterable: true,
+    filter: CoreFieldFilterTypeEnum.ValueOrRange,
+    isDisplayable: true,
+    isSortable: false,
+    render: (r) => {
+      const entity = r as IEMCellMesh;
+      if ('level_of_detail' in entity)
+        return renderEmptyOrValue(renderAsString(entity.level_of_detail));
+      return EmptyValue;
+    },
+    defaultConstraint: 'level_of_detail',
+  },
+  [EntityCoreFields.MeshType]: {
+    className: 'text-left',
+    title: 'Mesh type',
+    isFilterable: true,
+    filter: CoreFieldFilterTypeEnum.DropdownList,
+    filterData: map(EMCellMeshTypeDict, (item) => ({
+      label: item.label,
+      value: item.key,
+    })),
+    isDisplayable: true,
+    isSortable: false,
+    render: (r) => {
+      const entity = r as IEMCellMesh;
+      if ('mesh_type' in entity) {
+        return renderEmptyOrValue(find(EMCellMeshTypeDict, { key: entity.mesh_type })?.label);
+      }
+      return EmptyValue;
+    },
+    defaultConstraint: 'mesh_type',
   },
 };

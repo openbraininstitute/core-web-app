@@ -64,3 +64,7 @@ export type SingleNeuronSynaptomeJsonMetadata = {
 export type NotebookJsonMetadata = {
   [key: string]: any;
 };
+
+export type EMCellMeshJsonMetadata = {
+  [key: string]: any;
+};

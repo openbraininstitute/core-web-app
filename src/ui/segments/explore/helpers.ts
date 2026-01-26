@@ -29,10 +29,11 @@ import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation
 import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/simulation/single-neuron-synaptome-simulation';
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { MicrocircuitSimulation } from '@/entity-configuration/domain/simulation/microcircuit-simulation';
+import { EmCellMesh } from '@/entity-configuration/domain/experimental/em-cell-mesh';
+import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
 import type { TWorkspaceScope } from '@/constants';
 import type { WorkspaceContext } from '@/types/common';
-import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
 export const ExperimentalEntitiesTileTypes = {
   ReconstructionMorphology: CellMorphology,
@@ -41,6 +42,7 @@ export const ExperimentalEntitiesTileTypes = {
   NeuronDensity,
   BoutonDensity,
   SynapsePerConnection,
+  EmCellMesh,
 } as const;
 
 export const ModelEntitiesTileTypes = {

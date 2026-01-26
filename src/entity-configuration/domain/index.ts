@@ -26,6 +26,7 @@ import { SingeNeuronCircuitSimulation } from '@/entity-configuration/domain/simu
 import { PairedNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/paired-neurons-simulation';
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { MicrocircuitSimulation } from '@/entity-configuration/domain/simulation/microcircuit-simulation';
+import { EmCellMesh } from '@/entity-configuration/domain/experimental/em-cell-mesh';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
@@ -36,6 +37,7 @@ export const EntityCoreExperimentalConfiguration = {
   NeuronDensity,
   BoutonDensity,
   SynapsePerConnection,
+  EmCellMesh,
 } as const;
 
 export const EntityCoreModelConfiguration = {

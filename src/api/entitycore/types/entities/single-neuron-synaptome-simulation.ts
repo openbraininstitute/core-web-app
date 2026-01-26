@@ -1,21 +1,23 @@
-import z from 'zod';
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-import type { MeTypeFilter } from '@/api/entitycore/types/entities/single-neuron-simulation';
-import type { SingleNeuronSynaptomeBase } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import z from "zod";
+
+import type { IBrainRegionHierarchy } from "@/api/entitycore/types/entities/brain-region";
+import type { MeTypeFilter } from "@/api/entitycore/types/entities/single-neuron-simulation";
+import type { SingleNeuronSynaptomeBase } from "@/api/entitycore/types/entities/single-neuron-synaptome";
 import type {
   EntityAuthorization,
   EntityCoreBaseAsset,
   EntityCoreIdentifiable,
   EntityCoreType,
   Timestamps,
-} from '@/api/entitycore/types/shared/global';
+} from "@/api/entitycore/types/shared/global";
 import {
   type ISingleNeuronSimulationBase,
   type SimulationStatusFilter,
   SingleNeuronSimulationStatus,
-} from '@/api/entitycore/types/shared/neuron-simulation';
+} from "@/api/entitycore/types/shared/neuron-simulation";
 import type {
   BrainRegionFilter,
+  BrainRegionHierarchyFilter,
   ContributionFilter,
   CreatorFilter,
   EtypeFilter,
@@ -26,8 +28,8 @@ import type {
   PaginationFilter,
   SharedFilter,
   TimestampsFilter,
-} from '@/api/entitycore/types/shared/request';
-import type { Prettify } from '@/utils/type';
+} from "@/api/entitycore/types/shared/request";
+import type { Prettify } from "@/utils/type";
 
 export interface ISingleNeuronSynaptomeSimulation
   extends ISingleNeuronSimulationBase,
@@ -36,7 +38,9 @@ export interface ISingleNeuronSynaptomeSimulation
     EntityCoreType,
     EntityCoreBaseAsset {
   brain_region: IBrainRegionHierarchy;
-  synaptome: Prettify<SingleNeuronSynaptomeBase & EntityCoreIdentifiable & Timestamps>;
+  synaptome: Prettify<
+    SingleNeuronSynaptomeBase & EntityCoreIdentifiable & Timestamps
+  >;
 }
 
 interface SynaptomeFilter {
@@ -55,6 +59,7 @@ export interface ISingleNeuronSynaptomeSimulationFilter
   extends IDFilter,
     ContributionFilter,
     BrainRegionFilter,
+    BrainRegionHierarchyFilter,
     CreatorFilter,
     SharedFilter,
     TimestampsFilter,

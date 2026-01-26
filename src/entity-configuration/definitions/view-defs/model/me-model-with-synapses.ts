@@ -16,8 +16,8 @@ export const ViewDefForMEModelWithSynapsesCircuit: ViewDefinitionConfig = {
     EntityCoreFields.CircuitNumberConnections,
     EntityCoreFields.SpeciesName,
     EntityCoreFields.CircuitBuildCategory,
-    EntityCoreFields.CircuitPublishedIn,
-    EntityCoreFields.CircuitExperimentDate,
+    EntityCoreFields.ArtifactPublishedIn,
+    EntityCoreFields.ArtifactExperimentDate,
     EntityCoreFields.RegistrationDate,
   ],
   miniDetailView: [
@@ -35,8 +35,8 @@ export const ViewDefForMEModelWithSynapsesCircuit: ViewDefinitionConfig = {
     { field: EntityCoreFields.License },
     { field: EntityCoreFields.CircuitNumberConnections },
     { field: EntityCoreFields.CircuitNumberSynapses },
-    { field: EntityCoreFields.CircuitPublishedIn },
-    { field: EntityCoreFields.CircuitExperimentDate },
-    { field: EntityCoreFields.CircuitContactEmail },
+    { field: EntityCoreFields.ArtifactPublishedIn },
+    { field: EntityCoreFields.ArtifactExperimentDate },
+    { field: EntityCoreFields.ArtifactContactEmail },
   ],
 };

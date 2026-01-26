@@ -19,8 +19,8 @@ export const ViewDefForCircuit: ViewDefinitionConfig = {
     EntityCoreFields.CircuitNumberConnections,
     EntityCoreFields.SpeciesName,
     EntityCoreFields.CircuitBuildCategory,
-    EntityCoreFields.CircuitPublishedIn,
-    EntityCoreFields.CircuitExperimentDate,
+    EntityCoreFields.ArtifactPublishedIn,
+    EntityCoreFields.ArtifactExperimentDate,
   ],
   miniDetailView: [
     { field: EntityCoreFields.BrainRegion },
@@ -42,8 +42,8 @@ export const ViewDefForCircuit: ViewDefinitionConfig = {
     { field: EntityCoreFields.CircuitNumberNeurons },
     { field: EntityCoreFields.CircuitNumberConnections },
     { field: EntityCoreFields.CircuitNumberSynapses },
-    { field: EntityCoreFields.CircuitPublishedIn },
-    { field: EntityCoreFields.CircuitExperimentDate },
-    { field: EntityCoreFields.CircuitContactEmail },
+    { field: EntityCoreFields.ArtifactPublishedIn },
+    { field: EntityCoreFields.ArtifactExperimentDate },
+    { field: EntityCoreFields.ArtifactContactEmail },
   ],
 };
