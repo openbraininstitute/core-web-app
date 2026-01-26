@@ -33,12 +33,14 @@ function CustomTH({
   style,
   onClick,
   handleResizing,
+  columnWidth,
   ...props
 }: {
   children: ReactNode;
   style: CSSProperties;
   onClick: () => void;
-  handleResizing: () => void;
+  handleResizing: (e: React.MouseEvent<HTMLElement>) => void;
+  columnWidth?: number;
 }) {
   const modifiedStyle: CSSProperties = {
     ...style,
@@ -47,16 +49,25 @@ function CustomTH({
     verticalAlign: 'baseline',
     boxSizing: 'border-box',
     backgroundColor: 'white',
+    ...(columnWidth ? { width: columnWidth, minWidth: columnWidth } : {}),
   };
 
-  return handleResizing ? (
+  const handleResize = handleResizing
+    ? (e: React.MouseEvent<HTMLElement>) => {
+        e.stopPropagation();
+        e.preventDefault();
+        handleResizing(e);
+      }
+    : undefined;
+
+  return handleResize ? (
     <th
       {...props} /* eslint-disable-line react/jsx-props-no-spreading */
       style={{ ...modifiedStyle, padding: '16px 16px 16px 0px' }}
       className="before:content-none!"
       data-testid="column-header"
     >
-      <div className="flex w-full">
+      <div className="relative flex w-full">
         <button
           className={classNames(
             'inline-flex w-full flex-col items-start',
@@ -67,7 +78,7 @@ function CustomTH({
         >
           {children}
         </button>
-        <VerticalAlignMiddleOutlined className={styles.dragIcons} onMouseDown={handleResizing} />
+        <VerticalAlignMiddleOutlined className={styles.dragIcons} onMouseDown={handleResize} />
       </div>
     </th>
   ) : (
