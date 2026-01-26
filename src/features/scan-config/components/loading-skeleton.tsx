@@ -50,13 +50,8 @@ function LeftColumnSkeleton() {
         <Skeleton className="mt-2 h-4 w-24 self-start" />
         <RootElementSkeleton expanded />
         <RootElementSkeleton />
-        {/* <RootElementSkeleton />
-
-        <Skeleton className="mt-2 h-4 w-16 self-start" />
-        <RootElementSkeleton /> */}
       </div>
 
-      {/* Generate button */}
       <div className="w-full px-4">
         <Skeleton className="h-12 w-full rounded-full" />
       </div>

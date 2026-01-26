@@ -148,7 +148,13 @@ export function RootElement({
         tab={rootElement}
         selectedTab={selectedRootElement}
         onClick={() => {
-          if (selectedRootElement === rootElement && !isRootBlock(schema, rootElement)) {
+          // For block_dictionary, clicking again collapses it
+          // For root_block and discriminated_union, they stay open
+          if (
+            selectedRootElement === rootElement &&
+            !isRootBlock(schema, rootElement) &&
+            rootElementSchema.ui_element !== 'discriminated_union'
+          ) {
             setEditing(false);
             setSelectedEntry('');
             setSelectedRootElement('');
@@ -158,7 +164,11 @@ export function RootElement({
           setSelectedRootElement(rootElement);
           setSelectedEntry('');
 
-          if (rootElementSchema.ui_element === 'root_block') setEditing(true);
+          if (
+            rootElementSchema.ui_element === 'root_block' ||
+            rootElementSchema.ui_element === 'discriminated_union'
+          )
+            setEditing(true);
           else setEditing(false);
         }}
         extraClass="w-full flex justify-between h-[50px] min-h-[50px] items-center drop-shadow"

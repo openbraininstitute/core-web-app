@@ -1,9 +1,12 @@
 import { Input } from 'antd';
 import { type atom, useAtom } from 'jotai';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import BooleanInput from '@/features/scan-config/components/boolean-input';
+import DiscriminatedUnion, {
+  type NestedFieldRendererProps,
+} from '@/features/scan-config/components/discriminated-union';
 import EntityPropertyDropdown from '@/features/scan-config/components/entity-property-dropdown';
 import ModelDetails from '@/features/scan-config/components/model-details';
 import NeuronIds from '@/features/scan-config/components/neuron-ids';
@@ -15,6 +18,7 @@ import {
   type Block,
   isType,
   type ParamSchema,
+  type RootDiscriminatedUnion,
   type SchemaName,
 } from '@/features/scan-config/types';
 
@@ -194,8 +198,150 @@ export function BlockUI({
       );
     }
 
+    if (paramSchema.ui_element === 'discriminated_union') {
+      const currentValue = isPlainObject(state[k]) ? state[k] : null;
+      return (
+        <DiscriminatedUnion
+          schema={paramSchema}
+          value={currentValue as Record<string, ConfigValue> | null}
+          disabled={disabled}
+          schemaName={schemaName}
+          config={config}
+          model={model}
+          onChange={(value: Record<string, ConfigValue>) => {
+            setState({ ...state, [k]: value });
+          }}
+          renderNestedField={renderNestedField}
+        />
+      );
+    }
+
     return null;
   }
+
+  /**
+   * Renders a nested field within a discriminated union.
+   * This reuses the same input rendering logic but with isolated state management.
+   */
+  const renderNestedField = useCallback(
+    ({
+      fieldKey,
+      paramSchema,
+      value,
+      onChange,
+      disabled: fieldDisabled,
+    }: NestedFieldRendererProps) => {
+      if (paramSchema.ui_element === 'string_input') {
+        return (
+          <Input
+            disabled={fieldDisabled}
+            value={typeof value === 'string' ? value : ''}
+            className="w-full"
+            onChange={(e) => onChange(e.currentTarget.value)}
+          />
+        );
+      }
+
+      if (paramSchema.ui_element === 'model_identifier' && model) {
+        return <ModelDetails model={model} />;
+      }
+
+      if (
+        paramSchema.ui_element === 'float_parameter_sweep' ||
+        paramSchema.ui_element === 'int_parameter_sweep'
+      ) {
+        return (
+          <ParameterSwep
+            k={fieldKey}
+            min={paramSchema.anyOf[0]?.minimum}
+            max={paramSchema.anyOf[0]?.maximum}
+            disabled={fieldDisabled}
+            value={value as number | null | number[]}
+            onChange={onChange}
+          />
+        );
+      }
+
+      if (paramSchema.ui_element === 'reference') {
+        const defaultV: string | null =
+          isPlainObject(value) && typeof value.block_name === 'string' ? value.block_name : null;
+
+        return (
+          <Reference
+            config={config}
+            schemaName={schemaName}
+            referenceSchema={paramSchema}
+            value={defaultV}
+            disabled={fieldDisabled}
+            onChange={(block_name: string | null, block_dict_name: string | null) => {
+              if (block_name === null) {
+                onChange(null);
+                return;
+              }
+              onChange({ block_name, block_dict_name });
+            }}
+          />
+        );
+      }
+
+      if (paramSchema.ui_element === 'neuron_ids') {
+        const elements: number[] =
+          isPlainObject(value) && Array.isArray(value.elements) ? value.elements : [];
+        return (
+          <NeuronIds
+            elements={elements}
+            disabled={fieldDisabled}
+            onDeleteElement={(i: number) => {
+              if (!isPlainObject(value) || !Array.isArray(value.elements)) return;
+              if (value.elements.length === 1) {
+                onChange(null);
+                return;
+              }
+              const newElements = [...value.elements];
+              newElements.splice(i, 1);
+              onChange({ elements: newElements });
+            }}
+            onAddElement={(newElement: number) => {
+              if (!value) {
+                onChange({ elements: [newElement] });
+              } else if (isPlainObject(value) && Array.isArray(value.elements)) {
+                onChange({ elements: [...value.elements, newElement] });
+              }
+            }}
+          />
+        );
+      }
+
+      if (paramSchema.ui_element === 'entity_property_dropdown' && model) {
+        return (
+          <EntityPropertyDropdown
+            modelId={model.id}
+            value={typeof value === 'string' ? value : null}
+            onChange={onChange}
+            entity_type={paramSchema.entity_type}
+            property={paramSchema.property}
+          />
+        );
+      }
+
+      if (paramSchema.ui_element === 'boolean_input') {
+        const currentValue = typeof value === 'boolean' ? value : null;
+        return (
+          <BooleanInput
+            value={currentValue}
+            disabled={fieldDisabled}
+            onChange={onChange}
+            trueLabel={paramSchema.true_label}
+            falseLabel={paramSchema.false_label}
+            ariaLabel={paramSchema.description}
+          />
+        );
+      }
+
+      return null;
+    },
+    [config, model, schemaName]
+  );
 
   if (!blockSchema) return null;
 
@@ -297,5 +443,184 @@ export function Chevron({ rotate }: { rotate?: number }) {
         strokeLinejoin="round"
       />
     </svg>
+  );
+}
+
+/**
+ * Root-level DiscriminatedUnionUI component.
+ * Used when a discriminated_union is a top-level schema property (like neuron_set).
+ */
+export function DiscriminatedUnionUI({
+  schemaName,
+  disabled,
+  unionSchema,
+  stateAtom,
+  config,
+  model,
+}: {
+  schemaName: SchemaName;
+  disabled: boolean;
+  config: Config;
+  unionSchema: RootDiscriminatedUnion;
+  model: ICircuit | IMEModel | undefined | null;
+  stateAtom: ReturnType<typeof atom<{ [key: string]: ConfigValue }>>;
+}) {
+  const [state, setState] = useAtom(stateAtom);
+
+  /**
+   * Renders a nested field within the discriminated union.
+   */
+  const renderNestedField = useCallback(
+    ({
+      fieldKey,
+      paramSchema,
+      value,
+      onChange,
+      disabled: fieldDisabled,
+    }: NestedFieldRendererProps) => {
+      if (paramSchema.ui_element === 'string_input') {
+        return (
+          <Input
+            disabled={fieldDisabled}
+            value={typeof value === 'string' ? value : ''}
+            className="w-full"
+            onChange={(e) => onChange(e.currentTarget.value)}
+          />
+        );
+      }
+
+      if (paramSchema.ui_element === 'model_identifier' && model) {
+        return <ModelDetails model={model} />;
+      }
+
+      if (
+        paramSchema.ui_element === 'float_parameter_sweep' ||
+        paramSchema.ui_element === 'int_parameter_sweep'
+      ) {
+        return (
+          <ParameterSwep
+            k={fieldKey}
+            min={paramSchema.anyOf[0]?.minimum}
+            max={paramSchema.anyOf[0]?.maximum}
+            disabled={fieldDisabled}
+            value={value as number | null | number[]}
+            onChange={onChange}
+          />
+        );
+      }
+
+      if (paramSchema.ui_element === 'reference') {
+        const defaultV: string | null =
+          isPlainObject(value) && typeof value.block_name === 'string' ? value.block_name : null;
+
+        return (
+          <Reference
+            config={config}
+            schemaName={schemaName}
+            referenceSchema={paramSchema}
+            value={defaultV}
+            disabled={fieldDisabled}
+            onChange={(block_name: string | null, block_dict_name: string | null) => {
+              if (block_name === null) {
+                onChange(null);
+                return;
+              }
+              onChange({ block_name, block_dict_name });
+            }}
+          />
+        );
+      }
+
+      if (paramSchema.ui_element === 'neuron_ids') {
+        const elements: number[] =
+          isPlainObject(value) && Array.isArray(value.elements) ? value.elements : [];
+        return (
+          <NeuronIds
+            elements={elements}
+            disabled={fieldDisabled}
+            onDeleteElement={(i: number) => {
+              if (!isPlainObject(value) || !Array.isArray(value.elements)) return;
+              if (value.elements.length === 1) {
+                onChange(null);
+                return;
+              }
+              const newElements = [...value.elements];
+              newElements.splice(i, 1);
+              onChange({ elements: newElements });
+            }}
+            onAddElement={(newElement: number) => {
+              if (!value) {
+                onChange({ elements: [newElement] });
+              } else if (isPlainObject(value) && Array.isArray(value.elements)) {
+                onChange({ elements: [...value.elements, newElement] });
+              }
+            }}
+          />
+        );
+      }
+
+      if (paramSchema.ui_element === 'entity_property_dropdown' && model) {
+        return (
+          <EntityPropertyDropdown
+            modelId={model.id}
+            value={typeof value === 'string' ? value : null}
+            onChange={onChange}
+            entity_type={paramSchema.entity_type}
+            property={paramSchema.property}
+          />
+        );
+      }
+
+      if (paramSchema.ui_element === 'boolean_input') {
+        const currentValue = typeof value === 'boolean' ? value : null;
+        return (
+          <BooleanInput
+            value={currentValue}
+            disabled={fieldDisabled}
+            onChange={onChange}
+            trueLabel={paramSchema.true_label}
+            falseLabel={paramSchema.false_label}
+            ariaLabel={paramSchema.description}
+          />
+        );
+      }
+
+      return null;
+    },
+    [config, model, schemaName]
+  );
+
+  const handleChange = useCallback(
+    (value: Record<string, ConfigValue>) => {
+      setState(value);
+    },
+    [setState]
+  );
+
+  // Convert RootDiscriminatedUnion to the format expected by DiscriminatedUnion component
+  const discriminatedUnionSchema = {
+    ui_element: 'discriminated_union' as const,
+    title: unionSchema.title,
+    description: unionSchema.description,
+    discriminator: unionSchema.discriminator,
+    oneOf: unionSchema.oneOf,
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="text-lg text-gray-500 uppercase">{unionSchema.title}</div>
+      <div className="mb-6 text-gray-500">{unionSchema.description}</div>
+
+      <DiscriminatedUnion
+        schema={discriminatedUnionSchema}
+        value={state as Record<string, ConfigValue> | null}
+        disabled={disabled}
+        schemaName={schemaName}
+        config={config}
+        model={model}
+        onChange={handleChange}
+        renderNestedField={renderNestedField}
+      />
+    </div>
   );
 }

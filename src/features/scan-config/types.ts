@@ -88,10 +88,17 @@ export interface NeuronIds extends BlockElement {
 
 export interface BooleanInput extends BlockElement {
   ui_element: 'boolean_input';
-  /** Optional label displayed when value is true */
   true_label?: string;
-  /** Optional label displayed when value is false */
   false_label?: string;
+}
+
+export interface DiscriminatedUnion extends BlockElement {
+  ui_element: 'discriminated_union';
+  /** The property name used to discriminate between variants (defaults to 'type') */
+  /** Can be a string or an OpenAPI-style discriminator object */
+  discriminator?: string | { propertyName: string; mapping?: Record<string, string> };
+  /** Array of possible variant schemas */
+  oneOf: Block[];
 }
 
 export type BlockElement = {
@@ -110,7 +117,8 @@ export type ParamSchema =
   | Reference
   | NeuronIds
   | EntityPropertyDropdown
-  | BooleanInput;
+  | BooleanInput
+  | DiscriminatedUnion;
 
 export type Block = {
   title: string;
@@ -134,12 +142,22 @@ export interface BlockDictionary extends RootElement {
   };
 }
 
+/** Root-level discriminated union (single value that can be one of several types) */
+export interface RootDiscriminatedUnion extends RootElement {
+  ui_element: 'discriminated_union';
+  /** The property name used to discriminate between variants (defaults to 'type') */
+  /** Can be a string or an OpenAPI-style discriminator object */
+  discriminator?: string | { propertyName: string; mapping?: Record<string, string> };
+  /** Array of possible variant schemas */
+  oneOf: Block[];
+}
+
 export type ConfigSchema = {
   additionalProperties: false;
   default_block_reference_labels: Record<string, string>;
   description: string;
   group_order: string[];
-  properties: Record<string, RootBlock | BlockDictionary> & { type: Type };
+  properties: Record<string, RootBlock | BlockDictionary | RootDiscriminatedUnion> & { type: Type };
   title: string;
 };
 
