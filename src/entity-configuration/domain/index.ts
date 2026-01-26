@@ -1,6 +1,7 @@
 import { BoutonDensity } from '@/entity-configuration/domain/experimental/bouton-density';
 import { CellMorphology } from '@/entity-configuration/domain/experimental/cell-morphology';
 import { ElectricalCellRecording } from '@/entity-configuration/domain/experimental/electrical-cell-recording';
+import { EmCellMesh } from '@/entity-configuration/domain/experimental/em-cell-mesh';
 import { IonChannelRecording } from '@/entity-configuration/domain/experimental/ion-channel-recording';
 import { NeuronDensity } from '@/entity-configuration/domain/experimental/neuron-density';
 import { SynapsesPerConnection } from '@/entity-configuration/domain/experimental/synapses-per-connection';
@@ -11,8 +12,8 @@ import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { MEModelCircuit } from '@/entity-configuration/domain/model/me-model-circuit';
 import { MEModelWithSynapsesCircuit } from '@/entity-configuration/domain/model/me-model-with-synapses';
 import { Microcircuit } from '@/entity-configuration/domain/model/mirocircuit';
-import { SingleNeuronCircuit } from '@/entity-configuration/domain/model/single-neuron-circuit';
 import { PairedNeuronCircuit } from '@/entity-configuration/domain/model/paired-neurons';
+import { SingleNeuronCircuit } from '@/entity-configuration/domain/model/single-neuron-circuit';
 import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import { SmallMicrocircuit } from '@/entity-configuration/domain/model/small-microcircuit';
 import { Notebook } from '@/entity-configuration/domain/notebook';
@@ -22,11 +23,10 @@ import {
   SingleNeuronSynaptomeSimulation,
 } from '@/entity-configuration/domain/simulation';
 import { MEModelCircuitSimulation } from '@/entity-configuration/domain/simulation/memodel-circuit-simulation';
-import { SingeNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/single-neuron-circuit-simulation';
-import { PairedNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/paired-neurons-simulation';
-import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { MicrocircuitSimulation } from '@/entity-configuration/domain/simulation/microcircuit-simulation';
-import { EmCellMesh } from '@/entity-configuration/domain/experimental/em-cell-mesh';
+import { PairedNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/paired-neurons-simulation';
+import { SingeNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/single-neuron-circuit-simulation';
+import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
@@ -36,7 +36,7 @@ export const EntityCoreExperimentalConfiguration = {
   IonChannelRecording,
   NeuronDensity,
   BoutonDensity,
-  SynapsePerConnection,
+  SynapsesPerConnection,
   EmCellMesh,
 } as const;
 
