@@ -16,7 +16,7 @@ import { useNextStepOnboarding, workflowTour } from '@/ui/segments/app-setup/dis
 import { CategoryMenu } from '@/ui/segments/workflows/elements/category-menu';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 import {
-  ActivityValues,
+  ActivityDictValue,
   WorkflowSessionIdSearchParam,
 } from '@/ui/segments/workflows/elements/helpers';
 import { TypesMenu } from '@/ui/segments/workflows/elements/types-menu';
@@ -58,7 +58,7 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
     return match({ activity, value })
       .with(
         {
-          activity: ActivityValues.Build,
+          activity: ActivityDictValue.build,
         },
         () => {
           const sessionId = crypto.randomUUID();
@@ -71,12 +71,12 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
             );
         }
       )
-      .with({ activity: ActivityValues.Simulate, value: P.nonNullable }, ({ value }) => {
+      .with({ activity: ActivityDictValue.simulate, value: P.nonNullable }, ({ value }) => {
         navigate(
           `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}`
         );
       })
-      .with({ activity: ActivityValues.Extract, value: P.nonNullable }, ({ value }) => {
+      .with({ activity: ActivityDictValue.extract, value: P.nonNullable }, ({ value }) => {
         navigate(
           `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}?${SCOPE_QUERY_PARAMS}=${WorkspaceScope.Public}`
         );

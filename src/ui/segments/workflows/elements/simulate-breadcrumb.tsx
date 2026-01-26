@@ -38,9 +38,11 @@ export function SimulateWorkflowsBreadcrumb({ section }: Props) {
 
   const dataType = convertEntitySlugToExtendedType({ type });
   const category = getCategoryDictItem(segment)?.name;
+
   const baseType = getBaseModelTypeFromActivityType({ type: dataType, section });
   const selectTitle = getEntityByExtendedType({ type: baseType })?.title;
-  const baseTitle = getEntityTypeWorkflowConfigurationItem(baseType)?.label;
+  const baseTitle = getEntityTypeWorkflowConfigurationItem({ value: baseType, section })?.label;
+
   const homeLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`;
 
   return (

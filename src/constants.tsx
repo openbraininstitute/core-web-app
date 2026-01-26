@@ -1,3 +1,5 @@
+import { ActivityDictValue } from '@/ui/segments/workflows/elements/helpers';
+
 export const LATEST_VISITED_PROJECT_KEY = 'latest-visited-project';
 export const AUTO_INIT_WORKSPACE = 'automatic-init-workspace';
 export const AUTO_ONBOARDING_TOURS = 'automatic-app-onboarding-tours';
@@ -26,10 +28,10 @@ export type TWorkspaceScope = (typeof WorkspaceScope)[keyof typeof WorkspaceScop
 
 export const WorkspaceSection = {
   Data: 'data',
-  BuildWorkflow: 'build',
-  SimulateWorkflow: 'simulate',
-  ExtractWorkflow: 'extract',
   Notebooks: 'notebooks',
+  BuildWorkflow: ActivityDictValue.build,
+  SimulateWorkflow: ActivityDictValue.simulate,
+  ExtractWorkflow: ActivityDictValue.extract,
 } as const;
 
 export type TWorkspaceSection = (typeof WorkspaceSection)[keyof typeof WorkspaceSection];
