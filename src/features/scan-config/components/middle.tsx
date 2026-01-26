@@ -130,6 +130,7 @@ export default function Middle({
                 : atomsMap[configTab]?.[selectedEntry]
             }
             model={model}
+            aiPatchKey={configTab + (selectedCategory ? `/${selectedCategory}` : '/')}
           />
         )}
     </div>

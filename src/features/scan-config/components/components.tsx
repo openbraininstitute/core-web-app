@@ -1,3 +1,4 @@
+import { CloseOutlined, PlusOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
 import { type atom, useAtom } from 'jotai';
 import { useEffect } from 'react';
@@ -16,8 +17,9 @@ import {
   type ParamSchema,
   type SchemaName,
 } from '@/features/scan-config/types';
-
+import { patchesAtoms } from '@/services/ai-agent';
 import { classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
 
 type Primitive = null | boolean | number | string;
 interface Object {
@@ -35,6 +37,7 @@ export function BlockUI({
   stateAtom,
   config,
   model,
+  aiPatchKey,
 }: {
   schemaName: SchemaName;
   disabled: boolean;
@@ -42,8 +45,12 @@ export function BlockUI({
   blockSchema?: Block;
   model: ICircuit | IMEModel | undefined | null;
   stateAtom: ReturnType<typeof atom<{ [key: string]: ConfigValue }>>;
+  aiPatchKey: string;
 }) {
   const [state, setState] = useAtom(stateAtom);
+
+  const [patches, setPatches] = useAtom(patchesAtoms.smc_simulation_config);
+  disabled = patches.length > 0 || disabled;
 
   useEffect(() => {
     if (!blockSchema || !blockSchema.properties) return;
@@ -59,12 +66,13 @@ export function BlockUI({
     });
   }, [setState, blockSchema]);
 
-  function renderInput(k: string, paramSchema: ParamSchema) {
+  function renderInput(k: string, paramSchema: ParamSchema, patchValue?: ConfigValue) {
+    const value = patchValue ?? state[k];
     if (paramSchema.ui_element === 'string_input') {
       return (
         <Input
           disabled={disabled}
-          value={typeof state[k] === 'string' ? state[k] : ''}
+          value={typeof value === 'string' ? value : ''}
           className="w-full"
           onChange={(e) => {
             setState({ ...state, [k]: e.currentTarget.value });
@@ -87,7 +95,7 @@ export function BlockUI({
           min={paramSchema.anyOf[0]?.minimum}
           max={paramSchema.anyOf[0]?.maximum}
           disabled={disabled}
-          value={state[k] as number | null | number[]}
+          value={value as number | null | number[]}
           onChange={(value) => {
             setState({ ...state, [k]: value });
           }}
@@ -97,13 +105,12 @@ export function BlockUI({
 
     if (paramSchema.ui_element === 'reference') {
       const defaultV: string | null =
-        isPlainObject(state[k]) && typeof state[k].block_name === 'string'
-          ? state[k].block_name
-          : null;
+        isPlainObject(value) && typeof value.block_name === 'string' ? value.block_name : null;
 
       return (
         <Reference
           config={config}
+          hasReplacePatch={!!value}
           schemaName={schemaName}
           referenceSchema={paramSchema}
           value={defaultV}
@@ -128,7 +135,7 @@ export function BlockUI({
 
     if (paramSchema.ui_element === 'neuron_ids') {
       const elements: number[] =
-        isPlainObject(state[k]) && Array.isArray(state[k].elements) ? state[k].elements : [];
+        isPlainObject(value) && Array.isArray(value.elements) ? value.elements : [];
       return (
         <NeuronIds
           elements={elements}
@@ -194,7 +201,19 @@ export function BlockUI({
               return !isType(paramSchema) && !paramSchema.ui_hidden;
             })
             .map(([k, blockElementSchema]) => {
+              const patch =
+                patches.find((p) => p.path.includes(aiPatchKey + k)) ??
+                patches.find(
+                  (p) => (p.op === 'add' || p.op === 'delete') && p.path.includes(aiPatchKey)
+                );
               if (isType(blockElementSchema)) return null;
+
+              const patchBorderClass = () => {
+                if (!patch) return 'border-transparent';
+                if (patch.op === 'replace' || patch.op === 'delete') return 'border-red-500';
+                if (patch.op === 'add') return 'border-sky-400';
+              };
+
               return (
                 <div key={k}>
                   <div className="flex items-end gap-3">
@@ -209,7 +228,23 @@ export function BlockUI({
                     )}
                   </div>
                   <Tooltip value={blockElementSchema.description}>
-                    {renderInput(k, blockElementSchema)}
+                    <div className="mb-1 flex">
+                      <div className={cn('border-1 flex-1 mr-1', patchBorderClass())}>
+                        {renderInput(k, blockElementSchema)}
+                      </div>
+                      {(patch?.op === 'delete' || patch?.op === 'replace') && (
+                        <CloseOutlined className="text-red-500" />
+                      )}
+                    </div>
+
+                    {patch?.op === 'replace' && (
+                      <div className="flex">
+                        <div className="border-1 border-sky-400 flex-1 mr-1">
+                          {renderInput(k, blockElementSchema, patch.value)}
+                        </div>
+                        <PlusOutlined className="text-sky-400" />
+                      </div>
+                    )}
                   </Tooltip>
 
                   {blockSchema.required?.includes(k) &&
