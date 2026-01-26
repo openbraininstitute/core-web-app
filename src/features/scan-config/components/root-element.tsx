@@ -21,7 +21,7 @@ import {
   type ConfigSchema,
   type DiscriminatedUnion,
   type RootBlock,
-  UIElementDict,
+  ScanConfigUIElementDict,
 } from '../types';
 import { Chevron, type Config, type ConfigValue, Tab } from './components';
 import { isRootBlock } from './hooks/schema';
@@ -160,7 +160,7 @@ export function RootElement({
           if (
             selectedRootElement === rootElement &&
             !isRootBlock(schema, rootElement) &&
-            rootElementSchema.ui_element !== UIElementDict.DiscriminatedUnion
+            rootElementSchema.ui_element !== ScanConfigUIElementDict.DiscriminatedUnion
           ) {
             setEditing(false);
             setSelectedEntry('');
@@ -172,8 +172,8 @@ export function RootElement({
           setSelectedEntry('');
 
           if (
-            rootElementSchema.ui_element === UIElementDict.RootBlock ||
-            rootElementSchema.ui_element === UIElementDict.DiscriminatedUnion
+            rootElementSchema.ui_element === ScanConfigUIElementDict.RootBlock ||
+            rootElementSchema.ui_element === ScanConfigUIElementDict.DiscriminatedUnion
           )
             setEditing(true);
           else setEditing(false);

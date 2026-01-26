@@ -2,7 +2,7 @@ import { CloseOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { InputNumber } from 'antd';
 import { useState } from 'react';
 
-export default function ParameterSwep({
+export default function ParameterSweep({
   value,
   min,
   max,

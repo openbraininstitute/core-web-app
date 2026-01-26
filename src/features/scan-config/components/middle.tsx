@@ -2,15 +2,14 @@ import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { BlockUI, type Config } from '@/features/scan-config/components/components';
 import { isAtom } from '@/features/scan-config/components/utils';
-import styles from '@/features/scan-config/scan-config.module.css';
-import type {
-  AtomsMap,
-  BlockDictionary as BlockDictionaryT,
-  ConfigSchema,
-  RootBlock,
-  SchemaName,
+import {
+  type AtomsMap,
+  type BlockDictionary as BlockDictionaryT,
+  type ConfigSchema,
+  type RootBlock,
+  ScanConfigUIElementDict,
+  type SchemaName,
 } from '@/features/scan-config/types';
-import { classNames } from '@/util/utils';
 import BlockDictionary from './block-dictionary';
 
 type MiddleProps = {
@@ -49,7 +48,7 @@ export default function Middle({
 }: MiddleProps) {
   return (
     <>
-      {selectedSchema.ui_element === 'block_dictionary' && (
+      {selectedSchema.ui_element === ScanConfigUIElementDict.BlockDictionary && (
         <BlockDictionary
           campaignId={campaignId}
           loading={loading}
@@ -68,16 +67,17 @@ export default function Middle({
         />
       )}
 
-      {selectedSchema.ui_element === 'root_block' && isAtom(atomsMap[selectedRootElement]) && (
-        <BlockUI
-          schemaName={schemaName}
-          disabled={!!campaignId || loading}
-          config={config}
-          blockSchema={selectedSchema}
-          stateAtom={atomsMap[selectedRootElement]}
-          model={model}
-        />
-      )}
+      {selectedSchema.ui_element === ScanConfigUIElementDict.RootBlock &&
+        isAtom(atomsMap[selectedRootElement]) && (
+          <BlockUI
+            schemaName={schemaName}
+            disabled={!!campaignId || loading}
+            config={config}
+            blockSchema={selectedSchema}
+            stateAtom={atomsMap[selectedRootElement]}
+            model={model}
+          />
+        )}
     </>
   );
 }

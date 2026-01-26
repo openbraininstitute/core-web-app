@@ -27,7 +27,7 @@ export type RootElement = {
   group_order: number;
 };
 
-export const UIElementDict = {
+export const ScanConfigUIElementDict = {
   StringInput: 'string_input',
   ModelIdentifier: 'model_identifier',
   FloatParameterSweep: 'float_parameter_sweep',
@@ -42,15 +42,15 @@ export const UIElementDict = {
 } as const;
 
 export interface StringInput extends BlockElement {
-  ui_element: typeof UIElementDict.StringInput;
+  ui_element: typeof ScanConfigUIElementDict.StringInput;
 }
 
 export interface ModelIdentifier extends BlockElement {
-  ui_element: typeof UIElementDict.ModelIdentifier;
+  ui_element: typeof ScanConfigUIElementDict.ModelIdentifier;
 }
 
 export interface FloatParameterSweep extends BlockElement {
-  ui_element: typeof UIElementDict.FloatParameterSweep;
+  ui_element: typeof ScanConfigUIElementDict.FloatParameterSweep;
   anyOf: [
     {
       type: 'number';
@@ -69,7 +69,7 @@ export interface FloatParameterSweep extends BlockElement {
 }
 
 export interface IntParameterSweep extends BlockElement {
-  ui_element: typeof UIElementDict.IntParameterSweep;
+  ui_element: typeof ScanConfigUIElementDict.IntParameterSweep;
   anyOf: [
     {
       type: 'integer';
@@ -88,28 +88,28 @@ export interface IntParameterSweep extends BlockElement {
 }
 
 export interface Reference extends BlockElement {
-  ui_element: typeof UIElementDict.Reference;
+  ui_element: typeof ScanConfigUIElementDict.Reference;
   reference_type: string;
 }
 
 export interface EntityPropertyDropdown extends BlockElement {
-  ui_element: typeof UIElementDict.EntityPropertyDropdown;
+  ui_element: typeof ScanConfigUIElementDict.EntityPropertyDropdown;
   entity_type: string;
   property: string;
 }
 
 export interface NeuronIds extends BlockElement {
-  ui_element: typeof UIElementDict.NeuronIds;
+  ui_element: typeof ScanConfigUIElementDict.NeuronIds;
 }
 
 export interface BooleanInput extends BlockElement {
-  ui_element: typeof UIElementDict.BooleanInput;
+  ui_element: typeof ScanConfigUIElementDict.BooleanInput;
   true_label?: string;
   false_label?: string;
 }
 
 export interface DiscriminatedUnion extends BlockElement {
-  ui_element: typeof UIElementDict.DiscriminatedUnion;
+  ui_element: typeof ScanConfigUIElementDict.DiscriminatedUnion;
   /** The property name used to discriminate between variants (defaults to 'type') */
   /** Can be a string or an OpenAPI-style discriminator object */
   discriminator?: string | { propertyName: string; mapping?: Record<string, string> };
@@ -144,13 +144,13 @@ export type Block = {
 };
 
 export interface RootBlock extends RootElement, Block {
-  ui_element: typeof UIElementDict.RootBlock;
+  ui_element: typeof ScanConfigUIElementDict.RootBlock;
   additionalProperties: false;
   required?: string[];
 }
 
 export interface BlockDictionary extends RootElement {
-  ui_element: typeof UIElementDict.BlockDictionary;
+  ui_element: typeof ScanConfigUIElementDict.BlockDictionary;
   reference_type: string;
   singular_name: string;
   additionalProperties: {
@@ -160,7 +160,7 @@ export interface BlockDictionary extends RootElement {
 
 /** Root-level discriminated union (single value that can be one of several types) */
 export interface RootDiscriminatedUnion extends RootElement {
-  ui_element: typeof UIElementDict.DiscriminatedUnion;
+  ui_element: typeof ScanConfigUIElementDict.DiscriminatedUnion;
   /** the property name used to discriminate between variants (defaults to 'type') */
   /** can be a string or an OpenAPI-style discriminator object */
   discriminator?: string | { propertyName: string; mapping?: Record<string, string> };

@@ -10,7 +10,7 @@ import DiscriminatedUnion, {
 import EntityPropertyDropdown from '@/features/scan-config/components/entity-property-dropdown';
 import ModelDetails from '@/features/scan-config/components/model-details';
 import NeuronIds from '@/features/scan-config/components/neuron-ids';
-import ParameterSwep from '@/features/scan-config/components/parameter-sweep';
+import ParameterSweep from '@/features/scan-config/components/parameter-sweep';
 import Reference from '@/features/scan-config/components/reference';
 import Tooltip from '@/features/scan-config/components/tooltip';
 import { isPlainObject } from '@/features/scan-config/components/utils';
@@ -18,9 +18,8 @@ import {
   type Block,
   isType,
   type ParamSchema,
-  type RootDiscriminatedUnion,
+  ScanConfigUIElementDict,
   type SchemaName,
-  UIElementDict,
 } from '@/features/scan-config/types';
 
 import { classNames } from '@/util/utils';
@@ -66,7 +65,7 @@ export function BlockUI({
   }, [setState, blockSchema]);
 
   function renderInput(k: string, paramSchema: ParamSchema) {
-    if (paramSchema.ui_element === UIElementDict.StringInput) {
+    if (paramSchema.ui_element === ScanConfigUIElementDict.StringInput) {
       return (
         <Input
           disabled={disabled}
@@ -79,16 +78,16 @@ export function BlockUI({
       );
     }
 
-    if (paramSchema.ui_element === UIElementDict.ModelIdentifier && model) {
+    if (paramSchema.ui_element === ScanConfigUIElementDict.ModelIdentifier && model) {
       return <ModelDetails model={model} />;
     }
 
     if (
-      paramSchema.ui_element === UIElementDict.FloatParameterSweep ||
-      paramSchema.ui_element === UIElementDict.IntParameterSweep
+      paramSchema.ui_element === ScanConfigUIElementDict.FloatParameterSweep ||
+      paramSchema.ui_element === ScanConfigUIElementDict.IntParameterSweep
     ) {
       return (
-        <ParameterSwep
+        <ParameterSweep
           k={k}
           min={paramSchema.anyOf[0]?.minimum}
           max={paramSchema.anyOf[0]?.maximum}
@@ -101,7 +100,7 @@ export function BlockUI({
       );
     }
 
-    if (paramSchema.ui_element === UIElementDict.Reference) {
+    if (paramSchema.ui_element === ScanConfigUIElementDict.Reference) {
       const defaultV: string | null =
         isPlainObject(state[k]) && typeof state[k].block_name === 'string'
           ? state[k].block_name
@@ -132,7 +131,7 @@ export function BlockUI({
       );
     }
 
-    if (paramSchema.ui_element === UIElementDict.NeuronIds) {
+    if (paramSchema.ui_element === ScanConfigUIElementDict.NeuronIds) {
       const elements: number[] =
         isPlainObject(state[k]) && Array.isArray(state[k].elements) ? state[k].elements : [];
       return (
@@ -171,7 +170,7 @@ export function BlockUI({
       );
     }
 
-    if (paramSchema.ui_element === UIElementDict.EntityPropertyDropdown && model) {
+    if (paramSchema.ui_element === ScanConfigUIElementDict.EntityPropertyDropdown && model) {
       return (
         <EntityPropertyDropdown
           modelId={model.id}
@@ -183,7 +182,7 @@ export function BlockUI({
       );
     }
 
-    if (paramSchema.ui_element === UIElementDict.BooleanInput) {
+    if (paramSchema.ui_element === ScanConfigUIElementDict.BooleanInput) {
       const currentValue = typeof state[k] === 'boolean' ? state[k] : null;
       return (
         <BooleanInput
@@ -197,7 +196,7 @@ export function BlockUI({
       );
     }
 
-    if (paramSchema.ui_element === UIElementDict.DiscriminatedUnion) {
+    if (paramSchema.ui_element === ScanConfigUIElementDict.DiscriminatedUnion) {
       const currentValue = isPlainObject(state[k]) ? state[k] : null;
       return (
         <DiscriminatedUnion
@@ -227,7 +226,7 @@ export function BlockUI({
       onChange,
       disabled: fieldDisabled,
     }: NestedFieldRendererProps) => {
-      if (paramSchema.ui_element === UIElementDict.StringInput) {
+      if (paramSchema.ui_element === ScanConfigUIElementDict.StringInput) {
         return (
           <Input
             disabled={fieldDisabled}
@@ -238,16 +237,16 @@ export function BlockUI({
         );
       }
 
-      if (paramSchema.ui_element === UIElementDict.ModelIdentifier && model) {
+      if (paramSchema.ui_element === ScanConfigUIElementDict.ModelIdentifier && model) {
         return <ModelDetails model={model} />;
       }
 
       if (
-        paramSchema.ui_element === UIElementDict.FloatParameterSweep ||
-        paramSchema.ui_element === UIElementDict.IntParameterSweep
+        paramSchema.ui_element === ScanConfigUIElementDict.FloatParameterSweep ||
+        paramSchema.ui_element === ScanConfigUIElementDict.IntParameterSweep
       ) {
         return (
-          <ParameterSwep
+          <ParameterSweep
             k={fieldKey}
             min={paramSchema.anyOf[0]?.minimum}
             max={paramSchema.anyOf[0]?.maximum}
@@ -258,7 +257,7 @@ export function BlockUI({
         );
       }
 
-      if (paramSchema.ui_element === UIElementDict.Reference) {
+      if (paramSchema.ui_element === ScanConfigUIElementDict.Reference) {
         const defaultV: string | null =
           isPlainObject(value) && typeof value.block_name === 'string' ? value.block_name : null;
 
@@ -280,7 +279,7 @@ export function BlockUI({
         );
       }
 
-      if (paramSchema.ui_element === UIElementDict.NeuronIds) {
+      if (paramSchema.ui_element === ScanConfigUIElementDict.NeuronIds) {
         const elements: number[] =
           isPlainObject(value) && Array.isArray(value.elements) ? value.elements : [];
         return (
@@ -308,7 +307,7 @@ export function BlockUI({
         );
       }
 
-      if (paramSchema.ui_element === UIElementDict.EntityPropertyDropdown && model) {
+      if (paramSchema.ui_element === ScanConfigUIElementDict.EntityPropertyDropdown && model) {
         return (
           <EntityPropertyDropdown
             modelId={model.id}
@@ -320,7 +319,7 @@ export function BlockUI({
         );
       }
 
-      if (paramSchema.ui_element === UIElementDict.BooleanInput) {
+      if (paramSchema.ui_element === ScanConfigUIElementDict.BooleanInput) {
         const currentValue = typeof value === 'boolean' ? value : null;
         return (
           <BooleanInput
@@ -454,179 +453,5 @@ export function Chevron({ rotate }: { rotate?: number }) {
         strokeLinejoin="round"
       />
     </svg>
-  );
-}
-
-/**
- * Root-level DiscriminatedUnionUI component.
- * Used when a discriminated_union is a top-level schema property (like neuron_set).
- */
-export function DiscriminatedUnionUI({
-  schemaName,
-  disabled,
-  unionSchema,
-  stateAtom,
-  config,
-  model,
-}: {
-  schemaName: SchemaName;
-  disabled: boolean;
-  config: Config;
-  unionSchema: RootDiscriminatedUnion;
-  model: ICircuit | IMEModel | undefined | null;
-  stateAtom: ReturnType<typeof atom<{ [key: string]: ConfigValue }>>;
-}) {
-  const [state, setState] = useAtom(stateAtom);
-
-  const renderNestedField = useCallback(
-    ({
-      fieldKey,
-      paramSchema,
-      value,
-      onChange,
-      disabled: fieldDisabled,
-    }: NestedFieldRendererProps) => {
-      if (paramSchema.ui_element === 'string_input') {
-        return (
-          <Input
-            disabled={fieldDisabled}
-            value={typeof value === 'string' ? value : ''}
-            className="w-full"
-            onChange={(e) => onChange(e.currentTarget.value)}
-          />
-        );
-      }
-
-      if (paramSchema.ui_element === 'model_identifier' && model) {
-        return <ModelDetails model={model} />;
-      }
-
-      if (
-        paramSchema.ui_element === 'float_parameter_sweep' ||
-        paramSchema.ui_element === 'int_parameter_sweep'
-      ) {
-        return (
-          <ParameterSwep
-            k={fieldKey}
-            min={paramSchema.anyOf[0]?.minimum}
-            max={paramSchema.anyOf[0]?.maximum}
-            disabled={fieldDisabled}
-            value={value as number | null | number[]}
-            onChange={onChange}
-          />
-        );
-      }
-
-      if (paramSchema.ui_element === 'reference') {
-        const defaultV: string | null =
-          isPlainObject(value) && typeof value.block_name === 'string' ? value.block_name : null;
-
-        return (
-          <Reference
-            config={config}
-            schemaName={schemaName}
-            referenceSchema={paramSchema}
-            value={defaultV}
-            disabled={fieldDisabled}
-            onChange={(block_name: string | null, block_dict_name: string | null) => {
-              if (block_name === null) {
-                onChange(null);
-                return;
-              }
-              onChange({ block_name, block_dict_name });
-            }}
-          />
-        );
-      }
-
-      if (paramSchema.ui_element === 'neuron_ids') {
-        const elements: number[] =
-          isPlainObject(value) && Array.isArray(value.elements) ? value.elements : [];
-        return (
-          <NeuronIds
-            elements={elements}
-            disabled={fieldDisabled}
-            onDeleteElement={(i: number) => {
-              if (!isPlainObject(value) || !Array.isArray(value.elements)) return;
-              if (value.elements.length === 1) {
-                onChange(null);
-                return;
-              }
-              const newElements = [...value.elements];
-              newElements.splice(i, 1);
-              onChange({ elements: newElements });
-            }}
-            onAddElement={(newElement: number) => {
-              if (!value) {
-                onChange({ elements: [newElement] });
-              } else if (isPlainObject(value) && Array.isArray(value.elements)) {
-                onChange({ elements: [...value.elements, newElement] });
-              }
-            }}
-          />
-        );
-      }
-
-      if (paramSchema.ui_element === 'entity_property_dropdown' && model) {
-        return (
-          <EntityPropertyDropdown
-            modelId={model.id}
-            value={typeof value === 'string' ? value : null}
-            onChange={onChange}
-            entity_type={paramSchema.entity_type}
-            property={paramSchema.property}
-          />
-        );
-      }
-
-      if (paramSchema.ui_element === 'boolean_input') {
-        const currentValue = typeof value === 'boolean' ? value : null;
-        return (
-          <BooleanInput
-            value={currentValue}
-            disabled={fieldDisabled}
-            onChange={onChange}
-            ariaLabel={paramSchema.description}
-          />
-        );
-      }
-
-      return null;
-    },
-    [config, model, schemaName]
-  );
-
-  const handleChange = useCallback(
-    (value: Record<string, ConfigValue>) => {
-      setState(value);
-    },
-    [setState]
-  );
-
-  // convert RootDiscriminatedUnion to the format expected by DiscriminatedUnion component
-  const discriminatedUnionSchema = {
-    ui_element: UIElementDict.DiscriminatedUnion,
-    title: unionSchema.title,
-    description: unionSchema.description,
-    discriminator: unionSchema.discriminator,
-    oneOf: unionSchema.oneOf,
-  };
-
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="text-lg text-gray-500 uppercase">{unionSchema.title}</div>
-      <div className="mb-6 text-gray-500">{unionSchema.description}</div>
-
-      <DiscriminatedUnion
-        schema={discriminatedUnionSchema}
-        value={state as Record<string, ConfigValue> | null}
-        disabled={disabled}
-        schemaName={schemaName}
-        config={config}
-        model={model}
-        onChange={handleChange}
-        renderNestedField={renderNestedField}
-      />
-    </div>
   );
 }
