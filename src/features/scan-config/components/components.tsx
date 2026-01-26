@@ -12,7 +12,7 @@ import ModelDetails from '@/features/scan-config/components/model-details';
 import NeuronIds from '@/features/scan-config/components/neuron-ids';
 import ParameterSweep from '@/features/scan-config/components/parameter-sweep';
 import Reference from '@/features/scan-config/components/reference';
-import Tooltip from '@/features/scan-config/components/tooltip';
+import TooltipA from '@/features/scan-config/components/tooltip';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type Block,
@@ -21,7 +21,7 @@ import {
   ScanConfigUIElementDict,
   type SchemaName,
 } from '@/features/scan-config/types';
-
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { classNames } from '@/util/utils';
 
 type Primitive = null | boolean | number | string;
@@ -373,15 +373,39 @@ export function BlockUI({
                     </div>
                     {isBooleanInput && (
                       <div className="shrink-0">
-                        <Tooltip value={blockElementSchema.description}>
-                          {renderInput(k, blockElementSchema)}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div>{renderInput(k, blockElementSchema)}</div>
+                          </TooltipTrigger>
+                          <TooltipContent
+                            avoidCollisions
+                            hideWhenDetached
+                            align="center"
+                            side="bottom"
+                            className="text-white shadow-bnb max-w-2xs min-w-2xs rounded-md bg-[#0050b3ee] px-4 py-2 text-base text-wrap"
+                            arrowClassName="bg-[#0050b3ee]"
+                          >
+                            {blockElementSchema.description}
+                          </TooltipContent>
                         </Tooltip>
                       </div>
                     )}
                   </div>
                   {!isBooleanInput && (
-                    <Tooltip value={blockElementSchema.description}>
-                      {renderInput(k, blockElementSchema)}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div>{renderInput(k, blockElementSchema)}</div>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        avoidCollisions
+                        hideWhenDetached
+                        align="center"
+                        side="bottom"
+                        className="text-white shadow-bnb max-w-2xs min-w-2xs rounded-md bg-[#0050b3ee] px-4 py-2 text-base text-wrap"
+                        arrowClassName="bg-[#0050b3ee]"
+                      >
+                        {blockElementSchema.description}
+                      </TooltipContent>
                     </Tooltip>
                   )}
 

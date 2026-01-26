@@ -8,10 +8,7 @@ import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import { AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
 import { Loader } from '@/components/loader';
-import {
-  modelAtomFamily,
-  simResultBySimIdAtomFamily,
-} from '@/features/scan-config/components/atoms';
+import { simResultBySimIdAtomFamily, useModelQuery } from '@/features/scan-config/components/atoms';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import type { WorkspaceContext } from '@/types/common';
 import { classNames } from '@/util/utils';
@@ -143,27 +140,19 @@ function useInputFiles(
   simulation: ICircuitSimulation,
   context: WorkspaceContext
 ): [boolean, File[]] {
-  const modelAtom = modelAtomFamily({ id: simulation.entity_id, context });
-  const modelLoadableAtom = useMemo(() => loadable(modelAtom), [modelAtom]);
-
-  const modelLoadable = useAtomValue(modelLoadableAtom);
-  const loading = modelLoadable.state === 'loading';
-
-  const lastModel = useLastTruthyValue(modelAtom);
-
-  const model = modelLoadable.state === 'hasData' ? modelLoadable.data : lastModel;
+  const { entity, isLoading } = useModelQuery({ id: simulation.entity_id, context });
 
   const inputFiles: File[] = useMemo(() => {
     const sonataCircuitAsset =
-      model && 'assets' in model
-        ? model.assets?.find((asset) => asset.label === AssetLabel.sonata_circuit)
+      entity && 'assets' in entity
+        ? entity.assets?.find((asset) => asset.label === AssetLabel.sonata_circuit)
         : null;
 
     const files: File[] = [];
 
-    if (model && sonataCircuitAsset) {
+    if (entity && sonataCircuitAsset) {
       files.push({
-        entity: model,
+        entity,
         asset: sonataCircuitAsset,
         assetPath: 'circuit_config.json',
       });
@@ -172,12 +161,14 @@ function useInputFiles(
     sortBy(
       simulation.assets.map((asset) => ({ asset, entity: simulation })),
       (file) => file.asset.path
-    ).forEach((file) => files.push(file));
+    ).forEach((file) => {
+      files.push(file);
+    });
 
     return files;
-  }, [model, simulation]);
+  }, [entity, simulation]);
 
-  return [loading, inputFiles];
+  return [isLoading, inputFiles];
 }
 
 function useOutputFiles(

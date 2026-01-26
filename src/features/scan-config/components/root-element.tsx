@@ -155,8 +155,8 @@ export function RootElement({
         tab={rootElement}
         selectedTab={selectedRootElement}
         onClick={() => {
-          // For block_dictionary, clicking again collapses it
-          // For root_block and discriminated_union, they stay open
+          // for block_dictionary, clicking again collapses it
+          // for ScanConfigUIElementDict.RootBlock and ScanConfigUIElementDict.DiscriminatedUnion, they stay open
           if (
             selectedRootElement === rootElement &&
             !isRootBlock(schema, rootElement) &&
@@ -182,7 +182,7 @@ export function RootElement({
       >
         {schema.properties?.[rootElement]?.title}
         <div className="flex gap-1">
-          {errors?.find((error) => error.instancePath.startsWith('/' + rootElement)) ? (
+          {errors?.find((error) => error.instancePath.startsWith(`/${rootElement}`)) ? (
             <WarningFilled className="text-yellow-400" />
           ) : (
             <CheckCircleFilled className="text-green-600" />
@@ -202,7 +202,9 @@ export function RootElement({
                   type="button"
                   key={subkey}
                   className={classNames(
-                    'text-primary-8 flex h-[50px] min-h-[50px] w-90percent min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
+                    'text-primary-8 flex h-12.5 min-h-12.5 w-90percent min-w-37.5 items-center',
+                    'justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow',
+                    'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
                     isSelected ? 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white' : ''
                   )}
                   tabIndex={0}
@@ -218,7 +220,7 @@ export function RootElement({
                       <>
                         <Input
                           value={newKey}
-                          className="inline-block h-[20px] w-[70%] text-sm outline-none"
+                          className="inline-block h-5 w-[70%] text-sm outline-none"
                           classNames={{
                             input: 'border-none !bg-transparent text-white',
                           }}

@@ -1,20 +1,16 @@
-import { useAtomValue } from 'jotai';
 import { useEffect, useState } from 'react';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-
 import { useAppNotification } from '@/components/notification';
-
-import { modelAtomFamily } from '@/features/scan-config/components/atoms';
+import { useModelQuery } from '@/features/scan-config/components/atoms';
 
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 export function useCircuitImageURL(circuitId: string) {
   const context = useWorkspace();
-  const modelAtom = modelAtomFamily({ id: circuitId, context });
-  const circuit = useAtomValue(modelAtom);
+  const { entity: circuit } = useModelQuery({ id: circuitId, context });
 
   const { error } = useAppNotification();
   const [url, setUrl] = useState<string | undefined>(undefined);
@@ -27,7 +23,9 @@ export function useCircuitImageURL(circuitId: string) {
         (item) => item.label === AssetLabel.simulation_designer_image
       );
       if (!asset) {
-        error({ message: `No image found for circuit "${circuit.name}" (${circuitId})!` });
+        error({
+          message: `No image found for circuit "${circuit.name}" (${circuitId})!`,
+        });
         return;
       }
       try {

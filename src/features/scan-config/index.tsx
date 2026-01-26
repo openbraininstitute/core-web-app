@@ -189,12 +189,15 @@ export default function ScanConfiguration({
     id: modelId,
     context: { virtualLabId, projectId },
   });
+
   if (isLoading) {
     return <ScanConfigSkeleton />;
   }
+
   if (error) {
-    return <div>Error</div>;
+    return <div className="h-full w-full flex items-center justify-center">{error.message}</div>;
   }
+
   if (entity) {
     return (
       <Template

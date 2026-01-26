@@ -286,11 +286,6 @@ export function useModelQuery({
 
   const isLoading = entityLoading || modelLoading;
   const error = entityError || modelError;
-  console.log("# # useModelQuery :", { error, isLoading, entity });
-
-  // if (!entity && !isLoading) return;
-  // if (error && !entity) throw error;
-  // if (!entity) throw new Error("No entity found");
 
   return { entity, isLoading, error };
 }
