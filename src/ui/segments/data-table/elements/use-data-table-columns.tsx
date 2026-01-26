@@ -94,11 +94,14 @@ export function useDataTableColumns<T>({
 }): ColumnProps<T>[] {
   const keys = useMemo(() => Object.keys(fieldsDefinitionRegistry), []);
 
-  const [columnWidths, setColumnWidths] = useState<{ key: string; width: number }[]>(
-    [...keys].map((key) => ({
-      key,
-      width: COL_SIZING.default,
-    }))
+  const [columnWidths, setColumnWidths] = useState<{ key: string; width: number }[]>(() =>
+    [...keys].map((key) => {
+      const field = getFieldDefinition(key as EntityCoreFields);
+      return {
+        key,
+        width: field?.style?.width ?? COL_SIZING.default,
+      };
+    })
   );
 
   useEffect(() => {
