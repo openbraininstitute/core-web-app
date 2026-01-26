@@ -29,7 +29,7 @@ export function useObioneJsonSchema(schemaName: SchemaName) {
 }
 
 export function isRootBlock(schema: ConfigSchema, key: string) {
-  return schema.properties?.[key] && schema.properties[key].ui_element === 'root_block';
+  return schema.properties?.[key]?.ui_element === 'root_block';
 }
 
 async function fetchSchema({ schemaName }: { schemaName: SchemaName }) {
