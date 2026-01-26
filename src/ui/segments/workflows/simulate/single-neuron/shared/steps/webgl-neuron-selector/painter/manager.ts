@@ -1,16 +1,10 @@
 /* eslint-disable no-param-reassign */
 
 import {
-  type ArrayNumber2,
   type TgdCameraState,
   TgdContext,
   TgdControllerCameraOrbit,
-  TgdLight,
   TgdMat4,
-  TgdMaterialDiffuse,
-  type TgdPainter,
-  TgdPainterSegments,
-  TgdPainterSegmentsData,
   TgdVec3,
   tgdCalcMapRange,
 } from '@tolokoban/tgd';
@@ -23,7 +17,7 @@ import { makeCamera } from './camera';
 import { computeSectionOffset } from './math';
 import { OffscreenPainter } from './offscreen-painter';
 import { Painter } from './painters';
-import { Structure, type StructureItem, StructureItemType } from './structure';
+import { Structure, type StructureItem } from './structure';
 
 interface SelectedItem {
   x: number;
@@ -427,34 +421,6 @@ export class PainterManager {
       return tgdCalcMapRange(normalizedZoom, 0, -1, 1, minZoom, true);
     }
     return tgdCalcMapRange(normalizedZoom, 0, +1, 1, maxZoom, true);
-  }
-
-  private makeHoverPainter(item: StructureItem): TgdPainter | null {
-    const { context } = this;
-    if (!context) return null;
-
-    const segments = new TgdPainterSegmentsData();
-    const uv: ArrayNumber2 = [
-      (StructureItemType.Selected + 0.5) / (StructureItemType.Unknown + 1),
-      0,
-    ];
-    const radius = item.radius * 1.5;
-    segments.add([...item.start, radius], [...item.end, radius], uv, uv);
-
-    return new TgdPainterSegments(context, {
-      roundness: 32,
-      minRadius: 2,
-      makeDataset: segments.makeDataset,
-      material: new TgdMaterialDiffuse({
-        color: [0.8, 0.6, 0.3, 1],
-        specularExponent: 1,
-        specularIntensity: 0.5,
-        lockLightsToCamera: true,
-        light: new TgdLight({
-          direction: new TgdVec3(0, 0, -1),
-        }),
-      }),
-    });
   }
 }
 
