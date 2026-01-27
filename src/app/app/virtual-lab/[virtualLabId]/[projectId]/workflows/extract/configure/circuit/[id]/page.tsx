@@ -6,7 +6,7 @@ import { use } from 'react';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import ScanConfig from '@/features/scan-config';
-import { ScanConfigActivity } from '@/features/scan-config/components/hooks';
+import { ScanConfigActivity } from '@/features/scan-config/types';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { WorkflowSimulatePanelKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import type { ExperimentStepKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu';

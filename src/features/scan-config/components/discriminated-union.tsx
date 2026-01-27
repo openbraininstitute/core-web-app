@@ -5,10 +5,10 @@ import { useCallback, useEffect, useMemo } from 'react';
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type {
-  Block,
-  DiscriminatedUnion as DiscriminatedUnionSchema,
+  IDiscriminatedUnion as DiscriminatedUnionSchema,
   ParamSchema,
   SchemaName,
+  TBlock,
 } from '@/features/scan-config/types';
 import type { Config, ConfigValue } from './components';
 
@@ -39,7 +39,7 @@ export interface DiscriminatedUnionProps {
  * Helper to get the const value from a type property in a variant.
  * Handles both simple Type schema and extended type schemas with additional properties.
  */
-function getTypeConst(variant: Block): string | undefined {
+function getTypeConst(variant: TBlock): string | undefined {
   const typeProp = variant.properties?.type;
   if (!typeProp) return undefined;
 
@@ -57,7 +57,7 @@ function getTypeConst(variant: Block): string | undefined {
 function getSelectedVariant(
   schema: DiscriminatedUnionSchema,
   discriminatorValue: string | null
-): Block | undefined {
+): TBlock | undefined {
   if (!discriminatorValue) return undefined;
   return schema.oneOf.find((variant) => getTypeConst(variant) === discriminatorValue);
 }
@@ -65,7 +65,10 @@ function getSelectedVariant(
 /**
  * Build default values for a variant based on its schema.
  */
-function buildDefaultValues(variant: Block, discriminatorKey: string): Record<string, ConfigValue> {
+function buildDefaultValues(
+  variant: TBlock,
+  discriminatorKey: string
+): Record<string, ConfigValue> {
   const defaults: Record<string, ConfigValue> = {};
 
   if (variant.properties) {

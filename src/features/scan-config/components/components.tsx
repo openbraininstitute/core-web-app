@@ -12,14 +12,14 @@ import ModelDetails from '@/features/scan-config/components/model-details';
 import NeuronIds from '@/features/scan-config/components/neuron-ids';
 import ParameterSweep from '@/features/scan-config/components/parameter-sweep';
 import Reference from '@/features/scan-config/components/reference';
-import TooltipA from '@/features/scan-config/components/tooltip';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import {
-  type Block,
   isType,
   type ParamSchema,
   ScanConfigUIElementDict,
   type SchemaName,
+  type TBlock,
+  type TScanConfigTabs,
 } from '@/features/scan-config/types';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { classNames } from '@/util/utils';
@@ -44,7 +44,7 @@ export function BlockUI({
   schemaName: SchemaName;
   disabled: boolean;
   config: Config;
-  blockSchema?: Block;
+  blockSchema?: TBlock;
   model: ICircuit | IMEModel | undefined | null;
   stateAtom: ReturnType<typeof atom<{ [key: string]: ConfigValue }>>;
 }) {
@@ -431,6 +431,42 @@ export function Tab({
   disabled,
 }: {
   tab: string;
+  selectedTab: TScanConfigTabs;
+  onClick?: () => void;
+  rounded?: 'rounded-l-full' | 'rounded-r-full' | 'rounded-full';
+  children?: React.ReactNode;
+  extraClass?: string;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      onClick={!disabled ? onClick : undefined}
+      type="button"
+      style={disabled ? { background: '#d1d5db', cursor: 'default', color: '#9ca3af' } : undefined}
+      className={classNames(
+        'min-w-37.5 px-5 py-2',
+        extraClass,
+        rounded,
+        tab === selectedTab.id
+          ? 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white rounded-l-none'
+          : 'text-primary-8 bg-white'
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+export function LeftMenuTab({
+  tab,
+  selectedTab,
+  children,
+  onClick,
+  rounded = 'rounded-full',
+  extraClass,
+  disabled,
+}: {
+  tab: string;
   selectedTab: string;
   onClick?: () => void;
   rounded?: 'rounded-l-full' | 'rounded-r-full' | 'rounded-full';
@@ -444,7 +480,7 @@ export function Tab({
       type="button"
       style={disabled ? { background: '#d1d5db', cursor: 'default', color: '#9ca3af' } : undefined}
       className={classNames(
-        'min-w-[150px] px-5 py-2',
+        'min-w-37.5 px-5 py-2',
         extraClass,
         rounded,
         tab === selectedTab

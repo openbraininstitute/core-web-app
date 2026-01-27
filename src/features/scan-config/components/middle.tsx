@@ -4,9 +4,10 @@ import { BlockUI, type Config } from '@/features/scan-config/components/componen
 import { isAtom } from '@/features/scan-config/components/utils';
 import {
   type AtomsMap,
-  type BlockDictionary as BlockDictionaryT,
   type ConfigSchema,
-  type RootBlock,
+  type IBlockDictionary,
+  IDiscriminatedUnion,
+  type IRootBlock,
   ScanConfigUIElementDict,
   type SchemaName,
 } from '@/features/scan-config/types';
@@ -27,7 +28,7 @@ type MiddleProps = {
   model: ICircuit | IMEModel;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
-  selectedSchema: RootBlock | BlockDictionaryT;
+  selectedSchema: IRootBlock | IBlockDictionary | IDiscriminatedUnion;
 };
 
 export default function Middle({

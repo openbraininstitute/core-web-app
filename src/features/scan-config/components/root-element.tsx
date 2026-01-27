@@ -17,13 +17,13 @@ import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 import {
   type AtomsMap,
-  type BlockDictionary,
   type ConfigSchema,
-  type DiscriminatedUnion,
-  type RootBlock,
+  type IBlockDictionary,
+  type IDiscriminatedUnion,
+  type IRootBlock,
   ScanConfigUIElementDict,
 } from '../types';
-import { Chevron, type Config, type ConfigValue, Tab } from './components';
+import { Chevron, type Config, type ConfigValue, LeftMenuTab, Tab } from './components';
 import { isRootBlock } from './hooks/schema';
 import { isAtom, isPlainObject } from './utils';
 
@@ -51,7 +51,7 @@ export function RootElement({
 }: {
   schema: ConfigSchema | null; // The global schema
   rootElement: string;
-  rootElementSchema: RootBlock | BlockDictionary | DiscriminatedUnion;
+  rootElementSchema: IRootBlock | IBlockDictionary | IDiscriminatedUnion;
   atomsMap: AtomsMap;
   setAtomsMap: React.Dispatch<React.SetStateAction<AtomsMap>>;
   selectedRootElement: string;
@@ -151,7 +151,7 @@ export function RootElement({
 
   return (
     <>
-      <Tab
+      <LeftMenuTab
         tab={rootElement}
         selectedTab={selectedRootElement}
         onClick={() => {
@@ -189,7 +189,7 @@ export function RootElement({
           )}
           <Chevron rotate={rootElementSchema.ui_element === 'block_dictionary' ? 90 : 0} />
         </div>
-      </Tab>
+      </LeftMenuTab>
       {rootElementSchema.ui_element === 'block_dictionary' &&
         selectedRootElement === rootElement &&
         config[rootElement] && (

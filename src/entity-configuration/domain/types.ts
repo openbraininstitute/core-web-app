@@ -1,18 +1,18 @@
-import type { TEntityTypeDict } from "@/api/entitycore/types";
-import type { TCircuitScaleDictionary } from "@/api/entitycore/types/entities/circuit";
-import type { TExtendedEntitiesTypeDict } from "@/api/entitycore/types/extended-entity-type";
+import type { TEntityTypeDict } from '@/api/entitycore/types';
+import type { TCircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type {
   AssetLabel,
   EntityCoreIdentifiable,
   EntityCoreIdentifiableNamed,
-} from "@/api/entitycore/types/shared/global";
-import type { EntityCoreResponse } from "@/api/entitycore/types/shared/response";
-import type { TDetailViewSectionDict } from "@/entity-configuration/definitions/types";
-import type { ViewDefinitionConfig } from "@/entity-configuration/definitions/view-defs/types";
-import type { TEntityTypeGroup } from "@/entity-configuration/domain/group";
-import type { EntitySlugValue } from "@/entity-configuration/domain/slug";
-import type { FlagKey } from "@/features/feature-flags/flags";
-import type { WorkspaceContext } from "@/types/common";
+} from '@/api/entitycore/types/shared/global';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { TDetailViewSectionDict } from '@/entity-configuration/definitions/types';
+import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
+import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
+import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
+import type { FlagKey } from '@/features/feature-flags/flags';
+import type { WorkspaceContext } from '@/types/common';
 
 export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   group: TEntityTypeGroup;
@@ -30,10 +30,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
     };
     query: {
       list?: (query: any) => Promise<EntityCoreResponse<T>>;
-      one: (query: {
-        id: string;
-        context?: WorkspaceContext | null;
-      }) => Promise<T>;
+      one: (query: { id: string; context?: WorkspaceContext | null }) => Promise<T>;
       create?: (body: any) => Promise<T>;
     };
     /**
@@ -43,10 +40,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
      *
      * Example: Fetch ME-model and synapse config for a synaptome detail page.
      */
-    expand?: Record<
-      string,
-      (source: T, ctx?: WorkspaceContext, ...other: any) => Promise<any>
-    >;
+    expand?: Record<string, (source: T, ctx?: WorkspaceContext, ...other: any) => Promise<any>>;
     /**
      * Fetches nested/child data for expandable table rows in list views.
      * Called on-demand when user clicks expand icon on a table row.
@@ -56,10 +50,8 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
      */
     expandRow?: (
       record: T,
-      ctx?: WorkspaceContext,
-    ) => Promise<
-      EntityCoreIdentifiableNamed | Array<EntityCoreIdentifiableNamed>
-    >;
+      ctx?: WorkspaceContext
+    ) => Promise<EntityCoreIdentifiableNamed | Array<EntityCoreIdentifiableNamed>>;
   };
   explore?: {
     basePrefix?: string;
@@ -74,10 +66,12 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   detailViewSections?: TDetailViewSectionDict[];
   isDownloadable?: boolean;
   isCopyable?: boolean;
-  isDeletable: boolean;
+  isDeletable?: boolean;
   isSimulatable: boolean | ((scale: TCircuitScaleDictionary) => boolean);
   isUploadable?: boolean;
 };
 
-export type SerializedEntityCoreTypeConfig<T extends EntityCoreIdentifiable> =
-  Omit<EntityCoreTypeConfig<T>, "api" | "viewDefinition">;
+export type SerializedEntityCoreTypeConfig<T extends EntityCoreIdentifiable> = Omit<
+  EntityCoreTypeConfig<T>,
+  'api' | 'viewDefinition'
+>;

@@ -6,14 +6,12 @@ import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/en
 import { config as appConfig } from '@/config';
 import type { Config } from '@/features/scan-config/components/components';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
-import type { ConfigSchema, SchemaName } from '@/features/scan-config/types';
-
-export const ScanConfigActivity = {
-  Simulate: 'simulate',
-  Extract: 'extract',
-} as const;
-
-export type TScanConfigActivity = (typeof ScanConfigActivity)[keyof typeof ScanConfigActivity];
+import {
+  type ConfigSchema,
+  ScanConfigActivity,
+  type SchemaName,
+  type TScanConfigActivity,
+} from '@/features/scan-config/types';
 
 export function useApiUrl({
   activity = ScanConfigActivity.Simulate,

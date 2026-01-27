@@ -7,7 +7,8 @@ import {
   type AtomsMap,
   type ConfigSchema,
   isType,
-  type TabType,
+  type TScanConfigActivity,
+  type TScanConfigTabs,
 } from '@/features/scan-config/types';
 import type { Config } from './components';
 import GenerateConfigButton from './generate-config-button';
@@ -36,6 +37,7 @@ export default function Left({
   setNewKey,
   isEditingKey,
   setIsEditingKey,
+  activity,
 }: {
   schema: ConfigSchema;
   atomsMap: AtomsMap;
@@ -51,7 +53,7 @@ export default function Left({
   readOnly?: boolean;
   setCampaignId: React.Dispatch<React.SetStateAction<string>>;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  setTab: React.Dispatch<React.SetStateAction<TabType>>;
+  setTab: React.Dispatch<React.SetStateAction<TScanConfigTabs>>;
   model: ICircuit | IMEModel;
   initialConfig?: Config;
   allEntries: Set<string>;
@@ -59,6 +61,7 @@ export default function Left({
   setNewKey: (k: string) => void;
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
+  activity: TScanConfigActivity;
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
 
@@ -123,6 +126,7 @@ export default function Left({
           model={model}
           setTab={setTab}
           setLoading={setLoading}
+          activity={activity}
         />
       )}
     </div>

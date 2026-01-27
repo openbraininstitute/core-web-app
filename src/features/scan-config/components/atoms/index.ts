@@ -25,6 +25,7 @@ import { hasSimConfigAsset } from "@/entity-configuration/domain/simulation/util
 import { getLatestSimExecStatus } from "@/features/scan-config/components/utils";
 import type { SimExecStatusMap } from "@/features/scan-config/types";
 import type { WorkspaceContext } from "@/types/common";
+import { keyBuilder } from "@/ui/use-query-keys/data";
 import {
   atomFamilyWithExpiration,
   readAtomFamilyWithExpiration,
@@ -249,7 +250,7 @@ export function useModelQuery({
     isLoading: entityLoading,
     error: entityError,
   } = useQuery({
-    queryKey: ["entity", { ...params }],
+    queryKey: keyBuilder.entity({ id, context }),
     queryFn: () => getEntity(params),
     select: (r) => r.type,
     enabled: !!id,
@@ -259,20 +260,8 @@ export function useModelQuery({
     data: entity,
     isLoading: modelLoading,
     error: modelError,
-  } = useQuery<
-    ICircuit | IMEModel,
-    Error,
-    ICircuit | IMEModel,
-    [
-      "entity",
-      {
-        id: string;
-        context: WorkspaceContext;
-        type: TEntityTypeDict | undefined;
-      },
-    ]
-  >({
-    queryKey: ["entity", { ...params, type: entityType }],
+  } = useQuery<ICircuit | IMEModel, Error, ICircuit | IMEModel>({
+    queryKey: keyBuilder.entity({ id, context, type: entityType }),
     queryFn: () => {
       return match(entityType)
         .with(EntityTypeDict.Circuit, () => getCircuit(params))
@@ -289,31 +278,6 @@ export function useModelQuery({
 
   return { entity, isLoading, error };
 }
-
-// TODO Refactor to use tanstack query
-export const modelAtomFamily = readAtomFamilyWithExpiration(
-  ({ id, context }: { id: string; context: WorkspaceContext }) =>
-    atom<Promise<ICircuit | IMEModel>>(async () => {
-      if (!id) {
-        throw new Error(`No model ID provided`);
-      }
-
-      const params = { id, context };
-
-      const modelEntityBase = await getEntity(params);
-
-      return match(modelEntityBase.type)
-        .with(EntityTypeDict.Circuit, () => getCircuit(params))
-        .with(EntityTypeDict.Memodel, () => getMEModel(params))
-        .otherwise((entityType) => {
-          throw new Error(`Unsupported model entity type ${entityType}`);
-        });
-    }),
-  {
-    ttl: 120000, // 2 minutes
-    areEqual: isEqual,
-  },
-);
 
 export const jsonFileAtomFamily = readAtomFamilyWithExpiration(
   ({

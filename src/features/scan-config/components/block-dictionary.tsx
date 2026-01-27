@@ -10,10 +10,10 @@ import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import type {
   AtomsMap,
-  Block,
-  BlockDictionary as BlockDictionaryT,
+  IBlockDictionary as BlockDictionaryT,
   ConfigSchema,
   SchemaName,
+  TBlock,
 } from '@/features/scan-config/types';
 
 type Props = {
@@ -28,7 +28,7 @@ type Props = {
   campaignId: string;
   loading: boolean;
   config: Config;
-  selectedBlockSchema?: Block;
+  selectedBlockSchema?: TBlock;
   model: ICircuit | IMEModel;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
@@ -54,9 +54,9 @@ export default function BlockDictionary({
     ? config[selectedRootElement][selectedEntry]?.type
     : undefined;
 
-  const selectedBlockSchema: Block | undefined =
+  const selectedBlockSchema: TBlock | undefined =
     blockDictionarySchema.additionalProperties.oneOf.find(
-      (o: Block) => o.properties?.type.const === selectedBlock
+      (o: TBlock) => o.properties?.type.const === selectedBlock
     );
 
   if (selectedBlockSchema && !isAtom(atomsMap[selectedRootElement]))
