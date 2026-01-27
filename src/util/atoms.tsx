@@ -1,4 +1,4 @@
-import { Atom, WritableAtom } from 'jotai';
+import type { Atom, WritableAtom } from 'jotai';
 import { atomFamily, atomWithRefresh } from 'jotai/utils';
 
 /**
@@ -67,7 +67,7 @@ export function atomFamilyWithExpiration<
   FamilyParam,
   AtomValue,
   SetAtomArgs extends unknown[],
-  SetAtomResult extends unknown,
+  SetAtomResult,
 >(
   initializeWritableAtom: (
     param: FamilyParam

@@ -65,8 +65,8 @@ const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
 export const createSingleNeuronSimulationAtom = atom(
   null,
   async (
-    get,
-    set,
+    _get,
+    _set,
     name: string,
     description: string,
     modelId: string,
@@ -290,44 +290,52 @@ export const launchSimulationAtom = atom<
         if (isLowFundsError) {
           errorMessage = isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin;
         }
-
+        console.log('@@@@@@@@@@1111');
         set(simulationStatusAtom, {
           status: SimulationStatus.ERROR,
           description: errorMessage,
         });
-        notify.error({
-          message: `Simulation ${overviewConfiguration.name}`,
-          description: errorMessage,
-          placement: 'topRight',
-          key: `simulation-failed-${sessionId}`,
-        });
+        // Don't show notification for low funds errors - let LowFundsNotification component handle it
+        if (!isLowFundsError) {
+          notify.error({
+            message: `Simulation ${overviewConfiguration.name}`,
+            description: errorMessage,
+            placement: 'topRight',
+            key: `simulation-failed-${sessionId}`,
+          });
+        }
         return;
       }
 
       if (!response?.ok) {
         let errorMessage = messages.DefaultSimulationError;
+        let isLowFundsError = false;
 
         try {
           const errResponseObj = await response?.json();
           if (errResponseObj.error_code === LOW_FUNDS_ERROR_CODE) {
             errorMessage = isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin;
+            isLowFundsError = true;
           }
         } catch {
           // ignore
         }
-
         set(simulationStatusAtom, {
           status: SimulationStatus.ERROR,
           description: errorMessage,
         });
-        notify.error({
-          message: `Simulation ${overviewConfiguration.name}`,
-          description: errorMessage,
-          placement: 'topRight',
-          key: `simulation-failed-${sessionId}`,
-        });
-
-        delay(() => set(simulationStatusAtom, RESET), 1000);
+        // Don't show notification for low funds errors - let LowFundsNotification component handle it
+        if (!isLowFundsError) {
+          notify.error({
+            message: `Simulation ${overviewConfiguration.name}`,
+            description: errorMessage,
+            placement: 'topRight',
+            key: `simulation-failed-${sessionId}`,
+          });
+          // Only reset status for non-low-funds errors
+          delay(() => set(simulationStatusAtom, RESET), 1000);
+        }
+        // Don't reset status for low funds errors - let LowFundsNotification component handle it
         return;
       }
 
@@ -459,7 +467,7 @@ export const launchSimulationAtom = atom<
         unit: streamData.unit,
       };
       const currentPlotData = get(plotDataAtom);
-      const currentRecording = currentPlotData![streamData.recording];
+      const currentRecording = currentPlotData?.[streamData.recording];
 
       if (currentRecording) {
         const key = makeKey(newPlot);

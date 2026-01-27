@@ -2,9 +2,9 @@
 
 'use client';
 
-import * as React from 'react';
-import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 import { CheckOutlined, RightOutlined } from '@ant-design/icons';
+import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
+import type * as React from 'react';
 
 import { cn } from '@/utils/css-class';
 

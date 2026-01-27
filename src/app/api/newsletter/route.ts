@@ -1,4 +1,4 @@
-import { createHash } from 'crypto';
+import { createHash } from 'node:crypto';
 import { captureException } from '@sentry/nextjs';
 import { z } from 'zod';
 
@@ -83,7 +83,7 @@ export async function POST(req: Request) {
     tags.push('test');
   }
 
-  if (formValidation.tags && formValidation.tags.length) {
+  if (formValidation.tags?.length) {
     tags = [...tags, ...formValidation.tags];
   }
 
@@ -130,8 +130,6 @@ export async function POST(req: Request) {
       { status: result.status ?? 400 }
     );
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('error sending newsletter email', error);
     captureException(error, {
       tags: { section: 'landing-page', feature: 'newsletter' },
       extra: {

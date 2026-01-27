@@ -1,10 +1,8 @@
 import SanityClient from 'next-sanity-client';
-
-import tiersQuery from './tiers.query.groq';
+import type { ContentForPricing } from '@/components/LandingPage/content/pricing';
 
 import { config } from '@/config';
-
-import { ContentForPricing } from '@/components/LandingPage/content/pricing';
+import tiersQuery from './tiers.query.groq';
 
 let cachedClient: SanityClient | null = null;
 

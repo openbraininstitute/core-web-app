@@ -1,6 +1,6 @@
-import { CSSProperties } from 'react';
 import useBreakpoint from 'antd/lib/grid/hooks/useBreakpoint';
-import { Config, Font, Layout } from 'plotly.js-dist-min';
+import type { Config, Font, Layout } from 'plotly.js-dist-min';
+import type { CSSProperties } from 'react';
 
 interface UseConfigResponse {
   layout: Partial<Layout>;

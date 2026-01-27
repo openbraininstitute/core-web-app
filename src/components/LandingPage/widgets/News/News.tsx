@@ -1,14 +1,10 @@
-/* eslint-disable no-param-reassign */
-/* eslint-disable react/no-array-index-key */
-import React from 'react';
-
-import { styleBlockSmallExpandRight } from '../../styles';
-import Title from '../../components/Title';
-import SwipeableCardsList from '../../components/swipeable-cards-list';
-import { gotoSection } from '../../utils';
-import { EnumSection } from '../../sections/sections';
-import NewsCard from './NewsCard';
 import { useSanityContentForNewsList } from '@/components/LandingPage/content';
+import SwipeableCardsList from '../../components/swipeable-cards-list';
+import Title from '../../components/Title';
+import { EnumSection } from '../../sections/sections';
+import { styleBlockSmallExpandRight } from '../../styles';
+import { gotoSection } from '../../utils';
+import NewsCard from './NewsCard';
 
 // Number max of news to display.
 const HIGHLIGHTS_COUNT = 4;

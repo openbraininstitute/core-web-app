@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 
 import AlphabeticalFilter from '@/components/documentation/global/AlphabeticalFilter'; // Adjust path if needed based on your project structure
 import { useFetchEntityTypes } from '@/components/documentation/hooks/use-entitycore-cell_type-for-glossary';
-import { CellTypeProps } from '@/components/explore-section/Circuit/type';
+import type { CellTypeProps } from '@/components/explore-section/Circuit/type';
 import { slugifyForUrl } from '@/components/explore-section/utils';
 import { classNames } from '@/util/utils';
 

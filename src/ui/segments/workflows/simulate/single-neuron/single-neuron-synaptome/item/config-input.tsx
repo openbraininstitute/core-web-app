@@ -1,13 +1,11 @@
 import { Form, InputNumber } from 'antd';
-
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { label } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
-import { cn } from '@/utils/css-class';
-
 import type {
   SynapseConfig,
   UpdateSynapseSimulationProperty,
 } from '@/types/small-scale-simulator/single-neuron';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { label } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
+import { cn } from '@/utils/css-class';
 
 const SYNAPTIC_INPUT_FIELDS: Array<Omit<ConfigInputProps, 'onChange' | 'index' | 'formName'>> = [
   {

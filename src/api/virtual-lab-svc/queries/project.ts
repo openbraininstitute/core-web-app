@@ -1,8 +1,3 @@
-import { getSession } from '@/auth-fetch';
-
-import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
-import { config } from '@/config';
-
 import type {
   ProjectCreationResponse,
   ProjectExistsVerificationResponse,
@@ -10,6 +5,9 @@ import type {
   VlmProjectsResponse,
 } from '@/api/virtual-lab-svc/queries/types';
 import type { ProjectPayload, Role } from '@/api/virtual-lab-svc/types';
+import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
+import { getSession } from '@/auth-fetch';
+import { config } from '@/config';
 import type { WorkspaceContext } from '@/types/common';
 import type { ProjectResponse } from '@/types/virtual-lab/projects';
 

@@ -2,22 +2,21 @@
 
 import { useCallback, useState } from 'react';
 import { match } from 'ts-pattern';
-
+import { usePrevious } from '@/hooks/hooks';
 import { useDisableWorkspaceModalFullHeight } from '@/ui/hooks/use-disable-workspace-modal-full-height';
-import { VirtualLabConfiguration } from '@/ui/segments/virtual-lab-settings';
 import { useResetQueryParams } from '@/ui/hooks/use-reset-query-params';
+import { Modal } from '@/ui/molecules/modal';
+import { AccountSettings } from '@/ui/segments/profile';
 import { ProjectCreation } from '@/ui/segments/project/create';
 import { ProjectPreview } from '@/ui/segments/project/preview';
-import { AccountSettings } from '@/ui/segments/profile';
+import { VirtualLabConfiguration } from '@/ui/segments/virtual-lab-settings';
 import {
-  type TTriggerWorkspaceConfigurationClickEvent,
-  type WorkspaceActionType,
-  WorkspaceActions,
   makeTriggerWorkspaceConfigurationClickEvent,
+  type TTriggerWorkspaceConfigurationClickEvent,
   useWorkspaceConfigurationClickEvent,
+  WorkspaceActions,
+  type WorkspaceActionType,
 } from '@/ui/segments/workspaces/space-manager/event';
-import { Modal } from '@/ui/molecules/modal';
-import { usePrevious } from '@/hooks/hooks';
 
 export function SpaceManagerContainer() {
   const resetQueryParams = useResetQueryParams();

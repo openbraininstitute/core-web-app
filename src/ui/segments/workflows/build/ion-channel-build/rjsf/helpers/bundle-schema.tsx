@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
-import { RJSFSchema } from '@rjsf/utils';
+import type { RJSFSchema } from '@rjsf/utils';
+import type { ReactNode } from 'react';
 
 import { renderMathInText } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers/render-mathematic-symbol';
 

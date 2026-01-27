@@ -1,9 +1,8 @@
 'use client';
 
+import { RightOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-
-import { RightOutlined } from '@ant-design/icons';
 
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';

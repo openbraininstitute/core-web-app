@@ -1,10 +1,10 @@
-import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
-import { compactRecord } from '@/utils/dictionary';
+import type { ISpecies } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 
 import type { ISpeciesFilter, TSpeciesCreate } from '@/api/entitycore/types/shared/species';
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { ISpecies } from '@/api/entitycore/types/shared/global';
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import type { WorkspaceContext } from '@/types/common';
+import { compactRecord } from '@/utils/dictionary';
 
 const baseUri = '/species';
 

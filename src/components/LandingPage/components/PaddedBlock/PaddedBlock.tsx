@@ -1,7 +1,6 @@
-import React from 'react';
-
-import { styleLayout } from '../../styles';
+import type React from 'react';
 import { classNames } from '@/util/utils';
+import { styleLayout } from '../../styles';
 
 interface PaddedBlockProps {
   className?: string;

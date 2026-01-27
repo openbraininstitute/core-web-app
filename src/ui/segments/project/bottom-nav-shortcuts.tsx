@@ -2,13 +2,11 @@
 
 import { RightOutlined } from '@ant-design/icons';
 import Link from 'next/link';
-
+import { config } from '@/config';
+import type { WorkspaceContext } from '@/types/common';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
-import { config } from '@/config';
-
-import type { WorkspaceContext } from '@/types/common';
 
 const links = [
   {

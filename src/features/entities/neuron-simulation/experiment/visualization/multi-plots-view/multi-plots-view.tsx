@@ -1,12 +1,10 @@
-import React from 'react';
 import { FullscreenOutlined } from '@ant-design/icons';
 import { tgdFullscreenToggle } from '@bbp/morphoviewer';
-
-import { usePlotly, useResizeObserver } from './hooks';
-import { PlotInstance } from '@/features/entities/neuron-simulation/experiment/visualization/plots-parser';
-import { classNames } from '@/util/utils';
-
+import React from 'react';
 import styles from '@/features/entities/neuron-simulation/experiment/visualization/multi-plots-view/multi-plots-view.module.css';
+import type { PlotInstance } from '@/features/entities/neuron-simulation/experiment/visualization/plots-parser';
+import { classNames } from '@/util/utils';
+import { usePlotly, useResizeObserver } from './hooks';
 
 export interface MultiPlotsViewProps {
   className?: string;

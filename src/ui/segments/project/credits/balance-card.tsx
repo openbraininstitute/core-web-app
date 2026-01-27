@@ -1,12 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
 import { SwapOutlined } from '@ant-design/icons';
-
-import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { Card, CardContent } from '@/ui/molecules/card';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { useQuery } from '@tanstack/react-query';
 import { useUserRole } from '@/hooks/use-user-role';
+import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
+import { Card, CardContent } from '@/ui/molecules/card';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 type Props = {
   onTransferCredits?: () => void;

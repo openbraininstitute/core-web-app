@@ -1,13 +1,12 @@
 /* eslint-disable react/no-array-index-key */
 import React from 'react';
-
-import { styleBlockFullWidth } from '../../styles';
-import { useSanityContentForMilestones } from '../../content/milestones';
+import { classNames } from '@/util/utils';
 import ProgressiveImage from '../../components/ProgressiveImage';
+import { useSanityContentForMilestones } from '../../content/milestones';
 import { IconChevronLeft } from '../../icons/IconChevronLeft';
 import { IconChevronRight } from '../../icons/IconChevronRight';
+import { styleBlockFullWidth } from '../../styles';
 import Button from './button';
-import { classNames } from '@/util/utils';
 
 import '../../styles.module.css';
 import styles from './milestones.module.css';

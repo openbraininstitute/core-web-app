@@ -190,13 +190,10 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
           style={tableStyle}
           aria-label="listing-view-table"
           className={cn(styles.table, 'grow [&_.ant-table-sticky-holder]:shadow-md', className)}
-          columns={
-            columns &&
-            columns.map((col) => ({
-              ...col,
-              ...onCellRouteHandler(col),
-            }))
-          }
+          columns={columns?.map((col) => ({
+            ...col,
+            ...onCellRouteHandler(col),
+          }))}
           components={{
             header: {
               cell: CustomTH,

@@ -1,14 +1,12 @@
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
-
+import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
+import { makeRoles } from '@/hooks/use-user-role';
 import { getQueryClient, HydrateClient } from '@/query-provider/server';
 import { getProjectJobReports } from '@/services/virtual-lab/projects';
-import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { Credits } from '@/ui/segments/project/credits';
-import { makeRoles } from '@/hooks/use-user-role';
-
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import { Credits } from '@/ui/segments/project/credits';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 export default async function Home({
   params: promisedParams,
@@ -26,7 +24,7 @@ export default async function Home({
     if (!isAdmin) {
       throw new Error('User not allowed to access this page');
     }
-  } catch (error) {
+  } catch (_error) {
     notFound();
   }
 

@@ -1,10 +1,10 @@
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import LandingPage from '@/components/LandingPage';
 import { DEFAULT_SECTION } from '@/components/LandingPage/constants';
-import { getSection } from '@/components/LandingPage/utils';
 import { generateMetadataFromSanity } from '@/components/LandingPage/metadata';
+import { getSection } from '@/components/LandingPage/utils';
 
 export const dynamic = 'force-dynamic';
 

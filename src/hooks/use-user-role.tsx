@@ -1,12 +1,11 @@
 import { useQueries } from '@tanstack/react-query';
-import { groupBy, find } from 'es-toolkit/compat';
-
-import { getVirtualLab, listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { VlmUserGroupsResponse } from '@/api/virtual-lab-svc/queries/types';
-import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
+import { find, groupBy } from 'es-toolkit/compat';
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import type { VlmUserGroupsResponse } from '@/api/virtual-lab-svc/queries/types';
+import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
+import { getVirtualLab, listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 type Props = {
   virtualLabId?: string;

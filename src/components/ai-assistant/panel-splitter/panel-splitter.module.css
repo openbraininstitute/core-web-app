@@ -6,11 +6,11 @@
   width: 12px;
   height: calc(100% - 2em);
   border-radius: 0 12px 12px 0;
-  content: '';
+  content: "";
   background: linear-gradient(to right, #0af0, #0af0);
   cursor: col-resize;
   z-index: 999;
-  content: '';
+  content: "";
   transition: all 0.2s;
 }
 

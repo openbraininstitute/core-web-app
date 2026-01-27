@@ -1,7 +1,5 @@
-import React from 'react';
 import {
-  TgdCamera,
-  tgdCanvasCreateFill,
+  type TgdCamera,
   TgdContext,
   TgdDataGlb,
   TgdGeometryGltf,
@@ -11,17 +9,17 @@ import {
   TgdPainterState,
   TgdPainterXRay,
   TgdTexture2D,
+  tgdCanvasCreateFill,
   webglPresetDepth,
 } from '@tolokoban/tgd';
-
-import { setCamera } from './camera';
-import { VisibleRegion } from './types';
-import { SettingsValues } from './settings';
-import { getBrainRegionMeshArrayBuffer, getPointCouldData } from './services/services';
-import { makeColor } from './hooks';
-
-import { logError } from '@/util/logger';
+import type React from 'react';
 import GenericEvent from '@/util/generic-event';
+import { logError } from '@/util/logger';
+import { setCamera } from './camera';
+import { makeColor } from './hooks';
+import { getBrainRegionMeshArrayBuffer, getPointCouldData } from './services/services';
+import type { SettingsValues } from './settings';
+import type { VisibleRegion } from './types';
 
 let globalId = 1;
 export class Painter {

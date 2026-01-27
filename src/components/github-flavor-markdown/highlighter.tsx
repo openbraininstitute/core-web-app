@@ -1,10 +1,10 @@
-import { PropsWithChildren } from 'react';
-import { BundledLanguage } from 'shiki';
+import type { PropsWithChildren } from 'react';
+import type { BundledLanguage } from 'shiki';
 
 import {
-  CodeBlock as DCodeBlock,
   CodeBlockCopyButton,
   CodeBlockLanguageLabel,
+  CodeBlock as DCodeBlock,
 } from '@/ui/molecules/code-blocks';
 import { cn } from '@/utils/css-class';
 

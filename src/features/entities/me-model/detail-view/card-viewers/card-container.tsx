@@ -1,11 +1,9 @@
-import { ReactNode } from 'react';
 import Link from 'next/link';
-
-import { renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
-import { classNames } from '@/util/utils';
-
+import type { ReactNode } from 'react';
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
+import { renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
+import { classNames } from '@/util/utils';
 
 import styles from './card-container.module.css';
 

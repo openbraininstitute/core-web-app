@@ -2,16 +2,14 @@
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex */
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import React from 'react';
-import Link from 'next/link';
 
+import Link from 'next/link';
+import { useAIToolsInvertedSelection } from '@/components/ai-assistant/state';
+import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { classNames } from '@/util/utils';
 import { IconChecked } from './icon-checked';
 import { IconUnchecked } from './icon-unchecked';
-import { classNames } from '@/util/utils';
-import { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
-import { useAIToolsInvertedSelection } from '@/components/ai-assistant/state';
-
-import { useWorkspace } from '@/ui/hooks/use-workspace';
 import styles from './tool-card.module.css';
 
 interface ToolCardProps {
@@ -34,7 +32,7 @@ export default function ToolCard({ className, tool }: ToolCardProps) {
 
   return (
     <div className={classNames(className, styles.toolCard)}>
-      <header aria-checked={checked} onClick={handleToggle} tabIndex={1}>
+      <header aria-checked={checked} onClick={handleToggle} tabIndex="0">
         <Icon />
         <div>{tool.name}</div>
         {checked ? <IconChecked /> : <IconUnchecked />}

@@ -1,8 +1,7 @@
-import { EnumSection } from '../sections/sections';
+import { useSanity } from '@/services/sanity';
+import type { EnumSection } from '../sections/sections';
 import { getSection } from '../utils';
 import { tryType } from './_common';
-
-import { useSanity } from '@/services/sanity';
 
 interface ContentForHero {
   title: string;

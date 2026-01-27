@@ -2,23 +2,21 @@
 
 import { DeleteOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Popconfirm, Select, Button as AntdButton } from 'antd';
+import { Button as AntdButton, Popconfirm, Select } from 'antd';
 import { find, get } from 'es-toolkit/compat';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
-
-import { useAppNotification } from '@/components/notification';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Button } from '@/ui/molecules/button';
 import {
   cancelProjectInvite,
   removeUserFromProject,
   updateProjectUserRole,
 } from '@/api/virtual-lab-svc/queries/member';
-import { cn } from '@/utils/css-class';
-
 import type { Member, Role } from '@/api/virtual-lab-svc/queries/types';
+import { useAppNotification } from '@/components/notification';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Button } from '@/ui/molecules/button';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { cn } from '@/utils/css-class';
 
 export const roleOptions: { value: Role; label: string }[] = [
   { value: 'admin', label: 'Administrator' },

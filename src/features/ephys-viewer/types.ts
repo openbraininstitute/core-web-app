@@ -1,4 +1,4 @@
-import { RecordingType, SweepData } from '@/features/ephys-viewer/nwb-trace';
+import type { RecordingType, SweepData } from '@/features/ephys-viewer/nwb-trace';
 
 export type ZoomRanges = Record<'x' | 'y', Array<number | undefined>>;
 

@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 
-import { IEModel } from '@/api/entitycore/types';
+import type { IEModel } from '@/api/entitycore/types';
 import { useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 

@@ -1,28 +1,26 @@
 'use client';
 
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { Form } from 'antd';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { Form } from 'antd';
 
 import type { ZodObject, ZodRawShape } from 'zod';
-
-import { SubmitEntityProgress } from '@/ui/segments/contribute/shared/components/submit-progress';
+import type { WorkspaceContext } from '@/types/common';
+import { Button } from '@/ui/molecules/button';
 import { StepNavigation } from '@/ui/segments/contribute/shared/components/step-navigation';
 import { SubmitButton } from '@/ui/segments/contribute/shared/components/submit-button';
+import { SubmitEntityProgress } from '@/ui/segments/contribute/shared/components/submit-progress';
 import {
   ContributionPipelineProvider,
   useContributionPipeline,
 } from '@/ui/segments/contribute/shared/pipeline/context';
-import { Button } from '@/ui/molecules/button';
-import { cn } from '@/utils/css-class';
-
-import type { WorkspaceContext } from '@/types/common';
 import type {
   IContributionFormConfig,
   IProgressStep,
   TPipelineHookFactory,
 } from '@/ui/segments/contribute/shared/types';
+import { cn } from '@/utils/css-class';
 
 interface IContributionFormProps<
   TFormValues extends Record<string, unknown>,

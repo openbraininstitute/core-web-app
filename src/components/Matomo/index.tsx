@@ -1,10 +1,9 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-
-import { init, push } from '@/util/matomo';
+import { Suspense, useEffect, useState } from 'react';
 import { useConfig } from '@/config';
+import { init, push } from '@/util/matomo';
 
 function Matomo() {
   const config = useConfig();
@@ -30,11 +29,11 @@ function Matomo() {
     return () => {
       setInitialized(true);
     };
-  }, [initialized, setInitialized, MATOMO_URL, MATOMO_CDN_URL, MATOMO_SITE_ID]);
+  }, [initialized, MATOMO_URL, MATOMO_CDN_URL, MATOMO_SITE_ID]);
 
   useEffect(() => {
     if (!pathname) return;
-    const url = `${pathname}${searchParamsString ? '?' + decodeURIComponent(searchParamsString) : ''}`;
+    const url = `${pathname}${searchParamsString ? `?${decodeURIComponent(searchParamsString)}` : ''}`;
     push(['setCustomUrl', url]);
     push(['trackPageView']);
   }, [pathname, searchParamsString]);

@@ -2,9 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
 import { getSingleNeuronMorphology } from '@/api/small-scale-simulator';
-import { keyBuilder } from '@/ui/use-query-keys/data';
-
 import type { Morphology } from '@/services/bluenaas-single-cell/types';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 
 export function useMorphology({
   modelId,

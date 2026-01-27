@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { classNames } from '@/util/utils';
 
 import styles from './VerticalSpace.module.css';

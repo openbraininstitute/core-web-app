@@ -5,11 +5,10 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 
 import { config } from '@/config';
+import { emitConsentGranted } from '@/services/consent';
 import { SharedLayout } from '@/ui/layouts/shared-layout';
 import { Button } from '@/ui/molecules/button';
 import { Icon } from '@/ui/segments/offline-consent/icon';
-
-import { emitConsentGranted } from '@/services/consent';
 
 export default function Page() {
   const searchParams = useSearchParams();

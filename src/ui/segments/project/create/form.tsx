@@ -2,26 +2,25 @@
 
 'use client';
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Form, ConfigProvider, Input } from 'antd';
-import { useRouter } from 'next/navigation';
-import { useRef, useState } from 'react';
 import {
   CheckCircleFilled,
   CloseCircleFilled,
   InfoCircleOutlined,
   LoadingOutlined,
 } from '@ant-design/icons';
-
-import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager/event';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { ConfigProvider, Form, Input } from 'antd';
+import { useRouter } from 'next/navigation';
+import { useRef, useState } from 'react';
 import { checkProjectExists, createProject } from '@/api/virtual-lab-svc/queries/project';
 import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
+import type { ProjectPayload } from '@/api/virtual-lab-svc/types';
 import { useAppNotification } from '@/components/notification';
-import { ProjectPayload } from '@/api/virtual-lab-svc/types';
 import { config } from '@/config';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
+import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager/event';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
 export function CreationForm() {
@@ -59,7 +58,7 @@ export function CreationForm() {
       await queryClient.invalidateQueries({
         queryKey: keyBuilder.listWorkspaceProjects({ virtualLabId }),
       });
-      if (result && result.data?.project) {
+      if (result?.data?.project) {
         const virLabId = result.data.project.virtual_lab_id;
         const projectId = result.data.project.id;
         navigate(`${config.ROOT_ROUTE}/${virLabId}/${projectId}`);
@@ -131,7 +130,7 @@ export function CreationForm() {
                     }
                     setValidName({ loading: false, status: 'valid' });
                     return Promise.resolve();
-                  } catch (error) {
+                  } catch (_error) {
                     setValidName({ loading: false, status: 'non-valid' });
                   }
                 },

@@ -2,24 +2,23 @@
 
 'use client';
 
-import { useInView } from 'react-intersection-observer';
 import { useQuery } from '@tanstack/react-query';
 import { Empty, Skeleton } from 'antd';
-import { match, P } from 'ts-pattern';
 import Image from 'next/image';
+import { useInView } from 'react-intersection-observer';
+import { match, P } from 'ts-pattern';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { getAssetElement } from '@/api/entitycore/utils';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { keyBuilder } from '@/ui/use-query-keys/data';
-import { getPreviewBlob } from '@/api/thumbnail-svc';
-import { cn } from '@/utils/css-class';
-
 import type { AssetLabel, EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import { getAssetElement } from '@/api/entitycore/utils';
+import { getPreviewBlob } from '@/api/thumbnail-svc';
 import type {
   TEntityAssetTarget,
   TThumbnailServiceTarget,
 } from '@/entity-configuration/definitions/renderer';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { keyBuilder } from '@/ui/use-query-keys/data';
+import { cn } from '@/utils/css-class';
 
 interface T extends EntityCoreResource {}
 

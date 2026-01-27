@@ -1,13 +1,12 @@
-import { ElectricalCellRecordingSchema } from '@/ui/segments/contribute/electrical-cell-recording/schema';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { DEFAULT_LICENSE_ID } from '@/ui/segments/contribute/shared/schemas';
-import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-
 import type { TElectricalCellRecordingForm } from '@/ui/segments/contribute/electrical-cell-recording/schema';
+import { ElectricalCellRecordingSchema } from '@/ui/segments/contribute/electrical-cell-recording/schema';
+import { DEFAULT_LICENSE_ID } from '@/ui/segments/contribute/shared/schemas';
 import type {
   IContributionFormConfig,
   IContributionStep,
 } from '@/ui/segments/contribute/shared/types';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 export const ELECTRICAL_CELL_RECORDING_PROGRESS_STEPS: Array<{
   key: string;

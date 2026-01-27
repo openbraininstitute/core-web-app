@@ -1,16 +1,13 @@
 'use client';
 
+import { RightOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-
-import { RightOutlined } from '@ant-design/icons';
-
+import type { TutorialProps } from '@/components/documentation/type';
 import { useSanityContentForTutorialsList } from '@/components/tutorials-carrousel/hooks';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 import { buildLink } from '@/utils/searchparams-to-link';
-
-import type { TutorialProps } from '@/components/documentation/type';
 
 export default function TutorialNavigation() {
   const tutorials = useSanityContentForTutorialsList();

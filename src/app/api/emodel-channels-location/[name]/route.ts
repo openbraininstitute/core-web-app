@@ -1,6 +1,5 @@
-import fs from 'fs/promises';
-import path from 'path';
-
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { NextResponse } from 'next/server';
 
 export async function GET(_: Request, { params }: { params: Promise<{ name: string }> }) {

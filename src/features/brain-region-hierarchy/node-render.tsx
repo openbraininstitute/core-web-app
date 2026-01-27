@@ -1,12 +1,11 @@
 'use client';
 
 import { CaretRightFilled } from '@ant-design/icons';
-import { type CSSProperties } from 'react';
-
-import { cn } from '@/utils/css-class';
+import type { CSSProperties } from 'react';
+import type { RenderNodeProps } from '@/components/tree/types';
 
 import type { IBrainRegionHierarchyExtended } from '@/features/brain-region-hierarchy/context';
-import type { RenderNodeProps } from '@/components/tree/types';
+import { cn } from '@/utils/css-class';
 
 type Props<TNode extends IBrainRegionHierarchyExtended = IBrainRegionHierarchyExtended> =
   RenderNodeProps<TNode>;

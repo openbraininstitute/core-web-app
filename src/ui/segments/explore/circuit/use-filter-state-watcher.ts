@@ -1,11 +1,9 @@
+import isNil from 'es-toolkit/compat/isNil';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect } from 'react';
-import isNil from 'es-toolkit/compat/isNil';
-
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { coreFiltersAtom, coreSearchStringAtom } from '@/ui/segments/data-table/elements/context';
 import { resetFilterSignalAtom } from '@/ui/segments/explore/circuit/helpers';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 /**
  * watch filter and search state for a given data key and

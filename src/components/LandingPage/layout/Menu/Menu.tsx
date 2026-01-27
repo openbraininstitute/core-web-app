@@ -2,15 +2,13 @@
 
 import Link from 'next/link';
 import React, { useState } from 'react';
-
+import { classNames } from '@/util/utils';
 import { ID_MENU } from '../../constants';
 import { IconChevronRight } from '../../icons/IconChevronRight';
 import { IconMenu } from '../../icons/IconMenu';
 import { EnumSection } from '../../sections/sections';
-import PopupMenu from './PopupMenu/PopupMenu';
-
-import { classNames } from '@/util/utils';
 import styles from './Menu.module.css';
+import PopupMenu from './PopupMenu/PopupMenu';
 
 interface MenuProps {
   className?: string;

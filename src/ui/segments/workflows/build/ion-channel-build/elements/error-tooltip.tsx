@@ -1,5 +1,5 @@
 import { WarningFilled } from '@ant-design/icons';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import { cn } from '@/utils/css-class';
 

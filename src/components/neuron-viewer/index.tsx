@@ -1,30 +1,28 @@
-import { RefObject, useCallback, useEffect, useRef } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-
-import { NeuronLocationOriginDict } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { DefaultInjectionColor } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
+import { type RefObject, useCallback, useEffect, useRef } from 'react';
 import { useNeuronViewerActions } from '@/components/neuron-viewer/hooks/actions-hook';
-import { DEFAULT_CURRENT_INJECTION_CONFIG } from '@/constants/simulate/single-neuron';
 import { useNeuronViewerEvents } from '@/components/neuron-viewer/hooks/events-hook';
 import { NeuronLoader } from '@/components/neuron-viewer/plugins/neuron-loader';
+import { useAppNotification } from '@/components/notification';
+import { DEFAULT_CURRENT_INJECTION_CONFIG } from '@/constants/simulate/single-neuron';
+import { useMorphology } from '@/hooks/use-morphology';
+import {
+  NeuronViewerRenderer,
+  type TNeuronViewerConfig,
+} from '@/services/bluenaas-single-cell/renderer';
+import type { Morphology } from '@/services/bluenaas-single-cell/types';
+import { DefaultInjectionColor } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import {
   RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
   STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
+  neuronSectionNamesAtomFamily,
   RecordLocationConfigurationAtomFamily,
   StimulationConfigurationAtomFamily,
-  neuronSectionNamesAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import {
-  type TNeuronViewerConfig,
-  NeuronViewerRenderer,
-} from '@/services/bluenaas-single-cell/renderer';
-import { useAppNotification } from '@/components/notification';
-import { useMorphology } from '@/hooks/use-morphology';
-
-import type { Morphology } from '@/services/bluenaas-single-cell/types';
+import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
+import { NeuronLocationOriginDict } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 type Props = {
   virtualLabId: string;
@@ -130,7 +128,7 @@ export function NeuronViewer({
    * In the future, we can have several stimulations.
    * But today, we have only one.
    */
-  const stimulationId = 0;
+  const _stimulationId = 0;
   const sessionKey = `${RECORDING_LOCATION_CONFIGURATION_SESSION_KEY}-${sessionId}`;
   const recordingAtom = RecordLocationConfigurationAtomFamily(sessionKey);
 
@@ -150,14 +148,7 @@ export function NeuronViewer({
       };
       rendererRef.current.labels.update([injection, ...recordLocations]);
     }
-  }, [
-    useLabels,
-    loading,
-    recordLocations,
-    stimulationId,
-    sessionId,
-    injectionSessionAtom.inject_to,
-  ]);
+  }, [useLabels, loading, recordLocations, sessionId, injectionSessionAtom.inject_to]);
 
   if (error) {
     notifyError({ message: `Morphology initialization error: ${error}`, placement: 'topRight' });

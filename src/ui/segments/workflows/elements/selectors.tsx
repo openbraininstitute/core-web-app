@@ -1,22 +1,21 @@
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { useFlags } from '@/features/feature-flags';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/ui/molecules/select';
+import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 import {
   ActivityDict,
   getDropdownOptionsByCategory,
 } from '@/ui/segments/workflows/elements/helpers';
 import { cn } from '@/utils/css-class';
-import {
-  SelectContent,
-  SelectTrigger,
-  SelectGroup,
-  SelectValue,
-  SelectLabel,
-  SelectItem,
-  Select,
-} from '@/ui/molecules/select';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
-import { useFlags } from '@/features/feature-flags';
 
 export function EntityTypeSelectScrollable({
   value,

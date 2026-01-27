@@ -1,5 +1,5 @@
 import { TgdColor } from '@tolokoban/tgd';
-import { PlotDataEntry } from '@/services/bluenaas-single-cell/types';
+import type { PlotDataEntry } from '@/services/bluenaas-single-cell/types';
 import { logError } from '@/util/logger';
 
 export interface PlotInstance {

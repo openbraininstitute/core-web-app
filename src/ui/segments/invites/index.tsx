@@ -1,25 +1,24 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
-import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@bprogress/next/app';
-import { useSession } from 'next-auth/react';
+import { useMutation } from '@tanstack/react-query';
 import Link from 'next/link';
-
-import { listProjects } from '@/api/virtual-lab-svc/queries/project';
-import { acceptInvite } from '@/api/virtual-lab-svc/queries/invite';
-import { Card, CardDescription } from '@/ui/molecules/card';
-import { getErrorUrl } from '@/ui/segments/invites/helpers';
-import { Button } from '@/ui/molecules/button';
-import { ApiErrorCause } from '@/api/error';
+import { useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import type { ApiErrorCause } from '@/api/error';
 import { tryCatch } from '@/api/utils';
-import { cn } from '@/utils/css-class';
+import { acceptInvite } from '@/api/virtual-lab-svc/queries/invite';
+import { listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { config } from '@/config';
 import {
-  InvitationContentResponse,
+  type InvitationContentResponse,
   InviteErrorCodes,
   InviteOriginDict,
 } from '@/types/virtual-lab/invites';
+import { Button } from '@/ui/molecules/button';
+import { Card, CardDescription } from '@/ui/molecules/card';
+import { getErrorUrl } from '@/ui/segments/invites/helpers';
+import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
 
 export function InvitationProcessing({ data }: { data: InvitationContentResponse }) {

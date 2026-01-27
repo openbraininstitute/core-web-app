@@ -109,7 +109,7 @@ export function ListingFilterPanel({
   const onToggleActive = useCallback(
     (key: string) => {
       if (!activeColumns) return;
-      const existingIndex = activeColumns.findIndex((existingKey) => existingKey === key);
+      const existingIndex = activeColumns.indexOf(key);
 
       if (existingIndex === -1) {
         setActiveColumns([...activeColumns, key]);

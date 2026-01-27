@@ -1,18 +1,17 @@
 'use client';
 
 import { RightOutlined } from '@ant-design/icons';
-import { usePathname } from 'next/navigation';
-import { ComponentProps } from 'react';
 import filter from 'es-toolkit/compat/filter';
 import Link from 'next/link';
-
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { usePathname } from 'next/navigation';
+import type { ComponentProps } from 'react';
 import { config } from '@/config';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { getActiveSection } from '@/utils/get-section';
 import { useUserRole } from '@/hooks/use-user-role';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
+import { getActiveSection } from '@/utils/get-section';
 
 type Props = {
   className?: ComponentProps<'div'>['className'];

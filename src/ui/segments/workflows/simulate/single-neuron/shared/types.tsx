@@ -1,5 +1,5 @@
-import { z } from 'zod';
 import isNil from 'es-toolkit/compat/isNil';
+import { z } from 'zod';
 
 import { DefaultColor } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 

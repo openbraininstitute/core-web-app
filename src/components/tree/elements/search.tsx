@@ -1,12 +1,10 @@
-import { useCallback, useState } from 'react';
 import { ConfigProvider, Select } from 'antd';
 import delay from 'es-toolkit/compat/delay';
-
-import filterAndSortBasedOnPosition from '@/util/filterAndSortBasedOnPosition';
+import { useCallback, useState } from 'react';
 import { scrollToNode } from '@/components/tree/elements/helpers';
-import { classNames } from '@/util/utils';
-
 import type { TTreeNode } from '@/components/tree/types';
+import filterAndSortBasedOnPosition from '@/util/filterAndSortBasedOnPosition';
+import { classNames } from '@/util/utils';
 
 interface Props {
   options: Array<{ value: string; label: string; data: TTreeNode }>;

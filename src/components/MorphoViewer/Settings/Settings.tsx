@@ -1,16 +1,13 @@
 import { CloseOutlined } from '@ant-design/icons';
-import { MorphologyCanvas } from '@bbp/morphoviewer';
+import type { MorphologyCanvas } from '@bbp/morphoviewer';
 import { useState } from 'react';
-
+import { SettingsIcon } from '@/components/icons';
+import { classNames } from '@/util/utils';
 import { ColorMode } from './ColorMode';
 import { ColorsLegend } from './ColorsLegend';
 import { DendriteThickness } from './DendriteThickness';
-import { ThicknessMode } from './ThicknessMode';
-
-import { SettingsIcon } from '@/components/icons';
-import { classNames } from '@/util/utils';
-
 import styles from './settings.module.css';
+import { ThicknessMode } from './ThicknessMode';
 
 interface SettingsProps {
   className?: string;

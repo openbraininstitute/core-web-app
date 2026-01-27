@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import { Input as AInput, InputProps } from 'antd';
+import { Input as AInput, type InputProps } from 'antd';
 
 import { classNames } from '@/util/utils';
 

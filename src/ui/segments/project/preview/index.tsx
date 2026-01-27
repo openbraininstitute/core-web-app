@@ -2,22 +2,20 @@
 
 import { CloseOutlined, RightOutlined } from '@ant-design/icons';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import Link from 'next/link';
 import Image from 'next/image';
-
-import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager/event';
-import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
+import Link from 'next/link';
 import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { Bar } from '@/ui/segments/project/metrics/metrics-skeleton';
-import { ExpandableText } from '@/ui/molecules/more-less-text';
-import { PeopleCommunity } from '@/components/icons/buttons';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { Button } from '@/ui/molecules/button';
-import { config } from '@/config';
-
 import type { Member, Project } from '@/api/virtual-lab-svc/queries/types';
+import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
+import { PeopleCommunity } from '@/components/icons/buttons';
+import { config } from '@/config';
 import type { WorkspaceContext } from '@/types/common';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { Button } from '@/ui/molecules/button';
+import { ExpandableText } from '@/ui/molecules/more-less-text';
+import { Bar } from '@/ui/segments/project/metrics/metrics-skeleton';
+import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager/event';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 function Header({ onClose, project }: { onClose: () => void; project?: Project | null }) {
   if (!project) return null;

@@ -1,8 +1,8 @@
-import { VirtualLab } from '@/api/virtual-lab-svc/queries/types';
+import type { VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 import authFetch, { authFetchRetryOnError } from '@/auth-fetch';
 import { config } from '@/config';
-import { VirtualLabBalanceResponse } from '@/types/accounting';
-import { VirtualLabAPIListData, VlmResponse } from '@/types/virtual-lab/common';
+import type { VirtualLabBalanceResponse } from '@/types/accounting';
+import type { VirtualLabAPIListData, VlmResponse } from '@/types/virtual-lab/common';
 import { assertApiResponse } from '@/util/utils';
 
 export async function getVirtualLabsOfUser(): Promise<

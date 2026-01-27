@@ -1,6 +1,6 @@
-import React from 'react';
 import { atom, useAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
+import React from 'react';
 
 import { AppUInterfaceSection, type TAppUInterfaceSection } from '@/utils/key-builder';
 

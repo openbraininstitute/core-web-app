@@ -1,8 +1,7 @@
 import { Button, Divider } from 'antd';
 import { useAtom } from 'jotai';
 import { useRef } from 'react';
-
-import { NeuronLocationOriginDict } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import useOnClickOutside from '@/hooks/useOnClickOutside';
 import {
   getSimulationColor,
   RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
@@ -12,7 +11,7 @@ import {
   RecordLocationConfigurationAtomFamily,
   StimulationConfigurationAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import useOnClickOutside from '@/hooks/useOnClickOutside';
+import { NeuronLocationOriginDict } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { classNames } from '@/util/utils';
 
 export default function NeuronMeshInjectionRecordingPopover({

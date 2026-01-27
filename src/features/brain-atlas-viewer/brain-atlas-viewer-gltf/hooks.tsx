@@ -1,24 +1,23 @@
 /* eslint-disable no-param-reassign */
-import React from 'react';
+
+import { TgdColor, TgdVec4 } from '@tolokoban/tgd';
 import compact from 'es-toolkit/compat/compact';
 import find from 'es-toolkit/compat/find';
 import { useAtom, useAtomValue } from 'jotai';
 import { atomWithStorage, unwrap } from 'jotai/utils';
-import { TgdColor, TgdVec4 } from '@tolokoban/tgd';
-
-import { brainRegionAtlasAtom } from '../context';
-import { Painter } from './painter';
-import { SettingsDefinitions } from './settings';
-import { VisibleRegion } from './types';
-
+import React from 'react';
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import { useAppNotification } from '@/components/notification';
 import {
   brainRegionBasicCellGroupsRegionsHierarchyAtom,
   brainRegionRootHierarchyAtom,
   ROOT_BRAIN_REGION_ID,
   useBrainRegionHierarchy,
 } from '@/features/brain-region-hierarchy/context';
-import { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-import { useAppNotification } from '@/components/notification';
+import { brainRegionAtlasAtom } from '../context';
+import { Painter } from './painter';
+import type { SettingsDefinitions } from './settings';
+import type { VisibleRegion } from './types';
 
 export function usePainter(): Painter {
   const notif = useAppNotification();

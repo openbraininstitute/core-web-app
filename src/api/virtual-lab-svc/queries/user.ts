@@ -1,7 +1,3 @@
-import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
-import { config } from '@/config';
-import { getSession } from '@/auth-fetch';
-
 import type {
   UpdateUserProfileRequest,
   UserProfileResponse,
@@ -9,6 +5,9 @@ import type {
   VlmUserGroupsResponse,
   VlmUserProfile,
 } from '@/api/virtual-lab-svc/queries/types';
+import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
+import { getSession } from '@/auth-fetch';
+import { config } from '@/config';
 import type { WorkspaceContext } from '@/types/common';
 
 function getBaseUrl() {

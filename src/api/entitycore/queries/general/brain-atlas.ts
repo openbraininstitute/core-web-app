@@ -1,12 +1,12 @@
-import { EntityCoreResponse } from '../../types/shared/response';
-import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import type {
   IBrainAtlas,
-  IBrainAtlasRegion,
   IBrainAtlasFilter,
+  IBrainAtlasRegion,
   IBrainAtlasRegionFilter,
 } from '@/api/entitycore/types/entities/brain-atlas';
-import { WorkspaceContext } from '@/types/common';
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
+import type { WorkspaceContext } from '@/types/common';
+import type { EntityCoreResponse } from '../../types/shared/response';
 
 const baseUri = '/brain-atlas';
 

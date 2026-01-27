@@ -6,14 +6,14 @@ import { use } from 'react';
 import { getMEModel } from '@/api/entitycore/queries';
 import {
   ExtendedEntitiesTypeDict,
-  TExtendedEntitiesTypeDict,
+  type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import ScanConfig from '@/features/scan-config';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import {
-  threeDVisualizerState,
   type ThreeDVisualizerQueryParamKeys,
+  threeDVisualizerState,
   type WorkflowSimulatePanelKeys,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { Header } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/header';

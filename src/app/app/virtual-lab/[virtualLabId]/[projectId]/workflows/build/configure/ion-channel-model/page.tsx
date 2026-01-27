@@ -1,6 +1,5 @@
-import { IonChannelModelBuilding } from '@/ui/segments/workflows/build/ion-channel-build';
-
 import type { ServerSideComponentProp } from '@/types/common';
+import { IonChannelModelBuilding } from '@/ui/segments/workflows/build/ion-channel-build';
 
 export default async function Page({
   searchParams,

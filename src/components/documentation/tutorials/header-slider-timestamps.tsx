@@ -1,6 +1,6 @@
-import { StepProps } from '../type';
 import { ChevronLeft, ChevronRight } from '@/components/icons';
 import { classNames } from '@/util/utils';
+import type { StepProps } from '../type';
 
 export default function HeaderSliderTimestamps({
   content,

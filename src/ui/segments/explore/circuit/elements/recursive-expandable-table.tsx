@@ -1,20 +1,17 @@
 import type { ReactNode } from 'react';
-
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
+import type { TWorkspaceScope } from '@/constants';
+import type { WorkspaceContext } from '@/types/common';
 import { BaseTable } from '@/ui/segments/data-table/table';
 import { expandIcon } from '@/ui/segments/explore/circuit/elements/expand-icon';
-import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
-
 import { createExpandableTableConfig } from '@/ui/segments/explore/circuit/elements/expandable-base-table';
 import { useExpandableTable } from '@/ui/segments/explore/circuit/elements/use-expandable-table';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type {
   ICircuitEnriched,
   TCircuitRepresentationView,
 } from '@/ui/segments/explore/circuit/helpers';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { WorkspaceContext } from '@/types/common';
-import type { TWorkspaceScope } from '@/constants';
 
 type Props = {
   id?: string;

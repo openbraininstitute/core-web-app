@@ -17,14 +17,13 @@ import { CoinsIcon } from '@/components/icons/buttons';
 import { useAppNotification } from '@/components/notification';
 import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
 import { assignProjectBudget, reverseProjectBudget } from '@/services/virtual-lab/projects';
+import type { ProjectBalance } from '@/types/accounting';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge } from '@/ui/molecules/badge';
 import { Button, Button as UiButton } from '@/ui/molecules/button';
 import { Input } from '@/ui/molecules/input';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
-
-import type { ProjectBalance } from '@/types/accounting';
 
 type Props = {
   virtualLabId: string;

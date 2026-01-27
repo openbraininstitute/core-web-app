@@ -1,33 +1,30 @@
 import { InfoCircleOutlined, LoadingOutlined } from '@ant-design/icons';
-import { ReactNode, useEffect, useState } from 'react';
 import { ConfigProvider, Segmented, Spin } from 'antd';
-import { SegmentedValue } from 'antd/lib/segmented';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import startsWith from 'es-toolkit/compat/startsWith';
-import some from 'es-toolkit/compat/some';
+import type { SegmentedValue } from 'antd/lib/segmented';
 import get from 'es-toolkit/compat/get';
-
-import SimulationPlot from '@/features/entities/neuron-simulation/simulation-results/simulation-plot-dynamic';
-
-import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
-import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
+import some from 'es-toolkit/compat/some';
+import startsWith from 'es-toolkit/compat/startsWith';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import { type ReactNode, useEffect, useState } from 'react';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
-import { getAssetElement } from '@/api/entitycore/utils';
-import { classNames } from '@/util/utils';
-import { tryCatch } from '@/api/utils';
-
-import type {
-  SimulationPayload,
-  SingleNeuronModelSimulationConfig,
-} from '@/types/small-scale-simulator/single-neuron';
 import type {
   ISingleNeuronSimulation,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
+import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { getAssetElement } from '@/api/entitycore/utils';
+import { tryCatch } from '@/api/utils';
+import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
+import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
+import SimulationPlot from '@/features/entities/neuron-simulation/simulation-results/simulation-plot-dynamic';
 import type { WorkspaceContext } from '@/types/common';
+import type {
+  SimulationPayload,
+  SingleNeuronModelSimulationConfig,
+} from '@/types/small-scale-simulator/single-neuron';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
+import { classNames } from '@/util/utils';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 const subtitleStyle = 'font-thin text-neutral-4';

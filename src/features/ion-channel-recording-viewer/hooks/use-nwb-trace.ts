@@ -1,13 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
-
-import { IonChannelRecordingParser } from '../ion-channel-recording-parser';
-
-import { nwbArrayBufferAtomFamily } from '@/features/ephys-viewer/atoms';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
+import { nwbArrayBufferAtomFamily } from '@/features/ephys-viewer/atoms';
 import type { WorkspaceContext } from '@/types/common';
+import { IonChannelRecordingParser } from '../ion-channel-recording-parser';
 
 type UseTraceArgs = {
   resource: IElectricalCellRecording | ICircuitSimulationResult;

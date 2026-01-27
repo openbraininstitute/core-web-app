@@ -1,6 +1,7 @@
 /* eslint-disable max-classes-per-file */
-import { File, Group, Dataset, ready } from 'h5wasm';
+
 import range from 'es-toolkit/compat/range';
+import { Dataset, File, Group, ready } from 'h5wasm';
 
 const SMALL_SCALE_SIMULATOR_ID = 'obi_small_scale_simulator_v1';
 
@@ -101,7 +102,7 @@ export default abstract class NWBTrace {
       }
 
       return new NWBCircuitSimulationTrace(file);
-    } catch (error) {
+    } catch (_error) {
       // Defaulting to Generic NWB Trace
       return new NWBGenericTrace(file);
     }

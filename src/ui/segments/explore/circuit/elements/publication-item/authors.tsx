@@ -1,8 +1,7 @@
 import { Button } from 'antd';
-import Popover from '@/features/entities/neuron-simulation/experiment/elements/popover';
-import { Person } from '@/components/icons/EditorIcons';
-
 import type { Author } from '@/api/entitycore/types/entities/publication';
+import { Person } from '@/components/icons/EditorIcons';
+import Popover from '@/features/entities/neuron-simulation/experiment/elements/popover';
 
 interface Props {
   authors: Array<Author>;

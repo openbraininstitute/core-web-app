@@ -1,7 +1,7 @@
 import { getClient } from '@/api/sanity/client';
-import { ContentForTutorialItem } from '@/types/help/type';
+import type { ContentForTutorialItem } from '@/types/help/type';
 import { logError } from '@/util/logger';
-import { assertType, TypeDef } from '@/util/type-guards';
+import { assertType, type TypeDef } from '@/util/type-guards';
 
 const queryForAboutContent = `*[_type == "documentationSettings"][0] {
   tutorialOrder[]-> {

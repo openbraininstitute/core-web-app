@@ -111,8 +111,7 @@ export default function Middle({
           </div>
         )}
 
-      {schema.properties &&
-        schema.properties?.[configTab] &&
+      {schema.properties?.[configTab] &&
         editing &&
         (isRootBlock(schema, configTab) || selectedBlockSchema) && (
           <BlockUI

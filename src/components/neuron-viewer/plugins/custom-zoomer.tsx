@@ -1,8 +1,7 @@
-import { RefObject, useEffect, useState } from 'react';
 import { ConfigProvider } from 'antd';
-
-import { NeuronViewerRenderer } from '@/services/bluenaas-single-cell/renderer';
+import { type RefObject, useEffect, useState } from 'react';
 import { Zoomer } from '@/components/neuron-viewer/plugins/zoomer';
+import type { NeuronViewerRenderer } from '@/services/bluenaas-single-cell/renderer';
 import { cn } from '@/utils/css-class';
 
 type Props = {
@@ -77,7 +76,7 @@ export function CustomZoomer({ renderer, placement = 'left' }: Props) {
         activeRenderer._renderer.domElement.removeEventListener('wheel', updateZoom);
       }
     };
-  }, [renderer, value]);
+  }, [renderer]);
 
   return (
     <div className={cn('absolute bottom-4 z-50', placement === 'left' ? 'left-6' : 'right-6')}>

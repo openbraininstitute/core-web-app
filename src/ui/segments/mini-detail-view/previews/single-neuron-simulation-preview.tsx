@@ -1,13 +1,11 @@
 import { Image } from 'antd';
-
-import { EmptyPreview, renderPreview } from '@/entity-configuration/definitions/renderer';
 import { hasAssets } from '@/api/entitycore/guards';
-import { cn } from '@/utils/css-class';
-
 import type {
   ISingleNeuronSimulation,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
+import { EmptyPreview, renderPreview } from '@/entity-configuration/definitions/renderer';
+import { cn } from '@/utils/css-class';
 
 export function SingleNeuronSimulationPreview({
   record,

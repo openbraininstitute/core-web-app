@@ -1,13 +1,11 @@
-import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
 import * as Accordion from '@radix-ui/react-accordion';
-import { ReactElement } from 'react';
+import type { ReactElement } from 'react';
 
 import { ChevronIcon } from '@/components/icons';
-import { classNames } from '@/util/utils';
-
 import type { TCoreFilter } from '@/entity-configuration/definitions/types';
-
 import styles from '@/ui/segments/data-table/elements/listing-filter-panel/filters.module.css';
+import { classNames } from '@/util/utils';
 
 type ContentProps = {
   filters: Array<TCoreFilter>;

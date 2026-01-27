@@ -1,17 +1,14 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link';
 import React from 'react';
-
-import ProgressiveImage from '../../components/ProgressiveImage';
-import NewsletterForm from '../../components/coming-soon/newsletter-form';
-import { useSanityContentForHero } from '../../content';
-import { EnumSection } from '../../sections/sections';
-import NextPanel from './NextPanel';
-
 import useFullHeight from '@/hooks/useFullHeight';
 import { classNames } from '@/util/utils';
-
+import NewsletterForm from '../../components/coming-soon/newsletter-form';
+import ProgressiveImage from '../../components/ProgressiveImage';
+import { useSanityContentForHero } from '../../content';
+import { EnumSection } from '../../sections/sections';
 import styles from './Hero.module.css';
+import NextPanel from './NextPanel';
 
 interface HeroProps {
   className?: string;

@@ -1,11 +1,10 @@
 'use client';
 
-import { useMemo, useCallback, useEffect, useRef } from 'react';
+import type { FieldProps, RJSFSchema } from '@rjsf/utils';
 import { get } from 'es-toolkit/compat';
 import katex from 'katex';
 import renderMathInElement from 'katex/contrib/auto-render';
-
-import type { FieldProps, RJSFSchema } from '@rjsf/utils';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { renderMathInText } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers/render-mathematic-symbol';
 import { cn } from '@/utils/css-class';
@@ -33,7 +32,7 @@ function renderLatex(latex: string): string {
       throwOnError: false,
       displayMode: false,
     });
-  } catch (error) {
+  } catch (_error) {
     return latex;
   }
 }

@@ -1,9 +1,8 @@
 import { InputNumber } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 import { ArrowsHorizontal } from '@/components/icons/Arrows-horizantal';
+import type { GteLteValue, TCoreFilter } from '@/entity-configuration/definitions/types';
 import { cn } from '@/utils/css-class';
-
-import type { TCoreFilter, GteLteValue } from '@/entity-configuration/definitions/types';
 
 type Props = {
   filter: TCoreFilter;

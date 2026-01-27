@@ -2,8 +2,8 @@
 
 'use client';
 
+import type * as React from 'react';
 import * as ResizablePrimitive from 'react-resizable-panels';
-import * as React from 'react';
 
 import { HorizontalResize } from '@/components/icons/buttons';
 import { cn } from '@/utils/css-class';

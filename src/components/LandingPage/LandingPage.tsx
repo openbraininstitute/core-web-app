@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
-import { getSection } from './utils';
-
+import { InvitationErrorDialog } from '@/ui/segments/invites/error-dialog';
+import { logError } from '@/util/logger';
+import { classNames } from '@/util/utils';
 import PaddedBlock from './components/PaddedBlock';
 import VerticalSpace from './components/VerticalSpace';
+import styles from './LandingPage.module.css';
 import FooterPanel from './layout/FooterPanel';
 import Hero from './layout/Hero';
 import Menu from './layout/Menu';
@@ -14,12 +15,7 @@ import SectionGeneric from './sections/SectionGeneric';
 import SectionNews from './sections/SectionNews';
 import SectionPricing from './sections/SectionPricing';
 import { EnumSection } from './sections/sections';
-
-import { InvitationErrorDialog } from '@/ui/segments/invites/error-dialog';
-import { logError } from '@/util/logger';
-import { classNames } from '@/util/utils';
-
-import styles from './LandingPage.module.css';
+import { getSection } from './utils';
 import './global.css';
 
 interface LandingPageProps {
@@ -40,19 +36,17 @@ export default function LandingPage({ className, section, error }: LandingPagePr
       top: 0,
       behavior: 'instant',
     });
-  }, [section]);
+  }, []);
 
   return (
-    <>
-      <div className={classNames(className, styles.landingPage)}>
-        <Menu scrollHasStarted={scrollHasStarted} section={section} />
-        <Hero section={section} />
-        <PaddedBlock>{renderSection(section)}</PaddedBlock>
-        <VerticalSpace height="30px" />
-        <FooterPanel />
-        {error?.errorcode && <InvitationErrorDialog error={error} />}
-      </div>
-    </>
+    <div className={classNames(className, styles.landingPage)}>
+      <Menu scrollHasStarted={scrollHasStarted} section={section} />
+      <Hero section={section} />
+      <PaddedBlock>{renderSection(section)}</PaddedBlock>
+      <VerticalSpace height="30px" />
+      <FooterPanel />
+      {error?.errorcode && <InvitationErrorDialog error={error} />}
+    </div>
   );
 }
 

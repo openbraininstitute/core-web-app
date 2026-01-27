@@ -129,7 +129,7 @@ function RecordingsArrayFieldContent({
       setIsModalOpen(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onChange, isSelectionValid]);
+  }, [onChange, isSelectionValid, recording, updateRecordingStorage]);
 
   const handleModalClose = () => setIsModalOpen(false);
 
@@ -138,14 +138,14 @@ function RecordingsArrayFieldContent({
     onChange(undefined, undefined);
     updateRecordingStorage(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readonly, disabled]);
+  }, [readonly, disabled, onChange, updateRecordingStorage]);
 
   const handleRowsSelected = useCallback(
     (selectedRows: Array<IIonChannelRecording>) => {
       updateRecordingStorage(selectedRows.at(0) ?? null);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [updateRecordingStorage]
   );
 
   return (

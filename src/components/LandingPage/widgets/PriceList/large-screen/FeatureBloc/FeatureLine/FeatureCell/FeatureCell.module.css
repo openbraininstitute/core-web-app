@@ -48,7 +48,7 @@ button.tooltip::after {
 
 button.tooltip::before {
   pointer-events: none;
-  content: '';
+  content: "";
   position: absolute;
   right: 0;
   top: 0;

@@ -1,12 +1,12 @@
 import { tableFromIPC } from '@apache-arrow/es2015-esm';
-import { fetchPointCloud } from '../../api';
 import { getBrainAtlasRegions } from '@/api/entitycore/queries/general/brain-atlas';
 import { entityCoreApi } from '@/api/entitycore/utils';
 import { config } from '@/config';
+import { logError } from '@/util/logger';
 import { assertType } from '@/util/type-guards';
 import { createHeaders } from '@/util/utils';
-import { logError } from '@/util/logger';
 import { log } from '@/utils/logger';
+import { fetchPointCloud } from '../../api';
 
 let cacheAtlasId: string | null = null;
 
@@ -148,7 +148,7 @@ export async function getPointCouldData(annotationValue: number, accessToken: st
 }
 
 async function actualGetPointCouldData(annotationValue: number, accessToken: string) {
-  const time = performance.now();
+  const _time = performance.now();
   const url = `${config.CELL_API_URL}/circuit?circuit_id=${encodeURIComponent(
     config.LEGACY_DEFAULT_CIRCUIT_ID || ''
   )}&region=${annotationValue}&how=arrow`;
@@ -165,14 +165,5 @@ async function actualGetPointCouldData(annotationValue: number, accessToken: str
     dataPoint[index++] = data.z;
     dataPoint[index++] = 100;
   }
-  // eslint-disable-next-line no-console
-  console.log(
-    'PointCould:',
-    'length=',
-    dataPoint.byteLength,
-    (3 * dataPoint.byteLength) / 4,
-    'time=',
-    `${performance.now() - time} msec`
-  );
   return dataPoint;
 }

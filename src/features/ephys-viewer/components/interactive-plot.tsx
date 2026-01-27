@@ -1,21 +1,20 @@
-import { useState, useMemo, useEffect } from 'react';
-import Plotly, { PlotData } from 'plotly.js-dist-min';
-import createPlotlyComponent from 'react-plotly.js/factory';
 import { Radio } from 'antd';
 import { useAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
-
-import { RecordingType, SweepData } from '@/features/ephys-viewer/nwb-trace';
+import Plotly, { type PlotData } from 'plotly.js-dist-min';
+import { useEffect, useMemo, useState } from 'react';
+import createPlotlyComponent from 'react-plotly.js/factory';
+import { useInteractivePlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
+import { RecordingType, type SweepData } from '@/features/ephys-viewer/nwb-trace';
+import type { PlotProps, ZoomRanges } from '@/features/ephys-viewer/types';
+import optimizePlotData from '@/util/explore-section/optimizeTrace';
 import {
+  type CurrentUnit,
   convertCurrentSeries,
   convertVoltageSeries,
-  CurrentUnit,
   ensureCurrentUnit,
-  VoltageUnit,
+  type VoltageUnit,
 } from '@/util/explore-section/plotHelpers';
-import optimizePlotData from '@/util/explore-section/optimizeTrace';
-import { useInteractivePlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
-import { PlotProps, ZoomRanges } from '@/features/ephys-viewer/types';
 
 const Plot = createPlotlyComponent(Plotly);
 
@@ -38,7 +37,7 @@ export default function InteractivePlot({
 
   useEffect(() => {
     setZoomRanges(null);
-  }, [reset]);
+  }, []);
 
   const { config, layout, font, style, antBreakpoints } = useInteractivePlotConfig();
 
@@ -54,7 +53,7 @@ export default function InteractivePlot({
   const selectedResponse: Partial<PlotData>[] = useMemo(
     () => rawData?.filter((data) => selectedSweeps.includes(data.sweepName)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [selectedSweeps, currentUnit]
+    [selectedSweeps, rawData?.filter]
   );
 
   const previewDataResponse: Partial<PlotData>[] = useMemo(
@@ -67,7 +66,7 @@ export default function InteractivePlot({
         return { ...data, opacity };
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [previewSweep]
+    [previewSweep, rawData?.map, selectedSweeps.includes]
   );
 
   const onChangeStimulusUnits = (event: any) => {

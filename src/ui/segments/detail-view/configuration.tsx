@@ -1,42 +1,39 @@
-import { notFound } from 'next/navigation';
 import isNil from 'es-toolkit/compat/isNil';
-
-import {
-  EntityCoreExtendedType,
-  getEntityByExtendedType,
-  applyEntityExpansions,
-} from '@/entity-configuration/domain/helpers';
-
-import EModelConfig from '@/features/entities/e-model/detail-view/wrapper';
-import { EntityTypeValue } from '@/entity-configuration/domain';
-import { WorkspaceContext, AwaitedType } from '@/types/common';
-import {
-  IEModel,
-  IMEModel,
+import { notFound } from 'next/navigation';
+import { getCellMorphology } from '@/api/entitycore/queries';
+import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
+import type {
   ICellMorphology,
   ICellMorphologyExpanded,
+  IEModel,
+  IMEModel,
   ISingleNeuronSimulation,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
-import { getCellMorphology } from '@/api/entitycore/queries';
-import MEModelConfig from '@/features/entities/me-model/detail-view/configuration';
-import SynaptomeConfig from '@/features/entities/single-neuron-synaptome/detail-view/configuration';
-import SynapseGroupList from '@/features/entities/single-neuron-synaptome/detail-view/elements/list-synapses-configuration';
-import { SingleNeuronSynaptome as singleNeuronSynaptomeEntity } from '@/entity-configuration/domain/model/single-neuron-synaptome';
-import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
-import { tryCatch } from '@/api/utils';
-import {
-  singleNeuronSimulationApiQueryExpand,
-  singleNeuronSynaptomeSimulationApiQueryExpand,
-} from '@/entity-configuration/domain/simulation';
-import SimulationConfigurationTab from '@/components/simulate/SimulationDetails/configuration-tab';
-import { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
-
 import type {
   ISingleNeuronSynaptome,
   TSingleNeuronSynaptomeConfiguration,
 } from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import { Prettify } from '@/utils/type';
+import { tryCatch } from '@/api/utils';
+import SimulationConfigurationTab from '@/components/simulate/SimulationDetails/configuration-tab';
+import type { EntityTypeValue } from '@/entity-configuration/domain';
+import {
+  applyEntityExpansions,
+  type EntityCoreExtendedType,
+  getEntityByExtendedType,
+} from '@/entity-configuration/domain/helpers';
+import { SingleNeuronSynaptome as singleNeuronSynaptomeEntity } from '@/entity-configuration/domain/model/single-neuron-synaptome';
+import {
+  singleNeuronSimulationApiQueryExpand,
+  singleNeuronSynaptomeSimulationApiQueryExpand,
+} from '@/entity-configuration/domain/simulation';
+import EModelConfig from '@/features/entities/e-model/detail-view/wrapper';
+import MEModelConfig from '@/features/entities/me-model/detail-view/configuration';
+import SynaptomeConfig from '@/features/entities/single-neuron-synaptome/detail-view/configuration';
+import SynapseGroupList from '@/features/entities/single-neuron-synaptome/detail-view/elements/list-synapses-configuration';
+import type { AwaitedType, WorkspaceContext } from '@/types/common';
+import type { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
+import type { Prettify } from '@/utils/type';
 
 type ExpandType = Prettify<{
   memodel: IMEModel;

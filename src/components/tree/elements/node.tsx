@@ -1,13 +1,13 @@
-import React, { CSSProperties, memo } from 'react';
+import type React from 'react';
+import { type CSSProperties, memo } from 'react';
 
 import DefaultNode from '@/components/tree/elements/default-node';
 import {
-  VerticalIndentationLine,
   HorizontalIndentationLine,
+  VerticalIndentationLine,
 } from '@/components/tree/elements/indentation';
+import type { NodeIndentation, RenderNodeProps, TTreeNode } from '@/components/tree/types';
 import { classNames } from '@/util/utils';
-
-import type { TTreeNode, RenderNodeProps, NodeIndentation } from '@/components/tree/types';
 
 interface NodeProps<TNode extends TTreeNode> {
   dataKey: string;

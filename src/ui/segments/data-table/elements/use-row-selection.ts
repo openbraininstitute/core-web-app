@@ -1,10 +1,8 @@
-import { Key } from 'react';
+import type { RowSelectionType, TableRowSelection } from 'antd/es/table/interface';
 import { useAtom } from 'jotai';
-import { RowSelectionType, TableRowSelection } from 'antd/es/table/interface';
-
-import { coreSelectedRowsAtom } from '@/ui/segments/data-table/elements/context';
-
+import type { Key } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { coreSelectedRowsAtom } from '@/ui/segments/data-table/elements/context';
 
 type RowSelection<T> = Pick<TableRowSelection<T>, 'selectedRowKeys' | 'onChange' | 'type'>;
 

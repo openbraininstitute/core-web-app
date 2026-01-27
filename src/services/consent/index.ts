@@ -44,7 +44,7 @@ export function useConsent() {
       const onAbort = () => {
         resolveRef.current = null;
         rejectRef.current = null;
-        reject(signal!.reason || new Error('Aborted'));
+        reject(signal?.reason || new Error('Aborted'));
       };
 
       signal?.addEventListener('abort', onAbort, { once: true });

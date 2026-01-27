@@ -2,8 +2,16 @@ import find from 'es-toolkit/compat/find';
 import isEmpty from 'es-toolkit/compat/isEmpty';
 
 import { isMemodel, isSingleNeuronSynaptome } from '@/api/entitycore/guards';
+import type {
+  EntityCoreDensityObjectTypes,
+  EntityCoreObjectTypes,
+  ICellMorphology,
+  IEModel,
+} from '@/api/entitycore/types';
 import { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
+import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { type IEType, type IMType, MeasurementUnit } from '@/api/entitycore/types/shared/global';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
@@ -17,19 +25,10 @@ import getMeasurements, {
   renderMeanStd,
   renderMorphologyMeasurement,
 } from '@/entity-configuration/definitions/renderer';
+import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import { CoreFieldType } from '@/entity-configuration/definitions/types';
 import { ensureString, isNumber, isString } from '@/util/type-guards';
 import { ensureArray } from '@/utils/array';
-
-import type {
-  EntityCoreDensityObjectTypes,
-  EntityCoreObjectTypes,
-  ICellMorphology,
-  IEModel,
-} from '@/api/entitycore/types';
-import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
-import { MeasurementUnit, type IEType, type IMType } from '@/api/entitycore/types/shared/global';
-import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 
 const morphologyMtypes = (morphology?: ICellMorphology) => {
   if (!morphology) return [];

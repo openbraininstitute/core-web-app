@@ -1,19 +1,17 @@
 'use client';
 
 import { Form, Input } from 'antd';
-
-import { ExperimentalNeuronDensitySchema } from '@/ui/segments/contribute/experimental-neuron-density/schema';
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { ExperimentalNeuronDensitySchema } from '@/ui/segments/contribute/experimental-neuron-density/schema';
 import {
-  renderLabel,
   createZodFieldValidator,
   RequiredFieldMarker,
+  renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
-
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 export function Setup() {
   const form = Form.useFormInstance();

@@ -1,14 +1,13 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
 import { LoadingOutlined } from '@ant-design/icons';
-import { FormEvent } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import isObject from 'es-toolkit/compat/isObject';
-
-import { TextArea } from '@/components/VirtualLab/create-entity-flows/common/inputs';
+import type { FormEvent } from 'react';
 import { cancelSubscription } from '@/api/virtual-lab-svc/queries/subscription';
 import { useAppNotification } from '@/components/notification';
+import { TextArea } from '@/components/VirtualLab/create-entity-flows/common/inputs';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 

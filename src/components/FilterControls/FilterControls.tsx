@@ -1,7 +1,7 @@
-import { HTMLProps, PropsWithChildren, useState } from 'react';
-import ControlPanel from './ControlPanel';
+import { type HTMLProps, type PropsWithChildren, useState } from 'react';
 import { SettingsIcon } from '@/components/icons/Settings';
 import { classNames } from '@/util/utils';
+import ControlPanel from './ControlPanel';
 
 export default function FilterControls({
   filtersCount,
@@ -45,10 +45,8 @@ export default function FilterControls({
                   Filters
                 </span>
                 <span className="text-neutral-4 text-xs leading-5 font-semibold">
-                  <>
-                    {numberOfColumns} active
-                    {numberOfColumns === 1 ? ' column' : ' columns'}
-                  </>
+                  {numberOfColumns} active
+                  {numberOfColumns === 1 ? ' column' : ' columns'}
                 </span>
               </div>
             </div>

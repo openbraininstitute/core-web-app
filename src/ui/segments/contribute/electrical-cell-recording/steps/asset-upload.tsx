@@ -3,24 +3,22 @@
 'use client';
 
 import { AlertOutlined, LoadingOutlined } from '@ant-design/icons';
-import { isNil } from 'es-toolkit/compat';
 import { Form, Spin } from 'antd';
+import { isNil } from 'es-toolkit/compat';
 import { useState } from 'react';
-
-import { ELECTRICAL_CELL_RECORDING_FILE_TYPES } from '@/ui/segments/contribute/electrical-cell-recording/schema';
-import { Alert, AlertContent, AlertDescription, AlertIcon, AlertTitle } from '@/ui/molecules/alert';
-import { formatBytes, useFileUpload, type FileWithPreview } from '@/ui/hooks/use-file-upload';
-import { getFileExtension } from '@/ui/segments/contribute/shared/helpers';
 import { resolveNWBFile } from '@/api/one/electrical-cell-recording';
+import { tryCatch } from '@/api/utils';
 import { DownloadAsBoxIcon } from '@/components/icons/buttons';
 import { FileDownloadLine } from '@/components/icons/File';
-import { Button } from '@/ui/molecules/button';
 import { messages } from '@/i18n/en/upload';
-import { tryCatch } from '@/api/utils';
-import { cn } from '@/utils/css-class';
-
+import { type FileWithPreview, formatBytes, useFileUpload } from '@/ui/hooks/use-file-upload';
+import { Alert, AlertContent, AlertDescription, AlertIcon, AlertTitle } from '@/ui/molecules/alert';
+import { Button } from '@/ui/molecules/button';
 import type { TElectricalCellRecordingForm } from '@/ui/segments/contribute/electrical-cell-recording/schema';
+import { ELECTRICAL_CELL_RECORDING_FILE_TYPES } from '@/ui/segments/contribute/electrical-cell-recording/schema';
 import type { IFileTypeConfig } from '@/ui/segments/contribute/shared/helpers';
+import { getFileExtension } from '@/ui/segments/contribute/shared/helpers';
+import { cn } from '@/utils/css-class';
 
 interface IAssetUploadProps {
   maxFiles?: number;
@@ -93,7 +91,7 @@ export function AssetUpload({
           continue;
         }
 
-        if (resolution && resolution.isValid) {
+        if (resolution?.isValid) {
           const originalFile = {
             file,
             id: crypto.randomUUID(),

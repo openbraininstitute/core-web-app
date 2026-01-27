@@ -118,7 +118,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
       onHeaderCell: () => ({
         id: 'activity-table-name-cell-selector',
       }),
-      render: (text, record) => <span className="text-primary-9">{record.name}</span>,
+      render: (_text, record) => <span className="text-primary-9">{record.name}</span>,
     },
     {
       title: 'Category',

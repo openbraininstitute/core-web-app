@@ -1,5 +1,5 @@
-import { ApiError } from './common';
-import { PlotData } from '@/services/bluenaas-single-cell/types';
+import type { PlotData } from '@/services/bluenaas-single-cell/types';
+import type { ApiError } from './common';
 
 export enum SimulationTypeNames {
   SYNAPTOME_SIMULATION = 'synaptome-simulation',

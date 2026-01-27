@@ -1,14 +1,13 @@
 import isEmpty from 'es-toolkit/compat/isEmpty';
-
-import { LabTypeEnum, VirtualLabPayload } from '@/api/virtual-lab-svc/types';
-import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
-import { getSession } from '@/auth-fetch';
-import {
+import type {
   VirtualLab,
   VirtualLabExistsVerificationResponse,
   VirtualLabListResponse,
   VirtualLabResponse,
 } from '@/api/virtual-lab-svc/queries/types';
+import { LabTypeEnum, type VirtualLabPayload } from '@/api/virtual-lab-svc/types';
+import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
+import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
 
 import type { VlmResponse } from '@/types/virtual-lab/common';

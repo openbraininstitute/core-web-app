@@ -1,7 +1,7 @@
 'use client';
 
-import { NavigationItem, NavigationItemProps } from '../ApplicationSidebar';
 import { classNames } from '@/util/utils';
+import { NavigationItem, type NavigationItemProps } from '../ApplicationSidebar';
 
 const MAIN_NAVIGATION_LIST: Array<NavigationItemProps> = [
   {

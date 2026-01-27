@@ -1,5 +1,5 @@
 import { PortableText, type PortableTextReactComponents } from 'next-sanity';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { isString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
 import type { RichText } from '../../content/_common';

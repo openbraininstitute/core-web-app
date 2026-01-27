@@ -1,27 +1,24 @@
-import { PaymentElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js';
-import { FormEvent, useState, useEffect, useRef, useTransition } from 'react';
-import { Stripe, StripeElementsOptions } from '@stripe/stripe-js';
-import { useQueryClient } from '@tanstack/react-query';
 import { LoadingOutlined } from '@ant-design/icons';
-import { useAtomValue } from 'jotai';
+import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import type { Stripe, StripeElementsOptions } from '@stripe/stripe-js';
+import { useQueryClient } from '@tanstack/react-query';
 import { Spin } from 'antd';
-
 import isObject from 'es-toolkit/compat/isObject';
-
-import sessionAtom from '@/state/session';
-
-import PricingToggleCards from '@/components/VirtualLab/create-entity-flows/checkout/price-card';
-import { SetupIntentResponse, SubscriptionStatus } from '@/api/virtual-lab-svc/queries/types';
-import { flowAtom } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
-import { createSubscription } from '@/api/virtual-lab-svc/queries/subscription';
+import { useAtomValue } from 'jotai';
+import { type FormEvent, useEffect, useRef, useState, useTransition } from 'react';
+import { tryCatch } from '@/api/utils';
 import { getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
+import { createSubscription } from '@/api/virtual-lab-svc/queries/subscription';
+import { type SetupIntentResponse, SubscriptionStatus } from '@/api/virtual-lab-svc/queries/types';
 import { useAppNotification } from '@/components/notification';
 import { getStripe } from '@/components/VirtualLab/Billing/utils';
-import { keyBuilder } from '@/ui/use-query-keys/user';
+import PricingToggleCards from '@/components/VirtualLab/create-entity-flows/checkout/price-card';
+import { flowAtom } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
+import sessionAtom from '@/state/session';
 import { Button } from '@/ui/molecules/button';
-import { tryCatch } from '@/api/utils';
-import { cn } from '@/utils/css-class';
 import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager/event';
+import { keyBuilder } from '@/ui/use-query-keys/user';
+import { cn } from '@/utils/css-class';
 
 type Props = {
   onPrevious: () => void;
@@ -235,7 +232,7 @@ export default function PaymentForm({ onPrevious }: Props) {
           setStripeSetupObject(stripeSetup.data);
           setLoadingStripe(false);
         }
-      } catch (error) {
+      } catch (_error) {
         errorNotify({
           message:
             "We're having some trouble setting up your payment options at the moment. Please try again in a little while.",

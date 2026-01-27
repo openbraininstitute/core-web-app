@@ -1,7 +1,8 @@
 /* eslint-disable no-param-reassign */
-import transform from 'es-toolkit/compat/transform';
-import isObject from 'es-toolkit/compat/isObject';
+
 import isArray from 'es-toolkit/compat/isArray';
+import isObject from 'es-toolkit/compat/isObject';
+import transform from 'es-toolkit/compat/transform';
 
 import type { TTreeNode } from '@/components/tree/types';
 
@@ -121,7 +122,7 @@ export function scrollToNode<TNode extends TTreeNode>(
 
   const findScrollableAncestor = (el: Element | null): HTMLElement | null => {
     let current: HTMLElement | null = el as HTMLElement | null;
-    while (current && current.parentElement) {
+    while (current?.parentElement) {
       const parent = current.parentElement as HTMLElement;
       const style = window.getComputedStyle(parent);
       const overflowY = style.overflowY || style.overflow;

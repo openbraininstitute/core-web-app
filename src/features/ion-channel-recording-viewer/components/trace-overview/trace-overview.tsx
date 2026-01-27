@@ -1,7 +1,6 @@
-import { IonChannelRecordingParser } from '../../ion-channel-recording-parser';
-import { TraceOverviewPlot } from './trace-overview-plot';
-
+import type { IonChannelRecordingParser } from '../../ion-channel-recording-parser';
 import styles from './trace-overview.module.css';
+import { TraceOverviewPlot } from './trace-overview-plot';
 
 export interface TraceOverviewProps {
   trace: IonChannelRecordingParser;

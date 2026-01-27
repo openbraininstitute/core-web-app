@@ -1,9 +1,7 @@
-import { useEffect } from 'react';
 import noop from 'es-toolkit/compat/noop';
-
-import { isBrowser } from '@/utils/environment';
-
+import { useEffect } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { isBrowser } from '@/utils/environment';
 
 export type TSelectedContributionType = {
   display: boolean;

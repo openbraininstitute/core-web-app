@@ -1,6 +1,6 @@
-import isNil from 'es-toolkit/compat/isNil';
 import isArray from 'es-toolkit/compat/isArray';
 import isEmpty from 'es-toolkit/compat/isEmpty';
+import isNil from 'es-toolkit/compat/isNil';
 
 // Overload 1: checkNotEmpty is true, returns boolean
 export function ensureArray<TElement>(options: {

@@ -1,16 +1,17 @@
 /* eslint-disable no-param-reassign */
-import { memoize } from '@/util/utils';
-import { log } from '@/utils/logger';
 
-import type { TBrainRegionHierarchyAtomReturnType } from '@/features/brain-region-hierarchy/context';
 import type { IBrainAtlasRegion } from '@/api/entitycore/types/entities/brain-atlas';
 import type {
-  CellCompositionBrainRegionEType,
   CellCompositionBrainRegion,
+  CellCompositionBrainRegionEType,
   CellCompositionMType,
   ICellCompositionRoot,
 } from '@/api/entitycore/types/entities/cell-composition';
+
+import type { TBrainRegionHierarchyAtomReturnType } from '@/features/brain-region-hierarchy/context';
 import type { NeuronComposition, RawTreeNode } from '@/features/cell-composition/types';
+import { memoize } from '@/util/utils';
+import { log } from '@/utils/logger';
 
 const NEURON_DENSITY_SCALE = 1e-9;
 

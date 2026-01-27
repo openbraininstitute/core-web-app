@@ -1,11 +1,9 @@
 import range from 'es-toolkit/compat/range';
 import round from 'es-toolkit/compat/round';
 import z from 'zod';
-
-import { cn } from '@/utils/css-class';
-
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { SynapseConfiguration } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { cn } from '@/utils/css-class';
 
 export const MAX_AMPERAGE_STEPS = 15;
 

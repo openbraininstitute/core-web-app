@@ -1,8 +1,6 @@
 import { isNil, omitBy } from 'es-toolkit/compat';
-
-import { compactRecord } from '@/utils/dictionary';
-
 import type { TEntityTypeDict } from '@/api/entitycore/types';
+import { compactRecord } from '@/utils/dictionary';
 
 export async function getEntityCorePresignedUrl({
   entityType,

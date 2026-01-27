@@ -170,7 +170,7 @@ export function RootElement({
       >
         {schema.properties?.[rootElement]?.title}
         <div className="flex gap-1">
-          {errors?.find((error) => error.instancePath.startsWith('/' + rootElement)) ? (
+          {errors?.find((error) => error.instancePath.startsWith(`/${rootElement}`)) ? (
             <WarningFilled className="text-yellow-400" />
           ) : (
             <CheckCircleFilled className="text-green-600" />

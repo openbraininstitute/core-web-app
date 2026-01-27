@@ -2,14 +2,10 @@
 
 import { PortableText } from 'next-sanity';
 import { useState } from 'react';
-
-import { NotebooksProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
-
 import { ChevronRight, ReadMeIcon } from '@/components/icons';
-
-import { classNames } from '@/util/utils';
-
 import styles from '@/ui/segments/reports/obi-showcases/notebooks/notebook.module.css';
+import type { NotebooksProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
+import { classNames } from '@/util/utils';
 
 export default function SingleNotebook({
   content,

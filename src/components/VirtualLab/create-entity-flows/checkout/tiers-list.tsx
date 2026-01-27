@@ -1,29 +1,29 @@
 'use client';
 
 import { CheckCircleFilled, InfoCircleOutlined } from '@ant-design/icons';
+import { Tooltip } from 'antd';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import noop from 'es-toolkit/compat/noop';
+import toUpper from 'es-toolkit/compat/toUpper';
+import { useAtom } from 'jotai';
 import { useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
-import { Tooltip } from 'antd';
-import { useAtom } from 'jotai';
-import kebabCase from 'es-toolkit/compat/kebabCase';
-import toUpper from 'es-toolkit/compat/toUpper';
-import noop from 'es-toolkit/compat/noop';
 
 import { tryCatch } from '@/api/utils';
-import { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';
+import type { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';
 import ContactUs from '@/components/VirtualLab/create-entity-flows/checkout/contact-us';
 import DowngradeFree from '@/components/VirtualLab/create-entity-flows/checkout/downgrade';
 import {
-  ExtendedTier,
+  type ExtendedTier,
   flowAtom,
   getAllTiers,
   Switch,
-  Tier,
-  TierFeature,
+  type Tier,
+  type TierFeature,
 } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
 import { TiersListSkeleton } from '@/components/VirtualLab/create-entity-flows/checkout/skeleton';
-import { classNames } from '@/util/utils';
 import { Button } from '@/ui/molecules/button';
+import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
 type Props = {

@@ -1,11 +1,9 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-
-import type { CellTypeContentProps } from '@/ui/segments/help/glossary';
-
-import { CellTypeContentForGlossaryItem, ContentForGlossaryItem } from '@/types/help/type';
+import type { CellTypeContentForGlossaryItem, ContentForGlossaryItem } from '@/types/help/type';
 import AccordionButton from '@/ui/molecules/dropdown';
+import type { CellTypeContentProps } from '@/ui/segments/help/glossary';
 import Slugify from '@/util/slugify';
 import { cn } from '@/utils/css-class';
 

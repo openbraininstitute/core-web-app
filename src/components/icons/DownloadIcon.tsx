@@ -1,4 +1,4 @@
-import { SVGProps } from 'react';
+import type { SVGProps } from 'react';
 
 /** Download icon: downwards arrow above a vertical line */
 export default function DownloadIcon({ className }: { className?: string }) {

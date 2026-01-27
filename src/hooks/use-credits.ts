@@ -58,8 +58,6 @@ export function useCredits(): UseCreditsReturn {
         const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
         setError(errorMessage);
         setCreditsPacks([]);
-        // eslint-disable-next-line no-console
-        console.error('Error fetching credits:', errorMessage, err);
       } finally {
         setLoading(false);
       }

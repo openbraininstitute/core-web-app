@@ -1,10 +1,8 @@
-import { useState, useCallback, ReactNode, useEffect } from 'react';
-import { useAtomValue } from 'jotai';
 import type { ExpandableConfig } from 'antd/es/table/interface';
-
-import { resetFilterSignalAtom } from '@/ui/segments/explore/circuit/helpers';
-
+import { useAtomValue } from 'jotai';
+import { type ReactNode, useCallback, useEffect, useState } from 'react';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import { resetFilterSignalAtom } from '@/ui/segments/explore/circuit/helpers';
 
 export interface ExpandableTableState<T extends EntityCoreIdentifiable> {
   expandedData: Record<string, Array<T> | null>;
@@ -65,7 +63,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable>(
     if (resetFilterSignal > 0) {
       resetState();
     }
-  }, [resetFilterSignal]);
+  }, [resetFilterSignal, resetState]);
 
   const isRowExpanded = useCallback(
     (record: T): boolean => {

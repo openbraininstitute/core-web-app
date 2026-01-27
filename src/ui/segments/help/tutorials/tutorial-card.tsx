@@ -3,10 +3,8 @@
 import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
-
-import PlaceholderImage from '@/ui/segments/help/tutorials/thumbnail_placeholder.webp';
-
 import type { TutorialProps } from '@/components/documentation/type';
+import PlaceholderImage from '@/ui/segments/help/tutorials/thumbnail_placeholder.webp';
 
 export default function TutorialCard({ content }: { content: TutorialProps }) {
   const [mouseHover, setMouseHover] = useState<boolean>(false);

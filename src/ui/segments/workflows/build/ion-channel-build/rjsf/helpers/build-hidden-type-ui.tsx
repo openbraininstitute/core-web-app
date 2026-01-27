@@ -1,4 +1,4 @@
-import { RJSFSchema, UiSchema } from '@rjsf/utils';
+import type { RJSFSchema, UiSchema } from '@rjsf/utils';
 
 export const makeHiddenTypeUiSchema = (rootSchema?: RJSFSchema): UiSchema => {
   const result: UiSchema = {};
@@ -23,7 +23,7 @@ export const makeHiddenTypeUiSchema = (rootSchema?: RJSFSchema): UiSchema => {
         typeProp &&
         typeof typeProp === 'object' &&
         typeProp.type === 'string' &&
-        Object.prototype.hasOwnProperty.call(typeProp, 'const')
+        Object.hasOwn(typeProp, 'const')
       ) {
         assignDeep(result, [...path, 'type'], {
           'ui:widget': 'hidden',

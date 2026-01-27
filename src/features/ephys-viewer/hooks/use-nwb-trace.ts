@@ -1,12 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
-
-import { nwbArrayBufferAtomFamily } from '@/features/ephys-viewer/atoms';
-import NWBTrace from '@/features/ephys-viewer/nwb-trace';
-
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
+import { nwbArrayBufferAtomFamily } from '@/features/ephys-viewer/atoms';
+import NWBTrace from '@/features/ephys-viewer/nwb-trace';
 import type { WorkspaceContext } from '@/types/common';
 
 type UseTraceArgs = {

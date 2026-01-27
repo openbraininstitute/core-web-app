@@ -1,6 +1,6 @@
 import { ZoomInOutlined, ZoomOutOutlined } from '@ant-design/icons';
-import { ComponentProps } from 'react';
 import { Slider } from 'antd';
+import type { ComponentProps } from 'react';
 
 import { cn } from '@/utils/css-class';
 

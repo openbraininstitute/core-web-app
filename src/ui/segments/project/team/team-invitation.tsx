@@ -1,21 +1,20 @@
 'use client';
 
-import { PlusOutlined, ArrowLeftOutlined, LoadingOutlined, DeleteFilled } from '@ant-design/icons';
+import { ArrowLeftOutlined, DeleteFilled, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ConfigProvider, Select, Empty, List, Input } from 'antd';
-import { filter, uniqBy, find, map } from 'es-toolkit/compat';
-import { useState, useRef, useEffect } from 'react';
+import { ConfigProvider, Empty, Input, List, Select } from 'antd';
+import { filter, find, map, uniqBy } from 'es-toolkit/compat';
+import { useEffect, useRef, useState } from 'react';
 import z from 'zod';
 
 import { inviteToProject } from '@/api/virtual-lab-svc/queries/invite';
-import { roleOptions } from '@/ui/segments/project/team/role-modifier';
+import type { Role } from '@/api/virtual-lab-svc/queries/types';
 import { useAppNotification } from '@/components/notification';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
+import { roleOptions } from '@/ui/segments/project/team/role-modifier';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
-
-import type { Role } from '@/api/virtual-lab-svc/queries/types';
 
 const emailSchema = z.string().min(3, 'Email is required').email('Email is not valid');
 

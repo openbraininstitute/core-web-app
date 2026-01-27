@@ -2,19 +2,17 @@ import { match } from 'ts-pattern';
 
 import {
   DetailViewSectionsDict,
-  TDetailViewSectionDict,
+  type TDetailViewSectionDict,
 } from '@/entity-configuration/definitions/types';
-
-import RelatedPublications from '@/ui/segments/detail-view/related-publications';
-import RelatedArtifacts from '@/ui/segments/detail-view/related-artifacts';
-import Configuration from '@/ui/segments/detail-view/configuration';
-import Analysis from '@/ui/segments/detail-view/analysis';
-import Overview from '@/ui/segments/detail-view/overview';
-import Results from '@/ui/segments/detail-view/results';
-
 import type { TEntityByExtendedTypeConfig } from '@/entity-configuration/domain/helpers';
 import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
 import type { WorkspaceContext } from '@/types/common';
+import Analysis from '@/ui/segments/detail-view/analysis';
+import Configuration from '@/ui/segments/detail-view/configuration';
+import Overview from '@/ui/segments/detail-view/overview';
+import RelatedArtifacts from '@/ui/segments/detail-view/related-artifacts';
+import RelatedPublications from '@/ui/segments/detail-view/related-publications';
+import Results from '@/ui/segments/detail-view/results';
 
 export function detailPageSectionRenderer({
   entity,

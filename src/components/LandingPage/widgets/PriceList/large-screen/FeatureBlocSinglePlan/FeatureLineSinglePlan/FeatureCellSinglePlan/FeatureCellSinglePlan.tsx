@@ -1,4 +1,4 @@
-import {
+import type {
   ContentForPricingFeatureItem,
   ContentForPricingPlan,
 } from '@/components/LandingPage/content/pricing';

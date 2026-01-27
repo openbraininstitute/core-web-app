@@ -1,16 +1,13 @@
 /* eslint-disable no-param-reassign */
 import React from 'react';
-
-import { PainterManager, usePainterController, usePainterManager } from './painter';
-import { HintPanel } from './hint';
-import ZoomSlider from './zoom-slider';
-import LegendOverlay from './legend-overlay';
-import { ButtonResetCamera } from './button-reset-camera';
+import type { Morphology } from '@/services/bluenaas-single-cell/types';
 import AddRecordingDialog from './add-recording-dialog';
-
-import { Morphology } from '@/services/bluenaas-single-cell/types';
-
+import { ButtonResetCamera } from './button-reset-camera';
+import { HintPanel } from './hint';
+import LegendOverlay from './legend-overlay';
+import { type PainterManager, usePainterController, usePainterManager } from './painter';
 import styles from './webgl-neuron-selector.module.css';
+import ZoomSlider from './zoom-slider';
 
 export interface WebglNeuronSelectorProps {
   morphology: Morphology;

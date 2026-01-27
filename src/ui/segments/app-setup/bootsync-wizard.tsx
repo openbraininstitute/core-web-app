@@ -1,21 +1,19 @@
 'use client';
 
-import { ComponentProps, useState } from 'react';
+import { type ComponentProps, useState } from 'react';
 import { match, P } from 'ts-pattern';
-
-import { WorkspaceCustomization } from '@/ui/segments/app-setup/workspace-customization';
-import { WorkspaceProvision } from '@/ui/segments/app-setup/workspace-provision';
-import { WorkspaceIdentity } from '@/ui/segments/app-setup/workspace-identity';
+import type { TResolvedWorkspace, TWizardSteps } from '@/ui/segments/app-setup/helpers';
 import {
-  WizardSteps,
   hasNoProject,
   hasNoVirtualLab,
   isAccountPayload,
   isCustomizationPayload,
+  WizardSteps,
 } from '@/ui/segments/app-setup/helpers';
-
+import { WorkspaceCustomization } from '@/ui/segments/app-setup/workspace-customization';
 import type { TWorkspaceIdentitySchema } from '@/ui/segments/app-setup/workspace-identity';
-import type { TResolvedWorkspace, TWizardSteps } from '@/ui/segments/app-setup/helpers';
+import { WorkspaceIdentity } from '@/ui/segments/app-setup/workspace-identity';
+import { WorkspaceProvision } from '@/ui/segments/app-setup/workspace-provision';
 import type { Prettify } from '@/utils/type';
 
 type FinalStepProps = Prettify<ComponentProps<typeof WorkspaceCustomization>>;

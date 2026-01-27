@@ -1,10 +1,9 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import ItemCard from '../global/item-card';
-
 import { useSanityContentForGlossary } from '@/components/documentation/hooks/use-sanity-content-for-glossary';
 import Slugify from '@/util/slugify';
+import ItemCard from '../global/item-card';
 
 export default function SingleGlossaryContent() {
   const content = useSanityContentForGlossary();

@@ -1,20 +1,18 @@
 'use client';
 
+import { LeftOutlined, RightOutlined } from '@ant-design/icons';
+import type { CardComponentProps, Tour } from 'nextstepjs';
 import {
   NextStepProvider as OnboardingProvider,
   NextStep as OnboardingSteps,
   useNextStep,
 } from 'nextstepjs';
-import { LeftOutlined, RightOutlined } from '@ant-design/icons';
-import { useLayoutEffect, type ReactNode } from 'react';
-import type { CardComponentProps, Tour } from 'nextstepjs';
-
+import { type ReactNode, useLayoutEffect } from 'react';
+import type { TOnboardingFeature } from '@/api/virtual-lab-svc/queries/types';
 import { useOnboardingStatus, useUpdateOnboardingStatus } from '@/hooks/use-onboarding';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
 import { cn } from '@/utils/css-class';
-
-import type { TOnboardingFeature } from '@/api/virtual-lab-svc/queries/types';
 
 const TourAction = {
   Skip: 'skip',

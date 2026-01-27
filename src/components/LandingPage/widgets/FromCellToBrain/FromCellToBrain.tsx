@@ -1,11 +1,10 @@
+import { classNames } from '@/util/utils';
 import ProgressiveImage from '../../components/ProgressiveImage';
 import SwipeableCardsList from '../../components/swipeable-cards-list';
 import { styleBlockLarge } from '../../styles';
 import { useMenuHeight } from '../../utils.client';
-import { useSanityContentForFromCelltoBrainContent } from './hooks';
-
-import { classNames } from '@/util/utils';
 import styles from './FromCellToBrain.module.css';
+import { useSanityContentForFromCelltoBrainContent } from './hooks';
 
 interface WidgetFromCellToBrainProps {
   className?: string;

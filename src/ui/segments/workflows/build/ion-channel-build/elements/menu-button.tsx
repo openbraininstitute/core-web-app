@@ -1,8 +1,7 @@
 import { CheckCircleFilled, RightOutlined } from '@ant-design/icons';
-import { ReactNode } from 'react';
-
-import { RenderErrorTooltip } from '@/ui/segments/workflows/build/ion-channel-build/elements/error-tooltip';
+import type { ReactNode } from 'react';
 import { Button } from '@/ui/molecules/button';
+import { RenderErrorTooltip } from '@/ui/segments/workflows/build/ion-channel-build/elements/error-tooltip';
 import { cn } from '@/utils/css-class';
 
 export function MenuButton({

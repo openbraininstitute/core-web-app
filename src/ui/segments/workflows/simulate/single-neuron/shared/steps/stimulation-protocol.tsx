@@ -1,29 +1,28 @@
-import { camelCase, startCase, toPairs, get } from 'es-toolkit/compat';
-import { useAtom, useAtomValue } from 'jotai';
 import { Form, Input, Select } from 'antd';
+import { camelCase, get, startCase, toPairs } from 'es-toolkit/compat';
+import { useAtom, useAtomValue } from 'jotai';
 import { useEffect } from 'react';
-
-import { AmperageConfiguration } from '@/ui/segments/workflows/simulate/single-neuron/shared/amperage-configuration';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { DefaultInjectionColor } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import { AmperageConfiguration } from '@/ui/segments/workflows/simulate/single-neuron/shared/amperage-configuration';
+import {
+  PROTOCOL_DETAILS,
+  STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
   neuronSectionNamesAtomFamily,
   SimulationStatus,
-  simulationStatusAtomFamily,
   StimulationConfigurationAtomFamily,
+  simulationStatusAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import {
   createZodValidator,
   getSessionKey,
   label,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import {
-  STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
-  PROTOCOL_DETAILS,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import {
-  StimulationMode,
   StimulationConfigurationSchema,
+  StimulationMode,
   type TProtocolDetails,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { cn } from '@/utils/css-class';

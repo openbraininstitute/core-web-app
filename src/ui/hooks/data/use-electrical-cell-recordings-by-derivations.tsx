@@ -1,9 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { getElectricalCellRecordings } from '@/api/entitycore/queries';
-import { keyBuilder } from '@/ui/use-query-keys/data';
-
 import type { WorkspaceContext } from '@/types/common';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 
 export function useElectricalCellRecordingsByDerivations({
   virtualLabId,

@@ -28,7 +28,7 @@ export default function Chat({ className, threadId }: ChatProps) {
 
   const refChatBottom = React.useRef<HTMLDivElement | null>(null);
   const refContainer = React.useRef<HTMLDivElement | null>(null);
-  const isStorageQueryFetching = useIsFetching({
+  const _isStorageQueryFetching = useIsFetching({
     predicate: (query) => {
       const fullQueryKey = query.queryKey.at(0);
       return fullQueryKey === 'storage';
@@ -36,7 +36,7 @@ export default function Chat({ className, threadId }: ChatProps) {
     fetchStatus: 'fetching',
   });
 
-  const [scrollHeight, setScrollHeight] = React.useState(0);
+  const [_scrollHeight, setScrollHeight] = React.useState(0);
 
   // Monitor scroll height changes for auto-scroll
   React.useEffect(() => {
@@ -82,7 +82,7 @@ export default function Chat({ className, threadId }: ChatProps) {
         refChatBottom.current?.scrollIntoView({ behavior: 'smooth' });
       }, 200);
     }
-  }, [scrollHeight, isAutoScrollEnabled, isStorageQueryFetching]);
+  }, [isAutoScrollEnabled]);
 
   const handlePrompt = (content: string) => {
     setIsAutoScrollEnabled(true);
@@ -117,17 +117,15 @@ export default function Chat({ className, threadId }: ChatProps) {
         ))}
 
         {status === 'ready' && messages.length > 0 && (
-          <>
-            <div className={styles.footerButtons}>
-              <div className={styles.price}>
-                <IconPrice />
-                <div>
-                  {Math.max(0, rateLimitRemaining)} free credit
-                  {rateLimitRemaining > 1 ? 's' : ''} left
-                </div>
+          <div className={styles.footerButtons}>
+            <div className={styles.price}>
+              <IconPrice />
+              <div>
+                {Math.max(0, rateLimitRemaining)} free credit
+                {rateLimitRemaining > 1 ? 's' : ''} left
               </div>
             </div>
-          </>
+          </div>
         )}
         {suggestions !== undefined && status === 'ready' && (
           <div className={styles.suggestedQuestionsContainer}>

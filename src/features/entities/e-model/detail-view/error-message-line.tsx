@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
 import { WarningFilled } from '@ant-design/icons';
+import type { ReactNode } from 'react';
 
 import { Header } from '@/features/entities/e-model/detail-view/header';
 

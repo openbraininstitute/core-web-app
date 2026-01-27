@@ -1,20 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
+import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
+import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
 import {
+  renderArray,
   renderEmptyOrValue,
   renderPreview,
-  renderArray,
 } from '@/entity-configuration/definitions/renderer';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-
-import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
-import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
-import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
-import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
 export default function Configuration({
   memodel,

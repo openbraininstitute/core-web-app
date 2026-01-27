@@ -3,11 +3,9 @@ import get from 'es-toolkit/compat/get';
 import groupBy from 'es-toolkit/compat/groupBy';
 import sortBy from 'es-toolkit/compat/sortBy';
 import values from 'es-toolkit/compat/values';
-
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { FeatureFlags, FlagKey, microcircuitFlag } from '@/features/feature-flags/flags';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { type FeatureFlags, type FlagKey, microcircuitFlag } from '@/features/feature-flags/flags';
 
 export const WorkflowSessionIdSearchParam = 'sessionId';
 export const EntityScopeDict = {

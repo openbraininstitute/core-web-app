@@ -1,14 +1,12 @@
 'use client';
 
 import { notFound } from 'next/navigation';
-
-import { PerTypePublications } from './per-type-publications';
-
 import { PublicationTypeDictionary } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
+import type { EntityTypeValue } from '@/entity-configuration/domain';
+import type { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import Tabs, { Tab } from '@/ui/molecules/tabbed-page';
-import type { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
-import type { EntityTypeValue } from '@/entity-configuration/domain';
+import { PerTypePublications } from './per-type-publications';
 
 export default function RelatedPublications({
   entity,

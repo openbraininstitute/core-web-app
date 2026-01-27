@@ -12,7 +12,7 @@ import { Modal } from '@/ui/molecules/modal';
 import { PillTabs, PillTabsContent, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import {
   ManageCreditsStep,
-  ManageCreditsStepHandle,
+  type ManageCreditsStepHandle,
 } from '@/ui/segments/virtual-lab-settings/elements/manage-credits';
 import {
   PaymentModeSelection,

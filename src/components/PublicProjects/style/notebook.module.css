@@ -1,5 +1,5 @@
 .readMeParagraph {
-  font-family: 'Titillium Web';
+  font-family: "Titillium Web";
   background: #f5f5f5;
   width: 100%;
   padding: 32px;
@@ -45,7 +45,7 @@
 }
 
 .readMeParagraph > h3::after {
-  content: '';
+  content: "";
   display: block;
   width: 32px;
   height: 1px;
@@ -73,8 +73,8 @@
 }
 
 .readMeParagraph code {
-  font-family: 'Titillium Web';
-  font-size: 18px !important;
+  font-family: "Titillium Web";
+  font-size: 18px;
   padding: 2px 8px;
   background: #eaf8ff;
   border-radius: 4px;
@@ -99,8 +99,8 @@
 }
 
 .readMeParagraph code {
-  font-family: 'Titillium Web';
-  font-size: 18px !important;
+  font-family: "Titillium Web";
+  font-size: 18px;
   padding: 2px 8px;
   background: #eaf8ff;
   border-radius: 4px;

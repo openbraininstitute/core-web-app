@@ -6,6 +6,11 @@ import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 import { useEffect, useRef } from 'react';
 
 import { getBrainRegionHierarchy } from '@/api/entitycore/queries/general/brain-region';
+import type { IBrainAtlasRegion } from '@/api/entitycore/types/entities/brain-atlas';
+import type {
+  BrainRegionHierarchyBase,
+  IBrainRegionHierarchy,
+} from '@/api/entitycore/types/entities/brain-region';
 import { tryCatch } from '@/api/utils';
 import {
   findNodeByKey,
@@ -19,12 +24,6 @@ import { useUnwrappedValue } from '@/hooks/hooks';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { getSectionFromDataKey } from '@/utils/key-builder';
 import { log } from '@/utils/logger';
-
-import type { IBrainAtlasRegion } from '@/api/entitycore/types/entities/brain-atlas';
-import type {
-  BrainRegionHierarchyBase,
-  IBrainRegionHierarchy,
-} from '@/api/entitycore/types/entities/brain-region';
 
 type Props = {
   dataKey: string;
@@ -388,7 +387,16 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
     isInitializedRef.current = true;
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [brainRegions, id, annotationValue, stored, defaultSelectedBrainRegion]);
+  }, [
+    brainRegions,
+    id,
+    annotationValue,
+    stored,
+    defaultSelectedBrainRegion,
+    selectedBrainRegion?.id,
+    setSearchParamHierarchyConfig,
+    updateSelectedBrainRegion,
+  ]);
 
   // Sync localStorage when URL params change
   useEffect(() => {

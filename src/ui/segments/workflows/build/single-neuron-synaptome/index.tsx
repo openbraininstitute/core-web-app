@@ -2,15 +2,14 @@
 
 import { useSearchParams } from 'next/navigation';
 import { match, P } from 'ts-pattern';
-
-import { SynapseSetConfiguration } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-configuration';
-import { MEModel } from '@/ui/segments/workflows/build/single-neuron-synaptome/me-model';
-import { Info } from '@/ui/segments/workflows/build/single-neuron-synaptome/overview';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import {
   BuildStep,
   useBuildSingleNeuronSynaptomeSessionState,
 } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import { MEModel } from '@/ui/segments/workflows/build/single-neuron-synaptome/me-model';
+import { Info } from '@/ui/segments/workflows/build/single-neuron-synaptome/overview';
+import { SynapseSetConfiguration } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-configuration';
 
 type Props = {
   sessionId: string;

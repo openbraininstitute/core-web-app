@@ -1,9 +1,8 @@
-import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { authApiClient } from '@/api/apiClient';
-import { config } from '@/config';
-
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { IEType, IETypeFilter } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import { getEntityCoreContext } from '@/api/entitycore/utils';
+import { config } from '@/config';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/etype';

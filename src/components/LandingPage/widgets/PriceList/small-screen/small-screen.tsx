@@ -1,11 +1,10 @@
 import React from 'react';
-
-import PlanHeader from './plan-header';
-import FeatureBloc from './FeatureBloc';
-import { classNames } from '@/util/utils';
-import { styleBlockFullWidth } from '@/components/LandingPage/styles';
 import { useSanityContentForPricing } from '@/components/LandingPage/content/pricing';
+import { styleBlockFullWidth } from '@/components/LandingPage/styles';
 import { useMenuHeight } from '@/components/LandingPage/utils.client';
+import { classNames } from '@/util/utils';
+import FeatureBloc from './FeatureBloc';
+import PlanHeader from './plan-header';
 
 import styles from './small-screen.module.css';
 

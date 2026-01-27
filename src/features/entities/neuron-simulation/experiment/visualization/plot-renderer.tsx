@@ -2,15 +2,14 @@
 
 import { DownloadOutlined } from '@ant-design/icons';
 import { Button, Spin } from 'antd';
-import { Layout } from 'plotly.js-dist-min';
-import { ComponentProps, useMemo } from 'react';
+import type { Layout } from 'plotly.js-dist-min';
+import { type ComponentProps, useMemo } from 'react';
 
 import MultiPlotsView from '@/features/entities/neuron-simulation/experiment/visualization/multi-plots-view';
 import { parsePlots } from '@/features/entities/neuron-simulation/experiment/visualization/plots-parser';
+import type { PlotData } from '@/services/bluenaas-single-cell/types';
 import { exportSingleSimulationResultWithCurrentsAsZip } from '@/util/simulation-plotly-to-csv';
 import { cn } from '@/utils/css-class';
-
-import type { PlotData } from '@/services/bluenaas-single-cell/types';
 
 type PlotConfig = {
   yAxisTitle?: string;

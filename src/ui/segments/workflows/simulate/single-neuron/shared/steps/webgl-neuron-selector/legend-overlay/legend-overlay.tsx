@@ -1,12 +1,9 @@
 import React from 'react';
-
-import { useRecordingsAndInjection } from '../hooks';
-import { PainterManager } from '../painter';
-import { LegendTarget, useLegendPainter } from './legend-painter';
-
 import { classNames } from '@/util/utils';
-
+import { useRecordingsAndInjection } from '../hooks';
+import type { PainterManager } from '../painter';
 import styles from './legend-overlay.module.css';
+import { type LegendTarget, useLegendPainter } from './legend-painter';
 
 export interface LegendOverlayProps {
   className?: string;

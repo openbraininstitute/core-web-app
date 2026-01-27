@@ -1,8 +1,11 @@
-import { useAtom } from 'jotai';
 import { motion } from 'framer-motion';
+import { useAtom } from 'jotai';
 
-import { ReactNode } from 'react';
-import { flowAtom, Interval } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
+import type { ReactNode } from 'react';
+import {
+  flowAtom,
+  type Interval,
+} from '@/components/VirtualLab/create-entity-flows/checkout/shared';
 import { classNames } from '@/util/utils';
 
 type Props = {
@@ -89,20 +92,19 @@ export default function PricingToggleCards() {
       data-testid="price-cards"
       className="flex w-full flex-row items-center justify-center gap-3 pb-4"
     >
-      {tier?.prices &&
-        tier.prices.map((o) => (
-          <PricingCard
-            key={`${o.id}`}
-            id={o.id}
-            title={tier.title}
-            price={o.discount / 100 || o.amount / 100}
-            currency={o.currency}
-            interval={o.interval}
-            discount={o.discount / 100}
-            selectedInterval={interval}
-            onSelect={handleSelect}
-          />
-        ))}
+      {tier?.prices?.map((o) => (
+        <PricingCard
+          key={`${o.id}`}
+          id={o.id}
+          title={tier.title}
+          price={o.discount / 100 || o.amount / 100}
+          currency={o.currency}
+          interval={o.interval}
+          discount={o.discount / 100}
+          selectedInterval={interval}
+          onSelect={handleSelect}
+        />
+      ))}
     </div>
   );
 }

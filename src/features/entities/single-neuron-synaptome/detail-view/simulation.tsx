@@ -2,19 +2,16 @@
 
 import { LoadingOutlined } from '@ant-design/icons';
 import { ErrorBoundary } from '@sentry/nextjs';
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
 import { Spin } from 'antd';
-
-import SimulationDetail from '@/features/entities/neuron-simulation/simulation-results/simulation-details';
-import ConfigItem from '@/features/entities/single-neuron-synaptome/build/elements/config-item';
-
+import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { getSingleNeuronSynaptomeSimulations } from '@/api/entitycore/queries';
-import { withErrorConfig } from '@/components/GenericErrorFallback';
+import type { ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { tryCatch } from '@/api/utils';
-
-import type { ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types';
+import { withErrorConfig } from '@/components/GenericErrorFallback';
+import SimulationDetail from '@/features/entities/neuron-simulation/simulation-results/simulation-details';
+import ConfigItem from '@/features/entities/single-neuron-synaptome/build/elements/config-item';
 import type { WorkspaceContext } from '@/types/common';
 
 type Props = {

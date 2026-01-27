@@ -1,12 +1,12 @@
 'use client';
 
-import { DependencyList, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useAtomValue } from 'jotai';
-import { Loadable } from 'jotai/vanilla/utils/loadable';
-import { Atom } from 'jotai/vanilla';
-import { unwrap, loadable } from 'jotai/utils';
-import { usePathname } from 'next/navigation';
 import debounce from 'es-toolkit/compat/debounce';
+import { useAtomValue } from 'jotai';
+import { loadable, unwrap } from 'jotai/utils';
+import type { Atom } from 'jotai/vanilla';
+import type { Loadable } from 'jotai/vanilla/utils/loadable';
+import { usePathname } from 'next/navigation';
+import { type DependencyList, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import sessionAtom from '@/state/session';
 
 export function usePrevious<T>(value: T) {

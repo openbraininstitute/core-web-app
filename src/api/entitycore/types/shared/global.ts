@@ -1,9 +1,8 @@
 import z from 'zod';
-import { EntityCoreConfiguration } from '@/entity-configuration/domain';
-
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { AssetLegacyMeta } from '@/api/entitycore/types/shared/legacy';
 import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
+import type { EntityCoreConfiguration } from '@/entity-configuration/domain';
 import type { Prettify } from '@/utils/type';
 
 export type EntityCoreDataType =

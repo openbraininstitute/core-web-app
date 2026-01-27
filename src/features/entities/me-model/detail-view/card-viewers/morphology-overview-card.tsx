@@ -1,8 +1,8 @@
-import React from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-
-import CardContainer from '@/features/entities/me-model/detail-view/card-viewers/card-container';
+import { useParams, useSearchParams } from 'next/navigation';
+import React from 'react';
+import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
   EmptyValue,
   renderArray,
@@ -10,11 +10,9 @@ import {
   renderLicense,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
-import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import CardContainer from '@/features/entities/me-model/detail-view/card-viewers/card-container';
 import { classNames } from '@/util/utils';
-
-import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 type Props = {
   mode: 'select' | 'summary';

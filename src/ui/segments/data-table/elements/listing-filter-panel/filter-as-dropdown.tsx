@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
-import { DefaultOptionType } from 'antd/es/select';
 import { Select } from 'antd';
+import type { DefaultOptionType } from 'antd/es/select';
 import map from 'es-toolkit/compat/map';
-import { cn } from '@/utils/css-class';
-
+import { useCallback, useEffect, useState } from 'react';
 import type { TCoreFilter } from '@/entity-configuration/definitions/types';
+import { cn } from '@/utils/css-class';
 
 export type OptionType = DefaultOptionType;
 type Props = {

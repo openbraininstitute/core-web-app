@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect } from 'react';
 
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
+import type { Project, VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 import { LabCompany } from '@/components/icons/buttons';
 import { Button } from '@/ui/molecules/button';
 import {
@@ -15,8 +16,6 @@ import {
 } from '@/ui/segments/workspaces/space-manager/event';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
-
-import type { Project, VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 
 type Props = {
   lab: VirtualLab & { isMine: boolean };

@@ -1,18 +1,16 @@
-import { isMatching, P } from 'ts-pattern';
 import head from 'es-toolkit/compat/head';
-
-import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { listProjects } from '@/api/virtual-lab-svc/queries/project';
-import { getUserProfile, getUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
-import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
+import { isMatching, P } from 'ts-pattern';
 import { tryCatch } from '@/api/utils';
-
+import { listProjects } from '@/api/virtual-lab-svc/queries/project';
 import type {
   Project,
   RecentWorkspace,
   UserProfileResponse,
   VirtualLab,
 } from '@/api/virtual-lab-svc/queries/types';
+import { getUserProfile, getUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
+import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 
 export type TResolvedWorkspace = {
   project: Project | null;

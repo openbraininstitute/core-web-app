@@ -1,28 +1,26 @@
 'use client';
 
-import { CloseOutlined, EditOutlined, CheckOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, CheckOutlined, CloseOutlined, EditOutlined } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 import { z } from 'zod';
-
-import { updateVirtualLab, checkVirtualLabExists } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
-import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
-import { TeamTable } from '@/ui/segments/virtual-lab-settings/sections/team';
-import { Credits } from '@/ui/segments/virtual-lab-settings/sections/credits';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { useAppNotification } from '@/components/notification';
-import { ExpandableText } from '@/ui/molecules/more-less-text';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import type { VirtualLab, VirtualLabListResponse } from '@/api/virtual-lab-svc/queries/types';
+import { checkVirtualLabExists, updateVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import { useTabs } from '@/components/detail-view-tabs';
+import { useAppNotification } from '@/components/notification';
+import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
 import { useUserRole } from '@/hooks/use-user-role';
 import { messages } from '@/i18n/en/virtual-lab';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
+import { ExpandableText } from '@/ui/molecules/more-less-text';
+import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
+import { Credits } from '@/ui/segments/virtual-lab-settings/sections/credits';
+import { TeamTable } from '@/ui/segments/virtual-lab-settings/sections/team';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
-
-import type { VirtualLab, VirtualLabListResponse } from '@/api/virtual-lab-svc/queries/types';
 
 const baseNameSchema = z
   .string()

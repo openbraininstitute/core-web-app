@@ -1,5 +1,5 @@
 import { renderAsString, renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
-import { SynaptomeConfig } from '@/types/small-scale-simulator/single-neuron';
+import type { SynaptomeConfig } from '@/types/small-scale-simulator/single-neuron';
 import { classNames } from '@/util/utils';
 
 type Props = {

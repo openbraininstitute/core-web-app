@@ -1,36 +1,34 @@
 'use client';
 
-import React from 'react';
 import { DeleteOutlined, EyeInvisibleOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import sample from 'es-toolkit/compat/sample';
 import { useAtom } from 'jotai';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import React from 'react';
 import { Color } from 'three';
-
-import { getColorFromGeneratedPalette } from '../../simulate/single-neuron/shared/steps/webgl-neuron-selector/colors';
-import { useVisibleSynapsesSetter } from '../../simulate/single-neuron/shared/steps/webgl-neuron-selector/hooks';
-
 import {
   SingleNeuronSynaptomeBaseSchema,
-  TSingleNeuronSynaptomeConfiguration,
+  type TSingleNeuronSynaptomeConfiguration,
 } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import {
+  sendDisplaySynapses3DEvent,
+  sendRemoveSynapses3DEvent,
+} from '@/components/neuron-viewer/hooks/events';
 import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
+import { type SectionSynapsesWith3D, synapsesPlacementAtom } from '@/state/synaptome';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import {
   DefaultSynapseValue,
   SimulationColors,
   useBuildSingleNeuronSynaptomeSessionState,
 } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { SectionSynapsesWith3D, synapsesPlacementAtom } from '@/state/synaptome';
-import { formatCompactNumber } from '@/utils/format';
 import { getRandomIntInclusive } from '@/util/utils';
-import { Button } from '@/ui/molecules/button';
-import {
-  sendRemoveSynapses3DEvent,
-  sendDisplaySynapses3DEvent,
-} from '@/components/neuron-viewer/hooks/events';
 import { cn } from '@/utils/css-class';
+import { formatCompactNumber } from '@/utils/format';
+import { getColorFromGeneratedPalette } from '../../simulate/single-neuron/shared/steps/webgl-neuron-selector/colors';
+import { useVisibleSynapsesSetter } from '../../simulate/single-neuron/shared/steps/webgl-neuron-selector/hooks';
 
 type Props = { sessionId: string };
 

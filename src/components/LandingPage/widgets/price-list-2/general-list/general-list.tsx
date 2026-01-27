@@ -1,7 +1,9 @@
-import React from 'react';
-
-import { ContentForPriceList2GeneralItem, ContentForPriceList2GeneralPriceItem } from '../hooks';
+import type React from 'react';
 import { useCurrency } from '@/components/LandingPage/atoms';
+import type {
+  ContentForPriceList2GeneralItem,
+  ContentForPriceList2GeneralPriceItem,
+} from '../hooks';
 
 import styles from './general-list.module.css';
 

@@ -1,4 +1,7 @@
-import { EntityCoreIdentifiable, EntityCoreOwnership } from '@/api/entitycore/types/shared/global';
+import type {
+  EntityCoreIdentifiable,
+  EntityCoreOwnership,
+} from '@/api/entitycore/types/shared/global';
 
 export enum SingleNeuronSimulationStatus {
   started = 'started',

@@ -1,4 +1,11 @@
-import { ComponentProps, ReactElement, ReactNode, useEffect, useRef, useState } from 'react';
+import {
+  type ComponentProps,
+  type ReactElement,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import { cn } from '@/utils/css-class';
 
@@ -74,7 +81,7 @@ export function ExpandableText({
       cancelAnimationFrame(rafId);
       if (resizeObserver) resizeObserver.disconnect();
     };
-  }, [text, collapsedLines, isExpanded]);
+  }, [collapsedLines]);
 
   const toggle = (): void => {
     setIsExpanded((prev: boolean) => !prev);

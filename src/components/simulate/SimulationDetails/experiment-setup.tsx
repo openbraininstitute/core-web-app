@@ -1,17 +1,15 @@
 import { LoadingOutlined } from '@ant-design/icons';
-import { match, P } from 'ts-pattern';
-import { useState } from 'react';
 import { Spin } from 'antd';
-
-import SimulationConfigurationTab from '@/components/simulate/SimulationDetails/configuration-tab';
-import AnalysisTab from '@/components/simulate/SimulationDetails/AnalysisTab';
-import ResultsTab from '@/components/simulate/SimulationDetails/recording-tab';
+import { useState } from 'react';
+import { match, P } from 'ts-pattern';
+import type { IMEModel } from '@/api/entitycore/types';
 import { ErrorData } from '@/components/message-banners/error';
-
-import { classNames } from '@/util/utils';
+import AnalysisTab from '@/components/simulate/SimulationDetails/AnalysisTab';
+import SimulationConfigurationTab from '@/components/simulate/SimulationDetails/configuration-tab';
+import ResultsTab from '@/components/simulate/SimulationDetails/recording-tab';
 
 import type { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
-import type { IMEModel } from '@/api/entitycore/types';
+import { classNames } from '@/util/utils';
 
 type TabKeys = 'configuration' | 'results' | 'analysis';
 type Tab = { key: TabKeys; title: string };

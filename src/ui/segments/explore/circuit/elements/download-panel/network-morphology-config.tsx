@@ -1,37 +1,34 @@
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
-import { match, P } from 'ts-pattern';
-import { useSetAtom } from 'jotai';
-import { useEffect } from 'react';
-
-import isString from 'es-toolkit/compat/isString';
 import compact from 'es-toolkit/compat/compact';
 import get from 'es-toolkit/compat/get';
-
+import isString from 'es-toolkit/compat/isString';
+import { useSetAtom } from 'jotai';
+import { useParams } from 'next/navigation';
+import { useEffect } from 'react';
+import { match, P } from 'ts-pattern';
+import type {
+  ICircuit,
+  ICircuitSonataConfiguration,
+} from '@/api/entitycore/types/entities/circuit';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { getAssetElement } from '@/api/entitycore/utils';
+import type { WorkspaceContext } from '@/types/common';
+import type { ConfigItemProps } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
 import { NetworkConfigItem } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
-import { SkeletonItem } from '@/ui/segments/explore/circuit/elements/download-panel/skeleton';
 import {
   morphologiesContentConfiguration,
   networksContentConfiguration,
 } from '@/ui/segments/explore/circuit/elements/download-panel/content-configuration';
 import { Error } from '@/ui/segments/explore/circuit/elements/download-panel/error';
 import {
-  updateFileCounterAtom,
   buildNetworksConfig,
-  resolveCircuitConfigAndDirectory,
   extractWithAlternateMorphologies,
   getAssetPath,
+  resolveCircuitConfigAndDirectory,
+  updateFileCounterAtom,
 } from '@/ui/segments/explore/circuit/elements/download-panel/helpers';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { getAssetElement } from '@/api/entitycore/utils';
+import { SkeletonItem } from '@/ui/segments/explore/circuit/elements/download-panel/skeleton';
 import { keyBuilder } from '@/ui/use-query-keys/data';
-import type {
-  ICircuit,
-  ICircuitSonataConfiguration,
-} from '@/api/entitycore/types/entities/circuit';
-
-import type { ConfigItemProps } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
-import type { WorkspaceContext } from '@/types/common';
 
 const AssetDefaultPath = 'circuit_config.json';
 
@@ -48,18 +45,18 @@ export default function NetworkAndMorphologyConfig({ circuit }: { circuit: ICirc
   const networksConfig = useQuery({
     queryKey: keyBuilder.asset({
       entityId: circuit.id,
-      assetId: configAsset!.id,
+      assetId: configAsset?.id,
       assetPath: AssetDefaultPath,
       context: { virtualLabId, projectId },
     }),
     queryFn: () =>
       resolveCircuitConfigAndDirectory<ICircuitSonataConfiguration>({
         entityId: circuit.id,
-        assetId: configAsset!.id,
+        assetId: configAsset?.id,
         assetPath: AssetDefaultPath,
         context: { virtualLabId, projectId },
       }),
-    enabled: !!circuit && !!configAsset!.id,
+    enabled: !!circuit && !!configAsset?.id,
     select: (result) => {
       return {
         directory: result.directory,
@@ -87,12 +84,7 @@ export default function NetworkAndMorphologyConfig({ circuit }: { circuit: ICirc
       edges: networksConfig.data?.nodes,
       morphologies: networksConfig.data?.nodes,
     });
-  }, [
-    networksConfig.data?.nodes,
-    networksConfig.data?.edges,
-    networksConfig.data?.morphologies,
-    updateFileCounter,
-  ]);
+  }, [networksConfig.data?.nodes, updateFileCounter]);
 
   return match(networksConfig)
     .with({ isLoading: true }, () => (

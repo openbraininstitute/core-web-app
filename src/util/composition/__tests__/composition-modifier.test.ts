@@ -1,14 +1,14 @@
 import cloneDeep from 'es-toolkit/compat/cloneDeep';
-import testComposition from './data/test-composition.json';
-import { calculateNewExtendedNodeId } from '@/util/composition/utils';
+import type { CalculatedCompositionNode } from '@/types/composition/calculation';
+import type { OriginalComposition, OriginalCompositionNode } from '@/types/composition/original';
 import computeModifiedComposition, {
+  applyNewDensity,
   calculateDensityRatioChange,
   findParentOfAffected,
   iterateAndApplyDensityChange,
-  applyNewDensity,
 } from '@/util/composition/composition-modifier';
-import { OriginalComposition, OriginalCompositionNode } from '@/types/composition/original';
-import { CalculatedCompositionNode } from '@/types/composition/calculation';
+import { calculateNewExtendedNodeId } from '@/util/composition/utils';
+import testComposition from './data/test-composition.json';
 
 describe('calculateNewExtendedNodeId', () => {
   it(`should append the new node id if extended exists`, () => {
@@ -28,7 +28,7 @@ describe('calculateNewExtendedNodeId', () => {
 });
 
 describe('findParentOfAffected', () => {
-  // @ts-ignore
+  // @ts-expect-error
   const testBrainRegion = cloneDeep(
     testComposition.hasPart.brainregion1
   ) as OriginalCompositionNode;
@@ -97,7 +97,7 @@ describe('iterateAndApplyDensityChange', () => {
   it('should calculate correct density change', () => {
     const testBrainRegion = cloneDeep(testComposition.hasPart.brainregion1);
     const copyTestBR = cloneDeep(testBrainRegion);
-    // @ts-ignore
+    // @ts-expect-error
     const mtype1 = copyTestBR.hasPart.mtype1 as OriginalCompositionNode;
     iterateAndApplyDensityChange(mtype1, 0.5, 0.2);
     expect(mtype1.hasPart.etype1.composition.neuron.density).toBeCloseTo(125);
@@ -107,14 +107,14 @@ describe('iterateAndApplyDensityChange', () => {
 
 describe('computeModifiedComposition', () => {
   it('should calculate the correct overall density change when decreasing value by half', () => {
-    // @ts-ignore
+    // @ts-expect-error
     const copyComposition = cloneDeep(testComposition) as OriginalComposition;
     const modifiedNode = {
       id: 'mtype1',
       composition: 900,
       extendedNodeId: 'mtype1',
     } as CalculatedCompositionNode;
-    // @ts-ignore
+    // @ts-expect-error
     computeModifiedComposition(
       modifiedNode,
       -450,
@@ -152,14 +152,14 @@ describe('computeModifiedComposition', () => {
   });
 
   it('should calculate the correct overall density change when increasing value', () => {
-    // @ts-ignore
+    // @ts-expect-error
     const copyComposition = cloneDeep(testComposition) as OriginalComposition;
     const modifiedNode = {
       id: 'mtype1',
       composition: 900,
       extendedNodeId: 'mtype1',
     } as CalculatedCompositionNode;
-    // @ts-ignore
+    // @ts-expect-error
     computeModifiedComposition(
       modifiedNode,
       100,
@@ -197,14 +197,14 @@ describe('computeModifiedComposition', () => {
   });
 
   it('should calculate the correct overall density change when decreasing value of second level', () => {
-    // @ts-ignore
+    // @ts-expect-error
     const copyComposition = cloneDeep(testComposition) as OriginalComposition;
     const modifiedNode = {
       id: 'etype2',
       extendedNodeId: 'mtype1__etype2',
       composition: 350,
     } as CalculatedCompositionNode;
-    // @ts-ignore
+    // @ts-expect-error
     computeModifiedComposition(
       modifiedNode,
       -175,

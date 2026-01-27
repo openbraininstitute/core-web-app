@@ -14,7 +14,7 @@ import get from 'es-toolkit/compat/get';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 import omit from 'es-toolkit/compat/omit';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { z } from 'zod';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -24,7 +24,8 @@ import { useAppNotification } from '@/components/notification';
 import { LowFundsNotification } from '@/components/notification/low-funds-notification';
 import { config } from '@/config';
 import { useUserRole } from '@/hooks/use-user-role';
-import { LOW_FUNDS_ERROR_CODE, messages } from '@/i18n/en/me-model';
+import { LOW_FUNDS_ERROR_CODE } from '@/i18n/en/me-model';
+import { messages } from '@/i18n/en/simulation';
 import { WorkspaceContextSchema } from '@/types/common';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -53,6 +54,11 @@ export function Menu({ sessionId }: { sessionId: string }) {
   const { push: navigate } = useRouter();
   const step = searchParams.get('step');
   const [showLowFundsNotification, setShowLowFundsNotification] = useState(false);
+
+  // Debug: Log when state changes
+  useEffect(() => {
+    console.log('showLowFundsNotification state changed:', showLowFundsNotification);
+  }, [showLowFundsNotification]);
   const { isProjectAdmin } = useUserRole({ virtualLabId, projectId });
 
   const { sessionValue } = useBuildMeModelSessionState({
@@ -93,7 +99,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
     mutationFn: buildMeModel,
     onSuccess: (data) => {
       notification.success({
-        message: messages.CreationModelSucceed,
+        message: 'ME-model creation succeeded',
         onClick: () => {
           notification.destroy('model-saved');
         },
@@ -109,19 +115,24 @@ export function Menu({ sessionId }: { sessionId: string }) {
     },
     onError(err) {
       log('error', 'Build me-model failed:', err);
-      const isLowFundsError = get(err, 'cause.code') === LOW_FUNDS_ERROR_CODE;
+      const errorCode = get(err, 'cause.code');
+      const isLowFundsError = errorCode === LOW_FUNDS_ERROR_CODE;
 
-      let message = messages.DefaultErrorMsg;
-      if (isLowFundsError) {
-        message = isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin;
-      }
+      // Debug logging
+      console.log('ME-model build error:', {
+        errorCode,
+        isLowFundsError,
+        LOW_FUNDS_ERROR_CODE,
+        fullError: err,
+      });
 
       if (isLowFundsError) {
+        console.log('Setting showLowFundsNotification to true');
         setShowLowFundsNotification(true);
       } else {
         notification.error({
           message: 'ME-model creation failed',
-          description: message,
+          description: 'Something went wrong while creating the ME-model, please try again later',
           placement: 'topRight',
           duration: 10,
         });
@@ -158,6 +169,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
           duration={10000}
         />
       )}
+
       <div className="flex h-full flex-col gap-2">
         <div className="text-neutral-3 ml-4 font-light uppercase">Setup</div>
         <Button
@@ -226,7 +238,6 @@ export function Menu({ sessionId }: { sessionId: string }) {
                     <CheckCircleFilled className="flex-shrink-0 text-base" />
                     <div
                       title={sessionValue.mmodel.name}
-                      aria-label={sessionValue.mmodel.name}
                       className="min-w-0 flex-1 truncate text-left"
                     >
                       {sessionValue?.mmodel.name}
@@ -266,7 +277,6 @@ export function Menu({ sessionId }: { sessionId: string }) {
                     <CheckCircleFilled className="flex-shrink-0 text-base" />
                     <div
                       title={sessionValue.emodel.name}
-                      aria-label={sessionValue.emodel.name}
                       className="min-w-0 flex-1 truncate text-left"
                     >
                       {sessionValue?.emodel.name}

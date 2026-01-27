@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import { projectTour, useNextStepOnboarding } from '@/ui/segments/app-setup/discover-app';
 import { cn } from '@/utils/css-class';

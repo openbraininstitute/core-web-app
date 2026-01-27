@@ -1,6 +1,6 @@
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { Field } from '@/ui/segments/detail-view/overview/field';
-import { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import { cn } from '@/utils/css-class';
 
 const columnFields: { field: EntityCoreFields; target: 'subject' | 'entity' }[][] = [

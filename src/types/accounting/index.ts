@@ -1,4 +1,4 @@
-import { VlmResponse } from '@/types/virtual-lab/common';
+import type { VlmResponse } from '@/types/virtual-lab/common';
 
 type Meta = {
   total_items: number;

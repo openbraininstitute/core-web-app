@@ -1,6 +1,5 @@
-import React from 'react';
-
-import {
+import { logError } from '@/util/logger';
+import type {
   ContentForRichText,
   ContentForRichTextImage,
   ContentForRichTextItems,
@@ -13,16 +12,15 @@ import {
   ContentForRichTextWidget,
 } from '../../content/types';
 import Error from '../Error';
-import SanityContentTitle from './SanityContentTitle';
-import SanityContentParagraph from './SanityContentParagraph';
 import SanityContentItems from './SanityContentItems';
-import SanityContentWidget from './SanityContentWidget';
-import SanityContentVerticalDivider from './SanityContentVerticalSpace';
+import SanityContentParagraph from './SanityContentParagraph';
 import SanityContentPreview from './SanityContentPreview';
+import SanityContentTitle from './SanityContentTitle';
+import SanityContentVerticalDivider from './SanityContentVerticalSpace';
+import SanityContentWidget from './SanityContentWidget';
 import SanityContentImage from './sanity-content-image';
-import SanityContentVideo from './sanity-content-video';
 import { SanityContentMultipleButton } from './sanity-content-multiple-button';
-import { logError } from '@/util/logger';
+import SanityContentVideo from './sanity-content-video';
 
 interface SanityContentRTFProps {
   className?: string;

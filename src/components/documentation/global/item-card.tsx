@@ -1,7 +1,6 @@
 import { PortableText } from 'next-sanity';
-import { ContentForGlossaryItem } from '../type';
-
 import Slugify from '@/util/slugify';
+import type { ContentForGlossaryItem } from '../type';
 import styles from './item-card.module.css';
 
 export default function ItemCard({ content }: { content: ContentForGlossaryItem }) {

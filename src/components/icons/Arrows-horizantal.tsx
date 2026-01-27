@@ -1,4 +1,4 @@
-import { SVGProps } from 'react';
+import type { SVGProps } from 'react';
 
 export function ArrowsHorizontal(props: SVGProps<SVGSVGElement>) {
   return (

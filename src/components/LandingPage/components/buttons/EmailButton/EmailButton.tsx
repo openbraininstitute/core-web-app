@@ -1,7 +1,6 @@
-import React from 'react';
-
-import { styleButtonHoverable } from '../../../styles';
+import type React from 'react';
 import { classNames } from '@/util/utils';
+import { styleButtonHoverable } from '../../../styles';
 
 import styles from './EmailButton.module.css';
 

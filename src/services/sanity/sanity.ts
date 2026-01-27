@@ -1,12 +1,11 @@
 /* eslint-disable no-console */
+
+import { createClient, type SanityClient } from 'next-sanity';
 import React from 'react';
-
-import { createClient, SanityClient } from 'next-sanity';
-
+import { config } from '@/config';
 import { logError } from '@/util/logger';
 import { isUndefined } from '@/util/type-guards';
 import { log } from '@/utils/logger';
-import { config } from '@/config';
 
 let cachedClient: SanityClient | null = null;
 

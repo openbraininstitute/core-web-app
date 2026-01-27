@@ -1,6 +1,6 @@
 import kebabCase from 'es-toolkit/compat/kebabCase';
 
-import { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
+import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
 import {

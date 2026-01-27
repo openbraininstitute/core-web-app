@@ -1,4 +1,4 @@
-import { RefObject } from 'react'; // Import React for RefObject
+import type { RefObject } from 'react'; // Import React for RefObject
 
 function playVideoAtTime(timeInSeconds: number, videoRef: RefObject<HTMLVideoElement>) {
   if (videoRef.current) {
