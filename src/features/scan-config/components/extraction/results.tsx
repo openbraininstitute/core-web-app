@@ -1,41 +1,34 @@
+'use client';
+
 import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CheckboxProps } from 'antd';
 import { Checkbox, ConfigProvider, Modal } from 'antd';
-import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { match } from 'ts-pattern';
 
 import { requestOfflineTokenConsent } from '@/api/auth-manager';
-import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
-import ApiError from '@/api/error';
-import { runSimulation } from '@/api/launch-system';
-import { useAppNotification } from '@/components/notification';
 import {
-  simExecRemoteStatusMapAtomFamily,
-  simExecStatusMapAtomFamily,
-  simulationsByCampaignIdAtomFamily,
-  useModelQuery,
-} from '@/features/scan-config/components/atoms';
-import { FileViewer } from '@/features/scan-config/components/file-viewer';
-import { type File, SimulationFiles } from '@/features/scan-config/components/simulation-files';
-import { SimulationStatusBadge } from '@/features/scan-config/components/simulation-status';
-import errorRegistry from '@/features/scan-config/error-registry';
+  getCircuitExtractionConfigs,
+  getCircuitExtractionExecutions,
+} from '@/api/entitycore/queries/extraction';
+import type { ICircuitExtractionConfig } from '@/api/entitycore/types/entities/circuit-extraction-config';
+import {
+  CircuitExtractionExecutionStatus,
+  type TCircuitExtractionExecutionStatus,
+} from '@/api/entitycore/types/entities/circuit-extraction-execution';
+import { launchExtraction } from '@/api/one/extraction';
+import { Loader } from '@/components/loader';
+import { useAppNotification } from '@/components/notification';
 import styles from '@/features/scan-config/scan-config.module.css';
-import { useLastTruthyValue } from '@/hooks/hooks';
-import { messages } from '@/i18n/en/simulation';
 import { useConsent } from '@/services/consent';
-import { runSimulationBatch } from '@/services/small-scale-simulator/circuit';
-import { MessageType } from '@/services/small-scale-simulator/types';
 import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
 import { classNames } from '@/util/utils';
-import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
 
 const USER_CANCELLED = 'user_cancelled';
+const STATUS_POLL_INTERVAL = 15_000; // 15 seconds
 
-type SimulationTabProps = {
+type ExtractionTabProps = {
   campaignId: string;
   virtualLabId: string;
   projectId: string;
@@ -46,92 +39,113 @@ type Consent = {
   url: string;
 };
 
-export function ExtractionTab({ campaignId, virtualLabId, projectId }: SimulationTabProps) {
+const queryKeys = {
+  extractionConfigs: (campaignId: string, context: { virtualLabId: string; projectId: string }) =>
+    ['extraction-configs', campaignId, context] as const,
+  extractionExecutions: (
+    configIds: string[],
+    context: { virtualLabId: string; projectId: string }
+  ) => ['extraction-executions', configIds, context] as const,
+};
+
+export function ExtractionTab({ campaignId, virtualLabId, projectId }: ExtractionTabProps) {
   const notification = useAppNotification();
   const { waitForConsent } = useConsent();
+  const queryClient = useQueryClient();
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
-  const simulationsAtom = simulationsByCampaignIdAtomFamily({ campaignId, context });
-  const simulations = useAtomValue(simulationsAtom);
 
-  const { entity: model } = useModelQuery({
-    context,
-    id: simulations[0].entity_id,
-  });
-
-  const simulationIds = simulations.map((s) => s.id);
-
-  const simExecStatusMapAtom = simExecStatusMapAtomFamily({ context, simulationIds });
-  const fetchRemoteSimExecStatusMap = useSetAtom(
-    simExecRemoteStatusMapAtomFamily({ simulationIds, context })
-  );
-
-  const statusMap = useLastTruthyValue(simExecStatusMapAtom);
-  const setSimStatus = useSetAtom(simExecStatusMapAtom);
-
-  const [simRequestInProgress, setSimRequestInProgress] = useState<boolean>(false);
-  const [selectedSimulationIds, setSelectedSimulationIds] = useState<string[]>([]);
-  const [activeSimulation, setActiveSimulation] = useState<null | ICircuitSimulation>(null);
-  const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
+  const [extractionRequestInProgress, setExtractionRequestInProgress] = useState<boolean>(false);
+  const [selectedConfigIds, setSelectedConfigIds] = useState<string[]>([]);
+  const [activeConfig, setActiveConfig] = useState<ICircuitExtractionConfig | null>(null);
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
-  const [filesLoading, setFilesLoading] = useState(false);
   const [consent, setConsent] = useState<Consent | null>(null);
 
-  const activeSimulationExecStatus = activeSimulation && statusMap?.get(activeSimulation.id);
+  const { data: configsResponse, isLoading: configsLoading } = useQuery({
+    queryKey: queryKeys.extractionConfigs(campaignId, context),
+    queryFn: () =>
+      getCircuitExtractionConfigs({
+        filters: { circuit_extraction_campaign_id: campaignId },
+        context,
+      }),
+  });
 
-  const onActiveSimulationChange = useCallback((simulation: ICircuitSimulation) => {
-    setActiveSimulation(simulation);
+  const configs = configsResponse?.data ?? [];
+  const configIds = configs.map((c) => c.id);
+
+  const { data: executionsResponse, isLoading: executionsLoading } = useQuery({
+    queryKey: queryKeys.extractionExecutions(configIds, context),
+    queryFn: () =>
+      getCircuitExtractionExecutions({
+        filters: { used__id__in: configIds },
+        context,
+      }),
+    enabled: configIds.length > 0,
+    refetchInterval: (query) => {
+      const executions = query.state.data?.data ?? [];
+      const hasActiveExtractions = executions.some((exec) =>
+        [
+          CircuitExtractionExecutionStatus.PENDING,
+          CircuitExtractionExecutionStatus.RUNNING,
+        ].includes(exec.status as CircuitExtractionExecutionStatus)
+      );
+      return hasActiveExtractions && !extractionRequestInProgress ? STATUS_POLL_INTERVAL : false;
+    },
+  });
+
+  const statusMap = useMemo(() => {
+    const map = new Map<string, TCircuitExtractionExecutionStatus>();
+    const executions = executionsResponse?.data ?? [];
+
+    for (const config of configs) {
+      const configExecutions = executions.filter((exec) =>
+        exec.used?.some((used) => used.id === config.id)
+      );
+      if (configExecutions.length > 0) {
+        const latestExecution = configExecutions.sort(
+          (a, b) => new Date(b.creation_date).getTime() - new Date(a.creation_date).getTime()
+        )[0];
+        map.set(config.id, latestExecution.status);
+      }
+    }
+
+    return map;
+  }, [configs, executionsResponse?.data]);
+
+  const activeConfigExecStatus = activeConfig ? statusMap.get(activeConfig.id) : undefined;
+
+  const onActiveConfigChange = useCallback((config: ICircuitExtractionConfig) => {
+    setActiveConfig(config);
   }, []);
 
-  const onSelectedForSimChange = useCallback((simulationId: string, selected: boolean) => {
+  const onSelectedForExtractionChange = useCallback((configId: string, selected: boolean) => {
     if (selected) {
-      setSelectedSimulationIds((prev) => [...prev, simulationId]);
+      setSelectedConfigIds((prev) => [...prev, configId]);
     } else {
-      setSelectedSimulationIds((prev) => prev.filter((id) => id !== simulationId));
+      setSelectedConfigIds((prev) => prev.filter((id) => id !== configId));
     }
   }, []);
 
-  const selectableSimulationIds = useMemo(() => {
-    return simulations
-      .filter((simulation) =>
-        [undefined, 'created', 'error'].includes(statusMap?.get(simulation.id))
-      )
-      .map((s) => s.id);
-  }, [simulations, statusMap]);
+  const selectableConfigIds = useMemo(() => {
+    return configs
+      .filter((config) => {
+        const status = statusMap.get(config.id);
+        return !status || status === 'created' || status === 'error';
+      })
+      .map((c) => c.id);
+  }, [configs, statusMap]);
 
   useEffect(() => {
-    // Auto select all simulations with status "created" on page load.
-    if (statusMap && simulations && !initialSelectionDone) {
-      setSelectedSimulationIds(selectableSimulationIds);
+    if (configs.length > 0 && !initialSelectionDone && !configsLoading && !executionsLoading) {
+      setSelectedConfigIds(selectableConfigIds);
       setInitialSelectionDone(true);
     }
-  }, [simulations, statusMap, initialSelectionDone, selectableSimulationIds]);
+  }, [configs, configsLoading, executionsLoading, initialSelectionDone, selectableConfigIds]);
 
   useEffect(() => {
-    // Select first simulation from the list
-    if (simulations.length > 0) {
-      onActiveSimulationChange(simulations[0]);
+    if (configs.length > 0 && !activeConfig) {
+      onActiveConfigChange(configs[0]);
     }
-  }, [onActiveSimulationChange, simulations]);
-
-  useEffect(() => {
-    // Poll simulation statuses if there are active (running/pending) simulations
-    // and no active simulation request with the status streaming
-    if (simRequestInProgress) return;
-
-    // TODO Optimize the polling when there are multiple simulation requests
-
-    const hasActiveSimulations = statusMap
-      ? Array.from(statusMap.values()).some((status) =>
-          [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING].includes(status)
-        )
-      : false;
-
-    if (!hasActiveSimulations) return;
-
-    const intervalId = setInterval(fetchRemoteSimExecStatusMap, 15_000);
-
-    return () => clearInterval(intervalId);
-  }, [fetchRemoteSimExecStatusMap, simRequestInProgress, statusMap]);
+  }, [configs, activeConfig, onActiveConfigChange]);
 
   const onConsentModalClose = () => {
     if (consent) {
@@ -140,124 +154,97 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Simulatio
     setConsent(null);
   };
 
-  // TODO: this is a POC, refactor once confirmed viable.
-  const runViaLaunchSystem = async (simIds: string[]) => {
-    const consentRes = await requestOfflineTokenConsent();
-    const consentUrl = consentRes.data.consent_url;
+  const launchExtractionMutation = useMutation({
+    mutationFn: async (configId: string) => {
+      return launchExtraction({
+        ctx: { virtualLabId, projectId },
+        entityType: 'CircuitExtractionConfig',
+        entityId: configId,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.extractionExecutions(configIds, context),
+      });
+    },
+  });
 
-    if (consentUrl) {
-      const controller = new AbortController();
-      setConsent({ controller, url: consentUrl });
-      window.open(consentUrl, '_blank');
+  const runExtraction = async (configIdsToRun: string[]) => {
+    setExtractionRequestInProgress(true);
 
-      try {
-        await waitForConsent(controller.signal);
-      } catch (error) {
-        if (error === USER_CANCELLED) return;
+    try {
+      const consentRes = await requestOfflineTokenConsent();
+      const consentUrl = consentRes.data.consent_url;
 
-        notification.error({
-          message: 'Unexpected error occurred, please try again later',
+      if (consentUrl) {
+        const controller = new AbortController();
+        setConsent({ controller, url: consentUrl });
+        window.open(consentUrl, '_blank');
+
+        try {
+          await waitForConsent(controller.signal);
+        } catch (error) {
+          if (error === USER_CANCELLED) {
+            setExtractionRequestInProgress(false);
+            return;
+          }
+
+          notification.error({
+            message: 'Unexpected error occurred, please try again later',
+            duration: 10,
+          });
+          setExtractionRequestInProgress(false);
+          return;
+        }
+      }
+
+      let successCount = 0;
+
+      for (const configId of configIdsToRun) {
+        try {
+          const executionId = await launchExtractionMutation.mutateAsync(configId);
+          log('info', `Extraction launched successfully, execution ID: ${executionId}`);
+          successCount += 1;
+        } catch (error) {
+          log('error', `Failed to launch extraction for config ${configId}`, error);
+        }
+      }
+
+      if (successCount === configIdsToRun.length) {
+        notification.success({
+          message: `Extraction${configIdsToRun.length > 1 ? 's' : ''} launched successfully.`,
           duration: 10,
         });
-
-        return;
-      }
-    }
-
-    for (const simId of simIds) {
-      let nSubmissions = 0;
-
-      try {
-        const res = await runSimulation({
-          ctx: { virtualLabId, projectId },
-          simulationId: simId,
-        });
-        log('info', res);
-        setSimStatus(simId, EntitycoreExecutionStatus.PENDING);
-        nSubmissions += 1;
-      } catch {
-        log('error', 'Failed to submit a simulation');
-      }
-
-      if (nSubmissions !== simIds.length) {
-        notification.error({
-          message: 'We ran into a problem submitting your simulation(s). Please try again later.',
+      } else if (successCount > 0) {
+        notification.warning({
+          message: `${successCount} of ${configIdsToRun.length} extraction(s) launched. Some failed to submit.`,
           duration: 10,
         });
       } else {
-        notification.success({
-          message: 'Simulation(s) submitted successfully.',
+        notification.error({
+          message: 'Failed to launch extractions. Please try again later.',
           duration: 10,
         });
       }
-    }
-    setConsent(null);
-  };
 
-  // TODO Refactor
-  const run = async (simIds: string[]) => {
-    if (model && 'scale' in model && model.scale === CircuitScaleDictionary.Microcircuit) {
-      return runViaLaunchSystem(simIds);
-    }
-
-    setSimRequestInProgress(true);
-    try {
-      await runSimulationBatch({
-        ctx: { virtualLabId, projectId },
-        simulationIds: simIds,
-        onInit: () => {
-          simIds.forEach((simId) => {
-            setSimStatus(simId, EntitycoreExecutionStatus.PENDING);
-          });
-          setSelectedSimulationIds([]);
-          setSimRequestInProgress(false);
-        },
-        onMessage: (message) => {
-          match(message)
-            .with({ message_type: MessageType.STATUS }, (msg) => {
-              const simId = msg.ctx?.simulation_id;
-              if (simId) {
-                setSimStatus(simId, msg.status as unknown as EntitycoreExecutionStatus);
-              }
-              if (msg.status !== 'done') return;
-              const simulation = simulations.find((s) => s.id === simId);
-              if (!simulation) return;
-              notification.success({ message: `Simulation ${simulation?.name} done` });
-            })
-            .otherwise(() => null);
-        },
-      });
-    } catch (error) {
-      const defaultMsg = messages.RunningSimulationDefaultError;
-
-      if (error instanceof ApiError) {
-        const message = getErrorMessage(error.cause?.code, errorRegistry, defaultMsg);
-        return notification.error({ message, duration: 20 });
-      }
-
-      notification.error({ message: defaultMsg, duration: 20 });
+      setSelectedConfigIds([]);
+      setConsent(null);
     } finally {
-      setSimRequestInProgress(false);
+      setExtractionRequestInProgress(false);
     }
   };
 
   const onSelectedAll: CheckboxProps['onChange'] = (e) => {
-    setSelectedSimulationIds(e.target.checked ? selectableSimulationIds : []);
+    setSelectedConfigIds(e.target.checked ? selectableConfigIds : []);
   };
 
   const allSelected = useMemo(
-    () =>
-      selectableSimulationIds.length > 0 &&
-      selectableSimulationIds.length === selectedSimulationIds.length,
-    [selectableSimulationIds, selectedSimulationIds]
+    () => selectableConfigIds.length > 0 && selectableConfigIds.length === selectedConfigIds.length,
+    [selectableConfigIds, selectedConfigIds]
   );
 
-  const launchSimBtnLabelPrefix = selectedSimulationIds.length
-    ? `(${selectedSimulationIds.length})`
-    : '';
-
-  const loading = !statusMap;
-  // TODO: Add loading skeleton animation
+  const launchBtnLabelPrefix = selectedConfigIds.length ? `(${selectedConfigIds.length})` : '';
+  const loading = configsLoading || executionsLoading;
 
   return (
     <div className={styles.threeColumns}>
@@ -265,28 +252,31 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Simulatio
         <div className="flex h-full flex-col gap-4 overflow-y-hidden">
           <Checkbox
             indeterminate={
-              selectedSimulationIds.length > 0 &&
-              selectedSimulationIds.length < selectableSimulationIds.length
+              selectedConfigIds.length > 0 && selectedConfigIds.length < selectableConfigIds.length
             }
             onChange={onSelectedAll}
             checked={allSelected}
-            disabled={simRequestInProgress || selectableSimulationIds.length === 0}
+            disabled={extractionRequestInProgress || selectableConfigIds.length === 0}
           >
             Select all
           </Checkbox>
-          {/* List of simulations */}
           <div className="flex grow flex-col justify-start gap-5 overflow-y-auto">
+            {loading && (
+              <div className="flex h-full items-center justify-center">
+                <Loader className="text-neutral-3" />
+              </div>
+            )}
             {!loading &&
-              simulations.map((simulation) => (
-                <SimulationListItem
-                  key={simulation.id}
-                  selected={activeSimulation?.id === simulation.id}
-                  simulation={simulation}
-                  execStatus={statusMap?.get(simulation.id)}
-                  onSelect={() => onActiveSimulationChange(simulation)}
-                  onSelectedForSimChange={onSelectedForSimChange}
-                  selectedForSim={selectedSimulationIds.includes(simulation.id)}
-                  selectionForSimDisabled={simRequestInProgress}
+              configs.map((config) => (
+                <ExtractionConfigListItem
+                  key={config.id}
+                  selected={activeConfig?.id === config.id}
+                  config={config}
+                  execStatus={statusMap.get(config.id)}
+                  onSelect={() => onActiveConfigChange(config)}
+                  onSelectedForExtractionChange={onSelectedForExtractionChange}
+                  selectedForExtraction={selectedConfigIds.includes(config.id)}
+                  selectionDisabled={extractionRequestInProgress}
                 />
               ))}
           </div>
@@ -297,39 +287,31 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Simulatio
               'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none'
             )}
             type="button"
-            onClick={() => run(selectedSimulationIds)}
-            disabled={simRequestInProgress || selectedSimulationIds.length === 0}
+            onClick={() => runExtraction(selectedConfigIds)}
+            disabled={extractionRequestInProgress || selectedConfigIds.length === 0}
           >
             <div className="flex justify-center gap-4">
-              <span className="pl-10">Launch simulations {launchSimBtnLabelPrefix}</span>
-              <div className="w-6">{simRequestInProgress && <LoadingOutlined />}</div>
+              <span className="pl-10">Launch extractions {launchBtnLabelPrefix}</span>
+              <div className="w-6">{extractionRequestInProgress && <LoadingOutlined />}</div>
             </div>
           </button>
         </div>
       </div>
 
-      {/* List of input/output files for selected simulation */}
       <div className="relative border-r border-gray-200 px-4">
-        {!!activeSimulation && activeSimulationExecStatus && (
-          <SimulationFiles
-            simulation={activeSimulation}
-            execStatus={activeSimulationExecStatus}
-            selectedFile={selectedFile}
-            context={context}
-            onSelect={setSelectedFile}
-            onLoadingChange={setFilesLoading}
-          />
+        {!!activeConfig && (
+          <ExtractionConfigDetails config={activeConfig} execStatus={activeConfigExecStatus} />
         )}
       </div>
 
-      {/* Preview for selected file */}
       <div className="relative pl-4">
-        <FileViewer
-          file={selectedFile}
-          className="h-full"
-          context={context}
-          loading={filesLoading}
-        />
+        {!!activeConfig && (
+          <ExtractionResultsPanel
+            config={activeConfig}
+            execStatus={activeConfigExecStatus}
+            context={context}
+          />
+        )}
       </div>
 
       <Modal
@@ -342,11 +324,11 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Simulatio
           If the authorization window did not open automatically, please click the link below to
           continue.
         </p>
-
         <a
           className="text-primary-9 mt-4 inline-block text-lg font-semibold"
           href={consent?.url}
           target="_blank"
+          rel="noreferrer"
         >
           Grant consent
         </a>
@@ -355,26 +337,28 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Simulatio
   );
 }
 
-type SimulationBlockProps = {
-  simulation: ICircuitSimulation;
-  execStatus?: EntitycoreExecutionStatus;
-  onSelect: (simulationId: string) => void;
+type ExtractionConfigListItemProps = {
+  config: ICircuitExtractionConfig;
+  execStatus?: TCircuitExtractionExecutionStatus;
+  onSelect: () => void;
   selected?: boolean;
-  onSelectedForSimChange: (simulationId: string, selected: boolean) => void;
-  selectedForSim: boolean;
-  selectionForSimDisabled?: boolean;
+  onSelectedForExtractionChange: (configId: string, selected: boolean) => void;
+  selectedForExtraction: boolean;
+  selectionDisabled?: boolean;
 };
 
-function SimulationListItem({
-  simulation,
+function ExtractionConfigListItem({
+  config,
   execStatus,
   onSelect,
   selected,
-  onSelectedForSimChange,
-  selectedForSim,
-  selectionForSimDisabled,
-}: SimulationBlockProps) {
-  const color = executionStatusColorMap[execStatus ?? EntitycoreExecutionStatus.CREATED];
+  onSelectedForExtractionChange,
+  selectedForExtraction,
+  selectionDisabled,
+}: ExtractionConfigListItemProps) {
+  const color =
+    executionStatusColorMap[execStatus ?? CircuitExtractionExecutionStatus.CREATED] ?? '#8c8c8c';
+  const isSelectable = !execStatus || execStatus === 'created' || execStatus === 'error';
 
   return (
     <div className="flex-none">
@@ -382,29 +366,27 @@ function SimulationListItem({
         className="rounded-lg px-4 pb-4 transition-colors duration-300"
         style={{
           border: `2px solid ${selected ? color : 'transparent'}`,
-          backgroundColor: selected ? `${color}0f` : 'white', // 6% opacity for bg color
+          backgroundColor: selected ? `${color}0f` : 'white',
         }}
       >
         <button
           type="button"
-          title={simulation.name}
+          title={config.name}
           className="mb-2 flex h-18 w-full cursor-pointer items-center justify-between"
-          onClick={() => onSelect(simulation.id)}
+          onClick={onSelect}
         >
           <div className="min-w-0 flex-1 overflow-hidden text-left font-bold">
-            {!execStatus || execStatus === EntitycoreExecutionStatus.CREATED ? (
+            {isSelectable ? (
               <ConfigProvider theme={{ token: { colorPrimary: '#1890ff' } }}>
                 <div className="flex min-w-0 items-center" style={{ maxWidth: '100%' }}>
                   <Checkbox
                     className="mr-2 transition-colors duration-300 [&_.ant-checkbox+span]:block [&_.ant-checkbox+span]:truncate [&_.ant-checkbox+span]:overflow-hidden [&_.ant-checkbox+span]:text-ellipsis [&_.ant-checkbox+span]:whitespace-nowrap"
-                    disabled={selectionForSimDisabled}
-                    onChange={(e) => onSelectedForSimChange(simulation.id, e.target.checked)}
-                    checked={selectedForSim}
+                    disabled={selectionDisabled}
+                    onChange={(e) => onSelectedForExtractionChange(config.id, e.target.checked)}
+                    checked={selectedForExtraction}
                     style={{ color, maxWidth: '100%', display: 'flex' }}
                   >
-                    <span className="text-lg transition-colors duration-300">
-                      {simulation.name}
-                    </span>
+                    <span className="text-lg transition-colors duration-300">{config.name}</span>
                   </Checkbox>
                 </div>
               </ConfigProvider>
@@ -413,25 +395,73 @@ function SimulationListItem({
                 style={{ color }}
                 className="block truncate text-lg transition-colors duration-300"
               >
-                {simulation.name}
+                {config.name}
               </span>
             )}
           </div>
           <div className="ml-4 flex shrink-0">
-            <SimulationStatusBadge status={execStatus} />
+            <ExtractionStatusBadge status={execStatus} />
             <RightOutlined className="ml-2 text-sm" />
           </div>
         </button>
-
-        <ScanParams scanParams={simulation.scan_parameters} color={color} />
+        <ScanParams
+          scanParams={config.scan_parameters as Record<string, string | number>}
+          color={color}
+        />
       </div>
     </div>
   );
 }
 
-type SimulationScanParams = { [key: string]: string | number };
+function ExtractionStatusBadge({ status }: { status?: TCircuitExtractionExecutionStatus }) {
+  const color = status
+    ? executionStatusColorMap[status as CircuitExtractionExecutionStatus]
+    : '#fafafa';
+  const showSpinner = status && ['pending', 'running'].includes(status);
 
-function ScanParams({ scanParams, color }: { scanParams: SimulationScanParams; color: string }) {
+  return (
+    <div className="flex items-center">
+      {showSpinner && (
+        <svg
+          className="mr-4 h-4 w-4 animate-spin"
+          style={{ color }}
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <title>Loading</title>
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          />
+        </svg>
+      )}
+      <span
+        style={{ borderColor: color, color }}
+        className="flex items-center rounded-xl border px-4 capitalize transition-colors duration-300"
+      >
+        {status ?? 'created'}
+      </span>
+    </div>
+  );
+}
+
+function ScanParams({
+  scanParams,
+  color,
+}: {
+  scanParams: Record<string, string | number>;
+  color: string;
+}) {
   return (
     <div className="grid grid-cols-2 gap-x-4 gap-y-2">
       {Object.entries(scanParams).map(([key, value]) => (
@@ -443,10 +473,147 @@ function ScanParams({ scanParams, color }: { scanParams: SimulationScanParams; c
             className="truncate font-bold text-ellipsis transition-colors duration-300"
             style={{ color }}
           >
-            {value}
+            {String(value)}
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+function ExtractionConfigDetails({
+  config,
+  execStatus,
+}: {
+  config: ICircuitExtractionConfig;
+  execStatus?: TCircuitExtractionExecutionStatus;
+}) {
+  const color =
+    executionStatusColorMap[execStatus ?? CircuitExtractionExecutionStatus.CREATED] ?? '#8c8c8c';
+
+  return (
+    <div className="h-full overflow-y-auto">
+      <h4 className="uppercase">Configuration Details</h4>
+      <div className="mt-4 mb-8 flex flex-col gap-4">
+        <div className="rounded-lg bg-white p-4">
+          <div className="mb-2 text-gray-400">Name</div>
+          <div className="font-semibold" style={{ color }}>
+            {config.name}
+          </div>
+        </div>
+        <div className="rounded-lg bg-white p-4">
+          <div className="mb-2 text-gray-400">Description</div>
+          <div className="text-sm">{config.description || 'No description'}</div>
+        </div>
+        <div className="rounded-lg bg-white p-4">
+          <div className="mb-2 text-gray-400">Circuit ID</div>
+          <div className="font-mono text-sm">{config.circuit_id}</div>
+        </div>
+        <div className="rounded-lg bg-white p-4">
+          <div className="mb-2 text-gray-400">Scan Parameters</div>
+          <pre className="overflow-auto text-xs">
+            {JSON.stringify(config.scan_parameters, null, 2)}
+          </pre>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ExtractionResultsPanel({
+  config,
+  execStatus,
+  context,
+}: {
+  config: ICircuitExtractionConfig;
+  execStatus?: TCircuitExtractionExecutionStatus;
+  context: { virtualLabId: string; projectId: string };
+}) {
+  const { data: executionsResponse, isLoading } = useQuery({
+    queryKey: ['extraction-execution-details', config.id, context],
+    queryFn: () =>
+      getCircuitExtractionExecutions({
+        filters: { used__id: config.id },
+        context,
+      }),
+    enabled:
+      !!execStatus &&
+      [CircuitExtractionExecutionStatus.DONE, CircuitExtractionExecutionStatus.ERROR].includes(
+        execStatus as CircuitExtractionExecutionStatus
+      ),
+  });
+
+  const execution = executionsResponse?.data?.[0];
+  const generatedEntities = execution?.generated ?? [];
+  const color =
+    executionStatusColorMap[execStatus ?? CircuitExtractionExecutionStatus.CREATED] ?? '#8c8c8c';
+
+  return (
+    <div className="text-primary-9 relative h-full rounded-2xl bg-white p-6">
+      <h4 className="uppercase">Extraction Status</h4>
+      <div className="mt-4 flex items-center gap-4">
+        <span className="text-gray-400">Status:</span>
+        <ExtractionStatusBadge status={execStatus} />
+      </div>
+
+      {execStatus === CircuitExtractionExecutionStatus.DONE && (
+        <div className="mt-6">
+          <h4 className="uppercase">Generated Circuits</h4>
+          {isLoading && (
+            <div className="mt-4 flex justify-center">
+              <Loader className="text-neutral-3" />
+            </div>
+          )}
+          {!isLoading && generatedEntities.length > 0 && (
+            <div className="mt-4 flex flex-col gap-2">
+              {generatedEntities.map((entity) => (
+                <div key={entity.id} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <div className="text-sm text-gray-400">Circuit ID</div>
+                  <div className="font-mono text-sm" style={{ color }}>
+                    {entity.id}
+                  </div>
+                  {entity.type && (
+                    <>
+                      <div className="mt-2 text-sm text-gray-400">Type</div>
+                      <div className="text-sm">{entity.type}</div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          {!isLoading && generatedEntities.length === 0 && (
+            <div className="mt-4 text-gray-400">No circuits generated yet.</div>
+          )}
+        </div>
+      )}
+
+      {execStatus === CircuitExtractionExecutionStatus.ERROR && (
+        <div className="mt-6">
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-600">
+            Extraction failed. Please check the logs or try again.
+          </div>
+        </div>
+      )}
+
+      {(!execStatus || execStatus === CircuitExtractionExecutionStatus.CREATED) && (
+        <div className="mt-6">
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-gray-500">
+            Select this configuration and click &quot;Launch extractions&quot; to start the
+            extraction process.
+          </div>
+        </div>
+      )}
+
+      {(execStatus === CircuitExtractionExecutionStatus.PENDING ||
+        execStatus === CircuitExtractionExecutionStatus.RUNNING) && (
+        <div className="mt-6">
+          <div className="flex items-center gap-4 rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-600">
+            <LoadingOutlined />
+            <span>Extraction is in progress. Status will update automatically.</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
