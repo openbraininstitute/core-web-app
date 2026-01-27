@@ -15,7 +15,7 @@ export async function ReconstructionMetadata({ entity }: Props) {
   const resource = { emDenseReconstructionDataset, entity };
   return (
     <div>
-      <h2 className="font-bold text-primary-8 text-2xl mb-4">Reconstruction Metadata</h2>
+      <h2 className="font-bold text-primary-8 text-2xl mb-4">Reconstruction metadata</h2>
       <div className="grid grid-cols-3 items-center justify-between gap-y-5">
         {ReconstructionMetadataFields.map(({ key, label, path, renderer }) => (
           <div key={key} id={key} className="text-primary-7 flex flex-col">
