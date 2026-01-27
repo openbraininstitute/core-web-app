@@ -22,23 +22,35 @@ export function makeCamera({
     },
     near: 1,
   });
-  const distanceMax = computeDistance(camera, bbox, 1.1);
+  camera.screenHeight = camera.screenWidth;
   const distance = computeDistance(camera, bboxDendrites, 1.1);
-  const distanceMin = computeDistance(camera, bboxSoma, 3);
-  const zoomMin = Math.min(0.5, distance / distanceMax);
-  const zoomMax = Math.min(1000, distance / distanceMin);
+  const distanceMax = ensureBigger(distance, computeDistance(camera, bbox, 1.5));
+  const distanceMin = ensureSmaller(computeDistance(camera, bboxSoma, 3), distance);
+  const zoomMin = distance / distanceMax;
+  const zoomMax = distance / distanceMin;
   camera.transfo.distance = distance;
   return { camera, zoomMin, zoomMax };
 }
 
+function ensureSmaller(value: number, limit: number) {
+  if (value < limit) return value;
+  return limit * 0.9;
+}
+
+function ensureBigger(value: number, limit: number) {
+  if (value > limit) return value;
+  return limit * 1.1;
+}
+
 function computeDistance(camera: TgdCamera, bbox: BoundingBox, scale: number) {
-  camera.fitSpaceAtTarget(
+  const width =
     2 *
-      scale *
-      Math.max(1, Math.abs(bbox.center[0] - bbox.min[0]), Math.abs(bbox.center[0] - bbox.max[0])),
+    scale *
+    Math.max(1, Math.abs(bbox.center[0] - bbox.min[0]), Math.abs(bbox.center[0] - bbox.max[0]));
+  const height =
     2 *
-      scale *
-      Math.max(1, Math.abs(bbox.center[1] - bbox.min[1]), Math.abs(bbox.center[1] - bbox.max[1]))
-  );
+    scale *
+    Math.max(1, Math.abs(bbox.center[1] - bbox.min[1]), Math.abs(bbox.center[1] - bbox.max[1]));
+  camera.fitSpaceAtTarget(width, height);
   return camera.transfo.distance;
 }
