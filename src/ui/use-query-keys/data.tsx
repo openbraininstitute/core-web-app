@@ -1,14 +1,15 @@
-import type { IScientificArtifactPublicationLinkFilter } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
-import type { ISingleNeuronSynaptomeSimulationFilter } from '@/api/entitycore/types/entities/single-neuron-synaptome-simulation';
-import type { ISingleNeuronSimulationFilter } from '@/api/entitycore/types/entities/single-neuron-simulation';
-import type { ElectricalCellRecordingFilter } from '@/api/entitycore/types/entities/electrical-cell-recording';
-import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
-import type { WorkspaceContext } from '@/types/common';
+import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
+import type { ElectricalCellRecordingFilter } from '@/api/entitycore/types/entities/electrical-cell-recording';
+import type { IScientificArtifactPublicationLinkFilter } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
+import type { ISingleNeuronSimulationFilter } from '@/api/entitycore/types/entities/single-neuron-simulation';
+import type { ISingleNeuronSynaptomeSimulationFilter } from '@/api/entitycore/types/entities/single-neuron-synaptome-simulation';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { IEMDenseReconstructionDatasetFilter } from '@/api/entitycore/types/shared/em-dense-reconstruction-dataset';
+import type { IProtocolFilter } from '@/api/entitycore/types/shared/protocol';
+import type { ISubjectFilter } from '@/api/entitycore/types/shared/subject';
 import type { TWorkspaceScope } from '@/constants';
-import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { ISubjectFilter } from '@/api/entitycore/types/shared/subject';
-import { IProtocolFilter } from '@/api/entitycore/types/shared/protocol';
+import type { WorkspaceContext } from '@/types/common';
 
 const prefix = 'data';
 
@@ -242,6 +243,14 @@ export const keyBuilder = {
   modelProperties: ({ modelId }: { modelId: string }) => {
     return [`${prefix}-circuit-properties`, modelId];
   },
+  emDenseReconstructionDatasets: (
+    context: WorkspaceContext,
+    props?: IEMDenseReconstructionDatasetFilter
+  ) => [`${prefix}-emDenseReconstructionDatasets`, { ...context, ...props }],
+  emDenseReconstructionDataset: ({ id, context }: { id: string; context: WorkspaceContext }) => [
+    `${prefix}-emDenseReconstructionDataset`,
+    { id, context },
+  ],
   etype: ({ virtualLabId, projectId }: WorkspaceContext) => [
     `${prefix}-etype-class`,
     { context: { virtualLabId, projectId } },

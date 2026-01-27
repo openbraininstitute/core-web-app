@@ -1,11 +1,14 @@
-import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
-
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { WorkspaceContext } from '@/types/common';
+import z from 'zod';
 import type {
-  IEmCellMeshQueryFilters,
+  EMCellMeshFilter,
+  ExpandEMCellMeshParm,
   IEMCellMesh,
+  IEMCellMeshExpanded,
+  IEmCellMeshQueryFilters,
 } from '@/api/entitycore/types/entities/em-cell-mesh';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
+import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/em-cell-mesh';
 /**
@@ -59,5 +62,60 @@ export async function getEmCellMesh({
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
     },
+  });
+}
+
+///
+
+const EMCellMeshSchema = z.object({
+  name: z
+    .string({ message: 'Cell mesh name is required' })
+    .nonempty({ message: 'Cell mesh name is required' }),
+  description: z
+    .string({ message: 'Cell mesh description is required' })
+    .nonempty({ message: 'Cell mesh description is required' }),
+  brain_region_id: z
+    .string({ message: 'Brain region is required' })
+    .uuid()
+    .nonempty({ message: 'Brain region is required' }),
+  subject_id: z
+    .string({ message: 'Subject is required' })
+    .uuid()
+    .nonempty({ message: 'Subject is required' }),
+  license_id: z
+    .string({ message: 'License is required' })
+    .uuid()
+    .nonempty({ message: 'License is required' }),
+  experiment_date: z.string({ message: 'Experiment date is required' }).nullish(),
+  contact_email: z
+    .string({ message: 'Contact email is required' })
+    .email({ message: 'Contact email is required' })
+    .nullish(),
+  published_in: z.string({ message: 'Published in is required' }).nullish(),
+  location: z.object({ x: z.number(), y: z.number(), z: z.number() }).nullable(),
+});
+
+export type TEMCellMeshCreate = z.infer<typeof EMCellMeshSchema>;
+
+/**
+ * Creates a new cell morphology
+ * @param param0
+ * @returns A promise that resolves to the created cell morphology
+ */
+export async function createEMCellMesh({
+  context,
+  payload,
+}: {
+  context?: WorkspaceContext | null;
+  payload: TEMCellMeshCreate;
+}) {
+  const api = await entityCoreApi();
+  return await api.post<IEMCellMesh>(baseUri, {
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+    body: payload,
   });
 }
