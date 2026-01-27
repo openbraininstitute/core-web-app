@@ -6,21 +6,22 @@ import { match } from 'ts-pattern';
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { Config } from '@/features/scan-config/components/components';
+import { ExtractionTab } from '@/features/scan-config/components/extraction/results';
 import { useEntries, useSchemaName } from '@/features/scan-config/components/hooks';
 import { useConfigAtom } from '@/features/scan-config/components/hooks/config-atom';
 import { useAtomsMap, useObioneJsonSchema } from '@/features/scan-config/components/hooks/schema';
 import Left from '@/features/scan-config/components/left';
 import Middle from '@/features/scan-config/components/middle';
 import ModelPreview from '@/features/scan-config/components/model-preview';
-import SimulationsTab from '@/features/scan-config/components/simulations';
+import SimulationsTab from '@/features/scan-config/components/simulations/results';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import styles from '@/features/scan-config/scan-config.module.css';
 import {
+  ExtractScanConfigTabs,
   ScanConfigActivity,
   ScanConfigDefaultTab,
   ScanConfigTabs,
-  ScanConfigUIElementDict,
-  type TBlock,
+  SimulateScanConfigTabs,
   type TScanConfigActivity,
   type TScanConfigTabs,
 } from '@/features/scan-config/types';
@@ -30,6 +31,7 @@ import { cn } from '@/utils/css-class';
 export function ScanConfigTemplate({
   entity,
   virtualLabId,
+
   projectId,
   initialCampaignId,
   initialConfig,
@@ -61,8 +63,6 @@ export function ScanConfigTemplate({
   const schemaName = useSchemaName({ model: entity, activity });
   const schema = useObioneJsonSchema(schemaName);
 
-  
-
   const allEntries = useEntries({ initialConfig, schema });
 
   const [atomsMap, setAtomsMap] = useAtomsMap({ schema, initialConfig, model: entity });
@@ -78,12 +78,34 @@ export function ScanConfigTemplate({
   }
 
   const results = match({ activity, tab })
-    .with({ activity: ScanConfigActivity.Simulate, tab: { id: 'simulations' } }, () => (
-      <Suspense>
-        <SimulationsTab campaignId={campaignId} virtualLabId={virtualLabId} projectId={projectId} />
-      </Suspense>
-    ))
-    .otherwise(() => null);
+    .with({ tab: { id: SimulateScanConfigTabs.configuration } }, () => null)
+    .with(
+      { activity: ScanConfigActivity.Simulate, tab: { id: SimulateScanConfigTabs.simulations } },
+      () => (
+        <Suspense>
+          <SimulationsTab
+            campaignId={campaignId}
+            virtualLabId={virtualLabId}
+            projectId={projectId}
+          />
+        </Suspense>
+      )
+    )
+    .with(
+      { activity: ScanConfigActivity.Extract, tab: { id: ExtractScanConfigTabs.extractions } },
+      () => (
+        <Suspense>
+          <ExtractionTab
+            campaignId={campaignId}
+            virtualLabId={virtualLabId}
+            projectId={projectId}
+          />
+        </Suspense>
+      )
+    )
+    .otherwise(() => {
+      throw new Error(`${activity} is not supported yet,`);
+    });
 
   return (
     <div className={cn('flex h-full flex-col space-y-5', className)}>
@@ -130,6 +152,7 @@ export function ScanConfigTemplate({
             setNewKey={setNewKey}
             isEditingKey={isEditingKey}
             setIsEditingKey={setIsEditingKey}
+            activity={activity}
           />
 
           <div

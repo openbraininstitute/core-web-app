@@ -12,6 +12,7 @@ import {
   type AtomsMap,
   type ConfigSchema,
   isType,
+  ScanConfigUIElementDict,
   type SchemaName,
 } from '@/features/scan-config/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
@@ -29,11 +30,17 @@ export function useObioneJsonSchema(schemaName: SchemaName) {
 }
 
 export function isRootBlock(schema: ConfigSchema, key: string) {
-  return schema.properties?.[key] && schema.properties[key].ui_element === 'root_block';
+  return (
+    schema.properties?.[key] &&
+    schema.properties[key].ui_element === ScanConfigUIElementDict.RootBlock
+  );
 }
 
 export function isRootDiscriminatedUnion(schema: ConfigSchema, key: string) {
-  return schema.properties?.[key] && schema.properties[key].ui_element === 'discriminated_union';
+  return (
+    schema.properties?.[key] &&
+    schema.properties[key].ui_element === ScanConfigUIElementDict.DiscriminatedUnion
+  );
 }
 
 async function fetchSchema({ schemaName }: { schemaName: SchemaName }) {
@@ -87,12 +94,15 @@ export function useAtomsMap({
     } else {
       Object.entries(schema.properties).forEach(([k, v]) => {
         if (isType(v)) return;
-        if (v.ui_element === 'root_block') {
+        if (v.ui_element === ScanConfigUIElementDict.RootBlock) {
           const initial: Record<string, ConfigValue> = {};
 
           Object.entries(v.properties).forEach(([subkey, subValue]) => {
             initial[subkey] = subValue.default ?? null;
-            if (!isType(subValue) && subValue.ui_element === 'model_identifier') {
+            if (
+              !isType(subValue) &&
+              subValue.ui_element === ScanConfigUIElementDict.ModelIdentifier
+            ) {
               const formModelType = match(model)
                 .with({ type: EntityTypeDict.Memodel }, () => 'MEModelFromID')
                 .with(
@@ -114,8 +124,8 @@ export function useAtomsMap({
           });
 
           map[k] = atom<Record<string, ConfigValue>>(initial);
-        } else if (v.ui_element === 'discriminated_union') {
-          // Initialize discriminated union with first variant's defaults
+        } else if (v.ui_element === ScanConfigUIElementDict.DiscriminatedUnion) {
+          // initialize discriminated union with first variant's defaults
           const firstVariant = v.oneOf[0];
           const initial: Record<string, ConfigValue> = {};
 
@@ -158,7 +168,7 @@ export function useReferenceTypeDict(schemaName: SchemaName) {
   Object.keys(schema?.properties).forEach((k) => {
     const v = schema.properties[k];
 
-    if (v.ui_element === 'block_dictionary') {
+    if (v.ui_element === ScanConfigUIElementDict.BlockDictionary) {
       const refType = v.reference_type;
       referenceTypeDict[refType] = {
         configKey: k,
