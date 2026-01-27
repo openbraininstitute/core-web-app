@@ -111,7 +111,7 @@ export function MModelMiniDetail({ sessionId }: { sessionId: string }) {
   const content = details.map(({ value, label: text, className }) => {
     return (
       <div key={`item-${label}`} className="flex w-full flex-col items-start justify-start">
-        {label(text!, 'secondary')}
+        {label(text, 'secondary')}
         <div className={cn('text-primary-9 font-light', className)}>{value}</div>
       </div>
     );
