@@ -28,7 +28,7 @@ import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
-import { migrateConfig } from './utils';
+import { hasSimConfigAsset, migrateConfig } from './utils';
 
 // NOTE: this is due entitycore do not support yet
 async function resolveSimulationCampaigns({
@@ -149,7 +149,14 @@ export function getStatusCountMap(simCampaign: ICircuitSimulationCampaign) {
   const statusCountMap = simulations.reduce((map, simulation) => {
     const executions = get(simulation, 'executions', []) as ICircuitSimulationExecution[];
     const sortedExecutions = sortBy(executions, (exec) => exec.creation_date);
-    const status = sortedExecutions.at(-1)?.status ?? EntitycoreExecutionStatus.CREATED;
+
+    // Used when there are no executions present
+    const fallbackStatus = hasSimConfigAsset(simulation)
+      ? EntitycoreExecutionStatus.CREATED
+      : EntitycoreExecutionStatus.ERROR;
+
+    const status = sortedExecutions.at(-1)?.status ?? fallbackStatus;
+
     return map.set(status, (map.get(status) ?? 0) + 1);
   }, new Map());
 
@@ -164,6 +171,7 @@ export const SimulationCampaign: EntityCoreTypeConfig<ICircuitSimulationCampaign
   extendedType: ExtendedEntitiesTypeDict.SimulationCampaign,
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.SimulationCampaign,
+  isDeletable: false,
   api: {
     config: {
       allowedFacets: true,
