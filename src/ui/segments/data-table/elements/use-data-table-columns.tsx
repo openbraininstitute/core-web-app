@@ -1,7 +1,7 @@
 'use client';
 
 import type { ColumnProps } from 'antd/lib/table';
-import { isString, throttle } from 'es-toolkit/compat';
+import { isString } from 'es-toolkit/compat';
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -21,6 +21,7 @@ import { classNames, fieldTitleSentenceCase } from '@/util/utils';
 type ResizeInit = {
   key: string | null;
   start: number | null;
+  startWidth: number | null;
 };
 
 const COL_SIZING = {
@@ -94,11 +95,14 @@ export function useDataTableColumns<T>({
 }): ColumnProps<T>[] {
   const keys = useMemo(() => Object.keys(fieldsDefinitionRegistry), []);
 
-  const [columnWidths, setColumnWidths] = useState<{ key: string; width: number }[]>(
-    [...keys].map((key) => ({
-      key,
-      width: COL_SIZING.default,
-    }))
+  const [columnWidths, setColumnWidths] = useState<{ key: string; width: number }[]>(() =>
+    [...keys].map((key) => {
+      const field = getFieldDefinition(key as EntityCoreFields);
+      return {
+        key,
+        width: field?.style?.width ?? COL_SIZING.default,
+      };
+    })
   );
 
   useEffect(() => {
@@ -131,46 +135,71 @@ export function useDataTableColumns<T>({
     [setSortState, sortState]
   );
 
-  const updateColumnWidths = useCallback(
-    (resizeInit: ResizeInit, clientX: number) => {
-      const { key, start } = resizeInit;
+  const updateColumnWidths = useCallback((resizeInit: ResizeInit, clientX: number) => {
+    const { key, start, startWidth } = resizeInit;
 
-      const delta = start ? clientX - start : 0; // No start? No delta.
-      const colWidthIndex = columnWidths.findIndex(({ key: colKey }) => colKey === key);
+    if (!key || start === null || startWidth === null) return;
 
-      const updatedWidth = {
-        key: key as string,
-        width: Math.max(columnWidths[colWidthIndex].width + delta, COL_SIZING.min),
-      };
+    const delta = clientX - start;
+    const newWidth = Math.max(startWidth + delta, COL_SIZING.min);
 
-      setColumnWidths([
-        ...columnWidths.slice(0, colWidthIndex),
-        updatedWidth,
-        ...columnWidths.slice(colWidthIndex + 1),
-      ]);
-    },
-    [columnWidths]
-  );
+    setColumnWidths((prev) => {
+      const colWidthIndex = prev.findIndex(({ key: colKey }) => colKey === key);
+      if (colWidthIndex === -1) return prev;
+
+      return [
+        ...prev.slice(0, colWidthIndex),
+        { key, width: newWidth },
+        ...prev.slice(colWidthIndex + 1),
+      ];
+    });
+  }, []);
 
   const onMouseDown = useCallback(
     (mouseDownEvent: React.MouseEvent<HTMLElement>, key: string) => {
-      const { clientX } = mouseDownEvent;
-      const resizeInit = {
-        key,
-        start: clientX,
+      const { clientX: startX } = mouseDownEvent;
+
+      const th = (mouseDownEvent.target as HTMLElement).closest('th');
+      const tableWrapper = th?.closest('.ant-table-wrapper');
+      const colIndex = th ? Array.from(th.parentElement?.children || []).indexOf(th) : -1;
+      const headerCol = tableWrapper?.querySelector(
+        `.ant-table-header colgroup col:nth-child(${colIndex + 1})`
+      ) as HTMLElement | null;
+      const bodyCol = tableWrapper?.querySelector(
+        `.ant-table-body colgroup col:nth-child(${colIndex + 1})`
+      ) as HTMLElement | null;
+
+      const currentWidth = th?.getBoundingClientRect().width ?? COL_SIZING.default;
+
+      let finalWidth = currentWidth;
+
+      const handleMouseMove = (moveEvent: MouseEvent) => {
+        const delta = moveEvent.clientX - startX;
+        finalWidth = Math.max(currentWidth + delta, COL_SIZING.min);
+        if (headerCol) {
+          headerCol.style.width = `${finalWidth}px`;
+          headerCol.style.minWidth = `${finalWidth}px`;
+        }
+        if (bodyCol) {
+          bodyCol.style.width = `${finalWidth}px`;
+          bodyCol.style.minWidth = `${finalWidth}px`;
+        }
+        if (th) {
+          th.style.width = `${finalWidth}px`;
+          th.style.minWidth = `${finalWidth}px`;
+        }
       };
 
-      const handleMouseMove = throttle(
-        (moveEvent: MouseEvent) => updateColumnWidths(resizeInit, moveEvent.clientX),
-        200
-      );
+      const handleMouseUp = () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        updateColumnWidths(
+          { key, start: startX, startWidth: currentWidth },
+          startX + (finalWidth - currentWidth)
+        );
+      };
 
       window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener(
-        'mouseup',
-        () => window.removeEventListener('mousemove', handleMouseMove),
-        { once: true } // Auto-removeEventListener
-      );
+      window.addEventListener('mouseup', handleMouseUp, { once: true });
     },
     [updateColumnWidths]
   );
@@ -178,9 +207,9 @@ export function useDataTableColumns<T>({
   const getOrderDirection = useCallback(
     (key: string) => {
       switch (sortState?.order) {
-        case 'asc':
+        case SortOrder.ASC:
           return sortState?.field === key ? 'ascend' : undefined;
-        case 'desc':
+        case SortOrder.DESC:
           return sortState?.field === key ? 'descend' : undefined;
         default:
           return undefined;
@@ -214,19 +243,24 @@ export function useDataTableColumns<T>({
           ellipsis: true,
           width: columnWidths.find(({ key: colKey }) => colKey === key)?.width,
           render: (_, r, i) => term?.render?.(r as EntityCoreIdentifiable, i),
-          onHeaderCell: () => ({
-            handleResizing: (e: React.MouseEvent<HTMLElement>) => onMouseDown(e, key),
-            onClick: () => {
-              if (!isSortable || !term.order) return;
-              const field = getOrderValue(term.order, dataType);
-              if (field) {
-                columnOrderBy(key as EntityCoreFields, field as EntityCoreFields);
-              }
-            },
-            showsortertooltip: {
-              title: term?.description ? term.description : term?.title,
-            },
-          }),
+          onHeaderCell: () => {
+            const currentWidth =
+              columnWidths.find(({ key: colKey }) => colKey === key)?.width ?? COL_SIZING.default;
+            return {
+              columnWidth: currentWidth,
+              handleResizing: (e: React.MouseEvent<HTMLElement>) => onMouseDown(e, key),
+              onClick: () => {
+                if (!isSortable || !term.order) return;
+                const field = getOrderValue(term.order, dataType);
+                if (field) {
+                  columnOrderBy(key as EntityCoreFields, field as EntityCoreFields);
+                }
+              },
+              showsortertooltip: {
+                title: term?.description ? term.description : term?.title,
+              },
+            };
+          },
           defaultSortOrder: 'descend',
           sortOrder: getOrderDirection(key),
           sortDirections: ['ascend', 'descend', 'descend'],

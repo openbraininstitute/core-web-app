@@ -1,6 +1,5 @@
 'use client';
 
-import { VerticalAlignMiddleOutlined } from '@ant-design/icons';
 import { ConfigProvider, Table, type TableProps } from 'antd';
 import type { TableRef } from 'antd/es/table';
 import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
@@ -33,12 +32,14 @@ function CustomTH({
   style,
   onClick,
   handleResizing,
+  columnWidth,
   ...props
 }: {
   children: ReactNode;
   style: CSSProperties;
   onClick: () => void;
-  handleResizing: () => void;
+  handleResizing: (e: React.MouseEvent<HTMLElement>) => void;
+  columnWidth?: number;
 }) {
   const modifiedStyle: CSSProperties = {
     ...style,
@@ -47,28 +48,35 @@ function CustomTH({
     verticalAlign: 'baseline',
     boxSizing: 'border-box',
     backgroundColor: 'white',
+    ...(columnWidth ? { width: columnWidth, minWidth: columnWidth } : {}),
   };
 
-  return handleResizing ? (
+  const handleResize = handleResizing
+    ? (e: React.MouseEvent<HTMLElement>) => {
+        e.stopPropagation();
+        e.preventDefault();
+        handleResizing(e);
+      }
+    : undefined;
+
+  return handleResize ? (
     <th
       {...props} /* eslint-disable-line react/jsx-props-no-spreading */
-      style={{ ...modifiedStyle, padding: '16px 16px 16px 0px' }}
+      style={{ ...modifiedStyle, padding: '16px 16px 16px 0px', position: 'relative' }}
       className="before:content-none!"
       data-testid="column-header"
     >
-      <div className="flex w-full">
-        <button
-          className={classNames(
-            'inline-flex w-full flex-col items-start',
-            '[&>.ant-table-column-sorters]:inline-flex [&>.ant-table-column-sorters]:flex-none [&>.ant-table-column-sorters]:items-start! [&>.ant-table-column-sorters]:gap-2'
-          )}
-          onClick={onClick}
-          type="button"
-        >
-          {children}
-        </button>
-        <VerticalAlignMiddleOutlined className={styles.dragIcons} onMouseDown={handleResizing} />
-      </div>
+      <button
+        className={classNames(
+          'inline-flex w-full flex-col items-start',
+          '[&>.ant-table-column-sorters]:inline-flex [&>.ant-table-column-sorters]:flex-none [&>.ant-table-column-sorters]:items-start! [&>.ant-table-column-sorters]:gap-2'
+        )}
+        onClick={onClick}
+        type="button"
+      >
+        {children}
+      </button>
+      <button type="button" className={styles.dragHandle} onMouseDown={handleResize} />
     </th>
   ) : (
     <th
