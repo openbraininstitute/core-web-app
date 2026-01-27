@@ -1,8 +1,11 @@
 'use client';
 
 import { RiCloseFill, RiMoneyDollarCircleLine } from '@remixicon/react';
+import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 
+import { listVirtualLabMembers } from '@/api/virtual-lab-svc/queries/member';
 import { useUserRole } from '@/hooks/use-user-role';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { CreditsTransferModal } from '@/ui/segments/project/credits/credits-transfer-modal';
@@ -20,6 +23,14 @@ export function LowFundsNotification({ title, description, onClose, duration = 1
   const [showCreditsModal, setShowCreditsModal] = useState(false);
   const { virtualLabId } = useWorkspace();
   const { isVirtualLabAdmin } = useUserRole({ virtualLabId });
+
+  const { data: membersData } = useQuery({
+    queryKey: ['virtual-lab-members', virtualLabId],
+    queryFn: () => listVirtualLabMembers({ virtualLabId: virtualLabId ?? '' }),
+    enabled: !!virtualLabId && !isVirtualLabAdmin,
+  });
+
+  const adminEmail = membersData?.data?.users.find((user) => user.role === 'admin')?.email;
 
   const handleClose = useCallback(() => {
     setIsVisible(false);
@@ -54,7 +65,7 @@ export function LowFundsNotification({ title, description, onClose, duration = 1
     <>
       <div
         className={cn(
-          'border-neutral-2 fixed top-4 right-4 z-[99999] max-w-[448px] min-w-[384px] rounded-2xl border bg-white shadow-lg transition-all duration-300',
+          'border-neutral-2 fixed top-4 right-4 z-99999 max-w-[448px] min-w-[384px] rounded-2xl border bg-white shadow-lg transition-all duration-300',
           isVisible ? 'translate-y-0 opacity-100' : 'pointer-events-none -translate-y-2 opacity-0'
         )}
         role="alert"
@@ -63,7 +74,7 @@ export function LowFundsNotification({ title, description, onClose, duration = 1
           <div className="min-w-0 flex-1">
             <div className="mb-2 flex justify-between">
               <div className="flex flex-row gap-x-2">
-                <div className="flex-shrink-0 pt-0.5">
+                <div className="shrink-0 pt-0.5">
                   <RiMoneyDollarCircleLine className="text-warning text-2xl" size={24} />
                 </div>
                 <h4 className="text-primary-9 m-0 text-lg font-semibold">{title}</h4>
@@ -79,7 +90,7 @@ export function LowFundsNotification({ title, description, onClose, duration = 1
               </button>
             </div>
             <p className="text-neutral-4 mb-4 text-base leading-normal">{description}</p>
-            {isVirtualLabAdmin && (
+            {isVirtualLabAdmin ? (
               <button
                 type="button"
                 name="transfer-credits-button"
@@ -89,6 +100,16 @@ export function LowFundsNotification({ title, description, onClose, duration = 1
               >
                 Transfer credits
               </button>
+            ) : (
+              adminEmail && (
+                <Link
+                  href={`mailto:${adminEmail}?subject=Low%20funds%20notification`}
+                  target="_blank"
+                  className="text-primary-9 border-neutral-3 rounded-4xl border px-6 py-2 text-lg font-bold"
+                >
+                  Contact admin
+                </Link>
+              )
             )}
           </div>
         </div>
