@@ -107,6 +107,10 @@ export class Structure {
         this.segments.set(item.name, item);
         this.addToSection(item);
         this.items.push(item);
+        bbox.min = computeMin(bbox.min, start, item.radius);
+        bbox.max = computeMax(bbox.max, start, item.radius);
+        bbox.min = computeMin(bbox.min, end, item.radius);
+        bbox.max = computeMax(bbox.max, end, item.radius);
         if (isSoma) {
           somaCounts++;
           somaCenter.add(start);
@@ -119,10 +123,6 @@ export class Structure {
           isBBoxSomaEmpty = false;
         } else {
           distanceFromSoma += section.length[segmentIndex];
-          bbox.min = computeMin(bbox.min, start, item.radius);
-          bbox.max = computeMax(bbox.max, start, item.radius);
-          bbox.min = computeMin(bbox.min, end, item.radius);
-          bbox.max = computeMax(bbox.max, end, item.radius);
           if (
             [
               StructureItemType.Dendrite,
