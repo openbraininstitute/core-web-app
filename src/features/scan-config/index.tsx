@@ -2,12 +2,11 @@
 
 // import { LoadingOutlined, UpOutlined } from '@ant-design/icons';
 import { LoadingOutlined } from '@ant-design/icons';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useState } from 'react';
 import SimulationsTab from './components/simulations';
 
 // import { useRouter } from 'next/navigation';
 
-import { useAtom } from 'jotai';
 import type { Config } from '@/features/scan-config/components/components';
 import { useConfigAtom } from '@/features/scan-config/components/hooks/config-atom';
 import { useAtomsMap, useObioneJsonSchema } from '@/features/scan-config/components/hooks/schema';
@@ -15,7 +14,7 @@ import ModelPreview from '@/features/scan-config/components/model-preview';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import styles from '@/features/scan-config/scan-config.module.css';
 import type { Block, TabType } from '@/features/scan-config/types';
-import { patchesAtoms, useAgentState } from '@/services/ai-agent';
+import { useAgentState } from '@/services/ai-agent';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 import { useEntries, useModel, useSchemaName } from './components/hooks';
@@ -71,11 +70,9 @@ export default function ScanConfiguration({
 
   const config = useConfigAtom(schema, atomsMap);
 
-  const [_, setAIState] = useAgentState('smc_simulation_config');
+  const [patches] = useAgentState('smc_simulation_config', config);
 
-  useEffect(() => {
-    setAIState(config);
-  }, [config, setAIState]);
+  console.log(patches);
 
   if (!schema || Object.keys(atomsMap).length === 0) {
     return (
@@ -128,7 +125,7 @@ export default function ScanConfiguration({
             setIsEditingKey={setIsEditingKey}
           />
 
-          <Middle
+          {/* <Middle
             schemaName={schemaName}
             schema={schema}
             configTab={selectedRootElement}
@@ -149,7 +146,7 @@ export default function ScanConfiguration({
               setNewKey('');
               setIsEditingKey(false);
             }}
-          />
+          /> */}
 
           <div className="rounded-lg">
             <ModelPreview model={model} />

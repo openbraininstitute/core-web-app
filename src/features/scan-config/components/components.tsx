@@ -17,7 +17,7 @@ import {
   type ParamSchema,
   type SchemaName,
 } from '@/features/scan-config/types';
-import { patchesAtoms } from '@/services/ai-agent';
+import { patchesAtom } from '@/services/ai-agent';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
@@ -49,7 +49,7 @@ export function BlockUI({
 }) {
   const [state, setState] = useAtom(stateAtom);
 
-  const [patches, setPatches] = useAtom(patchesAtoms.smc_simulation_config);
+  const [patches, setPatches] = useAtom(patchesAtom);
   disabled = patches.length > 0 || disabled;
 
   useEffect(() => {

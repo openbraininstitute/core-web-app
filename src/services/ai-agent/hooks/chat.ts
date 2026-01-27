@@ -3,13 +3,15 @@
 import { type CreateMessage, type Message, useChat } from '@ai-sdk/react';
 import type { ChatRequestOptions, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import { atom, useAtom } from 'jotai';
-import { userAgent } from 'next/server';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useAIActiveTools } from '@/components/ai-assistant/state';
 import type { Config } from '@/features/scan-config/components/components';
 import { logError } from '@/util/logger';
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { useAiAssistant } from '../assistant';
+
+let AI_AGENT_STATE: { id?: string; config?: Record<string, Config> } = {};
+let returnId: string = '';
 
 export interface AiAgentRateLimit {
   limit: number;
@@ -52,16 +54,7 @@ export function useServiceAiAgentChat(threadId: string) {
   const activeTools = useAIActiveTools();
   const [rateLimitRemaining, setRateLimitRemaining] = React.useState(() => getStoredRateLimit());
 
-  const patchAtomKey = globalThis.location.pathname.includes('workflows/simulate/configure/circuit')
-    ? 'smc_simulation_config'
-    : '';
-
-  const patchKeyToTool = useRef({
-    smc_simulation_config: 'obione-generatesimulationsconfig',
-    '': '',
-  });
-
-  const [_, setPatches] = useAtom(patchesAtoms[patchAtomKey]);
+  const [_, setPatches] = useAtom(patchesAtom);
 
   const chat = useChat({
     api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
@@ -69,6 +62,7 @@ export function useServiceAiAgentChat(threadId: string) {
     initialMessages,
     headers: {
       Authorization: `Bearer ${accessToken}`,
+      'x-request-id': AI_AGENT_STATE.id ?? '',
     },
     experimental_prepareRequestBody: ({ messages }) => {
       const lastMessage = messages.at(-1);
@@ -76,7 +70,7 @@ export function useServiceAiAgentChat(threadId: string) {
         content: (lastMessage?.content ?? '').trim(),
         tool_selection: activeTools,
         frontend_url: `${globalThis.location.pathname}${globalThis.location.search}`,
-        shared_state: AI_AGENT_STATE,
+        shared_state: AI_AGENT_STATE.config,
       };
     },
     fetch: async (url, options) => {
@@ -89,6 +83,7 @@ export function useServiceAiAgentChat(threadId: string) {
       };
       setRateLimitRemaining(newRateLimit.remaining);
       setStoredRateLimit(newRateLimit.remaining);
+      returnId = resp.headers.get('x-request-id') ?? '';
       return resp;
     },
   });
@@ -99,17 +94,17 @@ export function useServiceAiAgentChat(threadId: string) {
     const toolInvocation = lastMessage?.parts.find(
       (p) =>
         p.type === 'tool-invocation' &&
-        p.toolInvocation.toolName === patchKeyToTool.current[patchAtomKey]
+        p.toolInvocation.toolName === 'obione-generatesimulationsconfig'
     ) as ToolInvocationUIPart | undefined;
 
     //@ts-expect-error
-    if (toolInvocation?.toolInvocation?.result) {
+    if (toolInvocation?.toolInvocation?.result && returnId === AI_AGENT_STATE.id) {
       //@ts-expect-error
       const result = JSON.parse(toolInvocation?.toolInvocation?.result ?? '');
-      const patches = USER_HAS_PROMPTED && result?.patches ? result.patches : [];
+      const patches = result?.patches ? result.patches : [];
       setPatches(patches);
     }
-  }, [chat.messages, patchAtomKey, setPatches]);
+  }, [chat.messages, setPatches]);
 
   return {
     rateLimitRemaining,
@@ -139,37 +134,23 @@ export function useServiceAiAgentChat(threadId: string) {
   };
 }
 
-const AI_AGENT_STATE: {
-  smc_simulation_config?: Config;
-} = {};
-
-let USER_HAS_PROMPTED = false;
-
-export function setUserHasPrompted(value: boolean) {
-  USER_HAS_PROMPTED = value;
-}
-
 type Patch = {
   op: 'replace' | 'add' | 'delete';
   path: string;
   value: Config;
 };
 
-export function useAgentState(key: 'smc_simulation_config') {
+export const patchesAtom = atom<Patch[]>([]);
+
+export function useAgentState(key: 'smc_simulation_config', config: Config) {
   useEffect(() => {
-    setUserHasPrompted(false);
-  }, []);
-  const setAgentState = useCallback(
-    (value: Config) => {
-      AI_AGENT_STATE[key] = value;
-    },
-    [key]
-  );
+    AI_AGENT_STATE = {
+      id: crypto.randomUUID().replace(/-/g, ''),
+      config: {
+        [key]: config,
+      },
+    };
+  }, [config, key]);
 
-  return [AI_AGENT_STATE[key], setAgentState] as const;
+  return useAtom(patchesAtom);
 }
-
-export const patchesAtoms = {
-  smc_simulation_config: atom<Patch[]>([]),
-  '': atom<Patch[]>([]),
-};

@@ -2,7 +2,6 @@
 
 import React from 'react';
 import SendIcon from '@/components/icons/Send';
-import { setUserHasPrompted, USER_HAS_PROMPTED } from '@/services/ai-agent';
 import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 import { classNames } from '@/util/utils';
 
@@ -22,7 +21,6 @@ export default function Prompt({ className, value, tools, onChange, onClick }: P
   const [showToolsSelector, setShowToolsSelector] = React.useState(false);
 
   const handleSendClick = () => {
-    setUserHasPrompted(true);
     const promptText = value.trim();
     if (promptText.length > 0) onClick(promptText);
   };
@@ -44,7 +42,7 @@ export default function Prompt({ className, value, tools, onChange, onClick }: P
           <div className={styles.content}>{value + '!'}</div>
           <textarea
             placeholder="What would you like to do?"
-            // eslint-disable-next-line jsx-a11y/no-autofocus
+            // biome-ignore lint/a11y/noAutofocus: Autofocus
             autoFocus
             value={value}
             onChange={(evt) => onChange(evt.target.value)}
