@@ -185,7 +185,7 @@ export function EModelMiniDetail({ sessionId }: Props) {
       value: renderEmptyOrValue(renderArray(data?.etypes?.map((m) => m.pref_label) || [])),
     },
     {
-      label: 'Created By',
+      label: 'Registered By',
       value: renderEmptyOrValue(data?.created_by?.pref_label),
     },
     {

@@ -99,11 +99,11 @@ export function MModelMiniDetail({ sessionId }: { sessionId: string }) {
       value: renderEmptyOrValue(renderLicense({ license: data?.license })),
     },
     {
-      label: 'Created By',
+      label: 'Registered By',
       value: renderEmptyOrValue(data?.created_by?.pref_label),
     },
     {
-      label: 'Created At',
+      label: 'Registered At',
       value: renderDate(data?.creation_date),
     },
   ];

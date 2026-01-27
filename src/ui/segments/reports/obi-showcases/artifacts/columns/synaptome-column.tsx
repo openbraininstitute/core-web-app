@@ -1,4 +1,4 @@
-import { SynaptomeProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
+import type { SynaptomeProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
 
 const columns = () => {
   return [
@@ -52,7 +52,7 @@ const columns = () => {
       ),
     },
     {
-      title: 'Created By',
+      title: 'Registered By',
       key: 'createdBy',
       width: '150px',
       render: (_value: any, record: SynaptomeProps, _index: number) => (
