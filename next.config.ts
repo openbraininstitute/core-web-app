@@ -40,7 +40,8 @@ const nextConfig = (phase: string): NextConfig => {
       APP_BUILD_TIME: new Date().toISOString(),
     },
     experimental: {
-      turbopackFileSystemCacheForDev: true,
+      // Temporarily disabled due to Node.js warning in Next.js 16.1.0
+      // turbopackFileSystemCacheForDev: true,
     },
     reactCompiler: true,
     turbopack: {

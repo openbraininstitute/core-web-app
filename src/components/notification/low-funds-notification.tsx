@@ -82,7 +82,7 @@ export function LowFundsNotification({ title, description, onClose, duration = 1
               <button
                 type="button"
                 onClick={handleClose}
-                className="text-neutral-4 hover:text-primary-9 -mt-1 -mr-1 flex-shrink-0 p-1 transition-colors"
+                className="text-neutral-4 hover:text-primary-9 -mt-1 -mr-1 shrink-0 p-1 transition-colors"
                 aria-label="Close notification"
                 name="close-notification-button"
               >

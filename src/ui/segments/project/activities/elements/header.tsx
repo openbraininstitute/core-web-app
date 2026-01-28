@@ -1,14 +1,12 @@
 'use client';
 
-import { useState } from 'react';
 import { Select } from 'antd';
-
+import { useState } from 'react';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
   getScaleArray,
   getScaleAvailableActivities,
 } from '@/ui/segments/project/activities/elements/helpers';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 
 type Props = {
@@ -18,18 +16,18 @@ type Props = {
 };
 
 export function Header({ onScaleChange, onTypeChange, onPageChange }: Props) {
-  const defaultScale = getScaleArray().at(0)?.value!;
+  const defaultScale = getScaleArray().at(0)?.value as TExtendedEntitiesTypeDict;
   const defaultActivities = getScaleAvailableActivities(defaultScale);
 
   const [activities, setActivities] =
     useState<Array<{ label: string; value: string }>>(defaultActivities);
   const [selectedActivityType, setSelectedActivityType] = useState<TActivityValue>(
-    defaultActivities?.at(0)?.value!
+    defaultActivities.at(0)?.value as TActivityValue
   );
 
   const onScale = (s: TExtendedEntitiesTypeDict) => {
     const availableActivities = getScaleAvailableActivities(s);
-    const firstActivityType = availableActivities?.at(0)?.value!;
+    const firstActivityType = availableActivities.at(0)?.value as TActivityValue;
 
     onScaleChange(s);
     setActivities(availableActivities);
