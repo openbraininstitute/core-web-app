@@ -97,10 +97,13 @@ export function useServiceAiAgentChat(threadId: string) {
         p.toolInvocation.toolName === 'obione-generatesimulationsconfig'
     ) as ToolInvocationUIPart | undefined;
 
+    console.log('result', toolInvocation, AI_AGENT_STATE.id, returnId);
+
     //@ts-expect-error
     if (toolInvocation?.toolInvocation?.result && returnId === AI_AGENT_STATE.id) {
       //@ts-expect-error
       const result = JSON.parse(toolInvocation?.toolInvocation?.result ?? {});
+      console.log('HERE', result);
       setConfig(result);
     }
   }, [chat.messages, setConfig]);

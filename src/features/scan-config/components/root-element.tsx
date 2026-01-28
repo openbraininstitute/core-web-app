@@ -356,6 +356,111 @@ export function RootElement({
                   </button>
                 );
               })}
+
+            {!!aiConfig && (
+              <div className="border-red-500 border-2">
+                {Object.entries(config[rootElement])
+                  .filter(([block_key, block_schema]) => {
+                    if (!aiConfig) return false;
+                    if (!isPlainObject(aiConfig[rootElement])) return false;
+                    const blockAIConfig = aiConfig[rootElement][block_key];
+                    return !!blockAIConfig && !isEqual(block_schema, blockAIConfig);
+                  })
+                  .map(([subkey, subValue]) => {
+                    const isSelected =
+                      selectedRootElement === rootElement && subkey === selectedEntry;
+
+                    return (
+                      <button
+                        type="button"
+                        key={subkey}
+                        className={classNames(
+                          'text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
+                          isSelected
+                            ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
+                            : ''
+                        )}
+                        tabIndex={0}
+                        onClick={() => handleHeaderClick(subkey, subValue)}
+                        onKeyDown={(evt) => {
+                          if (evt.key === ' ' || evt.key === 'Enter') {
+                            handleHeaderClick(subkey, subValue);
+                          }
+                        }}
+                      >
+                        <div className="w-full text-left"> {subkey}</div>
+                      </button>
+                    );
+                  })}
+
+                {Object.entries(config[rootElement])
+                  .filter(([block_key, _]) => {
+                    if (!aiConfig) return false;
+                    if (!isPlainObject(aiConfig[rootElement])) return false;
+                    const blockAIConfig = aiConfig[rootElement][block_key];
+                    return !blockAIConfig;
+                  })
+                  .map(([subkey, subValue]) => {
+                    const isSelected =
+                      selectedRootElement === rootElement && subkey === selectedEntry;
+
+                    return (
+                      <button
+                        type="button"
+                        key={subkey}
+                        className={classNames(
+                          'text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
+                          isSelected
+                            ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
+                            : ''
+                        )}
+                        tabIndex={0}
+                        onClick={() => handleHeaderClick(subkey, subValue)}
+                        onKeyDown={(evt) => {
+                          if (evt.key === ' ' || evt.key === 'Enter') {
+                            handleHeaderClick(subkey, subValue);
+                          }
+                        }}
+                      >
+                        <div className="w-full text-left"> {subkey}</div>
+                      </button>
+                    );
+                  })}
+
+                {Object.entries(aiConfig[rootElement])
+                  .filter(([block_key, _]) => {
+                    if (!isPlainObject(config[rootElement])) return false;
+                    const currentBlockConfig = config[rootElement][block_key];
+                    return !currentBlockConfig;
+                  })
+                  .map(([subkey, subValue]) => {
+                    const isSelected =
+                      selectedRootElement === rootElement && subkey === selectedEntry;
+
+                    return (
+                      <button
+                        type="button"
+                        key={subkey}
+                        className={classNames(
+                          'text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
+                          isSelected
+                            ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
+                            : ''
+                        )}
+                        tabIndex={0}
+                        onClick={() => handleHeaderClick(subkey, subValue)}
+                        onKeyDown={(evt) => {
+                          if (evt.key === ' ' || evt.key === 'Enter') {
+                            handleHeaderClick(subkey, subValue);
+                          }
+                        }}
+                      >
+                        <div className="w-full text-left"> {subkey}</div>
+                      </button>
+                    );
+                  })}
+              </div>
+            )}
             {!campaignId && !loading && !readOnly && (
               <button
                 className="text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
