@@ -1,14 +1,13 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+import type { TCellMorphologyForm } from '@/ui/segments/contribute/cell-morphology/schema';
 
 import { CellMorphologySchema } from '@/ui/segments/contribute/cell-morphology/schema';
 import { DEFAULT_LICENSE_ID } from '@/ui/segments/contribute/shared/schemas';
-
-import type { TCellMorphologyForm } from '@/ui/segments/contribute/cell-morphology/schema';
 import type {
   IContributionFormConfig,
   IContributionStep,
 } from '@/ui/segments/contribute/shared/types';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 export const CELL_MORPHOLOGY_PROGRESS_STEPS: Array<{
   key: string;
@@ -43,7 +42,7 @@ export function createCellMorphologyConfig(
     progressSteps: steps,
     getInitialValues: (brainRegionId: string) => ({
       setup: { brain_region_id: brainRegionId } as TCellMorphologyForm['setup'],
-      contribution: [{}] as TCellMorphologyForm['contribution'],
+      contribution: [{}] as unknown as TCellMorphologyForm['contribution'],
       license_id: DEFAULT_LICENSE_ID,
     }),
     buildDetailsUrl: ({ entityId, virtualLabId, projectId }) =>

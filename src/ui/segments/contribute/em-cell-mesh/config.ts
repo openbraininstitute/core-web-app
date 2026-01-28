@@ -9,9 +9,21 @@ import type {
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 export const EM_CELL_MESH_PROGRESS_STEPS = [
-  { key: 'em-cell-mesh', label: 'Creating Cell Mesh', mutationKey: 'createEMCellMesh' },
-  { key: 'assets', label: 'Uploading Assets', mutationKey: 'createEMCellMeshAssets' },
-  { key: 'contribution', label: 'Creating Contribution', mutationKey: 'createContribution' },
+  {
+    key: 'em-cell-mesh',
+    label: 'Creating Cell Mesh',
+    mutationKey: 'createEMCellMesh',
+  },
+  {
+    key: 'assets',
+    label: 'Uploading Assets',
+    mutationKey: 'createEMCellMeshAssets',
+  },
+  {
+    key: 'contribution',
+    label: 'Creating Contribution',
+    mutationKey: 'createContribution',
+  },
   {
     key: 'mtype-classification',
     label: 'Creating M-Type Classification',
@@ -36,12 +48,8 @@ export function createEMCellMeshConfig(
         em_dense_reconstruction_dataset_id: ZERO_UUID,
         generation_method: 'marching_cubes',
       } as TEMCellMeshForm['setup'],
-      contribution: [{}] as TEMCellMeshForm['contribution'],
+      contribution: [{}] as unknown as TEMCellMeshForm['contribution'],
       license_id: DEFAULT_LICENSE_ID,
-      // Initialize assets to avoid uncontrolled input warnings
-      assets: {
-        obj: null,
-      },
     }),
     buildDetailsUrl: ({ entityId, virtualLabId, projectId }) =>
       resolveExploreDetailsPageUrl({

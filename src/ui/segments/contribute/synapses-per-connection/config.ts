@@ -2,16 +2,15 @@
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { MeasurementUnit } from '@/api/entitycore/types/shared/global';
-
-import {
-  ExperimentalSynapsesPerConnectionSchema,
-  type TExperimentalSynapsesPerConnectionForm,
-} from '@/ui/segments/contribute/synapses-per-connection/schema';
 import {
   DEFAULT_LICENSE_ID,
   type IContributionFormConfig,
   type IContributionStep,
 } from '@/ui/segments/contribute/shared';
+import {
+  ExperimentalSynapsesPerConnectionSchema,
+  type TExperimentalSynapsesPerConnectionForm,
+} from '@/ui/segments/contribute/synapses-per-connection/schema';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 export const EXPERIMENTAL_SYNAPSES_PER_CONNECTION_PROGRESS_STEPS: Array<{
@@ -21,7 +20,7 @@ export const EXPERIMENTAL_SYNAPSES_PER_CONNECTION_PROGRESS_STEPS: Array<{
 }> = [
   {
     key: 'synapses-per-connection',
-    label: 'Creating Experimental Synpase Per Connection',
+    label: 'Creating Experimental Synapses Per Connection',
     mutationKey: 'createExperimentalSynapsesPerConnection',
   },
   {

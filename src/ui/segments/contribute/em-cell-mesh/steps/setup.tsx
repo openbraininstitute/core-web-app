@@ -1,11 +1,18 @@
 'use client';
 
-import { DatePicker, Form, Input, InputNumber, Select } from 'antd';
+import { DatePicker, Form, Input, InputNumber } from 'antd';
 import dayjs from 'dayjs';
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import {
+  EMCellMeshGenerationMethodDict,
+  EMCellMeshTypeDict,
+  type TEMCellMeshGenerationMethod,
+  type TEMCellMeshType,
+} from '@/api/entitycore/types/entities/em-cell-mesh';
 import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
 import { EMCellMeshSchema } from '@/ui/segments/contribute/em-cell-mesh/schema';
 import { EMDenseReconstructionDatasetSelector } from '@/ui/segments/contribute/shared/components/em-dense-reconstruction-dataset-selector';
 import {
@@ -28,6 +35,22 @@ export function Setup() {
     showIcon: false,
     charsPerLine: 200,
     defaultBrainRegion: defaultBrainRegion as IBrainRegionHierarchy,
+  });
+
+  const GenerationMethodFormInput = SelectPopoverFormItem<TEMCellMeshGenerationMethod>({
+    options: Object.entries(EMCellMeshGenerationMethodDict).map(([, value]) => ({
+      label: value.label,
+      value: value.key,
+    })),
+    clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
+  });
+
+  const EMCellMeshTypeFormInput = SelectPopoverFormItem<TEMCellMeshType>({
+    options: Object.entries(EMCellMeshTypeDict).map(([, value]) => ({
+      label: value.label,
+      value: value.key,
+    })),
+    clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
   });
 
   return (
@@ -71,15 +94,24 @@ export function Setup() {
         <BrainRegionDropdown />
       </Form.Item>
 
-      {/* Replaced manual UUID Input with the Async Dropdown Selector */}
       <EMDenseReconstructionDatasetSelector schema={EMCellMeshSchema} />
 
       <Form.Item
         name={['setup', 'dense_reconstruction_cell_id']}
         label={renderLabel('Dense reconstruction cell id', 'main')}
+        rules={[
+          {
+            required: true,
+            validator: createZodFieldValidator(
+              EMCellMeshSchema,
+              'setup.dense_reconstruction_cell_id',
+              form
+            ),
+          },
+        ]}
       >
         <InputNumber
-          className="h-12 w-full rounded-full flex items-center"
+          className="h-12 w-full rounded-full flex items-center [&_.ant-input-number-handler-wrap]:hidden"
           placeholder="Enter cell ID (int)"
         />
       </Form.Item>
@@ -97,9 +129,17 @@ export function Setup() {
         <DatePicker className="h-12 w-full rounded-full" format="DD/MM/YYYY" maxDate={dayjs()} />
       </Form.Item>
 
-      <Form.Item name={['setup', 'release_version']} label={renderLabel('Release version', 'main')}>
+      <Form.Item
+        name={['setup', 'release_version']}
+        label={renderLabel('Release version', 'main')}
+        rules={[
+          {
+            validator: createZodFieldValidator(EMCellMeshSchema, 'setup.release_version', form),
+          },
+        ]}
+      >
         <InputNumber
-          className="h-12 w-full rounded-full flex items-center"
+          className="h-12 w-full rounded-full flex items-center [&_.ant-input-number-handler-wrap]:hidden"
           placeholder="Enter version (int)"
         />
       </Form.Item>
@@ -107,28 +147,40 @@ export function Setup() {
       <Form.Item
         name={['setup', 'generation_method']}
         label={renderLabel('Generation method', 'main')}
+        rules={[
+          {
+            validator: createZodFieldValidator(EMCellMeshSchema, 'setup.generation_method', form),
+          },
+        ]}
       >
-        <Select
-          className="h-12 w-full"
-          placeholder="Select method"
-          style={{ backgroundColor: 'white', borderRadius: '9999px' }}
-        >
-          <Select.Option value="marching_cubes">marching_cubes</Select.Option>
-        </Select>
+        <GenerationMethodFormInput />
       </Form.Item>
 
-      <Form.Item name={['setup', 'level_of_detail']} label={renderLabel('Level of detail', 'main')}>
+      <Form.Item
+        name={['setup', 'level_of_detail']}
+        label={renderLabel('Level of detail', 'main')}
+        rules={[
+          {
+            validator: createZodFieldValidator(EMCellMeshSchema, 'setup.level_of_detail', form),
+          },
+        ]}
+      >
         <InputNumber
-          className="h-12 w-full rounded-full flex items-center"
+          className="h-12 w-full rounded-full flex items-center [&_.ant-input-number-handler-wrap]:hidden"
           placeholder="Enter level (int)"
         />
       </Form.Item>
 
-      <Form.Item name={['setup', 'mesh_type']} label={renderLabel('Mesh type', 'main')}>
-        <Select className="h-12 w-full" placeholder="Select type" allowClear>
-          <Select.Option value="static">static</Select.Option>
-          <Select.Option value="dynamic">dynamic</Select.Option>
-        </Select>
+      <Form.Item
+        name={['setup', 'mesh_type']}
+        label={renderLabel('Mesh type', 'main')}
+        rules={[
+          {
+            validator: createZodFieldValidator(EMCellMeshSchema, 'setup.mesh_type', form),
+          },
+        ]}
+      >
+        <EMCellMeshTypeFormInput />
       </Form.Item>
     </div>
   );

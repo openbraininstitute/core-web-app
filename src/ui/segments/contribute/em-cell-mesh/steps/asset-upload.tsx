@@ -33,7 +33,7 @@ function getFileExtensionByTypeOrMimeType(file: File): string | undefined {
 
 export function AssetUpload({
   maxFiles = 1,
-  maxSize = 75 * 1024 * 1024,
+  maxSize = 500 * 1024 * 1024, // 500mb
   accept = ['application/obj', '.obj'],
   multiple = true,
   className,
