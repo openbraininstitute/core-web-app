@@ -1,9 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { useRouter } from '@bprogress/next';
 import {
   CheckCircleFilled,
   LoadingOutlined,
@@ -11,41 +7,41 @@ import {
   SettingFilled,
   WarningFilled,
 } from '@ant-design/icons';
-import { z } from 'zod';
-
-import kebabCase from 'es-toolkit/compat/kebabCase';
-import isNil from 'es-toolkit/compat/isNil';
+import { useRouter } from '@bprogress/next';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import delay from 'es-toolkit/compat/delay';
-
-import { useVisibleSynapsesSetter } from '../../simulate/single-neuron/shared/steps/webgl-neuron-selector/hooks';
-
-import { SynapseSetMenuItems } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-set-menu-item';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { createSingleNeuronSynaptome } from '@/api/small-scale-simulator';
-import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
-import {
-  BuildStep,
-  BuildStepKeys,
-  DefaultSynapseValue,
-  useBuildSingleNeuronSynaptomeSessionState,
-} from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import isNil from 'es-toolkit/compat/isNil';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
+import { z } from 'zod';
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import {
   SingleNeuronSynaptomeBaseSchema,
   SingleNeuronSynaptomeConfigurationSchema,
 } from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import { useAppNotification } from '@/components/notification';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { browserHistoryReplace } from '@/utils/browser';
-import { messages } from '@/i18n/en/synaptome';
-import { Button } from '@/ui/molecules/button';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { createSingleNeuronSynaptome } from '@/api/small-scale-simulator';
 import { tryCatch } from '@/api/utils';
-import { cn } from '@/utils/css-class';
+import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
-
-import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import { messages } from '@/i18n/en/synaptome';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Button } from '@/ui/molecules/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import type { BuildStepKeys } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import {
+  BuildStep,
+  DefaultSynapseValue,
+  useBuildSingleNeuronSynaptomeSessionState,
+} from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import { SynapseSetMenuItems } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-set-menu-item';
+import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { browserHistoryReplace } from '@/utils/browser';
+import { cn } from '@/utils/css-class';
+import { useVisibleSynapsesSetter } from '../../simulate/single-neuron/shared/steps/webgl-neuron-selector/hooks';
 
 type Props = { sessionId: string };
 
@@ -137,11 +133,11 @@ export function Menu({ sessionId }: Props) {
         createSingleNeuronSynaptome({
           ctx: { virtualLabId, projectId },
           modelInfo: {
-            name: validateMainFormData?.name!,
+            name: validateMainFormData?.name as string,
             description: validateMainFormData?.description || '',
-            seed: validateMainFormData?.seed!,
-            memodel_id: validateMainFormData?.me_model_id!,
-            brain_region_id: sessionValue?.memodel?.brain_region?.id!,
+            seed: validateMainFormData?.seed as number,
+            memodel_id: validateMainFormData?.me_model_id as string,
+            brain_region_id: sessionValue?.memodel?.brain_region?.id as string,
             config: {
               synapses: sets.map((o) => o.data),
             },
@@ -233,8 +229,10 @@ export function Menu({ sessionId }: Props) {
           <div className="flex items-center justify-center gap-3">
             {!sessionValue?.name && (
               <Tooltip>
-                <TooltipTrigger>
-                  <WarningFilled className="text-sm text-yellow-300" />
+                <TooltipTrigger asChild>
+                  <span>
+                    <WarningFilled className="text-sm text-yellow-300" />
+                  </span>
                 </TooltipTrigger>
                 <TooltipContent
                   avoidCollisions
@@ -244,10 +242,10 @@ export function Menu({ sessionId }: Props) {
                   className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
                   arrowClassName="bg-amber-100"
                 >
-                  <p className="w-full pb-0.5 break-words hyphens-auto">
+                  <p className="w-full pb-0.5 wrap-break-words hyphens-auto">
                     • The model name cannot be empty.
                   </p>
-                  <p className="w-full pb-0.5 break-words hyphens-auto">
+                  <p className="w-full pb-0.5 wrap-break-words hyphens-auto">
                     • Please enter a model name (minimum 1 character).
                   </p>
                 </TooltipContent>
@@ -271,15 +269,14 @@ export function Menu({ sessionId }: Props) {
         onClick={() => onStepChange(BuildStep.MEModel)}
       >
         <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
-          <div className="flex-shrink-0 font-bold">ME-model</div>
+          <div className="shrink-0 font-bold">ME-model</div>
           {sessionValue?.memodel ? (
             <Tooltip>
               <TooltipTrigger>
                 <div className="text-accent-light flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
-                  <CheckCircleFilled className="flex-shrink-0 text-base" />
+                  <CheckCircleFilled className="shrink-0 text-base" />
                   <div
                     title={sessionValue.memodel.name}
-                    aria-label={sessionValue.memodel.name}
                     className="line-clamp-1 min-w-0 flex-1 truncate text-left"
                   >
                     {sessionValue?.memodel.name}
@@ -315,7 +312,7 @@ export function Menu({ sessionId }: Props) {
               disabled={isNil(sessionValue?.memodel)}
             >
               <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
-                <div className="flex-shrink-0 font-bold">Synapse sets</div>
+                <div className="shrink-0 font-bold">Synapse sets</div>
                 <div className="ml-auto flex items-center justify-center gap-2">
                   {!!validSetsCount && (
                     <div>
@@ -357,7 +354,7 @@ export function Menu({ sessionId }: Props) {
               onClick={() => mutate.mutateAsync()}
               disabled={disabled}
             >
-              <div className="flex-shrink-0 font-bold">Build synaptome</div>
+              <div className="shrink-0 font-bold">Build synaptome</div>
               {mutate.isPending && <LoadingOutlined className="ml-2 text-white" />}
             </Button>
           </div>
