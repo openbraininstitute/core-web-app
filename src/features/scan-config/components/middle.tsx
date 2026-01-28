@@ -1,4 +1,5 @@
 import { atom } from 'jotai';
+import { useRef } from 'react';
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import {
@@ -53,6 +54,8 @@ export default function Middle({
   onNewBlockClick,
 }: MiddleProps) {
   const aiSuggestedConfig = useAIConfig();
+
+  const emptyAtom = useRef(atom({}));
 
   const getBlockAIConfig = () => {
     if (!aiSuggestedConfig) return null;
