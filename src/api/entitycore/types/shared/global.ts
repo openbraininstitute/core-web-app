@@ -1,9 +1,8 @@
 import z from 'zod';
-import { EntityCoreConfiguration } from '@/entity-configuration/domain';
-
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { AssetLegacyMeta } from '@/api/entitycore/types/shared/legacy';
 import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
+import type { EntityCoreConfiguration } from '@/entity-configuration/domain';
 import type { Prettify } from '@/utils/type';
 
 export type EntityCoreDataType =
@@ -218,6 +217,7 @@ export enum AssetLabel {
   campaign_summary = 'campaign_summary',
   cell_composition_summary = 'cell_composition_summary',
   cell_composition_volumes = 'cell_composition_volumes',
+  cell_surface_mesh = 'cell_surface_mesh',
   custom_node_sets = 'custom_node_sets',
   emodel_optimization_output = 'emodel_optimization_output',
   morphology = 'morphology',
