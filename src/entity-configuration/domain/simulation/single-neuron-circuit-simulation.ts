@@ -55,7 +55,11 @@ async function resolveSimulationCampaigns({
     (campaign) => campaign.simulations?.map((sim) => sim.id) ?? []
   );
 
-  const executions = await resolveExecutions({ context, allSimIds });
+  const [executions, simulationMap] = await Promise.all([
+    resolveExecutions({ context, allSimIds }),
+    // TODO: Switch to sim generation execution status for validation when implemented in obi-one.
+    getExtendedSimMap(allSimIds, context),
+  ]);
 
   // map simulationId -> array of executions that use it
   const executionsBySimId = executions.reduce<Record<string, typeof executions>>((acc, exec) => {
@@ -65,9 +69,6 @@ async function resolveSimulationCampaigns({
     });
     return acc;
   }, {});
-
-  // TODO: Switch to sim generation execution status for validation when implemented in obi-one.
-  const simulationMap = await getExtendedSimMap(allSimIds, context);
 
   // attach executions to each simulation (choose to add all executions as array)
   const enrichedData = source.data.map((campaign) => ({
