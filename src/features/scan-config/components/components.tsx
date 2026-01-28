@@ -1,8 +1,8 @@
 import { CloseOutlined, PlusOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
 import isEqual from 'es-toolkit/compat/isEqual';
-import { type atom, useAtom } from 'jotai';
-import { useEffect } from 'react';
+import { atom, useAtom } from 'jotai';
+import { useEffect, useRef } from 'react';
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import EntityPropertyDropdown from '@/features/scan-config/components/entity-property-dropdown';
@@ -44,13 +44,14 @@ export function BlockUI({
   config: Config;
   blockSchema?: Block;
   model: ICircuit | IMEModel | undefined | null;
-  stateAtom: ReturnType<typeof atom<Record<string, ConfigValue>>>;
+  stateAtom: ReturnType<typeof atom<Record<string, ConfigValue>>> | null;
   blockAIConfig: Record<string, ConfigValue> | null;
 }) {
-  const [state, setState] = useAtom(stateAtom);
+  const dummyAtom = useRef(atom<Record<string, ConfigValue>>({}));
+  const [state, setState] = useAtom(stateAtom ?? dummyAtom.current);
 
   useEffect(() => {
-    if (!blockSchema || !blockSchema.properties) return;
+    if (!blockSchema || !blockSchema.properties || stateAtom === null) return;
 
     const initial: Record<string, ConfigValue> = {};
 
@@ -61,7 +62,7 @@ export function BlockUI({
     setState((prev) => {
       return { ...initial, ...prev };
     });
-  }, [setState, blockSchema]);
+  }, [setState, blockSchema, stateAtom]);
 
   function renderInput(k: string, paramSchema: ParamSchema, value: ConfigValue) {
     if (paramSchema.ui_element === 'string_input') {

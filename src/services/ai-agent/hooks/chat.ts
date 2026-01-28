@@ -10,7 +10,7 @@ import { logError } from '@/util/logger';
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { useAiAssistant } from '../assistant';
 
-let AI_AGENT_STATE: { id?: string; config?: Record<string, Config> } = {};
+const AI_AGENT_STATE: { id?: string; config?: Record<string, Config> } = {};
 let returnId: string = '';
 
 export interface AiAgentRateLimit {
@@ -140,11 +140,12 @@ export const configStateAtom = atom<Config | null>(null);
 
 export function useAgentState(key: 'smc_simulation_config', config: Config) {
   useEffect(() => {
-    AI_AGENT_STATE = {
-      id: crypto.randomUUID().replace(/-/g, ''),
-      config: {
-        [key]: config,
-      },
+    AI_AGENT_STATE.id = crypto.randomUUID().replace(/-/g, '');
+  }, []);
+
+  useEffect(() => {
+    AI_AGENT_STATE.config = {
+      [key]: config,
     };
   }, [config, key]);
 

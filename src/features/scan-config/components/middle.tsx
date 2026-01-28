@@ -55,8 +55,6 @@ export default function Middle({
 }: MiddleProps) {
   const aiSuggestedConfig = useAIConfig();
 
-  const emptyAtom = useRef(atom({}));
-
   const getBlockAIConfig = () => {
     if (!aiSuggestedConfig) return null;
 
@@ -142,7 +140,7 @@ export default function Middle({
             stateAtom={
               isAtom(atomsMap[configTab])
                 ? atomsMap[configTab]
-                : atomsMap[configTab]?.[selectedEntry]
+                : (atomsMap[configTab]?.[selectedEntry] ?? null)
             }
             model={model}
             blockAIConfig={getBlockAIConfig()}
