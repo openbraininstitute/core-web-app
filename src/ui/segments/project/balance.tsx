@@ -81,6 +81,17 @@ export function Wallet() {
             </Badge>
           </span>
         </TooltipTrigger>
+        <TooltipContent
+          avoidCollisions
+          side="bottom"
+          sideOffset={5}
+          collisionPadding={{ bottom: 20 }}
+          className="text-primary-8 max-w-2xs bg-white text-base shadow-lg"
+          arrowClassName="bg-white"
+        >
+          <div className="font-bold">Project Credits</div>
+          <p className="hyphens-auto">Credits transferred to this project from the virtual lab.</p>
+        </TooltipContent>
       </Tooltip>
       <CreditsTransferModal open={showCreditsManagement} onClose={handleTransferCredits} />
     </>
