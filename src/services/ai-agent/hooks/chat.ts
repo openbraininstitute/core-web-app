@@ -139,9 +139,11 @@ export function useServiceAiAgentChat(threadId: string) {
 export const configStateAtom = atom<Config | null>(null);
 
 export function useAgentState(key: 'smc_simulation_config', config: Config) {
+  const [_, setConfig] = useAtom(configStateAtom);
   useEffect(() => {
     AI_AGENT_STATE.id = crypto.randomUUID().replace(/-/g, '');
-  }, []);
+    return () => setConfig(null);
+  }, [setConfig]);
 
   useEffect(() => {
     AI_AGENT_STATE.config = {

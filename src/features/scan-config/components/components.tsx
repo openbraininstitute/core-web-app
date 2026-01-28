@@ -172,6 +172,7 @@ export function BlockUI({
     if (paramSchema.ui_element === 'entity_property_dropdown' && model) {
       return (
         <EntityPropertyDropdown
+          disabled={disabled}
           modelId={model.id}
           value={typeof state.node_set === 'string' ? state.node_set : null}
           onChange={(newV: string | null) => setState({ ...state, node_set: newV })}
