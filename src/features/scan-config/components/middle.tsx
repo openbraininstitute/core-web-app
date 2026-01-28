@@ -1,5 +1,4 @@
 import { atom } from 'jotai';
-import { useRef } from 'react';
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import {

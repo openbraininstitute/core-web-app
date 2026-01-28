@@ -47,9 +47,11 @@ export function BlockUI({
   stateAtom: ReturnType<typeof atom<Record<string, ConfigValue>>> | null;
   blockAIConfig: Record<string, ConfigValue> | null;
 }) {
-  const dummyAtom = useRef(atom<Record<string, ConfigValue>>({}));
-  const [state, setState] = useAtom(stateAtom ?? dummyAtom.current);
+  // Empty atom for when a block doesn't exist in the config (and the atoms map) yet, only in the AI suggested changes
+  const emptyAtom = useRef(atom<Record<string, ConfigValue>>({}));
+  const [state, setState] = useAtom(stateAtom ?? emptyAtom.current);
 
+  // TODO: Delete this? (shouldn't be needed since the new atom should already have the defaults)
   useEffect(() => {
     if (!blockSchema || !blockSchema.properties || stateAtom === null) return;
 
