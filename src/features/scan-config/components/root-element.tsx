@@ -11,19 +11,24 @@ import type { ErrorObject } from 'ajv';
 import { Input } from 'antd';
 import { atom } from 'jotai';
 import type React from 'react';
-import { classNames } from '@/util/utils';
-import { cn } from '@/utils/css-class';
+import {
+  Chevron,
+  type Config,
+  type ConfigValue,
+  LeftMenuTab,
+} from '@/features/scan-config/components/components';
+import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
+import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type AtomsMap,
   type ConfigSchema,
   type IBlockDictionary,
   type IBlockSingle,
-  type IRootBlock,
+  type IBlockUnion,
   ScanConfigUIElementDict,
-} from '../types';
-import { Chevron, type Config, type ConfigValue, LeftMenuTab, Tab } from './components';
-import { isRootBlock } from './hooks/schema';
-import { isAtom, isPlainObject } from './utils';
+} from '@/features/scan-config/types';
+import { classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
 
 export function RootElement({
   schema,
@@ -49,7 +54,7 @@ export function RootElement({
 }: {
   schema: ConfigSchema | null; // The global schema
   rootElement: string;
-  rootElementSchema: IRootBlock | IBlockDictionary | IBlockSingle;
+  rootElementSchema: IBlockSingle | IBlockDictionary | IBlockUnion;
   atomsMap: AtomsMap;
   setAtomsMap: React.Dispatch<React.SetStateAction<AtomsMap>>;
   selectedRootElement: string;
@@ -158,7 +163,7 @@ export function RootElement({
           if (
             selectedRootElement === rootElement &&
             !isRootBlock(schema, rootElement) &&
-            rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockSingle
+            rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion
           ) {
             setEditing(false);
             setSelectedEntry('');
@@ -170,8 +175,8 @@ export function RootElement({
           setSelectedEntry('');
 
           if (
-            rootElementSchema.ui_element === ScanConfigUIElementDict.RootBlock ||
-            rootElementSchema.ui_element === ScanConfigUIElementDict.BlockSingle
+            rootElementSchema.ui_element === ScanConfigUIElementDict.BlockSingle ||
+            rootElementSchema.ui_element === ScanConfigUIElementDict.BlockUnion
           )
             setEditing(true);
           else setEditing(false);
@@ -185,10 +190,14 @@ export function RootElement({
           ) : (
             <CheckCircleFilled className="text-green-600" />
           )}
-          <Chevron rotate={rootElementSchema.ui_element === 'block_dictionary' ? 90 : 0} />
+          <Chevron
+            rotate={
+              rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary ? 90 : 0
+            }
+          />
         </div>
       </LeftMenuTab>
-      {rootElementSchema.ui_element === 'block_dictionary' &&
+      {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary &&
         selectedRootElement === rootElement &&
         config[rootElement] && (
           <>

@@ -74,6 +74,11 @@ export type TRootElement = {
 };
 
 export const ScanConfigUIElementDict = {
+  // blocks
+  BlockUnion: "block_union",
+  BlockSingle: "block_single",
+  BlockDictionary: "block_dictionary",
+  // components
   StringInput: "string_input",
   ModelIdentifier: "model_identifier",
   FloatParameterSweep: "float_parameter_sweep",
@@ -82,9 +87,6 @@ export const ScanConfigUIElementDict = {
   EntityPropertyDropdown: "entity_property_dropdown",
   NeuronIds: "neuron_ids",
   BooleanInput: "boolean_input",
-  BlockSingle: "block_single",
-  RootBlock: "root_block",
-  BlockDictionary: "block_dictionary",
 } as const;
 
 export interface StringInput extends TBlockElement {
@@ -154,8 +156,8 @@ export interface BooleanInput extends TBlockElement {
   false_label?: string;
 }
 
-export interface IBlockSingle extends TBlockElement {
-  ui_element: typeof ScanConfigUIElementDict.BlockSingle;
+export interface IBlockUnion extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.BlockUnion;
   /** the property name used to discriminate between variants (defaults to 'type') */
   discriminator?:
     | string
@@ -165,7 +167,7 @@ export interface IBlockSingle extends TBlockElement {
 }
 
 /** root-level discriminated union (single value that can be one of several types) */
-export interface IRootBlockSingle extends TRootElement, IBlockSingle {}
+export interface IRootBlockUnion extends TRootElement, IBlockUnion {}
 
 export type TBlockElement = {
   default?: ConfigValue;
@@ -184,7 +186,7 @@ export type ParamSchema =
   | NeuronIds
   | EntityPropertyDropdown
   | BooleanInput
-  | IBlockSingle;
+  | IBlockUnion;
 
 export type TBlock = {
   title: string;
@@ -193,8 +195,8 @@ export type TBlock = {
   required?: string[];
 };
 
-export interface IRootBlock extends TRootElement, TBlock {
-  ui_element: typeof ScanConfigUIElementDict.RootBlock;
+export interface IBlockSingle extends TRootElement, TBlock {
+  ui_element: typeof ScanConfigUIElementDict.BlockSingle;
   additionalProperties: false;
   required?: string[];
 }
@@ -213,7 +215,7 @@ export type ConfigSchema = {
   default_block_reference_labels: Record<string, string>;
   description: string;
   group_order: string[];
-  properties: Record<string, IRootBlock | IBlockDictionary | IBlockSingle> & {
+  properties: Record<string, IBlockSingle | IBlockDictionary | IBlockUnion> & {
     type: Type;
   };
   title: string;

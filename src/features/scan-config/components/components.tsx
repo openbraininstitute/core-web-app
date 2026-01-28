@@ -196,7 +196,7 @@ export function BlockUI({
       );
     }
 
-    if (paramSchema.ui_element === ScanConfigUIElementDict.BlockSingle) {
+    if (paramSchema.ui_element === ScanConfigUIElementDict.BlockUnion) {
       const currentValue = isPlainObject(state[k]) ? state[k] : null;
       return (
         <DiscriminatedUnion

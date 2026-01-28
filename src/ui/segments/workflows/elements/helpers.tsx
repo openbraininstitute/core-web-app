@@ -264,7 +264,7 @@ export const extractConfiguration: Array<TExtractWorkflowConfig> = [
   {
     group: EntityGroupDict.Circuit,
     disabled: false,
-    label: 'Circuit',
+    label: 'Circuit (beta)',
     value: ExtendedEntitiesTypeDict.Circuit,
   },
 ] as const;

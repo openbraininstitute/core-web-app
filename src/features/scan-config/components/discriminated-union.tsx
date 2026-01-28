@@ -6,7 +6,7 @@ import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type {
   Block,
-  IBlockSingle as DiscriminatedUnionSchema,
+  IBlockUnion as DiscriminatedUnionSchema,
   ParamSchema,
   SchemaName,
   TBlock,

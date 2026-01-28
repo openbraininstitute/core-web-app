@@ -32,14 +32,14 @@ export function useObioneJsonSchema(schemaName: SchemaName) {
 export function isRootBlock(schema: ConfigSchema, key: string) {
   return (
     schema.properties?.[key] &&
-    schema.properties[key].ui_element === ScanConfigUIElementDict.RootBlock
+    schema.properties[key].ui_element === ScanConfigUIElementDict.BlockSingle
   );
 }
 
 export function isRootBlockSingle(schema: ConfigSchema, key: string) {
   return (
     schema.properties?.[key] &&
-    schema.properties[key].ui_element === ScanConfigUIElementDict.BlockSingle
+    schema.properties[key].ui_element === ScanConfigUIElementDict.BlockUnion
   );
 }
 
@@ -94,7 +94,7 @@ export function useAtomsMap({
     } else {
       Object.entries(schema.properties).forEach(([k, v]) => {
         if (isType(v)) return;
-        if (v.ui_element === ScanConfigUIElementDict.RootBlock) {
+        if (v.ui_element === ScanConfigUIElementDict.BlockSingle) {
           const initial: Record<string, ConfigValue> = {};
 
           Object.entries(v.properties).forEach(([subkey, subValue]) => {
@@ -124,7 +124,7 @@ export function useAtomsMap({
           });
 
           map[k] = atom<Record<string, ConfigValue>>(initial);
-        } else if (v.ui_element === ScanConfigUIElementDict.BlockSingle) {
+        } else if (v.ui_element === ScanConfigUIElementDict.BlockUnion) {
           // initialize discriminated union with first variant's defaults
           const firstVariant = v.oneOf[0];
           const initial: Record<string, ConfigValue> = {};

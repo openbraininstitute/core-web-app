@@ -1,10 +1,7 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
-<<<<<<< HEAD
-=======
 import { get } from 'es-toolkit/compat';
->>>>>>> 471a7fdba (refactor extraction/simulation to usecases)
 import { Suspense, useState } from 'react';
 import { match } from 'ts-pattern';
 import type { IMEModel } from '@/api/entitycore/types';
