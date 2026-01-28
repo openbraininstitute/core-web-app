@@ -7,6 +7,7 @@ export const messages: Record<TScanConfigActivity, Record<string, string>> = {
     ScanConfigGenerateGridCampaignIdFailed: 'An error occurred updating the simulation',
     Generate: 'Generate simulation(s)',
     New: 'New simulation campaign',
+    CopyCampaignId: 'Copy simulation campaign ID',
   },
   [ScanConfigActivity.Extract]: {
     CoordinateCountFailed: 'An error occurred generating the extraction campaign coordinates',
@@ -14,5 +15,6 @@ export const messages: Record<TScanConfigActivity, Record<string, string>> = {
     ScanConfigGenerateGridCampaignIdFailed: 'An error occurred updating the extraction',
     Generate: 'Generate extraction(s)',
     New: 'New extraction campaign',
+    CopyCampaignId: 'Copy extraction campaign ID',
   },
 };

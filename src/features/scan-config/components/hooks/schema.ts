@@ -36,10 +36,10 @@ export function isRootBlock(schema: ConfigSchema, key: string) {
   );
 }
 
-export function isRootDiscriminatedUnion(schema: ConfigSchema, key: string) {
+export function isRootBlockSingle(schema: ConfigSchema, key: string) {
   return (
     schema.properties?.[key] &&
-    schema.properties[key].ui_element === ScanConfigUIElementDict.DiscriminatedUnion
+    schema.properties[key].ui_element === ScanConfigUIElementDict.BlockSingle
   );
 }
 
@@ -77,13 +77,13 @@ export function useAtomsMap({
     // Logic to build the atoms map based on initialConfig OR schema defaults
     if (initialConfig) {
       Object.entries(initialConfig)
-        .filter(([k]) => isRootBlock(schema, k) || isRootDiscriminatedUnion(schema, k))
+        .filter(([k]) => isRootBlock(schema, k) || isRootBlockSingle(schema, k))
         .forEach(([k, v]) => {
           if (isPlainObject(v)) map[k] = atom<Record<string, ConfigValue>>(v);
         });
 
       Object.entries(initialConfig)
-        .filter(([k]) => !isRootBlock(schema, k) && !isRootDiscriminatedUnion(schema, k))
+        .filter(([k]) => !isRootBlock(schema, k) && !isRootBlockSingle(schema, k))
         .forEach(([k, v]) => {
           map[k] = {};
           Object.entries(v).forEach(([subK, subV]) => {
@@ -124,7 +124,7 @@ export function useAtomsMap({
           });
 
           map[k] = atom<Record<string, ConfigValue>>(initial);
-        } else if (v.ui_element === ScanConfigUIElementDict.DiscriminatedUnion) {
+        } else if (v.ui_element === ScanConfigUIElementDict.BlockSingle) {
           // initialize discriminated union with first variant's defaults
           const firstVariant = v.oneOf[0];
           const initial: Record<string, ConfigValue> = {};

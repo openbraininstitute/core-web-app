@@ -82,7 +82,7 @@ export const ScanConfigUIElementDict = {
   EntityPropertyDropdown: "entity_property_dropdown",
   NeuronIds: "neuron_ids",
   BooleanInput: "boolean_input",
-  DiscriminatedUnion: "discriminated_union",
+  BlockSingle: "block_single",
   RootBlock: "root_block",
   BlockDictionary: "block_dictionary",
 } as const;
@@ -154,8 +154,8 @@ export interface BooleanInput extends TBlockElement {
   false_label?: string;
 }
 
-export interface IDiscriminatedUnion extends TBlockElement {
-  ui_element: typeof ScanConfigUIElementDict.DiscriminatedUnion;
+export interface IBlockSingle extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.BlockSingle;
   /** the property name used to discriminate between variants (defaults to 'type') */
   discriminator?:
     | string
@@ -165,9 +165,7 @@ export interface IDiscriminatedUnion extends TBlockElement {
 }
 
 /** root-level discriminated union (single value that can be one of several types) */
-export interface IRootDiscriminatedUnion
-  extends TRootElement,
-    IDiscriminatedUnion {}
+export interface IRootBlockSingle extends TRootElement, IBlockSingle {}
 
 export type TBlockElement = {
   default?: ConfigValue;
@@ -186,7 +184,7 @@ export type ParamSchema =
   | NeuronIds
   | EntityPropertyDropdown
   | BooleanInput
-  | IDiscriminatedUnion;
+  | IBlockSingle;
 
 export type TBlock = {
   title: string;
@@ -215,10 +213,9 @@ export type ConfigSchema = {
   default_block_reference_labels: Record<string, string>;
   description: string;
   group_order: string[];
-  properties: Record<
-    string,
-    IRootBlock | IBlockDictionary | IRootDiscriminatedUnion
-  > & { type: Type };
+  properties: Record<string, IRootBlock | IBlockDictionary | IBlockSingle> & {
+    type: Type;
+  };
   title: string;
 };
 

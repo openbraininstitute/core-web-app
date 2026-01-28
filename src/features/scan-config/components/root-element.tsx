@@ -1,5 +1,3 @@
-/* eslint-disable no-param-reassign */
-
 import {
   CheckCircleFilled,
   CheckOutlined,
@@ -19,7 +17,7 @@ import {
   type AtomsMap,
   type ConfigSchema,
   type IBlockDictionary,
-  type IDiscriminatedUnion,
+  type IBlockSingle,
   type IRootBlock,
   ScanConfigUIElementDict,
 } from '../types';
@@ -51,7 +49,7 @@ export function RootElement({
 }: {
   schema: ConfigSchema | null; // The global schema
   rootElement: string;
-  rootElementSchema: IRootBlock | IBlockDictionary | IDiscriminatedUnion;
+  rootElementSchema: IRootBlock | IBlockDictionary | IBlockSingle;
   atomsMap: AtomsMap;
   setAtomsMap: React.Dispatch<React.SetStateAction<AtomsMap>>;
   selectedRootElement: string;
@@ -160,7 +158,7 @@ export function RootElement({
           if (
             selectedRootElement === rootElement &&
             !isRootBlock(schema, rootElement) &&
-            rootElementSchema.ui_element !== ScanConfigUIElementDict.DiscriminatedUnion
+            rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockSingle
           ) {
             setEditing(false);
             setSelectedEntry('');
@@ -173,7 +171,7 @@ export function RootElement({
 
           if (
             rootElementSchema.ui_element === ScanConfigUIElementDict.RootBlock ||
-            rootElementSchema.ui_element === ScanConfigUIElementDict.DiscriminatedUnion
+            rootElementSchema.ui_element === ScanConfigUIElementDict.BlockSingle
           )
             setEditing(true);
           else setEditing(false);

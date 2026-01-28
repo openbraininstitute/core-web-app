@@ -1,10 +1,11 @@
+import type { TEntityTypeDictKey } from '@/api/entitycore/types';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { obioneApi } from '@/api/one/utils';
 import type { WorkspaceContext } from '@/types/common';
 
 type LaunchExtractionParams = {
   ctx: WorkspaceContext;
-  entityType: string;
+  entityType: TEntityTypeDictKey;
   entityId: string;
   signal?: AbortSignal;
 };

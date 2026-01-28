@@ -6,7 +6,7 @@ import {
   type AtomsMap,
   type ConfigSchema,
   type IBlockDictionary,
-  IDiscriminatedUnion,
+  type IBlockSingle,
   type IRootBlock,
   ScanConfigUIElementDict,
   type SchemaName,
@@ -28,7 +28,7 @@ type MiddleProps = {
   model: ICircuit | IMEModel;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
-  selectedSchema: IRootBlock | IBlockDictionary | IDiscriminatedUnion;
+  selectedSchema: IRootBlock | IBlockDictionary | IBlockSingle;
 };
 
 export default function Middle({

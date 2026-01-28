@@ -10,8 +10,8 @@ import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import type {
   AtomsMap,
-  IBlockDictionary as BlockDictionaryT,
   ConfigSchema,
+  IBlockDictionary,
   SchemaName,
   TBlock,
 } from '@/features/scan-config/types';
@@ -19,7 +19,7 @@ import type {
 type Props = {
   schemaName: SchemaName;
   schema: ConfigSchema;
-  blockDictionarySchema: BlockDictionaryT;
+  blockDictionarySchema: IBlockDictionary;
   selectedRootElement: string;
   atomsMap: AtomsMap;
   setAtomsMap: (v: AtomsMap) => void;

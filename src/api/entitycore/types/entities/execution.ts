@@ -17,6 +17,14 @@ export enum EntitycoreExecutionStatus {
   CANCELLED = 'cancelled',
 }
 
+export enum ExecutorType {
+  SINGLE_NODE_JOB = 'single_node_job',
+  DISTRIBUTED_JOB = 'distributed_job',
+  JUPYTER_NOTEBOOK = 'jupyter_notebook',
+}
+
+export type TExecutorType = `${ExecutorType}`;
+
 export type TEntitycoreExecutionStatus = `${EntitycoreExecutionStatus}`;
 
 export interface EntitycoreUsedEntity
@@ -35,6 +43,8 @@ export interface IEntitycoreExecution
     EntityCoreOwnership,
     Timestamps,
     EntityCoreType {
+  executor: TExecutorType | null;
+  execution_id: string | null;
   start_time: string;
   end_time: string | null;
   status: TEntitycoreExecutionStatus;

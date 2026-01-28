@@ -1,14 +1,14 @@
 import type {
-  EntityCoreIdentifiable,
-  EntityAuthorization,
-  Timestamps,
   ActivityType,
+  EntityAuthorization,
+  EntityCoreIdentifiable,
+  Timestamps,
 } from '@/api/entitycore/types/shared/global';
 import type {
   ContributionFilter,
-  SharedFilter,
-  PaginationFilter,
   OwnershipFilter,
+  PaginationFilter,
+  SharedFilter,
 } from '@/api/entitycore/types/shared/request';
 
 interface IActivityBase<

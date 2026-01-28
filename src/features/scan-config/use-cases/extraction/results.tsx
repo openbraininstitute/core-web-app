@@ -4,18 +4,19 @@ import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CheckboxProps } from 'antd';
 import { Checkbox, ConfigProvider, Modal } from 'antd';
+import { includes } from 'es-toolkit/compat';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-
 import { requestOfflineTokenConsent } from '@/api/auth-manager';
 import {
   getCircuitExtractionConfigs,
   getCircuitExtractionExecutions,
 } from '@/api/entitycore/queries/extraction';
+import { EntityTypeByKeyDict } from '@/api/entitycore/types';
 import type { ICircuitExtractionConfig } from '@/api/entitycore/types/entities/circuit-extraction-config';
 import {
-  CircuitExtractionExecutionStatus,
-  type TCircuitExtractionExecutionStatus,
-} from '@/api/entitycore/types/entities/circuit-extraction-execution';
+  EntitycoreExecutionStatus,
+  type TEntitycoreExecutionStatus,
+} from '@/api/entitycore/types/entities/execution';
 import { launchExtraction } from '@/api/one/extraction';
 import { Loader } from '@/components/loader';
 import { useAppNotification } from '@/components/notification';
@@ -83,17 +84,17 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Extractio
     refetchInterval: (query) => {
       const executions = query.state.data?.data ?? [];
       const hasActiveExtractions = executions.some((exec) =>
-        [
-          CircuitExtractionExecutionStatus.PENDING,
-          CircuitExtractionExecutionStatus.RUNNING,
-        ].includes(exec.status as CircuitExtractionExecutionStatus)
+        includes(
+          [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING],
+          exec.status
+        )
       );
       return hasActiveExtractions && !extractionRequestInProgress ? STATUS_POLL_INTERVAL : false;
     },
   });
 
   const statusMap = useMemo(() => {
-    const map = new Map<string, TCircuitExtractionExecutionStatus>();
+    const map = new Map<string, TEntitycoreExecutionStatus>();
     const executions = executionsResponse?.data ?? [];
 
     for (const config of configs) {
@@ -158,7 +159,7 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Extractio
     mutationFn: async (configId: string) => {
       return launchExtraction({
         ctx: { virtualLabId, projectId },
-        entityType: 'CircuitExtractionConfig',
+        entityType: EntityTypeByKeyDict.CircuitExtractionConfig,
         entityId: configId,
       });
     },

@@ -1,58 +1,34 @@
 import { z } from 'zod';
+import {
+  EntitycoreExecutionStatus,
+  ExecutorType,
+  type IEntitycoreExecution,
+  type TEntitycoreExecutionStatus,
+  type TExecutorType,
+} from '@/api/entitycore/types/entities/execution';
 import type { IActivityFilter } from '@/api/entitycore/types/shared/activity';
 import type {
-  ActivityType,
   EntityAuthorization,
   EntityCoreIdentifiable,
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
 
-export enum CircuitExtractionExecutionStatus {
-  CREATED = 'created',
-  PENDING = 'pending',
-  RUNNING = 'running',
-  DONE = 'done',
-  ERROR = 'error',
-}
-
-export type TCircuitExtractionExecutionStatus = `${CircuitExtractionExecutionStatus}`;
-
-export enum ExecutorType {
-  UNICORE = 'unicore',
-  LOCAL = 'local',
-}
-
-export type TExecutorType = `${ExecutorType}`;
-
-interface NestedEntityRead extends EntityCoreIdentifiable {
-  type: string | null;
-}
-
-interface ICircuitExtractionExecutionBase {
-  status: TCircuitExtractionExecutionStatus;
-  executor: TExecutorType | null;
-  execution_id: string | null;
-  start_time: string | null;
-  end_time: string | null;
-  used: Array<NestedEntityRead>;
-  generated: Array<NestedEntityRead>;
-}
+interface ICircuitExtractionExecutionBase extends IEntitycoreExecution {}
 
 export interface ICircuitExtractionExecution
   extends EntityCoreIdentifiable,
     ICircuitExtractionExecutionBase,
     Timestamps,
-    EntityAuthorization,
-    ActivityType {}
+    EntityAuthorization {}
 
 export interface ICircuitExtractionExecutionFilter extends IActivityFilter {
   executor?: TExecutorType | null;
   execution_id?: string | null;
-  status?: TCircuitExtractionExecutionStatus | null;
+  status?: TEntitycoreExecutionStatus | null;
 }
 
 const CreateCircuitExtractionExecutionSchema = z.object({
-  status: z.nativeEnum(CircuitExtractionExecutionStatus),
+  status: z.nativeEnum(EntitycoreExecutionStatus),
   executor: z.nativeEnum(ExecutorType).optional().nullable(),
   execution_id: z.string().uuid().optional().nullable(),
   start_time: z.string().datetime().optional().nullable(),
@@ -67,7 +43,7 @@ export type TCreateCircuitExtractionExecution = z.infer<
 >;
 
 const UpdateCircuitExtractionExecutionSchema = z.object({
-  status: z.nativeEnum(CircuitExtractionExecutionStatus).optional().nullable(),
+  status: z.nativeEnum(EntitycoreExecutionStatus).optional().nullable(),
   executor: z.nativeEnum(ExecutorType).optional().nullable(),
   execution_id: z.string().uuid().optional().nullable(),
   start_time: z.string().datetime().optional().nullable(),

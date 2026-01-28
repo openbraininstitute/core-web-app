@@ -1,10 +1,9 @@
 'use client';
 
-import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { notFound } from 'next/navigation';
 import { use } from 'react';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
-import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import ScanConfig from '@/features/scan-config';
 import { ScanConfigActivity } from '@/features/scan-config/types';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
@@ -25,51 +24,51 @@ export default function Page({
   }
 >) {
   const queryParams = use(searchParams);
-  const { initialCampaignId } = queryParams;
+  // const { initialCampaignId } = queryParams;
   const { virtualLabId, projectId, id: modelId } = use(pathParams);
 
   let sessionId = queryParams?.sessionId;
   if (!sessionId) sessionId = crypto.randomUUID();
 
-  const { data: entity } = useSuspenseQuery({
+  const { data: entity, error } = useSuspenseQuery({
     queryKey: keyBuilder.oneCircuit({ virtualLabId, projectId, entityId: modelId }),
     queryFn: () => getCircuit({ id: modelId, context: { virtualLabId, projectId } }),
   });
 
-  const {
-    data: campaignData,
-    error,
-    isLoading,
-  } = useQuery({
-    queryKey: keyBuilder.simCampaign({ entityId: initialCampaignId }),
-    queryFn: async () => {
-      if (!initialCampaignId) return null;
-      return await resolveSimulationByCampaignId({
-        id: initialCampaignId,
-        context: { virtualLabId, projectId },
-      });
-    },
-  });
+  // const {
+  //   data: campaignData,
+  //   error,
+  //   isLoading,
+  // } = useQuery({
+  //   queryKey: keyBuilder.simCampaign({ entityId: initialCampaignId }),
+  //   queryFn: async () => {
+  //     if (!initialCampaignId) return null;
+  //     return await resolveSimulationByCampaignId({
+  //       id: initialCampaignId,
+  //       context: { virtualLabId, projectId },
+  //     });
+  //   },
+  // });
 
   if (error || !entity) {
     return notFound();
   }
 
-  if (
-    !initialCampaignId ||
-    (initialCampaignId && !isLoading && campaignData && campaignData.config.form)
-  ) {
-    return (
-      <div className="border-neutral-2 ml-2 h-full rounded-2xl border pt-3">
-        <ScanConfig
-          modelId={entity.id}
-          virtualLabId={virtualLabId}
-          projectId={projectId}
-          initialConfig={campaignData?.config.form}
-          className="px-10 pt-2"
-          activity={ScanConfigActivity.Extract}
-        />
-      </div>
-    );
-  }
+  return (
+    <div className="border-neutral-2 ml-2 h-full rounded-2xl border pt-3">
+      <ScanConfig
+        modelId={entity.id}
+        virtualLabId={virtualLabId}
+        projectId={projectId}
+        initialConfig={undefined}
+        className="px-10 pt-2"
+        activity={ScanConfigActivity.Extract}
+      />
+    </div>
+  );
+  // if (
+  //   !initialCampaignId ||
+  //   (initialCampaignId && !isLoading && campaignData && campaignData.config.form)
+  // ) {
+  // }
 }

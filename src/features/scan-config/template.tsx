@@ -1,19 +1,21 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
+<<<<<<< HEAD
+=======
+import { get } from 'es-toolkit/compat';
+>>>>>>> 471a7fdba (refactor extraction/simulation to usecases)
 import { Suspense, useState } from 'react';
 import { match } from 'ts-pattern';
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { Config } from '@/features/scan-config/components/components';
-import { ExtractionTab } from '@/features/scan-config/components/extraction/results';
 import { useEntries, useSchemaName } from '@/features/scan-config/components/hooks';
 import { useConfigAtom } from '@/features/scan-config/components/hooks/config-atom';
 import { useAtomsMap, useObioneJsonSchema } from '@/features/scan-config/components/hooks/schema';
 import Left from '@/features/scan-config/components/left';
 import Middle from '@/features/scan-config/components/middle';
 import ModelPreview from '@/features/scan-config/components/model-preview';
-import SimulationsTab from '@/features/scan-config/components/simulations/results';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import styles from '@/features/scan-config/scan-config.module.css';
 import {
@@ -25,6 +27,9 @@ import {
   type TScanConfigActivity,
   type TScanConfigTabs,
 } from '@/features/scan-config/types';
+import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
+import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
+import { messages } from '@/i18n/en/scan-config';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
@@ -117,7 +122,9 @@ export function ScanConfigTemplate({
           disableSimulationTab={!campaignId || loading}
         />
         <div className="flex items-center justify-center gap-8">
-          {!!campaignId && <ButtonCopyId label="Copy simulation campaign ID" value={campaignId} />}
+          {!!campaignId && (
+            <ButtonCopyId label={get(messages, `${activity}.CopyCampaignId`)} value={campaignId} />
+          )}
         </div>
       </header>
       <div className="relative mb-10">
