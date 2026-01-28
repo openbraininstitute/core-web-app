@@ -28,7 +28,7 @@ import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
-import { hasSimConfigAsset, migrateConfig } from './utils';
+import { getExtendedSimMap, hasSimConfigAsset, migrateConfig } from './utils';
 
 // NOTE: this is due entitycore do not support yet
 async function resolveSimulationCampaigns({
@@ -57,6 +57,9 @@ async function resolveSimulationCampaigns({
   });
   const executions = executionsResponse.data;
 
+  // TODO: Switch to sim generation execution status for validation when implemented in obi-one.
+  const simulationMap = await getExtendedSimMap(allSimIds, context);
+
   // map simulationId -> array of executions that use it
   const executionsBySimId = executions.reduce<Record<string, typeof executions>>((acc, exec) => {
     exec.used.forEach((usedSim) => {
@@ -70,7 +73,7 @@ async function resolveSimulationCampaigns({
   const enrichedData = source.data.map((campaign) => ({
     ...campaign,
     simulations: campaign.simulations?.map((sim) => ({
-      ...sim,
+      ...simulationMap.get(sim.id),
       executions: executionsBySimId[sim.id] ?? [],
     })),
   }));

@@ -4,15 +4,16 @@ import type {
   EntityCoreIdentifiable,
   EntityCoreType,
   Timestamps,
-} from "@/api/entitycore/types/shared/global";
-import type { ICircuitSimulationBase } from "@/api/entitycore/types/shared/neuron-simulation";
+} from '@/api/entitycore/types/shared/global';
+import type { ICircuitSimulationBase } from '@/api/entitycore/types/shared/neuron-simulation';
 import type {
   ContributionFilter,
-  SharedFilter,
-  PaginationFilter,
-  OwnershipFilter,
+  IDFilter,
   IlikeSearchFilter,
-} from "@/api/entitycore/types/shared/request";
+  OwnershipFilter,
+  PaginationFilter,
+  SharedFilter,
+} from '@/api/entitycore/types/shared/request';
 
 export interface ICircuitSimulation
   extends EntityCoreIdentifiable,
@@ -30,6 +31,7 @@ interface ICircuitSimulationFilterBase {
 export interface ICircuitSimulationFilter
   extends ICircuitSimulationFilterBase,
     ContributionFilter,
+    IDFilter,
     SharedFilter,
     PaginationFilter,
     OwnershipFilter,

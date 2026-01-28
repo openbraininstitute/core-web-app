@@ -25,7 +25,7 @@ import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { WorkspaceContext } from '@/types/common';
-import { migrateConfig } from './utils';
+import { getExtendedSimMap, migrateConfig } from './utils';
 
 export async function resolveExecutions({
   context,
@@ -94,11 +94,14 @@ async function resolveSimulationCampaigns({
     return acc;
   }, {});
 
+  // TODO: Switch to sim generation execution status for validation when implemented in obi-one.
+  const simulationMap = await getExtendedSimMap(allSimIds, context);
+
   // attach executions to each simulation (choose to add all executions as array)
   const enrichedData = source.data.map((campaign) => ({
     ...campaign,
     simulations: campaign.simulations?.map((sim) => ({
-      ...sim,
+      ...simulationMap.get(sim.id),
       executions: executionsBySimId[sim.id] ?? [],
     })),
   }));
