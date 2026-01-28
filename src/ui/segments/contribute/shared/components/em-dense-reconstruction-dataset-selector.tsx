@@ -30,8 +30,6 @@ export function EMDenseReconstructionDatasetSelector<TSchema extends ZodObject<Z
     () =>
       AsyncSelectFormItem<PaginationFilter & SearchFilter, IEMDenseReconstructionDataset>({
         id: 'dataset-selector',
-        // Ensure your keyBuilder has a method for these datasets,
-        // otherwise use a generic key like ['em-datasets', virtualLabId, projectId]
         dataKey: keyBuilder.emDenseReconstructionDatasets({ virtualLabId, projectId }),
         queryFn: getEmDenseReconstructionDatasets,
         getOptionLabel: (d) => d.name,
