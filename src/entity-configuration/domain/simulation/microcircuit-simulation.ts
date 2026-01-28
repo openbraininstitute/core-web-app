@@ -100,9 +100,6 @@ async function resolveSimulationCampaigns({
     return acc;
   }, {});
 
-  // TODO: Switch to sim generation execution status for validation when implemented in obi-one.
-  const simulationMap = await getExtendedSimMap(allSimIds, context);
-
   // attach executions to each simulation (choose to add all executions as array)
   const enrichedData = source.data.map((campaign) => ({
     ...campaign,
