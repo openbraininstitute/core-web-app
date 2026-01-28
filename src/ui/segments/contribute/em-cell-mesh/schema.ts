@@ -3,7 +3,6 @@ import { z } from 'zod';
 import {
   EMCellMeshGenerationMethodDictionary,
   EMCellMeshTypeDictionary,
-  type TEMCellMeshGenerationMethod,
 } from '@/api/entitycore/types/entities/em-cell-mesh';
 import {
   ContributionArraySchema,
@@ -11,6 +10,7 @@ import {
   LicenseIdSchema,
   SubjectIdSchema,
 } from '@/ui/segments/contribute/shared/schemas';
+import { valuesToEnumTuple } from '@/utils/array';
 
 const ExperimentDateSchema = z.custom<dayjs.Dayjs | Date | string>((val) => !!val, {
   message: 'Experiment date is required',
@@ -43,9 +43,9 @@ export const SetupSchema = z.object({
   level_of_detail: z.coerce.number().int().nullish(),
 
   generation_method: z
-    .enum(Object.values(EMCellMeshGenerationMethodDictionary) as [string, ...string[]])
+    .enum(valuesToEnumTuple(EMCellMeshGenerationMethodDictionary))
     .default(EMCellMeshGenerationMethodDictionary.MarchingCubes),
-  mesh_type: z.enum(Object.values(EMCellMeshTypeDictionary) as [string, ...string[]]).nullish(),
+  mesh_type: z.enum(valuesToEnumTuple(EMCellMeshTypeDictionary)).nullish(),
   generation_parameters: z.string().nullish().or(z.literal('')),
 });
 

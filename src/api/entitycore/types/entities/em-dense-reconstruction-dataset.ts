@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type {
   EntityAuthorization,
   EntityCoreBaseAsset,
-  EntityCoreIdentifiable,
+  EntityCoreIdentifiableNamed,
   EntityCoreOwnership,
   EntityCoreType,
   IContributor,
@@ -83,7 +83,7 @@ interface IEMDenseReconstructionDatasetBase {
 }
 
 export interface IEmDenseReconstructionDataset
-  extends EntityCoreIdentifiable,
+  extends EntityCoreIdentifiableNamed,
     IEMDenseReconstructionDatasetBase,
     EntityCoreBaseAsset,
     EntityAuthorization,
@@ -102,7 +102,9 @@ export const EMDenseReconstructionDatasetBaseSchema = z.object({
     .nonempty({ message: 'EMDenseReconstructionDataset name is required' }),
   description: z
     .string({ message: 'EMDenseReconstructionDataset description is required' })
-    .nonempty({ message: 'EMDenseReconstructionDataset description is required' }),
+    .nonempty({
+      message: 'EMDenseReconstructionDataset description is required',
+    }),
   protocol_document: z.string().nullish(),
   fixation: z.string().nullish(),
   staining_type: z.string().nullish(),

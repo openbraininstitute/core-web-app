@@ -5,8 +5,8 @@ import { useMemo } from 'react';
 import type { ZodObject, ZodRawShape } from 'zod';
 
 import { getEmDenseReconstructionDatasets } from '@/api/entitycore/queries/general/em-dense-reconstruction-dataset';
-import type { IEMDenseReconstructionDataset } from '@/api/entitycore/types/shared/global';
-import type { IlikeSearchFilter, PaginationFilter } from '@/api/entitycore/types/shared/request';
+import type { IEmDenseReconstructionDataset } from '@/api/entitycore/types/entities/em-dense-reconstruction-dataset';
+import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
 import {
@@ -28,7 +28,7 @@ export function EMDenseReconstructionDatasetSelector<TSchema extends ZodObject<Z
 
   const DatasetDropdown = useMemo(
     () =>
-      AsyncSelectFormItem<PaginationFilter & SearchFilter, IEMDenseReconstructionDataset>({
+      AsyncSelectFormItem<PaginationFilter & SearchFilter, IEmDenseReconstructionDataset>({
         id: 'dataset-selector',
         dataKey: keyBuilder.emDenseReconstructionDatasets({ virtualLabId, projectId }),
         queryFn: getEmDenseReconstructionDatasets,
