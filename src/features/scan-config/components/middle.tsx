@@ -1,4 +1,4 @@
-import { atom } from 'jotai';
+import { atom, useAtom } from 'jotai';
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import {
@@ -7,9 +7,10 @@ import {
   type ConfigValue,
 } from '@/features/scan-config/components/components';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
-import { isAtom } from '@/features/scan-config/components/utils';
+import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import styles from '@/features/scan-config/scan-config.module.css';
 import type { AtomsMap, Block, ConfigSchema, SchemaName } from '@/features/scan-config/types';
+import { configStateAtom } from '@/services/ai-agent';
 import { classNames } from '@/util/utils';
 
 type MiddleProps = {
@@ -51,6 +52,18 @@ export default function Middle({
   allEntries,
   onNewBlockClick,
 }: MiddleProps) {
+  const [aiSuggestedConfig] = useAtom(configStateAtom);
+
+  const getBlockAIConfig = () => {
+    if (!aiSuggestedConfig) return null;
+
+    const blockConf = aiSuggestedConfig[configTab];
+    if (!isPlainObject(blockConf)) return {};
+    if (isRootBlock(schema, configTab)) return blockConf;
+
+    return blockConf[selectedEntry] ?? {};
+  };
+
   return (
     <div
       className={classNames(
@@ -117,7 +130,7 @@ export default function Middle({
           <BlockUI
             schemaName={schemaName}
             key={isRootBlock(schema, configTab) ? configTab : `${configTab}_${selectedEntry}`}
-            disabled={!!campaignId || loading}
+            disabled={!!campaignId || loading || !!aiSuggestedConfig}
             config={config}
             blockSchema={
               schema.properties[configTab].ui_element === 'root_block'
@@ -130,7 +143,7 @@ export default function Middle({
                 : atomsMap[configTab]?.[selectedEntry]
             }
             model={model}
-            aiPatchKey={configTab + (selectedCategory ? `/${selectedCategory}` : '/')}
+            blockAIConfig={getBlockAIConfig()}
           />
         )}
     </div>

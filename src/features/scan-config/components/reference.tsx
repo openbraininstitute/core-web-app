@@ -23,8 +23,6 @@ export default function Reference({
   const referenceTypeDict = useReferenceTypeDict(schemaName);
   const schema = useObioneJsonSchema(schemaName);
 
-  console.log(value, hasReplacePatch);
-
   if (
     !schema ||
     !schema.default_block_reference_labels ||

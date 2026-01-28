@@ -70,9 +70,7 @@ export default function ScanConfiguration({
 
   const config = useConfigAtom(schema, atomsMap);
 
-  const [patches] = useAgentState('smc_simulation_config', config);
-
-  console.log(patches);
+  const [aiConfig] = useAgentState('smc_simulation_config', config);
 
   if (!schema || Object.keys(atomsMap).length === 0) {
     return (
@@ -112,7 +110,7 @@ export default function ScanConfiguration({
             setSelectedEntry={setSelectedEntry}
             setEditing={setEditing}
             setSelectedBlock={setSelectedBlock}
-            readOnly={readOnly}
+            readOnly={readOnly || !!aiConfig}
             setCampaignId={setCampaignId}
             setLoading={setLoading}
             model={model}
@@ -125,7 +123,7 @@ export default function ScanConfiguration({
             setIsEditingKey={setIsEditingKey}
           />
 
-          {/* <Middle
+          <Middle
             schemaName={schemaName}
             schema={schema}
             configTab={selectedRootElement}
@@ -146,7 +144,7 @@ export default function ScanConfiguration({
               setNewKey('');
               setIsEditingKey(false);
             }}
-          /> */}
+          />
 
           <div className="rounded-lg">
             <ModelPreview model={model} />

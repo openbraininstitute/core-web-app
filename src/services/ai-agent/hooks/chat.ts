@@ -54,7 +54,7 @@ export function useServiceAiAgentChat(threadId: string) {
   const activeTools = useAIActiveTools();
   const [rateLimitRemaining, setRateLimitRemaining] = React.useState(() => getStoredRateLimit());
 
-  const [_, setPatches] = useAtom(patchesAtom);
+  const [_, setConfig] = useAtom(configStateAtom);
 
   const chat = useChat({
     api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
@@ -100,11 +100,10 @@ export function useServiceAiAgentChat(threadId: string) {
     //@ts-expect-error
     if (toolInvocation?.toolInvocation?.result && returnId === AI_AGENT_STATE.id) {
       //@ts-expect-error
-      const result = JSON.parse(toolInvocation?.toolInvocation?.result ?? '');
-      const patches = result?.patches ? result.patches : [];
-      setPatches(patches);
+      const result = JSON.parse(toolInvocation?.toolInvocation?.result ?? {});
+      setConfig(result);
     }
-  }, [chat.messages, setPatches]);
+  }, [chat.messages, setConfig]);
 
   return {
     rateLimitRemaining,
@@ -134,13 +133,7 @@ export function useServiceAiAgentChat(threadId: string) {
   };
 }
 
-type Patch = {
-  op: 'replace' | 'add' | 'delete';
-  path: string;
-  value: Config;
-};
-
-export const patchesAtom = atom<Patch[]>([]);
+export const configStateAtom = atom<Config | null>(null);
 
 export function useAgentState(key: 'smc_simulation_config', config: Config) {
   useEffect(() => {
@@ -152,5 +145,5 @@ export function useAgentState(key: 'smc_simulation_config', config: Config) {
     };
   }, [config, key]);
 
-  return useAtom(patchesAtom);
+  return useAtom(configStateAtom);
 }
