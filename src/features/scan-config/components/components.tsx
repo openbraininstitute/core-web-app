@@ -421,6 +421,16 @@ export function BlockUI({
   );
 }
 
+export const getRoundedByIndex = (
+  index: number,
+  length: number
+): 'rounded-full' | 'rounded-l-full' | 'rounded-r-full' | 'rounded-none' => {
+  if (length === 1) return 'rounded-full';
+  if (index === 0) return 'rounded-l-full';
+  if (index === length - 1) return 'rounded-r-full';
+  return 'rounded-none';
+};
+
 export function Tab({
   tab,
   selectedTab,
@@ -433,7 +443,7 @@ export function Tab({
   tab: string;
   selectedTab: TScanConfigTabs;
   onClick?: () => void;
-  rounded?: 'rounded-l-full' | 'rounded-r-full' | 'rounded-full';
+  rounded?: 'rounded-l-full' | 'rounded-r-full' | 'rounded-full' | 'rounded-none';
   children?: React.ReactNode;
   extraClass?: string;
   disabled?: boolean;

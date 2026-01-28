@@ -1,5 +1,5 @@
-import { Tab } from '@/features/scan-config/components/components';
-// biome-ignore lint/style/useImportType: this is wrong
+import { getRoundedByIndex, Tab } from '@/features/scan-config/components/components';
+// biome-ignore lint/style/useImportType: biome hallucination
 import {
   ExtractScanConfigTabs,
   ScanConfigActivity,
@@ -44,16 +44,15 @@ export default function TabsSelector({
       }
     },
   }));
-  console.log('# # TabsSelector # tabs:', { tabs, tab, activity, disableSimulationTab });
 
   return (
     <div className={classNames(className, 'flex')}>
       <div className="inline-flex overflow-hidden rounded-full border border-gray-200">
-        {tabs.map(({ disabled, id, label, onClick }) => (
+        {tabs.map(({ disabled, id, label, onClick }, index) => (
           <Tab
             key={`${id}`}
             tab={label}
-            rounded="rounded-l-full"
+            rounded={getRoundedByIndex(index, tabs.length)}
             selectedTab={tab}
             onClick={onClick}
             disabled={disabled}
@@ -62,23 +61,6 @@ export default function TabsSelector({
             {label}
           </Tab>
         ))}
-        {/* <Tab
-          tab="configuration"
-          rounded="rounded-l-full"
-          selectedTab={tab}
-          onClick={() => setTab('configuration')}
-        >
-          Configuration
-        </Tab>
-        <Tab
-          tab="simulations"
-          rounded="rounded-r-full"
-          selectedTab={tab}
-          onClick={() => setTab('simulations')}
-          disabled={disableSimulationTab}
-        >
-          Simulations
-        </Tab> */}
       </div>
     </div>
   );
