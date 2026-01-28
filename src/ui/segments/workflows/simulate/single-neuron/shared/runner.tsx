@@ -324,7 +324,7 @@ export const launchSimulationAtom = atom<
           ),
           placement: 'topRight',
           key: `simulation-failed-${sessionId}`,
-          duration: isLowFundsError ? 0 : undefined,
+          duration: 1000,
         });
         return;
       }

@@ -139,7 +139,7 @@ export function Menu({ sessionId }: Props) {
             memodel_id: validateMainFormData?.me_model_id as string,
             brain_region_id: sessionValue?.memodel?.brain_region?.id as string,
             config: {
-              synapses: sets.map((o) => o.data as TSingleNeuronSynaptomeConfiguration),
+              synapses: sets.map((o) => o.data),
             },
           },
         })

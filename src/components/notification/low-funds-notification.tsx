@@ -9,6 +9,7 @@ import { listVirtualLabMembers } from '@/api/virtual-lab-svc/queries/member';
 import { useUserRole } from '@/hooks/use-user-role';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { CreditsTransferModal } from '@/ui/segments/project/credits/credits-transfer-modal';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
 type Props = {
@@ -25,8 +26,8 @@ export function LowFundsNotification({ title, description, onClose, duration = 1
   const { isVirtualLabAdmin } = useUserRole({ virtualLabId });
 
   const { data: membersData } = useQuery({
-    queryKey: ['virtual-lab-members', virtualLabId],
-    queryFn: () => listVirtualLabMembers({ virtualLabId: virtualLabId ?? '' }),
+    queryKey: keyBuilder.listVirtualLabTeam({ virtualLabId }),
+    queryFn: () => listVirtualLabMembers({ virtualLabId }),
     enabled: !!virtualLabId && !isVirtualLabAdmin,
   });
 

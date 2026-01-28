@@ -16,7 +16,7 @@ type Props = {
 };
 
 export function Header({ onScaleChange, onTypeChange, onPageChange }: Props) {
-  const defaultScale = getScaleArray().at(0)?.value as TExtendedEntitiesTypeDict;
+  const defaultScale = getScaleArray().at(0)?.value!;
   const defaultActivities = getScaleAvailableActivities(defaultScale);
 
   const [activities, setActivities] =
@@ -27,7 +27,7 @@ export function Header({ onScaleChange, onTypeChange, onPageChange }: Props) {
 
   const onScale = (s: TExtendedEntitiesTypeDict) => {
     const availableActivities = getScaleAvailableActivities(s);
-    const firstActivityType = availableActivities.at(0)?.value as TActivityValue;
+    const firstActivityType = availableActivities?.at(0)?.value!;
 
     onScaleChange(s);
     setActivities(availableActivities);
