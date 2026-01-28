@@ -3,7 +3,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { get } from 'es-toolkit/compat';
 import { createEMCellMesh } from '@/api/entitycore/queries';
-import { createMtypeClassification } from '@/api/entitycore/queries/annotations/mtype-classification';
+import {
+  createMtypeClassification,
+  type TMtypeClassificationCreate,
+} from '@/api/entitycore/queries/annotations/mtype-classification';
 import { createAsset } from '@/api/entitycore/queries/assets';
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -25,11 +28,8 @@ export function useEMCellMeshPipeline({
   const queryClient = useQueryClient();
   const { projectId, virtualLabId } = useWorkspace();
 
-  // STEP 1: Create Metadata Entity
   const createEMCellMeshAsync = useMutation({
     mutationFn: (values: TEMCellMeshForm) => {
-      // We explicitly pick fields to avoid passing File objects or
-      // complex React state into the API call which causes circular refs.
       return createEMCellMesh({
         context: { projectId, virtualLabId },
         payload: {
@@ -38,9 +38,10 @@ export function useEMCellMeshPipeline({
           brain_region_id: values.setup.brain_region_id,
           subject_id: values.subject_id,
           license_id: values.license_id,
-          // Format date if it's a Dayjs object from Ant Design
           experiment_date:
-            (values.setup.experiment_date as any)?.toISOString?.() || values.setup.experiment_date,
+            typeof values.setup.experiment_date === 'string'
+              ? values.setup.experiment_date
+              : values.setup.experiment_date.toISOString(),
           contact_email: values.setup.contact_email,
           published_in: values.setup.published_in,
           notice_text: values.setup.notice_text,
@@ -69,7 +70,6 @@ export function useEMCellMeshPipeline({
     },
   });
 
-  // STEP 2: Upload Assets (The OBJ file)
   const createAssetsAsync = useMutation({
     mutationFn: async ({ entityId, file }: { entityId: string; file: File }) => {
       return createAsset({
@@ -79,12 +79,11 @@ export function useEMCellMeshPipeline({
         fileName: file.name,
         mimeType: 'application/obj',
         payload: file,
-        label: 'cell_surface_mesh' as any,
+        label: 'cell_surface_mesh' as Parameters<typeof createAsset>[0]['label'],
       });
     },
   });
 
-  // STEP 3: Create Contributions (Authors/Contributors)
   const createContributionAsync = useMutation({
     mutationFn: ({
       entityId,
@@ -110,28 +109,25 @@ export function useEMCellMeshPipeline({
     },
   });
 
-  // STEP 4: Create M-Type Annotation
   const createMtypeClassificationAsync = useMutation({
     mutationFn: async ({ entityId, mtypeId }: { entityId: string; mtypeId: string }) => {
+      const payload: TMtypeClassificationCreate = {
+        mtype_class_id: mtypeId,
+        entity_id: entityId,
+        authorized_public: true,
+      };
+
       return createMtypeClassification({
         context: { projectId, virtualLabId },
-        entityId, // Used for the URL path
-        payload: {
-          // FIX: The backend requires these specific keys in the request body
-          mtype_class_id: mtypeId,
-          entity_id: entityId,
-          authorized_public: true,
-        } as any,
+        payload,
       });
     },
   });
 
   return {
     createEntity: async ({ values }: { values: TEMCellMeshForm }) => {
-      // 1. Create the base entity
       const cellMorphology = await createEMCellMeshAsync.mutateAsync(values);
 
-      // 2. Upload the OBJ file if it exists
       if (values.assets?.obj) {
         await createAssetsAsync.mutateAsync({
           entityId: cellMorphology.id,
@@ -139,7 +135,6 @@ export function useEMCellMeshPipeline({
         });
       }
 
-      // 3. Create contributions
       if (values.contribution && values.contribution.length > 0) {
         await createContributionAsync.mutateAsync({
           entityId: cellMorphology.id,
@@ -147,7 +142,6 @@ export function useEMCellMeshPipeline({
         });
       }
 
-      // 4. Create M-Type classification
       if (values.mtype_class_id) {
         await createMtypeClassificationAsync.mutateAsync({
           entityId: cellMorphology.id,
@@ -162,11 +156,10 @@ export function useEMCellMeshPipeline({
       createAssetsAsync.isPending ||
       createContributionAsync.isPending ||
       createMtypeClassificationAsync.isPending,
-    error:
-      createEMCellMeshAsync.error ||
+    error: (createEMCellMeshAsync.error ||
       createAssetsAsync.error ||
       createContributionAsync.error ||
-      createMtypeClassificationAsync.error,
+      createMtypeClassificationAsync.error) as Error | null,
     status: {
       createEMCellMesh: createEMCellMeshAsync.status,
       createEMCellMeshAssets: createAssetsAsync.status,
@@ -183,5 +176,5 @@ export function useEMCellMeshPipeline({
       },
       {} as Record<string, IMutationKeyConfig>
     ),
-  } as any;
+  };
 }

@@ -9,7 +9,7 @@ import type {
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 export const EM_CELL_MESH_PROGRESS_STEPS = [
-  { key: 'em-cell-mesh', label: 'Creating Cell Morphology', mutationKey: 'createEMCellMesh' },
+  { key: 'em-cell-mesh', label: 'Creating Cell Mesh', mutationKey: 'createEMCellMesh' },
   { key: 'assets', label: 'Uploading Assets', mutationKey: 'createEMCellMeshAssets' },
   { key: 'contribution', label: 'Creating Contribution', mutationKey: 'createContribution' },
   {
@@ -19,7 +19,7 @@ export const EM_CELL_MESH_PROGRESS_STEPS = [
   },
 ];
 
-const ZERO_UUID = '00000000-0000-0000-0000-000000000000';
+const ZERO_UUID = '00000000-0000-4000-8000-000000000000';
 
 export function createEMCellMeshConfig(
   steps: IContributionStep<TEMCellMeshForm>[]

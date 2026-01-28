@@ -1,5 +1,10 @@
+import type dayjs from 'dayjs';
 import { z } from 'zod';
-
+import {
+  EMCellMeshGenerationMethodDictionary,
+  EMCellMeshTypeDictionary,
+  type TEMCellMeshGenerationMethod,
+} from '@/api/entitycore/types/entities/em-cell-mesh';
 import {
   ContributionArraySchema,
   createFileSchema,
@@ -7,7 +12,7 @@ import {
   SubjectIdSchema,
 } from '@/ui/segments/contribute/shared/schemas';
 
-const ExperimentDateSchema = z.any().refine((val) => !!val, {
+const ExperimentDateSchema = z.custom<dayjs.Dayjs | Date | string>((val) => !!val, {
   message: 'Experiment date is required',
 });
 
@@ -29,20 +34,18 @@ export const SetupSchema = z.object({
   published_in: z.string().nullish().or(z.literal('')),
   notice_text: z.string().nullish().or(z.literal('')),
 
-  // Required UUID Field
   em_dense_reconstruction_dataset_id: z
     .string({ message: 'Dataset ID is required' })
-    .uuid({ message: 'Dataset ID must be a valid UUID' }),
+    .uuid({ message: 'Dataset ID is required' }),
   dense_reconstruction_cell_id: z.coerce.number().int(),
 
-  // Fields changed to integers via coercion
   release_version: z.coerce.number().int().nullish(),
   level_of_detail: z.coerce.number().int().nullish(),
 
-  // Dropdown options enforced by Enums
-  generation_method: z.enum(['marching_cubes']).default('marching_cubes'),
-  mesh_type: z.enum(['static', 'dynamic']).nullish(),
-
+  generation_method: z
+    .enum(Object.values(EMCellMeshGenerationMethodDictionary) as [string, ...string[]])
+    .default(EMCellMeshGenerationMethodDictionary.MarchingCubes),
+  mesh_type: z.enum(Object.values(EMCellMeshTypeDictionary) as [string, ...string[]]).nullish(),
   generation_parameters: z.string().nullish().or(z.literal('')),
 });
 

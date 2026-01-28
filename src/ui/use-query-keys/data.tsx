@@ -1,11 +1,11 @@
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
 import type { ElectricalCellRecordingFilter } from '@/api/entitycore/types/entities/electrical-cell-recording';
+import type { IEMDenseReconstructionDatasetFilter } from '@/api/entitycore/types/entities/em-dense-reconstruction-dataset';
 import type { IScientificArtifactPublicationLinkFilter } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
 import type { ISingleNeuronSimulationFilter } from '@/api/entitycore/types/entities/single-neuron-simulation';
 import type { ISingleNeuronSynaptomeSimulationFilter } from '@/api/entitycore/types/entities/single-neuron-synaptome-simulation';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { IEMDenseReconstructionDatasetFilter } from '@/api/entitycore/types/shared/em-dense-reconstruction-dataset';
 import type { IProtocolFilter } from '@/api/entitycore/types/shared/protocol';
 import type { ISubjectFilter } from '@/api/entitycore/types/shared/subject';
 import type { TWorkspaceScope } from '@/constants';
@@ -246,9 +246,9 @@ export const keyBuilder = {
   emDenseReconstructionDatasets: (
     context: WorkspaceContext,
     props?: IEMDenseReconstructionDatasetFilter
-  ) => [`${prefix}-emDenseReconstructionDatasets`, { ...context, ...props }],
+  ) => [`${prefix}-em-dense-reconstruction-datasets`, { ...context, ...props }],
   emDenseReconstructionDataset: ({ id, context }: { id: string; context: WorkspaceContext }) => [
-    `${prefix}-emDenseReconstructionDataset`,
+    `${prefix}-em-dense-reconstruction-dataset`,
     { id, context },
   ],
   etype: ({ virtualLabId, projectId }: WorkspaceContext) => [

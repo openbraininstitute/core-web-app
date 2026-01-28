@@ -108,7 +108,11 @@ export function Setup() {
         name={['setup', 'generation_method']}
         label={renderLabel('Generation method', 'main')}
       >
-        <Select className="h-12 w-full" placeholder="Select method">
+        <Select
+          className="h-12 w-full"
+          placeholder="Select method"
+          style={{ backgroundColor: 'white', borderRadius: '9999px' }}
+        >
           <Select.Option value="marching_cubes">marching_cubes</Select.Option>
         </Select>
       </Form.Item>

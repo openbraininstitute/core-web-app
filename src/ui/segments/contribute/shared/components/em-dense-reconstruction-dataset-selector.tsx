@@ -4,9 +4,9 @@ import { Form } from 'antd';
 import { useMemo } from 'react';
 import type { ZodObject, ZodRawShape } from 'zod';
 
-import { getEMDenseReconstructionDatasets } from '@/api/entitycore/queries/experimental/em-dense-reconstruction-dataset';
+import { getEmDenseReconstructionDatasets } from '@/api/entitycore/queries/general/em-dense-reconstruction-dataset';
 import type { IEMDenseReconstructionDataset } from '@/api/entitycore/types/shared/global';
-import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
+import type { IlikeSearchFilter, PaginationFilter } from '@/api/entitycore/types/shared/request';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
 import {
@@ -33,14 +33,14 @@ export function EMDenseReconstructionDatasetSelector<TSchema extends ZodObject<Z
         // Ensure your keyBuilder has a method for these datasets,
         // otherwise use a generic key like ['em-datasets', virtualLabId, projectId]
         dataKey: keyBuilder.emDenseReconstructionDatasets({ virtualLabId, projectId }),
-        queryFn: getEMDenseReconstructionDatasets,
+        queryFn: getEmDenseReconstructionDatasets,
         getOptionLabel: (d) => d.name,
         getOptionValue: (d) => d.id,
         placeholder: 'Select a dataset...',
         searchPlaceholder: 'Search datasets...',
         clsx: { trigger: 'rounded-full h-12', content: 'z-[99999]' },
         searchable: true,
-        searchField: 'search',
+        searchField: 'ilike_search',
       }),
     [virtualLabId, projectId]
   );
