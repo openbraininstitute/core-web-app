@@ -28,8 +28,8 @@ Set basic information about your simulation:
 
 - **Name**: A unique name for your simulation (required). The platform checks if the name already exists in your simulations and warns you if it does.
 - **Description**: Optional description of your simulation
-- **Created by**: Automatically set to your username
-- **Created at**: Automatically set to the current date
+- **Registered by**: Automatically set to your username
+- **Registered at**: Automatically set to the current date
 
 ### Experimental Setup
 
@@ -101,6 +101,7 @@ Once configured:
 5. Once complete, switch to the **Results** panel to view outputs
 
 The simulation may take time depending on:
+
 - Simulation duration and time step
 - Number of recording locations
 - Number of current amplitudes

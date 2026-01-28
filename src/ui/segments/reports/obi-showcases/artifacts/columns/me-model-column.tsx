@@ -1,6 +1,6 @@
 import Image from 'next/image';
 
-import { MEModelsProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
+import type { MEModelsProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
 import truncateText from '@/util/truncate';
 
 const columns = () => {
@@ -93,7 +93,7 @@ const columns = () => {
       ),
     },
     {
-      title: 'Created by',
+      title: 'Registered by',
       key: 'createdBy',
       width: '150px',
       render: (_value: any, record: MEModelsProps, _index: number) => (
