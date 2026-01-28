@@ -147,3 +147,7 @@ export function useAgentState(key: 'smc_simulation_config', config: Config) {
 
   return useAtom(configStateAtom);
 }
+
+export function useAIConfig() {
+  return useAtom(configStateAtom)[0];
+}

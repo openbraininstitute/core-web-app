@@ -1,4 +1,4 @@
-import { atom, useAtom } from 'jotai';
+import { atom } from 'jotai';
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import {
@@ -10,7 +10,7 @@ import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import styles from '@/features/scan-config/scan-config.module.css';
 import type { AtomsMap, Block, ConfigSchema, SchemaName } from '@/features/scan-config/types';
-import { configStateAtom } from '@/services/ai-agent';
+import { useAIConfig } from '@/services/ai-agent';
 import { classNames } from '@/util/utils';
 
 type MiddleProps = {
@@ -52,7 +52,7 @@ export default function Middle({
   allEntries,
   onNewBlockClick,
 }: MiddleProps) {
-  const [aiSuggestedConfig] = useAtom(configStateAtom);
+  const aiSuggestedConfig = useAIConfig();
 
   const getBlockAIConfig = () => {
     if (!aiSuggestedConfig) return null;
@@ -60,7 +60,6 @@ export default function Middle({
     const blockConf = aiSuggestedConfig[configTab];
     if (!isPlainObject(blockConf)) return {};
     if (isRootBlock(schema, configTab)) return blockConf;
-
     return blockConf[selectedEntry] ?? {};
   };
 

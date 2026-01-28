@@ -1,3 +1,4 @@
+import { useAtom } from 'jotai';
 import { Fragment } from 'react';
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -9,6 +10,7 @@ import {
   isType,
   type TabType,
 } from '@/features/scan-config/types';
+import { useAIConfig } from '@/services/ai-agent';
 import type { Config } from './components';
 import GenerateConfigButton from './generate-config-button';
 import { useValidateSchema } from './hooks';
@@ -63,7 +65,6 @@ export default function Left({
   setIsEditingKey: (k: boolean) => void;
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
-
   return (
     <div className={styles.scrollable}>
       <div className="flex flex-grow flex-col items-center gap-5 overflow-y-auto pr-5 pb-5">
@@ -79,7 +80,6 @@ export default function Left({
                   )
                   .sort(([_, a], [__, b]) => {
                     if (isType(a) || isType(b)) return 0;
-
                     return a.group_order - b.group_order;
                   })
                   .map(([k, rootElementSchema]) => {

@@ -11,8 +11,10 @@ import {
 } from '@ant-design/icons';
 import type { ErrorObject } from 'ajv';
 import { Input } from 'antd';
+import isEqual from 'es-toolkit/compat/isEqual';
 import { atom } from 'jotai';
 import type React from 'react';
+import { useAIConfig } from '@/services/ai-agent';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 import type { AtomsMap, BlockDictionary, ConfigSchema, RootBlock } from '../types';
@@ -65,6 +67,8 @@ export function RootElement({
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
 }) {
+  const aiConfig = useAIConfig();
+  console.log(aiConfig, config);
   if (!schema || !schema?.properties) return;
 
   const handleHeaderClick = (subkey: string, subValue: unknown) => {
@@ -182,170 +186,176 @@ export function RootElement({
         selectedRootElement === rootElement &&
         config[rootElement] && (
           <>
-            {Object.entries(config[rootElement]).map(([subkey, subValue]) => {
-              const isSelected = selectedRootElement === rootElement && subkey === selectedEntry;
+            {Object.entries(config[rootElement])
+              .filter(([block_key, block_schema]) => {
+                if (!aiConfig) return true;
+                if (!isPlainObject(aiConfig[rootElement])) return true;
+                return isEqual(block_schema, aiConfig[rootElement][block_key]);
+              })
+              .map(([subkey, subValue]) => {
+                const isSelected = selectedRootElement === rootElement && subkey === selectedEntry;
 
-              return (
-                <button
-                  type="button"
-                  key={subkey}
-                  className={classNames(
-                    'text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
-                    isSelected ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white' : ''
-                  )}
-                  tabIndex={0}
-                  onClick={() => handleHeaderClick(subkey, subValue)}
-                  onKeyDown={(evt) => {
-                    if (evt.key === ' ' || evt.key === 'Enter') {
-                      handleHeaderClick(subkey, subValue);
-                    }
-                  }}
-                >
-                  <div className="w-full text-left">
-                    {isSelected && isEditingKey && !readOnly && (
-                      <>
-                        <Input
-                          value={newKey}
-                          className="inline-block h-[20px] w-[70%] text-sm outline-none"
-                          classNames={{
-                            input: 'border-none !bg-transparent text-white',
-                          }}
-                          ref={(element) => element?.focus()}
-                          onKeyDown={(e) => {
-                            e.stopPropagation();
-                            if (e.key === 'Enter') {
-                              onNameChangeConfirm(e);
-                            }
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                          onChange={(v) => {
-                            v.stopPropagation();
-                            setNewKey(v.currentTarget.value);
-                          }}
-                          status={newKeyError ? 'error' : undefined}
-                          size="small"
-                        />
-                        <div className="ml-3 inline-block">
-                          <CheckOutlined
-                            className={cn('mr-2', newKeyError && 'opacity-30')}
-                            disabled={newKeyError}
-                            onClick={onNameChangeConfirm}
-                          />
-
-                          <CloseOutlined
-                            onClick={() => {
-                              setIsEditingKey(false);
-                              setNewKey('');
-                            }}
-                          />
-                        </div>
-                      </>
+                return (
+                  <button
+                    type="button"
+                    key={subkey}
+                    className={classNames(
+                      'text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
+                      isSelected ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white' : ''
                     )}
-
-                    {(!isSelected || (isSelected && !isEditingKey)) && (
-                      <>
-                        {subkey}
-                        {!readOnly && !campaignId && (
-                          <EditOutlined
-                            className="ml-3"
-                            onClick={(e) => {
+                    tabIndex={0}
+                    onClick={() => handleHeaderClick(subkey, subValue)}
+                    onKeyDown={(evt) => {
+                      if (evt.key === ' ' || evt.key === 'Enter') {
+                        handleHeaderClick(subkey, subValue);
+                      }
+                    }}
+                  >
+                    <div className="w-full text-left">
+                      {isSelected && isEditingKey && !readOnly && (
+                        <>
+                          <Input
+                            value={newKey}
+                            className="inline-block h-[20px] w-[70%] text-sm outline-none"
+                            classNames={{
+                              input: 'border-none !bg-transparent text-white',
+                            }}
+                            ref={(element) => element?.focus()}
+                            onKeyDown={(e) => {
                               e.stopPropagation();
-                              setSelectedEntry(subkey);
-                              setIsEditingKey(true);
-                              setNewKey(subkey);
+                              if (e.key === 'Enter') {
+                                onNameChangeConfirm(e);
+                              }
                             }}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(v) => {
+                              v.stopPropagation();
+                              setNewKey(v.currentTarget.value);
+                            }}
+                            status={newKeyError ? 'error' : undefined}
+                            size="small"
                           />
-                        )}
-                      </>
-                    )}
-                  </div>
+                          <div className="ml-3 inline-block">
+                            <CheckOutlined
+                              className={cn('mr-2', newKeyError && 'opacity-30')}
+                              disabled={newKeyError}
+                              onClick={onNameChangeConfirm}
+                            />
 
-                  <div className="flex gap-2">
-                    {errors?.find((error) =>
-                      error.instancePath.startsWith(`/${rootElement}/${subkey}`)
-                    ) ? (
-                      <WarningFilled className="text-yellow-400" />
-                    ) : (
-                      <CheckCircleFilled className="text-green-600" />
-                    )}
+                            <CloseOutlined
+                              onClick={() => {
+                                setIsEditingKey(false);
+                                setNewKey('');
+                              }}
+                            />
+                          </div>
+                        </>
+                      )}
 
-                    {!campaignId && !loading && !readOnly && (
-                      <DeleteOutlined
-                        className="cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
+                      {(!isSelected || (isSelected && !isEditingKey)) && (
+                        <>
+                          {subkey}
+                          {!readOnly && !campaignId && (
+                            <EditOutlined
+                              className="ml-3"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedEntry(subkey);
+                                setIsEditingKey(true);
+                                setNewKey(subkey);
+                              }}
+                            />
+                          )}
+                        </>
+                      )}
+                    </div>
 
-                          setSelectedBlock('');
-                          setEditing(false);
+                    <div className="flex gap-2">
+                      {errors?.find((error) =>
+                        error.instancePath.startsWith(`/${rootElement}/${subkey}`)
+                      ) ? (
+                        <WarningFilled className="text-yellow-400" />
+                      ) : (
+                        <CheckCircleFilled className="text-green-600" />
+                      )}
 
-                          const selectedTabAtoms = atomsMap[selectedRootElement];
+                      {!campaignId && !loading && !readOnly && (
+                        <DeleteOutlined
+                          className="cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
 
-                          if (!isAtom(selectedTabAtoms)) {
-                            delete selectedTabAtoms[subkey];
+                            setSelectedBlock('');
+                            setEditing(false);
 
-                            // Initialize case
-                            const configInitialize = config.initialize;
-                            if (
-                              isPlainObject(configInitialize) &&
-                              isPlainObject(configInitialize.node_set) &&
-                              typeof configInitialize.node_set.block_name === 'string' &&
-                              configInitialize.node_set.block_name === subkey
-                            ) {
-                              atomsMap.initialize = atom<Record<string, ConfigValue>>({
-                                ...configInitialize,
-                                node_set: null,
-                              });
-                            }
+                            const selectedTabAtoms = atomsMap[selectedRootElement];
 
-                            // Check all keys in the config
-                            Object.entries(config)
-                              .filter(([configK]) => configK !== 'initialize')
-                              .forEach(([configK, configV]) => {
-                                if (typeof configV !== 'object') return;
+                            if (!isAtom(selectedTabAtoms)) {
+                              delete selectedTabAtoms[subkey];
 
-                                // Check all keys in a section (e.g stimuli, recordings)
-                                Object.entries(configV).forEach(([entryKey, entryV]) => {
-                                  if (!isPlainObject(entryV)) return;
+                              // Initialize case
+                              const configInitialize = config.initialize;
+                              if (
+                                isPlainObject(configInitialize) &&
+                                isPlainObject(configInitialize.node_set) &&
+                                typeof configInitialize.node_set.block_name === 'string' &&
+                                configInitialize.node_set.block_name === subkey
+                              ) {
+                                atomsMap.initialize = atom<Record<string, ConfigValue>>({
+                                  ...configInitialize,
+                                  node_set: null,
+                                });
+                              }
 
-                                  // Check all values in a particular object (a single stimuli, a single timestamp, etc)
-                                  Object.entries(entryV).forEach(([fieldK, field]) => {
-                                    if (
-                                      !isPlainObject(entryV) ||
-                                      !isPlainObject(field) ||
-                                      typeof field.block_name !== 'string' ||
-                                      isAtom(atomsMap[configK]) || // skip top level atoms (e.g initialize)
-                                      field.block_name !== subkey
-                                    )
-                                      return;
+                              // Check all keys in the config
+                              Object.entries(config)
+                                .filter(([configK]) => configK !== 'initialize')
+                                .forEach(([configK, configV]) => {
+                                  if (typeof configV !== 'object') return;
 
-                                    // Deleting the reference to current object
+                                  // Check all keys in a section (e.g stimuli, recordings)
+                                  Object.entries(configV).forEach(([entryKey, entryV]) => {
+                                    if (!isPlainObject(entryV)) return;
 
-                                    delete entryV[fieldK]; //eslint-disable-line
+                                    // Check all values in a particular object (a single stimuli, a single timestamp, etc)
+                                    Object.entries(entryV).forEach(([fieldK, field]) => {
+                                      if (
+                                        !isPlainObject(entryV) ||
+                                        !isPlainObject(field) ||
+                                        typeof field.block_name !== 'string' ||
+                                        isAtom(atomsMap[configK]) || // skip top level atoms (e.g initialize)
+                                        field.block_name !== subkey
+                                      )
+                                        return;
 
-                                    // The atom that has a reference to current object
-                                    atomsMap[configK][entryKey] =
-                                      atom<Record<string, ConfigValue>>(entryV);
+                                      // Deleting the reference to current object
+
+                                      delete entryV[fieldK]; //eslint-disable-line
+
+                                      // The atom that has a reference to current object
+                                      atomsMap[configK][entryKey] =
+                                        atom<Record<string, ConfigValue>>(entryV);
+                                    });
                                   });
                                 });
+
+                              setAtomsMap({
+                                ...atomsMap,
+                                [selectedRootElement]: {
+                                  ...selectedTabAtoms,
+                                },
                               });
+                            }
 
-                            setAtomsMap({
-                              ...atomsMap,
-                              [selectedRootElement]: {
-                                ...selectedTabAtoms,
-                              },
-                            });
-                          }
-
-                          setSelectedEntry('');
-                          allEntries.delete(subkey);
-                        }}
-                      />
-                    )}
-                  </div>
-                </button>
-              );
-            })}
+                            setSelectedEntry('');
+                            allEntries.delete(subkey);
+                          }}
+                        />
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
             {!campaignId && !loading && !readOnly && (
               <button
                 className="text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
