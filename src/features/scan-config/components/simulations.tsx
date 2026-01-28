@@ -208,7 +208,7 @@ export default function SimulationsTab({
         ctx: { virtualLabId, projectId },
         simulationIds: simIds,
         onInit: () => {
-          simIds.forEach((simId) => setSimStatus(simId, EntitycoreExecutionStatus.PENDING));
+          simIds.forEach((simId) => void setSimStatus(simId, EntitycoreExecutionStatus.PENDING));
           setSelectedSimulationIds([]);
           setSimRequestInProgress(false);
         },
