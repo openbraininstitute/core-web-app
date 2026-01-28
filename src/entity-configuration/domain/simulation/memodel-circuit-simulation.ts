@@ -127,9 +127,11 @@ export async function resolveSimulationByCampaignId({
   context: WorkspaceContext | undefined;
 }) {
   const campaign = await getCircuitSimulationCampaign({ id, context });
+
   if (!campaign) {
-    throw new Error(`Campaign with id ${id} not found`);
+    throw new Error(`No campaign with id ${id} found`);
   }
+
   const source = await getCircuitSimulations({ context, filters: { simulation_campaign_id: id } });
 
   const simulation = source.data.at(0);

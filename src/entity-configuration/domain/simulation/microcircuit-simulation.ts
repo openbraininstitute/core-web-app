@@ -134,6 +134,11 @@ export async function resolveSimulationByCampaignId({
   context: WorkspaceContext | undefined;
 }) {
   const campaign = await getCircuitSimulationCampaign({ id, context });
+
+  if (!campaign) {
+    throw new Error(`No campaign with id ${id} found`);
+  }
+
   const source = await getCircuitSimulations({ context, filters: { simulation_campaign_id: id } });
 
   const simulation = source.data.at(0);
@@ -146,7 +151,7 @@ export async function resolveSimulationByCampaignId({
   if (!configAsset) throw Error('No campaign config asset found');
 
   const rawConfig = await downloadAsset({
-    entityId: campaign?.id!,
+    entityId: campaign.id,
     entityType: EntityTypeDict.SimulationCampaign,
     id: configAsset?.id,
     ctx: context,
