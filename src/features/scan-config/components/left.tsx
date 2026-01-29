@@ -1,4 +1,4 @@
-import { useAtom } from 'jotai';
+import { Button } from 'antd';
 import { Fragment } from 'react';
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -65,6 +65,8 @@ export default function Left({
   setIsEditingKey: (k: boolean) => void;
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
+  const { aiConfig, setAiConfig, isChatReady } = useAIConfig();
+
   return (
     <div className={styles.scrollable}>
       <div className="flex flex-grow flex-col items-center gap-5 overflow-y-auto pr-5 pb-5">
@@ -116,7 +118,25 @@ export default function Left({
         })}
       </div>
 
-      {!readOnly && (
+      {!!aiConfig && isChatReady && !campaignId && (
+        <div className="flex w-[95%] min-h-[50px] gap-2">
+          <button
+            type="button"
+            className="min-h-[50px] text-lg drop-shadow border-red-500 border-1 rounded-full p-2 grow text-red-500"
+            onClick={() => setAiConfig(null)}
+          >
+            Reject changes
+          </button>
+          <button
+            type="button"
+            className="min-h-[50px] text-lg bg-green-600 text-white p-2 rounded-full grow "
+          >
+            Accept changes
+          </button>
+        </div>
+      )}
+
+      {!readOnly && (!aiConfig || (aiConfig && campaignId)) && (
         <GenerateConfigButton
           loading={loading}
           campaignId={campaignId}

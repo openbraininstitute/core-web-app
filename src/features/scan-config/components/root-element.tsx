@@ -12,6 +12,7 @@ import {
 import type { ErrorObject } from 'ajv';
 import { Input } from 'antd';
 import isEqual from 'es-toolkit/compat/isEqual';
+import { read } from 'fs';
 import { atom } from 'jotai';
 import type React from 'react';
 import { useAIConfig } from '@/services/ai-agent';
@@ -67,8 +68,7 @@ export function RootElement({
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
 }) {
-  const aiConfig = useAIConfig();
-  console.log(aiConfig, config);
+  const { aiConfig, isChatReady } = useAIConfig();
   if (!schema || !schema?.properties) return;
 
   const handleHeaderClick = (subkey: string, subValue: unknown) => {
@@ -188,7 +188,7 @@ export function RootElement({
           <>
             {Object.entries(config[rootElement])
               .filter(([block_key, block_schema]) => {
-                if (!aiConfig) return true;
+                if (!aiConfig || !isChatReady) return true;
                 if (!isPlainObject(aiConfig[rootElement])) return true;
                 return isEqual(block_schema, aiConfig[rootElement][block_key]);
               })
@@ -255,7 +255,7 @@ export function RootElement({
                       {(!isSelected || (isSelected && !isEditingKey)) && (
                         <>
                           {subkey}
-                          {!readOnly && !campaignId && (
+                          {!readOnly && !campaignId && !aiConfig && isChatReady && (
                             <EditOutlined
                               className="ml-3"
                               onClick={(e) => {
@@ -279,7 +279,7 @@ export function RootElement({
                         <CheckCircleFilled className="text-green-600" />
                       )}
 
-                      {!campaignId && !loading && !readOnly && (
+                      {!campaignId && !loading && !readOnly && isChatReady && !aiConfig && (
                         <DeleteOutlined
                           className="cursor-pointer"
                           onClick={(e) => {
@@ -357,7 +357,7 @@ export function RootElement({
                 );
               })}
 
-            {!!aiConfig && (
+            {!!aiConfig && isChatReady && !campaignId && (
               <div className="border-red-500 border-2">
                 {Object.entries(config[rootElement])
                   .filter(([block_key, block_schema]) => {
@@ -461,7 +461,7 @@ export function RootElement({
                   })}
               </div>
             )}
-            {!campaignId && !loading && !readOnly && (
+            {!campaignId && !loading && !readOnly && isChatReady && !aiConfig && (
               <button
                 className="text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
                 type="button"

@@ -55,6 +55,7 @@ export function useServiceAiAgentChat(threadId: string) {
   const [rateLimitRemaining, setRateLimitRemaining] = React.useState(() => getStoredRateLimit());
 
   const [_, setConfig] = useAtom(configStateAtom);
+  const [__, setIsChatReady] = useAtom(isChatReadyAtom);
 
   const chat = useChat({
     api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
@@ -97,16 +98,17 @@ export function useServiceAiAgentChat(threadId: string) {
         p.toolInvocation.toolName === 'obione-generatesimulationsconfig'
     ) as ToolInvocationUIPart | undefined;
 
-    console.log('result', toolInvocation, AI_AGENT_STATE.id, returnId);
-
     //@ts-expect-error
     if (toolInvocation?.toolInvocation?.result && returnId === AI_AGENT_STATE.id) {
       //@ts-expect-error
       const result = JSON.parse(toolInvocation?.toolInvocation?.result ?? {});
-      console.log('HERE', result);
       setConfig(result);
     }
   }, [chat.messages, setConfig]);
+
+  useEffect(() => {
+    setIsChatReady(chat.status === 'ready');
+  }, [chat.status, setIsChatReady]);
 
   return {
     rateLimitRemaining,
@@ -137,6 +139,7 @@ export function useServiceAiAgentChat(threadId: string) {
 }
 
 export const configStateAtom = atom<Config | null>(null);
+const isChatReadyAtom = atom(true);
 
 export function useAgentState(key: 'smc_simulation_config', config: Config) {
   const [_, setConfig] = useAtom(configStateAtom);
@@ -150,10 +153,15 @@ export function useAgentState(key: 'smc_simulation_config', config: Config) {
       [key]: config,
     };
   }, [config, key]);
-
-  return useAtom(configStateAtom);
 }
 
 export function useAIConfig() {
-  return useAtom(configStateAtom)[0];
+  const [aiConfig, setAiConfig] = useAtom(configStateAtom);
+  const [isChatReady] = useAtom(isChatReadyAtom);
+
+  return {
+    aiConfig,
+    setAiConfig,
+    isChatReady,
+  };
 }

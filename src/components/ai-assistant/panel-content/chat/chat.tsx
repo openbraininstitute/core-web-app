@@ -1,4 +1,5 @@
 import { useIsFetching } from '@tanstack/react-query';
+import { atom } from 'jotai';
 import React from 'react';
 import {
   useServiceAiAgentChat,
@@ -12,7 +13,6 @@ import { MessageItem } from '../../message-item';
 import SuggestedQuestions from '../../suggested-questions';
 import Footer from '../footer';
 import Welcome from '../welcome';
-
 import styles from './chat.module.css';
 
 export interface ChatProps {

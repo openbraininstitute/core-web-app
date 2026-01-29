@@ -14,7 +14,7 @@ import ModelPreview from '@/features/scan-config/components/model-preview';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import styles from '@/features/scan-config/scan-config.module.css';
 import type { Block, TabType } from '@/features/scan-config/types';
-import { useAgentState } from '@/services/ai-agent';
+import { useAgentState, useAIConfig } from '@/services/ai-agent';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 import { useEntries, useModel, useSchemaName } from './components/hooks';
@@ -70,7 +70,8 @@ export default function ScanConfiguration({
 
   const config = useConfigAtom(schema, atomsMap);
 
-  const [aiConfig] = useAgentState('smc_simulation_config', config);
+  useAgentState('smc_simulation_config', config);
+  const { aiConfig, isChatReady } = useAIConfig();
 
   if (!schema || Object.keys(atomsMap).length === 0) {
     return (
@@ -110,7 +111,7 @@ export default function ScanConfiguration({
             setSelectedEntry={setSelectedEntry}
             setEditing={setEditing}
             setSelectedBlock={setSelectedBlock}
-            readOnly={readOnly || !!aiConfig}
+            readOnly={readOnly}
             setCampaignId={setCampaignId}
             setLoading={setLoading}
             model={model}

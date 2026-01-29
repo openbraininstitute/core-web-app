@@ -216,7 +216,7 @@ export function BlockUI({
               const op_ = op(k);
 
               const patchBorderClass = () => {
-                if (op_ === 'delete' || op_ === 'replace') 'border-red-500';
+                if (op_ === 'delete' || op_ === 'replace') return 'border-red-500';
                 if (op_ === 'add') return 'border-sky-400';
                 return 'border-transparent';
               };
@@ -251,6 +251,7 @@ export function BlockUI({
                       {(op_ === 'delete' || op_ === 'replace') && (
                         <CloseOutlined className="text-red-500" />
                       )}
+                      {op_ === 'add' && <PlusOutlined className="text-sky-400" />}
                     </div>
 
                     {op_ === 'replace' && !!blockAIConfig && (

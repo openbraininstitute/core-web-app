@@ -52,12 +52,12 @@ export default function Middle({
   allEntries,
   onNewBlockClick,
 }: MiddleProps) {
-  const aiSuggestedConfig = useAIConfig();
+  const { aiConfig, isChatReady } = useAIConfig();
 
   const getBlockAIConfig = () => {
-    if (!aiSuggestedConfig) return null;
+    if (!aiConfig) return null;
 
-    const blockConf = aiSuggestedConfig[configTab];
+    const blockConf = aiConfig[configTab];
     if (!isPlainObject(blockConf)) return {};
     if (isRootBlock(schema, configTab)) return blockConf;
     return blockConf[selectedEntry] ?? {};
@@ -129,7 +129,7 @@ export default function Middle({
           <BlockUI
             schemaName={schemaName}
             key={isRootBlock(schema, configTab) ? configTab : `${configTab}_${selectedEntry}`}
-            disabled={!!campaignId || loading || !!aiSuggestedConfig}
+            disabled={!!campaignId || loading || !!aiConfig || !isChatReady}
             config={config}
             blockSchema={
               schema.properties[configTab].ui_element === 'root_block'
