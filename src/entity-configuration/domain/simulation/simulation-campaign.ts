@@ -11,7 +11,7 @@ import {
 } from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
-import { CircuitScaleDictionary, ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import type {
   ICircuitSimulationCampaign,
