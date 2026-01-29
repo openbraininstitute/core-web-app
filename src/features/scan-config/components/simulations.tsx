@@ -12,6 +12,7 @@ import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execu
 import ApiError from '@/api/error';
 import { runSimulation } from '@/api/launch-system';
 import { useAppNotification } from '@/components/notification';
+import { hasSimConfigAsset } from '@/entity-configuration/domain/simulation/utils';
 import {
   modelAtomFamily,
   simExecRemoteStatusMapAtomFamily,
@@ -60,11 +61,9 @@ export default function SimulationsTab({
   const modelAtom = modelAtomFamily({ id: simulations[0].entity_id, context });
   const model = useAtomValue(modelAtom);
 
-  const simulationIds = simulations.map((s) => s.id);
-
-  const simExecStatusMapAtom = simExecStatusMapAtomFamily({ context, simulationIds });
+  const simExecStatusMapAtom = simExecStatusMapAtomFamily({ context, campaignId });
   const fetchRemoteSimExecStatuseMap = useSetAtom(
-    simExecRemoteStatusMapAtomFamily({ simulationIds, context })
+    simExecRemoteStatusMapAtomFamily({ campaignId, context })
   );
 
   const statusMap = useLastTruthyValue(simExecStatusMapAtom);
@@ -97,6 +96,7 @@ export default function SimulationsTab({
       .filter((simulation) =>
         [undefined, 'created', 'error'].includes(statusMap?.get(simulation.id))
       )
+      .filter((simulation) => hasSimConfigAsset(simulation))
       .map((s) => s.id);
   }, [simulations, statusMap]);
 
@@ -208,7 +208,9 @@ export default function SimulationsTab({
         ctx: { virtualLabId, projectId },
         simulationIds: simIds,
         onInit: () => {
-          simIds.forEach((simId) => setSimStatus(simId, EntitycoreExecutionStatus.PENDING));
+          simIds.forEach((simId) => {
+            setSimStatus(simId, EntitycoreExecutionStatus.PENDING);
+          });
           setSelectedSimulationIds([]);
           setSimRequestInProgress(false);
         },
@@ -376,6 +378,10 @@ function SimulationListItem({
 }: SimulationBlockProps) {
   const color = executionStatusColorMap[execStatus ?? EntitycoreExecutionStatus.CREATED];
 
+  const statusDetails = hasSimConfigAsset(simulation)
+    ? undefined
+    : 'There was a problem generating this simulation';
+
   return (
     <div className="flex-none">
       <div
@@ -417,8 +423,8 @@ function SimulationListItem({
               </span>
             )}
           </div>
-          <div className="ml-4 flex flex-shrink-0">
-            <SimulationStatusBadge status={execStatus} />
+          <div className="ml-4 flex shrink-0">
+            <SimulationStatusBadge status={execStatus} details={statusDetails} />
             <RightOutlined className="ml-2 text-sm" />
           </div>
         </button>

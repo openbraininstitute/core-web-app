@@ -28,7 +28,7 @@ import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
-import { migrateConfig } from './utils';
+import { getExtendedSimMap, hasSimConfigAsset, migrateConfig } from './utils';
 
 // NOTE: this is due entitycore do not support yet
 async function resolveSimulationCampaigns({
@@ -57,6 +57,9 @@ async function resolveSimulationCampaigns({
   });
   const executions = executionsResponse.data;
 
+  // TODO: Switch to sim generation execution status for validation when implemented in obi-one.
+  const simulationMap = await getExtendedSimMap(allSimIds, context);
+
   // map simulationId -> array of executions that use it
   const executionsBySimId = executions.reduce<Record<string, typeof executions>>((acc, exec) => {
     exec.used.forEach((usedSim) => {
@@ -70,7 +73,7 @@ async function resolveSimulationCampaigns({
   const enrichedData = source.data.map((campaign) => ({
     ...campaign,
     simulations: campaign.simulations?.map((sim) => ({
-      ...sim,
+      ...simulationMap.get(sim.id),
       executions: executionsBySimId[sim.id] ?? [],
     })),
   }));
@@ -100,6 +103,11 @@ export async function resolveSimulationByCampaignId({
   context: WorkspaceContext | undefined;
 }) {
   const campaign = await getCircuitSimulationCampaign({ id, context });
+
+  if (!campaign) {
+    throw new Error(`No campaign with id ${id} found`);
+  }
+
   const source = await getCircuitSimulations({ context, filters: { simulation_campaign_id: id } });
 
   const simulation = source.data.at(0);
@@ -149,7 +157,14 @@ export function getStatusCountMap(simCampaign: ICircuitSimulationCampaign) {
   const statusCountMap = simulations.reduce((map, simulation) => {
     const executions = get(simulation, 'executions', []) as ICircuitSimulationExecution[];
     const sortedExecutions = sortBy(executions, (exec) => exec.creation_date);
-    const status = sortedExecutions.at(-1)?.status ?? EntitycoreExecutionStatus.CREATED;
+
+    // Used when there are no executions present
+    const fallbackStatus = hasSimConfigAsset(simulation)
+      ? EntitycoreExecutionStatus.CREATED
+      : EntitycoreExecutionStatus.ERROR;
+
+    const status = sortedExecutions.at(-1)?.status ?? fallbackStatus;
+
     return map.set(status, (map.get(status) ?? 0) + 1);
   }, new Map());
 
@@ -164,6 +179,7 @@ export const SimulationCampaign: EntityCoreTypeConfig<ICircuitSimulationCampaign
   extendedType: ExtendedEntitiesTypeDict.SimulationCampaign,
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.SimulationCampaign,
+  isDeletable: false,
   api: {
     config: {
       allowedFacets: true,
