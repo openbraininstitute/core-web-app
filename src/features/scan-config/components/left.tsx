@@ -14,6 +14,7 @@ import { useAIConfig } from '@/services/ai-agent';
 import type { Config } from './components';
 import GenerateConfigButton from './generate-config-button';
 import { useValidateSchema } from './hooks';
+import { resetConfig } from './hooks/schema';
 
 export default function Left({
   schema,
@@ -130,6 +131,10 @@ export default function Left({
           <button
             type="button"
             className="min-h-[50px] text-lg bg-green-600 text-white p-2 rounded-full grow "
+            onClick={() => {
+              resetConfig(schema, aiConfig, setAtomsMap);
+              setAiConfig(null);
+            }}
           >
             Accept changes
           </button>

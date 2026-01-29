@@ -71,7 +71,6 @@ export default function ScanConfiguration({
   const config = useConfigAtom(schema, atomsMap);
 
   useAgentState('smc_simulation_config', config);
-  const { aiConfig, isChatReady } = useAIConfig();
 
   if (!schema || Object.keys(atomsMap).length === 0) {
     return (

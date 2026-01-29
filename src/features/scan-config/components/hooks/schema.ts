@@ -2,6 +2,7 @@ import $RefParser from '@apidevtools/json-schema-ref-parser';
 import { useQuery } from '@tanstack/react-query';
 import { atom } from 'jotai';
 import { useEffect, useState } from 'react';
+
 import { match } from 'ts-pattern';
 import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
 import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -120,6 +121,36 @@ export function useAtomsMap({
   }, [schema, model, initialConfig]);
 
   return [atomsMap, setAtomsMap] as const;
+}
+
+export function resetConfig(
+  schema: ConfigSchema,
+  newConfig: Config,
+  setAtomsMap: (newMap: AtomsMap) => void
+) {
+  const map: {
+    [key: string]:
+      | ReturnType<typeof atom<Record<string, ConfigValue>>>
+      | Record<string, ReturnType<typeof atom<Record<string, ConfigValue>>>>;
+  } = {};
+
+  Object.entries(newConfig)
+    .filter(([k]) => isRootBlock(schema, k))
+    .forEach(([k, v]) => {
+      if (isPlainObject(v)) map[k] = atom<Record<string, ConfigValue>>(v);
+    });
+
+  Object.entries(newConfig)
+    .filter(([k]) => !isRootBlock(schema, k))
+    .forEach(([k, v]) => {
+      map[k] = {};
+      Object.entries(v).forEach(([subK, subV]) => {
+        if (!isPlainObject(subV) || isAtom(map[k])) return;
+        map[k][subK] = atom<Record<string, ConfigValue>>(subV);
+      });
+    });
+
+  setAtomsMap(map);
 }
 
 export function useReferenceTypeDict(schemaName: SchemaName) {
