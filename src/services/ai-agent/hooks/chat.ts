@@ -3,7 +3,7 @@
 import { type CreateMessage, type Message, useChat } from '@ai-sdk/react';
 import type { ChatRequestOptions, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import { atom, useAtom } from 'jotai';
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useAIActiveTools } from '@/components/ai-assistant/state';
 import type { Config } from '@/features/scan-config/components/components';
 import { logError } from '@/util/logger';
@@ -153,6 +153,12 @@ export function useAgentState(key: 'smc_simulation_config', config: Config) {
       [key]: config,
     };
   }, [config, key]);
+
+  const updateId = useCallback(() => {
+    AI_AGENT_STATE.id = crypto.randomUUID().replace(/-/g, '');
+  }, []);
+
+  return updateId;
 }
 
 export function useAIConfig() {

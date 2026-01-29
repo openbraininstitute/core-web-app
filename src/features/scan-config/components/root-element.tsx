@@ -12,7 +12,6 @@ import {
 import type { ErrorObject } from 'ajv';
 import { Input } from 'antd';
 import isEqual from 'es-toolkit/compat/isEqual';
-import { read } from 'fs';
 import { atom } from 'jotai';
 import type React from 'react';
 import { useAIConfig } from '@/services/ai-agent';
@@ -188,7 +187,7 @@ export function RootElement({
           <>
             {Object.entries(config[rootElement])
               .filter(([block_key, block_schema]) => {
-                if (!aiConfig || !isChatReady) return true;
+                if (!aiConfig) return true;
                 if (!isPlainObject(aiConfig[rootElement])) return true;
                 return isEqual(block_schema, aiConfig[rootElement][block_key]);
               })
@@ -357,7 +356,7 @@ export function RootElement({
                 );
               })}
 
-            {!!aiConfig && isChatReady && !campaignId && (
+            {!!aiConfig && !campaignId && (
               <div className="border-red-500 border-2">
                 {Object.entries(config[rootElement])
                   .filter(([block_key, block_schema]) => {

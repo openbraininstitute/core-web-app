@@ -1,4 +1,5 @@
 import { Button } from 'antd';
+import { handleBuildComplete } from 'next/dist/build/adapter/build-complete';
 import { Fragment } from 'react';
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -14,7 +15,6 @@ import { useAIConfig } from '@/services/ai-agent';
 import type { Config } from './components';
 import GenerateConfigButton from './generate-config-button';
 import { useValidateSchema } from './hooks';
-import { resetConfig } from './hooks/schema';
 
 export default function Left({
   schema,
@@ -40,6 +40,7 @@ export default function Left({
   setNewKey,
   isEditingKey,
   setIsEditingKey,
+  handleAcceptAIChanges,
 }: {
   schema: ConfigSchema;
   atomsMap: AtomsMap;
@@ -64,9 +65,10 @@ export default function Left({
   setNewKey: (k: string) => void;
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
+  handleAcceptAIChanges: () => void;
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
-  const { aiConfig, setAiConfig, isChatReady } = useAIConfig();
+  const { aiConfig, setAiConfig } = useAIConfig();
 
   return (
     <div className={styles.scrollable}>
@@ -119,7 +121,7 @@ export default function Left({
         })}
       </div>
 
-      {!!aiConfig && isChatReady && !campaignId && (
+      {!!aiConfig && !campaignId && (
         <div className="flex w-[95%] min-h-[50px] gap-2">
           <button
             type="button"
@@ -131,10 +133,7 @@ export default function Left({
           <button
             type="button"
             className="min-h-[50px] text-lg bg-green-600 text-white p-2 rounded-full grow "
-            onClick={() => {
-              resetConfig(schema, aiConfig, setAtomsMap);
-              setAiConfig(null);
-            }}
+            onClick={handleAcceptAIChanges}
           >
             Accept changes
           </button>

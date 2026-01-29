@@ -9,7 +9,11 @@ import SimulationsTab from './components/simulations';
 
 import type { Config } from '@/features/scan-config/components/components';
 import { useConfigAtom } from '@/features/scan-config/components/hooks/config-atom';
-import { useAtomsMap, useObioneJsonSchema } from '@/features/scan-config/components/hooks/schema';
+import {
+  resetConfig,
+  useAtomsMap,
+  useObioneJsonSchema,
+} from '@/features/scan-config/components/hooks/schema';
 import ModelPreview from '@/features/scan-config/components/model-preview';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import styles from '@/features/scan-config/scan-config.module.css';
@@ -70,7 +74,8 @@ export default function ScanConfiguration({
 
   const config = useConfigAtom(schema, atomsMap);
 
-  useAgentState('smc_simulation_config', config);
+  const updateAiRequestId = useAgentState('smc_simulation_config', config);
+  const { aiConfig, setAiConfig } = useAIConfig();
 
   if (!schema || Object.keys(atomsMap).length === 0) {
     return (
@@ -121,6 +126,12 @@ export default function ScanConfiguration({
             setNewKey={setNewKey}
             isEditingKey={isEditingKey}
             setIsEditingKey={setIsEditingKey}
+            handleAcceptAIChanges={() => {
+              if (!aiConfig) return;
+              resetConfig(schema, aiConfig, setAtomsMap);
+              setAiConfig(null);
+              updateAiRequestId();
+            }}
           />
 
           <Middle
