@@ -1,12 +1,18 @@
-import type { TEntityTypeDictKey } from '@/api/entitycore/types';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { obioneApi } from '@/api/one/utils';
 import type { WorkspaceContext } from '@/types/common';
 
+export const ObiOneTaskTypeDict = {
+  CircuitExtraction: 'circuit_extraction',
+  CircuitSimulation: 'circuit_simulation',
+} as const;
+
+export type TObiOneTaskType = (typeof ObiOneTaskTypeDict)[keyof typeof ObiOneTaskTypeDict];
+
 type LaunchExtractionParams = {
   ctx: WorkspaceContext;
-  entityType: TEntityTypeDictKey;
-  entityId: string;
+  task_type: TObiOneTaskType;
+  config_id: string;
   signal?: AbortSignal;
 };
 
@@ -23,23 +29,24 @@ type LaunchExtractionParams = {
  */
 export async function launchExtraction({
   ctx,
-  entityType,
-  entityId,
+  task_type,
+  config_id,
   signal,
 }: LaunchExtractionParams): Promise<string> {
   const api = await obioneApi();
 
-  const response = await api.post<string>(
-    `/declared/task-launch?entity_type=${entityType}&entity_id=${entityId}`,
-    {
-      headers: {
-        ...getEntityCoreContext(ctx).headers,
-        accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      signal,
-    }
-  );
+  const response = await api.post<string>(`/declared/task-launch`, {
+    headers: {
+      ...getEntityCoreContext(ctx).headers,
+      accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: {
+      task_type,
+      config_id,
+    },
+    signal,
+  });
 
   return response;
 }

@@ -20,6 +20,7 @@ import {
   useModelQuery,
 } from '@/features/scan-config/components/atoms';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
+import { ScanParams } from '@/features/scan-config/components/scan-params';
 import { type File, SimulationFiles } from '@/features/scan-config/components/simulation-files';
 import { SimulationStatusBadge } from '@/features/scan-config/components/simulation-status';
 import errorRegistry from '@/features/scan-config/error-registry';
@@ -433,28 +434,6 @@ function SimulationListItem({
 
         <ScanParams scanParams={simulation.scan_parameters} color={color} />
       </div>
-    </div>
-  );
-}
-
-type SimulationScanParams = { [key: string]: string | number };
-
-function ScanParams({ scanParams, color }: { scanParams: SimulationScanParams; color: string }) {
-  return (
-    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-      {Object.entries(scanParams).map(([key, value]) => (
-        <div key={key} className="overflow-x-hidden">
-          <div title={key} className="truncate text-ellipsis text-gray-400">
-            {key.split('.').at(-1)}
-          </div>
-          <div
-            className="truncate font-bold text-ellipsis transition-colors duration-300"
-            style={{ color }}
-          >
-            {value}
-          </div>
-        </div>
-      ))}
     </div>
   );
 }
