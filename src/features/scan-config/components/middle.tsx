@@ -121,7 +121,7 @@ export default function Middle({
             disabled={!!campaignId || loading}
             config={config}
             blockSchema={
-              schema.properties[configTab].ui_element === 'root_block'
+              schema.properties[configTab].ui_element === 'block_single'
                 ? schema.properties[configTab]
                 : selectedBlockSchema
             }
