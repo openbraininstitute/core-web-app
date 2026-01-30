@@ -71,7 +71,6 @@ export enum EntityCoreFields {
   SimulationSeed = 'simulation_seed',
   InjectionLocation = 'injection_location',
   RecordingLocation = 'recording_location',
-  SimulationStatus = 'simulation_status',
   SimulationResponse = 'simulation_response',
   SimulationStimulus = 'simulation_stimulus',
   SimulationModel = 'me_model',
