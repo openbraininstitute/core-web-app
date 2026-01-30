@@ -56,13 +56,6 @@ export default function ScanConfiguration({
   const schemaName = useSchemaName({ model });
   const schema = useObioneJsonSchema(schemaName);
 
-  const selectedBlockSchema: Block | undefined =
-    schema?.properties?.[selectedRootElement]?.ui_element === 'block_dictionary'
-      ? schema.properties[selectedRootElement].additionalProperties.oneOf.find(
-          (o: Block) => o.properties?.type.const === selectedBlock
-        )
-      : undefined;
-
   const allEntries = useEntries({ initialConfig, schema });
 
   const [atomsMap, setAtomsMap] = useAtomsMap({ schema, initialConfig, model });
@@ -120,28 +113,37 @@ export default function ScanConfiguration({
             setIsEditingKey={setIsEditingKey}
           />
 
-          <Middle
-            schemaName={schemaName}
-            schema={schema}
-            configTab={selectedRootElement}
-            selectedCategory={selectedBlock}
-            editing={editing}
-            atomsMap={atomsMap}
-            setAtomsMap={setAtomsMap}
-            setSelectedCategory={setSelectedBlock}
-            selectedEntry={selectedEntry}
-            setSelectedEntry={setSelectedEntry}
-            campaignId={campaignId}
-            loading={loading}
-            config={config}
-            selectedBlockSchema={selectedBlockSchema}
-            model={model}
-            allEntries={allEntries}
-            onNewBlockClick={() => {
-              setNewKey('');
-              setIsEditingKey(false);
-            }}
-          />
+          <div
+            className={cn(
+              styles.scrollable,
+              'h-full overflow-y-auto border-r border-l border-gray-200 px-5'
+            )}
+          >
+            {editing && (
+              <Middle
+                schemaName={schemaName}
+                schema={schema}
+                selectedRootElement={selectedRootElement}
+                selectedBlock={selectedBlock}
+                editing={editing}
+                atomsMap={atomsMap}
+                setAtomsMap={setAtomsMap}
+                setSelectedBlock={setSelectedBlock}
+                selectedEntry={selectedEntry}
+                setSelectedEntry={setSelectedEntry}
+                campaignId={campaignId}
+                loading={loading}
+                config={config}
+                model={model}
+                allEntries={allEntries}
+                onNewBlockClick={() => {
+                  setNewKey('');
+                  setIsEditingKey(false);
+                }}
+                selectedSchema={schema.properties[selectedRootElement]}
+              />
+            )}
+          </div>
 
           <div className="rounded-lg">
             <ModelPreview model={model} />
