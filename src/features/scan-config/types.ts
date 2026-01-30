@@ -124,12 +124,17 @@ export interface BlockDictionary extends RootElement {
   };
 }
 
+export interface BlockUnion extends RootElement {
+  ui_element: 'block_union';
+  oneOf: Block[];
+}
+
 export type ConfigSchema = {
   additionalProperties: false;
   default_block_reference_labels: Record<string, string>;
   description: string;
   group_order: string[];
-  properties: Record<string, RootBlock | BlockDictionary> & { type: Type };
+  properties: Record<string, RootBlock | BlockDictionary | BlockUnion> & { type: Type };
   title: string;
 };
 

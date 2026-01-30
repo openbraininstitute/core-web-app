@@ -15,7 +15,7 @@ import { atom } from 'jotai';
 import type React from 'react';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
-import type { AtomsMap, BlockDictionary, ConfigSchema, RootBlock } from '../types';
+import type { AtomsMap, BlockDictionary, BlockUnion, ConfigSchema, RootBlock } from '../types';
 import { Chevron, type Config, type ConfigValue, Tab } from './components';
 import { isRootBlock } from './hooks/schema';
 import { isAtom, isPlainObject } from './utils';
@@ -44,7 +44,7 @@ export function RootElement({
 }: {
   schema: ConfigSchema | null; // The global schema
   rootElement: string;
-  rootElementSchema: RootBlock | BlockDictionary;
+  rootElementSchema: RootBlock | BlockDictionary | BlockUnion;
   atomsMap: AtomsMap;
   setAtomsMap: React.Dispatch<React.SetStateAction<AtomsMap>>;
   selectedRootElement: string;
@@ -158,7 +158,7 @@ export function RootElement({
           setSelectedRootElement(rootElement);
           setSelectedEntry('');
 
-          if (rootElementSchema.ui_element === 'root_block') setEditing(true);
+          if (rootElementSchema.ui_element !== 'block_dictionary') setEditing(true);
           else setEditing(false);
         }}
         extraClass="w-full flex justify-between h-[50px] min-h-[50px] items-center drop-shadow"

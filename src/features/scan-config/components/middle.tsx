@@ -6,11 +6,13 @@ import styles from '@/features/scan-config/scan-config.module.css';
 import type {
   AtomsMap,
   BlockDictionary as BlockDictionaryT,
+  BlockUnion as BlockUnionT,
   ConfigSchema,
   RootBlock,
   SchemaName,
 } from '@/features/scan-config/types';
 import { classNames } from '@/util/utils';
+import BlockUnion from './bloc-union';
 import BlockDictionary from './block-dictionary';
 
 type MiddleProps = {
@@ -28,7 +30,7 @@ type MiddleProps = {
   model: ICircuit | IMEModel;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
-  selectedSchema: RootBlock | BlockDictionaryT;
+  selectedSchema: RootBlock | BlockDictionaryT | BlockUnionT;
 };
 
 export default function Middle({
@@ -72,7 +74,24 @@ export default function Middle({
           onNewBlockClick={onNewBlockClick}
         />
       )}
-
+      {selectedSchema.ui_element === 'block_union' && (
+        <BlockUnion
+          campaignId={campaignId}
+          loading={loading}
+          config={config}
+          model={model}
+          allEntries={allEntries}
+          schema={schema}
+          atomsMap={atomsMap}
+          setAtomsMap={setAtomsMap}
+          selectedEntry={selectedEntry}
+          setSelectedEntry={setSelectedEntry}
+          schemaName={schemaName}
+          blockUnionSchema={selectedSchema}
+          selectedRootElement={selectedRootElement}
+          onNewBlockClick={onNewBlockClick}
+        />
+      )}
       {selectedSchema.ui_element === 'root_block' && isAtom(atomsMap[selectedRootElement]) && (
         <BlockUI
           schemaName={schemaName}

@@ -43,6 +43,8 @@ export function useSchemaName({ model }: { model: ICircuit | IMEModel }) {
     .otherwise(() => {
       throw new Error(`Unsupported entity type: ${model.type}`);
     });
+
+  return 'CircuitExtractionScanConfig';
   return schemaName as SchemaName;
 }
 

@@ -20,9 +20,9 @@ import {
 import { classNames } from '@/util/utils';
 
 type Primitive = null | boolean | number | string;
-interface Object {
+type Object = {
   [key: string]: Primitive | Primitive[] | Object;
-}
+};
 
 export type ConfigValue = Primitive | Primitive[] | Object;
 
@@ -35,6 +35,7 @@ export function BlockUI({
   stateAtom,
   config,
   model,
+  showBackButton = false,
 }: {
   schemaName: SchemaName;
   disabled: boolean;
@@ -42,6 +43,7 @@ export function BlockUI({
   blockSchema?: Block;
   model: ICircuit | IMEModel | undefined | null;
   stateAtom: ReturnType<typeof atom<{ [key: string]: ConfigValue }>>;
+  showBackButton?: boolean;
 }) {
   const [state, setState] = useAtom(stateAtom);
 
@@ -183,7 +185,16 @@ export function BlockUI({
   if (!blockSchema) return null;
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 relative">
+      {showBackButton && (
+        <button
+          className="absolute top-0 right-0 bg-neutral-400 text-white py-2 px-4 rounded"
+          type="button"
+          onClick={() => setState({})}
+        >
+          Back
+        </button>
+      )}
       <div className="text-lg text-gray-500 uppercase">{blockSchema.title}</div>
       <div className="mb-6 text-gray-500">{blockSchema.description}</div>
 
