@@ -94,7 +94,7 @@ export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
           const localStatus = localStatusMap.get(sim.id);
 
           // Simple validity check: if there is no sonata sim config asset we set error status.
-          if (hasSimConfigAsset(sim)) {
+          if (!hasSimConfigAsset(sim)) {
             return map.set(sim.id, EntitycoreExecutionStatus.ERROR);
           }
 
