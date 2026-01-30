@@ -40,11 +40,12 @@ export function useSchemaName({ model }: { model: ICircuit | IMEModel }) {
       () => 'MEModelWithSynapsesCircuitSimulationScanConfig'
     )
     .with({ type: EntityTypeDict.Circuit }, () => 'CircuitSimulationScanConfig')
+
+    // Add case for circuit extraction and others here
     .otherwise(() => {
       throw new Error(`Unsupported entity type: ${model.type}`);
     });
 
-  return 'CircuitExtractionScanConfig';
   return schemaName as SchemaName;
 }
 
