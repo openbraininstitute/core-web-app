@@ -3,12 +3,12 @@ import { Suspense, useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
 import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import { Loader } from '@/components/loader';
-
 import { EphysViewer } from '@/features/ephys-viewer';
 import type { WorkspaceContext } from '@/types/common';
-import { classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
 import { jsonFileAtomFamily } from '../atoms';
 import type { File } from '../simulation-files';
+import { CodeFileViewer } from './code-viewer';
 
 type FileViewerProps = {
   file?: File;
@@ -32,6 +32,7 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
 
   const fileName =
     displayFile?.assetPath?.split('/').at(-1) ?? displayFile?.asset.path.split('/').at(-1);
+
   const fileExt = fileName?.split('.').at(-1)?.toLowerCase();
 
   const viewerContent = match(fileExt)
@@ -41,8 +42,12 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
     .otherwise(() => <PlaceholderFileViewer file={displayFile!} />);
 
   return (
-    <div className={classNames('text-primary-9 relative rounded-2xl bg-white p-6', className)}>
-      <div className="relative h-full overflow-auto p-6">
+    <div
+      className={cn('text-primary-9 relative rounded-2xl bg-white p-6', className, {
+        'p-0': fileExt === 'json',
+      })}
+    >
+      <div className={cn('relative h-full overflow-auto p-6', { 'p-0': fileExt === 'json' })}>
         <Suspense>{viewerContent}</Suspense>
         {loading && !isFilePreloading && (
           <div className="absolute inset-0 z-10 flex h-full cursor-progress items-center justify-center rounded-2xl backdrop-blur-xs">
@@ -123,17 +128,14 @@ type JsonFileViewerProps = {
 };
 
 function JsonFileViewer({ file, context }: JsonFileViewerProps) {
-  const parsedJson = useAtomValue(
-    jsonFileAtomFamily({
-      id: file.asset.id,
-      entityId: file.entity.id,
-      entityType: file.entity.type,
-      assetPath: file.assetPath,
-      context,
-    })
+  return (
+    <CodeFileViewer
+      asset={file.asset}
+      assetPath={file.assetPath}
+      entity={file.entity}
+      context={context}
+    />
   );
-
-  return <pre>{JSON.stringify(parsedJson, null, 2)}</pre>;
 }
 
 type NwbFileViewerProps = {

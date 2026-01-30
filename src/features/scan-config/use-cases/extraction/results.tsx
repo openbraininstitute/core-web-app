@@ -295,7 +295,6 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Extractio
         </div>
       </div>
 
-      {/* Input/Output files for selected extraction config */}
       <div className="relative border-r border-gray-200 px-4">
         {!!activeConfig && (
           <ExtractionFiles
@@ -309,7 +308,6 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Extractio
         )}
       </div>
 
-      {/* File preview */}
       <div className="relative pl-4">
         <FileViewer file={selectedFile} className="h-full" context={context} />
       </div>
@@ -467,7 +465,6 @@ function ExtractionFiles({
       files.push({
         entity: config,
         asset: extractionConfigAsset,
-        assetPath: extractionConfigAsset.path.split('/').at(-1),
       });
     }
     if (circuit && circuitConfigAsset) {
@@ -566,8 +563,8 @@ type ExtractionFileProps = {
 };
 
 function ExtractionFile({ file, selected, onSelect }: ExtractionFileProps) {
-  const fileName = file.asset.path.split('.').at(0);
-  const fileExt = file.asset.path?.split('.').at(-1);
+  const fileName = file.assetPath?.split('/').at(-1) ?? file.asset.path.split('/').at(-1);
+  const fileExt = fileName?.split('.').at(-1);
 
   return (
     <button
