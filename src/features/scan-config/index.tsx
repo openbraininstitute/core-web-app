@@ -13,7 +13,7 @@ import { useAtomsMap, useObioneJsonSchema } from '@/features/scan-config/compone
 import ModelPreview from '@/features/scan-config/components/model-preview';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import styles from '@/features/scan-config/scan-config.module.css';
-import type { Block, TabType } from '@/features/scan-config/types';
+import type { TabType } from '@/features/scan-config/types';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 import { useEntries, useModel, useSchemaName } from './components/hooks';
@@ -43,7 +43,6 @@ export default function ScanConfiguration({
   const [tab, setTab] = useState<TabType>(defaultTab);
   const [selectedRootElement, setSelectedRootElement] = useState<string>('info');
   const [editing, setEditing] = useState(true);
-  const [selectedBlock, setSelectedBlock] = useState('');
   const [selectedEntry, setSelectedEntry] = useState('');
   const [loading, setLoading] = useState(false);
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
@@ -99,7 +98,6 @@ export default function ScanConfiguration({
             selectedEntry={selectedEntry}
             setSelectedEntry={setSelectedEntry}
             setEditing={setEditing}
-            setSelectedBlock={setSelectedBlock}
             readOnly={readOnly}
             setCampaignId={setCampaignId}
             setLoading={setLoading}
@@ -124,11 +122,9 @@ export default function ScanConfiguration({
                 schemaName={schemaName}
                 schema={schema}
                 selectedRootElement={selectedRootElement}
-                selectedBlock={selectedBlock}
                 editing={editing}
                 atomsMap={atomsMap}
                 setAtomsMap={setAtomsMap}
-                setSelectedBlock={setSelectedBlock}
                 selectedEntry={selectedEntry}
                 setSelectedEntry={setSelectedEntry}
                 campaignId={campaignId}

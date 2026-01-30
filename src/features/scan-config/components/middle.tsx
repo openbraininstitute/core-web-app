@@ -20,8 +20,6 @@ type MiddleProps = {
   editing: boolean;
   atomsMap: AtomsMap;
   setAtomsMap: (v: AtomsMap) => void;
-  selectedBlock: string;
-  setSelectedBlock: (s: string) => void;
   selectedEntry: string;
   setSelectedEntry: (entry: string) => void;
   campaignId: string;
@@ -39,8 +37,6 @@ export default function Middle({
   selectedRootElement,
   atomsMap,
   setAtomsMap,
-  selectedBlock,
-  setSelectedBlock,
   selectedEntry,
   setSelectedEntry,
   campaignId,
@@ -66,11 +62,8 @@ export default function Middle({
           model={model}
           allEntries={allEntries}
           schema={schema}
-          selectedCategory={selectedBlock}
           atomsMap={atomsMap}
           setAtomsMap={setAtomsMap}
-          setSelectedBlock={setSelectedBlock}
-          selectedBlock={selectedBlock}
           selectedEntry={selectedEntry}
           setSelectedEntry={setSelectedEntry}
           schemaName={schemaName}
@@ -83,7 +76,6 @@ export default function Middle({
       {selectedSchema.ui_element === 'root_block' && isAtom(atomsMap[selectedRootElement]) && (
         <BlockUI
           schemaName={schemaName}
-          key={selectedBlock}
           disabled={!!campaignId || loading}
           config={config}
           blockSchema={selectedSchema}

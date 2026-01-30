@@ -7,7 +7,7 @@ import {
   type ConfigValue,
 } from '@/features/scan-config/components/components';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
-import { isAtom } from '@/features/scan-config/components/utils';
+import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import type {
   AtomsMap,
   Block,
@@ -21,11 +21,8 @@ type Props = {
   schema: ConfigSchema;
   blockDictionarySchema: BlockDictionaryT;
   selectedRootElement: string;
-  selectedCategory: string;
   atomsMap: AtomsMap;
   setAtomsMap: (v: AtomsMap) => void;
-  selectedBlock: string;
-  setSelectedBlock: (s: string) => void;
   selectedEntry: string;
   setSelectedEntry: (entry: string) => void;
   campaignId: string;
@@ -44,8 +41,6 @@ export default function BlockDictionary({
   selectedRootElement,
   atomsMap,
   setAtomsMap,
-  selectedBlock,
-  setSelectedBlock,
   selectedEntry,
   setSelectedEntry,
   campaignId,
@@ -55,6 +50,10 @@ export default function BlockDictionary({
   allEntries,
   onNewBlockClick,
 }: Props) {
+  const selectedBlock = isPlainObject(config[selectedRootElement])
+    ? config[selectedRootElement][selectedEntry]?.type
+    : undefined;
+
   const selectedBlockSchema: Block | undefined =
     blockDictionarySchema.additionalProperties.oneOf.find(
       (o: Block) => o.properties?.type.const === selectedBlock
@@ -86,7 +85,6 @@ export default function BlockDictionary({
 
               if (onNewBlockClick) onNewBlockClick();
 
-              setSelectedBlock(o.properties?.type.const ?? '');
               const initial: Record<string, ConfigValue> = {};
               if (o.properties)
                 Object.entries(o.properties).forEach(([subkey, subValue]) => {
