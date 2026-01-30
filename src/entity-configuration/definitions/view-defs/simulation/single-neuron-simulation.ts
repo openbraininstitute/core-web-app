@@ -1,9 +1,9 @@
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import {
   DataTypeGroup,
   type ViewDefinitionConfig,
 } from '@/entity-configuration/definitions/view-defs/types';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
 export const viewDefForSingleNeuronSimulation: ViewDefinitionConfig = {
   title: 'Simulation',
@@ -15,7 +15,6 @@ export const viewDefForSingleNeuronSimulation: ViewDefinitionConfig = {
     EntityCoreFields.SimulationModel,
     EntityCoreFields.SimulationStimulus,
     EntityCoreFields.SimulationResponse,
-    EntityCoreFields.SimulationStatus,
     EntityCoreFields.InjectionLocation,
     EntityCoreFields.RecordingLocation,
     EntityCoreFields.BrainRegion,
@@ -28,7 +27,6 @@ export const viewDefForSingleNeuronSimulation: ViewDefinitionConfig = {
   ],
   miniDetailView: [
     { field: EntityCoreFields.SimulationModel },
-    { field: EntityCoreFields.SimulationStatus },
     { field: EntityCoreFields.InjectionLocation },
     { field: EntityCoreFields.RecordingLocation },
     { field: EntityCoreFields.BrainRegion },

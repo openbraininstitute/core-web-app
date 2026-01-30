@@ -1,29 +1,26 @@
-import z from "zod";
+import z from 'zod';
 
-import type { IBrainRegionHierarchy } from "@/api/entitycore/types/entities/brain-region";
-import type { INestedMEModel } from "@/api/entitycore/types/entities/me-model";
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import type { INestedMEModel } from '@/api/entitycore/types/entities/me-model';
 import type {
   EntityAuthorization,
   EntityCoreBaseAsset,
   EntityCoreIdentifiable,
   EntityCoreType,
   Timestamps,
-} from "@/api/entitycore/types/shared/global";
-import {
-  type ISingleNeuronSimulationBase,
-  SingleNeuronSimulationStatus,
-} from "@/api/entitycore/types/shared/neuron-simulation";
+} from '@/api/entitycore/types/shared/global';
+import type { ISingleNeuronSimulationBase } from '@/api/entitycore/types/shared/neuron-simulation';
 import type {
-  ContributionFilter,
+  BrainRegionFilter,
   BrainRegionHierarchyFilter,
-  SharedFilter,
-  MtypeFilter,
+  ContributionFilter,
   EtypeFilter,
   IlikeSearchFilter,
+  MtypeFilter,
   OwnershipFilter,
   PaginationFilter,
-  BrainRegionFilter,
-} from "@/api/entitycore/types/shared/request";
+  SharedFilter,
+} from '@/api/entitycore/types/shared/request';
 
 export interface ISingleNeuronSimulation
   extends EntityCoreIdentifiable,
@@ -81,7 +78,6 @@ export interface ISingleNeuronSimulationFilter
 const CreateSingleNeuronSimulationSchema = z.object({
   name: z.string(),
   description: z.string(),
-  status: z.nativeEnum(SingleNeuronSimulationStatus),
   seed: z.number().int(),
   injection_location: z.array(z.string()),
   recording_location: z.array(z.string()),
@@ -89,6 +85,4 @@ const CreateSingleNeuronSimulationSchema = z.object({
   me_model_id: z.string().uuid(),
 });
 
-export type TCreateSingleNeuronSimulation = z.infer<
-  typeof CreateSingleNeuronSimulationSchema
->;
+export type TCreateSingleNeuronSimulation = z.infer<typeof CreateSingleNeuronSimulationSchema>;
