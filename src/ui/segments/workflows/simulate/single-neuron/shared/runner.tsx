@@ -28,7 +28,6 @@ import type {
   ISingleNeuronSimulation,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
-import { SingleNeuronSimulationStatus } from '@/api/entitycore/types/shared/neuron-simulation';
 import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
 import { tryCatch } from '@/api/utils';
 import { config } from '@/config';
@@ -115,7 +114,6 @@ export const createSingleNeuronSimulationAtom = atom(
     const basePayload = {
       name,
       description,
-      status: SingleNeuronSimulationStatus.success,
       seed: experimentalSetupConfiguration.seed,
       injection_location: [singleNeuronSimulationConfig.current_injection.inject_to],
       recording_location: singleNeuronSimulationConfig.record_from.map(
