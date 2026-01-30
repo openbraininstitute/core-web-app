@@ -2,7 +2,6 @@ import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { BlockUI, type Config } from '@/features/scan-config/components/components';
 import { isAtom } from '@/features/scan-config/components/utils';
-import styles from '@/features/scan-config/scan-config.module.css';
 import type {
   AtomsMap,
   BlockDictionary as BlockDictionaryT,
@@ -10,7 +9,6 @@ import type {
   RootBlock,
   SchemaName,
 } from '@/features/scan-config/types';
-import { classNames } from '@/util/utils';
 import BlockDictionary from './block-dictionary';
 
 type MiddleProps = {
