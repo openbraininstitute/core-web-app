@@ -1,27 +1,25 @@
 'use client';
 
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-
-import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
-import { useCellMorphologyPipeline } from '@/ui/segments/contribute/cell-morphology/pipeline';
 import {
-  createCellMorphologyConfig,
   CELL_MORPHOLOGY_PROGRESS_STEPS,
+  createCellMorphologyConfig,
 } from '@/ui/segments/contribute/cell-morphology/config';
+import { useCellMorphologyPipeline } from '@/ui/segments/contribute/cell-morphology/pipeline';
+import type { TCellMorphologyForm } from '@/ui/segments/contribute/cell-morphology/schema';
 import {
-  MTypeClassification,
-  Contribution,
   AssetUpload,
+  Contribution,
+  License,
+  MTypeClassification,
   Protocol,
   Setup,
   Subject,
-  License,
 } from '@/ui/segments/contribute/cell-morphology/steps';
-
-import type { TCellMorphologyForm } from '@/ui/segments/contribute/cell-morphology/schema';
+import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
 import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
+import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 const CELL_MORPHOLOGY_STEP_CONFIG: Array<IContributionStep<TCellMorphologyForm>> = [
   {

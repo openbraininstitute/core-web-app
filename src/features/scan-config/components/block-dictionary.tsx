@@ -7,7 +7,7 @@ import {
   type ConfigValue,
 } from '@/features/scan-config/components/components';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
-import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
+import { type ConfigObject, isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import type {
   AtomsMap,
   Block,
@@ -32,6 +32,7 @@ type Props = {
   model: ICircuit | IMEModel;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
+  blockAIConfig: ConfigObject | null;
 };
 
 export default function BlockDictionary({
@@ -49,6 +50,7 @@ export default function BlockDictionary({
   model,
   allEntries,
   onNewBlockClick,
+  blockAIConfig,
 }: Props) {
   const selectedBlock = isPlainObject(config[selectedRootElement])
     ? config[selectedRootElement][selectedEntry]?.type
@@ -69,6 +71,7 @@ export default function BlockDictionary({
         blockSchema={selectedBlockSchema}
         stateAtom={atomsMap[selectedRootElement]?.[selectedEntry]}
         model={model}
+        blockAIConfig={blockAIConfig}
       />
     );
 
