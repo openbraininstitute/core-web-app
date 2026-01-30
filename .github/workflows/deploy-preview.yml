@@ -1,56 +1,281 @@
-name: Deploy to PREVIEW
-
-permissions:
-  id-token: write # Required for OIDC authentication
-  contents: read # Standard permission for GitHub Actions
+name: Amplify Preview Deployment
 
 on:
-  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
 
-concurrency:
-  group: preview
-  cancel-in-progress: true
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+env:
+  AMPLIFY_APP_ID: ${{ vars.AMPLIFY_PREVIEW_APP_ID }}
+  AWS_REGION: ${{ vars.AWS_REGION }}
 
 jobs:
-  deploy-preview:
+  deploy:
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
-    env:
-      IMAGE_NAME: ${{ vars.PUBLICECR_URI }}
-      IMAGE_TAG: preview
+    outputs:
+      job-id: ${{ steps.start-build.outputs.job-id }}
+      branch-name: ${{ steps.vars.outputs.branch-name }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.PUBLICECR_UPLOAD_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.PUBLICECR_UPLOAD_SECRET_ACCESS_KEY }}
-          aws-region: ${{ vars.PUBLICECR_REGION }}
+          role-to-assume: ${{ secrets.PREVIEW_DEPLOY_AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Authenticate with AWS ECR
-        uses: aws-actions/amazon-ecr-login@v2
+      - name: Set variables
+        id: vars
+        run: |
+          BRANCH_NAME="${{ github.head_ref }}"
+          echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+          BACKEND_ENV=$(echo "$BRANCH_NAME" | tr -d '-_' | tr '[:upper:]' '[:lower:]' | cut -c1-10)
+          echo "backend-env=$BACKEND_ENV" >> $GITHUB_OUTPUT
+
+      - name: Create or update Amplify branch
+        run: |
+          BRANCH_NAME="${{ steps.vars.outputs.branch-name }}"
+
+          if aws amplify get-branch --app-id ${{ env.AMPLIFY_APP_ID }} --branch-name "$BRANCH_NAME" 2>/dev/null; then
+            echo "Branch $BRANCH_NAME already exists in Amplify"
+          else
+            echo "Creating Amplify branch $BRANCH_NAME"
+            aws amplify create-branch \
+              --app-id ${{ env.AMPLIFY_APP_ID }} \
+              --branch-name "$BRANCH_NAME" \
+              --backend-environment-arn "${{ steps.vars.outputs.backend-env }}" \
+              --framework "Next.js - SSR" \
+              --no-enable-auto-build
+          fi
+
+      - name: Start build
+        id: start-build
+        run: |
+          JOB_ID=$(aws amplify start-job \
+            --app-id ${{ env.AMPLIFY_APP_ID }} \
+            --branch-name ${{ steps.vars.outputs.branch-name }} \
+            --job-type RELEASE \
+            --query 'jobSummary.jobId' \
+            --output text)
+          echo "job-id=$JOB_ID" >> $GITHUB_OUTPUT
+
+      - name: Post initial comment
+        uses: actions/github-script@v7
         with:
-          registry-type: public
+          script: |
+            const marker = '<!-- amplify-preview-comment -->';
 
-      - name: Build and publish Docker image for AWS
-        run: make publish
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
 
-      - name: Authenticate with AWS ECS
+            const existingComment = comments.find(c => c.body.includes(marker));
+            const urlMatch = existingComment?.body.match(/\[Visit preview\]\((https:\/\/[^)]+)\)/);
+            const existingUrl = urlMatch ? `[Visit preview](${urlMatch[1]})` : '-';
+
+            const now = new Date();
+            const formatted = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
+              ' at ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) + ' (UTC)';
+
+            const body = `${marker}
+            ## Preview Deployment
+
+            | Name | Status | Preview | Updated |
+            |--------|--------|----------------|----------|
+            | \`${{ steps.vars.outputs.branch-name }}\` | ⏳ Starting | ${existingUrl} | ${formatted} |
+
+            [View Build Logs →](https://console.aws.amazon.com/amplify/home?region=${{ env.AWS_REGION }}#/${{ env.AMPLIFY_APP_ID }}/${{ steps.vars.outputs.branch-name }}/${{ steps.start-build.outputs.job-id }})`;
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body,
+              });
+            }
+
+  monitor:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.PREVIEW_ECS_REDEPLOY_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_STAGING_REGION }}
+          role-to-assume: ${{ secrets.PREVIEW_DEPLOY_AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Trigger new deployment
-        run: |
-          aws ecs update-service \
-            --cluster ${{ vars.PREVIEW_ECS_CLUSTER }} \
-            --service ${{ vars.PREVIEW_ECS_SERVICE }} \
-            --force-new-deployment
+      - name: Monitor build and update comment
+        uses: actions/github-script@v7
+        env:
+          JOB_ID: ${{ needs.deploy.outputs.job-id }}
+          BRANCH_NAME: ${{ needs.deploy.outputs.branch-name }}
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            const marker = '<!-- amplify-preview-comment -->';
 
-      - name: Wait until the service is stable
+            const getJobStatus = () => {
+              const output = execSync(
+                `aws amplify get-job --app-id ${process.env.AMPLIFY_APP_ID} --branch-name "${process.env.BRANCH_NAME}" --job-id ${process.env.JOB_ID} --region ${process.env.AWS_REGION} --output json`,
+                { encoding: 'utf-8' }
+              );
+              return JSON.parse(output).job.summary;
+            };
+
+            const getBranchUrl = () => {
+              try {
+                const output = execSync(
+                  `aws amplify get-branch --app-id ${process.env.AMPLIFY_APP_ID} --branch-name "${process.env.BRANCH_NAME}" --region ${process.env.AWS_REGION} --output json`,
+                  { encoding: 'utf-8' }
+                );
+                const branch = JSON.parse(output).branch;
+                return `https://${branch.branchName}.${branch.defaultDomain}`;
+              } catch (e) {
+                return null;
+              }
+            };
+
+            const updateComment = async (status, url = null, duration = null) => {
+              const statusConfig = {
+                PENDING: { icon: '⏳', text: 'Pending' },
+                PROVISIONING: { icon: '🔧', text: 'Provisioning' },
+                RUNNING: { icon: '🔨', text: 'Building' },
+                SUCCEED: { icon: '✅', text: 'Ready' },
+                FAILED: { icon: '❌', text: 'Failed' },
+                CANCELLED: { icon: '⭕', text: 'Cancelled' }
+              };
+
+              const config = statusConfig[status] || { icon: '○', text: 'Unknown' };
+
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+              });
+
+              const existingComment = comments.find(c => c.body.includes(marker));
+              const urlMatch = existingComment?.body.match(/\[Visit preview\]\((https:\/\/[^)]+)\)/);
+              const existingUrl = urlMatch ? urlMatch[1] : null;
+              const deploymentUrl = url || existingUrl;
+              const urlCell = deploymentUrl ? `[Visit preview](${deploymentUrl})` : '-';
+
+              const now = new Date();
+              const formatted = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
+                ' at ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) + ' (UTC)';
+
+              const body = `${marker}
+            ## Preview Deployment
+
+            | Name | Status | Preview | Updated |
+            |--------|--------|----------------|----------|
+            | \`${process.env.BRANCH_NAME}\` | ${config.icon} ${config.text} | ${urlCell} | ${formatted} |
+
+            [View Build Logs →](https://console.aws.amazon.com/amplify/home?region=${process.env.AWS_REGION}#/${process.env.AMPLIFY_APP_ID}/${process.env.BRANCH_NAME}/${process.env.JOB_ID})`;
+
+              if (existingComment) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existingComment.id,
+                  body: body,
+                });
+              }
+            };
+
+            let status = 'PENDING';
+            const startTime = Date.now();
+            const maxWaitTime = 30 * 60 * 1000; // 30 minutes
+
+            while (true) {
+              const job = getJobStatus();
+              status = job.status;
+
+              const duration = Math.round((Date.now() - startTime) / 1000);
+              const durationStr = `${Math.floor(duration / 60)}m ${duration % 60}s`;
+
+              const url = status === 'SUCCEED' ? getBranchUrl() : null;
+
+              await updateComment(status, url, durationStr);
+
+              if (['SUCCEED', 'FAILED', 'CANCELLED'].includes(status)) {
+                if (status === 'FAILED') {
+                  core.setFailed('Amplify build failed');
+                }
+                break;
+              }
+
+              if (Date.now() - startTime > maxWaitTime) {
+                await updateComment('FAILED', null, durationStr);
+                core.setFailed('Build timeout after 30 minutes');
+                break;
+              }
+
+              await new Promise(resolve => setTimeout(resolve, 30000)); // Wait 30s
+            }
+
+  cleanup:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.PREVIEW_DEPLOY_AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Delete Amplify branch
         run: |
-          aws ecs wait services-stable \
-            --cluster ${{ vars.PREVIEW_ECS_CLUSTER }} \
-            --service ${{ vars.PREVIEW_ECS_SERVICE }}
+          BRANCH_NAME="${{ github.head_ref }}"
+          if aws amplify get-branch --app-id ${{ env.AMPLIFY_APP_ID }} --branch-name "$BRANCH_NAME" 2>/dev/null; then
+            aws amplify delete-branch --app-id ${{ env.AMPLIFY_APP_ID }} --branch-name "$BRANCH_NAME"
+            echo "Deleted branch: $BRANCH_NAME"
+          else
+            echo "Branch does not exist: $BRANCH_NAME"
+          fi
+
+      - name: Update comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- amplify-preview-comment -->';
+
+            const now = new Date();
+            const formatted = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
+              ' at ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) + ' (UTC)';
+
+            const body = `${marker}
+            ## Preview Deployment
+
+            | Name | Status | Preview | Updated |
+            |--------|--------|----------------|----------|
+            | \`${{ github.head_ref }}\` | ❌ Deleted | - | ${formatted} |`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existingComment = comments.find(c => c.body.includes(marker));
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: body,
+              });
+            }
