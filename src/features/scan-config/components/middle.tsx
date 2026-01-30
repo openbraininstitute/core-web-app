@@ -48,12 +48,7 @@ export default function Middle({
   selectedSchema,
 }: MiddleProps) {
   return (
-    <div
-      className={classNames(
-        styles.scrollable,
-        'h-full overflow-y-auto border-r border-l border-gray-200 px-5'
-      )}
-    >
+    <>
       {selectedSchema.ui_element === 'block_dictionary' && (
         <BlockDictionary
           campaignId={campaignId}
@@ -83,6 +78,6 @@ export default function Middle({
           model={model}
         />
       )}
-    </div>
+    </>
   );
 }
