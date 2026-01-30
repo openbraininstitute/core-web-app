@@ -1,4 +1,4 @@
-name: Preview Deployment
+name: Amplify Preview Deployment
 
 on:
   pull_request:
@@ -8,6 +8,10 @@ permissions:
   id-token: write
   contents: read
   pull-requests: write
+
+env:
+  AMPLIFY_APP_ID: ${{ vars.AMPLIFY_PREVIEW_APP_ID }}
+  AWS_REGION: ${{ vars.AWS_REGION }}
 
 jobs:
   deploy:
@@ -36,12 +40,12 @@ jobs:
         run: |
           BRANCH_NAME="${{ steps.vars.outputs.branch-name }}"
 
-          if aws amplify get-branch --app-id ${{ env.AMPLIFY_PREVIEW_APP_ID }} --branch-name "$BRANCH_NAME" 2>/dev/null; then
+          if aws amplify get-branch --app-id ${{ env.AMPLIFY_APP_ID }} --branch-name "$BRANCH_NAME" 2>/dev/null; then
             echo "Branch $BRANCH_NAME already exists in Amplify"
           else
             echo "Creating Amplify branch $BRANCH_NAME"
             aws amplify create-branch \
-              --app-id ${{ env.AMPLIFY_PREVIEW_APP_ID }} \
+              --app-id ${{ env.AMPLIFY_APP_ID }} \
               --branch-name "$BRANCH_NAME" \
               --backend-environment-arn "${{ steps.vars.outputs.backend-env }}" \
               --framework "Next.js - SSR" \
@@ -52,7 +56,7 @@ jobs:
         id: start-build
         run: |
           JOB_ID=$(aws amplify start-job \
-            --app-id ${{ env.AMPLIFY_PREVIEW_APP_ID }} \
+            --app-id ${{ env.AMPLIFY_APP_ID }} \
             --branch-name ${{ steps.vars.outputs.branch-name }} \
             --job-type RELEASE \
             --query 'jobSummary.jobId' \
@@ -86,7 +90,7 @@ jobs:
             |--------|--------|----------------|----------|
             | \`${{ steps.vars.outputs.branch-name }}\` | ⏳ Starting | ${existingUrl} | ${formatted} |
 
-            [View Build Logs →](https://console.aws.amazon.com/amplify/home?region=${{ env.AWS_PREVIEW_DEPLOY_REGION }}#/${{ env.AMPLIFY_PREVIEW_APP_ID }}/${{ steps.vars.outputs.branch-name }}/${{ steps.start-build.outputs.job-id }})`;
+            [View Build Logs →](https://console.aws.amazon.com/amplify/home?region=${{ env.AWS_REGION }}#/${{ env.AMPLIFY_APP_ID }}/${{ steps.vars.outputs.branch-name }}/${{ steps.start-build.outputs.job-id }})`;
 
             if (existingComment) {
               await github.rest.issues.updateComment({
@@ -111,7 +115,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ env.PREVIEW_DEPLOY_AWS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.PREVIEW_DEPLOY_AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Monitor build and update comment
@@ -126,7 +130,7 @@ jobs:
 
             const getJobStatus = () => {
               const output = execSync(
-                `aws amplify get-job --app-id ${process.env.AMPLIFY_PREVIEW_APP_ID} --branch-name "${process.env.BRANCH_NAME}" --job-id ${process.env.JOB_ID} --region ${process.env.AWS_REGION} --output json`,
+                `aws amplify get-job --app-id ${process.env.AMPLIFY_APP_ID} --branch-name "${process.env.BRANCH_NAME}" --job-id ${process.env.JOB_ID} --region ${process.env.AWS_REGION} --output json`,
                 { encoding: 'utf-8' }
               );
               return JSON.parse(output).job.summary;
@@ -135,7 +139,7 @@ jobs:
             const getBranchUrl = () => {
               try {
                 const output = execSync(
-                  `aws amplify get-branch --app-id ${process.env.AMPLIFY_PREVIEW_APP_ID} --branch-name "${process.env.BRANCH_NAME}" --region ${process.env.AWS_REGION} --output json`,
+                  `aws amplify get-branch --app-id ${process.env.AMPLIFY_APP_ID} --branch-name "${process.env.BRANCH_NAME}" --region ${process.env.AWS_REGION} --output json`,
                   { encoding: 'utf-8' }
                 );
                 const branch = JSON.parse(output).branch;
@@ -180,7 +184,7 @@ jobs:
             |--------|--------|----------------|----------|
             | \`${process.env.BRANCH_NAME}\` | ${config.icon} ${config.text} | ${urlCell} | ${formatted} |
 
-            [View Build Logs →](https://console.aws.amazon.com/amplify/home?region=${process.env.AWS_REGION}#/${process.env.AMPLIFY_PREVIEW_APP_ID}/${process.env.BRANCH_NAME}/${process.env.JOB_ID})`;
+            [View Build Logs →](https://console.aws.amazon.com/amplify/home?region=${process.env.AWS_REGION}#/${process.env.AMPLIFY_APP_ID}/${process.env.BRANCH_NAME}/${process.env.JOB_ID})`;
 
               if (existingComment) {
                 await github.rest.issues.updateComment({
@@ -236,8 +240,8 @@ jobs:
       - name: Delete Amplify branch
         run: |
           BRANCH_NAME="${{ github.head_ref }}"
-          if aws amplify get-branch --app-id ${{ env.AMPLIFY_PREVIEW_APP_ID }} --branch-name "$BRANCH_NAME" 2>/dev/null; then
-            aws amplify delete-branch --app-id ${{ env.AMPLIFY_PREVIEW_APP_ID }} --branch-name "$BRANCH_NAME"
+          if aws amplify get-branch --app-id ${{ env.AMPLIFY_APP_ID }} --branch-name "$BRANCH_NAME" 2>/dev/null; then
+            aws amplify delete-branch --app-id ${{ env.AMPLIFY_APP_ID }} --branch-name "$BRANCH_NAME"
             echo "Deleted branch: $BRANCH_NAME"
           else
             echo "Branch does not exist: $BRANCH_NAME"
