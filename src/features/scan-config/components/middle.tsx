@@ -82,7 +82,7 @@ export default function Middle({
         />
       )}
 
-      {selectedSchema.ui_element === 'root_block' && isAtom(atomsMap[selectedRootElement]) && (
+      {selectedSchema.ui_element === 'block_single' && isAtom(atomsMap[selectedRootElement]) && (
         <BlockUI
           schemaName={schemaName}
           disabled={!!campaignId || loading || !!aiConfig || !isChatReady}

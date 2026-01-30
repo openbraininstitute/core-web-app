@@ -161,7 +161,7 @@ export function RootElement({
           setSelectedRootElement(rootElement);
           setSelectedEntry('');
 
-          if (rootElementSchema.ui_element === 'root_block') setEditing(true);
+          if (rootElementSchema.ui_element === 'block_single') setEditing(true);
           else setEditing(false);
         }}
         extraClass="w-full flex justify-between h-[50px] min-h-[50px] items-center drop-shadow"
