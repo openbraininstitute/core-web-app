@@ -110,7 +110,7 @@ export type Block = {
 };
 
 export interface RootBlock extends RootElement, Block {
-  ui_element: 'root_block';
+  ui_element: 'block_single';
   additionalProperties: false;
   required?: string[];
 }
