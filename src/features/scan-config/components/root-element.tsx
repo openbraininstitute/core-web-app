@@ -35,7 +35,6 @@ export function RootElement({
   selectedEntry,
   setSelectedEntry,
   setEditing,
-  setSelectedBlock,
   readOnly,
   allEntries,
   newKey,
@@ -57,7 +56,6 @@ export function RootElement({
   selectedEntry: string;
   setSelectedEntry: (selectedEntry: string) => void;
   setEditing: React.Dispatch<React.SetStateAction<boolean>>;
-  setSelectedBlock: React.Dispatch<React.SetStateAction<string>>;
   readOnly?: boolean;
   allEntries: Set<string>;
   newKey: string;
@@ -69,7 +67,6 @@ export function RootElement({
 
   const handleHeaderClick = (subkey: string, subValue: unknown) => {
     if (isPlainObject(subValue)) {
-      setSelectedBlock(typeof subValue.type === 'string' ? subValue.type : '');
       setSelectedEntry(subkey);
     }
     setEditing(true);
@@ -153,7 +150,6 @@ export function RootElement({
         onClick={() => {
           if (selectedRootElement === rootElement && !isRootBlock(schema, rootElement)) {
             setEditing(false);
-            setSelectedBlock('');
             setSelectedEntry('');
             setSelectedRootElement('');
             return;
@@ -161,7 +157,6 @@ export function RootElement({
 
           setSelectedRootElement(rootElement);
           setSelectedEntry('');
-          setSelectedBlock('');
 
           if (rootElementSchema.ui_element === 'block_single') setEditing(true);
           else setEditing(false);
@@ -275,7 +270,6 @@ export function RootElement({
                         onClick={(e) => {
                           e.stopPropagation();
 
-                          setSelectedBlock('');
                           setEditing(false);
 
                           const selectedTabAtoms = atomsMap[selectedRootElement];
@@ -352,7 +346,7 @@ export function RootElement({
                 type="button"
                 onClick={() => {
                   setEditing(true);
-                  setSelectedBlock('');
+                  setSelectedEntry('');
                 }}
               >
                 Add {rootElementSchema.singular_name ?? rootElementSchema.title ?? 'element'}
