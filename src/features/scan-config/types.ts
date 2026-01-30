@@ -1,7 +1,7 @@
-import type { atom } from "jotai";
-import type { EntitycoreExecutionStatus } from "@/api/entitycore/types/entities/execution";
-import type { Prettify } from "@/utils/type";
-import type { ConfigValue } from "./components/components";
+import type { atom } from 'jotai';
+import type { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import type { Prettify } from '@/utils/type';
+import type { ConfigValue } from './components/components';
 
 export interface AtomsMap {
   [key: string]:
@@ -10,40 +10,37 @@ export interface AtomsMap {
 }
 
 export const ScanConfigActivity = {
-  Simulate: "simulate",
-  Extract: "extract",
+  Simulate: 'simulate',
+  Extract: 'extract',
 } as const;
 
-export type TScanConfigActivity =
-  (typeof ScanConfigActivity)[keyof typeof ScanConfigActivity];
+export type TScanConfigActivity = (typeof ScanConfigActivity)[keyof typeof ScanConfigActivity];
 
 export const BaseScanConfigTabs = {
-  configuration: "configuration",
+  configuration: 'configuration',
 } as const;
 
 export const SimulateScanConfigTabs = {
   ...BaseScanConfigTabs,
-  simulations: "simulations",
+  simulations: 'simulations',
 } as const;
 
 export type TSimulateScanConfigTabs = {
   id: keyof typeof SimulateScanConfigTabs;
-  __activity: "simulate";
+  __activity: 'simulate';
 };
 
 export const ExtractScanConfigTabs = {
   ...BaseScanConfigTabs,
-  extractions: "extractions",
+  extractions: 'extractions',
 } as const;
 
 export type TExtractScanConfigTabs = {
   id: keyof typeof ExtractScanConfigTabs;
-  __activity: "extract";
+  __activity: 'extract';
 };
 
-export type TScanConfigTabs =
-  | Prettify<TSimulateScanConfigTabs>
-  | Prettify<TExtractScanConfigTabs>;
+export type TScanConfigTabs = Prettify<TSimulateScanConfigTabs> | Prettify<TExtractScanConfigTabs>;
 
 export const ScanConfigTabs = {
   [ScanConfigActivity.Simulate]: SimulateScanConfigTabs,
@@ -56,15 +53,15 @@ export const ScanConfigDefaultTab = {
 } as const;
 
 export type SimExecStatusMap = Map<string, EntitycoreExecutionStatus>;
-export type TabType = "configuration" | "simulations";
+export type TabType = 'configuration' | 'simulations';
 
 export type SchemaName =
   // simulation
-  | "CircuitSimulationScanConfig"
-  | "MEModelSimulationScanConfig"
-  | "MEModelWithSynapsesCircuitSimulationScanConfig"
+  | 'CircuitSimulationScanConfig'
+  | 'MEModelSimulationScanConfig'
+  | 'MEModelWithSynapsesCircuitSimulationScanConfig'
   // extraction
-  | "CircuitExtractionScanConfig";
+  | 'CircuitExtractionScanConfig';
 
 export type TRootElement = {
   description: string;
@@ -75,18 +72,18 @@ export type TRootElement = {
 
 export const ScanConfigUIElementDict = {
   // blocks
-  BlockUnion: "block_union",
-  BlockSingle: "block_single",
-  BlockDictionary: "block_dictionary",
+  BlockUnion: 'block_union',
+  BlockSingle: 'block_single',
+  BlockDictionary: 'block_dictionary',
   // components
-  StringInput: "string_input",
-  ModelIdentifier: "model_identifier",
-  FloatParameterSweep: "float_parameter_sweep",
-  IntParameterSweep: "int_parameter_sweep",
-  Reference: "reference",
-  EntityPropertyDropdown: "entity_property_dropdown",
-  NeuronIds: "neuron_ids",
-  BooleanInput: "boolean_input",
+  StringInput: 'string_input',
+  ModelIdentifier: 'model_identifier',
+  FloatParameterSweep: 'float_parameter_sweep',
+  IntParameterSweep: 'int_parameter_sweep',
+  Reference: 'reference',
+  EntityPropertyDropdown: 'entity_property_dropdown',
+  NeuronIds: 'neuron_ids',
+  BooleanInput: 'boolean_input',
 } as const;
 
 export interface StringInput extends TBlockElement {
@@ -101,14 +98,14 @@ export interface FloatParameterSweep extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.FloatParameterSweep;
   anyOf: [
     {
-      type: "number";
+      type: 'number';
       minimum?: number;
       maximum?: number;
     },
     {
-      type: "array";
+      type: 'array';
       items: {
-        type: "number";
+        type: 'number';
         minimum?: number;
         maximum?: number;
       };
@@ -120,14 +117,14 @@ export interface IntParameterSweep extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.IntParameterSweep;
   anyOf: [
     {
-      type: "integer";
+      type: 'integer';
       minimum?: number;
       maximum?: number;
     },
     {
-      type: "array";
+      type: 'array';
       items: {
-        type: "integer";
+        type: 'integer';
         minimum?: number;
         maximum?: number;
       };
@@ -159,9 +156,7 @@ export interface BooleanInput extends TBlockElement {
 export interface IBlockUnion extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.BlockUnion;
   /** the property name used to discriminate between variants (defaults to 'type') */
-  discriminator?:
-    | string
-    | { propertyName: string; mapping?: Record<string, string> };
+  discriminator?: string | { propertyName: string; mapping?: Record<string, string> };
   /** array of possible variant schemas */
   oneOf: TBlock[];
 }
@@ -215,7 +210,7 @@ export type ConfigSchema = {
   default_block_reference_labels: Record<string, string>;
   description: string;
   group_order: string[];
-  properties: Record<string, IBlockSingle | IBlockDictionary | IBlockUnion> & {
+  properties: Record<string, IBlockSingle | IBlockDictionary | IRootBlockUnion> & {
     type: Type;
   };
   title: string;
@@ -227,5 +222,5 @@ type Type = {
 };
 
 export function isType(v: TRootElement | Type | TBlockElement): v is Type {
-  return "const" in v;
+  return 'const' in v;
 }

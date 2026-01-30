@@ -125,21 +125,8 @@ export function useAtomsMap({
 
           map[k] = atom<Record<string, ConfigValue>>(initial);
         } else if (v.ui_element === ScanConfigUIElementDict.BlockUnion) {
-          // initialize discriminated union with first variant's defaults
-          const firstVariant = v.oneOf[0];
-          const initial: Record<string, ConfigValue> = {};
-
-          if (firstVariant?.properties) {
-            Object.entries(firstVariant.properties).forEach(([subkey, subValue]) => {
-              if (isType(subValue)) {
-                initial[subkey] = subValue.const ?? subValue.default ?? null;
-              } else {
-                initial[subkey] = subValue.default ?? null;
-              }
-            });
-          }
-
-          map[k] = atom<Record<string, ConfigValue>>(initial);
+          // Initialize as empty - user must select a variant first (like block_dictionary)
+          map[k] = atom<Record<string, ConfigValue>>({});
         } else {
           map[k] = {};
         }

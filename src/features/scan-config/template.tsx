@@ -64,6 +64,7 @@ export function ScanConfigTemplate({
 
   const schemaName = useSchemaName({ model: entity, activity });
   const schema = useObioneJsonSchema(schemaName);
+  console.log('# # ScanConfigTemplate # schema:', schema);
 
   const allEntries = useEntries({ initialConfig, schema });
 
@@ -159,35 +160,28 @@ export function ScanConfigTemplate({
             activity={activity}
           />
 
-          <div
-            className={cn(
-              styles.scrollable,
-              'h-full overflow-y-auto border-r border-l border-gray-200 px-5'
-            )}
-          >
-            {editing && (
-              <Middle
-                schemaName={schemaName}
-                schema={schema}
-                selectedRootElement={selectedRootElement}
-                editing={editing}
-                atomsMap={atomsMap}
-                setAtomsMap={setAtomsMap}
-                selectedEntry={selectedEntry}
-                setSelectedEntry={setSelectedEntry}
-                campaignId={campaignId}
-                loading={loading}
-                config={config}
-                model={entity}
-                allEntries={allEntries}
-                onNewBlockClick={() => {
-                  setNewKey('');
-                  setIsEditingKey(false);
-                }}
-                selectedSchema={schema.properties[selectedRootElement]}
-              />
-            )}
-          </div>
+          {editing && (
+            <Middle
+              schemaName={schemaName}
+              schema={schema}
+              selectedRootElement={selectedRootElement}
+              editing={editing}
+              atomsMap={atomsMap}
+              setAtomsMap={setAtomsMap}
+              selectedEntry={selectedEntry}
+              setSelectedEntry={setSelectedEntry}
+              campaignId={campaignId}
+              loading={loading}
+              config={config}
+              model={entity}
+              allEntries={allEntries}
+              onNewBlockClick={() => {
+                setNewKey('');
+                setIsEditingKey(false);
+              }}
+              selectedSchema={schema.properties[selectedRootElement]}
+            />
+          )}
 
           <div className="rounded-lg">
             <ModelPreview model={entity} />

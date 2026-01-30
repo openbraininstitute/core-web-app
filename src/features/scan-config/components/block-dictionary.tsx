@@ -8,12 +8,13 @@ import {
 } from '@/features/scan-config/components/components';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
-import type {
-  AtomsMap,
-  ConfigSchema,
-  IBlockDictionary,
-  SchemaName,
-  TBlock,
+import {
+  type AtomsMap,
+  type ConfigSchema,
+  type IBlockDictionary,
+  ScanConfigUIElementDict,
+  type SchemaName,
+  type TBlock,
 } from '@/features/scan-config/types';
 
 type Props = {
@@ -94,7 +95,9 @@ export default function BlockDictionary({
               const element = schema.properties?.[selectedRootElement];
 
               const baseName =
-                element.ui_element === 'block_dictionary' ? element.singular_name : 'element';
+                element.ui_element === ScanConfigUIElementDict.BlockDictionary
+                  ? element.singular_name
+                  : 'element';
               let counter = 0;
               let newEntry: string;
 

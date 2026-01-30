@@ -5,6 +5,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   PlusCircleOutlined,
+  SwapOutlined,
   WarningFilled,
 } from '@ant-design/icons';
 import type { ErrorObject } from 'ajv';
@@ -24,8 +25,10 @@ import {
   type ConfigSchema,
   type IBlockDictionary,
   type IBlockSingle,
-  type IBlockUnion,
+  type IRootBlockUnion,
+  isType,
   ScanConfigUIElementDict,
+  type TBlock,
 } from '@/features/scan-config/types';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
@@ -54,7 +57,7 @@ export function RootElement({
 }: {
   schema: ConfigSchema | null; // The global schema
   rootElement: string;
-  rootElementSchema: IBlockSingle | IBlockDictionary | IBlockUnion;
+  rootElementSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion;
   atomsMap: AtomsMap;
   setAtomsMap: React.Dispatch<React.SetStateAction<AtomsMap>>;
   selectedRootElement: string;
@@ -159,7 +162,7 @@ export function RootElement({
         selectedTab={selectedRootElement}
         onClick={() => {
           // for block_dictionary, clicking again collapses it
-          // for ScanConfigUIElementDict.RootBlock and ScanConfigUIElementDict.DiscriminatedUnion, they stay open
+          // for ScanConfigUIElementDict.BlockSingle and ScanConfigUIElementDict.BlockUnion, they stay open
           if (
             selectedRootElement === rootElement &&
             !isRootBlock(schema, rootElement) &&
@@ -381,6 +384,56 @@ export function RootElement({
             )}
           </>
         )}
+
+      {/* Block Union: show selected variant with change option */}
+      {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockUnion &&
+        selectedRootElement === rootElement &&
+        (() => {
+          const unionSchema = rootElementSchema as IRootBlockUnion;
+          const discriminatorProp = unionSchema.discriminator
+            ? typeof unionSchema.discriminator === 'string'
+              ? unionSchema.discriminator
+              : (unionSchema.discriminator.propertyName ?? 'type')
+            : 'type';
+
+          const currentConfig = config[rootElement];
+          const selectedType =
+            isPlainObject(currentConfig) && typeof currentConfig[discriminatorProp] === 'string'
+              ? currentConfig[discriminatorProp]
+              : undefined;
+
+          const selectedVariant: TBlock | undefined = unionSchema.oneOf.find((o: TBlock) => {
+            const typeProp = o.properties?.[discriminatorProp];
+            return typeProp && isType(typeProp) && typeProp.const === selectedType;
+          });
+
+          if (!selectedVariant || !selectedType) return null;
+
+          return (
+            <button
+              type="button"
+              className={classNames(
+                'text-primary-8 flex h-12.5 min-h-12.5 w-90percent min-w-37.5 items-center',
+                'justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow',
+                'bg-linear-to-r from-[#003A8C] to-[#001026] text-white'
+              )}
+            >
+              <span className="truncate">{selectedVariant.title}</span>
+              {!campaignId && !loading && !readOnly && (
+                <SwapOutlined
+                  className="cursor-pointer transition-transform hover:scale-110"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setAtomsMap({
+                      ...atomsMap,
+                      [rootElement]: atom<Record<string, ConfigValue>>({}),
+                    });
+                  }}
+                />
+              )}
+            </button>
+          );
+        })()}
     </>
   );
 }

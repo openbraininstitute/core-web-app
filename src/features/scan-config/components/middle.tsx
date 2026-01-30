@@ -6,12 +6,13 @@ import {
   type AtomsMap,
   type ConfigSchema,
   type IBlockDictionary,
-  type IBlockUnion,
   type IBlockSingle,
+  type IRootBlockUnion,
   ScanConfigUIElementDict,
   type SchemaName,
 } from '@/features/scan-config/types';
 import BlockDictionary from './block-dictionary';
+import BlockUnion from './block-union';
 
 type MiddleProps = {
   schemaName: SchemaName;
@@ -28,7 +29,7 @@ type MiddleProps = {
   model: ICircuit | IMEModel;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
-  selectedSchema: IBlockSingle | IBlockDictionary | IBlockUnion;
+  selectedSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion;
 };
 
 export default function Middle({
@@ -79,6 +80,20 @@ export default function Middle({
             model={model}
           />
         )}
+
+      {selectedSchema.ui_element === ScanConfigUIElementDict.BlockUnion && (
+        <BlockUnion
+          schemaName={schemaName}
+          blockUnionSchema={selectedSchema}
+          selectedRootElement={selectedRootElement}
+          atomsMap={atomsMap}
+          setAtomsMap={setAtomsMap}
+          campaignId={campaignId}
+          loading={loading}
+          config={config}
+          model={model}
+        />
+      )}
     </>
   );
 }

@@ -1,12 +1,9 @@
 import { Input } from 'antd';
 import { type atom, useAtom } from 'jotai';
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import BooleanInput from '@/features/scan-config/components/boolean-input';
-import DiscriminatedUnion, {
-  type NestedFieldRendererProps,
-} from '@/features/scan-config/components/discriminated-union';
 import EntityPropertyDropdown from '@/features/scan-config/components/entity-property-dropdown';
 import ModelDetails from '@/features/scan-config/components/model-details';
 import NeuronIds from '@/features/scan-config/components/neuron-ids';
@@ -196,145 +193,8 @@ export function BlockUI({
       );
     }
 
-    if (paramSchema.ui_element === ScanConfigUIElementDict.BlockUnion) {
-      const currentValue = isPlainObject(state[k]) ? state[k] : null;
-      return (
-        <DiscriminatedUnion
-          schema={paramSchema}
-          value={currentValue as Record<string, ConfigValue> | null}
-          disabled={disabled}
-          schemaName={schemaName}
-          config={config}
-          model={model}
-          onChange={(value: Record<string, ConfigValue>) => {
-            setState({ ...state, [k]: value });
-          }}
-          renderNestedField={renderNestedField}
-        />
-      );
-    }
-
     return null;
   }
-
-  //renders a nested field within a discriminated union
-  const renderNestedField = useCallback(
-    ({
-      fieldKey,
-      paramSchema,
-      value,
-      onChange,
-      disabled: fieldDisabled,
-    }: NestedFieldRendererProps) => {
-      if (paramSchema.ui_element === ScanConfigUIElementDict.StringInput) {
-        return (
-          <Input
-            disabled={fieldDisabled}
-            value={typeof value === 'string' ? value : ''}
-            className="w-full"
-            onChange={(e) => onChange(e.currentTarget.value)}
-          />
-        );
-      }
-
-      if (paramSchema.ui_element === ScanConfigUIElementDict.ModelIdentifier && model) {
-        return <ModelDetails model={model} />;
-      }
-
-      if (
-        paramSchema.ui_element === ScanConfigUIElementDict.FloatParameterSweep ||
-        paramSchema.ui_element === ScanConfigUIElementDict.IntParameterSweep
-      ) {
-        return (
-          <ParameterSweep
-            k={fieldKey}
-            min={paramSchema.anyOf[0]?.minimum}
-            max={paramSchema.anyOf[0]?.maximum}
-            disabled={fieldDisabled}
-            value={value as number | null | number[]}
-            onChange={onChange}
-          />
-        );
-      }
-
-      if (paramSchema.ui_element === ScanConfigUIElementDict.Reference) {
-        const defaultV: string | null =
-          isPlainObject(value) && typeof value.block_name === 'string' ? value.block_name : null;
-
-        return (
-          <Reference
-            config={config}
-            schemaName={schemaName}
-            referenceSchema={paramSchema}
-            value={defaultV}
-            disabled={fieldDisabled}
-            onChange={(block_name: string | null, block_dict_name: string | null) => {
-              if (block_name === null) {
-                onChange(null);
-                return;
-              }
-              onChange({ block_name, block_dict_name });
-            }}
-          />
-        );
-      }
-
-      if (paramSchema.ui_element === ScanConfigUIElementDict.NeuronIds) {
-        const elements: number[] =
-          isPlainObject(value) && Array.isArray(value.elements) ? value.elements : [];
-        return (
-          <NeuronIds
-            elements={elements}
-            disabled={fieldDisabled}
-            onDeleteElement={(i: number) => {
-              if (!isPlainObject(value) || !Array.isArray(value.elements)) return;
-              if (value.elements.length === 1) {
-                onChange(null);
-                return;
-              }
-              const newElements = [...value.elements];
-              newElements.splice(i, 1);
-              onChange({ elements: newElements });
-            }}
-            onAddElement={(newElement: number) => {
-              if (!value) {
-                onChange({ elements: [newElement] });
-              } else if (isPlainObject(value) && Array.isArray(value.elements)) {
-                onChange({ elements: [...value.elements, newElement] });
-              }
-            }}
-          />
-        );
-      }
-
-      if (paramSchema.ui_element === ScanConfigUIElementDict.EntityPropertyDropdown && model) {
-        return (
-          <EntityPropertyDropdown
-            modelId={model.id}
-            value={typeof value === 'string' ? value : null}
-            onChange={onChange}
-            entity_type={paramSchema.entity_type}
-            property={paramSchema.property}
-          />
-        );
-      }
-
-      if (paramSchema.ui_element === ScanConfigUIElementDict.BooleanInput) {
-        const currentValue = typeof value === 'boolean' ? value : null;
-        return (
-          <BooleanInput
-            value={currentValue}
-            disabled={fieldDisabled}
-            onChange={onChange}
-            ariaLabel={paramSchema.description}
-          />
-        );
-      }
-
-      return null;
-    },
-    [config, model, schemaName]
-  );
 
   if (!blockSchema) return null;
 
