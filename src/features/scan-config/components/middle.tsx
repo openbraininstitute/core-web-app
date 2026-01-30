@@ -50,7 +50,7 @@ export default function Middle({
   onNewBlockClick,
   selectedSchema,
 }: MiddleProps) {
-  const { aiConfig } = useAIConfig();
+  const { aiConfig, isChatReady } = useAIConfig();
 
   const getBlockAIConfig = () => {
     if (!aiConfig) return null;
@@ -91,7 +91,7 @@ export default function Middle({
       {selectedSchema.ui_element === 'root_block' && isAtom(atomsMap[selectedRootElement]) && (
         <BlockUI
           schemaName={schemaName}
-          disabled={!!campaignId || loading}
+          disabled={!!campaignId || loading || !!aiConfig || !isChatReady}
           config={config}
           blockSchema={selectedSchema}
           stateAtom={atomsMap[selectedRootElement]}

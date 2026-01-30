@@ -15,6 +15,7 @@ import type {
   ConfigSchema,
   SchemaName,
 } from '@/features/scan-config/types';
+import { useAIConfig } from '@/services/ai-agent';
 
 type Props = {
   schemaName: SchemaName;
@@ -52,6 +53,7 @@ export default function BlockDictionary({
   onNewBlockClick,
   blockAIConfig,
 }: Props) {
+  const { isChatReady } = useAIConfig();
   const selectedBlock = isPlainObject(config[selectedRootElement])
     ? config[selectedRootElement][selectedEntry]?.type
     : undefined;
@@ -66,7 +68,7 @@ export default function BlockDictionary({
       <BlockUI
         schemaName={schemaName}
         key={`${selectedRootElement}_${selectedEntry}`}
-        disabled={!!campaignId || loading}
+        disabled={!!campaignId || loading || !!blockAIConfig || !isChatReady}
         config={config}
         blockSchema={selectedBlockSchema}
         stateAtom={atomsMap[selectedRootElement]?.[selectedEntry]}
