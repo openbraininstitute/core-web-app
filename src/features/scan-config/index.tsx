@@ -40,7 +40,6 @@ export default function ScanConfiguration({
   readOnly?: boolean;
   className?: string;
 }) {
-  //  const router = useRouter();
   const [tab, setTab] = useState<TabType>(defaultTab);
   const [selectedRootElement, setSelectedRootElement] = useState<string>('info');
   const [editing, setEditing] = useState(true);
@@ -64,6 +63,8 @@ export default function ScanConfiguration({
 
   const updateAiRequestId = useAgentState('smc_simulation_config', config);
   const { aiConfig, setAiConfig } = useAIConfig();
+
+  console.log(aiConfig);
 
   if (!schema || Object.keys(atomsMap).length === 0) {
     return (

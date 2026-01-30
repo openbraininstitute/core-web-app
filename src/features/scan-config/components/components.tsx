@@ -2,7 +2,7 @@ import { CloseOutlined, PlusOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
 import isEqual from 'es-toolkit/compat/isEqual';
 import { atom, useAtom } from 'jotai';
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import EntityPropertyDropdown from '@/features/scan-config/components/entity-property-dropdown';
@@ -50,21 +50,6 @@ export function BlockUI({
   // Empty atom for when a block doesn't exist in the config (and the atoms map) yet, only in the AI suggested changes
   const emptyAtom = useRef(atom<Record<string, ConfigValue>>({}));
   const [state, setState] = useAtom(stateAtom ?? emptyAtom.current);
-
-  // TODO: Delete this? (shouldn't be needed since the new atom should already have the defaults)
-  useEffect(() => {
-    if (!blockSchema || !blockSchema.properties || stateAtom === null) return;
-
-    const initial: Record<string, ConfigValue> = {};
-
-    Object.entries(blockSchema.properties).forEach(([key, value]) => {
-      initial[key] = value.default ?? null;
-    });
-
-    setState((prev) => {
-      return { ...initial, ...prev };
-    });
-  }, [setState, blockSchema, stateAtom]);
 
   function renderInput(k: string, paramSchema: ParamSchema, value: ConfigValue) {
     if (paramSchema.ui_element === 'string_input') {
@@ -135,6 +120,7 @@ export function BlockUI({
     if (paramSchema.ui_element === 'neuron_ids') {
       const elements: number[] =
         isPlainObject(value) && Array.isArray(value.elements) ? value.elements : [];
+
       return (
         <NeuronIds
           elements={elements}

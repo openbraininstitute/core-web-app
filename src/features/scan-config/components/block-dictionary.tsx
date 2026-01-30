@@ -53,17 +53,25 @@ export default function BlockDictionary({
   onNewBlockClick,
   blockAIConfig,
 }: Props) {
-  const { isChatReady } = useAIConfig();
-  const selectedBlock = isPlainObject(config[selectedRootElement])
+  const { aiConfig, isChatReady } = useAIConfig();
+
+  const selectedBlockLocal = isPlainObject(config[selectedRootElement])
     ? config[selectedRootElement][selectedEntry]?.type
     : undefined;
+
+  const selectedBlockAI =
+    aiConfig && isPlainObject(aiConfig[selectedRootElement])
+      ? aiConfig[selectedRootElement][selectedEntry]?.type
+      : undefined;
+
+  const selectedBlock = selectedBlockLocal ?? selectedBlockAI;
 
   const selectedBlockSchema: Block | undefined =
     blockDictionarySchema.additionalProperties.oneOf.find(
       (o: Block) => o.properties?.type.const === selectedBlock
     );
 
-  if (selectedBlockSchema && !isAtom(atomsMap[selectedRootElement]))
+  if (selectedBlockSchema && !isAtom(atomsMap[selectedRootElement])) {
     return (
       <BlockUI
         schemaName={schemaName}
@@ -76,6 +84,7 @@ export default function BlockDictionary({
         blockAIConfig={blockAIConfig}
       />
     );
+  }
 
   return (
     <div className="flex flex-col items-center gap-5">
