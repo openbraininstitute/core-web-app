@@ -10,7 +10,7 @@ import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit'
 import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import ApiError from '@/api/error';
-import { runSimulation } from '@/api/launch-system';
+import { runSimulation } from '@/api/one/circuit-simulation';
 import { useAppNotification } from '@/components/notification';
 import { hasSimConfigAsset } from '@/entity-configuration/domain/simulation/utils';
 import {
@@ -130,7 +130,7 @@ export default function SimulationsTab({
 
     if (!hasActiveSimulations) return;
 
-    const intervalId = setInterval(fetchRemoteSimExecStatuseMap, 15_000);
+    const intervalId = setInterval(fetchRemoteSimExecStatuseMap, 20_000);
 
     return () => clearInterval(intervalId);
   }, [fetchRemoteSimExecStatuseMap, simRequestInProgress, statusMap]);
