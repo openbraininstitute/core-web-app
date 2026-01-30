@@ -1,5 +1,4 @@
-import { ReactNode, Suspense } from 'react';
-
+import { type ReactNode, Suspense } from 'react';
 import { Providers } from '@/app/app/providers';
 import { auth } from '@/auth';
 import { getAllFlags } from '@/features/feature-flags';

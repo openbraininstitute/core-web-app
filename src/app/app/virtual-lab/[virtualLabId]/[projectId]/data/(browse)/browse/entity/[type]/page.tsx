@@ -1,17 +1,14 @@
 import { snakeCase } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
 import { match, P } from 'ts-pattern';
-
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { BrowseLibraryScope } from '@/features/views/listing/browse-library';
-import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
-import { KebabCase } from '@/utils/type';
-
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceScope } from '@/constants';
+import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import type { KebabCase } from '@/utils/type';
 
 const AllowedEntities = [
   ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
@@ -33,6 +30,7 @@ const AllowedEntities = [
   ExtendedEntitiesTypeDict.SingleNeuronSimulation,
   ExtendedEntitiesTypeDict.IonChannelModel,
   ExtendedEntitiesTypeDict.MEModelWithSynapses,
+  ExtendedEntitiesTypeDict.EMCellMesh,
 ] as const;
 
 export default async function Page({
@@ -43,6 +41,7 @@ export default async function Page({
   { scope: TWorkspaceScope | null }
 >) {
   const { scope } = await searchParams;
+
   const { type } = await params;
 
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
@@ -62,17 +61,14 @@ export default async function Page({
           <BrowseEntityScope
             section={WorkspaceSection.Data}
             dataType={dataType}
-            scope={scope ?? WorkspaceScope.Public}
             mainTableProps={{
               selectionType: 'checkbox',
             }}
+            allowDownload
           />
         );
       }
     )
-    .with({ scope: WorkspaceScope.Bookmarks }, () => {
-      return <BrowseLibraryScope />;
-    })
     .otherwise(() => notFound());
 
   return content;

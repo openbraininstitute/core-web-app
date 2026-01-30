@@ -1,28 +1,29 @@
-import z from 'zod';
+import z from "zod";
 
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-import type { INestedMEModel } from '@/api/entitycore/types/entities/me-model';
+import type { IBrainRegionHierarchy } from "@/api/entitycore/types/entities/brain-region";
+import type { INestedMEModel } from "@/api/entitycore/types/entities/me-model";
 import type {
   EntityAuthorization,
   EntityCoreBaseAsset,
   EntityCoreIdentifiable,
   EntityCoreType,
   Timestamps,
-} from '@/api/entitycore/types/shared/global';
+} from "@/api/entitycore/types/shared/global";
 import {
   type ISingleNeuronSimulationBase,
   SingleNeuronSimulationStatus,
-} from '@/api/entitycore/types/shared/neuron-simulation';
+} from "@/api/entitycore/types/shared/neuron-simulation";
 import type {
-  BrainRegionFilter,
   ContributionFilter,
+  BrainRegionHierarchyFilter,
+  SharedFilter,
+  MtypeFilter,
   EtypeFilter,
   IlikeSearchFilter,
-  MtypeFilter,
   OwnershipFilter,
   PaginationFilter,
-  SharedFilter,
-} from '@/api/entitycore/types/shared/request';
+  BrainRegionFilter,
+} from "@/api/entitycore/types/shared/request";
 
 export interface ISingleNeuronSimulation
   extends EntityCoreIdentifiable,
@@ -69,6 +70,7 @@ export interface ISingleNeuronSimulationFilter
     MtypeFilter,
     EtypeFilter,
     BrainRegionFilter,
+    BrainRegionHierarchyFilter,
     SharedFilter,
     MeTypeFilter,
     MeModelFilter,
@@ -87,4 +89,6 @@ const CreateSingleNeuronSimulationSchema = z.object({
   me_model_id: z.string().uuid(),
 });
 
-export type TCreateSingleNeuronSimulation = z.infer<typeof CreateSingleNeuronSimulationSchema>;
+export type TCreateSingleNeuronSimulation = z.infer<
+  typeof CreateSingleNeuronSimulationSchema
+>;

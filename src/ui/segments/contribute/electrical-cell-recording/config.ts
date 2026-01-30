@@ -50,7 +50,7 @@ export function createElectricalCellRecordingConfig(
         brain_region_id: brainRegionId,
         recording_origin: 'in_vitro',
       } as TElectricalCellRecordingForm['setup'],
-      contribution: [{}] as TElectricalCellRecordingForm['contribution'],
+      contribution: [{}] as unknown as TElectricalCellRecordingForm['contribution'],
       license_id: DEFAULT_LICENSE_ID,
     }),
     buildDetailsUrl: ({ entityId, virtualLabId, projectId }) =>

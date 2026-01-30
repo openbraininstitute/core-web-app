@@ -7,10 +7,7 @@ const measurementSchema = z.object({
     .union([z.string(), z.null(), z.undefined()])
     .optional()
     .transform((val) => (val === null ? undefined : val)),
-  unit: z
-    .union([z.string(), z.null(), z.undefined()])
-    .optional()
-    .transform((val) => (val === null ? undefined : val)),
+  unit: z.literal('1/mm³'),
   value: z
     .union([z.number(), z.null(), z.undefined()])
     .optional()
@@ -21,28 +18,27 @@ export type TMeasurement = z.infer<typeof measurementSchema>;
 
 const MeasurementArraySchema = z.array(measurementSchema).superRefine((arr, ctx) => {
   let hasFullyFilledMeasurement = false;
+
   if (arr.length === 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'At least one measurement is required',
+      path: [],
+    });
     return;
   }
 
   arr.forEach((measurement, idx) => {
-    const filledFields = [measurement.name, measurement.unit, measurement.value].filter(
+    const filledFields = [measurement.name, measurement.value].filter(
       (field) => field !== undefined && field !== null && field !== ''
     );
 
-    if (filledFields.length > 0 && filledFields.length < 3) {
+    if (filledFields.length > 0 && filledFields.length < 2) {
       if (!measurement.name) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: 'Measurement name is required',
           path: [idx, 'name'],
-        });
-      }
-      if (!measurement.unit) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Measurement unit is required',
-          path: [idx, 'unit'],
         });
       }
       if (measurement.value === undefined || measurement.value === null) {
@@ -54,7 +50,7 @@ const MeasurementArraySchema = z.array(measurementSchema).superRefine((arr, ctx)
       }
     }
 
-    if (filledFields.length === 3) {
+    if (filledFields.length === 2) {
       hasFullyFilledMeasurement = true;
     }
   });
@@ -83,8 +79,8 @@ export const ExperimentalNeuronDensitySchema = z.object({
     .string({ message: 'License is required' })
     .uuid()
     .nonempty({ message: 'License is required' }),
-  mtype_class_id: z.string({ message: 'M-type class is required' }).uuid().optional(),
-  etype_class_id: z.string({ message: 'E-type class is required' }).uuid().optional(),
+  mtype_class_id: z.string({ message: 'M-type must be a valid UUID' }).uuid().optional(),
+  etype_class_id: z.string({ message: 'E-type must be a valid UUID' }).uuid().optional(),
 
   measurements: MeasurementArraySchema,
   contribution: ContributionArraySchema,

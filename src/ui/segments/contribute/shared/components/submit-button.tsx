@@ -40,7 +40,11 @@ export function SubmitButton<
 
   const isValidForm = config.schema.safeParse(values).success;
   const detailsUrl = createdEntityId
-    ? config.buildDetailsUrl({ entityId: createdEntityId, virtualLabId, projectId })
+    ? config.buildDetailsUrl({
+        entityId: createdEntityId,
+        virtualLabId,
+        projectId,
+      })
     : null;
 
   if (detailsUrl) {

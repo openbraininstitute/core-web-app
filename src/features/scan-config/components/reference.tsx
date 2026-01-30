@@ -23,18 +23,20 @@ export default function Reference({
   const referenceTypeDict = useReferenceTypeDict(schemaName);
   const schema = useObioneJsonSchema(schemaName);
 
+  const configOptions = referenceTypeDict[referenceSchema.reference_type] ?? {
+    singularName: '',
+    configKey: '',
+  };
+
   if (
     !schema ||
     !schema.default_block_reference_labels ||
     !schema.default_block_reference_labels[referenceSchema.reference_type]
-  ) {
+  )
     return null;
-  }
-
-  const configOptions = referenceTypeDict[referenceSchema.reference_type];
 
   const options: { label: string; value: string | null }[] = Object.keys(
-    config[configOptions.configKey]
+    config[configOptions.configKey] ?? {}
   ).map((k) => ({
     label: k,
     value: k,
@@ -54,7 +56,6 @@ export default function Reference({
 
   return (
     <Select
-      placeholder={`Select ${configOptions.singularName}`}
       className="w-full"
       disabled={disabled}
       onChange={(newV: string | null) => onChange(newV, configOptions.configKey)}

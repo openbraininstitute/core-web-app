@@ -36,7 +36,11 @@ export function useElectricalCellRecordingPipeline({
         !isNil(values.setup.location.x) &&
         !isNil(values.setup.location.y) &&
         !isNil(values.setup.location.z)
-          ? { x: values.setup.location.x, y: values.setup.location.y, z: values.setup.location.z }
+          ? {
+              x: values.setup.location.x,
+              y: values.setup.location.y,
+              z: values.setup.location.z,
+            }
           : null;
 
       return createElectricalCellRecording({

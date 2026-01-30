@@ -1,8 +1,6 @@
 'use client';
 
-import React from 'react';
 import IconIdea from '@/components/icons/Idea';
-import { useServiceAiAgentSuggestionFromUserJourney } from '@/services/ai-agent';
 import { classNames } from '@/util/utils';
 
 import styles from './suggested-questions.module.css';
@@ -18,7 +16,9 @@ interface SuggestedQuestionsProps {
    */
   messagesLength: number;
   onClick(prompt: string): void;
-  isLoading?: boolean;
+  suggestions: string[];
+  clearSuggestions(): void;
+  isLoading: boolean;
 }
 
 export default function SuggestedQuestions({
@@ -26,28 +26,26 @@ export default function SuggestedQuestions({
   threadId,
   messagesLength,
   onClick,
+  suggestions,
+  clearSuggestions,
   isLoading,
 }: SuggestedQuestionsProps) {
-  const [allSuggestions, clearSuggestions, isLoadingFromHook] =
-    useServiceAiAgentSuggestionFromUserJourney(threadId ?? '');
-  const actualLoading = isLoading ?? isLoadingFromHook;
-
   if (!threadId) return null;
-  if (allSuggestions.length === 0 && !actualLoading) return null;
+  if (suggestions.length === 0 && !isLoading) return null;
 
   return (
     <div className={classNames(className, styles.suggestedQuestions, styles.container)}>
       <div className={styles.title}>
         {messagesLength === 0 ? 'Based on the content you have been browsing' : 'Related'}
       </div>
-      {allSuggestions.length === 0 && actualLoading ? (
+      {isLoading ? (
         <div className={styles.spinnerContainer}>
           <div className={styles.spinner} />
         </div>
       ) : (
         <>
-          <div className={classNames(styles.suggestions, actualLoading && styles.loading)}>
-            {allSuggestions.map((prompt) => (
+          <div className={classNames(styles.suggestions, isLoading && styles.loading)}>
+            {suggestions.map((prompt) => (
               <button
                 key={prompt}
                 type="button"
@@ -55,14 +53,14 @@ export default function SuggestedQuestions({
                   onClick(prompt ?? '');
                   clearSuggestions();
                 }}
-                disabled={actualLoading}
+                disabled={isLoading}
               >
                 <IconIdea />
                 <div>{prompt}</div>
               </button>
             ))}
           </div>
-          {actualLoading && (
+          {isLoading && (
             <div className={styles.spinnerOverlay}>
               <div className={styles.spinner} />
             </div>

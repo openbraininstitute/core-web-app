@@ -1,16 +1,14 @@
-/* eslint-disable no-empty */
-
-import { getEModel, getMEModel, getCellMorphology } from '@/api/entitycore/queries';
+import { getCellMorphology, getEModel, getMEModel } from '@/api/entitycore/queries';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { ASSET_BASE_PATH } from '@/features/entity-download/constants';
 import { Metadata } from '@/features/entity-download/metadata';
-import { MemodelJsonMetadata } from '@/features/entity-download/types';
+import type { MemodelJsonMetadata } from '@/features/entity-download/types';
 import {
   createAssetFileEntry,
   createTemplateFileEntry,
   getMetadataCsvEntryBase,
 } from '@/features/entity-download/utils';
-import { WorkspaceContext } from '@/types/common';
+import type { WorkspaceContext } from '@/types/common';
 
 export async function* getMEmodelFiles(entityIds: string[], ctx?: WorkspaceContext) {
   const metadata = new Metadata<MemodelJsonMetadata>();
@@ -41,11 +39,18 @@ export async function* getMEmodelFiles(entityIds: string[], ctx?: WorkspaceConte
     });
 
     // HOC file
-    const hocFileAsset = emodel.assets.find((asset) => asset.label === 'neuron_hoc')!;
-    try {
-      const path = `${dataPath}/${hocFileAsset.label}/${hocFileAsset.path}`;
-      yield await createAssetFileEntry({ entity: emodel, asset: hocFileAsset, path, ctx });
-    } catch (error) {}
+    const hocFileAsset = emodel.assets.find((asset) => asset.label === 'neuron_hoc');
+    if (hocFileAsset) {
+      try {
+        const path = `${dataPath}/${hocFileAsset.label}/${hocFileAsset.path}`;
+        yield await createAssetFileEntry({
+          entity: emodel,
+          asset: hocFileAsset,
+          path,
+          ctx,
+        });
+      } catch {}
+    }
 
     // Morphologies
     const morphology = await getCellMorphology({
@@ -58,17 +63,29 @@ export async function* getMEmodelFiles(entityIds: string[], ctx?: WorkspaceConte
     for await (const asset of morphAssets) {
       const path = `${dataPath}/${asset.label}/${asset.path}`;
       try {
-        yield await createAssetFileEntry({ entity: morphology, asset, path, ctx });
-      } catch (error) {}
+        yield await createAssetFileEntry({
+          entity: morphology,
+          asset,
+          path,
+          ctx,
+        });
+      } catch {}
     }
 
     // MOD files
     for await (const icEntity of emodel.ion_channel_models) {
-      const asset = icEntity.assets.find((a) => a.label === 'neuron_mechanisms')!;
-      const path = `${dataPath}/${asset.label}/${asset.path}`;
-      try {
-        yield await createAssetFileEntry({ entity: icEntity, asset, path, ctx });
-      } catch (error) {}
+      const asset = icEntity.assets.find((a) => a.label === 'neuron_mechanisms');
+      if (asset) {
+        const path = `${dataPath}/${asset.label}/${asset.path}`;
+        try {
+          yield await createAssetFileEntry({
+            entity: icEntity,
+            asset,
+            path,
+            ctx,
+          });
+        } catch {}
+      }
     }
   }
 

@@ -1,9 +1,9 @@
-import React from 'react';
 import dynamic from 'next/dynamic';
-import { Data, Layout } from 'plotly.js-dist-min';
-
-import { classNames } from '@/util/utils';
+import type { Data, Layout } from 'plotly.js-dist-min';
+import React from 'react';
 import { logError } from '@/util/logger';
+import { classNames } from '@/util/utils';
+import ToolSkeleton from '../../tool-skeleton';
 
 import styles from './generic-plot.module.css';
 
@@ -27,6 +27,8 @@ export default function GenericPlot<T>({
   convert,
   assert,
 }: GenericPlotProps<T>) {
+  const [plotReady, setPlotReady] = React.useState(false);
+
   const props = React.useMemo(
     () => makeProps(plotType, value, convert, assert),
     [plotType, value, convert, assert]
@@ -64,14 +66,17 @@ export default function GenericPlot<T>({
           {title}
         </div>
       )}
+      {!plotReady && <ToolSkeleton />}
       <Plot
         className={classNames(className, styles.genericPlot)}
-        style={{ width: '100%' }}
+        style={{ width: '100%', display: plotReady ? 'block' : 'none' }}
         data={props.data}
         layout={modifiedLayout}
         frames={props?.frames}
         config={{ displaylogo: false }}
         useResizeHandler
+        onInitialized={() => setPlotReady(true)}
+        onUpdate={() => setPlotReady(true)}
       />
     </div>
   );

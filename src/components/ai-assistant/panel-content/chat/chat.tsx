@@ -7,7 +7,6 @@ import {
 } from '@/services/ai-agent';
 import { classNames } from '@/util/utils';
 import ErrorPanel from '../../error';
-import { IconClear } from '../../icons/clear';
 import { IconPrice } from '../../icons/price';
 import { MessageItem } from '../../message-item';
 import SuggestedQuestions from '../../suggested-questions';
@@ -18,16 +17,18 @@ import styles from './chat.module.css';
 export interface ChatProps {
   className?: string;
   threadId: string;
-  onClearChat(): void;
 }
 
-export default function Chat({ className, threadId, onClearChat }: ChatProps) {
+export default function Chat({ className, threadId }: ChatProps) {
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = React.useState(true);
-  const { messages, clear, status, append, error, stop, rateLimitRemaining } =
-    useServiceAiAgentChat(threadId ?? '');
-  const [suggestions, , isLoadingSuggestions] = useServiceAiAgentSuggestionFromUserJourney(
+  const { messages, status, append, error, stop, rateLimitRemaining } = useServiceAiAgentChat(
     threadId ?? ''
   );
+  const [suggestions, clearSuggestions, isLoadingSuggestions] =
+    useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', status);
+
+  const refChatBottom = React.useRef<HTMLDivElement | null>(null);
+  const refContainer = React.useRef<HTMLDivElement | null>(null);
   const isStorageQueryFetching = useIsFetching({
     predicate: (query) => {
       const fullQueryKey = query.queryKey.at(0);
@@ -35,29 +36,55 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
     },
     fetchStatus: 'fetching',
   });
-  const refChatBottom = React.useRef<HTMLDivElement | null>(null);
-  const refContainer = React.useRef<HTMLDivElement | null>(null);
+
+  const [scrollHeight, setScrollHeight] = React.useState(0);
+
+  // Monitor scroll height changes for auto-scroll
+  React.useEffect(() => {
+    if (!refContainer.current) return;
+
+    const container = refContainer.current;
+    let previousScrollHeight = container.scrollHeight;
+
+    const updateScrollHeight = () => {
+      const newScrollHeight = container.scrollHeight;
+
+      if (isAutoScrollEnabled && newScrollHeight > previousScrollHeight) {
+        requestAnimationFrame(() => {
+          const maxScroll = container.scrollHeight - container.clientHeight;
+          if (maxScroll > 0) {
+            container.scrollTop = maxScroll;
+          }
+        });
+      }
+
+      setScrollHeight(newScrollHeight);
+      previousScrollHeight = newScrollHeight;
+    };
+
+    const observer = new MutationObserver(updateScrollHeight);
+    observer.observe(container, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      characterData: true,
+    });
+
+    updateScrollHeight();
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isAutoScrollEnabled]);
 
   React.useEffect(() => {
-    if (isAutoScrollEnabled) {
-      requestAnimationFrame(() => {
+    if (isAutoScrollEnabled && refContainer.current) {
+      setTimeout(() => {
         refChatBottom.current?.scrollIntoView({ behavior: 'smooth' });
-      });
+      }, 200);
     }
-  }, [
-    messages,
-    error,
-    status,
-    isAutoScrollEnabled,
-    isStorageQueryFetching,
-    suggestions,
-    isLoadingSuggestions,
-  ]);
+  }, [scrollHeight, isAutoScrollEnabled, isStorageQueryFetching]);
 
-  const handleClearChat = () => {
-    onClearChat();
-    clear();
-  };
   const handlePrompt = (content: string) => {
     setIsAutoScrollEnabled(true);
     append({
@@ -65,6 +92,7 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
       content,
     });
   };
+
   const handleWheel = (event: React.WheelEvent) => {
     if (event.deltaY < 0) {
       setIsAutoScrollEnabled(false);
@@ -92,10 +120,6 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
         {status === 'ready' && messages.length > 0 && (
           <>
             <div className={styles.footerButtons}>
-              <button type="button" className={styles.actionButton} onClick={handleClearChat}>
-                <IconClear />
-                <div>New Chat</div>
-              </button>
               <div className={styles.price}>
                 <IconPrice />
                 <div>
@@ -104,13 +128,19 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
                 </div>
               </div>
             </div>
+          </>
+        )}
+        {suggestions !== undefined && status === 'ready' && (
+          <div className={styles.suggestedQuestionsContainer}>
             <SuggestedQuestions
               threadId={threadId}
               messagesLength={messages.length}
               onClick={handlePrompt}
+              suggestions={suggestions}
+              clearSuggestions={clearSuggestions}
               isLoading={isLoadingSuggestions}
             />
-          </>
+          </div>
         )}
         {error && <ErrorPanel value={error} />}
         <div ref={refChatBottom} className={styles.bottom} />
@@ -122,7 +152,6 @@ export default function Chat({ className, threadId, onClearChat }: ChatProps) {
         onPrompt={handlePrompt}
         messagesCount={messages.length}
         stop={stop}
-        isLoadingSuggestions={isLoadingSuggestions}
       />
     </>
   );

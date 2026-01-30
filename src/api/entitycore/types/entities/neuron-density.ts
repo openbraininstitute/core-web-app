@@ -1,7 +1,7 @@
 import type { IExperimentalDensity } from '@/api/entitycore/types/shared/density';
 import type { EntityCoreType, IEType, IMType } from '@/api/entitycore/types/shared/global';
 import type {
-  BrainRegionFilter,
+  BrainRegionHierarchyFilter,
   ContributionFilter,
   EtypeFilter,
   IlikeSearchFilter,
@@ -20,7 +20,7 @@ export interface IExperimentalNeuronDensity extends IExperimentalDensity, Entity
 
 export type ExperimentalNeuronDensityFilter = Partial<
   SharedFilter &
-    BrainRegionFilter &
+    BrainRegionHierarchyFilter &
     ContributionFilter &
     EtypeFilter &
     MtypeFilter &

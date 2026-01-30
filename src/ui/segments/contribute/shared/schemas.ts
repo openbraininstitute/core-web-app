@@ -8,19 +8,16 @@ export const DEFAULT_LICENSE_ID = 'ad8686db-3cdd-4e3f-bcbd-812380a9eba7';
 export const DEFAULT_LICENSE_NAME = 'CC BY 4.0';
 
 export const ContributionSchema = z.object({
-  agent_type: z
-    .enum(Object.values(AgentType).map((type) => type.key) as [TAgentType, ...Array<TAgentType>], {
+  agent_type: z.enum(
+    Object.values(AgentType).map((type) => type.key) as [TAgentType, ...Array<TAgentType>],
+    {
       message: 'Contributor type is required',
-    })
-    .optional(),
+    }
+  ),
   agent_id: z
     .string({ message: 'Contributor is required' })
-    .uuid({ message: 'Contributor must be a valid UUID' })
-    .optional(),
-  role_id: z
-    .string({ message: 'Role is required' })
-    .uuid({ message: 'Role must be a valid UUID' })
-    .optional(),
+    .uuid({ message: 'Contributor must be a valid UUID' }),
+  role_id: z.string({ message: 'Role is required' }).uuid({ message: 'Role must be a valid UUID' }),
 });
 
 export type TContribution = z.infer<typeof ContributionSchema>;
@@ -117,7 +114,9 @@ export const LocationSchema = z
   );
 
 export const ExperimentDateSchema = z
-  .custom((data) => dayjs.isDayjs(data), { message: 'Experiment date should be a valid date' })
+  .custom((data) => dayjs.isDayjs(data), {
+    message: 'Experiment date should be a valid date',
+  })
   .refine(
     (data) => {
       const today = dayjs();

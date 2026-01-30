@@ -1,12 +1,14 @@
 import { includes } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
 import type { PropsWithChildren } from 'react';
-
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { tryCatch } from '@/api/utils';
+import { config } from '@/config';
 import { WorkspaceScope } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
+import type { WorkspaceContext } from '@/types/common';
 import ActionMenu from '@/ui/segments/action-menu';
 import { DownloadPanel as CircuitDownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { ClosePage, DataBreadcrumb } from '@/ui/segments/explore/data-nav-btns';
@@ -15,10 +17,6 @@ import {
   EntityNameDisplay,
   EntityNameDisplayWrapper,
 } from '@/ui/segments/explore/entity-name-display';
-import { config } from '@/config';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { WorkspaceContext } from '@/types/common';
 
 export async function DataViewLayout({
   children,
@@ -47,7 +45,7 @@ export async function DataViewLayout({
 
   const isPublicEntity = entity.authorized_public;
   const scope = isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project;
-  const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}&scope=${scope}`;
+  const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}?group=${entityType.group}&scope=${isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project}`;
 
   const breadcrumbs = (
     <DataBreadcrumb title={entityType.title} type={type} group={entityType.group} scope={scope} />
@@ -67,10 +65,10 @@ export async function DataViewLayout({
     )
   ) {
     return (
-      <div className="ml-5 flex h-full flex-col rounded-md border-[1px] border-[#D9D9D9] px-5 py-3">
-        <div className="mb-5">
-          {closePage}
+      <div className="ml-5 flex h-full flex-col rounded-md border border-[rgb(217,217,217)] px-5 py-3">
+        <div className="w-full flex items-center justify-between pb-4">
           {breadcrumbs}
+          {closePage}
         </div>
         <div className="relative flex-1 overflow-auto">{children}</div>
       </div>
@@ -80,18 +78,26 @@ export async function DataViewLayout({
   if (!entityType.detailViewSections) return null;
 
   return (
-    <>
-      <div className="relative ml-5 flex h-full rounded-md border-[1px] border-[#D9D9D9] py-3">
+    <div className="relative ml-5 flex flex-col h-full rounded-md border border-[#D9D9D9]">
+      <div className="w-full flex items-center justify-between px-5 py-2">
+        {breadcrumbs}
         {closePage}
+      </div>
+      <div className="flex h-full max-h-[calc(100%-56px)] overflow-hidden pt-2">
         <div className="w-1/5 pl-5">
-          {breadcrumbs}
-          <div className="mt-5 flex flex-col gap-3">
+          <div className="flex flex-col gap-3">
             <DetailMenu sections={entityType.detailViewSections} />
           </div>
-          <ActionMenu entity={entity} type={type} ctx={{ virtualLabId, projectId }} />
+          <ActionMenu
+            entity={entity}
+            type={type}
+            ctx={{ virtualLabId, projectId }}
+            parentLink={parentLink}
+            isPublicEntity={isPublicEntity}
+          />
         </div>
         <div className="w-4/5 pr-1">
-          <div className="secondary-scrollbar h-full w-full overflow-x-auto overflow-y-auto p-10">
+          <div className="secondary-scrollbar h-full w-full overflow-x-auto overflow-y-auto p-10 pt-0">
             <EntityNameDisplay name={entity.name} />
             <EntityNameDisplayWrapper>{children}</EntityNameDisplayWrapper>
           </div>
@@ -99,8 +105,8 @@ export async function DataViewLayout({
       </div>
       {includes(
         [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.MEModelWithSynapses],
-        type
+        entityType.extendedType
       ) && <CircuitDownloadPanel />}
-    </>
+    </div>
   );
 }

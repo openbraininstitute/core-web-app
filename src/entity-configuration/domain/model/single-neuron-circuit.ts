@@ -25,11 +25,17 @@ export const SingleNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
       extraRequiredListFilters: circuitScaleFilter,
     },
     query: {
-      list: (...params) =>
-        getCircuits({
+      list: (...params) => {
+        return getCircuits({
           ...params,
-          filters: { ...params[0].filters, ...circuitScaleFilter },
-        }),
+          context: params[0].context,
+          withFacets: params[0].withFacets,
+          filters: {
+            ...circuitScaleFilter,
+            ...params[0].filters,
+          },
+        });
+      },
       one: getCircuit,
     },
   },

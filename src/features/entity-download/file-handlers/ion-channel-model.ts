@@ -1,5 +1,3 @@
-/* eslint-disable no-empty */
-
 import { getIonChannelModel } from '@/api/entitycore/queries/model/ion-channel-model';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
@@ -11,7 +9,7 @@ import {
   createTemplateFileEntry,
   getMetadataCsvEntryBase,
 } from '@/features/entity-download/utils';
-import { WorkspaceContext } from '@/types/common';
+import type { WorkspaceContext } from '@/types/common';
 
 export async function* getIonChannelModelFiles(entityIds: string[], ctx?: WorkspaceContext) {
   const metadata = new Metadata<Record<string, any>>();
@@ -36,19 +34,21 @@ export async function* getIonChannelModelFiles(entityIds: string[], ctx?: Worksp
       json: { ...idxExtra, ...icm },
     });
 
-    const configAsset = icm.assets.find((asset) => asset.label === AssetLabel.neuron_mechanisms)!;
-    try {
-      const path = `${dataPath}/${configAsset.path}`;
-      yield await createAssetFileEntry({
-        entity: icm,
-        asset: configAsset,
-        path,
-        ctx,
-      });
-    } catch (error) {}
-
-    for await (const metadataFileEntry of metadata.getFileEntries()) {
-      yield metadataFileEntry;
+    const configAsset = icm.assets.find((asset) => asset.label === AssetLabel.neuron_mechanisms);
+    if (configAsset) {
+      try {
+        const path = `${dataPath}/${configAsset.path}`;
+        yield await createAssetFileEntry({
+          entity: icm,
+          asset: configAsset,
+          path,
+          ctx,
+        });
+      } catch {}
     }
+  }
+
+  for await (const metadataFileEntry of metadata.getFileEntries()) {
+    yield metadataFileEntry;
   }
 }

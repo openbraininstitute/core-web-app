@@ -103,7 +103,7 @@
   flex-direction: row;
   justify-content: flex-start;
   align-items: center;
-  padding: 1em 2em 0 2em;
+  padding: 1em 0.5em 0 2em;
   gap: 0;
 }
 
@@ -115,16 +115,17 @@
   align-items: center;
   gap: 0.5em;
   width: auto;
-  height: 48px;
+  height: 42px;
   color: #0007;
   background: transparent;
   padding: 0 1em;
   border-radius: 0.5em 0.5em 0 0;
   border: none;
+  font-size: 14px;
 }
 
 .overlay nav > button > svg {
-  font-size: 32px;
+  font-size: 20px;
   width: 1em;
   height: 1em;
   flex: 0 0 auto;
@@ -133,7 +134,7 @@
 .overlay nav > button.selected {
   background: var(--color-neutral-7);
   color: var(--color-primary-3);
-  z-index: 99999;
+  z-index: 1;
   transform: translateY(1px);
   border: 1px solid var(--color-neutral-3);
   border-bottom: 1px solid var(--color-neutral-7);
@@ -144,6 +145,27 @@
   flex: 1 1 auto;
   text-align: left;
   font-variant: small-caps;
+}
+
+.overlay nav > button.newChatBtn {
+  margin-left: auto;
+  color: var(--color-primary-5);
+  background: color-mix(in srgb, var(--color-primary-5) 4%, transparent);
+  font-weight: 500;
+  font-size: 12px;
+  border-radius: 0.5em;
+  border: 1px solid color-mix(in srgb, var(--color-primary-5) 20%, transparent);
+  height: 34px;
+  padding: 0 1em 0 0.5em;
+}
+
+.overlay nav > button.newChatBtn:hover:not(:disabled) {
+  background: var(--color-neutral-5);
+}
+
+.overlay nav > button.newChatBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .content {

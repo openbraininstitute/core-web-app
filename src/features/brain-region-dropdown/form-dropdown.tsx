@@ -1,5 +1,5 @@
 import { CheckOutlined, DownOutlined, LoadingOutlined, SearchOutlined } from '@ant-design/icons';
-import { ComponentProps, startTransition, useCallback, useEffect, useMemo, useState } from 'react';
+import { ComponentProps, useCallback, useEffect, useMemo, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { loadable, unwrap } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
@@ -256,9 +256,8 @@ export function BrainRegionDropdownWithFormItem({
       }) {
         const handleSelectBrainRegion = useCallback(
           (br: IBrainRegionHierarchy) => {
-            startTransition(() => {
-              onChange?.(br.id);
-            });
+            // FIX: Remove startTransition wrapper - form onChange should not be wrapped
+            onChange?.(br.id);
             onSelectBrainRegion?.(br);
           },
           [onChange]

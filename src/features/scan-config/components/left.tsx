@@ -26,7 +26,6 @@ export default function Left({
   selectedEntry,
   setSelectedEntry,
   setEditing,
-  setSelectedBlock,
   readOnly,
   setCampaignId,
   setLoading,
@@ -51,7 +50,6 @@ export default function Left({
   selectedEntry: string;
   setSelectedEntry: (selectedEntry: string) => void;
   setEditing: React.Dispatch<React.SetStateAction<boolean>>;
-  setSelectedBlock: React.Dispatch<React.SetStateAction<string>>;
   readOnly?: boolean;
   setCampaignId: React.Dispatch<React.SetStateAction<string>>;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
@@ -104,7 +102,6 @@ export default function Left({
                         selectedEntry={selectedEntry}
                         setSelectedEntry={setSelectedEntry}
                         setEditing={setEditing}
-                        setSelectedBlock={setSelectedBlock}
                         readOnly={readOnly}
                         allEntries={allEntries}
                         newKey={newKey}

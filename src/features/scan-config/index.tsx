@@ -1,12 +1,7 @@
 'use client';
 
-// import { LoadingOutlined, UpOutlined } from '@ant-design/icons';
 import { LoadingOutlined } from '@ant-design/icons';
 import { Suspense, useState } from 'react';
-import SimulationsTab from './components/simulations';
-
-// import { useRouter } from 'next/navigation';
-
 import type { Config } from '@/features/scan-config/components/components';
 import { useConfigAtom } from '@/features/scan-config/components/hooks/config-atom';
 import {
@@ -17,13 +12,14 @@ import {
 import ModelPreview from '@/features/scan-config/components/model-preview';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import styles from '@/features/scan-config/scan-config.module.css';
-import type { Block, TabType } from '@/features/scan-config/types';
+import type { TabType } from '@/features/scan-config/types';
 import { useAgentState, useAIConfig } from '@/services/ai-agent';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 import { useEntries, useModel, useSchemaName } from './components/hooks';
 import Left from './components/left';
 import Middle from './components/middle';
+import SimulationsTab from './components/simulations';
 
 export default function ScanConfiguration({
   modelId,
@@ -48,7 +44,6 @@ export default function ScanConfiguration({
   const [tab, setTab] = useState<TabType>(defaultTab);
   const [selectedRootElement, setSelectedRootElement] = useState<string>('info');
   const [editing, setEditing] = useState(true);
-  const [selectedBlock, setSelectedBlock] = useState('');
   const [selectedEntry, setSelectedEntry] = useState('');
   const [loading, setLoading] = useState(false);
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
@@ -60,13 +55,6 @@ export default function ScanConfiguration({
 
   const schemaName = useSchemaName({ model });
   const schema = useObioneJsonSchema(schemaName);
-
-  const selectedBlockSchema: Block | undefined =
-    schema?.properties?.[selectedRootElement]?.ui_element === 'block_dictionary'
-      ? schema.properties[selectedRootElement].additionalProperties.oneOf.find(
-          (o: Block) => o.properties?.type.const === selectedBlock
-        )
-      : undefined;
 
   const allEntries = useEntries({ initialConfig, schema });
 
@@ -95,9 +83,6 @@ export default function ScanConfiguration({
       </header>
       <div className="relative mb-10">
         <div className="w-full border-t border-gray-200" />
-        {/* <div className="text-primary-8 absolute -top-5 left-1/2 rounded-full bg-gray-50 p-2 px-3 shadow-sm">
-          <UpOutlined onClick={() => router.back()} />
-        </div> */}
       </div>
 
       {tab === 'configuration' && (
@@ -114,7 +99,6 @@ export default function ScanConfiguration({
             selectedEntry={selectedEntry}
             setSelectedEntry={setSelectedEntry}
             setEditing={setEditing}
-            setSelectedBlock={setSelectedBlock}
             readOnly={readOnly}
             setCampaignId={setCampaignId}
             setLoading={setLoading}
@@ -134,28 +118,35 @@ export default function ScanConfiguration({
             }}
           />
 
-          <Middle
-            schemaName={schemaName}
-            schema={schema}
-            configTab={selectedRootElement}
-            selectedCategory={selectedBlock}
-            editing={editing}
-            atomsMap={atomsMap}
-            setAtomsMap={setAtomsMap}
-            setSelectedCategory={setSelectedBlock}
-            selectedEntry={selectedEntry}
-            setSelectedEntry={setSelectedEntry}
-            campaignId={campaignId}
-            loading={loading}
-            config={config}
-            selectedBlockSchema={selectedBlockSchema}
-            model={model}
-            allEntries={allEntries}
-            onNewBlockClick={() => {
-              setNewKey('');
-              setIsEditingKey(false);
-            }}
-          />
+          <div
+            className={cn(
+              styles.scrollable,
+              'h-full overflow-y-auto border-r border-l border-gray-200 px-5'
+            )}
+          >
+            {editing && (
+              <Middle
+                schemaName={schemaName}
+                schema={schema}
+                selectedRootElement={selectedRootElement}
+                editing={editing}
+                atomsMap={atomsMap}
+                setAtomsMap={setAtomsMap}
+                selectedEntry={selectedEntry}
+                setSelectedEntry={setSelectedEntry}
+                campaignId={campaignId}
+                loading={loading}
+                config={config}
+                model={model}
+                allEntries={allEntries}
+                onNewBlockClick={() => {
+                  setNewKey('');
+                  setIsEditingKey(false);
+                }}
+                selectedSchema={schema.properties[selectedRootElement]}
+              />
+            )}
+          </div>
 
           <div className="rounded-lg">
             <ModelPreview model={model} />

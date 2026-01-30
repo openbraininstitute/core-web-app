@@ -1,9 +1,8 @@
 import z from 'zod';
-import { EntityCoreConfiguration } from '@/entity-configuration/domain';
-
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { AssetLegacyMeta } from '@/api/entitycore/types/shared/legacy';
 import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
+import type { EntityCoreConfiguration } from '@/entity-configuration/domain';
 import type { Prettify } from '@/utils/type';
 
 export type EntityCoreDataType =
@@ -58,6 +57,44 @@ interface License {
 }
 
 export interface ILicense extends License, Timestamps, EntityCoreIdentifiable {}
+
+interface Protocol {
+  generation_type: string;
+  name: string;
+  cell_morphology_protocol_id: string;
+}
+export interface IProtocol extends Protocol, Timestamps, EntityCoreIdentifiable {}
+
+export const EntityTypeSchema = z.string() as z.ZodSchema<EntityCoreDataType>;
+
+export const CellMorphologyProtocolDesignSchema = z.enum([
+  'electron_microscopy',
+  'cell_patch',
+  'fluorophore',
+  'topological_synthesis',
+]);
+
+export const CellMorphologyGenerationTypeSchema = z.enum([
+  'digital_reconstruction',
+  'modified_reconstruction',
+  'computationally_synthesized',
+  'placeholder',
+]);
+
+export const SlicingDirectionTypeSchema = z.enum(['coronal', 'sagittal', 'horizontal', 'custom']);
+
+export const RepairPipelineTypeSchema = z.enum(['raw', 'curated', 'unraveled', 'repaired']);
+
+export type ModifiedMorphologyMethodType = {
+  type: 'cloned' | 'mix_and_match' | 'mousified' | 'ratified';
+};
+
+export const ModifiedMorphologyMethodTypeSchema = z.enum([
+  'cloned',
+  'mix_and_match',
+  'mousified',
+  'ratified',
+]);
 
 export interface PointLocationBase {
   x: number;
@@ -180,6 +217,7 @@ export enum AssetLabel {
   campaign_summary = 'campaign_summary',
   cell_composition_summary = 'cell_composition_summary',
   cell_composition_volumes = 'cell_composition_volumes',
+  cell_surface_mesh = 'cell_surface_mesh',
   custom_node_sets = 'custom_node_sets',
   emodel_optimization_output = 'emodel_optimization_output',
   morphology = 'morphology',

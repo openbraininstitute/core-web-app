@@ -5,73 +5,77 @@ import type {
   EntityCoreOwnership,
   EntityCoreType,
   Timestamps,
-} from '@/api/entitycore/types/shared/global';
+} from "@/api/entitycore/types/shared/global";
 import type {
-  BrainRegionFilter,
+  BrainRegionHierarchyFilter,
+  SharedFilter,
+  PaginationFilter,
   IdFilter,
   IlikeSearchFilter,
-  PaginationFilter,
-  SharedFilter,
-} from '@/api/entitycore/types/shared/request';
+  BrainRegionFilter,
+} from "@/api/entitycore/types/shared/request";
 
 export const CircuitBuildCategory = {
   ComputationalModel: {
-    key: 'computational_model',
-    label: 'Computational model',
+    key: "computational_model",
+    label: "Computational model",
   },
   EmReconstruction: {
-    key: 'em_reconstruction',
-    label: 'EM reconstruction',
+    key: "em_reconstruction",
+    label: "EM reconstruction",
   },
 } as const;
 
 export const CircuitScale = {
   Single: {
-    key: 'single',
-    label: 'Single',
+    key: "single",
+    label: "Single",
   },
   PairNeuron: {
-    key: 'pair',
-    label: 'Pair neuron',
+    key: "pair",
+    label: "Pair neuron",
   },
   SmallMicrocircuit: {
-    key: 'small',
-    label: 'Small Microcircuit',
+    key: "small",
+    label: "Small Microcircuit",
   },
   Microcircuit: {
-    key: 'microcircuit',
-    label: 'Microcircuit',
+    key: "microcircuit",
+    label: "Microcircuit",
   },
   Region: {
-    key: 'region',
-    label: 'Region',
+    key: "region",
+    label: "Region",
   },
   System: {
-    key: 'system',
-    label: 'System',
+    key: "system",
+    label: "System",
   },
   WholeBrain: {
-    key: 'whole_brain',
-    label: 'Whole brain',
+    key: "whole_brain",
+    label: "Whole brain",
   },
 } as const;
 
 export const CircuitScaleDictionary = Object.fromEntries(
-  Object.entries(CircuitScale).map(([name, value]) => [name, value.key])
+  Object.entries(CircuitScale).map(([name, value]) => [name, value.key]),
 ) as {
-  [K in keyof typeof CircuitScale]: (typeof CircuitScale)[K]['key'];
+  [K in keyof typeof CircuitScale]: (typeof CircuitScale)[K]["key"];
 };
 export const CircuitBuildCategoryDictionary = Object.fromEntries(
-  Object.entries(CircuitBuildCategory).map(([name, value]) => [name, value.key])
+  Object.entries(CircuitBuildCategory).map(([name, value]) => [
+    name,
+    value.key,
+  ]),
 ) as {
-  [K in keyof typeof CircuitBuildCategory]: (typeof CircuitBuildCategory)[K]['key'];
+  [K in keyof typeof CircuitBuildCategory]: (typeof CircuitBuildCategory)[K]["key"];
 };
 
 export type TCircuitScaleDictionary =
   (typeof CircuitScaleDictionary)[keyof typeof CircuitScaleDictionary];
 
 export type TCircuitBuildCategoryDictionary =
-  (typeof CircuitBuildCategory)[keyof typeof CircuitBuildCategory]['key'];
+  (typeof CircuitBuildCategory)[keyof typeof CircuitBuildCategory]["key"];
 
 interface CircuitBase {
   description: string;
@@ -102,6 +106,7 @@ type CircuitScaleFilter = {
 export interface ICircuitFilter
   extends IdFilter,
     BrainRegionFilter,
+    BrainRegionHierarchyFilter,
     SharedFilter,
     PaginationFilter,
     CircuitScaleFilter,
@@ -122,7 +127,7 @@ export type SonataCircuitNetworkNodeConfigItem = {
   populations: Record<
     string,
     {
-      type: 'biophysical' | 'virtual';
+      type: "biophysical" | "virtual";
       biophysical_neuron_models_dir?: string;
       morphologies_dir?: string;
       alternate_morphologies?: Record<string, string>;

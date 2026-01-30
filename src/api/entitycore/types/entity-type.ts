@@ -23,6 +23,7 @@ export const EntityTypeDict = {
   IonChannelModel: 'ion_channel_model',
   ValidationResult: 'validation_result',
   Notebook: 'analysis_notebook_template',
+  EMCellMesh: 'em_cell_mesh',
 } as const;
 
 export const EntityTypeWithBrainRegionDict = {

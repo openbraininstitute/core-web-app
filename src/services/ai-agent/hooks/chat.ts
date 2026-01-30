@@ -134,7 +134,6 @@ export function useServiceAiAgentChat(threadId: string) {
     status: chat.status,
     error: chat.error,
     stop: chat.stop,
-    clear: () => chat.setMessages([]),
   };
 }
 
