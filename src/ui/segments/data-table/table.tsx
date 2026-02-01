@@ -198,13 +198,10 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
           style={tableStyle}
           aria-label="listing-view-table"
           className={cn(styles.table, 'grow [&_.ant-table-sticky-holder]:shadow-md', className)}
-          columns={
-            columns &&
-            columns.map((col) => ({
-              ...col,
-              ...onCellRouteHandler(col),
-            }))
-          }
+          columns={columns?.map((col) => ({
+            ...col,
+            ...onCellRouteHandler(col),
+          }))}
           components={{
             header: {
               cell: CustomTH,
@@ -262,6 +259,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
   controls,
   baseTableWrapperClassname,
   allowDownload,
+  allowDelete,
   workspace,
 }: TableProps<T> &
   AdditionalTableProps<T> & {
@@ -271,7 +269,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
     onRowsSelected?: (rows: Array<T>) => void;
     dataKey: string;
     expandableConfig?: ExpandableConfig<T>;
-    expandableOptions?: UseExpandableTableOptions<T, any>;
+    expandableOptions?: UseExpandableTableOptions<T, T>;
     showExpandButtons?: boolean;
     tableStyle?: CSSProperties | undefined;
     dataType: TExtendedEntitiesTypeDict;
@@ -279,6 +277,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
     workspace?: WorkspaceContext;
     baseTableWrapperClassname?: ComponentProps<'div'>['className'];
     allowDownload?: boolean;
+    allowDelete?: boolean;
   }) {
   const { rowSelection, selectedRows, clearSelectedRows } = useRowSelection({
     dataKey,
@@ -318,6 +317,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
         dataType={dataType}
         workspace={workspace}
         allowDownload={allowDownload}
+        allowDelete={allowDelete}
       >
         {controls}
       </TableControls>

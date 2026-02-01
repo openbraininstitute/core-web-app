@@ -66,8 +66,9 @@ type Props = {
   mainTableProps?: Partial<ComponentProps<typeof MainTable>>;
   miniViewProps?: Partial<ComponentProps<typeof MiniDetailView>>;
   allowDownload?: boolean;
+  allowDelete?: boolean;
   requireBrainRegionDropdown?: boolean;
-  extraQueryParams?: Record<string, any>;
+  extraQueryParams?: Record<string, unknown>;
   left?: ReactNode;
 };
 
@@ -83,13 +84,14 @@ export function BrowseEntityScope({
   mainTableProps,
   miniViewProps,
   allowDownload,
+  allowDelete,
   requireBrainRegionDropdown,
   extraQueryParams,
   left,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const { mdv, setMdv } = useMiniDetailView();
-  const { scope } = useScope({ defaultScope, clearOnDefault: false });
+  const { scope = defaultScope ?? '' } = useScope({ defaultScope, clearOnDefault: false });
 
   const dataKey = compact([virtualLabId, projectId, section, dataType, scope, id]).join('/');
   const entity = getEntityByExtendedType({ type: dataType });
@@ -128,7 +130,7 @@ export function BrowseEntityScope({
       getRowKey: (record: EntityCoreIdentifiableNamed) => record.id,
       getFetchId: (record: EntityCoreIdentifiableNamed) => record.id,
       fetcher: (record: EntityCoreIdentifiable) =>
-        entity.api.expandRow?.(record as any, {
+        entity.api.expandRow?.(record as EntityCoreIdentifiableNamed, {
           virtualLabId,
           projectId,
         }),
@@ -153,7 +155,7 @@ export function BrowseEntityScope({
   const { data, error, isFetching } = useQueryExtendedEntityType({
     context: {
       key: dataKey,
-      workspaceScope: scope!,
+      workspaceScope: scope,
       extendedEntityType: dataType as TExtendedEntitiesTypeDict,
     },
     workspace: { virtualLabId, projectId },
@@ -162,7 +164,7 @@ export function BrowseEntityScope({
       const filters = {
         ...queryParameters,
         ...extraQueryParams,
-        ...getWorkspaceScopeFilters(scope!, { virtualLabId, projectId }),
+        ...getWorkspaceScopeFilters(scope, { virtualLabId, projectId }),
       };
       return entity?.api?.query.list?.({
         withFacets: true,
@@ -253,10 +255,11 @@ export function BrowseEntityScope({
           <MainTable
             showLoadingState
             allowDownload={allowDownload}
+            allowDelete={allowDelete}
             requireBrainRegionDropdown={requireBrainRegionDropdown}
             sticky={{ offsetHeader: 75.5 }}
             isLoading={isFetching}
-            dataScope={scope!}
+            dataScope={scope}
             section={section}
             dataSource={dataSource ?? []}
             dataType={dataType}

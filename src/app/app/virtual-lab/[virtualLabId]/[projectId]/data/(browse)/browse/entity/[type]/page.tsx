@@ -41,7 +41,6 @@ export default async function Page({
   { scope: TWorkspaceScope | null }
 >) {
   const { scope } = await searchParams;
-
   const { type } = await params;
 
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
@@ -57,6 +56,10 @@ export default async function Page({
         ),
       },
       () => {
+        const isCellMorphology = dataType === ExtendedEntitiesTypeDict.CellMorphology;
+        const isProjectScope = scope === WorkspaceScope.Project;
+        const allowDelete = isCellMorphology && isProjectScope;
+
         return (
           <BrowseEntityScope
             section={WorkspaceSection.Data}
@@ -65,6 +68,7 @@ export default async function Page({
               selectionType: 'checkbox',
             }}
             allowDownload
+            allowDelete={allowDelete}
           />
         );
       }
