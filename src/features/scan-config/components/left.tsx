@@ -9,6 +9,7 @@ import {
   isType,
   type TabType,
 } from '@/features/scan-config/types';
+import { useAIConfig } from '@/services/ai-agent';
 import type { Config } from './components';
 import GenerateConfigButton from './generate-config-button';
 import { useValidateSchema } from './hooks';
@@ -36,6 +37,7 @@ export default function Left({
   setNewKey,
   isEditingKey,
   setIsEditingKey,
+  handleAcceptAIChanges,
 }: {
   schema: ConfigSchema;
   atomsMap: AtomsMap;
@@ -59,8 +61,10 @@ export default function Left({
   setNewKey: (k: string) => void;
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
+  handleAcceptAIChanges: () => void;
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
+  const { aiConfig, setAiConfig } = useAIConfig();
 
   return (
     <div className={styles.scrollable}>
@@ -77,7 +81,6 @@ export default function Left({
                   )
                   .sort(([_, a], [__, b]) => {
                     if (isType(a) || isType(b)) return 0;
-
                     return a.group_order - b.group_order;
                   })
                   .map(([k, rootElementSchema]) => {
@@ -113,7 +116,26 @@ export default function Left({
         })}
       </div>
 
-      {!readOnly && (
+      {!!aiConfig && !campaignId && (
+        <div className="flex w-[95%] min-h-[50px] gap-2">
+          <button
+            type="button"
+            className="min-h-[50px] text-lg drop-shadow border-red-500 border-1 rounded-full p-2 grow text-red-500"
+            onClick={() => setAiConfig(null)}
+          >
+            Reject changes
+          </button>
+          <button
+            type="button"
+            className="min-h-[50px] text-lg bg-green-600 text-white p-2 rounded-full grow "
+            onClick={handleAcceptAIChanges}
+          >
+            Accept changes
+          </button>
+        </div>
+      )}
+
+      {!readOnly && (!aiConfig || (aiConfig && campaignId)) && (
         <GenerateConfigButton
           loading={loading}
           campaignId={campaignId}

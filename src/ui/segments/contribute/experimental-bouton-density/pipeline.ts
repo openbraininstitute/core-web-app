@@ -4,18 +4,18 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { compact, get } from 'es-toolkit/compat';
-import { MeasurementUnit } from '@/api/entitycore/types/shared/global';
 import { createMtypeClassification } from '@/api/entitycore/queries/annotations/mtype-classification';
-import { EXPERIMENTAL_BOUTON_DENSITY_PROGRESS_STEPS } from '@/ui/segments/contribute/experimental-bouton-density/config';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { createContribution } from '@/api/entitycore/queries/general/contribution';
-import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 import { createExperimentalBoutonDensity } from '@/api/entitycore/queries/experimental/bouton-density';
 import { measurementSchema } from '@/api/entitycore/queries/experimental/neuron-density';
+import { createContribution } from '@/api/entitycore/queries/general/contribution';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { MeasurementUnit } from '@/api/entitycore/types/shared/global';
+import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { EXPERIMENTAL_BOUTON_DENSITY_PROGRESS_STEPS } from '@/ui/segments/contribute/experimental-bouton-density/config';
 
 import type { TExperimentalBoutonDensityForm } from '@/ui/segments/contribute/experimental-bouton-density/schema';
-import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
+import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 import type {
   IMutationKeyConfig,
   IPipelineHookResult,

@@ -7,7 +7,7 @@ import {
   type ConfigValue,
 } from '@/features/scan-config/components/components';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
-import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
+import { type ConfigObject, isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import type {
   AtomsMap,
   Block,
@@ -15,6 +15,7 @@ import type {
   ConfigSchema,
   SchemaName,
 } from '@/features/scan-config/types';
+import { useAIConfig } from '@/services/ai-agent';
 
 type Props = {
   schemaName: SchemaName;
@@ -32,6 +33,7 @@ type Props = {
   model: ICircuit | IMEModel;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
+  blockAIConfig: ConfigObject | null;
 };
 
 export default function BlockDictionary({
@@ -49,28 +51,40 @@ export default function BlockDictionary({
   model,
   allEntries,
   onNewBlockClick,
+  blockAIConfig,
 }: Props) {
-  const selectedBlock = isPlainObject(config[selectedRootElement])
+  const { aiConfig, isChatReady } = useAIConfig();
+
+  const selectedBlockLocal = isPlainObject(config[selectedRootElement])
     ? config[selectedRootElement][selectedEntry]?.type
     : undefined;
+
+  const selectedBlockAI =
+    aiConfig && isPlainObject(aiConfig[selectedRootElement])
+      ? aiConfig[selectedRootElement][selectedEntry]?.type
+      : undefined;
+
+  const selectedBlock = selectedBlockLocal ?? selectedBlockAI;
 
   const selectedBlockSchema: Block | undefined =
     blockDictionarySchema.additionalProperties.oneOf.find(
       (o: Block) => o.properties?.type.const === selectedBlock
     );
 
-  if (selectedBlockSchema && !isAtom(atomsMap[selectedRootElement]))
+  if (selectedBlockSchema && !isAtom(atomsMap[selectedRootElement])) {
     return (
       <BlockUI
         schemaName={schemaName}
         key={`${selectedRootElement}_${selectedEntry}`}
-        disabled={!!campaignId || loading}
+        disabled={!!campaignId || loading || !!blockAIConfig || !isChatReady}
         config={config}
         blockSchema={selectedBlockSchema}
         stateAtom={atomsMap[selectedRootElement]?.[selectedEntry]}
         model={model}
+        blockAIConfig={blockAIConfig}
       />
     );
+  }
 
   return (
     <div className="flex flex-col items-center gap-5">

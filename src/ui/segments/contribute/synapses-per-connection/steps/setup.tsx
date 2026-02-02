@@ -3,21 +3,19 @@
 'use client';
 
 import { Form, Input } from 'antd';
-
-import { PreMTypeClassificationSelector } from '@/ui/segments/contribute/synapses-per-connection/steps/pre-mtype-selector';
-import { PostMTypeClassificationSelector } from '@/ui/segments/contribute/synapses-per-connection/steps/post-mtype-selector';
-import { ExperimentalSynapsesPerConnectionSchema } from '@/ui/segments/contribute/synapses-per-connection/schema';
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
-  renderLabel,
   createZodFieldValidator,
   RequiredFieldMarker,
+  renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
-
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import { ExperimentalSynapsesPerConnectionSchema } from '@/ui/segments/contribute/synapses-per-connection/schema';
+import { PostMTypeClassificationSelector } from '@/ui/segments/contribute/synapses-per-connection/steps/post-mtype-selector';
+import { PreMTypeClassificationSelector } from '@/ui/segments/contribute/synapses-per-connection/steps/pre-mtype-selector';
+import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 // Wrapper component to handle state updates properly
 function BrainRegionFormField({ name, label }: { name: string; label: string }) {

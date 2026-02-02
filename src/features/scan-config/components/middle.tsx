@@ -1,7 +1,8 @@
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { BlockUI, type Config } from '@/features/scan-config/components/components';
-import { isAtom } from '@/features/scan-config/components/utils';
+import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
+import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import type {
   AtomsMap,
   BlockDictionary as BlockDictionaryT,
@@ -9,6 +10,8 @@ import type {
   RootBlock,
   SchemaName,
 } from '@/features/scan-config/types';
+
+import { useAIConfig } from '@/services/ai-agent';
 import BlockDictionary from './block-dictionary';
 
 type MiddleProps = {
@@ -45,6 +48,17 @@ export default function Middle({
   onNewBlockClick,
   selectedSchema,
 }: MiddleProps) {
+  const { aiConfig, isChatReady } = useAIConfig();
+
+  const getBlockAIConfig = () => {
+    if (!aiConfig) return null;
+
+    const blockConf = aiConfig[selectedRootElement];
+    if (!isPlainObject(blockConf)) return {};
+    if (isRootBlock(schema, selectedRootElement)) return blockConf;
+    return blockConf[selectedEntry] ?? {};
+  };
+
   return (
     <>
       {selectedSchema.ui_element === 'block_dictionary' && (
@@ -63,17 +77,19 @@ export default function Middle({
           blockDictionarySchema={selectedSchema}
           selectedRootElement={selectedRootElement}
           onNewBlockClick={onNewBlockClick}
+          blockAIConfig={getBlockAIConfig()}
         />
       )}
 
       {selectedSchema.ui_element === 'block_single' && isAtom(atomsMap[selectedRootElement]) && (
         <BlockUI
           schemaName={schemaName}
-          disabled={!!campaignId || loading}
+          disabled={!!campaignId || loading || !!aiConfig || !isChatReady}
           config={config}
           blockSchema={selectedSchema}
           stateAtom={atomsMap[selectedRootElement]}
           model={model}
+          blockAIConfig={getBlockAIConfig()}
         />
       )}
     </>

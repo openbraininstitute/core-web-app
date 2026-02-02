@@ -1,9 +1,8 @@
 // schema.ts
 
 import z from 'zod';
-
-import { BaseSetupSchema, ContributionArraySchema } from '@/ui/segments/contribute/shared';
 import { MeasurementUnit } from '@/api/entitycore/types/shared/global';
+import { BaseSetupSchema, ContributionArraySchema } from '@/ui/segments/contribute/shared';
 
 const measurementSchema = z.object({
   name: z.string().optional(),

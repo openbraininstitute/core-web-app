@@ -1,4 +1,4 @@
-import type { TEntityTypeDict } from "@/api/entitycore/types/entity-type";
+import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 
 export type TimestampsFilter = {
   creation_date__lte: Date | null;
@@ -12,9 +12,9 @@ export type BrainLocationFilter = {
 };
 
 export const BrainRegionDirection = {
-  ASCENDANTS: "ascendants",
-  DESCENDANTS: "descendants",
-  ASCENDANTS_AND_DESCENDANTS: "ascendants_and_descendants",
+  ASCENDANTS: 'ascendants',
+  DESCENDANTS: 'descendants',
+  ASCENDANTS_AND_DESCENDANTS: 'ascendants_and_descendants',
 } as const;
 export type TBrainRegionDirection =
   (typeof BrainRegionDirection)[keyof typeof BrainRegionDirection];

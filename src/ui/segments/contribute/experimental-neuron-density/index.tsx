@@ -1,26 +1,25 @@
 'use client';
 
-import { useExperimentalNeuronDensityPipeline } from '@/ui/segments/contribute/experimental-neuron-density/pipeline';
-import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
-  EXPERIMENTAL_NEURON_DENSITY_PROGRESS_STEPS,
   createExperimentalNeuronDensityConfig,
+  EXPERIMENTAL_NEURON_DENSITY_PROGRESS_STEPS,
 } from '@/ui/segments/contribute/experimental-neuron-density/config';
+import { useExperimentalNeuronDensityPipeline } from '@/ui/segments/contribute/experimental-neuron-density/pipeline';
+import type { TExperimentalNeuronDensityForm } from '@/ui/segments/contribute/experimental-neuron-density/schema';
 import {
   Contribution,
-  Measurements,
-  Subject,
-  License,
-  Setup,
   ETypeClassification,
+  License,
+  Measurements,
   MTypeClassification,
+  Setup,
+  Subject,
 } from '@/ui/segments/contribute/experimental-neuron-density/steps';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-
-import type { TExperimentalNeuronDensityForm } from '@/ui/segments/contribute/experimental-neuron-density/schema';
+import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
 import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
+import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 const EXPERIMENTAL_NEURON_DENSITY_STEP_CONFIG: Array<
   IContributionStep<TExperimentalNeuronDensityForm>

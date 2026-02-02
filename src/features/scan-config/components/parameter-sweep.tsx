@@ -1,6 +1,6 @@
 import { CloseOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { InputNumber } from 'antd';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 export default function ParameterSwep({
   value,
@@ -20,9 +20,15 @@ export default function ParameterSwep({
   const [mode, setMode] = useState<'single' | 'multiple'>(
     Array.isArray(value) ? 'multiple' : 'single'
   );
-
   const [singleValue, setSingleValue] = useState(Array.isArray(value) ? null : value);
   const [values, setValues] = useState(Array.isArray(value) ? value : [value]);
+
+  // When the AI agent updates the value we need to change the mode
+  useEffect(() => {
+    setMode(Array.isArray(value) ? 'multiple' : 'single');
+    setSingleValue(Array.isArray(value) ? null : value);
+    setValues(Array.isArray(value) ? value : [value]);
+  }, [value]);
 
   if (mode === 'single' && !Array.isArray(value)) {
     return (
