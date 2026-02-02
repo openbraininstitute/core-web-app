@@ -425,7 +425,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isSortable: false,
   },
   [EntityCoreFields.CreatedBy]: {
-    title: 'Created by',
+    title: 'Registered by',
     filter: CoreFieldFilterTypeEnum.CheckList,
     render: (r) => {
       if ('created_by' in r) return renderEmptyOrValue(r.created_by?.pref_label);
