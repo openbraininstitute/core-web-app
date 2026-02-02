@@ -99,7 +99,7 @@ export const SingleNeuronSynaptomeConfigurationSchema = SingleNeuronSynaptomeBas
     if (synapse.target !== 'soma' && isNil(synapse.formula)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'formula should be provided when target is different then "soma"',
+        message: 'formula should be provided when target is different than "soma"',
         path: ['formula'],
       });
     }
