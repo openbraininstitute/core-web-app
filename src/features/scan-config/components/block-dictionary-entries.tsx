@@ -153,9 +153,42 @@ export default function BlockDictionaryEntries({
         }}
       >
         <div className="w-full text-left"> {entry}</div>
+        <span className="text-slate-500 text-[10px] animate-pulse">✦</span>
       </button>
     );
   }
+
+  const aiAddedEntries = aiConfig
+    ? Object.entries(aiConfig[rootElement])
+        .filter(([block_key, _]) => {
+          if (!isPlainObject(config[rootElement])) return false;
+          const currentBlockConfig = config[rootElement][block_key];
+          return !currentBlockConfig;
+        })
+        .map(([entry]) => renderBlockTab(entry))
+    : [];
+
+  const aiDeletedEntries = aiConfig
+    ? Object.entries(config[rootElement])
+        .filter(([block_key, _]) => {
+          if (!aiConfig) return false;
+          if (!isPlainObject(aiConfig[rootElement])) return false;
+          const blockAIConfig = aiConfig[rootElement][block_key];
+          return !blockAIConfig;
+        })
+        .map(([entry]) => renderBlockTab(entry))
+    : [];
+
+  const aiEditedEntries = aiConfig
+    ? Object.entries(config[rootElement])
+        .filter(([block_key, block_schema]) => {
+          if (!aiConfig) return false;
+          if (!isPlainObject(aiConfig[rootElement])) return false;
+          const blockAIConfig = aiConfig[rootElement][block_key];
+          return !!blockAIConfig && !isEqual(block_schema, blockAIConfig);
+        })
+        .map(([entry]) => renderBlockTab(entry))
+    : [];
 
   return (
     <>
@@ -334,43 +367,28 @@ export default function BlockDictionaryEntries({
 
       {!!aiConfig && !campaignId && (
         <div className="border-neutral-200 border-1 rounded-lg w-[90%] px-2 pb-4 pt-2">
-          {/* Added entries */}
-          <div className="mb-1 text-sm text-sky-400 flex items-center gap-1">
-            <PlusOutlined /> Added
-          </div>
-          {Object.entries(aiConfig[rootElement])
-            .filter(([block_key, _]) => {
-              if (!isPlainObject(config[rootElement])) return false;
-              const currentBlockConfig = config[rootElement][block_key];
-              return !currentBlockConfig;
-            })
-            .map(([entry]) => renderBlockTab(entry))}
+          {aiAddedEntries.length > 0 && (
+            <div className="mb-1 text-sm text-sky-400 flex items-center gap-1">
+              <PlusOutlined /> Added
+            </div>
+          )}
 
-          {/* Deleted entries */}
-          <div className="mt-2 mb-1 text-sm text-red-500 flex items-center gap-1">
-            <CloseOutlined /> Deleted
-          </div>
-          {Object.entries(config[rootElement])
-            .filter(([block_key, _]) => {
-              if (!aiConfig) return false;
-              if (!isPlainObject(aiConfig[rootElement])) return false;
-              const blockAIConfig = aiConfig[rootElement][block_key];
-              return !blockAIConfig;
-            })
-            .map(([entry]) => renderBlockTab(entry))}
+          {aiAddedEntries}
 
-          {/* Edited entries */}
-          <div className="mt-2 mb-1 text-sm text-amber-500 flex items-center gap-1">
-            <EditOutlined /> Edited
-          </div>
-          {Object.entries(config[rootElement])
-            .filter(([block_key, block_schema]) => {
-              if (!aiConfig) return false;
-              if (!isPlainObject(aiConfig[rootElement])) return false;
-              const blockAIConfig = aiConfig[rootElement][block_key];
-              return !!blockAIConfig && !isEqual(block_schema, blockAIConfig);
-            })
-            .map(([entry]) => renderBlockTab(entry))}
+          {aiDeletedEntries.length > 0 && (
+            <div className="mt-2 mb-1 text-sm text-red-500 flex items-center gap-1">
+              <CloseOutlined /> Deleted
+            </div>
+          )}
+
+          {aiDeletedEntries}
+
+          {aiEditedEntries.length > 0 && (
+            <div className="mt-2 mb-1 text-sm text-amber-500 flex items-center gap-1">
+              <EditOutlined /> Edited
+            </div>
+          )}
+          {aiEditedEntries}
         </div>
       )}
       {!campaignId && !loading && !readOnly && isChatReady && !aiConfig && (
