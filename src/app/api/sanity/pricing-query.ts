@@ -15,12 +15,18 @@ const pricingQuery = `*[_type == "planV2"][] {
   monthly_subscriptions[] {
     name,
     price,
-    currency
+    currency,
+    has_special_label,
+    special_label,
+    features
   },
   yearly_subscriptions[] {
     name,
     price,
-    currency
+    currency,
+    has_special_label,
+    special_label,
+    features
   },
   planOrder,
 }`;
