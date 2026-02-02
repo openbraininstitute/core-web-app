@@ -3,7 +3,6 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { BlockUI, type Config } from '@/features/scan-config/components/components';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
-
 import type {
   AtomsMap,
   BlockDictionary as BlockDictionaryT,
@@ -11,8 +10,8 @@ import type {
   RootBlock,
   SchemaName,
 } from '@/features/scan-config/types';
-import { useAIConfig } from '@/services/ai-agent';
 
+import { useAIConfig } from '@/services/ai-agent';
 import BlockDictionary from './block-dictionary';
 
 type MiddleProps = {

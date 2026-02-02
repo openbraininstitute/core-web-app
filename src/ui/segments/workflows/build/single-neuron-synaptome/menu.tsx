@@ -61,14 +61,7 @@ export function Menu({ sessionId }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const { push: navigate } = useRouter();
   const step = searchParams.get('step');
-  const setVisibleSynapses = useVisibleSynapsesSetter();
-  useEffect(() => {
-    if (step === BuildStep.Info) {
-      // Reset the synapses in the info panel.
-      // Go to "Synaptic Inputs" to see the synapses.
-      setVisibleSynapses([]);
-    }
-  }, [step, setVisibleSynapses]);
+
   const { sessionValue, setSessionValue } = useBuildSingleNeuronSynaptomeSessionState({
     sessionId,
   });
