@@ -2,7 +2,6 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { serviceAiAgentUrl } from '../api';
-import { isType } from '@/util/type-guards';
 
 export interface AiAgentRateLimitEndpoint {
   limit: number;
@@ -62,8 +61,7 @@ export function useAiAgentRateLimit(accessToken: string | null) {
       return data;
     },
     enabled: !!accessToken,
-    staleTime: 30000, // 30 seconds
-    refetchInterval: 60000, // Refetch every minute
-    retry: false, // Don't retry on failure for easier debugging
+    staleTime: Infinity, // Only fetch once on mount
+    retry: false,
   });
 }
