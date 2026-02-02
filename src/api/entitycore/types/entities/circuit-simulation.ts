@@ -7,8 +7,8 @@ import type {
 } from '@/api/entitycore/types/shared/global';
 import type { ICircuitSimulationBase } from '@/api/entitycore/types/shared/neuron-simulation';
 import type {
-  BrainRegionFilter,
   ContributionFilter,
+  IDFilter,
   IlikeSearchFilter,
   OwnershipFilter,
   PaginationFilter,
@@ -31,7 +31,7 @@ interface ICircuitSimulationFilterBase {
 export interface ICircuitSimulationFilter
   extends ICircuitSimulationFilterBase,
     ContributionFilter,
-    BrainRegionFilter, // Entitycore API doesn't support brain_region_id filtering, to be removed
+    IDFilter,
     SharedFilter,
     PaginationFilter,
     OwnershipFilter,

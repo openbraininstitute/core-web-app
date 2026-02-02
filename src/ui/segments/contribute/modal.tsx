@@ -1,24 +1,25 @@
 import { CloseOutlined } from '@ant-design/icons';
 import { isNil } from 'es-toolkit/compat';
-import { match, P } from 'ts-pattern';
 import { useState } from 'react';
-
-import { ExperimentalNeuronDensity } from '@/ui/segments/contribute/experimental-neuron-density';
-import { ElectricalCellRecording } from '@/ui/segments/contribute/electrical-cell-recording';
+import { match, P } from 'ts-pattern';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { CellMorphology } from '@/ui/segments/contribute/cell-morphology';
 import { EntityCoreConfiguration } from '@/entity-configuration/domain';
-import { SelectPopover } from '@/ui/molecules/select-popover';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { Button } from '@/ui/molecules/button';
 import { Modal } from '@/ui/molecules/modal';
+import { SelectPopover } from '@/ui/molecules/select-popover';
+import { CellMorphology } from '@/ui/segments/contribute/cell-morphology';
+import { ElectricalCellRecording } from '@/ui/segments/contribute/electrical-cell-recording';
+import { EMCellMesh } from '@/ui/segments/contribute/em-cell-mesh';
 import {
   makeSelectContributionEntityClickEvent,
   useContributionEntityClickEvent,
 } from '@/ui/segments/contribute/event';
+import { ExperimentalBoutonDensity } from '@/ui/segments/contribute/experimental-bouton-density';
+import { ExperimentalNeuronDensity } from '@/ui/segments/contribute/experimental-neuron-density';
+import { ExperimentalSynapsesPerConnection } from '@/ui/segments/contribute/synapses-per-connection';
 import { cn } from '@/utils/css-class';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 interface IExtendedEntitiesSelectorProps {
   onSelectEntityType: (type: TExtendedEntitiesTypeDict) => void;
@@ -84,6 +85,13 @@ function RenderEntityTypeContent({ type, sessionId: sId }: IRenderEntityTypeCont
     .with({ type: ExtendedEntitiesTypeDict.ExperimentalNeuronDensity }, () => (
       <ExperimentalNeuronDensity sessionId={sId} />
     ))
+    .with({ type: ExtendedEntitiesTypeDict.ExperimentalBoutonDensity }, () => (
+      <ExperimentalBoutonDensity sessionId={sId} />
+    ))
+    .with({ type: ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection }, () => (
+      <ExperimentalSynapsesPerConnection sessionId={sId} />
+    ))
+    .with({ type: ExtendedEntitiesTypeDict.EMCellMesh }, () => <EMCellMesh sessionId={sId} />)
     .otherwise(() => null);
 }
 

@@ -8,6 +8,9 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
+export const circuitScaleFilter = {
+  scale__in: [CircuitScaleDictionary.Microcircuit],
+};
 export const Microcircuit: EntityCoreTypeConfig<ICircuit> = {
   group: EntityTypeGroup.Models,
   title: 'Microcircuit',
@@ -20,11 +23,17 @@ export const Microcircuit: EntityCoreTypeConfig<ICircuit> = {
       ilikeSearchEnabled: true,
     },
     query: {
-      list: (...params) =>
-        getCircuits({
+      list: (...params) => {
+        return getCircuits({
           ...params,
-          filters: { ...params[0].filters, scale__in: [CircuitScaleDictionary.Microcircuit] },
-        }),
+          context: params[0].context,
+          withFacets: params[0].withFacets,
+          filters: {
+            ...circuitScaleFilter,
+            ...params[0].filters,
+          },
+        });
+      },
       one: getCircuit,
     },
   },

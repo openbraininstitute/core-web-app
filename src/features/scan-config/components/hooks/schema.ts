@@ -29,7 +29,7 @@ export function useObioneJsonSchema(schemaName: SchemaName) {
 }
 
 export function isRootBlock(schema: ConfigSchema, key: string) {
-  return schema.properties?.[key] && schema.properties[key].ui_element === 'root_block';
+  return schema.properties?.[key] && schema.properties[key].ui_element === 'block_single';
 }
 
 async function fetchSchema({ schemaName }: { schemaName: SchemaName }) {
@@ -83,7 +83,7 @@ export function useAtomsMap({
     } else {
       Object.entries(schema.properties).forEach(([k, v]) => {
         if (isType(v)) return;
-        if (v.ui_element === 'root_block') {
+        if (v.ui_element === 'block_single') {
           const initial: Record<string, ConfigValue> = {};
 
           Object.entries(v.properties).forEach(([subkey, subValue]) => {

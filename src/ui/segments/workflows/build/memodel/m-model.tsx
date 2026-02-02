@@ -5,12 +5,11 @@ import { Image } from 'antd';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 
 import { useRouter } from 'next/navigation';
-import { label, useBuildMeModelSessionState } from '@/ui/segments/workflows/build/memodel/helpers';
+import { EntityTypeDict, type ICellMorphology } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import { EntityCoreResource } from '@/api/entitycore/types/shared/global';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import { config } from '@/config';
+import { WorkspaceSection } from '@/constants';
 import {
   renderArray,
   renderDate,
@@ -18,11 +17,12 @@ import {
   renderLicense,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
+import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
+import { label, useBuildMeModelSessionState } from '@/ui/segments/workflows/build/memodel/helpers';
+import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-selector';
 import { cn } from '@/utils/css-class';
-import { config } from '@/config';
-
-import { EntityTypeDict, type ICellMorphology } from '@/api/entitycore/types';
 
 type Props = {
   sessionId: string;
@@ -40,12 +40,12 @@ export function MModel({ sessionId }: Props) {
   return (
     <BrowseEntityScope
       requireBrainRegion
+      requireBrainRegionDropdown
       id={sessionId}
       section={WorkspaceSection.BuildWorkflow}
       requireMiniDetailView={false}
       classNames={{ container: 'max-h-full' }}
       dataType={ExtendedEntitiesTypeDict.CellMorphology}
-      scope={WorkspaceScope.BuildMeModelM}
       miniViewProps={{ section: WorkspaceSection.BuildWorkflow }}
       allowDownload={false}
       mainTableProps={{
@@ -63,6 +63,7 @@ export function MModel({ sessionId }: Props) {
           });
         },
       }}
+      left={<WorkflowScopeTabs className="max-w-max" />}
     />
   );
 }
@@ -78,9 +79,16 @@ export function MModelMiniDetail({ sessionId }: { sessionId: string }) {
   const data = sessionValue.mmodel;
 
   const details = [
-    { label: 'Name', value: renderEmptyOrValue(data?.name), className: 'font-bold' },
+    {
+      label: 'Name',
+      value: renderEmptyOrValue(data?.name),
+      className: 'font-bold',
+    },
     { label: 'Description', value: renderEmptyOrValue(data?.description) },
-    { label: 'Brain Region', value: renderEmptyOrValue(data?.brain_region.name) },
+    {
+      label: 'Brain Region',
+      value: renderEmptyOrValue(data?.brain_region.name),
+    },
     { label: 'Species', value: renderEmptyOrValue(data?.subject.species.name) },
     {
       label: 'M-Type',
@@ -91,11 +99,11 @@ export function MModelMiniDetail({ sessionId }: { sessionId: string }) {
       value: renderEmptyOrValue(renderLicense({ license: data?.license })),
     },
     {
-      label: 'Created By',
+      label: 'Registered By',
       value: renderEmptyOrValue(data?.created_by?.pref_label),
     },
     {
-      label: 'Created At',
+      label: 'Registered At',
       value: renderDate(data?.creation_date),
     },
   ];
@@ -103,7 +111,7 @@ export function MModelMiniDetail({ sessionId }: { sessionId: string }) {
   const content = details.map(({ value, label: text, className }) => {
     return (
       <div key={`item-${label}`} className="flex w-full flex-col items-start justify-start">
-        {label(text!, 'secondary')}
+        {label(text, 'secondary')}
         <div className={cn('text-primary-9 font-light', className)}>{value}</div>
       </div>
     );

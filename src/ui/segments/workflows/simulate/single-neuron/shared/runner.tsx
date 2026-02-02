@@ -28,7 +28,6 @@ import type {
   ISingleNeuronSimulation,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
-import { SingleNeuronSimulationStatus } from '@/api/entitycore/types/shared/neuron-simulation';
 import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
 import { tryCatch } from '@/api/utils';
 import { config } from '@/config';
@@ -115,7 +114,6 @@ export const createSingleNeuronSimulationAtom = atom(
     const basePayload = {
       name,
       description,
-      status: SingleNeuronSimulationStatus.success,
       seed: experimentalSetupConfiguration.seed,
       injection_location: [singleNeuronSimulationConfig.current_injection.inject_to],
       recording_location: singleNeuronSimulationConfig.record_from.map(
@@ -295,21 +293,48 @@ export const launchSimulationAtom = atom<
           status: SimulationStatus.ERROR,
           description: errorMessage,
         });
+
         notify.error({
           message: `Simulation ${overviewConfiguration.name}`,
-          description: errorMessage,
+          description: isLowFundsError ? (
+            <div className="flex flex-col gap-2  items-start">
+              <p>{errorMessage}</p>
+              {isProjectAdmin ? (
+                <Link
+                  href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/credits`}
+                  className="text-primary-8 border-neutral-300 rounded-full border px-4 py-1.5 no-underline! hover:underline"
+                  onClick={() => notify.destroy(`simulation-failed-${sessionId}`)}
+                >
+                  Transfer credits
+                </Link>
+              ) : (
+                <Link
+                  href={`${config.ROOT_ROUTE}/${virtualLabId}/overview`}
+                  className="text-primary-8 border-neutral-300 rounded-full border px-4 py-1.5 no-underline! hover:underline"
+                  onClick={() => notify.destroy(`simulation-failed-${sessionId}`)}
+                >
+                  Contact lab admin
+                </Link>
+              )}
+            </div>
+          ) : (
+            errorMessage
+          ),
           placement: 'topRight',
           key: `simulation-failed-${sessionId}`,
+          duration: 1000,
         });
         return;
       }
 
       if (!response?.ok) {
         let errorMessage = messages.DefaultSimulationError;
+        let isLowFundsError = false;
 
         try {
           const errResponseObj = await response?.json();
           if (errResponseObj.error_code === LOW_FUNDS_ERROR_CODE) {
+            isLowFundsError = true;
             errorMessage = isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin;
           }
         } catch {
@@ -320,14 +345,41 @@ export const launchSimulationAtom = atom<
           status: SimulationStatus.ERROR,
           description: errorMessage,
         });
+
         notify.error({
           message: `Simulation ${overviewConfiguration.name}`,
-          description: errorMessage,
+          description: isLowFundsError ? (
+            <div className="flex flex-col gap-2 items-start">
+              <p>{errorMessage}</p>
+              {isProjectAdmin ? (
+                <Link
+                  href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/credits`}
+                  className="text-primary-8 border-neutral-300 rounded-full border px-4 py-1.5 no-underline! hover:underline"
+                  onClick={() => notify.destroy(`simulation-failed-${sessionId}`)}
+                >
+                  Transfer credits
+                </Link>
+              ) : (
+                <Link
+                  href={`${config.ROOT_ROUTE}/${virtualLabId}/overview`}
+                  className="text-primary-8 border-neutral-300 rounded-full border px-4 py-1.5 no-underline! hover:underline"
+                  onClick={() => notify.destroy(`simulation-failed-${sessionId}`)}
+                >
+                  Contact lab admin
+                </Link>
+              )}
+            </div>
+          ) : (
+            errorMessage
+          ),
           placement: 'topRight',
           key: `simulation-failed-${sessionId}`,
+          duration: isLowFundsError ? 0 : undefined,
         });
 
-        delay(() => set(simulationStatusAtom, RESET), 1000);
+        if (!isLowFundsError) {
+          delay(() => set(simulationStatusAtom, RESET), 1000);
+        }
         return;
       }
 

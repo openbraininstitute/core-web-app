@@ -82,16 +82,18 @@ export function EntityLinkCount() {
 
   const content = match(activeTab)
     .with(ExploreDataTypeTabs.Experimental, () =>
-      map(experimental, (value) => (
-        <BrowseLink
-          enabled
-          key={`link-${value.title}/${value.type}`}
-          scope={scope}
-          extendedType={value.extendedType}
-          currentBrainRegionId={selectedBrainRegion?.id}
-          defaultBrainRegionId={brainRegionHierarchy?.root.id}
-        />
-      ))
+      map(experimental, (value) => {
+        return (
+          <BrowseLink
+            enabled
+            key={`link-${value.title}/${value.type}`}
+            scope={scope}
+            extendedType={value.extendedType}
+            currentBrainRegionId={selectedBrainRegion?.id}
+            defaultBrainRegionId={brainRegionHierarchy?.root.id}
+          />
+        );
+      })
     )
     .with(ExploreDataTypeTabs.Models, () =>
       map(models, (value) => {

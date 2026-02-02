@@ -56,7 +56,7 @@ export type WorkflowActivityProps = {
   onShouldOnlyRenderScrollableSelector: (shouldRenderOnlyScrollableSelector: boolean) => void;
 };
 
-export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement | null> }) {
+export function WorkflowActivity() {
   const { push: navigate } = useRouter();
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
@@ -118,7 +118,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
       onHeaderCell: () => ({
         id: 'activity-table-name-cell-selector',
       }),
-      render: (text, record) => <span className="text-primary-9">{record.name}</span>,
+      render: (_, record) => <span className="text-primary-9">{record.name}</span>,
     },
     {
       title: 'Category',
@@ -323,7 +323,6 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
           </Card>
         ) : (
           <div
-            ref={ref}
             className="h-full w-full"
             id="workflow-activities-full-table"
             data-testid="workflow-activities-full-table"

@@ -14,6 +14,7 @@ import {
   MTypeClassification,
   Contribution,
   AssetUpload,
+  Protocol,
   Setup,
   Subject,
   License,
@@ -34,6 +35,12 @@ const CELL_MORPHOLOGY_STEP_CONFIG: Array<IContributionStep<TCellMorphologyForm>>
     label: 'Setup',
     schemaFieldKey: 'setup',
     component: Setup,
+  },
+  {
+    key: 'protocol',
+    label: 'Protocol',
+    schemaFieldKey: 'cell_morphology_protocol_id',
+    component: Protocol,
   },
   {
     key: 'contribution',

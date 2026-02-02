@@ -3,12 +3,12 @@ import { useQueries } from '@tanstack/react-query';
 import { useState } from 'react';
 import { match, P } from 'ts-pattern';
 
-import { VlmUserGroupsResponse } from '@/api/virtual-lab-svc/queries/types';
+import type { VlmUserGroupsResponse } from '@/api/virtual-lab-svc/queries/types';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { CoinsIcon } from '@/components/icons/buttons';
 import { makeRoles } from '@/hooks/use-user-role';
 import { getProjectAccountBalance } from '@/services/virtual-lab/projects';
-import { ProjectBalance } from '@/types/accounting';
+import type { ProjectBalance } from '@/types/accounting';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge } from '@/ui/molecules/badge';
@@ -89,8 +89,8 @@ export function Wallet() {
           className="text-primary-8 max-w-2xs bg-white text-base shadow-lg"
           arrowClassName="bg-white"
         >
-          Can&apos;t find your credits? Check your virtual lab manager in the upper-left of your
-          screen. If you&apos;re not the lab owner, please contact the virtual lab administrator.
+          <div className="font-bold">Project Credits</div>
+          <p className="hyphens-auto">Credits transferred to this project from the virtual lab.</p>
         </TooltipContent>
       </Tooltip>
       <CreditsTransferModal open={showCreditsManagement} onClose={handleTransferCredits} />

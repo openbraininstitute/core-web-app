@@ -1,4 +1,5 @@
 import z from 'zod';
+
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 import type { MeTypeFilter } from '@/api/entitycore/types/entities/single-neuron-simulation';
 import type { SingleNeuronSynaptomeBase } from '@/api/entitycore/types/entities/single-neuron-synaptome';
@@ -9,13 +10,10 @@ import type {
   EntityCoreType,
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
-import {
-  type ISingleNeuronSimulationBase,
-  type SimulationStatusFilter,
-  SingleNeuronSimulationStatus,
-} from '@/api/entitycore/types/shared/neuron-simulation';
+import type { ISingleNeuronSimulationBase } from '@/api/entitycore/types/shared/neuron-simulation';
 import type {
   BrainRegionFilter,
+  BrainRegionHierarchyFilter,
   ContributionFilter,
   CreatorFilter,
   EtypeFilter,
@@ -55,10 +53,10 @@ export interface ISingleNeuronSynaptomeSimulationFilter
   extends IDFilter,
     ContributionFilter,
     BrainRegionFilter,
+    BrainRegionHierarchyFilter,
     CreatorFilter,
     SharedFilter,
     TimestampsFilter,
-    SimulationStatusFilter,
     MeTypeFilter,
     MtypeFilter,
     EtypeFilter,
@@ -70,7 +68,6 @@ export interface ISingleNeuronSynaptomeSimulationFilter
 const CreateSingleNeuronSynaptomeSimulationSchema = z.object({
   name: z.string(),
   description: z.string(),
-  status: z.nativeEnum(SingleNeuronSimulationStatus),
   seed: z.number().int(),
   injection_location: z.array(z.string()),
   recording_location: z.array(z.string()),

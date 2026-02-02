@@ -30,6 +30,7 @@ const AllowedEntities = [
   ExtendedEntitiesTypeDict.SingleNeuronSimulation,
   ExtendedEntitiesTypeDict.IonChannelModel,
   ExtendedEntitiesTypeDict.MEModelWithSynapses,
+  ExtendedEntitiesTypeDict.EMCellMesh,
 ] as const;
 
 export default async function Page({
@@ -60,10 +61,10 @@ export default async function Page({
           <BrowseEntityScope
             section={WorkspaceSection.Data}
             dataType={dataType}
-            scope={scope ?? WorkspaceScope.Public}
             mainTableProps={{
               selectionType: 'checkbox',
             }}
+            allowDownload
           />
         );
       }

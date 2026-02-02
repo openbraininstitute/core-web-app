@@ -70,7 +70,7 @@ export function Search({ dataKey, dataType, className }: SearchProps) {
 
   return (
     <div
-      className={cn('flex items-center justify-start max-w-112.5', className, {
+      className={cn('flex items-center justify-start min-w-0 max-w-112.5', className, {
         'border border-gray-100 rounded-full shadow-sm': isSearchOpen,
       })}
     >

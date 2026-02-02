@@ -181,7 +181,9 @@ export function Menu({ sessionId }: { sessionId: string }) {
               {!sessionValue?.name && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <WarningFilled className="text-sm text-yellow-300" />
+                    <span>
+                      <WarningFilled className="text-sm text-yellow-300" />
+                    </span>
                   </TooltipTrigger>
                   <TooltipContent
                     avoidCollisions
@@ -191,10 +193,10 @@ export function Menu({ sessionId }: { sessionId: string }) {
                     className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
                     arrowClassName="bg-amber-100"
                   >
-                    <p className="w-full pb-0.5 break-words hyphens-auto">
+                    <p className="w-full pb-0.5 wrap-break-word hyphens-auto">
                       • The model name cannot be empty.
                     </p>
-                    <p className="w-full pb-0.5 break-words hyphens-auto">
+                    <p className="w-full pb-0.5 wrap-break-word hyphens-auto">
                       • Please enter a model name (minimum 1 character).
                     </p>
                   </TooltipContent>
@@ -218,15 +220,14 @@ export function Menu({ sessionId }: { sessionId: string }) {
           onClick={() => onStepChange(BuildStep.MModel)}
         >
           <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
-            <div className="flex-shrink-0 font-bold">M-model</div>
+            <div className="shrink-0 font-bold">M-model</div>
             {sessionValue?.mmodel ? (
               <Tooltip>
                 <TooltipTrigger>
                   <div className="text-accent-light flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
-                    <CheckCircleFilled className="flex-shrink-0 text-base" />
+                    <CheckCircleFilled className="shrink-0 text-base" />
                     <div
                       title={sessionValue.mmodel.name}
-                      aria-label={sessionValue.mmodel.name}
                       className="min-w-0 flex-1 truncate text-left"
                     >
                       {sessionValue?.mmodel.name}
@@ -258,15 +259,14 @@ export function Menu({ sessionId }: { sessionId: string }) {
           onClick={() => onStepChange(BuildStep.EModel)}
         >
           <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
-            <div className="flex-shrink-0 font-bold">E-model</div>
+            <div className="shrink-0 font-bold">E-model</div>
             {sessionValue?.emodel ? (
               <Tooltip>
                 <TooltipTrigger>
                   <div className="text-accent-light flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
-                    <CheckCircleFilled className="flex-shrink-0 text-base" />
+                    <CheckCircleFilled className="shrink-0 text-base" />
                     <div
                       title={sessionValue.emodel.name}
-                      aria-label={sessionValue.emodel.name}
                       className="min-w-0 flex-1 truncate text-left"
                     >
                       {sessionValue?.emodel.name}
@@ -302,7 +302,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
                 onClick={() => mutate.mutateAsync()}
                 disabled={disabled}
               >
-                <div className="flex-shrink-0 font-bold">Build model</div>
+                <div className="shrink-0 font-bold">Build model</div>
                 {mutate.isPending && <LoadingOutlined className="ml-2 text-white" />}
               </Button>
             </div>

@@ -44,7 +44,6 @@ export function WorkspaceScopeSelector({
     <PillTabs
       id="scope-selector"
       data-testid="scope-selector"
-      key={activeTab}
       value={activeTab}
       className={cn('w-full', className)}
       activationMode="manual"

@@ -1,9 +1,9 @@
-import type { IExperimentalDensity } from '@/api/entitycore/types/shared/density';
+import type { IExperimentalDensity } from "@/api/entitycore/types/shared/density";
 import type {
   EntityAuthorization,
   EntityCoreType,
   IMType,
-} from '@/api/entitycore/types/shared/global';
+} from "@/api/entitycore/types/shared/global";
 import type {
   BrainRegionFilter,
   ContributionFilter,
@@ -11,11 +11,14 @@ import type {
   MtypeFilter,
   PaginationFilter,
   SharedFilter,
+  BrainRegionHierarchyFilter,
   StainFilter,
   TimestampsFilter,
-} from '@/api/entitycore/types/shared/request';
+} from "@/api/entitycore/types/shared/request";
 
-export interface IExperimentalBoutonDensity extends IExperimentalDensity, EntityCoreType {
+export interface IExperimentalBoutonDensity
+  extends IExperimentalDensity,
+    EntityCoreType {
   mtypes: Array<IMType>;
 }
 
@@ -25,6 +28,7 @@ export type ExperimentalBoutonDensityFilter = Partial<
     PaginationFilter &
     ContributionFilter &
     BrainRegionFilter &
+    BrainRegionHierarchyFilter &
     StainFilter &
     MtypeFilter &
     EntityAuthorization &

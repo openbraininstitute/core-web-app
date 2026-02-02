@@ -1,10 +1,8 @@
-/* eslint-disable no-empty */
-
 import { getIonChannelRecording } from '@/api/entitycore/queries';
-import { IonChannelRecordingJsonMetadata } from '@/features/entity-download/types';
+import { EntityTypeDict } from '@/api/entitycore/types';
 import { ASSET_BASE_PATH } from '@/features/entity-download/constants';
 import { Metadata } from '@/features/entity-download/metadata';
-import { EntityTypeDict } from '@/api/entitycore/types';
+import type { IonChannelRecordingJsonMetadata } from '@/features/entity-download/types';
 import {
   createAssetFileEntry,
   createTemplateFileEntry,
@@ -12,7 +10,7 @@ import {
 } from '@/features/entity-download/utils';
 import type { WorkspaceContext } from '@/types/common';
 
-export async function* getIonChannellRecordingFiles(entityIds: string[], ctx?: WorkspaceContext) {
+export async function* getIonChannelRecordingFiles(entityIds: string[], ctx?: WorkspaceContext) {
   const metadata = new Metadata<IonChannelRecordingJsonMetadata>();
 
   try {

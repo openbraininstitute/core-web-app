@@ -9,7 +9,10 @@ import { RESET } from 'jotai/utils';
 import dynamic from 'next/dynamic';
 import { type ComponentProps, type ReactElement, type ReactNode, useEffect, useMemo } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
+import type {
+  EntityCoreIdentifiable,
+  EntityCoreIdentifiableNamed,
+} from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 
@@ -41,9 +44,9 @@ import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
-const MainTable = dynamic(() => import('@/ui/segments/data-table'), { ssr: false }) as (
-  props: MainTableProps<EntityCoreIdentifiableNamed>
-) => ReactElement | null;
+const MainTable = dynamic(() => import('@/ui/segments/data-table'), {
+  ssr: false,
+}) as (props: MainTableProps<EntityCoreIdentifiableNamed>) => ReactElement | null;
 
 type Props = {
   id?: string;
@@ -63,6 +66,7 @@ type Props = {
   mainTableProps?: Partial<ComponentProps<typeof MainTable>>;
   miniViewProps?: Partial<ComponentProps<typeof MiniDetailView>>;
   allowDownload?: boolean;
+  requireBrainRegionDropdown?: boolean;
   extraQueryParams?: Record<string, any>;
   left?: ReactNode;
 };
@@ -79,6 +83,7 @@ export function BrowseEntityScope({
   mainTableProps,
   miniViewProps,
   allowDownload,
+  requireBrainRegionDropdown,
   extraQueryParams,
   left,
 }: Props) {
@@ -122,8 +127,11 @@ export function BrowseEntityScope({
     return {
       getRowKey: (record: EntityCoreIdentifiableNamed) => record.id,
       getFetchId: (record: EntityCoreIdentifiableNamed) => record.id,
-      fetcher: (record: EntityCoreIdentifiableNamed) =>
-        entity.api.expandRow?.(record, { virtualLabId, projectId }),
+      fetcher: (record: EntityCoreIdentifiable) =>
+        entity.api.expandRow?.(record as any, {
+          virtualLabId,
+          projectId,
+        }),
       renderExpanded: (
         records: EntityCoreIdentifiableNamed[],
         originalRecord: EntityCoreIdentifiableNamed
@@ -165,10 +173,7 @@ export function BrowseEntityScope({
     requireBrainRegion,
     defaultBrainRegion,
     useKeepPreviousData: true,
-    extraQueryParams: {
-      ...extraQueryParams,
-      ...entity?.api.config.extraRequiredListFilters,
-    },
+    extraQueryParams,
     enabled: ({ queryKey }) => {
       const [{ queryParameters }] = queryKey;
       if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
@@ -231,6 +236,7 @@ export function BrowseEntityScope({
           <MainTable
             showLoadingState
             allowDownload={allowDownload}
+            requireBrainRegionDropdown={requireBrainRegionDropdown}
             sticky={{ offsetHeader: 75.5 }}
             isLoading={isFetching}
             dataScope={scope!}
