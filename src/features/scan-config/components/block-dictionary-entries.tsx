@@ -159,6 +159,7 @@ export default function BlockDictionaryEntries({
   return (
     <>
       {Object.entries(config[rootElement])
+        // We show only those that have no AI changes
         .filter(([block_key, block_schema]) => {
           if (!aiConfig) return true;
           if (!isPlainObject(aiConfig[rootElement])) return true;
@@ -332,15 +333,18 @@ export default function BlockDictionaryEntries({
 
       {!!aiConfig && !campaignId && (
         <div className="border-red-500 border-2">
-          {Object.entries(config[rootElement])
-            .filter(([block_key, block_schema]) => {
-              if (!aiConfig) return false;
-              if (!isPlainObject(aiConfig[rootElement])) return false;
-              const blockAIConfig = aiConfig[rootElement][block_key];
-              return !!blockAIConfig && !isEqual(block_schema, blockAIConfig);
+          {/* Added entries */}
+          <div className="font-bold">Added</div>
+          {Object.entries(aiConfig[rootElement])
+            .filter(([block_key, _]) => {
+              if (!isPlainObject(config[rootElement])) return false;
+              const currentBlockConfig = config[rootElement][block_key];
+              return !currentBlockConfig;
             })
             .map(([entry]) => renderBlockTab(entry))}
 
+          {/* Deleted entries */}
+          <div className="font-bold">Deleted</div>
           {Object.entries(config[rootElement])
             .filter(([block_key, _]) => {
               if (!aiConfig) return false;
@@ -350,11 +354,14 @@ export default function BlockDictionaryEntries({
             })
             .map(([entry]) => renderBlockTab(entry))}
 
-          {Object.entries(aiConfig[rootElement])
-            .filter(([block_key, _]) => {
-              if (!isPlainObject(config[rootElement])) return false;
-              const currentBlockConfig = config[rootElement][block_key];
-              return !currentBlockConfig;
+          {/* Modified entries */}
+          <div className="font-bold">Modified</div>
+          {Object.entries(config[rootElement])
+            .filter(([block_key, block_schema]) => {
+              if (!aiConfig) return false;
+              if (!isPlainObject(aiConfig[rootElement])) return false;
+              const blockAIConfig = aiConfig[rootElement][block_key];
+              return !!blockAIConfig && !isEqual(block_schema, blockAIConfig);
             })
             .map(([entry]) => renderBlockTab(entry))}
         </div>
