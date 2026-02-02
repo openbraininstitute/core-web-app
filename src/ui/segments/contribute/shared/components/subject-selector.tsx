@@ -85,12 +85,10 @@ export function SubjectSelector<TSchema extends ZodObject<ZodRawShape>>({
 
   const tooltipRenderer = useCallback((data: ISubject) => SubjectDataTooltip(data), []);
 
-  // Wrap the queryFn to filter out "Unknown" subjects
   const filteredQueryFn = useCallback(
     async ({ filters }: { filters: PaginationFilter & SearchFilter }) => {
       const result = await getSubjects({ filters, context: { virtualLabId, projectId } });
 
-      // Filter out "Unknown" subjects from the results
       return {
         ...result,
         data: result.data.filter((subject: ISubject) => subject.name.toLowerCase() !== 'unknown'),
