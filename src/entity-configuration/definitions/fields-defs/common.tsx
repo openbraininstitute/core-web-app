@@ -1,5 +1,6 @@
 import { Button } from 'antd';
 import get from 'es-toolkit/compat/get';
+import isNil from 'es-toolkit/compat/isNil';
 import { useAtom } from 'jotai';
 import { hasAssets } from '@/api/entitycore/guards';
 import { transformAgentToNames } from '@/api/entitycore/transformers';
@@ -313,7 +314,12 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.SubjectAge]: {
     title: 'Age',
     filter: CoreFieldFilterTypeEnum.ValueRange,
-    render: (r) => renderEmptyOrValue((r as EntityCoreDensityObjectTypes).subject.age_value),
+    render: (r) => {
+      const ageValue = get(r, 'subject.age_value');
+      if (isNil(ageValue)) return EmptyValue;
+      const days = Math.floor(ageValue / 86400); //seconds to days
+      return renderEmptyOrValue(`${days} days`);
+    },
     vocabulary: {
       plural: 'Ages',
       singular: 'Age',
