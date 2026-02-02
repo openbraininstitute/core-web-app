@@ -5,6 +5,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   PlusCircleOutlined,
+  PlusOutlined,
   WarningFilled,
 } from '@ant-design/icons';
 import type { ErrorObject } from 'ajv';
@@ -140,7 +141,7 @@ export default function BlockDictionaryEntries({
         type="button"
         key={entry}
         className={classNames(
-          'text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
+          'text-primary-8 flex h-[50px] min-h-[50px] w-full min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
           isSelected ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white' : ''
         )}
         tabIndex={0}
@@ -332,9 +333,11 @@ export default function BlockDictionaryEntries({
       {/* AI suggested changes */}
 
       {!!aiConfig && !campaignId && (
-        <div className="border-red-500 border-2">
+        <div className="border-neutral-200 border-1 rounded-lg w-[90%] px-2 pb-4 pt-2">
           {/* Added entries */}
-          <div className="font-bold">Added</div>
+          <div className="mb-1 text-sm text-sky-400 flex items-center gap-1">
+            <PlusOutlined /> Added
+          </div>
           {Object.entries(aiConfig[rootElement])
             .filter(([block_key, _]) => {
               if (!isPlainObject(config[rootElement])) return false;
@@ -344,7 +347,9 @@ export default function BlockDictionaryEntries({
             .map(([entry]) => renderBlockTab(entry))}
 
           {/* Deleted entries */}
-          <div className="font-bold">Deleted</div>
+          <div className="mt-2 mb-1 text-sm text-red-500 flex items-center gap-1">
+            <CloseOutlined /> Deleted
+          </div>
           {Object.entries(config[rootElement])
             .filter(([block_key, _]) => {
               if (!aiConfig) return false;
@@ -354,8 +359,10 @@ export default function BlockDictionaryEntries({
             })
             .map(([entry]) => renderBlockTab(entry))}
 
-          {/* Modified entries */}
-          <div className="font-bold">Modified</div>
+          {/* Edited entries */}
+          <div className="mt-2 mb-1 text-sm text-amber-500 flex items-center gap-1">
+            <EditOutlined /> Edited
+          </div>
           {Object.entries(config[rootElement])
             .filter(([block_key, block_schema]) => {
               if (!aiConfig) return false;
