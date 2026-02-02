@@ -74,7 +74,7 @@ export default function PlanHeader({
               key={`advantage-${advantage.title}`}
               className="text-primary-9 flex items-center gap-2 text-lg font-normal"
             >
-              <div>+</div>
+              <div className="mr-2">+</div>
               <div>{advantage.title}</div>
               {advantage.tooltip && (
                 <div>
