@@ -1,13 +1,11 @@
 import { notFound } from 'next/navigation';
-
-import { fetchSanity } from '@/services/sanity';
-import { SanityShowcaseSchema } from '@/ui/segments/reports/obi-showcases/types';
-
 import singleShowcaseQuery from '@/app/api/sanity/query';
+import { fetchSanity } from '@/services/sanity';
 import type { ServerSideComponentProp } from '@/types/common';
 import ArtifactsSection from '@/ui/segments/reports/obi-showcases/artifacts';
 import DescriptionSection from '@/ui/segments/reports/obi-showcases/description';
 import NotebooksSection from '@/ui/segments/reports/obi-showcases/notebooks';
+import { SanityShowcaseSchema } from '@/ui/segments/reports/obi-showcases/types';
 
 export default async function OBIShowcasePage({
   params: promisedParams,
@@ -21,7 +19,10 @@ export default async function OBIShowcasePage({
   const { slug } = params;
   const section = searchParams.section ?? 'description';
 
-  const rawData = await fetchSanity(singleShowcaseQuery(slug), (data: unknown) => data !== null);
+  const rawData = await fetchSanity(
+    singleShowcaseQuery(slug),
+    (data: unknown): data is NonNullable<typeof data> => data !== null
+  );
 
   if (!rawData) {
     notFound();
