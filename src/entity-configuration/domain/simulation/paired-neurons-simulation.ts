@@ -172,6 +172,7 @@ export const PairedNeuronCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulat
       one: getCircuitSimulationCampaign,
       create: createSimulationCampaign,
     },
+    expandRow: async (record, _context) => record,
   },
   explore: {
     basePrefix: 'simulate',

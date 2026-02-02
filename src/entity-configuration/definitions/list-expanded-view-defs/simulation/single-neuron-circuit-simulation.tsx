@@ -1,17 +1,13 @@
-import { lowerCase, upperFirst } from 'es-toolkit/compat';
-
+import { get } from 'es-toolkit/compat';
 import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { getParamLabel } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation/utils';
 import type { ListExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/types';
 import { getSimulationStatus } from '@/entity-configuration/domain/simulation';
 import { ExecutionStatus } from '@/ui/segments/activity-execution/status';
 import { BaseTable } from '@/ui/segments/data-table/table';
 import { cn } from '@/utils/css-class';
-
-function getParamLabel(param: string) {
-  return upperFirst(lowerCase(param.split('.').at(-1))); // e.g. "initialize.random_seed" -> "Random seed"
-}
 
 const className = 'text-primary-7';
 
@@ -31,7 +27,6 @@ export const viewConfig: ListExpandedViewConfig<ICircuitSimulationCampaign> = {
         className: cn(className, 'whitespace-nowrap'),
         dataIndex: 'name',
         key: 'name',
-        width: 120,
         fixed: 'left' as const,
       },
 
@@ -66,5 +61,5 @@ export const viewConfig: ListExpandedViewConfig<ICircuitSimulationCampaign> = {
       </div>
     );
   },
-  isExpandable: () => true,
+  isExpandable: (simCampaign) => get(simCampaign, 'simulations', []).length > 1,
 };
