@@ -67,9 +67,8 @@ function SubjectDataTooltip(data: ISubject) {
   return (
     <div className="max-w-xs">
       <div className="space-y-1">
-        {fields.map((field, index) => (
-          // eslint-disable-next-line react/no-array-index-key
-          <div key={`subject-data-info-${index}`} className="text-sm text-white">
+        {fields.map((field) => (
+          <div key={field} className="text-sm text-white">
             {field}
           </div>
         ))}
@@ -86,10 +85,12 @@ export function SubjectSelector<TSchema extends ZodObject<ZodRawShape>>({
 
   const tooltipRenderer = useCallback((data: ISubject) => SubjectDataTooltip(data), []);
 
+  // Wrap the queryFn to filter out "Unknown" subjects
   const filteredQueryFn = useCallback(
-    async ({ filters, search }: { filters: PaginationFilter & SearchFilter; search?: string }) => {
+    async ({ filters }: { filters: PaginationFilter & SearchFilter }) => {
       const result = await getSubjects({ filters, context: { virtualLabId, projectId } });
 
+      // Filter out "Unknown" subjects from the results
       return {
         ...result,
         data: result.data.filter((subject: ISubject) => subject.name.toLowerCase() !== 'unknown'),
