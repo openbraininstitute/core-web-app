@@ -91,9 +91,7 @@ export function useEntries({
     Object.entries(initialConfig)
       .filter(([k]) => !isRootBlock(schema, k))
       .forEach(([_key, value]) => {
-        Object.keys(value).forEach((entryKey) => {
-          allEntries.current.add(entryKey);
-        });
+        Object.keys(value).forEach((entryKey) => { allEntries.current.add(entryKey) });
       });
   }, [schema, initialConfig]);
 
