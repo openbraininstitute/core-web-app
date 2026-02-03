@@ -1,10 +1,9 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
 import { Form, Input } from 'antd';
-
-import { useBuildMeModelSessionState, label } from '@/ui/segments/workflows/build/memodel/helpers';
+import { useSession } from 'next-auth/react';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { label, useBuildMeModelSessionState } from '@/ui/segments/workflows/build/memodel/helpers';
 import { makeDateToAppFormat } from '@/util/date';
 
 type Props = {
@@ -66,11 +65,11 @@ export function Info({ sessionId }: Props) {
         </Form.Item>
         <div className="flex flex-col gap-10 select-none">
           <div className="flex flex-col">
-            <div>{label('Created by', 'secondary')}</div>
+            <div>{label('Registered by', 'secondary')}</div>
             <div className="text-neutral-4 font-bold">{data?.user.name ?? data?.user.username}</div>
           </div>
           <div className="flex flex-col">
-            <div>{label('created at', 'secondary')}</div>
+            <div>{label('Registered at', 'secondary')}</div>
             <div className="text-neutral-4 font-bold">
               {makeDateToAppFormat(new Date().toISOString())}
             </div>

@@ -4,12 +4,10 @@ import { useRouter } from '@bprogress/next';
 import { Form } from 'antd';
 
 import type { ZodObject, ZodRawShape } from 'zod';
-
-import { useContributionPipeline } from '@/ui/segments/contribute/shared/pipeline/context';
 import { Button } from '@/ui/molecules/button';
-import { cn } from '@/utils/css-class';
-
+import { useContributionPipeline } from '@/ui/segments/contribute/shared/pipeline/context';
 import type { IContributionFormConfig } from '@/ui/segments/contribute/shared/types';
+import { cn } from '@/utils/css-class';
 
 interface ISubmitButtonProps<
   TFormValues extends Record<string, unknown>,
@@ -40,7 +38,11 @@ export function SubmitButton<
 
   const isValidForm = config.schema.safeParse(values).success;
   const detailsUrl = createdEntityId
-    ? config.buildDetailsUrl({ entityId: createdEntityId, virtualLabId, projectId })
+    ? config.buildDetailsUrl({
+        entityId: createdEntityId,
+        virtualLabId,
+        projectId,
+      })
     : null;
 
   if (detailsUrl) {

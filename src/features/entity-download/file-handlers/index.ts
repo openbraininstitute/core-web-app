@@ -5,6 +5,7 @@ import { getCellMorphologyFiles } from './cell-morphology';
 import { getCircuitFiles } from './circuit';
 import { getCircuitSimulationFiles } from './circuit-simulation';
 import { getElectricalCellRecordingFiles } from './electrical-cell-recording';
+import { getEMCellMeshFiles } from './em-cell-mesh';
 import { getEmodelFiles } from './emodel';
 import { getExperimentalBoutonDensityFiles } from './experimental-bouton-density';
 import { getExperimentalNeuronDensityFiles } from './experimental-neuron-density';
@@ -31,6 +32,7 @@ export const getEntityFilesHandlerMap: Partial<Record<TEntityTypeDict, GetEntity
   [EntityTypeDict.ExperimentalNeuronDensity]: getExperimentalNeuronDensityFiles,
   [EntityTypeDict.ExperimentalSynapsesPerConnection]: getExperimentalSynapsesPerConnectionFiles,
   [EntityTypeDict.CellMorphology]: getCellMorphologyFiles,
+  [EntityTypeDict.EMCellMesh]: getEMCellMeshFiles,
   // Model data
   [EntityTypeDict.Emodel]: getEmodelFiles,
   [EntityTypeDict.Memodel]: getMEmodelFiles,

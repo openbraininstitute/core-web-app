@@ -34,19 +34,21 @@ export async function* getIonChannelModelFiles(entityIds: string[], ctx?: Worksp
       json: { ...idxExtra, ...icm },
     });
 
-    const configAsset = icm.assets.find((asset) => asset.label === AssetLabel.neuron_mechanisms)!;
-    try {
-      const path = `${dataPath}/${configAsset.path}`;
-      yield await createAssetFileEntry({
-        entity: icm,
-        asset: configAsset,
-        path,
-        ctx,
-      });
-    } catch {}
-
-    for await (const metadataFileEntry of metadata.getFileEntries()) {
-      yield metadataFileEntry;
+    const configAsset = icm.assets.find((asset) => asset.label === AssetLabel.neuron_mechanisms);
+    if (configAsset) {
+      try {
+        const path = `${dataPath}/${configAsset.path}`;
+        yield await createAssetFileEntry({
+          entity: icm,
+          asset: configAsset,
+          path,
+          ctx,
+        });
+      } catch {}
     }
+  }
+
+  for await (const metadataFileEntry of metadata.getFileEntries()) {
+    yield metadataFileEntry;
   }
 }

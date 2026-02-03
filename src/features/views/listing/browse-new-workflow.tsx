@@ -54,7 +54,7 @@ export function WorkflowBrowseEntity({ workspace, buildType }: Props) {
       requireMiniDetailView
       requireBrainRegion
       section={WorkspaceSection.SimulateWorkflow}
-      classNames={{ container: 'max-h-full' }}
+      classNames={{ container: 'max-h-full', miniView: 'max-h-[calc(100vh-15rem)]' }}
       dataType={buildType}
       mainTableProps={{
         selectionType: undefined,

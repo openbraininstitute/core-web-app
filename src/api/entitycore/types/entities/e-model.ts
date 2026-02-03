@@ -16,6 +16,7 @@ import type {
 } from '@/api/entitycore/types/shared/global';
 import type {
   BrainRegionFilter,
+  BrainRegionHierarchyFilter,
   ContributionFilter,
   EtypeFilter,
   IlikeSearchFilter,
@@ -63,6 +64,7 @@ export interface IEModelFilter
     EtypeFilter,
     SpeciesFilter,
     BrainRegionFilter,
+    BrainRegionHierarchyFilter,
     SharedFilter,
     IMorphologyFilter,
     PaginationFilter,

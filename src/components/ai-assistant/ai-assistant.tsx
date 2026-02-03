@@ -31,7 +31,9 @@ export default function AiAssistant({ className, fullscreen, section }: AiAssist
   const assistant = useAiAssistant();
   const threadId = assistant.threadId.useValue();
   const { messages, status } = useServiceAiAgentChat(threadId ?? '');
+
   const style: CSSProperties = {
+    //@ts-expect-error
     '--custom-panel-width': fullscreen ? '100%' : `${panelWidth.toFixed(0)}px`,
   };
 

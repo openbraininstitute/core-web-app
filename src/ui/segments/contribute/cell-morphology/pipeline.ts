@@ -4,19 +4,14 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { get, isNil } from 'es-toolkit/compat';
 
 import { createMtypeClassification } from '@/api/entitycore/queries/annotations/mtype-classification';
-import { CELL_MORPHOLOGY_PROGRESS_STEPS } from '@/ui/segments/contribute/cell-morphology/config';
-import { getCellMorphologyMimeType } from '@/ui/segments/contribute/cell-morphology/schema';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
-import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { createCellMorphology } from '@/api/entitycore/queries';
-import { createAsset } from '@/api/entitycore/queries/assets';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { EntityTypeDict } from '@/api/entitycore/types';
-
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { createAndRegisterMorphometrics } from '@/api/one/cell-morphology';
 import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { CELL_MORPHOLOGY_PROGRESS_STEPS } from '@/ui/segments/contribute/cell-morphology/config';
 import type { TCellMorphologyForm } from '@/ui/segments/contribute/cell-morphology/schema';
+import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 import type {
   IMutationKeyConfig,
   IPipelineHookResult,
@@ -31,29 +26,55 @@ export function useCellMorphologyPipeline({
   const { projectId, virtualLabId } = useWorkspace();
 
   const createCellMorphologyAsync = useMutation({
-    mutationFn: (values: TCellMorphologyForm) => {
+    mutationFn: async (values: TCellMorphologyForm) => {
+      // 1. Identify the file to upload from the assets object
+      const assetKeys = Object.keys(values.assets);
+      const fileAsset = assetKeys.length > 0 ? values.assets[assetKeys[0]] : null;
+
+      if (!fileAsset) {
+        throw new Error('No morphology file provided in assets.');
+      }
+
+      // 2. Build the payload currently used in the existing logic
       const location =
         values.setup.location &&
         !isNil(values.setup.location.x) &&
         !isNil(values.setup.location.y) &&
         !isNil(values.setup.location.z)
-          ? { x: values.setup.location.x, y: values.setup.location.y, z: values.setup.location.z }
+          ? {
+              x: values.setup.location.x,
+              y: values.setup.location.y,
+              z: values.setup.location.z,
+            }
           : null;
 
-      return createCellMorphology({
-        context: { projectId, virtualLabId },
-        payload: {
-          name: values.setup.name,
-          description: values.setup.description,
-          brain_region_id: values.setup.brain_region_id,
-          subject_id: values.subject_id,
-          license_id: values.license_id,
-          experiment_date: values.setup.experiment_date as string,
-          contact_email: values.setup.contact_email,
-          published_in: values.setup.published_in,
-          location,
-        },
+      const payload = {
+        name: values.setup.name,
+        description: values.setup.description,
+        brain_region_id: values.setup.brain_region_id,
+        cell_morphology_protocol_id: values.cell_morphology_protocol_id,
+        subject_id: values.subject_id,
+        license_id: values.license_id,
+        experiment_date: values.setup.experiment_date as string,
+        contact_email: values.setup.contact_email,
+        published_in: values.setup.published_in,
+        location,
+        project_id: projectId, // Including context as part of the registration payload
+        virtual_lab_id: virtualLabId,
+      };
+
+      // 3. Execute the new registration function
+      const result = await createAndRegisterMorphometrics(fileAsset, payload, {
+        projectId,
+        virtualLabId,
       });
+
+      if (!result.isValid) {
+        throw new Error('Failed to register morphology with metrics.');
+      }
+
+      // Return the ID to maintain compatibility with downstream mutations
+      return { id: result.id };
     },
     onSettled: async () => {
       await Promise.all([
@@ -123,30 +144,6 @@ export function useCellMorphologyPipeline({
     },
   });
 
-  const createAssetsAsync = useMutation({
-    mutationFn: ({
-      entityId,
-      assets,
-    }: {
-      entityId: string;
-      assets: TCellMorphologyForm['assets'];
-    }) => {
-      return Promise.all(
-        Object.entries(assets).map(([, asset]) => {
-          return createAsset({
-            entityId,
-            entityType: EntityTypeDict.CellMorphology,
-            fileName: asset.name || '',
-            mimeType: getCellMorphologyMimeType(asset) ?? '',
-            label: AssetLabel.morphology,
-            payload: asset,
-            ctx: { virtualLabId, projectId },
-          });
-        })
-      );
-    },
-  });
-
   async function createEntity({ values }: { values: TCellMorphologyForm }): Promise<string> {
     const cellMorphology = await createCellMorphologyAsync.mutateAsync(values);
     await Promise.allSettled([
@@ -158,10 +155,6 @@ export function useCellMorphologyPipeline({
         entityId: cellMorphology.id,
         mtype_class_id: values.mtype_class_id,
       }),
-      createAssetsAsync.mutateAsync({
-        entityId: cellMorphology.id,
-        assets: values.assets,
-      }),
     ]);
     return cellMorphology.id;
   }
@@ -169,20 +162,17 @@ export function useCellMorphologyPipeline({
   const loading =
     createCellMorphologyAsync.isPending ||
     createContributionAsync.isPending ||
-    createMtypeClassificationAsync.isPending ||
-    createAssetsAsync.isPending;
+    createMtypeClassificationAsync.isPending;
 
   const error =
     createCellMorphologyAsync.error ||
     createContributionAsync.error ||
-    createMtypeClassificationAsync.error ||
-    createAssetsAsync.error;
+    createMtypeClassificationAsync.error;
 
   const status = {
     createCellMorphology: createCellMorphologyAsync.status,
     createContribution: createContributionAsync.status,
     createMtypeClassification: createMtypeClassificationAsync.status,
-    createCellMorphologyAssets: createAssetsAsync.status,
   };
 
   return {

@@ -13,12 +13,14 @@ export default function EntityPropertyDropdown({
   onChange,
   entity_type,
   property,
+  disabled = false,
 }: {
   modelId: string;
   value: string | null;
   onChange: (v: string | null) => void;
   entity_type: string;
   property: string;
+  disabled?: boolean;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
 
@@ -38,6 +40,7 @@ export default function EntityPropertyDropdown({
 
   return (
     <Select
+      disabled={disabled}
       className="w-full"
       value={value}
       onChange={onChange}

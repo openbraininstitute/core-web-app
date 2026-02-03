@@ -17,6 +17,7 @@ import type { ICircuitSimulationExecution } from '@/api/entitycore/types/entitie
 import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import { resolveExecutions } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
+import { hasSimConfigAsset } from '@/entity-configuration/domain/simulation/utils';
 import { getLatestSimExecStatus } from '@/features/scan-config/components/utils';
 import type { SimExecStatusMap } from '@/features/scan-config/types';
 import type { WorkspaceContext } from '@/types/common';
@@ -40,8 +41,12 @@ const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
 );
 
 export const simExecRemoteStatusMapAtomFamily = atomFamilyWithExpiration(
-  ({ simulationIds, context }: { simulationIds: string[]; context: WorkspaceContext }) =>
-    atomWithRefresh<Promise<SimExecStatusMap>>(async () => {
+  ({ campaignId, context }: { campaignId: string; context: WorkspaceContext }) =>
+    atomWithRefresh<Promise<SimExecStatusMap>>(async (get) => {
+      const simulationsAtom = simulationsByCampaignIdAtomFamily({ campaignId, context });
+      const simulations = await get(simulationsAtom);
+      const simulationIds = simulations.map((s) => s.id);
+
       const simExecutions = await resolveExecutions({ context, allSimIds: simulationIds });
 
       const executionsGrouped = simExecutions.reduce<Map<string, ICircuitSimulationExecution[]>>(
@@ -49,8 +54,9 @@ export const simExecRemoteStatusMapAtomFamily = atomFamilyWithExpiration(
         new Map()
       );
 
-      Array.from(executionsGrouped.values()).forEach((executions) =>
-        executions.sort((a, b) => b.creation_date.localeCompare(a.creation_date))
+      Array.from(executionsGrouped.values()).forEach(
+        (executions) =>
+          void executions.sort((a, b) => b.creation_date.localeCompare(a.creation_date))
       );
 
       return Array.from(executionsGrouped.keys()).reduce(
@@ -64,12 +70,12 @@ export const simExecRemoteStatusMapAtomFamily = atomFamilyWithExpiration(
   }
 );
 
-type SimExecStatusMapAtomFamilyArg = { simulationIds: string[]; context: WorkspaceContext };
+type SimExecStatusMapAtomFamilyArg = { campaignId: string; context: WorkspaceContext };
 
 export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
-  ({ simulationIds, context }: SimExecStatusMapAtomFamilyArg) => {
+  ({ campaignId, context }: SimExecStatusMapAtomFamilyArg) => {
     const simExecRemoteStatusMapAtom = simExecRemoteStatusMapAtomFamily({
-      simulationIds,
+      campaignId,
       context,
     });
 
@@ -77,13 +83,22 @@ export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
 
     return atom<Promise<SimExecStatusMap>, [string, EntitycoreExecutionStatus], void>(
       async (get) => {
+        const simulationsAtom = simulationsByCampaignIdAtomFamily({ campaignId, context });
+        const simulations = await get(simulationsAtom);
+
         const remoteStatusMap = await get(simExecRemoteStatusMapAtom);
         const localStatusMap = get(localStatusMapAtom);
 
-        const statusMap = simulationIds.reduce((map, simId) => {
-          const remoteStatus = remoteStatusMap.get(simId);
-          const localStatus = localStatusMap.get(simId);
-          // If both are set we take the latest possible one,
+        const statusMap = simulations.reduce((map, sim) => {
+          const remoteStatus = remoteStatusMap.get(sim.id);
+          const localStatus = localStatusMap.get(sim.id);
+
+          // Simple validity check: if there is no sonata sim config asset we set error status.
+          if (!hasSimConfigAsset(sim)) {
+            return map.set(sim.id, EntitycoreExecutionStatus.ERROR);
+          }
+
+          // If both statuses are set we take the latest possible one,
           // because the status change in a particular sequence.
           // See definition of getLatestSimExecStatus
           const status =
@@ -91,7 +106,7 @@ export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
               ? getLatestSimExecStatus(remoteStatus, localStatus)
               : (localStatus ?? remoteStatus ?? EntitycoreExecutionStatus.CREATED);
 
-          return map.set(simId, status);
+          return map.set(sim.id, status);
         }, new Map());
 
         return statusMap;

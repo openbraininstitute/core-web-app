@@ -3,10 +3,15 @@ import { z } from 'zod';
 import {
   BaseSetupSchema,
   ContributionArraySchema,
-  SubjectIdSchema,
-  LicenseIdSchema,
   createFileSchema,
+  LicenseIdSchema,
+  SubjectIdSchema,
 } from '@/ui/segments/contribute/shared/schemas';
+
+export const ProtocolSchema = z
+  .string({ message: 'Protocol is required' })
+  .uuid()
+  .nonempty({ message: 'Protocol is required' });
 
 export const MTypeClassIdSchema = z
   .string({ message: 'M-type class is required' })
@@ -25,6 +30,7 @@ export const CellMorphologySchema = z.object({
   setup: BaseSetupSchema,
   subject_id: SubjectIdSchema,
   license_id: LicenseIdSchema,
+  cell_morphology_protocol_id: ProtocolSchema,
   mtype_class_id: MTypeClassIdSchema,
   assets: CellMorphologyAssetsSchema,
   contribution: ContributionArraySchema,

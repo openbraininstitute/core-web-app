@@ -1,28 +1,26 @@
 'use client';
 
-import { isEmpty, isNil, find, filter, reject, isString } from 'es-toolkit/compat';
-import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
-import { JSX, ReactNode, useEffect, useState, isValidElement } from 'react';
 import { Button, Empty, Modal } from 'antd';
+import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
+import { filter, find, isEmpty, isNil, isString, reject } from 'es-toolkit/compat';
 import { useParams } from 'next/navigation';
-
-import { AgentType, MeasurementStatistic } from '@/api/entitycore/types/shared/global';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { PreviewThumbnail } from '@/features/thumbnail/preview';
-import { tryCatch } from '@/api/utils';
-
+import { isValidElement, type JSX, type ReactNode, useEffect, useState } from 'react';
+import type { EntityCoreDensityObjectTypes, ICellMorphology } from '@/api/entitycore/types';
 import type { ICellMorphologyExpanded } from '@/api/entitycore/types/entities/cell-morphology';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreDensityObjectTypes, ICellMorphology } from '@/api/entitycore/types';
-import type { WorkspaceContext } from '@/types/common';
-import {
-  type AssetLabel,
-  type EntityCoreIdentifiable,
-  type EntityCoreResource,
-  type IContributor,
-  type ILicense,
-  type MeasurementBase,
+import type {
+  AssetLabel,
+  EntityCoreIdentifiable,
+  EntityCoreResource,
+  IContributor,
+  ILicense,
+  MeasurementBase,
 } from '@/api/entitycore/types/shared/global';
+import { AgentType, MeasurementStatistic } from '@/api/entitycore/types/shared/global';
+import { tryCatch } from '@/api/utils';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { PreviewThumbnail } from '@/features/thumbnail/preview';
+import type { WorkspaceContext } from '@/types/common';
 
 export const EmptyValue = '—';
 
@@ -131,9 +129,9 @@ export function RenderCustomField<R extends EntityCoreIdentifiable>({
   useEffect(() => {
     async function getEntity() {
       setPayload({ entity: null, error: null, loading: true });
-      if (entityConfig && entityConfig.api.query.one && entityId) {
+      if (entityConfig?.api.query.one && entityId) {
         const { data, error } = await tryCatch<R, any>(
-          // @ts-ignore
+          // @ts-expect-error
           entityConfig.api.query.one({ id: entityId, context: { virtualLabId, projectId } })
         );
         if (data) setPayload({ entity: data, error: null, loading: false });
@@ -141,7 +139,7 @@ export function RenderCustomField<R extends EntityCoreIdentifiable>({
       }
     }
     getEntity();
-  }, [entityId, entityType, virtualLabId, projectId, entityConfig]);
+  }, [entityId, virtualLabId, projectId, entityConfig]);
 
   return (
     <CustomComponent loading={payload?.loading} error={payload?.error} data={payload?.entity} />
@@ -311,7 +309,7 @@ export const renderMorphologyMeasurement = (
 function ContributorsModalTrigger({
   contributors,
 }: {
-  contributors: Array<IContributor>;
+  contributors: IContributor[];
 }): React.ReactElement {
   const [isOpen, setIsOpen] = useState(false);
   return (
@@ -325,13 +323,13 @@ function ContributorsModalTrigger({
 }
 
 export const renderContributorsModal = (
-  contributors: Array<IContributor>,
+  contributors: IContributor[],
   open: boolean,
   onClose: () => void,
   mode: 'modal' | 'inline' = 'modal'
 ): ReactNode => {
   const getName = (c: IContributor) =>
-    `${('given_name' in c.agent ? c.agent.given_name : '') + ' ' + ('family_name' in c.agent ? c.agent.family_name : '')}`.trim() ||
+    `${'given_name' in c.agent ? c.agent.given_name : ''} ${'family_name' in c.agent ? c.agent.family_name : ''}`.trim() ||
     c.agent.pref_label;
 
   const consortia = filter(contributors, { agent: { type: AgentType.Consortium } });

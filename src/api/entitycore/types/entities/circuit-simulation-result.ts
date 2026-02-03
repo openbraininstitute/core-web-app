@@ -6,7 +6,7 @@ import type {
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
 import type {
-  BrainRegionFilter,
+  BrainRegionHierarchyFilter,
   ContributionFilter,
   OwnershipFilter,
   PaginationFilter,
@@ -31,7 +31,7 @@ export interface ICircuitSimulationResult
 
 export interface ICircuitSimulationResultFilter
   extends ContributionFilter,
-    BrainRegionFilter, // Entitycore API doesn't support brain_region_id filtering, to be removed
+    BrainRegionHierarchyFilter, // Entitycore API doesn't support brain_region_id filtering, to be removed
     SharedFilter,
     PaginationFilter,
     OwnershipFilter {}

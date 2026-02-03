@@ -10,6 +10,7 @@ export default function Reference({
   schemaName,
   referenceSchema,
   config,
+  hasReplacePatch,
 }: {
   schemaName: SchemaName;
   referenceSchema: ReferenceSchema;
@@ -17,6 +18,7 @@ export default function Reference({
   value: string | null;
   onChange: (block_name: string | null, block_dict_name: string | null) => void;
   disabled: boolean;
+  hasReplacePatch: boolean;
 }) {
   const referenceTypeDict = useReferenceTypeDict(schemaName);
   const schema = useObioneJsonSchema(schemaName);
@@ -44,6 +46,13 @@ export default function Reference({
     label: schema.default_block_reference_labels[referenceSchema.reference_type] ?? 'Default',
     value: null,
   });
+
+  if (hasReplacePatch && typeof value === 'string') {
+    options.push({
+      label: value,
+      value: value,
+    });
+  }
 
   return (
     <Select

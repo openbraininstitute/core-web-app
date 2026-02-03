@@ -1,7 +1,6 @@
-import { ViewDefinitionConfig } from '../types';
-import { EntityCoreFields } from '../../fields-defs/enums';
-
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+import { EntityCoreFields } from '../../fields-defs/enums';
+import type { ViewDefinitionConfig } from '../types';
 
 export const ViewDefForCircuit: ViewDefinitionConfig = {
   title: 'Circuit',
@@ -19,8 +18,8 @@ export const ViewDefForCircuit: ViewDefinitionConfig = {
     EntityCoreFields.CircuitNumberConnections,
     EntityCoreFields.SpeciesName,
     EntityCoreFields.CircuitBuildCategory,
-    EntityCoreFields.CircuitPublishedIn,
-    EntityCoreFields.CircuitExperimentDate,
+    EntityCoreFields.ArtifactPublishedIn,
+    EntityCoreFields.ArtifactExperimentDate,
   ],
   miniDetailView: [
     { field: EntityCoreFields.BrainRegion },
@@ -42,8 +41,8 @@ export const ViewDefForCircuit: ViewDefinitionConfig = {
     { field: EntityCoreFields.CircuitNumberNeurons },
     { field: EntityCoreFields.CircuitNumberConnections },
     { field: EntityCoreFields.CircuitNumberSynapses },
-    { field: EntityCoreFields.CircuitPublishedIn },
-    { field: EntityCoreFields.CircuitExperimentDate },
-    { field: EntityCoreFields.CircuitContactEmail },
+    { field: EntityCoreFields.ArtifactPublishedIn },
+    { field: EntityCoreFields.ArtifactExperimentDate },
+    { field: EntityCoreFields.ArtifactContactEmail },
   ],
 };

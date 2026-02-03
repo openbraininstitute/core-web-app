@@ -6,6 +6,7 @@ import type {
 } from '@/api/entitycore/types/shared/global';
 import type {
   BrainRegionFilter,
+  BrainRegionHierarchyFilter,
   ContributionFilter,
   IlikeSearchFilter,
   MtypeFilter,
@@ -25,6 +26,7 @@ export type ExperimentalBoutonDensityFilter = Partial<
     PaginationFilter &
     ContributionFilter &
     BrainRegionFilter &
+    BrainRegionHierarchyFilter &
     StainFilter &
     MtypeFilter &
     EntityAuthorization &

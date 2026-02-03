@@ -99,11 +99,11 @@ export function MModelMiniDetail({ sessionId }: { sessionId: string }) {
       value: renderEmptyOrValue(renderLicense({ license: data?.license })),
     },
     {
-      label: 'Created By',
+      label: 'Registered By',
       value: renderEmptyOrValue(data?.created_by?.pref_label),
     },
     {
-      label: 'Created At',
+      label: 'Registered At',
       value: renderDate(data?.creation_date),
     },
   ];
@@ -111,7 +111,7 @@ export function MModelMiniDetail({ sessionId }: { sessionId: string }) {
   const content = details.map(({ value, label: text, className }) => {
     return (
       <div key={`item-${label}`} className="flex w-full flex-col items-start justify-start">
-        {label(text!, 'secondary')}
+        {label(text, 'secondary')}
         <div className={cn('text-primary-9 font-light', className)}>{value}</div>
       </div>
     );

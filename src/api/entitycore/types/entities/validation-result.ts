@@ -5,7 +5,7 @@ import type {
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
 import type {
-  BrainRegionFilter,
+  BrainRegionHierarchyFilter,
   ContributionFilter,
   IdFilter,
   PaginationFilter,
@@ -26,7 +26,7 @@ export interface IValidationResult
 
 export interface IValidationResultFilter
   extends IdFilter,
-    BrainRegionFilter,
+    BrainRegionHierarchyFilter,
     SharedFilter,
     ContributionFilter,
     PaginationFilter {

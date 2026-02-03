@@ -33,23 +33,21 @@ export default function SectionPricing() {
             Error loading prices: {error}
           </div>
         )}
-        {!loading && !error && (
-          <>
-            {prices.length === 0 && creditsPacks.length === 0 ? (
-              <div style={{ padding: '1rem', color: '#666', backgroundColor: '#f5f5f5' }}>
-                No pricing data available. Prices: {prices.length}, Credits: {creditsPacks.length}
-              </div>
-            ) : (
-              <div className="px-8 lg:px-[8.7vw]">
-                <PriceTable
-                  prices={prices}
-                  creditsPacks={creditsPacks}
-                  backgroundTitle="bg-black/5"
-                />
-              </div>
-            )}
-          </>
-        )}
+        {!loading &&
+          !error &&
+          (prices.length === 0 && creditsPacks.length === 0 ? (
+            <div style={{ padding: '1rem', color: '#666', backgroundColor: '#f5f5f5' }}>
+              No pricing data available. Prices: {prices.length}, Credits: {creditsPacks.length}
+            </div>
+          ) : (
+            <div className="px-8 lg:px-[8.7vw]">
+              <PriceTable
+                prices={prices}
+                creditsPacks={creditsPacks}
+                backgroundTitle="bg-black/5"
+              />
+            </div>
+          ))}
       </div>
     </>
   );
