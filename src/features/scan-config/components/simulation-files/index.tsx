@@ -70,7 +70,9 @@ export function SimulationFiles({
     );
 
     const voltageReportFile = outputFiles.find(
-      (file) => file.asset.label === AssetLabel.voltage_report
+      (file) =>
+        file.asset.label === AssetLabel.voltage_report &&
+        file.asset.content_type === 'application/nwb'
     );
 
     if (!selectedFile) {
