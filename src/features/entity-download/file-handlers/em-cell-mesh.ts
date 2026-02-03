@@ -1,0 +1,52 @@
+import { getEmCellMesh } from '@/api/entitycore/queries/experimental/em-cell-mesh';
+import { EntityTypeDict } from '@/api/entitycore/types';
+import { ASSET_BASE_PATH } from '@/features/entity-download/constants';
+import { Metadata } from '@/features/entity-download/metadata';
+import type { EMCellMeshJsonMetadata } from '@/features/entity-download/types';
+import {
+  createAssetFileEntry,
+  createTemplateFileEntry,
+  getMetadataCsvEntryBase,
+} from '@/features/entity-download/utils';
+import type { WorkspaceContext } from '@/types/common';
+
+export async function* getEMCellMeshFiles(entityIds: string[], ctx?: WorkspaceContext) {
+  const metadata = new Metadata<EMCellMeshJsonMetadata>();
+
+  try {
+    yield await createTemplateFileEntry(EntityTypeDict.EMCellMesh);
+  } catch {}
+
+  for (const entityId of entityIds) {
+    const morphology = await getEmCellMesh({
+      id: entityId,
+      context: ctx,
+    });
+
+    const idx = metadata.entriesCount;
+
+    const dataPath = `${ASSET_BASE_PATH}/${idx}`;
+    const idxExtra = { idx, data_path: dataPath };
+
+    metadata.add({
+      csv: { ...idxExtra, ...getMetadataCsvEntryBase(morphology) },
+      json: { ...idxExtra, ...morphology },
+    });
+
+    for await (const asset of morphology.assets) {
+      const path = `${dataPath}/${asset.path}`;
+      try {
+        yield await createAssetFileEntry({
+          entity: morphology,
+          asset,
+          path,
+          ctx,
+        });
+      } catch {}
+    }
+  }
+
+  for await (const metadataFileEntry of metadata.getFileEntries()) {
+    yield metadataFileEntry;
+  }
+}

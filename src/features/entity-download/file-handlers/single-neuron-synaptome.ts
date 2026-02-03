@@ -41,16 +41,18 @@ export async function* getSingleNeuronSynaptomeFiles(entityIds: string[], ctx?: 
     // Synaptome config
     const synaptomeConfigAsset = singleNeuronSynaptomeModel.assets.find(
       (asset) => asset.label === 'single_neuron_synaptome_config'
-    )!;
-    try {
-      const path = `${dataPath}/${synaptomeConfigAsset.path}`;
-      yield await createAssetFileEntry({
-        entity: singleNeuronSynaptomeModel,
-        asset: synaptomeConfigAsset,
-        path,
-        ctx,
-      });
-    } catch {}
+    );
+    if (synaptomeConfigAsset) {
+      try {
+        const path = `${dataPath}/${synaptomeConfigAsset.path}`;
+        yield await createAssetFileEntry({
+          entity: singleNeuronSynaptomeModel,
+          asset: synaptomeConfigAsset,
+          path,
+          ctx,
+        });
+      } catch {}
+    }
 
     const memodel = await getMEModel({
       id: singleNeuronSynaptomeModel.me_model.id,
@@ -63,17 +65,19 @@ export async function* getSingleNeuronSynaptomeFiles(entityIds: string[], ctx?: 
     });
 
     // HOC file
-    const hocFileAsset = emodel.assets.find((asset) => asset.label === 'neuron_hoc')!;
-    try {
-      const fileName = hocFileAsset.full_path.split('/').at(-1);
-      const path = `${dataPath}/hoc/${fileName}`;
-      yield await createAssetFileEntry({
-        entity: emodel,
-        asset: hocFileAsset,
-        path,
-        ctx,
-      });
-    } catch {}
+    const hocFileAsset = emodel.assets.find((asset) => asset.label === 'neuron_hoc');
+    if (hocFileAsset) {
+      try {
+        const fileName = hocFileAsset.full_path.split('/').at(-1);
+        const path = `${dataPath}/hoc/${fileName}`;
+        yield await createAssetFileEntry({
+          entity: emodel,
+          asset: hocFileAsset,
+          path,
+          ctx,
+        });
+      } catch {}
+    }
 
     // Morphologies
     const morphology = await getCellMorphology({
@@ -97,16 +101,18 @@ export async function* getSingleNeuronSynaptomeFiles(entityIds: string[], ctx?: 
 
     // MOD files
     for await (const icEntity of emodel.ion_channel_models) {
-      const asset = icEntity.assets.find((a) => a.label === 'neuron_mechanisms')!;
-      const path = `${dataPath}/mechanisms/${asset.path}`;
-      try {
-        yield await createAssetFileEntry({
-          entity: icEntity,
-          asset,
-          path,
-          ctx,
-        });
-      } catch {}
+      const asset = icEntity.assets.find((a) => a.label === 'neuron_mechanisms');
+      if (asset) {
+        const path = `${dataPath}/mechanisms/${asset.path}`;
+        try {
+          yield await createAssetFileEntry({
+            entity: icEntity,
+            asset,
+            path,
+            ctx,
+          });
+        } catch {}
+      }
     }
   }
 

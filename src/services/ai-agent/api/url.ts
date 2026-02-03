@@ -1,5 +1,5 @@
-import { isString } from '@/util/type-guards';
 import { config } from '@/config';
+import { isString } from '@/util/type-guards';
 
 /**
  * This function can be used to set the `api` property

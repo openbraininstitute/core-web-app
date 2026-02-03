@@ -1,35 +1,35 @@
 'use client';
 
-import { parseAsString, SingleParserBuilder, useQueryStates } from 'nuqs';
-import { motion, AnimatePresence } from 'motion/react';
-import { kebabCase } from 'es-toolkit/compat';
 import { useRouter } from '@bprogress/next';
+import { kebabCase } from 'es-toolkit/compat';
+import { AnimatePresence, motion } from 'motion/react';
+import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
 import { use, useRef } from 'react';
-
-import { useNextStepOnboarding, workflowTour } from '@/ui/segments/app-setup/discover-app';
-import { WorkflowActivity } from '@/ui/segments/workflows/elements/workflow-activity';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { config } from '@/config';
+import { WorkspaceScope } from '@/constants';
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
+import { SCOPE_QUERY_PARAMS } from '@/ui/hooks/use-scope';
+import { useNextStepOnboarding, workflowTour } from '@/ui/segments/app-setup/discover-app';
 import { CategoryMenu } from '@/ui/segments/workflows/elements/category-menu';
-import {
-  PanelQueryParam,
-  WorkflowSimulatePanels,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import { TypesMenu } from '@/ui/segments/workflows/elements/types-menu';
+import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 import {
   ActivityValues,
   WorkflowSessionIdSearchParam,
 } from '@/ui/segments/workflows/elements/helpers';
-import { config } from '@/config';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
-import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
+import { TypesMenu } from '@/ui/segments/workflows/elements/types-menu';
+import { WorkflowActivity } from '@/ui/segments/workflows/elements/workflow-activity';
+import {
+  PanelQueryParam,
+  WorkflowSimulatePanels,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 
 export default function Page({ params }: ServerSideComponentProp<WorkspaceContext, null>) {
   useDisableElementOverflow({ id: 'workspace-body' });
   const { virtualLabId, projectId } = use(params);
   const { push: navigate } = useRouter();
-  const tableRef = useRef<HTMLDivElement>(null);
+
   const [{ activity, entityType }, updateWorkflowState] = useQueryStates(
     {
       activity: parseAsString.withOptions({
@@ -65,7 +65,7 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
         );
     } else if (activity === ActivityValues.Simulate && value) {
       navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}`
+        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}?${SCOPE_QUERY_PARAMS}=${WorkspaceScope.Public}`
       );
     }
   };
@@ -126,7 +126,7 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
             ease: 'easeInOut',
           }}
         >
-          <WorkflowActivity ref={tableRef} />
+          <WorkflowActivity />
         </motion.div>
       </AnimatePresence>
     </div>

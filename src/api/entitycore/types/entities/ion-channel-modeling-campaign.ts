@@ -8,7 +8,6 @@ import type {
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
 import type {
-  BrainRegionFilter,
   ContributionFilter,
   IlikeSearchFilter,
   NameFilter,
@@ -69,7 +68,6 @@ export interface IonChannelModelingCampaignFilter
     ContributionFilter,
     OwnershipFilter,
     SearchFilter,
-    BrainRegionFilter,
     IlikeSearchFilter {
   ion_channel_modeling_config_id?: string | null;
   ion_channel_modeling_config__id__in?: string[] | null;

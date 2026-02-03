@@ -1,11 +1,10 @@
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/types';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
-import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
-
-export const viewDefForExperimentalSynapsePerConnection: ViewDefinitionConfig = {
-  title: 'Synapse per connection',
+export const viewDefForExperimentalSynapsesPerConnection: ViewDefinitionConfig = {
+  title: 'Synapses per connection',
   group: DataTypeGroup.ExperimentalData,
   name: EntitySlug.ExperimentalSynapsesPerConnection,
   columns: [
@@ -37,5 +36,5 @@ export const viewDefForExperimentalSynapsePerConnection: ViewDefinitionConfig = 
     { field: EntityCoreFields.License },
   ],
   curated: false,
-  mlTopic: 'Synapse per connection',
+  mlTopic: 'Synapses per connection',
 };

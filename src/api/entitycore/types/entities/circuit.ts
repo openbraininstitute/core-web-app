@@ -8,6 +8,7 @@ import type {
 } from '@/api/entitycore/types/shared/global';
 import type {
   BrainRegionFilter,
+  BrainRegionHierarchyFilter,
   IdFilter,
   IlikeSearchFilter,
   PaginationFilter,
@@ -102,6 +103,7 @@ type CircuitScaleFilter = {
 export interface ICircuitFilter
   extends IdFilter,
     BrainRegionFilter,
+    BrainRegionHierarchyFilter,
     SharedFilter,
     PaginationFilter,
     CircuitScaleFilter,

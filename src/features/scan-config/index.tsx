@@ -1,24 +1,25 @@
 'use client';
 
-// import { LoadingOutlined, UpOutlined } from '@ant-design/icons';
 import { LoadingOutlined } from '@ant-design/icons';
 import { Suspense, useState } from 'react';
-import SimulationsTab from './components/simulations';
-
-// import { useRouter } from 'next/navigation';
-
 import type { Config } from '@/features/scan-config/components/components';
 import { useConfigAtom } from '@/features/scan-config/components/hooks/config-atom';
-import { useAtomsMap, useObioneJsonSchema } from '@/features/scan-config/components/hooks/schema';
+import {
+  resetConfig,
+  useAtomsMap,
+  useObioneJsonSchema,
+} from '@/features/scan-config/components/hooks/schema';
 import ModelPreview from '@/features/scan-config/components/model-preview';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import styles from '@/features/scan-config/scan-config.module.css';
 import type { TabType } from '@/features/scan-config/types';
+import { useAgentState, useAIConfig } from '@/services/ai-agent';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 import { useEntries, useModel, useSchemaName } from './components/hooks';
 import Left from './components/left';
 import Middle from './components/middle';
+import SimulationsTab from './components/simulations';
 
 export default function ScanConfiguration({
   modelId,
@@ -39,7 +40,6 @@ export default function ScanConfiguration({
   readOnly?: boolean;
   className?: string;
 }) {
-  //  const router = useRouter();
   const [tab, setTab] = useState<TabType>(defaultTab);
   const [selectedRootElement, setSelectedRootElement] = useState<string>('info');
   const [editing, setEditing] = useState(true);
@@ -61,6 +61,11 @@ export default function ScanConfiguration({
 
   const config = useConfigAtom(schema, atomsMap);
 
+  const updateAiRequestId = useAgentState('smc_simulation_config', config);
+  const { aiConfig, setAiConfig } = useAIConfig();
+
+  console.log(aiConfig);
+
   if (!schema || Object.keys(atomsMap).length === 0) {
     return (
       <div className="flex h-full w-full items-center justify-center">
@@ -79,9 +84,6 @@ export default function ScanConfiguration({
       </header>
       <div className="relative mb-10">
         <div className="w-full border-t border-gray-200" />
-        {/* <div className="text-primary-8 absolute -top-5 left-1/2 rounded-full bg-gray-50 p-2 px-3 shadow-sm">
-          <UpOutlined onClick={() => router.back()} />
-        </div> */}
       </div>
 
       {tab === 'configuration' && (
@@ -109,6 +111,12 @@ export default function ScanConfiguration({
             setNewKey={setNewKey}
             isEditingKey={isEditingKey}
             setIsEditingKey={setIsEditingKey}
+            handleAcceptAIChanges={() => {
+              if (!aiConfig) return;
+              resetConfig(schema, aiConfig, setAtomsMap);
+              setAiConfig(null);
+              updateAiRequestId();
+            }}
           />
 
           <div

@@ -1,9 +1,11 @@
-import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import z from 'zod';
+import { measurementSchema } from '@/api/entitycore/queries/experimental/neuron-density';
 import type {
   ExperimentalBoutonDensityFilter,
   IExperimentalBoutonDensity,
 } from '@/api/entitycore/types/entities/bouton-density';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/experimental-bouton-density';
@@ -58,5 +60,55 @@ export async function getExperimentalBoutonDensity({
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
     },
+  });
+}
+
+const ExperimentalBoutonDensitySchema = z.object({
+  name: z
+    .string({ message: 'Experimental bouton density name is required' })
+    .nonempty({ message: 'Experimental bouton density name is required' }),
+  description: z
+    .string({ message: 'Experimental bouton density description is required' })
+    .nonempty({
+      message: 'Experimental bouton density description is required',
+    }),
+  brain_region_id: z
+    .string({ message: 'Brain region is required' })
+    .uuid()
+    .nonempty({ message: 'Brain region is required' }),
+  subject_id: z
+    .string({ message: 'Subject is required' })
+    .uuid()
+    .nonempty({ message: 'Subject is required' }),
+  license_id: z
+    .string({ message: 'License is required' })
+    .uuid()
+    .nonempty({ message: 'License is required' }),
+  measurements: z.array(measurementSchema),
+  legacy_id: z.string().uuid().nullable().optional(),
+});
+
+export type TExperimentalBoutonDensityCreate = z.infer<typeof ExperimentalBoutonDensitySchema>;
+
+/**
+ * Creates a new Experimental cell density
+ * @param param0
+ * @returns A promise that resolves to the created Experimental cell density
+ */
+export async function createExperimentalBoutonDensity({
+  context,
+  payload,
+}: {
+  context?: WorkspaceContext | null;
+  payload: TExperimentalBoutonDensityCreate;
+}) {
+  const api = await entityCoreApi();
+  return await api.post<IExperimentalBoutonDensity>(baseUri, {
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+    body: payload,
   });
 }

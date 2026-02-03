@@ -16,7 +16,7 @@ import type {
 } from '@/api/entitycore/types/shared/global';
 import type {
   BrainLocationFilter,
-  BrainRegionFilter,
+  BrainRegionHierarchyFilter,
   ContributionFilter,
   IDFilter,
   IlikeSearchFilter,
@@ -32,7 +32,7 @@ export type CellMorphologyFilter = Partial<
     TimestampsFilter &
     BrainLocationFilter &
     ContributionFilter &
-    BrainRegionFilter &
+    BrainRegionHierarchyFilter &
     PaginationFilter &
     MtypeFilter &
     SubjectFilter &

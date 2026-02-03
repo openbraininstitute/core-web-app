@@ -1,29 +1,26 @@
-import { useSearchParams } from 'next/navigation';
 import { map } from 'es-toolkit/compat';
-import { unwrap } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
-import { match } from 'ts-pattern';
+import { unwrap } from 'jotai/utils';
+import { useSearchParams } from 'next/navigation';
 import { useMemo } from 'react';
-
-import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { BrowseLink } from '@/ui/segments/explore/browse-link';
+import { match } from 'ts-pattern';
 import { useTabs } from '@/components/detail-view-tabs';
-import { useFlags } from '@/features/feature-flags';
+import { type TWorkspaceScope, WorkspaceScope } from '@/constants';
 import {
   brainRegionBasicCellGroupsRegionsHierarchyAtom,
   useGetSelectedBrainRegion,
 } from '@/features/brain-region-hierarchy/context';
+import { useFlags } from '@/features/feature-flags';
 import { useLoadableValue } from '@/hooks/hooks';
-import { WorkspaceScope } from '@/constants';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
+import { BrowseLink } from '@/ui/segments/explore/browse-link';
 import {
   ExperimentalEntitiesTileTypes,
   ModelEntitiesTileTypes,
   SimulationEntitiesTileTypes,
 } from '@/ui/segments/explore/helpers';
 import { cn } from '@/utils/css-class';
-
-import { type TWorkspaceScope } from '@/constants';
 
 export const ExploreDataTypeTabs = {
   Experimental: 'experimental',
@@ -82,16 +79,18 @@ export function EntityLinkCount() {
 
   const content = match(activeTab)
     .with(ExploreDataTypeTabs.Experimental, () =>
-      map(experimental, (value) => (
-        <BrowseLink
-          enabled
-          key={`link-${value.title}/${value.type}`}
-          scope={scope}
-          extendedType={value.extendedType}
-          currentBrainRegionId={selectedBrainRegion?.id}
-          defaultBrainRegionId={brainRegionHierarchy?.root.id}
-        />
-      ))
+      map(experimental, (value) => {
+        return (
+          <BrowseLink
+            enabled
+            key={`link-${value.title}/${value.type}`}
+            scope={scope}
+            extendedType={value.extendedType}
+            currentBrainRegionId={selectedBrainRegion?.id}
+            defaultBrainRegionId={brainRegionHierarchy?.root.id}
+          />
+        );
+      })
     )
     .with(ExploreDataTypeTabs.Models, () =>
       map(models, (value) => {

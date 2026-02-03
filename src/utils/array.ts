@@ -1,6 +1,6 @@
-import isNil from 'es-toolkit/compat/isNil';
 import isArray from 'es-toolkit/compat/isArray';
 import isEmpty from 'es-toolkit/compat/isEmpty';
+import isNil from 'es-toolkit/compat/isNil';
 
 // Overload 1: checkNotEmpty is true, returns boolean
 export function ensureArray<TElement>(options: {
@@ -42,4 +42,14 @@ export function ensureArray<TElement>({
     return !arrayIsEmpty;
   }
   return resultArray;
+}
+
+export function valuesToEnumTuple<T extends Record<string, string>>(
+  obj: T
+): readonly [T[keyof T], ...T[keyof T][]] {
+  const vals = Object.values(obj);
+  if (vals.length === 0) {
+    throw new Error('Enum dictionary cannot be empty');
+  }
+  return vals as [T[keyof T], ...T[keyof T][]];
 }

@@ -1,20 +1,20 @@
 'use client';
 
-import { useMemo, useEffect, type JSX, useState } from 'react';
-import { motion } from 'motion/react';
 import {
-  MinusOutlined,
-  FullscreenOutlined,
   FullscreenExitOutlined,
+  FullscreenOutlined,
+  MinusOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
+import { motion } from 'motion/react';
+import { type JSX, useEffect, useMemo, useState } from 'react';
 
 import AiAssistant from '@/components/ai-assistant';
+import styles from '@/ui/segments/ai/container.module.css';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
-import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import { cn } from '@/utils/css-class';
-import styles from '@/ui/segments/ai/container.module.css';
+import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 export function Container(): JSX.Element {
   const { state, setState, isCollapsed, isExpanded, isFullscreen } = usePanelState();

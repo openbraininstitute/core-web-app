@@ -15,6 +15,7 @@ export default function NeuronIds({
 }) {
   const [addingElement, setAddingElement] = useState(false);
   const [newElement, setNewElement] = useState<number | null>(null);
+
   return (
     <div className="text-primary-8 mt-2 flex flex-col gap-2">
       <div className="flex flex-wrap gap-3">

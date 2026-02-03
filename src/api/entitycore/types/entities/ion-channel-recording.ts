@@ -10,7 +10,7 @@ import type {
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
 import type {
-  BrainRegionFilter,
+  BrainRegionHierarchyFilter,
   ContributionFilter,
   IDFilter,
   IlikeSearchFilter,
@@ -49,7 +49,7 @@ export type IonChannelRecordingFilter = Partial<
   IDFilter &
     TimestampsFilter &
     ContributionFilter &
-    BrainRegionFilter &
+    BrainRegionHierarchyFilter &
     PaginationFilter &
     SharedFilter &
     IRecordingFilter &

@@ -1,18 +1,16 @@
 import { CheckOutlined, DownOutlined, LoadingOutlined, SearchOutlined } from '@ant-design/icons';
-import { ComponentProps, startTransition, useCallback, useEffect, useMemo, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { loadable, unwrap } from 'jotai/utils';
 import { useAtomValue } from 'jotai';
-
+import { loadable, unwrap } from 'jotai/utils';
+import { type ComponentProps, useCallback, useEffect, useMemo, useState } from 'react';
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import { BrainIcon } from '@/components/icons';
+import type { TBrainRegionHierarchyExtendedOption } from '@/features/brain-region-hierarchy/context';
 import { brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom } from '@/features/brain-region-hierarchy/context';
-import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
-import { BrainIcon } from '@/components/icons';
+import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
-
-import type { TBrainRegionHierarchyExtendedOption } from '@/features/brain-region-hierarchy/context';
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
 type Props = {
   onSelectBrainRegion?: (br: IBrainRegionHierarchy) => void;
@@ -256,9 +254,8 @@ export function BrainRegionDropdownWithFormItem({
       }) {
         const handleSelectBrainRegion = useCallback(
           (br: IBrainRegionHierarchy) => {
-            startTransition(() => {
-              onChange?.(br.id);
-            });
+            // FIX: Remove startTransition wrapper - form onChange should not be wrapped
+            onChange?.(br.id);
             onSelectBrainRegion?.(br);
           },
           [onChange]

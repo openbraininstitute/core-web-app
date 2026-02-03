@@ -1,7 +1,6 @@
-import { ViewDefinitionConfig } from '../types';
-import { EntityCoreFields } from '../../fields-defs/enums';
-
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+import { EntityCoreFields } from '../../fields-defs/enums';
+import type { ViewDefinitionConfig } from '../types';
 
 export const ViewDefForMEModelWithSynapsesCircuit: ViewDefinitionConfig = {
   title: 'Synaptome (beta)',
@@ -16,8 +15,8 @@ export const ViewDefForMEModelWithSynapsesCircuit: ViewDefinitionConfig = {
     EntityCoreFields.CircuitNumberConnections,
     EntityCoreFields.SpeciesName,
     EntityCoreFields.CircuitBuildCategory,
-    EntityCoreFields.CircuitPublishedIn,
-    EntityCoreFields.CircuitExperimentDate,
+    EntityCoreFields.ArtifactPublishedIn,
+    EntityCoreFields.ArtifactExperimentDate,
     EntityCoreFields.RegistrationDate,
   ],
   miniDetailView: [
@@ -35,8 +34,8 @@ export const ViewDefForMEModelWithSynapsesCircuit: ViewDefinitionConfig = {
     { field: EntityCoreFields.License },
     { field: EntityCoreFields.CircuitNumberConnections },
     { field: EntityCoreFields.CircuitNumberSynapses },
-    { field: EntityCoreFields.CircuitPublishedIn },
-    { field: EntityCoreFields.CircuitExperimentDate },
-    { field: EntityCoreFields.CircuitContactEmail },
+    { field: EntityCoreFields.ArtifactPublishedIn },
+    { field: EntityCoreFields.ArtifactExperimentDate },
+    { field: EntityCoreFields.ArtifactContactEmail },
   ],
 };

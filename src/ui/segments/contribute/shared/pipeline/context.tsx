@@ -1,24 +1,22 @@
 'use client';
 
-import { createContext, useContext, useCallback, useMemo, useState } from 'react';
-import { Form } from 'antd';
-
-import type { ZodObject, ZodRawShape } from 'zod';
 import type { FormInstance } from 'antd';
+import { Form } from 'antd';
 import type { ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import type { ZodObject, ZodRawShape } from 'zod';
 
 import {
+  getCurrentStepIndex,
   getDirtyFields,
   getValidationStatus,
-  getCurrentStepIndex,
 } from '@/ui/segments/contribute/shared/helpers';
-import { cn } from '@/utils/css-class';
-
 import type {
   IContributionFormConfig,
   IContributionStep,
   TStepValidationStatus,
 } from '@/ui/segments/contribute/shared/types';
+import { cn } from '@/utils/css-class';
 
 interface IContributionPipelineContextValue<TFormValues extends Record<string, unknown>> {
   form: FormInstance<TFormValues>;
@@ -68,10 +66,37 @@ export function ContributionPipelineProvider<
     const statusMap: Record<string, TStepValidationStatus> = {};
 
     progressSteps.forEach((step) => {
-      const fieldKey = step.schemaFieldKey as string;
-      const partialSchema = schema.pick({ [fieldKey]: true } as Record<string, true>);
-      const parseResult = partialSchema.safeParse(allValues);
-      statusMap[step.key] = getValidationStatus(parseResult, fieldKey, dirtyFields);
+      const fieldKey = step.schemaFieldKey;
+
+      if (Array.isArray(fieldKey)) {
+        // Create a pick object with all fields set to true
+        const pickObject = fieldKey.reduce(
+          (acc, key) => {
+            acc[key] = true;
+            return acc;
+          },
+          {} as Record<string, true>
+        );
+
+        const partialSchema = schema.pick(pickObject);
+        const parseResult = partialSchema.safeParse(allValues);
+
+        // For array fields, check if ANY field is dirty
+        const isDirty = fieldKey.some((key) => dirtyFields.includes(key));
+        const hasErrors = !parseResult.success;
+
+        if (!isDirty) {
+          statusMap[step.key] = 'non-touched';
+        } else if (hasErrors) {
+          statusMap[step.key] = 'invalid';
+        } else {
+          statusMap[step.key] = 'valid';
+        }
+      } else {
+        const partialSchema = schema.pick({ [fieldKey]: true } as Record<string, true>);
+        const parseResult = partialSchema.safeParse(allValues);
+        statusMap[step.key] = getValidationStatus(parseResult, fieldKey as string, dirtyFields);
+      }
     });
 
     return statusMap;

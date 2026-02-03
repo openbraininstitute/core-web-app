@@ -9,12 +9,10 @@ import type {
   EntityCoreType,
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
-import {
-  type ISingleNeuronSimulationBase,
-  SingleNeuronSimulationStatus,
-} from '@/api/entitycore/types/shared/neuron-simulation';
+import type { ISingleNeuronSimulationBase } from '@/api/entitycore/types/shared/neuron-simulation';
 import type {
   BrainRegionFilter,
+  BrainRegionHierarchyFilter,
   ContributionFilter,
   EtypeFilter,
   IlikeSearchFilter,
@@ -69,6 +67,7 @@ export interface ISingleNeuronSimulationFilter
     MtypeFilter,
     EtypeFilter,
     BrainRegionFilter,
+    BrainRegionHierarchyFilter,
     SharedFilter,
     MeTypeFilter,
     MeModelFilter,
@@ -79,7 +78,6 @@ export interface ISingleNeuronSimulationFilter
 const CreateSingleNeuronSimulationSchema = z.object({
   name: z.string(),
   description: z.string(),
-  status: z.nativeEnum(SingleNeuronSimulationStatus),
   seed: z.number().int(),
   injection_location: z.array(z.string()),
   recording_location: z.array(z.string()),
