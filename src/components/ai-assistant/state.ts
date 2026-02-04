@@ -2,7 +2,7 @@ import { atom, useAtom, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 
 import { useAITools } from '@/services/ai-agent/tools/tools';
-import type { AiAgentRateLimitEndpoint } from '@/services/ai-agent/hooks/chat';
+import type { AiAgentRateLimitEndpoint } from '@/services/ai-agent/hooks/rate-limit';
 import React from 'react';
 
 const atomToolsInvertedSelection = atomWithStorage<string[]>(

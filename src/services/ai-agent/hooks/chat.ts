@@ -11,7 +11,6 @@ import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { useAiAssistant } from '../assistant';
 import type { AiAgentRateLimitEndpoint } from './rate-limit';
 
-export type { AiAgentRateLimitEndpoint };
 const AI_AGENT_STATE: { id?: string; config?: Record<string, Config> } = {};
 let returnId: string = '';
 
