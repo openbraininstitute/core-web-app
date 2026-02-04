@@ -1,19 +1,17 @@
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { FullscreenOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
-import { useMemo, useTransition } from 'react';
 import { motion } from 'motion/react';
-
-import { useFullscreenSwitcher } from './hooks';
-
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useMemo, useTransition } from 'react';
 import { NeuronViewerContainer } from '@/components/neuron-viewer/neuron-viewer-with-actions';
 import {
   type ThreeDVisualizerQueryParamKeys,
-  threeDVisualizerState,
   threeDVisualizerQueryParam,
+  threeDVisualizerState,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { cn } from '@/utils/css-class';
+import { useFullscreenSwitcher } from './hooks';
 
 import styles from './neuron-visualizer.module.css';
 

@@ -2,24 +2,24 @@
 
 'use client';
 
-import { useExperimentalSynapsesPerConnectionPipeline } from '@/ui/segments/contribute/synapses-per-connection/pipeline';
-import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
+import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
 import {
-  EXPERIMENTAL_SYNAPSES_PER_CONNECTION_PROGRESS_STEPS,
   createExperimentalSynapsesPerConnectionConfig,
+  EXPERIMENTAL_SYNAPSES_PER_CONNECTION_PROGRESS_STEPS,
 } from '@/ui/segments/contribute/synapses-per-connection/config';
+import { useExperimentalSynapsesPerConnectionPipeline } from '@/ui/segments/contribute/synapses-per-connection/pipeline';
+import type { TExperimentalSynapsesPerConnectionForm } from '@/ui/segments/contribute/synapses-per-connection/schema';
 import {
   Contribution,
-  Measurements,
-  Subject,
   License,
+  Measurements,
   Setup,
+  Subject,
 } from '@/ui/segments/contribute/synapses-per-connection/steps';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import type { TExperimentalSynapsesPerConnectionForm } from '@/ui/segments/contribute/synapses-per-connection/schema';
-import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
+import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 const EXPERIMENTAL_SYNAPSES_PER_CONNECTION_STEP_CONFIG: Array<
   IContributionStep<TExperimentalSynapsesPerConnectionForm>
@@ -27,7 +27,7 @@ const EXPERIMENTAL_SYNAPSES_PER_CONNECTION_STEP_CONFIG: Array<
   {
     key: 'setup',
     label: 'Setup',
-    // @ts-ignore - Allow array for multi-field validation; component handles it
+    // @ts-expect-error - Allow array for multi-field validation; component handles it
     schemaFieldKey: [
       'name',
       'description',

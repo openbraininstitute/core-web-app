@@ -17,6 +17,9 @@ export type SubscriptionProps = {
   name: string;
   price: number;
   currency: string;
+  features?: AdvantagesProps[];
+  has_special_label?: boolean;
+  special_label?: string;
 };
 
 export type PlanV2 = {
