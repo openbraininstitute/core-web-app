@@ -1,6 +1,6 @@
 import { CloseOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { InputNumber } from 'antd';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function ParameterSwep({
   value,
@@ -13,6 +13,7 @@ export default function ParameterSwep({
   value: number | number[] | null;
   min: number | undefined;
   max: number | undefined;
+
   onChange: (v: null | number | (number | null)[]) => void;
   disabled: boolean;
   k: string;
