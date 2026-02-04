@@ -303,6 +303,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       renderMorphologyMeasurement(
         r as ICellMorphology,
         StructuralDomain.Axon,
+
         'section_strahler_orders',
         'maximum'
       ),
@@ -389,7 +390,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       renderMorphologyMeasurement(
         r as ICellMorphology,
         StructuralDomain.ApicalDendrite,
-        'Total Length',
+        'total_length',
         'raw',
         true
       ),
@@ -492,7 +493,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Diameter',
     },
     render: (r) =>
-      renderMorphologyMeasurement(r as ICellMorphology, 'Soma', 'soma_radius', 'raw', true),
+      renderMorphologyMeasurement(r as ICellMorphology, StructuralDomain.Soma, 'soma_radius', 'raw', true),
   },
   [EntityCoreFields.IonChannel]: {
     className: 'text-left',
