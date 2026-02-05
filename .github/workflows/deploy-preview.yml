@@ -99,7 +99,7 @@ jobs:
             |--------|--------|----------------|----------|
             | \`${{ steps.vars.outputs.branch-name }}\` | ⏳ Starting | [Visit preview](${process.env.PREVIEW_URL}) | ${formatted} |
 
-            [View Build Logs →](https://console.aws.amazon.com/amplify/home?region=${{ env.AWS_REGION }}#/${{ env.AMPLIFY_APP_ID }}/${{ steps.vars.outputs.branch-name }}/${{ steps.start-build.outputs.job-id }})`;
+            [View Build Logs →](https://${{ env.AWS_REGION }}.console.aws.amazon.com/amplify/apps/${{ env.AMPLIFY_APP_ID }}/branches/${{ steps.vars.outputs.branch-name }}/deployments/${{ steps.start-build.outputs.job-id }})`;
 
             if (existingComment) {
               await github.rest.issues.updateComment({
@@ -178,7 +178,7 @@ jobs:
             |--------|--------|----------------|----------|
             | \`${process.env.BRANCH_NAME}\` | ${config.icon} ${config.text} | ${urlCell} | ${formatted} |
 
-            [View Build Logs →](https://console.aws.amazon.com/amplify/home?region=${process.env.AWS_REGION}#/${process.env.AMPLIFY_APP_ID}/${process.env.BRANCH_NAME}/${process.env.JOB_ID})`;
+            [View Build Logs →](https://${process.env.AWS_REGION}.console.aws.amazon.com/amplify/apps/${process.env.AMPLIFY_APP_ID}/branches/${process.env.BRANCH_NAME}/deployments/${process.env.JOB_ID})`;
 
               if (existingComment) {
                 await github.rest.issues.updateComment({
