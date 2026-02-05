@@ -20,6 +20,7 @@ jobs:
     outputs:
       job-id: ${{ steps.start-build.outputs.job-id }}
       branch-name: ${{ steps.vars.outputs.branch-name }}
+      preview-url: ${{ steps.get-url.outputs.url }}
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -61,8 +62,20 @@ jobs:
             --output text)
           echo "job-id=$JOB_ID" >> $GITHUB_OUTPUT
 
+      - name: Get preview URL
+        id: get-url
+        run: |
+          DOMAIN=$(aws amplify get-branch \
+            --app-id ${{ env.AMPLIFY_APP_ID }} \
+            --branch-name ${{ steps.vars.outputs.branch-name }} \
+            --query 'branch.defaultDomain' \
+            --output text)
+          echo "url=https://${{ steps.vars.outputs.branch-name }}.${DOMAIN}" >> $GITHUB_OUTPUT
+
       - name: Post initial comment
         uses: actions/github-script@v7
+        env:
+          PREVIEW_URL: ${{ steps.get-url.outputs.url }}
         with:
           script: |
             const marker = '<!-- amplify-preview-comment -->';
@@ -74,8 +87,6 @@ jobs:
             });
 
             const existingComment = comments.find(c => c.body.includes(marker));
-            const urlMatch = existingComment?.body.match(/\[Visit preview\]\((https:\/\/[^)]+)\)/);
-            const existingUrl = urlMatch ? `[Visit preview](${urlMatch[1]})` : '-';
 
             const now = new Date();
             const formatted = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
@@ -86,7 +97,7 @@ jobs:
 
             | Name | Status | Preview | Updated |
             |--------|--------|----------------|----------|
-            | \`${{ steps.vars.outputs.branch-name }}\` | ⏳ Starting | ${existingUrl} | ${formatted} |
+            | \`${{ steps.vars.outputs.branch-name }}\` | ⏳ Starting | [Visit preview](${process.env.PREVIEW_URL}) | ${formatted} |
 
             [View Build Logs →](https://console.aws.amazon.com/amplify/home?region=${{ env.AWS_REGION }}#/${{ env.AMPLIFY_APP_ID }}/${{ steps.vars.outputs.branch-name }}/${{ steps.start-build.outputs.job-id }})`;
 
@@ -121,6 +132,7 @@ jobs:
         env:
           JOB_ID: ${{ needs.deploy.outputs.job-id }}
           BRANCH_NAME: ${{ needs.deploy.outputs.branch-name }}
+          PREVIEW_URL: ${{ needs.deploy.outputs.preview-url }}
         with:
           script: |
             const { execSync } = require('child_process');
@@ -132,20 +144,6 @@ jobs:
                 { encoding: 'utf-8' }
               );
               return JSON.parse(output).job.summary;
-            };
-
-            const getBranchUrl = () => {
-              try {
-                const output = execSync(
-                  `aws amplify get-branch --app-id ${process.env.AMPLIFY_APP_ID} --branch-name "${process.env.BRANCH_NAME}" --region ${process.env.AWS_REGION} --output json`,
-                  { encoding: 'utf-8' }
-                );
-                console.log(output);
-                const branch = JSON.parse(output).branch;
-                return `https://${branch.branchName}.${branch.defaultDomain}`;
-              } catch (e) {
-                return null;
-              }
             };
 
             const updateComment = async (status, url = null, duration = null) => {
@@ -167,10 +165,7 @@ jobs:
               });
 
               const existingComment = comments.find(c => c.body.includes(marker));
-              const urlMatch = existingComment?.body.match(/\[Visit preview\]\((https:\/\/[^)]+)\)/);
-              const existingUrl = urlMatch ? urlMatch[1] : null;
-              const deploymentUrl = url || existingUrl;
-              const urlCell = deploymentUrl ? `[Visit preview](${deploymentUrl})` : '-';
+              const urlCell = url ? `[Visit preview](${url})` : '-';
 
               const now = new Date();
               const formatted = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
@@ -192,12 +187,19 @@ jobs:
                   comment_id: existingComment.id,
                   body: body,
                 });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body: body,
+                });
               }
             };
 
             let status = 'PENDING';
             const startTime = Date.now();
-            const maxWaitTime = 30 * 60 * 1000; // 30 minutes
+            const maxWaitTime = 10 * 60 * 1000; // 10 minutes
 
             while (true) {
               const job = getJobStatus();
@@ -206,9 +208,7 @@ jobs:
               const duration = Math.round((Date.now() - startTime) / 1000);
               const durationStr = `${Math.floor(duration / 60)}m ${duration % 60}s`;
 
-              const url = status === 'SUCCEED' ? getBranchUrl() : null;
-
-              await updateComment(status, url, durationStr);
+              await updateComment(status, process.env.PREVIEW_URL, durationStr);
 
               if (['SUCCEED', 'FAILED', 'CANCELLED'].includes(status)) {
                 if (status === 'FAILED') {
@@ -218,12 +218,12 @@ jobs:
               }
 
               if (Date.now() - startTime > maxWaitTime) {
-                await updateComment('FAILED', null, durationStr);
-                core.setFailed('Build timeout after 30 minutes');
+                await updateComment('FAILED', process.env.PREVIEW_URL, durationStr);
+                core.setFailed('Build timeout after 10 minutes');
                 break;
               }
 
-              await new Promise(resolve => setTimeout(resolve, 30000)); // Wait 30s
+              await new Promise(resolve => setTimeout(resolve, 20000)); // Wait 20s
             }
 
   # Note: Branch cleanup is handled automatically by:
