@@ -64,8 +64,6 @@ export default function ScanConfiguration({
   const updateAiRequestId = useAgentState('smc_simulation_config', config);
   const { aiConfig, setAiConfig } = useAIConfig();
 
-  console.log(aiConfig);
-
   if (!schema || Object.keys(atomsMap).length === 0) {
     return (
       <div className="flex h-full w-full items-center justify-center">
