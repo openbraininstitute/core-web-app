@@ -1,5 +1,5 @@
 import { CloseOutlined, PlusCircleOutlined } from '@ant-design/icons';
-import { Form, InputNumber } from 'antd';
+import { InputNumber } from 'antd';
 import isNil from 'es-toolkit/compat/isNil';
 import { useEffect, useState } from 'react';
 
@@ -47,7 +47,7 @@ export default function ParameterSweep({
   if (mode === 'single' && !Array.isArray(value)) {
     const errorMessage = !isNil(value) ? error(value) : undefined;
     return (
-      <Form className="relative">
+      <div className="relative">
         <InputNumber
           controls={false}
           disabled={disabled}
@@ -71,7 +71,7 @@ export default function ParameterSweep({
             }}
           />
         )}
-      </Form>
+      </div>
     );
   }
 
