@@ -164,7 +164,7 @@ export function BlockUI({
         <EntityPropertyDropdown
           disabled={disabled}
           modelId={model.id}
-          value={typeof state.node_set === 'string' ? state.node_set : null}
+          value={typeof value === 'string' ? value : null}
           onChange={(newV: string | null) => setState({ ...state, node_set: newV })}
           entity_type={paramSchema.entity_type}
           property={paramSchema.property}
