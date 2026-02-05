@@ -152,7 +152,7 @@ export default function BlockDictionaryEntries({
           }
         }}
       >
-        <div className="w-full text-left"> {entry}</div>
+        <div className="w-full text-left truncate max-w-[24ch]">{entry}</div>
         <span className="text-slate-500 text-[10px] animate-pulse">✦</span>
       </button>
     );
@@ -189,6 +189,9 @@ export default function BlockDictionaryEntries({
         })
         .map(([entry]) => renderBlockTab(entry))
     : [];
+
+  const areThereAiEntries =
+    !!aiConfig && [aiAddedEntries, aiDeletedEntries, aiEditedEntries].some((a) => a.length > 0);
 
   return (
     <>
@@ -234,6 +237,7 @@ export default function BlockDictionaryEntries({
                           onNameChangeConfirm(e);
                         }
                       }}
+                      maxLength={24}
                       onClick={(e) => e.stopPropagation()}
                       onChange={(v) => {
                         v.stopPropagation();
@@ -260,8 +264,8 @@ export default function BlockDictionaryEntries({
                 )}
 
                 {(!isSelected || (isSelected && !isEditingKey)) && (
-                  <>
-                    {subkey}
+                  <div className="flex items-center">
+                    <div className="inline-block truncate max-w-[24ch]">{subkey}</div>
                     {!readOnly && !campaignId && !aiConfig && isChatReady && (
                       <EditOutlined
                         className="ml-3"
@@ -273,7 +277,7 @@ export default function BlockDictionaryEntries({
                         }}
                       />
                     )}
-                  </>
+                  </div>
                 )}
               </div>
 
@@ -365,10 +369,10 @@ export default function BlockDictionaryEntries({
 
       {/* AI suggested changes */}
 
-      {!!aiConfig && !campaignId && (
-        <div className="border-neutral-200 border-1 rounded-lg w-[90%] px-2 pb-4 pt-2">
+      {!campaignId && areThereAiEntries && (
+        <div className="border-neutral-200 border-1 rounded-lg w-[90%] px-2 pb-4 pt-2 flex flex-col gap-2">
           {aiAddedEntries.length > 0 && (
-            <div className="mb-1 text-sm text-sky-400 flex items-center gap-1">
+            <div className="text-sm text-sky-400 flex items-center gap-1">
               <PlusOutlined /> Added
             </div>
           )}
@@ -376,7 +380,7 @@ export default function BlockDictionaryEntries({
           {aiAddedEntries}
 
           {aiDeletedEntries.length > 0 && (
-            <div className="mt-2 mb-1 text-sm text-red-500 flex items-center gap-1">
+            <div className="text-sm text-red-500 flex items-center gap-1">
               <CloseOutlined /> Deleted
             </div>
           )}
@@ -384,7 +388,7 @@ export default function BlockDictionaryEntries({
           {aiDeletedEntries}
 
           {aiEditedEntries.length > 0 && (
-            <div className="mt-2 mb-1 text-sm text-amber-500 flex items-center gap-1">
+            <div className="text-sm text-amber-500 flex items-center gap-1">
               <EditOutlined /> Edited
             </div>
           )}
