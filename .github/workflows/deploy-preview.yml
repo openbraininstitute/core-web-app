@@ -33,24 +33,22 @@ jobs:
           BRANCH_NAME="${{ github.head_ref }}"
           echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
 
-          BACKEND_ENV=$(echo "$BRANCH_NAME" | tr -d '-_' | tr '[:upper:]' '[:lower:]' | cut -c1-10)
-          echo "backend-env=$BACKEND_ENV" >> $GITHUB_OUTPUT
-
-      - name: Create or update Amplify branch
+      - name: Cancel running builds
         run: |
-          BRANCH_NAME="${{ steps.vars.outputs.branch-name }}"
-
-          if aws amplify get-branch --app-id ${{ env.AMPLIFY_APP_ID }} --branch-name "$BRANCH_NAME" 2>/dev/null; then
-            echo "Branch $BRANCH_NAME already exists in Amplify"
-          else
-            echo "Creating Amplify branch $BRANCH_NAME"
-            aws amplify create-branch \
+          RUNNING_JOBS=$(aws amplify list-jobs \
+            --app-id ${{ env.AMPLIFY_APP_ID }} \
+            --branch-name ${{ steps.vars.outputs.branch-name }} \
+            --max-results 5 \
+            --query 'jobSummaries[?status==`PENDING` || status==`PROVISIONING` || status==`RUNNING`].jobId' \
+            --output text)
+          
+          for JOB_ID in $RUNNING_JOBS; do
+            echo "Stopping job: $JOB_ID"
+            aws amplify stop-job \
               --app-id ${{ env.AMPLIFY_APP_ID }} \
-              --branch-name "$BRANCH_NAME" \
-              --backend-environment-arn "${{ steps.vars.outputs.backend-env }}" \
-              --framework "Next.js - SSR" \
-              --no-enable-auto-build
-          fi
+              --branch-name ${{ steps.vars.outputs.branch-name }} \
+              --job-id $JOB_ID || true
+          done
 
       - name: Start build
         id: start-build
@@ -227,26 +225,13 @@ jobs:
               await new Promise(resolve => setTimeout(resolve, 30000)); // Wait 30s
             }
 
+  # Note: Branch cleanup is handled automatically by:
+  # - AWS Amplify auto-disconnect for preview branches
+  # - GitHub auto-delete branch setting for merged PRs
   cleanup:
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.PREVIEW_DEPLOY_AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Delete Amplify branch
-        run: |
-          BRANCH_NAME="${{ github.head_ref }}"
-          if aws amplify get-branch --app-id ${{ env.AMPLIFY_APP_ID }} --branch-name "$BRANCH_NAME" 2>/dev/null; then
-            aws amplify delete-branch --app-id ${{ env.AMPLIFY_APP_ID }} --branch-name "$BRANCH_NAME"
-            echo "Deleted branch: $BRANCH_NAME"
-          else
-            echo "Branch does not exist: $BRANCH_NAME"
-          fi
-
       - name: Update comment
         uses: actions/github-script@v7
         with:
