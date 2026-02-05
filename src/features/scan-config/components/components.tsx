@@ -8,7 +8,7 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import EntityPropertyDropdown from '@/features/scan-config/components/entity-property-dropdown';
 import ModelDetails from '@/features/scan-config/components/model-details';
 import NeuronIds from '@/features/scan-config/components/neuron-ids';
-import ParameterSwep from '@/features/scan-config/components/parameter-sweep';
+import ParameterSweep from '@/features/scan-config/components/parameter-sweep';
 import Reference from '@/features/scan-config/components/reference';
 import Tooltip from '@/features/scan-config/components/tooltip';
 import { isPlainObject } from '@/features/scan-config/components/utils';
@@ -74,7 +74,7 @@ export function BlockUI({
       paramSchema.ui_element === 'int_parameter_sweep'
     ) {
       return (
-        <ParameterSwep
+        <ParameterSweep
           k={k}
           min={paramSchema.anyOf[0]?.minimum}
           max={paramSchema.anyOf[0]?.maximum}
