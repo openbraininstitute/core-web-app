@@ -1,4 +1,6 @@
 version: 1
+compute:
+  type: LARGE_16GB
 frontend:
   phases:
     preBuild:
