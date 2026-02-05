@@ -248,9 +248,10 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
     // Build user info section
     const userName = session?.user?.name ?? 'Unknown';
     const userUsername = session?.user?.username ?? 'Unknown';
+    const userEmail = session?.user?.email ?? 'Unknown';
     const userId = session?.user?.id ?? 'Unknown';
 
-    const body = `${feedback}\n\n---\n\n👤 User: ${userName} (@${userUsername})\n\n🔑 Keycloak ID: ${userId}\n\n🗳️ Project: ${projectName}\n\n🏠 Virtual Lab: ${virtualLabName}\n\nURL: ${currentUrl}`;
+    const body = `${feedback}\n\n---\n\n👤 User: ${userName} (@${userUsername})\n\n📧 Email: ${userEmail}\n\n🔑 Keycloak ID: ${userId}\n\n🗳️ Project: ${projectName}\n\n🏠 Virtual Lab: ${virtualLabName}\n\nURL: ${currentUrl}`;
 
     const labels = [type, section].filter(Boolean);
 
