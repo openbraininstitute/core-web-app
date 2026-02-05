@@ -41,7 +41,7 @@ jobs:
             --max-results 5 \
             --query 'jobSummaries[?status==`PENDING` || status==`PROVISIONING` || status==`RUNNING`].jobId' \
             --output text)
-          
+
           for JOB_ID in $RUNNING_JOBS; do
             echo "Stopping job: $JOB_ID"
             aws amplify stop-job \
@@ -140,6 +140,7 @@ jobs:
                   `aws amplify get-branch --app-id ${process.env.AMPLIFY_APP_ID} --branch-name "${process.env.BRANCH_NAME}" --region ${process.env.AWS_REGION} --output json`,
                   { encoding: 'utf-8' }
                 );
+                console.log(output);
                 const branch = JSON.parse(output).branch;
                 return `https://${branch.branchName}.${branch.defaultDomain}`;
               } catch (e) {
