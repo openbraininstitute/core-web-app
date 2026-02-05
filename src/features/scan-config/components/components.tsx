@@ -78,6 +78,8 @@ export function BlockUI({
           k={k}
           min={paramSchema.anyOf[0]?.minimum}
           max={paramSchema.anyOf[0]?.maximum}
+          exclusiveMin={paramSchema.anyOf[0]?.exclusiveMinimum}
+          exclusiveMax={paramSchema.anyOf[0]?.exclusiveMaximum}
           disabled={disabled}
           value={value as number | null | number[]}
           onChange={(value) => {

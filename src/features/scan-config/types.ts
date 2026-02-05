@@ -39,6 +39,8 @@ export interface FloatParameterSweep extends BlockElement {
       type: 'number';
       minimum?: number;
       maximum?: number;
+      exclusiveMinimum?: number;
+      exclusiveMaximum?: number;
     },
     {
       type: 'array';
@@ -46,6 +48,8 @@ export interface FloatParameterSweep extends BlockElement {
         type: 'number';
         minimum?: number;
         maximum?: number;
+        exclusiveMinimum?: number;
+        exclusiveMaximum?: number;
       };
     },
   ];
@@ -58,6 +62,8 @@ export interface IntParameterSweep extends BlockElement {
       type: 'integer';
       minimum?: number;
       maximum?: number;
+      exclusiveMinimum?: number;
+      exclusiveMaximum?: number;
     },
     {
       type: 'array';
@@ -65,6 +71,8 @@ export interface IntParameterSweep extends BlockElement {
         type: 'integer';
         minimum?: number;
         maximum?: number;
+        exclusiveMinimum?: number;
+        exclusiveMaximum?: number;
       };
     },
   ];
