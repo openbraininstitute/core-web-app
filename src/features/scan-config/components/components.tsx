@@ -1,6 +1,5 @@
 import { CloseOutlined, PlusOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
-import { every, uniq } from 'es-toolkit/compat';
 import isEqual from 'es-toolkit/compat/isEqual';
 import { atom, useAtom } from 'jotai';
 import { useRef } from 'react';
