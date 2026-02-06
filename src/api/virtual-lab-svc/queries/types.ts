@@ -1,5 +1,5 @@
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 interface VlmResponse<T> {
   message: string;
@@ -68,6 +68,7 @@ export type VirtualLab = {
   members_count: number | null;
   projects_count: number | null;
   created_by: string | null;
+  compute_cell: string;
 };
 
 export type VirtualLabExistsVerificationResponse = VlmResponse<{

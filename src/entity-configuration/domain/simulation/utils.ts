@@ -17,12 +17,24 @@ export function hasSimConfigAsset(simulation: ICircuitSimulation) {
 }
 
 export async function getExtendedSimMap(simIds: string[], context: WorkspaceContext | undefined) {
-  const simulationsResponse = await getCircuitSimulations({
-    context,
-    withFacets: false,
-    filters: { id__in: simIds },
-  });
+  const chunkSize = 30;
 
-  const simulations = simulationsResponse.data;
+  const promises: ReturnType<typeof getCircuitSimulations>[] = [];
+
+  for (let i = 0; i < simIds.length; i += chunkSize) {
+    const chunk = simIds.slice(i, i + chunkSize);
+
+    promises.push(
+      getCircuitSimulations({
+        context,
+        withFacets: false,
+        filters: { id__in: [...chunk] },
+      })
+    );
+  }
+
+  const simulationResponses = await Promise.all(promises);
+  const simulations = simulationResponses.flatMap((r) => r.data);
+
   return new Map(simulations.map((sim) => [sim.id, sim]));
 }

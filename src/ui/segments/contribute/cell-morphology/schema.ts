@@ -3,9 +3,9 @@ import { z } from 'zod';
 import {
   BaseSetupSchema,
   ContributionArraySchema,
-  SubjectIdSchema,
-  LicenseIdSchema,
   createFileSchema,
+  LicenseIdSchema,
+  SubjectIdSchema,
 } from '@/ui/segments/contribute/shared/schemas';
 
 export const ProtocolSchema = z

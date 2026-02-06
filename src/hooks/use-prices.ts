@@ -41,7 +41,6 @@ export function usePrices(): UsePricesReturn {
           throw new Error(`Failed to fetch prices: ${response.status} ${response.statusText}`);
         }
 
-        // Check content type to ensure we're getting JSON
         if (!contentType.includes('application/json')) {
           const text = await response.text();
           throw new Error(
@@ -56,8 +55,6 @@ export function usePrices(): UsePricesReturn {
         const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
         setError(errorMessage);
         setPrices([]);
-        // eslint-disable-next-line no-console
-        console.error('Error fetching prices:', errorMessage, err);
       } finally {
         setLoading(false);
       }

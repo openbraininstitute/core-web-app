@@ -1,15 +1,14 @@
 // measurements.tsx
 
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { Form, InputNumber, Space } from 'antd';
-
-import type { TMeasurement } from '@/ui/segments/contribute/experimental-bouton-density/schema';
-import { ExperimentalBoutonDensitySchema } from '@/ui/segments/contribute/experimental-bouton-density/schema';
 import { MeasurementStatistic, MeasurementUnit } from '@/api/entitycore/types/shared/global';
-import { createZodFieldValidator, renderLabel } from '@/ui/segments/contribute/shared';
-import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
+import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
+import type { TMeasurement } from '@/ui/segments/contribute/experimental-bouton-density/schema';
+import { ExperimentalBoutonDensitySchema } from '@/ui/segments/contribute/experimental-bouton-density/schema';
+import { createZodFieldValidator, renderLabel } from '@/ui/segments/contribute/shared';
 import { cn } from '@/utils/css-class';
 
 const FIXED_UNIT = MeasurementUnit.linear_density__1_um;

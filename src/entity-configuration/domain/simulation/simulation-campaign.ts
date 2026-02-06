@@ -151,19 +151,25 @@ export async function resolveSimulationByCampaignId({
   };
 }
 
+export function getSimulationStatus(simulation: ICircuitSimulation) {
+  const executions = get(simulation, 'executions', []) as ICircuitSimulationExecution[];
+  const sortedExecutions = sortBy(executions, (exec) => exec.creation_date);
+
+  // Used when there are no executions present
+  const fallbackStatus = hasSimConfigAsset(simulation)
+    ? EntitycoreExecutionStatus.CREATED
+    : EntitycoreExecutionStatus.ERROR;
+
+  const status = sortedExecutions.at(-1)?.status ?? fallbackStatus;
+
+  return status;
+}
+
 export function getStatusCountMap(simCampaign: ICircuitSimulationCampaign) {
   const simulations = get(simCampaign, 'simulations', []) as ICircuitSimulation[];
 
   const statusCountMap = simulations.reduce((map, simulation) => {
-    const executions = get(simulation, 'executions', []) as ICircuitSimulationExecution[];
-    const sortedExecutions = sortBy(executions, (exec) => exec.creation_date);
-
-    // Used when there are no executions present
-    const fallbackStatus = hasSimConfigAsset(simulation)
-      ? EntitycoreExecutionStatus.CREATED
-      : EntitycoreExecutionStatus.ERROR;
-
-    const status = sortedExecutions.at(-1)?.status ?? fallbackStatus;
+    const status = getSimulationStatus(simulation);
 
     return map.set(status, (map.get(status) ?? 0) + 1);
   }, new Map());

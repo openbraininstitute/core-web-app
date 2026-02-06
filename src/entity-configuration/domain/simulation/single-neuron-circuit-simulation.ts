@@ -172,6 +172,7 @@ export const SingeNeuronCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulati
       one: getCircuitSimulationCampaign,
       create: createSimulationCampaign,
     },
+    expandRow: async (record, _context) => record,
   },
   explore: {
     basePrefix: 'simulate',

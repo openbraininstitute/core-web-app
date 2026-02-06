@@ -188,6 +188,7 @@ export const MEModelCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCa
       one: getCircuitSimulationCampaign,
       create: createSimulationCampaign,
     },
+    expandRow: async (record, _context) => record,
   },
   explore: {
     basePrefix: 'simulate',

@@ -1,13 +1,13 @@
 import { notFound } from 'next/navigation';
-
-import { fetchSanity } from '@/services/sanity';
-import { SanityShowcaseSchema } from '@/ui/segments/reports/obi-showcases/types';
-
 import singleShowcaseQuery from '@/app/api/sanity/query';
+import { fetchSanity } from '@/services/sanity';
 import type { ServerSideComponentProp } from '@/types/common';
 import ArtifactsSection from '@/ui/segments/reports/obi-showcases/artifacts';
 import DescriptionSection from '@/ui/segments/reports/obi-showcases/description';
 import NotebooksSection from '@/ui/segments/reports/obi-showcases/notebooks';
+import type { ShowCaseProjectQueryType } from '@/ui/segments/reports/obi-showcases/showcase-type';
+import type { SanityShowcaseType } from '@/ui/segments/reports/obi-showcases/types';
+import { SanityShowcaseSchema } from '@/ui/segments/reports/obi-showcases/types';
 
 export default async function OBIShowcasePage({
   params: promisedParams,
@@ -21,7 +21,10 @@ export default async function OBIShowcasePage({
   const { slug } = params;
   const section = searchParams.section ?? 'description';
 
-  const rawData = await fetchSanity(singleShowcaseQuery(slug), (data: unknown) => data !== null);
+  const rawData = await fetchSanity(
+    singleShowcaseQuery(slug),
+    (data: unknown): data is NonNullable<typeof data> => data !== null
+  );
 
   if (!rawData) {
     notFound();
@@ -29,14 +32,14 @@ export default async function OBIShowcasePage({
 
   const validationResult = SanityShowcaseSchema.safeParse(rawData);
 
-  let project;
+  let project: SanityShowcaseType;
   if (!validationResult.success) {
-    project = rawData as any;
+    project = rawData as SanityShowcaseType;
   } else {
     project = validationResult.data;
   }
 
-  let activeSectionContent;
+  let activeSectionContent: React.ReactNode;
   switch (section) {
     case 'description':
       activeSectionContent = <DescriptionSection content={project} />;
@@ -45,7 +48,9 @@ export default async function OBIShowcasePage({
       activeSectionContent = <ArtifactsSection content={project} />;
       break;
     case 'notebooks':
-      activeSectionContent = <NotebooksSection content={project} />;
+      activeSectionContent = (
+        <NotebooksSection content={project as unknown as ShowCaseProjectQueryType} />
+      );
       break;
     default:
       activeSectionContent = <DescriptionSection content={project} />;

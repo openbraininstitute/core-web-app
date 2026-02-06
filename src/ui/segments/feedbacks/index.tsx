@@ -2,6 +2,7 @@
 
 import { CheckCircleFilled, CloseOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
+import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
@@ -31,6 +32,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
   const [isSuccess, setIsSuccess] = useState(false);
 
   const { virtualLabId, projectId } = useWorkspace();
+  const { data: session } = useSession();
 
   useEffect(() => {
     setMounted(true);
@@ -243,7 +245,13 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
     }
     const title = feedback.substring(0, 60).trim() || `[${type.toUpperCase()}] in ${section}`;
 
-    const body = `${feedback}\n\n---\n\n🗳️ Project: ${projectName}\n\n🏠 Virtual Lab: ${virtualLabName}\n\nURL: ${currentUrl}`;
+    // Build user info section
+    const userName = session?.user?.name ?? 'Unknown';
+    const userUsername = session?.user?.username ?? 'Unknown';
+    const userEmail = session?.user?.email ?? 'Unknown';
+    const userId = session?.user?.id ?? 'Unknown';
+
+    const body = `${feedback}\n\n---\n\n👤 User: ${userName} (@${userUsername})\n\n📧 Email: ${userEmail}\n\n🔑 Keycloak ID: ${userId}\n\n🗳️ Project: ${projectName}\n\n🏠 Virtual Lab: ${virtualLabName}\n\nURL: ${currentUrl}`;
 
     const labels = [type, section].filter(Boolean);
 

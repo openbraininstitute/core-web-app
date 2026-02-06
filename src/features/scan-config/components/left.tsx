@@ -10,9 +10,11 @@ import {
   type TScanConfigActivity,
   type TScanConfigTabs,
 } from '@/features/scan-config/types';
+import { useAgentState, useAIConfig } from '@/services/ai-agent';
 import type { Config } from './components';
 import GenerateConfigButton from './generate-config-button';
 import { useValidateSchema } from './hooks';
+import { resetConfig } from './hooks/schema';
 
 export default function Left({
   schema,
@@ -64,6 +66,15 @@ export default function Left({
   activity: TScanConfigActivity;
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
+  const updateAiRequestId = useAgentState('smc_simulation_config', config);
+  const { aiConfig, setAiConfig } = useAIConfig();
+
+  const handleAcceptAIChanges = () => {
+    if (!aiConfig) return;
+    resetConfig(schema, aiConfig, setAtomsMap);
+    setAiConfig(null);
+    updateAiRequestId();
+  };
 
   return (
     <div className={styles.scrollable}>
@@ -80,7 +91,6 @@ export default function Left({
                   )
                   .sort(([_, a], [__, b]) => {
                     if (isType(a) || isType(b)) return 0;
-
                     return a.group_order - b.group_order;
                   })
                   .map(([k, rootElementSchema]) => {
@@ -116,7 +126,26 @@ export default function Left({
         })}
       </div>
 
-      {!readOnly && (
+      {!!aiConfig && !campaignId && (
+        <div className="flex w-[95%] min-h-[50px] gap-2">
+          <button
+            type="button"
+            className="min-h-[50px] text-lg drop-shadow border-red-500 border-1 rounded-full p-2 grow text-red-500"
+            onClick={() => setAiConfig(null)}
+          >
+            Reject changes
+          </button>
+          <button
+            type="button"
+            className="min-h-[50px] text-lg bg-green-600 text-white p-2 rounded-full grow "
+            onClick={handleAcceptAIChanges}
+          >
+            Accept changes
+          </button>
+        </div>
+      )}
+
+      {!readOnly && (!aiConfig || (aiConfig && campaignId)) && (
         <GenerateConfigButton
           loading={loading}
           campaignId={campaignId}

@@ -118,16 +118,16 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Extractio
       );
       return hasActiveExtractions && !extractionRequestInProgress ? STATUS_POLL_INTERVAL : false;
     },
-    staleTime(query) {
-      const executions = query.state.data?.data ?? [];
-      const hasActiveExtractions = executions.some((exec) =>
-        includes(
-          [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING],
-          exec.status
-        )
-      );
-      return hasActiveExtractions && !extractionRequestInProgress ? STATUS_POLL_INTERVAL : 'static';
-    },
+    // staleTime(query) {
+    //   const executions = query.state.data?.data ?? [];
+    //   const hasActiveExtractions = executions.some((exec) =>
+    //     includes(
+    //       [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING],
+    //       exec.status
+    //     )
+    //   );
+    //   return hasActiveExtractions && !extractionRequestInProgress ? STATUS_POLL_INTERVAL : 'static';
+    // },
   });
 
   const statusMap = useMemo(() => {

@@ -19,16 +19,8 @@ type FileViewerProps = {
 
 export function FileViewer({ file, context, loading = false, className = '' }: FileViewerProps) {
   const [displayFile, setDisplayFile] = useState<File | undefined>(file);
-  const [isFilePreloading, setIsFilePreloading] = useState(false);
 
-  useEffect(() => {
-    if (file && file !== displayFile) {
-      setIsFilePreloading(true);
-    } else if (!file) {
-      setDisplayFile(undefined);
-      setIsFilePreloading(false);
-    }
-  }, [file, displayFile]);
+  const isFilePreloading = file && file !== displayFile;
 
   const fileName =
     displayFile?.assetPath?.split('/').at(-1) ?? displayFile?.asset.path.split('/').at(-1);
@@ -63,14 +55,7 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
                 </div>
               }
             >
-              <FilePreloader
-                file={file}
-                context={context}
-                onLoaded={() => {
-                  setDisplayFile(file);
-                  setIsFilePreloading(false);
-                }}
-              />
+              <FilePreloader file={file} context={context} onLoaded={() => setDisplayFile(file)} />
             </Suspense>
           </div>
         )}

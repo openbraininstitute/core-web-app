@@ -68,17 +68,8 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
   const { isProjectAdmin } = useUserRole({ virtualLabId, projectId });
   const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
   const step = searchParams.get('step') ?? ExperimentStep.Info;
-  const setVisibleSynapses = useVisibleSynapsesSetter();
 
   const [isLaunching, setIsLaunching] = useState(false);
-
-  useEffect(() => {
-    if (step === ExperimentStep.Info) {
-      // Reset the synapses in the info panel.
-      // Go to "Synaptic Inputs" to see the synapses.
-      setVisibleSynapses([]);
-    }
-  }, [step, setVisibleSynapses]);
 
   const updatePanelSelection = () => {
     const query = new URLSearchParams(searchParams);

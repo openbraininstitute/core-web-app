@@ -1,6 +1,8 @@
+import { CloseOutlined, PlusOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
-import { type atom, useAtom } from 'jotai';
-import { useEffect } from 'react';
+import isEqual from 'es-toolkit/compat/isEqual';
+import { atom, useAtom } from 'jotai';
+import { useRef } from 'react';
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import BooleanInput from '@/features/scan-config/components/boolean-input';
@@ -20,6 +22,7 @@ import {
 } from '@/features/scan-config/types';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
 
 type Primitive = null | boolean | number | string;
 interface Object {
@@ -37,36 +40,26 @@ export function BlockUI({
   stateAtom,
   config,
   model,
+  blockAIConfig,
 }: {
   schemaName: SchemaName;
   disabled: boolean;
   config: Config;
   blockSchema?: TBlock;
   model: ICircuit | IMEModel | undefined | null;
-  stateAtom: ReturnType<typeof atom<{ [key: string]: ConfigValue }>>;
+  stateAtom: ReturnType<typeof atom<Record<string, ConfigValue>>> | null;
+  blockAIConfig: Record<string, ConfigValue> | null;
 }) {
-  const [state, setState] = useAtom(stateAtom);
+  // Empty atom for when a block doesn't exist in the config (and the atoms map) yet, only in the AI suggested changes
+  const emptyAtom = useRef(atom<Record<string, ConfigValue>>({}));
+  const [state, setState] = useAtom(stateAtom ?? emptyAtom.current);
 
-  useEffect(() => {
-    if (!blockSchema || !blockSchema.properties) return;
-
-    const initial: Record<string, ConfigValue> = {};
-
-    Object.entries(blockSchema.properties).forEach(([key, value]) => {
-      initial[key] = value.default ?? null;
-    });
-
-    setState((prev) => {
-      return { ...initial, ...prev };
-    });
-  }, [setState, blockSchema]);
-
-  function renderInput(k: string, paramSchema: ParamSchema) {
+  function renderInput(k: string, paramSchema: ParamSchema, value: ConfigValue) {
     if (paramSchema.ui_element === ScanConfigUIElementDict.StringInput) {
       return (
         <Input
           disabled={disabled}
-          value={typeof state[k] === 'string' ? state[k] : ''}
+          value={typeof value === 'string' ? value : ''}
           className="w-full"
           onChange={(e) => {
             setState({ ...state, [k]: e.currentTarget.value });
@@ -88,8 +81,10 @@ export function BlockUI({
           k={k}
           min={paramSchema.anyOf[0]?.minimum}
           max={paramSchema.anyOf[0]?.maximum}
+          exclusiveMin={paramSchema.anyOf[0]?.exclusiveMinimum}
+          exclusiveMax={paramSchema.anyOf[0]?.exclusiveMaximum}
           disabled={disabled}
-          value={state[k] as number | null | number[]}
+          value={value as number | null | number[]}
           onChange={(value) => {
             setState({ ...state, [k]: value });
           }}
@@ -99,13 +94,12 @@ export function BlockUI({
 
     if (paramSchema.ui_element === ScanConfigUIElementDict.Reference) {
       const defaultV: string | null =
-        isPlainObject(state[k]) && typeof state[k].block_name === 'string'
-          ? state[k].block_name
-          : null;
+        isPlainObject(value) && typeof value.block_name === 'string' ? value.block_name : null;
 
       return (
         <Reference
           config={config}
+          hasReplacePatch={!!value}
           schemaName={schemaName}
           referenceSchema={paramSchema}
           value={defaultV}
@@ -130,7 +124,8 @@ export function BlockUI({
 
     if (paramSchema.ui_element === ScanConfigUIElementDict.NeuronIds) {
       const elements: number[] =
-        isPlainObject(state[k]) && Array.isArray(state[k].elements) ? state[k].elements : [];
+        isPlainObject(value) && Array.isArray(value.elements) ? value.elements : [];
+
       return (
         <NeuronIds
           elements={elements}
@@ -170,8 +165,9 @@ export function BlockUI({
     if (paramSchema.ui_element === ScanConfigUIElementDict.EntityPropertyDropdown && model) {
       return (
         <EntityPropertyDropdown
+          disabled={disabled}
           modelId={model.id}
-          value={typeof state.node_set === 'string' ? state.node_set : null}
+          value={typeof value === 'string' ? value : null}
           onChange={(newV: string | null) => setState({ ...state, node_set: newV })}
           entity_type={paramSchema.entity_type}
           property={paramSchema.property}
@@ -198,6 +194,17 @@ export function BlockUI({
 
   if (!blockSchema) return null;
 
+  function op(k: string) {
+    if (!blockAIConfig) return null;
+    const v1 = state[k];
+    const v2 = blockAIConfig[k];
+
+    if (v1 === undefined && v2 !== undefined) return 'add';
+    if (v1 !== undefined && v2 === undefined) return 'delete';
+    if (v1 !== undefined && v2 !== undefined && !isEqual(v1, v2)) return 'replace';
+    return null;
+  }
+
   return (
     <div className="flex flex-col gap-2">
       <div className="text-lg text-gray-500 uppercase">{blockSchema.title}</div>
@@ -211,7 +218,25 @@ export function BlockUI({
             })
             .map(([k, blockElementSchema]) => {
               if (isType(blockElementSchema)) return null;
-              const isBooleanInput = blockElementSchema.ui_element === 'boolean_input';
+              const isBooleanInput =
+                blockElementSchema.ui_element === ScanConfigUIElementDict.BooleanInput;
+              const op_ = op(k);
+
+              const patchBorderClass = () => {
+                if (op_ === 'delete' || op_ === 'replace') return 'border-red-500';
+                if (op_ === 'add') return 'border-sky-400';
+                return 'border-transparent';
+              };
+
+              // Gets the value so show in the input element
+              const firstValue = () => {
+                if (!op_ || op_ === 'delete' || op_ === 'replace' || !blockAIConfig) {
+                  return state[k];
+                }
+
+                return blockAIConfig[k];
+              };
+
               return (
                 <div key={k} className="w-full">
                   <div
@@ -235,7 +260,26 @@ export function BlockUI({
                       <div className="shrink-0">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div>{renderInput(k, blockElementSchema)}</div>
+                            <div>
+                              <div className="mb-1 flex">
+                                <div className={cn('border-1 flex-1 mr-1', patchBorderClass())}>
+                                  {renderInput(k, blockElementSchema, firstValue())}
+                                </div>
+                                {(op_ === 'delete' || op_ === 'replace') && (
+                                  <CloseOutlined className="text-red-500" />
+                                )}
+                                {op_ === 'add' && <PlusOutlined className="text-sky-400" />}
+                              </div>
+
+                              {op_ === 'replace' && !!blockAIConfig && (
+                                <div className="flex">
+                                  <div className="border-1 border-sky-400 flex-1 mr-1">
+                                    {renderInput(k, blockElementSchema, blockAIConfig[k])}
+                                  </div>
+                                  <PlusOutlined className="text-sky-400" />
+                                </div>
+                              )}
+                            </div>
                           </TooltipTrigger>
                           <TooltipContent
                             avoidCollisions
@@ -254,7 +298,26 @@ export function BlockUI({
                   {!isBooleanInput && (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div>{renderInput(k, blockElementSchema)}</div>
+                        <div>
+                          <div className="mb-1 flex">
+                            <div className={cn('border-1 flex-1 mr-1', patchBorderClass())}>
+                              {renderInput(k, blockElementSchema, firstValue())}
+                            </div>
+                            {(op_ === 'delete' || op_ === 'replace') && (
+                              <CloseOutlined className="text-red-500" />
+                            )}
+                            {op_ === 'add' && <PlusOutlined className="text-sky-400" />}
+                          </div>
+
+                          {op_ === 'replace' && !!blockAIConfig && (
+                            <div className="flex">
+                              <div className="border-1 border-sky-400 flex-1 mr-1">
+                                {renderInput(k, blockElementSchema, blockAIConfig[k])}
+                              </div>
+                              <PlusOutlined className="text-sky-400" />
+                            </div>
+                          )}
+                        </div>
                       </TooltipTrigger>
                       <TooltipContent
                         avoidCollisions

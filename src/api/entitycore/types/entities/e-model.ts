@@ -1,5 +1,5 @@
-import type { BrainRegionHierarchyBase } from "@/api/entitycore/types/entities/brain-region";
-import type { IonChannelModel } from "@/api/entitycore/types/entities/ion-channel";
+import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
+import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import type {
   EntityAuthorization,
   EntityCoreBaseAsset,
@@ -13,19 +13,19 @@ import type {
   IStrain,
   PointLocationBase,
   Timestamps,
-} from "@/api/entitycore/types/shared/global";
+} from '@/api/entitycore/types/shared/global';
 import type {
-  ContributionFilter,
-  IMorphologyFilter,
   BrainRegionFilter,
   BrainRegionHierarchyFilter,
-  SpeciesFilter,
-  SharedFilter,
-  MtypeFilter,
+  ContributionFilter,
   EtypeFilter,
   IlikeSearchFilter,
+  IMorphologyFilter,
+  MtypeFilter,
   PaginationFilter,
-} from "@/api/entitycore/types/shared/request";
+  SharedFilter,
+  SpeciesFilter,
+} from '@/api/entitycore/types/shared/request';
 
 interface ExemplarMorphology extends Timestamps, EntityCoreIdentifiable {
   name: string;

@@ -1,24 +1,24 @@
 'use client';
 
-import { useExperimentalBoutonDensityPipeline } from '@/ui/segments/contribute/experimental-bouton-density/pipeline';
-import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
-  EXPERIMENTAL_BOUTON_DENSITY_PROGRESS_STEPS,
   createExperimentalBoutonDensityConfig,
+  EXPERIMENTAL_BOUTON_DENSITY_PROGRESS_STEPS,
 } from '@/ui/segments/contribute/experimental-bouton-density/config';
+import { useExperimentalBoutonDensityPipeline } from '@/ui/segments/contribute/experimental-bouton-density/pipeline';
+import type { TExperimentalBoutonDensityForm } from '@/ui/segments/contribute/experimental-bouton-density/schema';
 import {
   Contribution,
-  Measurements,
-  Subject,
   License,
-  Setup,
+  Measurements,
   MTypeClassification,
+  Setup,
+  Subject,
 } from '@/ui/segments/contribute/experimental-bouton-density/steps';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import type { TExperimentalBoutonDensityForm } from '@/ui/segments/contribute/experimental-bouton-density/schema';
+import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
 import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
+import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 const EXPERIMENTAL_BOUTON_DENSITY_STEP_CONFIG: Array<
   IContributionStep<TExperimentalBoutonDensityForm>
