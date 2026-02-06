@@ -4,6 +4,8 @@ import { CloseOutlined } from '@ant-design/icons';
 import { capitalize } from 'es-toolkit/compat';
 
 import { HierarchySquare } from '@/components/icons/buttons';
+import { useAppNotification } from '@/components/notification';
+import { ATLAS_3D_VIEWER_ERROR_MESSAGE_KEY } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/hooks';
 import { SpeciesSelector } from '@/features/brain-region-hierarchy/components/species-selector';
 import { useBrainRegionRootHierarchyQuery } from '@/features/brain-region-hierarchy/context';
 import {
@@ -29,12 +31,18 @@ type Props = {
 };
 
 export function RegionBanner({ view, onSwitchView }: Props) {
+  const notifier = useAppNotification();
   const { workspaceSpecies, selectedBrainRegion, changeBulkStoreHierarchySpecies } =
     useWorkspaceHierarchyRegistry();
   const { loading: isLoadingRootHierarchy } = useBrainRegionRootHierarchyQuery();
   const { loading: isLoadingAvailableHierarchySpecies } = useAvailableHierarchySpeciesQuery();
   const { loading: isLoadingRemoteUserPreferenceHierarchySpecies } =
     useRemoteUserPreferenceHierarchySpeciesQuery();
+
+  const onSpeciesChange = (hId: string) => {
+    changeBulkStoreHierarchySpecies(hId);
+    notifier.destroy(ATLAS_3D_VIEWER_ERROR_MESSAGE_KEY);
+  };
 
   return (
     <div
@@ -54,10 +62,7 @@ export function RegionBanner({ view, onSwitchView }: Props) {
       >
         <div className="flex items-center flex-nowrap w-full min-w-0">
           <div className="pr-3 pl-4 hover:bg-gray-100 rounded-l-full shrink-0">
-            <SpeciesSelector
-              selectedSpecies={workspaceSpecies}
-              onSpeciesChange={changeBulkStoreHierarchySpecies}
-            />
+            <SpeciesSelector selectedSpecies={workspaceSpecies} onSpeciesChange={onSpeciesChange} />
           </div>
           <div className="h-6 w-px bg-gray-200 shrink-0" />
           <div className="items-stretch h-12 w-full rounded-r-full pl-3 pr-10 hover:bg-gray-100 py-2 min-w-0 overflow-hidden">

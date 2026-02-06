@@ -17,6 +17,7 @@ import {
 } from '@/features/brain-region-hierarchy/context';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 
+export const ATLAS_3D_VIEWER_ERROR_MESSAGE_KEY = '3d-mesh-error';
 export function usePainter({
   atlasId,
   loading,
@@ -42,7 +43,8 @@ export function usePainter({
     refPainter.current.eventError.addListener((message) => {
       notifier.warning({
         message,
-        key: '3d-mesh-error',
+        key: ATLAS_3D_VIEWER_ERROR_MESSAGE_KEY,
+        duration: 2,
       });
     });
     refPainter.current.uniforms = getAtlasViewerDefaultSettings();

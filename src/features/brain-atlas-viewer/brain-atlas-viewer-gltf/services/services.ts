@@ -129,6 +129,12 @@ export async function getPointCouldData(annotationValue: number, accessToken: st
 
   const promise = actualGetPointCouldData(annotationValue, accessToken);
   cachePointClouds.set(annotationValue, promise);
+
+  // Evict from cache on failure so retries can succeed
+  promise.catch(() => {
+    cachePointClouds.delete(annotationValue);
+  });
+
   return promise;
 }
 

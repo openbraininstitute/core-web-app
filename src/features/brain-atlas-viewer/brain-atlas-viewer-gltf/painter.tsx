@@ -184,10 +184,13 @@ export class Painter {
       if (this.pointCloudPainter) {
         group.remove(this.pointCloudPainter);
         this.pointCloudPainter.delete();
+        this.pointCloudPainter = null;
       }
       this.pointCloudId = annotationValue;
       if (annotationValue !== -1) {
         const dataPoint = await getPointCouldData(annotationValue, accessToken);
+        // context may have been destroyed while awaiting the fetch
+        if (!this.context || !this.group) return;
         const painter = new TgdPainterPointsCloud(context, {
           dataPoint,
           minSizeInPixels: 5,
@@ -197,7 +200,19 @@ export class Painter {
         this.pointCloudPainter = painter;
       }
     } catch (ex) {
-      logError('Unable to load point could!', ex);
+      console.log('# # setPointCloud # ex:', { ex });
+      if (
+        ex instanceof Error &&
+        ex.message.includes('[TgdContext] This context has been deleted:')
+      ) {
+        logError(`Point cloud unavailable for annotation ${annotationValue}:`, ex);
+        return;
+      }
+      // reset so the same region can be retried on next render
+      this.pointCloudId = -1;
+      // not all regions have point cloud data.
+      // only log, never show a user-facing error for point cloud failures.
+      logError(`Point cloud unavailable for annotation ${annotationValue}:`, ex);
       this.eventError.dispatch(`Unable to load points cloud!`);
     }
     this.loadingPointCloud = false;
