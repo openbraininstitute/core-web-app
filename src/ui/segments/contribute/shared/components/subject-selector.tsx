@@ -91,7 +91,7 @@ export function SubjectSelector<TSchema extends ZodObject<ZodRawShape>>({
 
       return {
         ...result,
-        data: result.data.filter((subject: ISubject) => subject.name.toLowerCase() !== 'unknown'),
+        data: result.data.filter((subject: ISubject) => subject.name.trim().toLowerCase() !== 'unknown'),
       };
     },
     [virtualLabId, projectId]
