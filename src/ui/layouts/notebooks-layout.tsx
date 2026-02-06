@@ -1,13 +1,16 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
-import NextLink from 'next/link';
-import Image from 'next/image';
 import { LoadingOutlined } from '@ant-design/icons';
-import { useWorkspace } from '../hooks/use-workspace';
-import { cn } from '@/utils/css-class';
-import { startEmptyNotebook } from '@/services/notebooks';
+import { useQuery } from '@tanstack/react-query';
+import Image from 'next/image';
+import NextLink from 'next/link';
+import { type ReactNode, useState } from 'react';
+import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useAppNotification } from '@/components/notification';
+import { startEmptyNotebook } from '@/services/notebooks';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { cn } from '@/utils/css-class';
+import { useWorkspace } from '../hooks/use-workspace';
 
 type Props = {
   children: ReactNode;
@@ -19,10 +22,23 @@ export function NotebooksLayout({ children, active }: Props) {
   const notification = useAppNotification();
   const [loading, setLoading] = useState(false);
 
+  const { data: virtualLabData } = useQuery({
+    queryKey: keyBuilder.getOneLab({ virtualLabId }),
+    queryFn: () => getVirtualLab(virtualLabId),
+    enabled: Boolean(virtualLabId),
+  });
+
   async function handleRunNotebook() {
     setLoading(true);
+    if (virtualLabData == null || virtualLabData.data == null) {
+      throw new Error(`Could not fetch virtual lab data with useQuery ${virtualLabData}`);
+    }
     try {
-      const retval = await startEmptyNotebook(virtualLabId, projectId);
+      const retval = await startEmptyNotebook(
+        virtualLabId,
+        projectId,
+        virtualLabData.data.virtual_lab.compute_cell
+      );
       notification.success({
         message: `Notebook starting`,
         key: 'notebook-started-successfully',
