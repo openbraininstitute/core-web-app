@@ -1,3 +1,5 @@
+'use client';
+
 import { TgdColor, TgdVec4 } from '@tolokoban/tgd';
 import { compact, find } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';

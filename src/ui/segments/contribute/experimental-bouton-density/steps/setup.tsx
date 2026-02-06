@@ -1,32 +1,22 @@
 'use client';
 
 import { Form, Input } from 'antd';
+
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+
 import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
-import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { ExperimentalBoutonDensitySchema } from '@/ui/segments/contribute/experimental-bouton-density/schema';
 import {
   createZodFieldValidator,
   RequiredFieldMarker,
   renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
-import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 export function Setup() {
   const form = Form.useFormInstance();
-  const { projectId } = useWorkspace();
 
-  const { node: defaultBrainRegion } = useBrainRegionHierarchy({
-    dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
-  });
-
-  const BrainRegionDropdown = BrainRegionDropdownWithFormItem({
-    clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
-    showIcon: false,
-    charsPerLine: 200,
-    defaultBrainRegion: defaultBrainRegion as IBrainRegionHierarchy,
-  });
+  const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
 
   return (
     <div className="h-full w-full">
@@ -82,7 +72,12 @@ export function Setup() {
           },
         ]}
       >
-        <BrainRegionDropdown />
+        <BrainRegionDropdownWithFormItem
+          clsx={{ trigger: 'rounded-full w-full h-12', content: 'z-[99999]' }}
+          showIcon={false}
+          charsPerLine={200}
+          defaultBrainRegion={selectedBrainRegion as IBrainRegionHierarchy}
+        />
       </Form.Item>
     </div>
   );

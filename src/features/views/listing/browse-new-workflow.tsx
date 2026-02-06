@@ -1,52 +1,37 @@
 'use client';
 
-import { compact, omit } from 'es-toolkit/compat';
-import { useAtomValue } from 'jotai';
-import { unwrap } from 'jotai/utils';
+import { omit } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
+
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
+
+import { WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
-  brainRegionBasicCellGroupsRegionsHierarchyAtom,
-  useBrainRegionHierarchy,
+  usePrimaryHierarchyOfCurrentSpeciesQuery,
   useSetSelectedBrainRegion,
 } from '@/features/brain-region-hierarchy/context';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
-  workspace: WorkspaceContext;
   buildType: TExtendedEntitiesTypeDict;
 };
 
-export function WorkflowBrowseEntity({ workspace, buildType }: Props) {
+export function WorkflowBrowseEntity({ buildType }: Props) {
   const dataType = getEntityByExtendedType({ type: buildType });
-  const dataKey = compact([
-    workspace.virtualLabId,
-    workspace.projectId,
-    WorkspaceSection.SimulateWorkflow,
-    buildType,
-    WorkspaceScope.Simulate,
-  ]).join('/');
   const { updateSelectedBrainRegion } = useSetSelectedBrainRegion();
-  const { updateHierarchyConfig } = useBrainRegionHierarchy({
-    dataKey,
-  });
+  const { changeBrainRegion } = useWorkspaceHierarchyRegistry();
+  const { result: brainRegionHierarchy } = usePrimaryHierarchyOfCurrentSpeciesQuery();
 
-  const brainRegionHierarchy = useAtomValue(
-    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
-  );
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: both functions are stable
   useEffect(() => {
     if (brainRegionHierarchy) {
       const defaultBrainRegion = brainRegionHierarchy?.root;
-      updateHierarchyConfig(defaultBrainRegion);
+      changeBrainRegion(defaultBrainRegion);
       updateSelectedBrainRegion(omit(defaultBrainRegion, 'children'));
     }
-  }, [brainRegionHierarchy]);
+  }, [brainRegionHierarchy, changeBrainRegion, updateSelectedBrainRegion]);
 
   if (!dataType) return notFound();
   return (
