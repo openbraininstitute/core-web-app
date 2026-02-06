@@ -97,7 +97,6 @@ export function BlockUI({
       return (
         <Reference
           config={config}
-          hasReplacePatch={!!value}
           schemaName={schemaName}
           referenceSchema={paramSchema}
           value={defaultV}
