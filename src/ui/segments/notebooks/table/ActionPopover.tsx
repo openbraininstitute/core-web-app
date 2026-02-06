@@ -218,7 +218,7 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
           placement="bottomRight"
           arrow={false}
         >
-          <PlusOutlined className="bg-primary-8 rounded-full p-2 text-lg font-bold text-white shadow-md" />
+          <PlusOutlined className="bg-primary-8 rounded-full p-2 text-lg font-bold !text-white shadow-md" />
         </Popover>
       </div>
     </>
