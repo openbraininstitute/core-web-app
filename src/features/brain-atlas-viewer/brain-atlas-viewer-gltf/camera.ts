@@ -1,28 +1,88 @@
+import type { TgdCamera, TgdCameraState, TgdContext } from '@tolokoban/tgd';
 import {
-  tgdActionCreateCameraInterpolation,
-  tgdCalcDegToRad,
-  TgdCamera,
   TgdCameraPerspective,
-  TgdCameraState,
-  TgdContext,
+  TgdControllerCameraOrbit,
   TgdQuat,
   TgdVec3,
-  TgdControllerCameraOrbit,
+  tgdActionCreateCameraInterpolation,
+  tgdCalcDegToRad,
 } from '@tolokoban/tgd';
 
-import GenericEvent from '@/util/generic-event';
+import type GenericEvent from '@/util/generic-event';
 
-export function setCamera(context: TgdContext, eventChange: GenericEvent<TgdCamera>) {
-  const restTransfo: Partial<TgdCameraState> = {
-    position: new TgdVec3([6714.025177001953, 3849.1394271850586, 5688.234390258789]),
-    distance: 20000,
+import { AppSpeciesBrainRegionConfig } from '@/features/brain-region-hierarchy/context';
+
+interface CameraPreset {
+  position: [number, number, number];
+  distance: number;
+  near: number;
+  far: number;
+}
+
+const MOUSE_PRESET: CameraPreset = {
+  position: [6714.025177001953, 3849.1394271850586, 5688.234390258789],
+  distance: 20000,
+  near: 1,
+  far: 80000,
+};
+
+function getPresetForAtlas(atlasId: string): CameraPreset {
+  if (atlasId === AppSpeciesBrainRegionConfig.Mouse.AtlasId) {
+    return MOUSE_PRESET;
+  }
+  // for non-mouse atlases, return a neutral default that will be
+  // overridden by fitCameraToBounds once the first mesh loads.
+  return {
+    position: [0, 0, 0],
+    distance: 200,
+    near: 0.01,
+    far: 100000,
+  };
+}
+
+/**
+ * compute a camera preset from the GLTF accessor min/max bounding box.
+ * `min` and `max` are vec3 arrays from the POSITION accessor.
+ */
+export function computePresetFromBounds(min: number[], max: number[]): CameraPreset {
+  const cx = (min[0] + max[0]) / 2;
+  const cy = (min[1] + max[1]) / 2;
+  const cz = (min[2] + max[2]) / 2;
+  const dx = max[0] - min[0];
+  const dy = max[1] - min[1];
+  const dz = max[2] - min[2];
+  const diagonal = Math.sqrt(dx * dx + dy * dy + dz * dz);
+  // place camera at ~1.5x the bounding diagonal away
+  const distance = diagonal * 1.5;
+  return {
+    position: [cx, cy, cz],
+    distance,
+    near: distance * 0.001,
+    far: distance * 10,
+  };
+}
+
+export interface CameraController {
+  resetCamera: () => void;
+  fitToBounds: (min: number[], max: number[]) => void;
+}
+
+export function setCamera(
+  context: TgdContext,
+  eventChange: GenericEvent<TgdCamera>,
+  atlasId: string = AppSpeciesBrainRegionConfig.Common.DefaultAtlasId
+): CameraController {
+  const preset = getPresetForAtlas(atlasId);
+  let restTransformation: Partial<TgdCameraState> = {
+    position: new TgdVec3(preset.position),
+    distance: preset.distance,
     orientation: TgdQuat.fromFace('-X-Y+Z'),
   };
   context.camera = new TgdCameraPerspective({
-    near: 1,
-    far: 80000,
+    near: preset.near,
+    far: preset.far,
     fovy: tgdCalcDegToRad(55),
-    transfo: { ...restTransfo },
+    transfo: { ...restTransformation },
   });
   const controller = new TgdControllerCameraOrbit(context, {
     inertiaOrbit: 500,
@@ -31,13 +91,34 @@ export function setCamera(context: TgdContext, eventChange: GenericEvent<TgdCame
     maxZoom: 3,
   });
   controller.eventChange.addListener((camera) => eventChange.dispatch(camera));
-  return () => {
+
+  const resetCamera = () => {
     context.animSchedule({
-      action: tgdActionCreateCameraInterpolation(context.camera, { ...restTransfo }),
+      action: tgdActionCreateCameraInterpolation(context.camera, {
+        ...restTransformation,
+      }),
       duration: 0.5,
       onEnd: () => {
         controller.resetZoom();
       },
     });
   };
+
+  const fitToBounds = (min: number[], max: number[]) => {
+    const computed = computePresetFromBounds(min, max);
+    restTransformation = {
+      position: new TgdVec3(computed.position),
+      distance: computed.distance,
+      orientation: TgdQuat.fromFace('-X-Y+Z'),
+    };
+    context.camera = new TgdCameraPerspective({
+      near: computed.near,
+      far: computed.far,
+      fovy: tgdCalcDegToRad(55),
+      transfo: { ...restTransformation },
+    });
+    context.paint();
+  };
+
+  return { resetCamera, fitToBounds };
 }

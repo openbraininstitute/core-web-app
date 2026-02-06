@@ -19,7 +19,7 @@ import { AppSpeciesBrainRegionConfig } from '@/features/brain-region-hierarchy/c
 import GenericEvent from '@/util/generic-event';
 import { logError } from '@/util/logger';
 
-import { setCamera } from './camera';
+import { type CameraController, setCamera } from './camera';
 import { makeColor } from './hooks';
 import { getCachedBrainRegionMeshArrayBuffer, getPointCouldData } from './services/services';
 import type { SettingsValues } from './settings';
@@ -38,6 +38,10 @@ export class Painter {
   public readonly eventLoading = new GenericEvent<boolean>();
 
   public resetCamera: () => void = () => {};
+
+  private cameraController: CameraController | null = null;
+
+  private hasFittedCamera = false;
 
   private context: TgdContext | null = null;
 
@@ -94,7 +98,10 @@ export class Painter {
         premultipliedAlpha: false,
       });
       this.context = context;
-      this.resetCamera = setCamera(context, this.eventCameraChange);
+      const camCtrl = setCamera(context, this.eventCameraChange, this.AtlasID);
+      this.cameraController = camCtrl;
+      this.resetCamera = camCtrl.resetCamera;
+      this.hasFittedCamera = false;
       const group = new TgdPainterGroup();
       this.group = group;
       context.add(
@@ -153,6 +160,7 @@ export class Painter {
           atlasId: this.AtlasID,
           regionId: region.id,
         });
+        console.log('–– – setRegions – data––', data);
         await this.addMesh(data, region);
       } catch (ex) {
         logError(`Unable to load mesh for region "${region.name}":`, ex);
@@ -242,10 +250,17 @@ export class Painter {
   private async addMesh(data: ArrayBuffer | null, region: VisibleRegion) {
     const { context, group, regionPainters } = this;
     if (!context || !group || !data || regionPainters.has(region.id)) return;
-
     try {
       const asset = await TgdDataGlb.parse(data);
       const geometry = new TgdGeometryGltf({ data: asset });
+      // Auto-fit camera to the first loaded mesh's bounding box (non-mouse atlases)
+      if (
+        !this.hasFittedCamera &&
+        this.cameraController &&
+        this.AtlasID !== AppSpeciesBrainRegionConfig.Common.DefaultAtlasId
+      ) {
+        this.fitCameraFromGltf(asset);
+      }
       const painterXRay = new TgdPainterXRay(context, {
         geometry,
         color: region.color,
@@ -258,6 +273,33 @@ export class Painter {
     } catch (ex) {
       logError(`Unable to load mesh for region ${region.name}!`, ex);
       this.eventError.dispatch(`Unable to load mesh for region "${region.name}"!`);
+    }
+  }
+
+  /**
+   * Extract the POSITION accessor's min/max from the GLTF JSON
+   * and fit the camera to those bounds.
+   */
+  private fitCameraFromGltf(asset: TgdDataGlb) {
+    try {
+      const json = asset.getJson();
+      const accessors = json.accessors ?? [];
+      // Find the POSITION accessor — it's the one with type "VEC3"
+      // referenced by the first mesh primitive's POSITION attribute.
+      const meshes = json.meshes ?? [];
+      const firstMesh = meshes[0];
+      if (!firstMesh) return;
+
+      const posAttr = firstMesh.primitives[0]?.attributes?.POSITION;
+      if (typeof posAttr !== 'number') return;
+
+      const accessor = accessors[posAttr];
+      if (!accessor?.min || !accessor?.max) return;
+
+      this.cameraController?.fitToBounds(accessor.min, accessor.max);
+      this.hasFittedCamera = true;
+    } catch {
+      // Non-critical — fall back to default camera position
     }
   }
 

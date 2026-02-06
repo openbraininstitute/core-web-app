@@ -31,7 +31,7 @@ export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerG
   const SpeciesConfig = getSpeciesConfigByHierarchyId(workspaceHierarchyId);
   const painter = usePainter({
     loading,
-    atlasId: SpeciesConfig.atlasId ?? AppSpeciesBrainRegionConfig.Common.DefaultAtlasId,
+    atlasId: SpeciesConfig.AtlasId ?? AppSpeciesBrainRegionConfig.Common.DefaultAtlasId,
   });
 
   // Temporary disabled

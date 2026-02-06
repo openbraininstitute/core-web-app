@@ -88,7 +88,7 @@ export const AppSpeciesBrainRegionConfig = {
   },
   Human: {
     name: 'Human',
-    atlasId: HUMAN_ATLAS__ID,
+    AtlasId: HUMAN_ATLAS__ID,
     RootId: HUMAN_ROOT__BRAIN_REGION_ID,
     RootAnnotationValue: HUMAN_ROOT__BRAIN_REGION_ANNOTATION_VALUE, // 999
     PrimaryDivisionAnnotationValue: HUMAN_PRIMARY__DIVISION_ANNOTATION_VALUE, // 999
@@ -98,7 +98,7 @@ export const AppSpeciesBrainRegionConfig = {
   },
   Mouse: {
     name: 'Mouse',
-    atlasId: MOUSE_ATLAS__ID,
+    AtlasId: MOUSE_ATLAS__ID,
     RootId: MOUSE_ROOT__BRAIN_REGION_ID,
     RootAnnotationValue: MOUSE_ROOT__BRAIN_REGION_ANNOTATION_VALUE, // 997
     PrimaryDivisionAnnotationValue: MOUSE_PRIMARY__DIVISION_ANNOTATION_VALUE, // 8
