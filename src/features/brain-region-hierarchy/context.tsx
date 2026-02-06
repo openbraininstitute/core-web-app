@@ -42,8 +42,8 @@ export const defaultExploreRegion = {
   title: 'Cerebrum',
 };
 
-export const VERSIONED__BRAIN_REGION_HIERARCHY_STORAGE_KEY_PREFIX =
-  'brain-region-hierarchy-species-v15-01-2026';
+export const VERSIONED__SPECIES_BRAIN_REGION_SELECTION_SNAPSHOT =
+  'species-brain-region-selection-snapshot-v06-02-2026';
 
 /**
  * url parameter keys for brain region hierarchy
@@ -188,7 +188,7 @@ export const useBrainRegionRootHierarchyQuery = (config?: { hId?: string }) => {
     useRemoteUserPreferenceHierarchySpeciesQuery();
   const { urlState } = useHierarchyBrainRegionUrlState();
   const [browserStorageHierarchy] = useLocalStorage<BrainRegionHierarchySelection | null>(
-    VERSIONED__BRAIN_REGION_HIERARCHY_STORAGE_KEY_PREFIX,
+    VERSIONED__SPECIES_BRAIN_REGION_SELECTION_SNAPSHOT,
     null
   );
   // Priority: Url hierarchy ID > Remote ID > browser storage selection > config default

@@ -41,6 +41,8 @@ export interface BrainRegionHierarchySelection {
   speciesName: string;
   brainRegionId: string;
   brainRegionName: string;
+  /** Per-hierarchy brain region memory for restoring selections when switching species */
+  perHierarchyMemory?: Record<string, { brainRegionId: string; brainRegionName: string }>;
 }
 
 /**
