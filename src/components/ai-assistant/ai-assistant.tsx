@@ -37,10 +37,9 @@ export default function AiAssistant({ className, fullscreen, section }: AiAssist
     '--custom-panel-width': fullscreen ? '100%' : `${panelWidth.toFixed(0)}px`,
   };
 
-  const canCreateNewChat = messages.length > 0 && status === 'ready';
+  const canCreateNewChat = threadId && messages.length > 0 && status === 'ready';
 
   const handleNewChat = async () => {
-    if (!canCreateNewChat) return;
     await assistant.createThread();
     setTab('chat');
   };
@@ -54,50 +53,50 @@ export default function AiAssistant({ className, fullscreen, section }: AiAssist
           className={classNames(className, styles.aiAssistant, 'rounded-xl! border-0!')}
         >
           <div className={styles.mask} />
-          {threadId && (
-            <div
-              className={classNames(
-                styles.overlay,
-                panelWidth > MINIMAL_PANEL_SIZE && styles.shadow
-              )}
-            >
-              <nav>
-                <button
-                  type="button"
-                  className={classNames(tab === 'chat' && styles.selected)}
-                  onClick={() => setTab('chat')}
-                >
-                  <IconChat />
-                  <div>Chat</div>
-                </button>
-                <button
-                  type="button"
-                  className={classNames(tab === 'history' && styles.selected)}
-                  onClick={() => setTab('history')}
-                >
-                  <IconHistory />
-                  <div>History</div>
-                </button>
-                <button
-                  type="button"
-                  className={styles.newChatBtn}
-                  disabled={!canCreateNewChat}
-                  onClick={handleNewChat}
-                >
-                  <IconNewChat />
-                  <div>New Chat</div>
-                </button>
-              </nav>
+          <div
+            className={classNames(styles.overlay, panelWidth > MINIMAL_PANEL_SIZE && styles.shadow)}
+          >
+            <nav>
+              <button
+                type="button"
+                className={classNames(tab === 'chat' && styles.selected)}
+                onClick={() => setTab('chat')}
+                disabled={!threadId}
+              >
+                <IconChat />
+                <div>Chat</div>
+              </button>
+              <button
+                type="button"
+                className={classNames(tab === 'history' && styles.selected)}
+                onClick={() => setTab('history')}
+                disabled={!threadId}
+              >
+                <IconHistory />
+                <div>History</div>
+              </button>
+              <button
+                type="button"
+                className={styles.newChatBtn}
+                disabled={!canCreateNewChat}
+                onClick={handleNewChat}
+              >
+                <IconNewChat />
+                <div>New Chat</div>
+              </button>
+            </nav>
+            {threadId ? (
               <PanelContent
                 className={styles.content}
                 threadId={threadId}
                 tab={tab}
                 onTabChange={setTab}
               />
-              {!fullscreen && <PanelSplitter />}
-            </div>
-          )}
-          {!threadId && <Spinner />}
+            ) : (
+              <Spinner />
+            )}
+            {!fullscreen && <PanelSplitter />}
+          </div>
         </div>
       </AiContextProvider>
     </QueryClientProvider>

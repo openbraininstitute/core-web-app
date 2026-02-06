@@ -1,7 +1,11 @@
-import { serviceAiAgentThreadCreate, serviceAiAgentThreadExists } from '../../api';
-import { Signal } from '../signal';
-import { AssistantContext } from '../types';
 import { sharedSessionStorage } from '@/util/shared-session-storage';
+import {
+  serviceAiAgentThreadCreate,
+  serviceAiAgentThreadExists,
+  serviceAiAgentThreadList,
+} from '../../api';
+import type { Signal } from '../signal';
+import type { AssistantContext } from '../types';
 
 export class ThreadManager {
   private context: AssistantContext | null = null;
@@ -15,7 +19,7 @@ export class ThreadManager {
   /**
    * The first time we open the AI Assistant, we try to get the
    * last recently used thread stored in session storage.
-   * If no such thread exists, we create a new one.
+   * If no such thread exists, we load the most recent thread from history.
    */
   readonly init = async (context: AssistantContext) => {
     this.context = context;
@@ -25,7 +29,11 @@ export class ThreadManager {
     if (sessionThreadId) {
       target.threadId.set(sessionThreadId);
     } else {
-      await this.createThread();
+      const lastThreadId = await this.getLastThreadFromHistory(context);
+      if (lastThreadId) {
+        target.threadId.set(lastThreadId);
+        sharedSessionStorage.setItem('AI-Assistant/threadId', lastThreadId);
+      }
     }
   };
 
@@ -51,5 +59,21 @@ export class ThreadManager {
     // Check thread existence.
     const exists = await serviceAiAgentThreadExists({ accessToken, threadId: sessionThreadId });
     return exists ? sessionThreadId : null;
+  }
+
+  private async getLastThreadFromHistory(context: AssistantContext): Promise<string | null> {
+    try {
+      const { accessToken, projectId, virtualLabId } = context;
+      const resp = await serviceAiAgentThreadList({
+        accessToken,
+        projectId,
+        virtualLabId,
+        pageSize: 1,
+        excludeEmptyThreads: true,
+      });
+      return resp.results[0]?.thread_id ?? null;
+    } catch {
+      return null;
+    }
   }
 }
