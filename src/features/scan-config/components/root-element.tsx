@@ -1,18 +1,18 @@
-import { CheckCircleFilled, WarningFilled } from '@ant-design/icons';
-import type { ErrorObject } from 'ajv';
-import { isEqual } from 'es-toolkit/compat';
-import type React from 'react';
-import { useAIConfig } from '@/services/ai-agent';
+import { CheckCircleFilled, WarningFilled } from "@ant-design/icons";
+import type { ErrorObject } from "ajv";
+import { isEqual } from "es-toolkit/compat";
+import type React from "react";
+import { useAIConfig } from "@/services/ai-agent";
 import {
   type AtomsMap,
   type BlockDictionary,
   type ConfigSchema,
   isType,
   type RootBlock,
-} from '../types';
-import BlockDictionaryEntries from './block-dictionary-entries';
-import { Chevron, type Config, Tab } from './components';
-import { isRootBlock } from './hooks/schema';
+} from "../types";
+import BlockDictionaryEntries from "./block-dictionary-entries";
+import { Chevron, type Config, Tab } from "./components";
+import { isRootBlock } from "./hooks/schema";
 
 export function RootElement({
   schema,
@@ -46,7 +46,10 @@ export function RootElement({
   config: Config;
   campaignId: string;
   loading: boolean;
-  errors: ErrorObject<string, Record<string, any>, unknown>[] | null | undefined;
+  errors:
+    | ErrorObject<string, Record<string, any>, unknown>[]
+    | null
+    | undefined;
   selectedEntry: string;
   setSelectedEntry: (selectedEntry: string) => void;
   setEditing: React.Dispatch<React.SetStateAction<boolean>>;
@@ -64,7 +67,7 @@ export function RootElement({
     setSelectedEntry(subkey);
     setEditing(true);
     setIsEditingKey(false);
-    setNewKey('');
+    setNewKey("");
   };
 
   return (
@@ -73,38 +76,50 @@ export function RootElement({
         tab={rootElement}
         selectedTab={selectedRootElement}
         onClick={() => {
-          if (selectedRootElement === rootElement && !isRootBlock(schema, rootElement)) {
+          if (
+            selectedRootElement === rootElement &&
+            !isRootBlock(schema, rootElement)
+          ) {
             setEditing(false);
-            setSelectedEntry('');
-            setSelectedRootElement('');
+            setSelectedEntry("");
+            setSelectedRootElement("");
             return;
           }
 
           setSelectedRootElement(rootElement);
-          setSelectedEntry('');
+          setSelectedEntry("");
 
-          if (rootElementSchema.ui_element === 'block_single') setEditing(true);
+          if (rootElementSchema.ui_element === "block_single") setEditing(true);
           else setEditing(false);
         }}
         extraClass="w-full flex justify-between h-[50px] min-h-[50px] items-center drop-shadow"
       >
         {schema.properties?.[rootElement]?.title}
         <div className="flex gap-2">
-          {errors?.find((error) => error.instancePath.startsWith(`/${rootElement}`)) ? (
-            <WarningFilled className="text-yellow-400" />
+          {errors?.find((error) =>
+            error.instancePath.startsWith(`/${rootElement}`),
+          ) ? (
+            <WarningFilled className="text-yellow-400!" />
           ) : (
-            <CheckCircleFilled className="text-green-600" />
+            <CheckCircleFilled className="text-green-600!" />
           )}
 
-          {!!aiConfig && !isEqual(config[rootElement], aiConfig[rootElement]) && (
-            <span className="text-slate-500 text-[10px] animate-pulse">✦</span>
-          )}
+          {!!aiConfig &&
+            !isEqual(config[rootElement], aiConfig[rootElement]) && (
+              <span className="text-slate-500! text-[10px] animate-pulse">
+                ✦
+              </span>
+            )}
 
-          <Chevron rotate={rootElementSchema.ui_element === 'block_dictionary' ? 90 : 0} />
+          <Chevron
+            rotate={
+              rootElementSchema.ui_element === "block_dictionary" ? 90 : 0
+            }
+          />
         </div>
       </Tab>
 
-      {rootElementSchema.ui_element === 'block_dictionary' &&
+      {rootElementSchema.ui_element === "block_dictionary" &&
         selectedRootElement === rootElement &&
         config[rootElement] && (
           <BlockDictionaryEntries
