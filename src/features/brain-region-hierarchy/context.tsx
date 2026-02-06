@@ -37,11 +37,6 @@ import { useLocalStorage } from '@/hooks/use-local-storage';
 import { keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
 import { log } from '@/utils/logger';
 
-export const defaultExploreRegion = {
-  id: 'http://api.brain-map.org/api/v2/data/Structure/567',
-  title: 'Cerebrum',
-};
-
 export const VERSIONED__SPECIES_BRAIN_REGION_SELECTION_SNAPSHOT =
   'species-brain-region-selection-snapshot-v06-02-2026';
 

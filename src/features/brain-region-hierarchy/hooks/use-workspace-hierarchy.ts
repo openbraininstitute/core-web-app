@@ -3,7 +3,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { find, omit } from 'es-toolkit/compat';
 import { useAtom, useAtomValue } from 'jotai';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 import type {
@@ -213,7 +213,7 @@ export function useWorkspaceHierarchyRegistry() {
    * restores the previously selected brain region if the user has visited this hierarchy before,
    * otherwise falls back to the default for the new hierarchy
    */
-  async function changeBulkStoreHierarchySpecies(hId: string) {
+  async function changeBulkStoreHierarchySpeciesImpl(hId: string) {
     const hierarchy = remoteAvailableHierarchies?.find((h) => h.id === hId);
     if (!hierarchy) return;
 
@@ -249,7 +249,7 @@ export function useWorkspaceHierarchyRegistry() {
   /**
    * change the selected brain region within the current hierarchy
    */
-  function changeBrainRegion(region: IBrainRegionHierarchy | null) {
+  function changeBrainRegionImpl(region: IBrainRegionHierarchy | null) {
     if (!region) {
       setSelectedBrainRegion(null);
 
@@ -295,6 +295,17 @@ export function useWorkspaceHierarchyRegistry() {
       perHierarchyMemory: updatedMemory,
     });
   }
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: stable callback wrappers — identity doesn't change across renders,
+  const changeBulkStoreHierarchySpecies = useCallback(
+    (hId: string) => changeBulkStoreHierarchySpeciesImpl(hId),
+    [changeLocalStoreHierarchySpecies]
+  );
+  // biome-ignore lint/correctness/useExhaustiveDependencies: stable callback wrappers — identity doesn't change across renders,
+  const changeBrainRegion = useCallback(
+    (region: IBrainRegionHierarchy | null) => changeBrainRegionImpl(region),
+    [changeLocalStoreBrainRegion, setSelectedBrainRegion]
+  );
 
   /**
    * initialize state from URL or localStorage on mount
