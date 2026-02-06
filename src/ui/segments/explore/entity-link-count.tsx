@@ -6,7 +6,7 @@ import { useTabs } from '@/components/detail-view-tabs';
 import { type TWorkspaceScope, WorkspaceScope } from '@/constants';
 import {
   useGetSelectedBrainRegion,
-  usePrimaryHierarchySpeciesQuery,
+  usePrimaryHierarchyOfCurrentSpeciesQuery,
 } from '@/features/brain-region-hierarchy/context';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { useFlags } from '@/features/feature-flags';
@@ -53,7 +53,7 @@ export function EntityLinkCount() {
   const { selectedBrainRegion } = useGetSelectedBrainRegion();
   const scope = (useSearchParams().get('scope') ?? WorkspaceScope.Public) as TWorkspaceScope;
 
-  const { result: brainRegionHierarchy } = usePrimaryHierarchySpeciesQuery();
+  const { result: brainRegionHierarchy } = usePrimaryHierarchyOfCurrentSpeciesQuery();
 
   const { activeTab, onChangeTab } = useTabs<TExploreDataTypeTabs>({
     tabsConfig: tabsConfigItems,

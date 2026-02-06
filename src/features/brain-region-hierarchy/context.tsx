@@ -54,18 +54,20 @@ export const URL_PARAMS = {
 } as const;
 
 export const {
-  DEFAULT_BRAIN_ATLAS_ID,
+  APP_DEFAULT__BRAIN_ATLAS__ID,
   APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID,
   // MOUSE
   MOUSE_ROOT__BRAIN_REGION_ID,
   MOUSE_ROOT__BRAIN_REGION_ANNOTATION_VALUE, // 997
   MOUSE_DEFAULT__SELECTED_BRAIN_REGION_ID,
   MOUSE_PRIMARY__DIVISION_ANNOTATION_VALUE, // 8
+  MOUSE_ATLAS__ID,
   // HUMAN
   HUMAN_ROOT__BRAIN_REGION_ID,
   HUMAN_ROOT__BRAIN_REGION_ANNOTATION_VALUE, // 999
   HUMAN_DEFAULT__SELECTED_BRAIN_REGION_ID,
   HUMAN_PRIMARY__DIVISION_ANNOTATION_VALUE, // 999
+  HUMAN_ATLAS__ID,
 } = config;
 
 // MOUSE
@@ -84,10 +86,14 @@ export const DEFAULT_BRAIN_REGION_QUERY_ID = 'br_id';
 export const DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE = 'br_av';
 
 export const AppSpeciesBrainRegionConfig = {
-  Global: {
+  Common: {
+    name: 'Common',
     DefaultHierarchyId: config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID,
+    DefaultAtlasId: config.APP_DEFAULT__BRAIN_ATLAS__ID,
   },
   Human: {
+    name: 'Human',
+    atlasId: HUMAN_ATLAS__ID,
     RootId: HUMAN_ROOT__BRAIN_REGION_ID,
     RootAnnotationValue: HUMAN_ROOT__BRAIN_REGION_ANNOTATION_VALUE, // 999
     PrimaryDivisionAnnotationValue: HUMAN_PRIMARY__DIVISION_ANNOTATION_VALUE, // 999
@@ -96,6 +102,8 @@ export const AppSpeciesBrainRegionConfig = {
     DefaultSelectedName: HUMAN_DEFAULT__SELECTED_BRAIN_REGION_NAME,
   },
   Mouse: {
+    name: 'Mouse',
+    atlasId: MOUSE_ATLAS__ID,
     RootId: MOUSE_ROOT__BRAIN_REGION_ID,
     RootAnnotationValue: MOUSE_ROOT__BRAIN_REGION_ANNOTATION_VALUE, // 997
     PrimaryDivisionAnnotationValue: MOUSE_PRIMARY__DIVISION_ANNOTATION_VALUE, // 8
@@ -106,7 +114,19 @@ export const AppSpeciesBrainRegionConfig = {
 };
 
 export function getSpeciesConfigByHierarchyId(hId: string) {
-  return hId === AppSpeciesBrainRegionConfig.Global.DefaultHierarchyId
+  return hId === AppSpeciesBrainRegionConfig.Common.DefaultHierarchyId
+    ? AppSpeciesBrainRegionConfig.Mouse
+    : AppSpeciesBrainRegionConfig.Human;
+}
+/**
+ * Get the species config by atlas ID
+ * @param aId string
+ * @returns species configuration
+ *
+ * @remarks this is only for debugging purposes, generally you should use getSpeciesConfigByHierarchyId
+ */
+export function getSpeciesConfigByAtlasId(aId: string) {
+  return aId === AppSpeciesBrainRegionConfig.Common.DefaultAtlasId
     ? AppSpeciesBrainRegionConfig.Mouse
     : AppSpeciesBrainRegionConfig.Human;
 }
@@ -176,7 +196,7 @@ export const useBrainRegionRootHierarchyQuery = (config?: { hId?: string }) => {
     urlState.hierarchyId ||
     remoteUserPreferenceHierarchySpecies?.hierarchy_id ||
     browserStorageHierarchy?.hierarchyId ||
-    AppSpeciesBrainRegionConfig.Global.DefaultHierarchyId;
+    AppSpeciesBrainRegionConfig.Common.DefaultHierarchyId;
 
   const usedHierarchyId = config?.hId ?? hierarchyId;
 
@@ -197,6 +217,7 @@ export const useBrainRegionRootHierarchyQuery = (config?: { hId?: string }) => {
       queryFn: () => getBrainRegionHierarchy({ id }),
       enabled,
       select,
+      staleTime: Infinity,
     });
 
   const { data, isLoading, error } = useQuery(
@@ -232,7 +253,7 @@ export const useBrainRegionRootHierarchyQuery = (config?: { hId?: string }) => {
   };
 };
 
-export const usePrimaryHierarchySpeciesQuery = () => {
+export const usePrimaryHierarchyOfCurrentSpeciesQuery = () => {
   const {
     result: { root: master, workspaceHierarchyId },
     loading: loadingRootHierarchy,
@@ -301,11 +322,12 @@ export const usePrimaryExtendedHierarchySpeciesQuery = () => {
     result: { root: master, workspaceHierarchyId },
     loading: loadingRootHierarchy,
   } = useBrainRegionRootHierarchyQuery();
+  const SpeciesConfig = getSpeciesConfigByHierarchyId(workspaceHierarchyId);
   const {
     result: { atlas },
     loadingAtlas,
     error: atlasError,
-  } = useBrainRegionAtlasQuery();
+  } = useBrainRegionAtlasQuery({ id: SpeciesConfig.atlasId });
 
   if (atlasError || !atlas || !master) {
     log('warn', 'Failed to fetch brain atlas regions:', atlasError);
@@ -319,8 +341,7 @@ export const usePrimaryExtendedHierarchySpeciesQuery = () => {
   for (const region of atlas) {
     atlasMap.set(region.brain_region_id, region);
   }
-  const primaryDivisionAnnotationValue =
-    getSpeciesConfigByHierarchyId(workspaceHierarchyId).PrimaryDivisionAnnotationValue;
+  const primaryDivisionAnnotationValue = SpeciesConfig.PrimaryDivisionAnnotationValue;
 
   const baseRoot = findNodeByKey<IBrainRegionHierarchy>(
     DEFAULT_BRAIN_REGION_ANNOTATION_FIELD,

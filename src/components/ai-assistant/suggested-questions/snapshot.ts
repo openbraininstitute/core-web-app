@@ -4,7 +4,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 
 import {
   getSpeciesConfigByHierarchyId,
-  usePrimaryHierarchySpeciesQuery,
+  usePrimaryHierarchyOfCurrentSpeciesQuery,
 } from '@/features/brain-region-hierarchy/context';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { useCurrentExplorerArtifactValue } from '@/state/explore-section/artifact';
@@ -25,7 +25,7 @@ export function useSnapshot(): Snapshot {
   const isRootRegion =
     `${selectedBrainRegion?.annotation_value}` === config.PrimaryDivisionAnnotationValue;
 
-  const { result } = usePrimaryHierarchySpeciesQuery();
+  const { result } = usePrimaryHierarchyOfCurrentSpeciesQuery();
 
   const regionId = selectedBrainRegion?.id ?? '';
   const node = (result?.options ?? []).find((o) => o.data.id === selectedBrainRegion?.id);

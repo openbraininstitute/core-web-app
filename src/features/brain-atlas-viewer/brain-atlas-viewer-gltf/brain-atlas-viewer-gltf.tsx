@@ -6,6 +6,11 @@ import { usePainter, useVisibleRegions } from './hooks';
 // Temporary disabled
 // import { Settings } from './settings/settings';
 
+import {
+  AppSpeciesBrainRegionConfig,
+  getSpeciesConfigByHierarchyId,
+  useBrainRegionRootHierarchyQuery,
+} from '@/features/brain-region-hierarchy/context';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { classNames } from '@/util/utils';
 
@@ -19,12 +24,22 @@ export interface BrainAtlasViewerGltfProps {
 export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerGltfProps) {
   const [showResetCamera, setShowResetCamera] = React.useState(false);
   const accessToken = useAccessToken();
-  const painter = usePainter();
+  const {
+    loading,
+    result: { workspaceHierarchyId },
+  } = useBrainRegionRootHierarchyQuery();
+  const SpeciesConfig = getSpeciesConfigByHierarchyId(workspaceHierarchyId);
+  const painter = usePainter({
+    loading,
+    atlasId: SpeciesConfig.atlasId ?? AppSpeciesBrainRegionConfig.Common.DefaultAtlasId,
+  });
+
   // Temporary disabled
   // const [values, setValues] = useAtlasViewerSettingsValues(painter);
   const { region, regions } = useVisibleRegions();
+
   React.useEffect(() => {
-    if (accessToken) {
+    if (accessToken && painter) {
       painter.setRegions(regions, accessToken);
       painter.setPointCloud(
         region?.annotation_value ?? -1,
@@ -35,22 +50,23 @@ export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerG
     const handleCameraChange = () => {
       setShowResetCamera(true);
     };
-    painter.eventCameraChange.addListener(handleCameraChange);
-    painter.eventLoading.addListener(onLoading);
+    painter?.eventCameraChange.addListener(handleCameraChange);
+    painter?.eventLoading.addListener(onLoading);
+
     return () => {
-      painter.eventCameraChange.removeListener(handleCameraChange);
-      painter.eventLoading.removeListener(onLoading);
+      painter?.eventCameraChange.removeListener(handleCameraChange);
+      painter?.eventLoading.removeListener(onLoading);
     };
   }, [painter, region, regions, accessToken, onLoading]);
 
   return (
     <div className={classNames(className, styles.brainAtlasViewerGltf)}>
-      <canvas ref={painter.start} />
+      <canvas ref={painter?.start} />
       <header className={classNames(showResetCamera && styles.show)}>
         <button
           type="button"
           onClick={() => {
-            painter.resetCamera();
+            painter?.resetCamera();
             setShowResetCamera(false);
           }}
         >

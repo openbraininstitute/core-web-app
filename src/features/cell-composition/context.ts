@@ -1,18 +1,21 @@
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { arrayToTree } from 'performant-array-to-tree';
+
+import type { ICellCompositionRoot } from '@/api/entitycore/types/entities/cell-composition';
+import type { WorkspaceContext } from '@/types/common';
+
 import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
 import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getCellCompositions } from '@/api/entitycore/queries/general/cell-composition';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import type { ICellCompositionRoot } from '@/api/entitycore/types/entities/cell-composition';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
 import { renameKeyDeep } from '@/components/tree/elements/helpers';
+import { config } from '@/config';
 import { useBrainRegionAtlasQuery } from '@/features/brain-atlas-viewer/context';
-import { usePrimaryHierarchySpeciesQuery } from '@/features/brain-region-hierarchy/context';
+import { usePrimaryHierarchyOfCurrentSpeciesQuery } from '@/features/brain-region-hierarchy/context';
 import { resolveBrainRegionCellComposition } from '@/features/cell-composition/composition-constructor';
-import type { WorkspaceContext } from '@/types/common';
 import { keyBuilderAnnotation } from '@/ui/use-query-keys/annotation';
 import { cellCompositionKeyBuilder } from '@/ui/use-query-keys/atlas';
 import { log } from '@/utils/logger';
@@ -54,7 +57,7 @@ const useCellCompositionSummaryQuery = () => {
         entityId: cellComposition?.at(0)?.id!,
         id: summaryAsset?.id!,
       }),
-    enabled: !!cellComposition?.at(0)?.id! && !!summaryAsset.id,
+    enabled: !!cellComposition?.at(0)?.id! && !!summaryAsset?.id,
     refetchOnWindowFocus: false,
     staleTime: Infinity,
   });
@@ -122,17 +125,29 @@ export const useAnnotationTypesQuery = (ctx: WorkspaceContext) => {
 };
 
 export const useCellCompositionQuery = ({ brainRegionId }: { brainRegionId?: string }) => {
-  const { result: brainRegionAtlas, loadingAtlas, error: atlasError } = useBrainRegionAtlasQuery();
+  const {
+    result: brainRegionAtlas,
+    loadingAtlas,
+    error: atlasError,
+  } = useBrainRegionAtlasQuery({ id: config.MOUSE_ATLAS__ID });
   const {
     result: brainRegions,
     loading: loadingHierarchy,
     error: hierarchyError,
-  } = usePrimaryHierarchySpeciesQuery();
+  } = usePrimaryHierarchyOfCurrentSpeciesQuery();
   const {
     result: cellComposition,
     loading: loadingComposition,
     error: errorSummary,
   } = useCellCompositionSummaryQuery();
+
+  const emptyResult = {
+    totalComposition: {
+      neuron: { density: 0, count: 0 },
+      glia: { density: 0, count: 0 },
+    },
+    neurons: [],
+  };
 
   if (!cellComposition || !brainRegions || !brainRegionAtlas.atlas) {
     log('warn', 'Missing required data for composition', {
@@ -143,28 +158,36 @@ export const useCellCompositionQuery = ({ brainRegionId }: { brainRegionId?: str
 
     return {
       error: errorSummary || hierarchyError || atlasError,
-      result: {
-        totalComposition: {
-          neuron: { density: 0, count: 0 },
-          glia: { density: 0, count: 0 },
-        },
-        neurons: [],
-      },
+      result: emptyResult,
       loading: loadingAtlas || loadingHierarchy || loadingComposition,
     };
   }
   if (!brainRegionId)
     return {
       error: null,
-      result: {
-        totalComposition: {
-          neuron: { density: 0, count: 0 },
-          glia: { density: 0, count: 0 },
-        },
-        neurons: [],
-      },
+      result: emptyResult,
       loading: loadingAtlas || loadingHierarchy || loadingComposition,
     };
+
+  // Guard against species transition race condition:
+  // When switching species, the selectedBrainRegion atom updates immediately with the
+  // new species' brain region ID, but the hierarchy query may still return stale data
+  // from the previous species. Verify the brainRegionId exists in the current hierarchy
+  // before resolving composition to prevent cross-species mismatches.
+  const brainRegionExistsInHierarchy = brainRegions.options.some(
+    (option) => option.value === brainRegionId
+  );
+  if (!brainRegionExistsInHierarchy) {
+    log('warn', 'Brain region ID not found in current hierarchy — species transition in progress', {
+      brainRegionId,
+    });
+    return {
+      error: null,
+      result: emptyResult,
+      loading: true,
+    };
+  }
+
   try {
     const { nodes, totalComposition } = resolveBrainRegionCellComposition({
       brainRegionId,

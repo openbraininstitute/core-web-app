@@ -1,7 +1,6 @@
-import React from 'react';
+/** biome-ignore-all lint/style/useImportType: biome shit */
 import {
   TgdCamera,
-  tgdCanvasCreateFill,
   TgdContext,
   TgdDataGlb,
   TgdGeometryGltf,
@@ -11,20 +10,25 @@ import {
   TgdPainterState,
   TgdPainterXRay,
   TgdTexture2D,
+  tgdCanvasCreateFill,
   webglPresetDepth,
 } from '@tolokoban/tgd';
+import type React from 'react';
+
+import { AppSpeciesBrainRegionConfig } from '@/features/brain-region-hierarchy/context';
+import GenericEvent from '@/util/generic-event';
+import { logError } from '@/util/logger';
 
 import { setCamera } from './camera';
-import { VisibleRegion } from './types';
-import { SettingsValues } from './settings';
-import { getBrainRegionMeshArrayBuffer, getPointCouldData } from './services/services';
 import { makeColor } from './hooks';
-
-import { logError } from '@/util/logger';
-import GenericEvent from '@/util/generic-event';
+import { getCachedBrainRegionMeshArrayBuffer, getPointCouldData } from './services/services';
+import type { SettingsValues } from './settings';
+import type { VisibleRegion } from './types';
 
 let globalId = 1;
 export class Painter {
+  public readonly AtlasID: string;
+
   public readonly ID: number;
 
   public readonly eventError = new GenericEvent<React.ReactNode>();
@@ -55,8 +59,12 @@ export class Painter {
 
   private _uniforms: SettingsValues = {};
 
-  constructor(private readonly backgroundColor = '#002766') {
+  constructor(
+    readonly atlasId: string = AppSpeciesBrainRegionConfig.Common.DefaultAtlasId,
+    private readonly backgroundColor = '#002766'
+  ) {
     this.ID = globalId++;
+    this.AtlasID = atlasId;
   }
 
   get uniforms() {
@@ -141,7 +149,10 @@ export class Painter {
     }
     for (const region of regions) {
       try {
-        const data = await getBrainRegionMeshArrayBuffer(accessToken, region.id);
+        const data = await getCachedBrainRegionMeshArrayBuffer({
+          atlasId: this.AtlasID,
+          regionId: region.id,
+        });
         await this.addMesh(data, region);
       } catch (ex) {
         logError(`Unable to load mesh for region "${region.name}":`, ex);

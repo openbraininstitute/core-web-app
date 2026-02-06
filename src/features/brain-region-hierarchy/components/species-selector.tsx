@@ -35,8 +35,11 @@ export function SpeciesSelector({
   disabled = false,
   className,
 }: SpeciesSelectorProps) {
-  const { remoteAvailableHierarchies, loading, error } = useAvailableHierarchySpeciesQuery();
-  const { loading: isLoadingAvailableHierarchySpecies } = useAvailableHierarchySpeciesQuery();
+  const {
+    remoteAvailableHierarchies,
+    loading: isLoadingAvailableHierarchySpecies,
+    error,
+  } = useAvailableHierarchySpeciesQuery();
 
   const { loading: isLoadingRemoteUserPreferenceHierarchySpecies } =
     useRemoteUserPreferenceHierarchySpeciesQuery();
@@ -44,7 +47,6 @@ export function SpeciesSelector({
   const { syncSettled } = useWorkspaceHierarchyRegistry();
 
   if (
-    loading ||
     isLoadingAvailableHierarchySpecies ||
     isLoadingRemoteUserPreferenceHierarchySpecies ||
     !syncSettled

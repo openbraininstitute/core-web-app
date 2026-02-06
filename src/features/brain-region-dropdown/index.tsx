@@ -6,7 +6,7 @@ import { type ComponentProps, useCallback, useEffect, useMemo, useState } from '
 import { BrainIcon } from '@/components/icons';
 import {
   usePrimaryExtendedHierarchySpeciesQuery,
-  usePrimaryHierarchySpeciesQuery,
+  usePrimaryHierarchyOfCurrentSpeciesQuery,
   useSetSelectedBrainRegion,
 } from '@/features/brain-region-hierarchy/context';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';

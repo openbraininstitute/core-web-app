@@ -83,8 +83,11 @@ const configFields = {
     schema: z.string().nonempty(),
     public: true,
   },
-  DEFAULT_BRAIN_ATLAS_ID: { schema: z.string().nonempty(), public: true },
   APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID: {
+    schema: z.string().nonempty(),
+    public: true,
+  },
+  APP_DEFAULT__BRAIN_ATLAS__ID: {
     schema: z.string().nonempty(),
     public: true,
   },
@@ -112,6 +115,7 @@ const configFields = {
     schema: z.string().nonempty(),
     public: true,
   },
+  MOUSE_ATLAS__ID: { schema: z.string().nonempty(), public: true },
   // HUMAN
   HUMAN_ROOT__BRAIN_REGION_ID: {
     schema: z.string().nonempty(),
@@ -137,6 +141,7 @@ const configFields = {
     schema: z.string().nonempty(),
     public: true,
   },
+  HUMAN_ATLAS__ID: { schema: z.string().nonempty(), public: true },
   LEGACY_DEFAULT_CIRCUIT_ID: {
     schema: z.string().url().nonempty(),
     public: true,

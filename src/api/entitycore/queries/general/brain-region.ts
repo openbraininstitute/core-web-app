@@ -1,5 +1,6 @@
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 import type { IBrainRegionHierarchiesResponse } from '@/api/entitycore/types/entities/brain-region-hierarchy';
+
 import { entityCoreApi } from '@/api/entitycore/utils';
 import { AppSpeciesBrainRegionConfig } from '@/features/brain-region-hierarchy/context';
 
@@ -11,7 +12,7 @@ import { AppSpeciesBrainRegionConfig } from '@/features/brain-region-hierarchy/c
  * @returns A promise that resolves to the brain region hierarchy data.
  */
 export async function getBrainRegionHierarchy({
-  id = AppSpeciesBrainRegionConfig.Global.DefaultHierarchyId,
+  id = AppSpeciesBrainRegionConfig.Common.DefaultHierarchyId,
 }: {
   id?: string;
 }) {

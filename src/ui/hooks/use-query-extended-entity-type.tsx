@@ -92,7 +92,7 @@ function useQueryParameters(
     ...(requireBrainRegion
       ? {
           within_brain_region_hierarchy_id:
-            workspaceHierarchyId ?? AppSpeciesBrainRegionConfig.Global.DefaultHierarchyId,
+            workspaceHierarchyId ?? AppSpeciesBrainRegionConfig.Common.DefaultHierarchyId,
           within_brain_region_brain_region_id: defaultBrainRegion ?? selectedBrainRegion?.id,
           within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
         }

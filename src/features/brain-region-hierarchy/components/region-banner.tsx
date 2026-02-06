@@ -32,11 +32,10 @@ export function RegionBanner({ view, onSwitchView }: Props) {
   const { workspaceSpecies, selectedBrainRegion, changeBulkStoreHierarchySpecies } =
     useWorkspaceHierarchyRegistry();
   const { loading: isLoadingRootHierarchy } = useBrainRegionRootHierarchyQuery();
-
   const { loading: isLoadingAvailableHierarchySpecies } = useAvailableHierarchySpeciesQuery();
-
   const { loading: isLoadingRemoteUserPreferenceHierarchySpecies } =
     useRemoteUserPreferenceHierarchySpeciesQuery();
+
   return (
     <div
       id="brain-region-entities-switcher"

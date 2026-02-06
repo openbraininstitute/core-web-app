@@ -18,7 +18,7 @@ import {
   selectedBrainRegionAtom,
   useBrainRegionRootHierarchyQuery,
   useHierarchyBrainRegionUrlState,
-  usePrimaryHierarchySpeciesQuery,
+  usePrimaryHierarchyOfCurrentSpeciesQuery,
   VERSIONED__BRAIN_REGION_HIERARCHY_STORAGE_KEY_PREFIX,
   workspaceHierarchySpeciesAtom,
 } from '@/features/brain-region-hierarchy/context';
@@ -142,7 +142,7 @@ export function useWorkspaceHierarchyRegistry() {
   const { remoteUserPreferenceHierarchySpecies, loading: isLoadingRemotePreference } =
     useRemoteUserPreferenceHierarchySpeciesQuery();
 
-  const { result: brainRegions } = usePrimaryHierarchySpeciesQuery();
+  const { result: brainRegions } = usePrimaryHierarchyOfCurrentSpeciesQuery();
   const [browserStorageHierarchy, setBrowserStorageHierarchy] =
     useLocalStorage<BrainRegionHierarchySelection | null>(
       VERSIONED__BRAIN_REGION_HIERARCHY_STORAGE_KEY_PREFIX,
@@ -151,14 +151,14 @@ export function useWorkspaceHierarchyRegistry() {
 
   // get default hierarchy based on configured species
   const defaultHierarchy = remoteAvailableHierarchies?.find(
-    (h) => h.id === AppSpeciesBrainRegionConfig.Global.DefaultHierarchyId
+    (h) => h.id === AppSpeciesBrainRegionConfig.Common.DefaultHierarchyId
   );
 
   const defaultingCurrentHierarchyId =
     urlState.hierarchyId ||
     remoteUserPreferenceHierarchySpecies?.hierarchy_id ||
     browserStorageHierarchy?.hierarchyId ||
-    AppSpeciesBrainRegionConfig.Global.DefaultHierarchyId;
+    AppSpeciesBrainRegionConfig.Common.DefaultHierarchyId;
 
   const defaultBrainRegionId = getSpeciesConfigByHierarchyId(
     defaultingCurrentHierarchyId
@@ -238,7 +238,7 @@ export function useWorkspaceHierarchyRegistry() {
         urlState.hierarchyId ||
         remoteUserPreferenceHierarchySpecies?.hierarchy_id ||
         browserStorageHierarchy?.hierarchyId ||
-        AppSpeciesBrainRegionConfig.Global.DefaultHierarchyId;
+        AppSpeciesBrainRegionConfig.Common.DefaultHierarchyId;
 
       const currentSpeciesName = workspaceSpecies?.name || '';
       const hierarchyConfig = getSpeciesConfigByHierarchyId(currentHierarchyId);
@@ -407,7 +407,7 @@ export function useWorkspaceHierarchyRegistry() {
       urlState.hierarchyId ||
       browserStorageHierarchy?.hierarchyId ||
       defaultHierarchy?.id ||
-      AppSpeciesBrainRegionConfig.Global.DefaultHierarchyId;
+      AppSpeciesBrainRegionConfig.Common.DefaultHierarchyId;
 
     const currentSpeciesName = remoteAvailableHierarchies?.find((p) => p.id === currentHierarchyId)
       ?.species.name;
@@ -435,7 +435,7 @@ export function useWorkspaceHierarchyRegistry() {
     urlState.hierarchyId ||
     remoteUserPreferenceHierarchySpecies?.hierarchy_id ||
     browserStorageHierarchy?.hierarchyId ||
-    AppSpeciesBrainRegionConfig.Global.DefaultHierarchyId;
+    AppSpeciesBrainRegionConfig.Common.DefaultHierarchyId;
 
   return {
     workspaceSpecies,

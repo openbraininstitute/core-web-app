@@ -1,33 +1,46 @@
-/* eslint-disable no-param-reassign */
-
 import { TgdColor, TgdVec4 } from '@tolokoban/tgd';
 import { compact, find } from 'es-toolkit/compat';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import React from 'react';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import type { SettingsDefinitions } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/settings';
+import type { VisibleRegion } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/types';
 
 import { useAppNotification } from '@/components/notification';
+import { Painter } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/painter';
 import {
   AppSpeciesBrainRegionConfig,
   useBrainRegionRootHierarchyQuery,
-  usePrimaryHierarchySpeciesQuery,
+  usePrimaryHierarchyOfCurrentSpeciesQuery,
 } from '@/features/brain-region-hierarchy/context';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 
-import { brainRegionAtlasAtom } from '../context';
-import { Painter } from './painter';
-import type { SettingsDefinitions } from './settings';
-import type { VisibleRegion } from './types';
-
-export function usePainter(): Painter {
-  const notif = useAppNotification();
+export function usePainter({
+  atlasId,
+  loading,
+}: {
+  atlasId: string;
+  loading: boolean;
+}): Painter | null {
+  const notifier = useAppNotification();
   const refPainter = React.useRef<Painter | null>(null);
+  const refAtlasId = React.useRef<string>(atlasId);
+
+  // recreate the Painter when atlasId changes (species switch).
+  // the old Painter holds a stale AtlasID, so we must discard it.
+  if (refPainter.current && refAtlasId.current !== atlasId) {
+    refPainter.current = null;
+    refAtlasId.current = atlasId;
+  }
+
+  if (loading) return null;
   if (!refPainter.current) {
-    refPainter.current = new Painter();
+    refPainter.current = new Painter(atlasId);
+    refAtlasId.current = atlasId;
     refPainter.current.eventError.addListener((message) => {
-      notif.warning({
+      notifier.warning({
         message,
         key: '3d-mesh-error',
       });
@@ -38,10 +51,6 @@ export function usePainter(): Painter {
   return refPainter.current;
 }
 
-export function useAtlas() {
-  return useAtomValue(brainRegionAtlasAtom);
-}
-
 export function useVisibleRegions(): {
   region: IBrainRegionHierarchy | undefined;
   regions: VisibleRegion[];
@@ -49,10 +58,10 @@ export function useVisibleRegions(): {
   const { selectedBrainRegion: brainRegionNode, workspaceHierarchyId } =
     useWorkspaceHierarchyRegistry();
   const { result: rootBrainRegions } = useBrainRegionRootHierarchyQuery();
-  const { result: brainRegions } = usePrimaryHierarchySpeciesQuery();
+  const { result: brainRegions } = usePrimaryHierarchyOfCurrentSpeciesQuery();
 
   const rootBrainRegionId =
-    workspaceHierarchyId === AppSpeciesBrainRegionConfig.Global.DefaultHierarchyId
+    workspaceHierarchyId === AppSpeciesBrainRegionConfig.Common.DefaultHierarchyId
       ? AppSpeciesBrainRegionConfig.Mouse.RootId
       : AppSpeciesBrainRegionConfig.Human.RootId;
 

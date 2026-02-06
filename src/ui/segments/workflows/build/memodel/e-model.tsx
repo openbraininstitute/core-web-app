@@ -20,7 +20,7 @@ import {
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
 import {
-  usePrimaryHierarchySpeciesQuery,
+  usePrimaryHierarchyOfCurrentSpeciesQuery,
   useSetSelectedBrainRegion,
 } from '@/features/brain-region-hierarchy/context';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
@@ -58,7 +58,7 @@ export function EModel({ sessionId }: Props) {
 
   const { updateSelectedBrainRegion } = useSetSelectedBrainRegion();
   const { changeBrainRegion } = useWorkspaceHierarchyRegistry();
-  const { result: brainRegionHierarchy } = usePrimaryHierarchySpeciesQuery();
+  const { result: brainRegionHierarchy } = usePrimaryHierarchyOfCurrentSpeciesQuery();
 
   useEffect(() => {
     if (brainRegionHierarchy) {
