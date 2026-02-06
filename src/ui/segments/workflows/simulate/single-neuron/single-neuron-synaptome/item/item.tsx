@@ -78,7 +78,7 @@ export function SynapticInputItem({
   const [state] = useAtom(SynaptomeConfigurationAtomFamily(key));
   const synapseWithFrequencyStep = state.findIndex((s) => Array.isArray(s.frequency));
   const abortController = useRef(new AbortController());
-  const synapseDisplayed = isSynapseDisplayed(synapsesPlacement, Object.values(state)[index].id);
+  const synapseDisplayed = isSynapseDisplayed(synapsesPlacement, index);
   const color = placementConfig?.color;
 
   const onVisualizationError = () => {
@@ -98,13 +98,7 @@ export function SynapticInputItem({
     color: op.color ?? DefaultColor,
   }));
 
-  const currentSynapseId = state[index]?.id;
-  const onHideSynapse = useHideSynapseHandler(
-    synapsesPlacement,
-    setSynapsesPlacement,
-    index,
-    currentSynapseId
-  );
+  const onHideSynapse = useHideSynapseHandler(synapsesPlacement, setSynapsesPlacement, index);
 
   const onShowSynapse = async () => {
     setLoadingVisualize(true);
@@ -342,39 +336,26 @@ function useHideSynapseHandler(
         > | null)
       | null
   ) => void,
-  index: number,
-  id: string | undefined
+  index: number
 ) {
   return () => {
     if (!synapsesPlacement) return;
 
-    // Find the entry by synapsePlacementConfigId matching the current synapse id
-    const entryKey = Object.keys(synapsesPlacement).find((key) => {
-      const entry = synapsesPlacement[key];
-      return entry?.synapsePlacementConfigId === id;
-    });
+    // Only hide synapses stored under this form item's index key
+    // This prevents accidentally hiding another form item's synapses
+    // when they happen to share the same synapse group ID
+    const indexKey = `${index}`;
+    const entry = synapsesPlacement[indexKey];
 
-    if (entryKey) {
-      const meshId = synapsesPlacement[entryKey]?.meshId;
+    if (entry) {
+      const meshId = entry.meshId;
       if (meshId) {
-        sendRemoveSynapses3DEvent(entryKey, meshId);
+        sendRemoveSynapses3DEvent(indexKey, meshId);
       }
       setSynapsesPlacement((prev) => {
         const newValue = structuredClone(prev);
         if (!newValue) return newValue;
-        delete newValue[entryKey];
-        return newValue;
-      });
-    } else if (synapsesPlacement[`${index}`]) {
-      // Fallback to index-based lookup
-      const meshId = synapsesPlacement[`${index}`]?.meshId;
-      if (meshId) {
-        sendRemoveSynapses3DEvent(`${index}`, meshId);
-      }
-      setSynapsesPlacement((prev) => {
-        const newValue = structuredClone(prev);
-        if (!newValue) return newValue;
-        delete newValue[`${index}`];
+        delete newValue[indexKey];
         return newValue;
       });
     }
@@ -391,17 +372,13 @@ function isSynapseDisplayed(
       meshId?: string;
     } | null
   > | null,
-  key: string
+  index: number
 ) {
   if (!synapsesPlacement) return false;
 
-  for (const item of Object.values(synapsesPlacement)) {
-    if (!item) continue;
-
-    const { synapsePlacementConfigId } = item;
-    if (synapsePlacementConfigId === key) return true;
-  }
-  return false;
+  // Check if there's an entry for this form item's index
+  const entry = synapsesPlacement[`${index}`];
+  return entry != null;
 }
 
 function resolveIcon(synapseDisplayed: boolean, visualizeLoading: boolean) {
