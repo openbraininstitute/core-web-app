@@ -322,7 +322,7 @@ export const usePrimaryExtendedHierarchySpeciesQuery = () => {
     result: { atlas },
     loadingAtlas,
     error: atlasError,
-  } = useBrainRegionAtlasQuery({ id: SpeciesConfig.atlasId });
+  } = useBrainRegionAtlasQuery({ id: SpeciesConfig.AtlasId });
 
   if (atlasError || !atlas || !master) {
     log('warn', 'Failed to fetch brain atlas regions:', atlasError);

@@ -160,7 +160,6 @@ export class Painter {
           atlasId: this.AtlasID,
           regionId: region.id,
         });
-        console.log('–– – setRegions – data––', data);
         await this.addMesh(data, region);
       } catch (ex) {
         logError(`Unable to load mesh for region "${region.name}":`, ex);
@@ -208,7 +207,6 @@ export class Painter {
         this.pointCloudPainter = painter;
       }
     } catch (ex) {
-      console.log('# # setPointCloud # ex:', { ex });
       if (
         ex instanceof Error &&
         ex.message.includes('[TgdContext] This context has been deleted:')
