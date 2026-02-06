@@ -214,20 +214,31 @@ export function useWorkspaceHierarchyRegistry() {
    * otherwise falls back to the default for the new hierarchy
    */
   async function changeBulkStoreHierarchySpeciesImpl(hId: string) {
-    const hierarchy = remoteAvailableHierarchies?.find((h) => h.id === hId);
+    const {
+      remoteAvailableHierarchies: latestHierarchies,
+      selectedBrainRegion: latestRegion,
+      urlState: latestUrlState,
+      browserStorageHierarchy: latestStorage,
+    } = latestRef.current;
+    const hierarchy = latestHierarchies?.find((h) => h.id === hId);
     if (!hierarchy) return;
 
     // Remember the current brain region for the current hierarchy before switching
-    const currentHierarchyId = urlState.hierarchyId || browserStorageHierarchy?.hierarchyId;
-    const prevMemory = browserStorageHierarchy?.perHierarchyMemory ?? {};
-    if (currentHierarchyId && selectedBrainRegion) {
+    const currentHierarchyId = latestUrlState.hierarchyId || latestStorage?.hierarchyId;
+    const prevMemory = {
+      ...(latestStorage?.perHierarchyMemory ?? {}),
+    };
+    if (currentHierarchyId && latestRegion) {
       prevMemory[currentHierarchyId] = {
-        brainRegionId: selectedBrainRegion.id,
-        brainRegionName: selectedBrainRegion.name,
+        brainRegionId: latestRegion.id,
+        brainRegionName: latestRegion.name,
       };
     }
 
-    // Check if we have a previously remembered brain region for the target hierarchy
+    // clear the atom so stale state doesn't leak into the new hierarchy
+    setSelectedBrainRegion(null);
+
+    // check if we have a previously remembered brain region for the target hierarchy
     const remembered = prevMemory[hierarchy.id];
 
     // update Jotai atoms for immediate UI feedback
@@ -278,7 +289,7 @@ export function useWorkspaceHierarchyRegistry() {
 
     changeLocalStoreBrainRegion(region);
 
-    // Keep per-hierarchy memory in sync
+    // keep per-hierarchy memory in sync
     const updatedMemory = {
       ...(browserStorageHierarchy?.perHierarchyMemory ?? {}),
       [currentHierarchyId]: {
@@ -296,12 +307,30 @@ export function useWorkspaceHierarchyRegistry() {
     });
   }
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: stable callback wrappers — identity doesn't change across renders,
+  // use refs so the memoized callbacks always read the latest values
+  const latestRef = useRef({
+    selectedBrainRegion,
+    urlState,
+    browserStorageHierarchy,
+    remoteAvailableHierarchies,
+    workspaceSpecies,
+    remoteUserPreferenceHierarchySpecies,
+  });
+  latestRef.current = {
+    selectedBrainRegion,
+    urlState,
+    browserStorageHierarchy,
+    remoteAvailableHierarchies,
+    workspaceSpecies,
+    remoteUserPreferenceHierarchySpecies,
+  };
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: uses latestRef for fresh values
   const changeBulkStoreHierarchySpecies = useCallback(
     (hId: string) => changeBulkStoreHierarchySpeciesImpl(hId),
-    [changeLocalStoreHierarchySpecies]
+    [changeLocalStoreHierarchySpecies, setSelectedBrainRegion]
   );
-  // biome-ignore lint/correctness/useExhaustiveDependencies: stable callback wrappers — identity doesn't change across renders,
+  // biome-ignore lint/correctness/useExhaustiveDependencies: uses latestRef for fresh values
   const changeBrainRegion = useCallback(
     (region: IBrainRegionHierarchy | null) => changeBrainRegionImpl(region),
     [changeLocalStoreBrainRegion, setSelectedBrainRegion]
