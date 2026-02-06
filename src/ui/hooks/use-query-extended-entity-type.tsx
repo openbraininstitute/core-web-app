@@ -56,7 +56,7 @@ export function buildQueryKey({
 
 export type ExtendedEntityTypeQueryKey = ReturnType<typeof buildQueryKey>;
 
-function useQueryParameters(
+export function useQueryParameters(
   { context, workspace }: { context: QueryContext; workspace?: WorkspaceContext },
   {
     requireBrainRegion = true,

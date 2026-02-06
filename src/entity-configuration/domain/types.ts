@@ -30,6 +30,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
     };
     query: {
       list?: (query: any) => Promise<EntityCoreResponse<T>>;
+      count?: (query: any) => Promise<EntityCoreResponse<T>>;
       one: (query: { id: string; context?: WorkspaceContext | null }) => Promise<T>;
       create?: (body: any) => Promise<T>;
     };
