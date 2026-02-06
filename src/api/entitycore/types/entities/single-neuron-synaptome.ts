@@ -1,29 +1,28 @@
 import isNil from 'es-toolkit/compat/isNil';
 import { z } from 'zod';
-
-import { validateSingleNeuronSynapseGenerationFormula } from '@/api/small-scale-simulator';
-import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
-
+import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type { IMEModel, IMEModelFilter } from '@/api/entitycore/types/entities/me-model';
 import type {
-  EntityCoreIdentifiable,
   EntityAuthorization,
-  IContributor,
-  Timestamps,
+  EntityCoreBaseAsset,
+  EntityCoreIdentifiable,
   EntityCoreOwnership,
   EntityCoreType,
-  EntityCoreBaseAsset,
+  IContributor,
+  Timestamps,
 } from '@/api/entitycore/types/shared/global';
 import type {
-  ContributionFilter,
   BrainRegionFilter,
-  SharedFilter,
-  MtypeFilter,
+  BrainRegionHierarchyFilter,
+  ContributionFilter,
   EtypeFilter,
-  PaginationFilter,
-  OwnershipFilter,
   IlikeSearchFilter,
+  MtypeFilter,
+  OwnershipFilter,
+  PaginationFilter,
+  SharedFilter,
 } from '@/api/entitycore/types/shared/request';
+import { validateSingleNeuronSynapseGenerationFormula } from '@/api/small-scale-simulator';
 
 export interface SingleNeuronSynaptomeBase {
   name: string;
@@ -49,6 +48,7 @@ export interface ISingleNeuronSynaptomeFilter
     MtypeFilter,
     EtypeFilter,
     BrainRegionFilter,
+    BrainRegionHierarchyFilter,
     SharedFilter,
     IMEModelFilter,
     PaginationFilter,
@@ -99,7 +99,7 @@ export const SingleNeuronSynaptomeConfigurationSchema = SingleNeuronSynaptomeBas
     if (synapse.target !== 'soma' && isNil(synapse.formula)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'formula should be provided when target is different then "soma"',
+        message: 'formula should be provided when target is different than "soma"',
         path: ['formula'],
       });
     }

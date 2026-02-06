@@ -1,4 +1,4 @@
-import { ExpandableConfig } from 'antd/es/table/interface';
+import type { ExpandableConfig } from 'antd/es/table/interface';
 import type { ReactNode } from 'react';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';

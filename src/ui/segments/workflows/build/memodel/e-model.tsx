@@ -2,7 +2,9 @@
 
 import { ReloadOutlined } from '@ant-design/icons';
 import { Image } from 'antd';
-import { kebabCase, omit } from 'es-toolkit/compat';
+import compact from 'es-toolkit/compat/compact';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import omit from 'es-toolkit/compat/omit';
 import { useRouter } from 'next/navigation';
 import { type HTMLAttributes, type TdHTMLAttributes, useEffect } from 'react';
 
@@ -30,6 +32,8 @@ import { Button } from '@/ui/molecules/button';
 import { label, useBuildMeModelSessionState } from '@/ui/segments/workflows/build/memodel/helpers';
 import { cn } from '@/utils/css-class';
 
+import { WorkflowScopeTabs } from '../../elements/scope-selector';
+
 type Props = {
   sessionId: string;
 };
@@ -56,10 +60,20 @@ export function EModel({ sessionId }: Props) {
     projectId,
   });
 
+  const dataKey = compact([
+    virtualLabId,
+    projectId,
+    WorkspaceSection.BuildWorkflow,
+    ExtendedEntitiesTypeDict.Emodel,
+    WorkspaceScope.Build,
+    sessionId,
+  ]).join('/');
+
   const { updateSelectedBrainRegion } = useSetSelectedBrainRegion();
   const { changeBrainRegion } = useWorkspaceHierarchyRegistry();
   const { result: brainRegionHierarchy } = usePrimaryHierarchyOfCurrentSpeciesQuery();
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: both functions are stable
   useEffect(() => {
     if (brainRegionHierarchy) {
       const defaultBrainRegion = brainRegionHierarchy?.root;
@@ -77,7 +91,6 @@ export function EModel({ sessionId }: Props) {
       requireMiniDetailView={false}
       classNames={{ container: 'max-h-full' }}
       dataType={ExtendedEntitiesTypeDict.Emodel}
-      scope={WorkspaceScope.BuildMeModelE}
       miniViewProps={{ section: WorkspaceSection.BuildWorkflow }}
       mainTableProps={{
         selectionType: 'radio',
@@ -134,6 +147,7 @@ export function EModel({ sessionId }: Props) {
             : '';
         },
       }}
+      left={<WorkflowScopeTabs className="max-w-max" />}
     />
   );
 }
@@ -167,7 +181,7 @@ export function EModelMiniDetail({ sessionId }: Props) {
       value: renderEmptyOrValue(renderArray(data?.etypes?.map((m) => m.pref_label) || [])),
     },
     {
-      label: 'Created By',
+      label: 'Registered By',
       value: renderEmptyOrValue(data?.created_by?.pref_label),
     },
     {

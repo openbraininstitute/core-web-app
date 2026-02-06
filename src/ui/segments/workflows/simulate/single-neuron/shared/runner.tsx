@@ -1,67 +1,63 @@
 'use client';
 
 import { captureException } from '@sentry/nextjs';
-import { RESET } from 'jotai/utils';
-import { match } from 'ts-pattern';
-import Link from 'next/link';
-import { atom } from 'jotai';
+import type { NotificationInstance } from 'antd/es/notification/interface';
 import {
+  delay,
+  isNil,
+  kebabCase,
+  get as lget,
+  map,
+  omit,
+  pick,
   sortBy,
   uniqBy,
   values,
-  isNil,
-  delay,
-  pick,
-  omit,
-  map,
-  get as lget,
-  kebabCase,
 } from 'es-toolkit/compat';
-import type { NotificationInstance } from 'antd/es/notification/interface';
-
-import { SingleNeuronSimulationStatus } from '@/api/entitycore/types/shared/neuron-simulation';
-import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
-import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
-import {
-  genericSingleNeuronSimulationPlotDataAtomFamily,
-  SimulationStatus,
-  simulationStatusAtomFamily,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import { createJsonAsset } from '@/api/entitycore/queries/assets';
-import { readNdjsonResponse } from '@/utils/response';
-import {
-  SingleNeuronSimulation,
-  SingleNeuronSynaptomeSimulation,
-} from '@/entity-configuration/domain/simulation';
-import { messages } from '@/i18n/en/simulation';
-import { tryCatch } from '@/api/utils';
+import { atom } from 'jotai';
+import { RESET } from 'jotai/utils';
+import Link from 'next/link';
+import { match } from 'ts-pattern';
 import {
   createSingleNeuronSimulation,
   createSingleNeuronSynaptomeSimulation,
   getMEModel,
 } from '@/api/entitycore/queries';
-
-import { type Message, JobStatus, MessageType } from '@/services/small-scale-simulator/types';
-import type { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
-import type {
-  NeuronLocationArray,
-  SimulationExperimentalSetup,
-  TStimulationConfiguration,
-  SynapseConfigurationArray,
-  TOverviewConfiguration,
-  TSimulationType,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import type {
-  SimulationStreamData,
-  SingleNeuronModelSimulationConfig,
-} from '@/types/small-scale-simulator/single-neuron';
+import { createJsonAsset } from '@/api/entitycore/queries/assets';
 import type {
   ISingleNeuronSimulation,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
-
+import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
+import { tryCatch } from '@/api/utils';
 import { config } from '@/config';
+import {
+  SingleNeuronSimulation,
+  SingleNeuronSynaptomeSimulation,
+} from '@/entity-configuration/domain/simulation';
+import { messages } from '@/i18n/en/simulation';
+import type { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
+import { JobStatus, type Message, MessageType } from '@/services/small-scale-simulator/types';
+import type {
+  SimulationStreamData,
+  SingleNeuronModelSimulationConfig,
+} from '@/types/small-scale-simulator/single-neuron';
+import {
+  genericSingleNeuronSimulationPlotDataAtomFamily,
+  SimulationStatus,
+  simulationStatusAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import type {
+  NeuronLocationArray,
+  SimulationExperimentalSetup,
+  SynapseConfigurationArray,
+  TOverviewConfiguration,
+  TSimulationType,
+  TStimulationConfiguration,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
+import { readNdjsonResponse } from '@/utils/response';
 
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
 
@@ -118,7 +114,6 @@ export const createSingleNeuronSimulationAtom = atom(
     const basePayload = {
       name,
       description,
-      status: SingleNeuronSimulationStatus.success,
       seed: experimentalSetupConfiguration.seed,
       injection_location: [singleNeuronSimulationConfig.current_injection.inject_to],
       recording_location: singleNeuronSimulationConfig.record_from.map(
@@ -298,21 +293,48 @@ export const launchSimulationAtom = atom<
           status: SimulationStatus.ERROR,
           description: errorMessage,
         });
+
         notify.error({
           message: `Simulation ${overviewConfiguration.name}`,
-          description: errorMessage,
+          description: isLowFundsError ? (
+            <div className="flex flex-col gap-2  items-start">
+              <p>{errorMessage}</p>
+              {isProjectAdmin ? (
+                <Link
+                  href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/credits`}
+                  className="text-primary-8 border-neutral-300 rounded-full border px-4 py-1.5 no-underline! hover:underline"
+                  onClick={() => notify.destroy(`simulation-failed-${sessionId}`)}
+                >
+                  Transfer credits
+                </Link>
+              ) : (
+                <Link
+                  href={`${config.ROOT_ROUTE}/${virtualLabId}/overview`}
+                  className="text-primary-8 border-neutral-300 rounded-full border px-4 py-1.5 no-underline! hover:underline"
+                  onClick={() => notify.destroy(`simulation-failed-${sessionId}`)}
+                >
+                  Contact lab admin
+                </Link>
+              )}
+            </div>
+          ) : (
+            errorMessage
+          ),
           placement: 'topRight',
           key: `simulation-failed-${sessionId}`,
+          duration: 1000,
         });
         return;
       }
 
       if (!response?.ok) {
         let errorMessage = messages.DefaultSimulationError;
+        let isLowFundsError = false;
 
         try {
           const errResponseObj = await response?.json();
           if (errResponseObj.error_code === LOW_FUNDS_ERROR_CODE) {
+            isLowFundsError = true;
             errorMessage = isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin;
           }
         } catch {
@@ -323,14 +345,41 @@ export const launchSimulationAtom = atom<
           status: SimulationStatus.ERROR,
           description: errorMessage,
         });
+
         notify.error({
           message: `Simulation ${overviewConfiguration.name}`,
-          description: errorMessage,
+          description: isLowFundsError ? (
+            <div className="flex flex-col gap-2 items-start">
+              <p>{errorMessage}</p>
+              {isProjectAdmin ? (
+                <Link
+                  href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/credits`}
+                  className="text-primary-8 border-neutral-300 rounded-full border px-4 py-1.5 no-underline! hover:underline"
+                  onClick={() => notify.destroy(`simulation-failed-${sessionId}`)}
+                >
+                  Transfer credits
+                </Link>
+              ) : (
+                <Link
+                  href={`${config.ROOT_ROUTE}/${virtualLabId}/overview`}
+                  className="text-primary-8 border-neutral-300 rounded-full border px-4 py-1.5 no-underline! hover:underline"
+                  onClick={() => notify.destroy(`simulation-failed-${sessionId}`)}
+                >
+                  Contact lab admin
+                </Link>
+              )}
+            </div>
+          ) : (
+            errorMessage
+          ),
           placement: 'topRight',
           key: `simulation-failed-${sessionId}`,
+          duration: isLowFundsError ? 0 : undefined,
         });
 
-        delay(() => set(simulationStatusAtom, RESET), 1000);
+        if (!isLowFundsError) {
+          delay(() => set(simulationStatusAtom, RESET), 1000);
+        }
         return;
       }
 

@@ -1,9 +1,9 @@
 import kebabCase from 'es-toolkit/compat/kebabCase';
 import snakeCase from 'es-toolkit/compat/snakeCase';
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import z from 'zod';
 
-import { TEntityTypeDict } from '@/api/entitycore/types';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 import { auth } from '@/auth';
 import { createDownloadStream } from '@/features/entity-download/download-stream';
 import { getDownloadStreamHeaders } from '@/features/entity-download/utils';
@@ -46,6 +46,8 @@ export async function POST(request: NextRequest, { params }: { params: { entityT
   const downloadStream = await createDownloadStream({ entityType, ...reqData });
 
   return new NextResponse(downloadStream, {
-    headers: getDownloadStreamHeaders({ filename: `${kebabCase(entityType)}.tar.gz` }),
+    headers: getDownloadStreamHeaders({
+      filename: `${kebabCase(entityType)}.tar.gz`,
+    }),
   });
 }

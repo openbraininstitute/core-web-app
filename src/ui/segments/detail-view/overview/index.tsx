@@ -1,13 +1,21 @@
 import { notFound } from 'next/navigation';
 
 import { getMEModel } from '@/api/entitycore/queries';
-import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
-import { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
+import type {
+  ICellMorphology,
+  IElectricalCellRecording,
+  ISingleNeuronSynaptome,
+} from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
   CommonSummaryViewFields,
   getViewDefinitionByExtendedType,
 } from '@/entity-configuration/definitions/view-defs';
+import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
+import type { EntityTypeValue } from '@/entity-configuration/domain';
 import { circuitTypes, type EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
 import {
   resolveSimulationByCampaignId,
@@ -15,25 +23,17 @@ import {
   resolveSingleNeuronSynaptomeSimulation,
 } from '@/entity-configuration/domain/simulation';
 import { CellMorphologyViewer } from '@/features/entities/cell-morphology/detail-view';
+import { EmCellMeshMetadata } from '@/features/entities/em-cell-mesh';
 import MEModelDetails from '@/features/entities/neuron-simulation/elements/me-model-details';
 import SynaptomeDetails from '@/features/entities/neuron-simulation/elements/synaptome-details';
 import { EphysViewer } from '@/features/ephys-viewer';
 import { IonChannelRecordingViewer } from '@/features/ion-channel-recording-viewer';
-import SmallMicrocircuitSimulation from '@/features/small-microcircuit';
+import ScanConfig from '@/features/scan-config';
+import type { AwaitedType, WorkspaceContext } from '@/types/common';
 import { Field } from '@/ui/segments/detail-view/overview/field';
 import IonChannelModelOverview from '@/ui/segments/detail-view/overview/ion-channel-model';
 import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
 import { Visualization as CircuitViz } from '@/ui/segments/explore/circuit/elements/visualization';
-
-import type {
-  ICellMorphology,
-  IElectricalCellRecording,
-  ISingleNeuronSynaptome,
-} from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { EntityTypeValue } from '@/entity-configuration/domain';
-import type { AwaitedType, WorkspaceContext } from '@/types/common';
-import { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 
 export default async function Overview({
   entity,
@@ -86,9 +86,8 @@ export default async function Overview({
       context: ctx,
     });
 
-    (entity as ISingleNeuronSynaptome).me_model = meModel; //eslint-disable-line
+    (entity as ISingleNeuronSynaptome).me_model = meModel;
   }
-
   if (
     extendedType === ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation ||
     extendedType === ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation ||
@@ -100,14 +99,14 @@ export default async function Overview({
 
     try {
       config = await resolveSimulationByCampaignId({ id: entity.id, context: ctx });
-    } catch (err) {
+    } catch (_err) {
       notFound();
     }
 
     if (!config.simulation?.entity_id) notFound();
 
     return (
-      <SmallMicrocircuitSimulation
+      <ScanConfig
         modelId={config.simulation.entity_id}
         virtualLabId={ctx.virtualLabId}
         projectId={ctx.projectId}
@@ -164,6 +163,9 @@ export default async function Overview({
       )}
       {extendedType === ExtendedEntitiesTypeDict.IonChannelModel && (
         <IonChannelModelOverview icm={entity as IonChannelModel} ctx={ctx} />
+      )}
+      {extendedType === ExtendedEntitiesTypeDict.EMCellMesh && (
+        <EmCellMeshMetadata id={entity.id} ctx={ctx} />
       )}
     </>
   );

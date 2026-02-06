@@ -3,15 +3,14 @@
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { notFound } from 'next/navigation';
 import { use } from 'react';
-
-import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
-import SimulationConfig from '@/features/small-microcircuit';
-import { keyBuilder } from '@/ui/use-query-keys/data';
+import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
+import ScanConfig from '@/features/scan-config';
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 import type { WorkflowSimulatePanelKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import type { ExperimentStepKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu';
-import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 
 export default function Page({
   searchParams,
@@ -62,7 +61,7 @@ export default function Page({
   ) {
     return (
       <div className="border-neutral-2 ml-2 h-full rounded-2xl border pt-3">
-        <SimulationConfig
+        <ScanConfig
           modelId={entity.id}
           virtualLabId={virtualLabId}
           projectId={projectId}

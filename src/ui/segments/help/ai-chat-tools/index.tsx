@@ -1,9 +1,8 @@
 'use client';
 
+import { useAITools } from '@/services/ai-agent/tools/tools';
 import AIChatToolsContent from '@/ui/segments/help/ai-chat-tools/content';
 import AIChatToolsNavigation from '@/ui/segments/help/ai-chat-tools/navigation';
-
-import { useAITools } from '@/services/ai-agent/tools/tools';
 
 export type AIChatToolsSectionProps = {
   description?: string;

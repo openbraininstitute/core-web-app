@@ -2,37 +2,25 @@
 
 'use client';
 
-import { parseAsString, SingleParserBuilder, useQueryState } from 'nuqs';
-import { ReactNode, useEffect, type ComponentProps } from 'react';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { WarningOutlined } from '@ant-design/icons';
 import { get } from 'es-toolkit/compat';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { RESET } from 'jotai/utils';
 import dynamic from 'next/dynamic';
-
-import { RecursiveExpandableTable } from '@/ui/segments/explore/circuit/elements/recursive-expandable-table';
-import { createExpandableTableConfig } from '@/ui/segments/explore/circuit/elements/expandable-base-table';
-import {
-  CircuitRepresentationView,
-  circuitRepresentationViewAtom,
-  ICircuitEnriched,
-} from '@/ui/segments/explore/circuit/helpers';
-import { useExpandableTable } from '@/ui/segments/explore/circuit/elements/use-expandable-table';
-import { useFilterStateWatcher } from '@/ui/segments/explore/circuit/use-filter-state-watcher';
-import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
-import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
+import { type ComponentProps, type ReactNode, useEffect } from 'react';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
-import { DEFAULT_PAGE_NUMBER, WorkspaceScope, WorkspaceSection } from '@/constants';
-import { expandIcon } from '@/ui/segments/explore/circuit/elements/expand-icon';
-import { useHierarchy } from '@/ui/segments/explore/circuit/use-hierarchy';
-import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
+import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
+import type { Facets, Pagination } from '@/api/entitycore/types/shared/response';
 import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
+import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
+import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
-import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
-import { MiniDetailView } from '@/ui/segments/mini-detail-view';
-import { GenericError } from '@/ui/molecules/generic-error';
+import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
+import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { GenericError } from '@/ui/molecules/generic-error';
 import {
   coreActiveColumnsAtom,
   coreFiltersAtom,
@@ -40,6 +28,21 @@ import {
   coreSortStateAtom,
   useDataListStateSnapshotActions,
 } from '@/ui/segments/data-table/elements/context';
+import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
+import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
+import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
+import { expandIcon } from '@/ui/segments/explore/circuit/elements/expand-icon';
+import { createExpandableTableConfig } from '@/ui/segments/explore/circuit/elements/expandable-base-table';
+import { RecursiveExpandableTable } from '@/ui/segments/explore/circuit/elements/recursive-expandable-table';
+import { useExpandableTable } from '@/ui/segments/explore/circuit/elements/use-expandable-table';
+import {
+  CircuitRepresentationView,
+  circuitRepresentationViewAtom,
+  type ICircuitEnriched,
+} from '@/ui/segments/explore/circuit/helpers';
+import { useFilterStateWatcher } from '@/ui/segments/explore/circuit/use-filter-state-watcher';
+import { useHierarchy } from '@/ui/segments/explore/circuit/use-hierarchy';
+import { MiniDetailView } from '@/ui/segments/mini-detail-view';
 import {
   makeSelectEntityClickEvent,
   useMiniDetailView,
@@ -47,12 +50,7 @@ import {
 } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
-import type { Facets, Pagination } from '@/api/entitycore/types/shared/response';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
+import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
 const CircuitTable = dynamic(() => import('@/ui/segments/explore/circuit/table'), { ssr: false });
 
@@ -88,14 +86,7 @@ export function BrowseCircuit({
   const { virtualLabId, projectId } = useWorkspace();
   const { mdv, setMdv } = useMiniDetailView();
   const view = useAtomValue(circuitRepresentationViewAtom);
-  const [scope] = useQueryState(
-    'scope',
-    parseAsString
-      .withDefault(defaultScope ?? WorkspaceScope.Public)
-      .withOptions({ shallow: true, clearOnDefault: false }) as NonNullable<
-      SingleParserBuilder<TWorkspaceScope>
-    >
-  );
+  const { scope } = useScope({ defaultScope, clearOnDefault: false });
 
   const { dataKey } = makeDataKey({
     virtualLabId,
@@ -134,7 +125,7 @@ export function BrowseCircuit({
     if (section === WorkspaceSection.Data) {
       runStorageRestore();
     }
-  }, [section]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [section, runStorageRestore]);
 
   const {
     queryKeyHash,
@@ -177,10 +168,7 @@ export function BrowseCircuit({
     requireBrainRegion,
     defaultBrainRegion,
     useKeepPreviousData: true,
-    extraQueryParams: {
-      ...extraQueryParams,
-      ...Circuit?.api.config.extraRequiredListFilters,
-    },
+    extraQueryParams,
     enabled: ({ queryKey }) => {
       const [{ queryParameters }] = queryKey;
       if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))

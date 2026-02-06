@@ -1,30 +1,29 @@
 import flatMap from 'es-toolkit/compat/flatMap';
 import keyBy from 'es-toolkit/compat/keyBy';
-
-import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
-import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
-import { EntityTypeGroup } from '@/entity-configuration/domain/group';
-import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { EntitySlug } from '@/entity-configuration/domain/slug';
-import { getAssetElement } from '@/api/entitycore/utils';
 import { getMEModels } from '@/api/entitycore/queries';
+import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import {
   createSimulationCampaign,
   getCircuitSimulationCampaign,
   getCircuitSimulationCampaigns,
 } from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
-
-import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
+import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import {
-  SimulationCampaignEntityTypeDict,
   type ICircuitSimulationCampaign,
   type ICircuitSimulationCampaignFilter,
+  SimulationCampaignEntityTypeDict,
 } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { getAssetElement } from '@/api/entitycore/utils';
+import { EntityTypeGroup } from '@/entity-configuration/domain/group';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
+import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { WorkspaceContext } from '@/types/common';
+import { getExtendedSimMap } from './utils';
 
 const ENTITY_TYPE = SimulationCampaignEntityTypeDict.memodel;
 
@@ -53,7 +52,7 @@ export async function resolveExecutions({
 
   const executionsResponses = await Promise.all(promises);
 
-  return executionsResponses.map((r) => r.data).flat();
+  return executionsResponses.flatMap((r) => r.data);
 }
 
 // NOTE: this is due entitycore do not support yet the circuit inclusion
@@ -91,11 +90,14 @@ async function resolveSimulationCampaigns({
     return acc;
   }, {});
 
+  // TODO: Switch to sim generation execution status for validation when implemented in obi-one.
+  const simulationMap = await getExtendedSimMap(allSimIds, context);
+
   // attach executions to each simulation (choose to add all executions as array)
   const enrichedData = source.data.map((campaign) => ({
     ...campaign,
     simulations: campaign.simulations?.map((sim) => ({
-      ...sim,
+      ...simulationMap.get(sim.id),
       executions: executionsBySimId[sim.id] ?? [],
     })),
   }));
@@ -125,6 +127,11 @@ export async function resolveSimulationByCampaignId({
   context: WorkspaceContext | undefined;
 }) {
   const campaign = await getCircuitSimulationCampaign({ id, context });
+
+  if (!campaign) {
+    throw new Error(`No campaign with id ${id} found`);
+  }
+
   const source = await getCircuitSimulations({ context, filters: { simulation_campaign_id: id } });
 
   const simulation = source.data.at(0);
@@ -137,7 +144,7 @@ export async function resolveSimulationByCampaignId({
   if (!configAsset) throw Error('No campaign config asset found');
 
   const rawConfig = await downloadAsset({
-    entityId: campaign?.id!,
+    entityId: campaign.id,
     entityType: EntityTypeDict.SimulationCampaign,
     id: configAsset?.id,
     ctx: context,
@@ -181,6 +188,7 @@ export const MEModelCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCa
       one: getCircuitSimulationCampaign,
       create: createSimulationCampaign,
     },
+    expandRow: async (record, _context) => record,
   },
   explore: {
     basePrefix: 'simulate',

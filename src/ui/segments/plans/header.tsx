@@ -1,9 +1,8 @@
-import Link from 'next/link';
-
 import { RiInformation2Line } from '@remixicon/react';
 import { Tooltip } from 'antd';
+import Link from 'next/link';
 
-import { PlanV2, AdvantagesProps } from '@/types/virtual-lab/pricing';
+import type { AdvantagesProps, PlanV2 } from '@/types/virtual-lab/pricing';
 import SubscriptionToggle from '@/ui/segments/plans/subscription-toggle';
 import SubscriptionsCosts from '@/ui/segments/plans/subscriptions-costs';
 
@@ -16,6 +15,13 @@ export default function PlanHeader({
   billingInterval: 'month' | 'year';
   setBillingInterval: (billingInterval: 'month' | 'year') => void;
 }) {
+  const displayedFeatures = plan.has_subscription
+    ? ((billingInterval === 'month'
+        ? plan.monthly_subscriptions[0]?.features
+        : plan.yearly_subscriptions[0]?.features) ?? [])
+    : [];
+  const advantages = plan.advantages ?? [];
+
   return (
     <header className="relative flex h-[260px] w-full flex-col justify-between">
       <div>
@@ -45,14 +51,30 @@ export default function PlanHeader({
           </Link>
         </div>
       )}
-      {plan.advantages && plan.advantages.length > 0 && (
+      {(displayedFeatures.length > 0 || advantages.length > 0) && (
         <div className="flex flex-col gap-1">
-          {plan.advantages.map((advantage: AdvantagesProps) => (
+          {displayedFeatures.map((advantage: AdvantagesProps) => (
             <div
-              key={advantage.title}
+              key={`feature-${advantage.title}`}
               className="text-primary-9 flex items-center gap-2 text-lg font-normal"
             >
               <div>+</div>
+              <div>{advantage.title}</div>
+              {advantage.tooltip && (
+                <div>
+                  <Tooltip title={advantage.tooltip}>
+                    <RiInformation2Line className="text-primary-9 size-5" />
+                  </Tooltip>
+                </div>
+              )}
+            </div>
+          ))}
+          {advantages.map((advantage: AdvantagesProps) => (
+            <div
+              key={`advantage-${advantage.title}`}
+              className="text-primary-9 flex items-center gap-2 text-lg font-normal"
+            >
+              <div className="mr-2">+</div>
               <div>{advantage.title}</div>
               {advantage.tooltip && (
                 <div>

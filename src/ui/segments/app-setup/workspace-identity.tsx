@@ -3,9 +3,6 @@
 
 'use client';
 
-import { ComponentProps, ReactNode, useEffect, useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { Alert, Form, Popover } from 'antd';
 import {
   CheckCircleFilled,
   EditOutlined,
@@ -13,32 +10,34 @@ import {
   LoadingOutlined,
   RightOutlined,
 } from '@ant-design/icons';
+import { useMutation } from '@tanstack/react-query';
+import { Alert, Form, Popover } from 'antd';
+import type { RuleObject } from 'antd/es/form';
+import { type ComponentProps, type ReactNode, useEffect, useState } from 'react';
 import z from 'zod';
-
-import { VerificationCode } from '@/components/VirtualLab/create-entity-flows/common/otp-code';
-import { EmailStatusSchema } from '@/api/virtual-lab-svc/validation';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import {
   getEmailVerificationCode,
   verifyOtpCode,
 } from '@/api/virtual-lab-svc/queries/email-verification';
-import { Card, CardContent } from '@/ui/molecules/card';
+import { EmailStatusSchema, type TEmailStatus } from '@/api/virtual-lab-svc/validation';
+import { VerificationCode } from '@/components/VirtualLab/create-entity-flows/common/otp-code';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
+import { Card, CardContent } from '@/ui/molecules/card';
 import { Input } from '@/ui/molecules/input';
-import { cn } from '@/utils/css-class';
-
 import type { TResolvedWorkspace } from '@/ui/segments/app-setup/helpers';
+import { cn } from '@/utils/css-class';
+import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 export const WorkspaceIdentitySchema = z.object({
   name: z.string({ message: 'Virtual lab name is required' }).min(1),
   first_name: z
     .string({ message: 'Please enter your first name' })
-    .nonempty({ message: 'First name is required' })
+    .min(1, { message: 'First name is required' })
     .describe('first name of the user'),
   last_name: z
     .string({ message: 'Please enter your last name' })
-    .nonempty({ message: 'Last name is required' })
+    .min(1, { message: 'Last name is required' })
     .describe('last name of the user'),
   email: z
     .string({ message: 'Please enter your email' })
@@ -99,7 +98,7 @@ export function WorkspaceIdentity({
   move,
 }: {
   data: TResolvedWorkspace;
-  move: (v: any) => void;
+  move: (v: TWorkspaceIdentitySchema & { name: string }) => void;
 }) {
   const breakpoint = useDefaultBreakpoint();
   const [verificationMsg, setVerificationMsg] = useState<string | null>(null);
@@ -130,14 +129,12 @@ export function WorkspaceIdentity({
     }));
   };
 
-  const values = Form.useWatch([], form);
-
   useEffect(() => {
     form
       .validateFields({ validateOnly: true })
       .then(() => setSubmittable(true))
       .catch(() => setSubmittable(false));
-  }, [form, values, editableField]);
+  }, [form]);
 
   const fullName =
     [data?.profile?.first_name, data?.profile?.last_name].filter(Boolean).join(' ') ||
@@ -178,7 +175,7 @@ export function WorkspaceIdentity({
       const fv = form.getFieldsValue();
       return await getEmailVerificationCode({
         email: fv.email,
-        name: virtualLabName!,
+        name: virtualLabName ?? '',
       });
     },
     onSuccess: (result) => {
@@ -259,7 +256,7 @@ export function WorkspaceIdentity({
                     rules={[
                       {
                         required: true,
-                        validator(rule, value) {
+                        validator(_rule: RuleObject, value: TEmailStatus) {
                           if (
                             !EmailStatusSchema.options.includes(value) ||
                             value !== EmailStatusSchema.Enum.verified
@@ -290,10 +287,14 @@ export function WorkspaceIdentity({
                   <Form.Item
                     name="first_name"
                     className="flex-1"
-                    label={<span className="block text-sm text-[#8C8C8C]">First name</span>}
+                    label={
+                      <span className="block text-sm text-[#8C8C8C]">
+                        First name <sup className="text-red-500">*</sup>
+                      </span>
+                    }
                     rules={[
                       {
-                        validator: async (_rule, value) => {
+                        validator: async (_rule: RuleObject, value: string) => {
                           try {
                             await WorkspaceIdentitySchema.pick({
                               first_name: true,
@@ -319,10 +320,14 @@ export function WorkspaceIdentity({
                   <Form.Item
                     name="last_name"
                     className="flex-1"
-                    label={<span className="block text-sm text-[#8C8C8C]">Last name</span>}
+                    label={
+                      <span className="block text-sm text-[#8C8C8C]">
+                        Last name <sup className="text-red-500">*</sup>
+                      </span>
+                    }
                     rules={[
                       {
-                        validator: async (_rule, value) => {
+                        validator: async (_rule: RuleObject, value: string) => {
                           try {
                             await WorkspaceIdentitySchema.pick({
                               last_name: true,
@@ -372,7 +377,7 @@ export function WorkspaceIdentity({
                     name="entity"
                     rules={[
                       {
-                        validator: async (_rule, value) => {
+                        validator: async (_rule: RuleObject, value: string) => {
                           try {
                             await WorkspaceIdentitySchema.pick({
                               entity: true,
@@ -401,7 +406,7 @@ export function WorkspaceIdentity({
                     className="flex-1"
                     rules={[
                       {
-                        validator: async (_rule, value) => {
+                        validator: async (_rule: RuleObject, value: string) => {
                           try {
                             await WorkspaceIdentitySchema.pick({
                               email: true,

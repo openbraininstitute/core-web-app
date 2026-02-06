@@ -3,6 +3,8 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import omit from 'es-toolkit/compat/omit';
 import { type ComponentProps, useCallback, useEffect, useMemo, useState } from 'react';
 
+import type { TBrainRegionHierarchyExtendedOption } from '@/features/brain-region-hierarchy/types';
+
 import { BrainIcon } from '@/components/icons';
 import {
   usePrimaryExtendedHierarchySpeciesQuery,
@@ -14,8 +16,6 @@ import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
-
-import type { TBrainRegionHierarchyExtendedOption } from '../brain-region-hierarchy/helpers';
 
 export function BrainRegionDropdown({
   charsPerLine = 25,
@@ -107,6 +107,7 @@ export function BrainRegionDropdown({
           'active:bg-primary-9 border bg-white shadow-xs hover:text-white',
           'text-md h-full flex-1 gap-1.5 rounded-md px-5',
           'flex w-full grow justify-between self-stretch',
+          'max-w-64',
           clsx?.trigger
         )}
       >

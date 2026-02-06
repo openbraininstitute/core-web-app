@@ -1,18 +1,20 @@
-import { useAtom } from 'jotai';
 import { Button } from 'antd';
 import get from 'es-toolkit/compat/get';
-
-import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { AgentType, AssetLabel } from '@/api/entitycore/types/shared/global';
-import { transformAgentToNames } from '@/api/entitycore/transformers';
-import { EntityTypeValue } from '@/entity-configuration/domain';
+import isNil from 'es-toolkit/compat/isNil';
+import { useAtom } from 'jotai';
 import { hasAssets } from '@/api/entitycore/guards';
+import { transformAgentToNames } from '@/api/entitycore/transformers';
+import type { EntityCoreDensityObjectTypes, EntityCoreObjectTypes } from '@/api/entitycore/types';
+import { EntityTypeDict } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { IContributor, TAgentType } from '@/api/entitycore/types/shared/global';
+import { AgentType, AssetLabel } from '@/api/entitycore/types/shared/global';
+import { DownloadIcon } from '@/components/icons';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
 } from '@/entity-configuration/definitions/fields-defs/enums';
-import { EntityTypeDict } from '@/api/entitycore/types';
 import {
   EmptyPreview,
   EmptyValue,
@@ -22,13 +24,11 @@ import {
   renderEmptyOrValue,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
-import { DownloadIcon } from '@/components/icons';
-import { ensureArray } from '@/utils/array';
 
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
-import type { TAgentType, IContributor } from '@/api/entitycore/types/shared/global';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { EntityCoreDensityObjectTypes, EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { EntityTypeValue } from '@/entity-configuration/domain';
+import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
+import { ensureArray } from '@/utils/array';
 
 const collator = new Intl.Collator('en', { sensitivity: 'base' });
 
@@ -134,6 +134,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     isFilterable: true,
     isDisplayable: true,
+    style: { width: 150 },
   },
   [EntityCoreFields.UpdateDate]: {
     title: 'Update date',
@@ -313,7 +314,12 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.SubjectAge]: {
     title: 'Age',
     filter: CoreFieldFilterTypeEnum.ValueRange,
-    render: (r) => renderEmptyOrValue((r as EntityCoreDensityObjectTypes).subject.age_value),
+    render: (r) => {
+      const ageValue = get(r, 'subject.age_value');
+      if (isNil(ageValue)) return EmptyValue;
+      const days = Math.floor(ageValue / 86400); //seconds to days
+      return renderEmptyOrValue(`${days} days`);
+    },
     vocabulary: {
       plural: 'Ages',
       singular: 'Age',
@@ -419,7 +425,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isSortable: false,
   },
   [EntityCoreFields.CreatedBy]: {
-    title: 'Created by',
+    title: 'Registered by',
     filter: CoreFieldFilterTypeEnum.CheckList,
     render: (r) => {
       if ('created_by' in r) return renderEmptyOrValue(r.created_by?.pref_label);

@@ -20,17 +20,32 @@ export type TBrainRegionDirection =
   (typeof BrainRegionDirection)[keyof typeof BrainRegionDirection];
 
 export type BrainRegionFilter = {
+  // Brain region
+  brain_region__name?: string | null;
+  brain_region__name__in?: string[] | null;
+  brain_region__name__ilike?: string | null;
+  brain_region__id?: string | null; // UUID
+  brain_region__id__in?: string[] | null;
+  brain_region__acronym?: string | null;
+  brain_region__acronym__in?: string[] | null;
+  brain_region__annotation_value?: number | null;
+  brain_region__hierarchy_id?: string | null; // UUID
+};
+
+export type BrainRegionHierarchyFilter = {
   within_brain_region_hierarchy_id: string;
   within_brain_region_brain_region_id: string;
   within_brain_region_direction: TBrainRegionDirection;
-  // @deprecated
+  /**
+   * @deprecated Use `within_brain_region_direction` instead.
+   */
   within_brain_region_ascendants?: boolean;
 };
 
 export type ContributionFilter = {
   contribution__id: string | null;
-  contribution_pref_label: string | null;
-  contribution_pref_label__in: string | null;
+  contribution__pref_label: string | null;
+  contribution__pref_label__in: string | null;
   contribution__order_by: string | null;
 };
 export type PaginationFilter = {
@@ -84,9 +99,11 @@ export type EtypeFilter = {
 
 export type MtypeFilter = {
   mtype__id: string | null;
-  mtype_pref_label: string | null;
-  mtype_pref_label__in: Array<string> | null;
-  mtype_order_by: Array<string> | null; //  ["pref_label"]
+  mtype__id__in?: string[] | null;
+  mtype__pref_label: string | null;
+  mtype__pref_label__ilike?: string | null;
+  mtype__pref_label__in: Array<string> | null;
+  mtype__order_by: Array<string> | null; //  ["pref_label"]
 };
 
 export type IDFilter = {
@@ -118,17 +135,37 @@ export interface IMorphologyFilter {
   exemplar_morphology__order_by?: string | null;
 }
 
-export interface CreatorFilter {}
+export type CreatorFilter = {};
 
 export interface OwnershipFilter {
-  created_by__id?: string | null;
+  // Created by
   created_by__pref_label?: string | null;
-  created_by__pref_label__in?: Array<string> | null;
-  created_by__order_by?: string | null;
-
-  updated_by__id?: string | null;
+  created_by__pref_label__in?: string[] | null;
+  created_by__pref_label__ilike?: string | null;
+  created_by__id?: string | null; // UUID
+  created_by__id__in?: string[] | null;
+  created_by__type?: string | null;
+  created_by__given_name?: string | null;
+  created_by__given_name__ilike?: string | null;
+  created_by__family_name?: string | null;
+  created_by__family_name__ilike?: string | null;
+  created_by__sub_id?: string | null; // UUID
+  created_by__sub_id_in?: string[] | null;
+  // Updated by
   updated_by__pref_label?: string | null;
-  updated_by__pref_label__in?: Array<string> | null;
+  updated_by__pref_label__in?: string[] | null;
+  updated_by__pref_label__ilike?: string | null;
+  updated_by__id?: string | null; // UUID
+  updated_by__id_in?: string[] | null;
+  updated_by__type?: string | null;
+  updated_by__given_name?: string | null;
+  updated_by__given_name__ilike?: string | null;
+  updated_by__family_name?: string | null;
+  updated_by__family_name__ilike?: string | null;
+  updated_by__sub_id?: string | null; // UUID
+  updated_by__sub_id__in?: string[] | null;
+  // Order by
+  created_by__order_by?: string | null;
   updated_by__order_by?: string | null;
 }
 
@@ -183,4 +220,9 @@ export type PersonNameFilter = {
   family_name: string | null;
   family_name__in: Array<string> | null;
   family_name__ilike: string | null;
+};
+
+export type ExperimentDateFilter = {
+  experiment_date__lte: Date | null;
+  experiment_date__gte: Date | null;
 };

@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.10/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.3.14/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -41,13 +41,14 @@
         },
         "useConst": "error",
         "useExportType": "error",
-        "useImportType": "error"
+        "useImportType": "error",
+        "noNonNullAssertion": "warn"
       },
       "suspicious": {
         "noArrayIndexKey": "warn",
         "noConsole": "warn",
         "noVar": "error",
-        "noExplicitAny": "warn",
+        "noExplicitAny": "info",
         "noImplicitAnyLet": "warn",
         "useIterableCallbackReturn": "warn",
         "noNonNullAssertedOptionalChain": "warn"
@@ -92,12 +93,16 @@
               ":PACKAGE:",
               {
                 "type": true,
-                "source": [":PACKAGE:"]
+                "source": [
+                  ":PACKAGE:"
+                ]
               },
               ":BLANK_LINE:",
               {
                 "type": true,
-                "source": ["@/**"]
+                "source": [
+                  "@/**"
+                ]
               },
               ":BLANK_LINE:",
               "@/**",

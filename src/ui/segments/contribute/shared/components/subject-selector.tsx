@@ -2,24 +2,23 @@
 
 'use client';
 
-import { useCallback, useMemo } from 'react';
-import { isNil } from 'es-toolkit/compat';
 import { Form } from 'antd';
+import { isNil } from 'es-toolkit/compat';
+import { useCallback, useMemo } from 'react';
 import type { ZodObject, ZodRawShape } from 'zod';
 
 import { getSubjects } from '@/api/entitycore/queries/general/subject';
+import type { ISubject } from '@/api/entitycore/types/shared/global';
 import { AgePeriod, Sex } from '@/api/entitycore/types/shared/global';
-import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
+import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { keyBuilder } from '@/ui/use-query-keys/data';
+import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
 import {
-  renderLabel,
   createZodFieldValidator,
   RequiredFieldMarker,
+  renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
-
-import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
-import type { ISubject } from '@/api/entitycore/types/shared/global';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 
 interface ISubjectSelectorProps<TSchema extends ZodObject<ZodRawShape>> {
   schema: TSchema;
@@ -68,9 +67,8 @@ function SubjectDataTooltip(data: ISubject) {
   return (
     <div className="max-w-xs">
       <div className="space-y-1">
-        {fields.map((field, index) => (
-          // eslint-disable-next-line react/no-array-index-key
-          <div key={`subject-data-info-${index}`} className="text-sm text-white">
+        {fields.map((field) => (
+          <div key={field} className="text-sm text-white">
             {field}
           </div>
         ))}
@@ -87,12 +85,24 @@ export function SubjectSelector<TSchema extends ZodObject<ZodRawShape>>({
 
   const tooltipRenderer = useCallback((data: ISubject) => SubjectDataTooltip(data), []);
 
+  const filteredQueryFn = useCallback(
+    async ({ filters }: { filters: PaginationFilter & SearchFilter }) => {
+      const result = await getSubjects({ filters, context: { virtualLabId, projectId } });
+
+      return {
+        ...result,
+        data: result.data.filter((subject: ISubject) => subject.name.trim().toLowerCase() !== 'unknown'),
+      };
+    },
+    [virtualLabId, projectId]
+  );
+
   const SubjectDropdown = useMemo(
     () =>
       AsyncSelectFormItem<PaginationFilter & SearchFilter, ISubject>({
         id: 'subject-selector',
         dataKey: keyBuilder.subjects({ virtualLabId, projectId }),
-        queryFn: getSubjects,
+        queryFn: filteredQueryFn,
         getOptionLabel: (l) => l.name,
         getOptionValue: (l) => l.id,
         placeholder: 'Select a subject...',
@@ -102,7 +112,7 @@ export function SubjectSelector<TSchema extends ZodObject<ZodRawShape>>({
         searchField: 'search',
         tooltip: tooltipRenderer,
       }),
-    [virtualLabId, projectId, tooltipRenderer]
+    [virtualLabId, projectId, tooltipRenderer, filteredQueryFn]
   );
 
   return (

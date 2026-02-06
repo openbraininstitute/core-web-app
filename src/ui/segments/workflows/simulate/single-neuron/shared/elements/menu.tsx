@@ -1,47 +1,44 @@
 'use client';
 
 import { RightOutlined, SettingFilled, WarningFilled } from '@ant-design/icons';
-import { usePathname, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { useEffect, useState, useMemo } from 'react';
-
-import { useVisibleSynapsesSetter } from '../steps/webgl-neuron-selector/hooks';
-
-import { useSingleNeuronSimulationAtoms } from '@/ui/segments/workflows/simulate/single-neuron/shared/use-simulation-atoms';
-import { launchSimulationAtom } from '@/ui/segments/workflows/simulate/single-neuron/shared/runner';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import { getSingleNeuronStimuliPlot } from '@/api/small-scale-simulator';
-import {
-  SimulationStatus,
-  simulationStatusAtomFamily,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import { useAppNotification } from '@/components/notification';
+import { useUserRole } from '@/hooks/use-user-role';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import {
-  SynapseConfigurationArraySchema,
-  NeuronLocationArraySchema,
-  OverviewConfigurationSchema,
-  StimulationConfigurationSchema,
-  ExperimentalSetupConfigurationSchema,
-  AmperageStateSchema,
-  FrequencyInputConfigSchema,
-  PlotData,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Button } from '@/ui/molecules/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import {
   PROTOCOL_DETAILS,
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import { useAppNotification } from '@/components/notification';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { useUserRole } from '@/hooks/use-user-role';
-import { browserHistoryReplace } from '@/utils/browser';
-import { keyBuilder } from '@/ui/use-query-keys/data';
-import { Button } from '@/ui/molecules/button';
-import { cn } from '@/utils/css-class';
 import {
+  SimulationStatus,
+  simulationStatusAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import { launchSimulationAtom } from '@/ui/segments/workflows/simulate/single-neuron/shared/runner';
+import {
+  AmperageStateSchema,
+  ExperimentalSetupConfigurationSchema,
+  FrequencyInputConfigSchema,
+  NeuronLocationArraySchema,
+  OverviewConfigurationSchema,
+  type PlotData,
   SimulationType,
+  StimulationConfigurationSchema,
+  SynapseConfigurationArraySchema,
   type TSimulationType,
+  type TStimulusModuleValue,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { useSingleNeuronSimulationAtoms } from '@/ui/segments/workflows/simulate/single-neuron/shared/use-simulation-atoms';
+import { keyBuilder } from '@/ui/use-query-keys/data';
+import { browserHistoryReplace } from '@/utils/browser';
+import { cn } from '@/utils/css-class';
+import { useVisibleSynapsesSetter } from '../steps/webgl-neuron-selector/hooks';
 
 export const ExperimentStep = {
   Info: 'info',
@@ -71,17 +68,8 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
   const { isProjectAdmin } = useUserRole({ virtualLabId, projectId });
   const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
   const step = searchParams.get('step') ?? ExperimentStep.Info;
-  const setVisibleSynapses = useVisibleSynapsesSetter();
 
   const [isLaunching, setIsLaunching] = useState(false);
-
-  useEffect(() => {
-    if (step === ExperimentStep.Info) {
-      // Reset the synapses in the info panel.
-      // Go to "Synaptic Inputs" to see the synapses.
-      setVisibleSynapses([]);
-    }
-  }, [step, setVisibleSynapses]);
 
   const updatePanelSelection = () => {
     const query = new URLSearchParams(searchParams);
@@ -155,7 +143,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
           ? stimulationConfiguration.stimulus.amplitudes
           : [stimulationConfiguration.stimulus.amplitudes]
         ).join(','),
-        protocol: stimulationConfiguration.stimulus.stimulus_protocol!,
+        protocol: stimulationConfiguration.stimulus.stimulus_protocol as string,
       }),
       queryFn: () =>
         getSingleNeuronStimuliPlot({
@@ -164,7 +152,8 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
             amplitudes: Array.isArray(stimulationConfiguration.stimulus.amplitudes)
               ? stimulationConfiguration.stimulus.amplitudes
               : [stimulationConfiguration.stimulus.amplitudes],
-            stimulusProtocol: stimulationConfiguration.stimulus.stimulus_protocol!,
+            stimulusProtocol: stimulationConfiguration.stimulus
+              .stimulus_protocol as TStimulusModuleValue,
           },
           ctx: { projectId, virtualLabId },
         }),
@@ -252,8 +241,10 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
           <div className="flex items-center justify-center gap-3">
             {!!warnInfo && (
               <Tooltip>
-                <TooltipTrigger>
-                  <WarningFilled className="text-sm text-yellow-300" />
+                <TooltipTrigger asChild>
+                  <span>
+                    <WarningFilled className="text-sm text-yellow-300" />
+                  </span>
                 </TooltipTrigger>
                 <TooltipContent
                   avoidCollisions
@@ -265,7 +256,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
                 >
                   {Object.values(warnInfo ?? {}).map((e1) => {
                     return e1.map((err1) => (
-                      <p key={err1} className="w-full pb-0.5 break-words hyphens-auto">
+                      <p key={err1} className="w-full pb-0.5 wrap-break-words hyphens-auto">
                         • {err1}
                       </p>
                     ));
@@ -291,12 +282,14 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
         onClick={() => onStepChange(ExperimentStep.ExperimentalSetup)}
       >
         <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
-          <div className="flex-shrink-0 font-bold">Experimental setup</div>
+          <div className="shrink-0 font-bold">Experimental setup</div>
           <div className="flex items-center justify-center gap-3">
             {warnExperimentalSetup && (
               <Tooltip>
-                <TooltipTrigger>
-                  <WarningFilled className="text-sm text-yellow-300" />
+                <TooltipTrigger asChild>
+                  <span>
+                    <WarningFilled className="text-sm text-yellow-300" />
+                  </span>
                 </TooltipTrigger>
                 <TooltipContent
                   avoidCollisions
@@ -310,7 +303,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
                     Object.values(warnExperimentalSetup).map((e2) => {
                       return e2.map((err2) => {
                         return (
-                          <p key={err2} className="w-full pb-0.5 break-words hyphens-auto">
+                          <p key={err2} className="w-full pb-0.5 wrap-break-words hyphens-auto">
                             • {err2}
                           </p>
                         );
@@ -337,19 +330,21 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
           onClick={() => onStepChange(ExperimentStep.SynapticInputs)}
         >
           <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
-            <div className="flex-shrink-0 font-bold">Synaptic Input</div>
+            <div className="shrink-0 font-bold">Synaptic Input</div>
             <div className="flex items-center justify-center gap-3">
               {!!Object.keys(warnSynaptome ?? {}).length && (
                 <Tooltip>
-                  <TooltipTrigger>
-                    <WarningFilled className="text-sm text-yellow-300" />
+                  <TooltipTrigger asChild>
+                    <span>
+                      <WarningFilled className="text-sm text-yellow-300" />
+                    </span>
                   </TooltipTrigger>
                   <TooltipContent
                     avoidCollisions
                     side="bottom"
                     sideOffset={10}
                     collisionPadding={{ left: 25 }}
-                    className="text-destructive shadow-bnb w-full max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap break-words"
+                    className="text-destructive shadow-bnb w-full max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap wrap-break-words"
                     arrowClassName="bg-amber-100"
                   >
                     {warnSynaptome &&
@@ -358,7 +353,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
                           ? e3.map((err3: string) => (
                               <p
                                 key={err3}
-                                className="pb-0.5 [overflow-wrap:anywhere] hyphens-auto whitespace-pre-wrap"
+                                className="pb-0.5 wrap-anywhere] hyphens-auto whitespace-pre-wrap"
                               >
                                 • {err3}
                               </p>
@@ -386,12 +381,14 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
         onClick={() => onStepChange(ExperimentStep.StimulationProtocol)}
       >
         <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
-          <div className="flex-shrink-0 font-bold">Stimulation protocol</div>
+          <div className="shrink-0 font-bold">Stimulation protocol</div>
           <div className="flex items-center justify-center gap-3">
             {!!Object.keys(warnStimulationProtocol ?? {}).length && (
               <Tooltip>
-                <TooltipTrigger>
-                  <WarningFilled className="text-sm text-yellow-300" />
+                <TooltipTrigger asChild>
+                  <span>
+                    <WarningFilled className="text-sm text-yellow-300" />
+                  </span>
                 </TooltipTrigger>
                 <TooltipContent
                   avoidCollisions
@@ -405,7 +402,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
                     Object.values(warnStimulationProtocol).map((e4) => {
                       return Array.isArray(e4)
                         ? e4.map((err4: string) => (
-                            <p key={err4} className="w-full pb-0.5 break-words hyphens-auto">
+                            <p key={err4} className="w-full pb-0.5 wrap-break-words hyphens-auto">
                               • {err4}
                             </p>
                           ))
@@ -431,12 +428,14 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
         onClick={() => onStepChange(ExperimentStep.Recording)}
       >
         <div className="flex w-full items-center justify-between gap-4 overflow-hidden">
-          <div className="flex-shrink-0 font-bold">Recording</div>
+          <div className="shrink-0 font-bold">Recording</div>
           <div className="flex items-center justify-center gap-3">
             {!!Object.keys(warnRecordLocation ?? {}).length && (
               <Tooltip>
-                <TooltipTrigger>
-                  <WarningFilled className="text-sm text-yellow-300" />
+                <TooltipTrigger asChild>
+                  <span>
+                    <WarningFilled className="text-sm text-yellow-300" />
+                  </span>
                 </TooltipTrigger>
                 <TooltipContent
                   avoidCollisions
@@ -450,7 +449,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
                     Object.values(warnRecordLocation).map((error) => {
                       return Array.isArray(error)
                         ? error.map((err5: string) => (
-                            <p key={err5} className="w-full pb-0.5 break-words hyphens-auto">
+                            <p key={err5} className="w-full pb-0.5 wrap-break-words hyphens-auto">
                               • {err5}
                             </p>
                           ))
@@ -480,7 +479,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
               disabled={disableRunSimulation}
               onClick={onRun}
             >
-              <div className="flex-shrink-0 font-bold">Run experiment</div>
+              <div className="shrink-0 font-bold">Run experiment</div>
             </Button>
           </div>
         </TooltipTrigger>

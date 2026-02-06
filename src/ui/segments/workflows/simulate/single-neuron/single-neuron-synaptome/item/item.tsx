@@ -1,49 +1,50 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { Form, Select } from 'antd';
-import { useAtom } from 'jotai';
-import { Color } from 'three';
 import {
-  EyeInvisibleOutlined,
-  LoadingOutlined,
   DeleteOutlined,
+  EyeInvisibleOutlined,
   EyeOutlined,
+  LoadingOutlined,
 } from '@ant-design/icons';
+import { Form, Select } from 'antd';
 import find from 'es-toolkit/compat/find';
-
-import { FrequencyFormItem } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome/item/frequency-input';
-import { OptionRender } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome/item/config-list-render';
-import { ConfigInputList } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome/item/config-input';
-import { SynaptomeConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import { SynapseTypeDictionary } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { DefaultColor } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { useAtom } from 'jotai';
+import { useParams } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
+import { Color } from 'three';
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import { getSingleNeuronSynaptomePlacement } from '@/api/small-scale-simulator';
+import { tryCatch } from '@/api/utils';
+import { getSession } from '@/auth-fetch';
+import {
+  sendDisplaySynapses3DEvent,
+  sendRemoveSynapses3DEvent,
+} from '@/components/neuron-viewer/hooks/events';
+import { useAppNotification } from '@/components/notification';
+import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
+import type { SectionSynapses } from '@/state/synaptome';
+import { synapsesPlacementAtom } from '@/state/synaptome';
+import type { WorkspaceContext } from '@/types/common';
+import type { UpdateSynapseSimulationProperty } from '@/types/small-scale-simulator/single-neuron';
+import type { SynapsesConfiguration } from '@/types/synaptome';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { Button } from '@/ui/molecules/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { DefaultColor } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import {
+  SectionTargetMapping,
+  SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { SynaptomeConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import {
   getSessionKey,
   label,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
-import {
-  SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
-  SectionTargetMapping,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import { useAppNotification } from '@/components/notification';
-import { synapsesPlacementAtom } from '@/state/synaptome';
-import { sendDisplaySynapses3DEvent } from '@/components/neuron-viewer/hooks/events';
-import { Button } from '@/ui/molecules/button';
-import { getSession } from '@/auth-fetch';
-import { tryCatch } from '@/api/utils';
+import { SynapseTypeDictionary } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { ConfigInputList } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome/item/config-input';
+import { OptionRender } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome/item/config-list-render';
+import { FrequencyFormItem } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome/item/frequency-input';
 import { cn } from '@/utils/css-class';
-
-import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import type { UpdateSynapseSimulationProperty } from '@/types/small-scale-simulator/single-neuron';
-import type { SynapsesConfiguration } from '@/types/synaptome';
-import type { SectionSynapses } from '@/state/synaptome';
-import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
   meModelId: string;
@@ -77,7 +78,7 @@ export function SynapticInputItem({
   const [state] = useAtom(SynaptomeConfigurationAtomFamily(key));
   const synapseWithFrequencyStep = state.findIndex((s) => Array.isArray(s.frequency));
   const abortController = useRef(new AbortController());
-  const synapseDisplayed = isSynapseDisplayed(synapsesPlacement, Object.values(state)[index].id);
+  const synapseDisplayed = isSynapseDisplayed(synapsesPlacement, index);
   const color = placementConfig?.color;
 
   const onVisualizationError = () => {
@@ -97,12 +98,7 @@ export function SynapticInputItem({
     color: op.color ?? DefaultColor,
   }));
 
-  const onHideSynapse = useHideSynapseHandler(
-    synapsesPlacement,
-    setSynapsesPlacement,
-    index,
-    synapsesConfiguration.synapses[index]?.id
-  );
+  const onHideSynapse = useHideSynapseHandler(synapsesPlacement, setSynapsesPlacement, index);
 
   const onShowSynapse = async () => {
     setLoadingVisualize(true);
@@ -151,7 +147,6 @@ export function SynapticInputItem({
           },
         };
       });
-      // setSynapseDisplayed(true);
     } catch (error) {
       if (error instanceof Error && error.name !== 'AbortError') {
         return onVisualizationError();
@@ -341,31 +336,29 @@ function useHideSynapseHandler(
         > | null)
       | null
   ) => void,
-  index: number,
-  id: string | undefined
+  index: number
 ) {
   return () => {
-    if (synapsesPlacement) {
-      if (id && synapsesPlacement[id]) {
-        setSynapsesPlacement((prev) => {
-          const newValue = structuredClone(prev);
-          if (!newValue) return newValue;
+    if (!synapsesPlacement) return;
 
-          delete newValue[id];
-          return newValue;
-        });
-      } else if (synapsesPlacement[`${index}`]) {
-        setSynapsesPlacement((prev) => {
-          const newValue = structuredClone(prev);
-          if (!newValue) return newValue;
+    // Only hide synapses stored under this form item's index key
+    // This prevents accidentally hiding another form item's synapses
+    // when they happen to share the same synapse group ID
+    const indexKey = `${index}`;
+    const entry = synapsesPlacement[indexKey];
 
-          delete newValue[`${index}`];
-          return newValue;
-        });
+    if (entry) {
+      const meshId = entry.meshId;
+      if (meshId) {
+        sendRemoveSynapses3DEvent(indexKey, meshId);
       }
+      setSynapsesPlacement((prev) => {
+        const newValue = structuredClone(prev);
+        if (!newValue) return newValue;
+        delete newValue[indexKey];
+        return newValue;
+      });
     }
-
-    //   // sendRemoveSynapses3DEvent(`${index}`, currentSynapsesPlacementConfig.meshId);
   };
 }
 
@@ -379,17 +372,13 @@ function isSynapseDisplayed(
       meshId?: string;
     } | null
   > | null,
-  key: string
+  index: number
 ) {
   if (!synapsesPlacement) return false;
 
-  for (const item of Object.values(synapsesPlacement)) {
-    if (!item) continue;
-
-    const { synapsePlacementConfigId } = item;
-    if (synapsePlacementConfigId === key) return true;
-  }
-  return false;
+  // Check if there's an entry for this form item's index
+  const entry = synapsesPlacement[`${index}`];
+  return entry != null;
 }
 
 function resolveIcon(synapseDisplayed: boolean, visualizeLoading: boolean) {

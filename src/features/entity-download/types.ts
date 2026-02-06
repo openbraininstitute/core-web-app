@@ -1,4 +1,4 @@
-import { Readable } from 'stream';
+import type { Readable } from 'stream';
 
 export type FileEntry = {
   path: string;
@@ -13,6 +13,11 @@ export type CsvEntryBase = {
   species_name: string;
   brain_region: string;
   contributors: string;
+};
+
+export type CsvSimulationEntryBase = {
+  name: string;
+  description: string;
 };
 
 export type CsvEntry = CsvEntryBase & {
@@ -57,5 +62,9 @@ export type SingleNeuronSynaptomeJsonMetadata = {
 };
 
 export type NotebookJsonMetadata = {
+  [key: string]: any;
+};
+
+export type EMCellMeshJsonMetadata = {
   [key: string]: any;
 };

@@ -86,6 +86,7 @@
     "next-sanity-client": "^1.0.8",
     "nextstepjs": "^2.1.1",
     "nuqs": "^2.7.2",
+    "p-limit": "^7.2.0",
     "p-map": "^7.0.3",
     "p-props": "^6.0.0",
     "performant-array-to-tree": "^1.11.0",
@@ -133,6 +134,7 @@
     "lefthook": "^1.11.12",
     "postcss": "^8.5.3",
     "raw-loader": "^4.0.2",
+    "sass": "^1.97.3",
     "tailwindcss": "^4.1.18",
     "typescript": "5.5.4"
   }

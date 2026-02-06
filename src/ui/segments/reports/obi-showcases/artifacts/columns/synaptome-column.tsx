@@ -1,4 +1,4 @@
-import { SynaptomeProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
+import type { SynaptomeProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
 
 const columns = () => {
   return [
@@ -6,7 +6,7 @@ const columns = () => {
       title: 'Name',
       key: 'name',
       width: '200px',
-      render: (_value: any, record: SynaptomeProps, _index: number) => (
+      render: (_value: unknown, record: SynaptomeProps, _index: number) => (
         <div className="font-normal">{record.name}</div>
       ),
     },
@@ -14,7 +14,7 @@ const columns = () => {
       title: 'Description',
       key: 'description',
       width: '200px',
-      render: (_value: any, record: SynaptomeProps, _index: number) => (
+      render: (_value: unknown, record: SynaptomeProps, _index: number) => (
         <div className="font-normal">{record.description}</div>
       ),
     },
@@ -22,7 +22,7 @@ const columns = () => {
       title: 'M-Type',
       key: 'MType',
       width: '100px',
-      render: (_value: any, record: SynaptomeProps, _index: number) => (
+      render: (_value: unknown, record: SynaptomeProps, _index: number) => (
         <div className="font-normal">{record.MType}</div>
       ),
     },
@@ -30,7 +30,7 @@ const columns = () => {
       title: 'E-Type',
       key: 'EType',
       width: '100px',
-      render: (_value: any, record: SynaptomeProps, _index: number) => (
+      render: (_value: unknown, record: SynaptomeProps, _index: number) => (
         <div className="font-normal">{record.EType}</div>
       ),
     },
@@ -38,7 +38,7 @@ const columns = () => {
       title: 'Brain region',
       key: 'brainRegion',
       width: '200px',
-      render: (_value: any, record: SynaptomeProps, _index: number) => (
+      render: (_value: unknown, record: SynaptomeProps, _index: number) => (
         <div className="font-normal">{record.brainRegion}</div>
       ),
     },
@@ -47,15 +47,15 @@ const columns = () => {
       title: 'Species',
       key: 'species',
       width: '150px',
-      render: (_value: any, record: SynaptomeProps, _index: number) => (
+      render: (_value: unknown, record: SynaptomeProps, _index: number) => (
         <div className="font-normal">{record.species}</div>
       ),
     },
     {
-      title: 'Created By',
+      title: 'Registered By',
       key: 'createdBy',
       width: '150px',
-      render: (_value: any, record: SynaptomeProps, _index: number) => (
+      render: (_value: unknown, record: SynaptomeProps, _index: number) => (
         <div className="font-normal">{record.createdBy}</div>
       ),
     },
@@ -63,7 +63,7 @@ const columns = () => {
       title: 'Registration Date',
       key: 'creationDate',
       width: '150px',
-      render: (_value: any, record: SynaptomeProps, _index: number) => (
+      render: (_value: unknown, record: SynaptomeProps, _index: number) => (
         <div className="font-normal">{record.creationDate}</div>
       ),
     },

@@ -9,7 +9,7 @@ import {
   TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
-import SimulationConfig from '@/features/small-microcircuit';
+import ScanConfig from '@/features/scan-config';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import {
   threeDVisualizerState,
@@ -68,7 +68,7 @@ export default function Page({
 
   if (queryParams.dataType === ExtendedEntitiesTypeDict.MemodelCircuit) {
     return (
-      <SimulationConfig
+      <ScanConfig
         modelId={entity.id}
         virtualLabId={virtualLabId}
         projectId={projectId}

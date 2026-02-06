@@ -1,10 +1,10 @@
-import { MenuOutlined } from "@ant-design/icons";
-import dynamic from "next/dynamic";
-import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import React, { useState } from "react";
-
-import type { ReactNode } from "react";
+import { MenuOutlined } from '@ant-design/icons';
+import dynamic from 'next/dynamic';
+import Link from 'next/link';
+import { usePathname, useSearchParams } from 'next/navigation';
+import type React from 'react';
+import type { ReactNode } from 'react';
+import { useState } from 'react';
 
 import {
   ExploreIcon,
@@ -13,36 +13,30 @@ import {
   NotebookIcon,
   ReportsIcon,
   WorkflowIcon,
-} from "@/components/icons/buttons";
-import FeedbacksIcon from "@/components/icons/FeedbacksIcon";
-import { config } from "@/config";
+} from '@/components/icons/buttons';
+import { FeedbackStarIcon } from '@/components/icons/FeedbackStarIcon';
+import { config } from '@/config';
 import {
   DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
   DEFAULT_BRAIN_REGION_QUERY_ID,
-} from "@/features/brain-region-hierarchy/context";
-import {
-  createBreakpoint,
-  useDefaultBreakpoint,
-} from "@/ui/hooks/create-break-point";
-import { useWorkspace } from "@/ui/hooks/use-workspace";
-import { Button } from "@/ui/molecules/button";
+} from '@/features/brain-region-hierarchy/context';
+import { createBreakpoint, useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Button } from '@/ui/molecules/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/ui/molecules/dropdown-menu";
-import { cn } from "@/utils/css-class";
-import { getActiveSection } from "@/utils/get-section";
-import { cleanSearchParams } from "@/utils/search-params";
+} from '@/ui/molecules/dropdown-menu';
+import { cn } from '@/utils/css-class';
+import { getActiveSection } from '@/utils/get-section';
+import { cleanSearchParams } from '@/utils/search-params';
 
 // Dynamically import FeedbackModal with SSR disabled to prevent Suspense boundary issues
-const FeedbackModal = dynamic(
-  () => import("@/ui/segments/feedbacks/feedback-modal"),
-  {
-    ssr: false,
-  },
-);
+const FeedbackModal = dynamic(() => import('@/ui/segments/feedbacks/feedback-modal'), {
+  ssr: false,
+});
 
 type LinkItem = {
   id: string;
@@ -51,115 +45,92 @@ type LinkItem = {
   url: string;
   icon: ReactNode;
   allowText: boolean;
-  className: React.ComponentProps<"div">["className"];
+  className: React.ComponentProps<'div'>['className'];
   isActive?: (path: string) => boolean;
   hasAction?: boolean;
-  action?: ({
-    virtualLabId,
-    projectId,
-  }: {
-    virtualLabId: string;
-    projectId: string;
-  }) => string;
+  action?: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) => string;
 };
 
-const links: Array<LinkItem> = [
+const links: LinkItem[] = [
   {
-    id: "workspace-home",
-    key: "home",
-    title: "Home",
-    url: "",
+    id: 'workspace-home',
+    key: 'home',
+    title: 'Home',
+    url: '',
     icon: <Home className="group-hover:text-primary-3 text-lg" />,
     allowText: false,
-    className: "gap-2 flex items-center justify-center",
+    className: 'gap-2 flex items-center justify-center',
     isActive: (pathname: string) => {
       const section = getActiveSection(pathname);
-      if (section) return ["overview", "team", "credits"].includes(section);
+      if (section) return ['overview', 'team', 'credits'].includes(section);
       return false;
     },
     hasAction: false,
   },
   {
-    id: "workspace-explore-data",
-    key: "data",
-    title: "Data",
-    url: "data",
+    id: 'workspace-explore-data',
+    key: 'data',
+    title: 'Data',
+    url: 'data',
     icon: <ExploreIcon className="group-hover:text-primary-3 text-xl" />,
     allowText: true,
-    className: "px-6 gap-8",
+    className: 'px-6 gap-8',
     hasAction: false,
   },
   {
-    id: "workspace-workflows",
-    key: "workflows",
-    title: "Workflows",
-    url: "workflows",
+    id: 'workspace-workflows',
+    key: 'workflows',
+    title: 'Workflows',
+    url: 'workflows',
     icon: <WorkflowIcon className="group-hover:text-primary-3 text-xl" />,
     allowText: true,
-    className: "px-6 gap-8",
+    className: 'px-6 gap-8',
     hasAction: true,
-    action: ({
-      virtualLabId,
-      projectId,
-    }: {
-      virtualLabId: string;
-      projectId: string;
-    }) => `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`,
+    action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
+      `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`,
   },
   {
-    id: "workspace-notebooks",
-    key: "notebooks",
-    title: "Notebooks",
-    url: "notebooks",
+    id: 'workspace-notebooks',
+    key: 'notebooks',
+    title: 'Notebooks',
+    url: 'notebooks',
     icon: <NotebookIcon className="group-hover:text-primary-3 h-5!" />,
     allowText: true,
-    className: "px-6 gap-8",
+    className: 'px-6 gap-8',
     hasAction: true,
-    action: ({
-      virtualLabId,
-      projectId,
-    }: {
-      virtualLabId: string;
-      projectId: string;
-    }) => `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
+    action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
+      `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
   },
   {
-    id: "workspace-reports",
-    key: "reports",
-    title: "Reports",
-    url: "reports",
+    id: 'workspace-reports',
+    key: 'reports',
+    title: 'Reports',
+    url: 'reports',
     icon: <ReportsIcon className="group-hover:text-primary-3 h-5!" />,
     allowText: true,
-    className: "px-6 gap-8",
+    className: 'px-6 gap-8',
     hasAction: true,
-    action: ({
-      virtualLabId,
-      projectId,
-    }: {
-      virtualLabId: string;
-      projectId: string;
-    }) => `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
+    action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
+      `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
   },
   {
-    id: "workspace-help",
-    key: "help",
-    title: "Help",
-    url: "help",
+    id: 'workspace-help',
+    key: 'help',
+    title: 'Help',
+    url: 'help',
     icon: <HelpIcon className="group-hover:text-primary-3 h-5! w-5!" />,
     allowText: false,
-    className: "",
+    className: '',
     hasAction: false,
   },
   {
-    id: "workspace-feedbacks",
-    key: "feedbacks",
-    title: "Feedback",
-    url: "feedback",
-    icon: (
-      <FeedbacksIcon className="group-hover:text-primary-3 relative left-0.5 h-6! w-6!" />
-    ),
+    id: 'workspace-feedbacks',
+    key: 'feedbacks',
+    title: 'Feedback',
+    url: 'feedback',
+    icon: <FeedbackStarIcon className="group-hover:text-primary-3 relative left-0.5 h-6! w-6!" />,
     allowText: false,
-    className: "",
+    className: '',
     hasAction: false,
   },
 ];
@@ -182,17 +153,12 @@ export function TopMenuNavigation() {
   const useCustomBreakpoint = createBreakpoint({ mobile: 0, desktop: 950 });
   const customBreakpoint = useCustomBreakpoint();
 
-  if (customBreakpoint === "mobile") {
+  if (customBreakpoint === 'mobile') {
     return (
       <div className="flex justify-end">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="md"
-              rounded
-              className="text-primary-9 h-10 w-10 p-0"
-            >
+            <Button variant="outline" size="md" rounded className="text-primary-9 h-10 w-10 p-0">
               <MenuOutlined className="text-base" />
             </Button>
           </DropdownMenuTrigger>
@@ -203,7 +169,7 @@ export function TopMenuNavigation() {
             {hashedLinks.map((link) => {
               const searchParams = new URLSearchParams(queryParams);
 
-              if (link.id === "workspace-feedbacks") {
+              if (link.id === 'workspace-feedbacks') {
                 return (
                   <DropdownMenuItem
                     key={link.key}
@@ -260,10 +226,7 @@ export function TopMenuNavigation() {
           </DropdownMenuContent>
         </DropdownMenu>
         {isFeedbackModalOpen && (
-          <FeedbackModal
-            open={isFeedbackModalOpen}
-            onClose={() => setIsFeedbackModalOpen(false)}
-          />
+          <FeedbackModal open={isFeedbackModalOpen} onClose={() => setIsFeedbackModalOpen(false)} />
         )}
       </div>
     );
@@ -287,36 +250,28 @@ export function TopMenuNavigation() {
           const searchParams = new URLSearchParams(queryParams);
           const linkSearchParams = cleanSearchParams({
             searchParams,
-            keepKeys: [
-              DEFAULT_BRAIN_REGION_QUERY_ID,
-              DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
-            ],
+            keepKeys: [DEFAULT_BRAIN_REGION_QUERY_ID, DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE],
           }).toString();
 
-          if (id === "workspace-feedbacks") {
+          if (id === 'workspace-feedbacks') {
             return (
-              <div
-                key={key}
-                className="group flex w-max items-center justify-center gap-0"
-              >
+              <div key={key} className="group flex w-max items-center justify-center gap-0">
                 <div className="relative flex items-center">
                   <Button
                     rounded
                     id={id}
                     variant="outline"
-                    size={breakpoint === "xl" ? "lg" : "md"}
+                    size={breakpoint === 'xl' ? 'lg' : 'md'}
                     className={cn(
                       {
-                        "w-12 justify-center!":
-                          !allowText && breakpoint === "xl",
+                        'w-12 justify-center!': !allowText && breakpoint === 'xl',
                       },
                       {
-                        "w-10! justify-center!":
-                          breakpoint === "l" && !allowText,
+                        'w-10! justify-center!': breakpoint === 'l' && !allowText,
                       },
-                      "group relative flex items-center justify-between",
-                      "transition-all duration-400 ease-out",
-                      clx,
+                      'group relative flex items-center justify-between',
+                      'transition-all duration-400 ease-out',
+                      clx
                     )}
                     active={activeSection === baseUrl || isActive?.(pathname)}
                     onClick={() => setIsFeedbackModalOpen(true)}
@@ -332,35 +287,29 @@ export function TopMenuNavigation() {
             );
           }
 
-          if (id === "workspace-help") {
+          if (id === 'workspace-help') {
             return (
-              <div
-                key={key}
-                className="group flex w-max items-center justify-center gap-0"
-              >
+              <div key={key} className="group flex w-max items-center justify-center gap-0">
                 <div className="relative flex items-center">
                   <Button
                     asChild
                     rounded
                     id={id}
                     variant="outline"
-                    size={breakpoint === "xl" ? "lg" : "md"}
+                    size={breakpoint === 'xl' ? 'lg' : 'md'}
                     className={cn(
                       {
-                        "w-12 justify-center!":
-                          !allowText && breakpoint === "xl",
+                        'w-12 justify-center!': !allowText && breakpoint === 'xl',
                       },
                       {
-                        "w-10! justify-center!":
-                          breakpoint === "l" && !allowText,
+                        'w-10! justify-center!': breakpoint === 'l' && !allowText,
                       },
-                      "group relative flex items-center justify-between",
+                      'group relative flex items-center justify-between',
                       {
-                        "group-hover:rounded-r-none group-hover:border-r-0":
-                          hasAction,
+                        'group-hover:rounded-r-none group-hover:border-r-0': hasAction,
                       },
-                      "transition-all duration-400 ease-out",
-                      clx,
+                      'transition-all duration-400 ease-out',
+                      clx
                     )}
                     active={activeSection === baseUrl || isActive?.(pathname)}
                   >
@@ -384,31 +333,27 @@ export function TopMenuNavigation() {
           }
 
           return (
-            <div
-              key={key}
-              className="group flex w-max items-center justify-center gap-0"
-            >
+            <div key={key} className="group flex w-max items-center justify-center gap-0">
               <div className="relative flex items-center">
                 <Button
                   asChild
                   rounded
                   id={id}
                   variant="outline"
-                  size={breakpoint === "xl" ? "lg" : "md"}
+                  size={breakpoint === 'xl' ? 'lg' : 'md'}
                   className={cn(
                     {
-                      "w-12 justify-center!": !allowText && breakpoint === "xl",
+                      'w-12 justify-center!': !allowText && breakpoint === 'xl',
                     },
                     {
-                      "w-10! justify-center!": breakpoint === "l" && !allowText,
+                      'w-10! justify-center!': breakpoint === 'l' && !allowText,
                     },
-                    "group relative flex items-center justify-between",
+                    'group relative flex items-center justify-between',
                     {
-                      "group-hover:rounded-r-none group-hover:border-r-0":
-                        hasAction,
+                      'group-hover:rounded-r-none group-hover:border-r-0': hasAction,
                     },
-                    "transition-all duration-400 ease-out",
-                    clx,
+                    'transition-all duration-400 ease-out',
+                    clx
                   )}
                   active={activeSection === baseUrl || isActive?.(pathname)}
                 >
@@ -425,13 +370,10 @@ export function TopMenuNavigation() {
               </div>
             </div>
           );
-        },
+        }
       )}
       {isFeedbackModalOpen && (
-        <FeedbackModal
-          open={isFeedbackModalOpen}
-          onClose={() => setIsFeedbackModalOpen(false)}
-        />
+        <FeedbackModal open={isFeedbackModalOpen} onClose={() => setIsFeedbackModalOpen(false)} />
       )}
     </>
   );

@@ -1,0 +1,50 @@
+.circuitName {
+  position: relative;
+  text-align: end;
+}
+
+.circuitName > .name svg {
+  margin-left: 1em;
+  color: #005;
+}
+
+.name {
+  font-weight: bold;
+  font-variant: small-caps;
+}
+
+.description {
+  margin-top: 16px;
+  white-space: pre-wrap;
+  position: absolute;
+  background: #0050b3ee;
+  color: #fff;
+  padding: 0.5em 1em;
+  border-radius: 0.25em;
+  position: absolute;
+  left: 0;
+  right: 0;
+  width: 100%;
+  pointer-events: none;
+  z-index: 9;
+  text-align: start;
+  transition: all 0.3s;
+  opacity: 0;
+}
+
+.circuitName:hover .description {
+  opacity: 1;
+}
+
+.description::after {
+  content: "";
+  border: 16px solid transparent;
+  border-bottom: 16px solid #0050b3ee;
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  width: 0;
+  height: 0;
+  margin: -16px;
+  transform: scale(0.5, 1);
+}

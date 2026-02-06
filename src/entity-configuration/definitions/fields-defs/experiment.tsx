@@ -1,25 +1,21 @@
 import get from 'es-toolkit/compat/get';
 
 import { hasAssets } from '@/api/entitycore/guards';
-import {
-  CoreFieldFilterTypeEnum,
-  EntityCoreFields,
-} from '@/entity-configuration/definitions/fields-defs/enums';
+import type {
+  EntityCoreObjectTypes,
+  ISingleNeuronSynaptomeSimulation,
+} from '@/api/entitycore/types';
+import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import {
   EmptyPreview,
   renderArray,
   renderDictionaryKeys,
   renderEmptyOrValue,
 } from '@/entity-configuration/definitions/renderer';
-import { PreviewThumbnail } from '@/features/thumbnail/preview';
-
-import type {
-  EntityCoreObjectTypes,
-  ISingleNeuronSynaptomeSimulation,
-} from '@/api/entitycore/types';
-import { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 import { getStatusCountMap } from '@/entity-configuration/domain/simulation/simulation-campaign';
+import { PreviewThumbnail } from '@/features/thumbnail/preview';
 import ExecutionAggregatedStatus from '@/ui/segments/activity-execution/status';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
@@ -62,19 +58,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     style: { width: 184, align: 'left' },
     isFilterable: false,
-    isDisplayable: true,
-  },
-  [EntityCoreFields.SimulationStatus]: {
-    className: 'text-center',
-    title: 'Status',
-    filter: CoreFieldFilterTypeEnum.CheckList,
-    render: (r) => renderEmptyOrValue('status' in r ? r.status : undefined),
-    vocabulary: {
-      plural: 'Statuses',
-      singular: 'Status',
-    },
-    style: { width: 184, align: 'left' },
-    isFilterable: true,
     isDisplayable: true,
   },
   [EntityCoreFields.SimulationStimulus]: {

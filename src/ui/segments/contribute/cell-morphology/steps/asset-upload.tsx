@@ -3,25 +3,23 @@
 'use client';
 
 import { AlertOutlined, LoadingOutlined } from '@ant-design/icons';
-import { reject, isNil } from 'es-toolkit/compat';
 import { Form, Spin } from 'antd';
-import { useState } from 'react';
+import { isNil, reject } from 'es-toolkit/compat';
 import JSZip from 'jszip';
-
-import { Alert, AlertContent, AlertDescription, AlertIcon, AlertTitle } from '@/ui/molecules/alert';
-import { formatBytes, useFileUpload, type FileWithPreview } from '@/ui/hooks/use-file-upload';
-import { CELL_MORPHOLOGY_FILE_TYPES } from '@/ui/segments/contribute/cell-morphology/schema';
-import { parseFileName, getFileExtension } from '@/ui/segments/contribute/shared/helpers';
-import { DownloadAsBoxIcon } from '@/components/icons/buttons';
+import { useState } from 'react';
 import { resolveNeuronFile } from '@/api/one/cell-morphology';
-import { FileDownloadLine } from '@/components/icons/File';
-import { Button } from '@/ui/molecules/button';
-import { messages } from '@/i18n/en/upload';
 import { tryCatch } from '@/api/utils';
-import { cn } from '@/utils/css-class';
-
+import { DownloadAsBoxIcon } from '@/components/icons/buttons';
+import { FileDownloadLine } from '@/components/icons/File';
+import { messages } from '@/i18n/en/upload';
+import { type FileWithPreview, formatBytes, useFileUpload } from '@/ui/hooks/use-file-upload';
+import { Alert, AlertContent, AlertDescription, AlertIcon, AlertTitle } from '@/ui/molecules/alert';
+import { Button } from '@/ui/molecules/button';
 import type { TCellMorphologyForm } from '@/ui/segments/contribute/cell-morphology/schema';
+import { CELL_MORPHOLOGY_FILE_TYPES } from '@/ui/segments/contribute/cell-morphology/schema';
 import type { IFileTypeConfig } from '@/ui/segments/contribute/shared/helpers';
+import { getFileExtension, parseFileName } from '@/ui/segments/contribute/shared/helpers';
+import { cn } from '@/utils/css-class';
 
 interface IAssetUploadProps {
   maxFiles?: number;
@@ -45,7 +43,9 @@ export function AssetUpload({
   onFilesChange,
 }: IAssetUploadProps) {
   const form = Form.useFormInstance();
-  const { assets } = form.getFieldsValue(['assets']) as { assets: TCellMorphologyForm['assets'] };
+  const { assets } = form.getFieldsValue(['assets']) as {
+    assets: TCellMorphologyForm['assets'];
+  };
   const [resolveNeuronFileLoading, setResolveNeuronFileLoading] = useState(false);
   const [originalFileType, setOriginalFileType] = useState<string | null>(null);
 

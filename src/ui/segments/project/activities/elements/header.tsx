@@ -22,7 +22,7 @@ export function Header({ onScaleChange, onTypeChange, onPageChange }: Props) {
   const [activities, setActivities] =
     useState<Array<{ label: string; value: string }>>(defaultActivities);
   const [selectedActivityType, setSelectedActivityType] = useState<TActivityValue>(
-    defaultActivities?.at(0)?.value!
+    defaultActivities.at(0)?.value as TActivityValue
   );
 
   const onScale = (s: TExtendedEntitiesTypeDict) => {

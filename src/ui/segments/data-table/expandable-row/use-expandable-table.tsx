@@ -1,13 +1,11 @@
-import { useState, useCallback, ReactNode, useEffect } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
-import { useAtomValue } from 'jotai';
 import { Spin } from 'antd';
 import type { ExpandableConfig } from 'antd/es/table/interface';
-
+import { useAtomValue } from 'jotai';
+import { type ReactNode, useCallback, useEffect, useState } from 'react';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { resetFilterSignalAtom } from '@/ui/segments/explore/circuit/helpers';
 import { log } from '@/utils/logger';
-
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 export interface ExpandableTableState<T extends EntityCoreIdentifiable> {
   expandedData: Record<string, Array<T> | null>;
@@ -17,7 +15,7 @@ export interface ExpandableTableState<T extends EntityCoreIdentifiable> {
 
 export interface UseExpandableTableOptions<T extends EntityCoreIdentifiable, P = unknown> {
   // fetch data for expanded row
-  fetcher?: (record: T, params?: P) => Promise<T | Array<T>>;
+  fetcher?: (record: T, params?: P) => Promise<T | Array<T>> | undefined;
   // optional parameters to pass to fetcher
   fetcherParams?: P;
   getRowKey: (record: T) => string;
@@ -150,7 +148,7 @@ export function useExpandableTable<T extends EntityCoreIdentifiable, P = unknown
             },
             expandedRowKeys: prev.expandedRowKeys,
           }));
-        } catch (error) {
+        } catch (_error) {
           setState((prev) => ({
             expandedData: {
               ...prev.expandedData,

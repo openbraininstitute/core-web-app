@@ -1,38 +1,38 @@
+import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type { NestedCellMorphologyProtocolRead } from '@/api/entitycore/types/entities/cell-morphology-protocol';
 import type { MeasurementAnnotation } from '@/api/entitycore/types/entities/measurement-annotation';
-import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
+import type {
+  EntityAuthorization,
+  EntityCoreBaseAsset,
+  EntityCoreIdentifiable,
+  EntityCoreOwnership,
+  EntityCoreType,
+  IBrainLocation,
+  IContributor,
+  ILicense,
+  IMType,
+  Subject,
+  Timestamps,
+} from '@/api/entitycore/types/shared/global';
 import type {
   BrainLocationFilter,
-  BrainRegionFilter,
+  BrainRegionHierarchyFilter,
   ContributionFilter,
-  TimestampsFilter,
+  IDFilter,
+  IlikeSearchFilter,
+  MtypeFilter,
   PaginationFilter,
   SharedFilter,
   SubjectFilter,
-  IDFilter,
-  MtypeFilter,
-  IlikeSearchFilter,
+  TimestampsFilter,
 } from '@/api/entitycore/types/shared/request';
-import type {
-  EntityCoreIdentifiable,
-  EntityCoreBaseAsset,
-  EntityAuthorization,
-  IBrainLocation,
-  IContributor,
-  Timestamps,
-  ILicense,
-  Subject,
-  IMType,
-  EntityCoreType,
-  EntityCoreOwnership,
-} from '@/api/entitycore/types/shared/global';
 
 export type CellMorphologyFilter = Partial<
   IDFilter &
     TimestampsFilter &
     BrainLocationFilter &
     ContributionFilter &
-    BrainRegionFilter &
+    BrainRegionHierarchyFilter &
     PaginationFilter &
     MtypeFilter &
     SubjectFilter &

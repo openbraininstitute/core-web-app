@@ -1,22 +1,21 @@
 import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
 import type {
-  BrainRegionFilter,
-  PaginationFilter,
-  NameFilter,
-  TimestampsFilter,
-  ContributionFilter,
-  OwnershipFilter,
-  SearchFilter,
-  IlikeSearchFilter,
-} from '@/api/entitycore/types/shared/request';
-import type {
-  EntityCoreIdentifiable,
-  EntityCoreBaseAsset,
   EntityAuthorization,
-  Timestamps,
-  EntityCoreType,
+  EntityCoreBaseAsset,
+  EntityCoreIdentifiable,
   EntityCoreOwnership,
+  EntityCoreType,
+  Timestamps,
 } from '@/api/entitycore/types/shared/global';
+import type {
+  ContributionFilter,
+  IlikeSearchFilter,
+  NameFilter,
+  OwnershipFilter,
+  PaginationFilter,
+  SearchFilter,
+  TimestampsFilter,
+} from '@/api/entitycore/types/shared/request';
 
 interface NestedIonChannelRecording extends IIonChannelRecording {}
 
@@ -69,7 +68,6 @@ export interface IonChannelModelingCampaignFilter
     ContributionFilter,
     OwnershipFilter,
     SearchFilter,
-    BrainRegionFilter,
     IlikeSearchFilter {
   ion_channel_modeling_config_id?: string | null;
   ion_channel_modeling_config__id__in?: string[] | null;

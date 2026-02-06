@@ -1,26 +1,24 @@
 'use client';
 
-import Link from 'next/link';
-
 import { CloseOutlined, LoadingOutlined } from '@ant-design/icons';
 import { RiCheckFill, RiFileCopyLine } from '@remixicon/react';
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { match } from 'ts-pattern';
-
-import { ExperimentalFeatures } from '@/ui/segments/profile/sections/experimental-features';
-import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
-import { Subscription } from '@/ui/segments/profile/sections/subscription';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { UserProfile } from '@/ui/segments/profile/sections/profile';
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
-import { Invoices } from '@/ui/segments/profile/sections/invoices';
+import { useTabs } from '@/components/detail-view-tabs';
+import { SignOutFill } from '@/components/icons/EditorIcons';
 import { hasVisibleFlags } from '@/features/feature-flags/flags';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
-import { SignOutFill } from '@/components/icons/EditorIcons';
-import { useTabs } from '@/components/detail-view-tabs';
-import { keyBuilder } from '@/ui/use-query-keys/user';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
+import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
+import { ExperimentalFeatures } from '@/ui/segments/profile/sections/experimental-features';
+import { Invoices } from '@/ui/segments/profile/sections/invoices';
+import { UserProfile } from '@/ui/segments/profile/sections/profile';
+import { Subscription } from '@/ui/segments/profile/sections/subscription';
+import { keyBuilder } from '@/ui/use-query-keys/user';
 import { cn } from '@/utils/css-class';
 
 function Header({ onClose }: { onClose: () => void }) {

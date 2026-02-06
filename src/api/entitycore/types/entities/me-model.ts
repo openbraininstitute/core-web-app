@@ -1,33 +1,34 @@
 import z from 'zod';
-import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
+import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type {
-  EntityCoreIdentifiable,
   EntityAuthorization,
+  EntityCoreIdentifiable,
+  EntityCoreOwnership,
+  EntityCoreType,
   IContributor,
-  Timestamps,
-  ISpecies,
-  IStrain,
   IEType,
   IMType,
-  EntityCoreType,
-  EntityCoreOwnership,
+  ISpecies,
+  IStrain,
+  Timestamps,
 } from '@/api/entitycore/types/shared/global';
 import type {
-  ContributionFilter,
-  IMorphologyFilter,
   BrainRegionFilter,
-  PaginationFilter,
-  IEModelFilter,
-  SpeciesFilter,
-  SharedFilter,
-  MtypeFilter,
+  BrainRegionHierarchyFilter,
+  ContributionFilter,
   EtypeFilter,
   IdFilter,
-  OwnershipFilter,
+  IEModelFilter,
   IlikeSearchFilter,
+  IMorphologyFilter,
+  MtypeFilter,
+  OwnershipFilter,
+  PaginationFilter,
+  SharedFilter,
+  SpeciesFilter,
 } from '@/api/entitycore/types/shared/request';
 
 export enum ValidationStatus {
@@ -77,6 +78,7 @@ export interface IMEModelFilter
     EtypeFilter,
     SpeciesFilter,
     BrainRegionFilter,
+    BrainRegionHierarchyFilter,
     IMorphologyFilter,
     PaginationFilter,
     IEModelFilter,

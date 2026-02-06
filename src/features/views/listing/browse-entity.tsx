@@ -3,21 +3,25 @@
 'use client';
 
 import { WarningOutlined } from '@ant-design/icons';
-import { compact, get } from 'es-toolkit/compat';
+import { compact, get, uniqBy } from 'es-toolkit/compat';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { RESET } from 'jotai/utils';
 import dynamic from 'next/dynamic';
-import { parseAsString, type SingleParserBuilder, useQueryState } from 'nuqs';
-import { type ComponentProps, type ReactElement, useEffect, useMemo } from 'react';
+import { type ComponentProps, type ReactElement, type ReactNode, useEffect, useMemo } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
+import type {
+  EntityCoreIdentifiable,
+  EntityCoreIdentifiableNamed,
+} from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 
-import { DEFAULT_PAGE_NUMBER, WorkspaceScope, WorkspaceSection } from '@/constants';
+import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
 import { listExpandedViewRegistry } from '@/entity-configuration/definitions/list-expanded-view-defs';
+import type { TSortState } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
+import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { GenericError } from '@/ui/molecules/generic-error';
 import type { Props as MainTableProps } from '@/ui/segments/data-table';
@@ -40,9 +44,9 @@ import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
-const MainTable = dynamic(() => import('@/ui/segments/data-table'), { ssr: false }) as (
-  props: MainTableProps<EntityCoreIdentifiableNamed>
-) => ReactElement | null;
+const MainTable = dynamic(() => import('@/ui/segments/data-table'), {
+  ssr: false,
+}) as (props: MainTableProps<EntityCoreIdentifiableNamed>) => ReactElement | null;
 
 type Props = {
   id?: string;
@@ -62,7 +66,9 @@ type Props = {
   mainTableProps?: Partial<ComponentProps<typeof MainTable>>;
   miniViewProps?: Partial<ComponentProps<typeof MiniDetailView>>;
   allowDownload?: boolean;
+  requireBrainRegionDropdown?: boolean;
   extraQueryParams?: Record<string, any>;
+  left?: ReactNode;
 };
 
 export function BrowseEntityScope({
@@ -77,16 +83,13 @@ export function BrowseEntityScope({
   mainTableProps,
   miniViewProps,
   allowDownload,
+  requireBrainRegionDropdown,
   extraQueryParams,
+  left,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const { mdv, setMdv } = useMiniDetailView();
-  const [scope] = useQueryState(
-    'scope',
-    parseAsString
-      .withDefault(defaultScope ?? WorkspaceScope.Public)
-      .withOptions({ shallow: true }) as NonNullable<SingleParserBuilder<TWorkspaceScope>>
-  );
+  const { scope } = useScope({ defaultScope, clearOnDefault: false });
 
   const dataKey = compact([virtualLabId, projectId, section, dataType, scope, id]).join('/');
   const entity = getEntityByExtendedType({ type: dataType });
@@ -100,7 +103,7 @@ export function BrowseEntityScope({
     section,
   });
 
-  const onSortChange = (newSortState: any) => {
+  const onSortChange = (newSortState: TSortState) => {
     setPageNumber(DEFAULT_PAGE_NUMBER);
     setSortState(newSortState);
     runStorageSync({ Sort: newSortState, Page: DEFAULT_PAGE_NUMBER });
@@ -111,7 +114,10 @@ export function BrowseEntityScope({
     sortState,
     setSortState: onSortChange,
   });
-  const columns = allColumns.filter(({ key }) => (activeColumns || []).includes(key as string));
+  const columns = uniqBy(
+    allColumns.filter(({ key }) => (activeColumns || []).includes(key as string)),
+    'key'
+  );
 
   const expandableOptions = useMemo(() => {
     const expandedViewConfig = listExpandedViewRegistry[dataType];
@@ -121,8 +127,11 @@ export function BrowseEntityScope({
     return {
       getRowKey: (record: EntityCoreIdentifiableNamed) => record.id,
       getFetchId: (record: EntityCoreIdentifiableNamed) => record.id,
-      fetcher: (record: EntityCoreIdentifiableNamed) =>
-        entity.api.expandRow!(record, { virtualLabId, projectId }),
+      fetcher: (record: EntityCoreIdentifiable) =>
+        entity.api.expandRow?.(record as any, {
+          virtualLabId,
+          projectId,
+        }),
       renderExpanded: (
         records: EntityCoreIdentifiableNamed[],
         originalRecord: EntityCoreIdentifiableNamed
@@ -139,7 +148,7 @@ export function BrowseEntityScope({
     if (section === WorkspaceSection.Data) {
       runStorageRestore();
     }
-  }, [section]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [section, runStorageRestore]);
 
   const { data, error, isFetching } = useQueryExtendedEntityType({
     context: {
@@ -164,10 +173,7 @@ export function BrowseEntityScope({
     requireBrainRegion,
     defaultBrainRegion,
     useKeepPreviousData: true,
-    extraQueryParams: {
-      ...extraQueryParams,
-      ...entity?.api.config.extraRequiredListFilters,
-    },
+    extraQueryParams,
     enabled: ({ queryKey }) => {
       const [{ queryParameters }] = queryKey;
       if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
@@ -230,6 +236,7 @@ export function BrowseEntityScope({
           <MainTable
             showLoadingState
             allowDownload={allowDownload}
+            requireBrainRegionDropdown={requireBrainRegionDropdown}
             sticky={{ offsetHeader: 75.5 }}
             isLoading={isFetching}
             dataScope={scope!}
@@ -254,6 +261,7 @@ export function BrowseEntityScope({
             {...mainTableProps}
             filterClassNames={classNames?.filterClassNames}
             expandableOptions={expandableOptions}
+            left={left}
           />
         </div>
       </div>

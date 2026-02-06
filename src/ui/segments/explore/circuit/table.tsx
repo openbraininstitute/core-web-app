@@ -8,6 +8,7 @@ import { useAtom } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import type { ComponentProps, CSSProperties, ReactNode } from 'react';
 import { useMemo, useState } from 'react';
+
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type {
@@ -15,18 +16,17 @@ import type {
   Facets,
 } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
-import { WorkspaceScope } from '@/constants';
-import { BrainRegionDropdown } from '@/features/brain-region-dropdown';
 import type { WorkspaceContext } from '@/types/common';
+import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
+import type { TCircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
+
 import { coreFiltersAtom } from '@/ui/segments/data-table/elements/context';
 import { FilterControls } from '@/ui/segments/data-table/elements/filter-controls';
 import { ListingFilterPanel } from '@/ui/segments/data-table/elements/listing-filter-panel/listing-filter-panel';
 import { Pagination } from '@/ui/segments/data-table/elements/pagination';
-import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
 import { Search } from '@/ui/segments/data-table/search';
 import { type OnCellClick, WrapperTable } from '@/ui/segments/data-table/table';
 import { CircuitViewToggle } from '@/ui/segments/explore/circuit/elements/view-toggle';
-import type { TCircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
 import { CircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
 import { cn } from '@/utils/css-class';
 
@@ -121,8 +121,6 @@ export function MainTable({
           </div>
           <div className="[grid-area:filter]">
             <div className="ml-auto flex h-12 items-stretch justify-center gap-3">
-              {(dataScope === WorkspaceScope.BuildMeModelM ||
-                dataScope === WorkspaceScope.BuildSynaptomeModel) && <BrainRegionDropdown />}
               <CircuitViewToggle {...{ dataKey }} />
               <FilterControls
                 filters={filters}

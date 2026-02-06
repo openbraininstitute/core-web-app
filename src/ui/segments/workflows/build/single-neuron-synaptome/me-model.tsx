@@ -1,22 +1,20 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { motion } from 'motion/react';
-
-import kebabCase from 'es-toolkit/compat/kebabCase';
 import isNil from 'es-toolkit/compat/isNil';
-
-import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
-import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { config } from '@/config';
-import { cn } from '@/utils/css-class';
-
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import { motion } from 'motion/react';
+import { useRouter } from 'next/navigation';
 import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { config } from '@/config';
+import { WorkspaceSection } from '@/constants';
+import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
+import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
+import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-selector';
+import { cn } from '@/utils/css-class';
 
 type Props = {
   sessionId: string;
@@ -59,13 +57,13 @@ export function MEModel({ sessionId }: Props) {
     >
       <BrowseEntityScope
         requireBrainRegion
+        requireBrainRegionDropdown
         allowDownload={false}
         id={sessionId}
         requireMiniDetailView={false}
         section={WorkspaceSection.BuildWorkflow}
         classNames={{ container: 'max-h-full' }}
         dataType={ExtendedEntitiesTypeDict.Memodel}
-        scope={WorkspaceScope.BuildSynaptomeModel}
         miniViewProps={{ section: WorkspaceSection.BuildWorkflow }}
         mainTableProps={{
           selectionType: 'radio',
@@ -95,6 +93,7 @@ export function MEModel({ sessionId }: Props) {
             }
           },
         }}
+        left={<WorkflowScopeTabs className="max-w-max" />}
       />
     </motion.div>
   );

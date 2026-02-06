@@ -6,40 +6,41 @@ import type { ColumnsType } from 'antd/es/table/interface';
 import { find, get, kebabCase } from 'es-toolkit/compat';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { SingleParserBuilder, parseAsString, useQueryStates } from 'nuqs';
+import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
 import { useMemo, useState } from 'react';
-
-import { viewConfig as simulationCampaignExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation/small-microcircuit-simulation';
-import { useExpandableTable } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
-
-import { EntityCoreObjectTypes, EntityTypeDict, TEntityTypeDict } from '@/api/entitycore/types';
+import {
+  type EntityCoreObjectTypes,
+  EntityTypeDict,
+  type TEntityTypeDict,
+} from '@/api/entitycore/types';
+import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
 import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
+import { viewConfig as simulationCampaignExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation/small-microcircuit-simulation';
+import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import {
+  type ExtendedCampaignsType,
+  getStatusCountMap,
+} from '@/entity-configuration/domain/simulation';
 import { usePrevious } from '@/hooks/hooks';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { CardContent } from '@/ui/molecules/card';
+import ExecutionAggregatedStatus from '@/ui/segments/activity-execution/status';
 import { useRowSelection } from '@/ui/segments/data-table/elements/use-row-selection';
+import { useExpandableTable } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
 import { BaseTable } from '@/ui/segments/data-table/table';
 import { StatusMap } from '@/ui/segments/project/activities/elements/helpers';
 import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
 import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/browse-header';
+import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 import { ActivityDict, ActivityValues } from '@/ui/segments/workflows/elements/helpers';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
-
-import { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
-import {
-  type ExtendedCampaignsType,
-  getStatusCountMap,
-} from '@/entity-configuration/domain/simulation';
-import ExecutionAggregatedStatus from '@/ui/segments/activity-execution/status';
-import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 
 const AllowedDuplicateEntityTypes: TEntityTypeDict[] = [EntityTypeDict.SimulationCampaign];
 export interface WorkflowActivityRef {
@@ -55,7 +56,7 @@ export type WorkflowActivityProps = {
   onShouldOnlyRenderScrollableSelector: (shouldRenderOnlyScrollableSelector: boolean) => void;
 };
 
-export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement | null> }) {
+export function WorkflowActivity() {
   const { push: navigate } = useRouter();
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
@@ -117,7 +118,7 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
       onHeaderCell: () => ({
         id: 'activity-table-name-cell-selector',
       }),
-      render: (text, record) => <span className="text-primary-9">{record.name}</span>,
+      render: (_, record) => <span className="text-primary-9">{record.name}</span>,
     },
     {
       title: 'Category',
@@ -322,7 +323,6 @@ export function WorkflowActivity({ ref }: { ref: React.RefObject<HTMLDivElement 
           </Card>
         ) : (
           <div
-            ref={ref}
             className="h-full w-full"
             id="workflow-activities-full-table"
             data-testid="workflow-activities-full-table"
