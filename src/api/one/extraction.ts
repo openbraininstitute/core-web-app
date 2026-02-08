@@ -35,7 +35,7 @@ export async function launchExtraction({
 }: LaunchExtractionParams): Promise<string> {
   const api = await obioneApi();
 
-  const response = await api.post<string>(`/declared/task-launch`, {
+  const response = await api.post<string>(`/declared/task/launch`, {
     headers: {
       ...getEntityCoreContext(ctx).headers,
       accept: 'application/json',

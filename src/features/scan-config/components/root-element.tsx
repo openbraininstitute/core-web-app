@@ -112,13 +112,13 @@ export function RootElement({
         {schema.properties?.[rootElement]?.title}
         <div className="flex gap-1">
           {errors?.find((error) => error.instancePath.startsWith(`/${rootElement}`)) ? (
-            <WarningFilled className="text-yellow-400" />
+            <WarningFilled className="text-yellow-400!" />
           ) : (
-            <CheckCircleFilled className="text-green-600" />
+            <CheckCircleFilled className="text-green-600!" />
           )}
 
           {!!aiConfig && !isEqual(config[rootElement], aiConfig[rootElement]) && (
-            <span className="text-slate-500 text-[10px] animate-pulse">✦</span>
+            <span className="text-slate-500! text-[10px] animate-pulse">✦</span>
           )}
 
           <Chevron

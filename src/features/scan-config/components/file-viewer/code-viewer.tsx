@@ -35,6 +35,7 @@ export function CodeFileViewer({
       });
     },
     enabled: !!entity.id && !!asset.id,
+    staleTime: Infinity,
   });
 
   const { data: content, isLoading } = useQuery({
@@ -45,6 +46,7 @@ export function CodeFileViewer({
       return response.text();
     },
     enabled: !!presignedData?.url,
+    staleTime: Infinity,
   });
 
   if (isLoading || isLoadingUrl) {
