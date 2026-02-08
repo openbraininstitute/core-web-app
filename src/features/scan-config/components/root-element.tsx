@@ -12,6 +12,7 @@ import {
 } from '@/features/scan-config/components/components';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import { isPlainObject } from '@/features/scan-config/components/utils';
+
 import {
   type AtomsMap,
   type ConfigSchema,
@@ -22,6 +23,7 @@ import {
   ScanConfigUIElementDict,
   type TBlock,
 } from '@/features/scan-config/types';
+
 import { useAIConfig } from '@/services/ai-agent';
 import { classNames } from '@/util/utils';
 

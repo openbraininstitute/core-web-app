@@ -157,7 +157,7 @@ export const simResultBySimIdAtomFamily = readAtomFamilyWithExpiration(
       const execution = await get(simExecBySimIdAtomFamily({ simulationId, context }));
 
       if (!execution?.generated?.[0]) {
-        throw new Error('Simulation Result not found');
+        return null;
       }
 
       return getCircuitSimulationResult({

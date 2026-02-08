@@ -163,12 +163,20 @@ export function BlockUI({
     }
 
     if (paramSchema.ui_element === ScanConfigUIElementDict.EntityPropertyDropdown && model) {
+      const getValue = (): string[] => {
+        if (Array.isArray(value) && value.every((v) => typeof v === 'string')) {
+          return value;
+        }
+        if (typeof value === 'string') return [value];
+        return [];
+      };
+
       return (
         <EntityPropertyDropdown
           disabled={disabled}
           modelId={model.id}
-          value={typeof value === 'string' ? value : null}
-          onChange={(newV: string | null) => setState({ ...state, node_set: newV })}
+          value={getValue()}
+          onChange={(newV: string[]) => setState({ ...state, node_set: newV })}
           entity_type={paramSchema.entity_type}
           property={paramSchema.property}
         />

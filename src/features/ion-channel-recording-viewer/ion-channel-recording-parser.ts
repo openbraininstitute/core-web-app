@@ -1,11 +1,9 @@
 import { TgdColor } from '@tolokoban/tgd';
 import { Dataset, File, ready } from 'h5wasm';
-
-import { H5Parser } from './h5-parser';
-import { createPalette } from './colors';
-
-import APWaveform_50KHz from './APWaveform_50KHz.json';
 import { isType } from '@/util/type-guards';
+import APWaveform_50KHz from './APWaveform_50KHz.json';
+import { createPalette } from './colors';
+import { H5Parser } from './h5-parser';
 
 export interface IonChannelRecordingProtocol {
   name: string;
@@ -115,12 +113,19 @@ export class IonChannelRecordingParser extends H5Parser {
    *
    * Each part is separated by a semicolon. Inside each part there are 4 numbers
    * separated by colons:
-   * - lowest voltage (mV)
+   * - start voltage (mV)
    * - voltage step
-   * - highest voltage (mV)
+   * - end voltage (mV)
    * - duration (ms)
    *
    * The parts are in sequence.
+   *
+   *
+   * The start and end voltage in a presence of voltage step (> 0) represent
+   * a range of voltages across multiple steps where a particular instance
+   * has the same start and end voltages and they equal to startVoltage + (step * step idx).
+   *
+   * While if there is only a single step the start and end voltages can be different.
    */
   private extractStimuli(protocolName: string, linesPerPlot: number): IonChannelRecordingPlot {
     const plot: IonChannelRecordingPlot = {
@@ -163,16 +168,20 @@ export class IonChannelRecordingParser extends H5Parser {
       let time = 0;
       for (const stimulus of stimuli) {
         if (stimulus.length === 4) {
-          const [voltageMin, voltageStep, , duration] = stimulus;
+          const [voltageStart, voltageStep, voltageEnd, duration] = stimulus;
           line.x.push(time, time + duration);
-          const voltage = voltageMin + lineIndex * voltageStep;
-          line.y.push(voltage, voltage);
+          const stepVoltage = voltageStart + lineIndex * voltageStep;
+          if (voltageStep === 0) {
+            line.y.push(voltageStart, voltageEnd);
+          } else {
+            line.y.push(stepVoltage, stepVoltage);
+          }
           time += duration;
         } else {
-          const [voltageMin, , , durationMin, durationStep] = stimulus;
+          const [voltageStart, , , durationMin, durationStep] = stimulus;
           const duration = durationMin + lineIndex * durationStep;
           line.x.push(time, time + duration);
-          line.y.push(voltageMin, voltageMin);
+          line.y.push(voltageStart, voltageStart);
           time += duration;
         }
       }
@@ -240,11 +249,11 @@ export class IonChannelRecordingParser extends H5Parser {
 }
 
 type Stimulus =
-  | [coltageMin: number, voltageStep: number, voltageMax: number, duration: number]
+  | [voltageStart: number, voltageStep: number, voltageEnd: number, duration: number]
   | [
-      coltageMin: number,
+      voltageStart: number,
       voltageStep: number,
-      voltageMax: number,
+      voltageEnd: number,
       durationMin: number,
       durationStep: number,
       durationMax: number,
@@ -279,10 +288,10 @@ function countStimuliLines(stimuli: Stimulus[]) {
   let count = 0;
   for (const stimulus of stimuli) {
     if (stimulus.length === 4) {
-      const [voltageMin, voltageStep, voltageMax] = stimulus;
-      if (voltageMax > voltageMin && voltageStep > 0) {
+      const [voltageStart, voltageStep, voltageEnd] = stimulus;
+      if (voltageEnd > voltageStart && voltageStep > 0) {
         count = Math.max(
-          Math.ceil((0.5 * voltageStep + voltageMax - voltageMin) / voltageStep),
+          Math.ceil((0.5 * voltageStep + voltageEnd - voltageStart) / voltageStep),
           count
         );
       } else {
