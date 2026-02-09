@@ -32,6 +32,7 @@ export function useCircuitImageURL(circuitId: string) {
       }
       try {
         const resp = await downloadAsset({
+          ctx: context,
           entityType: EntityTypeDict.Circuit,
           entityId: circuit.id,
           id: asset.id,
@@ -50,7 +51,7 @@ export function useCircuitImageURL(circuitId: string) {
       }
     };
     action();
-  }, [circuit, circuitId, error]);
+  }, [circuit, circuitId, context, error]);
 
   return url;
 }
