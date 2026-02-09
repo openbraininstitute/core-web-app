@@ -109,7 +109,14 @@
               ":BLANK_LINE:",
               {
                 "type": false,
-                "source": [":PATH:"]
+                "source": [
+                  ":PATH:",
+                  "!**/*.css",
+                  "!**/*.module.css",
+                  "!**/*.scss",
+                  "!**/*.module.scss",
+                  "!**/*.less"
+                ]
               },
               ":BLANK_LINE:",
               {
