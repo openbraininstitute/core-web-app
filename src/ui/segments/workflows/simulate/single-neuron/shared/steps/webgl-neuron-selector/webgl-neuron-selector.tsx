@@ -55,7 +55,7 @@ function WebglNeuronSelectorContent({
   disableSynapses,
   disableClick,
 }: WebglNeuronSelectorContentProps) {
-  usePainterController(painterManager, disableElectrodes, disableSynapses, disableClick);
+  usePainterController(painterManager, disableElectrodes, disableSynapses, disableClick, sessionId);
 
   return (
     <div className={styles.main}>

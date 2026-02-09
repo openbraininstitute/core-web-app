@@ -7,7 +7,6 @@ import { useEffect, useRef } from 'react';
 
 import { getSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/queries/model/single-neuron-synaptome';
 import { sendRemoveSynapses3DEvent } from '@/components/neuron-viewer/hooks/events';
-import { type SectionSynapsesWith3D, synapsesPlacementAtom } from '@/state/synaptome';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
@@ -21,6 +20,7 @@ import {
 import {
   SimulationStatus,
   StimulationConfigurationAtomFamily,
+  SynapsesPlacementAtomFamily,
   SynaptomeConfigurationAtomFamily,
   simulationStatusAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
@@ -39,7 +39,10 @@ import type {
   ISingleNeuronSynaptome,
   TSingleNeuronSynaptomeConfiguration,
 } from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import type { SynapseConfiguration } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import type {
+  SectionSynapsesWith3D,
+  SynapseConfiguration,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 type Props = {
   sessionId: string;
@@ -57,7 +60,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
   const breakpoint = useDefaultBreakpoint();
   const spcKey = getSessionKey(STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
   const { virtualLabId, projectId } = useWorkspace();
-  const [synapsesPlacement] = useAtom(synapsesPlacementAtom);
+  const [synapsesPlacement] = useAtom(SynapsesPlacementAtomFamily(sessionId));
   const key = getSessionKey(SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
   const [state, update] = useAtom(SynaptomeConfigurationAtomFamily(key));
   const [stimulationState, updateStimulation] = useAtom(StimulationConfigurationAtomFamily(spcKey));
@@ -167,7 +170,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
     }
   });
 
-  useViewer3D(state ?? [], synapsesPlacement ?? {}, data);
+  useViewer3D(state ?? [], synapsesPlacement ?? {}, data, sessionId);
 
   if (isLoading) {
     return (
@@ -263,9 +266,10 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
 function useViewer3D(
   synapticInputs: SynapseConfiguration[],
   selection: Record<string, SectionSynapsesWith3D | null>,
-  data: { synapses: Array<{ id: string; color?: string }> } | null | undefined
+  data: { synapses: Array<{ id: string; color?: string }> } | null | undefined,
+  sessionId: string
 ) {
-  const update = useVisibleSynapsesSetter();
+  const update = useVisibleSynapsesSetter(sessionId);
   useEffect(() => {
     const synapses: {
       color: string;

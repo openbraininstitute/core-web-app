@@ -457,7 +457,8 @@ export function usePainterController(
   painter: PainterManager,
   disableElectrodes: boolean,
   disableSynapses: boolean,
-  disableClick: boolean
+  disableClick: boolean,
+  sessionId: string
 ) {
   const notifier = useAppNotification();
   React.useEffect(() => {
@@ -477,7 +478,7 @@ export function usePainterController(
     }
   }, [disableClick, painter]);
 
-  const synapses = useVisibleSynapses();
+  const synapses = useVisibleSynapses(sessionId);
   React.useEffect(() => {
     painter.showSynapses(synapses);
   }, [synapses, painter]);

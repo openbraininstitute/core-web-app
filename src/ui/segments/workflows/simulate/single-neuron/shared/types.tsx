@@ -1,5 +1,5 @@
-import { z } from 'zod';
 import isNil from 'es-toolkit/compat/isNil';
+import { z } from 'zod';
 
 import { DefaultColor } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 
@@ -368,3 +368,25 @@ export const AmperageStateSchema = AmperageBaseSchema.refine(
 );
 
 export type AmperageState = z.infer<typeof AmperageStateSchema>;
+
+type Coordinates3D = [number, number, number];
+
+type SynapsePosition = {
+  segment_id: number;
+  coordinates: Coordinates3D;
+  position: number;
+};
+
+export type SectionSynapses = {
+  section_id: string;
+  synapses: Array<SynapsePosition>;
+};
+
+export type SectionSynapsesWith3D = {
+  sectionSynapses: Array<SectionSynapses>;
+  synapsePlacementConfigId: string;
+  count?: number;
+  meshId?: string;
+};
+
+export type SynapsesPlacementRecord = Record<string, SectionSynapsesWith3D | null>;

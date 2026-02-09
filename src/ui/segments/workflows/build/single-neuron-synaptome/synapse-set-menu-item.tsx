@@ -16,7 +16,6 @@ import {
   sendRemoveSynapses3DEvent,
 } from '@/components/neuron-viewer/hooks/events';
 import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
-import { type SectionSynapsesWith3D, synapsesPlacementAtom } from '@/state/synaptome';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
@@ -25,12 +24,14 @@ import {
   SimulationColors,
   useBuildSingleNeuronSynaptomeSessionState,
 } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import { SynapsesPlacementAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import { getColorFromGeneratedPalette } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector/colors';
+import { useVisibleSynapsesSetter } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector/hooks';
 import { getRandomIntInclusive } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 import { formatCompactNumber } from '@/utils/format';
 
-import { getColorFromGeneratedPalette } from '../../simulate/single-neuron/shared/steps/webgl-neuron-selector/colors';
-import { useVisibleSynapsesSetter } from '../../simulate/single-neuron/shared/steps/webgl-neuron-selector/hooks';
+import type { SectionSynapsesWith3D } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 type Props = { sessionId: string };
 
@@ -39,7 +40,7 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
   const pathname = usePathname();
   const breakpoint = useDefaultBreakpoint();
   const { replace } = useRouter();
-  const [synapsesPlacement, setSynapsesPlacement] = useAtom(synapsesPlacementAtom);
+  const [synapsesPlacement, setSynapsesPlacement] = useAtom(SynapsesPlacementAtomFamily(sessionId));
   const { sessionValue, setSessionValue } = useBuildSingleNeuronSynaptomeSessionState({
     sessionId,
   });
@@ -161,7 +162,7 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
     }
   };
   const values = sessionValue?.synapseSets?.values();
-  useViewer3D(values ? Array.from(values) : [], synapsesPlacement ?? {});
+  useViewer3D(values ? Array.from(values) : [], synapsesPlacement ?? {}, sessionId);
 
   return (
     <div className="flex max-h-[300px] flex-col gap-1.5">
@@ -306,7 +307,6 @@ function VisibilityButton({
         'shadow-md',
         { 'h-8 w-8': breakpoint === 'l' },
         { 'h-10 w-10': breakpoint === 'xl' },
-        // eslint-disable-next-line no-nested-ternary
         isVisible
           ? 'hover:border-orange-500 hover:bg-orange-500'
           : canShow
@@ -318,7 +318,6 @@ function VisibilityButton({
         onToggleVisibility(id);
       }}
       title={
-        // eslint-disable-next-line no-nested-ternary
         isVisible
           ? 'Hide synaptome'
           : canShow
@@ -334,9 +333,10 @@ function VisibilityButton({
 
 function useViewer3D(
   synapticInputs: { id: string; color?: string }[],
-  selection: Record<string, SectionSynapsesWith3D | null>
+  selection: Record<string, SectionSynapsesWith3D | null>,
+  sessionId: string
 ) {
-  const update = useVisibleSynapsesSetter();
+  const update = useVisibleSynapsesSetter(sessionId);
   React.useEffect(() => {
     const synapses: {
       color: string;

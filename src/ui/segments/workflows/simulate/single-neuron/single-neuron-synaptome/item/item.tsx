@@ -22,7 +22,6 @@ import {
 } from '@/components/neuron-viewer/hooks/events';
 import { useAppNotification } from '@/components/notification';
 import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
-import { synapsesPlacementAtom } from '@/state/synaptome';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
@@ -31,19 +30,24 @@ import {
   SectionTargetMapping,
   SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import { SynaptomeConfigurationAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import {
+  SynapsesPlacementAtomFamily,
+  SynaptomeConfigurationAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import {
   getSessionKey,
   label,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
-import { SynapseTypeDictionary } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import {
+  type SectionSynapses,
+  SynapseTypeDictionary,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { ConfigInputList } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome/item/config-input';
 import { OptionRender } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome/item/config-list-render';
 import { FrequencyFormItem } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome/item/frequency-input';
 import { cn } from '@/utils/css-class';
 
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import type { SectionSynapses } from '@/state/synaptome';
 import type { WorkspaceContext } from '@/types/common';
 import type { UpdateSynapseSimulationProperty } from '@/types/small-scale-simulator/single-neuron';
 import type { SynapsesConfiguration } from '@/types/synaptome';
@@ -75,7 +79,7 @@ export function SynapticInputItem({
   const { error: notifyError } = useAppNotification();
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
   const [visualizeLoading, setLoadingVisualize] = useState(false);
-  const [synapsesPlacement, setSynapsesPlacement] = useAtom(synapsesPlacementAtom);
+  const [synapsesPlacement, setSynapsesPlacement] = useAtom(SynapsesPlacementAtomFamily(sessionId));
   const key = getSessionKey(SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
   const [state] = useAtom(SynaptomeConfigurationAtomFamily(key));
   const synapseWithFrequencyStep = state.findIndex((s) => Array.isArray(s.frequency));
