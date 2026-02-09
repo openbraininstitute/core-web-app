@@ -1,12 +1,19 @@
 import { CheckOutlined, DownOutlined, LoadingOutlined, SearchOutlined } from '@ant-design/icons';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useAtomValue } from 'jotai';
-import { loadable, unwrap } from 'jotai/utils';
-import { type ComponentProps, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  type ComponentProps,
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import type { TBrainRegionHierarchyExtendedOption } from '@/features/brain-region-hierarchy/types';
+
 import { BrainIcon } from '@/components/icons';
-import type { TBrainRegionHierarchyExtendedOption } from '@/features/brain-region-hierarchy/context';
-import { brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom } from '@/features/brain-region-hierarchy/context';
+import { usePrimaryExtendedHierarchySpeciesQuery } from '@/features/brain-region-hierarchy/context';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
@@ -34,22 +41,11 @@ export function BrainRegionDropdown({
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [parent, setParent] = useState<HTMLDivElement | null>(null);
-
-  const brainRegionHierarchy = useAtomValue(
-    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom), [])
-  );
-  const isLoading =
-    useAtomValue(loadable(brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom)).state ===
-    'loading';
-
+  const { result: brainRegionHierarchy, loading: isLoading } =
+    usePrimaryExtendedHierarchySpeciesQuery();
   const [selectedNode, updateSelectedNode] = useState(defaultBrainRegion);
 
-  const parentSetter = useCallback(
-    (el: HTMLDivElement) => {
-      setParent(el);
-    },
-    [setParent]
-  );
+  const parentSetter = (el: HTMLDivElement) => setParent(el);
 
   const filteredOptions = useMemo<Array<TBrainRegionHierarchyExtendedOption>>(() => {
     const options = (brainRegionHierarchy?.options ??
@@ -238,47 +234,36 @@ export function BrainRegionDropdownWithFormItem({
   defaultBrainRegion,
   showIcon = true,
   charsPerLine = 200,
-}: Props) {
-  const brainRegionHierarchy = useAtomValue(
-    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom), [])
+  value,
+  onChange,
+}: Props & {
+  value?: string;
+  onChange?: (value: string) => void;
+}) {
+  const { result: brainRegionHierarchy } = usePrimaryExtendedHierarchySpeciesQuery();
+  const handleSelectBrainRegion = useCallback(
+    (br: IBrainRegionHierarchy) => {
+      startTransition(() => {
+        onChange?.(br.id);
+      });
+      onSelectBrainRegion?.(br);
+    },
+    [onChange, onSelectBrainRegion]
   );
 
-  const wrapper = useMemo(
-    () =>
-      function Wrapper({
-        value,
-        onChange,
-      }: {
-        value?: string;
-        onChange?: (value: string) => void;
-      }) {
-        const handleSelectBrainRegion = useCallback(
-          (br: IBrainRegionHierarchy) => {
-            // FIX: Remove startTransition wrapper - form onChange should not be wrapped
-            onChange?.(br.id);
-            onSelectBrainRegion?.(br);
-          },
-          [onChange]
-        );
-
-        return (
-          <BrainRegionDropdown
-            defaultBrainRegion={
-              value
-                ? brainRegionHierarchy?.options.find(({ value: _value }) => value === _value)?.data
-                : brainRegionHierarchy?.options.find(
-                    ({ value: _value }) => defaultBrainRegion?.id === _value
-                  )?.data
-            }
-            onSelectBrainRegion={handleSelectBrainRegion}
-            charsPerLine={charsPerLine}
-            clsx={clsx}
-            showIcon={showIcon}
-          />
-        );
-      },
-    [brainRegionHierarchy, defaultBrainRegion, charsPerLine, clsx, showIcon, onSelectBrainRegion]
+  return (
+    <BrainRegionDropdown
+      defaultBrainRegion={
+        value
+          ? brainRegionHierarchy?.options.find(({ value: _value }) => value === _value)?.data
+          : brainRegionHierarchy?.options.find(
+              ({ value: _value }) => defaultBrainRegion?.id === _value
+            )?.data
+      }
+      onSelectBrainRegion={handleSelectBrainRegion}
+      charsPerLine={charsPerLine}
+      clsx={clsx}
+      showIcon={showIcon}
+    />
   );
-
-  return wrapper;
 }

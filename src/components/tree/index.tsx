@@ -1,17 +1,19 @@
-import React, { useState, useCallback, useEffect, ReactNode } from 'react';
-import flatMap from 'es-toolkit/compat/flatMap';
-import map from 'es-toolkit/compat/map';
+import flatMap from "es-toolkit/compat/flatMap";
+import map from "es-toolkit/compat/map";
+import React, { type ReactNode, useCallback, useEffect, useState } from "react";
 
-import { getParentsToRoot, scrollToNode } from '@/components/tree/elements/helpers';
-import { MemoizedNode as Node } from '@/components/tree/elements/node';
-import { classNames } from '@/util/utils';
-
+import {
+  getParentsToRoot,
+  scrollToNode,
+} from "@/components/tree/elements/helpers";
+import { MemoizedNode as Node } from "@/components/tree/elements/node";
 import type {
-  RenderNodeProps,
   NodeIndentation,
   NodeSubtitle,
+  RenderNodeProps,
   TTreeNode,
-} from '@/components/tree/types';
+} from "@/components/tree/types";
+import { cn } from "@/utils/css-class";
 
 interface Props<TNode extends TTreeNode> {
   dataKey: string;
@@ -44,7 +46,10 @@ function Container({
 }) {
   return (
     <div
-      className={classNames('no-scrollbar h-full min-h-0 w-full overflow-y-auto', className)}
+      className={cn(
+        "no-scrollbar h-full min-h-0 w-full overflow-y-auto",
+        className,
+      )}
       style={{ height }}
     >
       {children}
@@ -52,7 +57,7 @@ function Container({
   );
 }
 
-export default function Tree<TNode extends TTreeNode>({
+export function Tree<TNode extends TTreeNode>({
   dataKey,
   data,
   onClick,
@@ -62,10 +67,10 @@ export default function Tree<TNode extends TTreeNode>({
     h: false,
     v: true,
     size: 18,
-    style: 'border-dotted border-primary-6',
+    style: "border-dotted border-primary-6",
   },
   defaultExpandedNodes = [],
-  height = 'auto',
+  height = "auto",
   nodeRowHeight = 32,
   renderNode,
   defaultColor,
@@ -73,14 +78,19 @@ export default function Tree<TNode extends TTreeNode>({
   separator = true,
   keepPreviousExpanded = false,
 }: Props<TNode>) {
-  const nodes = React.useMemo(() => (Array.isArray(data) ? data : [data]), [data]);
+  const nodes = React.useMemo(
+    () => (Array.isArray(data) ? data : [data]),
+    [data],
+  );
 
   const [expandedIds, setExpandedIds] = useState<Set<string>>(
     new Set(
       flatMap(defaultExpandedNodes, (id) =>
-        flatMap(nodes, (node) => map(getParentsToRoot(id.toString(), node as any), 'id'))
-      )
-    )
+        flatMap(nodes, (node) =>
+          map(getParentsToRoot(id.toString(), node as any), "id"),
+        ),
+      ),
+    ),
   );
 
   useEffect(() => {
@@ -88,12 +98,14 @@ export default function Tree<TNode extends TTreeNode>({
       setExpandedIds((prev) => {
         // get parents path to the selected node across all trees
         const currentParents = flatMap(nodes, (node) =>
-          flatMap(getParentsToRoot(selectedNode.id, node as any), 'id')
+          flatMap(getParentsToRoot(selectedNode.id, node as any), "id"),
         );
 
         // get parents for default expanded nodes
         const initialParents = flatMap(defaultExpandedNodes, (id) =>
-          flatMap(nodes, (node) => map(getParentsToRoot(id.toString(), node as any), 'id'))
+          flatMap(nodes, (node) =>
+            map(getParentsToRoot(id.toString(), node as any), "id"),
+          ),
         );
 
         let finalExpandedNodes: Array<string>;
@@ -119,7 +131,7 @@ export default function Tree<TNode extends TTreeNode>({
       });
 
       requestAnimationFrame(() => {
-        scrollToNode(selectedNode as any, 'start');
+        scrollToNode(selectedNode as any, "start");
       });
     }
   }, [selectedNode, data, defaultExpandedNodes, keepPreviousExpanded, nodes]);
@@ -135,14 +147,14 @@ export default function Tree<TNode extends TTreeNode>({
         return newSet;
       });
     },
-    [onToggle]
+    [onToggle],
   );
 
   const handleClick = useCallback(
     (node: TNode) => {
       onClick?.(node);
     },
-    [onClick]
+    [onClick],
   );
 
   return (
@@ -168,3 +180,5 @@ export default function Tree<TNode extends TTreeNode>({
     </Container>
   );
 }
+
+export default Tree;

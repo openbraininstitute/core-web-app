@@ -1,7 +1,3 @@
-import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
-import { config } from '@/config';
-import { getSession } from '@/auth-fetch';
-
 import type {
   UpdateUserProfileRequest,
   UserProfileResponse,
@@ -9,7 +5,12 @@ import type {
   VlmUserGroupsResponse,
   VlmUserProfile,
 } from '@/api/virtual-lab-svc/queries/types';
+import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
+import { getSession } from '@/auth-fetch';
+import { config } from '@/config';
+import type { IWorkspaceHierarchySpeciesPreference } from '@/features/brain-region-hierarchy/types';
 import type { WorkspaceContext } from '@/types/common';
+import { log } from '@/utils/logger';
 
 function getBaseUrl() {
   return `${config.VIRTUAL_LAB_API_URL}/users`;
@@ -20,7 +21,9 @@ function getBaseUrl() {
  *
  * @returns user profile information
  */
-export const getUserProfile = async (): Promise<{ profile: UserProfileResponse } | null> => {
+export const getUserProfile = async (): Promise<{
+  profile: UserProfileResponse;
+} | null> => {
   const session = await getSession();
   const response = await fetch(`${getBaseUrl()}/profile`, {
     method: 'get',
@@ -69,7 +72,9 @@ export const updateUserProfile = async (
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to update user profile`, { cause: await response.json() });
+    throw new Error(`Failed to update user profile`, {
+      cause: await response.json(),
+    });
   }
 
   const result: VlmUserProfile = await response.json();
@@ -92,12 +97,15 @@ export const getUserGroups = async (): Promise<VlmUserGroupsResponse> => {
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to get user groups`, { cause: await response.json() });
+    throw new Error(`Failed to get user groups`, {
+      cause: await response.json(),
+    });
   }
 
   return await response.json();
 };
 
+const userPreferencesBaseUri = '/users/preferences';
 /**
  * Fetches the current user's most recently used workspace preference
  *
@@ -106,7 +114,7 @@ export const getUserGroups = async (): Promise<VlmUserGroupsResponse> => {
  */
 export const getUserRecentWorkspace = async () => {
   const api = await virtualLabRootApi();
-  return await api.get<VlmRecentWorkspace>(`/users/preferences/recent-workspace`);
+  return await api.get<VlmRecentWorkspace>(`${userPreferencesBaseUri}/recent-workspace`);
 };
 
 /**
@@ -123,7 +131,7 @@ export const setUserRecentWorkspace = async ({
   workspace: WorkspaceContext;
 }): Promise<VlmRecentWorkspace> => {
   const api = await virtualLabRootApi();
-  return await api.post<VlmRecentWorkspace>(`/users/preferences/recent-workspace`, {
+  return await api.post<VlmRecentWorkspace>(`${userPreferencesBaseUri}/recent-workspace`, {
     headers: {
       'Content-Type': 'application/json',
       accept: 'application/json',
@@ -136,3 +144,57 @@ export const setUserRecentWorkspace = async ({
     },
   });
 };
+
+/**
+ * Response shape for brain region preference API
+ */
+export interface IVlmWorkspaceHierarchySpeciesPreference {
+  message: string;
+  data: {
+    user_id: string;
+    preference: IWorkspaceHierarchySpeciesPreference;
+    updated_at: string;
+  } | null;
+}
+
+/**
+ * Fetches the user's brain region hierarchy preference from the API
+ *
+ * @returns Promise with the user's brain region preference, or null if not set
+ */
+export async function getWorkspaceHierarchySpeciesPreference(): Promise<IVlmWorkspaceHierarchySpeciesPreference | null> {
+  try {
+    const api = await virtualLabRootApi();
+    return await api.get<IVlmWorkspaceHierarchySpeciesPreference>(
+      `${userPreferencesBaseUri}/workspace-hierarchy-species`
+    );
+  } catch (error) {
+    log('warn', 'Failed to fetch brain region preference from API:', error);
+    return null;
+  }
+}
+
+/**
+ * sets the user's brain region hierarchy species preference
+ *
+ * @param preference - The brain region preference to persist
+ */
+export async function updateBrainRegionPreference(
+  preference: IWorkspaceHierarchySpeciesPreference
+): Promise<void> {
+  // Fire-and-forget: execute async but don't await
+
+  try {
+    const api = await virtualLabRootApi();
+    await api.patch(`${userPreferencesBaseUri}/workspace-hierarchy-species`, {
+      headers: {
+        'Content-Type': 'application/json',
+        accept: 'application/json',
+      },
+      body: preference,
+    });
+  } catch (error) {
+    // Log but don't throw - this is intentionally fire-and-forget
+    log('warn', 'Failed to persist brain region preference to API:', error);
+  }
+}

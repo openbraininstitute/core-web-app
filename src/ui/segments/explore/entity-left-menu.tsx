@@ -3,16 +3,16 @@
 import { motion } from 'motion/react';
 import { Suspense, useState } from 'react';
 
-import { TreeSkeleton } from '@/features/brain-region-hierarchy/brain-region-skeleton';
-import { EntityLinkCount } from '@/ui/segments/explore/entity-link-count';
+import type { TTreeNode } from '@/components/tree/types';
+import type { TExploreLeftMenuContext } from '@/features/brain-region-hierarchy/components/region-banner';
+
 import { BrainRegionHierarchy } from '@/features/brain-region-hierarchy';
+import { TreeSkeleton } from '@/features/brain-region-hierarchy/components/brain-region-skeleton';
 import {
   ExploreLeftMenuContext,
   RegionBanner,
-} from '@/features/brain-region-hierarchy/region-banner';
-
-import type { TExploreLeftMenuContext } from '@/features/brain-region-hierarchy/region-banner';
-import type { TTreeNode } from '@/components/tree/types';
+} from '@/features/brain-region-hierarchy/components/region-banner';
+import { EntityLinkCount } from '@/ui/segments/explore/entity-link-count';
 
 type Props = { dataKey: string };
 

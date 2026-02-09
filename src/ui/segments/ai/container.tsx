@@ -54,10 +54,12 @@ export function Container(): JSX.Element {
       id="workspace-ai"
       className={cn(
         styles.aiPanel,
-        'text-white [grid-area:ai]',
+        'text-white [grid-area:ai] border-none!',
         { 'text-primary-9 mr-3 rounded-lg! bg-white': isExpanded },
         { 'text-primary-9 my-2 bg-white shadow-lg': isFullscreen },
-        { 'bg-primary-9 border-primary-9 mr-3 text-white shadow-md': isCollapsed },
+        {
+          'bg-primary-9 border-primary-9 mr-3 text-white shadow-md': isCollapsed,
+        },
         { 'rounded-full!': isCollapsed && animationComplete }
       )}
       animate={{

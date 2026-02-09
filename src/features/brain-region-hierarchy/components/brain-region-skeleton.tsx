@@ -1,7 +1,7 @@
 'use client';
 
 import { CaretRightFilled } from '@ant-design/icons';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { cn } from '@/utils/css-class';
 

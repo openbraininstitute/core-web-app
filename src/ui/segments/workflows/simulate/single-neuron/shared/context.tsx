@@ -1,28 +1,29 @@
 'use client';
 
-import { atomFamily, atomWithReset } from 'jotai/utils';
+import { atomWithReset } from 'jotai/utils';
+import { atomFamily } from 'jotai-family';
 
+import type { PlotData } from '@/services/bluenaas-single-cell/types';
+
+import { getSimulationColor } from '@/constants/simulate/single-neuron';
 import {
   makeStorageAtomWithValidationFamily,
   safeStorage,
 } from '@/ui/hooks/use-storage-atom-with-validation';
 import {
-  StimulationConfigurationSchema,
-  ExperimentalSetupConfigurationSchema,
-  NeuronLocationArraySchema,
-  SynapseConfigurationArraySchema,
-  OverviewConfigurationSchema,
-  FrequencyInputConfigSchema,
-  AmperageStateSchema,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import {
   buildDefaultRecordingLocation,
-  DEFAULT_SIMULATION_EXPERIMENTAL_SETUP,
   DEFAULT_CURRENT_INJECTION_CONFIG,
+  DEFAULT_SIMULATION_EXPERIMENTAL_SETUP,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import { getSimulationColor } from '@/constants/simulate/single-neuron';
-
-import type { PlotData } from '@/services/bluenaas-single-cell/types';
+import {
+  AmperageStateSchema,
+  ExperimentalSetupConfigurationSchema,
+  FrequencyInputConfigSchema,
+  NeuronLocationArraySchema,
+  OverviewConfigurationSchema,
+  StimulationConfigurationSchema,
+  SynapseConfigurationArraySchema,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 export const StimulationConfigurationAtomFamily = makeStorageAtomWithValidationFamily(
   StimulationConfigurationSchema,

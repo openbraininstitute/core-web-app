@@ -168,13 +168,6 @@ export function TopMenuNavigation() {
           >
             {hashedLinks.map((link) => {
               const searchParams = new URLSearchParams(queryParams);
-              const linkSearchParams = cleanSearchParams({
-                searchParams,
-                keepKeys: [
-                  DEFAULT_BRAIN_REGION_QUERY_ID,
-                  DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
-                ],
-              }).toString();
 
               if (link.id === 'workspace-feedbacks') {
                 return (
@@ -200,7 +193,6 @@ export function TopMenuNavigation() {
                         <Link
                           href={{
                             pathname: link.url,
-                            query: linkSearchParams,
                           }}
                         >
                           {link.icon}
@@ -271,8 +263,12 @@ export function TopMenuNavigation() {
                     variant="outline"
                     size={breakpoint === 'xl' ? 'lg' : 'md'}
                     className={cn(
-                      { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
-                      { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
+                      {
+                        'w-12 justify-center!': !allowText && breakpoint === 'xl',
+                      },
+                      {
+                        'w-10! justify-center!': breakpoint === 'l' && !allowText,
+                      },
                       'group relative flex items-center justify-between',
                       'transition-all duration-400 ease-out',
                       clx
@@ -302,10 +298,16 @@ export function TopMenuNavigation() {
                     variant="outline"
                     size={breakpoint === 'xl' ? 'lg' : 'md'}
                     className={cn(
-                      { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
-                      { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
+                      {
+                        'w-12 justify-center!': !allowText && breakpoint === 'xl',
+                      },
+                      {
+                        'w-10! justify-center!': breakpoint === 'l' && !allowText,
+                      },
                       'group relative flex items-center justify-between',
-                      { 'group-hover:rounded-r-none group-hover:border-r-0': hasAction },
+                      {
+                        'group-hover:rounded-r-none group-hover:border-r-0': hasAction,
+                      },
                       'transition-all duration-400 ease-out',
                       clx
                     )}
@@ -340,10 +342,16 @@ export function TopMenuNavigation() {
                   variant="outline"
                   size={breakpoint === 'xl' ? 'lg' : 'md'}
                   className={cn(
-                    { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
-                    { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
+                    {
+                      'w-12 justify-center!': !allowText && breakpoint === 'xl',
+                    },
+                    {
+                      'w-10! justify-center!': breakpoint === 'l' && !allowText,
+                    },
                     'group relative flex items-center justify-between',
-                    { 'group-hover:rounded-r-none group-hover:border-r-0': hasAction },
+                    {
+                      'group-hover:rounded-r-none group-hover:border-r-0': hasAction,
+                    },
                     'transition-all duration-400 ease-out',
                     clx
                   )}
@@ -353,7 +361,6 @@ export function TopMenuNavigation() {
                     prefetch
                     href={{
                       pathname: url,
-                      query: linkSearchParams,
                     }}
                   >
                     {allowText && <span>{title}</span>}

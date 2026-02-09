@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 
+import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
+import type { WorkspaceContext } from '@/types/common';
+
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
-
-import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
-import type { WorkspaceContext } from '@/types/common';
 
 export function useLoadCellMorphology3DAsset({
   morphology,
@@ -16,7 +16,7 @@ export function useLoadCellMorphology3DAsset({
 }) {
   const asset = morphology?.assets?.find((a) => a.content_type === 'application/swc');
   if (!asset) {
-    throw new Error(`No distribution found for resource ${morphology?.id}`);
+    throw new Error(`No asset found for the entity ${morphology?.id}`);
   }
   const { data, isLoading, error } = useQuery({
     queryKey: keyBuilder.asset({

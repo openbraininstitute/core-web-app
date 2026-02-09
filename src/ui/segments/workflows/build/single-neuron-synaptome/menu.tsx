@@ -15,7 +15,10 @@ import kebabCase from 'es-toolkit/compat/kebabCase';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 import { z } from 'zod';
+
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import type { BuildStepKeys } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+
 import {
   SingleNeuronSynaptomeBaseSchema,
   SingleNeuronSynaptomeConfigurationSchema,
@@ -30,7 +33,6 @@ import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import type { BuildStepKeys } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import {
   BuildStep,
   DefaultSynapseValue,
@@ -41,6 +43,7 @@ import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { browserHistoryReplace } from '@/utils/browser';
 import { cn } from '@/utils/css-class';
+
 import { useVisibleSynapsesSetter } from '../../simulate/single-neuron/shared/steps/webgl-neuron-selector/hooks';
 
 type Props = { sessionId: string };
