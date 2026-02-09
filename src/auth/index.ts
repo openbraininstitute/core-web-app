@@ -135,7 +135,7 @@ export const authOptions: NextAuthOptions = {
         },
       },
       idToken: true,
-      checks: ['pkce', 'state'],
+      checks: config.AUTH_PROXY_URL ? ['state'] : ['pkce', 'state'],
       profile(profile) {
         return {
           name: profile.name,
