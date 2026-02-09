@@ -212,7 +212,8 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
               <div className="flex w-full flex-col items-start justify-start gap-4">
                 {fields.map((field) => {
                   const formName = `${field.name}`;
-                  const synapseConfigId = state[field.name]?.id;
+                  const synapseConfigId = state[field.name]?.config_id;
+                  const synapseGroupId = state[field.name]?.id;
                   const meshForForm = synapseConfigId
                     ? synapsesPlacement?.[synapseConfigId]?.meshId
                     : undefined;
@@ -227,8 +228,8 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
                       removeForm={() => {
                         remove(field.name);
                         onRemoveSynapseConfig(field.name);
-                        if (synapseConfigId && meshForForm) {
-                          sendRemoveSynapses3DEvent(synapseConfigId, meshForForm);
+                        if (synapseGroupId && meshForForm) {
+                          sendRemoveSynapses3DEvent(synapseGroupId, meshForForm);
                         }
                       }}
                       onChange={onConfigProperty}
@@ -277,9 +278,7 @@ function useViewer3D(
     }[] = [];
     for (let index = 0; index < synapticInputs.length; index++) {
       const synapticInput = synapticInputs[index];
-      const match = Object.values(selection).find(
-        (item) => item?.synapsePlacementConfigId === synapticInput.id
-      );
+      const match = selection[synapticInput.config_id];
       if (match) {
         synapses.push({
           color:

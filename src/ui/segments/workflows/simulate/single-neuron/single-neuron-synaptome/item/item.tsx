@@ -84,8 +84,8 @@ export function SynapticInputItem({
   const [state] = useAtom(SynaptomeConfigurationAtomFamily(key));
   const synapseWithFrequencyStep = state.findIndex((s) => Array.isArray(s.frequency));
   const abortController = useRef(new AbortController());
-  const currentSynapseId = state[index]?.id;
-  const synapseDisplayed = isSynapseDisplayed(synapsesPlacement, index, currentSynapseId);
+  const currentConfigId = state[index]?.config_id;
+  const synapseDisplayed = isSynapseDisplayed(synapsesPlacement, currentConfigId);
   const color = placementConfig?.color;
 
   const onVisualizationError = () => {
@@ -108,8 +108,7 @@ export function SynapticInputItem({
   const onHideSynapse = useHideSynapseHandler(
     synapsesPlacement,
     setSynapsesPlacement,
-    index,
-    currentSynapseId
+    currentConfigId
   );
 
   const onShowSynapse = async () => {
@@ -147,12 +146,13 @@ export function SynapticInputItem({
       const mesh = createBubblesInstanced(synapsePositions, new Color(color));
 
       const configId = placementConfig?.id!;
+      const inputConfigId = state[index]?.config_id;
       sendDisplaySynapses3DEvent(configId, mesh);
 
       setSynapsesPlacement((prev) => {
         return {
           ...prev,
-          [configId]: {
+          [inputConfigId]: {
             sectionSynapses: result.synapses,
             count: synapsePositions.length,
             meshId: mesh.uuid,
@@ -349,22 +349,21 @@ function useHideSynapseHandler(
         > | null)
       | null
   ) => void,
-  _index: number,
-  synapseConfigId: string | undefined
+  configId: string | undefined
 ) {
   return () => {
-    if (!synapsesPlacement || !synapseConfigId) return;
+    if (!synapsesPlacement || !configId) return;
 
-    const entry = synapsesPlacement[synapseConfigId];
+    const entry = synapsesPlacement[configId];
     if (!entry) return;
 
     if (entry.meshId) {
-      sendRemoveSynapses3DEvent(synapseConfigId, entry.meshId);
+      sendRemoveSynapses3DEvent(entry.synapsePlacementConfigId, entry.meshId);
     }
     setSynapsesPlacement((prev) => {
       const newValue = structuredClone(prev);
       if (!newValue) return newValue;
-      delete newValue[synapseConfigId];
+      delete newValue[configId];
       return newValue;
     });
   };
@@ -380,12 +379,11 @@ function isSynapseDisplayed(
       meshId?: string;
     } | null
   > | null,
-  _index: number,
-  synapseConfigId: string | undefined
+  configId: string | undefined
 ) {
-  if (!synapsesPlacement || !synapseConfigId) return false;
+  if (!synapsesPlacement || !configId) return false;
 
-  return synapsesPlacement[synapseConfigId] != null;
+  return synapsesPlacement[configId] != null;
 }
 
 function resolveIcon(synapseDisplayed: boolean, visualizeLoading: boolean) {
