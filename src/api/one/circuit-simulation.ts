@@ -1,13 +1,6 @@
-import { authApiClient } from '@/api/apiClient';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
+import { obioneApi } from '@/api/one/utils';
 import type { WorkspaceContext } from '@/types/common';
-
-export async function launchSystemApi(url?: string) {
-  const api = await authApiClient(
-    url ?? 'https://staging.openbraininstitute.org/api/launch-system'
-  );
-  return api;
-}
 
 type RunSimulationParams = {
   ctx: WorkspaceContext;
@@ -16,16 +9,17 @@ type RunSimulationParams = {
 };
 
 export async function runSimulation({ ctx, simulationId, signal }: RunSimulationParams) {
-  const api = await launchSystemApi();
+  const api = await obioneApi();
 
-  return api.post<any>('/simulation', {
+  return api.post<any>('/declared/task/launch', {
     headers: {
       ...getEntityCoreContext(ctx).headers,
       accept: 'application/json',
       'Content-Type': 'application/json',
     },
     body: {
-      simulation_id: simulationId,
+      task_type: 'circuit_simulation',
+      config_id: simulationId,
     },
     signal,
   });
