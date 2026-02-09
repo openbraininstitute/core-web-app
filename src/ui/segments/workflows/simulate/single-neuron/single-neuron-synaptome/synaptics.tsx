@@ -4,11 +4,8 @@ import { Form } from 'antd';
 import sample from 'es-toolkit/compat/sample';
 import { useAtom, useAtomValue } from 'jotai';
 import { useEffect, useRef } from 'react';
+
 import { getSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/queries/model/single-neuron-synaptome';
-import type {
-  ISingleNeuronSynaptome,
-  TSingleNeuronSynaptomeConfiguration,
-} from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import { sendRemoveSynapses3DEvent } from '@/components/neuron-viewer/hooks/events';
 import { type SectionSynapsesWith3D, synapsesPlacementAtom } from '@/state/synaptome';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
@@ -31,12 +28,18 @@ import {
   getDefaultSynapseConfig,
   getSessionKey,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
-import type { SynapseConfiguration } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { SynapticInputItem } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome/item/item';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
+
 import { getColorFromGeneratedPalette } from '../shared/steps/webgl-neuron-selector/colors';
 import { useVisibleSynapsesSetter } from '../shared/steps/webgl-neuron-selector/hooks';
+
+import type {
+  ISingleNeuronSynaptome,
+  TSingleNeuronSynaptomeConfiguration,
+} from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import type { SynapseConfiguration } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 type Props = {
   sessionId: string;
@@ -206,20 +209,23 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
               <div className="flex w-full flex-col items-start justify-start gap-4">
                 {fields.map((field) => {
                   const formName = `${field.name}`;
-                  const meshForForm = synapsesPlacement?.[formName]?.meshId;
+                  const synapseConfigId = state[field.name]?.id;
+                  const meshForForm = synapseConfigId
+                    ? synapsesPlacement?.[synapseConfigId]?.meshId
+                    : undefined;
                   return (
                     <SynapticInputItem
                       key={field.key}
                       index={field.name}
                       meModelId={memodelId}
                       synapsesConfiguration={data ?? { synapses: [] }}
-                      formName={`${field.name}`}
+                      formName={formName}
                       placementConfig={placementConfigForForm(field.name)!}
                       removeForm={() => {
                         remove(field.name);
                         onRemoveSynapseConfig(field.name);
-                        if (meshForForm) {
-                          sendRemoveSynapses3DEvent(formName, meshForForm);
+                        if (synapseConfigId && meshForForm) {
+                          sendRemoveSynapses3DEvent(synapseConfigId, meshForForm);
                         }
                       }}
                       onChange={onConfigProperty}
