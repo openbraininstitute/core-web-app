@@ -162,11 +162,11 @@ export const authOptions: NextAuthOptions = {
         return `${authProxyUrl}/api/auth/signin?callbackUrl=${encodeURIComponent(url)}`;
       }
 
-      if (targetSharesDomain) {
+      if (isCurrentProxy && targetSharesDomain && urlObj.hostname !== proxyUrlObj.hostname) {
         return url;
       }
 
-      return baseUrl;
+      return url.startsWith(baseUrl) ? url : baseUrl;
     },
     async jwt({ token, account, user, profile }) {
       // Initial sign in
