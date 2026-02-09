@@ -22,7 +22,7 @@ frontend:
           SANITIZED_BRANCH=$(sanitize_branch "$AWS_BRANCH")
           PREVIEW_DOMAIN="${SANITIZED_BRANCH}.preview.openbraininstitute.org"
           export NEXTAUTH_URL="https://${PREVIEW_DOMAIN}/api/auth"
-          export AUTH_PROXY_URL="auth.preview.openbraininstitute.org"
+          export AUTH_PROXY_URL="https://auth.preview.openbraininstitute.org"
 
           echo "Sanitized branch: $SANITIZED_BRANCH"
           echo "NEXTAUTH_URL set to: $NEXTAUTH_URL"
