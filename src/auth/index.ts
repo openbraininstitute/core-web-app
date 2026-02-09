@@ -244,6 +244,16 @@ export const authOptions: NextAuthOptions = {
             domain: getSharedCookieDomain(config.AUTH_PROXY_URL),
           },
         },
+        state: {
+          name: '__Secure-next-auth.state',
+          options: {
+            httpOnly: true,
+            sameSite: 'lax',
+            path: '/',
+            secure: true,
+            domain: getSharedCookieDomain(config.AUTH_PROXY_URL),
+          },
+        },
       }
     : undefined,
   pages: {
