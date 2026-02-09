@@ -8,6 +8,21 @@ const issuer = config.KEYCLOAK_ISSUER;
 const clientId = config.KEYCLOAK_CLIENT_ID;
 const clientSecret = config.KEYCLOAK_CLIENT_SECRET;
 
+function getParentDomain(hostname: string): string {
+  const parts = hostname.split('.');
+  return parts.length > 2 ? parts.slice(-3).join('.') : hostname;
+}
+
+function getSharedCookieDomain(authProxyDomain: string): string {
+  try {
+    const proxyHostname = new URL(authProxyDomain).hostname;
+    return `.${getParentDomain(proxyHostname)}`;
+  } catch {
+    log('error', 'Invalid AUTH_PROXY_DOMAIN', authProxyDomain);
+    return '';
+  }
+}
+
 /**
  * Updates or inserts a refresh token in the authentication manager service.
  *
@@ -129,6 +144,27 @@ export const authOptions: NextAuthOptions = {
     },
   ],
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      const authProxyDomain = config.AUTH_PROXY_DOMAIN;
+      if (!authProxyDomain) return url.startsWith(baseUrl) ? url : baseUrl;
+
+      const urlObj = new URL(url.startsWith('/') ? `${baseUrl}${url}` : url);
+      const baseUrlObj = new URL(baseUrl);
+      const proxyUrlObj = new URL(authProxyDomain);
+
+      const isCurrentProxy = baseUrlObj.hostname === proxyUrlObj.hostname;
+      const targetSharesDomain = getParentDomain(urlObj.hostname) === getParentDomain(proxyUrlObj.hostname);
+
+      if (!isCurrentProxy) {
+        return `${authProxyDomain}/api/auth/signin?callbackUrl=${encodeURIComponent(url)}`;
+      }
+
+      if (targetSharesDomain) {
+        return url;
+      }
+
+      return baseUrl;
+    },
     async jwt({ token, account, user, profile }) {
       // Initial sign in
       if (account && user) {
@@ -182,6 +218,20 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
     maxAge: 10 * 60 * 60, // 10 hours
   },
+  cookies: config.AUTH_PROXY_DOMAIN
+    ? {
+        sessionToken: {
+          name: '__Secure-next-auth.session-token',
+          options: {
+            httpOnly: true,
+            sameSite: 'lax',
+            path: '/',
+            secure: true,
+            domain: getSharedCookieDomain(config.AUTH_PROXY_DOMAIN),
+          },
+        },
+      }
+    : undefined,
   pages: {
     signIn: '/app/log-in',
   },
