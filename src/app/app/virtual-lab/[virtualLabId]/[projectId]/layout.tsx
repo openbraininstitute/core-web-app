@@ -1,5 +1,7 @@
-import type { ReactNode } from 'react';
-import { getBrainRegionHierarchiesWithSpecies } from '@/api/entitycore/queries/general/brain-region';
+import {
+  getBrainRegionHierarchiesWithSpecies,
+  getBrainRegionHierarchy,
+} from '@/api/entitycore/queries/general/brain-region';
 import { getWorkspaceHierarchySpeciesPreference } from '@/api/virtual-lab-svc/queries/user';
 import { getQueryClient } from '@/query-provider/server';
 import { ProjectRootLayout } from '@/ui/layouts/project-root-layout';
@@ -7,6 +9,8 @@ import { Container as AiContainer } from '@/ui/segments/ai/container';
 import { SpaceManagerContainer } from '@/ui/segments/workspaces/space-manager';
 import { WorkspaceTopMenu } from '@/ui/segments/workspaces/top-menu';
 import { keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
+
+import type { ReactNode } from 'react';
 
 type Props = {
   children: ReactNode;
@@ -16,8 +20,23 @@ export default async function Layout({ children }: Props) {
   const queryClient = getQueryClient();
   queryClient.prefetchQuery({
     queryKey: keyBuilderHierarchy.hierarchies(),
-    queryFn: () => getBrainRegionHierarchiesWithSpecies(),
+    queryFn: async () => {
+      const result = await getBrainRegionHierarchiesWithSpecies();
+      result.data
+        .map((o) => o.id)
+        .forEach((id) => {
+          queryClient.prefetchQuery({
+            queryKey: keyBuilderHierarchy.hierarchy({ id }),
+            queryFn: () => getBrainRegionHierarchy({ id }),
+            staleTime: Infinity,
+            gcTime: Infinity,
+          });
+        });
+    },
+    staleTime: Infinity,
+    gcTime: Infinity,
   });
+
   queryClient.prefetchQuery({
     queryKey: keyBuilderHierarchy.hierarchyPreference(),
     queryFn: () => getWorkspaceHierarchySpeciesPreference(),
