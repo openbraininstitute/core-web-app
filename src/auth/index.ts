@@ -129,9 +129,6 @@ export const authOptions: NextAuthOptions = {
       authorization: {
         params: {
           scope: 'profile openid groups',
-          ...(config.AUTH_PROXY_URL && {
-            redirect_uri: `${config.AUTH_PROXY_URL}/api/auth/callback/keycloak`,
-          }),
         },
       },
       idToken: true,
