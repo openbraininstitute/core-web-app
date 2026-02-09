@@ -1,14 +1,13 @@
-/* eslint-disable no-param-reassign */
 import React from 'react';
 
-import { PainterManager, usePainterController, usePainterManager } from './painter';
-import { HintPanel } from './hint';
-import ZoomSlider from './zoom-slider';
-import LegendOverlay from './legend-overlay';
-import { ButtonResetCamera } from './button-reset-camera';
 import AddRecordingDialog from './add-recording-dialog';
+import { ButtonResetCamera } from './button-reset-camera';
+import { HintPanel } from './hint';
+import LegendOverlay from './legend-overlay';
+import { type PainterManager, usePainterController, usePainterManager } from './painter';
+import ZoomSlider from './zoom-slider';
 
-import { Morphology } from '@/services/bluenaas-single-cell/types';
+import type { Morphology } from '@/services/bluenaas-single-cell/types';
 
 import styles from './webgl-neuron-selector.module.css';
 
@@ -20,7 +19,6 @@ export interface WebglNeuronSelectorProps {
   disableClick?: boolean;
 }
 
-// eslint-disable-next-line react/display-name
 export const WebglNeuronSelector = React.memo(
   ({
     morphology,

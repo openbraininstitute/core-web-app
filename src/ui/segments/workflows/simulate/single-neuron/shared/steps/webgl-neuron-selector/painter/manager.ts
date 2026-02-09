@@ -9,15 +9,18 @@ import {
   tgdCalcMapRange,
 } from '@tolokoban/tgd';
 import React from 'react';
+
 import { useAppNotification } from '@/components/notification';
-import type { Morphology } from '@/services/bluenaas-single-cell/types';
 import GenericEvent from '@/util/generic-event';
+
 import { useVisibleSynapses } from '../hooks';
 import { makeCamera } from './camera';
 import { computeSectionOffset } from './math';
 import { OffscreenPainter } from './offscreen-painter';
 import { Painter } from './painters';
 import { Structure, type StructureItem } from './structure';
+
+import type { Morphology } from '@/services/bluenaas-single-cell/types';
 
 interface SelectedItem {
   x: number;
@@ -456,17 +459,17 @@ export function usePainterController(
   disableSynapses: boolean,
   disableClick: boolean
 ) {
-  const notif = useAppNotification();
+  const notifier = useAppNotification();
   React.useEffect(() => {
     const action = () => {
-      notif.error({
+      notifier.error({
         message: `You cannot add recordings nor move injection while a simulation is running!`,
-        key: `ForbidenClick[${painter.id}]`,
+        key: `ForbiddenClick[${painter.id}]`,
       });
     };
     painter.eventForbiddenClick.addListener(action);
     return () => painter.eventForbiddenClick.removeListener(action);
-  }, [notif, painter]);
+  }, [notifier, painter]);
 
   React.useEffect(() => {
     if (painter) {
