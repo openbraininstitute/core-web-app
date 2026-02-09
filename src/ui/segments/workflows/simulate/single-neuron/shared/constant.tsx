@@ -1,17 +1,17 @@
 import {
-  NeuronLocationOriginDict,
-  StimulusModuleDict,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import {
   DefaultColor,
   SimulationColors,
 } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import {
+  NeuronLocationOriginDict,
+  StimulusModuleDict,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 import type {
   SimulationExperimentalSetup,
   StimulusConfig,
-  TStimulationConfiguration,
   TProtocolDetails,
+  TStimulationConfiguration,
   TStimulusModuleValue,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 

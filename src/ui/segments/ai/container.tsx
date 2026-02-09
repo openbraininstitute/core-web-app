@@ -10,11 +10,12 @@ import { motion } from 'motion/react';
 import { type JSX, useEffect, useMemo, useState } from 'react';
 
 import AiAssistant from '@/components/ai-assistant';
-import styles from '@/ui/segments/ai/container.module.css';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
 import { cn } from '@/utils/css-class';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
+
+import styles from '@/ui/segments/ai/container.module.css';
 
 export function Container(): JSX.Element {
   const { state, setState, isCollapsed, isExpanded, isFullscreen } = usePanelState();
@@ -54,10 +55,12 @@ export function Container(): JSX.Element {
       id="workspace-ai"
       className={cn(
         styles.aiPanel,
-        'text-white [grid-area:ai]',
+        'text-white [grid-area:ai] border-none!',
         { 'text-primary-9 mr-3 rounded-lg! bg-white': isExpanded },
         { 'text-primary-9 my-2 bg-white shadow-lg': isFullscreen },
-        { 'bg-primary-9 border-primary-9 mr-3 text-white shadow-md': isCollapsed },
+        {
+          'bg-primary-9 border-primary-9 mr-3 text-white shadow-md': isCollapsed,
+        },
         { 'rounded-full!': isCollapsed && animationComplete }
       )}
       animate={{

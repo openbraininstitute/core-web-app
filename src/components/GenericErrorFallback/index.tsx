@@ -1,10 +1,11 @@
 'use client';
 
 import { WarningOutlined } from '@ant-design/icons';
-import { ReactNode } from 'react';
 import Link from 'next/link';
 
 import { cn } from '@/utils/css-class';
+
+import type { ReactNode } from 'react';
 
 interface Props {
   error?: Error & { cause?: unknown };
@@ -40,12 +41,11 @@ export function ErrorComponent({
     >
       <div className="mx-auto w-full max-w-md">
         <div className="mb-2 flex items-center justify-start gap-2">
-          <WarningOutlined className="text-2xl text-[#f0c75e]" />
-          <h1 className="text-xl font-bold text-[#f0c75e]">An error occurred</h1>
+          <WarningOutlined className="text-2xl text-warning!" />
+          <h1 className="text-xl font-bold text-warning">An error occurred</h1>
         </div>
 
-        <div className={cn('text-primary-8 mb-2 w-full bg-white p-6', cls?.error)}>
-          <h2 className="mb-2 text-sm font-medium select-none">DESCRIPTION</h2>
+        <div className={cn('text-primary-8 mb-2 w-full bg-white p-1', cls?.error)}>
           <p className="text-lg font-bold">{error?.message || customError}</p>
         </div>
         {children}

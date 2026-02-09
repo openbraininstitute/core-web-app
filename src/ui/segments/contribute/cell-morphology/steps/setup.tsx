@@ -1,37 +1,24 @@
 'use client';
 
-import { DatePicker, Form, Input, InputNumber, Space } from 'antd';
 import { InfoCircleFilled } from '@ant-design/icons';
+import { DatePicker, Form, Input, InputNumber, Space } from 'antd';
 import dayjs from 'dayjs';
 
 import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { CellMorphologySchema } from '@/ui/segments/contribute/cell-morphology/schema';
-import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { cn } from '@/utils/css-class';
 import {
-  renderLabel,
   createZodFieldValidator,
   RequiredFieldMarker,
+  renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
+import { cn } from '@/utils/css-class';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
 export function Setup() {
   const form = Form.useFormInstance();
-  const { projectId } = useWorkspace();
-
-  const { node: defaultBrainRegion } = useBrainRegionHierarchy({
-    dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
-  });
-
-  const BrainRegionDropdown = BrainRegionDropdownWithFormItem({
-    clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
-    showIcon: false,
-    charsPerLine: 200,
-    defaultBrainRegion: defaultBrainRegion as IBrainRegionHierarchy,
-  });
+  const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
 
   return (
     <div className="h-full w-full">
@@ -79,7 +66,12 @@ export function Setup() {
           },
         ]}
       >
-        <BrainRegionDropdown />
+        <BrainRegionDropdownWithFormItem
+          clsx={{ trigger: 'rounded-full w-full h-12', content: 'z-[99999]' }}
+          showIcon={false}
+          charsPerLine={200}
+          defaultBrainRegion={selectedBrainRegion as IBrainRegionHierarchy}
+        />
       </Form.Item>
 
       <Form.Item

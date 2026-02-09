@@ -1,26 +1,28 @@
 'use client';
 
-import { atomFamily, atomWithReset } from 'jotai/utils';
+import { atomWithReset } from 'jotai/utils';
+import { atomFamily } from 'jotai-family';
 
+import { getSimulationColor } from '@/constants/simulate/single-neuron';
 import {
   makeStorageAtomWithValidationFamily,
   safeStorage,
 } from '@/ui/hooks/use-storage-atom-with-validation';
 import {
-  StimulationConfigurationSchema,
-  ExperimentalSetupConfigurationSchema,
-  NeuronLocationArraySchema,
-  SynapseConfigurationArraySchema,
-  OverviewConfigurationSchema,
-  FrequencyInputConfigSchema,
-  AmperageStateSchema,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import {
   buildDefaultRecordingLocation,
-  DEFAULT_SIMULATION_EXPERIMENTAL_SETUP,
   DEFAULT_CURRENT_INJECTION_CONFIG,
+  DEFAULT_SIMULATION_EXPERIMENTAL_SETUP,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import { getSimulationColor } from '@/constants/simulate/single-neuron';
+import {
+  AmperageStateSchema,
+  ExperimentalSetupConfigurationSchema,
+  FrequencyInputConfigSchema,
+  NeuronLocationArraySchema,
+  OverviewConfigurationSchema,
+  StimulationConfigurationSchema,
+  SynapseConfigurationArraySchema,
+  type SynapsesPlacementRecord,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 import type { PlotData } from '@/services/bluenaas-single-cell/types';
 
@@ -101,5 +103,11 @@ export const simulationStatusAtomFamily = atomFamily((key: string) => {
     description?: string;
   } | null>(null);
   childAtom.debugLabel = `simulation-status-atom-family-${key}`;
+  return childAtom;
+});
+
+export const SynapsesPlacementAtomFamily = atomFamily((key: string) => {
+  const childAtom = atomWithReset<SynapsesPlacementRecord | null>(null);
+  childAtom.debugLabel = `synapses-placement-atom-${key}`;
   return childAtom;
 });

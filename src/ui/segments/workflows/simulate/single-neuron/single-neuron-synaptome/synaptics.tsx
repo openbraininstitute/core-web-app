@@ -4,13 +4,9 @@ import { Form } from 'antd';
 import sample from 'es-toolkit/compat/sample';
 import { useAtom, useAtomValue } from 'jotai';
 import { useEffect, useRef } from 'react';
+
 import { getSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/queries/model/single-neuron-synaptome';
-import type {
-  ISingleNeuronSynaptome,
-  TSingleNeuronSynaptomeConfiguration,
-} from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import { sendRemoveSynapses3DEvent } from '@/components/neuron-viewer/hooks/events';
-import { type SectionSynapsesWith3D, synapsesPlacementAtom } from '@/state/synaptome';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
@@ -24,6 +20,7 @@ import {
 import {
   SimulationStatus,
   StimulationConfigurationAtomFamily,
+  SynapsesPlacementAtomFamily,
   SynaptomeConfigurationAtomFamily,
   simulationStatusAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
@@ -31,12 +28,21 @@ import {
   getDefaultSynapseConfig,
   getSessionKey,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
-import type { SynapseConfiguration } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { SynapticInputItem } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome/item/item';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
+
 import { getColorFromGeneratedPalette } from '../shared/steps/webgl-neuron-selector/colors';
 import { useVisibleSynapsesSetter } from '../shared/steps/webgl-neuron-selector/hooks';
+
+import type {
+  ISingleNeuronSynaptome,
+  TSingleNeuronSynaptomeConfiguration,
+} from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import type {
+  SectionSynapsesWith3D,
+  SynapseConfiguration,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 type Props = {
   sessionId: string;
@@ -54,7 +60,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
   const breakpoint = useDefaultBreakpoint();
   const spcKey = getSessionKey(STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
   const { virtualLabId, projectId } = useWorkspace();
-  const [synapsesPlacement] = useAtom(synapsesPlacementAtom);
+  const [synapsesPlacement] = useAtom(SynapsesPlacementAtomFamily(sessionId));
   const key = getSessionKey(SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
   const [state, update] = useAtom(SynaptomeConfigurationAtomFamily(key));
   const [stimulationState, updateStimulation] = useAtom(StimulationConfigurationAtomFamily(spcKey));
@@ -164,7 +170,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
     }
   });
 
-  useViewer3D(state ?? [], synapsesPlacement ?? {}, data);
+  useViewer3D(state ?? [], synapsesPlacement ?? {}, data, sessionId);
 
   if (isLoading) {
     return (
@@ -206,20 +212,24 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
               <div className="flex w-full flex-col items-start justify-start gap-4">
                 {fields.map((field) => {
                   const formName = `${field.name}`;
-                  const meshForForm = synapsesPlacement?.[formName]?.meshId;
+                  const synapseConfigId = state[field.name]?.config_id;
+                  const synapseGroupId = state[field.name]?.id;
+                  const meshForForm = synapseConfigId
+                    ? synapsesPlacement?.[synapseConfigId]?.meshId
+                    : undefined;
                   return (
                     <SynapticInputItem
                       key={field.key}
                       index={field.name}
                       meModelId={memodelId}
                       synapsesConfiguration={data ?? { synapses: [] }}
-                      formName={`${field.name}`}
+                      formName={formName}
                       placementConfig={placementConfigForForm(field.name)!}
                       removeForm={() => {
                         remove(field.name);
                         onRemoveSynapseConfig(field.name);
-                        if (meshForForm) {
-                          sendRemoveSynapses3DEvent(formName, meshForForm);
+                        if (synapseGroupId && meshForForm) {
+                          sendRemoveSynapses3DEvent(synapseGroupId, meshForForm);
                         }
                       }}
                       onChange={onConfigProperty}
@@ -257,9 +267,10 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
 function useViewer3D(
   synapticInputs: SynapseConfiguration[],
   selection: Record<string, SectionSynapsesWith3D | null>,
-  data: { synapses: Array<{ id: string; color?: string }> } | null | undefined
+  data: { synapses: Array<{ id: string; color?: string }> } | null | undefined,
+  sessionId: string
 ) {
-  const update = useVisibleSynapsesSetter();
+  const update = useVisibleSynapsesSetter(sessionId);
   useEffect(() => {
     const synapses: {
       color: string;
@@ -267,9 +278,7 @@ function useViewer3D(
     }[] = [];
     for (let index = 0; index < synapticInputs.length; index++) {
       const synapticInput = synapticInputs[index];
-      const match = Object.values(selection).find(
-        (item) => item?.synapsePlacementConfigId === synapticInput.id
-      );
+      const match = selection[synapticInput.config_id];
       if (match) {
         synapses.push({
           color:

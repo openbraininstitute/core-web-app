@@ -4,11 +4,8 @@ import { useEffect, useState } from 'react';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-
 import { useAppNotification } from '@/components/notification';
-
 import { modelAtomFamily } from '@/features/scan-config/components/atoms';
-
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 export function useCircuitImageURL(circuitId: string) {
