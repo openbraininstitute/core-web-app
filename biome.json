@@ -90,13 +90,32 @@
           "level": "on",
           "options": {
             "groups": [
-              ":PACKAGE:",
+              {
+                "type": false,
+                "source": [":PACKAGE:"]
+              },
+              ":BLANK_LINE:",
+              {
+                "type": false,
+                "source": [
+                  "@/**",
+                  "!**/*.css",
+                  "!**/*.module.css",
+                  "!**/*.scss",
+                  "!**/*.module.scss",
+                  "!**/*.less"
+                ]
+              },
+              ":BLANK_LINE:",
+              {
+                "type": false,
+                "source": [":PATH:"]
+              },
               ":BLANK_LINE:",
               {
                 "type": true,
                 "source": [":PACKAGE:"]
               },
-              ":BLANK_LINE:",
               {
                 "type": true,
                 "source": [
@@ -108,11 +127,6 @@
                   "!**/*.less"
                 ]
               },
-              ":BLANK_LINE:",
-              ["@/**", "!**/*.css", "!**/*.scss", "!**/*.less"],
-              ":BLANK_LINE:",
-              ":PATH:",
-              ":BLANK_LINE:",
               {
                 "type": true,
                 "source": [":PATH:"]

@@ -1,8 +1,6 @@
 import { Fragment } from 'react';
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+
 import { RootElement } from '@/features/scan-config/components/root-element';
-import styles from '@/features/scan-config/scan-config.module.css';
 import {
   type AtomsMap,
   type ConfigSchema,
@@ -10,9 +8,15 @@ import {
   type TabType,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
-import type { Config } from './components';
+
 import GenerateConfigButton from './generate-config-button';
 import { useValidateSchema } from './hooks';
+
+import type { IMEModel } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { Config } from './components';
+
+import styles from '@/features/scan-config/scan-config.module.css';
 
 export default function Left({
   schema,
