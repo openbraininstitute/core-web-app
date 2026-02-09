@@ -1,8 +1,5 @@
 'use client';
 
-import type { TExperimentalNeuronDensityForm } from '@/ui/segments/contribute/experimental-neuron-density/schema';
-import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
-
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
@@ -20,6 +17,9 @@ import {
   Subject,
 } from '@/ui/segments/contribute/experimental-neuron-density/steps';
 import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
+
+import type { TExperimentalNeuronDensityForm } from '@/ui/segments/contribute/experimental-neuron-density/schema';
+import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
 
 const EXPERIMENTAL_NEURON_DENSITY_STEP_CONFIG: Array<
   IContributionStep<TExperimentalNeuronDensityForm>

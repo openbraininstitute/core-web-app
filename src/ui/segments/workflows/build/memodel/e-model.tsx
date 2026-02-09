@@ -8,9 +8,6 @@ import omit from 'es-toolkit/compat/omit';
 import { useRouter } from 'next/navigation';
 import { type HTMLAttributes, type TdHTMLAttributes, useEffect } from 'react';
 
-import type { IEModel } from '@/api/entitycore/types';
-import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
-
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
@@ -33,6 +30,9 @@ import { label, useBuildMeModelSessionState } from '@/ui/segments/workflows/buil
 import { cn } from '@/utils/css-class';
 
 import { WorkflowScopeTabs } from '../../elements/scope-selector';
+
+import type { IEModel } from '@/api/entitycore/types';
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 
 type Props = {
   sessionId: string;

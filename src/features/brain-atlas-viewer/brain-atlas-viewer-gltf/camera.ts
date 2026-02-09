@@ -1,4 +1,3 @@
-import type { TgdCamera, TgdCameraState, TgdContext } from '@tolokoban/tgd';
 import {
   TgdCameraPerspective,
   TgdControllerCameraOrbit,
@@ -8,9 +7,10 @@ import {
   tgdCalcDegToRad,
 } from '@tolokoban/tgd';
 
-import type GenericEvent from '@/util/generic-event';
-
 import { AppSpeciesBrainRegionConfig } from '@/features/brain-region-hierarchy/context';
+
+import type { TgdCamera, TgdCameraState, TgdContext } from '@tolokoban/tgd';
+import type GenericEvent from '@/util/generic-event';
 
 interface CameraPreset {
   position: [number, number, number];

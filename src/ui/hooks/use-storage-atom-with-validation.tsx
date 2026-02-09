@@ -3,8 +3,9 @@
 import { atomWithStorage } from 'jotai/utils';
 import { atomFamily } from 'jotai-family';
 import superjson from 'superjson';
-import type { ZodType } from 'zod';
 import z from 'zod';
+
+import type { ZodType } from 'zod';
 
 export const memoryStorage: Storage = {
   getItem: () => null,

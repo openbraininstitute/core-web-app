@@ -1,7 +1,5 @@
 'use client';
 
-import type { IWorkspaceSpecies } from '@/features/brain-region-hierarchy/types';
-
 import {
   useAvailableHierarchySpeciesQuery,
   useRemoteUserPreferenceHierarchySpeciesQuery,
@@ -15,6 +13,8 @@ import {
   SelectValue,
 } from '@/ui/molecules/select';
 import { cn } from '@/utils/css-class';
+
+import type { IWorkspaceSpecies } from '@/features/brain-region-hierarchy/types';
 
 interface SpeciesSelectorProps {
   selectedSpecies: IWorkspaceSpecies | null;

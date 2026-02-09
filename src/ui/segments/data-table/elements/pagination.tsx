@@ -1,10 +1,6 @@
 import { Pagination as AntPagination, type PaginationProps } from 'antd';
 import { useAtom } from 'jotai';
-import type { ComponentProps } from 'react';
 import { useCallback, useEffect, useRef } from 'react';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { Pagination as EntitycorePagination } from '@/api/entitycore/types/shared/response';
 
 import { DEFAULT_PAGE_SIZE, type TWorkspaceSection } from '@/constants';
 import {
@@ -12,6 +8,10 @@ import {
   useDataListStateSnapshotActions,
 } from '@/ui/segments/data-table/elements/context';
 import { cn } from '@/utils/css-class';
+
+import type { ComponentProps } from 'react';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { Pagination as EntitycorePagination } from '@/api/entitycore/types/shared/response';
 
 type Props = {
   dataKey: string;

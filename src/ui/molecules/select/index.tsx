@@ -4,10 +4,11 @@
 
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { RiCheckFill } from '@remixicon/react';
-import type * as React from 'react';
 
 import ChevronDownIcon from '@/components/icons/ChevronDownIcon';
 import { cn } from '@/utils/css-class';
+
+import type * as React from 'react';
 
 function Select({ ...props }: React.ComponentProps<typeof SelectPrimitive.Root>) {
   return <SelectPrimitive.Root data-slot="select" {...props} />;

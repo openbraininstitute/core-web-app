@@ -9,7 +9,7 @@
 }
 
 .navigation > button.page {
-  content: '';
+  content: "";
   width: 24px;
   height: 6px;
   border-radius: 99vmax;

@@ -377,7 +377,7 @@ export default function BlockDictionaryEntries({
       {!campaignId && areThereAiEntries && (
         <div className="border-neutral-200 border-1 rounded-lg w-[90%] px-2 pb-4 pt-2 flex flex-col gap-2">
           {aiAddedEntries.length > 0 && (
-            <div className="text-sm text-sky-400 flex items-center gap-1">
+            <div className="text-sm text-[#1690ff] flex items-center gap-1">
               <PlusOutlined /> Added
             </div>
           )}
@@ -393,7 +393,7 @@ export default function BlockDictionaryEntries({
           {aiDeletedEntries}
 
           {aiEditedEntries.length > 0 && (
-            <div className="text-sm text-amber-500 flex items-center gap-1">
+            <div className="text-sm text-[#d3951c] flex items-center gap-1">
               <EditOutlined /> Edited
             </div>
           )}

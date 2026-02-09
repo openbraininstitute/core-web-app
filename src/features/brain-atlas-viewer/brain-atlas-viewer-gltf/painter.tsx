@@ -13,7 +13,6 @@ import {
   tgdCanvasCreateFill,
   webglPresetDepth,
 } from '@tolokoban/tgd';
-import type React from 'react';
 
 import { AppSpeciesBrainRegionConfig } from '@/features/brain-region-hierarchy/context';
 import GenericEvent from '@/util/generic-event';
@@ -22,6 +21,8 @@ import { logError } from '@/util/logger';
 import { type CameraController, setCamera } from './camera';
 import { makeColor } from './hooks';
 import { getCachedBrainRegionMeshArrayBuffer, getPointCouldData } from './services/services';
+
+import type React from 'react';
 import type { SettingsValues } from './settings';
 import type { VisibleRegion } from './types';
 

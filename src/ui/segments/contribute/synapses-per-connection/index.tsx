@@ -2,9 +2,6 @@
 
 'use client';
 
-import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
-import type { TExperimentalSynapsesPerConnectionForm } from '@/ui/segments/contribute/synapses-per-connection/schema';
-
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
@@ -20,6 +17,9 @@ import {
   Setup,
   Subject,
 } from '@/ui/segments/contribute/synapses-per-connection/steps';
+
+import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
+import type { TExperimentalSynapsesPerConnectionForm } from '@/ui/segments/contribute/synapses-per-connection/schema';
 
 const EXPERIMENTAL_SYNAPSES_PER_CONNECTION_STEP_CONFIG: Array<
   IContributionStep<TExperimentalSynapsesPerConnectionForm>

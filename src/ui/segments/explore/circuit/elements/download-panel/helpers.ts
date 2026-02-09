@@ -1,33 +1,29 @@
-import { atomFamily } from "jotai-family";
-import { atom } from "jotai";
+import escapeRegExp from 'es-toolkit/compat/escapeRegExp';
+import get from 'es-toolkit/compat/get';
+import has from 'es-toolkit/compat/has';
+import isEmpty from 'es-toolkit/compat/isEmpty';
+import map from 'es-toolkit/compat/map';
+import reduce from 'es-toolkit/compat/reduce';
+import sumBy from 'es-toolkit/compat/sumBy';
+import toPairs from 'es-toolkit/compat/toPairs';
+import values from 'es-toolkit/compat/values';
+import { atom } from 'jotai';
+import { atomFamily } from 'jotai-family';
 
-import escapeRegExp from "es-toolkit/compat/escapeRegExp";
-import isEmpty from "es-toolkit/compat/isEmpty";
-import toPairs from "es-toolkit/compat/toPairs";
-import reduce from "es-toolkit/compat/reduce";
-import values from "es-toolkit/compat/values";
-import sumBy from "es-toolkit/compat/sumBy";
-import map from "es-toolkit/compat/map";
-import get from "es-toolkit/compat/get";
-import has from "es-toolkit/compat/has";
+import { downloadAsset, listDirectoryOfAssets } from '@/api/entitycore/queries/assets';
+import { EntityTypeDict } from '@/api/entitycore/types';
+import { EmptyValue } from '@/entity-configuration/definitions/renderer';
 
-import {
-  downloadAsset,
-  listDirectoryOfAssets,
-} from "@/api/entitycore/queries/assets";
-import { EmptyValue } from "@/entity-configuration/definitions/renderer";
-import { EntityTypeDict } from "@/api/entitycore/types";
-
-import type { TCircuitContentConfigurationKeys } from "@/ui/segments/explore/circuit/elements/download-panel/content-configuration";
-import type { DirectoryListContent } from "@/api/entitycore/types/shared/global";
-import type { WorkspaceContext } from "@/types/common";
 import type {
   CircuitConnectivityMatricesConfiguration,
   SonataCircuitComponentConfig,
   SonataCircuitConfigNetworks,
   SonataCircuitNetworkEdgeConfigItem,
   SonataCircuitNetworkNodeConfigItem,
-} from "@/api/entitycore/types/entities/circuit";
+} from '@/api/entitycore/types/entities/circuit';
+import type { DirectoryListContent } from '@/api/entitycore/types/shared/global';
+import type { WorkspaceContext } from '@/types/common';
+import type { TCircuitContentConfigurationKeys } from '@/ui/segments/explore/circuit/elements/download-panel/content-configuration';
 
 type FilesCount = Record<TCircuitContentConfigurationKeys, number>;
 
@@ -39,25 +35,22 @@ export const fileCounterAtom = atomFamily((key: string) => {
 
 export const updateFileCounterAtom = atomFamily((key: string) => {
   const fileCounter = fileCounterAtom(key);
-  const childAtom = atom(
-    null,
-    (innerGet, set, update: Partial<FilesCount> | null) => {
-      const current = innerGet(fileCounter) ?? {
-        connectivity_metrics: 0,
-        morphologies: 0,
-        nodes: 0,
-        edges: 0,
-      };
-      if (update) {
-        set(fileCounter, {
-          ...current,
-          ...update,
-        });
-      } else {
-        set(fileCounter, null);
-      }
-    },
-  );
+  const childAtom = atom(null, (innerGet, set, update: Partial<FilesCount> | null) => {
+    const current = innerGet(fileCounter) ?? {
+      connectivity_metrics: 0,
+      morphologies: 0,
+      nodes: 0,
+      edges: 0,
+    };
+    if (update) {
+      set(fileCounter, {
+        ...current,
+        ...update,
+      });
+    } else {
+      set(fileCounter, null);
+    }
+  });
   childAtom.debugLabel = `update-file-counter-${key}`;
   return childAtom;
 });
@@ -69,23 +62,19 @@ export function buildNetworkConfigItem({
   manifest,
 }: {
   item: SonataCircuitNetworkEdgeConfigItem | SonataCircuitNetworkNodeConfigItem;
-  selector: "edges_file" | "nodes_file";
-  directory: DirectoryListContent["files"];
+  selector: 'edges_file' | 'nodes_file';
+  directory: DirectoryListContent['files'];
   manifest?: Record<string, string>;
 }) {
   const path = get(item, selector, EmptyValue);
-  const title = path.split("/").pop();
-  const subItems = toPairs(get(item, "populations", {})).map(([key, value]) => {
+  const title = path.split('/').pop();
+  const subItems = toPairs(get(item, 'populations', {})).map(([key, value]) => {
     return {
       title: key,
       type: value.type,
     };
   });
-  const mimeType = get(item, selector, EmptyValue)
-    .split("/")
-    .pop()
-    ?.split(".")
-    ?.pop();
+  const mimeType = get(item, selector, EmptyValue).split('/').pop()?.split('.')?.pop();
 
   const result = {
     type: selector,
@@ -107,24 +96,24 @@ export function buildNetworkConfigItem({
 
 export function buildNetworksConfig(
   networks: SonataCircuitConfigNetworks,
-  directory: DirectoryListContent["files"],
-  manifest?: Record<string, string>,
+  directory: DirectoryListContent['files'],
+  manifest?: Record<string, string>
 ) {
   const edges = networks.edges.map((o) =>
     buildNetworkConfigItem({
       item: o,
-      selector: "edges_file",
+      selector: 'edges_file',
       directory,
       manifest,
-    }),
+    })
   );
   const nodes = networks.nodes.map((o) =>
     buildNetworkConfigItem({
       item: o,
-      selector: "nodes_file",
+      selector: 'nodes_file',
       directory,
       manifest,
-    }),
+    })
   );
 
   return {
@@ -132,21 +121,18 @@ export function buildNetworksConfig(
       showType: null,
       items: edges,
       count: edges.length,
-      showPrefix: "Edge populations:",
+      showPrefix: 'Edge populations:',
     },
     nodes: {
-      showType: "nodes",
-      showPrefix: "Node populations:",
+      showType: 'nodes',
+      showPrefix: 'Node populations:',
       items: nodes,
       count: nodes.length,
     },
   };
 }
 
-export function getAssetPath(
-  path: string,
-  manifest?: Record<string, string>,
-): string {
+export function getAssetPath(path: string, manifest?: Record<string, string>): string {
   if (!manifest || isEmpty(manifest)) {
     return sanitizePath(path);
   }
@@ -156,7 +142,7 @@ export function getAssetPath(
   let iteration = 0;
 
   // Keep replacing variables until no more variables exist or max iterations reached
-  while (resolvedPath.includes("$") && iteration < maxIterations) {
+  while (resolvedPath.includes('$') && iteration < maxIterations) {
     const previousPath = resolvedPath;
 
     // Use  es-toolkit's reduce for efficient variable replacement
@@ -164,9 +150,9 @@ export function getAssetPath(
       manifest,
       (currentPath, value, key) => {
         // Use global regex replace for all occurrences
-        return currentPath.replace(new RegExp(escapeRegExp(key), "g"), value);
+        return currentPath.replace(new RegExp(escapeRegExp(key), 'g'), value);
       },
-      resolvedPath,
+      resolvedPath
     );
 
     // Break if no changes were made (no more replacements possible)
@@ -181,19 +167,16 @@ export function getAssetPath(
 }
 
 function sanitizePath(path: string): string {
-  let sanitized = path.replace(/^\.\//, ""); // Remove leading ./
-  sanitized = sanitized.replace(/^\/+/, ""); // Remove leading slashes
+  let sanitized = path.replace(/^\.\//, ''); // Remove leading ./
+  sanitized = sanitized.replace(/^\/+/, ''); // Remove leading slashes
   return sanitized;
 }
 
 export function countConnectivityPaths(
-  config: CircuitConnectivityMatricesConfiguration | null,
+  config: CircuitConnectivityMatricesConfiguration | null
 ): number {
   if (!config) return 0;
-  return sumBy(
-    values(config),
-    (inner) => values(inner).filter((item) => !!item.path).length,
-  );
+  return sumBy(values(config), (inner) => values(inner).filter((item) => !!item.path).length);
 }
 
 type PopulationWithMorphology = {
@@ -203,16 +186,16 @@ type PopulationWithMorphology = {
 
 export const extractWithAlternateMorphologies = (
   sections: Array<SonataCircuitNetworkNodeConfigItem>,
-  components?: SonataCircuitComponentConfig | undefined,
+  components?: SonataCircuitComponentConfig | undefined
 ): Record<string, PopulationWithMorphology> => {
   let alternateMorpho = sections
     .flatMap((section) =>
       map(section.populations, (popValue, popName) => ({
         name: popName,
         ...popValue,
-      })),
+      }))
     )
-    .filter((pop) => has(pop, "alternate_morphologies"))
+    .filter((pop) => has(pop, 'alternate_morphologies'))
     .reduce((acc: Record<string, PopulationWithMorphology>, pop) => {
       acc[pop.name] = {
         type: pop.type,
@@ -222,9 +205,7 @@ export const extractWithAlternateMorphologies = (
     }, {});
 
   if (Object.keys(alternateMorpho ?? {}).length <= 0) {
-    alternateMorpho = Object.entries(
-      components?.alternate_morphologies ?? {},
-    ).reduce(
+    alternateMorpho = Object.entries(components?.alternate_morphologies ?? {}).reduce(
       (acc, [key, value]) => {
         acc[key] = {
           type: key,
@@ -232,7 +213,7 @@ export const extractWithAlternateMorphologies = (
         };
         return acc;
       },
-      {} as Record<string, PopulationWithMorphology>,
+      {} as Record<string, PopulationWithMorphology>
     );
   }
   return alternateMorpho;
@@ -249,7 +230,7 @@ export async function resolveCircuitConfigAndDirectory<T>({
   assetPath: string;
   context: WorkspaceContext;
 }): Promise<{
-  directory: DirectoryListContent["files"] | null;
+  directory: DirectoryListContent['files'] | null;
   config: T | null;
   error?: {
     directory: string | null;
@@ -275,27 +256,22 @@ export async function resolveCircuitConfigAndDirectory<T>({
     ]);
 
     const directory =
-      listingDirectoryPromise.status === "fulfilled"
-        ? listingDirectoryPromise.value.files
-        : null;
-    const config =
-      configPromise.status === "fulfilled"
-        ? await configPromise.value.json()
-        : null;
+      listingDirectoryPromise.status === 'fulfilled' ? listingDirectoryPromise.value.files : null;
+    const config = configPromise.status === 'fulfilled' ? await configPromise.value.json() : null;
 
     let error: {
       directory: string | null;
       config: string | null;
     } | null = null;
-    if (configPromise.status === "rejected") {
+    if (configPromise.status === 'rejected') {
       error = {
         directory: null,
-        config: "Failed to download configuration",
+        config: 'Failed to download configuration',
       };
     }
-    if (listingDirectoryPromise.status === "rejected") {
+    if (listingDirectoryPromise.status === 'rejected') {
       error = {
-        directory: "Failed to list directory",
+        directory: 'Failed to list directory',
         config: null,
       };
     }

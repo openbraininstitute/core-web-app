@@ -12,7 +12,7 @@
 }
 
 .priceList2 .fullWidth {
-  grid-column: 1/-1;
+  grid-column: 1 / -1;
 }
 
 .priceList2 * {

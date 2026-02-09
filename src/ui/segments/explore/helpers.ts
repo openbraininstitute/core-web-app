@@ -1,25 +1,25 @@
 /* eslint-disable no-nested-ternary */
 
-import { BoutonDensity } from "@/entity-configuration/domain/experimental/bouton-density";
-import { CellMorphology } from "@/entity-configuration/domain/experimental/cell-morphology";
-import { ElectricalCellRecording } from "@/entity-configuration/domain/experimental/electrical-cell-recording";
-import { EmCellMesh } from "@/entity-configuration/domain/experimental/em-cell-mesh";
-import { IonChannelRecording } from "@/entity-configuration/domain/experimental/ion-channel-recording";
-import { NeuronDensity } from "@/entity-configuration/domain/experimental/neuron-density";
-import { SynapsesPerConnection } from "@/entity-configuration/domain/experimental/synapses-per-connection";
-import { Circuit } from "@/entity-configuration/domain/model/circuit";
-import { Emodel } from "@/entity-configuration/domain/model/e-model";
-import { IonChannelModel } from "@/entity-configuration/domain/model/ion-channel-model";
-import { MEmodel } from "@/entity-configuration/domain/model/me-model";
-import { MEModelWithSynapsesCircuit } from "@/entity-configuration/domain/model/me-model-with-synapses";
-import { SingleNeuronSynaptome } from "@/entity-configuration/domain/model/single-neuron-synaptome";
-import { MEModelCircuitSimulation } from "@/entity-configuration/domain/simulation/memodel-circuit-simulation";
-import { MicrocircuitSimulation } from "@/entity-configuration/domain/simulation/microcircuit-simulation";
-import { PairedNeuronCircuitSimulation } from "@/entity-configuration/domain/simulation/paired-neurons-simulation";
-import { SingeNeuronCircuitSimulation } from "@/entity-configuration/domain/simulation/single-neuron-circuit-simulation";
-import { SingleNeuronSimulation } from "@/entity-configuration/domain/simulation/single-neuron-simulation";
-import { SingleNeuronSynaptomeSimulation } from "@/entity-configuration/domain/simulation/single-neuron-synaptome-simulation";
-import { SmallMicrocircuitSimulation } from "@/entity-configuration/domain/simulation/small-microcircuit-simulation";
+import { BoutonDensity } from '@/entity-configuration/domain/experimental/bouton-density';
+import { CellMorphology } from '@/entity-configuration/domain/experimental/cell-morphology';
+import { ElectricalCellRecording } from '@/entity-configuration/domain/experimental/electrical-cell-recording';
+import { EmCellMesh } from '@/entity-configuration/domain/experimental/em-cell-mesh';
+import { IonChannelRecording } from '@/entity-configuration/domain/experimental/ion-channel-recording';
+import { NeuronDensity } from '@/entity-configuration/domain/experimental/neuron-density';
+import { SynapsesPerConnection } from '@/entity-configuration/domain/experimental/synapses-per-connection';
+import { Circuit } from '@/entity-configuration/domain/model/circuit';
+import { Emodel } from '@/entity-configuration/domain/model/e-model';
+import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
+import { MEmodel } from '@/entity-configuration/domain/model/me-model';
+import { MEModelWithSynapsesCircuit } from '@/entity-configuration/domain/model/me-model-with-synapses';
+import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
+import { MEModelCircuitSimulation } from '@/entity-configuration/domain/simulation/memodel-circuit-simulation';
+import { MicrocircuitSimulation } from '@/entity-configuration/domain/simulation/microcircuit-simulation';
+import { PairedNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/paired-neurons-simulation';
+import { SingeNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/single-neuron-circuit-simulation';
+import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation/single-neuron-simulation';
+import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/simulation/single-neuron-synaptome-simulation';
+import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 
 export const ExperimentalEntitiesTileTypes = {
   ReconstructionMorphology: CellMorphology,

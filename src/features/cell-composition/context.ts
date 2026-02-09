@@ -1,9 +1,6 @@
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { arrayToTree } from 'performant-array-to-tree';
 
-import type { ICellCompositionRoot } from '@/api/entitycore/types/entities/cell-composition';
-import type { WorkspaceContext } from '@/types/common';
-
 import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
 import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
@@ -19,6 +16,9 @@ import { resolveBrainRegionCellComposition } from '@/features/cell-composition/c
 import { keyBuilderAnnotation } from '@/ui/use-query-keys/annotation';
 import { cellCompositionKeyBuilder } from '@/ui/use-query-keys/atlas';
 import { log } from '@/utils/logger';
+
+import type { ICellCompositionRoot } from '@/api/entitycore/types/entities/cell-composition';
+import type { WorkspaceContext } from '@/types/common';
 
 const defaultCellCompositionName = 'Cell Composition from Blue Brain Atlas';
 

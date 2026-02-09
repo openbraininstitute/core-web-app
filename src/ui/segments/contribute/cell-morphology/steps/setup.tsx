@@ -4,8 +4,6 @@ import { InfoCircleFilled } from '@ant-design/icons';
 import { DatePicker, Form, Input, InputNumber, Space } from 'antd';
 import dayjs from 'dayjs';
 
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-
 import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { CellMorphologySchema } from '@/ui/segments/contribute/cell-morphology/schema';
@@ -15,6 +13,8 @@ import {
   renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
 import { cn } from '@/utils/css-class';
+
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
 export function Setup() {
   const form = Form.useFormInstance();

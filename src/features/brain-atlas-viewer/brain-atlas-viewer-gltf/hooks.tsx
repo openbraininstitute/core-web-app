@@ -6,10 +6,6 @@ import { useAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import React from 'react';
 
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-import type { SettingsDefinitions } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/settings';
-import type { VisibleRegion } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/types';
-
 import { useAppNotification } from '@/components/notification';
 import { Painter } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/painter';
 import {
@@ -18,6 +14,10 @@ import {
   usePrimaryHierarchyOfCurrentSpeciesQuery,
 } from '@/features/brain-region-hierarchy/context';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
+
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import type { SettingsDefinitions } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/settings';
+import type { VisibleRegion } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/types';
 
 export const ATLAS_3D_VIEWER_ERROR_MESSAGE_KEY = '3d-mesh-error';
 export function usePainter({

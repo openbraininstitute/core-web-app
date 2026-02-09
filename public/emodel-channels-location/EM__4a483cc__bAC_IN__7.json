@@ -1,27 +1,25 @@
 {
-    "all": [
-        "pas"
-    ],
-    "somatic": [
-        "Ih",
-        "NaTg",
-        "CaDynamics_DC0",
-        "Ca_HVA2",
-        "Ca_LVAst",
-        "SKv3_1",
-        "SK_E2",
-        "K_Pst",
-        "K_Tst"
-    ],
-    "axonal": [
-        "Ih",
-        "NaTg",
-        "CaDynamics_DC0",
-        "Ca_HVA2",
-        "Ca_LVAst",
-        "SKv3_1",
-        "SK_E2",
-        "K_Pst",
-        "K_Tst"
-    ]
+  "all": ["pas"],
+  "somatic": [
+    "Ih",
+    "NaTg",
+    "CaDynamics_DC0",
+    "Ca_HVA2",
+    "Ca_LVAst",
+    "SKv3_1",
+    "SK_E2",
+    "K_Pst",
+    "K_Tst"
+  ],
+  "axonal": [
+    "Ih",
+    "NaTg",
+    "CaDynamics_DC0",
+    "Ca_HVA2",
+    "Ca_LVAst",
+    "SKv3_1",
+    "SK_E2",
+    "K_Pst",
+    "K_Tst"
+  ]
 }

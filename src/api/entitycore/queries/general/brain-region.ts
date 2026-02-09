@@ -1,8 +1,8 @@
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-import type { IBrainRegionHierarchiesResponse } from '@/api/entitycore/types/entities/brain-region-hierarchy';
-
 import { entityCoreApi } from '@/api/entitycore/utils';
 import { AppSpeciesBrainRegionConfig } from '@/features/brain-region-hierarchy/context';
+
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import type { IBrainRegionHierarchiesResponse } from '@/api/entitycore/types/entities/brain-region-hierarchy';
 
 /**
  * Retrieves the brain region hierarchy from the entity core API.

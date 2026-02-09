@@ -2,8 +2,6 @@
 
 import { Form, Input } from 'antd';
 
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-
 import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { ExperimentalNeuronDensitySchema } from '@/ui/segments/contribute/experimental-neuron-density/schema';
@@ -12,6 +10,8 @@ import {
   RequiredFieldMarker,
   renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
+
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
 export function Setup() {
   const form = Form.useFormInstance();

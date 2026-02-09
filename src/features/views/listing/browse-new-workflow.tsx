@@ -4,8 +4,6 @@ import { omit } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
 import { useEffect } from 'react';
 
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
 import { WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
@@ -14,6 +12,8 @@ import {
 } from '@/features/brain-region-hierarchy/context';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 type Props = {
   buildType: TExtendedEntitiesTypeDict;

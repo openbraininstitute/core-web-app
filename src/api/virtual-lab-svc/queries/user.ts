@@ -1,3 +1,8 @@
+import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
+import { getSession } from '@/auth-fetch';
+import { config } from '@/config';
+import { log } from '@/utils/logger';
+
 import type {
   UpdateUserProfileRequest,
   UserProfileResponse,
@@ -5,12 +10,8 @@ import type {
   VlmUserGroupsResponse,
   VlmUserProfile,
 } from '@/api/virtual-lab-svc/queries/types';
-import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
-import { getSession } from '@/auth-fetch';
-import { config } from '@/config';
 import type { IWorkspaceHierarchySpeciesPreference } from '@/features/brain-region-hierarchy/types';
 import type { WorkspaceContext } from '@/types/common';
-import { log } from '@/utils/logger';
 
 function getBaseUrl() {
   return `${config.VIRTUAL_LAB_API_URL}/users`;

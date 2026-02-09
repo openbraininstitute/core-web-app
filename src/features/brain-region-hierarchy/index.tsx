@@ -2,10 +2,6 @@
 
 import { LoadingOutlined } from '@ant-design/icons';
 import { useAtomValue, useSetAtom } from 'jotai';
-import type { ReactNode } from 'react';
-
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-import type { RenderNodeProps, TTreeNode } from '@/components/tree/types';
 
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { Tree } from '@/components/tree';
@@ -23,6 +19,10 @@ import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy
 import { corePageNumberAtom } from '@/ui/segments/data-table/elements/context';
 import { classNames } from '@/util/utils';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
+
+import type { ReactNode } from 'react';
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import type { RenderNodeProps, TTreeNode } from '@/components/tree/types';
 
 export function BrainRegionHierarchy({
   dataKey,

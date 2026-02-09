@@ -4,12 +4,12 @@ import snakeCase from 'es-toolkit/compat/snakeCase';
 import { notFound } from 'next/navigation';
 import { use } from 'react';
 
+import { WorkflowBrowseEntity } from '@/features/views/listing/browse-new-workflow';
+import { getBuildTypeFromSimulateType } from '@/ui/segments/workflows/elements/helpers';
+
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { KebabCase } from '@/utils/type';
-
-import { WorkflowBrowseEntity } from '@/features/views/listing/browse-new-workflow';
-import { getBuildTypeFromSimulateType } from '@/ui/segments/workflows/elements/helpers';
 
 export default function Page({
   params,

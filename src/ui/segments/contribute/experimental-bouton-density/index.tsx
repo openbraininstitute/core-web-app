@@ -1,8 +1,5 @@
 'use client';
 
-import type { TExperimentalBoutonDensityForm } from '@/ui/segments/contribute/experimental-bouton-density/schema';
-import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
-
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
@@ -19,6 +16,9 @@ import {
   Subject,
 } from '@/ui/segments/contribute/experimental-bouton-density/steps';
 import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
+
+import type { TExperimentalBoutonDensityForm } from '@/ui/segments/contribute/experimental-bouton-density/schema';
+import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
 
 const EXPERIMENTAL_BOUTON_DENSITY_STEP_CONFIG: Array<
   IContributionStep<TExperimentalBoutonDensityForm>

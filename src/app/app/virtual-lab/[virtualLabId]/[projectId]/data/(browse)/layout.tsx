@@ -1,9 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
 import { use } from 'react';
-
-import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 import { DataInnerLayout } from '@/ui/layouts/explore-inner-layout';
 import { DataLayout } from '@/ui/layouts/explore-layout';
@@ -12,6 +9,9 @@ import { ContributionModal } from '@/ui/segments/contribute/modal';
 import { DefaultContent as ExploreDefaultContent } from '@/ui/segments/explore/default-content';
 import { DataHeader } from '@/ui/segments/explore/header';
 import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
+
+import type { ReactNode } from 'react';
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 export default function Page({
   children,

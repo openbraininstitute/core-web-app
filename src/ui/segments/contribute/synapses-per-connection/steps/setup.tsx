@@ -4,8 +4,6 @@
 
 import { Form, Input } from 'antd';
 
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-
 import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import {
@@ -16,6 +14,8 @@ import {
 import { ExperimentalSynapsesPerConnectionSchema } from '@/ui/segments/contribute/synapses-per-connection/schema';
 import { PostMTypeClassificationSelector } from '@/ui/segments/contribute/synapses-per-connection/steps/post-mtype-selector';
 import { PreMTypeClassificationSelector } from '@/ui/segments/contribute/synapses-per-connection/steps/pre-mtype-selector';
+
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
 // Wrapper component to handle state updates properly
 function BrainRegionFormField({ name, label }: { name: string; label: string }) {

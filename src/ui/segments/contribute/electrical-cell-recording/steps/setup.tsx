@@ -5,8 +5,6 @@ import { DatePicker, Form, Input, InputNumber, Space } from 'antd';
 import dayjs from 'dayjs';
 import { upperFirst } from 'es-toolkit/compat';
 
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-
 import {
   ElectricalRecordingOrigin,
   ElectricalRecordingOriginDictionary,
@@ -25,6 +23,8 @@ import {
   renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
 import { cn } from '@/utils/css-class';
+
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
 export function Setup() {
   const form = Form.useFormInstance();

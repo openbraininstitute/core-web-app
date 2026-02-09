@@ -1,20 +1,20 @@
-"use client";
+'use client';
 
-import type { ComponentProps } from "react";
+import { Wallet } from '@/ui/segments/project/balance';
+import { SpaceSwitcher } from '@/ui/segments/workspaces/space-switcher';
+import { TopMenuNavigation } from '@/ui/segments/workspaces/top-menu-nav';
+import { cn } from '@/utils/css-class';
+import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
-import { TopMenuNavigation } from "@/ui/segments/workspaces/top-menu-nav";
-import { SpaceSwitcher } from "@/ui/segments/workspaces/space-switcher";
-import { HydrateWrapper } from "@/wrappers/hydrate-wrapper";
-import { Wallet } from "@/ui/segments/project/balance";
-import { cn } from "@/utils/css-class";
+import type { ComponentProps } from 'react';
 
 type Props = {
-  className?: ComponentProps<"div">["className"];
+  className?: ComponentProps<'div'>['className'];
 };
 
 export function WorkspaceTopMenu({ className }: Props) {
   return (
-    <div className={cn("flex items-start justify-between gap-4", className)}>
+    <div className={cn('flex items-start justify-between gap-4', className)}>
       <div className="flex items-start justify-center gap-2">
         <SpaceSwitcher className="w-93" />
         <Wallet />

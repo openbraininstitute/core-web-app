@@ -2,9 +2,10 @@
 
 import { WarningOutlined } from '@ant-design/icons';
 import Link from 'next/link';
-import type { ReactNode } from 'react';
 
 import { cn } from '@/utils/css-class';
+
+import type { ReactNode } from 'react';
 
 interface Props {
   error?: Error & { cause?: unknown };

@@ -2,12 +2,12 @@
 
 import { CaretRightFilled } from '@ant-design/icons';
 import { capitalize } from 'es-toolkit/compat';
-import type { CSSProperties } from 'react';
-
-import type { RenderNodeProps } from '@/components/tree/types';
-import type { IBrainRegionHierarchyExtended } from '@/features/brain-region-hierarchy/types';
 
 import { cn } from '@/utils/css-class';
+
+import type { CSSProperties } from 'react';
+import type { RenderNodeProps } from '@/components/tree/types';
+import type { IBrainRegionHierarchyExtended } from '@/features/brain-region-hierarchy/types';
 
 type Props<TNode extends IBrainRegionHierarchyExtended = IBrainRegionHierarchyExtended> =
   RenderNodeProps<TNode>;

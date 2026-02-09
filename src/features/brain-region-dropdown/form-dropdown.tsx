@@ -9,15 +9,15 @@ import {
   useState,
 } from 'react';
 
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-import type { TBrainRegionHierarchyExtendedOption } from '@/features/brain-region-hierarchy/types';
-
 import { BrainIcon } from '@/components/icons';
 import { usePrimaryExtendedHierarchySpeciesQuery } from '@/features/brain-region-hierarchy/context';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
+
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import type { TBrainRegionHierarchyExtendedOption } from '@/features/brain-region-hierarchy/types';
 
 type Props = {
   onSelectBrainRegion?: (br: IBrainRegionHierarchy) => void;

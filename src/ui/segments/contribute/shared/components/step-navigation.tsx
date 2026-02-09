@@ -1,30 +1,22 @@
-"use client";
+'use client';
 
-import {
-  CheckCircleFilled,
-  InfoCircleFilled,
-  RightOutlined,
-} from "@ant-design/icons";
-import { Fragment, useMemo } from "react";
+import { CheckCircleFilled, InfoCircleFilled, RightOutlined } from '@ant-design/icons';
+import { Fragment, useMemo } from 'react';
 
-import { useContributionPipeline } from "@/ui/segments/contribute/shared/pipeline/context";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/ui/molecules/tooltip";
-import { DEFAULT_LICENSE_NAME } from "@/ui/segments/contribute/shared/schemas";
 import {
   Breadcrumb,
-  BreadcrumbList,
   BreadcrumbItem,
   BreadcrumbLink,
+  BreadcrumbList,
   BreadcrumbSeparator,
-} from "@/ui/molecules/breadcrumb/index";
-import { Button } from "@/ui/molecules/button";
-import { cn } from "@/utils/css-class";
+} from '@/ui/molecules/breadcrumb/index';
+import { Button } from '@/ui/molecules/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { useContributionPipeline } from '@/ui/segments/contribute/shared/pipeline/context';
+import { DEFAULT_LICENSE_NAME } from '@/ui/segments/contribute/shared/schemas';
+import { cn } from '@/utils/css-class';
 
-import type { TStepValidationStatus } from "@/ui/segments/contribute/shared/types";
+import type { TStepValidationStatus } from '@/ui/segments/contribute/shared/types';
 
 interface IStepLabelProps {
   label: string;
@@ -35,10 +27,10 @@ interface IStepLabelProps {
 function StepLabel({ label, status, isActive }: IStepLabelProps) {
   return (
     <div
-      className={cn("font-light", {
-        "text-error": status === "invalid",
-        "text-primary-8 font-bold": status === "valid",
-        "text-primary-6": status !== "invalid" && isActive,
+      className={cn('font-light', {
+        'text-error': status === 'invalid',
+        'text-primary-8 font-bold': status === 'valid',
+        'text-primary-6': status !== 'invalid' && isActive,
       })}
     >
       {label}
@@ -54,10 +46,10 @@ interface IStepIconProps {
 
 function StepIcon({ status, hasTooltip, tooltipContent }: IStepIconProps) {
   const icon = useMemo(() => {
-    if (status === "valid") {
+    if (status === 'valid') {
       return <CheckCircleFilled className="text-teal-500!" />;
     }
-    if (hasTooltip && status === "non-touched") {
+    if (hasTooltip && status === 'non-touched') {
       return <InfoCircleFilled className="text-primary-8" />;
     }
     return null;
@@ -69,16 +61,16 @@ function StepIcon({ status, hasTooltip, tooltipContent }: IStepIconProps) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>{icon}</TooltipTrigger>
-        {status !== "invalid" && (
+        {status !== 'invalid' && (
           <TooltipContent
             side="bottom"
             sideOffset={0}
             avoidCollisions
-            className={cn("bg-primary-8 z-99999", {
-              "bg-teal-500!": status === "valid",
+            className={cn('bg-primary-8 z-99999', {
+              'bg-teal-500!': status === 'valid',
             })}
-            arrowClassName={cn("text-primary-8", {
-              "text-teal-500!": status === "valid",
+            arrowClassName={cn('text-primary-8', {
+              'text-teal-500!': status === 'valid',
             })}
           >
             {tooltipContent}
@@ -92,20 +84,14 @@ function StepIcon({ status, hasTooltip, tooltipContent }: IStepIconProps) {
 }
 
 function DefaultStepIcon({ status }: { status: TStepValidationStatus }) {
-  if (status === "valid") {
+  if (status === 'valid') {
     return <CheckCircleFilled className="text-teal-500!" />;
   }
   return null;
 }
 
 function LicenseStepIcon({ status }: { status: TStepValidationStatus }) {
-  return (
-    <StepIcon
-      status={status}
-      hasTooltip
-      tooltipContent={DEFAULT_LICENSE_NAME}
-    />
-  );
+  return <StepIcon status={status} hasTooltip tooltipContent={DEFAULT_LICENSE_NAME} />;
 }
 
 export function StepNavigation() {
@@ -117,36 +103,27 @@ export function StepNavigation() {
       <Breadcrumb>
         <BreadcrumbList className="justify-between gap-0.5 sm:gap-0.5">
           {progressSteps.map((step, index) => {
-            const status = stepValidationStatus[step.key] ?? "non-touched";
+            const status = stepValidationStatus[step.key] ?? 'non-touched';
             const isActive = activeStep === step.key;
 
-            const IconComponent = step.hasTooltip
-              ? LicenseStepIcon
-              : DefaultStepIcon;
+            const IconComponent = step.hasTooltip ? LicenseStepIcon : DefaultStepIcon;
             const customIcon = step.iconRenderer?.(status);
 
             return (
               <Fragment key={step.key}>
                 <BreadcrumbItem>
-                  <BreadcrumbLink
-                    asChild
-                    className={cn("hover:text-primary-6 cursor-pointer")}
-                  >
+                  <BreadcrumbLink asChild className={cn('hover:text-primary-6 cursor-pointer')}>
                     <Button
                       borderless
                       rounded
                       type="button"
                       variant="outline"
                       className={cn(
-                        "active:text-primary-6 text-label active:bg-neutral-1 bg-transparent px-2 text-base shadow-none",
+                        'active:text-primary-6 text-label active:bg-neutral-1 bg-transparent px-2 text-base shadow-none'
                       )}
                       onClick={() => setActiveStep(step.key)}
                     >
-                      <StepLabel
-                        label={step.label}
-                        status={status}
-                        isActive={isActive}
-                      />
+                      <StepLabel label={step.label} status={status} isActive={isActive} />
                       {customIcon ?? <IconComponent status={status} />}
                     </Button>
                   </BreadcrumbLink>

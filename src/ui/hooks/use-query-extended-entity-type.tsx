@@ -8,10 +8,6 @@ import {
 import { isEmpty } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
 
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TWorkspaceScope } from '@/constants';
-import type { WorkspaceContext } from '@/types/common';
-
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { DEFAULT_PAGE_SIZE } from '@/constants';
@@ -27,6 +23,10 @@ import {
 } from '@/ui/segments/data-table/elements/context';
 import { compactRecord } from '@/utils/dictionary';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TWorkspaceScope } from '@/constants';
+import type { WorkspaceContext } from '@/types/common';
 
 export type QueryContext = {
   key: string;

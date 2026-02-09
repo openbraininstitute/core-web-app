@@ -9,7 +9,7 @@
   width: 300px;
 
   > input {
-    grid-column: 1/-1;
+    grid-column: 1 / -1;
 
     accent-color: #55a4e3;
   }

@@ -5,8 +5,6 @@ import { Form } from 'antd';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 
-import type { ZodObject, ZodRawShape } from 'zod';
-import type { WorkspaceContext } from '@/types/common';
 import { Button } from '@/ui/molecules/button';
 import { StepNavigation } from '@/ui/segments/contribute/shared/components/step-navigation';
 import { SubmitButton } from '@/ui/segments/contribute/shared/components/submit-button';
@@ -15,12 +13,15 @@ import {
   ContributionPipelineProvider,
   useContributionPipeline,
 } from '@/ui/segments/contribute/shared/pipeline/context';
+import { cn } from '@/utils/css-class';
+
+import type { ZodObject, ZodRawShape } from 'zod';
+import type { WorkspaceContext } from '@/types/common';
 import type {
   IContributionFormConfig,
   IProgressStep,
   TPipelineHookFactory,
 } from '@/ui/segments/contribute/shared/types';
-import { cn } from '@/utils/css-class';
 
 interface IContributionFormProps<
   TFormValues extends Record<string, unknown>,

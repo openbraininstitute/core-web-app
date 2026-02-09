@@ -1,13 +1,14 @@
 import React from 'react';
 
-import { IonChannelRecordingParser } from '../../ion-channel-recording-parser';
-import { GenericPlot } from '../generic-plot';
-import { useColorMap, usePlotParams, useVisibleLines } from './hooks';
-import { factory } from './factory';
 import OptionSelect from '@/features/ephys-viewer/components/option-select';
-
 import SweepSelector from '@/features/ephys-viewer/components/sweep-selector';
 import { cn } from '@/utils/css-class';
+
+import { GenericPlot } from '../generic-plot';
+import { factory } from './factory';
+import { useColorMap, usePlotParams, useVisibleLines } from './hooks';
+
+import type { IonChannelRecordingParser } from '../../ion-channel-recording-parser';
 
 import styles from './trace-details-view.module.css';
 
@@ -52,18 +53,14 @@ export function TraceDetailsView({ trace, cls }: TraceDetailsViewProps) {
           label={{ title: 'Protocol', numberOfAvailable: protocolsNames.length }}
           value={protocolName}
           onChange={setProtocolName}
-          options={protocolsNames.map((name) => (
-            <div key={name}>{name}</div>
-          ))}
+          options={protocolsNames.map((name) => <div key={name}>{name}</div>)}
         />
         {repetitionsNames.length > 1 && (
           <OptionSelect
             label={{ title: 'Repetition', numberOfAvailable: repetitionsNames.length }}
             value={repetitionName}
             onChange={setRepetitionName}
-            options={repetitionsNames.map((name) => (
-              <div key={name}>{name}</div>
-            ))}
+            options={repetitionsNames.map((name) => <div key={name}>{name}</div>)}
           />
         )}
       </header>
