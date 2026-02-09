@@ -9,12 +9,14 @@ import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
 import { z } from 'zod';
+
+import type { Member, Role } from '@/api/virtual-lab-svc/queries/types';
+
 import { inviteToVirtualLab } from '@/api/virtual-lab-svc/queries/invite';
 import {
   cancelVirtualLabInvite,
   listVirtualLabMembers,
 } from '@/api/virtual-lab-svc/queries/member';
-import type { Member, Role } from '@/api/virtual-lab-svc/queries/types';
 import { useAppNotification } from '@/components/notification';
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
 import { useUserRole } from '@/hooks/use-user-role';
@@ -566,7 +568,7 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
             showHeader={false}
             size="middle"
             rowKey={(record) => record.id ?? record.email}
-            rootClassName="[&_.ant-spin-blur]:opacity-0!"
+            rootClassName="[&_.ant-spin-blur]:opacity-0 [&_#team-members-table]:bg-primary-9!"
             className={cn(
               'h-full',
               '[&_.ant-table-tbody>tr]:transition-all [&_.ant-table-tbody>tr]:duration-1000',
