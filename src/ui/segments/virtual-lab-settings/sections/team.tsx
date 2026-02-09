@@ -3,14 +3,11 @@
 import { ArrowLeftOutlined, DeleteFilled, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, ConfigProvider, Empty, Input, List, Table } from 'antd';
-import type { ColumnType } from 'antd/es/table';
 import { compact, filter, get, map, sortBy, uniqBy } from 'es-toolkit/compat';
 import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
 import { z } from 'zod';
-
-import type { Member, Role } from '@/api/virtual-lab-svc/queries/types';
 
 import { inviteToVirtualLab } from '@/api/virtual-lab-svc/queries/invite';
 import {
@@ -27,6 +24,9 @@ import { extractInitials } from '@/util/slugify';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
+
+import type { ColumnType } from 'antd/es/table';
+import type { Member, Role } from '@/api/virtual-lab-svc/queries/types';
 
 const emailSchema = z.string().min(3, 'Email is required').email('Email is not valid');
 
