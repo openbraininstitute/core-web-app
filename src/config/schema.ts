@@ -18,7 +18,7 @@ const configFields = {
   KEYCLOAK_ISSUER: { schema: z.string().url(), public: false },
 
   NEXTAUTH_SECRET: { schema: z.string().nonempty(), public: false },
-  AUTH_PROXY_DOMAIN: { schema: z.string().url().optional(), public: false },
+  AUTH_PROXY_URL: { schema: z.string().url().optional(), public: false },
 
   MAILCHIMP_API_KEY: {
     schema: z.string().nonempty().optional(),
@@ -128,11 +128,11 @@ const baseServerSchema = z
     Object.fromEntries(Object.entries(configFields).map(([key, { schema }]) => [key, schema]))
   )
   .superRefine((data, ctx) => {
-    if (data.AUTH_PROXY_DOMAIN && data.DEPLOYMENT_ENV !== 'preview') {
+    if (data.AUTH_PROXY_URL && data.DEPLOYMENT_ENV !== 'preview') {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'AUTH_PROXY_DOMAIN can only be set when DEPLOYMENT_ENV is "preview"',
-        path: ['AUTH_PROXY_DOMAIN'],
+        message: 'AUTH_PROXY_URL can only be set when DEPLOYMENT_ENV is "preview"',
+        path: ['AUTH_PROXY_URL'],
       });
     }
   }) as any as z.ZodObject<{
