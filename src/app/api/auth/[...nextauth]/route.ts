@@ -17,9 +17,12 @@ async function GET(req: NextRequest) {
     if (!isCurrentProxy) {
       const callbackUrl = url.searchParams.get('callbackUrl');
       if (callbackUrl && callbackUrl.startsWith('/')) {
-        const fullCallbackUrl = `${url.origin}${callbackUrl}`;
+        const protocol = req.headers.get('x-forwarded-proto') || 'https';
+        const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || url.hostname;
+        const fullCallbackUrl = `${protocol}://${host}${callbackUrl}`;
         return NextResponse.redirect(
-          `${authProxyUrl}/api/auth/signin?callbackUrl=${encodeURIComponent(fullCallbackUrl)}`
+          `${authProxyUrl}/api/auth/signin?callbackUrl=${encodeURIComponent(fullCallbackUrl)}`,
+          { status: 302 }
         );
       }
     }
