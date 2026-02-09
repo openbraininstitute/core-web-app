@@ -159,8 +159,7 @@ export const authOptions: NextAuthOptions = {
       const targetSharesDomain = getParentDomain(urlObj.hostname) === getParentDomain(proxyUrlObj.hostname);
 
       if (!isCurrentProxy) {
-        const fullCallbackUrl = url.startsWith('/') ? `${baseUrl}${url}` : url;
-        return `${authProxyUrl}/api/auth/signin?callbackUrl=${encodeURIComponent(fullCallbackUrl)}`;
+        return `${authProxyUrl}/api/auth/signin?callbackUrl=${encodeURIComponent(url)}`;
       }
 
       if (isCurrentProxy && targetSharesDomain && urlObj.hostname !== proxyUrlObj.hostname) {
