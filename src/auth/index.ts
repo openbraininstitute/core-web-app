@@ -13,12 +13,12 @@ function getParentDomain(hostname: string): string {
   return parts.length > 2 ? parts.slice(-3).join('.') : hostname;
 }
 
-function getSharedCookieDomain(authProxyDomain: string): string {
+function getSharedCookieDomain(authProxyUrl: string): string {
   try {
-    const proxyHostname = new URL(authProxyDomain).hostname;
+    const proxyHostname = new URL(authProxyUrl).hostname;
     return `.${getParentDomain(proxyHostname)}`;
   } catch {
-    log('error', 'Invalid AUTH_PROXY_DOMAIN', authProxyDomain);
+    log('error', 'Invalid AUTH_PROXY_URL', authProxyUrl);
     return '';
   }
 }
@@ -145,18 +145,18 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async redirect({ url, baseUrl }) {
-      const authProxyDomain = config.AUTH_PROXY_DOMAIN;
-      if (!authProxyDomain) return url.startsWith(baseUrl) ? url : baseUrl;
+      const authProxyUrl = config.AUTH_PROXY_URL;
+      if (!authProxyUrl) return url.startsWith(baseUrl) ? url : baseUrl;
 
       const urlObj = new URL(url.startsWith('/') ? `${baseUrl}${url}` : url);
       const baseUrlObj = new URL(baseUrl);
-      const proxyUrlObj = new URL(authProxyDomain);
+      const proxyUrlObj = new URL(authProxyUrl);
 
       const isCurrentProxy = baseUrlObj.hostname === proxyUrlObj.hostname;
       const targetSharesDomain = getParentDomain(urlObj.hostname) === getParentDomain(proxyUrlObj.hostname);
 
       if (!isCurrentProxy) {
-        return `${authProxyDomain}/api/auth/signin?callbackUrl=${encodeURIComponent(url)}`;
+        return `${authProxyUrl}/api/auth/signin?callbackUrl=${encodeURIComponent(url)}`;
       }
 
       if (targetSharesDomain) {
@@ -218,7 +218,7 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
     maxAge: 10 * 60 * 60, // 10 hours
   },
-  cookies: config.AUTH_PROXY_DOMAIN
+  cookies: config.AUTH_PROXY_URL
     ? {
         sessionToken: {
           name: '__Secure-next-auth.session-token',
@@ -227,7 +227,7 @@ export const authOptions: NextAuthOptions = {
             sameSite: 'lax',
             path: '/',
             secure: true,
-            domain: getSharedCookieDomain(config.AUTH_PROXY_DOMAIN),
+            domain: getSharedCookieDomain(config.AUTH_PROXY_URL),
           },
         },
       }
