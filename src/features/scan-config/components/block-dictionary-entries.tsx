@@ -13,11 +13,12 @@ import { Input } from 'antd';
 import isEqual from 'es-toolkit/compat/isEqual';
 import { atom } from 'jotai';
 import type React from 'react';
+
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
+
 import type { AtomsMap } from '../types';
 import type { Config, ConfigValue } from './components';
-
 import { isAtom, isPlainObject } from './utils';
 
 export default function BlockDictionaryEntries({
@@ -372,7 +373,7 @@ export default function BlockDictionaryEntries({
       {!campaignId && areThereAiEntries && (
         <div className="border-neutral-200 border-1 rounded-lg w-[90%] px-2 pb-4 pt-2 flex flex-col gap-2">
           {aiAddedEntries.length > 0 && (
-            <div className="text-sm text-sky-400 flex items-center gap-1">
+            <div className="text-sm text-[#1690ff] flex items-center gap-1">
               <PlusOutlined /> Added
             </div>
           )}
@@ -388,7 +389,7 @@ export default function BlockDictionaryEntries({
           {aiDeletedEntries}
 
           {aiEditedEntries.length > 0 && (
-            <div className="text-sm text-amber-500 flex items-center gap-1">
+            <div className="text-sm text-[#d3951c] flex items-center gap-1">
               <EditOutlined /> Edited
             </div>
           )}
