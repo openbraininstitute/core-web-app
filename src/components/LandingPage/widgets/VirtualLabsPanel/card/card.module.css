@@ -6,7 +6,7 @@ button.card {
   display: grid;
   grid-template-rows: auto 1fr auto;
   width: var(--size-block, 256px);
-  aspect-ratio: 1/1;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
   cursor: default;
 }
