@@ -8,17 +8,19 @@ import {
   PlusOutlined,
   WarningFilled,
 } from '@ant-design/icons';
-import type { ErrorObject } from 'ajv';
 import { Input } from 'antd';
 import isEqual from 'es-toolkit/compat/isEqual';
 import { atom } from 'jotai';
-import type React from 'react';
+
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
-import type { AtomsMap } from '../types';
-import type { Config, ConfigValue } from './components';
 
 import { isAtom, isPlainObject } from './utils';
+
+import type { ErrorObject } from 'ajv';
+import type React from 'react';
+import type { AtomsMap } from '../types';
+import type { Config, ConfigValue } from './components';
 
 export default function BlockDictionaryEntries({
   config,
@@ -285,9 +287,9 @@ export default function BlockDictionaryEntries({
                 {errors?.find((error) =>
                   error.instancePath.startsWith(`/${rootElement}/${subkey}`)
                 ) ? (
-                  <WarningFilled className="text-yellow-400" />
+                  <WarningFilled className="text-yellow-400!" />
                 ) : (
-                  <CheckCircleFilled className="text-green-600" />
+                  <CheckCircleFilled className="text-green-600!" />
                 )}
 
                 {!campaignId && !loading && !readOnly && isChatReady && !aiConfig && (
