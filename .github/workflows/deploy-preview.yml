@@ -65,6 +65,9 @@ jobs:
       - name: Get preview URL
         id: get-url
         run: |
+          aws amplify get-branch \
+            --app-id ${{ env.AMPLIFY_APP_ID }} \
+            --branch-name ${{ steps.vars.outputs.branch-name }}
           DOMAIN=$(aws amplify get-branch \
             --app-id ${{ env.AMPLIFY_APP_ID }} \
             --branch-name ${{ steps.vars.outputs.branch-name }} \
