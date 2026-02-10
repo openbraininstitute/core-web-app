@@ -245,7 +245,7 @@ export function BlockUI({
                   </div>
                   <Tooltip value={blockElementSchema.description}>
                     <div className="mb-1 flex">
-                      <div className={cn('border-1 flex-1 mr-1', patchBorderClass())}>
+                      <div className={cn('border-1 flex-1 mr-1 rounded-lg', patchBorderClass())}>
                         {renderInput(k, blockElementSchema, value)}
                       </div>
                       {(op_ === 'delete' || op_ === 'replace') && (
@@ -256,7 +256,7 @@ export function BlockUI({
 
                     {op_ === 'replace' && !!blockAIConfig && (
                       <div className="flex">
-                        <div className="border-1 border-[#1690ff] flex-1 mr-1">
+                        <div className="border-1 border-[#1690ff] flex-1 mr-1 rounded-lg">
                           {renderInput(k, blockElementSchema, blockAIConfig[k])}
                         </div>
                         <PlusOutlined className="text-[#1690ff]" />
