@@ -4,11 +4,11 @@ import { FullscreenExitOutlined, FullscreenOutlined, MinusOutlined } from '@ant-
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
 import React, { type CSSProperties } from 'react';
+
 import { useServiceAiAgentChat } from '@/services/ai-agent';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
 import { classNames } from '@/util/utils';
-import type { TAppUInterfaceSection } from '@/utils/key-builder';
-import styles from './ai-assistant.module.css';
+
 import { AiContextProvider, MINIMAL_PANEL_SIZE, usePanelWidth } from './hooks';
 import { IconChat } from './icons/chat';
 import { IconHistory } from './icons/history';
@@ -16,6 +16,10 @@ import { IconNewChat } from './icons/new-chat';
 import PanelContent from './panel-content';
 import TabTransitionLoader from './panel-content/tab-transition-loader/tab-transition-loader';
 import PanelSplitter from './panel-splitter';
+
+import type { TAppUInterfaceSection } from '@/utils/key-builder';
+
+import styles from './ai-assistant.module.css';
 
 interface AiAssistantProps {
   className?: string;
@@ -63,7 +67,7 @@ export default function AiAssistant({
             containerRef?.(el);
           }}
           style={style}
-          className={classNames(className, styles.aiAssistant, 'rounded-xl! border-0!')}
+          className={classNames(className, styles.aiAssistant, 'border-0! bg-transparent!')}
         >
           <div className={styles.mask} />
           <div

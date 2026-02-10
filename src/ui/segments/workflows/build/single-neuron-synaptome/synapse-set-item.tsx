@@ -1,10 +1,5 @@
 'use client';
 
-import { useReducer, useRef, useState, useEffect } from 'react';
-import { Form, Input, Select, InputNumber } from 'antd';
-import { useSearchParams } from 'next/navigation';
-import { useAtom, useAtomValue } from 'jotai';
-import { Color } from 'three';
 import {
   CloseOutlined,
   DeleteOutlined,
@@ -12,39 +7,44 @@ import {
   LoadingOutlined,
   PlusCircleOutlined,
 } from '@ant-design/icons';
-
+import { Form, Input, InputNumber, Select } from 'antd';
 import findIndex from 'es-toolkit/compat/findIndex';
 import groupBy from 'es-toolkit/compat/groupBy';
 import map from 'es-toolkit/compat/map';
-
-import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import { SECTION_TARGET_MAPPING } from '@/features/entities/single-neuron-synaptome/build/elements/constants';
-import { neuronSectionNamesAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
-import { synapsesPlacementAtom } from '@/state/synaptome';
-import {
-  validateSingleNeuronSynapseGenerationFormula,
-  getSingleNeuronSynaptomePlacement,
-} from '@/api/small-scale-simulator';
-import { SettingAdjustment } from '@/components/icons/SettingAdjustment';
-import { useAppNotification } from '@/components/notification';
-import { ArrowSyncFilled } from '@/components/icons/buttons';
-import { Button } from '@/ui/molecules/button';
-import { messages } from '@/i18n/en/synaptome';
-import {
-  sendDisplaySynapses3DEvent,
-  sendRemoveSynapses3DEvent,
-} from '@/components/neuron-viewer/hooks/events';
-import { classNames, getRandomIntInclusive } from '@/util/utils';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { tryCatch } from '@/api/utils';
-import { cn } from '@/utils/css-class';
-import { log } from '@/utils/logger';
+import { useAtom, useAtomValue } from 'jotai';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useReducer, useRef, useState } from 'react';
+import { Color } from 'three';
 
 import {
   SingleNeuronSynaptomeConfigurationSchema,
   type TSingleNeuronSynaptomeConfiguration,
 } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import {
+  getSingleNeuronSynaptomePlacement,
+  validateSingleNeuronSynapseGenerationFormula,
+} from '@/api/small-scale-simulator';
+import { tryCatch } from '@/api/utils';
+import { ArrowSyncFilled } from '@/components/icons/buttons';
+import { SettingAdjustment } from '@/components/icons/SettingAdjustment';
+import {
+  sendDisplaySynapses3DEvent,
+  sendRemoveSynapses3DEvent,
+} from '@/components/neuron-viewer/hooks/events';
+import { useAppNotification } from '@/components/notification';
+import { SECTION_TARGET_MAPPING } from '@/features/entities/single-neuron-synaptome/build/elements/constants';
+import { messages } from '@/i18n/en/synaptome';
+import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Button } from '@/ui/molecules/button';
+import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import {
+  neuronSectionNamesAtomFamily,
+  SynapsesPlacementAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import { classNames, getRandomIntInclusive } from '@/util/utils';
+import { cn } from '@/utils/css-class';
+import { log } from '@/utils/logger';
 
 type Props = {
   sessionId: string;
@@ -79,7 +79,9 @@ export function SynapseSet({ sessionId }: Props) {
   const secNames = useAtomValue(neuronSectionNamesAtomFamily(sessionId));
   const [isFormValid, setIsFormValid] = useState(false);
   const [visualizeLoading, setLoadingVisualize] = useState(false);
-  const [synapsesPlacement, setSynapsesPlacementAtom] = useAtom(synapsesPlacementAtom);
+  const [synapsesPlacement, setSynapsesPlacementAtom] = useAtom(
+    SynapsesPlacementAtomFamily(sessionId)
+  );
   const [displayExclusionRules, toggleDisplayExclusionRules] = useReducer((val) => !val, false);
   const [displayFormulaHelp, toggleFormulaHelp] = useReducer((val) => !val, false);
   const { sessionValue, setSessionValue } = useBuildSingleNeuronSynaptomeSessionState({
@@ -315,7 +317,7 @@ export function SynapseSet({ sessionId }: Props) {
         });
 
         configRef.current = configSet;
-      } catch (error) {
+      } catch {
         return onVisualizationError();
       } finally {
         setLoadingVisualize(false);
@@ -404,8 +406,10 @@ export function SynapseSet({ sessionId }: Props) {
                 allowClear
                 placeholder="Select a target"
                 size="large"
-                className="border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! rounded-md border-[1px]! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!"
-                popupClassName="[&_.ant-select-item-option-content]:text-primary-9!"
+                className="border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! rounded-md border! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!"
+                classNames={{
+                  popup: { root: '[&_.ant-select-item-option-content]:text-primary-9!' },
+                }}
                 disabled={!targetOptions.length}
                 options={targetOptions}
                 onChange={onTargetChange}
@@ -423,7 +427,9 @@ export function SynapseSet({ sessionId }: Props) {
                 placeholder="Select a type"
                 size="large"
                 className="border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! rounded-md border-[1px]! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!"
-                popupClassName="[&_.ant-select-item-option-content]:text-primary-9!"
+                classNames={{
+                  popup: { root: '[&_.ant-select-item-option-content]:text-primary-9!' },
+                }}
                 options={[
                   { value: 110, label: 'Excitatory Synapses' },
                   { value: 10, label: 'Inhibitory Synapses' },

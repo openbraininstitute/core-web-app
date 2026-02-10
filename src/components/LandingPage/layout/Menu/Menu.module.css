@@ -71,7 +71,7 @@
 }
 
 .menuLink::after {
-  content: '';
+  content: "";
   display: block;
   height: 4px;
   width: 24px;
@@ -132,7 +132,7 @@
 }
 
 .menuButton::after {
-  content: '';
+  content: "";
   display: block;
   height: 4px;
   width: 24px;

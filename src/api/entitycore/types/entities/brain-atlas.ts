@@ -1,11 +1,12 @@
 import type {
-  EntityCoreIdentifiable,
-  Timestamps,
-  ISpecies,
-  IAsset,
   EntityAuthorization,
+  EntityCoreIdentifiable,
+  IAsset,
+  ISpecies,
+  Timestamps,
 } from '@/api/entitycore/types/shared/global';
-import {
+import type {
+  IDFilter,
   PaginationFilter,
   SharedFilter,
   SpeciesFilter,
@@ -34,7 +35,8 @@ export interface IBrainAtlasRegion extends BrainAtlasRegionBase, Timestamps {
 }
 
 export interface IBrainAtlasFilter
-  extends SharedFilter,
+  extends IDFilter,
+    SharedFilter,
     TimestampsFilter,
     SpeciesFilter,
     StainFilter,

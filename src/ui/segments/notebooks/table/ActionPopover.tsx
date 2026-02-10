@@ -4,7 +4,7 @@ import { LoadingOutlined, PlayCircleOutlined, PlusOutlined } from '@ant-design/i
 import { Modal } from 'antd';
 import { Popover } from 'antd/lib';
 import { useState } from 'react';
-import type { INotebook } from '@/api/entitycore/types/entities/notebook';
+
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
 import { EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
@@ -13,6 +13,8 @@ import { config } from '@/config';
 import { downloadArchive } from '@/services/entity-download';
 import { type NotebookStartResponse, startNotebook } from '@/services/notebooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+
+import type { INotebook } from '@/api/entitycore/types/entities/notebook';
 
 interface ActionPopoverProps {
   notebook: INotebook;
@@ -218,7 +220,7 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
           placement="bottomRight"
           arrow={false}
         >
-          <PlusOutlined className="bg-primary-8 rounded-full p-2 text-lg font-bold text-white shadow-md" />
+          <PlusOutlined className="bg-primary-8 rounded-full p-2 text-lg font-bold !text-white shadow-md" />
         </Popover>
       </div>
     </>

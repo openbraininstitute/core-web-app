@@ -11,9 +11,9 @@ div.paddedBlock {
 }
 
 div.paddedBlock h1 {
-  grid-column: 4/5;
+  grid-column: 4 / 5;
 }
 
 div.paddedBlock > * {
-  grid-column: 4/5;
+  grid-column: 4 / 5;
 }

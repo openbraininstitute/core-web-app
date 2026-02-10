@@ -11,17 +11,18 @@ import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circu
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulationResult } from '@/api/entitycore/queries/simulation/circuit-simulation-result';
 import { EntityTypeDict, type IMEModel, type TEntityTypeDict } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import type { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/circuit-simulation-execution';
-import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import { resolveExecutions } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { hasSimConfigAsset } from '@/entity-configuration/domain/simulation/utils';
 import { getLatestSimExecStatus } from '@/features/scan-config/components/utils';
+import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';
+
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import type { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/circuit-simulation-execution';
+import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import type { SimExecStatusMap } from '@/features/scan-config/types';
 import type { WorkspaceContext } from '@/types/common';
-import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';
 
 const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
   ({ simulationId, context }: { simulationId: string; context: WorkspaceContext }) =>
@@ -144,7 +145,7 @@ export const simResultBySimIdAtomFamily = readAtomFamilyWithExpiration(
       const execution = await get(simExecBySimIdAtomFamily({ simulationId, context }));
 
       if (!execution?.generated?.[0]) {
-        throw new Error('Simulation Result not found');
+        return null;
       }
 
       return getCircuitSimulationResult({ id: execution.generated[0].id, context });

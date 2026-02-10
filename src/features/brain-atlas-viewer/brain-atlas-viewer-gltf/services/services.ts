@@ -1,67 +1,53 @@
 import { tableFromIPC } from '@apache-arrow/es2015-esm';
-import { fetchPointCloud } from '../../api';
+
 import { getBrainAtlasRegions } from '@/api/entitycore/queries/general/brain-atlas';
 import { entityCoreApi } from '@/api/entitycore/utils';
 import { config } from '@/config';
+import { fetchPointCloud } from '@/features/brain-atlas-viewer/api';
+import {
+  AppSpeciesBrainRegionConfig,
+  getSpeciesConfigByAtlasId,
+} from '@/features/brain-region-hierarchy/context';
 import { assertType } from '@/util/type-guards';
-import { createHeaders } from '@/util/utils';
-import { logError } from '@/util/logger';
 import { log } from '@/utils/logger';
-
-let cacheAtlasId: string | null = null;
-
-export async function getAtlasId(accessToken: string | undefined): Promise<string> {
-  if (!cacheAtlasId) {
-    try {
-      const resp = await fetch(`${config.ENTITY_CORE_URL}/brain-atlas`, {
-        method: 'GET',
-        redirect: 'follow',
-        headers: createHeaders(accessToken ?? 'token-is-missing', {
-          'Content-Type': 'application/json',
-        }),
-      });
-      if (!accessToken) return config.DEFAULT_BRAIN_ATLAS_ID;
-
-      const data = await resp.json();
-      assertType<{ data: Array<{ id: string }> }>(data, {
-        data: ['array', { id: 'string' }],
-      });
-      cacheAtlasId = data.data[0]?.id ?? config.DEFAULT_BRAIN_ATLAS_ID;
-    } catch (ex) {
-      logError('Unable to retrieve current Atlas ID!', ex);
-      return config.DEFAULT_BRAIN_ATLAS_ID;
-    }
-  }
-  return cacheAtlasId;
-}
 
 const cacheMeshes = new Map<string, Promise<ArrayBuffer>>();
 
-export async function getBrainRegionMeshArrayBuffer(
-  accessToken: string,
-  regionId: string
-): Promise<ArrayBuffer> {
-  const fromCache = cacheMeshes.get(regionId);
+export async function getCachedBrainRegionMeshArrayBuffer({
+  atlasId = AppSpeciesBrainRegionConfig.Common.DefaultAtlasId,
+  regionId,
+}: {
+  regionId: string;
+  atlasId: string;
+}): Promise<ArrayBuffer> {
+  const cacheKey = `${atlasId}:${regionId}`;
+  const fromCache = cacheMeshes.get(cacheKey);
   if (fromCache) return fromCache;
 
-  const promise = actualGetBrainRegionMeshArrayBuffer(accessToken, regionId);
-  cacheMeshes.set(regionId, promise);
+  const promise = getBrainRegionMeshArrayBufferQuery({ atlasId, regionId });
+  cacheMeshes.set(cacheKey, promise);
   return promise;
 }
 
-async function actualGetBrainRegionMeshArrayBuffer(
-  accessToken: string,
-  regionId: string
-): Promise<ArrayBuffer> {
-  const atlasId = await getAtlasId(accessToken);
+async function getBrainRegionMeshArrayBufferQuery({
+  atlasId,
+  regionId,
+}: {
+  atlasId: string;
+  regionId: string;
+}): Promise<ArrayBuffer> {
+  log('info', '[GetBrainRegionMeshArrayBufferQuery]', {
+    atlasId,
+    regionId,
+    atlasName: getSpeciesConfigByAtlasId(atlasId).name,
+  });
   const atlas = await getAtlas(atlasId);
   const entity = atlas.data.find((elem) => elem.brain_region_id === regionId);
   if (!entity) {
-    throw new Error(`Unable to find region "${regionId}" in current Atlas!`);
+    throw new Error(`Unable to find region "${regionId}" in current Atlas ${atlasId}!`);
   }
 
   const contentType = 'model/gltf-binary';
-  // const contentType = 'application/obj';
   const asset = entity.assets.find(
     (elem) => elem.label === 'brain_atlas_region_mesh' && elem.content_type === contentType
   );
@@ -74,7 +60,7 @@ async function actualGetBrainRegionMeshArrayBuffer(
   const time = performance.now();
   const api = await entityCoreApi();
   const data = await api.get(`/brain-atlas-region/${entity.id}/assets/${asset.id}/download`);
-  // eslint-disable-next-line no-console
+
   log('debug', 'GLTF', `${performance.now() - time} msec`, data);
   const mesh = data instanceof ArrayBuffer ? data : null;
   if (!mesh) {
@@ -96,26 +82,25 @@ interface PartialAtlas {
   }>;
 }
 
-let cacheAtlas: Promise<PartialAtlas> | null = null;
+const cacheAtlas = new Map<string, Promise<PartialAtlas>>();
 
 async function getAtlas(atlasId: string) {
-  if (cacheAtlas) return cacheAtlas;
+  const fromCache = cacheAtlas.get(atlasId);
+  if (fromCache) return fromCache;
 
-  cacheAtlas = actualGetAtlas(atlasId);
-  return cacheAtlas;
+  const promise = actualGetAtlas(atlasId);
+  cacheAtlas.set(atlasId, promise);
+  return promise;
 }
 
 async function actualGetAtlas(atlasId: string) {
-  const time = performance.now();
   const atlas = await getBrainAtlasRegions({
-    atlasId: atlasId ?? config.DEFAULT_BRAIN_ATLAS_ID,
+    atlasId: atlasId ?? AppSpeciesBrainRegionConfig.Common.DefaultAtlasId,
     filters: {
       page: 1,
       page_size: 2000,
     },
   });
-
-  log('debug', '🚀 [services] atlas =', atlas, `${performance.now() - time} msec`);
   assertType<PartialAtlas>(atlas, {
     data: [
       'array',
@@ -144,16 +129,20 @@ export async function getPointCouldData(annotationValue: number, accessToken: st
 
   const promise = actualGetPointCouldData(annotationValue, accessToken);
   cachePointClouds.set(annotationValue, promise);
+
+  // Evict from cache on failure so retries can succeed
+  promise.catch(() => {
+    cachePointClouds.delete(annotationValue);
+  });
+
   return promise;
 }
 
 async function actualGetPointCouldData(annotationValue: number, accessToken: string) {
-  const time = performance.now();
   const url = `${config.CELL_API_URL}/circuit?circuit_id=${encodeURIComponent(
     config.LEGACY_DEFAULT_CIRCUIT_ID || ''
   )}&region=${annotationValue}&how=arrow`;
   const rawData = await fetchPointCloud(url, accessToken);
-  // eslint-disable-next-line no-console
   const table = tableFromIPC(rawData);
   const array = table.toArray();
   const dataPoint = new Float32Array(array.length * 4);
@@ -165,14 +154,5 @@ async function actualGetPointCouldData(annotationValue: number, accessToken: str
     dataPoint[index++] = data.z;
     dataPoint[index++] = 100;
   }
-  // eslint-disable-next-line no-console
-  console.log(
-    'PointCould:',
-    'length=',
-    dataPoint.byteLength,
-    (3 * dataPoint.byteLength) / 4,
-    'time=',
-    `${performance.now() - time} msec`
-  );
   return dataPoint;
 }

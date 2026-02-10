@@ -1,32 +1,32 @@
 'use client';
 
-import { PlusOutlined, ArrowLeftOutlined, DeleteFilled, LoadingOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, DeleteFilled, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Button, ConfigProvider, Table, Input, Empty, List } from 'antd';
-import { compact, sortBy, get, uniqBy, map, filter } from 'es-toolkit/compat';
-import { useMemo, useState, useEffect } from 'react';
+import { Button, ConfigProvider, Empty, Input, List, Table } from 'antd';
+import { compact, filter, get, map, sortBy, uniqBy } from 'es-toolkit/compat';
 import { useSession } from 'next-auth/react';
-import { ColumnType } from 'antd/es/table';
+import { useEffect, useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
 import { z } from 'zod';
 
-import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
 import { inviteToVirtualLab } from '@/api/virtual-lab-svc/queries/invite';
-import { useAppNotification } from '@/components/notification';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { Button as UiButton } from '@/ui/molecules/button';
-import { extractInitials } from '@/util/slugify';
-import { Badge } from '@/ui/molecules/badge';
 import {
   cancelVirtualLabInvite,
   listVirtualLabMembers,
 } from '@/api/virtual-lab-svc/queries/member';
+import { useAppNotification } from '@/components/notification';
+import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
+import { useUserRole } from '@/hooks/use-user-role';
+import { Badge } from '@/ui/molecules/badge';
+import { Button as UiButton } from '@/ui/molecules/button';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { extractInitials } from '@/util/slugify';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
-import { useUserRole } from '@/hooks/use-user-role';
-
-import type { Member, Role } from '@/api/virtual-lab-svc/queries/types';
 import { log } from '@/utils/logger';
+
+import type { ColumnType } from 'antd/es/table';
+import type { Member, Role } from '@/api/virtual-lab-svc/queries/types';
 
 const emailSchema = z.string().min(3, 'Email is required').email('Email is not valid');
 
@@ -509,7 +509,11 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
   );
 
   return (
-    <div className="flex h-full flex-col py-2">
+    <div
+      className="flex h-full flex-col py-2"
+      id="team-members-container"
+      data-testid="team-members-container"
+    >
       <div className="bg-primary-9 sticky top-0 z-10 flex shrink-0 items-center justify-between px-6 py-5">
         <div className="flex items-center justify-center gap-2">
           <span className="text-primary-3 text-lg font-bold">Administrators</span>
@@ -555,6 +559,7 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
           }}
         >
           <Table
+            id="team-members-table"
             bordered={false}
             loading={isLoading}
             dataSource={orderedUsers}
@@ -563,15 +568,16 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
             showHeader={false}
             size="middle"
             rowKey={(record) => record.id ?? record.email}
-            rootClassName="[&_.ant-spin-blur]:opacity-0!"
+            rootClassName="[&_.ant-spin-blur]:opacity-0 [&_#team-members-table]:bg-primary-9!"
             className={cn(
               'h-full',
               '[&_.ant-table-tbody>tr]:transition-all [&_.ant-table-tbody>tr]:duration-1000',
               '[&_.ant-table-tbody>tr.ant-table-row-remove]:h-0 [&_.ant-table-tbody>tr.ant-table-row-remove]:opacity-40',
               '[&_.ant-table-body]:primary-scrollbar [&_.ant-table-body]:max-h-full [&_.ant-table-body]:overflow-auto [&_.ant-table-container]:h-full',
-              '[&_.ant-empty-description]:text-white!'
+              '[&_.ant-empty-description]:text-white!',
+              '[&_.ant-table-cell]:bg-primary-9!'
             )}
-            scroll={{ y: 'calc(100vh - 180px)' }}
+            scroll={{ y: 'calc(100vh - 250px)' }}
           />
         </ConfigProvider>
       </div>

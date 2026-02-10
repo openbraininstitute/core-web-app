@@ -1,27 +1,24 @@
 'use client';
 
-import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-
-import { useElectricalCellRecordingPipeline } from '@/ui/segments/contribute/electrical-cell-recording/pipeline';
-import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
 import {
-  ELECTRICAL_CELL_RECORDING_PROGRESS_STEPS,
   createElectricalCellRecordingConfig,
+  ELECTRICAL_CELL_RECORDING_PROGRESS_STEPS,
 } from '@/ui/segments/contribute/electrical-cell-recording/config';
+import { useElectricalCellRecordingPipeline } from '@/ui/segments/contribute/electrical-cell-recording/pipeline';
+import {
+  AssetUpload,
+  Contribution,
+  ETypeClassification,
+  License,
+  Setup,
+  Subject,
+} from '@/ui/segments/contribute/electrical-cell-recording/steps';
+import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
 
 import type { TElectricalCellRecordingForm } from '@/ui/segments/contribute/electrical-cell-recording/schema';
 import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
-
-import {
-  ETypeClassification,
-  Contribution,
-  AssetUpload,
-  Subject,
-  License,
-  Setup,
-} from '@/ui/segments/contribute/electrical-cell-recording/steps';
 
 const ELECTRICAL_CELL_RECORDING_STEP_CONFIG: Array<
   IContributionStep<TElectricalCellRecordingForm>
@@ -75,15 +72,13 @@ interface IElectricalCellRecordingProps {
 
 export function ElectricalCellRecording({ sessionId }: IElectricalCellRecordingProps) {
   const { projectId, virtualLabId } = useWorkspace();
-  const { node: defaultBrainRegion } = useBrainRegionHierarchy({
-    dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
-  });
+  const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
 
   return (
     <ContributionForm
       config={electricalCellRecordingConfig}
       sessionId={sessionId}
-      brainRegionId={defaultBrainRegion.id}
+      brainRegionId={selectedBrainRegion?.id!}
       pipeline={useElectricalCellRecordingPipeline}
       progressSteps={ELECTRICAL_CELL_RECORDING_PROGRESS_STEPS}
       virtualLabId={virtualLabId}

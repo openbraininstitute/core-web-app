@@ -2,11 +2,13 @@
 
 import { Select } from 'antd';
 import { useState } from 'react';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
 import {
   getScaleArray,
   getScaleAvailableActivities,
 } from '@/ui/segments/project/activities/elements/helpers';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 
 type Props = {
@@ -50,7 +52,7 @@ export function Header({ onScaleChange, onTypeChange, onPageChange }: Props) {
           <div>Scale</div>
           <Select<TExtendedEntitiesTypeDict>
             className="[&_.ant-select-selector]:rounded-none!"
-            popupClassName="rounded-none!"
+            classNames={{ popup: { root: 'rounded-none!' } }}
             defaultValue={getScaleArray().at(0)?.value}
             style={{ width: 200 }}
             onChange={onScale}
@@ -61,7 +63,7 @@ export function Header({ onScaleChange, onTypeChange, onPageChange }: Props) {
           <div>Activity type</div>
           <Select
             className="[&_.ant-select-selector]:rounded-none!"
-            popupClassName="rounded-none!"
+            classNames={{ popup: { root: 'rounded-none!' } }}
             value={selectedActivityType}
             style={{ width: 120 }}
             onChange={onType}

@@ -28,6 +28,7 @@ export const PairedNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
       list: (...params) =>
         getCircuits({
           ...params,
+          withFacets: params[0].withFacets,
           filters: { ...params[0].filters, ...circuitScaleFilter },
         }),
       one: getCircuit,
@@ -50,4 +51,5 @@ export const PairedNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
   isDownloadable: true,
   isCopyable: true,
   isSimulatable: false,
+  isDeletable: false,
 } as const;

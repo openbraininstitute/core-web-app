@@ -10,7 +10,7 @@
 }
 
 .placeHolder::after {
-  content: 'PLACEHOLDER';
+  content: "PLACEHOLDER";
   position: absolute;
   opacity: 0.5;
   text-align: center;

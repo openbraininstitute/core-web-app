@@ -1,13 +1,12 @@
 'use client';
 
-import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   createExperimentalBoutonDensityConfig,
   EXPERIMENTAL_BOUTON_DENSITY_PROGRESS_STEPS,
 } from '@/ui/segments/contribute/experimental-bouton-density/config';
 import { useExperimentalBoutonDensityPipeline } from '@/ui/segments/contribute/experimental-bouton-density/pipeline';
-import type { TExperimentalBoutonDensityForm } from '@/ui/segments/contribute/experimental-bouton-density/schema';
 import {
   Contribution,
   License,
@@ -17,8 +16,9 @@ import {
   Subject,
 } from '@/ui/segments/contribute/experimental-bouton-density/steps';
 import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
+
+import type { TExperimentalBoutonDensityForm } from '@/ui/segments/contribute/experimental-bouton-density/schema';
 import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
-import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 const EXPERIMENTAL_BOUTON_DENSITY_STEP_CONFIG: Array<
   IContributionStep<TExperimentalBoutonDensityForm>
@@ -72,15 +72,13 @@ interface IExperimentalBoutonDensityProps {
 
 export function ExperimentalBoutonDensity({ sessionId }: IExperimentalBoutonDensityProps) {
   const { projectId, virtualLabId } = useWorkspace();
-  const { node: defaultBrainRegion } = useBrainRegionHierarchy({
-    dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
-  });
+  const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
 
   return (
     <ContributionForm
       config={experimentalBoutonDensityConfig}
       sessionId={sessionId}
-      brainRegionId={defaultBrainRegion.id}
+      brainRegionId={selectedBrainRegion?.id!}
       pipeline={useExperimentalBoutonDensityPipeline}
       progressSteps={EXPERIMENTAL_BOUTON_DENSITY_PROGRESS_STEPS}
       virtualLabId={virtualLabId}

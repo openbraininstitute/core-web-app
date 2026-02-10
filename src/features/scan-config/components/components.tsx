@@ -1,14 +1,14 @@
 import { CloseOutlined, PlusOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
+import { isNil } from 'es-toolkit/compat';
 import isEqual from 'es-toolkit/compat/isEqual';
 import { atom, useAtom } from 'jotai';
 import { useRef } from 'react';
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+
 import EntityPropertyDropdown from '@/features/scan-config/components/entity-property-dropdown';
 import ModelDetails from '@/features/scan-config/components/model-details';
 import NeuronIds from '@/features/scan-config/components/neuron-ids';
-import ParameterSwep from '@/features/scan-config/components/parameter-sweep';
+import ParameterSweep from '@/features/scan-config/components/parameter-sweep';
 import Reference from '@/features/scan-config/components/reference';
 import Tooltip from '@/features/scan-config/components/tooltip';
 import { isPlainObject } from '@/features/scan-config/components/utils';
@@ -20,6 +20,9 @@ import {
 } from '@/features/scan-config/types';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
+
+import type { IMEModel } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 type Primitive = null | boolean | number | string;
 interface Object {
@@ -74,10 +77,12 @@ export function BlockUI({
       paramSchema.ui_element === 'int_parameter_sweep'
     ) {
       return (
-        <ParameterSwep
+        <ParameterSweep
           k={k}
           min={paramSchema.anyOf[0]?.minimum}
           max={paramSchema.anyOf[0]?.maximum}
+          exclusiveMin={paramSchema.anyOf[0]?.exclusiveMinimum}
+          exclusiveMax={paramSchema.anyOf[0]?.exclusiveMaximum}
           disabled={disabled}
           value={value as number | null | number[]}
           onChange={(value) => {
@@ -94,7 +99,6 @@ export function BlockUI({
       return (
         <Reference
           config={config}
-          hasReplacePatch={!!value}
           schemaName={schemaName}
           referenceSchema={paramSchema}
           value={defaultV}
@@ -158,12 +162,20 @@ export function BlockUI({
     }
 
     if (paramSchema.ui_element === 'entity_property_dropdown' && model) {
+      const getValue = (): string[] => {
+        if (Array.isArray(value) && value.every((v) => typeof v === 'string')) {
+          return value;
+        }
+        if (typeof value === 'string') return [value];
+        return [];
+      };
+
       return (
         <EntityPropertyDropdown
           disabled={disabled}
           modelId={model.id}
-          value={typeof state.node_set === 'string' ? state.node_set : null}
-          onChange={(newV: string | null) => setState({ ...state, node_set: newV })}
+          value={getValue()}
+          onChange={(newV: string[]) => setState({ ...state, node_set: newV })}
           entity_type={paramSchema.entity_type}
           property={paramSchema.property}
         />
@@ -203,7 +215,7 @@ export function BlockUI({
 
               const patchBorderClass = () => {
                 if (op_ === 'delete' || op_ === 'replace') return 'border-red-500';
-                if (op_ === 'add') return 'border-sky-400';
+                if (op_ === 'add') return 'border-[#1690ff]';
                 return 'border-transparent';
               };
 
@@ -215,6 +227,8 @@ export function BlockUI({
 
                 return blockAIConfig[k];
               };
+
+              const value = firstValue();
 
               return (
                 <div key={k}>
@@ -232,28 +246,27 @@ export function BlockUI({
                   <Tooltip value={blockElementSchema.description}>
                     <div className="mb-1 flex">
                       <div className={cn('border-1 flex-1 mr-1', patchBorderClass())}>
-                        {renderInput(k, blockElementSchema, firstValue())}
+                        {renderInput(k, blockElementSchema, value)}
                       </div>
                       {(op_ === 'delete' || op_ === 'replace') && (
                         <CloseOutlined className="text-red-500" />
                       )}
-                      {op_ === 'add' && <PlusOutlined className="text-sky-400" />}
+                      {op_ === 'add' && <PlusOutlined className="text-[#1690ff]" />}
                     </div>
 
                     {op_ === 'replace' && !!blockAIConfig && (
                       <div className="flex">
-                        <div className="border-1 border-sky-400 flex-1 mr-1">
+                        <div className="border-1 border-[#1690ff] flex-1 mr-1">
                           {renderInput(k, blockElementSchema, blockAIConfig[k])}
                         </div>
-                        <PlusOutlined className="text-sky-400" />
+                        <PlusOutlined className="text-[#1690ff]" />
                       </div>
                     )}
                   </Tooltip>
 
-                  {blockSchema.required?.includes(k) &&
-                    (state[k] === null || state[k] === undefined) && (
-                      <span className="text-red-500">Required</span>
-                    )}
+                  {blockSchema.required?.includes(k) && isNil(value) && (
+                    <span className="text-red-500">Required</span>
+                  )}
                 </div>
               );
             })}

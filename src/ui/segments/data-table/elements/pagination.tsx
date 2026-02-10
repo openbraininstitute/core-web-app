@@ -1,15 +1,17 @@
 import { Pagination as AntPagination, type PaginationProps } from 'antd';
 import { useAtom } from 'jotai';
-import type { ComponentProps } from 'react';
 import { useCallback, useEffect, useRef } from 'react';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { Pagination as EntitycorePagination } from '@/api/entitycore/types/shared/response';
+
 import { DEFAULT_PAGE_SIZE, type TWorkspaceSection } from '@/constants';
 import {
   corePageNumberAtom,
   useDataListStateSnapshotActions,
 } from '@/ui/segments/data-table/elements/context';
 import { cn } from '@/utils/css-class';
+
+import type { ComponentProps } from 'react';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { Pagination as EntitycorePagination } from '@/api/entitycore/types/shared/response';
 
 type Props = {
   dataKey: string;
@@ -77,6 +79,8 @@ export function Pagination({
 
   return (
     <AntPagination
+      aria-labelledby="browse-pagination"
+      aria-description={dataKey}
       responsive
       showLessItems
       hideOnSinglePage
@@ -92,8 +96,8 @@ export function Pagination({
       showSizeChanger={false}
       aria-label="pagination for listing results"
       className={cn(
-        '[&_.ant-pagination-item-active]:bg-primary-9 [&_.ant-pagination-item-active_a]:text-white!',
-        '[&_.ant-pagination-disabled_button]:text-neutral-2 [&_button.ant-pagination-item-link]:text-primary-9',
+        '[&_.ant-pagination-item-active]:bg-primary-9! [&_.ant-pagination-item-active_a]:text-white!',
+        '[&_.ant-pagination-disabled_button]:text-neutral-2! [&_button.ant-pagination-item-link]:text-primary-9!',
         className
       )}
     />
