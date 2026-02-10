@@ -32,6 +32,7 @@ export default async function Layout({ children }: Props) {
             gcTime: Infinity,
           });
         });
+      return result;
     },
     staleTime: Infinity,
     gcTime: Infinity,
