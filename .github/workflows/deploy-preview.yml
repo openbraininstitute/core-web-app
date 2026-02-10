@@ -65,6 +65,8 @@ jobs:
       - name: Get preview URL
         id: get-url
         run: |
+          aws amplify get-app \
+            --app-id ${{ env.AMPLIFY_APP_ID }}
           DOMAIN=$(aws amplify get-app \
             --app-id ${{ env.AMPLIFY_APP_ID }} \
             --query 'app.defaultDomain' \
