@@ -6,6 +6,11 @@ import { useEffect } from 'react';
 
 import { config } from '@/config';
 
+function setAuthProxyRedirectCookie(url: string) {
+  // biome-ignore lint/suspicious/noDocumentCookie: Enable auth for preview deployments with only one subdomain registered in Keycloak as redirect_uri
+  document.cookie = `preview-return-to=${encodeURIComponent(url)}; path=/; domain=.preview.openbraininstitute.org; secure; samesite=lax`;
+}
+
 export default function Page() {
   const searchParams = useSearchParams();
 
@@ -13,7 +18,13 @@ export default function Page() {
 
   useEffect(() => {
     const onboarding = `${window.location.origin}${config.ROOT_ROUTE}/sync?redirectUrl=${encodeURIComponent(redirectURL ?? '')}`;
-    signIn('keycloak', { callbackUrl: onboarding });
+
+    if (config.AUTH_PROXY_URL && !window.location.href.startsWith(config.AUTH_PROXY_URL)) {
+      setAuthProxyRedirectCookie(onboarding);
+      window.location.href = `${config.AUTH_PROXY_URL}/api/auth/signin/keycloak`;
+    } else {
+      signIn('keycloak', { callbackUrl: onboarding });
+    }
   }, [redirectURL]);
 
   return (

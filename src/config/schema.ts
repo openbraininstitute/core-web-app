@@ -18,7 +18,7 @@ const configFields = {
   KEYCLOAK_ISSUER: { schema: z.string().url(), public: false },
 
   NEXTAUTH_SECRET: { schema: z.string().nonempty(), public: false },
-  AUTH_PROXY_URL: { schema: z.string().url().optional(), public: false },
+  AUTH_PROXY_URL: { schema: z.string().url().optional(), public: true },
 
   MAILCHIMP_API_KEY: {
     schema: z.string().nonempty().optional(),

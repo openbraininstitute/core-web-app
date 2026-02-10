@@ -128,12 +128,10 @@ export const authOptions: NextAuthOptions = {
       authorization: {
         params: {
           scope: 'profile openid groups',
-          // When using auth proxy, override redirect_uri to point to proxy
-          ...(config.AUTH_PROXY_URL ? { redirect_uri: `${config.AUTH_PROXY_URL}/api/auth/callback/keycloak` } : {}),
         },
       },
       idToken: true,
-      checks: config.AUTH_PROXY_URL ? ['state'] : ['pkce', 'state'],
+      checks: ['pkce', 'state'],
       profile(profile) {
         return {
           name: profile.name,
@@ -146,85 +144,15 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async redirect({ url, baseUrl }) {
-      const authProxyUrl = config.AUTH_PROXY_URL;
-
-      // Standard mode: no auth proxy
-      if (!authProxyUrl) {
-        return url.startsWith(baseUrl) ? url : baseUrl;
-      }
-
-      // Auth proxy mode: centralized authentication for preview deployments
-      const urlObj = new URL(url.startsWith('/') ? `${baseUrl}${url}` : url);
-      const baseUrlObj = new URL(baseUrl);
-      const proxyUrlObj = new URL(authProxyUrl);
-
-      const isRunningOnProxy = 
-        baseUrlObj.hostname === proxyUrlObj.hostname && 
-        baseUrlObj.port === proxyUrlObj.port;
-      const targetSharesDomain =
-        getParentDomain(urlObj.hostname) === getParentDomain(proxyUrlObj.hostname);
-
-      // Only log when making cross-domain decisions
-      const isCrossDomainRedirect = urlObj.hostname !== baseUrlObj.hostname || urlObj.port !== baseUrlObj.port;
-
-      // Case 1: Running on preview app (not proxy)
-      // Redirect to proxy for authentication, proxy will redirect back
-      if (!isRunningOnProxy) {
-        const callbackUrl = url.startsWith('/') ? `${baseUrl}${url}` : url;
-        
-        // If the target URL is on the auth proxy domain (not signin), 
-        // it means we're in a redirect loop - use baseUrl instead
-        if (urlObj.hostname === proxyUrlObj.hostname && !url.includes('/api/auth/signin')) {
-          log('warn', 'Preventing redirect loop to auth proxy domain', { url, baseUrl });
-          return baseUrl;
-        }
-        
-        if (isCrossDomainRedirect) {
-          log('info', 'App redirecting to auth proxy', { from: baseUrl, to: authProxyUrl });
-        }
-        return `${authProxyUrl}/api/auth/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`;
-      }
-
-      // Case 2: Running on proxy, redirecting back to preview app
-      // After successful auth, redirect to the original preview subdomain or different port
-      const isDifferentTarget = 
-        urlObj.hostname !== proxyUrlObj.hostname || 
-        urlObj.port !== proxyUrlObj.port;
-      
-      if (isRunningOnProxy && targetSharesDomain && isDifferentTarget) {
-        log('info', 'Auth proxy redirecting to preview app', { target: url });
-        return url;
-      }
-
-      // Case 2b: Running on proxy but target is also proxy domain
-      // This shouldn't happen - extract the actual target from redirectUrl if present
-      if (isRunningOnProxy && !isDifferentTarget) {
-        const redirectUrlParam = urlObj.searchParams.get('redirectUrl');
-        if (redirectUrlParam) {
-          try {
-            const actualTarget = new URL(redirectUrlParam);
-            const actualTargetSharesDomain = 
-              getParentDomain(actualTarget.hostname) === getParentDomain(proxyUrlObj.hostname);
-            const actualTargetIsDifferent = 
-              actualTarget.hostname !== proxyUrlObj.hostname || 
-              actualTarget.port !== proxyUrlObj.port;
-            
-            if (actualTargetSharesDomain && actualTargetIsDifferent) {
-              log('info', 'Auth proxy extracting actual target from redirectUrl', { target: redirectUrlParam });
-              return redirectUrlParam;
-            }
-          } catch (e) {
-            log('warn', 'Failed to parse redirectUrl parameter', { redirectUrlParam });
-          }
+      // Used for preview deployments to return back from the auth proxy
+      if (config.AUTH_PROXY_URL) {
+        const authProxyHostname = new URL(config.AUTH_PROXY_URL).hostname;
+        const baseHostname = new URL(baseUrl).hostname;
+        if (baseHostname === authProxyHostname && url.startsWith(baseUrl)) {
+          return `${config.AUTH_PROXY_URL}/api/auth/redirect-after-signin`;
         }
       }
-
-      // Case 3: Running on proxy, staying on proxy (or invalid target)
-      // Validate the target shares the domain, otherwise stay on proxy
-      if (!targetSharesDomain) {
-        log('warn', 'Auth redirect to different domain blocked', { url, baseUrl });
-      }
-      return url.startsWith(baseUrl) ? url : baseUrl;
+      return url;
     },
     async jwt({ token, account, user, profile }) {
       // Initial sign in
