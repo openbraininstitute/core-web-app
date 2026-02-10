@@ -1,13 +1,12 @@
 'use client';
 
-import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   createExperimentalNeuronDensityConfig,
   EXPERIMENTAL_NEURON_DENSITY_PROGRESS_STEPS,
 } from '@/ui/segments/contribute/experimental-neuron-density/config';
 import { useExperimentalNeuronDensityPipeline } from '@/ui/segments/contribute/experimental-neuron-density/pipeline';
-import type { TExperimentalNeuronDensityForm } from '@/ui/segments/contribute/experimental-neuron-density/schema';
 import {
   Contribution,
   ETypeClassification,
@@ -18,8 +17,9 @@ import {
   Subject,
 } from '@/ui/segments/contribute/experimental-neuron-density/steps';
 import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
+
+import type { TExperimentalNeuronDensityForm } from '@/ui/segments/contribute/experimental-neuron-density/schema';
 import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
-import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 const EXPERIMENTAL_NEURON_DENSITY_STEP_CONFIG: Array<
   IContributionStep<TExperimentalNeuronDensityForm>
@@ -79,15 +79,13 @@ interface IExperimentalNeuronDensityProps {
 
 export function ExperimentalNeuronDensity({ sessionId }: IExperimentalNeuronDensityProps) {
   const { projectId, virtualLabId } = useWorkspace();
-  const { node: defaultBrainRegion } = useBrainRegionHierarchy({
-    dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
-  });
+  const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
 
   return (
     <ContributionForm
       config={experimentalNeuronDensityConfig}
       sessionId={sessionId}
-      brainRegionId={defaultBrainRegion.id}
+      brainRegionId={selectedBrainRegion?.id!}
       pipeline={useExperimentalNeuronDensityPipeline}
       progressSteps={EXPERIMENTAL_NEURON_DENSITY_PROGRESS_STEPS}
       virtualLabId={virtualLabId}

@@ -6,7 +6,9 @@ import { atom, useAtom, useSetAtom } from 'jotai';
 import { useCallback, useEffect } from 'react';
 import { useAIActiveTools, atomRateLimit } from '@/components/ai-assistant/state';
 import type { Config } from '@/features/scan-config/components/components';
+
 import { logError } from '@/util/logger';
+
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { useAiAssistant } from '../assistant';
 import type { AiAgentRateLimitEndpoint } from './rate-limit';
@@ -65,9 +67,17 @@ export function useServiceAiAgentChat(threadId: string) {
 
     //@ts-expect-error
     if (toolInvocation?.toolInvocation?.result && returnId === AI_AGENT_STATE.id) {
-      //@ts-expect-error
-      const result = JSON.parse(toolInvocation?.toolInvocation?.result ?? {});
-      setConfig(result);
+      try {
+        //@ts-expect-error
+        const result = JSON.parse(toolInvocation?.toolInvocation?.result ?? {});
+        setConfig(result);
+      } catch {
+        logError(
+          'Failed to parse tool invocation result as JSON:',
+          //@ts-expect-error
+          toolInvocation.toolInvocation.result
+        );
+      }
     }
   }, [chat.messages, setConfig]);
 

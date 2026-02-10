@@ -137,6 +137,21 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
                       className="hover:text-primary-4 inline-flex items-center gap-[10px]"
                       onClick={(e) => {
                         e.stopPropagation();
+                        handleRunNotebook('from_vlab', 0);
+                      }}
+                    >
+                      {!loading && <PlayCircleOutlined aria-label="Run" />}
+                      {loading && <LoadingOutlined />}
+                      Run in your compute_cell
+                    </button>
+                  </div>
+                  <div className="flex gap-4">
+                    <button
+                      disabled={loading}
+                      type="button"
+                      className="hover:text-primary-4 inline-flex items-center gap-[10px]"
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handleRunNotebook('aws', 0);
                       }}
                     >
@@ -203,7 +218,7 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
           placement="bottomRight"
           arrow={false}
         >
-          <PlusOutlined className="bg-primary-8 rounded-full p-2 text-lg font-bold text-white shadow-md" />
+          <PlusOutlined className="bg-primary-8 rounded-full p-2 text-lg font-bold !text-white shadow-md" />
         </Popover>
       </div>
     </>

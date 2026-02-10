@@ -2,8 +2,6 @@ import { MenuOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import type React from 'react';
-import type { ReactNode } from 'react';
 import { useState } from 'react';
 
 import {
@@ -32,6 +30,9 @@ import {
 import { cn } from '@/utils/css-class';
 import { getActiveSection } from '@/utils/get-section';
 import { cleanSearchParams } from '@/utils/search-params';
+
+import type React from 'react';
+import type { ReactNode } from 'react';
 
 // Dynamically import FeedbackModal with SSR disabled to prevent Suspense boundary issues
 const FeedbackModal = dynamic(() => import('@/ui/segments/feedbacks/feedback-modal'), {
@@ -168,13 +169,6 @@ export function TopMenuNavigation() {
           >
             {hashedLinks.map((link) => {
               const searchParams = new URLSearchParams(queryParams);
-              const linkSearchParams = cleanSearchParams({
-                searchParams,
-                keepKeys: [
-                  DEFAULT_BRAIN_REGION_QUERY_ID,
-                  DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
-                ],
-              }).toString();
 
               if (link.id === 'workspace-feedbacks') {
                 return (
@@ -200,7 +194,6 @@ export function TopMenuNavigation() {
                         <Link
                           href={{
                             pathname: link.url,
-                            query: linkSearchParams,
                           }}
                         >
                           {link.icon}
@@ -271,8 +264,12 @@ export function TopMenuNavigation() {
                     variant="outline"
                     size={breakpoint === 'xl' ? 'lg' : 'md'}
                     className={cn(
-                      { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
-                      { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
+                      {
+                        'w-12 justify-center!': !allowText && breakpoint === 'xl',
+                      },
+                      {
+                        'w-10! justify-center!': breakpoint === 'l' && !allowText,
+                      },
                       'group relative flex items-center justify-between',
                       'transition-all duration-400 ease-out',
                       clx
@@ -302,10 +299,16 @@ export function TopMenuNavigation() {
                     variant="outline"
                     size={breakpoint === 'xl' ? 'lg' : 'md'}
                     className={cn(
-                      { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
-                      { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
+                      {
+                        'w-12 justify-center!': !allowText && breakpoint === 'xl',
+                      },
+                      {
+                        'w-10! justify-center!': breakpoint === 'l' && !allowText,
+                      },
                       'group relative flex items-center justify-between',
-                      { 'group-hover:rounded-r-none group-hover:border-r-0': hasAction },
+                      {
+                        'group-hover:rounded-r-none group-hover:border-r-0': hasAction,
+                      },
                       'transition-all duration-400 ease-out',
                       clx
                     )}
@@ -340,10 +343,16 @@ export function TopMenuNavigation() {
                   variant="outline"
                   size={breakpoint === 'xl' ? 'lg' : 'md'}
                   className={cn(
-                    { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
-                    { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
+                    {
+                      'w-12 justify-center!': !allowText && breakpoint === 'xl',
+                    },
+                    {
+                      'w-10! justify-center!': breakpoint === 'l' && !allowText,
+                    },
                     'group relative flex items-center justify-between',
-                    { 'group-hover:rounded-r-none group-hover:border-r-0': hasAction },
+                    {
+                      'group-hover:rounded-r-none group-hover:border-r-0': hasAction,
+                    },
                     'transition-all duration-400 ease-out',
                     clx
                   )}
@@ -353,7 +362,6 @@ export function TopMenuNavigation() {
                     prefetch
                     href={{
                       pathname: url,
-                      query: linkSearchParams,
                     }}
                   >
                     {allowText && <span>{title}</span>}

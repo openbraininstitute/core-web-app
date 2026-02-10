@@ -182,7 +182,7 @@ export default function Chat({ className, threadId }: ChatProps) {
         <div className={styles.notificationOverlay}>
           <FreeCreditsNotification
             onDismiss={() => setShowExhaustedNotification(false)}
-            reset_in={rateLimit?.reset_in ?? null}
+            resetIn={rateLimit?.reset_in ?? null}
           />
         </div>
       )}

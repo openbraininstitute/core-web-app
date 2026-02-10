@@ -1,3 +1,5 @@
+import type { VirtualLabResponse } from '@/api/virtual-lab-svc/queries/types';
+import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import authFetch, { getSession } from '@/auth-fetch';
 import { config } from '@/config';
 import { assertApiResponse } from '@/util/utils';
@@ -79,8 +81,18 @@ export async function startNotebook(
 
   let res: Response;
 
-  if (cloud === 'azure' || cloud === 'aws') {
+  if (cloud === 'azure' || cloud === 'aws' || cloud === 'from_vlab') {
     // use new service which requires pod number and cloud param
+
+    let cloudParam: string = cloud;
+    if (cloud === 'from_vlab') {
+      const vlab: VirtualLabResponse = await getVirtualLab(vlabId);
+      if (vlab.data?.virtual_lab.compute_cell === 'cell_b') {
+        cloudParam = 'azure';
+      } else {
+        cloudParam = 'aws';
+      }
+    }
 
     const request: NotebookStartInNumberedPodRequest = {
       analysis_notebook_template_id: id,
@@ -98,7 +110,7 @@ export async function startNotebook(
         },
       },
       podNumber: podNum === undefined ? 0 : podNum,
-      cloud: cloud,
+      cloud: cloudParam,
     };
 
     res = await authFetch(

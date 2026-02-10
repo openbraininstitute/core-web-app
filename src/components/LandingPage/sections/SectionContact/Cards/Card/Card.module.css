@@ -29,7 +29,7 @@
 }
 
 .card > div:last-child {
-  content: '';
+  content: "";
   background-size: cover;
 }
 

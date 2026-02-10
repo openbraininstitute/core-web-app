@@ -3,6 +3,7 @@
 import { useAtomValue } from 'jotai';
 import React from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
+
 import { DefaultLoadingSuspense } from '@/components/DefaultLoadingSuspense';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
 import {
@@ -12,11 +13,13 @@ import {
 import { useCleanMorphology } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/hooks';
 import { WebglNeuronSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector';
 import { logError } from '@/utils/logger';
+
 import { IconGear } from '../ai-assistant/icons/gear';
 import ReloadIcon from '../icons/Reload';
 import { ViewerDendrogram } from '../viewers/viewer-dendrogram';
-import styles from './neuron-viewer-with-actions.module.css';
 import { NeuronLoader } from './plugins/neuron-loader';
+
+import styles from './neuron-viewer-with-actions.module.css';
 
 type Props = {
   meModelId: string;

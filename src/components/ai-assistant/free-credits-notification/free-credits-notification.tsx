@@ -1,34 +1,42 @@
-import { InfoCircleOutlined, CloseOutlined } from '@ant-design/icons';
-import styles from './free-credits-notification.module.css';
+import { InfoCircleOutlined, CloseOutlined } from "@ant-design/icons";
+import { useMemo } from "react";
+import styles from "./free-credits-notification.module.css";
 
 export interface FreeCreditsNotificationProps {
   onDismiss: () => void;
-  reset_in: number | null;
+  resetIn: number | null;
 }
 
 export default function FreeCreditsNotification({
   onDismiss,
-  reset_in,
+  resetIn,
 }: FreeCreditsNotificationProps) {
-  const formatResetTime = (seconds: number | null): string => {
-    if (seconds === null || seconds <= 0) {
-      return 'later';
+  // Freeze the reset time when component mounts
+  const resetTimeString = useMemo(() => {
+    if (resetIn === null || resetIn <= 0) {
+      return "later";
     }
 
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
+    // Calculate the reset time in user's local timezone
+    const resetDate = new Date(Date.now() + resetIn * 1000);
 
-    if (hours > 0 && minutes > 0) {
-      return `in ${hours} hour${hours > 1 ? 's' : ''} ${minutes} minute${minutes > 1 ? 's' : ''}`;
+    // Format the time in user's local timezone
+    const timeString = resetDate.toLocaleTimeString(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+    // Check if reset is today or tomorrow
+    const now = new Date();
+    const isToday = resetDate.toDateString() === now.toDateString();
+
+    if (isToday) {
+      return `at ${timeString}`;
     }
-    if (hours > 0) {
-      return `in ${hours} hour${hours > 1 ? 's' : ''}`;
-    }
-    if (minutes > 0) {
-      return `in ${minutes} minute${minutes > 1 ? 's' : ''}`;
-    }
-    return 'in less than a minute';
-  };
+
+    return `tomorrow at ${timeString}`;
+  }, [resetIn]);
 
   return (
     <div className={styles.notification}>
@@ -38,8 +46,9 @@ export default function FreeCreditsNotification({
       <div className={styles.content}>
         <h4 className={styles.title}>Free Credits Exhausted</h4>
         <p className={styles.message}>
-          You have used all of your free credits. Your next chats will be charged from the current
-          project's balance. Free credits will be replenished {formatResetTime(reset_in)}.
+          You have used all of your free credits. Your next chats will be
+          charged from the current project's balance. Free credits will be
+          replenished {resetTimeString}.
         </p>
       </div>
       <button

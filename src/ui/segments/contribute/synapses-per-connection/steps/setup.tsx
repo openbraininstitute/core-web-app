@@ -3,10 +3,9 @@
 'use client';
 
 import { Form, Input } from 'antd';
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+
 import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
-import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import {
   createZodFieldValidator,
   RequiredFieldMarker,
@@ -15,23 +14,13 @@ import {
 import { ExperimentalSynapsesPerConnectionSchema } from '@/ui/segments/contribute/synapses-per-connection/schema';
 import { PostMTypeClassificationSelector } from '@/ui/segments/contribute/synapses-per-connection/steps/post-mtype-selector';
 import { PreMTypeClassificationSelector } from '@/ui/segments/contribute/synapses-per-connection/steps/pre-mtype-selector';
-import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
+
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
 // Wrapper component to handle state updates properly
 function BrainRegionFormField({ name, label }: { name: string; label: string }) {
   const form = Form.useFormInstance();
-  const { projectId } = useWorkspace();
-
-  const { node: defaultBrainRegion } = useBrainRegionHierarchy({
-    dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
-  });
-
-  const BrainRegionDropdown = BrainRegionDropdownWithFormItem({
-    clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
-    showIcon: false,
-    charsPerLine: 200,
-    defaultBrainRegion: defaultBrainRegion as IBrainRegionHierarchy,
-  });
+  const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
 
   return (
     <Form.Item
@@ -48,7 +37,12 @@ function BrainRegionFormField({ name, label }: { name: string; label: string }) 
         },
       ]}
     >
-      <BrainRegionDropdown />
+      <BrainRegionDropdownWithFormItem
+        clsx={{ trigger: 'rounded-full w-full h-12', content: 'z-[99999]' }}
+        showIcon={false}
+        charsPerLine={200}
+        defaultBrainRegion={selectedBrainRegion as IBrainRegionHierarchy}
+      />
     </Form.Item>
   );
 }

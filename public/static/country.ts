@@ -2638,8 +2638,8 @@ const COUNTRIES = [
     languages: ['eng', 'sna', 'nde'],
     name: 'Zimbabwe',
     status: 'assigned',
-  }
-]
+  },
+];
 
 // Here are the countries that are currently forbidden by insurances.
 // This list should be in sync with the one in `src/util/email.ts`.
@@ -2757,4 +2757,4 @@ const FORBIDDEN_COUNTRIES = [
   },
 ];
 
-export default COUNTRIES
+export default COUNTRIES;

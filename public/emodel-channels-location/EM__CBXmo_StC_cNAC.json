@@ -1,45 +1,30 @@
 {
-    "somatic": [
-        "Leak",
-        "Nav1_1",
-        "Cav3_2",
-        "Cav3_3",
-        "Kir2_3",
-        "Kv1_1",
-        "Kv3_4",
-        "Kv4_3",
-        "Kca1_1",
-        "Kca2_2",
-        "Cav2_1",
-        "HCN1",
-        "cdp5StCmod"
-    ],
-    "axonal": [
-        "Leak",
-        "HCN1",
-        "Nav1_6",
-        "Kv1_1",
-        "Kv3_4",
-        "cdp5StCmod",
-        "GRC_KM"
-    ],
-    "basal": [
-        "Leak",
-        "Cav3_2",
-        "Cav3_3",
-        "Kv1_1",
-        "Kv4_3",
-        "Kca1_1",
-        "Kca2_2",
-        "Cav2_1",
-        "cdp5StCmod"
-    ],
-    "apical": [
-        "Leak",
-        "Kv1_1",
-        "Kca1_1",
-        "Kca2_2",
-        "Cav2_1",
-        "cdp5StCmod"
-    ]
+  "somatic": [
+    "Leak",
+    "Nav1_1",
+    "Cav3_2",
+    "Cav3_3",
+    "Kir2_3",
+    "Kv1_1",
+    "Kv3_4",
+    "Kv4_3",
+    "Kca1_1",
+    "Kca2_2",
+    "Cav2_1",
+    "HCN1",
+    "cdp5StCmod"
+  ],
+  "axonal": ["Leak", "HCN1", "Nav1_6", "Kv1_1", "Kv3_4", "cdp5StCmod", "GRC_KM"],
+  "basal": [
+    "Leak",
+    "Cav3_2",
+    "Cav3_3",
+    "Kv1_1",
+    "Kv4_3",
+    "Kca1_1",
+    "Kca2_2",
+    "Cav2_1",
+    "cdp5StCmod"
+  ],
+  "apical": ["Leak", "Kv1_1", "Kca1_1", "Kca2_2", "Cav2_1", "cdp5StCmod"]
 }

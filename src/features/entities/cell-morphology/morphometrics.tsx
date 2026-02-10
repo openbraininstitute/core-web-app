@@ -1,14 +1,15 @@
 import { Divider } from 'antd';
 import startCase from 'es-toolkit/compat/startCase';
-
 import { atom } from 'jotai';
-import { atomFamily } from 'jotai/utils';
-import { useMorphometrics } from '@/hooks/useMorphoMetrics';
-import { useUnwrappedValue } from '@/hooks/hooks';
-import { ICellMorphology, ICellMorphologyExpanded } from '@/api/entitycore/types';
-import { MeasurementKind } from '@/api/entitycore/types/entities/measurement-annotation';
+import { atomFamily } from 'jotai-family';
+
 import { getMeasurementAnnotations } from '@/api/entitycore/queries/general/measurement-annotation';
+import { useUnwrappedValue } from '@/hooks/hooks';
+import { useMorphometrics } from '@/hooks/useMorphoMetrics';
 import { cn } from '@/utils/css-class';
+
+import type { ICellMorphology, ICellMorphologyExpanded } from '@/api/entitycore/types';
+import type { MeasurementKind } from '@/api/entitycore/types/entities/measurement-annotation';
 
 const measurementAnnotationsAtomFamily = atomFamily((entityId: string) =>
   atom<Promise<MeasurementKind[]>>(async () => {

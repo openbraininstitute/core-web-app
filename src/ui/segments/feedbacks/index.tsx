@@ -2,6 +2,7 @@
 
 import { CheckCircleFilled, CloseOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
+import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
@@ -12,6 +13,7 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
+import { log } from '@/utils/logger';
 
 type FeedbackFormProps = {
   onClose: () => void;
@@ -31,6 +33,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
   const [isSuccess, setIsSuccess] = useState(false);
 
   const { virtualLabId, projectId } = useWorkspace();
+  const { data: session } = useSession();
 
   useEffect(() => {
     setMounted(true);
@@ -48,7 +51,9 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
 
   useEffect(() => {
     return () => {
-      imageUrls.forEach((url) => URL.revokeObjectURL(url));
+      imageUrls.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
     };
   }, [imageUrls]);
 
@@ -243,18 +248,17 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
     }
     const title = feedback.substring(0, 60).trim() || `[${type.toUpperCase()}] in ${section}`;
 
-    const body = `${feedback}\n\n---\n\n🗳️ Project: ${projectName}\n\n🏠 Virtual Lab: ${virtualLabName}\n\nURL: ${currentUrl}`;
+    // Build user info section
+    const userName = session?.user?.name ?? 'Unknown';
+    const userUsername = session?.user?.username ?? 'Unknown';
+    const userEmail = session?.user?.email ?? 'Unknown';
+    const userId = session?.user?.id ?? 'Unknown';
+
+    const body = `${feedback}\n\n---\n\n👤 User: ${userName} (@${userUsername})\n\n📧 Email: ${userEmail}\n\n🔑 Keycloak ID: ${userId}\n\n🗳️ Project: ${projectName}\n\n🏠 Virtual Lab: ${virtualLabName}\n\nURL: ${currentUrl}`;
 
     const labels = [type, section].filter(Boolean);
 
     try {
-      // eslint-disable-next-line no-console
-      console.log('Submitting feedback:', {
-        title,
-        body: body.substring(0, 100) + '...',
-        label: getMonthYearLabel(),
-      });
-
       const res = await fetch('/api/feedback/create-ticket', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -270,16 +274,12 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
 
       const responseData = await res.json().catch(() => ({ error: 'Failed to parse response' }));
 
-      // eslint-disable-next-line no-console
-      console.log('API response:', { status: res.status, data: responseData });
-
       if (!res.ok) {
         throw new Error(responseData.error || 'Failed to create ticket');
       }
 
       if (responseData.warning) {
-        // eslint-disable-next-line no-console
-        console.warn('Warning:', responseData.warning);
+        log('warn', responseData.warning);
       }
 
       setIsSuccess(true);
@@ -296,8 +296,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error creating ticket';
       setMessage(`Error: ${errorMessage}`);
-      // eslint-disable-next-line no-console
-      console.error('Error creating ticket:', error);
+      log('error', 'Error creating ticket:', error);
     } finally {
       setLoading(false);
     }
