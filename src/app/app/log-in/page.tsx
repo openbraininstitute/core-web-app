@@ -14,19 +14,16 @@ function setAuthProxyRedirectCookie(url: string) {
 export default function Page() {
   const searchParams = useSearchParams();
 
-  const redirectURL = searchParams.get('callbackUrl');
+  const callbackUrl = searchParams.get('callbackUrl') || `${window.location.origin}${config.ROOT_ROUTE}/sync`;
 
   useEffect(() => {
-    const onboarding = `${window.location.origin}${config.ROOT_ROUTE}/sync`;
-    const callbackUrl = redirectURL ? `${onboarding}?redirectUrl=${encodeURIComponent(redirectURL)}` : onboarding;
-
     if (config.AUTH_PROXY_URL && !window.location.href.startsWith(config.AUTH_PROXY_URL)) {
       setAuthProxyRedirectCookie(callbackUrl);
       window.location.href = `${config.AUTH_PROXY_URL}/api/auth/signin/keycloak`;
     } else {
       signIn('keycloak', { callbackUrl });
     }
-  }, [redirectURL]);
+  }, [callbackUrl]);
 
   return (
     <div className="flex flex-col items-center justify-center space-y-4">
