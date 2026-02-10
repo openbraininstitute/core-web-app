@@ -149,7 +149,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           )}
           <div className="[grid-area:filter]">
             <div className="ml-auto flex h-12 items-stretch justify-end gap-3">
-              {requireBrainRegionDropdown && <BrainRegionDropdown />}
+              {requireBrainRegionDropdown && <BrainRegionDropdown dataKey={dataKey} />}
               <FilterControls
                 filters={filters}
                 displayControlPanel={displayControlPanel}
