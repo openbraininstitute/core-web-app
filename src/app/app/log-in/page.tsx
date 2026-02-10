@@ -17,13 +17,14 @@ export default function Page() {
   const redirectURL = searchParams.get('callbackUrl');
 
   useEffect(() => {
-    const onboarding = `${window.location.origin}${config.ROOT_ROUTE}/sync?redirectUrl=${encodeURIComponent(redirectURL ?? '')}`;
+    const onboarding = `${window.location.origin}${config.ROOT_ROUTE}/sync`;
+    const callbackUrl = redirectURL ? `${onboarding}?redirectUrl=${encodeURIComponent(redirectURL)}` : onboarding;
 
     if (config.AUTH_PROXY_URL && !window.location.href.startsWith(config.AUTH_PROXY_URL)) {
-      setAuthProxyRedirectCookie(onboarding);
+      setAuthProxyRedirectCookie(callbackUrl);
       window.location.href = `${config.AUTH_PROXY_URL}/api/auth/signin/keycloak`;
     } else {
-      signIn('keycloak', { callbackUrl: onboarding });
+      signIn('keycloak', { callbackUrl });
     }
   }, [redirectURL]);
 
