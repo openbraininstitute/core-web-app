@@ -1,5 +1,5 @@
 import { useActiveSubscription } from '@/hooks/use-active-subscription';
-import { useUserRole } from '@/hooks/use-user-role';
+import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 
 type Props = {
   virtualLabId?: string;
@@ -14,7 +14,7 @@ export function useUserPermissions({ virtualLabId, projectId }: Props) {
     isProjectAdmin,
     isProjectMember,
     isLoading: userRoleLoading,
-  } = useUserRole({
+  } = useWorkspaceMembership({
     virtualLabId,
     projectId,
   });
