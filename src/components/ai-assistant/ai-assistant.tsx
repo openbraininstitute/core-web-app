@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
 import React, { type CSSProperties } from 'react';
 
-import { useServiceAiAgentChat } from '@/services/ai-agent';
+import { useServiceAiAgentChat, useThreadMessages } from '@/services/ai-agent';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
 import { classNames } from '@/util/utils';
 
@@ -43,8 +43,13 @@ export default function AiAssistant({
   const { panelWidth, setPanelContainer } = usePanelWidth();
   const [tab, setTab] = React.useState<'chat' | 'history'>('chat');
   const assistant = useAiAssistant();
+  const context = assistant.useContext();
   const threadId = assistant.threadId.useValue();
-  const { messages, status } = useServiceAiAgentChat(threadId ?? '');
+  const messagesQuery = useThreadMessages(context, threadId);
+  const { messages, status } = useServiceAiAgentChat(
+    threadId ?? '',
+    messagesQuery.data?.results ?? []
+  );
 
   const style: CSSProperties = {
     //@ts-expect-error
