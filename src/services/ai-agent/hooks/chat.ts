@@ -52,6 +52,7 @@ function setStoredRateLimit(value: number): void {
 
 export function useServiceAiAgentChat(threadId: string, initialMessages: Message[] = []) {
   const assistant = useAiAssistant();
+  const assistantInitialMessages = assistant.initialMessages.useValue();
   const { accessToken } = assistant.useContext();
   const activeTools = useAIActiveTools();
   const [rateLimitRemaining, setRateLimitRemaining] = React.useState(() => getStoredRateLimit());
@@ -62,7 +63,8 @@ export function useServiceAiAgentChat(threadId: string, initialMessages: Message
   const chat = useChat({
     api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
     id: threadId,
-    initialMessages,
+    initialMessages:
+      assistantInitialMessages.length > 0 ? assistantInitialMessages : initialMessages,
     headers: {
       Authorization: `Bearer ${accessToken}`,
       'x-request-id': AI_AGENT_STATE.id ?? '',
