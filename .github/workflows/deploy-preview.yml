@@ -12,6 +12,7 @@ permissions:
 env:
   AMPLIFY_APP_ID: ${{ vars.AMPLIFY_PREVIEW_APP_ID }}
   AWS_REGION: ${{ vars.AWS_REGION }}
+  PREVIEW_DOMAIN: ${{ vars.AMPLIFY_PREVIEW_DOMAIN }}
 
 jobs:
   deploy:
@@ -65,13 +66,7 @@ jobs:
       - name: Get preview URL
         id: get-url
         run: |
-          aws amplify get-app \
-            --app-id ${{ env.AMPLIFY_APP_ID }}
-          DOMAIN=$(aws amplify get-app \
-            --app-id ${{ env.AMPLIFY_APP_ID }} \
-            --query 'app.defaultDomain' \
-            --output text)
-          echo "url=https://${{ steps.vars.outputs.branch-name }}.${DOMAIN}" >> $GITHUB_OUTPUT
+          echo "url=https://${{ steps.vars.outputs.branch-name }}.${{ env.PREVIEW_DOMAIN }}" >> $GITHUB_OUTPUT
 
       - name: Post initial comment
         uses: actions/github-script@v7
