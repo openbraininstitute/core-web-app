@@ -1,4 +1,4 @@
-.spinner {
+.waveLoader {
   width: 100%;
   display: flex;
   flex-wrap: nowrap;
@@ -10,7 +10,7 @@
   color: var(--color-neutral-0);
 }
 
-.spinner .bullet {
+.waveLoader .bullet {
   content: '';
   border-radius: 2px;
   width: 4px;

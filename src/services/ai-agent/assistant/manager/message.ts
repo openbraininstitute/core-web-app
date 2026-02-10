@@ -1,9 +1,8 @@
-import { Message } from '@ai-sdk/react';
-
-import { serviceAiAgentThreadMessages } from '../../api';
-import { Signal } from '../signal';
-import { AssistantContext } from '../types';
+import type { Message } from '@ai-sdk/react';
 import { logError } from '@/util/logger';
+import { serviceAiAgentThreadMessages } from '../../api';
+import type { Signal } from '../signal';
+import type { AssistantContext } from '../types';
 
 export class MessageManager {
   constructor(
@@ -15,6 +14,8 @@ export class MessageManager {
   /**
    * When the user select a thread, we need to display
    * all the messages of this thread. not only the new ones.
+   *
+   * @deprecated Use useThreadMessages() React Query hook instead
    */
   readonly loadMessages = async (context: AssistantContext, threadId: string) => {
     const { target } = this;

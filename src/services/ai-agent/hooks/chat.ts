@@ -47,9 +47,8 @@ function setStoredRateLimit(value: number): void {
   }
 }
 
-export function useServiceAiAgentChat(threadId: string) {
+export function useServiceAiAgentChat(threadId: string, initialMessages: Message[] = []) {
   const assistant = useAiAssistant();
-  const initialMessages = assistant.initialMessages.useValue();
   const { accessToken } = assistant.useContext();
   const activeTools = useAIActiveTools();
   const [rateLimitRemaining, setRateLimitRemaining] = React.useState(() => getStoredRateLimit());

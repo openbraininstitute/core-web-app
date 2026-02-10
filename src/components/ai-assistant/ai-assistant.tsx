@@ -1,5 +1,6 @@
 'use client';
 
+import { FullscreenExitOutlined, FullscreenOutlined, MinusOutlined } from '@ant-design/icons';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
 import React, { type CSSProperties } from 'react';
@@ -13,19 +14,28 @@ import { IconChat } from './icons/chat';
 import { IconHistory } from './icons/history';
 import { IconNewChat } from './icons/new-chat';
 import PanelContent from './panel-content';
+import TabTransitionLoader from './panel-content/tab-transition-loader/tab-transition-loader';
 import PanelSplitter from './panel-splitter';
 
 interface AiAssistantProps {
   className?: string;
   fullscreen: boolean;
   section: TAppUInterfaceSection;
+  containerRef?: (el: HTMLDivElement | null) => void;
+  onFullscreenToggle?: () => void;
+  onCollapse?: () => void;
 }
-
-const Spinner = dynamic(() => import('./spinner/spinner'), { ssr: false });
 
 const queryClient = new QueryClient();
 
-export default function AiAssistant({ className, fullscreen, section }: AiAssistantProps) {
+export default function AiAssistant({
+  className,
+  fullscreen,
+  section,
+  containerRef,
+  onFullscreenToggle,
+  onCollapse,
+}: AiAssistantProps) {
   const { panelWidth, setPanelContainer } = usePanelWidth();
   const [tab, setTab] = React.useState<'chat' | 'history'>('chat');
   const assistant = useAiAssistant();
@@ -48,7 +58,10 @@ export default function AiAssistant({ className, fullscreen, section }: AiAssist
     <QueryClientProvider client={queryClient}>
       <AiContextProvider section={section}>
         <div
-          ref={setPanelContainer}
+          ref={(el) => {
+            setPanelContainer(el);
+            containerRef?.(el);
+          }}
           style={style}
           className={classNames(className, styles.aiAssistant, 'rounded-xl! border-0!')}
         >
@@ -56,6 +69,31 @@ export default function AiAssistant({ className, fullscreen, section }: AiAssist
           <div
             className={classNames(styles.overlay, panelWidth > MINIMAL_PANEL_SIZE && styles.shadow)}
           >
+            <div className={styles.header}>
+              <div className={styles.headerTitle}>AI assistant</div>
+              <div className={styles.headerActions}>
+                {onFullscreenToggle && (
+                  <button
+                    type="button"
+                    onClick={onFullscreenToggle}
+                    className={styles.headerBtn}
+                    aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                  >
+                    {fullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
+                  </button>
+                )}
+                {onCollapse && (
+                  <button
+                    type="button"
+                    onClick={onCollapse}
+                    className={styles.headerBtn}
+                    aria-label="Collapse"
+                  >
+                    <MinusOutlined />
+                  </button>
+                )}
+              </div>
+            </div>
             <nav>
               <button
                 type="button"
@@ -93,7 +131,7 @@ export default function AiAssistant({ className, fullscreen, section }: AiAssist
                 onTabChange={setTab}
               />
             ) : (
-              <Spinner />
+              <TabTransitionLoader message="Initializing assistant..." />
             )}
             {!fullscreen && <PanelSplitter />}
           </div>

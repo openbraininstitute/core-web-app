@@ -1,10 +1,12 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 
 import type { Message } from '@ai-sdk/react';
+import { useQueryClient } from '@tanstack/react-query';
 import debounce from 'es-toolkit/compat/debounce';
 import React from 'react';
 import { useAppNotification } from '@/components/notification';
 import { useAccessToken } from '@/hooks/useAccessToken';
+import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
 import { logError } from '@/util/logger';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 import { serviceAiAgentThreadDelete, serviceAiAgentThreadRename } from '../api';
@@ -103,6 +105,17 @@ class AiAssistantClass {
     return [history, this.historyManager.hasMore, () => this.historyManager.next(context)];
   }
 
+  /**
+   * @deprecated Use useThreadHistory() React Query hook from hooks/messages.ts instead
+   */
+  useHistoryLegacy(): [
+    history: AiAssistantHistory,
+    hasMore: boolean,
+    fetchNextPage: () => Promise<void>,
+  ] {
+    return this.useHistory();
+  }
+
   useContext() {
     const accessToken = this.accessToken.useValue();
     const virtualLabId = this.virtualLabId.useValue();
@@ -135,8 +148,9 @@ class AiAssistantClass {
 
 const AiAssistant = new AiAssistantClass();
 
-export function useAiAssistant(): Omit<AiAssistantClass, 'init' | 'history' | 'error'> {
+export function useAiAssistant() {
   const { error } = useAppNotification();
+  const queryClient = useQueryClient();
   const accessToken = useAccessToken() ?? 'NO-TOKEN';
   const virtualLabId = useParamVirtualLabId();
   const projectId = useParamProjectId();
@@ -152,9 +166,26 @@ export function useAiAssistant(): Omit<AiAssistantClass, 'init' | 'history' | 'e
     AiAssistant.error.event.addListener(handleError);
     return () => AiAssistant.error.event.removeListener(handleError);
   }, [error]);
+
   React.useEffect(() => {
     AiAssistant.init({ accessToken, virtualLabId, projectId });
   }, [accessToken, virtualLabId, projectId]);
 
-  return AiAssistant;
+  return {
+    ...AiAssistant,
+    useContext: AiAssistant.useContext.bind(AiAssistant),
+    renameThread: async (threadId: string, title: string) => {
+      await AiAssistant.renameThread(threadId, title);
+      queryClient.invalidateQueries({ queryKey: keyBuilderAI.history(virtualLabId, projectId) });
+    },
+    deleteThread: async (threadId: string) => {
+      await AiAssistant.deleteThread(threadId);
+      queryClient.invalidateQueries({ queryKey: keyBuilderAI.history(virtualLabId, projectId) });
+    },
+    createThread: async () => {
+      const threadId = await AiAssistant.createThread();
+      queryClient.invalidateQueries({ queryKey: keyBuilderAI.history(virtualLabId, projectId) });
+      return threadId;
+    },
+  };
 }

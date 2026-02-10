@@ -1,6 +1,6 @@
-import React from 'react';
 import { atom, useAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
+import React from 'react';
 
 import { AppUInterfaceSection, type TAppUInterfaceSection } from '@/utils/key-builder';
 
@@ -19,7 +19,7 @@ export function useAiContext(): AiContextType {
   return context;
 }
 
-export const MINIMAL_PANEL_SIZE = 25;
+export const MINIMAL_PANEL_SIZE = 400;
 
 const AiContext = React.createContext<AiContextType>({
   section: AppUInterfaceSection.Data,
@@ -51,10 +51,10 @@ export function usePanelWidth(): {
   const [container, setContainer] = useAtom(atomPanelContainer);
   const dimension = useContainerDimension(container);
   const clamp = (value: number) => {
-    const minWidth = dimension.width;
+    const minWidth = MINIMAL_PANEL_SIZE; // Fixed minimum, not container width
     if (value < minWidth) return minWidth;
 
-    const maxWidth = dimension.left + dimension.width - (globalThis.screen?.availWidth ?? 0) / 3;
+    const maxWidth = (globalThis.screen?.availWidth ?? 1920) - 200; // Screen width minus margin
     if (value > maxWidth) return maxWidth;
 
     return value;

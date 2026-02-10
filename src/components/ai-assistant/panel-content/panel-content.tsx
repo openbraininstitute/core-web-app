@@ -1,6 +1,6 @@
-import { Spinner } from '../spinner';
 import Chat from './chat';
 import History from './history';
+import TabTransitionLoader from './tab-transition-loader/tab-transition-loader';
 
 interface PanelContentProps {
   className?: string;
@@ -10,18 +10,14 @@ interface PanelContentProps {
 }
 
 export default function PanelContent({ className, threadId, onTabChange, tab }: PanelContentProps) {
+  if (!threadId) {
+    return <TabTransitionLoader message="Initializing assistant..." />;
+  }
+
   return (
     <>
-      {threadId ? (
-        <>
-          {tab === 'chat' && <Chat className={className} threadId={threadId} />}
-          {tab === 'history' && (
-            <History className={className} onBack={() => onTabChange('chat')} />
-          )}
-        </>
-      ) : (
-        <Spinner />
-      )}
+      {tab === 'chat' && <Chat className={className} threadId={threadId} />}
+      {tab === 'history' && <History className={className} onBack={() => onTabChange('chat')} />}
     </>
   );
 }

@@ -5,20 +5,20 @@ import React from 'react';
 
 import { classNames } from '@/util/utils';
 
-import styles from './spinner.module.css';
+import styles from './wave-loader.module.css';
 
-interface SpinnerProps {
+interface WaveLoaderProps {
   className?: string;
   count?: number;
   period?: number;
 }
 
-export function Spinner({ className, count = 32, period = 0.6 }: SpinnerProps) {
+export function WaveLoader({ className, count = 32, period = 0.6 }: WaveLoaderProps) {
   const items = new Array(count).fill(0);
 
   return (
     <div
-      className={classNames(className, styles.spinner)}
+      className={classNames(className, styles.waveLoader)}
       style={{
         '--custom-period': `${period}s`,
       }}
@@ -37,4 +37,4 @@ export function Spinner({ className, count = 32, period = 0.6 }: SpinnerProps) {
   );
 }
 
-export default Spinner;
+export default WaveLoader;

@@ -10,6 +10,7 @@ import { motion } from 'motion/react';
 import { type JSX, useEffect, useMemo, useState } from 'react';
 
 import AiAssistant from '@/components/ai-assistant';
+import { usePanelWidth } from '@/components/ai-assistant/hooks';
 import styles from '@/ui/segments/ai/container.module.css';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
@@ -18,7 +19,13 @@ import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 export function Container(): JSX.Element {
   const { state, setState, isCollapsed, isExpanded, isFullscreen } = usePanelState();
+  const { panelWidth } = usePanelWidth();
   const [animationComplete, setAnimationComplete] = useState(false);
+
+  const style: React.CSSProperties = {
+    //@ts-expect-error
+    '--custom-panel-width': isFullscreen ? '100%' : `${panelWidth}px`,
+  };
   useEffect(() => {
     if (isFullscreen) {
       document.body.style.overflow = 'hidden';
@@ -34,7 +41,7 @@ export function Container(): JSX.Element {
   const targetWidth = useMemo<string>(() => {
     if (isCollapsed) return '3rem';
     if (isFullscreen) return 'calc(100vw - 20px)';
-    return '24rem';
+    return '24rem'; // Fixed width for grid cell
   }, [isCollapsed, isFullscreen]);
 
   const targetHeight = useMemo<string>(() => {
@@ -52,6 +59,7 @@ export function Container(): JSX.Element {
   return (
     <motion.div
       id="workspace-ai"
+      style={style}
       className={cn(
         styles.aiPanel,
         'text-white [grid-area:ai]',
@@ -67,10 +75,10 @@ export function Container(): JSX.Element {
         top: isFullscreen ? 0 : undefined,
         right: isFullscreen ? 10 : undefined,
         left: isFullscreen ? 10 : undefined,
-        zIndex: isFullscreen ? 500 : 10,
+        zIndex: isFullscreen ? 500 : 100,
       }}
       initial={false}
-      transition={{ ease: ['easeIn', 'easeOut'], stiffness: 260, damping: 30 }}
+      transition={{ ease: ['easeIn', 'easeOut'], stiffness: 150, damping: 25 }}
       onAnimationComplete={() => setAnimationComplete(true)}
     >
       {isCollapsed ? (
@@ -98,35 +106,19 @@ export function Container(): JSX.Element {
           </div>
         </button>
       ) : (
-        <div className="flex h-full w-full flex-col rounded-lg">
-          <div className="flex items-center justify-between px-3 py-3">
-            <div className="truncate text-lg font-bold">AI assistant</div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() =>
+        <div className="flex h-full w-full flex-col rounded-lg overflow-visible">
+          <div className="relative flex-1 border-none overflow-visible">
+            <HydrateWrapper>
+              <AiAssistant
+                section="explore"
+                fullscreen={isFullscreen}
+                onFullscreenToggle={() =>
                   beginTransition(
                     state === PanelState.Fullscreen ? PanelState.Expanded : PanelState.Fullscreen
                   )
                 }
-                className="inline-flex h-7 w-7 items-center justify-center rounded hover:bg-white/10"
-                aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-              >
-                {isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
-              </button>
-              <button
-                type="button"
-                onClick={() => beginTransition(PanelState.Collapsed)}
-                className="inline-flex h-7 w-7 items-center justify-center rounded hover:bg-white/10"
-                aria-label="Collapse"
-              >
-                <MinusOutlined />
-              </button>
-            </div>
-          </div>
-          <div className="relative flex-1 border-none">
-            <HydrateWrapper>
-              <AiAssistant section="explore" fullscreen={isFullscreen} />
+                onCollapse={() => beginTransition(PanelState.Collapsed)}
+              />
             </HydrateWrapper>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAITools } from '@/services/ai-agent/tools/tools';
 import Prompt from '../../prompt';
-import { Spinner } from '../../spinner';
+import { WaveLoader } from '../../wave-loader';
 
 import styles from './footer.module.css';
 
@@ -30,7 +30,7 @@ export default function Footer({ className, status, onPrompt, stop }: FooterProp
       )}
       {status !== 'ready' && status !== 'error' && (
         <div className={styles.spinnerContainer}>
-          <Spinner />
+          <WaveLoader />
           {(status === 'streaming' || status === 'submitted') && (
             <div className={styles.cancelButton}>
               <button type="button" onClick={stop}>
