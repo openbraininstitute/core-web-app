@@ -1,8 +1,7 @@
-import { getServerSession, type NextAuthOptions, type TokenSet, type Session } from 'next-auth';
-import { GetServerSidePropsContext, NextApiRequest, NextApiResponse } from 'next';
-
-import { log } from '../utils/logger';
+import type { GetServerSidePropsContext, NextApiRequest, NextApiResponse } from 'next';
+import { getServerSession, type NextAuthOptions, type Session, type TokenSet } from 'next-auth';
 import { serverConfig as config } from '@/config/server';
+import { log } from '../utils/logger';
 
 const issuer = config.KEYCLOAK_ISSUER;
 const clientId = config.KEYCLOAK_CLIENT_ID;
@@ -129,6 +128,8 @@ export const authOptions: NextAuthOptions = {
       authorization: {
         params: {
           scope: 'profile openid groups',
+          // When using auth proxy, override redirect_uri to point to proxy
+          ...(config.AUTH_PROXY_URL ? { redirect_uri: `${config.AUTH_PROXY_URL}/api/auth/callback/keycloak` } : {}),
         },
       },
       idToken: true,
@@ -146,23 +147,83 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async redirect({ url, baseUrl }) {
       const authProxyUrl = config.AUTH_PROXY_URL;
-      if (!authProxyUrl) return url.startsWith(baseUrl) ? url : baseUrl;
 
+      // Standard mode: no auth proxy
+      if (!authProxyUrl) {
+        return url.startsWith(baseUrl) ? url : baseUrl;
+      }
+
+      // Auth proxy mode: centralized authentication for preview deployments
       const urlObj = new URL(url.startsWith('/') ? `${baseUrl}${url}` : url);
       const baseUrlObj = new URL(baseUrl);
       const proxyUrlObj = new URL(authProxyUrl);
 
-      const isCurrentProxy = baseUrlObj.hostname === proxyUrlObj.hostname;
-      const targetSharesDomain = getParentDomain(urlObj.hostname) === getParentDomain(proxyUrlObj.hostname);
+      const isRunningOnProxy = 
+        baseUrlObj.hostname === proxyUrlObj.hostname && 
+        baseUrlObj.port === proxyUrlObj.port;
+      const targetSharesDomain =
+        getParentDomain(urlObj.hostname) === getParentDomain(proxyUrlObj.hostname);
 
-      if (!isCurrentProxy) {
-        return `${authProxyUrl}/api/auth/signin?callbackUrl=${encodeURIComponent(url)}`;
+      // Only log when making cross-domain decisions
+      const isCrossDomainRedirect = urlObj.hostname !== baseUrlObj.hostname || urlObj.port !== baseUrlObj.port;
+
+      // Case 1: Running on preview app (not proxy)
+      // Redirect to proxy for authentication, proxy will redirect back
+      if (!isRunningOnProxy) {
+        const callbackUrl = url.startsWith('/') ? `${baseUrl}${url}` : url;
+        
+        // If the target URL is on the auth proxy domain (not signin), 
+        // it means we're in a redirect loop - use baseUrl instead
+        if (urlObj.hostname === proxyUrlObj.hostname && !url.includes('/api/auth/signin')) {
+          log('warn', 'Preventing redirect loop to auth proxy domain', { url, baseUrl });
+          return baseUrl;
+        }
+        
+        if (isCrossDomainRedirect) {
+          log('info', 'App redirecting to auth proxy', { from: baseUrl, to: authProxyUrl });
+        }
+        return `${authProxyUrl}/api/auth/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`;
       }
 
-      if (isCurrentProxy && targetSharesDomain && urlObj.hostname !== proxyUrlObj.hostname) {
+      // Case 2: Running on proxy, redirecting back to preview app
+      // After successful auth, redirect to the original preview subdomain or different port
+      const isDifferentTarget = 
+        urlObj.hostname !== proxyUrlObj.hostname || 
+        urlObj.port !== proxyUrlObj.port;
+      
+      if (isRunningOnProxy && targetSharesDomain && isDifferentTarget) {
+        log('info', 'Auth proxy redirecting to preview app', { target: url });
         return url;
       }
 
+      // Case 2b: Running on proxy but target is also proxy domain
+      // This shouldn't happen - extract the actual target from redirectUrl if present
+      if (isRunningOnProxy && !isDifferentTarget) {
+        const redirectUrlParam = urlObj.searchParams.get('redirectUrl');
+        if (redirectUrlParam) {
+          try {
+            const actualTarget = new URL(redirectUrlParam);
+            const actualTargetSharesDomain = 
+              getParentDomain(actualTarget.hostname) === getParentDomain(proxyUrlObj.hostname);
+            const actualTargetIsDifferent = 
+              actualTarget.hostname !== proxyUrlObj.hostname || 
+              actualTarget.port !== proxyUrlObj.port;
+            
+            if (actualTargetSharesDomain && actualTargetIsDifferent) {
+              log('info', 'Auth proxy extracting actual target from redirectUrl', { target: redirectUrlParam });
+              return redirectUrlParam;
+            }
+          } catch (e) {
+            log('warn', 'Failed to parse redirectUrl parameter', { redirectUrlParam });
+          }
+        }
+      }
+
+      // Case 3: Running on proxy, staying on proxy (or invalid target)
+      // Validate the target shares the domain, otherwise stay on proxy
+      if (!targetSharesDomain) {
+        log('warn', 'Auth redirect to different domain blocked', { url, baseUrl });
+      }
       return url.startsWith(baseUrl) ? url : baseUrl;
     },
     async jwt({ token, account, user, profile }) {
@@ -220,37 +281,37 @@ export const authOptions: NextAuthOptions = {
   },
   cookies: config.AUTH_PROXY_URL
     ? {
-        sessionToken: {
-          name: '__Secure-next-auth.session-token',
-          options: {
-            httpOnly: true,
-            sameSite: 'lax',
-            path: '/',
-            secure: true,
-            domain: getSharedCookieDomain(config.AUTH_PROXY_URL),
-          },
+      sessionToken: {
+        name: '__Secure-next-auth.session-token',
+        options: {
+          httpOnly: true,
+          sameSite: 'lax',
+          path: '/',
+          secure: true,
+          domain: getSharedCookieDomain(config.AUTH_PROXY_URL),
         },
-        callbackUrl: {
-          name: '__Secure-next-auth.callback-url',
-          options: {
-            httpOnly: true,
-            sameSite: 'lax',
-            path: '/',
-            secure: true,
-            domain: getSharedCookieDomain(config.AUTH_PROXY_URL),
-          },
+      },
+      callbackUrl: {
+        name: '__Secure-next-auth.callback-url',
+        options: {
+          httpOnly: true,
+          sameSite: 'lax',
+          path: '/',
+          secure: true,
+          domain: getSharedCookieDomain(config.AUTH_PROXY_URL),
         },
-        state: {
-          name: '__Secure-next-auth.state',
-          options: {
-            httpOnly: true,
-            sameSite: 'lax',
-            path: '/',
-            secure: true,
-            domain: getSharedCookieDomain(config.AUTH_PROXY_URL),
-          },
+      },
+      state: {
+        name: '__Secure-next-auth.state',
+        options: {
+          httpOnly: true,
+          sameSite: 'lax',
+          path: '/',
+          secure: true,
+          domain: getSharedCookieDomain(config.AUTH_PROXY_URL),
         },
-      }
+      },
+    }
     : undefined,
   pages: {
     signIn: '/app/log-in',
