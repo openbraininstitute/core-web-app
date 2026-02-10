@@ -1,16 +1,17 @@
 /* eslint-disable no-param-reassign */
+import { memoize } from '@/util/utils';
+import { log } from '@/utils/logger';
 
 import { memoize } from '@/util/utils';
 import { log } from '@/utils/logger';
 
 import type { IBrainAtlasRegion } from '@/api/entitycore/types/entities/brain-atlas';
 import type {
-  CellCompositionBrainRegion,
   CellCompositionBrainRegionEType,
+  CellCompositionBrainRegion,
   CellCompositionMType,
   ICellCompositionRoot,
 } from '@/api/entitycore/types/entities/cell-composition';
-import type { TBrainRegionHierarchyAtomReturnType } from '@/features/brain-region-hierarchy/types';
 import type { NeuronComposition, RawTreeNode } from '@/features/cell-composition/types';
 
 const NEURON_DENSITY_SCALE = 1e-9;
@@ -231,10 +232,7 @@ function resolveBrainRegionCellCompositionFn({
         sumLeafGliaDensity += et.composition?.glia?.density ?? 0;
       }
     }
-    leafDensitySumsMap.set(leafId, {
-      neuron: sumLeafNeuronDensity,
-      glia: sumLeafGliaDensity,
-    });
+    leafDensitySumsMap.set(leafId, { neuron: sumLeafNeuronDensity, glia: sumLeafGliaDensity });
   }
 
   const nodeMap = new Map<string, RawTreeNode>();
@@ -369,12 +367,7 @@ function resolveBrainRegionCellCompositionFn({
 
 export const resolveBrainRegionCellComposition = memoize(
   resolveBrainRegionCellCompositionFn,
-  ({ brainRegionId, hierarchy }) => {
-    // Include hierarchy root ID in cache key to prevent cross-species cache hits
-    // when the same brainRegionId format exists across different hierarchies.
-    const hierarchyRootId = hierarchy?.root?.id ?? 'unknown';
-    return `${brainRegionId}__${hierarchyRootId}`;
-  }
+  ({ brainRegionId }) => brainRegionId
 );
 
 function resolveNeuronDensity(initialVolumeForNode: number, currentNode: RawTreeNode) {

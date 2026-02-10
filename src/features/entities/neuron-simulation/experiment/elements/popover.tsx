@@ -1,6 +1,6 @@
 import { Popover, type PopoverProps } from 'antd';
 
-import { cn } from '@/utils/css-class';
+import { classNames } from '@/util/utils';
 
 import type React from 'react';
 
@@ -29,22 +29,20 @@ export function CustomPopover({
 }: Props) {
   return (
     <Popover
-      destroyOnHidden
+      destroyTooltipOnHide
       open={visible}
       placement={placement}
       getPopupContainer={(trigger) => trigger.parentElement!}
       getTooltipContainer={(trigger) => trigger.parentElement!}
       trigger={when}
       onOpenChange={onOpenChange}
-      classNames={{
-        root: cn(
-          '[&_.ant-popover-inner]:p-0! [&_.ant-popover-inner]:bg-primary-8! max-w-[260px]',
-          '[&_.ant-popover-arrow:before]:bg-primary-8'
-        ),
-      }}
+      overlayClassName={classNames(
+        '[&_.ant-popover-inner]:p-0! [&_.ant-popover-inner]:bg-primary-8! max-w-[260px]',
+        '[&_.ant-popover-arrow:before]:bg-primary-8'
+      )}
       content={
         <div
-          className={cn(
+          className={classNames(
             'bg-primary-8 flex flex-col items-center justify-center gap-4 p-8',
             cls?.contentContainer
           )}

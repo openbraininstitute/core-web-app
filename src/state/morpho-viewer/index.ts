@@ -16,7 +16,7 @@ export function useLoadCellMorphology3DAsset({
 }) {
   const asset = morphology?.assets?.find((a) => a.content_type === 'application/swc');
   if (!asset) {
-    throw new Error(`No asset found for the entity ${morphology?.id}`);
+    throw new Error(`No distribution found for resource ${morphology?.id}`);
   }
   const { data, isLoading, error } = useQuery({
     queryKey: keyBuilder.asset({

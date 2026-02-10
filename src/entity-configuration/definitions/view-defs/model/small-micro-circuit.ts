@@ -11,7 +11,6 @@ export const ViewDefForSmallMicrocircuit: ViewDefinitionConfig = {
     EntityCoreFields.Name,
     EntityCoreFields.Description,
     EntityCoreFields.BrainRegion,
-    EntityCoreFields.SpeciesName,
     EntityCoreFields.CircuitNumberNeurons,
     EntityCoreFields.CircuitNumberSynapses,
     EntityCoreFields.CircuitNumberConnections,

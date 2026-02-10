@@ -54,3 +54,134 @@ export function getEntityTypeFromUrlOnEntityScope(url: string) {
   const match = url.match(/\/browse\/entity\/([^/?]+)/);
   return match ? match[1] : null;
 }
+
+export function getAllEntitiesCount({
+  virtualLabId,
+  projectId,
+  brainRegionId,
+}: WorkspaceContext & { brainRegionId: string }) {
+  return getEntitiesCount({
+    context: virtualLabId && projectId ? { virtualLabId, projectId } : undefined,
+    types: [
+      ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
+      ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
+      ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
+      ExtendedEntitiesTypeDict.CellMorphology,
+      ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
+      ExtendedEntitiesTypeDict.Memodel,
+      ExtendedEntitiesTypeDict.Emodel,
+      ExtendedEntitiesTypeDict.Circuit,
+    ],
+    brainRegion: {
+      within_brain_region_hierarchy_id: config.DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+      within_brain_region_brain_region_id: brainRegionId ?? null,
+      within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
+    },
+  });
+}
+
+export async function getAllEntitiesCountScoped({
+  virtualLabId,
+  projectId,
+  brainRegionId,
+  scope,
+}: WorkspaceContext & {
+  brainRegionId: string;
+  scope: TWorkspaceScope;
+}) {
+  const items = { ...ExperimentalEntitiesTileTypes, ...ModelEntitiesTileTypes };
+  const promises = Object.fromEntries(
+    Object.entries(items).map(([, value]) => {
+      return [
+        value.extendedType,
+        value.api.query?.list?.({
+          withFacets: false,
+          context: {
+            virtualLabId,
+            projectId,
+          },
+          filters: {
+            page: 1,
+            page_size: 1,
+            within_brain_region_hierarchy_id: config.DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+            within_brain_region_brain_region_id: brainRegionId ?? null,
+            within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
+            ...getWorkspaceScopeFilters(scope, { virtualLabId, projectId }),
+          },
+        }),
+      ];
+    })
+  );
+  const result = await pProps(promises);
+
+  return Object.fromEntries(
+    Object.entries(result).map(([key, value]) => [key, value?.pagination.total_items ?? 0])
+  );
+}
+
+export async function getSimulationsCount({
+  virtualLabId,
+  projectId,
+  brainRegionId,
+  scope,
+}: WorkspaceContext & {
+  brainRegionId: string;
+  scope: TWorkspaceScope;
+}) {
+  const promises = Object.fromEntries(
+    Object.entries(SimulationEntitiesTileTypes).map(([, value]) => {
+      return [
+        value.extendedType,
+        value.api.query?.list?.({
+          withFacets: false,
+          context: {
+            virtualLabId,
+            projectId,
+          },
+          filters: {
+            page: 1,
+            page_size: 1,
+            within_brain_region_hierarchy_id: config.DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+            within_brain_region_brain_region_id: brainRegionId ?? null,
+            within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
+            ...getWorkspaceScopeFilters(scope, { virtualLabId, projectId }),
+          },
+          circuitFilter: {
+            within_brain_region_hierarchy_id: config.DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+            within_brain_region_brain_region_id: brainRegionId ?? null,
+            within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
+          },
+        }),
+      ];
+    })
+  );
+  const result = await pProps(promises);
+
+  return Object.fromEntries(
+    Object.entries(result).map(([key, value]) => [key, value?.pagination.total_items ?? 0])
+  );
+}
+
+export function getElectricalCellRecordingsCount({
+  virtualLabId,
+  projectId,
+  brainRegionId,
+  scope,
+}: WorkspaceContext & {
+  brainRegionId: string;
+  scope: TWorkspaceScope;
+}) {
+  return getElectricalCellRecordings({
+    withFacets: false,
+    context: virtualLabId && projectId ? { virtualLabId, projectId } : undefined,
+    filters: {
+      recording_origin: ElectricalRecordingOriginDictionary.InVitro,
+      page: 1,
+      page_size: 1,
+      within_brain_region_hierarchy_id: config.DEFAULT_BRAIN_REGION_HIERARCHY_ID,
+      within_brain_region_brain_region_id: brainRegionId ?? null,
+      within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
+      ...getWorkspaceScopeFilters(scope, { virtualLabId, projectId }),
+    },
+  });
+}

@@ -29,6 +29,7 @@ import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import type { BuildStepKeys } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import {
   BuildStep,
   DefaultSynapseValue,

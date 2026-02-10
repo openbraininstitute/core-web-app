@@ -1,10 +1,13 @@
 import {
-  TgdCameraPerspective,
-  TgdControllerCameraOrbit,
-  TgdQuat,
-  TgdVec3,
   tgdActionCreateCameraInterpolation,
   tgdCalcDegToRad,
+  TgdCamera,
+  TgdCameraPerspective,
+  TgdCameraState,
+  TgdContext,
+  TgdQuat,
+  TgdVec3,
+  TgdControllerCameraOrbit,
 } from '@tolokoban/tgd';
 
 import { AppSpeciesBrainRegionConfig } from '@/features/brain-region-hierarchy/context';
@@ -79,10 +82,10 @@ export function setCamera(
     orientation: TgdQuat.fromFace('-X-Y+Z'),
   };
   context.camera = new TgdCameraPerspective({
-    near: preset.near,
-    far: preset.far,
+    near: 1,
+    far: 80000,
     fovy: tgdCalcDegToRad(55),
-    transfo: { ...restTransformation },
+    transfo: { ...restTransfo },
   });
   const controller = new TgdControllerCameraOrbit(context, {
     inertiaOrbit: 500,
@@ -91,34 +94,13 @@ export function setCamera(
     maxZoom: 3,
   });
   controller.eventChange.addListener((camera) => eventChange.dispatch(camera));
-
-  const resetCamera = () => {
+  return () => {
     context.animSchedule({
-      action: tgdActionCreateCameraInterpolation(context.camera, {
-        ...restTransformation,
-      }),
+      action: tgdActionCreateCameraInterpolation(context.camera, { ...restTransfo }),
       duration: 0.5,
       onEnd: () => {
         controller.resetZoom();
       },
     });
   };
-
-  const fitToBounds = (min: number[], max: number[]) => {
-    const computed = computePresetFromBounds(min, max);
-    restTransformation = {
-      position: new TgdVec3(computed.position),
-      distance: computed.distance,
-      orientation: TgdQuat.fromFace('-X-Y+Z'),
-    };
-    context.camera = new TgdCameraPerspective({
-      near: computed.near,
-      far: computed.far,
-      fovy: tgdCalcDegToRad(55),
-      transfo: { ...restTransformation },
-    });
-    context.paint();
-  };
-
-  return { resetCamera, fitToBounds };
 }

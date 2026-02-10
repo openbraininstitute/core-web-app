@@ -10,9 +10,11 @@ import { coreFiltersAtom } from '@/ui/segments/data-table/elements/context';
 import { FilterControls } from '@/ui/segments/data-table/elements/filter-controls';
 import { ListingFilterPanel } from '@/ui/segments/data-table/elements/listing-filter-panel/listing-filter-panel';
 import { Pagination } from '@/ui/segments/data-table/elements/pagination';
+import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
 import { Search } from '@/ui/segments/data-table/search';
 import { type OnCellClick, WrapperTable } from '@/ui/segments/data-table/table';
 import { CircuitViewToggle } from '@/ui/segments/explore/circuit/elements/view-toggle';
+import type { TCircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
 import { CircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
 import { cn } from '@/utils/css-class';
 

@@ -1,7 +1,7 @@
 'use client';
 
-import { InfoCircleFilled } from '@ant-design/icons';
 import { DatePicker, Form, Input, InputNumber, Space } from 'antd';
+import { InfoCircleFilled } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
 import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
@@ -18,7 +18,18 @@ import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brai
 
 export function Setup() {
   const form = Form.useFormInstance();
-  const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
+  const { projectId } = useWorkspace();
+
+  const { node: defaultBrainRegion } = useBrainRegionHierarchy({
+    dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
+  });
+
+  const BrainRegionDropdown = BrainRegionDropdownWithFormItem({
+    clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
+    showIcon: false,
+    charsPerLine: 200,
+    defaultBrainRegion: defaultBrainRegion as IBrainRegionHierarchy,
+  });
 
   return (
     <div className="h-full w-full">
@@ -66,12 +77,7 @@ export function Setup() {
           },
         ]}
       >
-        <BrainRegionDropdownWithFormItem
-          clsx={{ trigger: 'rounded-full w-full h-12', content: 'z-[99999]' }}
-          showIcon={false}
-          charsPerLine={200}
-          defaultBrainRegion={selectedBrainRegion as IBrainRegionHierarchy}
-        />
+        <BrainRegionDropdown />
       </Form.Item>
 
       <Form.Item

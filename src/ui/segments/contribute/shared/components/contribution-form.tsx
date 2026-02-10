@@ -1,14 +1,13 @@
 'use client';
 
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
-import { Form } from 'antd';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { Form } from 'antd';
 
 import { Button } from '@/ui/molecules/button';
 import { StepNavigation } from '@/ui/segments/contribute/shared/components/step-navigation';
 import { SubmitButton } from '@/ui/segments/contribute/shared/components/submit-button';
-import { SubmitEntityProgress } from '@/ui/segments/contribute/shared/components/submit-progress';
 import {
   ContributionPipelineProvider,
   useContributionPipeline,
@@ -133,7 +132,7 @@ function FormContent<
         )}
       </div>
 
-      <div className="flex w-full shrink-0 items-center justify-between gap-2 py-3">
+      <div className="flex w-full flex-shrink-0 items-center justify-between gap-2 py-3">
         <Button
           rounded
           variant="outline"

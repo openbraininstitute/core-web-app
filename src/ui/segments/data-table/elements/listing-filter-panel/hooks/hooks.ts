@@ -1,4 +1,3 @@
-import { isNil } from 'es-toolkit/compat';
 import React from 'react';
 
 import { getFieldDefinition } from '@/entity-configuration/definitions';

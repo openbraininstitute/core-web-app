@@ -7,8 +7,9 @@ import { getQueryClient } from '@/query-provider/server';
 import { ProjectRootLayout } from '@/ui/layouts/project-root-layout';
 import { Container as AiContainer } from '@/ui/segments/ai/container';
 import { SpaceManagerContainer } from '@/ui/segments/workspaces/space-manager';
+import { Container as AiContainer } from '@/ui/segments/ai/container';
+import { ProjectRootLayout } from '@/ui/layouts/project-root-layout';
 import { WorkspaceTopMenu } from '@/ui/segments/workspaces/top-menu';
-import { keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
 
 import type { ReactNode } from 'react';
 

@@ -1,4 +1,4 @@
-import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
+import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 import * as Accordion from '@radix-ui/react-accordion';
 
 import { ChevronIcon } from '@/components/icons';
@@ -34,21 +34,11 @@ export function FilterGroup({ items, filters, setFilters }: FilterGroupProps) {
     >
       {items?.map(({ content, display, label, toggleFunc }) => {
         const displayTrigger = display ? (
-          <button
-            key={`${label}-trigger-visible`}
-            type="button"
-            aria-label="filter-panel-hide-field-button"
-            onClick={toggleFunc}
-          >
+          <button type="button" aria-label="filter-panel-hide-field-button" onClick={toggleFunc}>
             <EyeOutlined style={{ color: 'white' }} />
           </button>
         ) : (
-          <button
-            key={`${label}-trigger-invisible}`}
-            type="button"
-            aria-label="filter-panel-show-field-button"
-            onClick={toggleFunc}
-          >
+          <button type="button" aria-label="filter-panel-show-field-button" onClick={toggleFunc}>
             <EyeInvisibleOutlined
               style={{ color: '#69C0FF' }}
               aria-label="filter-panel-show-field-button"

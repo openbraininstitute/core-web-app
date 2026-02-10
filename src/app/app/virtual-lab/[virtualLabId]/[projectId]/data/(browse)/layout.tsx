@@ -7,7 +7,11 @@ import { DataLayout } from '@/ui/layouts/explore-layout';
 import { dataTour, useNextStepOnboarding } from '@/ui/segments/app-setup/discover-app';
 import { ContributionModal } from '@/ui/segments/contribute/modal';
 import { DefaultContent as ExploreDefaultContent } from '@/ui/segments/explore/default-content';
+import { dataTour, useNextStepOnboarding } from '@/ui/segments/app-setup/discover-app';
+import { DataInnerLayout } from '@/ui/layouts/explore-inner-layout';
+import { ContributionModal } from '@/ui/segments/contribute/modal';
 import { DataHeader } from '@/ui/segments/explore/header';
+import { DataLayout } from '@/ui/layouts/explore-layout';
 import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 import type { ReactNode } from 'react';

@@ -4,7 +4,8 @@ import { isNil } from 'es-toolkit/compat';
 import isEqual from 'es-toolkit/compat/isEqual';
 import { atom, useAtom } from 'jotai';
 import { useRef } from 'react';
-
+import type { IMEModel } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import EntityPropertyDropdown from '@/features/scan-config/components/entity-property-dropdown';
 import ModelDetails from '@/features/scan-config/components/model-details';
 import NeuronIds from '@/features/scan-config/components/neuron-ids';
@@ -20,9 +21,6 @@ import {
 } from '@/features/scan-config/types';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
-
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 type Primitive = null | boolean | number | string;
 interface Object {

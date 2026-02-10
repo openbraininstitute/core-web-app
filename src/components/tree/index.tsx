@@ -7,9 +7,9 @@ import { MemoizedNode as Node } from '@/components/tree/elements/node';
 import { cn } from '@/utils/css-class';
 
 import type {
+  RenderNodeProps,
   NodeIndentation,
   NodeSubtitle,
-  RenderNodeProps,
   TTreeNode,
 } from '@/components/tree/types';
 
@@ -52,7 +52,7 @@ function Container({
   );
 }
 
-export function Tree<TNode extends TTreeNode>({
+export default function Tree<TNode extends TTreeNode>({
   dataKey,
   data,
   onClick,
@@ -168,5 +168,3 @@ export function Tree<TNode extends TTreeNode>({
     </Container>
   );
 }
-
-export default Tree;

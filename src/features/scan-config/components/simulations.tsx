@@ -1,8 +1,11 @@
 import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
+import type { CheckboxProps } from 'antd';
 import { Checkbox, ConfigProvider, Modal } from 'antd';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
+
+import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 
 import { requestOfflineTokenConsent } from '@/api/auth-manager';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
@@ -30,9 +33,6 @@ import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-
 import { classNames } from '@/util/utils';
 import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
-
-import type { CheckboxProps } from 'antd';
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 
 import styles from '@/features/scan-config/scan-config.module.css';
 

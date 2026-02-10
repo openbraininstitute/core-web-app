@@ -1,6 +1,5 @@
 'use client';
 
-import { LoadingOutlined } from '@ant-design/icons';
 import { useAtomValue, useSetAtom } from 'jotai';
 
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
@@ -32,18 +31,14 @@ export function BrainRegionHierarchy({
   onClickCallback?: (node: TTreeNode) => void;
 }) {
   const isCollapsed = useAtomValue(brainRegionSidebarAtom);
-  const { result: brainRegionHierarchyResult, loading } = usePrimaryExtendedHierarchySpeciesQuery();
-  const { changeBrainRegion, selectedBrainRegion, workspaceHierarchyId } =
-    useWorkspaceHierarchyRegistry();
+  const brainRegionHierarchyResult = useAtomValue(
+    brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom
+  );
+  const { updateHierarchyConfig } = useBrainRegionHierarchy({
+    dataKey,
+  });
+  const { selectedBrainRegion } = useGetSelectedBrainRegion();
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
-
-  if (loading) {
-    return (
-      <div className="w-full py-5 flex items-center justify-center">
-        <LoadingOutlined spin />
-      </div>
-    );
-  }
 
   if (!brainRegionHierarchyResult) {
     return (
@@ -54,19 +49,16 @@ export function BrainRegionHierarchy({
       </div>
     );
   }
-  const speciesConfig = getSpeciesConfigByHierarchyId(workspaceHierarchyId);
+
   const defaultBrainRegion = brainRegionHierarchyResult.options.find(
-    (o) => o.data.annotation_value === speciesConfig.DefaultSelectedAnnotationValue
+    (o) => o.data.annotation_value === DEFAULT_SELECTED_BRAIN_REGION_ANNOTATION_VALUE
   )?.value;
 
   const onClick = (clickedNode: TTreeNode) => {
-    changeBrainRegion(clickedNode as IBrainRegionHierarchy);
+    updateHierarchyConfig(clickedNode as IBrainRegionHierarchy);
     scrollToNode(clickedNode as IBrainRegionHierarchy, 'center');
     setPageNumber(DEFAULT_PAGE_NUMBER);
-    makeBrainRegionClickEvent({
-      dataKey,
-      node: clickedNode as IBrainRegionHierarchy,
-    });
+    makeBrainRegionClickEvent({ dataKey, node: clickedNode as IBrainRegionHierarchy });
     onClickCallback?.(clickedNode);
     userJourneyTracker.registerBrainRegionClick(clickedNode.name);
   };
@@ -102,11 +94,7 @@ export function BrainRegionHierarchy({
                   }}
                   selectedNode={(selectedBrainRegion as unknown as TTreeNode) ?? null}
                   onClick={onClick}
-                  renderNode={
-                    BrainRegionHierarchyNodeRender as (
-                      props: RenderNodeProps<TTreeNode>
-                    ) => ReactNode
-                  }
+                  renderNode={BrainRegionHierarchyNodeRender as any}
                 />
               </HydrateWrapper>
             )}

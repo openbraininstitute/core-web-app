@@ -18,6 +18,9 @@ export interface Snapshot {
 }
 
 export function useSnapshot(): Snapshot {
+  const params = useParams<{ projectId: string }>();
+  const { projectId } = params;
+  const { section } = useAiContext();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { selectedBrainRegion, workspaceHierarchyId } = useWorkspaceHierarchyRegistry();

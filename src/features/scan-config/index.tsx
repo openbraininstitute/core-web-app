@@ -3,6 +3,9 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { Suspense, useState } from 'react';
 
+import type { Config } from '@/features/scan-config/components/components';
+import type { TabType } from '@/features/scan-config/types';
+
 import { useConfigAtom } from '@/features/scan-config/components/hooks/config-atom';
 import {
   resetConfig,
@@ -19,9 +22,6 @@ import { useEntries, useModel, useSchemaName } from './components/hooks';
 import Left from './components/left';
 import Middle from './components/middle';
 import SimulationsTab from './components/simulations';
-
-import type { Config } from '@/features/scan-config/components/components';
-import type { TabType } from '@/features/scan-config/types';
 
 import styles from '@/features/scan-config/scan-config.module.css';
 

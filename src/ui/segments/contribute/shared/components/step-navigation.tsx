@@ -99,7 +99,7 @@ export function StepNavigation() {
     useContributionPipeline();
 
   return (
-    <div className="mb-2 shrink-0">
+    <div className="mb-2 flex-shrink-0">
       <Breadcrumb>
         <BreadcrumbList className="justify-between gap-0.5 sm:gap-0.5">
           {progressSteps.map((step, index) => {
