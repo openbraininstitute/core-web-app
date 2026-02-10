@@ -2,9 +2,11 @@
 
 import { isString } from 'es-toolkit/compat';
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
-
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import { fieldsDefinitionRegistry, getFieldDefinition } from '@/entity-configuration/definitions';
+import type { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import {
   type OrderShape,
   SortOrder,

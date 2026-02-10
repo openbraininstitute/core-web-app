@@ -1,19 +1,23 @@
+import { atomFamily } from 'jotai/utils';
+import { atom } from 'jotai';
+
 import escapeRegExp from 'es-toolkit/compat/escapeRegExp';
+import isEmpty from 'es-toolkit/compat/isEmpty';
+import toPairs from 'es-toolkit/compat/toPairs';
+import reduce from 'es-toolkit/compat/reduce';
+import values from 'es-toolkit/compat/values';
+import sumBy from 'es-toolkit/compat/sumBy';
+import map from 'es-toolkit/compat/map';
 import get from 'es-toolkit/compat/get';
 import has from 'es-toolkit/compat/has';
-import isEmpty from 'es-toolkit/compat/isEmpty';
-import map from 'es-toolkit/compat/map';
-import reduce from 'es-toolkit/compat/reduce';
-import sumBy from 'es-toolkit/compat/sumBy';
-import toPairs from 'es-toolkit/compat/toPairs';
-import values from 'es-toolkit/compat/values';
-import { atom } from 'jotai';
-import { atomFamily } from 'jotai-family';
 
 import { downloadAsset, listDirectoryOfAssets } from '@/api/entitycore/queries/assets';
-import { EntityTypeDict } from '@/api/entitycore/types';
 import { EmptyValue } from '@/entity-configuration/definitions/renderer';
+import { EntityTypeDict } from '@/api/entitycore/types';
 
+import type { TCircuitContentConfigurationKeys } from '@/ui/segments/explore/circuit/elements/download-panel/content-configuration';
+import type { DirectoryListContent } from '@/api/entitycore/types/shared/global';
+import type { WorkspaceContext } from '@/types/common';
 import type {
   CircuitConnectivityMatricesConfiguration,
   SonataCircuitComponentConfig,
@@ -21,9 +25,6 @@ import type {
   SonataCircuitNetworkEdgeConfigItem,
   SonataCircuitNetworkNodeConfigItem,
 } from '@/api/entitycore/types/entities/circuit';
-import type { DirectoryListContent } from '@/api/entitycore/types/shared/global';
-import type { WorkspaceContext } from '@/types/common';
-import type { TCircuitContentConfigurationKeys } from '@/ui/segments/explore/circuit/elements/download-panel/content-configuration';
 
 type FilesCount = Record<TCircuitContentConfigurationKeys, number>;
 
@@ -100,20 +101,10 @@ export function buildNetworksConfig(
   manifest?: Record<string, string>
 ) {
   const edges = networks.edges.map((o) =>
-    buildNetworkConfigItem({
-      item: o,
-      selector: 'edges_file',
-      directory,
-      manifest,
-    })
+    buildNetworkConfigItem({ item: o, selector: 'edges_file', directory, manifest })
   );
   const nodes = networks.nodes.map((o) =>
-    buildNetworkConfigItem({
-      item: o,
-      selector: 'nodes_file',
-      directory,
-      manifest,
-    })
+    buildNetworkConfigItem({ item: o, selector: 'nodes_file', directory, manifest })
   );
 
   return {

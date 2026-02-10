@@ -3,6 +3,9 @@
 import { CheckCircleFilled, InfoCircleFilled, RightOutlined } from '@ant-design/icons';
 import { Fragment, useMemo } from 'react';
 
+import { useContributionPipeline } from '@/ui/segments/contribute/shared/pipeline/context';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { DEFAULT_LICENSE_NAME } from '@/ui/segments/contribute/shared/schemas';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,9 +14,6 @@ import {
   BreadcrumbSeparator,
 } from '@/ui/molecules/breadcrumb/index';
 import { Button } from '@/ui/molecules/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { useContributionPipeline } from '@/ui/segments/contribute/shared/pipeline/context';
-import { DEFAULT_LICENSE_NAME } from '@/ui/segments/contribute/shared/schemas';
 import { cn } from '@/utils/css-class';
 
 import type { TStepValidationStatus } from '@/ui/segments/contribute/shared/types';
@@ -47,7 +47,7 @@ interface IStepIconProps {
 function StepIcon({ status, hasTooltip, tooltipContent }: IStepIconProps) {
   const icon = useMemo(() => {
     if (status === 'valid') {
-      return <CheckCircleFilled className="text-teal-500!" />;
+      return <CheckCircleFilled className="text-teal-500" />;
     }
     if (hasTooltip && status === 'non-touched') {
       return <InfoCircleFilled className="text-primary-8" />;
@@ -66,11 +66,11 @@ function StepIcon({ status, hasTooltip, tooltipContent }: IStepIconProps) {
             side="bottom"
             sideOffset={0}
             avoidCollisions
-            className={cn('bg-primary-8 z-99999', {
-              'bg-teal-500!': status === 'valid',
+            className={cn('bg-primary-8 z-[99999]', {
+              'bg-teal-500': status === 'valid',
             })}
             arrowClassName={cn('text-primary-8', {
-              'text-teal-500!': status === 'valid',
+              'text-teal-500': status === 'valid',
             })}
           >
             {tooltipContent}
@@ -85,7 +85,7 @@ function StepIcon({ status, hasTooltip, tooltipContent }: IStepIconProps) {
 
 function DefaultStepIcon({ status }: { status: TStepValidationStatus }) {
   if (status === 'valid') {
-    return <CheckCircleFilled className="text-teal-500!" />;
+    return <CheckCircleFilled className="text-teal-500" />;
   }
   return null;
 }
@@ -99,7 +99,7 @@ export function StepNavigation() {
     useContributionPipeline();
 
   return (
-    <div className="mb-2 shrink-0">
+    <div className="mb-2 flex-shrink-0">
       <Breadcrumb>
         <BreadcrumbList className="justify-between gap-0.5 sm:gap-0.5">
           {progressSteps.map((step, index) => {

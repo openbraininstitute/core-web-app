@@ -5,19 +5,6 @@ import { Spin } from 'antd';
 import { useAtom } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { useMemo, useState } from 'react';
-
-import { BrainRegionDropdown } from '@/features/brain-region-dropdown';
-import { coreFiltersAtom } from '@/ui/segments/data-table/elements/context';
-import { FilterControls } from '@/ui/segments/data-table/elements/filter-controls';
-import { ListingFilterPanel } from '@/ui/segments/data-table/elements/listing-filter-panel/listing-filter-panel';
-import { Pagination } from '@/ui/segments/data-table/elements/pagination';
-import { Search } from '@/ui/segments/data-table/search';
-import { type OnCellClick, WrapperTable } from '@/ui/segments/data-table/table';
-import { cn } from '@/utils/css-class';
-
-import type { ColumnProps, TableProps } from 'antd/es/table';
-import type { RowSelectionType } from 'antd/es/table/interface';
-import type { ComponentProps, CSSProperties, ReactNode } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type {
   EntityCoreIdentifiable,
@@ -28,9 +15,17 @@ import type {
   Facets,
 } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
+import { BrainRegionDropdown } from '@/features/brain-region-dropdown';
 import type { WorkspaceContext } from '@/types/common';
+import { coreFiltersAtom } from '@/ui/segments/data-table/elements/context';
+import { FilterControls } from '@/ui/segments/data-table/elements/filter-controls';
+import { ListingFilterPanel } from '@/ui/segments/data-table/elements/listing-filter-panel/listing-filter-panel';
+import { Pagination } from '@/ui/segments/data-table/elements/pagination';
 import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
 import type { UseExpandableTableOptions } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
+import { Search } from '@/ui/segments/data-table/search';
+import { type OnCellClick, WrapperTable } from '@/ui/segments/data-table/table';
+import { cn } from '@/utils/css-class';
 
 export type Props<T extends EntityCoreIdentifiable> = {
   facets: Facets | undefined;
@@ -149,7 +144,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           )}
           <div className="[grid-area:filter]">
             <div className="ml-auto flex h-12 items-stretch justify-end gap-3">
-              {requireBrainRegionDropdown && <BrainRegionDropdown />}
+              {requireBrainRegionDropdown && <BrainRegionDropdown dataKey={dataKey} />}
               <FilterControls
                 filters={filters}
                 displayControlPanel={displayControlPanel}

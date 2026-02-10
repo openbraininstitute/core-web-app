@@ -1,14 +1,13 @@
-import { isNil } from 'es-toolkit/compat';
 import React from 'react';
-
-import { getFieldDefinition } from '@/entity-configuration/definitions';
-import { fieldTitleSentenceCase } from '@/util/utils';
+import { isNil } from 'es-toolkit/compat';
 
 import { createFilterItemComponent } from './create-filter-item-component';
 
-import type { Facets } from '@/api/entitycore/types/shared/response';
-import type { CoreFilterValues, TCoreFilter } from '@/entity-configuration/definitions/types';
-import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
+import { type TCoreFilter, CoreFilterValues } from '@/entity-configuration/definitions/types';
+import { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
+import { getFieldDefinition } from '@/entity-configuration/definitions';
+import { Facets } from '@/api/entitycore/types/shared/response';
+import { fieldTitleSentenceCase } from '@/util/utils';
 
 export function useFilterItems(
   filters: TCoreFilter[],

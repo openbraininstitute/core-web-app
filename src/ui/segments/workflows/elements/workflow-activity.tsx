@@ -7,12 +7,13 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
 import { useMemo, useState } from 'react';
-
 import {
   type EntityCoreObjectTypes,
   EntityTypeDict,
   type TEntityTypeDict,
 } from '@/api/entitycore/types';
+import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
 import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
@@ -35,6 +36,7 @@ import { BaseTable } from '@/ui/segments/data-table/table';
 import { StatusMap } from '@/ui/segments/project/activities/elements/helpers';
 import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
 import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/browse-header';
+import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 import { ActivityDict, ActivityValues } from '@/ui/segments/workflows/elements/helpers';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';

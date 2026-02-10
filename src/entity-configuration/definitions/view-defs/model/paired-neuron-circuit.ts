@@ -1,4 +1,6 @@
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import { ViewDefinitionConfig } from '../types';
+import { EntityCoreFields } from '../../fields-defs/enums';
+
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
@@ -11,7 +13,6 @@ export const ViewDefForPairedNeuronCircuit: ViewDefinitionConfig = {
     EntityCoreFields.Name,
     EntityCoreFields.Description,
     EntityCoreFields.BrainRegion,
-    EntityCoreFields.SpeciesName,
     EntityCoreFields.CircuitNumberNeurons,
     EntityCoreFields.CircuitNumberSynapses,
     EntityCoreFields.CircuitNumberConnections,

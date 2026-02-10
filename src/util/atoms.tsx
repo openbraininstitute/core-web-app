@@ -1,5 +1,5 @@
-import { atomWithRefresh } from 'jotai/utils';
-import { atomFamily } from 'jotai-family';
+import { Atom, WritableAtom } from 'jotai';
+import { atomFamily, atomWithRefresh } from 'jotai/utils';
 
 import type { Atom, WritableAtom } from 'jotai';
 
@@ -69,15 +69,12 @@ export function atomFamilyWithExpiration<
   FamilyParam,
   AtomValue,
   SetAtomArgs extends unknown[],
-  SetAtomResult,
+  SetAtomResult extends unknown,
 >(
   initializeWritableAtom: (
     param: FamilyParam
   ) => WritableAtom<AtomValue, SetAtomArgs, SetAtomResult>,
-  options: {
-    ttl: number;
-    areEqual?: (a: FamilyParam, b: FamilyParam) => boolean;
-  }
+  options: { ttl: number; areEqual?: (a: FamilyParam, b: FamilyParam) => boolean }
 ) {
   const family = atomFamily((param) => {
     const atom = initializeWritableAtom(param);

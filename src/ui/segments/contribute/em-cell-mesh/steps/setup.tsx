@@ -2,7 +2,7 @@
 
 import { DatePicker, Form, Input, InputNumber } from 'antd';
 import dayjs from 'dayjs';
-
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 import {
   EMCellMeshGenerationMethodDict,
   EMCellMeshTypeDict,
@@ -10,7 +10,8 @@ import {
   type TEMCellMeshType,
 } from '@/api/entitycore/types/entities/em-cell-mesh';
 import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
-import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
 import { EMCellMeshSchema } from '@/ui/segments/contribute/em-cell-mesh/schema';
 import { EMDenseReconstructionDatasetSelector } from '@/ui/segments/contribute/shared/components/em-dense-reconstruction-dataset-selector';
@@ -19,12 +20,24 @@ import {
   RequiredFieldMarker,
   renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
+import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
 export function Setup() {
   const form = Form.useFormInstance();
-  const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
+  const { projectId } = useWorkspace();
+
+  const { node: defaultBrainRegion } = useBrainRegionHierarchy({
+    dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
+  });
+
+  const BrainRegionDropdown = BrainRegionDropdownWithFormItem({
+    clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
+    showIcon: false,
+    charsPerLine: 200,
+    defaultBrainRegion: defaultBrainRegion as IBrainRegionHierarchy,
+  });
 
   const GenerationMethodFormInput = SelectPopoverFormItem<TEMCellMeshGenerationMethod>({
     options: Object.entries(EMCellMeshGenerationMethodDict).map(([, value]) => ({
@@ -80,19 +93,14 @@ export function Setup() {
           },
         ]}
       >
-        <BrainRegionDropdownWithFormItem
-          clsx={{ trigger: 'rounded-full w-full h-12', content: 'z-[99999]' }}
-          showIcon={false}
-          charsPerLine={200}
-          defaultBrainRegion={selectedBrainRegion as IBrainRegionHierarchy}
-        />
+        <BrainRegionDropdown />
       </Form.Item>
 
       <EMDenseReconstructionDatasetSelector schema={EMCellMeshSchema} />
 
       <Form.Item
         name={['setup', 'dense_reconstruction_cell_id']}
-        label={renderLabel('Dense reconstruction cell id', 'main', RequiredFieldMarker)}
+        label={renderLabel('Dense reconstruction cell id', 'main')}
         rules={[
           {
             required: true,

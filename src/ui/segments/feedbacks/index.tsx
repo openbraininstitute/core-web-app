@@ -13,7 +13,6 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
-import { log } from '@/utils/logger';
 
 type FeedbackFormProps = {
   onClose: () => void;
@@ -51,9 +50,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
 
   useEffect(() => {
     return () => {
-      imageUrls.forEach((url) => {
-        URL.revokeObjectURL(url);
-      });
+      imageUrls.forEach((url) => URL.revokeObjectURL(url));
     };
   }, [imageUrls]);
 
@@ -259,6 +256,13 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
     const labels = [type, section].filter(Boolean);
 
     try {
+      // eslint-disable-next-line no-console
+      console.log('Submitting feedback:', {
+        title,
+        body: body.substring(0, 100) + '...',
+        label: getMonthYearLabel(),
+      });
+
       const res = await fetch('/api/feedback/create-ticket', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -274,12 +278,16 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
 
       const responseData = await res.json().catch(() => ({ error: 'Failed to parse response' }));
 
+      // eslint-disable-next-line no-console
+      console.log('API response:', { status: res.status, data: responseData });
+
       if (!res.ok) {
         throw new Error(responseData.error || 'Failed to create ticket');
       }
 
       if (responseData.warning) {
-        log('warn', responseData.warning);
+        // eslint-disable-next-line no-console
+        console.warn('Warning:', responseData.warning);
       }
 
       setIsSuccess(true);
@@ -296,7 +304,8 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error creating ticket';
       setMessage(`Error: ${errorMessage}`);
-      log('error', 'Error creating ticket:', error);
+      // eslint-disable-next-line no-console
+      console.error('Error creating ticket:', error);
     } finally {
       setLoading(false);
     }
