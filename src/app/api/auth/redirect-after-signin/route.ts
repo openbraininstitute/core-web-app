@@ -3,9 +3,10 @@ import { NextResponse } from 'next/server';
 
 const RETURN_TO_COOKIE = 'preview-return-to';
 
-export async function GET() {
+export async function GET(request: Request) {
   const cookieStore = await cookies();
   const returnTo = cookieStore.get(RETURN_TO_COOKIE)?.value;
+  const requestUrl = new URL(request.url);
 
   if (returnTo && isValidPreviewDomain(returnTo)) {
     const response = NextResponse.redirect(returnTo);
@@ -13,7 +14,10 @@ export async function GET() {
     return response;
   }
 
-  return NextResponse.redirect(new URL('/app', returnTo || 'https://openbluebrain.com'));
+  const fallbackUrl = new URL('/app', requestUrl.origin);
+  const response = NextResponse.redirect(fallbackUrl);
+  response.cookies.delete(RETURN_TO_COOKIE);
+  return response;
 }
 
 function isValidPreviewDomain(url: string): boolean {
