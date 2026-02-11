@@ -155,7 +155,7 @@ export default function BlockDictionaryEntries({
         }}
       >
         <div className="w-full text-left truncate max-w-[24ch]">{entry}</div>
-        <span className="text-slate-500 text-[10px] animate-pulse">✦</span>
+        <span className="text-slate-500 text-lg animate-pulse">✦</span>
       </button>
     );
   }
@@ -285,7 +285,7 @@ export default function BlockDictionaryEntries({
                   )}
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 text-[14px]">
                   {errors?.find((error) =>
                     error.instancePath.startsWith(`/${rootElement}/${subkey}`)
                   ) ? (
