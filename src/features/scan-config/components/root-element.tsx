@@ -1,7 +1,5 @@
 import { CheckCircleFilled, WarningFilled } from '@ant-design/icons';
-import type { ErrorObject } from 'ajv';
 import { isEqual } from 'es-toolkit/compat';
-import type React from 'react';
 
 import { useAIConfig } from '@/services/ai-agent';
 
@@ -15,6 +13,9 @@ import {
 import BlockDictionaryEntries from './block-dictionary-entries';
 import { Chevron, type Config, Tab } from './components';
 import { isRootBlock } from './hooks/schema';
+
+import type { ErrorObject } from 'ajv';
+import type React from 'react';
 
 export function RootElement({
   schema,
@@ -91,15 +92,15 @@ export function RootElement({
         extraClass="w-full flex justify-between h-[50px] min-h-[50px] items-center drop-shadow"
       >
         {schema.properties?.[rootElement]?.title}
-        <div className="flex gap-2">
+        <div className="flex gap-3">
+          {!!aiConfig && !isEqual(config[rootElement], aiConfig[rootElement]) && (
+            <span className="text-slate-500! text-lg animate-pulse">✦</span>
+          )}
+
           {errors?.find((error) => error.instancePath.startsWith(`/${rootElement}`)) ? (
             <WarningFilled className="text-yellow-400!" />
           ) : (
             <CheckCircleFilled className="text-green-600!" />
-          )}
-
-          {!!aiConfig && !isEqual(config[rootElement], aiConfig[rootElement]) && (
-            <span className="text-slate-500! text-[10px] animate-pulse">✦</span>
           )}
 
           <Chevron rotate={rootElementSchema.ui_element === 'block_dictionary' ? 90 : 0} />
