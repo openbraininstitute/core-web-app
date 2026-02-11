@@ -24,7 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       job-id: ${{ steps.start-build.outputs.job-id }}
-      branch-name: ${{ steps.vars.outputs.branch-name }}
+      git-branch: ${{ steps.vars.outputs.git-branch }}
+      amplify-branch: ${{ steps.vars.outputs.amplify-branch }}
       preview-url: ${{ steps.get-url.outputs.url }}
     steps:
       - name: Configure AWS credentials
@@ -36,14 +37,16 @@ jobs:
       - name: Set variables
         id: vars
         run: |
-          BRANCH_NAME="${{ github.head_ref }}"
-          echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          GIT_BRANCH="${{ github.head_ref }}"
+          AMPLIFY_BRANCH="${GIT_BRANCH//\//-}"
+          echo "git-branch=$GIT_BRANCH" >> $GITHUB_OUTPUT
+          echo "amplify-branch=$AMPLIFY_BRANCH" >> $GITHUB_OUTPUT
 
       - name: Cancel running builds
         run: |
           RUNNING_JOBS=$(aws amplify list-jobs \
             --app-id ${{ env.AMPLIFY_APP_ID }} \
-            --branch-name ${{ steps.vars.outputs.branch-name }} \
+            --branch-name ${{ steps.vars.outputs.amplify-branch }} \
             --max-results 5 \
             --query 'jobSummaries[?status==`PENDING` || status==`PROVISIONING` || status==`RUNNING`].jobId' \
             --output text)
@@ -52,7 +55,7 @@ jobs:
             echo "Stopping job: $JOB_ID"
             aws amplify stop-job \
               --app-id ${{ env.AMPLIFY_APP_ID }} \
-              --branch-name ${{ steps.vars.outputs.branch-name }} \
+              --branch-name ${{ steps.vars.outputs.amplify-branch }} \
               --job-id $JOB_ID || true
           done
 
@@ -61,7 +64,7 @@ jobs:
         run: |
           JOB_ID=$(aws amplify start-job \
             --app-id ${{ env.AMPLIFY_APP_ID }} \
-            --branch-name ${{ steps.vars.outputs.branch-name }} \
+            --branch-name ${{ steps.vars.outputs.amplify-branch }} \
             --job-type RELEASE \
             --query 'jobSummary.jobId' \
             --output text)
@@ -70,7 +73,7 @@ jobs:
       - name: Get preview URL
         id: get-url
         run: |
-          echo "url=https://${{ steps.vars.outputs.branch-name }}.${{ env.PREVIEW_DOMAIN }}" >> $GITHUB_OUTPUT
+          echo "url=https://${{ steps.vars.outputs.amplify-branch }}.${{ env.PREVIEW_DOMAIN }}" >> $GITHUB_OUTPUT
 
       - name: Post initial comment
         uses: actions/github-script@v7
@@ -95,11 +98,11 @@ jobs:
             const body = `${marker}
             ## Preview Deployment
 
-            | Name | Status | Preview | Updated |
+            | Branch | Status | Preview | Updated |
             |--------|--------|----------------|----------|
-            | \`${{ steps.vars.outputs.branch-name }}\` | ⏳ Starting | [Visit preview](${process.env.PREVIEW_URL}) | ${formatted} |
+            | \`${{ steps.vars.outputs.git-branch }}\` | ⏳ Starting | [Visit preview](${process.env.PREVIEW_URL}) | ${formatted} |
 
-            [View Build Logs →](https://${{ env.AWS_REGION }}.console.aws.amazon.com/amplify/apps/${{ env.AMPLIFY_APP_ID }}/branches/${{ steps.vars.outputs.branch-name }}/deployments/${{ steps.start-build.outputs.job-id }})`;
+            [View Build Logs →](https://${{ env.AWS_REGION }}.console.aws.amazon.com/amplify/apps/${{ env.AMPLIFY_APP_ID }}/branches/${{ steps.vars.outputs.amplify-branch }}/deployments/${{ steps.start-build.outputs.job-id }})`;
 
             if (existingComment) {
               await github.rest.issues.updateComment({
@@ -131,7 +134,8 @@ jobs:
         uses: actions/github-script@v7
         env:
           JOB_ID: ${{ needs.deploy.outputs.job-id }}
-          BRANCH_NAME: ${{ needs.deploy.outputs.branch-name }}
+          GIT_BRANCH: ${{ needs.deploy.outputs.git-branch }}
+          AMPLIFY_BRANCH: ${{ needs.deploy.outputs.amplify-branch }}
           PREVIEW_URL: ${{ needs.deploy.outputs.preview-url }}
         with:
           script: |
@@ -140,7 +144,7 @@ jobs:
 
             const getJobStatus = () => {
               const output = execSync(
-                `aws amplify get-job --app-id ${process.env.AMPLIFY_APP_ID} --branch-name "${process.env.BRANCH_NAME}" --job-id ${process.env.JOB_ID} --region ${process.env.AWS_REGION} --output json`,
+                `aws amplify get-job --app-id ${process.env.AMPLIFY_APP_ID} --branch-name "${process.env.AMPLIFY_BRANCH}" --job-id ${process.env.JOB_ID} --region ${process.env.AWS_REGION} --output json`,
                 { encoding: 'utf-8' }
               );
               return JSON.parse(output).job.summary;
@@ -174,11 +178,11 @@ jobs:
               const body = `${marker}
             ## Preview Deployment
 
-            | Name | Status | Preview | Updated |
+            | Branch | Status | Preview | Updated |
             |--------|--------|----------------|----------|
-            | \`${process.env.BRANCH_NAME}\` | ${config.icon} ${config.text} | ${urlCell} | ${formatted} |
+            | \`${process.env.GIT_BRANCH}\` | ${config.icon} ${config.text} | ${urlCell} | ${formatted} |
 
-            [View Build Logs →](https://${process.env.AWS_REGION}.console.aws.amazon.com/amplify/apps/${process.env.AMPLIFY_APP_ID}/branches/${process.env.BRANCH_NAME}/deployments/${process.env.JOB_ID})`;
+            [View Build Logs →](https://${process.env.AWS_REGION}.console.aws.amazon.com/amplify/apps/${process.env.AMPLIFY_APP_ID}/branches/${process.env.AMPLIFY_BRANCH}/deployments/${process.env.JOB_ID})`;
 
               if (existingComment) {
                 await github.rest.issues.updateComment({
@@ -246,7 +250,7 @@ jobs:
             const body = `${marker}
             ## Preview Deployment
 
-            | Name | Status | Preview | Updated |
+            | Branch | Status | Preview | Updated |
             |--------|--------|----------------|----------|
             | \`${{ github.head_ref }}\` | ❌ Deleted | - | ${formatted} |`;
 
