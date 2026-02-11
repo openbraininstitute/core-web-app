@@ -25,14 +25,21 @@ export default function ParameterSweep({
   const [mode, setMode] = useState<'single' | 'multiple'>(
     Array.isArray(value) ? 'multiple' : 'single'
   );
-  const [singleValue, setSingleValue] = useState(Array.isArray(value) ? null : value);
-  const [values, setValues] = useState(Array.isArray(value) ? value : [value]);
+
+  const singleValue = (() => {
+    if (Array.isArray(value) && !isNil(value[0])) return value[0];
+    if (!Array.isArray(value) && !isNil(value)) return value;
+    return null;
+  })();
+
+  const multipleValues = (() => {
+    if (Array.isArray(value)) return value;
+    return [value];
+  })();
 
   // When the AI agent updates the value we need to change the mode
   useEffect(() => {
     setMode(Array.isArray(value) ? 'multiple' : 'single');
-    setSingleValue(Array.isArray(value) ? null : value);
-    setValues(Array.isArray(value) ? value : [value]);
   }, [value]);
 
   function error(value: number) {
@@ -54,7 +61,6 @@ export default function ParameterSweep({
           status={errorMessage ? 'error' : undefined}
           value={value}
           onChange={(v) => {
-            setSingleValue(v); // Update locally
             onChange(v); // Update in the config
           }}
           className="w-full"
@@ -67,7 +73,7 @@ export default function ParameterSweep({
             className="text-primary-8 absolute top-[10px] right-[8px]"
             onClick={() => {
               setMode('multiple');
-              onChange(values);
+              onChange(multipleValues);
             }}
           />
         )}
@@ -84,14 +90,14 @@ export default function ParameterSweep({
               className="text-primary-8"
               onClick={() => {
                 setMode('single');
-                onChange(singleValue); // Update the config
+                onChange(singleValue);
               }}
             />
           </div>
         )}
         <div className="border-neutral-2 rounded-lg border bg-white p-3">
           <div className="flex flex-col gap-1">
-            {values.map((v, i) => {
+            {multipleValues.map((v, i) => {
               const errorMessage = !isNil(v) ? error(v) : undefined;
               return (
                 <>
@@ -102,31 +108,28 @@ export default function ParameterSweep({
                       value={v}
                       disabled={disabled}
                       onChange={(newValue) => {
-                        const updated = [...values];
+                        const updated = [...multipleValues];
                         updated[i] = newValue;
-                        setValues(updated);
                         onChange(updated);
                       }}
                     />
 
                     {!disabled && (
                       <div className="flex gap-1">
-                        {i === values.length - 1 && (
+                        {i === multipleValues.length - 1 && (
                           <PlusCircleOutlined
                             className="text-primary-8"
                             onClick={() => {
-                              setValues([...values, null]);
-                              onChange([...values, null]);
+                              onChange([...multipleValues, null]);
                             }}
                           />
                         )}
-                        {values.length >= 2 && (
+                        {multipleValues.length >= 2 && (
                           <CloseOutlined
                             className="text-primary-8"
                             onClick={() => {
-                              const updated = [...values];
+                              const updated = [...multipleValues];
                               updated.splice(i, 1);
-                              setValues(updated);
                               onChange(updated);
                             }}
                           />
