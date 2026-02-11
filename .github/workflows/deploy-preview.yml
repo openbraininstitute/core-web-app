@@ -1,4 +1,4 @@
-name: Amplify Preview Deployment
+name: Preview
 
 on:
   pull_request:
