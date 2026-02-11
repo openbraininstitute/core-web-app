@@ -8,13 +8,10 @@ import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { RESET } from 'jotai/utils';
 import dynamic from 'next/dynamic';
 import { type ComponentProps, type ReactNode, useEffect } from 'react';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
-import type { Facets, Pagination } from '@/api/entitycore/types/shared/response';
+import ApiError from '@/api/error';
 import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
-import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
@@ -51,6 +48,12 @@ import {
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
+
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
+import type { Facets, Pagination } from '@/api/entitycore/types/shared/response';
+import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 
 const CircuitTable = dynamic(() => import('@/ui/segments/explore/circuit/table'), { ssr: false });
 
@@ -273,14 +276,30 @@ export function BrowseCircuit({
 
   if (error) {
     log('error', error);
+    let content: ReactNode = `An error occurred while fetching circuit entities data for this region. We are sorry about the inconvenience. Please contact support.`;
+    let shouldContactSupport = true;
+
+    if (error instanceof ApiError && error.cause?.code === 'NOT_AUTHORIZED') {
+      shouldContactSupport = false;
+      content = (
+        <>
+          You don&apos;t have permission to access{' '}
+          <strong className="lowercase">circuit entities</strong> in this project.
+          <div className="h-3" />
+          <p className="text-xl font-light">
+            Please check that you are a member of the virtual lab and project, or reach out to your
+            project administrator to request access.
+          </p>
+        </>
+      );
+    }
+
     return (
       <GenericError
-        shouldContactSupport
-        text={`
-    An error occurred while fetching circuit entities data for this region.
-    We are sorry about the inconvenience. Please contact support
-    `}
+        shouldContactSupport={shouldContactSupport}
+        content={content}
         icon={<WarningOutlined className="fill-current [font-size:inherit]" />}
+        cls={{ content: 'max-w-3xl' }}
       />
     );
   }

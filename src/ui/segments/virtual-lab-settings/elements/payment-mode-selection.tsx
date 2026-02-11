@@ -3,7 +3,7 @@
 import { CreditCardOutlined, DollarOutlined, TagOutlined } from '@ant-design/icons';
 
 import { SparklesFill } from '@/components/icons/sparkles';
-import { useUserRole } from '@/hooks/use-user-role';
+import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { cn } from '@/utils/css-class';
 
 export const PurchaseMode = {
@@ -37,7 +37,7 @@ export function PaymentModeSelection({
   virtualLabId: string;
   onModeChange: (m: TPurchaseModeDictionary) => void;
 }) {
-  const { isVirtualLabOwner: isOwner } = useUserRole({ virtualLabId });
+  const { isVirtualLabOwner: isOwner } = useWorkspaceMembership({ virtualLabId });
   return (
     <div
       className={cn('grid gap-4 p-5 select-none md:grid-cols-2', { 'md:grid-cols-1': !isOwner })}

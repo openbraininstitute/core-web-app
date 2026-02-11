@@ -25,7 +25,6 @@ const FREE_ACCESS_PAGES = [
   '/gallery',
   '/gallery/*',
   '/app/version',
-
   '/app/log-in',
 
   '/api/newsletter',
