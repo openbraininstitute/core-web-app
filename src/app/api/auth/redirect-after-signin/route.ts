@@ -1,22 +1,22 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-const RETURN_TO_COOKIE = 'preview-return-to';
+import { AUTH_PROXY_REDIRECT_TARGET_COOKIE } from '@/auth';
 
 export async function GET(request: Request) {
   const cookieStore = await cookies();
-  const returnTo = cookieStore.get(RETURN_TO_COOKIE)?.value;
+  const returnTo = cookieStore.get(AUTH_PROXY_REDIRECT_TARGET_COOKIE)?.value;
   const requestUrl = new URL(request.url);
 
   if (returnTo && isValidPreviewDomain(returnTo)) {
     const response = NextResponse.redirect(returnTo);
-    response.cookies.delete(RETURN_TO_COOKIE);
+    response.cookies.delete(AUTH_PROXY_REDIRECT_TARGET_COOKIE);
     return response;
   }
 
   const fallbackUrl = new URL('/app', requestUrl.origin);
   const response = NextResponse.redirect(fallbackUrl);
-  response.cookies.delete(RETURN_TO_COOKIE);
+  response.cookies.delete(AUTH_PROXY_REDIRECT_TARGET_COOKIE);
   return response;
 }
 

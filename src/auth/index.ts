@@ -1,7 +1,12 @@
-import type { GetServerSidePropsContext, NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession, type NextAuthOptions, type Session, type TokenSet } from 'next-auth';
+
 import { serverConfig as config } from '@/config/server';
+
 import { log } from '../utils/logger';
+
+import type { GetServerSidePropsContext, NextApiRequest, NextApiResponse } from 'next';
+
+export const AUTH_PROXY_REDIRECT_TARGET_COOKIE = 'auth-proxy-redirect-target';
 
 const issuer = config.KEYCLOAK_ISSUER;
 const clientId = config.KEYCLOAK_CLIENT_ID;

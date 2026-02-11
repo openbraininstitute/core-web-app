@@ -4,11 +4,12 @@ import { useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { useEffect } from 'react';
 
+import { AUTH_PROXY_REDIRECT_TARGET_COOKIE } from '@/auth';
 import { config } from '@/config';
 
 function setAuthProxyRedirectCookie(url: string) {
   // biome-ignore lint/suspicious/noDocumentCookie: Enable auth for preview deployments with only one subdomain registered in Keycloak as redirect_uri
-  document.cookie = `preview-return-to=${encodeURIComponent(url)}; path=/; domain=.preview.openbraininstitute.org; secure; samesite=lax`;
+  document.cookie = `${AUTH_PROXY_REDIRECT_TARGET_COOKIE}=${encodeURIComponent(url)}; path=/; domain=.preview.openbraininstitute.org; secure; samesite=lax`;
 }
 
 export default function Page() {
@@ -18,7 +19,9 @@ export default function Page() {
 
   useEffect(() => {
     const onboarding = `${window.location.origin}${config.ROOT_ROUTE}/sync`;
-    const callbackUrl = redirectURL ? `${onboarding}?redirectUrl=${encodeURIComponent(redirectURL)}` : onboarding;
+    const callbackUrl = redirectURL
+      ? `${onboarding}?redirectUrl=${encodeURIComponent(redirectURL)}`
+      : onboarding;
 
     if (config.AUTH_PROXY_URL && !window.location.href.startsWith(config.AUTH_PROXY_URL)) {
       setAuthProxyRedirectCookie(callbackUrl);
