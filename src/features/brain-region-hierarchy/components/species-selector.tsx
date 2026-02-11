@@ -1,12 +1,11 @@
 'use client';
 
-import type { IWorkspaceSpecies } from '@/features/brain-region-hierarchy/types';
-
 import {
   useAvailableHierarchySpeciesQuery,
   useRemoteUserPreferenceHierarchySpeciesQuery,
   useWorkspaceHierarchyRegistry,
 } from '@/features/brain-region-hierarchy/hooks';
+import { type IWorkspaceSpecies, SPECIES_SUBTITLES } from '@/features/brain-region-hierarchy/types';
 import {
   Select,
   SelectContent,
@@ -107,10 +106,11 @@ export function SpeciesSelector({
         >
           {options?.map((species) => (
             <SelectItem
+              id="species-selector-options"
               key={species.hierarchId}
               value={species.hierarchId}
-              className={cn('cursor-pointer py-2.5 px-3')}
-              checkIConClassName="text-primary-8 size-5"
+              className={cn('cursor-pointer py-2.5 px-3', '[&_.select-icon-wrapper]:top-4')}
+              checkIConClassName="text-primary-8 size-5 ite"
             >
               <div className="flex flex-col">
                 <span
@@ -120,7 +120,9 @@ export function SpeciesSelector({
                 >
                   {species.displayName}
                 </span>
-                <span className="text-xs text-gray-400">{species.name}</span>
+                <span className="text-xs text-gray-400">
+                  {SPECIES_SUBTITLES[species.name] ?? species.name}
+                </span>
               </div>
             </SelectItem>
           ))}

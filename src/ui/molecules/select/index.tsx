@@ -4,10 +4,11 @@
 
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { RiCheckFill } from '@remixicon/react';
-import type * as React from 'react';
 
 import ChevronDownIcon from '@/components/icons/ChevronDownIcon';
 import { cn } from '@/utils/css-class';
+
+import type * as React from 'react';
 
 function Select({ ...props }: React.ComponentProps<typeof SelectPrimitive.Root>) {
   return <SelectPrimitive.Root data-slot="select" {...props} />;
@@ -109,7 +110,7 @@ function SelectItem({
       )}
       {...props}
     >
-      <span className="absolute right-2 flex size-3.5 items-center justify-center">
+      <span className="select-icon-wrapper absolute right-2 flex size-3.5 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
           <RiCheckFill className={cn('size-4', checkIConClassName)} />
         </SelectPrimitive.ItemIndicator>

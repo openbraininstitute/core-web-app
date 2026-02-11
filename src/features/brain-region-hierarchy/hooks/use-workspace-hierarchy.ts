@@ -5,12 +5,6 @@ import { find, omit } from 'es-toolkit/compat';
 import { useAtom, useAtomValue } from 'jotai';
 import { useCallback, useEffect, useRef } from 'react';
 
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-import type {
-  BrainRegionHierarchySelection,
-  IWorkspaceSpecies,
-} from '@/features/brain-region-hierarchy/types';
-
 import { updateBrainRegionPreference } from '@/api/virtual-lab-svc/queries/user';
 import {
   AppSpeciesBrainRegionConfig,
@@ -29,6 +23,12 @@ import {
 } from '@/features/brain-region-hierarchy/hooks/use-brain-region-species';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
+
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import type {
+  BrainRegionHierarchySelection,
+  IWorkspaceSpecies,
+} from '@/features/brain-region-hierarchy/types';
 
 /**
  * manages and synchronizes the workspace-local selection of a species and a brain-region hierarchy.

@@ -2,7 +2,12 @@ import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brai
 
 export const SPECIES_DISPLAY_NAMES: Record<string, string> = {
   'Homo sapiens': 'Human',
-  'Mus musculus': 'Mouse',
+  'Mus musculus': 'Rodent',
+} as const;
+
+export const SPECIES_SUBTITLES: Record<string, string> = {
+  'Homo sapiens': 'Homo sapiens',
+  'Mus musculus': 'Mus musculus and Rattus norvegicus',
 } as const;
 
 /**
