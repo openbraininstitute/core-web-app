@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-import { AUTH_PROXY_REDIRECT_TARGET_COOKIE } from '@/auth';
+import { AUTH_PROXY_REDIRECT_TARGET_COOKIE } from '@/auth/constants';
 
 export async function GET(request: Request) {
   const cookieStore = await cookies();

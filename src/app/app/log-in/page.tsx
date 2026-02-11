@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { useEffect } from 'react';
 
-import { AUTH_PROXY_REDIRECT_TARGET_COOKIE } from '@/auth';
+import { AUTH_PROXY_REDIRECT_TARGET_COOKIE } from '@/auth/constants';
 import { config } from '@/config';
 
 function setAuthProxyRedirectCookie(url: string) {

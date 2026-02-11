@@ -6,8 +6,6 @@ import { log } from '../utils/logger';
 
 import type { GetServerSidePropsContext, NextApiRequest, NextApiResponse } from 'next';
 
-export const AUTH_PROXY_REDIRECT_TARGET_COOKIE = 'auth-proxy-redirect-target';
-
 const issuer = config.KEYCLOAK_ISSUER;
 const clientId = config.KEYCLOAK_CLIENT_ID;
 const clientSecret = config.KEYCLOAK_CLIENT_SECRET;
