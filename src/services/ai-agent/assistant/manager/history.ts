@@ -14,8 +14,6 @@ import type {
 const PAGE_SIZE = 10;
 
 export class HistoryManager {
-  private currentThreadId: string | undefined = undefined;
-
   private cursor: string | null = null;
 
   private isProcessing = false;
@@ -39,14 +37,9 @@ export class HistoryManager {
     this.target.history.set([]);
   };
 
-  readonly start = async (context: AssistantContext, threadId: string) => {
-    if (threadId === this.currentThreadId) {
-      return;
-    }
-
+  readonly start = async (context: AssistantContext) => {
     await this.stop();
     this.target.history.set([]);
-    this.currentThreadId = threadId;
     this.cursor = null;
     this.currentProcess = this.next(context);
     await this.currentProcess;

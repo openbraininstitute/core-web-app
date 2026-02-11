@@ -38,9 +38,11 @@ export default function History({ className, onBack }: HistoryProps) {
     fetchNextPage();
   };
 
-  if (isLoading && history.length === 0) {
+  if (isLoading) {
     return <TabTransitionLoader message="Loading conversation history..." />;
   }
+
+  console.log(isLoading);
 
   return (
     <>

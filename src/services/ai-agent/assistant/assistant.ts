@@ -112,26 +112,31 @@ class AiAssistantClass {
     isLoading: boolean,
   ] {
     const history = this.history.useValue();
-    const threadId = this.threadId.useValue();
-    const context = this.useContext();
-    const isLoading = this.isLoadingHistory.useValue();
+    const accessToken = this.accessToken.useValue();
+    const virtualLabId = this.virtualLabId.useValue();
+    const projectId = this.projectId.useValue();
+    const [isLoading, setIsLoading] = React.useState(true);
+    const hasStarted = React.useRef(false);
 
     React.useEffect(() => {
-      if (threadId) {
-        this.isLoadingHistory.set(true);
-        this.historyManager.start(context, threadId).finally(() => {
-          this.isLoadingHistory.set(false);
-        });
-      }
+      if (hasStarted.current) return;
+      hasStarted.current = true;
+
+      const context = { accessToken, virtualLabId, projectId };
+      setIsLoading(true);
+      this.historyManager.start(context).finally(() => {
+        setIsLoading(false);
+      });
+
       return () => {
         this.historyManager.stop();
       };
-    }, [threadId, context]);
+    }, []);
 
     return [
       history,
       this.historyManager.hasMore,
-      () => this.historyManager.next(context),
+      () => this.historyManager.next({ accessToken, virtualLabId, projectId }),
       isLoading,
     ];
   }

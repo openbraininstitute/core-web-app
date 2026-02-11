@@ -26,6 +26,7 @@ export class Signal<T> {
   use(): [value: T, setValue: (value: T) => void] {
     const [value, setValue] = React.useState(this.value);
     React.useEffect(() => {
+      setValue(this.value);
       this.event.addListener(setValue);
       return () => this.event.removeListener(setValue);
     }, []);

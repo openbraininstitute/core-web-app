@@ -1,11 +1,14 @@
 'use client';
 
 import { type CreateMessage, type Message, useChat } from '@ai-sdk/react';
+import { useQueryClient } from '@tanstack/react-query';
 import { atom, useAtom } from 'jotai';
 import React, { useCallback, useEffect } from 'react';
 
 import { useAIActiveTools } from '@/components/ai-assistant/state';
+import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
 import { logError } from '@/util/logger';
+import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { useAiAssistant } from '../assistant';
@@ -56,6 +59,9 @@ export function useServiceAiAgentChat(threadId: string, initialMessages: Message
   const { accessToken } = assistant.useContext();
   const activeTools = useAIActiveTools();
   const [rateLimitRemaining, setRateLimitRemaining] = React.useState(() => getStoredRateLimit());
+  const queryClient = useQueryClient();
+  const virtualLabId = useParamVirtualLabId();
+  const projectId = useParamProjectId();
 
   const [_, setConfig] = useAtom(configStateAtom);
   const [__, setIsChatReady] = useAtom(isChatReadyAtom);
@@ -135,6 +141,10 @@ export function useServiceAiAgentChat(threadId: string, initialMessages: Message
             accessToken,
             threadId,
             title: message.content,
+          }).then(() => {
+            queryClient.invalidateQueries({
+              queryKey: keyBuilderAI.history(virtualLabId, projectId),
+            });
           });
         } catch (ex) {
           // Renaming the thread is not important.
