@@ -89,7 +89,7 @@ export default function ParameterSweep({
             />
           </div>
         )}
-        <div className="border-neutral-2 rounded border bg-white p-3">
+        <div className="border-neutral-2 rounded-lg border bg-white p-3">
           <div className="flex flex-col gap-1">
             {values.map((v, i) => {
               const errorMessage = !isNil(v) ? error(v) : undefined;
