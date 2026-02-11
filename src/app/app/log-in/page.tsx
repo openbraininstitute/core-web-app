@@ -2,7 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { AUTH_PROXY_REDIRECT_TARGET_COOKIE } from '@/auth/constants';
 import { config } from '@/config';
@@ -14,10 +14,15 @@ function setAuthProxyRedirectCookie(url: string) {
 
 export default function Page() {
   const searchParams = useSearchParams();
+  const hasInitiated = useRef(false);
 
   const redirectURL = searchParams.get('callbackUrl');
 
   useEffect(() => {
+    if (hasInitiated.current) return;
+
+    hasInitiated.current = true;
+
     const onboarding = `${window.location.origin}${config.ROOT_ROUTE}/sync`;
     const callbackUrl = redirectURL
       ? `${onboarding}?redirectUrl=${encodeURIComponent(redirectURL)}`
