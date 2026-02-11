@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
-
 import type { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { TWorkspaceSection } from '@/constants';
 import type {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
@@ -111,8 +111,12 @@ export type FieldDefinition<T extends EntityCoreIdentifiable> = {
   defaultConstraint?: string | Record<string, string>;
   perTypeConstraint?: Partial<Record<TExtendedEntitiesTypeDict, string>>;
   isSortable?: boolean;
-  isFilterable?: boolean;
-  isDisplayable?: boolean;
+  isFilterable?:
+    | boolean
+    | ((props: { section?: TWorkspaceSection; dataType?: TExtendedEntitiesTypeDict }) => boolean);
+  isDisplayable?:
+    | boolean
+    | ((props: { section?: TWorkspaceSection; dataType?: TExtendedEntitiesTypeDict }) => boolean);
   order?: OrderShape;
   unit?: ReactNode;
   group?: StructuralDomain;

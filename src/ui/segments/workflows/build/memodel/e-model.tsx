@@ -2,7 +2,6 @@
 
 import { ReloadOutlined } from '@ant-design/icons';
 import { Image } from 'antd';
-import compact from 'es-toolkit/compat/compact';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 import omit from 'es-toolkit/compat/omit';
 import { useRouter } from 'next/navigation';
@@ -11,7 +10,7 @@ import { type HTMLAttributes, type TdHTMLAttributes, useEffect } from 'react';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import { WorkspaceSection } from '@/constants';
 import {
   renderArray,
   renderDate,
@@ -31,8 +30,8 @@ import { cn } from '@/utils/css-class';
 
 import { WorkflowScopeTabs } from '../../elements/scope-selector';
 
-import type { IEModel, IEModel } from '@/api/entitycore/types';
-import type { EntityCoreResource, EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import type { IEModel } from '@/api/entitycore/types';
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 
 type Props = {
   sessionId: string;
@@ -60,20 +59,10 @@ export function EModel({ sessionId }: Props) {
     projectId,
   });
 
-  const dataKey = compact([
-    virtualLabId,
-    projectId,
-    WorkspaceSection.BuildWorkflow,
-    ExtendedEntitiesTypeDict.Emodel,
-    WorkspaceScope.Build,
-    sessionId,
-  ]).join('/');
-
   const { updateSelectedBrainRegion } = useSetSelectedBrainRegion();
   const { changeBrainRegion } = useWorkspaceHierarchyRegistry();
   const { result: brainRegionHierarchy } = usePrimaryHierarchyOfCurrentSpeciesQuery();
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: both functions are stable
   useEffect(() => {
     if (brainRegionHierarchy) {
       const defaultBrainRegion = brainRegionHierarchy?.root;

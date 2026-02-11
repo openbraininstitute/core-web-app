@@ -3,12 +3,6 @@ import get from 'es-toolkit/compat/get';
 import isNil from 'es-toolkit/compat/isNil';
 import { useAtom } from 'jotai';
 
-import type { EntityCoreDensityObjectTypes, EntityCoreObjectTypes } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { IContributor, TAgentType } from '@/api/entitycore/types/shared/global';
-import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
-import type { EntityTypeValue } from '@/entity-configuration/domain';
-
 import { hasAssets } from '@/api/entitycore/guards';
 import { transformAgentToNames } from '@/api/entitycore/transformers';
 import { EntityTypeDict } from '@/api/entitycore/types';
@@ -30,6 +24,12 @@ import {
 } from '@/entity-configuration/definitions/renderer';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { ensureArray } from '@/utils/array';
+
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { IContributor, TAgentType } from '@/api/entitycore/types/shared/global';
+import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
+import type { EntityTypeValue } from '@/entity-configuration/domain';
 
 const collator = new Intl.Collator('en', { sensitivity: 'base' });
 

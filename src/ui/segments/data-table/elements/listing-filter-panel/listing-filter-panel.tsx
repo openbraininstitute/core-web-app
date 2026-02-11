@@ -5,12 +5,9 @@ import { useAtom, useSetAtom } from 'jotai';
 import { unwrap, useResetAtom } from 'jotai/utils';
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { Facets } from '@/api/entitycore/types/shared/response';
+
 import { DEFAULT_PAGE_NUMBER, type TWorkspaceScope, type TWorkspaceSection } from '@/constants';
-import type { CoreFilterValues, TCoreFilter } from '@/entity-configuration/definitions/types';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
-import type { WorkspaceContext } from '@/types/common';
 import { Button } from '@/ui/molecules/button';
 import {
   coreActiveColumnsAtom,
@@ -25,18 +22,21 @@ import { FilterGroup } from '@/ui/segments/data-table/elements/listing-filter-pa
 import { useFilterItems } from '@/ui/segments/data-table/elements/listing-filter-panel/hooks';
 import { cn } from '@/utils/css-class';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { Facets } from '@/api/entitycore/types/shared/response';
+import type { CoreFilterValues, TCoreFilter } from '@/entity-configuration/definitions/types';
+import type { WorkspaceContext } from '@/types/common';
+
 type Props = {
   children?: ReactNode;
   toggleDisplay: () => void;
   dataType: TExtendedEntitiesTypeDict;
-  // eslint-disable-next-line react/no-unused-prop-types
   dataScope?: TWorkspaceScope;
   dataKey: string;
   filters: TCoreFilter[];
   facets: Facets | undefined;
   setFilters: any;
   showDisplayTrigger?: boolean;
-  // eslint-disable-next-line react/no-unused-prop-types
   workspace?: WorkspaceContext;
   classNames?: {
     container?: string;
@@ -109,7 +109,7 @@ export function ListingFilterPanel({
   const onToggleActive = useCallback(
     (key: string) => {
       if (!activeColumns) return;
-      const existingIndex = activeColumns.findIndex((existingKey) => existingKey === key);
+      const existingIndex = activeColumns.indexOf(key);
 
       if (existingIndex === -1) {
         setActiveColumns([...activeColumns, key]);
@@ -158,7 +158,9 @@ export function ListingFilterPanel({
     setFilterValues,
     activeColumns,
     showDisplayTrigger,
-    onToggleActive
+    onToggleActive,
+    dataType,
+    section
   );
 
   // The columnKeyToFilter method receives a string (key)

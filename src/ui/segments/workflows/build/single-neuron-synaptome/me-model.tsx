@@ -4,6 +4,7 @@ import isNil from 'es-toolkit/compat/isNil';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 import { motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
+
 import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
