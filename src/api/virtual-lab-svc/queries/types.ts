@@ -68,6 +68,7 @@ export type VirtualLab = {
   members_count: number | null;
   projects_count: number | null;
   created_by: string | null;
+  compute_cell: string;
 };
 
 export type VirtualLabExistsVerificationResponse = VlmResponse<{
