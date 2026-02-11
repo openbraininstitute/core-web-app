@@ -1,4 +1,8 @@
+import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
+
 import { serviceAiAgentThreadList } from '../../api';
+
+import type { useQueryClient } from '@tanstack/react-query';
 import type { Signal } from '../signal';
 import type {
   AiAssistantHistory,
@@ -20,6 +24,8 @@ export class HistoryManager {
 
   private hasMorePages = false;
 
+  private queryClient?: ReturnType<typeof useQueryClient>;
+
   constructor(
     private readonly target: { history: Signal<AiAssistantHistory>; error: Signal<AssistantError> }
   ) {}
@@ -35,7 +41,6 @@ export class HistoryManager {
 
   readonly start = async (context: AssistantContext, threadId: string) => {
     if (threadId === this.currentThreadId) {
-      // We are already loading history for this thread.
       return;
     }
 
@@ -76,24 +81,35 @@ export class HistoryManager {
     try {
       this.isProcessing = true;
       const { accessToken, projectId, virtualLabId } = context;
-      const resp = await serviceAiAgentThreadList({
-        accessToken,
-        projectId,
-        virtualLabId,
-        cursor: this.cursor,
-        pageSize: PAGE_SIZE,
-        excludeEmptyThreads: true,
-      });
-      this.cursor = resp.next_cursor ?? null;
-      return resp.results.map((result) => {
-        const item: AiAssistantHistoryItem = {
-          id: result.thread_id,
-          title: result.title,
-          date: new Date(result.update_date),
-        };
+
+      if (this.queryClient) {
+        const resp = await this.queryClient.fetchQuery({
+          queryKey: [...keyBuilderAI.history(virtualLabId, projectId), this.cursor],
+          queryFn: async () => {
+            return await serviceAiAgentThreadList({
+              accessToken,
+              projectId,
+              virtualLabId,
+              cursor: this.cursor,
+              pageSize: PAGE_SIZE,
+              excludeEmptyThreads: true,
+            });
+          },
+          staleTime: 30000,
+        });
+        this.cursor = resp.next_cursor ?? null;
         this.hasMorePages = resp.has_more;
-        return item;
-      });
+        return resp.results.map((result) => {
+          const item: AiAssistantHistoryItem = {
+            id: result.thread_id,
+            title: result.title,
+            date: new Date(result.update_date),
+          };
+          return item;
+        });
+      }
+
+      return [];
     } catch (ex) {
       this.target.error.set({ message: 'Unable to load chat history!', reason: ex });
       return [];

@@ -1,18 +1,20 @@
 'use client';
 
 import React from 'react';
+
 import IconPlus from '@/components/icons/Plus';
 import Tooltip from '@/components/tooltip';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
 import { classNames } from '@/util/utils';
+
 import { IconDelete } from '../../icons/delete';
 import { IconEdit } from '../../icons/edit';
 import TabTransitionLoader from '../tab-transition-loader/tab-transition-loader';
 import DialogDelete from './dialog-delete';
 import DialogEdit from './dialog-edit';
-import styles from './history.module.css';
 import { useSections } from './hooks';
-import { useThreadHistory } from './use-thread-history';
+
+import styles from './history.module.css';
 
 export interface HistoryProps {
   className?: string;
@@ -22,7 +24,7 @@ export interface HistoryProps {
 export default function History({ className, onBack }: HistoryProps) {
   const assistant = useAiAssistant();
   const [threadId, setThreadId] = assistant.threadId.use();
-  const { history, hasMore, fetchNextPage, isLoading } = useThreadHistory();
+  const [history, hasMore, fetchNextPage, isLoading] = assistant.useHistory();
   const sections = useSections(history);
   const [openEdit, setOpenEdit] = React.useState(false);
   const [openDelete, setOpenDelete] = React.useState(false);
@@ -36,7 +38,7 @@ export default function History({ className, onBack }: HistoryProps) {
     fetchNextPage();
   };
 
-  if (isLoading) {
+  if (isLoading && history.length === 0) {
     return <TabTransitionLoader message="Loading conversation history..." />;
   }
 

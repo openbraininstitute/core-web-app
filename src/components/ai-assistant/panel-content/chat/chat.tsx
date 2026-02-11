@@ -1,13 +1,14 @@
 import { useIsFetching } from '@tanstack/react-query';
 import { atom } from 'jotai';
 import React from 'react';
+
 import {
   useServiceAiAgentChat,
   useServiceAiAgentSuggestionFromUserJourney,
-  useThreadMessages,
 } from '@/services/ai-agent';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
 import { classNames } from '@/util/utils';
+
 import ErrorPanel from '../../error';
 import { IconPrice } from '../../icons/price';
 import { MessageItem } from '../../message-item';
@@ -15,6 +16,7 @@ import SuggestedQuestions from '../../suggested-questions';
 import Footer from '../footer';
 import TabTransitionLoader from '../tab-transition-loader/tab-transition-loader';
 import Welcome from '../welcome';
+
 import styles from './chat.module.css';
 
 export interface ChatProps {
@@ -24,12 +26,12 @@ export interface ChatProps {
 
 export default function Chat({ className, threadId }: ChatProps) {
   const assistant = useAiAssistant();
-  const context = assistant.useContext();
-  const messagesQuery = useThreadMessages(context, threadId);
+  const initialMessages = assistant.initialMessages.useValue();
+  const isLoadingMessages = assistant.isLoadingMessages.useValue();
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = React.useState(true);
   const { messages, status, append, error, stop, rateLimitRemaining } = useServiceAiAgentChat(
     threadId ?? '',
-    messagesQuery.data?.results ?? []
+    initialMessages
   );
   const [suggestions, clearSuggestions, isLoadingSuggestions] =
     useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', status);
@@ -112,7 +114,7 @@ export default function Chat({ className, threadId }: ChatProps) {
     }
   };
 
-  if (messagesQuery.isLoading) {
+  if (isLoadingMessages) {
     return <TabTransitionLoader message="Loading conversation..." />;
   }
 
