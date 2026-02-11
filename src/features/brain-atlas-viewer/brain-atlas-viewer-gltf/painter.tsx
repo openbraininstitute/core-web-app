@@ -1,6 +1,6 @@
-/** biome-ignore-all lint/style/useImportType: biome shit */
 import {
-  TgdCamera,
+  type TgdCamera,
+  tgdCanvasCreateFill,
   TgdContext,
   TgdDataGlb,
   TgdGeometryGltf,
@@ -10,39 +10,33 @@ import {
   TgdPainterState,
   TgdPainterXRay,
   TgdTexture2D,
-  tgdCanvasCreateFill,
   webglPresetDepth,
-} from '@tolokoban/tgd';
+} from "@tolokoban/tgd";
 
-import { AppSpeciesBrainRegionConfig } from '@/features/brain-region-hierarchy/context';
-import GenericEvent from '@/util/generic-event';
-import { logError } from '@/util/logger';
+import { setCamera } from "./camera";
+import type { VisibleRegion } from "./types";
+import type { SettingsValues } from "./settings";
+import {
+  getBrainRegionMeshArrayBuffer,
+  getPointCouldData,
+} from "./services/services";
+import { makeColor } from "./hooks";
 
-import { type CameraController, setCamera } from './camera';
-import { makeColor } from './hooks';
-import { getCachedBrainRegionMeshArrayBuffer, getPointCouldData } from './services/services';
-
-import type React from 'react';
-import type { SettingsValues } from './settings';
-import type { VisibleRegion } from './types';
+import { logError } from "@/util/logger";
+import GenericEvent from "@/util/generic-event";
+import type { ReactNode } from "react";
 
 let globalId = 1;
 export class Painter {
-  public readonly AtlasID: string;
-
   public readonly ID: number;
 
-  public readonly eventError = new GenericEvent<React.ReactNode>();
+  public readonly eventError = new GenericEvent<ReactNode>();
 
   public readonly eventCameraChange = new GenericEvent<TgdCamera>();
 
   public readonly eventLoading = new GenericEvent<boolean>();
 
   public resetCamera: () => void = () => {};
-
-  private cameraController: CameraController | null = null;
-
-  private hasFittedCamera = false;
 
   private context: TgdContext | null = null;
 
@@ -56,7 +50,10 @@ export class Painter {
 
   private isAddingRegions = false;
 
-  private nextRegionsToAdd: { regions: VisibleRegion[]; accessToken: string } | null = null;
+  private nextRegionsToAdd: {
+    regions: VisibleRegion[];
+    accessToken: string;
+  } | null = null;
 
   private _loadingMesh = false;
 
@@ -64,12 +61,8 @@ export class Painter {
 
   private _uniforms: SettingsValues = {};
 
-  constructor(
-    readonly atlasId: string = AppSpeciesBrainRegionConfig.Common.DefaultAtlasId,
-    private readonly backgroundColor = '#002766'
-  ) {
+  constructor(private readonly backgroundColor = "#002766") {
     this.ID = globalId++;
-    this.AtlasID = atlasId;
   }
 
   get uniforms() {
@@ -99,18 +92,18 @@ export class Painter {
         premultipliedAlpha: false,
       });
       this.context = context;
-      const camCtrl = setCamera(context, this.eventCameraChange, this.AtlasID);
-      this.cameraController = camCtrl;
-      this.resetCamera = camCtrl.resetCamera;
-      this.hasFittedCamera = false;
+      this.resetCamera = setCamera(context, this.eventCameraChange);
       const group = new TgdPainterGroup();
       this.group = group;
       context.add(
-        new TgdPainterClear(context, { depth: 1, color: makeColor(this.backgroundColor) }),
+        new TgdPainterClear(context, {
+          depth: 1,
+          color: makeColor(this.backgroundColor),
+        }),
         new TgdPainterState(context, {
           depth: webglPresetDepth.lessOrEqual,
           children: [group],
-        })
+        }),
       );
       context.logic.add(() => {
         const { pointCloudPainter, uniforms } = this;
@@ -157,18 +150,21 @@ export class Painter {
     }
     for (const region of regions) {
       try {
-        const data = await getCachedBrainRegionMeshArrayBuffer({
-          atlasId: this.AtlasID,
-          regionId: region.id,
-        });
+        const data = await getBrainRegionMeshArrayBuffer(
+          accessToken,
+          region.id,
+        );
         await this.addMesh(data, region);
       } catch (ex) {
         logError(`Unable to load mesh for region "${region.name}":`, ex);
         this.eventError.dispatch(
           <>
             <strong>{region.name}</strong>
-            <p>An error occurred while attempting to visualize the brain region mesh.</p>
-          </>
+            <p>
+              An error occurred while attempting to visualize the brain region
+              mesh.
+            </p>
+          </>,
         );
       }
     }
@@ -183,7 +179,11 @@ export class Painter {
     }
   }
 
-  public async setPointCloud(annotationValue: number, color: string, accessToken: string) {
+  public async setPointCloud(
+    annotationValue: number,
+    color: string,
+    accessToken: string,
+  ) {
     const { context, group } = this;
     if (!context || !group || this.pointCloudId === annotationValue) return;
 
@@ -192,34 +192,22 @@ export class Painter {
       if (this.pointCloudPainter) {
         group.remove(this.pointCloudPainter);
         this.pointCloudPainter.delete();
-        this.pointCloudPainter = null;
       }
       this.pointCloudId = annotationValue;
       if (annotationValue !== -1) {
         const dataPoint = await getPointCouldData(annotationValue, accessToken);
-        // context may have been destroyed while awaiting the fetch
-        if (!this.context || !this.group) return;
         const painter = new TgdPainterPointsCloud(context, {
           dataPoint,
           minSizeInPixels: 5,
-          texture: new TgdTexture2D(context).loadBitmap(tgdCanvasCreateFill(1, 1, color)),
+          texture: new TgdTexture2D(context).loadBitmap(
+            tgdCanvasCreateFill(1, 1, color),
+          ),
         });
         group.add(painter);
         this.pointCloudPainter = painter;
       }
     } catch (ex) {
-      if (
-        ex instanceof Error &&
-        ex.message.includes('[TgdContext] This context has been deleted:')
-      ) {
-        logError(`Point cloud unavailable for annotation ${annotationValue}:`, ex);
-        return;
-      }
-      // reset so the same region can be retried on next render
-      this.pointCloudId = -1;
-      // not all regions have point cloud data.
-      // only log, never show a user-facing error for point cloud failures.
-      logError(`Point cloud unavailable for annotation ${annotationValue}:`, ex);
+      logError("Unable to load point could!", ex);
       this.eventError.dispatch(`Unable to load points cloud!`);
     }
     this.loadingPointCloud = false;
@@ -249,17 +237,10 @@ export class Painter {
   private async addMesh(data: ArrayBuffer | null, region: VisibleRegion) {
     const { context, group, regionPainters } = this;
     if (!context || !group || !data || regionPainters.has(region.id)) return;
+
     try {
       const asset = await TgdDataGlb.parse(data);
       const geometry = new TgdGeometryGltf({ data: asset });
-      // Auto-fit camera to the first loaded mesh's bounding box (non-mouse atlases)
-      if (
-        !this.hasFittedCamera &&
-        this.cameraController &&
-        this.AtlasID !== AppSpeciesBrainRegionConfig.Common.DefaultAtlasId
-      ) {
-        this.fitCameraFromGltf(asset);
-      }
       const painterXRay = new TgdPainterXRay(context, {
         geometry,
         color: region.color,
@@ -271,34 +252,9 @@ export class Painter {
       context.paint();
     } catch (ex) {
       logError(`Unable to load mesh for region ${region.name}!`, ex);
-      this.eventError.dispatch(`Unable to load mesh for region "${region.name}"!`);
-    }
-  }
-
-  /**
-   * Extract the POSITION accessor's min/max from the GLTF JSON
-   * and fit the camera to those bounds.
-   */
-  private fitCameraFromGltf(asset: TgdDataGlb) {
-    try {
-      const json = asset.getJson();
-      const accessors = json.accessors ?? [];
-      // Find the POSITION accessor — it's the one with type "VEC3"
-      // referenced by the first mesh primitive's POSITION attribute.
-      const meshes = json.meshes ?? [];
-      const firstMesh = meshes[0];
-      if (!firstMesh) return;
-
-      const posAttr = firstMesh.primitives[0]?.attributes?.POSITION;
-      if (typeof posAttr !== 'number') return;
-
-      const accessor = accessors[posAttr];
-      if (!accessor?.min || !accessor?.max) return;
-
-      this.cameraController?.fitToBounds(accessor.min, accessor.max);
-      this.hasFittedCamera = true;
-    } catch {
-      // Non-critical — fall back to default camera position
+      this.eventError.dispatch(
+        `Unable to load mesh for region "${region.name}"!`,
+      );
     }
   }
 
