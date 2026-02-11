@@ -1,5 +1,7 @@
 import { CheckCircleFilled, WarningFilled } from '@ant-design/icons';
+import type { ErrorObject } from 'ajv';
 import { isEqual } from 'es-toolkit/compat';
+import type React from 'react';
 
 import { useAIConfig } from '@/services/ai-agent';
 
@@ -13,9 +15,6 @@ import {
 import BlockDictionaryEntries from './block-dictionary-entries';
 import { Chevron, type Config, Tab } from './components';
 import { isRootBlock } from './hooks/schema';
-
-import type { ErrorObject } from 'ajv';
-import type React from 'react';
 
 export function RootElement({
   schema,

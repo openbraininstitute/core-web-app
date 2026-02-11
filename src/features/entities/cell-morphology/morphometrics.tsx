@@ -1,7 +1,7 @@
 import { Divider } from 'antd';
 import startCase from 'es-toolkit/compat/startCase';
 import { atom } from 'jotai';
-import { atomFamily } from 'jotai-family';
+import { atomFamily } from 'jotai/utils';
 
 import { getMeasurementAnnotations } from '@/api/entitycore/queries/general/measurement-annotation';
 import { useUnwrappedValue } from '@/hooks/hooks';

@@ -1,6 +1,6 @@
 'use client';
 
-import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   createEMCellMeshConfig,
@@ -16,6 +16,7 @@ import {
   Subject,
 } from '@/ui/segments/contribute/em-cell-mesh/steps';
 import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
+import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 import type { TEMCellMeshForm } from '@/ui/segments/contribute/em-cell-mesh/schema';
 import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
@@ -68,13 +69,15 @@ interface IEMCellMeshProps {
 
 export function EMCellMesh({ sessionId }: IEMCellMeshProps) {
   const { projectId, virtualLabId } = useWorkspace();
-  const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
+  const { node: defaultBrainRegion } = useBrainRegionHierarchy({
+    dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
+  });
 
   return (
     <ContributionForm
       config={cellMorphologyConfig}
       sessionId={sessionId}
-      brainRegionId={selectedBrainRegion?.id!}
+      brainRegionId={defaultBrainRegion.id}
       pipeline={useEMCellMeshPipeline}
       progressSteps={EM_CELL_MESH_PROGRESS_STEPS}
       virtualLabId={virtualLabId}
