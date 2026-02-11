@@ -23,14 +23,10 @@ frontend:
           PREVIEW_DOMAIN="${SANITIZED_BRANCH}.preview.openbraininstitute.org"
           export NEXTAUTH_URL="https://${PREVIEW_DOMAIN}/api/auth"
 
-          echo "Sanitized branch: $SANITIZED_BRANCH"
-          echo "NEXTAUTH_URL set to: $NEXTAUTH_URL"
         - env | grep -e APP_VERSION -e DEPLOYMENT_ENV -e API_ORIGIN -e
           STRIPE_PUBLISHABLE_KEY -e SANITY_DATASET -e KEYCLOAK_CLIENT_ID -e
           KEYCLOAK_CLIENT_SECRET -e KEYCLOAK_ISSUER -e NOTEBOOK_REPO_URL -e
           NEXTAUTH_SECRET -e NEXTAUTH_URL >> .env.production
-        - env
-        - cat .env.production
         - pnpm run build
   artifacts:
     baseDirectory: .next
