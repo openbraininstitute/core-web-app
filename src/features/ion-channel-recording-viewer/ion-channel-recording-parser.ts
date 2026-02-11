@@ -1,6 +1,8 @@
 import { TgdColor } from '@tolokoban/tgd';
 import { Dataset, File, ready } from 'h5wasm';
+
 import { isType } from '@/util/type-guards';
+
 import APWaveform_50KHz from './APWaveform_50KHz.json';
 import { createPalette } from './colors';
 import { H5Parser } from './h5-parser';
@@ -251,13 +253,13 @@ export class IonChannelRecordingParser extends H5Parser {
 type Stimulus =
   | [voltageStart: number, voltageStep: number, voltageEnd: number, duration: number]
   | [
-    voltageStart: number,
-    voltageStep: number,
-    voltageEnd: number,
-    durationMin: number,
-    durationStep: number,
-    durationMax: number,
-  ];
+      voltageStart: number,
+      voltageStep: number,
+      voltageEnd: number,
+      durationMin: number,
+      durationStep: number,
+      durationMax: number,
+    ];
 
 function isStimulus(stimulus: unknown): stimulus is Stimulus {
   if (!Array.isArray(stimulus)) return false;

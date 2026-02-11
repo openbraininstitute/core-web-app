@@ -1,17 +1,15 @@
-import { Divider } from "antd";
-import startCase from "es-toolkit/compat/startCase";
+import { Divider } from 'antd';
+import startCase from 'es-toolkit/compat/startCase';
+import { atom } from 'jotai';
+import { atomFamily } from 'jotai/utils';
 
-import { atom } from "jotai";
-import { atomFamily } from "jotai-family";
-import { useMorphometrics } from "@/hooks/useMorphoMetrics";
-import { useUnwrappedValue } from "@/hooks/hooks";
-import {
-  ICellMorphology,
-  ICellMorphologyExpanded,
-} from "@/api/entitycore/types";
-import { MeasurementKind } from "@/api/entitycore/types/entities/measurement-annotation";
-import { getMeasurementAnnotations } from "@/api/entitycore/queries/general/measurement-annotation";
-import { cn } from "@/utils/css-class";
+import { getMeasurementAnnotations } from '@/api/entitycore/queries/general/measurement-annotation';
+import { useUnwrappedValue } from '@/hooks/hooks';
+import { useMorphometrics } from '@/hooks/useMorphoMetrics';
+import { cn } from '@/utils/css-class';
+
+import type { ICellMorphology, ICellMorphologyExpanded } from '@/api/entitycore/types';
+import type { MeasurementKind } from '@/api/entitycore/types/entities/measurement-annotation';
 
 const measurementAnnotationsAtomFamily = atomFamily((entityId: string) =>
   atom<Promise<MeasurementKind[]>>(async () => {
@@ -19,10 +17,8 @@ const measurementAnnotationsAtomFamily = atomFamily((entityId: string) =>
       filters: { entity_id: entityId },
     });
 
-    return measurementAnnotationsRes.data.flatMap(
-      (annotation) => annotation.measurement_kinds,
-    );
-  }),
+    return measurementAnnotationsRes.data.flatMap((annotation) => annotation.measurement_kinds);
+  })
 );
 
 export function Morphometrics({
@@ -32,9 +28,7 @@ export function Morphometrics({
   morphology: ICellMorphology;
   className?: string;
 }) {
-  const measurementKinds = useUnwrappedValue(
-    measurementAnnotationsAtomFamily(morphology.id),
-  );
+  const measurementKinds = useUnwrappedValue(measurementAnnotationsAtomFamily(morphology.id));
 
   const expandedMorphology = {
     ...morphology,
@@ -43,26 +37,16 @@ export function Morphometrics({
     },
   } as ICellMorphologyExpanded;
 
-  const { filteredGroupedCardFields, renderMetric } = useMorphometrics(
-    expandedMorphology,
-    true,
-  );
+  const { filteredGroupedCardFields, renderMetric } = useMorphometrics(expandedMorphology, true);
 
   return (
-    <div
-      className={cn(
-        "flex max-w-(--breakpoint-2xl) flex-col gap-10 pl-2",
-        className,
-      )}
-    >
+    <div className={cn('flex max-w-(--breakpoint-2xl) flex-col gap-10 pl-2', className)}>
       <Divider className="w-full" />
       <h1 className="text-primary-8 text-xl font-bold">Morphometrics</h1>
       <div className="grid grid-cols-5 gap-4 break-words">
         {Object.entries(filteredGroupedCardFields).map(([group, fields]) => (
           <div key={group}>
-            <h2 className="text-primary-8 mb-8 text-lg font-semibold">
-              {startCase(group)}
-            </h2>
+            <h2 className="text-primary-8 mb-8 text-lg font-semibold">{startCase(group)}</h2>
             {fields.map((field) => renderMetric(field))}
           </div>
         ))}

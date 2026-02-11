@@ -4,19 +4,20 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
 import React, { type CSSProperties } from 'react';
 
-import type { TAppUInterfaceSection } from '@/utils/key-builder';
-
 import { useServiceAiAgentChat } from '@/services/ai-agent';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
 import { classNames } from '@/util/utils';
 
-import styles from './ai-assistant.module.css';
 import { AiContextProvider, MINIMAL_PANEL_SIZE, usePanelWidth } from './hooks';
 import { IconChat } from './icons/chat';
 import { IconHistory } from './icons/history';
 import { IconNewChat } from './icons/new-chat';
 import PanelContent from './panel-content';
 import PanelSplitter from './panel-splitter';
+
+import type { TAppUInterfaceSection } from '@/utils/key-builder';
+
+import styles from './ai-assistant.module.css';
 
 interface AiAssistantProps {
   className?: string;

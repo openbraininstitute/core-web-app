@@ -2,23 +2,9 @@
 
 import { LoadingOutlined } from '@ant-design/icons';
 import { Spin } from 'antd';
-import type { ColumnProps, TableProps } from 'antd/es/table';
-import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
 import { useAtom } from 'jotai';
 import { unwrap } from 'jotai/utils';
-import type { ComponentProps, CSSProperties, ReactNode } from 'react';
 import { useMemo, useState } from 'react';
-
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type {
-  Pagination as EntitycorePagination,
-  Facets,
-} from '@/api/entitycore/types/shared/response';
-import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
-import type { WorkspaceContext } from '@/types/common';
-import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
-import type { TCircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
 
 import { coreFiltersAtom } from '@/ui/segments/data-table/elements/context';
 import { FilterControls } from '@/ui/segments/data-table/elements/filter-controls';
@@ -29,6 +15,20 @@ import { type OnCellClick, WrapperTable } from '@/ui/segments/data-table/table';
 import { CircuitViewToggle } from '@/ui/segments/explore/circuit/elements/view-toggle';
 import { CircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
 import { cn } from '@/utils/css-class';
+
+import type { ColumnProps, TableProps } from 'antd/es/table';
+import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
+import type { ComponentProps, CSSProperties, ReactNode } from 'react';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type {
+  Pagination as EntitycorePagination,
+  Facets,
+} from '@/api/entitycore/types/shared/response';
+import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
+import type { WorkspaceContext } from '@/types/common';
+import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
+import type { TCircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
 
 export type Props<T> = {
   facets: Facets | undefined;

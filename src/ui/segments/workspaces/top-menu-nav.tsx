@@ -2,8 +2,6 @@ import { MenuOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import type React from 'react';
-import type { ReactNode } from 'react';
 import { useState } from 'react';
 
 import {
@@ -32,6 +30,9 @@ import {
 import { cn } from '@/utils/css-class';
 import { getActiveSection } from '@/utils/get-section';
 import { cleanSearchParams } from '@/utils/search-params';
+
+import type React from 'react';
+import type { ReactNode } from 'react';
 
 // Dynamically import FeedbackModal with SSR disabled to prevent Suspense boundary issues
 const FeedbackModal = dynamic(() => import('@/ui/segments/feedbacks/feedback-modal'), {

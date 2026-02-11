@@ -2,14 +2,17 @@ import Ajv, { type AnySchema } from 'ajv';
 import { useAtomValue } from 'jotai';
 import { useEffect, useMemo, useRef } from 'react';
 import { match } from 'ts-pattern';
+
 import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
 import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { config as appConfig } from '@/config';
+
+import { modelAtomFamily } from '../atoms';
+import { isRootBlock } from './schema';
+
 import type { Config } from '@/features/scan-config/components/components';
 import type { ConfigSchema, SchemaName } from '@/features/scan-config/types';
 import type { WorkspaceContext } from '@/types/common';
-import { modelAtomFamily } from '../atoms';
-import { isRootBlock } from './schema';
 
 export function useModel({ id, context }: { id: string; context: WorkspaceContext }) {
   const modelAtom = modelAtomFamily({ id, context });
@@ -91,7 +94,9 @@ export function useEntries({
     Object.entries(initialConfig)
       .filter(([k]) => !isRootBlock(schema, k))
       .forEach(([_key, value]) => {
-        Object.keys(value).forEach((entryKey) => { allEntries.current.add(entryKey) });
+        Object.keys(value).forEach((entryKey) => {
+          allEntries.current.add(entryKey);
+        });
       });
   }, [schema, initialConfig]);
 

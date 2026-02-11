@@ -11,6 +11,6 @@
   width: 20px;
   height: 100%;
   font-size: 0;
-  content: '.';
+  content: ".";
   background-color: var(--color-neutral, currentColor);
 }

@@ -13,11 +13,7 @@ import delay from 'es-toolkit/compat/delay';
 import isNil from 'es-toolkit/compat/isNil';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
 import { z } from 'zod';
-
-import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import type { BuildStepKeys } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 
 import {
   SingleNeuronSynaptomeBaseSchema,
@@ -44,7 +40,8 @@ import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { browserHistoryReplace } from '@/utils/browser';
 import { cn } from '@/utils/css-class';
 
-import { useVisibleSynapsesSetter } from '../../simulate/single-neuron/shared/steps/webgl-neuron-selector/hooks';
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import type { BuildStepKeys } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 
 type Props = { sessionId: string };
 
@@ -227,7 +224,7 @@ export function Menu({ sessionId }: Props) {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span>
-                    <WarningFilled className="text-sm text-yellow-300" />
+                    <WarningFilled className="text-sm text-yellow-300!" />
                   </span>
                 </TooltipTrigger>
                 <TooltipContent
@@ -235,7 +232,7 @@ export function Menu({ sessionId }: Props) {
                   side="bottom"
                   sideOffset={10}
                   collisionPadding={{ left: 25 }}
-                  className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
+                  className="text-destructive! shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100! px-4 py-5 text-wrap"
                   arrowClassName="bg-amber-100"
                 >
                   <p className="w-full pb-0.5 wrap-break-words hyphens-auto">
@@ -269,7 +266,7 @@ export function Menu({ sessionId }: Props) {
           {sessionValue?.memodel ? (
             <Tooltip>
               <TooltipTrigger>
-                <div className="text-accent-light flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
+                <div className="text-accent-light! flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
                   <CheckCircleFilled className="shrink-0 text-base" />
                   <div
                     title={sessionValue.memodel.name}

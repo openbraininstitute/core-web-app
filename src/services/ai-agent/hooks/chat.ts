@@ -1,14 +1,17 @@
 'use client';
 
 import { type CreateMessage, type Message, useChat } from '@ai-sdk/react';
-import type { ChatRequestOptions, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import { atom, useAtom } from 'jotai';
 import React, { useCallback, useEffect } from 'react';
+
 import { useAIActiveTools } from '@/components/ai-assistant/state';
-import type { Config } from '@/features/scan-config/components/components';
 import { logError } from '@/util/logger';
+
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { useAiAssistant } from '../assistant';
+
+import type { ChatRequestOptions, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
+import type { Config } from '@/features/scan-config/components/components';
 
 const AI_AGENT_STATE: { id?: string; config?: Record<string, Config> } = {};
 let returnId: string = '';
@@ -100,9 +103,17 @@ export function useServiceAiAgentChat(threadId: string) {
 
     //@ts-expect-error
     if (toolInvocation?.toolInvocation?.result && returnId === AI_AGENT_STATE.id) {
-      //@ts-expect-error
-      const result = JSON.parse(toolInvocation?.toolInvocation?.result ?? {});
-      setConfig(result);
+      try {
+        //@ts-expect-error
+        const result = JSON.parse(toolInvocation?.toolInvocation?.result ?? {});
+        setConfig(result);
+      } catch {
+        logError(
+          'Failed to parse tool invocation result as JSON:',
+          //@ts-expect-error
+          toolInvocation.toolInvocation.result
+        );
+      }
     }
   }, [chat.messages, setConfig]);
 

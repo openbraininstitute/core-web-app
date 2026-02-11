@@ -5,19 +5,6 @@ import { capitalize, isNil } from 'es-toolkit/compat';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { parseAsString, useQueryStates } from 'nuqs';
 
-import type { IBrainAtlasRegion } from '@/api/entitycore/types/entities/brain-atlas';
-import type {
-  BrainRegionHierarchyBase,
-  IBrainRegionHierarchy,
-} from '@/api/entitycore/types/entities/brain-region';
-import type {
-  BrainRegionHierarchySelection,
-  IBrainRegionHierarchyExtended,
-  IWorkspaceSpecies,
-  TBrainRegionHierarchyExtendedOption,
-  TBrainRegionHierarchyOption,
-} from '@/features/brain-region-hierarchy/types';
-
 import { getBrainRegionHierarchy } from '@/api/entitycore/queries/general/brain-region';
 import {
   findNodeByKey,
@@ -37,6 +24,19 @@ import { useLocalStorage } from '@/hooks/use-local-storage';
 import { keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
 import { log } from '@/utils/logger';
 
+import type { IBrainAtlasRegion } from '@/api/entitycore/types/entities/brain-atlas';
+import type {
+  BrainRegionHierarchyBase,
+  IBrainRegionHierarchy,
+} from '@/api/entitycore/types/entities/brain-region';
+import type {
+  BrainRegionHierarchySelection,
+  IBrainRegionHierarchyExtended,
+  IWorkspaceSpecies,
+  TBrainRegionHierarchyExtendedOption,
+  TBrainRegionHierarchyOption,
+} from '@/features/brain-region-hierarchy/types';
+
 export const VERSIONED__SPECIES_BRAIN_REGION_SELECTION_SNAPSHOT =
   'species-brain-region-selection-snapshot-v06-02-2026';
 
@@ -55,7 +55,7 @@ export const {
   MOUSE_ROOT__BRAIN_REGION_ID,
   MOUSE_ROOT__BRAIN_REGION_ANNOTATION_VALUE, // 997
   MOUSE_DEFAULT__SELECTED_BRAIN_REGION_ID,
-  MOUSE_PRIMARY__DIVISION_ANNOTATION_VALUE, // 8
+  MOUSE_PRIMARY__DIVISION_ANNOTATION_VALUE, // 997
   MOUSE_ATLAS__ID,
   // HUMAN
   HUMAN_ROOT__BRAIN_REGION_ID,
@@ -101,7 +101,7 @@ export const AppSpeciesBrainRegionConfig = {
     AtlasId: MOUSE_ATLAS__ID,
     RootId: MOUSE_ROOT__BRAIN_REGION_ID,
     RootAnnotationValue: MOUSE_ROOT__BRAIN_REGION_ANNOTATION_VALUE, // 997
-    PrimaryDivisionAnnotationValue: MOUSE_PRIMARY__DIVISION_ANNOTATION_VALUE, // 8
+    PrimaryDivisionAnnotationValue: MOUSE_PRIMARY__DIVISION_ANNOTATION_VALUE, // 997
     DefaultSelectedId: MOUSE_DEFAULT__SELECTED_BRAIN_REGION_ID,
     DefaultSelectedAnnotationValue: MOUSE_DEFAULT__SELECTED_BRAIN_REGION_ANNOTATION_VALUE,
     DefaultSelectedName: MOUSE_DEFAULT__SELECTED_BRAIN_REGION_NAME,

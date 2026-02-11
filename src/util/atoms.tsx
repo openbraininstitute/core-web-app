@@ -1,6 +1,6 @@
+import { atomFamily, atomWithRefresh } from 'jotai/utils';
+
 import type { Atom, WritableAtom } from 'jotai';
-import { atomWithRefresh } from 'jotai/utils';
-import { atomFamily } from 'jotai-family';
 
 /**
   Creates an atom family with automatic expiration after a specified time-to-live (TTL).

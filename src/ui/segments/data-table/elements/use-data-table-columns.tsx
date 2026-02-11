@@ -1,12 +1,7 @@
 'use client';
 
-import type { ColumnProps } from 'antd/lib/table';
 import { isString } from 'es-toolkit/compat';
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import type { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { fieldsDefinitionRegistry, getFieldDefinition } from '@/entity-configuration/definitions';
@@ -17,8 +12,14 @@ import {
   type TSortState,
 } from '@/entity-configuration/definitions/types';
 import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
-import styles from '@/ui/segments/data-table/elements/table.module.css';
 import { classNames, fieldTitleSentenceCase } from '@/util/utils';
+
+import type { ColumnProps } from 'antd/lib/table';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+
+import styles from '@/ui/segments/data-table/elements/table.module.css';
 
 type ResizeInit = {
   key: string | null;

@@ -5,12 +5,9 @@
 import { Form } from 'antd';
 import { isNil } from 'es-toolkit/compat';
 import { useCallback, useMemo } from 'react';
-import type { ZodObject, ZodRawShape } from 'zod';
 
 import { getSubjects } from '@/api/entitycore/queries/general/subject';
-import type { ISubject } from '@/api/entitycore/types/shared/global';
 import { AgePeriod, Sex } from '@/api/entitycore/types/shared/global';
-import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
 import {
@@ -19,6 +16,10 @@ import {
   renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/data';
+
+import type { ZodObject, ZodRawShape } from 'zod';
+import type { ISubject } from '@/api/entitycore/types/shared/global';
+import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
 
 interface ISubjectSelectorProps<TSchema extends ZodObject<ZodRawShape>> {
   schema: TSchema;
@@ -91,7 +92,9 @@ export function SubjectSelector<TSchema extends ZodObject<ZodRawShape>>({
 
       return {
         ...result,
-        data: result.data.filter((subject: ISubject) => subject.name.trim().toLowerCase() !== 'unknown'),
+        data: result.data.filter(
+          (subject: ISubject) => subject.name.trim().toLowerCase() !== 'unknown'
+        ),
       };
     },
     [virtualLabId, projectId]

@@ -1,9 +1,10 @@
 import { CheckCircleFilled, RightOutlined } from '@ant-design/icons';
-import { ReactNode } from 'react';
 
-import { RenderErrorTooltip } from '@/ui/segments/workflows/build/ion-channel-build/elements/error-tooltip';
 import { Button } from '@/ui/molecules/button';
+import { RenderErrorTooltip } from '@/ui/segments/workflows/build/ion-channel-build/elements/error-tooltip';
 import { cn } from '@/utils/css-class';
+
+import type { ReactNode } from 'react';
 
 export function MenuButton({
   propName,
@@ -39,10 +40,10 @@ export function MenuButton({
       {showErrorIcon ? (
         <RenderErrorTooltip isActive={isActive} />
       ) : showValidIcon ? (
-        <CheckCircleFilled className="text-accent-dark text-lg" />
+        <CheckCircleFilled className="text-accent-dark! text-lg" />
       ) : null}
       <RightOutlined
-        className={cn('text-primary-9 [&>svg]:size-2.5!', {
+        className={cn('text-primary-9! [&>svg]:size-2.5!', {
           'rotate-90 text-white': isActive,
         })}
       />

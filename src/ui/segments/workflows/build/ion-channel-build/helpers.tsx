@@ -1,11 +1,8 @@
 import $RefParser, { type JSONSchema } from '@apidevtools/json-schema-ref-parser';
-import type { RJSFSchema } from '@rjsf/utils';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { get } from 'es-toolkit/compat';
 import { atomWithStorage } from 'jotai/utils';
 import { atomFamily } from 'jotai-family';
-
-import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
 
 import { config } from '@/config';
 import { makeSessionAtomWithDefault } from '@/ui/hooks/use-session-atom';
@@ -16,6 +13,9 @@ import {
 } from '@/ui/segments/workflows/build/ion-channel-build/elements/panel-tabs';
 import { normalizePrefixItems } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/third-parties';
+
+import type { RJSFSchema } from '@rjsf/utils';
+import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
 
 export async function dereferenceOpenApiSchema({ json, form }: { form?: string; json: any }) {
   const dereferenceObj = (await $RefParser.dereference(json)) as OpenApiSchema;

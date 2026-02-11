@@ -1,6 +1,5 @@
-/** biome-ignore-all lint/style/useImportType: biome shit */
 import {
-  TgdCamera,
+  type TgdCamera,
   TgdContext,
   TgdDataGlb,
   TgdGeometryGltf,
@@ -13,7 +12,6 @@ import {
   tgdCanvasCreateFill,
   webglPresetDepth,
 } from '@tolokoban/tgd';
-import type React from 'react';
 
 import { AppSpeciesBrainRegionConfig } from '@/features/brain-region-hierarchy/context';
 import GenericEvent from '@/util/generic-event';
@@ -22,6 +20,8 @@ import { logError } from '@/util/logger';
 import { type CameraController, setCamera } from './camera';
 import { makeColor } from './hooks';
 import { getCachedBrainRegionMeshArrayBuffer, getPointCouldData } from './services/services';
+
+import type { ReactNode } from 'react';
 import type { SettingsValues } from './settings';
 import type { VisibleRegion } from './types';
 
@@ -31,7 +31,7 @@ export class Painter {
 
   public readonly ID: number;
 
-  public readonly eventError = new GenericEvent<React.ReactNode>();
+  public readonly eventError = new GenericEvent<ReactNode>();
 
   public readonly eventCameraChange = new GenericEvent<TgdCamera>();
 
@@ -55,7 +55,10 @@ export class Painter {
 
   private isAddingRegions = false;
 
-  private nextRegionsToAdd: { regions: VisibleRegion[]; accessToken: string } | null = null;
+  private nextRegionsToAdd: {
+    regions: VisibleRegion[];
+    accessToken: string;
+  } | null = null;
 
   private _loadingMesh = false;
 
@@ -105,7 +108,10 @@ export class Painter {
       const group = new TgdPainterGroup();
       this.group = group;
       context.add(
-        new TgdPainterClear(context, { depth: 1, color: makeColor(this.backgroundColor) }),
+        new TgdPainterClear(context, {
+          depth: 1,
+          color: makeColor(this.backgroundColor),
+        }),
         new TgdPainterState(context, {
           depth: webglPresetDepth.lessOrEqual,
           children: [group],
