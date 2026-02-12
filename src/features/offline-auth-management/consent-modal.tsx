@@ -20,24 +20,14 @@ export function OfflineTokenConsentModal({
       onCancel={onCancel}
       okText={consentUrl ? 'Open consent page' : 'Preparing…'}
       onOk={onOpenConsent}
-      okButtonProps={{ disabled: !consentUrl }}
+      okButtonProps={{ disabled: !consentUrl, className: 'bg-primary-9 rounded-full' }}
+      cancelButtonProps={{ className: 'rounded-full' }}
       cancelText="Cancel"
     >
       <p className="text-lg">
-        To run this extraction, you need to grant offline access. A new tab should open
+        To run this operation, you need to grant an offline access token. A new tab should open
         automatically. If it didn’t, use the button below or click the link.
       </p>
-
-      {!!consentUrl && (
-        <a
-          className="text-primary-9 mt-4 inline-block text-lg font-semibold"
-          href={consentUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Open consent page
-        </a>
-      )}
     </Modal>
   );
 }

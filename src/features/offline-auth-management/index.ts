@@ -17,11 +17,10 @@ export {
   readOfflineTokenConsentState,
   writeOfflineTokenConsentState,
 } from './store';
+
 export type {
   OfflineTokenConsentEvent,
   OfflineTokenConsentState,
-} from './types';
-export {
-  OfflineTokenConsentEventSource,
-  OfflineTokenConsentEventType,
+  TOfflineTokenConsentEventSource,
+  TOfflineTokenConsentEventType,
 } from './types';

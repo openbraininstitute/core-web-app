@@ -3,7 +3,7 @@ export const OfflineTokenConsentEventType = {
   Denied: 'denied',
 } as const;
 
-export type OfflineTokenConsentEventType =
+export type TOfflineTokenConsentEventType =
   (typeof OfflineTokenConsentEventType)[keyof typeof OfflineTokenConsentEventType];
 
 export const OfflineTokenConsentEventSource = {
@@ -11,7 +11,7 @@ export const OfflineTokenConsentEventSource = {
   Server: 'server',
 } as const;
 
-export type OfflineTokenConsentEventSource =
+export type TOfflineTokenConsentEventSource =
   (typeof OfflineTokenConsentEventSource)[keyof typeof OfflineTokenConsentEventSource];
 
 export type OfflineTokenConsentDecision = 'granted' | 'denied';
@@ -20,7 +20,7 @@ export type OfflineTokenConsentEvent =
   | {
       type: typeof OfflineTokenConsentEventType.Granted;
       at: number;
-      source: OfflineTokenConsentEventSource;
+      source: TOfflineTokenConsentEventSource;
       sessionStateId?: string;
     }
   | {

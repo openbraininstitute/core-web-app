@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import type { OfflineTokenConsentRequest } from '@/features/offline-auth-management/auth-manager-client';
+
 import { requestOfflineTokenConsent } from '@/features/offline-auth-management/auth-manager-client';
 import {
   publishOfflineTokenConsentEvent,
@@ -11,11 +11,13 @@ import {
   readOfflineTokenConsentState,
   writeOfflineTokenConsentState,
 } from '@/features/offline-auth-management/store';
-import type { OfflineTokenConsentEvent } from '@/features/offline-auth-management/types';
 import {
   OfflineTokenConsentEventSource,
   OfflineTokenConsentEventType,
 } from '@/features/offline-auth-management/types';
+
+import type { OfflineTokenConsentRequest } from '@/features/offline-auth-management/auth-manager-client';
+import type { OfflineTokenConsentEvent } from '@/features/offline-auth-management/types';
 
 function isOpenBrainInstituteHostname(hostname: string) {
   return hostname === 'openbraininstitute.org' || hostname.endsWith('.openbraininstitute.org');
@@ -27,9 +29,6 @@ function isOpenBrainInstituteHostname(hostname: string) {
  * - unnecessary re-login
  * - shared-cookie session clobbering across subdomains
  * - redirect/callback landing on the wrong origin (breaking cross-tab signaling)
- *
- * We treat this as an exceptional case and normalize the URL to the *current* origin
- * when both the current host and consent host are within openbraininstitute.org.
  */
 function normalizeConsentUrl(rawUrl: string, currentOrigin: string) {
   try {
@@ -94,14 +93,10 @@ function normalizeConsentUrl(rawUrl: string, currentOrigin: string) {
 
 type EnsureOptions = {
   timeoutMs?: number;
-  /**
-   * Max time we'll accept a previously-emitted event as relevant to this wait.
-   * This prevents stale “granted” events from auto-unblocking a new flow.
-   */
+  // max time we'll accept a previously-emitted event as relevant to this wait.
+  // this prevents stale “granted” events from auto-unblocking a new flow.
   maxEventAgeMs?: number;
-  /**
-   * How many times to re-check auth-manager after a grant event.
-   */
+  // how many times to re-check auth-manager after a grant event.
   recheckAttempts?: number;
 };
 
@@ -174,6 +169,21 @@ async function waitForDecision({
   });
 }
 
+/**
+ * offline token consent gate
+ *
+ * use this when you need to make sure the user granted the “offline token” consent
+ * before you start a task (extraction, simulation, ...)
+ *
+ * how it works:
+ * - if we have a fresh local state that says “granted”, we allow the task directly
+ * - if not granted, we request a `consentUrl` from auth-manager, try to open it in a new tab,
+ *   and we show a modal as a fallback (manual link)
+ * - we wait for the consent callback page to emit an event (granted/denied) and then we return.
+ *
+ * @param options - Tuning options (timeouts, event age, etc).
+ * @returns helpers for UI + the main `ensure()` function
+ */
 export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
   const opts = useMemo(
     () => ({
@@ -276,8 +286,6 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
           message: 'Consent URL was not provided by auth-manager.',
         };
       }
-
-      // need user interaction. ensure modal shows the link.
       setModal({ open: true, consentUrl });
 
       const flowStartedAt = Date.now();
