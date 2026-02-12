@@ -312,8 +312,8 @@ export function BlockUI({
                       <TooltipTrigger asChild>
                         <div>
                           <div className="mb-1 flex">
-                            <div className={cn('border-1 flex-1 mr-1', patchBorderClass())}>
-                              {renderInput(k, blockElementSchema, firstValue())}
+                            <div className={cn('border flex-1 mr-1', patchBorderClass())}>
+                              {renderInput(k, blockElementSchema, value)}
                             </div>
                             {(op_ === 'delete' || op_ === 'replace') && (
                               <CloseOutlined className="text-red-500" />
@@ -323,7 +323,7 @@ export function BlockUI({
 
                           {op_ === 'replace' && !!blockAIConfig && (
                             <div className="flex">
-                              <div className="border-1 border-sky-400 flex-1 mr-1">
+                              <div className="border border-sky-400 flex-1 mr-1">
                                 {renderInput(k, blockElementSchema, blockAIConfig[k])}
                               </div>
                               <PlusOutlined className="text-sky-400" />
