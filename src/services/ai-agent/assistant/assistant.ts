@@ -45,8 +45,8 @@ class AiAssistantClass {
   private readonly messageManager = new MessageManager(this);
 
   setQueryClient(queryClient: ReturnType<typeof useQueryClient>) {
-    (this.messageManager as any).queryClient = queryClient;
-    (this.historyManager as any).queryClient = queryClient;
+    this.messageManager.queryClient = queryClient;
+    this.historyManager.queryClient = queryClient;
   }
 
   constructor() {
@@ -103,6 +103,12 @@ class AiAssistantClass {
       ...this.context,
       threadId,
     });
+  }
+
+  useMessages(): [messages: Message[], isLoading: boolean] {
+    const messages = this.initialMessages.useValue();
+    const isLoading = this.isLoadingMessages.useValue();
+    return [messages, isLoading];
   }
 
   useHistory(): [
@@ -200,6 +206,7 @@ export function useAiAssistant() {
   return {
     ...AiAssistant,
     useContext: AiAssistant.useContext.bind(AiAssistant),
+    useMessages: AiAssistant.useMessages.bind(AiAssistant),
     useHistory: AiAssistant.useHistory.bind(AiAssistant),
     renameThread: async (threadId: string, title: string) => {
       await AiAssistant.renameThread(threadId, title);

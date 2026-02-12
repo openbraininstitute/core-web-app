@@ -42,8 +42,6 @@ export default function History({ className, onBack }: HistoryProps) {
     return <TabTransitionLoader message="Loading conversation history..." />;
   }
 
-  console.log(isLoading);
-
   return (
     <>
       <div className={classNames(className, styles.history)}>

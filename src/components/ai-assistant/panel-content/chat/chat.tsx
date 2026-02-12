@@ -1,5 +1,4 @@
 import { useIsFetching } from '@tanstack/react-query';
-import { atom } from 'jotai';
 import React from 'react';
 
 import {
@@ -26,8 +25,7 @@ export interface ChatProps {
 
 export default function Chat({ className, threadId }: ChatProps) {
   const assistant = useAiAssistant();
-  const initialMessages = assistant.initialMessages.useValue();
-  const isLoadingMessages = assistant.isLoadingMessages.useValue();
+  const [initialMessages, isLoadingMessages] = assistant.useMessages();
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = React.useState(true);
   const { messages, status, append, error, stop, rateLimitRemaining } = useServiceAiAgentChat(
     threadId ?? '',
@@ -114,7 +112,7 @@ export default function Chat({ className, threadId }: ChatProps) {
     }
   };
 
-  if (isLoadingMessages) {
+  if (threadId && isLoadingMessages) {
     return <TabTransitionLoader message="Loading conversation..." />;
   }
 
@@ -125,23 +123,21 @@ export default function Chat({ className, threadId }: ChatProps) {
         ref={refContainer}
         onWheel={handleWheel}
       >
-        {messages.length === 0 && <Welcome />}
+        {!threadId && <Welcome />}
         {messages.map((item) => (
           <MessageItem key={item.id} value={item} />
         ))}
 
         {status === 'ready' && messages.length > 0 && (
-          <>
-            <div className={styles.footerButtons}>
-              <div className={styles.price}>
-                <IconPrice />
-                <div>
-                  {Math.max(0, rateLimitRemaining)} free credit
-                  {rateLimitRemaining > 1 ? 's' : ''} left
-                </div>
+          <div className={styles.footerButtons}>
+            <div className={styles.price}>
+              <IconPrice />
+              <div>
+                {Math.max(0, rateLimitRemaining)} free credit
+                {rateLimitRemaining > 1 ? 's' : ''} left
               </div>
             </div>
-          </>
+          </div>
         )}
         {suggestions !== undefined && status === 'ready' && (
           <div className={styles.suggestedQuestionsContainer}>

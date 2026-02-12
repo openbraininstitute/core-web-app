@@ -12,7 +12,7 @@ export class MessageManager {
     private readonly target: {
       initialMessages: Signal<Message[]>;
     },
-    private queryClient?: ReturnType<typeof useQueryClient>
+    public queryClient?: ReturnType<typeof useQueryClient>
   ) {}
 
   readonly loadMessages = async (context: AssistantContext, threadId: string) => {

@@ -22,7 +22,7 @@ export class HistoryManager {
 
   private hasMorePages = false;
 
-  private queryClient?: ReturnType<typeof useQueryClient>;
+  public queryClient?: ReturnType<typeof useQueryClient>;
 
   constructor(
     private readonly target: { history: Signal<AiAssistantHistory>; error: Signal<AssistantError> }
