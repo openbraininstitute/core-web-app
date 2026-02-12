@@ -1,37 +1,24 @@
+import { includes } from 'es-toolkit/compat';
 import find from 'es-toolkit/compat/find';
 import get from 'es-toolkit/compat/get';
 import groupBy from 'es-toolkit/compat/groupBy';
 import sortBy from 'es-toolkit/compat/sortBy';
 import values from 'es-toolkit/compat/values';
-
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
+import { match, P } from 'ts-pattern';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { FeatureFlags, FlagKey, microcircuitFlag } from '@/features/feature-flags/flags';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { type TWorkspaceSection, WorkflowActivityDictValue, WorkspaceSection } from '@/constants';
+import { type FeatureFlags, type FlagKey, microcircuitFlag } from '@/features/feature-flags/flags';
 
 export const WorkflowSessionIdSearchParam = 'sessionId';
-export const EntityScopeDict = {
+export const EntityGroupDict = {
   Subcellular: 'Subcellular',
   Cellular: 'Cellular',
   Circuit: 'Circuit',
   System: 'System',
 } as const;
 
-export type TEntityScopeValue = keyof typeof EntityScopeDict;
-
-export const ActivityDict = [
-  { label: 'Build', value: 'build', disabled: false, name: 'Build' },
-  { label: 'Simulate', value: 'simulate', disabled: false, name: 'Simulation' },
-  { label: 'Extract', value: 'extract', disabled: true, name: 'Extract' },
-  { label: 'Optimize', value: 'optimize', disabled: true, name: 'Optimize' },
-  { label: 'Validate', value: 'validate', disabled: true, name: 'Validate' },
-  { label: 'Process Data', value: 'process_data', disabled: true, name: 'Process Data' },
-] as const;
-
-export type TActivityValue = (typeof ActivityDict)[number]['value'];
-export const ActivityValues = Object.fromEntries(ActivityDict.map((c) => [c.label, c.value])) as {
-  [K in (typeof ActivityDict)[number] as K['label']]: K['value'];
-};
+export type TEntityGroupValue = keyof typeof EntityGroupDict;
 
 type EntityTypeProperties = {
   disabled: boolean;
@@ -40,7 +27,7 @@ type EntityTypeProperties = {
 };
 
 type EntityTypeOption = {
-  group: TEntityScopeValue;
+  group: TEntityGroupValue;
   value: TExtendedEntitiesTypeDict | undefined;
   label: string;
   disabled: boolean;
@@ -51,19 +38,31 @@ type EntityTypeGroupedOptions = {
   options: Array<EntityTypeOption>;
 };
 
-export const EntityWorkflowConfiguration: Partial<
-  Record<
-    TExtendedEntitiesTypeDict,
-    {
-      group: TEntityScopeValue;
-      label: string;
-      properties: Partial<Record<TActivityValue, EntityTypeProperties>>;
-      requiredFeatures?: Array<FlagKey>;
-    }
-  >
-> = {
+type TBuildSimulateWorkflowConfigProperties = {
+  group: TEntityGroupValue;
+  label: string;
+  properties: {
+    build?: EntityTypeProperties;
+    simulate?: EntityTypeProperties;
+  };
+  requiredFeatures?: Array<FlagKey>;
+};
+
+type TBuildSimulateWorkflowConfig = Record<
+  TExtendedEntitiesTypeDict,
+  TBuildSimulateWorkflowConfigProperties
+>;
+
+export type TExtractWorkflowConfig = {
+  group: TEntityGroupValue;
+  value: TExtendedEntitiesTypeDict;
+  label: string;
+  disabled: boolean;
+};
+
+export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig> = {
   [ExtendedEntitiesTypeDict.IonChannelModel]: {
-    group: EntityScopeDict.Subcellular,
+    group: EntityGroupDict.Subcellular,
     label: 'Ion channel',
     properties: {
       build: {
@@ -77,7 +76,7 @@ export const EntityWorkflowConfiguration: Partial<
     },
   },
   [ExtendedEntitiesTypeDict.Metabolism]: {
-    group: EntityScopeDict.Subcellular,
+    group: EntityGroupDict.Subcellular,
     label: 'Metabolism',
     properties: {
       build: {
@@ -91,7 +90,7 @@ export const EntityWorkflowConfiguration: Partial<
     },
   },
   [ExtendedEntitiesTypeDict.NGVUnit]: {
-    group: EntityScopeDict.Subcellular,
+    group: EntityGroupDict.Subcellular,
     label: 'NGV unit',
     properties: {
       build: {
@@ -105,7 +104,7 @@ export const EntityWorkflowConfiguration: Partial<
     },
   },
   [ExtendedEntitiesTypeDict.Memodel]: {
-    group: EntityScopeDict.Cellular,
+    group: EntityGroupDict.Cellular,
     label: 'Single neuron',
     properties: {
       build: {
@@ -119,7 +118,7 @@ export const EntityWorkflowConfiguration: Partial<
     },
   },
   [ExtendedEntitiesTypeDict.SingleNeuronSynaptome]: {
-    group: EntityScopeDict.Cellular,
+    group: EntityGroupDict.Cellular,
     label: 'Synaptome',
     properties: {
       build: {
@@ -133,7 +132,7 @@ export const EntityWorkflowConfiguration: Partial<
     },
   },
   [ExtendedEntitiesTypeDict.MemodelCircuit]: {
-    group: EntityScopeDict.Cellular,
+    group: EntityGroupDict.Cellular,
     label: 'Single neuron (beta)',
     properties: {
       build: {
@@ -147,7 +146,7 @@ export const EntityWorkflowConfiguration: Partial<
     },
   },
   [ExtendedEntitiesTypeDict.SingleNeuronCircuit]: {
-    group: EntityScopeDict.Cellular,
+    group: EntityGroupDict.Cellular,
     label: 'Synaptome (beta)',
     properties: {
       build: {
@@ -161,7 +160,7 @@ export const EntityWorkflowConfiguration: Partial<
     },
   },
   [ExtendedEntitiesTypeDict.PairedNeuronCircuit]: {
-    group: EntityScopeDict.Circuit,
+    group: EntityGroupDict.Circuit,
     label: 'Paired neurons (beta)',
     properties: {
       build: {
@@ -175,7 +174,7 @@ export const EntityWorkflowConfiguration: Partial<
     },
   },
   [ExtendedEntitiesTypeDict.SmallMicrocircuit]: {
-    group: EntityScopeDict.Circuit,
+    group: EntityGroupDict.Circuit,
     label: 'Small microcircuit (beta)',
     properties: {
       build: {
@@ -189,7 +188,7 @@ export const EntityWorkflowConfiguration: Partial<
     },
   },
   [ExtendedEntitiesTypeDict.Microcircuit]: {
-    group: EntityScopeDict.Circuit,
+    group: EntityGroupDict.Circuit,
     label: 'Microcircuit',
     properties: {
       build: {
@@ -204,7 +203,7 @@ export const EntityWorkflowConfiguration: Partial<
     },
   },
   [ExtendedEntitiesTypeDict.NGVCircuit]: {
-    group: EntityScopeDict.Circuit,
+    group: EntityGroupDict.Circuit,
     label: 'NGV circuit',
     properties: {
       build: {
@@ -218,7 +217,7 @@ export const EntityWorkflowConfiguration: Partial<
     },
   },
   [ExtendedEntitiesTypeDict.BrainRegion]: {
-    group: EntityScopeDict.System,
+    group: EntityGroupDict.System,
     label: 'Brain region',
     properties: {
       build: {
@@ -232,7 +231,7 @@ export const EntityWorkflowConfiguration: Partial<
     },
   },
   [ExtendedEntitiesTypeDict.BrainSystems]: {
-    group: EntityScopeDict.System,
+    group: EntityGroupDict.System,
     label: 'Brain system',
     properties: {
       build: {
@@ -246,7 +245,7 @@ export const EntityWorkflowConfiguration: Partial<
     },
   },
   [ExtendedEntitiesTypeDict.WholeBrain]: {
-    group: EntityScopeDict.System,
+    group: EntityGroupDict.System,
     label: 'Whole brain',
     properties: {
       build: {
@@ -261,13 +260,88 @@ export const EntityWorkflowConfiguration: Partial<
   },
 } as const;
 
+export const extractConfiguration: Array<TExtractWorkflowConfig> = [
+  {
+    group: EntityGroupDict.Circuit,
+    disabled: false,
+    label: 'Circuit (beta)',
+    value: ExtendedEntitiesTypeDict.Circuit,
+  },
+] as const;
+
+type ActivityConfigType =
+  | { configType: 'buildSimulate'; config: Partial<TBuildSimulateWorkflowConfig> }
+  | { configType: 'extract'; config: Array<TExtractWorkflowConfig> }
+  | { configType: 'none' };
+
+type ActivityDictEntry = {
+  label: string;
+  value: string;
+  disabled: boolean;
+  name: string;
+} & ActivityConfigType;
+
+export const ActivityDict: readonly ActivityDictEntry[] = [
+  {
+    label: 'Build',
+    value: WorkflowActivityDictValue.build,
+    disabled: false,
+    name: 'Build',
+    configType: 'buildSimulate',
+    config: buildAndSimulateConfiguration,
+  },
+  {
+    label: 'Simulate',
+    value: WorkflowActivityDictValue.simulate,
+    disabled: false,
+    name: 'Simulation',
+    configType: 'buildSimulate',
+    config: buildAndSimulateConfiguration,
+  },
+  {
+    label: 'Extract',
+    value: WorkflowActivityDictValue.extract,
+    disabled: false,
+    name: 'Extraction',
+    configType: 'extract',
+    config: extractConfiguration,
+  },
+  {
+    label: 'Optimize',
+    value: WorkflowActivityDictValue.optimize,
+    disabled: true,
+    name: 'Optimization',
+    configType: 'none',
+  },
+  {
+    label: 'Validate',
+    value: WorkflowActivityDictValue.validate,
+    disabled: true,
+    name: 'Validation',
+    configType: 'none',
+  },
+  {
+    label: 'Process Data',
+    value: WorkflowActivityDictValue.process_data,
+    disabled: true,
+    name: 'Processing Data',
+    configType: 'none',
+  },
+] as const;
+
+export type TActivityValue =
+  (typeof WorkflowActivityDictValue)[keyof typeof WorkflowActivityDictValue];
+export const ActivityValues = Object.fromEntries(ActivityDict.map((c) => [c.label, c.value])) as {
+  [K in (typeof ActivityDict)[number] as K['label']]: K['value'];
+};
+
 export type EntityDropdownOption = {
   label: string;
   properties: Partial<Record<TActivityValue, { disabled: boolean }>>;
 };
 
 export type TEntityDropdownOptionsGrouped = Array<{
-  group: TEntityScopeValue;
+  group: TEntityGroupValue;
   options: Array<EntityDropdownOption>;
 }>;
 
@@ -278,96 +352,126 @@ export function getDropdownOptionsByCategory(
   allOptions: Array<EntityTypeGroupedOptions>;
   enabledOptions: Array<EntityTypeGroupedOptions>;
 } {
-  const options = Object.values(EntityWorkflowConfiguration)
-    .filter((config): config is NonNullable<typeof config> => config !== undefined)
-    .filter(
-      (config) =>
-        !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
-    )
-    .map((config) => {
-      const disabled = get(config, `properties.${category}`, undefined)?.disabled ?? true;
-      const requiredFeatures = config.properties[category]?.requiredFeatures;
-      const satisfiesFeatureRequirements =
-        !requiredFeatures || requiredFeatures.every((flag) => featureFlags?.[flag]);
+  if (
+    !ActivityDict.filter((o) => !o.disabled)
+      .map((o) => o.value)
+      .includes(category)
+  ) {
+    return { allOptions: [], enabledOptions: [] };
+  }
+  if (category === WorkflowActivityDictValue.extract) {
+    const grouped = groupBy(extractConfiguration, 'group');
+    const options = Object.entries(grouped).map(([k, v]) => ({
+      group: k,
+      options: v,
+    }));
 
-      return {
-        group: config.group,
-        label: config.label,
-        value: get(config, `properties.${category}`, undefined)?.type,
-        disabled: disabled || !satisfiesFeatureRequirements,
-      };
-    });
+    const enabledOptions = options.filter((o) => o.options.some((a) => a.disabled));
 
-  const grouped = groupBy(options, 'group');
+    return { allOptions: options, enabledOptions };
+  }
+  if (includes([WorkflowActivityDictValue.build, WorkflowActivityDictValue.simulate], category)) {
+    const activityKey = category as 'build' | 'simulate';
+    const options = Object.values(buildAndSimulateConfiguration)
+      .filter((config): config is NonNullable<typeof config> => config !== undefined)
+      .filter(
+        (config) =>
+          !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
+      )
+      .map((config) => {
+        const propertyConfig = config.properties[activityKey];
+        const disabled = propertyConfig?.disabled ?? true;
+        const requiredFeatures = propertyConfig?.requiredFeatures;
+        const satisfiesFeatureRequirements =
+          !requiredFeatures || requiredFeatures.every((flag) => featureFlags?.[flag]);
 
-  const allOptions = Object.entries(grouped).map(([group, opts]) => ({
-    group: group as TEntityScopeValue,
-    options: opts.map(({ label, value, disabled }) => ({
-      label,
-      value,
-      disabled,
-      group: group as TEntityScopeValue,
-    })),
-  }));
+        return {
+          group: config.group,
+          label: config.label,
+          value: propertyConfig?.type,
+          disabled: disabled || !satisfiesFeatureRequirements,
+        };
+      });
 
-  const enabledOptions = Object.entries(grouped)
-    .map(([group, opts]) => ({
-      group: group as TEntityScopeValue,
+    const grouped = groupBy(options, 'group');
+
+    const allOptions = Object.entries(grouped).map(([group, opts]) => ({
+      group: group as TEntityGroupValue,
       options: opts.map(({ label, value, disabled }) => ({
         label,
         value,
         disabled,
-        group: group as TEntityScopeValue,
+        group: group as TEntityGroupValue,
       })),
-    }))
-    .filter((g) => g.options.some((opt) => !opt.disabled))
-    .map(({ group, options: _options }) => ({
-      group,
-      options: _options.filter((o) => !o.disabled),
     }));
 
-  return {
-    allOptions,
-    enabledOptions,
-  };
+    const enabledOptions = Object.entries(grouped)
+      .map(([group, opts]) => ({
+        group: group as TEntityGroupValue,
+        options: opts.map(({ label, value, disabled }) => ({
+          label,
+          value,
+          disabled,
+          group: group as TEntityGroupValue,
+        })),
+      }))
+      .filter((g) => g.options.some((opt) => !opt.disabled))
+      .map(({ group, options: _options }) => ({
+        group,
+        options: _options.filter((o) => !o.disabled),
+      }));
+
+    return {
+      allOptions,
+      enabledOptions,
+    };
+  }
+
+  return { allOptions: [], enabledOptions: [] };
 }
 
 export function getAllOptionsOrdered(
   category: TActivityValue,
   featureFlags: FeatureFlags
 ): Array<EntityTypeOption> {
-  const options = Object.values(EntityWorkflowConfiguration)
-    .filter((config): config is NonNullable<typeof config> => config !== undefined)
-    .filter(
-      (config) =>
-        !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
-    )
-    .map((config) => {
-      const disabled = get(config, `properties.${category}`, undefined)?.disabled ?? true;
-      const requiredFeatures = config.properties[category]?.requiredFeatures;
-      const satisfiesFeatureRequirements =
-        !requiredFeatures || requiredFeatures.every((flag) => featureFlags?.[flag]);
+  if (
+    !ActivityDict.filter((o) => !o.disabled)
+      .map((o) => o.value)
+      .includes(category)
+  ) {
+    return [];
+  }
+  if (category === WorkflowActivityDictValue.extract) {
+    return extractConfiguration;
+  }
 
-      return {
-        group: config.group,
-        label: config.label,
-        value: get(config, `properties.${category}`, undefined)?.type,
-        disabled: disabled || !satisfiesFeatureRequirements,
-      };
-    });
+  if (includes([WorkflowActivityDictValue.build, WorkflowActivityDictValue.simulate], category)) {
+    const activityKey = category as 'build' | 'simulate';
+    const options = Object.values(buildAndSimulateConfiguration)
+      .filter((config): config is NonNullable<typeof config> => config !== undefined)
+      .filter(
+        (config) =>
+          !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag])
+      )
+      .map((config) => {
+        const propertyConfig = config.properties[activityKey];
+        const disabled = propertyConfig?.disabled ?? true;
+        const requiredFeatures = propertyConfig?.requiredFeatures;
+        const satisfiesFeatureRequirements =
+          !requiredFeatures || requiredFeatures.every((flag) => featureFlags?.[flag]);
 
-  return sortBy(options, ['disabled', 'group']);
-}
+        return {
+          group: config.group,
+          label: config.label,
+          value: propertyConfig?.type,
+          disabled: disabled || !satisfiesFeatureRequirements,
+        };
+      });
 
-export function getBuildTypeFromSimulateType(
-  type: TExtendedEntitiesTypeDict
-): TExtendedEntitiesTypeDict | undefined {
-  const config = find(
-    values(EntityWorkflowConfiguration),
-    (c) => c.properties.simulate?.type === type
-  );
+    return sortBy(options, ['disabled', 'group']);
+  }
 
-  return config?.properties.build?.type;
+  return [];
 }
 
 export function getWorkflowSegment(url: string): TActivityValue | null {
@@ -380,9 +484,54 @@ export function getCategoryDictItem(value: TActivityValue | null | undefined) {
   return find(ActivityDict, { value });
 }
 
-export function getEntityTypeWorkflowConfigurationItem(
-  value: TExtendedEntitiesTypeDict | null | undefined
-) {
-  if (!value) return null;
-  return get(EntityWorkflowConfiguration, `${value}`, null);
+export function getEntityTypeWorkflowConfigurationItem({
+  value,
+  section,
+}: {
+  value: TExtendedEntitiesTypeDict | null | undefined;
+  section: TWorkspaceSection;
+}) {
+  return match({ section, value })
+    .with({ section: WorkspaceSection.ExtractWorkflow, value: P.nonNullable }, () =>
+      extractConfiguration.find((o) => o.value === value)
+    )
+    .with(
+      {
+        section: P.union(WorkspaceSection.BuildWorkflow, WorkspaceSection.SimulateWorkflow),
+        value: P.nonNullable,
+      },
+      () => {
+        return get(buildAndSimulateConfiguration, `${value}`, null);
+      }
+    )
+    .otherwise(() => null);
+}
+
+export function getBaseModelTypeFromActivityType({
+  type,
+  section,
+}: {
+  type: TExtendedEntitiesTypeDict;
+  section: TWorkspaceSection;
+}): TExtendedEntitiesTypeDict | undefined {
+  return match({ section, type })
+    .with(
+      { section: WorkspaceSection.ExtractWorkflow, type: P.nonNullable },
+      () => extractConfiguration.find((p) => p.value === type)?.value
+    )
+    .with(
+      {
+        section: P.union(WorkspaceSection.BuildWorkflow, WorkspaceSection.SimulateWorkflow),
+        type: P.nonNullable,
+      },
+      ({ section: workflowSection }) => {
+        const activityKey = workflowSection as 'build' | 'simulate';
+        const config = find(values(buildAndSimulateConfiguration), (c) => {
+          return c?.properties[activityKey]?.type === type;
+        });
+
+        return config?.properties.build?.type;
+      }
+    )
+    .otherwise(() => undefined);
 }

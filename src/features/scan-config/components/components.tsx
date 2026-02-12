@@ -1,23 +1,25 @@
 import { CloseOutlined, PlusOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
-import { isNil } from 'es-toolkit/compat';
-import isEqual from 'es-toolkit/compat/isEqual';
+import { isEqual, isNil } from 'es-toolkit/compat';
 import { atom, useAtom } from 'jotai';
 import { useRef } from 'react';
 
+import BooleanInput from '@/features/scan-config/components/boolean-input';
 import EntityPropertyDropdown from '@/features/scan-config/components/entity-property-dropdown';
 import ModelDetails from '@/features/scan-config/components/model-details';
 import NeuronIds from '@/features/scan-config/components/neuron-ids';
 import ParameterSweep from '@/features/scan-config/components/parameter-sweep';
 import Reference from '@/features/scan-config/components/reference';
-import Tooltip from '@/features/scan-config/components/tooltip';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import {
-  type Block,
   isType,
   type ParamSchema,
+  ScanConfigUIElementDict,
   type SchemaName,
+  type TBlock,
+  type TScanConfigTabs,
 } from '@/features/scan-config/types';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
@@ -45,7 +47,7 @@ export function BlockUI({
   schemaName: SchemaName;
   disabled: boolean;
   config: Config;
-  blockSchema?: Block;
+  blockSchema?: TBlock;
   model: ICircuit | IMEModel | undefined | null;
   stateAtom: ReturnType<typeof atom<Record<string, ConfigValue>>> | null;
   blockAIConfig: Record<string, ConfigValue> | null;
@@ -55,7 +57,7 @@ export function BlockUI({
   const [state, setState] = useAtom(stateAtom ?? emptyAtom.current);
 
   function renderInput(k: string, paramSchema: ParamSchema, value: ConfigValue) {
-    if (paramSchema.ui_element === 'string_input') {
+    if (paramSchema.ui_element === ScanConfigUIElementDict.StringInput) {
       return (
         <Input
           disabled={disabled}
@@ -68,13 +70,13 @@ export function BlockUI({
       );
     }
 
-    if (paramSchema.ui_element === 'model_identifier' && model) {
+    if (paramSchema.ui_element === ScanConfigUIElementDict.ModelIdentifier && model) {
       return <ModelDetails model={model} />;
     }
 
     if (
-      paramSchema.ui_element === 'float_parameter_sweep' ||
-      paramSchema.ui_element === 'int_parameter_sweep'
+      paramSchema.ui_element === ScanConfigUIElementDict.FloatParameterSweep ||
+      paramSchema.ui_element === ScanConfigUIElementDict.IntParameterSweep
     ) {
       return (
         <ParameterSweep
@@ -92,7 +94,7 @@ export function BlockUI({
       );
     }
 
-    if (paramSchema.ui_element === 'reference') {
+    if (paramSchema.ui_element === ScanConfigUIElementDict.Reference) {
       const defaultV: string | null =
         isPlainObject(value) && typeof value.block_name === 'string' ? value.block_name : null;
 
@@ -121,7 +123,7 @@ export function BlockUI({
       );
     }
 
-    if (paramSchema.ui_element === 'neuron_ids') {
+    if (paramSchema.ui_element === ScanConfigUIElementDict.NeuronIds) {
       const elements: number[] =
         isPlainObject(value) && Array.isArray(value.elements) ? value.elements : [];
 
@@ -161,7 +163,7 @@ export function BlockUI({
       );
     }
 
-    if (paramSchema.ui_element === 'entity_property_dropdown' && model) {
+    if (paramSchema.ui_element === ScanConfigUIElementDict.EntityPropertyDropdown && model) {
       const getValue = (): string[] => {
         if (Array.isArray(value) && value.every((v) => typeof v === 'string')) {
           return value;
@@ -178,6 +180,20 @@ export function BlockUI({
           onChange={(newV: string[]) => setState({ ...state, node_set: newV })}
           entity_type={paramSchema.entity_type}
           property={paramSchema.property}
+        />
+      );
+    }
+
+    if (paramSchema.ui_element === ScanConfigUIElementDict.BooleanInput) {
+      const currentValue = typeof state[k] === 'boolean' ? state[k] : null;
+      return (
+        <BooleanInput
+          value={currentValue}
+          disabled={disabled}
+          onChange={(value: boolean) => {
+            setState({ ...state, [k]: value });
+          }}
+          ariaLabel={paramSchema.description}
         />
       );
     }
@@ -211,6 +227,8 @@ export function BlockUI({
             })
             .map(([k, blockElementSchema]) => {
               if (isType(blockElementSchema)) return null;
+              const isBooleanInput =
+                blockElementSchema.ui_element === ScanConfigUIElementDict.BooleanInput;
               const op_ = op(k);
 
               const patchBorderClass = () => {
@@ -231,43 +249,103 @@ export function BlockUI({
               const value = firstValue();
 
               return (
-                <div key={k}>
-                  <div className="flex items-end gap-3">
-                    <div
-                      className="text-primary-9 text-base font-semibold uppercase"
-                      title={blockElementSchema.description}
-                    >
-                      {blockElementSchema.title}
+                <div key={k} className="w-full">
+                  <div
+                    className={classNames(
+                      'flex gap-3 w-full',
+                      isBooleanInput ? 'items-start justify-between' : 'items-end'
+                    )}
+                  >
+                    <div className={classNames('flex items-end gap-3', isBooleanInput && 'flex-1')}>
+                      <div
+                        className="text-primary-9 text-base font-semibold uppercase"
+                        title={blockElementSchema.description}
+                      >
+                        {blockElementSchema.title}
+                      </div>
+                      {blockElementSchema.units && (
+                        <div className="text-lg text-gray-500">{blockElementSchema.units}</div>
+                      )}
                     </div>
-                    {blockElementSchema.units && (
-                      <div className="text-lg text-gray-500">{blockElementSchema.units}</div>
+                    {isBooleanInput && (
+                      <div className="shrink-0">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div>
+                              <div className="mb-1 flex">
+                                <div className={cn('border flex-1 mr-1', patchBorderClass())}>
+                                  {renderInput(k, blockElementSchema, value)}
+                                </div>
+                                {(op_ === 'delete' || op_ === 'replace') && (
+                                  <CloseOutlined className="text-red-500" />
+                                )}
+                                {op_ === 'add' && <PlusOutlined className="text-[#1690ff]" />}
+                              </div>
+
+                              {op_ === 'replace' && !!blockAIConfig && (
+                                <div className="flex">
+                                  <div className="border border-[#1690ff] flex-1 mr-1">
+                                    {renderInput(k, blockElementSchema, blockAIConfig[k])}
+                                  </div>
+                                  <PlusOutlined className="text-[#1690ff]" />
+                                </div>
+                              )}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent
+                            avoidCollisions
+                            hideWhenDetached
+                            align="center"
+                            side="bottom"
+                            className="text-white shadow-bnb max-w-2xs min-w-2xs rounded-md bg-[#0050b3ee] px-4 py-2 text-base text-wrap"
+                            arrowClassName="bg-[#0050b3ee]"
+                          >
+                            {k === 'circuit' && model
+                              ? model.description
+                              : blockElementSchema.description}
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
                     )}
                   </div>
+                  {!isBooleanInput && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div>
+                          <div className="mb-1 flex">
+                            <div className={cn('border flex-1 mr-1', patchBorderClass())}>
+                              {renderInput(k, blockElementSchema, value)}
+                            </div>
+                            {(op_ === 'delete' || op_ === 'replace') && (
+                              <CloseOutlined className="text-red-500" />
+                            )}
+                            {op_ === 'add' && <PlusOutlined className="text-[#1690ff]" />}
+                          </div>
 
-                  <Tooltip
-                    value={
-                      k === 'circuit' && model ? model.description : blockElementSchema.description
-                    }
-                  >
-                    <div className="mb-1 flex">
-                      <div className={cn('border-1 flex-1 mr-1 rounded-lg', patchBorderClass())}>
-                        {renderInput(k, blockElementSchema, value)}
-                      </div>
-                      {(op_ === 'delete' || op_ === 'replace') && (
-                        <CloseOutlined className="text-red-500" />
-                      )}
-                      {op_ === 'add' && <PlusOutlined className="text-[#1690ff]" />}
-                    </div>
-
-                    {op_ === 'replace' && !!blockAIConfig && (
-                      <div className="flex">
-                        <div className="border-1 border-[#1690ff] flex-1 mr-1 rounded-lg">
-                          {renderInput(k, blockElementSchema, blockAIConfig[k])}
+                          {op_ === 'replace' && !!blockAIConfig && (
+                            <div className="flex">
+                              <div className="border border-[#1690ff] flex-1 mr-1">
+                                {renderInput(k, blockElementSchema, blockAIConfig[k])}
+                              </div>
+                              <PlusOutlined className="text-[#1690ff]" />
+                            </div>
+                          )}
                         </div>
-                        <PlusOutlined className="text-[#1690ff]" />
-                      </div>
-                    )}
-                  </Tooltip>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        avoidCollisions
+                        hideWhenDetached
+                        align="center"
+                        side="bottom"
+                        className="text-white shadow-bnb max-w-2xs min-w-2xs rounded-md bg-[#0050b3ee] px-4 py-2 text-base text-wrap"
+                        arrowClassName="bg-[#0050b3ee]"
+                      >
+                        {k === 'circuit' && model
+                          ? model.description
+                          : blockElementSchema.description}
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
 
                   {blockSchema.required?.includes(k) && isNil(value) && (
                     <span className="text-red-500">Required</span>
@@ -280,7 +358,53 @@ export function BlockUI({
   );
 }
 
+export const getRoundedByIndex = (
+  index: number,
+  length: number
+): 'rounded-full' | 'rounded-l-full' | 'rounded-r-full' | 'rounded-none' => {
+  if (length === 1) return 'rounded-full';
+  if (index === 0) return 'rounded-l-full';
+  if (index === length - 1) return 'rounded-r-full';
+  return 'rounded-none';
+};
+
 export function Tab({
+  tab,
+  selectedTab,
+  children,
+  onClick,
+  rounded = 'rounded-full',
+  extraClass,
+  disabled,
+}: {
+  tab: string;
+  selectedTab: TScanConfigTabs;
+  onClick?: () => void;
+  rounded?: 'rounded-l-full' | 'rounded-r-full' | 'rounded-full' | 'rounded-none';
+  children?: React.ReactNode;
+  extraClass?: string;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      onClick={!disabled ? onClick : undefined}
+      type="button"
+      style={disabled ? { background: '#d1d5db', cursor: 'default', color: '#9ca3af' } : undefined}
+      className={classNames(
+        'min-w-37.5 px-5 py-2',
+        extraClass,
+        rounded,
+        tab === selectedTab.id
+          ? 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white rounded-l-none'
+          : 'text-primary-8 bg-white'
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+export function LeftMenuTab({
   tab,
   selectedTab,
   children,
@@ -303,11 +427,11 @@ export function Tab({
       type="button"
       style={disabled ? { background: '#d1d5db', cursor: 'default', color: '#9ca3af' } : undefined}
       className={classNames(
-        'min-w-[150px] px-5 py-2',
+        'min-w-37.5 px-5 py-2',
         extraClass,
         rounded,
         tab === selectedTab
-          ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
+          ? 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white'
           : 'text-primary-8 bg-white'
       )}
     >

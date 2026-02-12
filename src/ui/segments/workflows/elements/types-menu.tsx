@@ -1,13 +1,11 @@
 import { WheelGesturesPlugin } from 'embla-carousel-wheel-gestures';
-
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { useFlags } from '@/features/feature-flags';
 import { Carousel, CarouselContent, CarouselItem } from '@/ui/molecules/carousel';
 import { CarouselButtons } from '@/ui/segments/workflows/elements/carousel-buttons';
+import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 import { getAllOptionsOrdered } from '@/ui/segments/workflows/elements/helpers';
 import { MenuItem } from '@/ui/segments/workflows/elements/menu-item';
-
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 
 export function TypesMenu({
   current,
@@ -21,10 +19,12 @@ export function TypesMenu({
   const featureFlags = useFlags();
 
   if (!category) return null;
+
   return (
     <Carousel
-      id="workflow-category-menu"
-      data-testid="workflow-category-menu"
+      key={`workflow-types-menu-${category}`}
+      id={`workflow-types-menu-${category}`}
+      data-testid={`workflow-types-menu-${category}`}
       opts={{ align: 'start' }}
       className="relative py-2"
       plugins={[WheelGesturesPlugin()]}
@@ -36,21 +36,23 @@ export function TypesMenu({
         </div>
       </div>
       <CarouselContent className="items-stretch">
-        {getAllOptionsOrdered(category, featureFlags).map(({ value, disabled, group, label }) => (
-          <CarouselItem
-            key={`category-selector-${value}`}
-            className="w-max basis-1/2 py-2 md:basis-1/3! lg:basis-1/5! 2xl:basis-1/6!"
-          >
-            <MenuItem<TExtendedEntitiesTypeDict | null>
-              group={group}
-              active={current === value}
-              value={value ?? null}
-              disabled={disabled}
-              title={label}
-              onClick={onItemClick}
-            />
-          </CarouselItem>
-        ))}
+        {getAllOptionsOrdered(category, featureFlags).map(({ value, disabled, group, label }) => {
+          return (
+            <CarouselItem
+              key={`type-selector-${group}-${label}`}
+              className="w-max basis-1/2 py-2 md:basis-1/3! lg:basis-1/5! 2xl:basis-1/6!"
+            >
+              <MenuItem<TExtendedEntitiesTypeDict | null>
+                group={group}
+                active={current === value}
+                value={value ?? null}
+                disabled={disabled}
+                title={label}
+                onClick={onItemClick}
+              />
+            </CarouselItem>
+          );
+        })}
       </CarouselContent>
     </Carousel>
   );

@@ -68,7 +68,7 @@ export function atomFamilyWithExpiration<
   FamilyParam,
   AtomValue,
   SetAtomArgs extends unknown[],
-  SetAtomResult extends unknown,
+  SetAtomResult,
 >(
   initializeWritableAtom: (
     param: FamilyParam

@@ -1,19 +1,25 @@
 import { InfoCircleOutlined } from '@ant-design/icons';
-import type { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+
+import {
+  EntitycoreExecutionStatus,
+  type TEntitycoreExecutionStatus,
+} from '@/api/entitycore/types/entities/execution';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
 
-export function SimulationStatusBadge({
+export function StatusBadge({
   status,
   details,
 }: {
-  status?: EntitycoreExecutionStatus;
+  status?: TEntitycoreExecutionStatus;
   details?: string;
 }) {
-  const color = status ? executionStatusColorMap[status] : '#fafafa';
-  const showSpinner = status && ['pending', 'running'].includes(status);
-
-  // TODO: move spinner outside of the module.
+  const color = status ? executionStatusColorMap[status as EntitycoreExecutionStatus] : '#fafafa';
+  const showSpinner =
+    status &&
+    [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING].includes(
+      status as EntitycoreExecutionStatus
+    );
 
   return (
     <div className="flex items-center">
@@ -41,13 +47,11 @@ export function SimulationStatusBadge({
           />
         </svg>
       )}
-
       <span
         style={{ borderColor: color, color }}
         className="flex items-center rounded-xl border px-4 capitalize transition-colors duration-300"
       >
-        {status ?? ''}
-
+        {status ?? 'created'}
         {details && (
           <Tooltip>
             <TooltipTrigger asChild>

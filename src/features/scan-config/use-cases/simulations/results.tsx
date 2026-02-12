@@ -1,11 +1,8 @@
 import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
-import type { CheckboxProps } from 'antd';
 import { Checkbox, ConfigProvider, Modal } from 'antd';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
-
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 
 import { requestOfflineTokenConsent } from '@/api/auth-manager';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
@@ -15,15 +12,16 @@ import { runSimulation } from '@/api/one/circuit-simulation';
 import { useAppNotification } from '@/components/notification';
 import { hasSimConfigAsset } from '@/entity-configuration/domain/simulation/utils';
 import {
-  modelAtomFamily,
   simExecRemoteStatusMapAtomFamily,
   simExecStatusMapAtomFamily,
   simulationsByCampaignIdAtomFamily,
+  useModelQuery,
 } from '@/features/scan-config/components/atoms';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
-import { type File, SimulationFiles } from '@/features/scan-config/components/simulation-files';
-import { SimulationStatusBadge } from '@/features/scan-config/components/simulation-status';
+import { ScanParams } from '@/features/scan-config/components/scan-params';
+import { SimulationFiles } from '@/features/scan-config/components/simulation-files';
 import errorRegistry from '@/features/scan-config/error-registry';
+import { StatusBadge } from '@/features/scan-config/status-badge';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/simulation';
 import { useConsent } from '@/services/consent';
@@ -33,6 +31,10 @@ import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-
 import { classNames } from '@/util/utils';
 import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
+
+import type { CheckboxProps } from 'antd';
+import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import type { TActivityCustomFile } from '@/features/scan-config/types';
 
 import styles from '@/features/scan-config/scan-config.module.css';
 
@@ -63,8 +65,10 @@ export default function SimulationsTab({
   });
   const simulations = useAtomValue(simulationsAtom);
 
-  const modelAtom = modelAtomFamily({ id: simulations[0].entity_id, context });
-  const model = useAtomValue(modelAtom);
+  const { entity: model } = useModelQuery({
+    context,
+    id: simulations[0].entity_id,
+  });
 
   const simExecStatusMapAtom = simExecStatusMapAtomFamily({
     context,
@@ -80,7 +84,7 @@ export default function SimulationsTab({
   const [simRequestInProgress, setSimRequestInProgress] = useState<boolean>(false);
   const [selectedSimulationIds, setSelectedSimulationIds] = useState<string[]>([]);
   const [activeSimulation, setActiveSimulation] = useState<null | ICircuitSimulation>(null);
-  const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
+  const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [filesLoading, setFilesLoading] = useState(false);
   const [consent, setConsent] = useState<Consent | null>(null);
@@ -166,7 +170,7 @@ export default function SimulationsTab({
         if (error === USER_CANCELLED) return;
 
         notification.error({
-          message: 'Unexpected error occured, please try again later',
+          message: 'Unexpected error occurred, please try again later',
           duration: 10,
         });
 
@@ -206,7 +210,7 @@ export default function SimulationsTab({
 
   // TODO Refactor
   const run = async (simIds: string[]) => {
-    if ('scale' in model && model.scale === CircuitScaleDictionary.Microcircuit) {
+    if (model && 'scale' in model && model.scale === CircuitScaleDictionary.Microcircuit) {
       return runViaLaunchSystem(simIds);
     }
 
@@ -305,7 +309,7 @@ export default function SimulationsTab({
           <button
             className={classNames(
               'min-h-[50] w-full cursor-pointer rounded-3xl p-2 text-white',
-              'bg-[linear-gradient(94.93deg,_#389E0D_18.84%,_#143805_116.7%)]',
+              'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)]',
               'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none'
             )}
             type="button"
@@ -434,35 +438,13 @@ function SimulationListItem({
             )}
           </div>
           <div className="ml-4 flex shrink-0">
-            <SimulationStatusBadge status={execStatus} details={statusDetails} />
+            <StatusBadge status={execStatus} details={statusDetails} />
             <RightOutlined className="ml-2 text-sm" />
           </div>
         </button>
 
         <ScanParams scanParams={simulation.scan_parameters} color={color} />
       </div>
-    </div>
-  );
-}
-
-type SimulationScanParams = { [key: string]: string | number };
-
-function ScanParams({ scanParams, color }: { scanParams: SimulationScanParams; color: string }) {
-  return (
-    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-      {Object.entries(scanParams).map(([key, value]) => (
-        <div key={key} className="overflow-x-hidden">
-          <div title={key} className="truncate text-ellipsis text-gray-400">
-            {key.split('.').at(-1)}
-          </div>
-          <div
-            className="truncate font-bold text-ellipsis transition-colors duration-300"
-            style={{ color }}
-          >
-            {value}
-          </div>
-        </div>
-      ))}
     </div>
   );
 }

@@ -212,37 +212,37 @@ export const authOptions: NextAuthOptions = {
   },
   cookies: config.AUTH_PROXY_URL
     ? {
-      sessionToken: {
-        name: '__Secure-next-auth.session-token',
-        options: {
-          httpOnly: true,
-          sameSite: 'lax',
-          path: '/',
-          secure: true,
-          domain: getSharedCookieDomain(config.AUTH_PROXY_URL),
+        sessionToken: {
+          name: '__Secure-next-auth.session-token',
+          options: {
+            httpOnly: true,
+            sameSite: 'lax',
+            path: '/',
+            secure: true,
+            domain: getSharedCookieDomain(config.AUTH_PROXY_URL),
+          },
         },
-      },
-      callbackUrl: {
-        name: '__Secure-next-auth.callback-url',
-        options: {
-          httpOnly: true,
-          sameSite: 'lax',
-          path: '/',
-          secure: true,
-          domain: getSharedCookieDomain(config.AUTH_PROXY_URL),
+        callbackUrl: {
+          name: '__Secure-next-auth.callback-url',
+          options: {
+            httpOnly: true,
+            sameSite: 'lax',
+            path: '/',
+            secure: true,
+            domain: getSharedCookieDomain(config.AUTH_PROXY_URL),
+          },
         },
-      },
-      state: {
-        name: '__Secure-next-auth.state',
-        options: {
-          httpOnly: true,
-          sameSite: 'lax',
-          path: '/',
-          secure: true,
-          domain: getSharedCookieDomain(config.AUTH_PROXY_URL),
+        state: {
+          name: '__Secure-next-auth.state',
+          options: {
+            httpOnly: true,
+            sameSite: 'lax',
+            path: '/',
+            secure: true,
+            domain: getSharedCookieDomain(config.AUTH_PROXY_URL),
+          },
         },
-      },
-    }
+      }
     : undefined,
   pages: {
     signIn: '/app/log-in',

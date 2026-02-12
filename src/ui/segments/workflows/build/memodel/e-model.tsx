@@ -30,6 +30,7 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { label, useBuildMeModelSessionState } from '@/ui/segments/workflows/build/memodel/helpers';
 import { cn } from '@/utils/css-class';
+
 import { WorkflowScopeTabs } from '../../elements/scope-selector';
 
 import type { IEModel } from '@/api/entitycore/types';

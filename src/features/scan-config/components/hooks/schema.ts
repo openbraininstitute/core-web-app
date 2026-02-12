@@ -12,6 +12,7 @@ import {
   type AtomsMap,
   type ConfigSchema,
   isType,
+  ScanConfigUIElementDict,
   type SchemaName,
 } from '@/features/scan-config/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
@@ -67,7 +68,17 @@ export function useDefaultConfig(
 }
 
 export function isRootBlock(schema: ConfigSchema, key: string) {
-  return schema.properties[key]?.ui_element === 'block_single';
+  return (
+    schema.properties?.[key] &&
+    schema.properties[key].ui_element === ScanConfigUIElementDict.BlockSingle
+  );
+}
+
+export function isRootBlockSingle(schema: ConfigSchema, key: string) {
+  return (
+    schema.properties?.[key] &&
+    schema.properties[key].ui_element === ScanConfigUIElementDict.BlockUnion
+  );
 }
 
 async function fetchSchema({ schemaName }: { schemaName: SchemaName }) {
@@ -104,13 +115,13 @@ export function useAtomsMap({
     // Logic to build the atoms map based on initialConfig OR schema defaults
     if (initialConfig) {
       Object.entries(initialConfig)
-        .filter(([k]) => isRootBlock(schema, k))
+        .filter(([k]) => isRootBlock(schema, k) || isRootBlockSingle(schema, k))
         .forEach(([k, v]) => {
           if (isPlainObject(v)) map[k] = atom<Record<string, ConfigValue>>(v);
         });
 
       Object.entries(initialConfig)
-        .filter(([k]) => !isRootBlock(schema, k))
+        .filter(([k]) => !isRootBlock(schema, k) && !isRootBlockSingle(schema, k))
         .forEach(([k, v]) => {
           map[k] = {};
           Object.entries(v).forEach(([subK, subV]) => {
@@ -121,12 +132,15 @@ export function useAtomsMap({
     } else {
       Object.entries(schema.properties).forEach(([k, v]) => {
         if (isType(v)) return;
-        if (v.ui_element === 'block_single') {
+        if (v.ui_element === ScanConfigUIElementDict.BlockSingle) {
           const initial: Record<string, ConfigValue> = {};
 
           Object.entries(v.properties).forEach(([subkey, subValue]) => {
             initial[subkey] = subValue.default ?? null;
-            if (!isType(subValue) && subValue.ui_element === 'model_identifier') {
+            if (
+              !isType(subValue) &&
+              subValue.ui_element === ScanConfigUIElementDict.ModelIdentifier
+            ) {
               const formModelType = match(model)
                 .with({ type: EntityTypeDict.Memodel }, () => 'MEModelFromID')
                 .with(
@@ -148,6 +162,9 @@ export function useAtomsMap({
           });
 
           map[k] = atom<Record<string, ConfigValue>>(initial);
+        } else if (v.ui_element === ScanConfigUIElementDict.BlockUnion) {
+          // Initialize as empty - user must select a variant first (like block_dictionary)
+          map[k] = atom<Record<string, ConfigValue>>({});
         } else {
           map[k] = {};
         }
@@ -206,7 +223,7 @@ export function useReferenceTypeDict(schemaName: SchemaName) {
   Object.keys(schema?.properties).forEach((k) => {
     const v = schema.properties[k];
 
-    if (v.ui_element === 'block_dictionary') {
+    if (v.ui_element === ScanConfigUIElementDict.BlockDictionary) {
       const refType = v.reference_type;
       referenceTypeDict[refType] = {
         configKey: k,

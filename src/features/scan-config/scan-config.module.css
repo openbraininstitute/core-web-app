@@ -12,7 +12,7 @@ div.threeColumns > div {
 
 div.threeColumns > div.scrollable {
   overflow-y: auto;
-  overflow-x: visible;
+  overflow-x: hidden;
 }
 
 div.threeColumns > div:first-child {

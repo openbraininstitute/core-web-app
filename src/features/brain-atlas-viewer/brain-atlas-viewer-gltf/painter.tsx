@@ -1,6 +1,5 @@
 import {
   type TgdCamera,
-  tgdCanvasCreateFill,
   TgdContext,
   TgdDataGlb,
   TgdGeometryGltf,
@@ -10,21 +9,20 @@ import {
   TgdPainterState,
   TgdPainterXRay,
   TgdTexture2D,
+  tgdCanvasCreateFill,
   webglPresetDepth,
-} from "@tolokoban/tgd";
+} from '@tolokoban/tgd';
 
-import { setCamera } from "./camera";
-import type { VisibleRegion } from "./types";
-import type { SettingsValues } from "./settings";
-import {
-  getBrainRegionMeshArrayBuffer,
-  getPointCouldData,
-} from "./services/services";
-import { makeColor } from "./hooks";
+import GenericEvent from '@/util/generic-event';
+import { logError } from '@/util/logger';
 
-import { logError } from "@/util/logger";
-import GenericEvent from "@/util/generic-event";
-import type { ReactNode } from "react";
+import { setCamera } from './camera';
+import { makeColor } from './hooks';
+import { getBrainRegionMeshArrayBuffer, getPointCouldData } from './services/services';
+
+import type { ReactNode } from 'react';
+import type { SettingsValues } from './settings';
+import type { VisibleRegion } from './types';
 
 let globalId = 1;
 export class Painter {
@@ -61,7 +59,7 @@ export class Painter {
 
   private _uniforms: SettingsValues = {};
 
-  constructor(private readonly backgroundColor = "#002766") {
+  constructor(private readonly backgroundColor = '#002766') {
     this.ID = globalId++;
   }
 
@@ -103,7 +101,7 @@ export class Painter {
         new TgdPainterState(context, {
           depth: webglPresetDepth.lessOrEqual,
           children: [group],
-        }),
+        })
       );
       context.logic.add(() => {
         const { pointCloudPainter, uniforms } = this;
@@ -150,21 +148,15 @@ export class Painter {
     }
     for (const region of regions) {
       try {
-        const data = await getBrainRegionMeshArrayBuffer(
-          accessToken,
-          region.id,
-        );
+        const data = await getBrainRegionMeshArrayBuffer(accessToken, region.id);
         await this.addMesh(data, region);
       } catch (ex) {
         logError(`Unable to load mesh for region "${region.name}":`, ex);
         this.eventError.dispatch(
           <>
             <strong>{region.name}</strong>
-            <p>
-              An error occurred while attempting to visualize the brain region
-              mesh.
-            </p>
-          </>,
+            <p>An error occurred while attempting to visualize the brain region mesh.</p>
+          </>
         );
       }
     }
@@ -179,11 +171,7 @@ export class Painter {
     }
   }
 
-  public async setPointCloud(
-    annotationValue: number,
-    color: string,
-    accessToken: string,
-  ) {
+  public async setPointCloud(annotationValue: number, color: string, accessToken: string) {
     const { context, group } = this;
     if (!context || !group || this.pointCloudId === annotationValue) return;
 
@@ -199,15 +187,13 @@ export class Painter {
         const painter = new TgdPainterPointsCloud(context, {
           dataPoint,
           minSizeInPixels: 5,
-          texture: new TgdTexture2D(context).loadBitmap(
-            tgdCanvasCreateFill(1, 1, color),
-          ),
+          texture: new TgdTexture2D(context).loadBitmap(tgdCanvasCreateFill(1, 1, color)),
         });
         group.add(painter);
         this.pointCloudPainter = painter;
       }
     } catch (ex) {
-      logError("Unable to load point could!", ex);
+      logError('Unable to load point could!', ex);
       this.eventError.dispatch(`Unable to load points cloud!`);
     }
     this.loadingPointCloud = false;
@@ -252,9 +238,7 @@ export class Painter {
       context.paint();
     } catch (ex) {
       logError(`Unable to load mesh for region ${region.name}!`, ex);
-      this.eventError.dispatch(
-        `Unable to load mesh for region "${region.name}"!`,
-      );
+      this.eventError.dispatch(`Unable to load mesh for region "${region.name}"!`);
     }
   }
 

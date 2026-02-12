@@ -1,18 +1,28 @@
-import { CheckCircleFilled, WarningFilled } from '@ant-design/icons';
+import { CheckCircleFilled, SwapOutlined, WarningFilled } from '@ant-design/icons';
 import { isEqual } from 'es-toolkit/compat';
+import { atom } from 'jotai';
 
-import { useAIConfig } from '@/services/ai-agent';
-
+import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
+import {
+  Chevron,
+  type Config,
+  type ConfigValue,
+  LeftMenuTab,
+} from '@/features/scan-config/components/components';
+import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
+import { isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type AtomsMap,
-  type BlockDictionary,
   type ConfigSchema,
+  type IBlockDictionary,
+  type IBlockSingle,
+  type IRootBlockUnion,
   isType,
-  type RootBlock,
-} from '../types';
-import BlockDictionaryEntries from './block-dictionary-entries';
-import { Chevron, type Config, Tab } from './components';
-import { isRootBlock } from './hooks/schema';
+  ScanConfigUIElementDict,
+  type TBlock,
+} from '@/features/scan-config/types';
+import { useAIConfig } from '@/services/ai-agent';
+import { classNames } from '@/util/utils';
 
 import type { ErrorObject } from 'ajv';
 import type React from 'react';
@@ -41,7 +51,7 @@ export function RootElement({
 }: {
   schema: ConfigSchema | null; // The global schema
   rootElement: string;
-  rootElementSchema: RootBlock | BlockDictionary;
+  rootElementSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion;
   atomsMap: AtomsMap;
   setAtomsMap: React.Dispatch<React.SetStateAction<AtomsMap>>;
   selectedRootElement: string;
@@ -72,11 +82,17 @@ export function RootElement({
 
   return (
     <>
-      <Tab
+      <LeftMenuTab
         tab={rootElement}
         selectedTab={selectedRootElement}
         onClick={() => {
-          if (selectedRootElement === rootElement && !isRootBlock(schema, rootElement)) {
+          // for block_dictionary, clicking again collapses it
+          // for ScanConfigUIElementDict.BlockSingle and ScanConfigUIElementDict.BlockUnion, they stay open
+          if (
+            selectedRootElement === rootElement &&
+            !isRootBlock(schema, rootElement) &&
+            rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion
+          ) {
             setEditing(false);
             setSelectedEntry('');
             setSelectedRootElement('');
@@ -86,7 +102,11 @@ export function RootElement({
           setSelectedRootElement(rootElement);
           setSelectedEntry('');
 
-          if (rootElementSchema.ui_element === 'block_single') setEditing(true);
+          if (
+            rootElementSchema.ui_element === ScanConfigUIElementDict.BlockSingle ||
+            rootElementSchema.ui_element === ScanConfigUIElementDict.BlockUnion
+          )
+            setEditing(true);
           else setEditing(false);
         }}
         extraClass="w-full flex justify-between h-[50px] min-h-[50px] items-center drop-shadow"
@@ -103,11 +123,15 @@ export function RootElement({
             <CheckCircleFilled className="text-green-600!" />
           )}
 
-          <Chevron rotate={rootElementSchema.ui_element === 'block_dictionary' ? 90 : 0} />
+          <Chevron
+            rotate={
+              rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary ? 90 : 0
+            }
+          />
         </div>
-      </Tab>
+      </LeftMenuTab>
 
-      {rootElementSchema.ui_element === 'block_dictionary' &&
+      {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary &&
         selectedRootElement === rootElement &&
         config[rootElement] && (
           <BlockDictionaryEntries
@@ -134,6 +158,56 @@ export function RootElement({
             errors={errors}
           />
         )}
+
+      {/* Block Union: show selected variant with change option */}
+      {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockUnion &&
+        selectedRootElement === rootElement &&
+        (() => {
+          const unionSchema = rootElementSchema as IRootBlockUnion;
+          const discriminatorProp = unionSchema.discriminator
+            ? typeof unionSchema.discriminator === 'string'
+              ? unionSchema.discriminator
+              : (unionSchema.discriminator.propertyName ?? 'type')
+            : 'type';
+
+          const currentConfig = config[rootElement];
+          const selectedType =
+            isPlainObject(currentConfig) && typeof currentConfig[discriminatorProp] === 'string'
+              ? currentConfig[discriminatorProp]
+              : undefined;
+
+          const selectedVariant: TBlock | undefined = unionSchema.oneOf.find((o: TBlock) => {
+            const typeProp = o.properties?.[discriminatorProp];
+            return typeProp && isType(typeProp) && typeProp.const === selectedType;
+          });
+
+          if (!selectedVariant || !selectedType) return null;
+
+          return (
+            <button
+              type="button"
+              className={classNames(
+                'text-primary-8 flex h-12.5 min-h-12.5 w-90percent min-w-37.5 items-center',
+                'justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow',
+                'bg-linear-to-r from-[#003A8C] to-[#001026] text-white'
+              )}
+            >
+              <span className="truncate">{selectedVariant.title}</span>
+              {!campaignId && !loading && !readOnly && (
+                <SwapOutlined
+                  className="cursor-pointer transition-transform hover:scale-110"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setAtomsMap({
+                      ...atomsMap,
+                      [rootElement]: atom<Record<string, ConfigValue>>({}),
+                    });
+                  }}
+                />
+              )}
+            </button>
+          );
+        })()}
     </>
   );
 }

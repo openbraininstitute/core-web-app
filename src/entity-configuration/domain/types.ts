@@ -67,7 +67,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   detailViewSections?: TDetailViewSectionDict[];
   isDownloadable?: boolean;
   isCopyable?: boolean;
-  isDeletable: boolean;
+  isDeletable?: boolean;
   isSimulatable: boolean | ((scale: TCircuitScaleDictionary) => boolean);
   isUploadable?: boolean;
 };
