@@ -1,12 +1,12 @@
 /* eslint-disable no-console */
+
+import { createClient, type SanityClient } from 'next-sanity';
 import React from 'react';
 
-import { createClient, SanityClient } from 'next-sanity';
-
+import { config } from '@/config';
 import { logError } from '@/util/logger';
 import { isUndefined } from '@/util/type-guards';
 import { log } from '@/utils/logger';
-import { config } from '@/config';
 
 let cachedClient: SanityClient | null = null;
 
@@ -61,12 +61,7 @@ export async function fetchSanity<T>(
   }
 }
 
-const cache = new Map<string, unknown>();
-
 async function fetchSanityContent(query: string): Promise<unknown> {
-  const fromCache = cache.get(query);
-  if (fromCache) return fromCache;
-
   const client = getClient();
 
   try {
@@ -74,10 +69,9 @@ async function fetchSanityContent(query: string): Promise<unknown> {
       query,
       {},
       {
-        cache: 'no-cache',
+        next: { revalidate: 3600 },
       }
     );
-    cache.set(query, data);
     return data;
   } catch (ex) {
     logError('Unable to connect to Sanity!', ex);
