@@ -1,7 +1,6 @@
 import { CloseOutlined, PlusOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
-import { isNil } from 'es-toolkit/compat';
-import isEqual from 'es-toolkit/compat/isEqual';
+import { isEqual, isNil } from 'es-toolkit/compat';
 import { atom, useAtom } from 'jotai';
 import { useRef } from 'react';
 
@@ -274,21 +273,21 @@ export function BlockUI({
                           <TooltipTrigger asChild>
                             <div>
                               <div className="mb-1 flex">
-                                <div className={cn('border-1 flex-1 mr-1', patchBorderClass())}>
-                                  {renderInput(k, blockElementSchema, firstValue())}
+                                <div className={cn('border flex-1 mr-1', patchBorderClass())}>
+                                  {renderInput(k, blockElementSchema, value)}
                                 </div>
                                 {(op_ === 'delete' || op_ === 'replace') && (
                                   <CloseOutlined className="text-red-500" />
                                 )}
-                                {op_ === 'add' && <PlusOutlined className="text-sky-400" />}
+                                {op_ === 'add' && <PlusOutlined className="text-[#1690ff]" />}
                               </div>
 
                               {op_ === 'replace' && !!blockAIConfig && (
                                 <div className="flex">
-                                  <div className="border-1 border-sky-400 flex-1 mr-1">
+                                  <div className="border border-[#1690ff] flex-1 mr-1">
                                     {renderInput(k, blockElementSchema, blockAIConfig[k])}
                                   </div>
-                                  <PlusOutlined className="text-sky-400" />
+                                  <PlusOutlined className="text-[#1690ff]" />
                                 </div>
                               )}
                             </div>
@@ -301,7 +300,9 @@ export function BlockUI({
                             className="text-white shadow-bnb max-w-2xs min-w-2xs rounded-md bg-[#0050b3ee] px-4 py-2 text-base text-wrap"
                             arrowClassName="bg-[#0050b3ee]"
                           >
-                            {blockElementSchema.description}
+                            {k === 'circuit' && model
+                              ? model.description
+                              : blockElementSchema.description}
                           </TooltipContent>
                         </Tooltip>
                       </div>
@@ -318,15 +319,15 @@ export function BlockUI({
                             {(op_ === 'delete' || op_ === 'replace') && (
                               <CloseOutlined className="text-red-500" />
                             )}
-                            {op_ === 'add' && <PlusOutlined className="text-sky-400" />}
+                            {op_ === 'add' && <PlusOutlined className="text-[#1690ff]" />}
                           </div>
 
                           {op_ === 'replace' && !!blockAIConfig && (
                             <div className="flex">
-                              <div className="border border-sky-400 flex-1 mr-1">
+                              <div className="border border-[#1690ff] flex-1 mr-1">
                                 {renderInput(k, blockElementSchema, blockAIConfig[k])}
                               </div>
-                              <PlusOutlined className="text-sky-400" />
+                              <PlusOutlined className="text-[#1690ff]" />
                             </div>
                           )}
                         </div>
@@ -339,7 +340,9 @@ export function BlockUI({
                         className="text-white shadow-bnb max-w-2xs min-w-2xs rounded-md bg-[#0050b3ee] px-4 py-2 text-base text-wrap"
                         arrowClassName="bg-[#0050b3ee]"
                       >
-                        {blockElementSchema.description}
+                        {k === 'circuit' && model
+                          ? model.description
+                          : blockElementSchema.description}
                       </TooltipContent>
                     </Tooltip>
                   )}

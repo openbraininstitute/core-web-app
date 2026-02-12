@@ -6,7 +6,7 @@ import {
   type TEntitycoreExecutionStatus,
 } from '@/api/entitycore/types/entities/execution';
 import { ScanParams } from '@/features/scan-config/components/scan-params';
-import { ExtractionStatusBadge } from '@/features/scan-config/status-badge';
+import { StatusBadge } from '@/features/scan-config/status-badge';
 import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
 
 import type { ICircuitExtractionConfig } from '@/api/entitycore/types/entities/circuit-extraction-config';
@@ -77,7 +77,7 @@ export function ExtractionConfigsLeftMenu({
             )}
           </div>
           <div className="ml-4 flex shrink-0">
-            <ExtractionStatusBadge status={execStatus} />
+            <StatusBadge status={execStatus} />
             <RightOutlined className="ml-2 text-sm" />
           </div>
         </button>

@@ -163,7 +163,7 @@ export interface BooleanInput extends TBlockElement {
   false_label?: string;
 }
 
-export interface IBlockUnion extends TBlockElement {
+export interface IBlockUnion extends TRootElement {
   ui_element: typeof ScanConfigUIElementDict.BlockUnion;
   /** the property name used to block between variants (defaults to 'type') */
   discriminator?: string | { propertyName: string; mapping?: Record<string, string> };
@@ -190,8 +190,7 @@ export type ParamSchema =
   | Reference
   | NeuronIds
   | EntityPropertyDropdown
-  | BooleanInput
-  | IBlockUnion;
+  | BooleanInput;
 
 export type TBlock = {
   title: string;

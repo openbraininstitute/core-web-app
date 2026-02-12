@@ -19,9 +19,9 @@ import {
 } from '@/features/scan-config/components/atoms';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { ScanParams } from '@/features/scan-config/components/scan-params';
-import { type File, SimulationFiles } from '@/features/scan-config/components/simulation-files';
-import { SimulationStatusBadge } from '@/features/scan-config/components/simulation-status';
+import { SimulationFiles } from '@/features/scan-config/components/simulation-files';
 import errorRegistry from '@/features/scan-config/error-registry';
+import { StatusBadge } from '@/features/scan-config/status-badge';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/simulation';
 import { useConsent } from '@/services/consent';
@@ -34,6 +34,7 @@ import { log } from '@/utils/logger';
 
 import type { CheckboxProps } from 'antd';
 import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import type { TActivityCustomFile } from '@/features/scan-config/types';
 
 import styles from '@/features/scan-config/scan-config.module.css';
 
@@ -83,7 +84,7 @@ export default function SimulationsTab({
   const [simRequestInProgress, setSimRequestInProgress] = useState<boolean>(false);
   const [selectedSimulationIds, setSelectedSimulationIds] = useState<string[]>([]);
   const [activeSimulation, setActiveSimulation] = useState<null | ICircuitSimulation>(null);
-  const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
+  const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [filesLoading, setFilesLoading] = useState(false);
   const [consent, setConsent] = useState<Consent | null>(null);
@@ -437,7 +438,7 @@ function SimulationListItem({
             )}
           </div>
           <div className="ml-4 flex shrink-0">
-            <SimulationStatusBadge status={execStatus} details={statusDetails} />
+            <StatusBadge status={execStatus} details={statusDetails} />
             <RightOutlined className="ml-2 text-sm" />
           </div>
         </button>

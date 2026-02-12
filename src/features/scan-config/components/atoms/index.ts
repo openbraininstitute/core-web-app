@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import isEqual from 'es-toolkit/compat/isEqual';
+import { isEqual } from 'es-toolkit/compat';
 import { atom } from 'jotai';
 import { atomWithRefresh } from 'jotai/utils';
 import { match } from 'ts-pattern';
+
 import { getMEModel } from '@/api/entitycore/queries';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getEntity } from '@/api/entitycore/queries/general/entity';
@@ -11,18 +12,19 @@ import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circu
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulationResult } from '@/api/entitycore/queries/simulation/circuit-simulation-result';
 import { EntityTypeDict, type IMEModel, type TEntityTypeDict } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import type { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/circuit-simulation-execution';
-import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import { resolveExecutions } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { hasSimConfigAsset } from '@/entity-configuration/domain/simulation/utils';
 import { getLatestSimExecStatus } from '@/features/scan-config/components/utils';
-import type { SimExecStatusMap } from '@/features/scan-config/types';
-import type { WorkspaceContext } from '@/types/common';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';
+
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import type { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/circuit-simulation-execution';
+import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
+import type { SimExecStatusMap } from '@/features/scan-config/types';
+import type { WorkspaceContext } from '@/types/common';
 
 const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
   ({ simulationId, context }: { simulationId: string; context: WorkspaceContext }) =>

@@ -19,78 +19,6 @@ import {
 import type { OfflineTokenConsentRequest } from '@/features/offline-auth-management/auth-manager-client';
 import type { OfflineTokenConsentEvent } from '@/features/offline-auth-management/types';
 
-function isOpenBrainInstituteHostname(hostname: string) {
-  return hostname === 'openbraininstitute.org' || hostname.endsWith('.openbraininstitute.org');
-}
-
-/**
- * auth-manager may return a consent URL pointing at another environment hostname
- * (e.g. dev.openbraininstitute.org) which can trigger:
- * - unnecessary re-login
- * - shared-cookie session clobbering across subdomains
- * - redirect/callback landing on the wrong origin (breaking cross-tab signaling)
- */
-function normalizeConsentUrl(rawUrl: string, currentOrigin: string) {
-  try {
-    const current = new URL(currentOrigin);
-    const url = new URL(rawUrl);
-
-    const shouldNormalizeHost =
-      isOpenBrainInstituteHostname(current.hostname) &&
-      isOpenBrainInstituteHostname(url.hostname) &&
-      url.hostname !== current.hostname;
-
-    if (shouldNormalizeHost) {
-      url.protocol = current.protocol;
-      url.host = current.host;
-    }
-
-    // Normalize embedded redirect URIs back to the current origin callback.
-    const callbackUrl = new URL('/app/consent-feedback', current.origin).toString();
-
-    const redirectUri = url.searchParams.get('redirect_uri');
-    if (redirectUri) {
-      try {
-        const ru = new URL(redirectUri);
-        const normalizeRedirect =
-          isOpenBrainInstituteHostname(current.hostname) &&
-          isOpenBrainInstituteHostname(ru.hostname) &&
-          ru.origin !== current.origin;
-
-        url.searchParams.set('redirect_uri', normalizeRedirect ? callbackUrl : redirectUri);
-      } catch {
-        // If redirect_uri isn't a valid URL, force our callback when normalizing host.
-        if (shouldNormalizeHost) {
-          url.searchParams.set('redirect_uri', callbackUrl);
-        }
-      }
-    }
-
-    const postLogoutRedirectUri = url.searchParams.get('post_logout_redirect_uri');
-    if (postLogoutRedirectUri) {
-      try {
-        const plu = new URL(postLogoutRedirectUri);
-        const normalizePostLogout =
-          isOpenBrainInstituteHostname(current.hostname) &&
-          isOpenBrainInstituteHostname(plu.hostname) &&
-          plu.origin !== current.origin;
-        url.searchParams.set(
-          'post_logout_redirect_uri',
-          normalizePostLogout ? callbackUrl : postLogoutRedirectUri
-        );
-      } catch {
-        if (shouldNormalizeHost) {
-          url.searchParams.set('post_logout_redirect_uri', callbackUrl);
-        }
-      }
-    }
-
-    return url.toString();
-  } catch {
-    return rawUrl;
-  }
-}
-
 type EnsureOptions = {
   timeoutMs?: number;
   // max time we'll accept a previously-emitted event as relevant to this wait.
@@ -273,9 +201,7 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
       const prefetched = consentPrefetchRef.current;
 
       const consentRes = prefetched?.value ?? (await fetchConsent());
-      const consentUrl = consentRes.consentUrl
-        ? normalizeConsentUrl(consentRes.consentUrl, window.location.origin)
-        : undefined;
+      const consentUrl = consentRes.consentUrl;
       const sessionStateId = consentRes.sessionStateId;
 
       if (!consentUrl) {

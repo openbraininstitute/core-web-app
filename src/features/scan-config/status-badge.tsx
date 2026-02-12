@@ -1,10 +1,19 @@
+import { InfoCircleOutlined } from '@ant-design/icons';
+
 import {
   EntitycoreExecutionStatus,
   type TEntitycoreExecutionStatus,
 } from '@/api/entitycore/types/entities/execution';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
 
-export function ExtractionStatusBadge({ status }: { status?: TEntitycoreExecutionStatus }) {
+export function StatusBadge({
+  status,
+  details,
+}: {
+  status?: TEntitycoreExecutionStatus;
+  details?: string;
+}) {
   const color = status ? executionStatusColorMap[status as EntitycoreExecutionStatus] : '#fafafa';
   const showSpinner =
     status &&
@@ -43,6 +52,21 @@ export function ExtractionStatusBadge({ status }: { status?: TEntitycoreExecutio
         className="flex items-center rounded-xl border px-4 capitalize transition-colors duration-300"
       >
         {status ?? 'created'}
+        {details && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <InfoCircleOutlined className="ml-2 cursor-pointer" />
+            </TooltipTrigger>
+            <TooltipContent
+              side="top"
+              sideOffset={5}
+              className="text-primary-9 z-50 max-w-80 rounded-md bg-white px-2 py-2 font-light shadow-md text-md"
+              arrowClassName="bg-white"
+            >
+              <p>{details}</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
       </span>
     </div>
   );

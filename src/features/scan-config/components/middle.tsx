@@ -1,5 +1,3 @@
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import BlockDictionary from '@/features/scan-config/components/block-dictionary';
 import BlockUnion from '@/features/scan-config/components/block-union';
 import { BlockUI, type Config } from '@/features/scan-config/components/components';
@@ -15,6 +13,9 @@ import {
   type SchemaName,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
+
+import type { IMEModel } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 type MiddleProps = {
   schemaName: SchemaName;
@@ -87,7 +88,7 @@ export default function Middle({
         isAtom(atomsMap[selectedRootElement]) && (
           <BlockUI
             schemaName={schemaName}
-            disabled={!!campaignId || loading}
+            disabled={!!campaignId || loading || !!aiConfig || !isChatReady}
             config={config}
             blockSchema={selectedSchema}
             stateAtom={atomsMap[selectedRootElement]}
