@@ -20,18 +20,27 @@ import {
   type TEntitycoreExecutionStatus,
 } from '@/api/entitycore/types/entities/execution';
 import { AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
+import ApiError from '@/api/error';
 import { launchExtraction, ObiOneTaskTypeDict } from '@/api/one/extraction';
 import { Loader } from '@/components/loader';
+import { useAppNotification } from '@/components/notification';
+import {
+  OfflineTokenConsentModal,
+  useRunWithOfflineTokenConsent,
+} from '@/features/offline-auth-management';
 import { useModelQuery } from '@/features/scan-config/components/atoms';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { ScanParams } from '@/features/scan-config/components/scan-params';
 import type { File } from '@/features/scan-config/components/simulation-files';
+import errorRegistry from '@/features/scan-config/error-registry';
 import styles from '@/features/scan-config/scan-config.module.css';
 import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
 import { classNames } from '@/util/utils';
+import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
 
 const STATUS_POLL_INTERVAL = 10_000; // 10 seconds
+const EXTRACTION_ERROR_KEY = 'extraction-config-error';
 
 type ExtractionTabProps = {
   campaignId: string;
@@ -52,6 +61,7 @@ const queryKeys = {
 
 export function ExtractionTab({ campaignId, virtualLabId, projectId }: ExtractionTabProps) {
   const queryClient = useQueryClient();
+  const notification = useAppNotification();
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
   const [extractionRequestInProgress, setExtractionRequestInProgress] = useState<boolean>(false);
@@ -59,6 +69,18 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Extractio
   const [activeConfig, setActiveConfig] = useState<ICircuitExtractionConfig | null>(null);
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
+
+  const consentGate = useRunWithOfflineTokenConsent({
+    notifyError: notification.error,
+    messages: {
+      denied: 'Consent declined. Extraction was not started.',
+      timeout: 'Consent timed out. Please grant consent to run the extraction.',
+    },
+  });
+
+  useEffect(() => {
+    consentGate.prime();
+  }, [consentGate.prime]);
 
   // 1. get the generation activity that used the campaign
   const { data: generationResponse, isLoading: generationLoading } = useQuery({
@@ -118,16 +140,6 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Extractio
       );
       return hasActiveExtractions && !extractionRequestInProgress ? STATUS_POLL_INTERVAL : false;
     },
-    // staleTime(query) {
-    //   const executions = query.state.data?.data ?? [];
-    //   const hasActiveExtractions = executions.some((exec) =>
-    //     includes(
-    //       [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING],
-    //       exec.status
-    //     )
-    //   );
-    //   return hasActiveExtractions && !extractionRequestInProgress ? STATUS_POLL_INTERVAL : 'static';
-    // },
   });
 
   const statusMap = useMemo(() => {
@@ -218,17 +230,34 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Extractio
     },
     onError: (error, vars) => {
       log('error', `Failed to launch extraction for config ${vars}`, error);
+      const defaultMsg = 'We ran into a problem launching your extraction. Please try again later.';
+      if (error instanceof ApiError) {
+        const code = error.cause?.code;
+        const apiMessage = error.cause?.message ?? defaultMsg;
+
+        // Only translate accounting/known codes. For everything else, show the API's message.
+        const message = code ? getErrorMessage(code, errorRegistry, apiMessage) : apiMessage;
+        notification.error({ message, duration: 5, key: EXTRACTION_ERROR_KEY });
+        return;
+      }
+
+      notification.error({ message: defaultMsg, duration: 5, key: EXTRACTION_ERROR_KEY });
     },
   });
 
   const runExtraction = async (configIdsToRun: string[]) => {
     setExtractionRequestInProgress(true);
-    await pMap(configIdsToRun, (c) => launchExtractionMutation.mutateAsync(c), {
-      concurrency: 3,
-    }).finally(() => {
-      setSelectedConfigIds([]);
+
+    try {
+      await consentGate.runWithConsent(async () => {
+        await pMap(configIdsToRun, (c) => launchExtractionMutation.mutateAsync(c), {
+          concurrency: 3,
+        });
+        setSelectedConfigIds([]);
+      });
+    } finally {
       setExtractionRequestInProgress(false);
-    });
+    }
   };
 
   const onSelectedAll: CheckboxProps['onChange'] = (e) => {
@@ -284,6 +313,8 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Extractio
               'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none'
             )}
             type="button"
+            onMouseEnter={() => consentGate.prime()}
+            onFocus={() => consentGate.prime()}
             onClick={() => runExtraction(selectedConfigIds)}
             disabled={extractionRequestInProgress || selectedConfigIds.length === 0}
           >
@@ -311,6 +342,15 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Extractio
       <div className="relative pl-4">
         <FileViewer file={selectedFile} className="h-full" context={context} />
       </div>
+
+      <OfflineTokenConsentModal
+        open={consentGate.modal.open}
+        consentUrl={consentGate.modal.consentUrl}
+        onCancel={consentGate.cancel}
+        onOpenConsent={() => {
+          consentGate.openConsentLink(consentGate.modal.consentUrl);
+        }}
+      />
     </div>
   );
 }

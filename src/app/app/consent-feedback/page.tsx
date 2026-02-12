@@ -5,17 +5,20 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 
 import { config } from '@/config';
+import {
+  emitOfflineTokenConsentDenied,
+  emitOfflineTokenConsentGranted,
+} from '@/features/offline-auth-management';
 import { SharedLayout } from '@/ui/layouts/shared-layout';
 import { Button } from '@/ui/molecules/button';
 import { Icon } from '@/ui/segments/offline-consent/icon';
-
-import { emitConsentGranted } from '@/services/consent';
 
 export default function Page() {
   const searchParams = useSearchParams();
 
   const error = searchParams.get('error');
   const description = searchParams.get('description');
+  const sessionStateId = searchParams.get('session_state_id');
 
   const isSuccess = !error && !description;
   const title = isSuccess ? 'Consent Granted Successfully' : 'Consent Error';
@@ -29,13 +32,20 @@ export default function Page() {
 
   useEffect(() => {
     if (isSuccess) {
-      emitConsentGranted();
+      emitOfflineTokenConsentGranted(sessionStateId ?? undefined);
 
       if (typeof window !== 'undefined') {
         setTimeout(() => window.close(), 3000);
       }
+      return;
     }
-  });
+
+    emitOfflineTokenConsentDenied({
+      sessionStateId: sessionStateId ?? undefined,
+      error,
+      description,
+    });
+  }, [description, error, isSuccess, sessionStateId]);
 
   return (
     <SharedLayout>
