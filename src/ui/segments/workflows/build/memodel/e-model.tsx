@@ -9,10 +9,9 @@ import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { useRouter } from 'next/navigation';
 import { type HTMLAttributes, type TdHTMLAttributes, useEffect, useMemo } from 'react';
-import type { IEModel } from '@/api/entitycore/types';
+
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import { config } from '@/config';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import {
@@ -31,7 +30,11 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { label, useBuildMeModelSessionState } from '@/ui/segments/workflows/build/memodel/helpers';
 import { cn } from '@/utils/css-class';
+
 import { WorkflowScopeTabs } from '../../elements/scope-selector';
+
+import type { IEModel } from '@/api/entitycore/types';
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 
 type Props = {
   sessionId: string;

@@ -1,6 +1,8 @@
 import { TgdColor } from '@tolokoban/tgd';
 import { Dataset, File, ready } from 'h5wasm';
+
 import { isType } from '@/util/type-guards';
+
 import APWaveform_50KHz from './APWaveform_50KHz.json';
 import { createPalette } from './colors';
 import { H5Parser } from './h5-parser';

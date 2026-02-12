@@ -1,6 +1,7 @@
 'use client';
 
 import { CloseOutlined } from '@ant-design/icons';
+import { capitalize } from 'es-toolkit/compat';
 
 import { HierarchySquare } from '@/components/icons/buttons';
 import { useGetSelectedBrainRegion } from '@/features/brain-region-hierarchy/context';
@@ -30,13 +31,14 @@ export function RegionBanner({ view, onSwitchView }: Props) {
       </div>
     );
 
+  const name = capitalize(selectedBrainRegion.name);
   return (
     <div
       id="brain-region-entities-switcher"
       data-testid="brain-region-entities-switcher"
       className="flex flex-col items-center justify-between gap-2 px-4 py-5"
     >
-      {/* eslint-disable-next-lien jsx-a11y/interactive-supports-focus */}
+      {/** biome-ignore lint/a11y/useSemanticElements: it already include the real button */}
       <div
         id="atlas-regions-selector"
         data-testid="atlas-regions-selector"
@@ -62,9 +64,7 @@ export function RegionBanner({ view, onSwitchView }: Props) {
                   className="block h-3! w-3! min-w-3! rounded-full"
                   style={{ backgroundColor: `#${selectedBrainRegion.color_hex_triplet}` }}
                 />
-                <span className="line-clamp-2 text-lg leading-6 font-bold">
-                  {selectedBrainRegion.name}
-                </span>
+                <span className="line-clamp-2 text-lg leading-6 font-bold">{name}</span>
               </div>
             </div>
           )}

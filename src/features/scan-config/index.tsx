@@ -1,7 +1,6 @@
 'use client';
 
 import { useModelQuery } from '@/features/scan-config/components/atoms';
-import type { Config } from '@/features/scan-config/components/components';
 import { ScanConfigSkeleton } from '@/features/scan-config/components/loading-skeleton';
 import { ScanConfigTemplate } from '@/features/scan-config/template';
 import {
@@ -10,6 +9,8 @@ import {
   type TScanConfigActivity,
   type TScanConfigTabs,
 } from '@/features/scan-config/types';
+
+import type { Config } from '@/features/scan-config/components/components';
 
 export default function ScanConfiguration({
   modelId,

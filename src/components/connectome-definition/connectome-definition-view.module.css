@@ -10,8 +10,8 @@
   grid-gap: 20px;
   grid-auto-flow: row;
   grid-template-areas:
-    'left-panel matrix-container right-panel'
-    'left-panel footer right-panel';
+    "left-panel matrix-container right-panel"
+    "left-panel footer right-panel";
 }
 
 .matrixContainer {

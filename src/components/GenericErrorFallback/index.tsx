@@ -1,10 +1,11 @@
 'use client';
 
 import { WarningOutlined } from '@ant-design/icons';
-import { ReactNode } from 'react';
 import Link from 'next/link';
 
 import { cn } from '@/utils/css-class';
+
+import type { ReactNode } from 'react';
 
 interface Props {
   error?: Error & { cause?: unknown };

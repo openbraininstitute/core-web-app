@@ -8,7 +8,6 @@ import { ElectricalRecordingOriginDictionary } from '@/api/entitycore/types/enti
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { config } from '@/config';
-import type { TWorkspaceScope } from '@/constants';
 import { BoutonDensity } from '@/entity-configuration/domain/experimental/bouton-density';
 import { CellMorphology } from '@/entity-configuration/domain/experimental/cell-morphology';
 import { ElectricalCellRecording } from '@/entity-configuration/domain/experimental/electrical-cell-recording';
@@ -29,8 +28,10 @@ import { SingeNeuronCircuitSimulation } from '@/entity-configuration/domain/simu
 import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation/single-neuron-simulation';
 import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/simulation/single-neuron-synaptome-simulation';
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
-import type { WorkspaceContext } from '@/types/common';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
+
+import type { TWorkspaceScope } from '@/constants';
+import type { WorkspaceContext } from '@/types/common';
 
 export const ExperimentalEntitiesTileTypes = {
   ReconstructionMorphology: CellMorphology,

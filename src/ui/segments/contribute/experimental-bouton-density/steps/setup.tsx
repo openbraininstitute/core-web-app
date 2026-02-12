@@ -1,7 +1,7 @@
 'use client';
 
 import { Form, Input } from 'antd';
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+
 import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -12,6 +12,8 @@ import {
   renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
 import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
+
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
 export function Setup() {
   const form = Form.useFormInstance();

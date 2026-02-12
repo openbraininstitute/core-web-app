@@ -2,12 +2,11 @@ import $RefParser from '@apidevtools/json-schema-ref-parser';
 import { useQuery } from '@tanstack/react-query';
 import { atom } from 'jotai';
 import { useEffect, useState } from 'react';
-
 import { match } from 'ts-pattern';
+
 import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
 import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { config } from '@/config';
-import type { Config, ConfigValue } from '@/features/scan-config/components/components';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type AtomsMap,
@@ -17,6 +16,8 @@ import {
   type SchemaName,
 } from '@/features/scan-config/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
+
+import type { Config, ConfigValue } from '@/features/scan-config/components/components';
 
 export function useObioneJsonSchema(schemaName: SchemaName) {
   const { data: schema } = useQuery({
@@ -28,6 +29,42 @@ export function useObioneJsonSchema(schemaName: SchemaName) {
   });
 
   return schema;
+}
+
+export function useDefaultConfig(
+  schemaName: SchemaName,
+  formModelType: 'CircuitFromId' = 'CircuitFromId'
+) {
+  const schema = useObioneJsonSchema(schemaName);
+
+  if (!schema) return;
+
+  const map: {
+    [key: string]: ConfigValue | Record<string, ConfigValue>;
+  } = {};
+
+  Object.entries(schema.properties).forEach(([k, v]) => {
+    if (isType(v)) return;
+    if (v.ui_element === 'block_single') {
+      const initial: Record<string, ConfigValue> = {};
+
+      Object.entries(v.properties).forEach(([subkey, subValue]) => {
+        initial[subkey] = subValue.default ?? null;
+        if (!isType(subValue) && subValue.ui_element === 'model_identifier') {
+          initial[subkey] = {
+            type: formModelType,
+            id_str: '',
+          };
+        }
+      });
+
+      map[k] = initial;
+    } else {
+      map[k] = {};
+    }
+  });
+
+  return map as Config;
 }
 
 export function isRootBlock(schema: ConfigSchema, key: string) {

@@ -4,7 +4,7 @@ import { InfoCircleFilled } from '@ant-design/icons';
 import { DatePicker, Form, Input, InputNumber, Space } from 'antd';
 import dayjs from 'dayjs';
 import { upperFirst } from 'es-toolkit/compat';
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+
 import {
   ElectricalRecordingOrigin,
   ElectricalRecordingOriginDictionary,
@@ -25,6 +25,8 @@ import {
 } from '@/ui/segments/contribute/shared/helpers';
 import { cn } from '@/utils/css-class';
 import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
+
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
 export function Setup() {
   const form = Form.useFormInstance();

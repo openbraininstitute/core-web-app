@@ -7,7 +7,6 @@ import {
   EXPERIMENTAL_BOUTON_DENSITY_PROGRESS_STEPS,
 } from '@/ui/segments/contribute/experimental-bouton-density/config';
 import { useExperimentalBoutonDensityPipeline } from '@/ui/segments/contribute/experimental-bouton-density/pipeline';
-import type { TExperimentalBoutonDensityForm } from '@/ui/segments/contribute/experimental-bouton-density/schema';
 import {
   Contribution,
   License,
@@ -17,8 +16,10 @@ import {
   Subject,
 } from '@/ui/segments/contribute/experimental-bouton-density/steps';
 import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
-import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
 import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
+
+import type { TExperimentalBoutonDensityForm } from '@/ui/segments/contribute/experimental-bouton-density/schema';
+import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
 
 const EXPERIMENTAL_BOUTON_DENSITY_STEP_CONFIG: Array<
   IContributionStep<TExperimentalBoutonDensityForm>

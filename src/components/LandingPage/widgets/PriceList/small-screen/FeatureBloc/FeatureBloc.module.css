@@ -5,7 +5,7 @@
 .title {
   color: var(--color-neutral);
   text-transform: uppercase;
-  grid-column: 1/-1;
+  grid-column: 1 / -1;
 }
 
 .title .capsule {

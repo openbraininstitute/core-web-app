@@ -5,8 +5,7 @@ import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { notFound } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TWorkspaceSection } from '@/constants';
+
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
   brainRegionBasicCellGroupsRegionsHierarchyAtom,
@@ -14,8 +13,11 @@ import {
   useSetSelectedBrainRegion,
 } from '@/features/brain-region-hierarchy/context';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import type { WorkspaceContext } from '@/types/common';
 import { useScope } from '@/ui/hooks/use-scope';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TWorkspaceSection } from '@/constants';
+import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
   section: TWorkspaceSection;

@@ -7,17 +7,15 @@ import {
 } from '@tanstack/react-query';
 import { isEmpty } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
+
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
-import type { TWorkspaceScope } from '@/constants';
 import { DEFAULT_PAGE_SIZE } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
   DEFAULT_BRAIN_REGION_HIERARCHY_ID,
   selectedBrainRegionAtom,
 } from '@/features/brain-region-hierarchy/context';
-import type { WorkspaceContext } from '@/types/common';
 import {
   coreFiltersAtom,
   corePageNumberAtom,
@@ -26,6 +24,10 @@ import {
 } from '@/ui/segments/data-table/elements/context';
 import { compactRecord } from '@/utils/dictionary';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TWorkspaceScope } from '@/constants';
+import type { WorkspaceContext } from '@/types/common';
 
 export type QueryContext = {
   key: string;

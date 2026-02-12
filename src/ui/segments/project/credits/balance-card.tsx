@@ -1,12 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
 import { SwapOutlined } from '@ant-design/icons';
+import { useQuery } from '@tanstack/react-query';
 
+import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { Card, CardContent } from '@/ui/molecules/card';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { useUserRole } from '@/hooks/use-user-role';
 import { Button } from '@/ui/molecules/button';
+import { Card, CardContent } from '@/ui/molecules/card';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 type Props = {
   onTransferCredits?: () => void;
@@ -19,7 +19,7 @@ export function BalanceCard({ onTransferCredits }: Props) {
     queryKey: keyBuilder.accounting({ virtualLabId }),
     queryFn: () => getVirtualLabAccountBalance({ virtualLabId, includeProjects: true }),
   });
-  const { isVirtualLabAdmin: isAdmin } = useUserRole({ virtualLabId, projectId });
+  const { isVirtualLabAdmin: isAdmin } = useWorkspaceMembership({ virtualLabId, projectId });
   const ProjectBalance = data?.data.projects?.find((p) => p.proj_id === projectId);
   const virtualLabBalance = data?.data?.balance ?? 0;
 

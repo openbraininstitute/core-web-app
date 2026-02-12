@@ -1,10 +1,10 @@
 import { CloseOutlined, PlusOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
+import { isNil } from 'es-toolkit/compat';
 import isEqual from 'es-toolkit/compat/isEqual';
 import { atom, useAtom } from 'jotai';
 import { useRef } from 'react';
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+
 import BooleanInput from '@/features/scan-config/components/boolean-input';
 import EntityPropertyDropdown from '@/features/scan-config/components/entity-property-dropdown';
 import ModelDetails from '@/features/scan-config/components/model-details';
@@ -23,6 +23,9 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
+
+import type { IMEModel } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 type Primitive = null | boolean | number | string;
 interface Object {
@@ -99,7 +102,6 @@ export function BlockUI({
       return (
         <Reference
           config={config}
-          hasReplacePatch={!!value}
           schemaName={schemaName}
           referenceSchema={paramSchema}
           value={defaultV}
@@ -232,7 +234,7 @@ export function BlockUI({
 
               const patchBorderClass = () => {
                 if (op_ === 'delete' || op_ === 'replace') return 'border-red-500';
-                if (op_ === 'add') return 'border-sky-400';
+                if (op_ === 'add') return 'border-[#1690ff]';
                 return 'border-transparent';
               };
 
@@ -244,6 +246,8 @@ export function BlockUI({
 
                 return blockAIConfig[k];
               };
+
+              const value = firstValue();
 
               return (
                 <div key={k} className="w-full">
@@ -340,10 +344,9 @@ export function BlockUI({
                     </Tooltip>
                   )}
 
-                  {blockSchema.required?.includes(k) &&
-                    (state[k] === null || state[k] === undefined) && (
-                      <span className="text-red-500">Required</span>
-                    )}
+                  {blockSchema.required?.includes(k) && isNil(value) && (
+                    <span className="text-red-500">Required</span>
+                  )}
                 </div>
               );
             })}

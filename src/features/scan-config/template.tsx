@@ -4,17 +4,18 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { get } from 'es-toolkit/compat';
 import { Suspense, useState } from 'react';
 import { match } from 'ts-pattern';
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { Config } from '@/features/scan-config/components/components';
+
 import { useEntries, useSchemaName } from '@/features/scan-config/components/hooks';
 import { useConfigAtom } from '@/features/scan-config/components/hooks/config-atom';
-import { useAtomsMap, useObioneJsonSchema } from '@/features/scan-config/components/hooks/schema';
+import {
+  resetConfig,
+  useAtomsMap,
+  useObioneJsonSchema,
+} from '@/features/scan-config/components/hooks/schema';
 import Left from '@/features/scan-config/components/left';
 import Middle from '@/features/scan-config/components/middle';
 import ModelPreview from '@/features/scan-config/components/model-preview';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
-import styles from '@/features/scan-config/scan-config.module.css';
 import {
   ExtractScanConfigTabs,
   ScanConfigActivity,
@@ -27,8 +28,15 @@ import {
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
 import { messages } from '@/i18n/en/scan-config';
+import { useAgentState, useAIConfig } from '@/services/ai-agent';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
+
+import type { IMEModel } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { Config } from '@/features/scan-config/components/components';
+
+import styles from '@/features/scan-config/scan-config.module.css';
 
 export function ScanConfigTemplate({
   entity,
@@ -69,6 +77,8 @@ export function ScanConfigTemplate({
   const [atomsMap, setAtomsMap] = useAtomsMap({ schema, initialConfig, model: entity });
 
   const config = useConfigAtom(schema, atomsMap);
+  const updateRequestId = useAgentState('smc_simulation_config', config);
+  const { aiConfig, setAiConfig } = useAIConfig();
 
   if (!schema || Object.keys(atomsMap).length === 0) {
     return (
@@ -156,6 +166,16 @@ export function ScanConfigTemplate({
             isEditingKey={isEditingKey}
             setIsEditingKey={setIsEditingKey}
             activity={activity}
+            handleAcceptAIChanges={() => {
+              if (!aiConfig) return;
+              resetConfig(schema, aiConfig, setAtomsMap);
+              setAiConfig(null);
+              updateRequestId();
+            }}
+            handleRejectAIChanges={() => {
+              setAiConfig(null);
+              updateRequestId();
+            }}
           />
           <div
             className={cn(

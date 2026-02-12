@@ -3,21 +3,20 @@
 import { ArrowLeftOutlined, DeleteFilled, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, ConfigProvider, Empty, Input, List, Table } from 'antd';
-import type { ColumnType } from 'antd/es/table';
 import { compact, filter, get, map, sortBy, uniqBy } from 'es-toolkit/compat';
 import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
 import { z } from 'zod';
+
 import { inviteToVirtualLab } from '@/api/virtual-lab-svc/queries/invite';
 import {
   cancelVirtualLabInvite,
   listVirtualLabMembers,
 } from '@/api/virtual-lab-svc/queries/member';
-import type { Member, Role } from '@/api/virtual-lab-svc/queries/types';
 import { useAppNotification } from '@/components/notification';
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
-import { useUserRole } from '@/hooks/use-user-role';
+import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { Badge } from '@/ui/molecules/badge';
 import { Button as UiButton } from '@/ui/molecules/button';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
@@ -25,6 +24,9 @@ import { extractInitials } from '@/util/slugify';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
+
+import type { ColumnType } from 'antd/es/table';
+import type { Member, Role } from '@/api/virtual-lab-svc/queries/types';
 
 const emailSchema = z.string().min(3, 'Email is required').email('Email is not valid');
 
@@ -419,7 +421,7 @@ type ListingStepProps = {
 
 function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps) {
   const { data } = useSession();
-  const { isVirtualLabAdmin } = useUserRole({ virtualLabId });
+  const { isVirtualLabAdmin } = useWorkspaceMembership({ virtualLabId });
 
   const { data: team, isLoading } = useQuery({
     queryKey: keyBuilder.listVirtualLabTeam({ virtualLabId }),
@@ -566,7 +568,7 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
             showHeader={false}
             size="middle"
             rowKey={(record) => record.id ?? record.email}
-            rootClassName="[&_.ant-spin-blur]:opacity-0!"
+            rootClassName="[&_.ant-spin-blur]:opacity-0 [&_#team-members-table]:bg-primary-9!"
             className={cn(
               'h-full',
               '[&_.ant-table-tbody>tr]:transition-all [&_.ant-table-tbody>tr]:duration-1000',

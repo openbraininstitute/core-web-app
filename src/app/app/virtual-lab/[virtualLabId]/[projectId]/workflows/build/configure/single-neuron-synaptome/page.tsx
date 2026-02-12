@@ -2,12 +2,12 @@
 
 import { use } from 'react';
 
+import { Content } from '@/ui/segments/workflows/build/single-neuron-synaptome';
 import { Header } from '@/ui/segments/workflows/build/single-neuron-synaptome/header';
 import { Menu } from '@/ui/segments/workflows/build/single-neuron-synaptome/menu';
-import { Content } from '@/ui/segments/workflows/build/single-neuron-synaptome';
 
-import type { BuildStepKeys } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import type { BuildStepKeys } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 
 export default function Page({
   searchParams,
@@ -20,7 +20,7 @@ export default function Page({
 
   return (
     <div className="border-neutral-2 mx-2 flex h-full w-[calc(100%-10px)] flex-col rounded-2xl border p-4">
-      <div className="mb-2 w-full flex-shrink-0">
+      <div className="mb-2 w-full shrink-0">
         <Header />
       </div>
       <div className='grid min-h-0 w-full flex-1 grid-cols-[24rem_1fr] gap-4 [grid-template-areas:"menu_content"]'>

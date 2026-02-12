@@ -2,7 +2,7 @@
 
 import { DatePicker, Form, Input, InputNumber } from 'antd';
 import dayjs from 'dayjs';
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+
 import {
   EMCellMeshGenerationMethodDict,
   EMCellMeshTypeDict,
@@ -21,6 +21,8 @@ import {
   renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
 import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
+
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
 export function Setup() {
   const form = Form.useFormInstance();

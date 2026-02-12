@@ -1,5 +1,6 @@
-import { PortableTextBlock } from '@portabletext/react';
-import { assertType, TypeDef } from '@/util/type-guards';
+import { assertType, type TypeDef } from '@/util/type-guards';
+
+import type { PortableTextBlock } from '@portabletext/react';
 
 /**
  * Check a type and log an explicit error in case of failure.

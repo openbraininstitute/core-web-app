@@ -2,19 +2,17 @@
 
 import { useRouter } from '@bprogress/next';
 import { Pagination as AntPagination, Card, ConfigProvider, Empty } from 'antd';
-import type { ColumnsType } from 'antd/es/table/interface';
 import { find, get, kebabCase } from 'es-toolkit/compat';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
 import { useMemo, useState } from 'react';
+
 import {
   type EntityCoreObjectTypes,
   EntityTypeDict,
   type TEntityTypeDict,
 } from '@/api/entitycore/types';
-import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
 import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
@@ -37,10 +35,14 @@ import { BaseTable } from '@/ui/segments/data-table/table';
 import { StatusMap } from '@/ui/segments/project/activities/elements/helpers';
 import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
 import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/browse-header';
-import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 import { ActivityDict, ActivityValues } from '@/ui/segments/workflows/elements/helpers';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
+
+import type { ColumnsType } from 'antd/es/table/interface';
+import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 
 const AllowedDuplicateEntityTypes: TEntityTypeDict[] = [EntityTypeDict.SimulationCampaign];
 export interface WorkflowActivityRef {
@@ -318,7 +320,7 @@ export function WorkflowActivity() {
         {shouldShowEmptyState ? (
           <Card className="text-neutral-4 bg-background border-none">
             <CardContent className="flex w-full items-center justify-center py-10">
-              You don’t have any activities yet
+              You don't have any activities yet
             </CardContent>
           </Card>
         ) : (
@@ -381,7 +383,7 @@ export function WorkflowActivity() {
                       image={Empty.PRESENTED_IMAGE_SIMPLE}
                       description={
                         <span className="text-primary-9">
-                          You don’t have any activities yet
+                          You don't have any activities yet
                           <strong>
                             {getEntityByExtendedType({ type: entityType ?? undefined })?.title}
                           </strong>

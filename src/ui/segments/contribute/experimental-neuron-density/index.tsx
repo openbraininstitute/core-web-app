@@ -7,7 +7,6 @@ import {
   EXPERIMENTAL_NEURON_DENSITY_PROGRESS_STEPS,
 } from '@/ui/segments/contribute/experimental-neuron-density/config';
 import { useExperimentalNeuronDensityPipeline } from '@/ui/segments/contribute/experimental-neuron-density/pipeline';
-import type { TExperimentalNeuronDensityForm } from '@/ui/segments/contribute/experimental-neuron-density/schema';
 import {
   Contribution,
   ETypeClassification,
@@ -18,8 +17,10 @@ import {
   Subject,
 } from '@/ui/segments/contribute/experimental-neuron-density/steps';
 import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
-import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
 import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
+
+import type { TExperimentalNeuronDensityForm } from '@/ui/segments/contribute/experimental-neuron-density/schema';
+import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
 
 const EXPERIMENTAL_NEURON_DENSITY_STEP_CONFIG: Array<
   IContributionStep<TExperimentalNeuronDensityForm>

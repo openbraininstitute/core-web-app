@@ -1,12 +1,29 @@
-import { getServerSession, type NextAuthOptions, type TokenSet, type Session } from 'next-auth';
-import { GetServerSidePropsContext, NextApiRequest, NextApiResponse } from 'next';
+import { getServerSession, type NextAuthOptions, type Session, type TokenSet } from 'next-auth';
+
+import { serverConfig as config } from '@/config/server';
 
 import { log } from '../utils/logger';
-import { serverConfig as config } from '@/config/server';
+
+import type { GetServerSidePropsContext, NextApiRequest, NextApiResponse } from 'next';
 
 const issuer = config.KEYCLOAK_ISSUER;
 const clientId = config.KEYCLOAK_CLIENT_ID;
 const clientSecret = config.KEYCLOAK_CLIENT_SECRET;
+
+function getParentDomain(hostname: string): string {
+  const parts = hostname.split('.');
+  return parts.length > 2 ? parts.slice(-3).join('.') : hostname;
+}
+
+function getSharedCookieDomain(authProxyUrl: string): string {
+  try {
+    const proxyHostname = new URL(authProxyUrl).hostname;
+    return `.${getParentDomain(proxyHostname)}`;
+  } catch {
+    log('error', 'Invalid AUTH_PROXY_URL', authProxyUrl);
+    return '';
+  }
+}
 
 /**
  * Updates or inserts a refresh token in the authentication manager service.
@@ -129,6 +146,17 @@ export const authOptions: NextAuthOptions = {
     },
   ],
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // Used for preview deployments to return back from the auth proxy
+      if (config.AUTH_PROXY_URL) {
+        const authProxyHostname = new URL(config.AUTH_PROXY_URL).hostname;
+        const baseHostname = new URL(baseUrl).hostname;
+        if (baseHostname === authProxyHostname && url.startsWith(baseUrl)) {
+          return `${config.AUTH_PROXY_URL}/api/auth/redirect-after-signin`;
+        }
+      }
+      return url;
+    },
     async jwt({ token, account, user, profile }) {
       // Initial sign in
       if (account && user) {
@@ -182,6 +210,40 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
     maxAge: 10 * 60 * 60, // 10 hours
   },
+  cookies: config.AUTH_PROXY_URL
+    ? {
+        sessionToken: {
+          name: '__Secure-next-auth.session-token',
+          options: {
+            httpOnly: true,
+            sameSite: 'lax',
+            path: '/',
+            secure: true,
+            domain: getSharedCookieDomain(config.AUTH_PROXY_URL),
+          },
+        },
+        callbackUrl: {
+          name: '__Secure-next-auth.callback-url',
+          options: {
+            httpOnly: true,
+            sameSite: 'lax',
+            path: '/',
+            secure: true,
+            domain: getSharedCookieDomain(config.AUTH_PROXY_URL),
+          },
+        },
+        state: {
+          name: '__Secure-next-auth.state',
+          options: {
+            httpOnly: true,
+            sameSite: 'lax',
+            path: '/',
+            secure: true,
+            domain: getSharedCookieDomain(config.AUTH_PROXY_URL),
+          },
+        },
+      }
+    : undefined,
   pages: {
     signIn: '/app/log-in',
   },

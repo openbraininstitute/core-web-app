@@ -1,10 +1,10 @@
 import Ajv, { type AnySchema } from 'ajv';
 import { useEffect, useMemo, useRef } from 'react';
 import { match } from 'ts-pattern';
+
 import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
 import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { config as appConfig } from '@/config';
-import type { Config } from '@/features/scan-config/components/components';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import {
   type ConfigSchema,
@@ -12,6 +12,8 @@ import {
   type SchemaName,
   type TScanConfigActivity,
 } from '@/features/scan-config/types';
+
+import type { Config } from '@/features/scan-config/components/components';
 
 export function useApiUrl({
   activity = ScanConfigActivity.Simulate,

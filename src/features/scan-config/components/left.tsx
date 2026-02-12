@@ -1,8 +1,6 @@
 import { Fragment } from 'react';
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+
 import { RootElement } from '@/features/scan-config/components/root-element';
-import styles from '@/features/scan-config/scan-config.module.css';
 import {
   type AtomsMap,
   type ConfigSchema,
@@ -11,10 +9,16 @@ import {
   type TScanConfigTabs,
 } from '@/features/scan-config/types';
 import { useAgentState, useAIConfig } from '@/services/ai-agent';
-import type { Config } from './components';
+
 import GenerateConfigButton from './generate-config-button';
 import { useValidateSchema } from './hooks';
 import { resetConfig } from './hooks/schema';
+
+import type { IMEModel } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { Config } from './components';
+
+import styles from '@/features/scan-config/scan-config.module.css';
 
 export default function Left({
   schema,
@@ -40,6 +44,8 @@ export default function Left({
   isEditingKey,
   setIsEditingKey,
   activity,
+  handleAcceptAIChanges,
+  handleRejectAIChanges,
 }: {
   schema: ConfigSchema;
   atomsMap: AtomsMap;
@@ -64,17 +70,11 @@ export default function Left({
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
   activity: TScanConfigActivity;
+  handleAcceptAIChanges: () => void;
+  handleRejectAIChanges: () => void;
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
-  const updateAiRequestId = useAgentState('smc_simulation_config', config);
-  const { aiConfig, setAiConfig } = useAIConfig();
-
-  const handleAcceptAIChanges = () => {
-    if (!aiConfig) return;
-    resetConfig(schema, aiConfig, setAtomsMap);
-    setAiConfig(null);
-    updateAiRequestId();
-  };
+  const { aiConfig } = useAIConfig();
 
   return (
     <div className={styles.scrollable}>
@@ -131,7 +131,7 @@ export default function Left({
           <button
             type="button"
             className="min-h-[50px] text-lg drop-shadow border-red-500 border-1 rounded-full p-2 grow text-red-500"
-            onClick={() => setAiConfig(null)}
+            onClick={handleRejectAIChanges}
           >
             Reject changes
           </button>

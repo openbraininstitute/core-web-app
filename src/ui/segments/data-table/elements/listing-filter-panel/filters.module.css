@@ -4,6 +4,6 @@
   transition-duration: 150ms;
 }
 
-.accordionTrigger[data-state='open'] .chevron {
+.accordionTrigger[data-state="open"] .chevron {
   transform: rotate(90deg);
 }

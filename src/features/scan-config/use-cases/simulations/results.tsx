@@ -1,5 +1,4 @@
 import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
-import type { CheckboxProps } from 'antd';
 import { Checkbox, ConfigProvider, Modal } from 'antd';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -7,10 +6,9 @@ import { match } from 'ts-pattern';
 
 import { requestOfflineTokenConsent } from '@/api/auth-manager';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import ApiError from '@/api/error';
-import { runSimulation } from '@/api/launch-system';
+import { runSimulation } from '@/api/one/circuit-simulation';
 import { useAppNotification } from '@/components/notification';
 import { hasSimConfigAsset } from '@/entity-configuration/domain/simulation/utils';
 import {
@@ -24,7 +22,6 @@ import { ScanParams } from '@/features/scan-config/components/scan-params';
 import { type File, SimulationFiles } from '@/features/scan-config/components/simulation-files';
 import { SimulationStatusBadge } from '@/features/scan-config/components/simulation-status';
 import errorRegistry from '@/features/scan-config/error-registry';
-import styles from '@/features/scan-config/scan-config.module.css';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/simulation';
 import { useConsent } from '@/services/consent';
@@ -34,6 +31,11 @@ import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-
 import { classNames } from '@/util/utils';
 import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
+
+import type { CheckboxProps } from 'antd';
+import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+
+import styles from '@/features/scan-config/scan-config.module.css';
 
 const USER_CANCELLED = 'user_cancelled';
 
@@ -56,7 +58,10 @@ export default function SimulationsTab({
   const notification = useAppNotification();
   const { waitForConsent } = useConsent();
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
-  const simulationsAtom = simulationsByCampaignIdAtomFamily({ campaignId, context });
+  const simulationsAtom = simulationsByCampaignIdAtomFamily({
+    campaignId,
+    context,
+  });
   const simulations = useAtomValue(simulationsAtom);
 
   const { entity: model } = useModelQuery({
@@ -64,7 +69,10 @@ export default function SimulationsTab({
     id: simulations[0].entity_id,
   });
 
-  const simExecStatusMapAtom = simExecStatusMapAtomFamily({ context, campaignId });
+  const simExecStatusMapAtom = simExecStatusMapAtomFamily({
+    context,
+    campaignId,
+  });
   const fetchRemoteSimExecStatuseMap = useSetAtom(
     simExecRemoteStatusMapAtomFamily({ campaignId, context })
   );
@@ -133,7 +141,7 @@ export default function SimulationsTab({
 
     if (!hasActiveSimulations) return;
 
-    const intervalId = setInterval(fetchRemoteSimExecStatuseMap, 15_000);
+    const intervalId = setInterval(fetchRemoteSimExecStatuseMap, 20_000);
 
     return () => clearInterval(intervalId);
   }, [fetchRemoteSimExecStatuseMap, simRequestInProgress, statusMap]);
@@ -227,7 +235,9 @@ export default function SimulationsTab({
               if (msg.status !== 'done') return;
               const simulation = simulations.find((s) => s.id === simId);
               if (!simulation) return;
-              notification.success({ message: `Simulation ${simulation?.name} done` });
+              notification.success({
+                message: `Simulation ${simulation?.name} done`,
+              });
             })
             .otherwise(() => null);
         },
