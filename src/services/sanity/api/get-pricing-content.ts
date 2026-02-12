@@ -1,9 +1,8 @@
-import { getClient } from '@/api/sanity/client';
-import pricingQuery from '@/app/api/sanity/pricing-query';
-import type { AdvantagesProps, PlanV2 } from '@/types/virtual-lab/pricing';
+import { getClient } from '@/services/sanity/client';
+import pricingQuery from '@/services/sanity/queries/pricing';
 import { logError } from '@/util/logger';
 
-export type PricingContentProps = PlanV2;
+import type { AdvantagesProps, PlanV2 } from '@/types/virtual-lab/pricing';
 
 function normalizeFeatures(features: unknown): AdvantagesProps[] {
   if (!Array.isArray(features)) return [];
@@ -71,10 +70,7 @@ function normalizePlan(plan: PlanV2): PlanV2 {
 
 export async function getPricingContent(): Promise<PlanV2[]> {
   try {
-    const data = await getClient().fetch<PlanV2[]>({
-      query: pricingQuery,
-      config: { cache: 'no-cache' },
-    });
+    const data = await getClient().fetch<PlanV2[]>(pricingQuery);
 
     if (Array.isArray(data)) {
       return data.map(normalizePlan);

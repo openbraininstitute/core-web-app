@@ -1,4 +1,5 @@
-import { getClient } from '@/api/sanity/client';
+import { getClient } from '@/services/sanity/client';
+import galleryQuery from '@/services/sanity/queries/gallery';
 import { logError } from '@/util/logger';
 
 export type GalleryContentProps = {
@@ -11,17 +12,6 @@ export type GalleryContentProps = {
   has_background: boolean;
   backgroundColor: string | null;
 };
-
-const queryForGalleryContent = `*[_type == "gallery"] {
-  title,
-  description,
-  mediaType,
-  "image": image.asset->url,
-  video,
-  brainRegion,
-  has_background,
-  backgroundColor,
-}`;
 
 function isContentForGallery(data: unknown): data is GalleryContentProps {
   try {
@@ -46,16 +36,10 @@ function isContentForGallery(data: unknown): data is GalleryContentProps {
 
 export async function getGalleryContent(): Promise<GalleryContentProps[]> {
   try {
-    const data = await getClient().fetch<GalleryContentProps[]>({
-      query: queryForGalleryContent,
-      // config: { cache: 'no-cache' },
-    });
+    const data = await getClient().fetch<GalleryContentProps[]>(galleryQuery);
 
     if (Array.isArray(data)) {
-      const filtered = data.filter((item) => {
-        return isContentForGallery(item);
-      });
-      return filtered;
+      return data.filter(isContentForGallery);
     }
   } catch (err) {
     logError('Error fetching gallery content:', err);

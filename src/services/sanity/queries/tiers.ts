@@ -1,4 +1,4 @@
-{
+const tiersQuery = `{
   "features": *[_type=="featureBlocList"].featuresBloc[] {
     title,
     "available": isAvailable,
@@ -15,6 +15,7 @@
   "plans": *[_type=="plan"] | order(position) {
     "id": _id,
     title,
+    buttonLabel,
     notes,
     "price": {
       "month": monthlyPlanNormal[] {
@@ -35,4 +36,6 @@
       }
     }
   }
-}
+}`;
+
+export default tiersQuery;
