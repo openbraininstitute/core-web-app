@@ -1,4 +1,4 @@
-import { serviceAiAgentThreadCreate } from '../../api';
+import { serviceAiAgentThreadCreate, serviceAiAgentThreadList } from '../../api';
 
 import type { Signal } from '../signal';
 import type { AssistantContext } from '../types';
@@ -23,6 +23,22 @@ export class ThreadManager {
   readonly createThread = async () => {
     const { context, target } = this;
     if (!context) throw new Error('ThreadManager has not been initialized yet!');
+
+    const lastThread = await serviceAiAgentThreadList({
+      ...context,
+      pageSize: 1,
+      excludeEmptyThreads: false,
+    });
+
+    if (lastThread.results.length > 0) {
+      const thread = lastThread.results[0];
+
+      // Compare up to milliseconds
+      if (new Date(thread.creation_date).getTime() === new Date(thread.update_date).getTime()) {
+        target.threadId.set(thread.thread_id);
+        return thread.thread_id;
+      }
+    }
 
     const params = {
       ...context,
