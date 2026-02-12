@@ -5,13 +5,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { match, P } from 'ts-pattern';
 import { z } from 'zod';
-import type { VirtualLab, VirtualLabListResponse } from '@/api/virtual-lab-svc/queries/types';
+
 import { checkVirtualLabExists, updateVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import { useTabs } from '@/components/detail-view-tabs';
 import { useAppNotification } from '@/components/notification';
 import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
-import { useUserRole } from '@/hooks/use-user-role';
+import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { messages } from '@/i18n/en/virtual-lab';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
@@ -21,6 +21,8 @@ import { Credits } from '@/ui/segments/virtual-lab-settings/sections/credits';
 import { TeamTable } from '@/ui/segments/virtual-lab-settings/sections/team';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
+
+import type { VirtualLab, VirtualLabListResponse } from '@/api/virtual-lab-svc/queries/types';
 
 const baseNameSchema = z
   .string()
@@ -67,7 +69,7 @@ function EditableName({
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const { error: notifyError, success: notifySuccess } = useAppNotification();
   const queryClient = useQueryClient();
-  const { isVirtualLabAdmin: isAdmin } = useUserRole({ virtualLabId });
+  const { isVirtualLabAdmin: isAdmin } = useWorkspaceMembership({ virtualLabId });
 
   const updateMutation = useMutation({
     mutationFn: async (name: string) => {
@@ -406,7 +408,7 @@ function Tabs({ id }: { id?: string | null }) {
     shallow: true,
     clearOnDefault: true,
   });
-  const { isVirtualLabAdmin: isAdmin } = useUserRole({ virtualLabId: id! });
+  const { isVirtualLabAdmin: isAdmin } = useWorkspaceMembership({ virtualLabId: id! });
   const [popoverOpen, setIsPopoverOpen] = useState(false);
 
   const onOpenChange = (visible: boolean) => {

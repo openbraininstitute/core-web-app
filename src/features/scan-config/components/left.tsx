@@ -42,6 +42,7 @@ export default function Left({
   isEditingKey,
   setIsEditingKey,
   handleAcceptAIChanges,
+  handleRejectAIChanges,
 }: {
   schema: ConfigSchema;
   atomsMap: AtomsMap;
@@ -66,9 +67,10 @@ export default function Left({
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
   handleAcceptAIChanges: () => void;
+  handleRejectAIChanges: () => void;
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
-  const { aiConfig, setAiConfig } = useAIConfig();
+  const { aiConfig } = useAIConfig();
 
   return (
     <div className={styles.scrollable}>
@@ -125,7 +127,7 @@ export default function Left({
           <button
             type="button"
             className="min-h-[50px] text-lg drop-shadow border-red-500 border-1 rounded-full p-2 grow text-red-500"
-            onClick={() => setAiConfig(null)}
+            onClick={handleRejectAIChanges}
           >
             Reject changes
           </button>

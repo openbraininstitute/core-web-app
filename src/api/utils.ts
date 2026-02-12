@@ -1,6 +1,7 @@
 import { captureException } from '@sentry/nextjs';
 import get from 'es-toolkit/compat/get';
-import ApiError from './error';
+
+import ApiError from '@/api/error';
 
 type Ok<T> = {
   data: T;
@@ -83,7 +84,7 @@ export async function parseApiError(
     );
 
     return new ApiError(errMessage, { code, message, details, status });
-  } catch (error) {
+  } catch {
     return new ApiError(errMessage, { status });
   }
 }

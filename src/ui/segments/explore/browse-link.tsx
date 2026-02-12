@@ -147,7 +147,6 @@ type Props = {
   extendedType: TExtendedEntitiesTypeDict;
   scope: TWorkspaceScope;
   currentBrainRegionId?: string;
-  hierarchyId?: string;
   defaultBrainRegionId?: string;
   enabled: boolean;
 };
@@ -155,12 +154,10 @@ type Props = {
 function buildQuery({
   virtualLabId,
   projectId,
-  hierarchyId,
   brainRegionId,
   scope,
   extendedType,
 }: WorkspaceContext & {
-  hierarchyId: string;
   brainRegionId: string;
   scope: TWorkspaceScope;
   extendedType: TExtendedEntitiesTypeDict;
@@ -174,8 +171,7 @@ function buildQuery({
     filters: {
       page: 1,
       page_size: 1,
-      within_brain_region_hierarchy_id:
-        hierarchyId ?? config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID,
+      within_brain_region_hierarchy_id: config.DEFAULT_BRAIN_REGION_HIERARCHY_ID,
       within_brain_region_brain_region_id: brainRegionId ?? null,
       within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
       ...getWorkspaceScopeFilters(scope, { virtualLabId, projectId }),
@@ -197,7 +193,6 @@ export function BrowseLink({
   scope,
   enabled,
   extendedType,
-  hierarchyId,
   currentBrainRegionId,
   defaultBrainRegionId,
 }: Props) {
@@ -228,7 +223,6 @@ export function BrowseLink({
   const fallbackQuery = buildQuery({
     virtualLabId,
     projectId,
-    hierarchyId: hierarchyId ?? '',
     brainRegionId: currentBrainRegionId ?? '',
     scope,
     extendedType,
@@ -238,7 +232,6 @@ export function BrowseLink({
   const rootQuery = buildQuery({
     virtualLabId,
     projectId,
-    hierarchyId: hierarchyId ?? '',
     brainRegionId: defaultBrainRegionId ?? '',
     scope,
     extendedType,
@@ -281,14 +274,7 @@ export function BrowseLink({
   const rootCount = root?.pagination.total_items;
   const isLoading = loadingCurrent || loadingRoot;
 
-  const countRenderer = match({
-    isCurrentError,
-    count,
-    rootCount,
-    isRootError,
-    enabled,
-    isLoading,
-  })
+  const countRenderer = match({ isCurrentError, count, rootCount, isRootError, enabled, isLoading })
     .with({ isLoading: false, enabled: true, rootCount: P.number, count: P.number }, () => (
       <span className="flex items-center justify-center gap-1">
         <span className="font-bold">{count}</span>

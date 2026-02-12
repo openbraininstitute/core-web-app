@@ -1,18 +1,18 @@
 'use client';
 
-import { usePathname, useSearchParams } from 'next/navigation';
 import { RightOutlined } from '@ant-design/icons';
 import filter from 'es-toolkit/compat/filter';
 import Link from 'next/link';
+import { usePathname, useSearchParams } from 'next/navigation';
 
-import type { ComponentProps } from 'react';
-
+import { config } from '@/config';
+import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { useUserRole } from '@/hooks/use-user-role';
 import { Button } from '@/ui/molecules/button';
-import { config } from '@/config';
 import { cn } from '@/utils/css-class';
+
+import type { ComponentProps } from 'react';
 
 type Props = {
   className?: ComponentProps<'div'>['className'];
@@ -42,7 +42,7 @@ const links = [
 export function LeftMenu({ className }: Props) {
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
-  const { isProjectAdmin } = useUserRole({ virtualLabId, projectId });
+  const { isProjectAdmin } = useWorkspaceMembership({ virtualLabId, projectId });
   const pathname = usePathname();
   const searchParams = useSearchParams();
 

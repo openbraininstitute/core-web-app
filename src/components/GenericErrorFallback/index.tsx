@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { WarningOutlined } from '@ant-design/icons';
-import Link from 'next/link';
+import { WarningOutlined } from "@ant-design/icons";
+import Link from "next/link";
 
-import { cn } from '@/utils/css-class';
+import { cn } from "@/utils/css-class";
 
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
 interface Props {
   error?: Error & { cause?: unknown };
@@ -28,24 +28,29 @@ export function ErrorLink({ href, title }: { href: string; title: string }) {
 export function ErrorComponent({
   error,
   cls,
-  customError = '',
+  customError = "",
   showButtons = true,
   children,
 }: Props) {
   return (
     <div
       className={cn(
-        'flex h-full w-full flex-col items-center justify-center bg-white p-6 text-white',
-        cls?.container
+        "flex h-full w-full flex-col items-center justify-center bg-white p-6 text-white",
+        cls?.container,
       )}
     >
       <div className="mx-auto w-full max-w-md">
         <div className="mb-2 flex items-center justify-start gap-2">
-          <WarningOutlined className="text-2xl text-warning!" />
-          <h1 className="text-xl font-bold text-warning">An error occurred</h1>
+          <WarningOutlined className="text-2xl text-[#f0c75e]" />
+          <h1 className="text-xl font-bold text-[#f0c75e]">
+            An error occurred
+          </h1>
         </div>
 
-        <div className={cn('text-primary-8 mb-2 w-full bg-white p-1', cls?.error)}>
+        <div
+          className={cn("text-primary-8 mb-2 w-full bg-white p-6", cls?.error)}
+        >
+          <h2 className="mb-2 text-sm font-medium select-none">DESCRIPTION</h2>
           <p className="text-lg font-bold">{error?.message || customError}</p>
         </div>
         {children}
@@ -72,7 +77,12 @@ export function withErrorConfig({
 }) {
   return function wrapper({ error }: { error?: Error & { cause?: unknown } }) {
     return (
-      <ErrorComponent error={error} customError={customError} cls={cls} showButtons={showButtons}>
+      <ErrorComponent
+        error={error}
+        customError={customError}
+        cls={cls}
+        showButtons={showButtons}
+      >
         {children}
       </ErrorComponent>
     );

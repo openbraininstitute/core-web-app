@@ -1,8 +1,7 @@
 import $RefParser, { type JSONSchema } from '@apidevtools/json-schema-ref-parser';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { get } from 'es-toolkit/compat';
-import { atomWithStorage } from 'jotai/utils';
-import { atomFamily } from 'jotai-family';
+import { atomFamily, atomWithStorage } from 'jotai/utils';
 
 import { config } from '@/config';
 import { makeSessionAtomWithDefault } from '@/ui/hooks/use-session-atom';
@@ -51,10 +50,7 @@ export function useGenerativeFormSchemaApi({
           return result;
         },
       });
-      const schema = (await dereferenceOpenApiSchema({
-        json,
-        form,
-      })) as RJSFSchema;
+      const schema = (await dereferenceOpenApiSchema({ json, form })) as RJSFSchema;
       return patchSchema?.(schema) ?? schema;
     },
   });

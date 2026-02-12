@@ -1,5 +1,5 @@
 import { atom } from 'jotai';
-import { atomFamily } from 'jotai-family';
+import { atomFamily } from 'jotai/utils';
 
 export const makeSessionAtomWithDefault = <T = any>(defaults: T) =>
   atomFamily(

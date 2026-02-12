@@ -17,11 +17,11 @@ export default function Page({
   WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict> },
   null
 >) {
-  const { type } = use(params);
+  const { type, virtualLabId, projectId } = use(params);
 
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
   const buildType = getBuildTypeFromSimulateType(dataType);
   if (!buildType) return notFound();
 
-  return <WorkflowBrowseEntity buildType={buildType} />;
+  return <WorkflowBrowseEntity workspace={{ virtualLabId, projectId }} buildType={buildType} />;
 }

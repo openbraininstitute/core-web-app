@@ -1,15 +1,15 @@
+import React, { useState, useCallback, useEffect, ReactNode } from 'react';
 import flatMap from 'es-toolkit/compat/flatMap';
 import map from 'es-toolkit/compat/map';
-import React, { type ReactNode, useCallback, useEffect, useState } from 'react';
 
 import { getParentsToRoot, scrollToNode } from '@/components/tree/elements/helpers';
 import { MemoizedNode as Node } from '@/components/tree/elements/node';
-import { cn } from '@/utils/css-class';
+import { classNames } from '@/util/utils';
 
 import type {
+  RenderNodeProps,
   NodeIndentation,
   NodeSubtitle,
-  RenderNodeProps,
   TTreeNode,
 } from '@/components/tree/types';
 
@@ -44,7 +44,7 @@ function Container({
 }) {
   return (
     <div
-      className={cn('no-scrollbar h-full min-h-0 w-full overflow-y-auto', className)}
+      className={classNames('no-scrollbar h-full min-h-0 w-full overflow-y-auto', className)}
       style={{ height }}
     >
       {children}
@@ -52,7 +52,7 @@ function Container({
   );
 }
 
-export function Tree<TNode extends TTreeNode>({
+export default function Tree<TNode extends TTreeNode>({
   dataKey,
   data,
   onClick,
@@ -168,5 +168,3 @@ export function Tree<TNode extends TTreeNode>({
     </Container>
   );
 }
-
-export default Tree;

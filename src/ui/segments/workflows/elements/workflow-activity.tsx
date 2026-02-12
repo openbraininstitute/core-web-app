@@ -320,7 +320,7 @@ export function WorkflowActivity() {
         {shouldShowEmptyState ? (
           <Card className="text-neutral-4 bg-background border-none">
             <CardContent className="flex w-full items-center justify-center py-10">
-              You don’t have any activities yet
+              You don't have any activities yet
             </CardContent>
           </Card>
         ) : (
@@ -383,7 +383,7 @@ export function WorkflowActivity() {
                       image={Empty.PRESENTED_IMAGE_SIMPLE}
                       description={
                         <span className="text-primary-9">
-                          You don’t have any activities yet
+                          You don't have any activities yet
                           <strong>
                             {getEntityByExtendedType({ type: entityType ?? undefined })?.title}
                           </strong>
