@@ -1,15 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { Empty } from 'antd';
-import type { BundledLanguage } from 'shiki';
-import type { TEntityTypeDict } from '@/api/entitycore/types';
-import type { EntityCoreResource, IAsset } from '@/api/entitycore/types/shared/global';
+
 import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
-import type { WorkspaceContext } from '@/types/common';
 import { CodeBlock, CodeBlockCopyButton, CodeBlockLanguageLabel } from '@/ui/molecules/code-blocks';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { keyBuilder } from '@/ui/use-query-keys/third-parties';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
+
+import type { BundledLanguage } from 'shiki';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
+import type { EntityCoreResource, IAsset } from '@/api/entitycore/types/shared/global';
+import type { WorkspaceContext } from '@/types/common';
 
 export function CodeFileViewer({
   entity,
@@ -27,6 +29,7 @@ export function CodeFileViewer({
     queryFn: async () => {
       return getEntityCorePresignedUrl({
         entityType: entity.type as TEntityTypeDict,
+        // biome-ignore lint/style/noNonNullAssertion: this is enabled only if entity is present (see useQuery/enabled)
         entityId: entity.id!,
         virtualLabId: context.virtualLabId,
         projectId: context.projectId,
@@ -41,7 +44,8 @@ export function CodeFileViewer({
   const { data: content, isLoading } = useQuery({
     queryKey: ['file-content', { url: presignedData?.url }],
     queryFn: async () => {
-      const response = await fetch(presignedData?.url!);
+      // biome-ignore lint/style/noNonNullAssertion: this is enabled only if presignedData is present (see useQuery/enabled)
+      const response = await fetch(presignedData!.url);
       if (!response.ok) throw new Error('Failed to fetch file');
       return response.text();
     },

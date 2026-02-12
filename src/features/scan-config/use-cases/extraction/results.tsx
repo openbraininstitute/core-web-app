@@ -1,48 +1,51 @@
 'use client';
 
-import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
+import { LoadingOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CheckboxProps } from 'antd';
-import { Checkbox, ConfigProvider } from 'antd';
+import { Checkbox } from 'antd';
 import { includes } from 'es-toolkit/compat';
 import pMap from 'p-map';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+
 import {
   getCircuitExtractionConfig,
   getCircuitExtractionConfigGenerations,
   getCircuitExtractionExecutions,
 } from '@/api/entitycore/queries/extraction';
-import type { ICircuitExtractionConfig } from '@/api/entitycore/types/entities/circuit-extraction-config';
-import type { ICircuitExtractionExecution } from '@/api/entitycore/types/entities/circuit-extraction-execution';
 import {
   EntitycoreExecutionStatus,
-  type EntitycoreUsedEntity,
   type TEntitycoreExecutionStatus,
 } from '@/api/entitycore/types/entities/execution';
-import { AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
-import ApiError from '@/api/error';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { ApiError } from '@/api/error';
 import { launchExtraction, ObiOneTaskTypeDict } from '@/api/one/extraction';
 import { Loader } from '@/components/loader';
 import { useAppNotification } from '@/components/notification';
+import { WorkspaceSection } from '@/constants';
 import {
   OfflineTokenConsentModal,
   useRunWithOfflineTokenConsent,
 } from '@/features/offline-auth-management';
-import { useModelQuery } from '@/features/scan-config/components/atoms';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
-import { ScanParams } from '@/features/scan-config/components/scan-params';
-import type { File } from '@/features/scan-config/components/simulation-files';
-import errorRegistry from '@/features/scan-config/error-registry';
-import styles from '@/features/scan-config/scan-config.module.css';
-import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
+import { errorRegistry } from '@/features/scan-config/error-registry';
+import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
+import { ExtractionInOutFiles } from '@/features/scan-config/use-cases/extraction/in-out-files';
+import { ExtractionConfigsLeftMenu } from '@/features/scan-config/use-cases/extraction/left-menu';
+import { MiniDetailViewRenderer, MiniDetailViewTheme } from '@/ui/segments/mini-detail-view';
 import { classNames } from '@/util/utils';
 import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
 
+import type { CheckboxProps } from 'antd';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { ICircuitExtractionConfig } from '@/api/entitycore/types/entities/circuit-extraction-config';
+
+import styles from '@/features/scan-config/scan-config.module.css';
+
 const STATUS_POLL_INTERVAL = 10_000; // 10 seconds
 const EXTRACTION_ERROR_KEY = 'extraction-config-error';
 
-type ExtractionTabProps = {
+type Props = {
   campaignId: string;
   virtualLabId: string;
   projectId: string;
@@ -59,7 +62,7 @@ const queryKeys = {
   ) => ['extraction-executions', configIds, context] as const,
 };
 
-export function ExtractionTab({ campaignId, virtualLabId, projectId }: ExtractionTabProps) {
+export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
   const queryClient = useQueryClient();
   const notification = useAppNotification();
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
@@ -68,7 +71,7 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Extractio
   const [selectedConfigIds, setSelectedConfigIds] = useState<string[]>([]);
   const [activeConfig, setActiveConfig] = useState<ICircuitExtractionConfig | null>(null);
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
+  const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
 
   const consentGate = useRunWithOfflineTokenConsent({
     notifyError: notification.error,
@@ -234,8 +237,6 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Extractio
       if (error instanceof ApiError) {
         const code = error.cause?.code;
         const apiMessage = error.cause?.message ?? defaultMsg;
-
-        // Only translate accounting/known codes. For everything else, show the API's message.
         const message = code ? getErrorMessage(code, errorRegistry, apiMessage) : apiMessage;
         notification.error({ message, duration: 5, key: EXTRACTION_ERROR_KEY });
         return;
@@ -247,13 +248,14 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Extractio
 
   const runExtraction = async (configIdsToRun: string[]) => {
     setExtractionRequestInProgress(true);
-
     try {
-      await consentGate.runWithConsent(async () => {
-        await pMap(configIdsToRun, (c) => launchExtractionMutation.mutateAsync(c), {
-          concurrency: 3,
-        });
-        setSelectedConfigIds([]);
+      await consentGate.runWithConsent({
+        fn: async () => {
+          await pMap(configIdsToRun, (c) => launchExtractionMutation.mutateAsync(c), {
+            concurrency: 3,
+          });
+          setSelectedConfigIds([]);
+        },
       });
     } finally {
       setExtractionRequestInProgress(false);
@@ -294,7 +296,7 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Extractio
             )}
             {!loading &&
               configList.map((config) => (
-                <ExtractionConfigListItem
+                <ExtractionConfigsLeftMenu
                   key={config.id}
                   selected={activeConfig?.id === config.id}
                   config={config}
@@ -328,7 +330,7 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Extractio
 
       <div className="relative border-r border-gray-200 px-4">
         {!!activeConfig && (
-          <ExtractionFiles
+          <ExtractionInOutFiles
             config={activeConfig}
             execStatus={activeConfigExecStatus}
             execution={activeConfigExecution}
@@ -340,7 +342,20 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Extractio
       </div>
 
       <div className="relative pl-4">
-        <FileViewer file={selectedFile} className="h-full" context={context} />
+        {selectedFile?.renderer === ActivityCustomFileRenderer.Default && (
+          <FileViewer file={selectedFile} className="h-full" context={context} />
+        )}
+        {selectedFile?.renderer === ActivityCustomFileRenderer.MiniDetailView && (
+          <div className="h-full">
+            <MiniDetailViewRenderer
+              section={WorkspaceSection.Data}
+              record={selectedFile.entity as ICircuit}
+              dataType={ExtendedEntitiesTypeDict.Circuit}
+              theme={MiniDetailViewTheme.Light}
+              enableAnimation={false}
+            />
+          </div>
+        )}
       </div>
 
       <OfflineTokenConsentModal
@@ -352,286 +367,5 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Extractio
         }}
       />
     </div>
-  );
-}
-
-type ExtractionConfigListItemProps = {
-  config: ICircuitExtractionConfig;
-  execStatus?: TEntitycoreExecutionStatus;
-  onSelect: () => void;
-  selected?: boolean;
-  onSelectedForExtractionChange: (configId: string, selected: boolean) => void;
-  selectedForExtraction: boolean;
-  selectionDisabled?: boolean;
-};
-
-function ExtractionConfigListItem({
-  config,
-  execStatus,
-  onSelect,
-  selected,
-  onSelectedForExtractionChange,
-  selectedForExtraction,
-  selectionDisabled,
-}: ExtractionConfigListItemProps) {
-  const color =
-    executionStatusColorMap[execStatus ?? EntitycoreExecutionStatus.CREATED] ?? '#8c8c8c';
-  const isSelectable =
-    !execStatus ||
-    execStatus === EntitycoreExecutionStatus.CREATED ||
-    execStatus === EntitycoreExecutionStatus.ERROR;
-
-  return (
-    <div className="flex-none">
-      <div
-        className="rounded-lg px-4 pb-4 transition-colors duration-300"
-        style={{
-          border: `2px solid ${selected ? color : 'transparent'}`,
-          backgroundColor: selected ? `${color}0f` : 'white',
-        }}
-      >
-        <button
-          type="button"
-          title={config.name}
-          className="mb-2 flex h-18 w-full cursor-pointer items-center justify-between"
-          onClick={onSelect}
-        >
-          <div className="min-w-0 flex-1 overflow-hidden text-left font-bold">
-            {isSelectable ? (
-              <ConfigProvider theme={{ token: { colorPrimary: '#1890ff' } }}>
-                <div className="flex min-w-0 items-center" style={{ maxWidth: '100%' }}>
-                  <Checkbox
-                    className="mr-2 transition-colors duration-300 [&_.ant-checkbox+span]:block [&_.ant-checkbox+span]:truncate [&_.ant-checkbox+span]:overflow-hidden [&_.ant-checkbox+span]:text-ellipsis [&_.ant-checkbox+span]:whitespace-nowrap"
-                    disabled={selectionDisabled}
-                    onChange={(e) => onSelectedForExtractionChange(config.id, e.target.checked)}
-                    checked={selectedForExtraction}
-                    style={{ color, maxWidth: '100%', display: 'flex' }}
-                  >
-                    <span className="text-lg transition-colors duration-300">{config.name}</span>
-                  </Checkbox>
-                </div>
-              </ConfigProvider>
-            ) : (
-              <span
-                style={{ color }}
-                className="block truncate text-lg transition-colors duration-300"
-              >
-                {config.name}
-              </span>
-            )}
-          </div>
-          <div className="ml-4 flex shrink-0">
-            <ExtractionStatusBadge status={execStatus} />
-            <RightOutlined className="ml-2 text-sm" />
-          </div>
-        </button>
-        <ScanParams
-          scanParams={config.scan_parameters as Record<string, string | number>}
-          color={color}
-        />
-      </div>
-    </div>
-  );
-}
-
-function ExtractionStatusBadge({ status }: { status?: TEntitycoreExecutionStatus }) {
-  const color = status ? executionStatusColorMap[status as EntitycoreExecutionStatus] : '#fafafa';
-  const showSpinner = status && ['pending', 'running'].includes(status);
-
-  return (
-    <div className="flex items-center">
-      {showSpinner && (
-        <svg
-          className="mr-4 h-4 w-4 animate-spin"
-          style={{ color }}
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <title>Loading</title>
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          />
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          />
-        </svg>
-      )}
-      <span
-        style={{ borderColor: color, color }}
-        className="flex items-center rounded-xl border px-4 capitalize transition-colors duration-300"
-      >
-        {status ?? 'created'}
-      </span>
-    </div>
-  );
-}
-
-type ExtractionFilesProps = {
-  config: ICircuitExtractionConfig;
-  execStatus?: TEntitycoreExecutionStatus;
-  execution?: ICircuitExtractionExecution;
-  selectedFile?: File;
-  onSelect: (file: File) => void;
-  context: { virtualLabId: string; projectId: string };
-};
-
-function ExtractionFiles({
-  config,
-  execStatus,
-  execution,
-  selectedFile,
-  onSelect,
-  context,
-}: ExtractionFilesProps) {
-  const { entity: circuit } = useModelQuery({ id: config.circuit_id, context });
-  const extractionConfigAsset = config.assets.find(
-    (o) => o.label === AssetLabel.circuit_extraction_config
-  );
-  const circuitAssets = circuit && 'assets' in circuit ? circuit.assets : [];
-  const circuitConfigAsset = circuitAssets?.find(
-    (o: IAsset) => o.label === AssetLabel.sonata_circuit
-  );
-  const inputFiles: File[] = useMemo(() => {
-    const files: File[] = [];
-    if (extractionConfigAsset) {
-      files.push({
-        entity: config,
-        asset: extractionConfigAsset,
-      });
-    }
-    if (circuit && circuitConfigAsset) {
-      files.push({
-        entity: circuit,
-        asset: circuitConfigAsset,
-        assetPath: 'circuit_config.json',
-      });
-    }
-    return files;
-  }, [config, circuit, circuitConfigAsset, extractionConfigAsset]);
-
-  const outputAvailable =
-    !!execStatus &&
-    includes([EntitycoreExecutionStatus.ERROR, EntitycoreExecutionStatus.DONE], execStatus);
-
-  // Use execution from props instead of making a duplicate request
-  const outputFiles = useMemo(() => {
-    const files: File[] = [];
-    if (!execution) return files;
-
-    const generatedEntities = (execution.generated ?? []) as EntitycoreUsedEntity[];
-
-    for (const entity of generatedEntities) {
-      const syntheticAsset = {
-        id: entity.id,
-        path: entity.name ?? entity.id,
-        content_type: 'application/json',
-        label: entity.type ?? 'circuit',
-        full_path: entity.id,
-        size: 0,
-        is_lazy_loaded: false,
-        status: 'done',
-        bucket_name: '',
-        is_directory: false,
-        meta: null,
-      } as unknown as IAsset;
-
-      files.push({
-        entity: entity as unknown as ICircuitExtractionConfig,
-        asset: syntheticAsset,
-        assetPath: entity.name ?? entity.id,
-      });
-    }
-
-    return files;
-  }, [execution]);
-
-  useEffect(() => {
-    if (inputFiles.length > 0 && !selectedFile) {
-      onSelect(inputFiles[0]);
-    }
-  }, [inputFiles, selectedFile, onSelect]);
-
-  return (
-    <div className="h-full overflow-y-auto">
-      <h4 className="uppercase">Input files</h4>
-      <div className="mt-4 mb-8 flex flex-col gap-4">
-        {inputFiles.length === 0 && <div className="text-gray-400">No input files available</div>}
-        {inputFiles.map((file) => (
-          <ExtractionFile
-            selected={file.asset.id === selectedFile?.asset.id}
-            key={file.asset.id}
-            file={file}
-            onSelect={onSelect}
-          />
-        ))}
-      </div>
-
-      {outputAvailable && (
-        <>
-          <h4 className="uppercase">Output files</h4>
-          <div className="mt-4 flex flex-col gap-4">
-            {outputFiles.length === 0 && (
-              <div className="text-gray-400">No output files generated</div>
-            )}
-            {outputFiles.map((file) => (
-              <ExtractionFile
-                selected={file.asset.id === selectedFile?.asset.id}
-                key={file.asset.id}
-                file={file}
-                onSelect={onSelect}
-              />
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-type ExtractionFileProps = {
-  file: File;
-  selected?: boolean;
-  onSelect: (file: File) => void;
-};
-
-function ExtractionFile({ file, selected, onSelect }: ExtractionFileProps) {
-  const fileName = file.assetPath?.split('/').at(-1) ?? file.asset.path.split('/').at(-1);
-  const fileExt = fileName?.split('.').at(-1);
-
-  return (
-    <button
-      type="button"
-      title={fileName}
-      className={classNames(
-        'flex w-full cursor-pointer items-center justify-between rounded-4xl p-4',
-        selected ? 'bg-[linear-gradient(95.07deg,#003A8C_42.23%,#001026_109.71%)]' : 'bg-white'
-      )}
-      onClick={() => onSelect(file)}
-    >
-      <span
-        className={classNames(
-          'truncate overflow-hidden font-semibold whitespace-nowrap',
-          selected ? 'text-white' : 'text-primary-9'
-        )}
-      >
-        {fileName}
-      </span>
-      <span
-        className={classNames(
-          'ml-4 shrink-0 rounded-2xl border px-4 uppercase',
-          selected ? 'border-white text-white' : 'text-neutral-5 border-neutral-5'
-        )}
-      >
-        {fileExt}
-      </span>
-    </button>
   );
 }

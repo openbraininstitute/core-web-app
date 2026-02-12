@@ -3,27 +3,22 @@ import { useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
 import { useEffect, useMemo } from 'react';
 
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
-import { AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { Loader } from '@/components/loader';
 import { simResultBySimIdAtomFamily, useModelQuery } from '@/features/scan-config/components/atoms';
+import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import { useLastTruthyValue } from '@/hooks/hooks';
-import type { WorkspaceContext } from '@/types/common';
 import { classNames } from '@/util/utils';
 
-export type File = {
-  asset: IAsset;
-  entity: IEntity;
-  assetPath?: string;
-};
+import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import type { WorkspaceContext } from '@/types/common';
 
 type SimulationFilesProps = {
   simulation: ICircuitSimulation;
   execStatus: EntitycoreExecutionStatus;
-  selectedFile?: File;
-  onSelect: (file: File) => void;
+  selectedFile?: TActivityCustomFile;
+  onSelect: (file: TActivityCustomFile) => void;
   onLoadingChange: (loading: boolean) => void;
   context: WorkspaceContext;
 };
@@ -141,22 +136,23 @@ export function SimulationFiles({
 function useInputFiles(
   simulation: ICircuitSimulation,
   context: WorkspaceContext
-): [boolean, File[]] {
+): [boolean, TActivityCustomFile[]] {
   const { entity, isLoading } = useModelQuery({ id: simulation.entity_id, context });
 
-  const inputFiles: File[] = useMemo(() => {
+  const inputFiles: TActivityCustomFile[] = useMemo(() => {
     const sonataCircuitAsset =
       entity && 'assets' in entity
         ? entity.assets?.find((asset) => asset.label === AssetLabel.sonata_circuit)
         : null;
 
-    const files: File[] = [];
+    const files: TActivityCustomFile[] = [];
 
     if (entity && sonataCircuitAsset) {
       files.push({
         entity,
         asset: sonataCircuitAsset,
         assetPath: 'circuit_config.json',
+        renderer: ActivityCustomFileRenderer.Default,
       });
     }
 
@@ -164,7 +160,7 @@ function useInputFiles(
       simulation.assets.map((asset) => ({ asset, entity: simulation })),
       (file) => file.asset.path
     ).forEach((file) => {
-      files.push(file);
+      files.push({ ...file, renderer: ActivityCustomFileRenderer.Default });
     });
 
     return files;
@@ -177,7 +173,7 @@ function useOutputFiles(
   simulation: ICircuitSimulation,
   context: WorkspaceContext,
   enabled: boolean
-): [boolean, File[]] {
+): [boolean, TActivityCustomFile[]] {
   const simResultAtom = simResultBySimIdAtomFamily({
     simulationId: simulation.id,
     context,
@@ -198,7 +194,11 @@ function useOutputFiles(
     if (!simResultEntity) return [loading, []];
 
     const files = sortBy(
-      assets.map((asset) => ({ asset, entity: simResultEntity })),
+      assets.map((asset) => ({
+        asset,
+        entity: simResultEntity,
+        renderer: ActivityCustomFileRenderer.Default,
+      })),
       (file) => file.asset.path
     );
 
@@ -207,9 +207,9 @@ function useOutputFiles(
 }
 
 type SimulationFileProps = {
-  file: File;
+  file: TActivityCustomFile;
   selected?: boolean;
-  onSelect: (file: File) => void;
+  onSelect: (file: TActivityCustomFile) => void;
 };
 
 function SimulationFile({ file, selected, onSelect }: SimulationFileProps) {
@@ -222,7 +222,7 @@ function SimulationFile({ file, selected, onSelect }: SimulationFileProps) {
       title={fileName}
       className={classNames(
         'flex w-full cursor-pointer items-center justify-between rounded-4xl p-4',
-        selected ? 'bg-[linear-gradient(95.07deg,_#003A8C_42.23%,_#001026_109.71%)]' : 'bg-white'
+        selected ? 'bg-[linear-gradient(95.07deg,#003A8C_42.23%,#001026_109.71%)]' : 'bg-white'
       )}
       onClick={() => onSelect(file)}
     >
@@ -236,7 +236,7 @@ function SimulationFile({ file, selected, onSelect }: SimulationFileProps) {
       </span>
       <span
         className={classNames(
-          'ml-4 flex-shrink-0 rounded-2xl border-1 px-4 uppercase',
+          'ml-4 shrink-0 rounded-2xl border px-4 uppercase',
           selected ? 'border-white text-white' : 'text-neutral-5 border-neutral-5'
         )}
       >

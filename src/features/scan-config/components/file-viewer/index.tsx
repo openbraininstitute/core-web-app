@@ -1,24 +1,27 @@
 import { useAtomValue } from 'jotai';
 import { Suspense, useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
-import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
+
 import { Loader } from '@/components/loader';
 import { EphysViewer } from '@/features/ephys-viewer';
-import type { WorkspaceContext } from '@/types/common';
 import { cn } from '@/utils/css-class';
+
 import { jsonFileAtomFamily } from '../atoms';
-import type { File } from '../simulation-files';
 import { CodeFileViewer } from './code-viewer';
 
+import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
+import type { TActivityCustomFile } from '@/features/scan-config/types';
+import type { WorkspaceContext } from '@/types/common';
+
 type FileViewerProps = {
-  file?: File;
+  file?: TActivityCustomFile;
   context: WorkspaceContext;
   loading?: boolean;
   className?: string;
 };
 
 export function FileViewer({ file, context, loading = false, className = '' }: FileViewerProps) {
-  const [displayFile, setDisplayFile] = useState<File | undefined>(file);
+  const [displayFile, setDisplayFile] = useState<TActivityCustomFile | undefined>(file);
 
   const isFilePreloading = file && file !== displayFile;
 
@@ -65,7 +68,7 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
 }
 
 type FilePreloaderProps = {
-  file: File;
+  file: TActivityCustomFile;
   context: WorkspaceContext;
   onLoaded: () => void;
 };
@@ -108,7 +111,7 @@ function DataPreloader({ file, context, onLoaded }: FilePreloaderProps) {
 }
 
 type JsonFileViewerProps = {
-  file: File;
+  file: TActivityCustomFile;
   context: WorkspaceContext;
 };
 
@@ -124,7 +127,7 @@ function JsonFileViewer({ file, context }: JsonFileViewerProps) {
 }
 
 type NwbFileViewerProps = {
-  file: File;
+  file: TActivityCustomFile;
   context: WorkspaceContext;
 };
 
@@ -136,7 +139,7 @@ function NwbFileViewer({ file, context }: NwbFileViewerProps) {
 }
 
 type PlaceholderFileViewerProps = {
-  file: File;
+  file: TActivityCustomFile;
 };
 
 function PlaceholderFileViewer({ file }: PlaceholderFileViewerProps) {

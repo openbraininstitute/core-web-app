@@ -3,26 +3,15 @@ import { Image } from 'antd';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { match, P } from 'ts-pattern';
-import type {
-  EntityCoreObjectTypes,
-  IMEModel,
-  ISingleNeuronSimulation,
-  ISingleNeuronSynaptome,
-  ISingleNeuronSynaptomeSimulation,
-} from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import type { TWorkspaceSection } from '@/constants';
 import { WorkspaceSection } from '@/constants';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { renderPreview } from '@/entity-configuration/definitions/renderer';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
 import { Card, CardTitle } from '@/ui/molecules/card';
 import { ExpandableText } from '@/ui/molecules/more-less-text';
-
 import {
   makeSelectEntityClickEvent,
   useMiniDetailView,
@@ -33,7 +22,27 @@ import { MEModelPreview } from '@/ui/segments/mini-detail-view/previews/me-model
 import { SingleNeuronSimulationPreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-simulation-preview';
 import { SingleNeuronSynaptomePreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-synaptome-preview';
 import { cn } from '@/utils/css-class';
+
 import { DataActions, WorkflowBuildActions, WorkflowSimulationOrExtractActions } from './actions';
+
+import type {
+  EntityCoreObjectTypes,
+  IMEModel,
+  ISingleNeuronSimulation,
+  ISingleNeuronSynaptome,
+  ISingleNeuronSynaptomeSimulation,
+} from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import type { TWorkspaceSection } from '@/constants';
+
+export const MiniDetailViewTheme = {
+  Light: 'light',
+  Default: 'default',
+} as const;
+
+export type TMiniDetailViewTheme = (typeof MiniDetailViewTheme)[keyof typeof MiniDetailViewTheme];
 
 type Props = {
   section?: TWorkspaceSection;
@@ -69,6 +78,31 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
     };
   }, [setMdv]);
 
+  return (
+    <MiniDetailViewRenderer
+      section={section}
+      record={record}
+      dataType={dataType}
+      onClose={onClose}
+    />
+  );
+}
+
+export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
+  section,
+  record,
+  dataType,
+  onClose,
+  theme = 'default',
+  enableAnimation = true,
+}: {
+  section: TWorkspaceSection;
+  record: T | null;
+  dataType: TExtendedEntitiesTypeDict;
+  onClose?: () => void;
+  theme?: TMiniDetailViewTheme;
+  enableAnimation?: boolean;
+}) {
   if (!record) return null;
   const viewConfig = getViewDefinitionByExtendedType(dataType ?? record.type);
   const miniConfig = viewConfig?.miniDetailView;
@@ -223,43 +257,70 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
       {record && (
         <motion.div
           key="mini-detail-view"
-          initial={{ x: 300, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: 300, opacity: 0 }}
-          transition={{
-            type: 'spring',
-            stiffness: 320,
-            damping: 33,
-            mass: 0.9,
-            opacity: { duration: 0.2 },
-          }}
+          initial={enableAnimation ? { x: 300, opacity: 0 } : undefined}
+          animate={enableAnimation ? { x: 0, opacity: 1 } : undefined}
+          exit={enableAnimation ? { x: 300, opacity: 0 } : undefined}
+          transition={
+            enableAnimation
+              ? {
+                  type: 'spring',
+                  stiffness: 320,
+                  damping: 33,
+                  mass: 0.9,
+                  opacity: { duration: 0.2 },
+                }
+              : undefined
+          }
           style={{ willChange: 'transform, opacity' }}
           className="h-full"
         >
           <Card
             id="mini-viewer"
             data-testid="mini-viewer"
-            className="bg-primary-9 relative h-full gap-0.5 rounded-2xl py-0 pr-1 pl-2 text-white"
+            className={cn(
+              'bg-primary-9 relative h-full gap-0.5 rounded-2xl py-0 pr-1 pl-2 text-white',
+              {
+                'bg-white text-primary-9': theme === 'light',
+              }
+            )}
           >
-            <CardTitle className="bg-primary-9 sticky top-0 flex items-start justify-between gap-4 rounded-2xl px-5 pt-4 pb-2">
+            <CardTitle
+              className={cn(
+                'bg-primary-9 sticky top-0 flex items-start justify-between gap-4 rounded-2xl px-5 pt-4 pb-2',
+                {
+                  'bg-white text-primary-9': theme === 'light',
+                }
+              )}
+            >
               <h1 className="text-2xl font-bold break-all" title={record.name}>
                 {record.name}
               </h1>
-              <button
-                type="button"
-                onClick={onClose}
-                className="mt-1.5 rounded-md p-2 hover:bg-white/20"
-              >
-                <CloseOutlined className="text-white" />
-              </button>
+              {onClose && (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="mt-1.5 rounded-md p-2 hover:bg-white/20"
+                >
+                  <CloseOutlined className="text-white" />
+                </button>
+              )}
             </CardTitle>
-            <div className="primary-scrollbar h-[calc(100%-90px)] w-full overflow-auto px-5">
+            <div
+              className={cn('primary-scrollbar h-[calc(100%-90px)] w-full overflow-auto px-5', {
+                'bg-white text-primary-9 secondary-scrollbar': theme === 'light',
+              })}
+            >
               {record.description && (
                 <ExpandableText
                   id="record-description"
                   text={record.description}
                   collapsedLines={2}
-                  className="text-primary-3 text-base leading-6 transition-all duration-300 lg:text-lg"
+                  className={cn(
+                    'text-primary-3 text-base leading-6 transition-all duration-300 lg:text-lg',
+                    {
+                      'text-gray-800': theme === 'light',
+                    }
+                  )}
                   btnWrapperClassName="mb-2 mt-0"
                 >
                   {({ isExpanded, toggle }) => (
@@ -268,7 +329,10 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
                       onClick={toggle}
                       className={cn(
                         'text-white/90 underline decoration-white/40 underline-offset-4 transition-colors hover:text-white',
-                        'text-xs'
+                        'text-xs',
+                        {
+                          'text-gray-800': theme === 'light',
+                        }
                       )}
                     >
                       {isExpanded ? 'Show less' : 'Show more'}
@@ -276,7 +340,13 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
                   )}
                 </ExpandableText>
               )}
-              {preview ?? <div className="bg-primary-3 my-4 h-px w-full" />}
+              {preview ?? (
+                <div
+                  className={cn('bg-primary-3 my-4 h-px w-full', {
+                    'bg-gray-400': theme === 'light',
+                  })}
+                />
+              )}
               <div className="mb-5 grid grid-flow-row-dense grid-cols-2 items-start justify-between gap-2 pt-4">
                 {miniConfig?.map((o) => {
                   const field = getFieldDefinition(o.field);
@@ -288,8 +358,18 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
                         o.className
                       )}
                     >
-                      <div className="text-primary-3 text-base font-light">{field?.title}</div>
-                      <div className="max-w-full text-base font-bold wrap-break-word text-white">
+                      <div
+                        className={cn('text-primary-3 text-base font-light', {
+                          'text-label': theme === 'light',
+                        })}
+                      >
+                        {field?.title}
+                      </div>
+                      <div
+                        className={cn('max-w-full text-base font-bold wrap-break-word text-white', {
+                          'text-primary-8': theme === 'light',
+                        })}
+                      >
                         {field?.render?.(record)}
                       </div>
                     </div>

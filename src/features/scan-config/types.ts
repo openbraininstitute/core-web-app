@@ -1,7 +1,9 @@
 import type { atom } from 'jotai';
+import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import type { IAsset } from '@/api/entitycore/types/shared/global';
+import type { ConfigValue } from '@/features/scan-config/components/components';
 import type { Prettify } from '@/utils/type';
-import type { ConfigValue } from './components/components';
 
 export interface AtomsMap {
   [key: string]:
@@ -163,13 +165,13 @@ export interface BooleanInput extends TBlockElement {
 
 export interface IBlockUnion extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.BlockUnion;
-  /** the property name used to discriminate between variants (defaults to 'type') */
+  /** the property name used to block between variants (defaults to 'type') */
   discriminator?: string | { propertyName: string; mapping?: Record<string, string> };
   /** array of possible variant schemas */
   oneOf: TBlock[];
 }
 
-/** root-level discriminated union (single value that can be one of several types) */
+/** root-level block union (single value that can be one of several types) */
 export interface IRootBlockUnion extends TRootElement, IBlockUnion {}
 
 export type TBlockElement = {
@@ -232,3 +234,19 @@ type Type = {
 export function isType(v: TRootElement | Type | TBlockElement): v is Type {
   return 'const' in v;
 }
+
+export const ActivityCustomFileRenderer = {
+  MiniDetailView: 'mini-detail-view',
+  Default: 'default',
+} as const;
+
+export type TActivityCustomFileRenderer =
+  (typeof ActivityCustomFileRenderer)[keyof typeof ActivityCustomFileRenderer];
+
+export type TActivityCustomFile = {
+  asset: IAsset;
+  entity: IEntity;
+  assetPath?: string;
+  name?: string;
+  renderer: TActivityCustomFileRenderer;
+};

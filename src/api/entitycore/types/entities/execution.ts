@@ -27,14 +27,11 @@ export type TExecutorType = `${ExecutorType}`;
 
 export type TEntitycoreExecutionStatus = `${EntitycoreExecutionStatus}`;
 
-export interface EntitycoreUsedEntity
-  extends EntityCoreIdentifiable,
-    EntityAuthorization,
-    EntityCoreBaseAsset,
-    EntityCoreType {
-  name: string | null;
-  description: string | null;
-  contributions?: Array<IContributor> | null;
+export interface TEntityCoreNestedEntityBase {
+  id: string;
+  type: string;
+  authorized_project_id: string;
+  authorized_public: boolean;
 }
 
 export interface IEntitycoreExecution
@@ -48,6 +45,6 @@ export interface IEntitycoreExecution
   start_time: string;
   end_time: string | null;
   status: TEntitycoreExecutionStatus;
-  generated: Array<unknown>;
-  used: Array<EntitycoreUsedEntity>;
+  generated: Array<TEntityCoreNestedEntityBase>;
+  used: Array<TEntityCoreNestedEntityBase>;
 }
