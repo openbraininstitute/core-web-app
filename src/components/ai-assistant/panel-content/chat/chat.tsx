@@ -26,6 +26,7 @@ export interface ChatProps {
 export default function Chat({ className, threadId }: ChatProps) {
   const assistant = useAiAssistant();
   const [initialMessages, isLoadingMessages] = assistant.useMessages();
+  const isEmptyThread = assistant.isEmptyThread.useValue();
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = React.useState(true);
   const { messages, status, append, error, stop, rateLimitRemaining } = useServiceAiAgentChat(
     threadId ?? '',
@@ -112,7 +113,7 @@ export default function Chat({ className, threadId }: ChatProps) {
     }
   };
 
-  if (threadId && isLoadingMessages) {
+  if (threadId && isLoadingMessages && !isEmptyThread) {
     return <TabTransitionLoader message="Loading conversation..." />;
   }
 
@@ -123,7 +124,7 @@ export default function Chat({ className, threadId }: ChatProps) {
         ref={refContainer}
         onWheel={handleWheel}
       >
-        {!threadId && <Welcome />}
+        {isEmptyThread && <Welcome />}
         {messages.map((item) => (
           <MessageItem key={item.id} value={item} />
         ))}

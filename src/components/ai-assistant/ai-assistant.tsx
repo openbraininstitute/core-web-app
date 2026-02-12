@@ -44,9 +44,10 @@ export default function AiAssistant({
   const [tab, setTab] = React.useState<'chat' | 'history'>('chat');
   const assistant = useAiAssistant();
   const threadId = assistant.threadId.useValue();
-  const { messages, status } = useServiceAiAgentChat(threadId ?? '');
+  const isEmptyThread = assistant.isEmptyThread.useValue();
+  const { status } = useServiceAiAgentChat(threadId ?? '');
 
-  const canCreateNewChat = threadId && messages.length > 0 && status === 'ready';
+  const canCreateNewChat = threadId && !isEmptyThread && status === 'ready';
 
   const style: CSSProperties = {
     //@ts-expect-error

@@ -32,6 +32,8 @@ class AiAssistantClass {
 
   public readonly history = new Signal<AiAssistantHistory>([]);
 
+  public readonly isEmptyThread = new Signal<boolean>(false);
+
   private readonly accessToken = new Signal('NO-TOKEN');
 
   private readonly virtualLabId = new Signal<string | null>(null);
@@ -57,6 +59,14 @@ class AiAssistantClass {
       if (!threadId) {
         this.initialMessages.set([]);
         this.isLoadingMessages.set(false);
+        this.isEmptyThread.set(false);
+        return;
+      }
+
+      // Skip loading messages if thread is marked as empty
+      if (this.isEmptyThread.get()) {
+        this.initialMessages.set([]);
+        this.isLoadingMessages.set(false);
         return;
       }
 
@@ -74,7 +84,9 @@ class AiAssistantClass {
   }
 
   readonly createThread = async () => {
-    const threadId = await this.threadmanager.createThread();
+    const { threadId, isEmpty } = await this.threadmanager.createThread();
+    this.isEmptyThread.set(isEmpty);
+    this.initialMessages.set([]);
     this.historyManager.reset();
     return threadId;
   };
@@ -173,7 +185,9 @@ class AiAssistantClass {
   }
 
   private readonly handleInit = debounce(() => {
-    this.threadmanager.init(this.context);
+    this.threadmanager.init(this.context).then(({ isEmpty }) => {
+      this.isEmptyThread.set(isEmpty);
+    });
   }, 50);
 }
 

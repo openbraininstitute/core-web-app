@@ -1,13 +1,16 @@
 'use client';
 
 import React from 'react';
+
 import SendIcon from '@/components/icons/Send';
-import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 import { classNames } from '@/util/utils';
 
-import styles from './prompt.module.css';
 // import { IconGear } from '../icons/gear';
 import ToolsSelector from './tools-selector';
+
+import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
+
+import styles from './prompt.module.css';
 
 interface PromptProps {
   className?: string;
@@ -15,9 +18,17 @@ interface PromptProps {
   tools: AIAssistantTool[];
   onChange(value: string): void;
   onClick(value: string): void;
+  disabled?: boolean;
 }
 
-export default function Prompt({ className, value, tools, onChange, onClick }: PromptProps) {
+export default function Prompt({
+  className,
+  value,
+  tools,
+  onChange,
+  onClick,
+  disabled,
+}: PromptProps) {
   const [showToolsSelector, setShowToolsSelector] = React.useState(false);
 
   const handleSendClick = () => {
@@ -57,7 +68,7 @@ export default function Prompt({ className, value, tools, onChange, onClick }: P
           type="button"
           onClick={handleSendClick}
           aria-label="Send prompt"
-          disabled={value.trim().length === 0}
+          disabled={value.trim().length === 0 || disabled}
         >
           <SendIcon />
         </button>

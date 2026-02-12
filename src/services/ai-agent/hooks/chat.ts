@@ -132,6 +132,7 @@ export function useServiceAiAgentChat(threadId: string, initialMessages: Message
     rateLimitRemaining,
     messages: chat.messages,
     append: (message: Message | CreateMessage, chatRequestOptions?: ChatRequestOptions) => {
+      assistant.isEmptyThread.set(false);
       chat.append(message, chatRequestOptions);
       if (chat.messages.length === 0) {
         // We suggest a title for the thread based

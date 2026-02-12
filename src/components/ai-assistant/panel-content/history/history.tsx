@@ -79,6 +79,7 @@ export default function History({ className, onBack }: HistoryProps) {
                             type="button"
                             className={styles.mainButton}
                             onClick={() => {
+                              assistant.isEmptyThread.set(false);
                               setThreadId(thread.id);
                               onBack();
                             }}
