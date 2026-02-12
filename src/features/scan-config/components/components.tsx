@@ -4,8 +4,7 @@ import { isNil } from 'es-toolkit/compat';
 import isEqual from 'es-toolkit/compat/isEqual';
 import { atom, useAtom } from 'jotai';
 import { useRef } from 'react';
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+
 import EntityPropertyDropdown from '@/features/scan-config/components/entity-property-dropdown';
 import ModelDetails from '@/features/scan-config/components/model-details';
 import NeuronIds from '@/features/scan-config/components/neuron-ids';
@@ -21,6 +20,9 @@ import {
 } from '@/features/scan-config/types';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
+
+import type { IMEModel } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 type Primitive = null | boolean | number | string;
 interface Object {
@@ -241,7 +243,12 @@ export function BlockUI({
                       <div className="text-lg text-gray-500">{blockElementSchema.units}</div>
                     )}
                   </div>
-                  <Tooltip value={blockElementSchema.description}>
+
+                  <Tooltip
+                    value={
+                      k === 'circuit' && model ? model.description : blockElementSchema.description
+                    }
+                  >
                     <div className="mb-1 flex">
                       <div className={cn('border-1 flex-1 mr-1 rounded-lg', patchBorderClass())}>
                         {renderInput(k, blockElementSchema, value)}
