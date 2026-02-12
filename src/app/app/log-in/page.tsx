@@ -23,10 +23,15 @@ export default function Page() {
 
     hasInitiated.current = true;
 
+    console.log(`redirectURL: ${redirectURL}`);
+
     const onboarding = `${window.location.origin}${config.ROOT_ROUTE}/sync`;
+    console.log(`Onboarding URL: ${onboarding}`);
     const callbackUrl = redirectURL
       ? `${onboarding}?redirectUrl=${encodeURIComponent(redirectURL)}`
       : onboarding;
+
+    console.log(`Callback URL: ${callbackUrl}`);
 
     if (config.AUTH_PROXY_URL && !window.location.href.startsWith(config.AUTH_PROXY_URL)) {
       setAuthProxyRedirectCookie(callbackUrl);
