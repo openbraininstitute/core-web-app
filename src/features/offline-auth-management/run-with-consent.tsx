@@ -1,87 +1,61 @@
+'use client';
+
 import { useCallback } from 'react';
 
 import { useEnsureOfflineTokenConsent } from '@/features/offline-auth-management/ensure-consent';
 
-type NotifyError = (args: { message: string; duration?: number }) => void;
+import type { EnsureResult } from '@/features/offline-auth-management/ensure-consent';
 
-/**
- * wrapper on top of `useEnsureOfflineTokenConsent()` to run any async task with consent
- *
- * it's the recommended hook for feature code, because it keeps the call-site small.
- * you inject your `run` function, and this hook handles:
- * - requesting consent when needed
- * - opening the consent page + showing a fallback modal
- * - returning early on denied/timeout/cancelled
- * - (optional) showing a notification error message
- *
- * @param options.notifyError - Function like `notification.error` to show a message.
- * @param options.duration - Notification duration (seconds).
- * @param options.messages - Optional custom messages.
- *
- * @returns All consent helpers + `runWithConsent(fn)`.
- *
- * @example
- * ```ts
- * const consent = useRunWithOfflineTokenConsent({ notifyError: notification.error });
- *
- * await consent.runWithConsent(async () => {
- *   await launchSomething();
- * });
- * ```
- */
+type NotifyError = (params: { message: string; duration?: number; key?: string }) => void;
 
-export function useRunWithOfflineTokenConsent(options?: {
+type UseRunWithOfflineTokenConsentOptions = {
+  /** When true, use localStorage and in-memory prefetch cache. Default: false (no cache). */
+  useCache?: boolean;
   notifyError?: NotifyError;
-  duration?: number;
-  messages?: Partial<{
-    denied: string;
-    timeout: string;
-    error: string;
-  }>;
-}) {
-  const { ensure, modal, cancel, openConsentLink, prime } = useEnsureOfflineTokenConsent();
+  messages?: {
+    denied?: string;
+    timeout?: string;
+    cancelled?: string;
+    error?: string;
+  };
+};
+
+export function useRunWithOfflineTokenConsent(options?: UseRunWithOfflineTokenConsentOptions) {
+  const { useCache, notifyError, messages = {} } = options ?? {};
+  const gate = useEnsureOfflineTokenConsent({ useCache });
 
   const runWithConsent = useCallback(
-    async <T,>({ fn }: { fn: () => Promise<T> }): Promise<T | undefined> => {
-      const consent = await ensure();
-      if (!consent.ok) {
-        if (consent.reason === 'cancelled') return undefined;
+    async (args: { fn: () => Promise<unknown> }): Promise<unknown> => {
+      const result: EnsureResult = await gate.ensure();
 
-        const duration = options?.duration ?? 10;
-        const msg = (() => {
-          if (consent.reason === 'denied') {
-            return options?.messages?.denied ?? 'Consent declined. Task was not started.';
-          }
-          if (consent.reason === 'timeout') {
-            return (
-              options?.messages?.timeout ?? 'Consent timed out. Please grant consent to continue.'
-            );
-          }
-          return options?.messages?.error ?? consent.message ?? 'Unexpected consent error.';
-        })();
-
-        options?.notifyError?.({ message: msg, duration });
-        return undefined;
+      if (result.ok) {
+        return args.fn();
       }
 
-      return await fn();
+      const msg =
+        result.reason === 'denied'
+          ? (messages.denied ?? 'Consent was declined.')
+          : result.reason === 'timeout'
+            ? (messages.timeout ?? 'Consent timed out. Please try again.')
+            : result.reason === 'cancelled'
+              ? (messages.cancelled ?? 'Consent was cancelled.')
+              : (messages.error ??
+                ('message' in result ? result.message : 'Consent could not be completed.'));
+
+      notifyError?.({ message: msg, duration: 5 });
     },
     [
-      ensure,
-      options?.duration,
-      options?.messages?.denied,
-      options?.messages?.error,
-      options?.messages?.timeout,
-      options?.notifyError,
+      gate.ensure,
+      messages.cancelled,
+      messages.denied,
+      messages.error,
+      messages.timeout,
+      notifyError,
     ]
   );
 
   return {
-    modal,
-    ensure,
-    cancel,
-    openConsentLink,
-    prime,
+    ...gate,
     runWithConsent,
   };
 }

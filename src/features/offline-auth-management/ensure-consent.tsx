@@ -20,6 +20,8 @@ import type { OfflineTokenConsentRequest } from '@/features/offline-auth-managem
 import type { OfflineTokenConsentEvent } from '@/features/offline-auth-management/types';
 
 type EnsureOptions = {
+  /** use localStorage to reduce the number of requests to auth-manager (defaults: false) */
+  useCache?: boolean;
   timeoutMs?: number;
   // max time we'll accept a previously-emitted event as relevant to this wait.
   // this prevents stale “granted” events from auto-unblocking a new flow.
@@ -28,7 +30,7 @@ type EnsureOptions = {
   recheckAttempts?: number;
 };
 
-type EnsureResult =
+export type EnsureResult =
   | { ok: true }
   | { ok: false; reason: 'denied'; error?: string; description?: string }
   | { ok: false; reason: 'cancelled' }
@@ -43,20 +45,24 @@ export type OfflineTokenConsentModalState = {
 const PREFETCH_TTL_MS = 30_000;
 
 async function waitForDecision({
+  useCache,
   timeoutMs,
   maxEventAgeMs,
   minEventAt,
   signal,
 }: {
+  useCache: boolean;
   timeoutMs: number;
   maxEventAgeMs: number;
   minEventAt: number;
   signal: AbortSignal;
 }): Promise<OfflineTokenConsentEvent> {
   // Fast-path: accept a very recent event (helps cross-tab “already granted just now”).
-  const last = readLastOfflineTokenConsentEvent();
-  if (last && last.at >= minEventAt && Date.now() - last.at < maxEventAgeMs) {
-    return last;
+  if (useCache) {
+    const last = readLastOfflineTokenConsentEvent();
+    if (last && last.at >= minEventAt && Date.now() - last.at < maxEventAgeMs) {
+      return last;
+    }
   }
 
   return new Promise((resolve, reject) => {
@@ -115,11 +121,12 @@ async function waitForDecision({
 export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
   const opts = useMemo(
     () => ({
+      useCache: options?.useCache ?? false,
       timeoutMs: options?.timeoutMs ?? 2 * 60 * 1000,
       maxEventAgeMs: options?.maxEventAgeMs ?? 10 * 60 * 1000,
       recheckAttempts: options?.recheckAttempts ?? 5,
     }),
-    [options?.maxEventAgeMs, options?.recheckAttempts, options?.timeoutMs]
+    [options?.maxEventAgeMs, options?.recheckAttempts, options?.timeoutMs, options?.useCache]
   );
 
   const abortRef = useRef<AbortController | null>(null);
@@ -142,26 +149,30 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
     return !!w;
   }, []);
 
-  const fetchConsent = useCallback(async (options?: { force?: boolean }) => {
-    const cached = consentPrefetchRef.current;
-    if (!options?.force && cached && Date.now() - cached.at < PREFETCH_TTL_MS) {
-      return cached.value;
-    }
+  const fetchConsent = useCallback(
+    async (fetchOptions?: { force?: boolean; useCache?: boolean }) => {
+      const useCache = fetchOptions?.useCache ?? false;
+      const cached = consentPrefetchRef.current;
+      if (useCache && !fetchOptions?.force && cached && Date.now() - cached.at < PREFETCH_TTL_MS) {
+        return cached.value;
+      }
 
-    if (inflightConsentRequestRef.current) {
+      if (inflightConsentRequestRef.current) {
+        return inflightConsentRequestRef.current;
+      }
+
+      inflightConsentRequestRef.current = (async () => {
+        const value = await requestOfflineTokenConsent();
+        consentPrefetchRef.current = { at: Date.now(), value };
+        return value;
+      })().finally(() => {
+        inflightConsentRequestRef.current = null;
+      });
+
       return inflightConsentRequestRef.current;
-    }
-
-    inflightConsentRequestRef.current = (async () => {
-      const value = await requestOfflineTokenConsent();
-      consentPrefetchRef.current = { at: Date.now(), value };
-      return value;
-    })().finally(() => {
-      inflightConsentRequestRef.current = null;
-    });
-
-    return inflightConsentRequestRef.current;
-  }, []);
+    },
+    []
+  );
 
   // prefetch so the consent tab can be opened synchronously on click.
   const prime = useCallback(() => {
@@ -182,25 +193,30 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
     abortRef.current?.abort('superseded');
     abortRef.current = new AbortController();
 
-    // show the modal immediately so the user always has a fallback.
     setModal({ open: true, consentUrl: undefined });
 
     try {
-      const cached = readOfflineTokenConsentState();
-      if (isOfflineTokenConsentStateFresh(cached) && cached?.decision === 'granted') {
-        setModal({ open: false, consentUrl: undefined });
-        publishOfflineTokenConsentEvent({
-          type: OfflineTokenConsentEventType.Granted,
-          at: Date.now(),
-          source: OfflineTokenConsentEventSource.Server,
-        });
-        return { ok: true };
+      if (opts.useCache) {
+        const cached = readOfflineTokenConsentState();
+        if (isOfflineTokenConsentStateFresh(cached) && cached?.decision === 'granted') {
+          setModal({ open: false, consentUrl: undefined });
+          publishOfflineTokenConsentEvent({
+            type: OfflineTokenConsentEventType.Granted,
+            at: Date.now(),
+            source: OfflineTokenConsentEventSource.Server,
+          });
+          return { ok: true };
+        }
       }
 
-      // if we already prefetched before this click, we can open synchronously.
       const prefetched = consentPrefetchRef.current;
+      const hasUrl = !!prefetched?.value?.consentUrl;
 
-      const consentRes = prefetched?.value ?? (await fetchConsent());
+      if (!hasUrl) {
+        await new Promise<void>((r) => setTimeout(r, 0));
+      }
+
+      const consentRes = prefetched?.value ?? (await fetchConsent({ useCache: opts.useCache }));
       const consentUrl = consentRes.consentUrl;
       const sessionStateId = consentRes.sessionStateId;
 
@@ -216,12 +232,10 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
 
       const flowStartedAt = Date.now();
 
-      // auto-open consent page as soon as we have the URL.
-      // this may be blocked by some browsers if the URL wasn't prefetched before the click;
-      // the modal remains as a deterministic fallback.
       openConsentLink(consentUrl);
 
       const decision = await waitForDecision({
+        useCache: opts.useCache,
         timeoutMs: opts.timeoutMs,
         maxEventAgeMs: opts.maxEventAgeMs,
         minEventAt: flowStartedAt,
@@ -232,13 +246,15 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
 
       if (decision.type === OfflineTokenConsentEventType.Denied) {
         const now = Date.now();
-        writeOfflineTokenConsentState({
-          decision: 'denied',
-          updatedAt: now,
-          sessionStateId: decision.sessionStateId,
-          error: decision.error,
-          description: decision.description,
-        });
+        if (opts.useCache) {
+          writeOfflineTokenConsentState({
+            decision: 'denied',
+            updatedAt: now,
+            sessionStateId: decision.sessionStateId,
+            error: decision.error,
+            description: decision.description,
+          });
+        }
         return {
           ok: false,
           reason: 'denied',
@@ -248,15 +264,16 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
       }
 
       const now = Date.now();
-      writeOfflineTokenConsentState({ decision: 'granted', updatedAt: now, sessionStateId });
+      if (opts.useCache) {
+        writeOfflineTokenConsentState({ decision: 'granted', updatedAt: now, sessionStateId });
+        consentPrefetchRef.current = { at: now, value: { consentUrl: undefined, sessionStateId } };
+      }
       publishOfflineTokenConsentEvent({
         type: OfflineTokenConsentEventType.Granted,
         at: now,
         source: OfflineTokenConsentEventSource.Server,
         sessionStateId,
       });
-      // ensure subsequent attempts don't reuse a stale consentUrl from prefetch.
-      consentPrefetchRef.current = { at: now, value: { consentUrl: undefined, sessionStateId } };
       return { ok: true };
     } catch (err: any) {
       setModal({ open: false, consentUrl: undefined });
@@ -276,7 +293,7 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
     } finally {
       abortRef.current = null;
     }
-  }, [opts.maxEventAgeMs, opts.timeoutMs, openConsentLink, fetchConsent]);
+  }, [opts.maxEventAgeMs, opts.timeoutMs, opts.useCache, openConsentLink, fetchConsent]);
 
   return {
     modal,
