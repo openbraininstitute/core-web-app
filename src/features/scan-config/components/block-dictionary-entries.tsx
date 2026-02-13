@@ -12,7 +12,9 @@ import { Input } from 'antd';
 import isEqual from 'es-toolkit/compat/isEqual';
 import { atom } from 'jotai';
 
+import AIAdd from '@/components/icons/ai/add_icon';
 import AIIcon from '@/components/icons/ai/ai_icon';
+import AIEdit from '@/components/icons/ai/edit_icon';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
@@ -379,7 +381,7 @@ export default function BlockDictionaryEntries({
         <div className="border-neutral-200 border-1 rounded-lg w-[90%] px-2 pb-4 pt-2 flex flex-col gap-2">
           {aiAddedEntries.length > 0 && (
             <div className="text-sm text-[#1690ff] flex items-center gap-1">
-              <PlusOutlined /> Added
+              <AIAdd w={12} h={12} /> Added
             </div>
           )}
 
@@ -394,8 +396,11 @@ export default function BlockDictionaryEntries({
           {aiDeletedEntries}
 
           {aiEditedEntries.length > 0 && (
-            <div className="text-sm text-[#d3951c] flex items-center gap-1">
-              <EditOutlined /> Edited
+            <div className="flex items-center gap-1">
+              <AIEdit />
+              <span className="text-sm bg-gradient-to-r from-[#ef4444] to-[#1690ff] bg-clip-text text-transparent">
+                Edited
+              </span>
             </div>
           )}
           {aiEditedEntries}
