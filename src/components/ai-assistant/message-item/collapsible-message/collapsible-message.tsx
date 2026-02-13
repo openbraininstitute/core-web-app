@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { UIMessage } from '@ai-sdk/ui-utils';
+import { UIMessage, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
+import { useAITools } from '@/services/ai-agent/tools/tools';
 import styles from './collapsible-message.module.css';
 
 interface CollapsibleMessageProps {
@@ -11,66 +12,126 @@ interface CollapsibleMessageProps {
 }
 
 export function CollapsibleMessage({ message, status, children }: CollapsibleMessageProps) {
-  const [isCollapsed, setIsCollapsed] = React.useState(false);
-  const [hasCollapsed, setHasCollapsed] = React.useState(false);
-  const [isAnimating, setIsAnimating] = React.useState(false);
+  const [collapsedIndices, setCollapsedIndices] = React.useState<Set<number>>(new Set());
+  const [animatingIndex, setAnimatingIndex] = React.useState<number | null>(null);
+  const previousPartsLength = React.useRef(0);
+  const tools = useAITools();
 
-  // Find the last text part index
-  const lastTextIndex = React.useMemo(() => {
-    for (let i = message.parts.length - 1; i >= 0; i--) {
-      const part = message.parts[i];
-      if (part.type === 'text' && 'text' in part && part.text !== '') {
-        return i;
+  // Find the latest tool invocation part in collapsed content
+  const latestToolInfo = React.useMemo(() => {
+    if (!tools) return null;
+    
+    const parts = message.parts;
+    for (let i = parts.length - 1; i >= 0; i--) {
+      if (collapsedIndices.has(i) && parts[i].type === 'tool-invocation') {
+        const toolPart = parts[i] as ToolInvocationUIPart;
+        const toolName = toolPart.toolInvocation.toolName;
+        const tool = tools.find((t) => t.id === toolName);
+        
+        if (tool) {
+          const Icon = tool.icon;
+          return {
+            name: tool.name,
+            Icon,
+            state: toolPart.toolInvocation.state,
+          };
+        }
       }
     }
-    return -1;
-  }, [message.parts]);
+    return null;
+  }, [message.parts, collapsedIndices, tools]);
 
-  // Auto-collapse when streaming finishes with smooth animation
+  // Track which parts should be collapsed
   React.useEffect(() => {
-    if (status === 'ready' && !hasCollapsed && lastTextIndex > 0) {
-      // Start animation
-      setIsAnimating(true);
-      
-      // Wait for fade-out animation to complete before collapsing
-      const timer = setTimeout(() => {
-        setIsCollapsed(true);
-        setHasCollapsed(true);
-        setIsAnimating(false);
-      }, 300); // Match the CSS animation duration
-
-      return () => clearTimeout(timer);
+    const parts = message.parts;
+    
+    // Find indices that should be collapsed
+    // A part should be collapsed if:
+    // 1. It's a text or tool-invocation
+    // 2. There's at least one more text part after it
+    const newCollapsedIndices = new Set<number>();
+    
+    // Find the last text part index
+    let lastTextIndex = -1;
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const part = parts[i];
+      if (part.type === 'text' && 'text' in part && part.text !== '') {
+        lastTextIndex = i;
+        break;
+      }
     }
-  }, [status, hasCollapsed, lastTextIndex]);
 
-  // If there's no content to collapse (only one text part or no text parts), render normally
-  if (lastTextIndex <= 0) {
-    return <>{children}</>;
-  }
+    // If we're streaming and a new text part appeared after previous content
+    if (status === 'streaming' && parts.length > previousPartsLength.current) {
+      // Check if the new part is a text part
+      const newPartIndex = parts.length - 1;
+      const newPart = parts[newPartIndex];
+      
+      if (newPart.type === 'text' && 'text' in newPart && newPartIndex > 0) {
+        // Collapse everything before this new text part
+        for (let i = 0; i < newPartIndex; i++) {
+          if (!collapsedIndices.has(i)) {
+            // Trigger animation for newly collapsed items
+            setAnimatingIndex(i);
+            setTimeout(() => setAnimatingIndex(null), 300);
+          }
+          newCollapsedIndices.add(i);
+        }
+      }
+    }
 
-  // During streaming, show everything normally
-  if (status === 'streaming' || status === 'submitted') {
-    return <>{children}</>;
-  }
+    // When streaming finishes, collapse everything except the last text
+    if (status === 'ready' && lastTextIndex > 0) {
+      for (let i = 0; i < lastTextIndex; i++) {
+        newCollapsedIndices.add(i);
+      }
+    }
 
-  // After streaming is complete, show the collapsible UI
-  const collapsibleChildren = children.slice(0, lastTextIndex);
-  const finalTextChild = children[lastTextIndex];
+    if (newCollapsedIndices.size > 0) {
+      setCollapsedIndices(newCollapsedIndices);
+    }
 
-  const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
+    previousPartsLength.current = parts.length;
+  }, [message.parts, status, collapsedIndices]);
+
+  // Separate collapsed and visible children
+  const collapsedChildren: React.ReactNode[] = [];
+  const visibleChildren: React.ReactNode[] = [];
+
+  children.forEach((child, index) => {
+    if (collapsedIndices.has(index)) {
+      collapsedChildren.push(
+        <div 
+          key={`collapsed-${index}`}
+          className={index === animatingIndex ? styles.slideToCollapsible : ''}
+        >
+          {child}
+        </div>
+      );
+    } else {
+      visibleChildren.push(child);
+    }
+  });
+
+  const [isExpanded, setIsExpanded] = React.useState(false);
+
+  const toggleExpanded = () => {
+    setIsExpanded(!isExpanded);
   };
 
   return (
     <>
-      {hasCollapsed ? (
-        <div className={styles.thinkingContainer}>
+      {collapsedChildren.length > 0 && (
+        <div 
+          className={styles.thinkingContainer}
+          data-receiving={animatingIndex !== null}
+        >
           <button
             type="button"
             className={styles.thinkingButton}
-            onClick={toggleCollapse}
-            aria-expanded={!isCollapsed}
-            data-collapsed={isCollapsed}
+            onClick={toggleExpanded}
+            aria-expanded={isExpanded}
+            data-collapsed={!isExpanded}
           >
             <div className={styles.thinkingHeader}>
               <svg
@@ -80,7 +141,7 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
                 className={styles.chevron}
-                data-collapsed={isCollapsed}
+                data-collapsed={!isExpanded}
               >
                 <path
                   d="M4 6L8 10L12 6"
@@ -90,23 +151,31 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
                   strokeLinejoin="round"
                 />
               </svg>
-              <span className={styles.thinkingLabel}>
-                Show details
-              </span>
+              {latestToolInfo ? (
+                <div className={styles.toolSummary}>
+                  <div className={styles.toolIcon}>
+                    <latestToolInfo.Icon />
+                  </div>
+                  <span className={styles.toolName}>{latestToolInfo.name}</span>
+                  <span className={styles.toolStatus}>
+                    {latestToolInfo.state === 'result' ? 'Complete' : 'Running'}
+                  </span>
+                </div>
+              ) : (
+                <span className={styles.thinkingLabel}>
+                  Show details
+                </span>
+              )}
             </div>
           </button>
-          {!isCollapsed && (
+          {isExpanded && (
             <div className={styles.thinkingContent}>
-              {collapsibleChildren}
+              {collapsedChildren}
             </div>
           )}
         </div>
-      ) : (
-        <div className={isAnimating ? styles.fadeOut : ''}>
-          {collapsibleChildren}
-        </div>
       )}
-      {finalTextChild}
+      {visibleChildren}
     </>
   );
 }
