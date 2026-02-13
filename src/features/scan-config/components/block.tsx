@@ -1,9 +1,10 @@
-import { CloseOutlined, PlusOutlined } from '@ant-design/icons';
+import { CloseOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
 import { isEqual, isNil } from 'es-toolkit/compat';
 import { atom, useAtom } from 'jotai';
 import { useRef } from 'react';
 
+import AIAdd from '@/components/icons/ai/add_icon';
 import BooleanInput from '@/features/scan-config/components/boolean-input';
 import EntityPropertyDropdown from '@/features/scan-config/components/entity-property-dropdown';
 import ModelDetails from '@/features/scan-config/components/model-details';
@@ -269,22 +270,22 @@ export default function Block({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div>
-                        <div className="mb-1 flex">
+                        <div className="mb-1 flex items-center gap-1">
                           <div className={cn('border rounded-lg flex-1 mr-1', patchBorderClass())}>
                             {renderInput(k, blockElementSchema, value)}
                           </div>
                           {(op_ === 'delete' || op_ === 'replace') && (
-                            <CloseOutlined className="!text-red-500" />
+                            <CloseOutlined className="!text-red-500 !text-[16px]" />
                           )}
-                          {op_ === 'add' && <PlusOutlined className="!text-[#1690ff]" />}
+                          {op_ === 'add' && <AIAdd />}
                         </div>
 
                         {op_ === 'replace' && !!blockAIConfig && (
-                          <div className="flex">
+                          <div className="flex items-center gap-1">
                             <div className="border rounded-lg border-[#1690ff] flex-1 mr-1">
                               {renderInput(k, blockElementSchema, blockAIConfig[k])}
                             </div>
-                            <PlusOutlined className="!text-[#1690ff]" />
+                            <AIAdd />
                           </div>
                         )}
                       </div>

@@ -2,6 +2,7 @@ import { CheckCircleFilled, SwapOutlined, WarningFilled } from '@ant-design/icon
 import { isEqual } from 'es-toolkit/compat';
 import { atom } from 'jotai';
 
+import AIIcon from '@/components/icons/ai/ai_icon';
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
 import {
   Chevron,
@@ -113,9 +114,7 @@ export function RootElement({
       >
         {schema.properties?.[rootElement]?.title}
         <div className="flex gap-3">
-          {!!aiConfig && !isEqual(config[rootElement], aiConfig[rootElement]) && (
-            <span className="text-slate-500! text-lg animate-pulse">✦</span>
-          )}
+          {!!aiConfig && !isEqual(config[rootElement], aiConfig[rootElement]) && <AIIcon />}
 
           {errors?.find((error) => error.instancePath.startsWith(`/${rootElement}`)) ? (
             <WarningFilled className="text-yellow-400!" />

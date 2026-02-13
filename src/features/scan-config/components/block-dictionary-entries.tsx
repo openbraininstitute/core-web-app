@@ -12,6 +12,7 @@ import { Input } from 'antd';
 import isEqual from 'es-toolkit/compat/isEqual';
 import { atom } from 'jotai';
 
+import AIIcon from '@/components/icons/ai/ai_icon';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
@@ -155,7 +156,7 @@ export default function BlockDictionaryEntries({
         }}
       >
         <div className="w-full text-left truncate max-w-[24ch]">{entry}</div>
-        <span className="text-slate-500 text-lg animate-pulse">✦</span>
+        <AIIcon />
       </button>
     );
   }
