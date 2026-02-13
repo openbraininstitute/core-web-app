@@ -1,9 +1,12 @@
 import dynamic from 'next/dynamic';
-import type { Data, Layout } from 'plotly.js-dist-min';
 import React from 'react';
+
 import { logError } from '@/util/logger';
 import { classNames } from '@/util/utils';
+
 import ToolSkeleton from '../../tool-skeleton';
+
+import type { Data, Layout } from 'plotly.js-dist-min';
 
 import styles from './generic-plot.module.css';
 

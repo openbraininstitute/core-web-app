@@ -2,10 +2,9 @@
 
 import { FullscreenExitOutlined, FullscreenOutlined, MinusOutlined } from '@ant-design/icons';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import dynamic from 'next/dynamic';
 import React, { type CSSProperties } from 'react';
 
-import { useAgentState, useServiceAiAgentChat } from '@/services/ai-agent';
+import { useServiceAiAgentChat } from '@/services/ai-agent';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
 import { classNames } from '@/util/utils';
 
@@ -50,7 +49,6 @@ export default function AiAssistant({
   const canCreateNewChat = threadId && !isEmptyThread && status === 'ready';
 
   const style: CSSProperties = {
-    //@ts-expect-error
     '--custom-panel-width': fullscreen ? '100%' : `${panelWidth.toFixed(0)}px`,
   };
 

@@ -25,10 +25,10 @@ export interface ChatProps {
 
 export default function Chat({ className, threadId }: ChatProps) {
   const assistant = useAiAssistant();
-  const [initialMessages, isLoadingMessages] = assistant.useMessages();
   const isEmptyThread = assistant.isEmptyThread.useValue();
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = React.useState(true);
-  const { messages, status, append, error, stop, rateLimitRemaining } = useServiceAiAgentChat(threadId ?? '');
+  const { messages, status, append, error, stop, rateLimitRemaining, isLoadingMessages } =
+    useServiceAiAgentChat(threadId ?? '');
   const [suggestions, clearSuggestions, isLoadingSuggestions] =
     useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', status);
 
@@ -88,7 +88,7 @@ export default function Chat({ className, threadId }: ChatProps) {
         refChatBottom.current?.scrollIntoView({ behavior: 'smooth' });
       }, 200);
     }
-  }, [scrollHeight, isAutoScrollEnabled, isStorageQueryFetching]);
+  }, [isAutoScrollEnabled]);
 
   const handlePrompt = (content: string) => {
     setIsAutoScrollEnabled(true);

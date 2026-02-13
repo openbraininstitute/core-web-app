@@ -19,8 +19,6 @@ import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { INotebook } from '@/api/entitycore/types/entities/notebook';
 
-import type { INotebook } from '@/api/entitycore/types/entities/notebook';
-
 interface ActionPopoverProps {
   notebook: INotebook;
   index: number;

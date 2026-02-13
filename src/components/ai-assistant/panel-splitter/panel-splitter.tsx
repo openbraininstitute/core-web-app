@@ -1,9 +1,8 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import React from 'react';
-
-import { usePointerHandler } from './pointer-handler';
 
 import { classNames } from '@/util/utils';
+
+import { usePointerHandler } from './pointer-handler';
 
 import styles from './panel-splitter.module.css';
 

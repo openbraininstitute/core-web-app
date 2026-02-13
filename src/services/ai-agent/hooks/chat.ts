@@ -1,16 +1,13 @@
 'use client';
 
 import { type CreateMessage, type Message, useChat } from '@ai-sdk/react';
-
 import { useQueryClient } from '@tanstack/react-query';
-import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
-
 import { atom, useAtom } from 'jotai';
-import React, {useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 import { useAIActiveTools } from '@/components/ai-assistant/state';
 import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
-
+import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
 import { logError } from '@/util/logger';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 
@@ -62,6 +59,7 @@ export function useServiceAiAgentChat(threadId: string) {
   const [aiAgentState] = useAtom(agentStateAtom);
   const assistant = useAiAssistant();
   const assistantInitialMessages = assistant.initialMessages.useValue();
+  const isLoadingMessages = assistant.isLoadingMessages.useValue();
   const { accessToken } = assistant.useContext();
   const activeTools = useAIActiveTools();
   const [rateLimitRemaining, setRateLimitRemaining] = React.useState(() => getStoredRateLimit());
@@ -75,8 +73,7 @@ export function useServiceAiAgentChat(threadId: string) {
   const chat = useChat({
     api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
     id: threadId,
-    initialMessages:
-     assistantInitialMessages, 
+    initialMessages: assistantInitialMessages,
     headers: {
       Authorization: `Bearer ${accessToken}`,
       'x-request-id': requestId,
@@ -138,6 +135,7 @@ export function useServiceAiAgentChat(threadId: string) {
   return {
     rateLimitRemaining,
     messages: chat.messages,
+    isLoadingMessages,
     append: (message: Message | CreateMessage, chatRequestOptions?: ChatRequestOptions) => {
       assistant.isEmptyThread.set(false);
       chat.append(message, chatRequestOptions);

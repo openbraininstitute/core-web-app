@@ -1,11 +1,6 @@
 'use client';
 
-import {
-  FullscreenExitOutlined,
-  FullscreenOutlined,
-  MinusOutlined,
-  PlusOutlined,
-} from '@ant-design/icons';
+import { PlusOutlined } from '@ant-design/icons';
 import { motion } from 'motion/react';
 import { type JSX, useEffect, useMemo, useState } from 'react';
 

@@ -117,12 +117,6 @@ class AiAssistantClass {
     });
   }
 
-  useMessages(): [messages: Message[], isLoading: boolean] {
-    const messages = this.initialMessages.useValue();
-    const isLoading = this.isLoadingMessages.useValue();
-    return [messages, isLoading];
-  }
-
   useHistory(): [
     history: AiAssistantHistory,
     hasMore: boolean,
@@ -220,7 +214,6 @@ export function useAiAssistant() {
   return {
     ...AiAssistant,
     useContext: AiAssistant.useContext.bind(AiAssistant),
-    useMessages: AiAssistant.useMessages.bind(AiAssistant),
     useHistory: AiAssistant.useHistory.bind(AiAssistant),
     renameThread: async (threadId: string, title: string) => {
       await AiAssistant.renameThread(threadId, title);

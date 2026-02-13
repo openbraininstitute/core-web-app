@@ -1,8 +1,9 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React from 'react';
-import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
+
 import { classNames } from '@/util/utils';
+
 import { IconGear } from '../../icons/gear';
 import { useAIToolsInvertedSelection } from '../../state';
 import { WaveLoader } from '../../wave-loader';
@@ -10,6 +11,8 @@ import { IconClose } from './icon-close';
 import ToolCard from './tool-card';
 import { IconChecked } from './tool-card/icon-checked';
 import { IconUnchecked } from './tool-card/icon-unchecked';
+
+import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 
 import styles from './tools-selector.module.css';
 
