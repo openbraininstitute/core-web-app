@@ -9,6 +9,8 @@ import type { EnsureResult } from '@/features/offline-auth-management/ensure-con
 type NotifyError = (params: { message: string; duration?: number; key?: string }) => void;
 
 type UseRunWithOfflineTokenConsentOptions = {
+  /** When true, use localStorage and in-memory prefetch cache. Default: false (no cache). */
+  useCache?: boolean;
   notifyError?: NotifyError;
   messages?: {
     denied?: string;
@@ -19,8 +21,8 @@ type UseRunWithOfflineTokenConsentOptions = {
 };
 
 export function useRunWithOfflineTokenConsent(options?: UseRunWithOfflineTokenConsentOptions) {
-  const { notifyError, messages = {} } = options ?? {};
-  const gate = useEnsureOfflineTokenConsent();
+  const { useCache, notifyError, messages = {} } = options ?? {};
+  const gate = useEnsureOfflineTokenConsent({ useCache });
 
   const runWithConsent = useCallback(
     async (args: { fn: () => Promise<unknown> }): Promise<unknown> => {

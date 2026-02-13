@@ -79,6 +79,7 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
       denied: 'Consent declined. Extraction was not started.',
       timeout: 'Consent timed out. Please grant consent to run the extraction.',
     },
+    useCache: false,
   });
 
   useEffect(() => {
