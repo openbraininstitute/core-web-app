@@ -6,6 +6,7 @@ import { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
 import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
 import ToolsProgress from './tools-progress';
 import ToolsComponents from './tools-components';
+import { CollapsibleMessage } from './collapsible-message';
 
 import { classNames } from '@/util/utils';
 import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
@@ -16,20 +17,27 @@ import styles from './message-item.module.css';
 interface MessageItemProps {
   className?: string;
   value: UIMessage;
+  status?: 'submitted' | 'streaming' | 'ready' | 'error';
+  isLastMessage?: boolean;
 }
 
 export const MessageItem = React.memo(RawMessageItem);
 
-function RawMessageItem({ className, value }: MessageItemProps) {
+function RawMessageItem({ className, value, status = 'ready', isLastMessage = false }: MessageItemProps) {
   const debug = useDebug();
   return (
     <div className={classNames(className, styles.messageItem)}>
-      <MessageChild value={value} debug={debug} />
+      <MessageChild value={value} debug={debug} status={status} isLastMessage={isLastMessage} />
     </div>
   );
 }
 
-function MessageChild({ value, debug }: { value: UIMessage; debug: boolean }): React.ReactNode {
+function MessageChild({ value, debug, status, isLastMessage }: { 
+  value: UIMessage; 
+  debug: boolean;
+  status: 'submitted' | 'streaming' | 'ready' | 'error';
+  isLastMessage: boolean;
+}): React.ReactNode {
   const { setPanelWidth } = usePanelWidth();
   const deferredParts = React.useDeferredValue(value.parts);
 
@@ -46,38 +54,46 @@ function MessageChild({ value, debug }: { value: UIMessage; debug: boolean }): R
         </div>
       );
     case 'assistant': {
+      const children = deferredParts.map((part, index) => {
+        if (part.type === 'text' && part.text !== '') {
+          return (
+            <GithubFlavorMarkdown
+              // eslint-disable-next-line react/no-array-index-key
+              key={`text-${index}`}
+              className={styles.markdown}
+              onLinkClicked={(external) => {
+                if (!external) setPanelWidth(MINIMAL_PANEL_SIZE);
+              }}
+            >
+              {part.text}
+            </GithubFlavorMarkdown>
+          );
+        }
+        if (part.type === 'tool-invocation') {
+          const { toolCallId } = part.toolInvocation;
+          return (
+            <div key={`tool-${toolCallId}`}>
+              <ToolsProgress part={part} />
+              <>
+                <ToolsComponents part={part} />
+                {/* This tool component has been disabled yet */}
+                {/* <ToolArticles message={value} /> */}
+              </>
+            </div>
+          );
+        }
+        return null;
+      });
+
       return (
         <div className={styles.assistant}>
-          {deferredParts.map((part, index) => {
-            if (part.type === 'text' && part.text !== '') {
-              return (
-                <GithubFlavorMarkdown
-                  // eslint-disable-next-line react/no-array-index-key
-                  key={`text-${index}`}
-                  className={styles.markdown}
-                  onLinkClicked={(external) => {
-                    if (!external) setPanelWidth(MINIMAL_PANEL_SIZE);
-                  }}
-                >
-                  {part.text}
-                </GithubFlavorMarkdown>
-              );
-            }
-            if (part.type === 'tool-invocation') {
-              const { toolCallId } = part.toolInvocation;
-              return (
-                <div key={`tool-${toolCallId}`}>
-                  <ToolsProgress part={part} />
-                  <>
-                    <ToolsComponents part={part} />
-                    {/* This tool component has been disabled yet */}
-                    {/* <ToolArticles message={value} /> */}
-                  </>
-                </div>
-              );
-            }
-            return null;
-          })}
+          {isLastMessage ? (
+            <CollapsibleMessage message={value} status={status}>
+              {children}
+            </CollapsibleMessage>
+          ) : (
+            children
+          )}
           {debug && (
             <button
               type="button"

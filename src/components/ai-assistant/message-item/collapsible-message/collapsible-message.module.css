@@ -1,0 +1,111 @@
+.thinkingContainer {
+  margin: 0.75rem 0 1rem 0;
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
+  border-radius: 8px;
+  background: var(--thinking-bg, rgba(0, 0, 0, 0.02));
+  overflow: hidden;
+  transition: all 0.2s ease;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.thinkingContainer:hover {
+  border-color: var(--border-hover, rgba(0, 0, 0, 0.15));
+  background: var(--thinking-bg-hover, rgba(0, 0, 0, 0.03));
+}
+
+.thinkingButton {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background 0.15s ease;
+}
+
+.thinkingButton:hover {
+  background: var(--thinking-button-hover, rgba(0, 0, 0, 0.04));
+}
+
+.thinkingButton:active {
+  background: var(--thinking-button-active, rgba(0, 0, 0, 0.06));
+}
+
+.thinkingHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--text-tertiary, #888);
+  transition: transform 0.2s ease;
+}
+
+.chevron[data-collapsed="false"] {
+  transform: rotate(180deg);
+}
+
+.thinkingLabel {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary, #666);
+  letter-spacing: 0.01em;
+}
+
+.thinkingContent {
+  padding: 0 0.875rem 0.875rem 0.875rem;
+  border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+  animation: expandContent 0.25s ease-out;
+}
+
+.fadeOut {
+  animation: fadeOutCollapse 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes expandContent {
+  from {
+    opacity: 0;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 5000px;
+    padding-top: 0;
+    padding-bottom: 0.875rem;
+  }
+}
+
+@keyframes fadeOutCollapse {
+  0% {
+    opacity: 1;
+    max-height: 5000px;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-4px);
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+}
