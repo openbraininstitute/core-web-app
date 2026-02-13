@@ -1,13 +1,15 @@
-import z from "zod";
-import type { TEntityTypeDict } from "@/api/entitycore/types/entity-type";
-import type { AssetLegacyMeta } from "@/api/entitycore/types/shared/legacy";
-import type { PaginationFilter } from "@/api/entitycore/types/shared/request";
+import z from 'zod';
+
 // biome-ignore lint/style/useImportType: biome hallucination
-import { EntityCoreConfiguration } from "@/entity-configuration/domain";
-import type { Prettify } from "@/utils/type";
+import { EntityCoreConfiguration } from '@/entity-configuration/domain';
+
+import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
+import type { AssetLegacyMeta } from '@/api/entitycore/types/shared/legacy';
+import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
+import type { Prettify } from '@/utils/type';
 
 export type EntityCoreDataType =
-  (typeof EntityCoreConfiguration)[keyof typeof EntityCoreConfiguration]["type"];
+  (typeof EntityCoreConfiguration)[keyof typeof EntityCoreConfiguration]['type'];
 
 export type EntityCoreIdentifiable = {
   id: string;
@@ -18,9 +20,9 @@ export type EntityCoreType = {
   type: TEntityTypeDict;
 };
 
-export type ActivityType = {
+export type TActivityType = {
   // TODO: derive from activity type, same as done with EntityTypeValue
-  type: "simulation_execution" | "simulation_generation";
+  type: 'simulation_execution' | 'simulation_generation';
 };
 
 export type EntityCoreOwnership = {
@@ -64,50 +66,37 @@ interface Protocol {
   name: string;
   cell_morphology_protocol_id: string;
 }
-export interface IProtocol
-  extends Protocol,
-    Timestamps,
-    EntityCoreIdentifiable {}
+export interface IProtocol extends Protocol, Timestamps, EntityCoreIdentifiable {}
 
 export const EntityTypeSchema = z.string() as z.ZodSchema<EntityCoreDataType>;
 
 export const CellMorphologyProtocolDesignSchema = z.enum([
-  "electron_microscopy",
-  "cell_patch",
-  "fluorophore",
-  "topological_synthesis",
+  'electron_microscopy',
+  'cell_patch',
+  'fluorophore',
+  'topological_synthesis',
 ]);
 
 export const CellMorphologyGenerationTypeSchema = z.enum([
-  "digital_reconstruction",
-  "modified_reconstruction",
-  "computationally_synthesized",
-  "placeholder",
+  'digital_reconstruction',
+  'modified_reconstruction',
+  'computationally_synthesized',
+  'placeholder',
 ]);
 
-export const SlicingDirectionTypeSchema = z.enum([
-  "coronal",
-  "sagittal",
-  "horizontal",
-  "custom",
-]);
+export const SlicingDirectionTypeSchema = z.enum(['coronal', 'sagittal', 'horizontal', 'custom']);
 
-export const RepairPipelineTypeSchema = z.enum([
-  "raw",
-  "curated",
-  "unraveled",
-  "repaired",
-]);
+export const RepairPipelineTypeSchema = z.enum(['raw', 'curated', 'unraveled', 'repaired']);
 
 export type ModifiedMorphologyMethodType = {
-  type: "cloned" | "mix_and_match" | "mousified" | "ratified";
+  type: 'cloned' | 'mix_and_match' | 'mousified' | 'ratified';
 };
 
 export const ModifiedMorphologyMethodTypeSchema = z.enum([
-  "cloned",
-  "mix_and_match",
-  "mousified",
-  "ratified",
+  'cloned',
+  'mix_and_match',
+  'mousified',
+  'ratified',
 ]);
 
 export interface PointLocationBase {
@@ -118,35 +107,34 @@ export interface PointLocationBase {
 
 export interface IBrainLocation extends PointLocationBase {}
 export const MeasurementStatistic = {
-  mean: "mean",
-  median: "median",
-  mode: "mode",
-  variance: "variance",
-  data_point: "data_point",
-  sample_size: "sample_size",
-  standard_error: "standard_error",
-  standard_deviation: "standard_deviation",
-  raw: "raw",
-  minimum: "minimum",
-  maximum: "maximum",
-  sum: "sum",
+  mean: 'mean',
+  median: 'median',
+  mode: 'mode',
+  variance: 'variance',
+  data_point: 'data_point',
+  sample_size: 'sample_size',
+  standard_error: 'standard_error',
+  standard_deviation: 'standard_deviation',
+  raw: 'raw',
+  minimum: 'minimum',
+  maximum: 'maximum',
+  sum: 'sum',
 } as const;
 
 export type TMeasurementStatistic =
   (typeof MeasurementStatistic)[keyof typeof MeasurementStatistic];
 
 export const MeasurementUnit = {
-  dimensionless: "dimensionless",
-  linear_density__1_um: "1/μm",
-  volume_density__1_mm3: "1/mm³",
-  linear__um: "μm",
-  area__um2: "μm²",
-  volume__mm3: "μm³",
-  angle__radian: "radian",
+  dimensionless: 'dimensionless',
+  linear_density__1_um: '1/μm',
+  volume_density__1_mm3: '1/mm³',
+  linear__um: 'μm',
+  area__um2: 'μm²',
+  volume__mm3: 'μm³',
+  angle__radian: 'radian',
 } as const;
 
-export type TMeasurementUnit =
-  (typeof MeasurementUnit)[keyof typeof MeasurementUnit];
+export type TMeasurementUnit = (typeof MeasurementUnit)[keyof typeof MeasurementUnit];
 
 export type MeasurementBase = {
   id: number;
@@ -187,13 +175,13 @@ type RoleBase = {
 interface IRole extends RoleBase, Timestamps, EntityCoreIdentifiable {}
 
 export interface IOrganization extends Timestamps, EntityCoreIdentifiable {
-  type: "organization";
+  type: 'organization';
   pref_label: string;
   alternative_name?: string | null;
 }
 
 export interface IPerson extends Timestamps, EntityCoreIdentifiable {
-  type: "person";
+  type: 'person';
   given_name: string | null;
   family_name: string | null;
   pref_label: string;
@@ -202,15 +190,15 @@ export interface IPerson extends Timestamps, EntityCoreIdentifiable {
 export interface IConsortium extends Timestamps, EntityCoreIdentifiable {
   pref_label: string;
   alternative_name: string;
-  type: "consortium";
+  type: 'consortium';
 }
 
 export type Agent = IPerson | IOrganization | IConsortium;
 
 export const AgentType = {
-  Person: "person",
-  Organization: "organization",
-  Consortium: "consortium",
+  Person: 'person',
+  Organization: 'organization',
+  Consortium: 'consortium',
 } as const;
 
 export type TAgentType = (typeof AgentType)[keyof typeof AgentType];
@@ -221,48 +209,48 @@ export interface IContributor extends Timestamps, EntityCoreIdentifiable {
 }
 
 enum AssetStatus {
-  CREATED = "created",
-  DELETED = "deleted",
+  CREATED = 'created',
+  DELETED = 'deleted',
 }
 
 export enum AssetLabel {
-  brain_atlas_annotation = "brain_atlas_annotation",
-  brain_atlas_region_mesh = "brain_atlas_region_mesh",
-  campaign_generation_config = "campaign_generation_config",
-  campaign_summary = "campaign_summary",
-  cell_composition_summary = "cell_composition_summary",
-  cell_composition_volumes = "cell_composition_volumes",
-  cell_surface_mesh = "cell_surface_mesh",
-  custom_node_sets = "custom_node_sets",
-  emodel_optimization_output = "emodel_optimization_output",
-  morphology = "morphology",
-  neuron_hoc = "neuron_hoc",
-  neuron_mechanisms = "neuron_mechanisms",
-  nwb = "nwb",
-  replay_spikes = "replay_spikes",
-  simulation_designer_image = "simulation_designer_image",
-  simulation_generation_config = "simulation_generation_config",
-  single_neuron_simulation_data = "single_neuron_simulation_data",
-  single_neuron_synaptome_config = "single_neuron_synaptome_config",
-  single_neuron_synaptome_simulation_data = "single_neuron_synaptome_simulation_data",
-  sonata_circuit = "sonata_circuit",
-  sonata_simulation_config = "sonata_simulation_config",
-  spike_report = "spike_report",
-  validation_result_details = "validation_result_details",
-  validation_result_figure = "validation_result_figure",
-  voltage_report = "voltage_report",
-  voxel_densities = "voxel_densities",
-  network_stats_a = "network_stats_a",
-  circuit_connectivity_matrices = "circuit_connectivity_matrices",
-  node_stats = "node_stats",
-  network_stats_b = "network_stats_b",
-  circuit_visualization = "circuit_visualization",
-  compressed_sonata_circuit = "compressed_sonata_circuit",
-  ion_channel_model_figure = "ion_channel_model_figure",
-  ion_channel_model_figure_summary_json = "ion_channel_model_figure_summary_json",
-  jupyter_notebook = "jupyter_notebook",
-  ion_channel_model_thumbnail = "ion_channel_model_thumbnail",
-  circuit_extraction_config = "circuit_extraction_config",
+  brain_atlas_annotation = 'brain_atlas_annotation',
+  brain_atlas_region_mesh = 'brain_atlas_region_mesh',
+  campaign_generation_config = 'campaign_generation_config',
+  campaign_summary = 'campaign_summary',
+  cell_composition_summary = 'cell_composition_summary',
+  cell_composition_volumes = 'cell_composition_volumes',
+  cell_surface_mesh = 'cell_surface_mesh',
+  custom_node_sets = 'custom_node_sets',
+  emodel_optimization_output = 'emodel_optimization_output',
+  morphology = 'morphology',
+  neuron_hoc = 'neuron_hoc',
+  neuron_mechanisms = 'neuron_mechanisms',
+  nwb = 'nwb',
+  replay_spikes = 'replay_spikes',
+  simulation_designer_image = 'simulation_designer_image',
+  simulation_generation_config = 'simulation_generation_config',
+  single_neuron_simulation_data = 'single_neuron_simulation_data',
+  single_neuron_synaptome_config = 'single_neuron_synaptome_config',
+  single_neuron_synaptome_simulation_data = 'single_neuron_synaptome_simulation_data',
+  sonata_circuit = 'sonata_circuit',
+  sonata_simulation_config = 'sonata_simulation_config',
+  spike_report = 'spike_report',
+  validation_result_details = 'validation_result_details',
+  validation_result_figure = 'validation_result_figure',
+  voltage_report = 'voltage_report',
+  voxel_densities = 'voxel_densities',
+  network_stats_a = 'network_stats_a',
+  circuit_connectivity_matrices = 'circuit_connectivity_matrices',
+  node_stats = 'node_stats',
+  network_stats_b = 'network_stats_b',
+  circuit_visualization = 'circuit_visualization',
+  compressed_sonata_circuit = 'compressed_sonata_circuit',
+  ion_channel_model_figure = 'ion_channel_model_figure',
+  ion_channel_model_figure_summary_json = 'ion_channel_model_figure_summary_json',
+  jupyter_notebook = 'jupyter_notebook',
+  ion_channel_model_thumbnail = 'ion_channel_model_thumbnail',
+  circuit_extraction_config = 'circuit_extraction_config',
 }
 
 type AssetBase = {
@@ -319,56 +307,56 @@ export type DirectoryListContent = {
 };
 
 // mirror Python Enums
-export const SexEnum = z.enum(["male", "female", "unknown"], {
-  message: "Sex must be male, female, or unknown",
+export const SexEnum = z.enum(['male', 'female', 'unknown'], {
+  message: 'Sex must be male, female, or unknown',
 });
 export type TSex = z.infer<typeof SexEnum>;
 
-export const AgePeriodEnum = z.enum(["prenatal", "postnatal", "unknown"], {
-  message: "Age period must be prenatal, postnatal, or unknown",
+export const AgePeriodEnum = z.enum(['prenatal', 'postnatal', 'unknown'], {
+  message: 'Age period must be prenatal, postnatal, or unknown',
 });
 export type TAgePeriod = z.infer<typeof AgePeriodEnum>;
 
 export const Sex = {
   Male: {
-    key: "male",
-    label: "Male",
+    key: 'male',
+    label: 'Male',
   },
   Female: {
-    key: "female",
-    label: "Female",
+    key: 'female',
+    label: 'Female',
   },
   Unknown: {
-    key: "unknown",
-    label: "Unknown",
+    key: 'unknown',
+    label: 'Unknown',
   },
 } as const;
 
 export const SexDictionary = Object.fromEntries(
-  Object.entries(Sex).map(([name, value]) => [name, value.key]),
+  Object.entries(Sex).map(([name, value]) => [name, value.key])
 ) as {
-  [K in keyof typeof Sex]: (typeof Sex)[K]["key"];
+  [K in keyof typeof Sex]: (typeof Sex)[K]['key'];
 };
 
 export const AgePeriod = {
   Prenatal: {
-    key: "prenatal",
-    label: "Prenatal",
+    key: 'prenatal',
+    label: 'Prenatal',
   },
   Postnatal: {
-    key: "postnatal",
-    label: "Postnatal",
+    key: 'postnatal',
+    label: 'Postnatal',
   },
   Unknown: {
-    key: "unknown",
-    label: "Unknown",
+    key: 'unknown',
+    label: 'Unknown',
   },
 } as const;
 
 export const AgePeriodDictionary = Object.fromEntries(
-  Object.entries(AgePeriod).map(([name, value]) => [name, value.key]),
+  Object.entries(AgePeriod).map(([name, value]) => [name, value.key])
 ) as {
-  [K in keyof typeof AgePeriod]: (typeof AgePeriod)[K]["key"];
+  [K in keyof typeof AgePeriod]: (typeof AgePeriod)[K]['key'];
 };
 
 type Strain = {
@@ -385,10 +373,7 @@ type SpeciesBase = {
   taxonomy_id: string;
 };
 
-export interface ISpecies
-  extends SpeciesBase,
-    Timestamps,
-    EntityCoreIdentifiable {}
+export interface ISpecies extends SpeciesBase, Timestamps, EntityCoreIdentifiable {}
 
 export interface NestedSpecies extends SpeciesBase, EntityCoreIdentifiable {}
 

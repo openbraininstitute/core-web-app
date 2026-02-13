@@ -1,8 +1,8 @@
 import { InfoCircleOutlined } from '@ant-design/icons';
 
 import {
-  EntitycoreExecutionStatus,
-  type TEntitycoreExecutionStatus,
+  ActivityExecutionStatus,
+  type TActivityExecutionStatus,
 } from '@/api/entitycore/types/entities/execution';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
@@ -11,14 +11,14 @@ export function StatusBadge({
   status,
   details,
 }: {
-  status?: TEntitycoreExecutionStatus;
+  status?: TActivityExecutionStatus;
   details?: string;
 }) {
-  const color = status ? executionStatusColorMap[status as EntitycoreExecutionStatus] : '#fafafa';
+  const color = status ? executionStatusColorMap[status as ActivityExecutionStatus] : '#fafafa';
   const showSpinner =
     status &&
-    [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING].includes(
-      status as EntitycoreExecutionStatus
+    [ActivityExecutionStatus.PENDING, ActivityExecutionStatus.RUNNING].includes(
+      status as ActivityExecutionStatus
     );
 
   return (

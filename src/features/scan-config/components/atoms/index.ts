@@ -12,7 +12,7 @@ import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circu
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulationResult } from '@/api/entitycore/queries/simulation/circuit-simulation-result';
 import { EntityTypeDict, type IMEModel, type TEntityTypeDict } from '@/api/entitycore/types';
-import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import { ActivityExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import { resolveExecutions } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { hasSimConfigAsset } from '@/entity-configuration/domain/simulation/utils';
 import { getLatestSimExecStatus } from '@/features/scan-config/components/utils';
@@ -21,14 +21,14 @@ import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/a
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import type { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/circuit-simulation-execution';
 import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
+import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
 import type { SimExecStatusMap } from '@/features/scan-config/types';
 import type { WorkspaceContext } from '@/types/common';
 
 const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
   ({ simulationId, context }: { simulationId: string; context: WorkspaceContext }) =>
-    atom<Promise<ICircuitSimulationExecution>>(async () => {
+    atom<Promise<IExecutionActivity>>(async () => {
       const simulationExecutionFilters = { used__id: simulationId };
       const res = await getCircuitSimulationExecutions({
         filters: simulationExecutionFilters,
@@ -58,7 +58,7 @@ export const simExecRemoteStatusMapAtomFamily = atomFamilyWithExpiration(
         allSimIds: simulationIds,
       });
 
-      const executionsGrouped = simExecutions.reduce<Map<string, ICircuitSimulationExecution[]>>(
+      const executionsGrouped = simExecutions.reduce<Map<string, IExecutionActivity[]>>(
         (map, exec) => map.set(exec.used[0].id, [...(map.get(exec.used[0].id) ?? []), exec]),
         new Map()
       );
@@ -93,7 +93,7 @@ export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
 
     const localStatusMapAtom = atom<SimExecStatusMap>(new Map());
 
-    return atom<Promise<SimExecStatusMap>, [string, EntitycoreExecutionStatus], void>(
+    return atom<Promise<SimExecStatusMap>, [string, ActivityExecutionStatus], void>(
       async (get) => {
         const simulationsAtom = simulationsByCampaignIdAtomFamily({
           campaignId,
@@ -110,7 +110,7 @@ export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
 
           // Simple validity check: if there is no sonata sim config asset we set error status.
           if (!hasSimConfigAsset(sim)) {
-            return map.set(sim.id, EntitycoreExecutionStatus.ERROR);
+            return map.set(sim.id, ActivityExecutionStatus.ERROR);
           }
 
           // If both statuses are set we take the latest possible one,
@@ -119,7 +119,7 @@ export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
           const status =
             remoteStatus && localStatus
               ? getLatestSimExecStatus(remoteStatus, localStatus)
-              : (localStatus ?? remoteStatus ?? EntitycoreExecutionStatus.CREATED);
+              : (localStatus ?? remoteStatus ?? ActivityExecutionStatus.CREATED);
 
           return map.set(sim.id, status);
         }, new Map());
@@ -129,7 +129,7 @@ export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
       (get, set, simId, status) => {
         const newStatusMap = new Map(get(localStatusMapAtom)).set(
           simId,
-          status as EntitycoreExecutionStatus
+          status as ActivityExecutionStatus
         );
         set(localStatusMapAtom, newStatusMap);
       }

@@ -1,36 +1,40 @@
 /* eslint-disable no-nested-ternary */
 
-import { useMemo, useState, useEffect } from 'react';
 import { LoadingOutlined } from '@ant-design/icons';
-import { useAtom } from 'jotai';
 import {
   queryOptions,
   experimental_streamedQuery as streamedQuery,
   useQuery,
 } from '@tanstack/react-query';
+import { useAtom } from 'jotai';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
-  CONFIGURATION_FORM_STATE_KEY,
-  GenerativeFromAtomFamily,
-  IonChannelModelingSharedStateFamily,
-} from '@/ui/segments/workflows/build/ion-channel-build/helpers';
-
-import { isFormValid } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers/validate-form';
-import { FileViewer } from '@/ui/segments/workflows/build/ion-channel-build/sections/file-viewer';
-import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
-import { getStatusColor } from '@/ui/segments/activity-execution/color-map';
+  ActivityExecutionStatus,
+  type IExecutionActivity,
+  type TActivityExecutionStatus,
+} from '@/api/entitycore/types/entities/execution';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { keyBuilder } from '@/ui/use-query-keys/third-parties';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   build as buildIonChannel,
   DataType,
   MessageType,
 } from '@/api/small-scale-simulator/ion-channel/build';
+import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Badge } from '@/ui/molecules/badge';
+import { Button } from '@/ui/molecules/button';
 import { Card, CardTitle } from '@/ui/molecules/card';
 import { Skeleton } from '@/ui/molecules/skeleton';
-import { Button } from '@/ui/molecules/button';
-import { Badge } from '@/ui/molecules/badge';
+import { getStatusColor } from '@/ui/segments/activity-execution/color-map';
+import {
+  CONFIGURATION_FORM_STATE_KEY,
+  GenerativeFromAtomFamily,
+  IonChannelModelingSharedStateFamily,
+} from '@/ui/segments/workflows/build/ion-channel-build/helpers';
+import { isFormValid } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers/validate-form';
+import { FileViewer } from '@/ui/segments/workflows/build/ion-channel-build/sections/file-viewer';
+import { keyBuilder } from '@/ui/use-query-keys/third-parties';
 import { cn } from '@/utils/css-class';
 import {
   createAsyncIterableStream,
@@ -39,19 +43,14 @@ import {
   messageGenerator,
 } from '@/utils/streamutils';
 
-import type { EntityCoreResource, IAsset } from '@/api/entitycore/types/shared/global';
-import type { TStreamMessage } from '@/api/small-scale-simulator/ion-channel/build';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import type {
   IonChannelModelingCampaign,
   IonChannelModelingConfig,
 } from '@/api/entitycore/types/entities/ion-channel-modeling-campaign';
-import type { TEntityTypeDict } from '@/api/entitycore/types';
-import {
-  EntitycoreExecutionStatus,
-  type IEntitycoreExecution,
-  type TEntitycoreExecutionStatus,
-} from '@/api/entitycore/types/entities/execution';
+import type { EntityCoreResource, IAsset } from '@/api/entitycore/types/shared/global';
+import type { TStreamMessage } from '@/api/small-scale-simulator/ion-channel/build';
 
 type IonChannelModelFigureSummaryJson = {
   [key: string]: {
@@ -70,14 +69,14 @@ type IonChannelModelProtocolGroup = {
 
 type IonChannelBuildingStreamDataMessage = TStreamMessage<{
   campaign?: IonChannelModelingCampaign;
-  execution?: IEntitycoreExecution;
+  execution?: IExecutionActivity;
   config?: IonChannelModelingConfig;
   model?: IonChannelModel;
 }>;
 
 type Build = {
   executionId: string;
-  status: TEntitycoreExecutionStatus;
+  status: TActivityExecutionStatus;
   configEntity: Partial<EntityCoreResource>;
   modelEntity?: Partial<EntityCoreResource>;
   executionStatus?: string;
@@ -205,8 +204,8 @@ export function Output({ sessionId }: { sessionId: string | null }) {
   }, [data]);
 
   const isBuilding =
-    currentStatus === EntitycoreExecutionStatus.RUNNING ||
-    currentStatus === EntitycoreExecutionStatus.PENDING;
+    currentStatus === ActivityExecutionStatus.RUNNING ||
+    currentStatus === ActivityExecutionStatus.PENDING;
   const hasBuilds = builds.length > 0;
   const hasOutputForSelectedBuild = selectedBuild?.modelEntity !== undefined;
 
@@ -294,7 +293,7 @@ export function Output({ sessionId }: { sessionId: string | null }) {
           </Card>
         ) : (
           builds.map((build, index) => {
-            const statusColor = getStatusColor(build.status as EntitycoreExecutionStatus);
+            const statusColor = getStatusColor(build.status as ActivityExecutionStatus);
             const isSelected = selectedBuildIndex === index;
 
             return (
@@ -316,8 +315,8 @@ export function Output({ sessionId }: { sessionId: string | null }) {
                 <CardTitle className="flex items-center justify-between gap-2">
                   <div className="text-primary-9 font-bold">Build {index}</div>
                   <div className="flex items-center gap-2">
-                    {(build.status === EntitycoreExecutionStatus.RUNNING ||
-                      build.status === EntitycoreExecutionStatus.PENDING) && (
+                    {(build.status === ActivityExecutionStatus.RUNNING ||
+                      build.status === ActivityExecutionStatus.PENDING) && (
                       <LoadingOutlined
                         spin
                         className="text-lg"

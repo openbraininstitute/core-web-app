@@ -1,4 +1,5 @@
 import { CloseCircleFilled } from '@ant-design/icons';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Image as AntdImage, Empty, Progress } from 'antd';
 import { isNumber } from 'es-toolkit/compat';
 import NextImage from 'next/image';
@@ -8,6 +9,7 @@ import { match, P } from 'ts-pattern';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
 import { trackDownloadProgress } from '@/utils/track-download-progress';
 
@@ -39,6 +41,11 @@ interface Props {
   optimized?: boolean; // whether to use next/image optimization or not (default: true)
 }
 
+interface ImageCacheEntry {
+  blob: Blob;
+  dimensions: { width: number; height: number };
+}
+
 export function ProgressiveEntityImage({
   entityId,
   asset,
@@ -55,22 +62,10 @@ export function ProgressiveEntityImage({
   optimized = true,
 }: Props) {
   const context = useParams<WorkspaceContext>();
-  const [status, setStatus] = useState<'idle' | 'loading' | 'loaded' | 'error'>('idle'); // idle, loading, loaded, error
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-
+  const queryClient = useQueryClient();
   const [downloadProgress, setDownloadProgress] = useState(0);
-  const [error, setError] = useState<{
-    message: string;
-    type: 'download' | 'missing-asset';
-  } | null>(null);
-
-  const [calculatedDimensions, setCalculatedDimensions] = useState<{
-    width: number;
-    height: number;
-  } | null>(null);
-
-  const imageRef = useRef<HTMLImageElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const imageRef = useRef<HTMLImageElement | null>(null);
   const [ratioHeight, setRatioHeight] = useState(maxHeight as number);
 
   const computeResponsiveSize = useCallback(
@@ -95,81 +90,83 @@ export function ProgressiveEntityImage({
     [maxWidth, maxHeight]
   );
 
-  const downloadImage = useCallback(
-    async () => {
-      if (!asset) {
-        setStatus('error');
-        setError({
-          message: 'The asset for this entity is missing, please contact support.',
-          type: 'missing-asset',
-        });
-        return;
-      }
-      try {
-        setStatus('loading');
-        setError(null);
-        setDownloadProgress(0);
+  const queryKey = keyBuilder.asset({
+    assetId: asset?.id ?? '',
+    entityId,
+    assetPath,
+    assetType: EntityTypeDict.Circuit,
+    context,
+    asRawResponse: true,
+  });
 
-        const response = await trackDownloadProgress(
-          () =>
-            downloadAsset({
-              entityId,
-              assetPath,
-              entityType: EntityTypeDict.Circuit,
-              id: asset?.id!,
-              ctx: context,
-              asRawResponse: true,
-            }),
-          (progress) => {
-            setDownloadProgress(progress);
-          }
-        );
+  const {
+    data: cacheEntry,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery<ImageCacheEntry>({
+    queryKey,
+    queryFn: async () => {
+      setDownloadProgress(0);
 
-        const blob = new Blob(response, { type: 'image/webp' });
-        const url = URL.createObjectURL(blob);
+      const response = await trackDownloadProgress(
+        () =>
+          downloadAsset({
+            entityId,
+            assetPath,
+            entityType: EntityTypeDict.Circuit,
+            id: asset?.id!,
+            ctx: context,
+            asRawResponse: true,
+          }),
+        (progress) => {
+          setDownloadProgress(progress);
+        }
+      );
 
+      const blob = new Blob(response as BlobPart[], { type: 'image/webp' });
+      const tempUrl = URL.createObjectURL(blob);
+      return new Promise<ImageCacheEntry>((resolve, reject) => {
         const tempImg = new Image();
         tempImg.onload = () => {
           const dimensions = computeResponsiveSize(tempImg.naturalWidth, tempImg.naturalHeight);
-
-          setImageUrl(url);
-          setStatus('loaded');
-          setCalculatedDimensions(dimensions);
+          URL.revokeObjectURL(tempUrl);
+          resolve({ blob, dimensions });
         };
-        tempImg.src = url;
-      } catch (err: any) {
-        setError({
-          message: 'message' in err ? (err as { message: string }).message : 'Unknown error',
-          type: 'download',
-        });
-        setStatus('error');
-      }
+        tempImg.onerror = () => {
+          URL.revokeObjectURL(tempUrl);
+          reject(new Error('Failed to decode image'));
+        };
+        tempImg.src = tempUrl;
+      });
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [entityId, asset?.id, context.virtualLabId, context.projectId, assetPath, computeResponsiveSize]
-  );
+    enabled: !!asset,
+    staleTime: Infinity,
+    retry: false,
+  });
 
-  const retryDownload = () => {
-    setCalculatedDimensions(null);
-    downloadImage();
-  };
-
-  useEffect(() => {
-    downloadImage();
-  }, [downloadImage]);
+  // create a blob URL from the cached Blob for this mount
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!cacheEntry?.blob) {
+      setImageUrl(null);
+      return;
+    }
+
+    const url = URL.createObjectURL(cacheEntry.blob);
+    setImageUrl(url);
+
     return () => {
-      if (imageUrl) {
-        URL.revokeObjectURL(imageUrl);
-      }
+      URL.revokeObjectURL(url);
     };
-  }, [imageUrl]);
+  }, [cacheEntry?.blob]);
 
+  // responsive height calculation
   useEffect(() => {
     const updateHeight = () => {
       const aspectRatio =
-        Number(calculatedDimensions?.width) / Number(calculatedDimensions?.height);
+        Number(cacheEntry?.dimensions?.width) / Number(cacheEntry?.dimensions?.height);
       if (containerRef.current) {
         const newWidth = containerRef.current.offsetWidth;
         setRatioHeight(newWidth / aspectRatio!);
@@ -182,7 +179,23 @@ export function ProgressiveEntityImage({
     return () => {
       window.removeEventListener('resize', updateHeight);
     };
-  }, [calculatedDimensions]);
+  }, [cacheEntry?.dimensions]);
+
+  const missingAsset = !asset;
+  const status = missingAsset
+    ? 'missing-asset'
+    : isLoading
+      ? 'loading'
+      : error
+        ? 'error'
+        : imageUrl
+          ? 'loaded'
+          : 'idle';
+
+  const retryDownload = () => {
+    queryClient.removeQueries({ queryKey });
+    refetch();
+  };
 
   return match({ status, asset })
     .with({ status: 'idle' }, () => (
@@ -191,6 +204,24 @@ export function ProgressiveEntityImage({
         style={{ width, height }}
       >
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="" />
+      </div>
+    ))
+    .with({ status: 'missing-asset' }, () => (
+      <div
+        className={cn('flex flex-col items-center justify-center border border-red-50 bg-red-50')}
+        style={{ width, height }}
+      >
+        <div className="space-y-4 text-center">
+          <CloseCircleFilled allowTransparency className="mx-auto text-5xl text-rose-700" />
+          <div className="space-y-2">
+            <p className={cn('text-base font-bold text-red-600', clsx?.error?.text)}>
+              Failed to load image
+            </p>
+            <p className={cn('text-xs text-red-500', clsx?.error?.text)}>
+              The asset for this entity is missing, please contact support.
+            </p>
+          </div>
+        </div>
       </div>
     ))
     .with({ status: 'loading' }, () => (
@@ -223,20 +254,20 @@ export function ProgressiveEntityImage({
             <p className={cn('text-base font-bold text-red-600', clsx?.error?.text)}>
               Failed to load image
             </p>
-            <p className={cn('text-xs text-red-500', clsx?.error?.text)}>{error?.message}</p>
+            <p className={cn('text-xs text-red-500', clsx?.error?.text)}>
+              {error instanceof Error ? error.message : 'Unknown error'}
+            </p>
           </div>
-          {error?.type === 'download' && (
-            <button
-              type="button"
-              onClick={retryDownload}
-              className={cn(
-                'rounded bg-red-500 px-4 py-2 text-sm text-white transition-colors hover:bg-red-600',
-                clsx?.error?.text
-              )}
-            >
-              Retry Download
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={retryDownload}
+            className={cn(
+              'rounded bg-red-500 px-4 py-2 text-sm text-white transition-colors hover:bg-red-600',
+              clsx?.error?.text
+            )}
+          >
+            Retry Download
+          </button>
         </div>
       </div>
     ))
@@ -266,7 +297,7 @@ export function ProgressiveEntityImage({
                 alt={`${value.path}`}
                 style={{
                   aspectRatio:
-                    Number(calculatedDimensions?.width) / Number(calculatedDimensions?.height),
+                    Number(cacheEntry?.dimensions?.width) / Number(cacheEntry?.dimensions?.height),
                 }}
                 objectFit="contain"
                 className="h-full w-full transition-all duration-200 ease-in-out"
@@ -277,7 +308,7 @@ export function ProgressiveEntityImage({
                 alt={`${value.path}`}
                 style={{
                   aspectRatio:
-                    Number(calculatedDimensions?.width) / Number(calculatedDimensions?.height),
+                    Number(cacheEntry?.dimensions?.width) / Number(cacheEntry?.dimensions?.height),
                 }}
                 rootClassName="w-full h-full flex items-center justify-center [&_.ant-image-preview-mask]:bg-white!"
                 className="h-full w-full object-contain transition-all duration-200 ease-in-out"

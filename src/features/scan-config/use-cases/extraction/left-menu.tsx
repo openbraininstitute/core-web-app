@@ -2,8 +2,8 @@ import { RightOutlined } from '@ant-design/icons';
 import { Checkbox, ConfigProvider } from 'antd';
 
 import {
-  EntitycoreExecutionStatus,
-  type TEntitycoreExecutionStatus,
+  ActivityExecutionStatus,
+  type TActivityExecutionStatus,
 } from '@/api/entitycore/types/entities/execution';
 import { ScanParams } from '@/features/scan-config/components/scan-params';
 import { StatusBadge } from '@/features/scan-config/status-badge';
@@ -13,7 +13,7 @@ import type { ICircuitExtractionConfig } from '@/api/entitycore/types/entities/c
 
 type Props = {
   config: ICircuitExtractionConfig;
-  execStatus?: TEntitycoreExecutionStatus;
+  execStatus?: TActivityExecutionStatus;
   onSelect: () => void;
   selected?: boolean;
   onSelectedForExtractionChange: (configId: string, selected: boolean) => void;
@@ -30,12 +30,11 @@ export function ExtractionConfigsLeftMenu({
   selectedForExtraction,
   selectionDisabled,
 }: Props) {
-  const color =
-    executionStatusColorMap[execStatus ?? EntitycoreExecutionStatus.CREATED] ?? '#8c8c8c';
+  const color = executionStatusColorMap[execStatus ?? ActivityExecutionStatus.CREATED] ?? '#8c8c8c';
   const isSelectable =
     !execStatus ||
-    execStatus === EntitycoreExecutionStatus.CREATED ||
-    execStatus === EntitycoreExecutionStatus.ERROR;
+    execStatus === ActivityExecutionStatus.CREATED ||
+    execStatus === ActivityExecutionStatus.ERROR;
 
   return (
     <div className="flex-none">

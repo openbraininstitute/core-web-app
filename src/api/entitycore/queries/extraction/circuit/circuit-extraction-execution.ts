@@ -1,13 +1,14 @@
-import type {
-  ICircuitExtractionExecution,
-  ICircuitExtractionExecutionFilter,
-  TCreateCircuitExtractionExecution,
-  TUpdateCircuitExtractionExecution,
-} from '@/api/entitycore/types/entities/circuit-extraction-execution';
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
-import type { WorkspaceContext } from '@/types/common';
 import { compactRecord } from '@/utils/dictionary';
+
+import type {
+  IExecutionActivity,
+  IExecutionActivityFilter,
+  TCreateCircuitExtractionExecution,
+  TUpdateExecutionActivity,
+} from '@/api/entitycore/types/entities/execution';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/circuit-extraction-execution';
 
@@ -30,7 +31,7 @@ export async function getCircuitExtractionExecution({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<ICircuitExtractionExecution>(`${baseUri}/${id}`, {
+  return await api.get<IExecutionActivity>(`${baseUri}/${id}`, {
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
@@ -57,11 +58,11 @@ export async function getCircuitExtractionExecutions({
   context,
 }: {
   withFacets?: boolean;
-  filters?: Partial<ICircuitExtractionExecutionFilter>;
+  filters?: Partial<IExecutionActivityFilter>;
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<EntityCoreResponse<ICircuitExtractionExecution>>(baseUri, {
+  return await api.get<EntityCoreResponse<IExecutionActivity>>(baseUri, {
     queryParams: compactRecord({
       ...filters,
       with_facets: withFacets,
@@ -93,7 +94,7 @@ export async function createCircuitExtractionExecution({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.post<ICircuitExtractionExecution>(baseUri, {
+  return await api.post<IExecutionActivity>(baseUri, {
     body: data,
     headers: {
       ...getEntityCoreContext(context).headers,
@@ -121,11 +122,11 @@ export async function updateCircuitExtractionExecution({
   context,
 }: {
   id: string;
-  data: TUpdateCircuitExtractionExecution;
+  data: TUpdateExecutionActivity;
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.patch<ICircuitExtractionExecution>(`${baseUri}/${id}`, {
+  return await api.patch<IExecutionActivity>(`${baseUri}/${id}`, {
     body: data,
     headers: {
       ...getEntityCoreContext(context).headers,

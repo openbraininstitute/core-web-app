@@ -3,7 +3,7 @@ import { includes } from 'es-toolkit/compat';
 import { useEffect, useMemo } from 'react';
 
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
-import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import { ActivityExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import { AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
 import { useModelQuery } from '@/features/scan-config/components/atoms/index';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
@@ -12,11 +12,11 @@ import { classNames } from '@/util/utils';
 
 import type { ICircuitExtractionConfig } from '@/api/entitycore/types/entities/circuit-extraction-config';
 import type { ICircuitExtractionExecution } from '@/api/entitycore/types/entities/circuit-extraction-execution';
-import type { TEntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import type { TActivityExecutionStatus } from '@/api/entitycore/types/entities/execution';
 
 type Props = {
   config: ICircuitExtractionConfig;
-  execStatus?: TEntitycoreExecutionStatus;
+  execStatus?: TActivityExecutionStatus;
   execution?: ICircuitExtractionExecution;
   selectedFile?: TActivityCustomFile;
   onSelect: (file: TActivityCustomFile) => void;
@@ -62,7 +62,7 @@ export function ExtractionInOutFiles({
 
   const outputAvailable =
     !!execStatus &&
-    includes([EntitycoreExecutionStatus.ERROR, EntitycoreExecutionStatus.DONE], execStatus);
+    includes([ActivityExecutionStatus.ERROR, ActivityExecutionStatus.DONE], execStatus);
 
   const extractedCircuitId = execution?.generated?.[0]?.id;
   const { data: extractedCircuit, isLoading } = useQuery({
@@ -74,6 +74,14 @@ export function ExtractionInOutFiles({
     // biome-ignore lint/style/noNonNullAssertion: the function is enable only if extractedCircuitId is present (see useQuery/enabled)
     queryFn: () => getCircuit({ id: extractedCircuitId!, context }),
     enabled: !!extractedCircuitId,
+    refetchInterval(query) {
+      const data = query.state.data;
+      const hasVisAsset = data?.assets?.some(
+        (asset) => asset.label === AssetLabel.circuit_visualization
+      );
+      const retry = hasVisAsset ? false : 2_000;
+      return retry;
+    },
   });
 
   useEffect(() => {

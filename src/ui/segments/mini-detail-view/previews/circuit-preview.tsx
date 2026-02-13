@@ -9,7 +9,6 @@ import { ProgressiveEntityImage } from '@/ui/segments/explore/circuit/elements/u
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export function CircuitPreview({ record }: { record: ICircuit }) {
-  console.log('–– – CircuitPreview – record––', record);
   if (!hasAssets(record)) return EmptyPreview;
   const visualizationAsset = getAssetElement({
     assets: record.assets,
@@ -29,6 +28,7 @@ export function CircuitPreview({ record }: { record: ICircuit }) {
   return (
     <div className="w-full bg-white">
       <ProgressiveEntityImage
+        key={visualizationAsset.id}
         asset={visualizationAsset}
         entityId={record.id}
         alt="hii"

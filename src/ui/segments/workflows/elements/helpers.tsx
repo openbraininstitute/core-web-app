@@ -262,12 +262,21 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
   },
 } as const;
 
-export const extractConfiguration: Array<TExtractWorkflowConfig> = [
+export const extractNewConfiguration: Array<TExtractWorkflowConfig> = [
   {
     group: EntityGroupDict.Circuit,
     disabled: false,
     label: 'Circuit (beta)',
     value: ExtendedEntitiesTypeDict.Circuit,
+  },
+] as const;
+
+export const extractActivitiesConfiguration: Array<TExtractWorkflowConfig> = [
+  {
+    group: EntityGroupDict.Circuit,
+    disabled: false,
+    label: 'Circuit (beta)',
+    value: ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
   },
 ] as const;
 
@@ -306,7 +315,7 @@ export const ActivityDict: readonly ActivityDictEntry[] = [
     disabled: false,
     name: 'Extraction',
     configType: 'extract',
-    config: extractConfiguration,
+    config: extractNewConfiguration,
   },
   {
     label: 'Optimize',
@@ -362,26 +371,19 @@ export function getDropdownOptionsByCategory(
     return { allOptions: [], enabledOptions: [] };
   }
   if (category === WorkflowActivityDictValue.extract) {
-    const grouped = groupBy(extractConfiguration, 'group');
-    const options = Object.entries(grouped).map(([k, v]) => ({
-      group: k,
-      options: v,
-    }));
+    const grouped = groupBy(extractActivitiesConfiguration, 'group');
+    const options = Object.entries(grouped).map(([k, v]) => {
+      return {
+        group: k,
+        options: v,
+      };
+    });
 
     const enabledOptions = options.filter((o) => o.options.some((a) => !a.disabled));
 
     return { allOptions: options, enabledOptions };
   }
-  if (
-    includes(
-      [
-        WorkflowActivityDictValue.build,
-        WorkflowActivityDictValue.simulate,
-        WorkflowActivityDictValue.extract,
-      ],
-      category
-    )
-  ) {
+  if (includes([WorkflowActivityDictValue.build, WorkflowActivityDictValue.simulate], category)) {
     const activityKey = category as 'build' | 'simulate';
     const options = Object.values(buildAndSimulateConfiguration)
       .filter((config): config is NonNullable<typeof config> => config !== undefined)
@@ -453,7 +455,7 @@ export function getAllOptionsOrdered(
     return [];
   }
   if (category === WorkflowActivityDictValue.extract) {
-    return extractConfiguration;
+    return extractNewConfiguration;
   }
 
   if (includes([WorkflowActivityDictValue.build, WorkflowActivityDictValue.simulate], category)) {
@@ -504,7 +506,7 @@ export function getEntityTypeWorkflowConfigurationItem({
 }) {
   return match({ section, value })
     .with({ section: WorkspaceSection.ExtractWorkflow, value: P.nonNullable }, () =>
-      extractConfiguration.find((o) => o.value === value)
+      extractNewConfiguration.find((o) => o.value === value)
     )
     .with(
       {
@@ -528,7 +530,7 @@ export function getBaseModelTypeFromActivityType({
   return match({ section, type })
     .with(
       { section: WorkspaceSection.ExtractWorkflow, type: P.nonNullable },
-      () => extractConfiguration.find((p) => p.value === type)?.value
+      () => extractNewConfiguration.find((p) => p.value === type)?.value
     )
     .with(
       {

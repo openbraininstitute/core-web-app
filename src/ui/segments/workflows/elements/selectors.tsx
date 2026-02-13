@@ -108,7 +108,7 @@ export function CategorySelectScrollable({
           <SelectItem
             key={`category-${_value}`}
             value={_value}
-            className={cn('text-primary-9 text-lg font-bold', 'data-[highlighted]:text-primary-7!')}
+            className={cn('text-primary-9 text-lg font-bold', 'data-highlighted:text-primary-7!')}
           >
             {label}
           </SelectItem>

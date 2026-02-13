@@ -1,48 +1,48 @@
 import { Fragment } from 'react';
 
 import {
-  EntitycoreExecutionStatus,
-  type TEntitycoreExecutionStatus,
+  ActivityExecutionStatus,
+  type TActivityExecutionStatus,
 } from '@/api/entitycore/types/entities/execution';
 import { executionStatusIconMap } from '@/components/icons/activity-execution';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { getStatusColor } from '@/ui/segments/activity-execution/color-map';
 
 const StatusConfig = {
-  [EntitycoreExecutionStatus.CREATED]: {
+  [ActivityExecutionStatus.CREATED]: {
     label: 'Generated',
-    icon: executionStatusIconMap[EntitycoreExecutionStatus.CREATED],
-    value: EntitycoreExecutionStatus.CREATED,
+    icon: executionStatusIconMap[ActivityExecutionStatus.CREATED],
+    value: ActivityExecutionStatus.CREATED,
   },
-  [EntitycoreExecutionStatus.PENDING]: {
+  [ActivityExecutionStatus.PENDING]: {
     label: 'Pending',
-    icon: executionStatusIconMap[EntitycoreExecutionStatus.PENDING],
-    value: EntitycoreExecutionStatus.PENDING,
+    icon: executionStatusIconMap[ActivityExecutionStatus.PENDING],
+    value: ActivityExecutionStatus.PENDING,
   },
-  [EntitycoreExecutionStatus.RUNNING]: {
+  [ActivityExecutionStatus.RUNNING]: {
     label: 'Running',
-    icon: executionStatusIconMap[EntitycoreExecutionStatus.RUNNING],
-    value: EntitycoreExecutionStatus.RUNNING,
+    icon: executionStatusIconMap[ActivityExecutionStatus.RUNNING],
+    value: ActivityExecutionStatus.RUNNING,
   },
-  [EntitycoreExecutionStatus.DONE]: {
+  [ActivityExecutionStatus.DONE]: {
     label: 'Done',
-    icon: executionStatusIconMap[EntitycoreExecutionStatus.DONE],
-    value: EntitycoreExecutionStatus.DONE,
+    icon: executionStatusIconMap[ActivityExecutionStatus.DONE],
+    value: ActivityExecutionStatus.DONE,
   },
-  [EntitycoreExecutionStatus.ERROR]: {
+  [ActivityExecutionStatus.ERROR]: {
     label: 'Error',
-    icon: executionStatusIconMap[EntitycoreExecutionStatus.ERROR],
-    value: EntitycoreExecutionStatus.ERROR,
+    icon: executionStatusIconMap[ActivityExecutionStatus.ERROR],
+    value: ActivityExecutionStatus.ERROR,
   },
-  [EntitycoreExecutionStatus.CANCELLED]: {
+  [ActivityExecutionStatus.CANCELLED]: {
     label: 'Cancelled',
-    icon: executionStatusIconMap[EntitycoreExecutionStatus.CANCELLED],
-    value: EntitycoreExecutionStatus.CANCELLED,
+    icon: executionStatusIconMap[ActivityExecutionStatus.CANCELLED],
+    value: ActivityExecutionStatus.CANCELLED,
   },
 };
 
 type ExecutionStatusProps = {
-  status: TEntitycoreExecutionStatus;
+  status: TActivityExecutionStatus;
 };
 
 export function ExecutionStatus({ status }: ExecutionStatusProps) {
@@ -65,17 +65,17 @@ export function ExecutionStatus({ status }: ExecutionStatusProps) {
 }
 
 type ExecutionSetAggregatedStatusProps = {
-  statusCountMap: Map<EntitycoreExecutionStatus, number>;
+  statusCountMap: Map<ActivityExecutionStatus, number>;
 };
 
 export default function ExecutionAggregatedStatus({
   statusCountMap,
 }: ExecutionSetAggregatedStatusProps) {
-  const getColor = (status: EntitycoreExecutionStatus) =>
+  const getColor = (status: ActivityExecutionStatus) =>
     statusCountMap.get(status) ? getStatusColor(status) : '#bfbfbf';
-  const hasExecutions = (status: EntitycoreExecutionStatus) => !!statusCountMap.get(status);
+  const hasExecutions = (status: ActivityExecutionStatus) => !!statusCountMap.get(status);
 
-  const statuses = Object.values(EntitycoreExecutionStatus).filter(hasExecutions);
+  const statuses = Object.values(ActivityExecutionStatus).filter(hasExecutions);
 
   return (
     <div className="flex">
@@ -126,3 +126,5 @@ export default function ExecutionAggregatedStatus({
     </div>
   );
 }
+
+export { ExecutionAggregatedStatus };

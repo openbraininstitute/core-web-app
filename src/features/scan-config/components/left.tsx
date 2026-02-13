@@ -8,15 +8,14 @@ import {
   type TScanConfigActivity,
   type TScanConfigTabs,
 } from '@/features/scan-config/types';
-import { useAgentState, useAIConfig } from '@/services/ai-agent';
+import { useAIConfig } from '@/services/ai-agent';
 
 import GenerateConfigButton from './generate-config-button';
 import { useValidateSchema } from './hooks';
-import { resetConfig } from './hooks/schema';
 
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { Config } from './components';
+import type { Config } from '@/features/scan-config/components/components';
 
 import styles from '@/features/scan-config/scan-config.module.css';
 
@@ -127,17 +126,17 @@ export default function Left({
       </div>
 
       {!!aiConfig && !campaignId && (
-        <div className="flex w-[95%] min-h-[50px] gap-2">
+        <div className="flex w-[95%] min-h-12.5 gap-2">
           <button
             type="button"
-            className="min-h-[50px] text-lg drop-shadow border-red-500 border-1 rounded-full p-2 grow text-red-500"
+            className="min-h-12.5 text-lg drop-shadow border-red-500 border rounded-full p-2 grow text-red-500"
             onClick={handleRejectAIChanges}
           >
             Reject changes
           </button>
           <button
             type="button"
-            className="min-h-[50px] text-lg bg-green-600 text-white p-2 rounded-full grow "
+            className="min-h-12.5 text-lg bg-green-600 text-white p-2 rounded-full grow "
             onClick={handleAcceptAIChanges}
           >
             Accept changes

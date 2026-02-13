@@ -1,7 +1,7 @@
 import type {
-  ActivityType,
   EntityAuthorization,
   EntityCoreIdentifiable,
+  TActivityType,
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
 import type {
@@ -10,6 +10,9 @@ import type {
   PaginationFilter,
   SharedFilter,
 } from '@/api/entitycore/types/shared/request';
+
+interface IUsedEntity extends EntityCoreIdentifiable, EntityAuthorization {}
+interface IGeneratedEntity extends EntityCoreIdentifiable, EntityAuthorization {}
 
 interface IActivityBase<
   UsedEntityT extends EntityCoreIdentifiable,
@@ -21,14 +24,12 @@ interface IActivityBase<
   generated?: GeneratedEntityT[];
 }
 
-export interface IActivity<
-  UsedEntityT extends EntityCoreIdentifiable,
-  GeneratedEntityT extends EntityCoreIdentifiable,
-> extends EntityCoreIdentifiable,
-    IActivityBase<UsedEntityT, GeneratedEntityT>,
+export interface IActivity
+  extends EntityCoreIdentifiable,
+    IActivityBase<IUsedEntity, IGeneratedEntity>,
     Timestamps,
     EntityAuthorization,
-    ActivityType {}
+    TActivityType {}
 
 interface IActivityFilterBase {
   used__id?: string | null;

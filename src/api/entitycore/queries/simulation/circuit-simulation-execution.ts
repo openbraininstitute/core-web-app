@@ -2,9 +2,9 @@ import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
 import type {
-  ICircuitSimulationExecutionFilter,
-  ICircuitSimulationExecution,
-} from '@/api/entitycore/types/entities/circuit-simulation-execution';
+  IExecutionActivity,
+  IExecutionActivityFilter,
+} from '@/api/entitycore/types/entities/execution';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -23,7 +23,7 @@ export async function getCircuitSimulationExecution({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<ICircuitSimulationExecution>(`${baseUri}/${id}`, {
+  return await api.get<IExecutionActivity>(`${baseUri}/${id}`, {
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
@@ -50,12 +50,12 @@ export async function getCircuitSimulationExecutions({
   context,
 }: {
   withFacets?: boolean;
-  filters?: Partial<ICircuitSimulationExecutionFilter>;
+  filters?: Partial<IExecutionActivityFilter>;
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
 
-  return await api.get<EntityCoreResponse<ICircuitSimulationExecution>>(baseUri, {
+  return await api.get<EntityCoreResponse<IExecutionActivity>>(baseUri, {
     queryParams: compactRecord({
       ...filters,
       with_facets: withFacets,
