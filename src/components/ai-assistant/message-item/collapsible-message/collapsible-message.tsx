@@ -17,28 +17,36 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
   const previousPartsLength = React.useRef(0);
   const tools = useAITools();
 
-  // Find the latest tool invocation part in collapsed content
-  const latestToolInfo = React.useMemo(() => {
+  // Find the latest tool invocation part in collapsed content and count total tools
+  const toolInfo = React.useMemo(() => {
     if (!tools) return null;
     
     const parts = message.parts;
+    let latestTool = null;
+    let toolCount = 0;
+    
     for (let i = parts.length - 1; i >= 0; i--) {
       if (collapsedIndices.has(i) && parts[i].type === 'tool-invocation') {
-        const toolPart = parts[i] as ToolInvocationUIPart;
-        const toolName = toolPart.toolInvocation.toolName;
-        const tool = tools.find((t) => t.id === toolName);
+        toolCount++;
         
-        if (tool) {
-          const Icon = tool.icon;
-          return {
-            name: tool.name,
-            Icon,
-            state: toolPart.toolInvocation.state,
-          };
+        if (!latestTool) {
+          const toolPart = parts[i] as ToolInvocationUIPart;
+          const toolName = toolPart.toolInvocation.toolName;
+          const tool = tools.find((t) => t.id === toolName);
+          
+          if (tool) {
+            const Icon = tool.icon;
+            latestTool = {
+              name: tool.name,
+              Icon,
+              state: toolPart.toolInvocation.state,
+            };
+          }
         }
       }
     }
-    return null;
+    
+    return latestTool ? { ...latestTool, count: toolCount } : null;
   }, [message.parts, collapsedIndices, tools]);
 
   // Track which parts should be collapsed
@@ -151,16 +159,43 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
                   strokeLinejoin="round"
                 />
               </svg>
-              {latestToolInfo ? (
-                <div className={styles.toolSummary}>
-                  <div className={styles.toolIcon}>
-                    <latestToolInfo.Icon />
+              {toolInfo ? (
+                <>
+                  <div className={styles.toolSummary}>
+                    <div className={styles.toolIcon}>
+                      <toolInfo.Icon />
+                    </div>
+                    <span className={styles.toolName}>{toolInfo.name}</span>
+                    {toolInfo.count > 1 && (
+                      <span className={styles.toolCount}>+{toolInfo.count - 1} more</span>
+                    )}
                   </div>
-                  <span className={styles.toolName}>{latestToolInfo.name}</span>
-                  <span className={styles.toolStatus}>
-                    {latestToolInfo.state === 'result' ? 'Complete' : 'Running'}
-                  </span>
-                </div>
+                  <div className={styles.statusBadge} data-state={toolInfo.state}>
+                    {toolInfo.state === 'result' ? (
+                      <>
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 14 14"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          className={styles.checkIcon}
+                        >
+                          <path
+                            d="M11.6667 3.5L5.25 9.91667L2.33333 7"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        <span>Complete</span>
+                      </>
+                    ) : (
+                      <span>Running</span>
+                    )}
+                  </div>
+                </>
               ) : (
                 <span className={styles.thinkingLabel}>
                   Show details
