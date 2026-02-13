@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
+import { ToolInvocation, UIMessage, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 
 import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
 import ToolsProgress from './tools-progress';
@@ -74,22 +74,32 @@ function MessageChild({ value, debug, status, isLastMessage }: {
           return (
             <div key={`tool-${toolCallId}`}>
               <ToolsProgress part={part} />
-              <>
-                <ToolsComponents part={part} />
-                {/* This tool component has been disabled yet */}
-                {/* <ToolArticles message={value} /> */}
-              </>
             </div>
           );
         }
         return null;
       });
 
+      // Collect tool components (plots, thumbnails) separately - only show when ready
+      const toolComponents = status === 'ready' 
+        ? deferredParts
+            .filter((part) => part.type === 'tool-invocation')
+            .map((part) => {
+              const { toolCallId } = (part as any).toolInvocation;
+              return (
+                <div key={`tool-component-${toolCallId}`}>
+                  <ToolsComponents part={part as ToolInvocationUIPart} />
+                </div>
+              );
+            })
+        : [];
+
       return (
         <div className={styles.assistant}>
           <CollapsibleMessage message={value} status={isLastMessage ? status : 'ready'}>
             {children}
           </CollapsibleMessage>
+          {toolComponents}
           {debug && (
             <button
               type="button"
