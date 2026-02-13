@@ -19,7 +19,6 @@ import {
   type TBlock,
 } from '@/features/scan-config/types';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
 import type { IMEModel } from '@/api/entitycore/types';
@@ -275,9 +274,9 @@ export default function Block({
                             {renderInput(k, blockElementSchema, value)}
                           </div>
                           {(op_ === 'delete' || op_ === 'replace') && (
-                            <CloseOutlined className="text-red-500" />
+                            <CloseOutlined className="!text-red-500" />
                           )}
-                          {op_ === 'add' && <PlusOutlined className="text-[#1690ff]" />}
+                          {op_ === 'add' && <PlusOutlined className="!text-[#1690ff]" />}
                         </div>
 
                         {op_ === 'replace' && !!blockAIConfig && (
@@ -285,7 +284,7 @@ export default function Block({
                             <div className="border rounded-lg border-[#1690ff] flex-1 mr-1">
                               {renderInput(k, blockElementSchema, blockAIConfig[k])}
                             </div>
-                            <PlusOutlined className="text-[#1690ff]" />
+                            <PlusOutlined className="!text-[#1690ff]" />
                           </div>
                         )}
                       </div>
