@@ -76,8 +76,9 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
   const consentGate = useRunWithOfflineTokenConsent({
     notifyError: notification.error,
     messages: {
-      denied: 'Consent declined. Extraction was not started.',
-      timeout: 'Consent timed out. Please grant consent to run the extraction.',
+      cancelled: errorRegistry.AUTH_CONSENT_CANCELLED.replace('$$', 'Extraction'),
+      denied: errorRegistry.AUTH_CONSENT_DENIED.replace('$$', 'Extraction'),
+      timeout: errorRegistry.AUTH_CONSENT_TIMEOUT,
     },
     useCache: false,
   });

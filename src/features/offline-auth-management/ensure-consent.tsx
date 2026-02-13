@@ -20,7 +20,7 @@ import type { OfflineTokenConsentRequest } from '@/features/offline-auth-managem
 import type { OfflineTokenConsentEvent } from '@/features/offline-auth-management/types';
 
 type EnsureOptions = {
-  /** When true, use localStorage and in-memory prefetch cache. Default: false (no cache). */
+  /** use localStorage to reduce the number of requests to auth-manager (defaults: false) */
   useCache?: boolean;
   timeoutMs?: number;
   // max time we'll accept a previously-emitted event as relevant to this wait.
@@ -163,9 +163,7 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
 
       inflightConsentRequestRef.current = (async () => {
         const value = await requestOfflineTokenConsent();
-        if (useCache) {
-          consentPrefetchRef.current = { at: Date.now(), value };
-        }
+        consentPrefetchRef.current = { at: Date.now(), value };
         return value;
       })().finally(() => {
         inflightConsentRequestRef.current = null;
@@ -195,11 +193,8 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
     abortRef.current?.abort('superseded');
     abortRef.current = new AbortController();
 
-    // show the modal immediately, then yield so React can render it before async work.
     setModal({ open: true, consentUrl: undefined });
-    await new Promise<void>((r) => setTimeout(r, 0));
 
-    let popup: Window | null = null;
     try {
       if (opts.useCache) {
         const cached = readOfflineTokenConsentState();
@@ -214,12 +209,11 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
         }
       }
 
-      const prefetched = opts.useCache ? consentPrefetchRef.current : null;
+      const prefetched = consentPrefetchRef.current;
+      const hasUrl = !!prefetched?.value?.consentUrl;
 
-      // Open a blank popup synchronously (before any await) so the browser doesn't block it.
-      // We'll navigate it to the consent URL once we have it.
-      if (!prefetched?.value) {
-        popup = window.open('about:blank', '_blank', 'noopener,noreferrer');
+      if (!hasUrl) {
+        await new Promise<void>((r) => setTimeout(r, 0));
       }
 
       const consentRes = prefetched?.value ?? (await fetchConsent({ useCache: opts.useCache }));
@@ -227,7 +221,6 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
       const sessionStateId = consentRes.sessionStateId;
 
       if (!consentUrl) {
-        popup?.close();
         setModal({ open: false, consentUrl: undefined });
         return {
           ok: false,
@@ -239,12 +232,7 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
 
       const flowStartedAt = Date.now();
 
-      // Navigate the popup we opened, or open fresh if we had prefetched (synchronous).
-      if (popup) {
-        popup.location.href = consentUrl;
-      } else {
-        openConsentLink(consentUrl);
-      }
+      openConsentLink(consentUrl);
 
       const decision = await waitForDecision({
         useCache: opts.useCache,
@@ -288,7 +276,6 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
       });
       return { ok: true };
     } catch (err: any) {
-      popup?.close();
       setModal({ open: false, consentUrl: undefined });
 
       if (err === 'cancelled' || err?.message === 'Aborted' || err?.toString?.() === 'cancelled') {
