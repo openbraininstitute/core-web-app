@@ -1,11 +1,5 @@
 import { atom } from 'jotai';
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import {
-  BlockUI,
-  type Config,
-  type ConfigValue,
-} from '@/features/scan-config/components/components';
+
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import { type ConfigObject, isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import {
@@ -17,6 +11,12 @@ import {
   type TBlock,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
+
+import Block from './block';
+
+import type { IMEModel } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { Config, ConfigValue } from '@/features/scan-config/components/components';
 
 type Props = {
   schemaName: SchemaName;
@@ -74,7 +74,7 @@ export default function BlockDictionary({
 
   if (selectedBlockSchema && !isAtom(atomsMap[selectedRootElement])) {
     return (
-      <BlockUI
+      <Block
         schemaName={schemaName}
         key={`${selectedRootElement}_${selectedEntry}`}
         disabled={!!campaignId || loading || !!blockAIConfig || !isChatReady}
