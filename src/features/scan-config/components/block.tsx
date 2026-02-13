@@ -248,24 +248,23 @@ export default function Block({
               const value = firstValue();
 
               return (
-                <div key={k} className="w-full">
-                  <div
-                    className={classNames(
-                      'flex gap-3 w-full',
-                      isBooleanInput ? 'items-start justify-between' : 'items-end'
-                    )}
-                  >
-                    <div className={classNames('flex items-end gap-3', isBooleanInput && 'flex-1')}>
-                      <div
-                        className="text-primary-9 text-base font-semibold uppercase"
-                        title={blockElementSchema.description}
-                      >
-                        {blockElementSchema.title}
-                      </div>
-                      {blockElementSchema.units && (
-                        <div className="text-lg text-gray-500">{blockElementSchema.units}</div>
-                      )}
+                <div
+                  key={k}
+                  className={cn(
+                    'w-full flex',
+                    isBooleanInput ? 'flex-row items-center' : 'flex-col'
+                  )}
+                >
+                  <div className="flex gap-3 w-full items-center">
+                    <div
+                      className="text-primary-9 text-base font-semibold uppercase"
+                      title={blockElementSchema.description}
+                    >
+                      {blockElementSchema.title}
                     </div>
+                    {blockElementSchema.units && (
+                      <div className="text-lg text-gray-500">{blockElementSchema.units}</div>
+                    )}
                   </div>
 
                   <Tooltip>
