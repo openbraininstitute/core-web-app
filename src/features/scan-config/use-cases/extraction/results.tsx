@@ -226,7 +226,7 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
     },
     throwOnError: false,
     onSuccess: (result, vars) => {
-      log('info', `Extraction for ${vars} launched successfully, execution ID: ${result}`);
+      log('info', `Extraction for ${vars} launched successfully, execution ID`, { result });
       queryClient.invalidateQueries({
         queryKey: queryKeys.extractionExecutions(configIds, context),
       });

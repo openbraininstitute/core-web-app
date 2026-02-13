@@ -28,7 +28,7 @@ type EnsureOptions = {
   recheckAttempts?: number;
 };
 
-type EnsureResult =
+export type EnsureResult =
   | { ok: true }
   | { ok: false; reason: 'denied'; error?: string; description?: string }
   | { ok: false; reason: 'cancelled' }
@@ -182,9 +182,11 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
     abortRef.current?.abort('superseded');
     abortRef.current = new AbortController();
 
-    // show the modal immediately so the user always has a fallback.
+    // show the modal immediately, then yield so React can render it before async work.
     setModal({ open: true, consentUrl: undefined });
+    await new Promise<void>((r) => setTimeout(r, 0));
 
+    let popup: Window | null = null;
     try {
       const cached = readOfflineTokenConsentState();
       if (isOfflineTokenConsentStateFresh(cached) && cached?.decision === 'granted') {
@@ -197,14 +199,20 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
         return { ok: true };
       }
 
-      // if we already prefetched before this click, we can open synchronously.
       const prefetched = consentPrefetchRef.current;
+
+      // Open a blank popup synchronously (before any await) so the browser doesn't block it.
+      // We'll navigate it to the consent URL once we have it.
+      if (!prefetched?.value) {
+        popup = window.open('about:blank', '_blank', 'noopener,noreferrer');
+      }
 
       const consentRes = prefetched?.value ?? (await fetchConsent());
       const consentUrl = consentRes.consentUrl;
       const sessionStateId = consentRes.sessionStateId;
 
       if (!consentUrl) {
+        popup?.close();
         setModal({ open: false, consentUrl: undefined });
         return {
           ok: false,
@@ -216,10 +224,12 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
 
       const flowStartedAt = Date.now();
 
-      // auto-open consent page as soon as we have the URL.
-      // this may be blocked by some browsers if the URL wasn't prefetched before the click;
-      // the modal remains as a deterministic fallback.
-      openConsentLink(consentUrl);
+      // Navigate the popup we opened, or open fresh if we had prefetched (synchronous).
+      if (popup) {
+        popup.location.href = consentUrl;
+      } else {
+        openConsentLink(consentUrl);
+      }
 
       const decision = await waitForDecision({
         timeoutMs: opts.timeoutMs,
@@ -259,6 +269,7 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
       consentPrefetchRef.current = { at: now, value: { consentUrl: undefined, sessionStateId } };
       return { ok: true };
     } catch (err: any) {
+      popup?.close();
       setModal({ open: false, consentUrl: undefined });
 
       if (err === 'cancelled' || err?.message === 'Aborted' || err?.toString?.() === 'cancelled') {
