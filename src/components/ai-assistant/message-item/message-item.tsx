@@ -87,13 +87,9 @@ function MessageChild({ value, debug, status, isLastMessage }: {
 
       return (
         <div className={styles.assistant}>
-          {isLastMessage ? (
-            <CollapsibleMessage message={value} status={status}>
-              {children}
-            </CollapsibleMessage>
-          ) : (
-            children
-          )}
+          <CollapsibleMessage message={value} status={isLastMessage ? status : 'ready'}>
+            {children}
+          </CollapsibleMessage>
           {debug && (
             <button
               type="button"

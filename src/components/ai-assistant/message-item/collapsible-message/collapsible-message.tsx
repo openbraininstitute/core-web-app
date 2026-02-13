@@ -1,8 +1,7 @@
 'use client';
 
 import React from 'react';
-import { UIMessage, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
-import { useAITools } from '@/services/ai-agent/tools/tools';
+import { UIMessage } from '@ai-sdk/ui-utils';
 import styles from './collapsible-message.module.css';
 
 interface CollapsibleMessageProps {
@@ -15,39 +14,33 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
   const [collapsedIndices, setCollapsedIndices] = React.useState<Set<number>>(new Set());
   const [animatingIndex, setAnimatingIndex] = React.useState<number | null>(null);
   const previousPartsLength = React.useRef(0);
-  const tools = useAITools();
 
-  // Find the latest tool invocation part in collapsed content and count total tools
-  const toolInfo = React.useMemo(() => {
-    if (!tools) return null;
-    
+  // Count steps in collapsed content (consecutive tool calls = 1 step)
+  const stepCount = React.useMemo(() => {
     const parts = message.parts;
-    let latestTool = null;
-    let toolCount = 0;
+    let count = 0;
+    let inToolSequence = false;
     
-    for (let i = parts.length - 1; i >= 0; i--) {
-      if (collapsedIndices.has(i) && parts[i].type === 'tool-invocation') {
-        toolCount++;
+    for (let i = 0; i < parts.length; i++) {
+      if (collapsedIndices.has(i)) {
+        const part = parts[i];
         
-        if (!latestTool) {
-          const toolPart = parts[i] as ToolInvocationUIPart;
-          const toolName = toolPart.toolInvocation.toolName;
-          const tool = tools.find((t) => t.id === toolName);
-          
-          if (tool) {
-            const Icon = tool.icon;
-            latestTool = {
-              name: tool.name,
-              Icon,
-              state: toolPart.toolInvocation.state,
-            };
+        if (part.type === 'tool-invocation') {
+          // If we're not already in a tool sequence, this is a new step
+          if (!inToolSequence) {
+            count++;
+            inToolSequence = true;
           }
+          // Otherwise, it's part of the same parallel tool call step
+        } else if (part.type === 'text' && 'text' in part && part.text !== '') {
+          // Text part ends the tool sequence
+          inToolSequence = false;
         }
       }
     }
     
-    return latestTool ? { ...latestTool, count: toolCount } : null;
-  }, [message.parts, collapsedIndices, tools]);
+    return count;
+  }, [message.parts, collapsedIndices]);
 
   // Track which parts should be collapsed
   React.useEffect(() => {
@@ -85,22 +78,21 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
           }
           newCollapsedIndices.add(i);
         }
+        setCollapsedIndices(newCollapsedIndices);
       }
     }
 
     // When streaming finishes, collapse everything except the last text
-    if (status === 'ready' && lastTextIndex > 0) {
+    // Only do this once when transitioning to ready
+    if (status === 'ready' && lastTextIndex > 0 && collapsedIndices.size === 0) {
       for (let i = 0; i < lastTextIndex; i++) {
         newCollapsedIndices.add(i);
       }
-    }
-
-    if (newCollapsedIndices.size > 0) {
       setCollapsedIndices(newCollapsedIndices);
     }
 
     previousPartsLength.current = parts.length;
-  }, [message.parts, status, collapsedIndices]);
+  }, [message.parts, status]);
 
   // Separate collapsed and visible children
   const collapsedChildren: React.ReactNode[] = [];
@@ -159,48 +151,9 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
                   strokeLinejoin="round"
                 />
               </svg>
-              {toolInfo ? (
-                <>
-                  <div className={styles.toolSummary}>
-                    <div className={styles.toolIcon}>
-                      <toolInfo.Icon />
-                    </div>
-                    <span className={styles.toolName}>{toolInfo.name}</span>
-                    {toolInfo.count > 1 && (
-                      <span className={styles.toolCount}>+{toolInfo.count - 1} more</span>
-                    )}
-                  </div>
-                  <div className={styles.statusBadge} data-state={toolInfo.state}>
-                    {toolInfo.state === 'result' ? (
-                      <>
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 14 14"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                          className={styles.checkIcon}
-                        >
-                          <path
-                            d="M11.6667 3.5L5.25 9.91667L2.33333 7"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                        <span>Complete</span>
-                      </>
-                    ) : (
-                      <span>Running</span>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <span className={styles.thinkingLabel}>
-                  Show details
-                </span>
-              )}
+              <span className={styles.thinkingLabel}>
+                Show steps ({stepCount})
+              </span>
             </div>
           </button>
           {isExpanded && (
