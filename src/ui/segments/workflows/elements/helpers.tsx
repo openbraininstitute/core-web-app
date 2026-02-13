@@ -5,10 +5,12 @@ import groupBy from 'es-toolkit/compat/groupBy';
 import sortBy from 'es-toolkit/compat/sortBy';
 import values from 'es-toolkit/compat/values';
 import { match, P } from 'ts-pattern';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { type TWorkspaceSection, WorkflowActivityDictValue, WorkspaceSection } from '@/constants';
 import { type FeatureFlags, type FlagKey, microcircuitFlag } from '@/features/feature-flags/flags';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 export const WorkflowSessionIdSearchParam = 'sessionId';
 export const EntityGroupDict = {
@@ -366,11 +368,20 @@ export function getDropdownOptionsByCategory(
       options: v,
     }));
 
-    const enabledOptions = options.filter((o) => o.options.some((a) => a.disabled));
+    const enabledOptions = options.filter((o) => o.options.some((a) => !a.disabled));
 
     return { allOptions: options, enabledOptions };
   }
-  if (includes([WorkflowActivityDictValue.build, WorkflowActivityDictValue.simulate], category)) {
+  if (
+    includes(
+      [
+        WorkflowActivityDictValue.build,
+        WorkflowActivityDictValue.simulate,
+        WorkflowActivityDictValue.extract,
+      ],
+      category
+    )
+  ) {
     const activityKey = category as 'build' | 'simulate';
     const options = Object.values(buildAndSimulateConfiguration)
       .filter((config): config is NonNullable<typeof config> => config !== undefined)

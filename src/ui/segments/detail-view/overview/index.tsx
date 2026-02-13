@@ -1,21 +1,11 @@
 import { notFound } from 'next/navigation';
 
 import { getMEModel } from '@/api/entitycore/queries';
-import type {
-  ICellMorphology,
-  IElectricalCellRecording,
-  ISingleNeuronSynaptome,
-} from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
-import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
   CommonSummaryViewFields,
   getViewDefinitionByExtendedType,
 } from '@/entity-configuration/definitions/view-defs';
-import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
-import type { EntityTypeValue } from '@/entity-configuration/domain';
 import { circuitTypes, type EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
 import {
   resolveSimulationByCampaignId,
@@ -29,11 +19,22 @@ import SynaptomeDetails from '@/features/entities/neuron-simulation/elements/syn
 import { EphysViewer } from '@/features/ephys-viewer';
 import { IonChannelRecordingViewer } from '@/features/ion-channel-recording-viewer';
 import ScanConfig from '@/features/scan-config';
-import type { AwaitedType, WorkspaceContext } from '@/types/common';
 import { Field } from '@/ui/segments/detail-view/overview/field';
 import IonChannelModelOverview from '@/ui/segments/detail-view/overview/ion-channel-model';
 import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
 import { Visualization as CircuitViz } from '@/ui/segments/explore/circuit/elements/visualization';
+
+import type {
+  ICellMorphology,
+  IElectricalCellRecording,
+  ISingleNeuronSynaptome,
+} from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
+import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
+import type { EntityTypeValue } from '@/entity-configuration/domain';
+import type { AwaitedType, WorkspaceContext } from '@/types/common';
 
 export default async function Overview({
   entity,
@@ -115,11 +116,13 @@ export default async function Overview({
         readOnly={!isWorkflow}
         // This is a temporary solution to show sim campaigns not complient with obi-one gen config.
         // TODO: remove this after microcircuit scale simulations are fully implemented.
-        defaultTab={
-          extendedType === ExtendedEntitiesTypeDict.MicrocircuitSimulation
-            ? 'simulations'
-            : undefined
-        }
+        defaultTab={{
+          __activity: 'simulate',
+          id:
+            extendedType === ExtendedEntitiesTypeDict.MicrocircuitSimulation
+              ? 'simulations'
+              : 'configuration',
+        }}
       />
     );
   }

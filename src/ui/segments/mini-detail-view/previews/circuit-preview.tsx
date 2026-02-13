@@ -1,14 +1,15 @@
 import { Empty } from 'antd';
 
-import { ProgressiveEntityImage } from '@/ui/segments/explore/circuit/elements/use-progressive-img';
-import { EmptyPreview } from '@/entity-configuration/definitions/renderer';
+import { hasAssets } from '@/api/entitycore/guards';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
-import { hasAssets } from '@/api/entitycore/guards';
+import { EmptyPreview } from '@/entity-configuration/definitions/renderer';
+import { ProgressiveEntityImage } from '@/ui/segments/explore/circuit/elements/use-progressive-img';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export function CircuitPreview({ record }: { record: ICircuit }) {
+  console.log('–– – CircuitPreview – record––', record);
   if (!hasAssets(record)) return EmptyPreview;
   const visualizationAsset = getAssetElement({
     assets: record.assets,
